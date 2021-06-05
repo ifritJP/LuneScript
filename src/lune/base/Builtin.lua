@@ -1419,6 +1419,8 @@ function Builtin:registBuiltInScope(  )
       
    end
    
+   local pos = Parser.Position.new(0, 0, "@builtin@")
+   
    for __index, builtinClassInfo in ipairs( builtInInfo ) do
       for className, name2FieldInfo in pairs( builtinClassInfo ) do
          local name = className
@@ -1502,7 +1504,7 @@ function Builtin:registBuiltInScope(  )
                      declMode = TransUnitIF.DeclClassMode.Interface
                   end
                   
-                  parentInfo = self.transUnit:pushClassLow( self.processInfo, self.transUnit:getLatestPos(  ), declMode, false, nil, interfaceList, genTypeList, true, name, true, Ast.AccessMode.Pub )
+                  parentInfo = self.transUnit:pushClassLow( self.processInfo, pos, declMode, false, nil, interfaceList, genTypeList, true, name, true, Ast.AccessMode.Pub )
                   builtinFunc:registerClass( parentInfo )
                elseif _switchExp == TransUnitIF.DeclClassMode.Module then
                   parentInfo = self.transUnit:pushModuleLow( self.processInfo, true, name, true )

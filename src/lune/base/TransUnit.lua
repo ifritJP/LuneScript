@@ -2231,7 +2231,7 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    if  nil == importObj then
       local _importObj = importObj
    
-      importObj = Import.Import.new(self, self.importModuleInfo, self.moduleType, self.builtinFunc, self.globalScope, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.validMutControl)
+      importObj = Import.Import.new(self:getLatestPos(  ), self, self.importModuleInfo, self.moduleType, self.builtinFunc, self.globalScope, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.validMutControl)
       self.importCtrl = importObj
    end
    
@@ -2250,7 +2250,7 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    local moduleSymbolInfo, shadowing = self.scope:add( self.processInfo, moduleSymbolKind, false, false, assignName, pos, moduleTypeInfo, Ast.AccessMode.Local, true, provideInfo:get_mutable() and Ast.MutMode.Mut or Ast.MutMode.IMut, true, lazyLoad ~= Nodes.LazyLoad.Off )
    
    if moduleSymbolInfo ~= nil then
-      local info = Nodes.ImportInfo.new(modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo)
+      local info = Nodes.ImportInfo.new(pos, modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo)
       return Nodes.ImportNode.create( self.nodeManager, pos, self.macroCtrl:isInAnalyzeArgMode(  ), {moduleTypeInfo}, info )
    end
    

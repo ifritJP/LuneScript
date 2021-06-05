@@ -747,6 +747,7 @@ pub enum LazyLoad {
 }
 
 pub class ImportInfo {
+   let pos:&Parser.Position {pub};
    let modulePath: str {pub};
    let lazy: LazyLoad {pub};
    let assignName: str {pub};

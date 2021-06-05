@@ -508,7 +508,7 @@ class AccessSymbolSetQueue {
    }
 }
 
-pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
+pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    /** 解析状態 */
    pri let mut analyzingStateQueue:List<AnalyzingState>;
@@ -530,22 +530,22 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
    /** macro-statement の最上位スコープ */
    pri let mut macroScope: Ast.Scope!;
 
-   /** 解析中の scope */
-   pri let mut scope: Ast.Scope;
+   // /** 解析中の scope */
+   // pri let mut scope: Ast.Scope;
 
-   pub fn get_scope() mut __async : Ast.Scope {
-      return self.scope;
-   }
+   // pub fn get_scope() mut __async : Ast.Scope {
+   //    return self.scope;
+   // }
    
    /** */
    pri let mut tentativeSymbol:TentativeSymbol;
-   /** クラスの TypeId -> NamespaceInfo */
-   pri let mut typeId2ClassMap: Map<&Ast.IdInfo,&Nodes.NamespaceInfo>;
+   // /** クラスの TypeId -> NamespaceInfo */
+   // pri let mut typeId2ClassMap: Map<&Ast.IdInfo,&Nodes.NamespaceInfo>;
 
    /** クラスの型情報 -> そのクラスを宣言しているノード */
    pri let mut typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
-   /** パーサー */
-   pri let mut parser: Parser.DefaultPushbackParser;
+   // /** パーサー */
+   // pri let mut parser: Parser.DefaultPushbackParser;
    // /** push バックしたトークンリスト */
    // pri let mut pushbackList: List<&Parser.Token>;
    // /** 現在のトークン */
@@ -553,12 +553,12 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
    /** コメントリスト */
    pri let mut commentCtrl: Parser.CommentCtrl;
    
-   // /** 解析済みトークンリスト */
-   // pri let mut usedTokenList: List<&Parser.Token>;
-   /** 解析エラーメッセージ */
-   pri let mut errMessList: str[] { pub };
-   /** 解析警告ーメッセージ */
-   pri let mut warnMessList: str[] { pub };
+   // // /** 解析済みトークンリスト */
+   // // pri let mut usedTokenList: List<&Parser.Token>;
+   // /** 解析エラーメッセージ */
+   // pri let mut errMessList: str[] { pub };
+   // /** 解析警告ーメッセージ */
+   // pri let mut warnMessList: str[] { pub };
 
 
    /** このモジュール内から直接 import しているモジュールのセット */
@@ -587,13 +587,13 @@ pub class TransUnit extend (TransUnitIF.TransUnitIF, Parser.PushbackParser) {
    // /** ループ系制御構文(for 等)の Scope */
    // pri let mut loopScopeQueue: List<&Ast.Scope>;
 
-   /**
-名前空間タイプ Map。
-解析終了時に、この Map に nobody 設定が残っているとエラー。
+//    /**
+// 名前空間タイプ Map。
+// 解析終了時に、この Map に nobody 設定が残っているとエラー。
 
-TypeInfo → NSInfo.
-   */
-   pri let mut nsInfoMap:Map<&Ast.TypeInfo,TransUnitIF.NSInfo>;
+// TypeInfo → NSInfo.
+//    */
+//    pri let mut nsInfoMap:Map<&Ast.TypeInfo,TransUnitIF.NSInfo>;
 
    /**
 トランスコンパイル先の lua バージョン
@@ -607,9 +607,9 @@ TypeInfo → NSInfo.
 
    pri let ctrl_info: &Types.TransCtrlInfo;
 
-   pri let mut macroCtrl:Macro.MacroCtrl;
+   // pri let mut macroCtrl:Macro.MacroCtrl;
    
-   pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
+   // pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
    pri let mut scopeAccess:Ast.ScopeAccess;
 
@@ -621,7 +621,7 @@ TypeInfo → NSInfo.
 
    let mut accessSymbolSetQueue:AccessSymbolSetQueue;
 
-   local let processInfo:Ast.ProcessInfo;
+   // local let processInfo:Ast.ProcessInfo;
 
    let mut importCtrl:Import.Import!;
 
@@ -637,13 +637,26 @@ alias で置き換えている元の Type → alias の型
 
    let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
 
-   let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
+   // let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
 
    /** 引数解析中の static method の Scope */
    let mut analyzingStaticMethodArgsScope:&Ast.Scope!;
 
    let builtinFunc:&Builtin.BuiltinFuncType;
 
+   static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo,
+                            macroEval: &Nodes.MacroEval ) : 
+      &Types.TransCtrlInfo, Ast.ProcessInfo, Ast.Scope,
+      Parser.DefaultPushbackParser, &Nodes.MacroEval
+   {
+      let mut processInfo = Ast.createProcessInfo(
+         ctrl_info.validCheckingMutable,
+         ctrl_info.validLuaval, ctrl_info.validAstDetailError );
+      let mut scope = new Ast.Scope( processInfo, processInfo.$topScope, true, nil ## );
+      let mut parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
+      return ctrl_info, processInfo, scope, parser, macroEval;
+   }
+   
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
@@ -651,9 +664,10 @@ alias で置き換えている元の Type → alias の型
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType) 
    {
+      super( TransUnit.getSuperParam( ctrl_info, macroEval )** ); 
       self.builtinFunc = builtinFunc;
       self.analyzingStaticMethodArgsScope = nil;
-      self.namespace2Scope = {};
+      // self.namespace2Scope = {};
       self.class2defaultAsyncMode = {};
       let defaultAsyncMode:DefaultAsyncMode;
       if ctrl_info.defaultAsync {
@@ -664,15 +678,15 @@ alias で置き換えている元の Type → alias の型
       self.defaultAsyncMode = defaultAsyncMode;
       self.importedAliasMap = {};
       self.importModuleSet = (@);
-      self.processInfo = Ast.createProcessInfo(
-         ctrl_info.validCheckingMutable,
-         ctrl_info.validLuaval, ctrl_info.validAstDetailError );
+      // self.processInfo = Ast.createProcessInfo(
+      //    ctrl_info.validCheckingMutable,
+      //    ctrl_info.validLuaval, ctrl_info.validAstDetailError );
       self.accessSymbolSetQueue = new AccessSymbolSetQueue();
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
       self.scopeAccess = .Normal;
-      self.macroCtrl = new Macro.MacroCtrl( macroEval );
-      self.typeNameCtrl = Ast.defaultTypeNameCtrl;
+      // self.macroCtrl = new Macro.MacroCtrl( macroEval );
+      // self.typeNameCtrl = Ast.defaultTypeNameCtrl;
       self.analyzingStateQueue = [];
       // self.macroCallLineNo = 0;
       //self.useModuleMacroSet = (@);
@@ -682,7 +696,7 @@ alias で置き換えている元の Type → alias の型
       self.helperInfo = new frontInterface.LuneHelperInfo();
       self.targetLuaVer = targetLuaVer;
       self.importModuleInfo = importModuleInfo.clone();
-      self.nsInfoMap = {};
+      // self.nsInfoMap = {};
       self.has__func__Symbol = (@);
       self.nodeManager = new Nodes.NodeManager();
       self.macroScope = nil;
@@ -691,26 +705,26 @@ alias で置き換えている元の Type → alias の型
          self.validMutControl, self.processInfo );
       self.moduleName = "";
       self.moduleType = Ast.headTypeInfo;
-      self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
+      // self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
       self.subfileList = [];
       self.globalScope = self.processInfo.$topScope;
-      let mut subRootTypeInfo = self.processInfo.$dummyParentType;
-      self.nsInfoMap[ subRootTypeInfo ] = new TransUnitIF.NSInfo(
-         subRootTypeInfo, self.parser.createPosition(0, 0) );
+      // let mut subRootTypeInfo = self.processInfo.$dummyParentType;
+      // self.nsInfoMap[ subRootTypeInfo ] = new TransUnitIF.NSInfo(
+      //    subRootTypeInfo, self.parser.createPosition(0, 0) );
 
-      self.scope = new Ast.Scope( self.processInfo, self.globalScope, true, nil ## );
+      // self.scope = new Ast.Scope( self.processInfo, self.globalScope, true, nil ## );
       self.topScope = self.scope;
       self.moduleScope = self.scope;
 
       self.tentativeSymbol = new TentativeSymbol(
          nil, self.globalScope, self.moduleScope, false, nil );
 
-      self.typeId2ClassMap = {};
+      // self.typeId2ClassMap = {};
       self.typeInfo2ClassNode = {};
       // self.currentToken = Parser.getEofToken();
       self.commentCtrl = new Parser.CommentCtrl();
-      self.errMessList = [];
-      self.warnMessList = [];
+      // self.errMessList = [];
+      // self.warnMessList = [];
       self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
       self.analyzePos = unwrap pos default self.createPosition( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
@@ -723,8 +737,8 @@ alias で置き換えている元の Type → alias の型
       return self.parser.$currentToken.pos;
    }
 
-   pub fn error( mess: str ) __async mut : __;
-   pub fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
+   // pub fn error( mess: str ) __async mut : __;
+   // pub fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
 
    pri fn pushAnalyzingState( state:AnalyzingState ) mut {
       self.analyzingStateQueue.insert( state );
@@ -749,14 +763,14 @@ alias で置き換えている元の Type → alias の型
       return false;
    }
 
-   pri fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {
-      if mess.find( "type mismatch.*<- &" ##) {
-         mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
-      }
-      self.errMessList.insert(
-         "%s:%d:%d: error: %s" ( pos.streamName,
-                                 pos.lineNo, pos.column, mess ) );
-   }
+   // pri fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {
+   //    if mess.find( "type mismatch.*<- &" ##) {
+   //       mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
+   //    }
+   //    self.errMessList.insert(
+   //       "%s:%d:%d: error: %s" ( pos.streamName,
+   //                               pos.lineNo, pos.column, mess ) );
+   // }
 
    pri fn addWarnMess( pos: &Parser.Position, mess: str ) __async mut {
       self.warnMessList.insert(
@@ -775,32 +789,32 @@ alias で置き換えている元の Type → alias の型
    
    
 
-   // pri fn pushScope( classFlag: bool, inheritScope: Ast.Scope!,
-   //                   ifScopeList:List<Ast.Scope>! ) mut : Ast.Scope
-   pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
-                     interfaceList: &List<&Ast.TypeInfo>! ) __async mut: Ast.Scope
-   {
-      // self.scope = new Ast.Scope( self.scope, classFlag, inheritScope, ifScopeList );
-      self.scope = Ast.TypeInfo.createScope(
-         self.processInfo, self.scope, classFlag, baseInfo, interfaceList );
-      return self.scope;
-   }
+   // // pri fn pushScope( classFlag: bool, inheritScope: Ast.Scope!,
+   // //                   ifScopeList:List<Ast.Scope>! ) mut : Ast.Scope
+   // pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
+   //                   interfaceList: &List<&Ast.TypeInfo>! ) __async mut: Ast.Scope
+   // {
+   //    // self.scope = new Ast.Scope( self.scope, classFlag, inheritScope, ifScopeList );
+   //    self.scope = Ast.TypeInfo.createScope(
+   //       self.processInfo, self.scope, classFlag, baseInfo, interfaceList );
+   //    return self.scope;
+   // }
 
-   pub fn popScope() __async mut {
-      self.scope = self.scope.get_parent();
-   }
+   // pub fn popScope() __async mut {
+   //    self.scope = self.scope.get_parent();
+   // }
 
-   /**
-解析した名前空間の情報を登録する。
-この情報は、&TypeInfo から imut を外すために利用する。
-   */ 
-   fn newNSInfo(
-      typeInfo:Ast.TypeInfo, pos:&Parser.Position) __async mut : TransUnitIF.NSInfo
-   {
-      let mut nsInfo = new TransUnitIF.NSInfo( typeInfo, pos );
-      self.nsInfoMap[ typeInfo ] = nsInfo;
-      return nsInfo;
-   }
+//    /**
+// 解析した名前空間の情報を登録する。
+// この情報は、&TypeInfo から imut を外すために利用する。
+//    */ 
+//    fn newNSInfo(
+//       typeInfo:Ast.TypeInfo, pos:&Parser.Position) __async mut : TransUnitIF.NSInfo
+//    {
+//       let mut nsInfo = new TransUnitIF.NSInfo( typeInfo, pos );
+//       self.nsInfoMap[ typeInfo ] = nsInfo;
+//       return nsInfo;
+//    }
 
    fn getNSInfo( typeInfo:&Ast.TypeInfo ) mut : TransUnitIF.NSInfo {
       let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
@@ -900,96 +914,96 @@ alias で置き換えている元の Type → alias の型
       return typeInfo;
    }
 
-   /**
-現在のスコープが属する名前空間の型を取得する。
+//    /**
+// 現在のスコープが属する名前空間の型を取得する。
 
-※
-現在のスコープが属する名前空間が、
-この TransUnit で生成した名前空間でない場合はエラーするので注意すること。
+// ※
+// 現在のスコープが属する名前空間が、
+// この TransUnit で生成した名前空間でない場合はエラーするので注意すること。
 
-例えば、現在のスコープが rootScope だった場合はエラーする。
-*/ 
-   pri fn getCurrentNamespaceTypeInfoMut() __async mut : Ast.TypeInfo {
-      let typeInfo = self.scope.getNamespaceTypeInfo();
-      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
-         self.error( "not found nsInfo -- %s (%d)"
-                     (typeInfo.getTxt(##), typeInfo.$typeId.id) );
-      };
-      return nsInfo.$typeInfo;
-   }
+// 例えば、現在のスコープが rootScope だった場合はエラーする。
+// */ 
+//    pri fn getCurrentNamespaceTypeInfoMut() __async mut : Ast.TypeInfo {
+//       let typeInfo = self.scope.getNamespaceTypeInfo();
+//       let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
+//          self.error( "not found nsInfo -- %s (%d)"
+//                      (typeInfo.getTxt(##), typeInfo.$typeId.id) );
+//       };
+//       return nsInfo.$typeInfo;
+//    }
 
-   pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
-      return self.scope.getNamespaceTypeInfo();
-   }
+//    pri fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
+//       return self.scope.getNamespaceTypeInfo();
+//    }
 
    fn getCurrentNSInfo() mut : TransUnitIF.NSInfo {
       return self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
    }
 
-   pub fn pushModule(
-      processInfo:Ast.ProcessInfo,
-      externalFlag: bool, name:str, mutable: bool ) __async mut : TransUnitIF.NSInfo
-   {
-      let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+   // pub fn pushModule(
+   //    processInfo:Ast.ProcessInfo,
+   //    externalFlag: bool, name:str, mutable: bool ) __async mut : TransUnitIF.NSInfo
+   // {
+   //    let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
 
-      let modName;
-      if name.find( "^@" ## ) {
-         modName = name;
-      }
-      else {
-         modName = "@%s" (name);
-      }
+   //    let modName;
+   //    if name.find( "^@" ## ) {
+   //       modName = name;
+   //    }
+   //    else {
+   //       modName = "@%s" (name);
+   //    }
 
-      let mut nsInfo;
-      if! self.scope.getTypeInfoChild( modName ) {
-         typeInfo = _exp;
-         if! let mut scope = self.namespace2Scope[ typeInfo ] {
-            self.scope = scope;
-         } else {
-            self.error( "not found scope -- %s" (name) );
-         }
-         nsInfo = unwrap self.nsInfoMap[ typeInfo ];
-      }
-      else {
-         let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
-         let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true ## );
-         let mut newType = processInfo.createModule(
-            scope, parentInfo, externalFlag, modName, mutable );
-         typeInfo = newType;
-         self.namespace2Scope[ typeInfo ] = scope;
-         nsInfo = self.newNSInfo( newType, self.parser.getLastPos() );
+   //    let mut nsInfo;
+   //    if! self.scope.getTypeInfoChild( modName ) {
+   //       typeInfo = _exp;
+   //       if! let mut scope = self.namespace2Scope[ typeInfo ] {
+   //          self.scope = scope;
+   //       } else {
+   //          self.error( "not found scope -- %s" (name) );
+   //       }
+   //       nsInfo = unwrap self.nsInfoMap[ typeInfo ];
+   //    }
+   //    else {
+   //       let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
+   //       let mut parentScope = self.scope;
+   //       let mut scope = self.pushScope( true ## );
+   //       let mut newType = processInfo.createModule(
+   //          scope, parentInfo, externalFlag, modName, mutable );
+   //       typeInfo = newType;
+   //       self.namespace2Scope[ typeInfo ] = scope;
+   //       nsInfo = self.newNSInfo( newType, self.parser.getLastPos() );
 
-         let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
-         when! existSym {
-            self.addErrMess(
-               self.parser.getLastPos(),
-               "module symbols exist -- %s.%s -- %s.%s"
-               ( existSym.$namespaceTypeInfo.getFullName(
-                  self.typeNameCtrl, parentScope, false ),
-                 existSym.$name,
-                 parentInfo.getFullName( self.typeNameCtrl, parentScope, false ),
-                 modName ) );
-         }
-      }
-      if not self.typeId2ClassMap[ typeInfo.$typeId ] {
-         let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
-         self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
-      }
-      return nsInfo;
-   }
+   //       let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
+   //       when! existSym {
+   //          self.addErrMess(
+   //             self.parser.getLastPos(),
+   //             "module symbols exist -- %s.%s -- %s.%s"
+   //             ( existSym.$namespaceTypeInfo.getFullName(
+   //                self.typeNameCtrl, parentScope, false ),
+   //               existSym.$name,
+   //               parentInfo.getFullName( self.typeNameCtrl, parentScope, false ),
+   //               modName ) );
+   //       }
+   //    }
+   //    if not self.typeId2ClassMap[ typeInfo.$typeId ] {
+   //       let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
+   //       self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
+   //    }
+   //    return nsInfo;
+   // }
 
-   pub fn pushModuleLow(
-      processInfo:Ast.ProcessInfo,
-      externalFlag: bool, name:str, mutable: bool ) __async mut : &Ast.TypeInfo
-   {
-      return self.pushModule( processInfo, externalFlag, name, mutable ).$typeInfo;
-   }
+   // pub fn pushModuleLow(
+   //    processInfo:Ast.ProcessInfo,
+   //    externalFlag: bool, name:str, mutable: bool ) __async mut : &Ast.TypeInfo
+   // {
+   //    return self.pushModule( processInfo, externalFlag, name, mutable ).$typeInfo;
+   // }
    
 
-   pub fn popModule() __async mut {
-      self.popScope();
-   }
+   // pub fn popModule() __async mut {
+   //    self.popScope();
+   // }
 
    pri fn pushExtModule(
       externalFlag: bool, name:str, accessMode:Ast.AccessMode, pos:&Parser.Position,
@@ -1019,206 +1033,206 @@ alias で置き換えている元の Type → alias の型
    }
 
 
-   /**
-既存クラスの Scope を push する。
-   */
-   pub fn pushClassScope(
-      errPos:&Parser.Position,
-      classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) __async mut
-   {
-      if self.scope ~= classTypeInfo.$scope$.$parent {
-         let classParentName;
-         let classParentTypeId;
-         if! let parentType = classTypeInfo.$scope$.$parent$.$ownerTypeInfo {
-            classParentName = parentType.getFullName(
-               self.typeNameCtrl, unwrap parentType.$scope, false );
-            classParentTypeId = parentType.$typeId;
-         }
-         else {
-            classParentName = "nil";
-            classParentTypeId = Ast.dummyIdInfo;
-         }
-         self.addErrMess(
-            errPos, "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)"
-            ( classTypeInfo.getTxt( ## ),
-              self.scope.$ownerTypeInfo$.getFullName$(
-                 self.typeNameCtrl, self.scope, false ),
-              self.scope.$ownerTypeInfo$.$typeId$.id or -1,
-              classParentName, classParentTypeId.id ) );
-      }
-      self.scope = scope;
-   }
+//    /**
+// 既存クラスの Scope を push する。
+//    */
+//    pub fn pushClassScope(
+//       errPos:&Parser.Position,
+//       classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) __async mut
+//    {
+//       if self.scope ~= classTypeInfo.$scope$.$parent {
+//          let classParentName;
+//          let classParentTypeId;
+//          if! let parentType = classTypeInfo.$scope$.$parent$.$ownerTypeInfo {
+//             classParentName = parentType.getFullName(
+//                self.typeNameCtrl, unwrap parentType.$scope, false );
+//             classParentTypeId = parentType.$typeId;
+//          }
+//          else {
+//             classParentName = "nil";
+//             classParentTypeId = Ast.dummyIdInfo;
+//          }
+//          self.addErrMess(
+//             errPos, "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)"
+//             ( classTypeInfo.getTxt( ## ),
+//               self.scope.$ownerTypeInfo$.getFullName$(
+//                  self.typeNameCtrl, self.scope, false ),
+//               self.scope.$ownerTypeInfo$.$typeId$.id or -1,
+//               classParentName, classParentTypeId.id ) );
+//       }
+//       self.scope = scope;
+//    }
 
-   /**
-指定クラスの Scope を push し、TypeInfo を取得する。
+//    /**
+// 指定クラスの Scope を push し、TypeInfo を取得する。
 
-クラスが生成済みの場合は baseInfo, interfaceList, genTypeList に nil を指定する。
-   */
-   pub fn pushClass(
-      processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
-      baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
-      genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
-      allowMultiple:bool, accessMode:Ast.AccessMode,
-      defNamespace: Nodes.NamespaceInfo! ) mut : TransUnitIF.NSInfo
-   {
-      let typeInfo:&Ast.TypeInfo;
-      let mut nsInfo;
-      if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
-         // 宣言済み
-         typeInfo = _exp;
-         nsInfo = unwrap self.nsInfoMap[ typeInfo ];
+// クラスが生成済みの場合は baseInfo, interfaceList, genTypeList に nil を指定する。
+//    */
+//    pub fn pushClass(
+//       processInfo:Ast.ProcessInfo,
+//       errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
+//       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
+//       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
+//       allowMultiple:bool, accessMode:Ast.AccessMode,
+//       defNamespace: Nodes.NamespaceInfo! ) mut : TransUnitIF.NSInfo
+//    {
+//       let typeInfo:&Ast.TypeInfo;
+//       let mut nsInfo;
+//       if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
+//          // 宣言済み
+//          typeInfo = _exp;
+//          nsInfo = unwrap self.nsInfoMap[ typeInfo ];
 
-         if typeInfo.$scope$.$parent ~= self.scope {
-            self.addErrMess(
-               errPos,     
-               "multiple class(%s)" (typeInfo.getTxt( self.typeNameCtrl ##)));
-            // クラスの複数定義は、その後の解析すると、
-            self.error( "stop by error" );
-         }
+//          if typeInfo.$scope$.$parent ~= self.scope {
+//             self.addErrMess(
+//                errPos,     
+//                "multiple class(%s)" (typeInfo.getTxt( self.typeNameCtrl ##)));
+//             // クラスの複数定義は、その後の解析すると、
+//             self.error( "stop by error" );
+//          }
 
-         if typeInfo.$abstractFlag ~= abstractFlag {
-            self.addErrMess( errPos,
-                             "mismatch class(%s) abstract for prototpye"
-                             (typeInfo.getTxt( self.typeNameCtrl ##)));
-         }
-         if typeInfo.$accessMode ~= accessMode {
-            self.addErrMess( errPos,
-                             "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
-                             ( typeInfo.getTxt( self.typeNameCtrl ##),
-                               accessMode.$_txt, typeInfo.$accessMode.$_txt));
-         }
-         when! baseInfo {
-            if typeInfo.$baseTypeInfo ~= baseInfo {
-               self.addErrMess(
-                  errPos,
-                  "mismatch class(%s) base class(%s) for prototpye base class(%s)"
-                  ( typeInfo.getTxt( self.typeNameCtrl##),
-                    baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
-            }
-         }
-         else {
-            if typeInfo.hasBase() {
-               self.addErrMess(
-                  errPos,
-                  "mismatch class(%s) base class(None) for prototpye base class(%s)"
-                  ( typeInfo.getTxt( self.typeNameCtrl##),
-                    typeInfo.$baseTypeInfo.getTxt(##)));
-            }
-         }
+//          if typeInfo.$abstractFlag ~= abstractFlag {
+//             self.addErrMess( errPos,
+//                              "mismatch class(%s) abstract for prototpye"
+//                              (typeInfo.getTxt( self.typeNameCtrl ##)));
+//          }
+//          if typeInfo.$accessMode ~= accessMode {
+//             self.addErrMess( errPos,
+//                              "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
+//                              ( typeInfo.getTxt( self.typeNameCtrl ##),
+//                                accessMode.$_txt, typeInfo.$accessMode.$_txt));
+//          }
+//          when! baseInfo {
+//             if typeInfo.$baseTypeInfo ~= baseInfo {
+//                self.addErrMess(
+//                   errPos,
+//                   "mismatch class(%s) base class(%s) for prototpye base class(%s)"
+//                   ( typeInfo.getTxt( self.typeNameCtrl##),
+//                     baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
+//             }
+//          }
+//          else {
+//             if typeInfo.hasBase() {
+//                self.addErrMess(
+//                   errPos,
+//                   "mismatch class(%s) base class(None) for prototpye base class(%s)"
+//                   ( typeInfo.getTxt( self.typeNameCtrl##),
+//                     typeInfo.$baseTypeInfo.getTxt(##)));
+//             }
+//          }
 
-         fn compareList( protoList:&List<&Ast.TypeInfo>,
-                         typeList:&List<&Ast.TypeInfo>, message:str )
-         {
-            if #protoList == #typeList {
-               foreach protoType, index in protoList {
-                  if protoType ~= typeList[ index ] {
-                     self.addErrMess(
-                        errPos,
-                        "mismatch class(%s) %s(%s) for prototpye %s(%s)"
-                        ( typeInfo.getTxt(self.typeNameCtrl##), message,
-                          typeList[ index ].getTxt(self.typeNameCtrl##),
-                          message, protoType.getTxt(##)));
-                  }
-               }
-            }
-            else {
-               self.addErrMess(
-                  errPos,
-                  "mismatch class(%s) %s(%d) for prototpye %s(%d)"
-                  ( typeInfo.getTxt(self.typeNameCtrl##), message, #typeList,
-                    message, #protoList) );
-            }
-         }
+//          fn compareList( protoList:&List<&Ast.TypeInfo>,
+//                          typeList:&List<&Ast.TypeInfo>, message:str )
+//          {
+//             if #protoList == #typeList {
+//                foreach protoType, index in protoList {
+//                   if protoType ~= typeList[ index ] {
+//                      self.addErrMess(
+//                         errPos,
+//                         "mismatch class(%s) %s(%s) for prototpye %s(%s)"
+//                         ( typeInfo.getTxt(self.typeNameCtrl##), message,
+//                           typeList[ index ].getTxt(self.typeNameCtrl##),
+//                           message, protoType.getTxt(##)));
+//                   }
+//                }
+//             }
+//             else {
+//                self.addErrMess(
+//                   errPos,
+//                   "mismatch class(%s) %s(%d) for prototpye %s(%d)"
+//                   ( typeInfo.getTxt(self.typeNameCtrl##), message, #typeList,
+//                     message, #protoList) );
+//             }
+//          }
          
-         compareList( typeInfo.$interfaceList,
-                      unwrap interfaceList default [], "interface" );
+//          compareList( typeInfo.$interfaceList,
+//                       unwrap interfaceList default [], "interface" );
          
-         compareList( typeInfo.$itemTypeInfoList,
-                      unwrap genTypeList default [], "generics" );
+//          compareList( typeInfo.$itemTypeInfoList,
+//                       unwrap genTypeList default [], "generics" );
 
          
 
-         if! let mut scope = self.namespace2Scope[ typeInfo ] {
-            self.scope = scope;
-         } else {
-            self.errorAt( errPos, "not find scope -- %s" (name) );
-         }
-         switch ( typeInfo.$kind ) {
-            case .Class {
-               if mode == .Interface {
-                  self.addErrMess(
-                     errPos,
-                     "define interface already -- %s" (name) );
-                  Util.printStackTrace();
-               }
-            }
-            case .IF {
-               if mode ~= .Interface {
-                  self.addErrMess(
-                     errPos,
-                     "define class already -- %s" (name) );
-                  Util.printStackTrace();
-               }
-            }
-         }
-      }
-      else {
-         let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
+//          if! let mut scope = self.namespace2Scope[ typeInfo ] {
+//             self.scope = scope;
+//          } else {
+//             self.errorAt( errPos, "not find scope -- %s" (name) );
+//          }
+//          switch ( typeInfo.$kind ) {
+//             case .Class {
+//                if mode == .Interface {
+//                   self.addErrMess(
+//                      errPos,
+//                      "define interface already -- %s" (name) );
+//                   Util.printStackTrace();
+//                }
+//             }
+//             case .IF {
+//                if mode ~= .Interface {
+//                   self.addErrMess(
+//                      errPos,
+//                      "define class already -- %s" (name) );
+//                   Util.printStackTrace();
+//                }
+//             }
+//          }
+//       }
+//       else {
+//          let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
 
-         let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true, baseInfo, interfaceList );
-         let workGenTypeList;
-         when! genTypeList {
-            workGenTypeList = genTypeList;
-         }
-         else {
-            workGenTypeList = [];
-         }
+//          let mut parentScope = self.scope;
+//          let mut scope = self.pushScope( true, baseInfo, interfaceList );
+//          let workGenTypeList;
+//          when! genTypeList {
+//             workGenTypeList = genTypeList;
+//          }
+//          else {
+//             workGenTypeList = [];
+//          }
 
-         let mut newType = processInfo.createClassAsync(
-            mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
-            workGenTypeList, parentInfo, externalFlag, accessMode, name );
-         typeInfo = newType;
-         self.namespace2Scope[ typeInfo ] = scope;
-         nsInfo = self.newNSInfo( newType, errPos );
+//          let mut newType = processInfo.createClassAsync(
+//             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
+//             workGenTypeList, parentInfo, externalFlag, accessMode, name );
+//          typeInfo = newType;
+//          self.namespace2Scope[ typeInfo ] = scope;
+//          nsInfo = self.newNSInfo( newType, errPos );
          
-         parentScope.addClassLazy(
-            processInfo, name, errPos, typeInfo, mode == .LazyModule );
-      }
-      when! genTypeList {
-         foreach genType in genTypeList {
-            self.scope.addAlternate(
-               processInfo, accessMode, genType.$txt, errPos, genType );
-         }
-      }
+//          parentScope.addClassLazy(
+//             processInfo, name, errPos, typeInfo, mode == .LazyModule );
+//       }
+//       when! genTypeList {
+//          foreach genType in genTypeList {
+//             self.scope.addAlternate(
+//                processInfo, accessMode, genType.$txt, errPos, genType );
+//          }
+//       }
 
-      let! mut namespace = defNamespace {
-         namespace = new Nodes.NamespaceInfo( name, self.scope, typeInfo );
-      };
-      self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
+//       let! mut namespace = defNamespace {
+//          namespace = new Nodes.NamespaceInfo( name, self.scope, typeInfo );
+//       };
+//       self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
       
-      return nsInfo;
-   }
+//       return nsInfo;
+//    }
 
-   pub fn pushClassLow(
-      processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
-      baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
-      genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
-      allowMultiple:bool, accessMode:Ast.AccessMode,
-      defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
-   {
-      return self.pushClass(
-         processInfo, errPos, mode, abstractFlag,
-         baseInfo, interfaceList, genTypeList, externalFlag, name,
-         allowMultiple, accessMode, defNamespace ).$typeInfo;
-   }
+//    pub fn pushClassLow(
+//       processInfo:Ast.ProcessInfo,
+//       errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
+//       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
+//       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
+//       allowMultiple:bool, accessMode:Ast.AccessMode,
+//       defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
+//    {
+//       return self.pushClass(
+//          processInfo, errPos, mode, abstractFlag,
+//          baseInfo, interfaceList, genTypeList, externalFlag, name,
+//          allowMultiple, accessMode, defNamespace ).$typeInfo;
+//    }
    
 
-   pub fn popClass() __async mut {
-      self.popScope();
-   }
+//    pub fn popClass() __async mut {
+//       self.popScope();
+//    }
 
    pub fn pushbackStr( name: str, statement: str, pos:&Types.Position ) __async mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
@@ -1458,27 +1472,27 @@ pri fn TransUnit.checkThreading( pos:&Parser.Position ) mut : bool {
 }
 
 
-pub fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
-   self.addErrMess( pos, mess);
+// pub fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
+//    self.addErrMess( pos, mess);
 
-   foreach errmess in self.errMessList {
-      Util.errorLog( errmess );
-   }
-   foreach warnmess in self.warnMessList {
-      Util.errorLog( warnmess );
-   }
-   if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-      print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
-      print( self.parser.getNearCode() );
-      print( "------" );
-   }
+//    foreach errmess in self.errMessList {
+//       Util.errorLog( errmess );
+//    }
+//    foreach warnmess in self.warnMessList {
+//       Util.errorLog( warnmess );
+//    }
+//    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+//       print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
+//       print( self.parser.getNearCode() );
+//       print( "------" );
+//    }
    
-   Util.err( "has error" );
-}
+//    Util.err( "has error" );
+// }
 
-pub fn TransUnit.error( mess: str ) __async mut : __ {
-   self.errorAt( self.parser.getLastPos(), mess );
-}
+// pub fn TransUnit.error( mess: str ) __async mut : __ {
+//    self.errorAt( self.parser.getLastPos(), mess );
+// }
 
 fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
    //return self.createNode( nodeKindNone, pos, [ builtinTypeNone ], {} );
@@ -2038,6 +2052,7 @@ fn TransUnit.analyzeImportFor(
 
    let! mut importObj = self.importCtrl {
       importObj = new Import.Import(
+         self.getLatestPos(),
          self,
          self.importModuleInfo,
          self.moduleType,
@@ -2075,8 +2090,8 @@ fn TransUnit.analyzeImportFor(
 
   
    when! moduleSymbolInfo {
-      let info = new Nodes.ImportInfo(
-         modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo );
+      let info = new Nodes.ImportInfo( pos, modulePath, lazyLoad, assignName,
+                                       assigned, moduleSymbolInfo, moduleTypeInfo );
       return Nodes.ImportNode.create(
          self.nodeManager, pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );

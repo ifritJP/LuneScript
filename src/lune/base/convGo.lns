@@ -2469,6 +2469,8 @@ fn convFilter.outputDummyReturn( retTypeInfoList:&List<&Ast.TypeInfo> ) mut {
             case Ast.builtinTypeString {
                self.write( '""' );
             }
+            case Ast.builtinTypeNeverRet {
+            }
             default {
                self.write( "nil" );
             }

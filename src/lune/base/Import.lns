@@ -46,8 +46,6 @@ pub class Import {
    let globalScope: Ast.Scope;
    let macroCtrl:Macro.MacroCtrl;
    let typeNameCtrl:&Ast.TypeNameCtrl;
-   //let processInfo:Ast.ProcessInfo;
-   //   let helperInfo:frontInterface.LuneHelperInfo;
 
    /**
 インポートしているモジュールの TypeInfo -> シンボル情報。
@@ -63,22 +61,21 @@ alias で置き換えている元の Type → alias の型
    let importModuleName2ModuleInfo: Map<str,&frontInterface.ModuleInfo>;
 
    let validMutControl: bool;
+
+   let curPos:&Parser.Position;
    
-   pub fn __init( transUnitIF:TransUnitIF.TransUnitIF,
+   pub fn __init( curPos:&Parser.Position, transUnitIF:TransUnitIF.TransUnitIF,
                   importModuleInfo: frontInterface.ImportModuleInfo,
                   moduleType: &Ast.TypeInfo,
                   builtinFunc:&Builtin.BuiltinFuncType,
                   globalScope: Ast.Scope,
                   macroCtrl:Macro.MacroCtrl,
                   typeNameCtrl:&Ast.TypeNameCtrl,
-                  //processInfo:Ast.ProcessInfo,
-                  //helperInfo:frontInterface.LuneHelperInfo,
-                  //importModule2ModuleInfo: Map<&Ast.TypeInfo,&Nodes.ModuleInfo>,
                   importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>,
-                  //importModuleName2ModuleInfo: Map<str,&Nodes.ModuleInfo>,
                   
                   validMutControl:bool )
    {
+      self.curPos = curPos;
       self.validMutControl = validMutControl;
       self.transUnitIF = transUnitIF;
       self.importModuleInfo = importModuleInfo;
@@ -87,18 +84,10 @@ alias で置き換えている元の Type → alias の型
       self.globalScope = globalScope;
       self.macroCtrl = macroCtrl;
       self.typeNameCtrl = typeNameCtrl;
-//      self.processInfo = processInfo;
-      //self.helperInfo = helperInfo;
-//      self.helperInfo = new frontInterface.LuneHelperInfo();
-      //self.importModule2ModuleInfo = importModule2ModuleInfo;
       self.importedAliasMap = importedAliasMap;
-      //self.importModuleName2ModuleInfo = importModuleName2ModuleInfo;
 
       self.importModule2ModuleInfo = {};
-      // self.importedAliasMap = {};
       self.importModuleName2ModuleInfo = {};
-
-      // self.modifier = new TransUnitIF.Modifier( validMutControl, self.processInfo );
    }
 
    fn processImportMain(
@@ -111,7 +100,6 @@ proto abstract class _TypeInfo extend (Mapping);
 class ImportParam {
    pub let pos:&Parser.Position;
    pub let modifier:TransUnitIF.Modifier;
-   //pub let mut transUnit:TransUnitIF;
    pub let mut processInfo:Ast.ProcessInfo;
    pub let mut typeId2Scope:Map<int,Ast.Scope>;
    pub let mut typeId2TypeInfo:Map<int,&Ast.TypeInfo>;
@@ -848,7 +836,6 @@ fn Import.processImportFromFile(
    typeId2TypeInfo[ Ast.userRootId ] = processInfo.$dummyParentType;
    let mut typeId2Scope: Map<int,Ast.Scope> = {};
    typeId2Scope[ Ast.userRootId ] = processInfo.$topScope;
-   //typeId2Scope[ Ast.builtinRootId ] = self.transUnitIF.$scope;
 
    typeId2TypeInfo[ self.builtinFunc.lnsthread_.$typeId.id ] =
       self.builtinFunc.lnsthread_;
@@ -981,7 +968,7 @@ fn Import.processImportFromFile(
    
    // 初めに child 以外で TypeInfo を登録
    let mut importParam = new ImportParam(
-      self.transUnitIF.getLatestPos(), modifier, processInfo, typeId2Scope,
+      self.curPos, modifier, processInfo, typeId2Scope,
       typeId2TypeInfo, typeId2TypeInfoMut, {},
       lazyModuleSet, metaInfo, self.transUnitIF.$scope,
       moduleTypeInfo, .Normal, id2atomMap, dependLibId2DependInfo );
@@ -1085,11 +1072,9 @@ fn Import.processImportFromFile(
       
       switch ( classTypeInfo.$kind ) {
          case .Class, .ExtModule {
-            // self.pushClass( self.currentToken.pos, true, classTypeInfo.$abstractFlag,
-            //                 nil, nil, nil, true, classTypeInfo.getTxt(##), .Pub ## );
             let mut scope = unwrap typeId2Scope[ classTypeId ];
             self.transUnitIF.pushClassScope(
-               self.transUnitIF.getLatestPos(), classTypeInfo, scope );
+               self.curPos, classTypeInfo, scope );
             
             if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                let! classInfo = expandLuavalMap( _exp ) {

@@ -1254,22 +1254,26 @@ _moduleObj.ImportInfo = ImportInfo
 function ImportInfo.setmeta( obj )
   setmetatable( obj, { __index = ImportInfo  } )
 end
-function ImportInfo.new( modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+function ImportInfo.new( pos, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
    local obj = {}
    ImportInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+      obj:__init( pos, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
    end
    return obj
 end
-function ImportInfo:__init( modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
+function ImportInfo:__init( pos, modulePath, lazy, assignName, assigned, symbolInfo, moduleTypeInfo )
 
+   self.pos = pos
    self.modulePath = modulePath
    self.lazy = lazy
    self.assignName = assignName
    self.assigned = assigned
    self.symbolInfo = symbolInfo
    self.moduleTypeInfo = moduleTypeInfo
+end
+function ImportInfo:get_pos()
+   return self.pos
 end
 function ImportInfo:get_modulePath()
    return self.modulePath
@@ -13698,7 +13702,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8949 in pairs( self.map ) do
+   for key, _8951 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13733,8 +13737,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8963 in ipairs( __sorted ) do
-         local key = __map[ _8963 ]
+      for __index, _8965 in ipairs( __sorted ) do
+         local key = __map[ _8965 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false
