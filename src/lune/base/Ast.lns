@@ -2255,8 +2255,8 @@ pub fn Scope.filterSymbolInfoIfField(
 
 
 pub fn Scope.getTypeInfoField(
-   name: str, includeSelfFlag:
-   bool!, fromScope:&Scope, access:ScopeAccess ) : &TypeInfo!
+   name: str, includeSelfFlag:bool!,
+   fromScope:&Scope, access:ScopeAccess ) : &TypeInfo!
 {
    let symbolInfo =
       self.getSymbolInfoField( name, includeSelfFlag, fromScope, access );
