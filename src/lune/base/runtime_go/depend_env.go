@@ -35,8 +35,8 @@ func Depend_canUseAsync(_env *LnsEnv) bool {
 
 var DependLuaOnLns_runLuaOnLnsFunc func(_env *LnsEnv, luaCode string) (LnsAny, string) = nil
 
-func DependLuaOnLns_runLuaOnLns(_env *LnsEnv, luaCode string) (LnsAny, string) {
-	return dependLuaOnLns_runLuaOnLns(luaCode)
+func DependLuaOnLns_runLuaOnLns(_env *LnsEnv, luaCode string, baseDir LnsAny) (LnsAny, string) {
+	return dependLuaOnLns_runLuaOnLns(luaCode, baseDir)
 }
 
 func Lns_DependLuaOnLns_init(_env *LnsEnv) {

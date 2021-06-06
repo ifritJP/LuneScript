@@ -794,7 +794,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
 end
 
 
-function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeInfo, typeId2TypeInfo, importedMacroInfoMap )
+function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeInfo, typeId2TypeInfo, importedMacroInfoMap, baseDir )
 
    local macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem )
    if macroInfo ~= nil then
@@ -840,7 +840,7 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       end
       
       
-      local extMacroInfo = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ), symbol2MacroValInfoMap, argList, tokenList)
+      local extMacroInfo = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock, baseDir ), symbol2MacroValInfoMap, argList, tokenList)
       
       self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
       importedMacroInfoMap[macroTypeInfo:get_typeId()] = extMacroInfo
@@ -860,9 +860,9 @@ function MacroCtrl:importMacroInfo( importedMacroInfoMap )
 end
 
 
-function MacroCtrl:regist( processInfo, node, macroScope )
+function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
 
-   local macroObj = self.macroEval:eval( processInfo, node )
+   local macroObj = self.macroEval:eval( processInfo, node, baseDir )
    local remap = {}
    for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
       if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) then

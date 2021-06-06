@@ -156,19 +156,20 @@ _moduleObj.ModProjInfo = ModProjInfo
 function ModProjInfo.setmeta( obj )
   setmetatable( obj, { __index = ModProjInfo  } )
 end
-function ModProjInfo.new( path, projRoot, mod )
+function ModProjInfo.new( path, projRoot, mod, fullMod )
    local obj = {}
    ModProjInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( path, projRoot, mod )
+      obj:__init( path, projRoot, mod, fullMod )
    end
    return obj
 end
-function ModProjInfo:__init( path, projRoot, mod )
+function ModProjInfo:__init( path, projRoot, mod, fullMod )
 
    self.path = path
    self.projRoot = projRoot
    self.mod = mod
+   self.fullMod = fullMod
 end
 function ModProjInfo:get_path()
    return self.path
@@ -178,6 +179,9 @@ function ModProjInfo:get_projRoot()
 end
 function ModProjInfo:get_mod()
    return self.mod
+end
+function ModProjInfo:get_fullMod()
+   return self.fullMod
 end
 
 
@@ -206,6 +210,37 @@ GoModResult._name2Val["NotGo"] = GoModResult.NotGo
 
 local ModInfo = {}
 _moduleObj.ModInfo = ModInfo
+function ModInfo:getGoModPath( ver, mod )
+
+   local pathList = {}
+   
+   do
+      local gopath = Depend.getGOPATH(  )
+      if gopath ~= nil then
+         table.insert( pathList, Util.pathJoin( gopath, string.format( "src/%s", mod) ) )
+         
+         local gomod = ""
+         for __index, aChar in pairs( {mod:byte( 1, #mod )} ) do
+            if aChar ~= nil then
+               if aChar >= 65 and aChar <= 90 then
+                  gomod = string.format( "%s!%c", gomod, aChar - 65 + 97)
+               else
+                
+                  gomod = string.format( "%s%c", gomod, aChar)
+               end
+               
+            end
+            
+         end
+         
+         gomod = string.format( "%s@%s", gomod, ver)
+         
+         table.insert( pathList, Util.pathJoin( gopath, string.format( "pkg/mod/%s", gomod) ) )
+      end
+   end
+   
+   return pathList
+end
 function ModInfo.new( name, moduleMap, replaceMap )
    local obj = {}
    ModInfo.setmeta( obj )
@@ -216,8 +251,21 @@ function ModInfo:__init(name, moduleMap, replaceMap)
    self.name = name
    self.moduleMap = moduleMap
    self.replaceMap = replaceMap
+   self.goModDir2Path = {}
    self.path2modProjInfo = {}
    self.latestModProjInfo = nil
+   
+   for mod, dst in pairs( replaceMap ) do
+      self.goModDir2Path[dst] = mod
+   end
+   
+   for mod, ver in pairs( moduleMap ) do
+      for __index, path in ipairs( self:getGoModPath( ver, mod ) ) do
+         self.goModDir2Path[path] = mod
+      end
+      
+   end
+   
 end
 function ModInfo:getLatestProjRoot(  )
 
@@ -312,15 +360,33 @@ function ModInfo:getProjRootPath( mod, path )
    
    return path, convMod
 end
-function ModInfo:convLocalModulePath( mod, suffix )
+function ModInfo:convLocalModulePath( mod, suffix, baseDir )
    local __func__ = '@lune.@base.@GoMod.ModInfo.convLocalModulePath'
 
    if not mod:find( "^go/" ) then
-      return _lune.newAlge( GoModResult.NotGo)
+      if baseDir ~= nil then
+         local goModDir = nil
+         goModDir = self.goModDir2Path[baseDir]
+         if goModDir ~= nil then
+            mod = string.format( "go/%s.%s", goModDir:gsub( "%.", ":" ):gsub( "/", "." ), mod)
+         end
+         
+         if not goModDir then
+            Log.log( Log.Level.Log, __func__, 178, function (  )
+            
+               return string.format( "not found baseDir -- %s", baseDir)
+            end )
+            
+         end
+         
+      else
+         return _lune.newAlge( GoModResult.NotGo)
+      end
+      
    end
    
-   local workMod = self:convPath( mod, suffix )
    
+   local workMod = self:convPath( mod, suffix )
    do
       local _exp = self.path2modProjInfo[workMod]
       if _exp ~= nil then
@@ -336,13 +402,13 @@ function ModInfo:convLocalModulePath( mod, suffix )
    for __index, path in ipairs( pathList ) do
       if Depend.existFile( path ) then
          local projRoot, convMod = self:getProjRootPath( mod, path )
-         local projInfo = ModProjInfo.new(path, projRoot, convMod)
+         local projInfo = ModProjInfo.new(path, projRoot, convMod, mod)
          self.path2modProjInfo[workMod] = projInfo
          self.latestModProjInfo = projInfo
          return _lune.newAlge( GoModResult.Found, {projInfo})
       else
        
-         Log.log( Log.Level.Log, __func__, 153, function (  )
+         Log.log( Log.Level.Log, __func__, 206, function (  )
          
             return string.format( "not found %s", path)
          end )
@@ -353,18 +419,18 @@ function ModInfo:convLocalModulePath( mod, suffix )
    
    return _lune.newAlge( GoModResult.NotFound)
 end
-function ModInfo:getLuaModulePath( mod )
+function ModInfo:getLuaModulePath( mod, baseDir )
 
    local info
    
    do
-      local _matchExp = self:convLocalModulePath( mod, ".lns" )
+      local _matchExp = self:convLocalModulePath( mod, ".lns", baseDir )
       if _matchExp[1] == GoModResult.NotGo[1] then
       
-         return mod
+         return mod, nil, mod
       elseif _matchExp[1] == GoModResult.NotFound[1] then
       
-         return mod
+         return mod, nil, mod
       elseif _matchExp[1] == GoModResult.Found[1] then
          local workInfo = _matchExp[2][1]
       
@@ -373,7 +439,7 @@ function ModInfo:getLuaModulePath( mod )
    end
    
    
-   return info:get_mod()
+   return info:get_mod(), info:get_projRoot(), info:get_fullMod()
 end
 function ModInfo.setmeta( obj )
   setmetatable( obj, { __index = ModInfo  } )

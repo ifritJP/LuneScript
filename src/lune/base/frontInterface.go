@@ -18,8 +18,8 @@ Val1 *FrontInterface_ModuleInfo
 func (self *FrontInterface_MetaOrModule__Module) GetTxt() string {
 return "MetaOrModule.Module"
 }
-// for 285
-func frontInterface_convExp838(arg1 []LnsAny) LnsAny {
+// for 291
+func frontInterface_convExp873(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 108: decl @lune.@base.@frontInterface.getRootDependModId
@@ -27,35 +27,35 @@ func FrontInterface_getRootDependModId(_env *LnsEnv) LnsInt {
     return -1
 }
 
-// 317: decl @lune.@base.@frontInterface.setFront
+// 326: decl @lune.@base.@frontInterface.setFront
 func FrontInterface_setFront(_env *LnsEnv, newFront FrontInterface_frontInterface) {
     FrontInterface___luneScript = newFront
     
 }
 
-// 321: decl @lune.@base.@frontInterface.loadModule
+// 330: decl @lune.@base.@frontInterface.loadModule
 func FrontInterface_loadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     return FrontInterface___luneScript.LoadModule(_env, mod)
 }
 
-// 325: decl @lune.@base.@frontInterface.loadFromLnsTxt
-func FrontInterface_loadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,name string,txt string) LnsAny {
-    return FrontInterface___luneScript.LoadFromLnsTxt(_env, importModuleInfo, name, txt)
+// 334: decl @lune.@base.@frontInterface.loadFromLnsTxt
+func FrontInterface_loadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,baseDir LnsAny,name string,txt string) LnsAny {
+    return FrontInterface___luneScript.LoadFromLnsTxt(_env, importModuleInfo, baseDir, name, txt)
 }
 
-// 331: decl @lune.@base.@frontInterface.loadMeta
-func FrontInterface_loadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string) LnsAny {
-    return FrontInterface___luneScript.LoadMeta(_env, importModuleInfo, mod)
+// 341: decl @lune.@base.@frontInterface.loadMeta
+func FrontInterface_loadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string,orgMod string,baseDir LnsAny) LnsAny {
+    return FrontInterface___luneScript.LoadMeta(_env, importModuleInfo, mod, orgMod, baseDir)
 }
 
-// 335: decl @lune.@base.@frontInterface.searchModule
-func FrontInterface_searchModule(_env *LnsEnv, mod string) LnsAny {
-    return FrontInterface___luneScript.SearchModule(_env, mod)
+// 347: decl @lune.@base.@frontInterface.searchModule
+func FrontInterface_searchModule(_env *LnsEnv, mod string,baseDir LnsAny,addSearchPath LnsAny) LnsAny {
+    return FrontInterface___luneScript.SearchModule(_env, mod, baseDir, addSearchPath)
 }
 
-// 339: decl @lune.@base.@frontInterface.getLuaModulePath
-func FrontInterface_getLuaModulePath(_env *LnsEnv, mod string) string {
-    return FrontInterface___luneScript.GetLuaModulePath(_env, mod)
+// 351: decl @lune.@base.@frontInterface.getLuaModulePath
+func FrontInterface_getLuaModulePath(_env *LnsEnv, mod string,baseDir LnsAny)(string, LnsAny, string) {
+    return FrontInterface___luneScript.GetLuaModulePath(_env, mod, baseDir)
 }
 
 // declaration Class -- ModuleId
@@ -475,6 +475,7 @@ type FrontInterface_ImportModuleInfoMtd interface {
     Clone(_env *LnsEnv) *FrontInterface_ImportModuleInfo
     GetFull(_env *LnsEnv) string
     Len(_env *LnsEnv) LnsInt
+    List(_env *LnsEnv) *LnsList
     Remove(_env *LnsEnv)
 }
 type FrontInterface_ImportModuleInfo struct {
@@ -551,14 +552,19 @@ func (self *FrontInterface_ImportModuleInfo) Len(_env *LnsEnv) LnsInt {
     return self.orderedSet.FP.Get_list(_env).Len()
 }
 
+// 237: decl @lune.@base.@frontInterface.ImportModuleInfo.list
+func (self *FrontInterface_ImportModuleInfo) List(_env *LnsEnv) *LnsList {
+    return self.orderedSet.FP.Get_list(_env)
+}
+
 
 type FrontInterface_frontInterface interface {
         Error(_env *LnsEnv, arg1 string)
-        GetLuaModulePath(_env *LnsEnv, arg1 string) string
-        LoadFromLnsTxt(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string) LnsAny
-        LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string) LnsAny
+        GetLuaModulePath(_env *LnsEnv, arg1 string, arg2 LnsAny)(string, LnsAny, string)
+        LoadFromLnsTxt(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string) LnsAny
+        LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string, arg4 LnsAny) LnsAny
         LoadModule(_env *LnsEnv, arg1 string)(LnsAny, *FrontInterface_ModuleMeta)
-        SearchModule(_env *LnsEnv, arg1 string) LnsAny
+        SearchModule(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 LnsAny) LnsAny
 }
 func Lns_cast2FrontInterface_frontInterface( obj LnsAny ) LnsAny {
     if _, ok := obj.(FrontInterface_frontInterface); ok { 
@@ -570,11 +576,11 @@ func Lns_cast2FrontInterface_frontInterface( obj LnsAny ) LnsAny {
 // declaration Class -- dummyFront
 type frontInterface_dummyFrontMtd interface {
     Error(_env *LnsEnv, arg1 string)
-    GetLuaModulePath(_env *LnsEnv, arg1 string) string
-    LoadFromLnsTxt(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string) LnsAny
-    LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string) LnsAny
+    GetLuaModulePath(_env *LnsEnv, arg1 string, arg2 LnsAny)(string, LnsAny, string)
+    LoadFromLnsTxt(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string) LnsAny
+    LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string, arg4 LnsAny) LnsAny
     LoadModule(_env *LnsEnv, arg1 string)(LnsAny, *FrontInterface_ModuleMeta)
-    SearchModule(_env *LnsEnv, arg1 string) LnsAny
+    SearchModule(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 LnsAny) LnsAny
 }
 type frontInterface_dummyFront struct {
     FP frontInterface_dummyFrontMtd
@@ -607,14 +613,14 @@ func NewfrontInterface_dummyFront(_env *LnsEnv) *frontInterface_dummyFront {
 }
 func (self *frontInterface_dummyFront) InitfrontInterface_dummyFront(_env *LnsEnv) {
 }
-// 283: decl @lune.@base.@frontInterface.dummyFront.loadModule
+// 289: decl @lune.@base.@frontInterface.dummyFront.loadModule
 func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     var loaded LnsAny
-    loaded = frontInterface_convExp838(Lns_2DDD(_env.CommonLuaVM.Load("return {}", nil)))
+    loaded = frontInterface_convExp873(Lns_2DDD(_env.CommonLuaVM.Load("return {}", nil)))
     var emptyTable LnsAny
     if loaded != nil{
-        loaded_204 := loaded.(*Lns_luaValue)
-        emptyTable = Lns_unwrap( Lns_car(_env.CommonLuaVM.RunLoadedfunc(loaded_204,Lns_2DDD([]LnsAny{}))[0]))
+        loaded_214 := loaded.(*Lns_luaValue)
+        emptyTable = Lns_unwrap( Lns_car(_env.CommonLuaVM.RunLoadedfunc(loaded_214,Lns_2DDD([]LnsAny{}))[0]))
         
     } else {
         panic("load error")
@@ -624,35 +630,35 @@ func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsA
     return Lns_require(mod), meta
 }
 
-// 296: decl @lune.@base.@frontInterface.dummyFront.loadMeta
-func (self *frontInterface_dummyFront) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string) LnsAny {
+// 302: decl @lune.@base.@frontInterface.dummyFront.loadMeta
+func (self *frontInterface_dummyFront) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string,orgMod string,baseDir LnsAny) LnsAny {
     panic("not implements")
 // insert a dummy
     return nil
 }
 
-// 299: decl @lune.@base.@frontInterface.dummyFront.loadFromLnsTxt
-func (self *frontInterface_dummyFront) LoadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,name string,txt string) LnsAny {
+// 307: decl @lune.@base.@frontInterface.dummyFront.loadFromLnsTxt
+func (self *frontInterface_dummyFront) LoadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,baseDir LnsAny,name string,txt string) LnsAny {
     panic("not implements")
 // insert a dummy
     return nil
 }
 
-// 304: decl @lune.@base.@frontInterface.dummyFront.getLuaModulePath
-func (self *frontInterface_dummyFront) GetLuaModulePath(_env *LnsEnv, mod string) string {
+// 313: decl @lune.@base.@frontInterface.dummyFront.getLuaModulePath
+func (self *frontInterface_dummyFront) GetLuaModulePath(_env *LnsEnv, mod string,baseDir LnsAny)(string, LnsAny, string) {
     panic("not implements")
 // insert a dummy
-    return ""
+    return "",nil,""
 }
 
-// 307: decl @lune.@base.@frontInterface.dummyFront.searchModule
-func (self *frontInterface_dummyFront) SearchModule(_env *LnsEnv, mod string) LnsAny {
+// 316: decl @lune.@base.@frontInterface.dummyFront.searchModule
+func (self *frontInterface_dummyFront) SearchModule(_env *LnsEnv, mod string,baseDir LnsAny,addSearchPath LnsAny) LnsAny {
     panic("not implements")
 // insert a dummy
     return nil
 }
 
-// 310: decl @lune.@base.@frontInterface.dummyFront.error
+// 319: decl @lune.@base.@frontInterface.dummyFront.error
 func (self *frontInterface_dummyFront) Error(_env *LnsEnv, message string) {
     panic("not implements")
 }

@@ -510,6 +510,10 @@ function ImportModuleInfo:len(  )
 
    return #self.orderedSet:get_list()
 end
+function ImportModuleInfo:list(  )
+
+   return self.orderedSet:get_list()
+end
 function ImportModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ImportModuleInfo  } )
 end
@@ -549,19 +553,19 @@ function dummyFront:loadModule( mod )
    local meta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.Meta, {emptyTable}))
    return require( mod ), meta
 end
-function dummyFront:loadMeta( importModuleInfo, mod )
+function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir )
 
    error( "not implements" )
 end
-function dummyFront:loadFromLnsTxt( importModuleInfo, name, txt )
+function dummyFront:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
 
    error( "not implements" )
 end
-function dummyFront:getLuaModulePath( mod )
+function dummyFront:getLuaModulePath( mod, baseDir )
 
    error( "not implements" )
 end
-function dummyFront:searchModule( mod )
+function dummyFront:searchModule( mod, baseDir, addSearchPath )
 
    error( "not implements" )
 end
@@ -601,27 +605,27 @@ local function loadModule( mod )
 end
 _moduleObj.loadModule = loadModule
 
-local function loadFromLnsTxt( importModuleInfo, name, txt )
+local function loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
 
-   return __luneScript:loadFromLnsTxt( importModuleInfo, name, txt )
+   return __luneScript:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
 end
 _moduleObj.loadFromLnsTxt = loadFromLnsTxt
 
-local function loadMeta( importModuleInfo, mod )
+local function loadMeta( importModuleInfo, mod, orgMod, baseDir )
 
-   return __luneScript:loadMeta( importModuleInfo, mod )
+   return __luneScript:loadMeta( importModuleInfo, mod, orgMod, baseDir )
 end
 _moduleObj.loadMeta = loadMeta
 
-local function searchModule( mod )
+local function searchModule( mod, baseDir, addSearchPath )
 
-   return __luneScript:searchModule( mod )
+   return __luneScript:searchModule( mod, baseDir, addSearchPath )
 end
 _moduleObj.searchModule = searchModule
 
-local function getLuaModulePath( mod )
+local function getLuaModulePath( mod, baseDir )
 
-   return __luneScript:getLuaModulePath( mod )
+   return __luneScript:getLuaModulePath( mod, baseDir )
 end
 _moduleObj.getLuaModulePath = getLuaModulePath
 

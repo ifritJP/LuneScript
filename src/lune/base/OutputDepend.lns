@@ -109,14 +109,14 @@ __test {
       }
       pub fn loadFromLnsTxt(
          importModuleInfo:frontInterface.ImportModuleInfo,
-         name:str, txt:str ) mut : Luaval<&stem>
+         baseDir:str!, name:str, txt:str ) mut : Luaval<&stem>
       {
          Util.err( "not implements" );
       }
-      pub fn getLuaModulePath( mod:str ) mut : str {
-         return mod;
+      pub fn getLuaModulePath( mod:str, baseDir:str! ) mut : str, str!, str {
+         return mod, nil, mod;
       }
-      pub fn searchModule( mod:str ) mut : str! {
+      pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! ) mut : str! {
          Util.err( "not implements" );
       }
       pub fn error( message:str ) {
@@ -124,9 +124,13 @@ __test {
       }
 
       pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo,
-                       mod:str ) mut: &frontInterface.ModuleMeta!
+                       mod:str, orgMod:str, baseDir:str! )
+         mut: &frontInterface.ModuleMeta!
       {
-         let metaPath = mod.gsub( "%.", "/" ) .. ".meta";
+         let mut metaPath = mod.gsub( "%.", "/" ) .. ".meta";
+         when! baseDir {
+            metaPath = Util.pathJoin( baseDir, metaPath );
+         }
          print( metaPath );
          let loaded, mess = loadfile( metaPath );
          when! loaded {

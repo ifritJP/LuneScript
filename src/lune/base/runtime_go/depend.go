@@ -136,7 +136,7 @@ func depend_existFile(path string) bool {
 
 //var dependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny, string) = nil
 
-func dependLuaOnLns_runLuaOnLns(luaCode string) (LnsAny, string) {
+func dependLuaOnLns_runLuaOnLns(luaCode string, baseDir LnsAny) (LnsAny, string) {
 
 	setBindListStr := ""
 	for key, _ := range lnsSrcMap {
@@ -170,17 +170,17 @@ function WrapFront:loadModule( mod )
    self:setupFront()
    return __luneScript:loadModule( mod )
 end
-function WrapFront:loadMeta( importModuleInfo, mod )
+function WrapFront:loadMeta( importModuleInfo, mod, orgMod, baseDir )
    self:setupFront()
-   return __luneScript:loadMeta( importModuleInfo, mod )
+   return __luneScript:loadMeta( importModuleInfo, mod, orgMod, baseDir )
 end
-function WrapFront:loadFromLnsTxt( importModuleInfo, name, txt )
+function WrapFront:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
    self:setupFront()
-   return __luneScript:loadFromLnsTxt( importModuleInfo, name, txt )
+   return __luneScript:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
 end
-function WrapFront:searchModule( mod )
+function WrapFront:searchModule( mod, baseDir )
    self:setupFront()
-   return __luneScript:searchModule( mod )
+   return __luneScript:searchModule( mod, baseDir )
 end
 function WrapFront:error( message )
    self:setupFront()

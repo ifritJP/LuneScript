@@ -615,6 +615,8 @@ alias で置き換えている元の Type → alias の型
 
    let mut stdinFile:&Types.StdinFile!;
 
+   let mut baseDir:str!;
+
    static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
       &Types.TransCtrlInfo, Ast.ProcessInfo
    {
@@ -633,6 +635,7 @@ alias で置き換えている元の Type → alias の型
    {
       super( TransUnit.getSuperParam( ctrl_info )** );
 
+      self.baseDir = nil;
       self.stdinFile = nil;
       self.builtinFunc = builtinFunc;
       self.analyzingStaticMethodArgsScope = nil;
@@ -1660,6 +1663,7 @@ fn TransUnit.analyzeImportFor(
          self.macroCtrl,
          self.typeNameCtrl,
          self.importedAliasMap,
+         self.baseDir,
          self.validMutControl );
       self.importCtrl = importObj;
    };
@@ -1865,7 +1869,7 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Subfil
    else {
       if mode.txt == "use" {
          usePath = moduleName;
-         if frontInterface.searchModule( moduleName ) {
+         if frontInterface.searchModule( moduleName, self.baseDir, nil ) {
             self.subfileList.insert( moduleName );
          }
          else {
@@ -1874,7 +1878,9 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Subfil
          }
       }
       elseif mode.txt == "owner" {
-         if frontInterface.getLuaModulePath( self.moduleName ) ~= moduleName {
+         if frontInterface.getLuaModulePath(
+            self.moduleName, self.baseDir ) ~= moduleName
+         {
             self.addErrMess(
                token.pos,
                "illegal owner module -- %s, %s"
