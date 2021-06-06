@@ -156,7 +156,7 @@ pub class Option {
    local let mut enableRunner:bool {pub};
    local let mut validPostBuild:bool {pub};
 
-   local let mut stdinFile:Types.StdinFile! {pub};
+   local let mut stdinFile:&Types.StdinFile! {pub,pub};
 
    pub fn __init() {
       self.stdinFile = nil;
@@ -380,6 +380,15 @@ usage:
                }
                case "--defaultAsync" {
                   option.transCtrlInfo.defaultAsync = true;
+               }
+               case "--limitThread" {
+                  let! nextArg = getNextOp() {
+                     printUsage( 1 );
+                  };
+                  let! num = tonumber( nextArg## ) {
+                     printUsage( 1 );
+                  };
+                  Depend.setRuntimeThreadLimit( num@@int );
                }
                case "--nodebug" {
                   Util.setDebugFlag( false );

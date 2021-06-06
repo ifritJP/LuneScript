@@ -3,13 +3,39 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Runner bool
 var Runner__mod__ string
+// decl enum -- RunModeWhenFull 
+type Runner_RunModeWhenFull = LnsInt
+const Runner_RunModeWhenFull__Queue = 1
+const Runner_RunModeWhenFull__Skip = 2
+const Runner_RunModeWhenFull__Sync = 0
+var Runner_RunModeWhenFullList_ = NewLnsList( []LnsAny {
+  Runner_RunModeWhenFull__Sync,
+  Runner_RunModeWhenFull__Queue,
+  Runner_RunModeWhenFull__Skip,
+})
+func Runner_RunModeWhenFull_get__allList(_env *LnsEnv) *LnsList{
+    return Runner_RunModeWhenFullList_
+}
+var Runner_RunModeWhenFullMap_ = map[LnsInt]string {
+  Runner_RunModeWhenFull__Queue: "RunModeWhenFull.Queue",
+  Runner_RunModeWhenFull__Skip: "RunModeWhenFull.Skip",
+  Runner_RunModeWhenFull__Sync: "RunModeWhenFull.Sync",
+}
+func Runner_RunModeWhenFull__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
+    if _, ok := Runner_RunModeWhenFullMap_[arg1]; ok { return arg1 }
+    return nil
+}
+
+func Runner_RunModeWhenFull_getTxt(arg1 LnsInt) string {
+    return Runner_RunModeWhenFullMap_[arg1];
+}
 // declaration Class -- Runner
 type Runner_RunnerMtd interface {
     GetLnsSyncFlag() *Lns_syncFlag
     Join(_env *LnsEnv)
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
-    Start(_env *LnsEnv)
+    Start(_env *LnsEnv, arg1 LnsInt)
 }
 type Runner_Runner struct {
     _syncFlag *Lns_syncFlag
@@ -36,23 +62,23 @@ func Runner_RunnerDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Runner_Runner) ToRunner_Runner() *Runner_Runner {
     return obj
 }
-// 29: DeclConstr
+// 35: DeclConstr
 func (self *Runner_Runner) InitRunner_Runner(_env *LnsEnv) {
     self._syncFlag = &Lns_syncFlag{}
 }
 
 
-// 34: decl @lune.@base.@Runner.Runner.run
+// 40: decl @lune.@base.@Runner.Runner.run
 func (self *Runner_Runner) Run(_env *LnsEnv) {
     self.FP.RunMain(_env)
 }
 
-// 39: decl @lune.@base.@Runner.Runner.start
-func (self *Runner_Runner) Start(_env *LnsEnv) {
-    LnsRun2(_env, self.FP, 0)
+// 45: decl @lune.@base.@Runner.Runner.start
+func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt) {
+    LnsRun(_env, self.FP, LnsInt(mode))
 }
 
-// 42: decl @lune.@base.@Runner.Runner.join
+// 48: decl @lune.@base.@Runner.Runner.join
 func (self *Runner_Runner) Join(_env *LnsEnv) {
     LnsJoin(_env, self.FP)
 }

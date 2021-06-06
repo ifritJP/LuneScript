@@ -47,34 +47,6 @@ func (self *Lns__pipe) Get(_env *LnsEnv) LnsAny {
 	return self.get()
 }
 
-type LnsRunner interface {
-	Run(*LnsEnv)
-	GetLnsSyncFlag() *Lns_syncFlag
-}
-
-func lnsRunMain(self LnsRunner) {
-	env := createEnv(true)
-
-	self.Run(env)
-	self.GetLnsSyncFlag().wg.Done()
-
-	env.LuaVM.closeVM()
-}
-
-func LnsRun(self LnsRunner) {
-	self.GetLnsSyncFlag().wg.Add(1)
-	go lnsRunMain(self)
-}
-
-func LnsRun2(_env *LnsEnv, runner LnsRunner, mode int) bool {
-	LnsRun(runner)
-	return true
-}
-
-func LnsJoin(_env *LnsEnv, runner LnsRunner) {
-	runner.GetLnsSyncFlag().Wait(_env)
-}
-
 func (self *Lns_syncFlag) Wait(_env *LnsEnv) {
 	if !_env.async {
 		// __asyncLock の処理が動くように sync_LnsEnvMutex を unlock する。
@@ -84,4 +56,32 @@ func (self *Lns_syncFlag) Wait(_env *LnsEnv) {
 		defer sync_LnsEnvMutex.Lock()
 	}
 	self.wg.Wait()
+}
+
+type LnsRunner interface {
+	Run(*LnsEnv)
+	GetLnsSyncFlag() *Lns_syncFlag
+}
+
+func lnsRunMain(self LnsRunner, threadMgrInfo *Lns_ThreadMgrInfo) {
+	env := createEnv(true)
+
+	self.Run(env)
+	self.GetLnsSyncFlag().wg.Done()
+
+	env.LuaVM.closeVM()
+
+	threadMgrInfo.endToRun(self)
+}
+
+func LnsRun(_env *LnsEnv, runner LnsRunner, mode int) bool {
+	return lns_threadMgrInfo.run(runner, mode, _env)
+}
+
+func LnsExecRunner(_env *LnsEnv, runner LnsRunner) {
+	runner.Run(_env)
+}
+
+func LnsJoin(_env *LnsEnv, runner LnsRunner) {
+	runner.GetLnsSyncFlag().Wait(_env)
 }

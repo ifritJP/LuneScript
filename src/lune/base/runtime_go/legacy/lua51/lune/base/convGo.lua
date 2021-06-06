@@ -6391,7 +6391,7 @@ function convFilter:processExpRef( node, opt )
                      if _switchExp == builtinFunc.lns_print then
                         self:write( "Lns_print" )
                      elseif _switchExp == builtinFunc.lns___run then
-                        self:write( "LnsRun2" )
+                        self:write( "LnsRun" )
                      elseif _switchExp == builtinFunc.lns___join or _switchExp == builtinFunc.lns___join2 then
                         self:write( "LnsJoin" )
                      else 

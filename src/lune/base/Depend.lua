@@ -368,4 +368,9 @@ local function setRuntimeLog( valid )
 end
 _moduleObj.setRuntimeLog = setRuntimeLog
 
+local function setRuntimeThreadLimit( limit )
+
+end
+_moduleObj.setRuntimeThreadLimit = setRuntimeThreadLimit
+
 return _moduleObj

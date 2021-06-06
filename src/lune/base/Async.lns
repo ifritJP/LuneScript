@@ -73,9 +73,11 @@ pub abstract class Pipe<T> {
 
    pub fn start() mut {
       self.started = true;
-      //_lune_control run_async_pipe;
-      //__run( self, 0 );
    }
+   pub fn stop() mut {
+      self.started = false;
+   }
+
 }
 
 // /**

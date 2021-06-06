@@ -203,3 +203,6 @@ pub fn getBindLns( mod:str ) : str! {
 
 pub fn setRuntimeLog( valid:bool ) {
 }
+
+pub fn setRuntimeThreadLimit( limit:int ) {
+}

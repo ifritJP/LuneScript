@@ -315,7 +315,11 @@ class Runner extend (__Runner)
 
       if! self.parser {
          _exp.start();
-         __run( self, 1 ); // スレッドフルの場合、同期実行せずに待ちに入れる
+         if not __run( self, 2 ) {
+            // スレッドフルの場合、
+            // 同期実行せずに getNext() 毎に parser する
+            _exp.stop();
+         }; 
       }
    }
 

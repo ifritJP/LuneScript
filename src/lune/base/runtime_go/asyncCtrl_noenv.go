@@ -40,18 +40,23 @@ func (self *Lns__pipe) Get() LnsAny {
 
 type LnsRunner interface {
 	Run()
-	GetLnsSyncFlag(_env *LnsEnv) *Lns_syncFlag
+	GetLnsSyncFlag() *Lns_syncFlag
 }
 
-func LnsRun(runner LnsRunner) {
+func lnsRunMain(self LnsRunner, self *Lns_ThreadMgrInfo) {
+	self.Run()
+	self.GetLnsSyncFlag().wg.Done()
+
+	threadMgrInfo.endToRun(self)
+}
+
+func LnsExecRunner(_env *LnsEnv, runner LnsRunner) {
+	runner.Run()
+}
+func LnsRun(runner LnsRunner, mode int) bool {
 	runner.GetLnsSyncFlag().wg.Add(1)
 	runner.Run()
 	runner.GetLnsSyncFlag().wg.Done()
-}
-
-func LnsRun2(runner LnsRunner, mode int) bool {
-	LnsRun(runner)
-	return true
 }
 
 func LnsJoin(runner LnsRunner) {

@@ -524,7 +524,10 @@ function Runner:__init(parserSrc, stdinFile, overridePos)
       local _exp = self.parser
       if _exp ~= nil then
          _exp:start(  )
-         _lune._run(self, 1 )
+         if not _lune._run(self, 2 ) then
+            _exp:stop(  )
+         end
+         
          
       end
    end
@@ -782,7 +785,7 @@ function Parser:parse(  )
       local comment = ""
       while true do
          do
-            local _264, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
+            local _265, termEndIndex = string.find( rawLine, termStr, searchIndex, true )
             if termEndIndex ~= nil then
                comment = comment .. rawLine:sub( searchIndex, termEndIndex )
                return comment, termEndIndex + 1

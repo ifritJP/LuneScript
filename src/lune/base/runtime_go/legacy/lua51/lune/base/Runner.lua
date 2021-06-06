@@ -65,6 +65,39 @@ if not _lune4 then
 end
 
 
+local RunModeWhenFull = {}
+_moduleObj.RunModeWhenFull = RunModeWhenFull
+RunModeWhenFull._val2NameMap = {}
+function RunModeWhenFull:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "RunModeWhenFull.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function RunModeWhenFull._from( val )
+   if RunModeWhenFull._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+RunModeWhenFull.__allList = {}
+function RunModeWhenFull.get__allList()
+   return RunModeWhenFull.__allList
+end
+
+RunModeWhenFull.Sync = 0
+RunModeWhenFull._val2NameMap[0] = 'Sync'
+RunModeWhenFull.__allList[1] = RunModeWhenFull.Sync
+RunModeWhenFull.Queue = 1
+RunModeWhenFull._val2NameMap[1] = 'Queue'
+RunModeWhenFull.__allList[2] = RunModeWhenFull.Queue
+RunModeWhenFull.Skip = 2
+RunModeWhenFull._val2NameMap[2] = 'Skip'
+RunModeWhenFull.__allList[3] = RunModeWhenFull.Skip
+
+
 local Runner = {}
 setmetatable( Runner, { ifList = {__Runner,} } )
 _moduleObj.Runner = Runner
@@ -80,9 +113,9 @@ function Runner:run(  )
 
    self:runMain(  )
 end
-function Runner:start(  )
+function Runner:start( mode )
 
-   _lune._run(self, 0 )
+   _lune._run(self, mode )
 end
 function Runner:join(  )
 

@@ -5981,7 +5981,7 @@ func (self *convGo_convFilter) ProcessExpRef(_env *LnsEnv, node *Nodes_ExpRefNod
                     if _switch29645 := node.FP.Get_expType(_env); _switch29645 == builtinFunc.Lns_print {
                         self.FP.Write(_env, "Lns_print")
                     } else if _switch29645 == builtinFunc.Lns___run {
-                        self.FP.Write(_env, "LnsRun2")
+                        self.FP.Write(_env, "LnsRun")
                     } else if _switch29645 == builtinFunc.Lns___join || _switch29645 == builtinFunc.Lns___join2 {
                         self.FP.Write(_env, "LnsJoin")
                     } else {

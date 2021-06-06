@@ -48,6 +48,7 @@ type Async_PipeMtd interface {
     GetNext(_env *LnsEnv) LnsAny
     Run(_env *LnsEnv)
     Start(_env *LnsEnv)
+    Stop(_env *LnsEnv)
 }
 type Async_Pipe struct {
     pipe LnsAny
@@ -138,6 +139,12 @@ func (self *Async_Pipe) Run(_env *LnsEnv) {
 // 74: decl @lune.@base.@Async.Pipe.start
 func (self *Async_Pipe) Start(_env *LnsEnv) {
     self.started = true
+    
+}
+
+// 77: decl @lune.@base.@Async.Pipe.stop
+func (self *Async_Pipe) Stop(_env *LnsEnv) {
+    self.started = false
     
 }
 

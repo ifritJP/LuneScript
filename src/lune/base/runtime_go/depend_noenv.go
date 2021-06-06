@@ -70,3 +70,7 @@ func Depend_runMain(mainFunc LnsAny, argList *LnsList) LnsInt {
 func Depend_setRuntimeLog(valid bool) {
 	depend_setRuntimeLog(valid)
 }
+
+func Depend_setRuntimeThreadLimit(limit int) {
+	Lns_setThreadLimit(limit)
+}

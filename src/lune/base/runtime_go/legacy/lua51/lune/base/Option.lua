@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 9830
+   return 9877
 end
 
 
@@ -405,6 +405,9 @@ end
 function Option:get_stdinFile()
    return self.stdinFile
 end
+function Option:set_stdinFile( stdinFile )
+   self.stdinFile = stdinFile
+end
 
 
 local function outputLuneMod( path )
@@ -629,6 +632,22 @@ end
                   option.transCtrlInfo.validAsyncCtrl = true
                elseif _switchExp == "--defaultAsync" then
                   option.transCtrlInfo.defaultAsync = true
+               elseif _switchExp == "--limitThread" then
+                  local nextArg = getNextOp(  )
+                  if  nil == nextArg then
+                     local _nextArg = nextArg
+                  
+                     printUsage( 1 )
+                  end
+                  
+                  local num = tonumber( nextArg )
+                  if  nil == num then
+                     local _num = num
+                  
+                     printUsage( 1 )
+                  end
+                  
+                  Depend.setRuntimeThreadLimit( math.floor(num) )
                elseif _switchExp == "--nodebug" then
                   Util.setDebugFlag( false )
                elseif _switchExp == "--debug" then
@@ -930,7 +949,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 658, function (  )
+   Log.log( Log.Level.Log, __func__, 667, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

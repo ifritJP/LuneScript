@@ -97,6 +97,7 @@ func exitRuntime(code LnsInt) {
 		fmt.Printf("----------\n")
 		fmt.Printf("vmFreeMap = %d\n", len(lns_freeVMMap))
 		fmt.Printf("totalReqVM = %d\n", lns_countOfRequestToCreateVM)
+		lns_threadMgrInfo.dump(os.Stdout)
 	}
 	os.Exit(code)
 }

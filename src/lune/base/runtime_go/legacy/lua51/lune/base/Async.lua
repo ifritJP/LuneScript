@@ -140,7 +140,10 @@ end
 function Pipe:start(  )
 
    self.started = true
-   
+end
+function Pipe:stop(  )
+
+   self.started = false
 end
 function Pipe.setmeta( obj )
   setmetatable( obj, { __index = Pipe  } )

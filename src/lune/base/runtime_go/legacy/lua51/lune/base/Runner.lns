@@ -24,6 +24,12 @@ SOFTWARE.
 
 _lune_control default_async_all;
 
+pub enum RunModeWhenFull {
+   Sync,
+   Queue,
+   Skip,
+}
+
 pub abstract class Runner extend (__Runner) {
    
    pub fn __init() {
@@ -36,8 +42,8 @@ pub abstract class Runner extend (__Runner) {
    }
 
    
-   pub fn start() mut {
-      __run( self, 0 );
+   pub fn start( mode:RunModeWhenFull ) mut {
+      __run( self, mode );
    }
    pub fn join() {
       __join( self );

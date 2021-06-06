@@ -211,7 +211,7 @@ class AstCreater extend Runner.Runner {
       };
 
 
-      self.start();
+      self.start( .Sync );
       //self.converter();
    }
 
@@ -1455,7 +1455,7 @@ class LuaConverter extend Runner.Runner {
             ast, path, outStream, oMetaStream, convMode, false, option );
          self.filterInfo.outputLua( unwrap ast.$node@@@Nodes.RootNode );
       };
-      self.start();
+      self.start( .Queue );
    }
 
    pub override fn runMain() __async mut {
@@ -1589,7 +1589,7 @@ class GoConverter extend Runner.Runner {
             option.testing, path, self.memStream, ast, goOpt );
          ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
       };
-      self.start();
+      self.start( .Queue );
    }
 
    pub override fn runMain() __async mut {
