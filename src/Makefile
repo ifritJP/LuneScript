@@ -1033,9 +1033,10 @@ endif
 	diff work/test4.result work/test5.result
 	diff work/1/start.dep work/3_2/start.dep
 	diff -u -r work/glue work/newglue
+ifeq ($(WITH_GO),y)
 	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
 		work/result-testGo.txt work/3/work/result-testGo.txt 
-
+endif
 
 
 define setup-lua51-test
