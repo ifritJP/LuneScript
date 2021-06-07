@@ -578,6 +578,9 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    pri let ctrl_info: &Types.TransCtrlInfo;
 
    pri let mut macroCtrl:Macro.MacroCtrl;
+   /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
+   pri let macroEval: &Nodes.MacroEval;
+   
    
    // pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
@@ -653,6 +656,7 @@ alias で置き換えている元の Type → alias の型
       self.advertisedTypeSet = (@);
       self.closureFunList = [];
       self.scopeAccess = .Normal;
+      self.macroEval = macroEval;
       self.macroCtrl = new Macro.MacroCtrl( macroEval );
       self.analyzingStateQueue = [];
       self.ctrl_info = ctrl_info;
@@ -1637,8 +1641,6 @@ fn TransUnit.analyzeImportFor(
    // スコープをルートに変更
    self.scope = self.topScope;
 
-   let mut importProcessInfo = self.processInfo.newUser();
-
    let macroMode;
    let nearCode:str!;
    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
@@ -1649,17 +1651,11 @@ fn TransUnit.analyzeImportFor(
       nearCode = nil;
    }
 
-   let mut simpleTransUnit = new TransUnitIF.SimpeTransUnit(
-      self.ctrl_info, importProcessInfo,
-      self.getLatestPos(), macroMode, nearCode );
-   
    let! mut importObj = self.importCtrl {
       importObj = new Import.Import(
          self.getLatestPos(),
-         simpleTransUnit,
          self.importModuleInfo,
          self.moduleType,
-         self.builtinFunc,
          self.macroCtrl,
          self.typeNameCtrl,
          self.importedAliasMap,
@@ -1667,10 +1663,26 @@ fn TransUnit.analyzeImportFor(
          self.validMutControl );
       self.importCtrl = importObj;
    };
-   let mut moduleLoader = importObj.processImport( modulePath );
+
+   let moduleLoaderParam = new Import.ModuleLoaderParam(
+      self.ctrl_info,
+      self.processInfo,
+      self.getLatestPos(),
+      macroMode,
+      nearCode,
+      self.validMutControl,
+      self.macroEval );
+   let mut moduleLoader = importObj.processImport(
+      modulePath, moduleLoaderParam );
+   
    let moduleInfo;
    __asyncLock {
-      moduleInfo = importObj.loadModuleInfo( importProcessInfo, moduleLoader );
+      let work, err = importObj.loadModuleInfo( moduleLoader );
+      when! work {
+         moduleInfo = work;
+      } else {
+         self.error( err );
+      }
    }
 
    foreach symbol in moduleInfo.$exportInfo.$globalSymbolList {
@@ -1690,12 +1702,20 @@ fn TransUnit.analyzeImportFor(
    self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName ) );
 
    let moduleSymbolKind = provideInfo.$symbolKind;
-   let moduleSymbolInfo, shadowing = self.scope.add(
+   let mut moduleSymbolInfo:&Ast.SymbolInfo!, shadowing = self.scope.add(
       self.processInfo, moduleSymbolKind, false, false, assignName, pos,
       moduleTypeInfo, .Local, true,
       provideInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut,
       true, lazyLoad ~= .Off );
 
+   when! shadowing {
+      let err = shadowing.$typeInfo ~= moduleTypeInfo;
+      self.errorShadowingOp( pos, shadowing, err );
+      if err {
+         self.error( "failed to import -- %s" (modulePath) );
+      }
+      moduleSymbolInfo = shadowing;
+   }
   
    when! moduleSymbolInfo {
       let info = new Nodes.ImportInfo( pos, modulePath, lazyLoad, assignName,
@@ -1703,10 +1723,6 @@ fn TransUnit.analyzeImportFor(
       return Nodes.ImportNode.create(
          self.nodeManager, pos,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );
-   }
-
-   when! shadowing {
-      self.errorShadowingOp( pos, shadowing, shadowing.$typeInfo ~= moduleTypeInfo );
    }
    self.error( "failed to import -- %s" (modulePath) );
 }

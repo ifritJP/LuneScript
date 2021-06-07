@@ -2040,7 +2040,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _781 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _776 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -4294,9 +4294,9 @@ local function createFilter( streamName, stream, metaStream, convMode, inMacro, 
 end
 _moduleObj.createFilter = createFilter
 
-local function runLuaOnLns( code )
+local function runLuaOnLns( code, baseDir )
 
-   local loadFunc, err = DependLuaOnLns.runLuaOnLns( code )
+   local loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir )
    if loadFunc ~= nil then
       local mod = loadFunc(  )
       if mod ~= nil then
@@ -4313,7 +4313,7 @@ _moduleObj.runLuaOnLns = runLuaOnLns
 local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
-function MacroEvalImp:evalFromMacroCode( code )
+function MacroEvalImp:evalFromMacroCode( code, baseDir )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
@@ -4323,14 +4323,14 @@ function MacroEvalImp:evalFromMacroCode( code )
    end )
    
    
-   local func, err = runLuaOnLns( code )
+   local func, err = runLuaOnLns( code, baseDir )
    if func ~= nil then
       return func
    end
    
    Util.err( err )
 end
-function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code )
+function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code, baseDir )
 
    local stream = Util.memStream.new()
    local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
@@ -4343,16 +4343,16 @@ function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code )
       
    end )
    
-   return self:evalFromMacroCode( stream:get_txt() )
+   return self:evalFromMacroCode( stream:get_txt(), baseDir )
 end
-function MacroEvalImp:eval( processInfo, node )
+function MacroEvalImp:eval( processInfo, node, baseDir )
 
    local stream = Util.memStream.new()
    local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:processDeclMacro( node, Opt.new(node) )
    
-   return self:evalFromMacroCode( stream:get_txt() )
+   return self:evalFromMacroCode( stream:get_txt(), baseDir )
 end
 function MacroEvalImp.setmeta( obj )
   setmetatable( obj, { __index = MacroEvalImp  } )

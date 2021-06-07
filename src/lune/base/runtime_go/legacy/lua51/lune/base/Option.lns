@@ -73,6 +73,7 @@ pub enum ModeKind {
    Inquire = "inq",
    MkMain = "mkmain",
    Shebang = "shebang",
+   BuildAst = "buildAst",
 }
 
 pub fn getRuntimeModule(): str {

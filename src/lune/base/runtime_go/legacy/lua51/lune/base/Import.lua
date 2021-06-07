@@ -281,6 +281,7 @@ local Macro = _lune.loadModule( 'lune.base.Macro' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local Runner = _lune.loadModule( 'lune.base.Runner' )
 
 local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
@@ -288,37 +289,6 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 
 local ModuleLoader = {}
-
-local Import = {}
-_moduleObj.Import = Import
-function Import.new( curPos, transUnitIF, importModuleInfo, moduleType, builtinFunc, macroCtrl, typeNameCtrl, importedAliasMap, validMutControl )
-   local obj = {}
-   Import.setmeta( obj )
-   if obj.__init then obj:__init( curPos, transUnitIF, importModuleInfo, moduleType, builtinFunc, macroCtrl, typeNameCtrl, importedAliasMap, validMutControl ); end
-   return obj
-end
-function Import:__init(curPos, transUnitIF, importModuleInfo, moduleType, builtinFunc, macroCtrl, typeNameCtrl, importedAliasMap, validMutControl) 
-   self.curPos = curPos
-   self.validMutControl = validMutControl
-   self.transUnitIF = transUnitIF
-   self.importModuleInfo = importModuleInfo
-   self.moduleType = moduleType
-   self.builtinFunc = builtinFunc
-   self.globalScope = transUnitIF:get_globalScope()
-   self.macroCtrl = macroCtrl
-   self.typeNameCtrl = typeNameCtrl
-   self.importedAliasMap = importedAliasMap
-   
-   self.importModule2ModuleInfo = {}
-   self.importModuleName2ModuleInfo = {}
-end
-function Import.setmeta( obj )
-  setmetatable( obj, { __index = Import  } )
-end
-function Import:get_importModule2ModuleInfo()
-   return self.importModule2ModuleInfo
-end
-
 
 local _TypeInfo = {}
 
@@ -606,9 +576,9 @@ function _TypeInfoAlias:createTypeInfo( param )
    param.typeId2TypeInfoMut[self.typeId] = newTypeInfo
    
    newTypeInfo:get_typeId():set_orgId( self.typeId )
-   local _168 = param:getTypeInfo( self.parentId )
-   if  nil == _168 then
-      local __168 = _168
+   local _133 = param:getTypeInfo( self.parentId )
+   if  nil == _133 then
+      local __133 = _133
    
       return nil, string.format( "%s: not found parentInfo %d %s", __func__, self.parentId, self.rawTxt)
    end
@@ -1120,7 +1090,7 @@ function _TypeInfoModule:createTypeInfo( param )
          workTypeInfo:get_typeId():set_orgId( self.typeId )
          parentScope:addClass( param.processInfo, self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 430, function (  )
+         Log.log( Log.Level.Info, __func__, 375, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), self.typeId, workTypeInfo:get_typeId().id, parentScope:get_scopeId())
          end )
@@ -1260,7 +1230,7 @@ function _TypeInfoNormal:createTypeInfo( param )
          do
             local _switchExp = self.kind
             if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-               Log.log( Log.Level.Debug, __func__, 540, function (  )
+               Log.log( Log.Level.Debug, __func__, 485, function (  )
                
                   return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
                end )
@@ -1289,7 +1259,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                
                param.typeId2TypeInfoMut[self.typeId] = workTypeInfo
             elseif _switchExp == Ast.TypeInfoKind.ExtModule then
-               Log.log( Log.Level.Debug, __func__, 577, function (  )
+               Log.log( Log.Level.Debug, __func__, 522, function (  )
                
                   return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
                end )
@@ -1706,34 +1676,240 @@ function DependModuleInfo:__init( id, metaTypeId2TypeInfoMap )
 end
 
 
-function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgModulePath, modulePath, nameList, depth )
-   local __func__ = '@lune.@base.@Import.Import.processImportFromFile'
+local ModuleLoaderParam = {}
+_moduleObj.ModuleLoaderParam = ModuleLoaderParam
+function ModuleLoaderParam.setmeta( obj )
+  setmetatable( obj, { __index = ModuleLoaderParam  } )
+end
+function ModuleLoaderParam.new( ctrl_info, processInfo, latestPos, macroMode, nearCode, validMutControl, macroEval )
+   local obj = {}
+   ModuleLoaderParam.setmeta( obj )
+   if obj.__init then
+      obj:__init( ctrl_info, processInfo, latestPos, macroMode, nearCode, validMutControl, macroEval )
+   end
+   return obj
+end
+function ModuleLoaderParam:__init( ctrl_info, processInfo, latestPos, macroMode, nearCode, validMutControl, macroEval )
+
+   self.ctrl_info = ctrl_info
+   self.processInfo = processInfo
+   self.latestPos = latestPos
+   self.macroMode = macroMode
+   self.nearCode = nearCode
+   self.validMutControl = validMutControl
+   self.macroEval = macroEval
+end
+function ModuleLoaderParam:get_ctrl_info()
+   return self.ctrl_info
+end
+function ModuleLoaderParam:get_processInfo()
+   return self.processInfo
+end
+function ModuleLoaderParam:get_latestPos()
+   return self.latestPos
+end
+function ModuleLoaderParam:get_macroMode()
+   return self.macroMode
+end
+function ModuleLoaderParam:get_nearCode()
+   return self.nearCode
+end
+function ModuleLoaderParam:get_validMutControl()
+   return self.validMutControl
+end
+function ModuleLoaderParam:get_macroEval()
+   return self.macroEval
+end
+
+
+
+setmetatable( ModuleLoader, { __index = Runner.Runner,ifList = {frontInterface.ModuleLoader,} } )
+_moduleObj.ModuleLoader = ModuleLoader
+function ModuleLoader:applyModuleInfo( moduleInfo )
+
+   if moduleInfo ~= nil then
+      do
+         local exportInfo = _lune.__Cast( moduleInfo:get_exportInfo(), 3, Nodes.ExportInfo )
+         if exportInfo ~= nil then
+            self.macroCtrl:importMacroInfo( exportInfo:get_typeId2DefMacroInfo() )
+         end
+      end
+      
+      for key, val in pairs( moduleInfo:get_importedAliasMap() ) do
+         self.importedAliasMap[key] = val
+      end
+      
+      
+   end
+   
+end
+function ModuleLoader:craeteModuleInfo( moduleMeta, importProcessInfo )
+
+   do
+      local _matchExp = moduleMeta:get_metaOrModule()
+      if _matchExp[1] == frontInterface.MetaOrModule.Module[1] then
+         local moduleInfo = _matchExp[2][1]
+      
+         self:applyModuleInfo( moduleInfo )
+         return moduleInfo
+      elseif _matchExp[1] == frontInterface.MetaOrModule.Meta[1] then
+         local metaInfo = _matchExp[2][1]
+      
+         self.importModuleInfo:add( self.modulePath )
+         importProcessInfo:switchIdProvier( Ast.IdType.Ext )
+         
+         local nameList = Util.splitStr( self.modulePath, '[^%./:]+' )
+         
+         local moduleInfo = self:processImportFromFile( importProcessInfo, moduleMeta:get_lnsPath(), metaInfo, self.fullModulePath, self.modulePath, nameList, self.baseDir, self.depth )
+         
+         importProcessInfo:switchIdProvier( Ast.IdType.Base )
+         self.importModuleInfo:remove(  )
+         
+         moduleMeta:set_metaOrModule( _lune.newAlge( frontInterface.MetaOrModule.Module, {moduleInfo}) )
+         
+         return moduleInfo
+      end
+   end
+   
+end
+function ModuleLoader.new( moduleInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth )
+   local obj = {}
+   ModuleLoader.setmeta( obj )
+   if obj.__init then obj:__init( moduleInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth ); end
+   return obj
+end
+function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth) 
+   Runner.Runner.__init( self)
+   
+   
+   self.importedAliasMap = {}
+   
+   self.moduleLoaderParam = moduleLoaderParam
+   self.baseDir = baseDir
+   self.moduleInfo = moduleInfo
+   self.moduleMeta = nil
+   self.modulePath = modulePath
+   self.fullModulePath = fullModulePath
+   self.depth = depth
+   self.err = ""
+   self.validMutControl = moduleLoaderParam:get_validMutControl()
+   self.curPos = moduleLoaderParam:get_latestPos()
+   self.macroCtrl = Macro.MacroCtrl.new(moduleLoaderParam:get_macroEval())
+   self.importModuleInfo = workImportModuleInfo:clone(  )
+   
+   local importProcessInfo = moduleLoaderParam:get_processInfo():newUser(  )
+   
+   local simpleTransUnit = TransUnitIF.SimpeTransUnit.new(moduleLoaderParam:get_ctrl_info(), importProcessInfo, moduleLoaderParam:get_latestPos(), moduleLoaderParam:get_macroMode(), moduleLoaderParam:get_nearCode())
+   
+   self.transUnitIF = simpleTransUnit
+   self.globalScope = simpleTransUnit:get_globalScope()
+   
+   self.loaderFunc = function (  )
+   
+      if not self.moduleInfo then
+         if not self.importModuleInfo:add( fullModulePath ) then
+            self.err = string.format( "recursive import: %s -> %s", self.importModuleInfo:getFull(  ), fullModulePath)
+         else
+          
+            do
+               do
+                  local _exp = frontInterface.loadMeta( self.importModuleInfo:clone(  ), modulePath, fullModulePath, baseDir, self )
+                  if _exp ~= nil then
+                     local moduleMeta = _exp
+                     self.moduleInfo = self:craeteModuleInfo( moduleMeta, importProcessInfo )
+                  else
+                     self.err = string.format( "failed to load meta -- %s on %s", fullModulePath, baseDir or "./")
+                  end
+               end
+               
+            end
+            
+            self.importModuleInfo:remove(  )
+         end
+         
+      end
+      
+   end
+   self:start( Runner.RunModeWhenFull.Sync )
+end
+function ModuleLoader:runMain(  )
+
+   self.loaderFunc(  )
+end
+function ModuleLoader:getModuleInfo(  )
+
+   self:join(  )
+   return self.moduleInfo
+end
+function ModuleLoader.setmeta( obj )
+  setmetatable( obj, { __index = ModuleLoader  } )
+end
+function ModuleLoader:get_moduleInfo()
+   return self.moduleInfo
+end
+function ModuleLoader:get_modulePath()
+   return self.modulePath
+end
+function ModuleLoader:get_fullModulePath()
+   return self.fullModulePath
+end
+function ModuleLoader:get_baseDir()
+   return self.baseDir
+end
+function ModuleLoader:get_err()
+   return self.err
+end
+function ModuleLoader:get_depth()
+   return self.depth
+end
+function ModuleLoader:get_importedAliasMap()
+   return self.importedAliasMap
+end
+
+
+function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem, fullModulePath, modulePath, nameList, baseDir, depth )
+   local __func__ = '@lune.@base.@Import.ModuleLoader.processImportFromFile'
 
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 812, function (  )
+   Log.log( Log.Level.Info, __func__, 931, function (  )
    
-      return string.format( "%s processing", orgModulePath)
+      return string.format( "%s processing", fullModulePath)
    end )
    
    
    local dependLibId2DependInfo = {}
    do
-      local __sorted = {}
-      local __map = metaInfo.__dependModuleMap
-      for __key in pairs( __map ) do
-         table.insert( __sorted, __key )
-      end
-      table.sort( __sorted )
-      for __index, dependName in ipairs( __sorted ) do
-         local dependInfo = __map[ dependName ]
-         do
-            local workProcessInfo = processInfo:newUser(  )
-            local moduleInfo = self:processImportMain( workProcessInfo, dependName, depth + 1 )
-            local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
-            dependLibId2DependInfo[typeId] = moduleInfo
-            
+      local loaderMap = {}
+      do
+         local __sorted = {}
+         local __map = metaInfo.__dependModuleMap
+         for __key in pairs( __map ) do
+            table.insert( __sorted, __key )
+         end
+         table.sort( __sorted )
+         for __index, dependName in ipairs( __sorted ) do
+            local dependInfo = __map[ dependName ]
+            do
+               local workProcessInfo = processInfo:newUser(  )
+               local moduleLoader = self:processImportMain( workProcessInfo, baseDir, dependName, depth + 1 )
+               local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
+               loaderMap[moduleLoader] = typeId
+            end
          end
       end
+      
+      for moduleLoader, typeId in pairs( loaderMap ) do
+         local moduleInfo = moduleLoader:getModuleInfo(  )
+         if  nil == moduleInfo then
+            local _moduleInfo = moduleInfo
+         
+            self.transUnitIF:error( moduleLoader:get_err() )
+         end
+         
+         self:applyModuleInfo( moduleInfo )
+         dependLibId2DependInfo[typeId] = moduleInfo
+      end
+      
    end
    
    local typeId2TypeInfo = {}
@@ -1764,7 +1940,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
       typeId2Scope[typeId] = self.transUnitIF:get_scope()
    end
    
-   for __index, _541 in ipairs( nameList ) do
+   for __index, _627 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -1874,7 +2050,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
       do
          local _exp = errMess
          if _exp ~= nil then
-            Util.err( string.format( "Failed to createType -- %s: %s(%d): %s", orgModulePath, Ast.SerializeKind:_getTxt( atomInfo.skind)
+            Util.err( string.format( "Failed to createType -- %s: %s(%d): %s", fullModulePath, Ast.SerializeKind:_getTxt( atomInfo.skind)
             , atomInfo.typeId, _exp) )
          end
       end
@@ -1922,7 +2098,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
             if  nil == typeInfo then
                local _typeInfo = typeInfo
             
-               Util.err( string.format( "not found childId -- %s, %d, %s(%d)", orgModulePath, childId.id, atomInfo.txt, atomInfo.typeId) )
+               Util.err( string.format( "not found childId -- %s, %d, %s(%d)", fullModulePath, childId.id, atomInfo.txt, atomInfo.typeId) )
             end
             
             local symbolKind = Ast.SymbolKind.Typ
@@ -1959,7 +2135,7 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
    
    
    local function registMember( classTypeId )
-      local __func__ = '@lune.@base.@Import.Import.processImportFromFile.registMember'
+      local __func__ = '@lune.@base.@Import.ModuleLoader.processImportFromFile.registMember'
    
       
       if metaInfo.__dependIdMap[classTypeId] then
@@ -1998,13 +2174,13 @@ function Import:processImportFromFile( processInfo, lnsPath, metaInfoStem, orgMo
                   end
                   
                else
-                  self.transUnitIF:error( string.format( "not found class -- %s: %d, %s", orgModulePath, classTypeId, classTypeInfo:getTxt(  )) )
+                  self.transUnitIF:error( string.format( "not found class -- %s: %d, %s", fullModulePath, classTypeId, classTypeInfo:getTxt(  )) )
                end
             end
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1106, function (  )
+            Log.log( Log.Level.Debug, __func__, 1236, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2139,8 +2315,7 @@ end
    
    local importedMacroInfoMap = {}
    for orgTypeId, macroInfoStem in pairs( metaInfo.__macroName2InfoMap ) do
-      
-      self.macroCtrl:importMacro( processInfo, lnsPath, (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo, importedMacroInfoMap )
+      self.macroCtrl:importMacro( processInfo, lnsPath, (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo, importedMacroInfoMap, baseDir )
    end
    
    
@@ -2153,7 +2328,7 @@ end
    end
    
    
-   for __index, _700 in ipairs( nameList ) do
+   for __index, _786 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2170,96 +2345,62 @@ end
    
    local exportInfo = Nodes.ExportInfo.new(moduleTypeInfo, moduleProvideInfo, processInfo, globalSymbolList, importedMacroInfoMap)
    
-   local moduleInfo = frontInterface.ModuleInfo.new(orgModulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), exportInfo, importParam.importedAliasMap)
+   local moduleInfo = frontInterface.ModuleInfo.new(lnsPath, fullModulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), exportInfo, importParam.importedAliasMap)
    
    return moduleInfo
 end
 
 
-_moduleObj.ModuleLoader = ModuleLoader
-function ModuleLoader.new( moduleInfo, workImportModuleInfo, modulePath, orgModulePath, depth )
+local Import = {}
+_moduleObj.Import = Import
+function Import.new( curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl )
    local obj = {}
-   ModuleLoader.setmeta( obj )
-   if obj.__init then obj:__init( moduleInfo, workImportModuleInfo, modulePath, orgModulePath, depth ); end
+   Import.setmeta( obj )
+   if obj.__init then obj:__init( curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl ); end
    return obj
 end
-function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, orgModulePath, depth) 
-   self.moduleInfo = moduleInfo
-   self.moduleMeta = nil
-   self.modulePath = modulePath
-   self.orgModulePath = orgModulePath
-   self.depth = depth
+function Import:__init(curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl) 
+   self.baseDir = baseDir
+   self.importModuleInfo = importModuleInfo
+   self.moduleType = moduleType
+   self.macroCtrl = macroCtrl
+   self.typeNameCtrl = typeNameCtrl
+   self.importedAliasMap = importedAliasMap
    
-   if not self.moduleInfo then
-      local importModuleInfo = workImportModuleInfo:clone(  )
-      if not importModuleInfo:add( orgModulePath ) then
-         self.err = string.format( "recursive import: %s -> %s", importModuleInfo:getFull(  ), orgModulePath)
-      else
-       
-         do
-            do
-               local _exp = frontInterface.loadMeta( importModuleInfo:clone(  ), modulePath )
-               if _exp ~= nil then
-                  self.moduleMeta = _exp
-               else
-                  self.err = "failed to load meta -- " .. orgModulePath
-               end
-            end
-            
-         end
-         
-         importModuleInfo:remove(  )
-      end
-      
-   end
-   
+   self.importModule2ModuleInfo = {}
+   self.importModuleName2ModuleInfo = {}
 end
-function ModuleLoader:getModuleMeta(  )
-
-   return self.moduleMeta
+function Import.setmeta( obj )
+  setmetatable( obj, { __index = Import  } )
 end
-function ModuleLoader.setmeta( obj )
-  setmetatable( obj, { __index = ModuleLoader  } )
-end
-function ModuleLoader:get_moduleInfo()
-   return self.moduleInfo
-end
-function ModuleLoader:get_modulePath()
-   return self.modulePath
-end
-function ModuleLoader:get_orgModulePath()
-   return self.orgModulePath
-end
-function ModuleLoader:get_err()
-   return self.err
-end
-function ModuleLoader:get_depth()
-   return self.depth
+function Import:get_importModule2ModuleInfo()
+   return self.importModule2ModuleInfo
 end
 
 
-function Import:createModuleLoader( modulePath, depth )
+function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, depth )
    local __func__ = '@lune.@base.@Import.Import.createModuleLoader'
 
-   local orgModulePath = modulePath
+   local fullModulePath
+   
    
    do
-      modulePath = frontInterface.getLuaModulePath( modulePath )
+      modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1293, function (  )
+   Log.log( Log.Level.Info, __func__, 1432, function (  )
    
-      return string.format( "%s -> %s start", self.moduleType:getTxt( self.typeNameCtrl ), orgModulePath)
+      return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, tostring( baseDir))
    end )
    
    
-   local moduleInfo = self.importModuleName2ModuleInfo[modulePath]
+   local moduleInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if moduleInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1301, function (  )
+      Log.log( Log.Level.Info, __func__, 1440, function (  )
       
-         return string.format( "%s already", orgModulePath)
+         return string.format( "%s already", fullModulePath)
       end )
       
       
@@ -2275,108 +2416,81 @@ function Import:createModuleLoader( modulePath, depth )
    end
    
    
-   return ModuleLoader.new(moduleInfo, self.importModuleInfo, modulePath, orgModulePath, depth)
+   return ModuleLoader.new(moduleInfo, self.importModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth)
 end
 
 
-function Import:loadModuleInfo( processInfo, moduleLoader )
+function Import:loadModuleInfo( moduleLoader )
    local __func__ = '@lune.@base.@Import.Import.loadModuleInfo'
 
-   do
-      local _exp = moduleLoader:get_err()
-      if _exp ~= nil then
-         self.transUnitIF:error( _exp )
-      end
-   end
-   
-   
-   do
-      local _exp = moduleLoader:get_moduleInfo()
-      if _exp ~= nil then
-         return _exp
-      end
-   end
-   
-   
-   local modulePath = moduleLoader:get_modulePath()
-   local orgModulePath = moduleLoader:get_orgModulePath()
+   local fullModulePath = moduleLoader:get_fullModulePath()
    local depth = moduleLoader:get_depth()
    
-   local nameList = Util.splitStr( modulePath, '[^%./:]+' )
+   local moduleInfo = moduleLoader:getModuleInfo(  )
+   if  nil == moduleInfo then
+      local _moduleInfo = moduleInfo
    
-   local moduleMeta = moduleLoader:getModuleMeta(  )
-   if  nil == moduleMeta then
-      local _moduleMeta = moduleMeta
-   
-      self.transUnitIF:error( "failed to load meta -- " .. orgModulePath )
+      return nil, moduleLoader:get_err()
    end
    
    
-   self.importModuleInfo:add( orgModulePath )
-   processInfo:switchIdProvier( Ast.IdType.Ext )
-   
-   local moduleInfo
-   
    do
-      local _matchExp = moduleMeta:get_metaOrModule()
-      if _matchExp[1] == frontInterface.MetaOrModule.Module[1] then
-         local info = _matchExp[2][1]
-      
-         moduleInfo = info
-         do
-            local exportInfo = _lune.__Cast( moduleInfo:get_exportInfo(), 3, Nodes.ExportInfo )
-            if exportInfo ~= nil then
-               self.macroCtrl:importMacroInfo( exportInfo:get_typeId2DefMacroInfo() )
-            end
-         end
-         
-         for __index, globalSymbol in ipairs( moduleInfo:get_exportInfo():get_globalSymbolList() ) do
-            self.transUnitIF:get_scope():addSymbolInfo( processInfo, globalSymbol )
-         end
-         
-         for key, val in pairs( moduleInfo:get_importedAliasMap() ) do
-            self.importedAliasMap[key] = val
-         end
-         
-      elseif _matchExp[1] == frontInterface.MetaOrModule.Meta[1] then
-         local metaInfo = _matchExp[2][1]
-      
-         moduleInfo = self:processImportFromFile( processInfo, moduleMeta:get_lnsPath(), metaInfo, orgModulePath, modulePath, nameList, depth )
-         moduleMeta:set_metaOrModule( _lune.newAlge( frontInterface.MetaOrModule.Module, {moduleInfo}) )
+      local exportInfo = _lune.__Cast( moduleInfo:get_exportInfo(), 3, Nodes.ExportInfo )
+      if exportInfo ~= nil then
+         self.macroCtrl:importMacroInfo( exportInfo:get_typeId2DefMacroInfo() )
       end
    end
    
+   for key, val in pairs( moduleInfo:get_importedAliasMap() ) do
+      self.importedAliasMap[key] = val
+   end
    
-   processInfo:switchIdProvier( Ast.IdType.Base )
-   self.importModuleInfo:remove(  )
+   for key, val in pairs( moduleLoader:get_importedAliasMap() ) do
+      self.importedAliasMap[key] = val
+   end
+   
    
    if depth == 1 then
       self.importModule2ModuleInfo[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = moduleInfo
    end
    
-   self.importModuleName2ModuleInfo[modulePath] = moduleInfo
+   self.importModuleName2ModuleInfo[fullModulePath] = moduleInfo
    
-   Log.log( Log.Level.Info, __func__, 1376, function (  )
+   Log.log( Log.Level.Info, __func__, 1491, function (  )
    
-      return string.format( "%s complete", orgModulePath)
+      return string.format( "%s complete", fullModulePath)
    end )
    
    
-   return moduleInfo
+   return moduleInfo, ""
 end
 
 
-function Import:processImportMain( processInfo, modulePath, depth )
+function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth )
+   local __func__ = '@lune.@base.@Import.ModuleLoader.processImportMain'
 
-   local moduleLoader = self:createModuleLoader( modulePath, depth )
+   local fullModulePath
    
-   return self:loadModuleInfo( processInfo, moduleLoader )
+   do
+      modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
+   end
+   
+   
+   Log.log( Log.Level.Info, __func__, 1506, function (  )
+   
+      return string.format( "%s -> %s start on %s", self.fullModulePath, fullModulePath, tostring( baseDir))
+   end )
+   
+   
+   local moduleLoader = ModuleLoader.new(nil, self.importModuleInfo, modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth)
+   return moduleLoader
+   
 end
 
 
-function Import:processImport( modulePath )
+function Import:processImport( modulePath, moduleLoaderParam )
 
-   local moduleLoader = self:createModuleLoader( modulePath, 1 )
+   local moduleLoader = self:createModuleLoader( self.baseDir, modulePath, moduleLoaderParam, 1 )
    
    return moduleLoader
 end

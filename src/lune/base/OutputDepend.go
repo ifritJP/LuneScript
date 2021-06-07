@@ -3,12 +3,12 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_OutputDepend bool
 var OutputDepend__mod__ string
-// for 135
-func OutputDepend_convExp534(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 136
+func OutputDepend_convExp538(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 137
-func OutputDepend_convExp551(arg1 []LnsAny) LnsAny {
+// for 138
+func OutputDepend_convExp555(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 95: decl @lune.@base.@OutputDepend.createFilter
@@ -16,7 +16,7 @@ func OutputDepend_createFilter(_env *LnsEnv, stream Lns_oStream) *Nodes_Filter {
     return &NewOutputDepend_convFilter(_env, stream).Nodes_Filter
 }
 
-// 149: decl @lune.@base.@OutputDepend.Ast2Depend
+// 150: decl @lune.@base.@OutputDepend.Ast2Depend
 func OutputDepend_Ast2Depend_1170_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
@@ -265,7 +265,7 @@ type OutputDepend_FrontMtd interface {
     Error(_env *LnsEnv, arg1 string)
     GetLuaModulePath(_env *LnsEnv, arg1 string, arg2 LnsAny)(string, LnsAny, string)
     LoadFromLnsTxt(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string) LnsAny
-    LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string, arg4 LnsAny) LnsAny
+    LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string, arg4 LnsAny, arg5 FrontInterface_ModuleLoader) LnsAny
     LoadModule(_env *LnsEnv, arg1 string)(LnsAny, *FrontInterface_ModuleMeta)
     SearchModule(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 LnsAny) LnsAny
 }
@@ -332,12 +332,12 @@ func (self *OutputDepend_Front) Error(_env *LnsEnv, message string) {
 }
 
 // 126: decl @lune.@base.@OutputDepend.Front.loadMeta
-func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string,orgMod string,baseDir LnsAny) LnsAny {
+func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string,orgMod string,baseDir LnsAny,loader FrontInterface_ModuleLoader) LnsAny {
     var metaPath string
     metaPath = Lns_car(_env.LuaVM.String_gsub(mod,"%.", "/")).(string) + ".meta"
     if baseDir != nil{
-        baseDir_114 := baseDir.(string)
-        metaPath = Util_pathJoin(_env, baseDir_114, metaPath)
+        baseDir_110 := baseDir.(string)
+        metaPath = Util_pathJoin(_env, baseDir_110, metaPath)
         
     }
     Lns_print([]LnsAny{metaPath})
@@ -345,11 +345,11 @@ func (self *OutputDepend_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontIn
     var mess LnsAny
     loaded,mess = _env.CommonLuaVM.Loadfile(metaPath)
     if loaded != nil{
-        loaded_118 := loaded.(*Lns_luaValue)
+        loaded_114 := loaded.(*Lns_luaValue)
         var meta LnsAny
         
         {
-            _meta := OutputDepend_convExp551(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_118,Lns_2DDD([]LnsAny{}))[0]))
+            _meta := OutputDepend_convExp555(Lns_2DDD(_env.CommonLuaVM.RunLoadedfunc(loaded_114,Lns_2DDD([]LnsAny{}))[0]))
             if _meta == nil{
                 return nil
             } else {

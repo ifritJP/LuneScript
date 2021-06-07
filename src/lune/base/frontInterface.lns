@@ -25,6 +25,7 @@ SOFTWARE.
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.LuneControl;
+import lune.base.Runner;
 
 _lune_control ignore_symbol_;
 _lune_control default_async_all;
@@ -117,6 +118,7 @@ pub class ExportInfo {
 }
 
 pub class ModuleInfo extend (Ast.ModuleInfoIF) {
+   pri let streamName:str {pub};
    pri let fullName:str{ pub };
    /**
 import した TypeInfo の中で、
@@ -137,10 +139,12 @@ alias で置き換えている元の Type → alias の型。
 
    pri let exportInfo:&ExportInfo {pub};
 
-   pub fn __init( fullName:str, assignName:str, idMap:&Map<&Ast.TypeInfo,int>,
+   pub fn __init( streamName:str, fullName:str, assignName:str,
+                  idMap:&Map<&Ast.TypeInfo,int>,
                   moduleId:&ModuleId, exportInfo:&ExportInfo,
                   importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> )
    {
+      self.streamName = streamName;
       self.exportInfo = exportInfo;
       self.moduleId = moduleId;
       self.fullName = fullName;
@@ -178,7 +182,7 @@ alias で置き換えている元の Type → alias の型。
 
    pub fn assign( assignName: str ) : ModuleInfo {
       return new ModuleInfo(
-         self.fullName, assignName, self.localTypeInfo2importIdMap,
+         self.streamName, self.fullName, assignName, self.localTypeInfo2importIdMap,
          self.moduleId, self.exportInfo, self.importedAliasMap );
    }
 }
@@ -239,6 +243,10 @@ pub class ImportModuleInfo {
    }
 }
 
+pub interface ModuleLoader {
+   pub fn getModuleInfo() __noasync mut : &ModuleInfo!;
+}
+
 pub interface frontInterface {
    /**
 指定の LuneScript のモジュールをロードする。
@@ -260,8 +268,8 @@ Lua からも利用される。
 @return &stem ロードしたモジュールのメタ情報。
    */
    pub fn loadMeta(
-      importModuleInfo:ImportModuleInfo,
-      mod:str, orgMod:str, baseDir:str! ) __noasync mut: ModuleMeta!;
+      importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
+      baseDir:str!, loader:ModuleLoader ) __noasync mut: ModuleMeta!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -299,8 +307,8 @@ class dummyFront extend (frontInterface) {
                                      MetaOrModule.Meta( emptyTable ) );           
       return require( mod ), meta;
    }
-   pub fn loadMeta( importModuleInfo:ImportModuleInfo,
-                    mod:str, orgMod:str, baseDir:str! ) __noasync mut : ModuleMeta!
+   pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
+                    baseDir:str!, loader:ModuleLoader ) __noasync mut : ModuleMeta!
    {
       error( "not implements" );
    }
@@ -338,10 +346,10 @@ pub fn loadFromLnsTxt(
    return __luneScript.loadFromLnsTxt( importModuleInfo, baseDir, name, txt );
 }
 
-pub fn loadMeta( importModuleInfo:ImportModuleInfo,
-                 mod:str, orgMod:str, baseDir:str! ) __noasync : ModuleMeta!
+pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
+                 baseDir:str!, loader:ModuleLoader ) __noasync : ModuleMeta!
 {
-   return __luneScript.loadMeta( importModuleInfo, mod, orgMod, baseDir );
+   return __luneScript.loadMeta( importModuleInfo, mod, orgMod, baseDir, loader );
 }
 
 pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! ) __noasync: str! {

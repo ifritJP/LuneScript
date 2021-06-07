@@ -3612,8 +3612,8 @@ pub fn createFilter(
 
 
 
-pub fn runLuaOnLns( code:str ) __noasync : Luaval<&stem>!, str {
-   let loadFunc, err = DependLuaOnLns.runLuaOnLns( code );
+pub fn runLuaOnLns( code:str, baseDir:str! ) __noasync : Luaval<&stem>!, str {
+   let loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir );
    when! loadFunc {
       let mod = loadFunc();
       when! mod {
@@ -3631,11 +3631,11 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    
    _lune_control default_noasync_this_class;
    
-   fn evalFromMacroCode( code:str ): Luaval<Nodes.macroStatmentProc> {
+   fn evalFromMacroCode( code:str, baseDir:str! ): Luaval<Nodes.macroStatmentProc> {
 
       Log._log2( .Trace, "macro: %s" (code) );
       
-      let func, err = runLuaOnLns( code );
+      let func, err = runLuaOnLns( code, baseDir );
       when! func {
          return func@@Luaval<Nodes.macroStatmentProc>;
       }
@@ -3643,8 +3643,8 @@ pub class MacroEvalImp extend Nodes.MacroEval {
    }
 
    pub override fn evalFromCode(
-      processInfo:Ast.ProcessInfo,
-      name:str, argNameList:&List<str>, code:str! ):
+      processInfo:Ast.ProcessInfo, 
+      name:str, argNameList:&List<str>, code:str!, baseDir:str! ):
       Luaval<Nodes.macroStatmentProc>
    {
       let mut stream = new Util.memStream();
@@ -3660,11 +3660,12 @@ pub class MacroEvalImp extend Nodes.MacroEval {
             }
          });
 
-      return self.evalFromMacroCode( stream.$txt );
+      return self.evalFromMacroCode( stream.$txt, baseDir );
    }
 
 
-   pub override fn eval( processInfo:Ast.ProcessInfo, node: Nodes.DeclMacroNode ):
+   pub override fn eval( processInfo:Ast.ProcessInfo,
+                         node: Nodes.DeclMacroNode, baseDir:str! ):
       Luaval<Nodes.macroStatmentProc>
    {
       let mut stream = new Util.memStream();
@@ -3675,7 +3676,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 
       conv.processDeclMacro( node, new Opt( node ) );
 
-      return self.evalFromMacroCode( stream.$txt );
+      return self.evalFromMacroCode( stream.$txt, baseDir );
    }
 }
 
@@ -3700,7 +3701,7 @@ __test {
          moduleId, moduleInfo, new MacroEvalImp(builtinFunc), nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
       
-      return transUnit.createAST( parserSrc, nil, false, mod );
+      return transUnit.createAST( parserSrc, nil, nil, false, mod );
    }
    
    

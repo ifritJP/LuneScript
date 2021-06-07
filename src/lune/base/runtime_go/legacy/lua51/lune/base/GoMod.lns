@@ -12,6 +12,8 @@ pub class ModProjInfo {
    let projRoot:str {pub};
    /** projRoot からのモジュールパス */
    let mod:str {pub};
+   /** 完全限定名 */
+   let fullMod:str {pub};
 }
 
 pub alge GoModResult {
@@ -23,23 +25,59 @@ pub alge GoModResult {
 pub class ModInfo {
    /** モジュール名 */
    let name:str {pub};
-   /** モジュールパス → バージョン */
+   /** モジュールパス → バージョン。 go.mod の情報。 */
    let moduleMap:&Map<str,str> {pub};
-   /** モジュールパス → replace 先 */
+   /** モジュールパス → replace 先。 go.mod の情報。 */
    let replaceMap:&Map<str,str> {pub};
 
    /** convPath で変換した path → 対応するローカルパス */
    let path2modProjInfo:Map<str,&ModProjInfo>;
+   /** go モジュールディレクトリ → Lns 上のモジュールパス。 */
+   let goModDir2Path:Map<str,str>;
+   
 
    /** convLocalModulePath() で最後にマッチしたパス */
    let mut latestModProjInfo:&ModProjInfo!;
 
+   fn getGoModPath( ver:str, mod:str ) : &List<str> {
+      let pathList:List<str> = [];
+         
+      if! let gopath = Depend.getGOPATH() {
+         pathList.insert( Util.pathJoin( gopath, "src/%s" ( mod ) ) );
+
+         let mut gomod = "";
+         foreach aChar in [ mod.byte(1,#mod) ] {
+            when! aChar {
+               if aChar >= ?A and aChar <= ?Z {
+                  gomod = "%s!%c" (gomod, aChar - ?A + ?a);
+               } else {
+                  gomod = "%s%c" (gomod, aChar);
+               }
+            }
+         }
+         gomod = "%s@%s" (gomod,ver);
+         
+         pathList.insert( Util.pathJoin( gopath, "pkg/mod/%s" (gomod) ) );
+      }
+      return pathList;
+   }
+   
    pub fn __init( name:str, moduleMap:&Map<str,str>, replaceMap:&Map<str,str> ) {
       self.name = name;
       self.moduleMap = moduleMap;
       self.replaceMap = replaceMap;
+      self.goModDir2Path = {};
       self.path2modProjInfo = {};
       self.latestModProjInfo = nil;
+
+      foreach dst, mod in replaceMap {
+         self.goModDir2Path[ dst ] = mod;
+      }
+      foreach ver, mod in moduleMap {
+         foreach path in self.getGoModPath( ver, mod ) {
+            self.goModDir2Path[ path ] = mod;
+         }
+      }
    }
 
    pub fn getLatestProjRoot():str! {
@@ -128,11 +166,26 @@ pub class ModInfo {
 go/github:com.ifritJP. 等の go 用のモジュールパスを、
 ローカルのファイルパスに変換する
    */ 
-   pub fn convLocalModulePath( mod:str, suffix:str ) mut : GoModResult {
+   pub fn convLocalModulePath( mut mod:str, suffix:str, baseDir:str! ) mut : GoModResult {
       if not mod.find( "^go/" ## ) {
-         return .NotGo;
+         when! baseDir {
+            let mut goModDir:str! = nil;
+            goModDir = self.goModDir2Path[ baseDir ];
+            when! goModDir {
+               mod = "go/%s.%s" (goModDir.gsub("%.", ":").gsub( "/", "." ), mod);
+            }
+            if not goModDir {
+               Log._log2( .Log, "not found baseDir -- %s" (baseDir) );
+            }
+         } else {
+            return .NotGo;
+         }
       }
-      let workMod = self.convPath( mod, suffix );
+      
+      let mut workMod = self.convPath( mod, suffix );
+      // when! goModDir {
+      //    workMod = Util.pathJoin( goModDir, workMod );
+      // }
 
       if! self.path2modProjInfo[ workMod ] {
          self.latestModProjInfo = _exp;
@@ -145,7 +198,7 @@ go/github:com.ifritJP. 等の go 用のモジュールパスを、
       foreach path in pathList {
          if Depend.existFile( path ) {
             let projRoot, convMod = self.getProjRootPath( mod, path );
-            let projInfo = new ModProjInfo( path, projRoot, convMod );
+            let projInfo = new ModProjInfo( path, projRoot, convMod, mod );
             self.path2modProjInfo[ workMod ] = projInfo;
             self.latestModProjInfo = projInfo;
             return .Found( projInfo );
@@ -166,21 +219,25 @@ lune.base.Nodes に変換する。
 プロジェクトの起点は、以下の場所を探す。
 - lune.js のあるディレクトリ
 - github.com の場合、 github.com/XXXXX/YYYYY ディレクトリ
+
+@return str プロジェクトからの相対モジュール
+@return str! プロジェクトへのパス
+@return str モジュールの完全パス
 */
-   pub fn getLuaModulePath( mod:str ) mut : str {
+   pub fn getLuaModulePath( mod:str, baseDir:str! ) mut : str, str!, str {
       let info;
-      _match self.convLocalModulePath( mod, ".lns" ) {
+      _match self.convLocalModulePath( mod, ".lns", baseDir ) {
          case .NotGo {
-            return mod;
+            return mod, nil, mod;
          }
          case .NotFound {
-            return mod;
+            return mod, nil, mod;
          }
          case .Found( workInfo ) {
             info = workInfo;
          }
       };
-      return info.$mod;
+      return info.$mod, info.$projRoot, info.$fullMod;
    }
 }
 

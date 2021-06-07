@@ -440,7 +440,7 @@ pub fn MacroCtrl.importMacro(
    processInfo:Ast.ProcessInfo, lnsPath:str, 
    macroInfoStem:&stem!, macroTypeInfo:&Ast.TypeInfo,
    typeId2TypeInfo: &Map<int,&Ast.TypeInfo>,
-   importedMacroInfoMap:Map<&Ast.IdInfo,&Nodes.MacroInfo> ) __noasync mut
+   importedMacroInfoMap:Map<&Ast.IdInfo,&Nodes.MacroInfo>, baseDir:str! ) __noasync mut
 {
    let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
    when! macroInfo {
@@ -490,7 +490,8 @@ pub fn MacroCtrl.importMacro(
       let extMacroInfo = new ExtMacroInfo(
          macroInfo.name,
          self.macroEval.evalFromCode(
-            processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock ),
+            processInfo, macroInfo.name, argNameList,
+            macroInfo.stmtBlock, baseDir ),
          symbol2MacroValInfoMap, argList, tokenList );
 
       self.typeId2MacroInfo[ macroTypeInfo.$typeId ] = extMacroInfo;
@@ -513,9 +514,9 @@ pub fn MacroCtrl.importMacroInfo(
 
 pub fn MacroCtrl.regist(
    processInfo:Ast.ProcessInfo,
-   node:Nodes.DeclMacroNode, macroScope:&Ast.Scope ) __noasync mut
+   node:Nodes.DeclMacroNode, macroScope:&Ast.Scope, baseDir:str! ) __noasync mut
 {
-   let macroObj = self.macroEval.eval( processInfo, node );
+   let macroObj = self.macroEval.eval( processInfo, node, baseDir );
 
    // registVar() した時に確定していない変数の型を、ここで確定する。
    let mut remap:Map<str,Nodes.MacroValInfo> = {};

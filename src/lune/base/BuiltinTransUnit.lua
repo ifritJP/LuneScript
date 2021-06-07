@@ -198,7 +198,7 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )
          
-         local _70, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
+         local _68, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:error( string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getTxt(  ), existSym:get_name(), parentInfo:getTxt(  ), modName) )
          end

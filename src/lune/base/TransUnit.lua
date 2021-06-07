@@ -901,6 +901,7 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, analyzeModule, 
    self.advertisedTypeSet = {}
    self.closureFunList = {}
    self.scopeAccess = Ast.ScopeAccess.Normal
+   self.macroEval = macroEval
    self.macroCtrl = Macro.MacroCtrl.new(macroEval)
    self.analyzingStateQueue = {}
    self.ctrl_info = ctrl_info
@@ -1936,8 +1937,6 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    local backupScope = self.scope
    self.scope = self.topScope
    
-   local importProcessInfo = self.processInfo:newUser(  )
-   
    local macroMode
    
    local nearCode
@@ -1953,21 +1952,28 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    end
    
    
-   local simpleTransUnit = TransUnitIF.SimpeTransUnit.new(self.ctrl_info, importProcessInfo, self:getLatestPos(  ), macroMode, nearCode)
-   
    local importObj = self.importCtrl
    if  nil == importObj then
       local _importObj = importObj
    
-      importObj = Import.Import.new(self:getLatestPos(  ), simpleTransUnit, self.importModuleInfo, self.moduleType, self.builtinFunc, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.baseDir, self.validMutControl)
+      importObj = Import.Import.new(self:getLatestPos(  ), self.importModuleInfo, self.moduleType, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.baseDir, self.validMutControl)
       self.importCtrl = importObj
    end
    
-   local moduleLoader = importObj:processImport( modulePath )
+   
+   local moduleLoaderParam = Import.ModuleLoaderParam.new(self.ctrl_info, self.processInfo, self:getLatestPos(  ), macroMode, nearCode, self.validMutControl, self.macroEval)
+   local moduleLoader = importObj:processImport( modulePath, moduleLoaderParam )
+   
    local moduleInfo
    
    do
-      moduleInfo = importObj:loadModuleInfo( importProcessInfo, moduleLoader )
+      local work, err = importObj:loadModuleInfo( moduleLoader )
+      if work ~= nil then
+         moduleInfo = work
+      else
+         self:error( err )
+      end
+      
    end
    
    
@@ -1985,14 +1991,20 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    local moduleSymbolKind = provideInfo:get_symbolKind()
    local moduleSymbolInfo, shadowing = self.scope:add( self.processInfo, moduleSymbolKind, false, false, assignName, pos, moduleTypeInfo, Ast.AccessMode.Local, true, provideInfo:get_mutable() and Ast.MutMode.Mut or Ast.MutMode.IMut, true, lazyLoad ~= Nodes.LazyLoad.Off )
    
-   if moduleSymbolInfo ~= nil then
-      local info = Nodes.ImportInfo.new(pos, modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo)
-      return Nodes.ImportNode.create( self.nodeManager, pos, self.macroCtrl:isInAnalyzeArgMode(  ), {moduleTypeInfo}, info )
+   if shadowing ~= nil then
+      local err = shadowing:get_typeInfo() ~= moduleTypeInfo
+      self:errorShadowingOp( pos, shadowing, err )
+      if err then
+         self:error( string.format( "failed to import -- %s", modulePath) )
+      end
+      
+      moduleSymbolInfo = shadowing
    end
    
    
-   if shadowing ~= nil then
-      self:errorShadowingOp( pos, shadowing, shadowing:get_typeInfo() ~= moduleTypeInfo )
+   if moduleSymbolInfo ~= nil then
+      local info = Nodes.ImportInfo.new(pos, modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo)
+      return Nodes.ImportNode.create( self.nodeManager, pos, self.macroCtrl:isInAnalyzeArgMode(  ), {moduleTypeInfo}, info )
    end
    
    self:error( string.format( "failed to import -- %s", modulePath) )
@@ -3078,7 +3090,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
       if aliasType ~= nil then
          local aliasSrc = aliasType:get_aliasSrcTypeInfo()
          if not _lune._Set_has(self.importModuleSet, aliasSrc:getModule(  ) ) and self.moduleType:get_parentInfo() ~= aliasSrc:getModule(  ):get_parentInfo() then
-            self:addErrMess( symbolNode:get_pos(), string.format( "must import '%s' for this alias -- %s", aliasSrc:getModule(  ):getFullName( self.typeNameCtrl, self.scope, false ), symbolNode:getSymbolInfo(  )[1]:get_name()) )
+            self:addErrMess( symbolNode:get_pos(), string.format( "must import '%s' for this alias -- %s (%s,%s)", aliasSrc:getModule(  ):getFullName( self.typeNameCtrl, self.scope, false ), symbolNode:getSymbolInfo(  )[1]:get_name(), self.moduleType:get_typeId().id, aliasSrc:getModule(  ):get_typeId().id) )
          end
          
       end
@@ -3534,7 +3546,7 @@ function TransUnit:createAST( parserSrc, baseDir, stdinFile, macroFlag, moduleNa
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 539, function (  )
+   Log.log( Log.Level.Log, __func__, 542, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnit.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s", __func__, parser:getStreamName(  ), baseDir)
@@ -4764,7 +4776,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
          
-         Log.log( Log.Level.Debug, __func__, 1835, function (  )
+         Log.log( Log.Level.Debug, __func__, 1838, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -5943,10 +5955,10 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       end
       
       
-      if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner ) then
+      if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner ) and Ast.isPubToExternal( accessMode ) then
          for index, argNode in ipairs( argList ) do
             if not self:canBeAsyncParam( argNode:get_expType() ) then
-               self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument. -- %d: %s", index, argNode:get_expType():getTxt(  )) )
+               self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument with public method. -- %d: %s", index, argNode:get_expType():getTxt(  )) )
             end
             
          end

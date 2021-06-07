@@ -107,11 +107,14 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          // 定義元のモジュールをインポートしていない場合、エラーとする。
          // なお、 go は同じディレクトリ内はインポート不要なので、
          // 異なるディレクトリの場合だけエラーとする。
-         self.addErrMess( symbolNode.$pos,
-                          "must import '%s' for this alias -- %s"
-                          ( aliasSrc.getModule().getFullName(
-                             self.typeNameCtrl, self.scope, false ),
-                            symbolNode.getSymbolInfo()[1].$name ) );
+         self.addErrMess(
+            symbolNode.$pos,
+            "must import '%s' for this alias -- %s (%s,%s)"
+            ( aliasSrc.getModule().getFullName(
+               self.typeNameCtrl, self.scope, false ),
+              symbolNode.getSymbolInfo()[1].$name,
+              self.moduleType.$typeId.id,
+              aliasSrc.getModule().$typeId.id ) );
       }
    }
    
@@ -3107,14 +3110,14 @@ fn TransUnit.analyzeDeclFunc(
          }
       }
 
-      if classTypeInfo.isInheritFrom(
-         self.processInfo, Ast.builtinTypeRunner ## )
+      if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeRunner ## ) and
+         Ast.isPubToExternal( accessMode )
       {
          foreach argNode, index in argList {
             if not self.canBeAsyncParam( argNode.$expType ) {
                self.addErrMess(
                   argNode.$pos,
-                  "__Runner can't have the mutable argument. -- %d: %s"
+                  "__Runner can't have the mutable argument with public method. -- %d: %s"
                   (index, argNode.$expType.getTxt(##) ) );
             }
          }

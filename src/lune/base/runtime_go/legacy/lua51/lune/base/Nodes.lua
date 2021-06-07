@@ -13542,7 +13542,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8806 in pairs( self.map ) do
+   for key, _8808 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13577,8 +13577,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8820 in ipairs( __sorted ) do
-         local key = __map[ _8820 ]
+      for __index, _8822 in ipairs( __sorted ) do
+         local key = __map[ _8822 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

@@ -107,11 +107,14 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          // 定義元のモジュールをインポートしていない場合、エラーとする。
          // なお、 go は同じディレクトリ内はインポート不要なので、
          // 異なるディレクトリの場合だけエラーとする。
-         self.addErrMess( symbolNode.$pos,
-                          "must import '%s' for this alias -- %s"
-                          ( aliasSrc.getModule().getFullName(
-                             self.typeNameCtrl, self.scope, false ),
-                            symbolNode.getSymbolInfo()[1].$name ) );
+         self.addErrMess(
+            symbolNode.$pos,
+            "must import '%s' for this alias -- %s (%s,%s)"
+            ( aliasSrc.getModule().getFullName(
+               self.typeNameCtrl, self.scope, false ),
+              symbolNode.getSymbolInfo()[1].$name,
+              self.moduleType.$typeId.id,
+              aliasSrc.getModule().$typeId.id ) );
       }
    }
    
@@ -528,14 +531,16 @@ pub class ASTInfo {
 }
 
 pub fn TransUnit.createAST(
-   parserSrc: &Types.ParserSrc, stdinFile:&Types.StdinFile!,
+   parserSrc: &Types.ParserSrc, baseDir:str!, stdinFile:&Types.StdinFile!,
    macroFlag: bool, moduleName: str! ) mut : ASTInfo
 {
    let mut parser = Parser.createParserFrom( parserSrc, stdinFile );
 
    self.stdinFile = stdinFile;
+   self.baseDir = baseDir;
    
-   Log._log2( .Log, "%s start -- %s" (__func__, parser.getStreamName()) );
+   Log._log2( .Log, "%s start -- %s on %s"
+              (__func__, parser.getStreamName(), baseDir ) );
    
    self.moduleName = unwrap moduleName default "";
 
@@ -553,7 +558,7 @@ pub fn TransUnit.createAST(
    __asyncLock {
       when! moduleName {
          apply txt of string.gmatch(
-            frontInterface.getLuaModulePath( moduleName ), '[^%.]+' )
+            frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' )
          {
             moduleTypeInfo = self.pushModule(
                self.processInfo, false, txt, true ).$typeInfo;
@@ -605,7 +610,7 @@ pub fn TransUnit.createAST(
       foreach subModule in self.subfileList {
          let file;
          __asyncLock {
-            if! frontInterface.searchModule( subModule ) {
+            if! frontInterface.searchModule( subModule, self.baseDir, nil ) {
                file = _exp;
             } else {
                self.error( "not found subfile -- %s" ( subModule ) );
@@ -887,7 +892,7 @@ fn TransUnit.analyzeDeclMacroSub(
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], declMacroInfo );
 
    __asyncLock { 
-      self.macroCtrl.regist( self.processInfo, node, macroScope );
+      self.macroCtrl.regist( self.processInfo, node, macroScope, self.baseDir );
    }
 
    return node;
@@ -3105,14 +3110,14 @@ fn TransUnit.analyzeDeclFunc(
          }
       }
 
-      if classTypeInfo.isInheritFrom(
-         self.processInfo, Ast.builtinTypeRunner ## )
+      if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeRunner ## ) and
+         Ast.isPubToExternal( accessMode )
       {
          foreach argNode, index in argList {
             if not self.canBeAsyncParam( argNode.$expType ) {
                self.addErrMess(
                   argNode.$pos,
-                  "__Runner can't have the mutable argument. -- %d: %s"
+                  "__Runner can't have the mutable argument with public method. -- %d: %s"
                   (index, argNode.$expType.getTxt(##) ) );
             }
          }

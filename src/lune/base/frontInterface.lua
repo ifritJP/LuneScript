@@ -195,6 +195,7 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+local Runner = _lune.loadModule( 'lune.base.Runner' )
 
 
 
@@ -345,13 +346,14 @@ end
 local ModuleInfo = {}
 setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
 _moduleObj.ModuleInfo = ModuleInfo
-function ModuleInfo.new( fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap )
+function ModuleInfo.new( streamName, fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap )
    local obj = {}
    ModuleInfo.setmeta( obj )
-   if obj.__init then obj:__init( fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap ); end
+   if obj.__init then obj:__init( streamName, fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap ); end
    return obj
 end
-function ModuleInfo:__init(fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap) 
+function ModuleInfo:__init(streamName, fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap) 
+   self.streamName = streamName
    self.exportInfo = exportInfo
    self.moduleId = moduleId
    self.fullName = fullName
@@ -392,10 +394,13 @@ function ModuleInfo:get_modulePath(  )
 end
 function ModuleInfo:assign( assignName )
 
-   return ModuleInfo.new(self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.exportInfo, self.importedAliasMap)
+   return ModuleInfo.new(self.streamName, self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.exportInfo, self.importedAliasMap)
 end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
+end
+function ModuleInfo:get_streamName()
+   return self.streamName
 end
 function ModuleInfo:get_fullName()
    return self.fullName
@@ -519,6 +524,24 @@ function ImportModuleInfo.setmeta( obj )
 end
 
 
+local ModuleLoader = {}
+_moduleObj.ModuleLoader = ModuleLoader
+function ModuleLoader.setmeta( obj )
+  setmetatable( obj, { __index = ModuleLoader  } )
+end
+function ModuleLoader.new(  )
+   local obj = {}
+   ModuleLoader.setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function ModuleLoader:__init(  )
+
+end
+
+
 local frontInterface = {}
 _moduleObj.frontInterface = frontInterface
 function frontInterface.setmeta( obj )
@@ -553,7 +576,7 @@ function dummyFront:loadModule( mod )
    local meta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.Meta, {emptyTable}))
    return require( mod ), meta
 end
-function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir )
+function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
 
    error( "not implements" )
 end
@@ -611,9 +634,9 @@ local function loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
 end
 _moduleObj.loadFromLnsTxt = loadFromLnsTxt
 
-local function loadMeta( importModuleInfo, mod, orgMod, baseDir )
+local function loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
 
-   return __luneScript:loadMeta( importModuleInfo, mod, orgMod, baseDir )
+   return __luneScript:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
 end
 _moduleObj.loadMeta = loadMeta
 

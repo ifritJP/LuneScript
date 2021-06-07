@@ -87,7 +87,7 @@ fn createModuleInfo(
    }
    let mut exportInfo = ast.$exportInfo;
    return new frontInterface.ModuleInfo(
-      mod, exportInfo.$moduleTypeInfo.$rawTxt, {},
+      ast.$streamName, mod, exportInfo.$moduleTypeInfo.$rawTxt, {},
       moduleId, exportInfo, importedAliasMap );
 }
 
@@ -242,6 +242,7 @@ class Front extend (frontInterface.frontInterface) {
    let targetSet:Set<str>;
 
    let mod2astCreate:Map<str,AstCreater>;
+   let mod2loader:Map<str,frontInterface.ModuleLoader>;
 
 
    /**
@@ -258,6 +259,7 @@ loadedMap で管理する前にシステムにロードされているため、
 
    
    pub fn __init( option:&Option.Option, bindModuleList:&List<str>! ) {
+      self.mod2loader = {};
       self.mod2astCreate = {};
       self.loadCount = 0;
       self.targetSet = (@);
@@ -315,8 +317,8 @@ loadedMap で管理する前にシステムにロードされているため、
 
    pub fn loadModule( mod:str ) mut: Luaval<&stem>!, frontInterface.ModuleMeta;
    pub fn loadMeta(
-      importModuleInfo:frontInterface.ImportModuleInfo,
-      mod:str, orgMod:str, baseDir:str! ) mut: frontInterface.ModuleMeta!;
+      importModuleInfo:frontInterface.ImportModuleInfo, mod:str, orgMod:str,
+      baseDir:str!, loader:frontInterface.ModuleLoader ) mut: frontInterface.ModuleMeta!;
    pub fn loadFromLnsTxt( importModuleInfo:frontInterface.ImportModuleInfo,
                           baseDir:str!, name:str, txt:str ) mut : Luaval<&stem>;
    pub fn getLuaModulePath( mod:str, baseDir:str! ) mut : str, str!, str;
@@ -407,13 +409,6 @@ fn Front.createAstSub(
       analyzeModule, analyzeMode, pos, self.builtinFunc, self.option );
    self.mod2astCreate[ mod ] = astCreater;
    return CreateAstResult.Creater( astCreater );
-}
-
-fn Front.processAstCreater( astCreater:AstCreater ) mut : &TransUnit.ASTInfo {
-   let ast, moduleInfo = astCreater.getAst();
-   self.moduleMgr.add( ast, moduleInfo );
-   
-   return ast;
 }
 
 fn Front.applyAstResult( result:&CreateAstResult ) mut : &TransUnit.ASTInfo {
@@ -1080,15 +1075,33 @@ pub fn Front.getLuaModulePath( mod:str, baseDir:str! ) mut : str, str!, str {
 }
 
 fn Front.loadMeta(
-   importModuleInfo:frontInterface.ImportModuleInfo,
-   mod:str, orgMod:str, baseDir:str! ) mut : frontInterface.ModuleMeta!
+   importModuleInfo:frontInterface.ImportModuleInfo, mod:str, orgMod:str,
+   baseDir:str!, loader:frontInterface.ModuleLoader ) mut : frontInterface.ModuleMeta!
 {
    if! let mut creater = self.mod2astCreate[ orgMod ] {
       let ast, moduleInfo = creater.getAst();
       return new frontInterface.ModuleMeta( ast.$streamName, .Module( moduleInfo ));
    }
+
+   if! let mut workLoader = self.mod2loader[ orgMod ] {
+      let! moduleInfo = workLoader.getModuleInfo() {
+         return nil;
+      };
+      let mut meta = new frontInterface.ModuleMeta(
+         moduleInfo.$streamName, .Module( moduleInfo ));
+      self.moduleMgr.addMeta( orgMod, meta );
+
+      // self.mod2loader をクリアするのは self.moduleMgr.addMeta() の後にする。
+      // こうしないと、self.moduleMgr.getMeta() に反映されないので、
+      // 再度 .meta から読み込んでしまう。
+      self.mod2loader[ orgMod ] = nil;
+      return meta;
+   }
+
    
    if not self.moduleMgr.getMeta( orgMod ) {
+      self.mod2loader[ orgMod ] = loader;
+      
       if! self.getLoadInfo( orgMod ) {
          // ロード済みのものを使用する
          self.moduleMgr.addMeta( orgMod, _exp.meta );
@@ -1882,8 +1895,8 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
          }
 
          when! astCallback {
-            foreach key in self.moduleMgr.getModList() {
-               if! self.moduleMgr.getAst( key ) {
+            foreach mod in self.moduleMgr.getModList() {
+               if! self.moduleMgr.getAst( mod ) {
                   astCallback( _exp );
                }
             }
@@ -1934,6 +1947,13 @@ pub fn Front.exec() mut
       }
       case .Save, .SaveMeta {
          self.build( .Save, nil );
+      }
+      case .BuildAst {
+         self.build(
+            .CreateAst,
+            fn ( ast: &TransUnit.ASTInfo ) {
+               print( ast.$streamName );
+            });
       }
       case .Shebang {
          if! let modObj =
