@@ -211,17 +211,17 @@ class AstCreater extend Runner.Runner {
       };
 
 
-      self.start( .Sync );
+      self.start( __lns.runMode.Sync );
       //self.converter();
    }
 
-   pub override fn runMain() __async mut {
+   pro override fn runMain() __async mut {
       self.converter();
    }
    
 
    local fn getAst() : &TransUnit.ASTInfo, &frontInterface.ModuleInfo {
-      self.join();
+      __join( self );
       return unwrap self.ast, unwrap self.moduleInfo;
    }
    
@@ -1482,15 +1482,15 @@ class LuaConverter extend Runner.Runner {
             ast, path, outStream, oMetaStream, convMode, false, option );
          self.filterInfo.outputLua( unwrap ast.$node@@@Nodes.RootNode );
       };
-      self.start( .Queue );
+      self.start( __lns.runMode.Queue );
    }
 
-   pub override fn runMain() __async mut {
+   pro override fn runMain() __async mut {
       self.converterFunc();
    }
    
    pub fn saveLua() mut {
-      self.join();
+      __join( self );
 
       let ast = getAstFromResult( self.astResult );
       self.filterInfo.outputMeta( unwrap ast.$node@@@Nodes.RootNode );
@@ -1617,15 +1617,15 @@ class GoConverter extend Runner.Runner {
             option.testing, path, self.memStream, ast, goOpt );
          ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
       };
-      self.start( .Queue );
+      self.start( __lns.runMode.Queue );
    }
 
-   pub override fn runMain() __async mut {
+   pro override fn runMain() __async mut {
       self.converter();
    }
 
    local fn saveGo() mut {
-      self.join();
+      __join( self );
 
       if not self.validFlag {
          return;

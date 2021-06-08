@@ -315,7 +315,7 @@ class Runner extend (__Runner)
 
       if! self.parser {
          _exp.start();
-         if not __run( self, 2 ) {
+         if not __run( self, __lns.runMode.Skip ) {
             // スレッドフルの場合、
             // 同期実行せずに getNext() 毎に parser する
             _exp.stop();

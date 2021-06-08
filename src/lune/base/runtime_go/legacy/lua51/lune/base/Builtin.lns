@@ -68,7 +68,7 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
       let mut classCaseList:List<stat> = [];
       foreach class2symMap in class2symMapList {
          forsort symbolMap, genClassName in class2symMap {
-            let className = genClassName.gsub( "<.*", "" );
+            let className = genClassName.gsub( "<.*", "" ).gsub( "%.", "_" );
             let mut subcaseList:List<stat> = [];
 
             let classTypeName = "%s_" ( className ~= "" and className.lower() or "lns" );
@@ -85,25 +85,28 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
             });
             
             
-            forsort _, funcName in symbolMap {
-               let typeName = "%s_%s" ( className ~= "" and className.lower() or "lns",
-                                        funcName );
-               let symName = "%s_sym" (typeName);
-               defMemberList.insert( `{
-                  pub let mut ,,,typeName:&Ast.TypeInfo;
-                  pub let mut ,,,symName:&Ast.SymbolInfo;
-               } );
-               initMemberList.insert( `{
-                  self.,,,typeName = Ast.headTypeInfo;
-                  self.,,,symName = Ast.dummySymbol;
-               });
-               subcaseList.insert( `{
-                  case ,,funcName ~~{
-                     builtinFunc. ,,,typeName = typeInfo;
-                     builtinFunc. ,,,symName = symInfo;
-                     builtinFunc.register( symInfo );
-                  }
-               });
+            forsort _, memberName in symbolMap {
+               if memberName ~= "__attrib" {
+                  let typeName =
+                     "%s_%s" ( className ~= "" and className.lower() or "lns",
+                               memberName );
+                  let symName = "%s_sym" (typeName);
+                  defMemberList.insert( `{
+                     pub let mut ,,,typeName:&Ast.TypeInfo;
+                     pub let mut ,,,symName:&Ast.SymbolInfo;
+                  } );
+                  initMemberList.insert( `{
+                     self.,,,typeName = Ast.headTypeInfo;
+                     self.,,,symName = Ast.dummySymbol;
+                  });
+                  subcaseList.insert( `{
+                     case ,,memberName ~~{
+                        builtinFunc. ,,,typeName = typeInfo;
+                        builtinFunc. ,,,symName = symInfo;
+                        builtinFunc.register( symInfo );
+                     }
+                  });
+               }
             }
             if #subcaseList > 0 {
                declProcessList.insert( `{
@@ -196,7 +199,14 @@ _DefBuiltinFuncType( [
          "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
          "__run": { "arg": [ "__Runner", "int" ], "ret":[ "bool" ] },
          "__join": { "arg": [ "&__Runner" ], "ret":[ "" ] },
-         "__join2": { "arg": [ "&__Runner" ], "ret":[ "" ] },
+      },
+   },
+   {
+      "__lns.runMode" : {
+         "__attrib": { "type": [ "module" ] },
+         "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
+         "Queue": { "type": [ "var" ], "typeInfo": ["int"] },
+         "Skip": { "type": [ "var" ], "typeInfo": ["int"] },
       },
    },
    {
@@ -490,107 +500,175 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
 {
    self.hasLuaval = false;
    if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
-      if info.type$[1] == "var" {
-         let symbol = unwrap self.transUnit.$scope.add(
-            self.processInfo, .Var, false, true, fieldName, nil,
-            self.getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
-            true, .Mut, true, false );
-         //builtinFunc.register( symbol );
-         setupBuiltinTypeInfo( name, fieldName, symbol );
-      }
-      else {
-         let mut argTypeList: List<&Ast.TypeInfo> = [];
-         foreach argType in unwrap info[ "arg" ] {
-            argTypeList.insert( self.getTypeInfo( argType ) );
+      switch info.type$[1] {
+         case "var" {
+            let symbol = unwrap self.transUnit.$scope.add(
+               self.processInfo, .Var, false, true, fieldName, nil,
+               self.getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
+               true, .Mut, true, false );
+            //builtinFunc.register( symbol );
+            setupBuiltinTypeInfo( name, fieldName, symbol );
          }
+         default {
+            let mut argTypeList: List<&Ast.TypeInfo> = [];
+            foreach argType in unwrap info[ "arg" ] {
+               argTypeList.insert( self.getTypeInfo( argType ) );
+            }
 
-         let mut retTypeList: List<&Ast.TypeInfo> = [];
-         foreach retType in unwrap info[ "ret" ] {
-            let retTypeInfo = self.getTypeInfo( retType );
-            retTypeList.insert( retTypeInfo );
-         }
+            let mut retTypeList: List<&Ast.TypeInfo> = [];
+            foreach retType in unwrap info[ "ret" ] {
+               let retTypeInfo = self.getTypeInfo( retType );
+               retTypeList.insert( retTypeInfo );
+            }
 
-         let funcType = info.type$[1];
-         let mutable;
+            let funcType = info.type$[1];
+            let mutable;
 
-         let staticFlag;
-         let kind:Ast.TypeInfoKind;
-         let symbolKind:Ast.SymbolKind;
-         let abstractFlag:bool;
-         let accessMode:Ast.AccessMode;
-         switch funcType {
-            case "method", "mut" {
-               staticFlag = false;
-               kind = .Method;
-               symbolKind = .Mtd;
-               abstractFlag = false;
-               accessMode = .Pub;
-               mutable = funcType == "mut";
+            let staticFlag;
+            let kind:Ast.TypeInfoKind;
+            let symbolKind:Ast.SymbolKind;
+            let abstractFlag:bool;
+            let accessMode:Ast.AccessMode;
+            switch funcType {
+               case "method", "mut" {
+                  staticFlag = false;
+                  kind = .Method;
+                  symbolKind = .Mtd;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = funcType == "mut";
+               }
+               case "abstract" {
+                  staticFlag = false;
+                  kind = .Method;
+                  symbolKind = .Mtd;
+                  abstractFlag = true;
+                  accessMode = .Pro;
+                  mutable = true;
+               }
+               case "macro" {
+                  staticFlag = true;
+                  kind = .Macro;
+                  symbolKind = .Mac;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = false;
+               }
+               case "formfunc" {
+                  staticFlag = true;
+                  kind = .FormFunc;
+                  symbolKind = .Typ;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = false;
+               }
+               default {
+                  staticFlag = true;
+                  kind = .Func;
+                  symbolKind = .Fun;
+                  abstractFlag = false;
+                  accessMode = .Pub;
+                  mutable = false;
+               }
             }
-            case "abstract" {
-               staticFlag = false;
-               kind = .Method;
-               symbolKind = .Mtd;
-               abstractFlag = true;
-               accessMode = .Pro;
-               mutable = true;
-            }
-            case "macro" {
-               staticFlag = true;
-               kind = .Macro;
-               symbolKind = .Mac;
-               abstractFlag = false;
-               accessMode = .Pub;
-               mutable = false;
-            }
-            case "formfunc" {
-               staticFlag = true;
-               kind = .FormFunc;
-               symbolKind = .Typ;
-               abstractFlag = false;
-               accessMode = .Pub;
-               mutable = false;
-            }
-            default {
-               staticFlag = true;
-               kind = .Func;
-               symbolKind = .Fun;
-               abstractFlag = false;
-               accessMode = .Pub;
-               mutable = false;
-            }
-         }
          
-         self.transUnit.pushScope( false ## );
+            self.transUnit.pushScope( false ## );
 
-         let mut scope = self.transUnit.$scope;
-         let asyncMode:Ast.Async;
-         if self.hasLuaval {
-            asyncMode = .Noasync;
-         } else {
-            asyncMode = .Async;
+            let mut scope = self.transUnit.$scope;
+            let asyncMode:Ast.Async;
+            if self.hasLuaval {
+               asyncMode = .Noasync;
+            } else {
+               asyncMode = .Async;
+            }
+            // asyncMode = .Async;
+            
+            let mut typeInfo = self.processInfo.createFuncAsync(
+               abstractFlag, true, scope, kind,
+               Ast.getBuiltinMut( parentInfo), false, true, staticFlag, accessMode,
+               fieldName, asyncMode, nil, argTypeList, retTypeList, mutable );
+
+            self.transUnit.popScope();
+
+            builtinFunc.$allFuncTypeSet.add( typeInfo );
+
+            Ast.addBuiltinMut( typeInfo, scope );
+            let symInfo = unwrap self.transUnit.$scope.add(
+               self.processInfo, symbolKind, false, kind == .Func,
+               fieldName, nil, typeInfo, accessMode, staticFlag,
+               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
+
+            setupBuiltinTypeInfo( name, fieldName, symInfo );
          }
-         // asyncMode = .Async;
-         
-         let mut typeInfo = self.processInfo.createFuncAsync(
-            abstractFlag, true, scope, kind,
-            Ast.getBuiltinMut( parentInfo), false, true, staticFlag, accessMode,
-            fieldName, asyncMode, nil, argTypeList, retTypeList, mutable );
-
-         self.transUnit.popScope();
-
-         builtinFunc.$allFuncTypeSet.add( typeInfo );
-
-         Ast.addBuiltinMut( typeInfo, scope );
-         let symInfo = unwrap self.transUnit.$scope.add(
-            self.processInfo, symbolKind, false, kind == .Func,
-            fieldName, nil, typeInfo, accessMode, staticFlag,
-            mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
-
-         setupBuiltinTypeInfo( name, fieldName, symInfo );
       }
    }
 }
+
+fn Builtin.registClass(
+   nameList:&List<str>, name2FieldInfo:&Map<str,&Map<str,&List<str>>>,
+   pos:&Parser.Position, genTypeList:List<&Ast.AlternateTypeInfo> ) mut : &Ast.TypeInfo
+{
+   let mut classKind = TransUnitIF.DeclClassMode.Class;
+   if! let types = name2FieldInfo.__attrib$.type {
+      if #types > 0 {
+         switch types[ 1 ] {
+            case "interface" {
+               classKind = .Interface;
+            }
+            case "module" {
+               classKind = .Module;
+            }
+         }
+      }
+   }
+   let mut interfaceList:List<&Ast.TypeInfo> = [];
+   if! name2FieldInfo.__attrib$.inplements {
+      foreach ifname in _exp {
+         let ifType = self.getTypeInfo( ifname );
+         interfaceList.insert( ifType );
+      }
+   }
+   fn registerClass(regName:str,index:int) : &Ast.TypeInfo {
+      let workClassKind;
+      if index == 1 {
+         workClassKind = classKind;
+      } else {
+         workClassKind = .Class;
+      }
+      
+      let mut classType:&Ast.TypeInfo = Ast.headTypeInfo;
+      switch workClassKind {
+         case .Class, .Interface {
+            let declMode;
+            if workClassKind == .Class {
+               declMode = TransUnitIF.DeclClassMode.Class;
+            } else {
+               declMode = .Interface;
+            }
+            classType = self.transUnit.pushClassLow(
+               self.processInfo, pos,
+               declMode, false, nil, interfaceList,
+               genTypeList, true, regName, true, .Pub ## );
+            builtinFunc.registerClass( classType );
+         }
+         case .Module {
+            classType = self.transUnit.pushModuleLow(
+               self.processInfo, true, regName, true );
+
+            self.transUnit.$scope.$parent.add(
+               self.processInfo, .Typ , false, false, regName, nil,
+               classType, .Local, true, Ast.MutMode.Mut, true, false );
+         }
+      }
+      return classType;
+   }
+   let mut parentInfo = Ast.headTypeInfo;
+   foreach name, index in nameList {
+      parentInfo = registerClass( name, index );
+   }
+   return parentInfo;
+}
+
 
 let mut readyBuiltin = false;
 pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
@@ -670,55 +748,16 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                }
             }
          }
+
+         let nameList = Util.splitModule( name );
+         
          let mut parentInfo:&Ast.TypeInfo = Ast.headTypeInfo;
          if name ~= "" {
-            let mut classKind = TransUnitIF.DeclClassMode.Class;
-            if! let types = name2FieldInfo.__attrib$.type {
-               if #types > 0 {
-                  switch types[ 1 ] {
-                     case "interface" {
-                        classKind = .Interface;
-                     }
-                     case "module" {
-                        classKind = .Module;
-                     }
-                  }
-               }
-            }
-            let mut interfaceList:List<&Ast.TypeInfo> = [];
-            if! name2FieldInfo.__attrib$.inplements {
-               foreach ifname in _exp {
-                  let ifType = self.getTypeInfo( ifname );
-                  interfaceList.insert( ifType );
-               }
-            }
-            switch classKind {
-               case .Class, .Interface {
-                  let declMode;
-                  if classKind == .Class {
-                     declMode = TransUnitIF.DeclClassMode.Class;
-                  } else {
-                     declMode = .Interface;
-                  }
-                  parentInfo = self.transUnit.pushClassLow(
-                     self.processInfo, pos,
-                     declMode, false, nil, interfaceList,
-                     genTypeList, true, name, true, .Pub ## );
-                  builtinFunc.registerClass( parentInfo );
-               }
-               case .Module {
-                  parentInfo = self.transUnit.pushModuleLow(
-                     self.processInfo, true, name, true );
-
-                  self.transUnit.$scope.$parent.add(
-                     self.processInfo, .Typ , false, false, name, nil,
-                     parentInfo, .Local, true, Ast.MutMode.Mut, true, false );
-               }
-            }
+            parentInfo = self.registClass( nameList, name2FieldInfo, pos, genTypeList );
          }
          if not builtinModuleName2Scope[ name ]
          {
-            if name ~= "" and self.getTypeInfo( name ) {
+            if name ~= "" {
                builtinModuleName2Scope[ name ] = self.transUnit.$scope;
             }
 
@@ -728,13 +767,16 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                   case "__attrib" {
                   }
                   default {
-                     self.processField( name, fieldName, info, parentInfo );
+                     self.processField(
+                        name.gsub( "%.", "_"), fieldName, info, parentInfo );         
                   }
                }
             }
          }
          if name ~= "" {
-            self.transUnit.popClass();
+            foreach _ in nameList {
+               self.transUnit.popClass();
+            }
          }
       }
    }

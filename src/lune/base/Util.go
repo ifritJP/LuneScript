@@ -5,20 +5,20 @@ var init_Util bool
 var Util__mod__ string
 var Util_debugFlag bool
 var Util_errorCode LnsInt
-// for 366
-func Util_convExp1439(arg1 []LnsAny) string {
+// for 370
+func Util_convExp1460(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 383
-func Util_convExp1545(arg1 []LnsAny) string {
+// for 387
+func Util_convExp1566(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 394
-func Util_convExp1613(arg1 []LnsAny) string {
+// for 398
+func Util_convExp1634(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 354
-func Util_convExp1358(arg1 []LnsAny) string {
+// for 358
+func Util_convExp1379(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 32: decl @lune.@base.@Util.setDebugFlag
@@ -66,20 +66,25 @@ func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList {
     return list
 }
 
-// 319: decl @lune.@base.@Util.log
+// 65: decl @lune.@base.@Util.splitModule
+func Util_splitModule(_env *LnsEnv, modPath string) *LnsList {
+    return Util_splitStr(_env, modPath, "[^%./:]+")
+}
+
+// 323: decl @lune.@base.@Util.log
 func Util_log(_env *LnsEnv, message string) {
     if Util_debugFlag{
         Util_errorLog(_env, message)
     }
 }
 
-// 325: decl @lune.@base.@Util.printStackTrace
+// 329: decl @lune.@base.@Util.printStackTrace
 func Util_printStackTrace(_env *LnsEnv) {
     Util_errorLog(_env, Depend_getStackTrace(_env))
 }
 
 
-// 334: decl @lune.@base.@Util.getReadyCode
+// 338: decl @lune.@base.@Util.getReadyCode
 func Util_getReadyCode(_env *LnsEnv, depPath string,tgtPath string) bool {
     __func__ := "@lune.@base.@Util.getReadyCode"
     var tgtTime LnsReal
@@ -97,42 +102,42 @@ func Util_getReadyCode(_env *LnsEnv, depPath string,tgtPath string) bool {
     if tgtTime >= depTime{
         return true
     }
-    Log_log(_env, Log_Level__Warn, __func__, 345, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Warn, __func__, 349, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.LuaVM.String_format("not ready %g < %g : %s, %s", []LnsAny{tgtTime, depTime, tgtPath, depPath})
     }))
     
     return false
 }
 
-// 350: decl @lune.@base.@Util.scriptPath2Module
+// 354: decl @lune.@base.@Util.scriptPath2Module
 func Util_scriptPath2Module(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(path,"^/", nil, nil))){
         Util_err(_env, "script must be relative-path -- " + path)
     }
     var mod string
-    mod = Util_convExp1358(Lns_2DDD(_env.LuaVM.String_gsub(Lns_car(_env.LuaVM.String_gsub(path,"^./", "")).(string),"/", ".")))
+    mod = Util_convExp1379(Lns_2DDD(_env.LuaVM.String_gsub(Lns_car(_env.LuaVM.String_gsub(path,"^./", "")).(string),"/", ".")))
     return Lns_car(_env.LuaVM.String_gsub(mod, "%.lns$", "")).(string)
 }
 
-// 358: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
+// 362: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
 func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny) string {
     if projDir != nil{
-        projDir_272 := projDir.(string)
+        projDir_276 := projDir.(string)
         var workpath string
-        if Lns_op_not(Lns_car(_env.LuaVM.String_find(projDir_272,"/$", nil, nil))){
-            workpath = projDir_272 + "/"
+        if Lns_op_not(Lns_car(_env.LuaVM.String_find(projDir_276,"/$", nil, nil))){
+            workpath = projDir_276 + "/"
             
         } else { 
-            workpath = projDir_272
+            workpath = projDir_276
             
         }
-        path = Util_convExp1439(Lns_2DDD(_env.LuaVM.String_gsub(path,"^" + workpath, "")))
+        path = Util_convExp1460(Lns_2DDD(_env.LuaVM.String_gsub(path,"^" + workpath, "")))
         
     }
     return Util_scriptPath2Module(_env, path)
 }
 
-// 371: decl @lune.@base.@Util.pathJoin
+// 375: decl @lune.@base.@Util.pathJoin
 func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(path,"^/", nil, nil))){
         return path
@@ -143,16 +148,16 @@ func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
     return _env.LuaVM.String_format("%s/%s", []LnsAny{dir, path})
 }
 
-// 381: decl @lune.@base.@Util.parentPath
+// 385: decl @lune.@base.@Util.parentPath
 func Util_parentPath(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(path,"/$", nil, nil))){
-        path = Util_convExp1545(Lns_2DDD(_env.LuaVM.String_gsub(path,"/$", "")))
+        path = Util_convExp1566(Lns_2DDD(_env.LuaVM.String_gsub(path,"/$", "")))
         
     }
     return Lns_car(_env.LuaVM.String_gsub(path,"/[^/]+$", "")).(string)
 }
 
-// 388: decl @lune.@base.@Util.searchProjDir
+// 392: decl @lune.@base.@Util.searchProjDir
 func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
     var work string
     work = dir
@@ -160,7 +165,7 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
         if Depend_existFile(_env, Util_pathJoin(_env, work, "lune.js")){
             return work
         }
-        work = Util_convExp1613(Lns_2DDD(_env.LuaVM.String_gsub(work,"/[^/]+$", "")))
+        work = Util_convExp1634(Lns_2DDD(_env.LuaVM.String_gsub(work,"/[^/]+$", "")))
         
     }
     return nil
@@ -206,7 +211,7 @@ func NewUtil_OrderedSet(_env *LnsEnv) *Util_OrderedSet {
     return obj
 }
 func (self *Util_OrderedSet) Get_list(_env *LnsEnv) *LnsList{ return self.list }
-// 69: DeclConstr
+// 73: DeclConstr
 func (self *Util_OrderedSet) InitUtil_OrderedSet(_env *LnsEnv) {
     self.set = NewLnsSet([]LnsAny{})
     
@@ -214,7 +219,7 @@ func (self *Util_OrderedSet) InitUtil_OrderedSet(_env *LnsEnv) {
     
 }
 
-// 74: decl @lune.@base.@Util.OrderedSet.add
+// 78: decl @lune.@base.@Util.OrderedSet.add
 func (self *Util_OrderedSet) Add(_env *LnsEnv, _val LnsAny) bool {
     val := _val
     if Lns_op_not(self.set.Has(val)){
@@ -225,7 +230,7 @@ func (self *Util_OrderedSet) Add(_env *LnsEnv, _val LnsAny) bool {
     return false
 }
 
-// 83: decl @lune.@base.@Util.OrderedSet.clone
+// 87: decl @lune.@base.@Util.OrderedSet.clone
 func (self *Util_OrderedSet) Clone(_env *LnsEnv) *Util_OrderedSet {
     var obj *Util_OrderedSet
     obj = NewUtil_OrderedSet(_env)
@@ -237,13 +242,13 @@ func (self *Util_OrderedSet) Clone(_env *LnsEnv) *Util_OrderedSet {
     return obj
 }
 
-// 92: decl @lune.@base.@Util.OrderedSet.has
+// 96: decl @lune.@base.@Util.OrderedSet.has
 func (self *Util_OrderedSet) Has(_env *LnsEnv, _val LnsAny) bool {
     val := _val
     return self.set.Has(val)
 }
 
-// 96: decl @lune.@base.@Util.OrderedSet.removeLast
+// 100: decl @lune.@base.@Util.OrderedSet.removeLast
 func (self *Util_OrderedSet) RemoveLast(_env *LnsEnv) {
     if self.list.Len() == 0{
         Util_err(_env, "empty")
@@ -293,7 +298,7 @@ func NewUtil_OrderdMap(_env *LnsEnv) *Util_OrderdMap {
 }
 func (self *Util_OrderdMap) Get_map(_env *LnsEnv) *LnsMap{ return self._map }
 func (self *Util_OrderdMap) Get_keyList(_env *LnsEnv) *LnsList{ return self.keyList }
-// 109: DeclConstr
+// 113: DeclConstr
 func (self *Util_OrderdMap) InitUtil_OrderdMap(_env *LnsEnv) {
     self._map = NewLnsMap( map[LnsAny]LnsAny{})
     
@@ -301,7 +306,7 @@ func (self *Util_OrderdMap) InitUtil_OrderdMap(_env *LnsEnv) {
     
 }
 
-// 114: decl @lune.@base.@Util.OrderdMap.clear
+// 118: decl @lune.@base.@Util.OrderdMap.clear
 func (self *Util_OrderdMap) Clear(_env *LnsEnv) {
     self._map = NewLnsMap( map[LnsAny]LnsAny{})
     
@@ -309,7 +314,7 @@ func (self *Util_OrderdMap) Clear(_env *LnsEnv) {
     
 }
 
-// 119: decl @lune.@base.@Util.OrderdMap.add
+// 123: decl @lune.@base.@Util.OrderdMap.add
 func (self *Util_OrderdMap) Add(_env *LnsEnv, _key LnsAny,_val LnsAny) {
     key := _key
     val := _val
@@ -358,30 +363,30 @@ func NewUtil_memStream(_env *LnsEnv) *Util_memStream {
     obj.InitUtil_memStream(_env)
     return obj
 }
-// 130: DeclConstr
+// 134: DeclConstr
 func (self *Util_memStream) InitUtil_memStream(_env *LnsEnv) {
     self.txt = NewStr_Builder(_env)
     
 }
 
-// 133: decl @lune.@base.@Util.memStream.get_txt
+// 137: decl @lune.@base.@Util.memStream.get_txt
 func (self *Util_memStream) Get_txt(_env *LnsEnv) string {
     self.txt.FP.Flush(_env)
     return self.txt.FP.Get_txt(_env)
 }
 
-// 137: decl @lune.@base.@Util.memStream.write
+// 141: decl @lune.@base.@Util.memStream.write
 func (self *Util_memStream) Write(_env *LnsEnv, val string)(LnsAny, LnsAny) {
     self.txt.FP.Add(_env, val)
     return self.FP, nil
 }
 
-// 141: decl @lune.@base.@Util.memStream.close
+// 145: decl @lune.@base.@Util.memStream.close
 func (self *Util_memStream) Close(_env *LnsEnv) {
     self.txt.FP.Flush(_env)
 }
 
-// 144: decl @lune.@base.@Util.memStream.flush
+// 148: decl @lune.@base.@Util.memStream.flush
 func (self *Util_memStream) Flush(_env *LnsEnv) {
     self.txt.FP.Flush(_env)
 }
@@ -431,7 +436,7 @@ func NewUtil_TxtStream(_env *LnsEnv, arg1 string) *Util_TxtStream {
 }
 func (self *Util_TxtStream) Get_txt(_env *LnsEnv) string{ return self.txt }
 func (self *Util_TxtStream) Get_lineNo(_env *LnsEnv) LnsInt{ return self.lineNo }
-// 155: DeclConstr
+// 159: DeclConstr
 func (self *Util_TxtStream) InitUtil_TxtStream(_env *LnsEnv, txt string) {
     self.txt = txt
     
@@ -445,17 +450,17 @@ func (self *Util_TxtStream) InitUtil_TxtStream(_env *LnsEnv, txt string) {
     
 }
 
-// 174: decl @lune.@base.@Util.TxtStream.getSubstring
+// 178: decl @lune.@base.@Util.TxtStream.getSubstring
 func (self *Util_TxtStream) GetSubstring(_env *LnsEnv, fromLineNo LnsInt,toLineNo LnsAny) string {
     var txt string
     txt = ""
     var to LnsInt
     to = Lns_unwrapDefault( toLineNo, self.lineList.Len() + 1).(LnsInt)
     {
-        var _from676 LnsInt = fromLineNo
-        var _to676 LnsInt = to - 1
-        for _work676 := _from676; _work676 <= _to676; _work676++ {
-            index := _work676
+        var _from697 LnsInt = fromLineNo
+        var _to697 LnsInt = to - 1
+        for _work697 := _from697; _work697 <= _to697; _work697++ {
+            index := _work697
             if _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( index < 1) ||
                 _env.SetStackVal( index > self.lineList.Len()) ).(bool){
@@ -468,7 +473,7 @@ func (self *Util_TxtStream) GetSubstring(_env *LnsEnv, fromLineNo LnsInt,toLineN
     return txt
 }
 
-// 186: decl @lune.@base.@Util.TxtStream.read
+// 190: decl @lune.@base.@Util.TxtStream.read
 func (self *Util_TxtStream) Read(_env *LnsEnv, mode LnsAny) LnsAny {
     if mode != "*l"{
         Util_err(_env, _env.LuaVM.String_format("not support -- %s", []LnsAny{mode}))
@@ -486,7 +491,7 @@ func (self *Util_TxtStream) Read(_env *LnsEnv, mode LnsAny) LnsAny {
     return line
 }
 
-// 200: decl @lune.@base.@Util.TxtStream.close
+// 204: decl @lune.@base.@Util.TxtStream.close
 func (self *Util_TxtStream) Close(_env *LnsEnv) {
 }
 
@@ -528,16 +533,16 @@ func NewUtil_NullOStream(_env *LnsEnv) *Util_NullOStream {
 }
 func (self *Util_NullOStream) InitUtil_NullOStream(_env *LnsEnv) {
 }
-// 207: decl @lune.@base.@Util.NullOStream.write
+// 211: decl @lune.@base.@Util.NullOStream.write
 func (self *Util_NullOStream) Write(_env *LnsEnv, val string)(LnsAny, LnsAny) {
     return self.FP, nil
 }
 
-// 210: decl @lune.@base.@Util.NullOStream.close
+// 214: decl @lune.@base.@Util.NullOStream.close
 func (self *Util_NullOStream) Close(_env *LnsEnv) {
 }
 
-// 212: decl @lune.@base.@Util.NullOStream.flush
+// 216: decl @lune.@base.@Util.NullOStream.flush
 func (self *Util_NullOStream) Flush(_env *LnsEnv) {
 }
 
@@ -603,7 +608,7 @@ func NewUtil_SimpleSourceOStream(_env *LnsEnv, arg1 Lns_oStream, arg2 LnsAny, ar
     obj.InitUtil_SimpleSourceOStream(_env, arg1, arg2, arg3)
     return obj
 }
-// 235: DeclConstr
+// 239: DeclConstr
 func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv, stream Lns_oStream,headStream LnsAny,stepIndent LnsInt) {
     self.srcStream = stream
     
@@ -621,7 +626,7 @@ func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv,
     
 }
 
-// 245: decl @lune.@base.@Util.SimpleSourceOStream.get_indent
+// 249: decl @lune.@base.@Util.SimpleSourceOStream.get_indent
 func (self *Util_SimpleSourceOStream) get_indent(_env *LnsEnv) LnsInt {
     if self.indentQueue.Len() > 0{
         return self.indentQueue.GetAt(self.indentQueue.Len()).(LnsInt)
@@ -629,7 +634,7 @@ func (self *Util_SimpleSourceOStream) get_indent(_env *LnsEnv) LnsInt {
     return 0
 }
 
-// 266: decl @lune.@base.@Util.SimpleSourceOStream.write
+// 270: decl @lune.@base.@Util.SimpleSourceOStream.write
 func (self *Util_SimpleSourceOStream) Write(_env *LnsEnv, txt string) {
     var stream Lns_oStream
     stream = self.nowStream
@@ -650,7 +655,7 @@ func (self *Util_SimpleSourceOStream) Write(_env *LnsEnv, txt string) {
     }
 }
 
-// 293: decl @lune.@base.@Util.SimpleSourceOStream.writeln
+// 297: decl @lune.@base.@Util.SimpleSourceOStream.writeln
 func (self *Util_SimpleSourceOStream) Writeln(_env *LnsEnv, txt string) {
     self.FP.Write(_env, txt)
     self.FP.Write(_env, "\n")
@@ -658,14 +663,14 @@ func (self *Util_SimpleSourceOStream) Writeln(_env *LnsEnv, txt string) {
     
 }
 
-// 299: decl @lune.@base.@Util.SimpleSourceOStream.pushIndent
+// 303: decl @lune.@base.@Util.SimpleSourceOStream.pushIndent
 func (self *Util_SimpleSourceOStream) PushIndent(_env *LnsEnv, newIndent LnsAny) {
     var indent LnsInt
     indent = Lns_unwrapDefault( newIndent, self.FP.get_indent(_env) + self.stepIndent).(LnsInt)
     self.indentQueue.Insert(indent)
 }
 
-// 304: decl @lune.@base.@Util.SimpleSourceOStream.popIndent
+// 308: decl @lune.@base.@Util.SimpleSourceOStream.popIndent
 func (self *Util_SimpleSourceOStream) PopIndent(_env *LnsEnv) {
     if self.indentQueue.Len() == 0{
         Util_err(_env, "self.indentQueue == 0")
@@ -673,13 +678,13 @@ func (self *Util_SimpleSourceOStream) PopIndent(_env *LnsEnv) {
     self.indentQueue.Remove(nil)
 }
 
-// 311: decl @lune.@base.@Util.SimpleSourceOStream.switchToHeader
+// 315: decl @lune.@base.@Util.SimpleSourceOStream.switchToHeader
 func (self *Util_SimpleSourceOStream) SwitchToHeader(_env *LnsEnv) {
     self.nowStream = self.headStream
     
 }
 
-// 314: decl @lune.@base.@Util.SimpleSourceOStream.returnToSource
+// 318: decl @lune.@base.@Util.SimpleSourceOStream.returnToSource
 func (self *Util_SimpleSourceOStream) ReturnToSource(_env *LnsEnv) {
     self.nowStream = self.srcStream
     

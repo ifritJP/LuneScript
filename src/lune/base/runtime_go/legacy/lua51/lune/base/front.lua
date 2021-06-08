@@ -519,7 +519,7 @@ function AstCreater:__init(importModuleInfo, parserSrc, mod, baseDir, moduleId, 
       
    end
    
-   self:start( Runner.RunModeWhenFull.Sync )
+   self:start( 0 )
    
 end
 function AstCreater:runMain(  )
@@ -528,7 +528,7 @@ function AstCreater:runMain(  )
 end
 function AstCreater:getAst(  )
 
-   self:join(  )
+   
    return _lune.unwrap( self.ast), _lune.unwrap( self.moduleInfo)
 end
 function AstCreater.setmeta( obj )
@@ -2008,7 +2008,7 @@ function LuaConverter:__init(luaPath, metaPath, dependsPath, astResult, convMode
       self.filterInfo = ast2LuaMain( ast, path, outStream, oMetaStream, convMode, false, option )
       self.filterInfo:outputLua( _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode )) )
    end
-   self:start( Runner.RunModeWhenFull.Queue )
+   self:start( 1 )
 end
 function LuaConverter:runMain(  )
 
@@ -2016,7 +2016,7 @@ function LuaConverter:runMain(  )
 end
 function LuaConverter:saveLua(  )
 
-   self:join(  )
+   
    
    local ast = getAstFromResult( self.astResult )
    self.filterInfo:outputMeta( _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode )) )
@@ -2160,7 +2160,7 @@ function GoConverter:__init(scriptPath, astResult, option, goOpt)
       local conv = convGo.createFilter( option.testing, path, self.memStream, ast, goOpt )
       ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
    end
-   self:start( Runner.RunModeWhenFull.Queue )
+   self:start( 1 )
 end
 function GoConverter:runMain(  )
 
@@ -2168,7 +2168,7 @@ function GoConverter:runMain(  )
 end
 function GoConverter:saveGo(  )
 
-   self:join(  )
+   
    
    if not self.validFlag then
       return 

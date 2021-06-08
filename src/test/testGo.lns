@@ -1925,31 +1925,18 @@ _section();
    abstract class Runner extend (__Runner) {
       _lune_control default_async_this_class;
       
-      let pipe:__pipe<RunItem>!;
-
-      pub fn __init() {
-         self.pipe = RunItem._createPipe( 1 );
-      }
-      
       pub abstract fn runMain() mut;
 
       pub fn run() mut {
          self.runMain();
-
-         if! self.pipe {
-            _exp.put( new RunItem( true ));
-         }
       }
 
       
       pub fn start() mut {
          __run( self, 0 );
       }
-      pub fn getResult() mut : bool {
-         if! let mut pipe = self.pipe {
-            return unwrap pipe.get()$.$result default false;
-         }
-         return false;
+      pub fn getResult() mut {
+         __join(self);
       }
    }
 

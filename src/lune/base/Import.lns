@@ -762,26 +762,31 @@ form LoaderFunc() __async;
 // 非同期化できるように準備をしておくが、
 // ここで単純に非同期化すると大量のスレッドが出来てしまいそうなので、
 // 形だけ作っておく。
+
+pub class ModuleLoaderResult {
+   local let mut moduleInfo:&frontInterface.ModuleInfo! {pub};
+   local let modulePath:str;
+   local let fullModulePath:str;
+   local let baseDir:str!;
+   local let mut err:str;
+   local let depth:int;
+   /**
+インポートしているモジュール内で定義している alias 情報。
+
+alias で置き換えている元の Type → alias の型
+   */
+   local let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
+}
+
 pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
-   let mut moduleInfo:&frontInterface.ModuleInfo! {local};
    let mut moduleMeta:frontInterface.ModuleMeta!;
-   let modulePath:str {pub};
-   let fullModulePath:str {pub};
-   let baseDir:str! {pub};
-   let mut err:str{pub};
-   let depth:int{pub};
+   let result:ModuleLoaderResult;
    let validMutControl:bool;
    let curPos:&Parser.Position;
    let moduleLoaderParam:&ModuleLoaderParam;
    let mut importModuleInfo:frontInterface.ImportModuleInfo;
    
    let macroCtrl:Macro.MacroCtrl;
-   /**
-インポートしているモジュール内で定義している alias 情報。
-
-alias で置き換えている元の Type → alias の型
-   */
-   let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
    
 
    let transUnitIF:TransUnitIF.TransUnitIF;
@@ -806,7 +811,7 @@ alias で置き換えている元の Type → alias の型
          //    self.transUnitIF.$scope.addSymbolInfo( processInfo, globalSymbol );
          // }     
          foreach val, key in moduleInfo.$importedAliasMap {
-            self.importedAliasMap[key] = val;
+            self.result.importedAliasMap[key] = val;
          }
          
          // foreach globalSymbol in info.$exportInfo.$globalSymbolList {
@@ -826,14 +831,15 @@ alias で置き換えている元の Type → alias の型
             return moduleInfo;
          }
          case .Meta( metaInfo ) {
-            self.importModuleInfo.add( self.modulePath );
+            self.importModuleInfo.add( self.result.modulePath );
             importProcessInfo.switchIdProvier( .Ext );
 
-            let mut nameList = Util.splitStr(self.modulePath, '[^%./:]+' );
+            let mut nameList = Util.splitStr(self.result.modulePath, '[^%./:]+' );
 
             let moduleInfo = self.processImportFromFile(
                importProcessInfo, moduleMeta.$lnsPath, metaInfo,
-               self.fullModulePath, self.modulePath, nameList, self.baseDir, self.depth );
+               self.result.fullModulePath, self.result.modulePath,
+               nameList, self.result.baseDir, self.result.depth );
 
             importProcessInfo.switchIdProvier( .Base );
             self.importModuleInfo.remove();
@@ -854,16 +860,17 @@ alias で置き換えている元の Type → alias の型
    {
       super();
 
-      self.importedAliasMap = {};
-
       self.moduleLoaderParam = moduleLoaderParam;
-      self.baseDir = baseDir;
-      self.moduleInfo = moduleInfo;
+      self.result = new ModuleLoaderResult( 
+         moduleInfo, 
+         modulePath,
+         fullModulePath,
+         baseDir,
+         "",
+         depth,
+         {} );
+      
       self.moduleMeta = nil;
-      self.modulePath = modulePath;
-      self.fullModulePath = fullModulePath;
-      self.depth = depth;
-      self.err = "";
       self.validMutControl = moduleLoaderParam.$validMutControl;
       self.curPos = moduleLoaderParam.$latestPos;
       self.macroCtrl = new Macro.MacroCtrl( moduleLoaderParam.$macroEval );
@@ -880,9 +887,9 @@ alias で置き換えている元の Type → alias の型
       
 
       self.loaderFunc = fn () {
-         if not self.moduleInfo {
+         if not self.result.moduleInfo {
             if not self.importModuleInfo.add( fullModulePath ) {
-               self.err = "recursive import: %s -> %s"
+               self.result.err = "recursive import: %s -> %s"
                ( self.importModuleInfo.getFull(), fullModulePath );
             } else {
                __asyncLock {
@@ -891,10 +898,10 @@ alias で置き換えている元の Type → alias の型
                      fullModulePath, baseDir, self )
                   {
                      let mut moduleMeta = _exp;
-                     self.moduleInfo = self.craeteModuleInfo(
+                     self.result.moduleInfo = self.craeteModuleInfo(
                         moduleMeta, importProcessInfo );
                   } else {
-                     self.err = "failed to load meta -- %s on %s"
+                     self.result.err = "failed to load meta -- %s on %s"
                      (  fullModulePath, baseDir or "./" );
                   }
                }
@@ -907,16 +914,21 @@ alias で置き換えている元の Type → alias の型
       //self.loaderFunc();
       // 現状、ここを非同期にすると、 lnstags がビルドできない。
       //
-      self.start( .Sync );
+      self.start( __lns.runMode.Sync );
    }
 
-   pub override fn runMain() __async mut {
+   pro override fn runMain() __async mut {
       self.loaderFunc();
    }
 
+   pub fn getResult() mut : &ModuleLoaderResult {
+      __join( self );
+      return self.result;
+   }
+
    pub fn getModuleInfo() mut : &frontInterface.ModuleInfo! {
-      self.join();
-      return self.moduleInfo;
+      __join( self );
+      return self.result.moduleInfo;
    }
 }
 
@@ -949,11 +961,13 @@ fn ModuleLoader.processImportFromFile(
          loaderMap[ moduleLoader ] = typeId;
       }
       foreach typeId, moduleLoader in loaderMap {
-         let! moduleInfo = moduleLoader.getModuleInfo() {
-            self.transUnitIF.error( moduleLoader.$err );
+         let result = moduleLoader.getResult();
+         if! result.moduleInfo {
+            self.applyModuleInfo( _exp );
+            dependLibId2DependInfo[ typeId ] = _exp;
+         } else {
+            self.transUnitIF.error( result.err );
          };
-         self.applyModuleInfo( moduleInfo );
-         dependLibId2DependInfo[ typeId ] = moduleInfo;
       }
    }
 
@@ -1344,7 +1358,7 @@ fn ModuleLoader.processImportFromFile(
    if depth == 1 {
       // トランスコンパイル対象から直接インポートされている場合
       foreach val, key in importParam.importedAliasMap {
-         self.importedAliasMap[key] = val;
+         self.result.importedAliasMap[key] = val;
       }
    }
 
@@ -1459,15 +1473,16 @@ pub fn Import.createModuleLoader(
 pub fn Import.loadModuleInfo( moduleLoader:ModuleLoader ) mut :
    &frontInterface.ModuleInfo!, str
 {
-   // let modulePath = moduleLoader.$modulePath;
-   let fullModulePath = moduleLoader.$fullModulePath;
-   // let baseDir = moduleLoader.$baseDir;
-   let depth = moduleLoader.$depth;
+   let result = moduleLoader.getResult();
+   
+   let! mut moduleInfo = result.moduleInfo {
+      return nil, result.$err;
+   };
+   
+   let fullModulePath = result.$fullModulePath;
+   let depth = result.$depth;
    
 
-   let! mut moduleInfo = moduleLoader.getModuleInfo() {
-      return nil, moduleLoader.$err;
-   };
 
 
    if! let exportInfo = moduleInfo.$exportInfo@@@Nodes.ExportInfo {
@@ -1476,7 +1491,7 @@ pub fn Import.loadModuleInfo( moduleLoader:ModuleLoader ) mut :
    foreach val, key in moduleInfo.$importedAliasMap {
       self.importedAliasMap[key] = val;
    }
-   foreach val, key in moduleLoader.$importedAliasMap {
+   foreach val, key in result.importedAliasMap {
       self.importedAliasMap[key] = val;
    }
    
@@ -1504,7 +1519,7 @@ fn ModuleLoader.processImportMain(
    }
    
    Log._log( .Info, `{ return "%s -> %s start on %s"
-                       ( self.fullModulePath, fullModulePath, baseDir); } );
+                       ( self.result.fullModulePath, fullModulePath, baseDir); } );
 
 
    let mut moduleLoader = new ModuleLoader(
@@ -1512,7 +1527,7 @@ fn ModuleLoader.processImportMain(
       modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth );
    return moduleLoader;
 
-   // let! moduleInfo = moduleLoader.getModuleInfo() {
+   // let! moduleInfo = moduleLoader.getResult() {
    //    self.transUnitIF.error( moduleLoader.$err );
    // };
    // self.applyModuleInfo( moduleInfo );

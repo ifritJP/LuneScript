@@ -52,7 +52,7 @@ pub fn err( message:str ): __ {
 /**
 txt 文字列から、 pattern で構成される文字列を抜き出してリストを返す。
 */
-pub fn splitStr( txt:str, pattern:str ) : &List<str> {
+pub fn splitStr( txt:str, pattern:str ) : List<str> {
    let mut list:List<str> = [];
    __asyncLock {
       apply token of string.gmatch( txt, pattern ) {
@@ -60,6 +60,10 @@ pub fn splitStr( txt:str, pattern:str ) : &List<str> {
       }
    }
    return list;
+}
+
+pub fn splitModule( modPath:str ) : List<str> {
+   return splitStr( modPath, '[^%./:]+' );
 }
 
 pub class OrderedSet<T> {

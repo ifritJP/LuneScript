@@ -385,6 +385,8 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.useLuneRuntime = useLuneRuntime
    self.targetLuaVer = targetLuaVer
    self.useIpairs = useIpairs
+   
+   self.builtinSym2code = {[builtinFunc.__lns_runmode_Sync_sym] = string.format( "%d", 0), [builtinFunc.__lns_runmode_Queue_sym] = string.format( "%d", 1), [builtinFunc.__lns_runmode_Skip_sym] = string.format( "%d", 2)}
 end
 function ConvFilter:get_indent(  )
 
@@ -2040,7 +2042,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _776 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _777 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -3415,7 +3417,7 @@ function ConvFilter:processExpCall( node, opt )
                elseif _switchExp == self.builtinFunc.lns___run then
                   self:write( "_lune._run(" )
                   wroteFuncFlag = true
-               elseif _switchExp == self.builtinFunc.lns___join or _switchExp == self.builtinFunc.lns___join2 then
+               elseif _switchExp == self.builtinFunc.lns___join then
                   return 
                end
             end
@@ -3865,6 +3867,21 @@ end
 
 function ConvFilter:processRefField( node, opt )
 
+   do
+      local symbol = node:get_symbolInfo()
+      if symbol ~= nil then
+         do
+            local code = self.builtinSym2code[symbol:getOrg(  )]
+            if code ~= nil then
+               self:write( code )
+               return 
+            end
+         end
+         
+      end
+   end
+   
+   
    local parent = opt.node
    local prefix = node:get_prefix(  )
    
@@ -4317,7 +4334,7 @@ function MacroEvalImp:evalFromMacroCode( code, baseDir )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3636, function (  )
+   Log.log( Log.Level.Trace, __func__, 3650, function (  )
    
       return string.format( "macro: %s", code)
    end )

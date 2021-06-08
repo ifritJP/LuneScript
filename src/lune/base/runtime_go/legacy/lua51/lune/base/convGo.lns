@@ -107,6 +107,8 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let moduleTypeInfo:&Ast.TypeInfo;
    pri let moduleScope:&Ast.Scope;
    pri let mut builtin2runtime:&Map<&Ast.TypeInfo,str>;
+   let builtin2code:&Map<&Ast.SymbolInfo,str>;
+
    pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
    pri let mut nodeManager:Nodes.NodeManager;
    pri let mut enableTest:bool;
@@ -148,6 +150,12 @@ class convFilter extend Nodes.Filter<Opt> {
       self.noneNode = Nodes.NoneNode.create(
          self.nodeManager, Parser.noneToken.pos, false,
          [ Ast.builtinTypeNone ] );
+
+      self.builtin2code = {
+         self.builtinFuncs.__lns_runmode_Sync_sym: "%d" (__lns.runMode.Sync),
+         self.builtinFuncs.__lns_runmode_Queue_sym: "%d" (__lns.runMode.Queue),
+         self.builtinFuncs.__lns_runmode_Skip_sym: "%d" (__lns.runMode.Skip),
+      };
    }
 
    fn getVM( typeInfo:&Ast.TypeInfo ) : str! {
@@ -3698,7 +3706,10 @@ pub override fn convFilter.processExpNew(
 fn convFilter.outputIFMethods( node: &Nodes.DeclClassNode ) mut {
    self.pushIndent(##);
 
-   if self.isImplementedRunner( node.$expType ) {
+   if node.$expType.isInheritFrom(
+      self.processInfo, Ast.builtinTypeRunner, nil )
+   {
+         //isImplementedRunner( node.$expType ) {
       self.writeln( "GetLnsSyncFlag() *Lns_syncFlag");
    }
    
@@ -4735,7 +4746,7 @@ pub override fn convFilter.processExpCall(
                case self.builtinFuncs.lns___run {
                   filter( node.$func, self, node );
                }
-               case self.builtinFuncs.lns___join, self.builtinFuncs.lns___join2 {
+               case self.builtinFuncs.lns___join {
                   filter( node.$func, self, node );
                }
                // case Ast.builtinTypeLoadedFunc {
@@ -5237,7 +5248,7 @@ pub override fn convFilter.processExpRef(
                      case builtinFunc.lns___run {
                         self.write( "LnsRun" );
                      }
-                     case builtinFunc.lns___join, builtinFunc.lns___join2 {
+                     case builtinFunc.lns___join {
                         self.write( "LnsJoin" );
                      }
                      default {
@@ -5386,6 +5397,10 @@ pub override fn convFilter.processRefField(
    }
    if! let symbol = node.$symbolInfo {
       let orgSym = symbol.getOrg();
+      if! let code = self.builtin2code[ orgSym ] {
+         self.write( code );
+         return;
+      }
       if self.builtinFuncs.$allSymbolSet.has( orgSym ) {
          self.write( "Lns_%s_%s" ( node.$prefix.$expType.$rawTxt.gsub( "@", "" ),
                                    orgSym.$name ) );                  

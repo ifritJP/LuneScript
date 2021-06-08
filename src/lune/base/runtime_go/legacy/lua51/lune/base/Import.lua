@@ -1723,6 +1723,34 @@ end
 
 
 
+local ModuleLoaderResult = {}
+_moduleObj.ModuleLoaderResult = ModuleLoaderResult
+function ModuleLoaderResult.setmeta( obj )
+  setmetatable( obj, { __index = ModuleLoaderResult  } )
+end
+function ModuleLoaderResult.new( moduleInfo, modulePath, fullModulePath, baseDir, err, depth, importedAliasMap )
+   local obj = {}
+   ModuleLoaderResult.setmeta( obj )
+   if obj.__init then
+      obj:__init( moduleInfo, modulePath, fullModulePath, baseDir, err, depth, importedAliasMap )
+   end
+   return obj
+end
+function ModuleLoaderResult:__init( moduleInfo, modulePath, fullModulePath, baseDir, err, depth, importedAliasMap )
+
+   self.moduleInfo = moduleInfo
+   self.modulePath = modulePath
+   self.fullModulePath = fullModulePath
+   self.baseDir = baseDir
+   self.err = err
+   self.depth = depth
+   self.importedAliasMap = importedAliasMap
+end
+function ModuleLoaderResult:get_moduleInfo()
+   return self.moduleInfo
+end
+
+
 setmetatable( ModuleLoader, { __index = Runner.Runner,ifList = {frontInterface.ModuleLoader,} } )
 _moduleObj.ModuleLoader = ModuleLoader
 function ModuleLoader:applyModuleInfo( moduleInfo )
@@ -1736,7 +1764,7 @@ function ModuleLoader:applyModuleInfo( moduleInfo )
       end
       
       for key, val in pairs( moduleInfo:get_importedAliasMap() ) do
-         self.importedAliasMap[key] = val
+         self.result.importedAliasMap[key] = val
       end
       
       
@@ -1755,12 +1783,12 @@ function ModuleLoader:craeteModuleInfo( moduleMeta, importProcessInfo )
       elseif _matchExp[1] == frontInterface.MetaOrModule.Meta[1] then
          local metaInfo = _matchExp[2][1]
       
-         self.importModuleInfo:add( self.modulePath )
+         self.importModuleInfo:add( self.result.modulePath )
          importProcessInfo:switchIdProvier( Ast.IdType.Ext )
          
-         local nameList = Util.splitStr( self.modulePath, '[^%./:]+' )
+         local nameList = Util.splitStr( self.result.modulePath, '[^%./:]+' )
          
-         local moduleInfo = self:processImportFromFile( importProcessInfo, moduleMeta:get_lnsPath(), metaInfo, self.fullModulePath, self.modulePath, nameList, self.baseDir, self.depth )
+         local moduleInfo = self:processImportFromFile( importProcessInfo, moduleMeta:get_lnsPath(), metaInfo, self.result.fullModulePath, self.result.modulePath, nameList, self.result.baseDir, self.result.depth )
          
          importProcessInfo:switchIdProvier( Ast.IdType.Base )
          self.importModuleInfo:remove(  )
@@ -1782,16 +1810,10 @@ function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, fullM
    Runner.Runner.__init( self)
    
    
-   self.importedAliasMap = {}
-   
    self.moduleLoaderParam = moduleLoaderParam
-   self.baseDir = baseDir
-   self.moduleInfo = moduleInfo
+   self.result = ModuleLoaderResult.new(moduleInfo, modulePath, fullModulePath, baseDir, "", depth, {})
+   
    self.moduleMeta = nil
-   self.modulePath = modulePath
-   self.fullModulePath = fullModulePath
-   self.depth = depth
-   self.err = ""
    self.validMutControl = moduleLoaderParam:get_validMutControl()
    self.curPos = moduleLoaderParam:get_latestPos()
    self.macroCtrl = Macro.MacroCtrl.new(moduleLoaderParam:get_macroEval())
@@ -1806,9 +1828,9 @@ function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, fullM
    
    self.loaderFunc = function (  )
    
-      if not self.moduleInfo then
+      if not self.result.moduleInfo then
          if not self.importModuleInfo:add( fullModulePath ) then
-            self.err = string.format( "recursive import: %s -> %s", self.importModuleInfo:getFull(  ), fullModulePath)
+            self.result.err = string.format( "recursive import: %s -> %s", self.importModuleInfo:getFull(  ), fullModulePath)
          else
           
             do
@@ -1816,9 +1838,9 @@ function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, fullM
                   local _exp = frontInterface.loadMeta( self.importModuleInfo:clone(  ), modulePath, fullModulePath, baseDir, self )
                   if _exp ~= nil then
                      local moduleMeta = _exp
-                     self.moduleInfo = self:craeteModuleInfo( moduleMeta, importProcessInfo )
+                     self.result.moduleInfo = self:craeteModuleInfo( moduleMeta, importProcessInfo )
                   else
-                     self.err = string.format( "failed to load meta -- %s on %s", fullModulePath, baseDir or "./")
+                     self.result.err = string.format( "failed to load meta -- %s on %s", fullModulePath, baseDir or "./")
                   end
                end
                
@@ -1830,40 +1852,24 @@ function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, fullM
       end
       
    end
-   self:start( Runner.RunModeWhenFull.Sync )
+   self:start( 0 )
 end
 function ModuleLoader:runMain(  )
 
    self.loaderFunc(  )
 end
+function ModuleLoader:getResult(  )
+
+   
+   return self.result
+end
 function ModuleLoader:getModuleInfo(  )
 
-   self:join(  )
-   return self.moduleInfo
+   
+   return self.result.moduleInfo
 end
 function ModuleLoader.setmeta( obj )
   setmetatable( obj, { __index = ModuleLoader  } )
-end
-function ModuleLoader:get_moduleInfo()
-   return self.moduleInfo
-end
-function ModuleLoader:get_modulePath()
-   return self.modulePath
-end
-function ModuleLoader:get_fullModulePath()
-   return self.fullModulePath
-end
-function ModuleLoader:get_baseDir()
-   return self.baseDir
-end
-function ModuleLoader:get_err()
-   return self.err
-end
-function ModuleLoader:get_depth()
-   return self.depth
-end
-function ModuleLoader:get_importedAliasMap()
-   return self.importedAliasMap
 end
 
 
@@ -1871,7 +1877,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
    local __func__ = '@lune.@base.@Import.ModuleLoader.processImportFromFile'
 
    local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 931, function (  )
+   Log.log( Log.Level.Info, __func__, 943, function (  )
    
       return string.format( "%s processing", fullModulePath)
    end )
@@ -1899,15 +1905,18 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
       end
       
       for moduleLoader, typeId in pairs( loaderMap ) do
-         local moduleInfo = moduleLoader:getModuleInfo(  )
-         if  nil == moduleInfo then
-            local _moduleInfo = moduleInfo
-         
-            self.transUnitIF:error( moduleLoader:get_err() )
+         local result = moduleLoader:getResult(  )
+         do
+            local _exp = result.moduleInfo
+            if _exp ~= nil then
+               self:applyModuleInfo( _exp )
+               dependLibId2DependInfo[typeId] = _exp
+            else
+               self.transUnitIF:error( result.err )
+            end
          end
          
-         self:applyModuleInfo( moduleInfo )
-         dependLibId2DependInfo[typeId] = moduleInfo
+         
       end
       
    end
@@ -1940,7 +1949,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
       typeId2Scope[typeId] = self.transUnitIF:get_scope()
    end
    
-   for __index, _627 in ipairs( nameList ) do
+   for __index, _629 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2180,7 +2189,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
             
          elseif _switchExp == Ast.TypeInfoKind.Module then
             self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1236, function (  )
+            Log.log( Log.Level.Debug, __func__, 1250, function (  )
             
                return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
             end )
@@ -2328,14 +2337,14 @@ end
    end
    
    
-   for __index, _786 in ipairs( nameList ) do
+   for __index, _788 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
    
    if depth == 1 then
       for key, val in pairs( importParam.importedAliasMap ) do
-         self.importedAliasMap[key] = val
+         self.result.importedAliasMap[key] = val
       end
       
    end
@@ -2389,7 +2398,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1432, function (  )
+   Log.log( Log.Level.Info, __func__, 1446, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, tostring( baseDir))
    end )
@@ -2398,7 +2407,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local moduleInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if moduleInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1440, function (  )
+      Log.log( Log.Level.Info, __func__, 1454, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2423,16 +2432,18 @@ end
 function Import:loadModuleInfo( moduleLoader )
    local __func__ = '@lune.@base.@Import.Import.loadModuleInfo'
 
-   local fullModulePath = moduleLoader:get_fullModulePath()
-   local depth = moduleLoader:get_depth()
+   local result = moduleLoader:getResult(  )
    
-   local moduleInfo = moduleLoader:getModuleInfo(  )
+   local moduleInfo = result.moduleInfo
    if  nil == moduleInfo then
       local _moduleInfo = moduleInfo
    
-      return nil, moduleLoader:get_err()
+      return nil, result.err
    end
    
+   
+   local fullModulePath = result.fullModulePath
+   local depth = result.depth
    
    do
       local exportInfo = _lune.__Cast( moduleInfo:get_exportInfo(), 3, Nodes.ExportInfo )
@@ -2445,7 +2456,7 @@ function Import:loadModuleInfo( moduleLoader )
       self.importedAliasMap[key] = val
    end
    
-   for key, val in pairs( moduleLoader:get_importedAliasMap() ) do
+   for key, val in pairs( result.importedAliasMap ) do
       self.importedAliasMap[key] = val
    end
    
@@ -2456,7 +2467,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = moduleInfo
    
-   Log.log( Log.Level.Info, __func__, 1491, function (  )
+   Log.log( Log.Level.Info, __func__, 1506, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2476,9 +2487,9 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1506, function (  )
+   Log.log( Log.Level.Info, __func__, 1521, function (  )
    
-      return string.format( "%s -> %s start on %s", self.fullModulePath, fullModulePath, tostring( baseDir))
+      return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, tostring( baseDir))
    end )
    
    

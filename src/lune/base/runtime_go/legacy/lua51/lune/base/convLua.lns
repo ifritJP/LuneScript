@@ -118,6 +118,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    let processInfo:&Ast.ProcessInfo;
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
    let builtinFunc:&Builtin.BuiltinFuncType;
+   let builtinSym2code:&Map<&Ast.SymbolInfo,str>;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
@@ -161,6 +162,12 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
       self.useLuneRuntime = useLuneRuntime;
       self.targetLuaVer = targetLuaVer;
       self.useIpairs = useIpairs;
+
+      self.builtinSym2code = {
+         builtinFunc.__lns_runmode_Sync_sym: "%d" (__lns.runMode.Sync),
+         builtinFunc.__lns_runmode_Queue_sym: "%d" (__lns.runMode.Queue),
+         builtinFunc.__lns_runmode_Skip_sym: "%d" (__lns.runMode.Skip),
+      };
    }
 
    fn get_indent(): int {
@@ -2856,7 +2863,7 @@ pub override fn ConvFilter.processExpCall(
                self.write( "_lune._run(" );
                wroteFuncFlag = true;
             }
-            case self.builtinFunc.lns___join, self.builtinFunc.lns___join2 {
+            case self.builtinFunc.lns___join {
                return;
             }
          }
@@ -3248,6 +3255,13 @@ pub override fn ConvFilter.processExpRefItem(
 pub override fn ConvFilter.processRefField(
    node: &Nodes.RefFieldNode, opt: Opt ) mut
 {
+   if! let symbol = node.$symbolInfo {
+      if! let code = self.builtinSym2code[ symbol.getOrg() ] {
+         self.write( code );
+         return;
+      }
+   }
+   
    let parent = opt.node;
    let prefix = node.get_prefix();
 

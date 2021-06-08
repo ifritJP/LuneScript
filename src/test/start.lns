@@ -1972,6 +1972,7 @@ _ = 1;
    print( hoge2.get() );
 }
 {
+   Macro._section();
    class Hoge {
       let val:int {pub};
    }
@@ -1995,3 +1996,8 @@ _ = 1;
       print( val.$val );
    }
 }
+{
+   Macro._section();
+   print(__lns.runMode.Queue, __lns.runMode.Skip, __lns.runMode.Sync );
+}
+

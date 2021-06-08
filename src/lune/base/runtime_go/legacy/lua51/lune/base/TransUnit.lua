@@ -5766,6 +5766,23 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfo, alt2type
 end
 
 
+local function getFirstStmt( stmtList )
+
+   for __index, stmt in ipairs( stmtList ) do
+      do
+         local _switchExp = stmt:get_kind()
+         if _switchExp == Nodes.nodeKindEnum.BlankLine then
+         else 
+            
+               return stmt
+         end
+      end
+      
+   end
+   
+   return nil
+end
+
 local CantOverrideMethods = {["__init"] = true, ["__free"] = true}
 function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, overrideFlag, accessMode, staticFlag, classTypeInfo, firstToken, name )
 
@@ -6136,26 +6153,52 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       end
       
       
-      if isCtorFlag then
-         if classTypeInfo ~= nil then
-            if classTypeInfo:get_baseTypeInfo() ~= Ast.headTypeInfo then
-               local needCall = true
-               for __index, stmt in ipairs( workBody:get_stmtList() ) do
-                  do
-                     local _switchExp = stmt:get_kind()
-                     if _switchExp == Nodes.nodeKindEnum.ExpCallSuperCtor then
-                        needCall = false
-                     elseif _switchExp == Nodes.nodeKindEnum.BlankLine then
-                     else 
-                        
-                           break
-                     end
+      if classTypeInfo ~= nil then
+         if isCtorFlag and classTypeInfo:hasBase(  ) then
+            local needCall = true
+            do
+               local firstNode = getFirstStmt( workBody:get_stmtList() )
+               if firstNode ~= nil then
+                  if firstNode:get_kind() == Nodes.nodeKindEnum.ExpCallSuperCtor then
+                     needCall = false
                   end
                   
                end
+            end
+            
+            if needCall then
+               self:addErrMess( workBody:get_pos(), "__init must call super() with first." )
+            end
+            
+         end
+         
+         if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner, nil ) then
+            if typeInfo:get_accessMode() == Ast.AccessMode.Pub and #typeInfo:get_retTypeInfoList() > 0 then
+               local callJoin = false
+               do
+                  local firstNode = getFirstStmt( workBody:get_stmtList() )
+                  if firstNode ~= nil then
+                     do
+                        local stmtNode = _lune.__Cast( firstNode, 3, Nodes.StmtExpNode )
+                        if stmtNode ~= nil then
+                           do
+                              local callNode = _lune.__Cast( stmtNode:get_exp(), 3, Nodes.ExpCallNode )
+                              if callNode ~= nil then
+                                 if callNode:get_func():get_expType() == self.builtinFunc.lns___join then
+                                    callJoin = true
+                                 end
+                                 
+                              end
+                           end
+                           
+                        end
+                     end
+                     
+                  end
+               end
                
-               if needCall then
-                  self:addErrMess( workBody:get_pos(), "__init must call super() with first." )
+               if not callJoin then
+                  self:addErrMess( workBody:get_pos(), string.format( "public method to return the value must call __join. -- %s", typeInfo:getTxt(  )) )
                end
                
             end
@@ -6341,7 +6384,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       
       if unwrapFlag then
          local hasNilable = false
-         for index, _2864 in ipairs( letVarList ) do
+         for index, _2880 in ipairs( letVarList ) do
             if expList:getExpTypeAt( index ):get_nilable() then
                hasNilable = true
                break
@@ -7696,7 +7739,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
       alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
    end
    
-   local matchResult, _3454, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
+   local matchResult, _3470, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap )
    
    if expList and newExpNodeList then
       return matchResult, alt2typeMap, newExpNodeList
@@ -7760,7 +7803,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
                   table.insert( expTypeList, expNode:get_expType() )
                else
                 
-                  for _3489 = 1, #expNode:get_expTypeList() do
+                  for _3505 = 1, #expNode:get_expTypeList() do
                      table.insert( expTypeList, itemTypeInfo )
                   end
                   
@@ -7775,7 +7818,7 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
          
       end
       
-      local _3492, _3493, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
+      local _3508, _3509, workExpList = self:checkMatchType( "List constructor", firstPos, expTypeList, expList, false, false, nil )
       if workExpList ~= nil then
          expList = workExpList
       end
@@ -9532,7 +9575,7 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          do
-            local _4271, _4272, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
+            local _4287, _4288, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -9795,7 +9838,7 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local _4375, _4376, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
+   local _4391, _4392, workList, expTypeList = self:checkMatchType( "= operator", opeToken.pos, exp:get_expTypeList(), expList, true, false, nil )
    if workList ~= nil then
       expList = workList
    end
@@ -10509,7 +10552,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
          local argNodeList = self:analyzeExpList( false, false, false )
          param = argNodeList
          
-         local _4648, _4649, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
+         local _4664, _4665, workExpList = self:checkMatchType( "str constructor", firstToken.pos, {Ast.builtinTypeDDD}, argNodeList, false, false, nil )
          if workExpList ~= nil then
             dddParam = workExpList
          else
@@ -10674,7 +10717,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      local _4714, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
+      local _4730, alt2type, newArgList = self:checkMatchValType( exp:get_pos(), initTypeInfo, argList, classTypeInfo:get_itemTypeInfoList(), classTypeInfo )
       
       if #classTypeInfo:get_itemTypeInfoList() > 0 then
          if classTypeInfo:get_itemTypeInfoList()[1]:get_kind() == Ast.TypeInfoKind.Alternate then
@@ -10970,7 +11013,7 @@ function TransUnit:analyzeReturn( token )
       local workList = expList
       if workList ~= nil then
          do
-            local _4822, _4823, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
+            local _4838, _4839, newExpNodeList = self:checkMatchType( "return", token.pos, retTypeList, workList, false, not workList:get_followOn(), nil )
             if newExpNodeList ~= nil then
                expList = newExpNodeList
             end

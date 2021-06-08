@@ -2908,6 +2908,19 @@ fn TransUnit.processAddFunc(
    return unwrap (funcSym or shadowing), nsInfo;
 }
 
+fn getFirstStmt( stmtList:&List<&Nodes.Node> ) : &Nodes.Node! {
+   foreach stmt in stmtList {
+      switch stmt.$kind {
+         case Nodes.nodeKindEnum.BlankLine {
+         }
+         default {
+            return stmt;
+         }
+      }
+   }
+   return nil;
+}
+
 
 let CantOverrideMethods = (@ "__init", "__free" );
 
@@ -3295,28 +3308,41 @@ fn TransUnit.analyzeDeclFunc(
          funcBodyScope.set_hasClosureAccess( true );
       }
 
-      if isCtorFlag {
-         when! classTypeInfo {
-            if classTypeInfo.$baseTypeInfo ~= Ast.headTypeInfo {
-               // Super クラスを持っている場合、
-               // 先頭の処理で super() をコールしているか調べる
-               let mut needCall = true;
-               foreach stmt in workBody.$stmtList {
-                  switch stmt.$kind {
-                     case Nodes.nodeKindEnum.ExpCallSuperCtor {
-                        needCall = false;
-                     }
-                     case Nodes.nodeKindEnum.BlankLine {
-                     }
-                     default {
-                        break;
+      when! classTypeInfo {
+         if isCtorFlag and classTypeInfo.hasBase() {
+            // Super クラスを持っている場合、
+            // 先頭の処理で super() をコールしているか調べる
+            let mut needCall = true;
+            if! let firstNode = getFirstStmt( workBody.$stmtList ) {
+               if firstNode.$kind == Nodes.nodeKindEnum.ExpCallSuperCtor {
+                  needCall = false;
+               }
+            }
+            if needCall {
+               self.addErrMess(
+                  workBody.$pos,             
+                  "__init must call super() with first." );
+            }
+         }
+         if classTypeInfo.isInheritFrom(
+            self.processInfo, Ast.builtinTypeRunner, nil )
+         {
+            if typeInfo.$accessMode == .Pub and #typeInfo.$retTypeInfoList > 0 {
+               let mut callJoin = false;
+               if! let firstNode = getFirstStmt( workBody.$stmtList ) {
+                  if! let stmtNode = firstNode@@@Nodes.StmtExpNode {
+                     if! let callNode = stmtNode.$exp@@@Nodes.ExpCallNode {
+                        if callNode.$func.$expType == self.builtinFunc.lns___join {
+                           callJoin = true;
+                        }
                      }
                   }
                }
-               if needCall {
+               if not callJoin {
                   self.addErrMess(
-                     workBody.$pos,             
-                     "__init must call super() with first." );
+                     workBody.$pos,       
+                     "public method to return the value must call __join. -- %s"
+                     (typeInfo.getTxt(##)));
                }
             }
          }
