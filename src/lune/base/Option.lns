@@ -74,6 +74,7 @@ pub enum ModeKind {
    MkMain = "mkmain",
    Shebang = "shebang",
    BuildAst = "buildAst",
+   Indexer = "indexer",
 }
 
 pub fn getRuntimeModule(): str {

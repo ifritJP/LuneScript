@@ -53,12 +53,12 @@ func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList {
     list = NewLnsList([]LnsAny{})
     Lns_LockEnvSync( _env, func () {
         {
-            _form140, _param140, _prev140 := _env.CommonLuaVM.String_gmatch(txt, pattern)
+            _applyForm1, _applyParam1, _applyPrev1 := _env.CommonLuaVM.String_gmatch(txt, pattern)
             for {
-                _work140 := _form140.(*Lns_luaValue).Call( Lns_2DDD( _param140, _prev140 ) )
-                _prev140 = Lns_getFromMulti(_work140,0)
-                if Lns_IsNil( _prev140 ) { break }
-                token := _prev140.(string)
+                _applyWork1 := _applyForm1.(*Lns_luaValue).Call( Lns_2DDD( _applyParam1, _applyPrev1 ) )
+                _applyPrev1 = Lns_getFromMulti(_applyWork1,0)
+                if Lns_IsNil( _applyPrev1 ) { break }
+                token := _applyPrev1.(string)
                 list.Insert(token)
             }
         }
@@ -457,10 +457,10 @@ func (self *Util_TxtStream) GetSubstring(_env *LnsEnv, fromLineNo LnsInt,toLineN
     var to LnsInt
     to = Lns_unwrapDefault( toLineNo, self.lineList.Len() + 1).(LnsInt)
     {
-        var _from697 LnsInt = fromLineNo
-        var _to697 LnsInt = to - 1
-        for _work697 := _from697; _work697 <= _to697; _work697++ {
-            index := _work697
+        var _forFrom1 LnsInt = fromLineNo
+        var _forTo1 LnsInt = to - 1
+        for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
+            index := _forWork1
             if _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( index < 1) ||
                 _env.SetStackVal( index > self.lineList.Len()) ).(bool){

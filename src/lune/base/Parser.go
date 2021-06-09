@@ -27,7 +27,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
     if len(txt) == 0{
         return txt
     }
-    if _switch165 := LnsInt(txt[1-1]); _switch165 == 39 || _switch165 == 34 {
+    if _switch1 := LnsInt(txt[1-1]); _switch1 == 39 || _switch1 == 34 {
     } else {
         return _env.LuaVM.String_sub(txt,4, len(txt) - 3)
     }
@@ -61,7 +61,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
         } else if workChar == 92{
             var quote LnsInt
             quote = LnsInt(workTxt[endIndex + 1-1])
-            if _switch331 := quote; _switch331 == 39 || _switch331 == 34 {
+            if _switch2 := quote; _switch2 == 39 || _switch2 == 34 {
                 retTxt = _env.LuaVM.String_format("%s%s%c", []LnsAny{retTxt, _env.LuaVM.String_sub(workTxt,setIndex, endIndex - 1), quote})
                 
             } else {
@@ -103,25 +103,25 @@ func Parser_quoteStr(_env *LnsEnv, txt string) string {
     var part string
     part = "\""
     {
-        var _from1888 LnsInt = 1
-        var _to1888 LnsInt = len(work)
-        for _work1888 := _from1888; _work1888 <= _to1888; _work1888++ {
-            index := _work1888
+        var _forFrom1 LnsInt = 1
+        var _forTo1 LnsInt = len(work)
+        for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
+            index := _forWork1
             var char LnsInt
             char = LnsInt(work[index-1])
-            if _switch1886 := char; _switch1886 == 10 {
+            if _switch1 := char; _switch1 == 10 {
                 part = part + "\\n"
                 
-            } else if _switch1886 == 13 {
+            } else if _switch1 == 13 {
                 part = part + "\\r"
                 
-            } else if _switch1886 == 9 {
+            } else if _switch1 == 9 {
                 part = part + "\\t"
                 
-            } else if _switch1886 == 34 {
+            } else if _switch1 == 34 {
                 part = part + "\\\""
                 
-            } else if _switch1886 == 92 {
+            } else if _switch1 == 92 {
                 part = part + "\\\\"
                 
             } else {
@@ -196,7 +196,7 @@ func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
 var Parser_StreamParser__stdinStreamModuleName LnsAny
 var Parser_StreamParser__stdinTxt string
 // 114: decl @lune.@base.@Parser.StreamParser.___init
-func Parser_StreamParser____init_1123_(_env *LnsEnv) {
+func Parser_StreamParser____init_0_(_env *LnsEnv) {
     Parser_StreamParser__stdinStreamModuleName = nil
     
     Parser_StreamParser__stdinTxt = ""
@@ -469,19 +469,19 @@ func (self *Parser_DefaultPushbackParser) PushbackStr(_env *LnsEnv, name string,
         }
     }
     {
-        var _from1129 LnsInt = list.Len()
-        var _to1129 LnsInt = 1
-        _work1129 := _from1129
-        _delta1129 := -1
+        var _forFrom1 LnsInt = list.Len()
+        var _forTo1 LnsInt = 1
+        _forWork1 := _forFrom1
+        _forDelta1 := -1
         for {
-            if _delta1129 > 0 {
-               if _work1129 > _to1129 { break }
+            if _forDelta1 > 0 {
+               if _forWork1 > _forTo1 { break }
             } else {
-               if _work1129 < _to1129 { break }
+               if _forWork1 < _forTo1 { break }
             }
-            index := _work1129
+            index := _forWork1
             self.FP.PushbackToken(_env, list.GetAt(index).(Types_TokenDownCast).ToTypes_Token())
-            _work1129 += _delta1129
+            _forWork1 += _forDelta1
         }
     }
 }
@@ -489,19 +489,19 @@ func (self *Parser_DefaultPushbackParser) PushbackStr(_env *LnsEnv, name string,
 // 272: decl @lune.@base.@Parser.DefaultPushbackParser.newPushback
 func (self *Parser_DefaultPushbackParser) NewPushback(_env *LnsEnv, tokenList *LnsList) {
     {
-        var _from1158 LnsInt = tokenList.Len()
-        var _to1158 LnsInt = 1
-        _work1158 := _from1158
-        _delta1158 := -1
+        var _forFrom1 LnsInt = tokenList.Len()
+        var _forTo1 LnsInt = 1
+        _forWork1 := _forFrom1
+        _forDelta1 := -1
         for {
-            if _delta1158 > 0 {
-               if _work1158 > _to1158 { break }
+            if _forDelta1 > 0 {
+               if _forWork1 > _forTo1 { break }
             } else {
-               if _work1158 < _to1158 { break }
+               if _forWork1 < _forTo1 { break }
             }
-            index := _work1158
+            index := _forWork1
             self.FP.PushbackToken(_env, tokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token())
-            _work1158 += _delta1158
+            _forWork1 += _forDelta1
         }
     }
 }
@@ -534,10 +534,10 @@ func (self *Parser_DefaultPushbackParser) GetNearCode(_env *LnsEnv) string {
     var code string
     code = ""
     {
-        var _from1333 LnsInt = self.usedTokenList.Len() - 30
-        var _to1333 LnsInt = self.usedTokenList.Len()
-        for _work1333 := _from1333; _work1333 <= _to1333; _work1333++ {
-            index := _work1333
+        var _forFrom1 LnsInt = self.usedTokenList.Len() - 30
+        var _forTo1 LnsInt = self.usedTokenList.Len()
+        for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
+            index := _forWork1
             if index > 1{
                 var token *Types_Token
                 token = self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token()
@@ -839,7 +839,7 @@ func Lns_Parser_init(_env *LnsEnv) {
     Lns_Async_init(_env)
     Lns_AsyncParser_init(_env)
     Parser_noneToken = Types_noneToken
-    Parser_StreamParser____init_1123_(_env)
+    Parser_StreamParser____init_0_(_env)
     Parser_eofToken = NewTypes_Token(_env, Types_TokenKind__Eof, "<EOF>", NewTypes_Position(_env, 0, 0, "eof"), false, NewLnsList([]LnsAny{}))
 }
 func init() {

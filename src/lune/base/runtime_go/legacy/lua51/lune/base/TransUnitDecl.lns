@@ -1631,7 +1631,7 @@ mut : Nodes.DeclFormNode
    self.errorShadowing( name.pos, shadowing );
 
    let declFuncInfo = new Nodes.DeclFuncInfo(
-      .Form, nil, nil, name, formSymbol or shadowing, argList, false,
+      .Form, nil, nil, false, name, formSymbol or shadowing, argList, false,
       accessMode, asyncMode, nil, retTypeList, retNodeList, false, false );
    
    return Nodes.DeclFormNode.create(
@@ -2294,7 +2294,7 @@ nil の場合、メンバの宣言位置。
          funcTypeInfo.$retTypeInfoList );
 
       let mut info = new Nodes.DeclFuncInfo(
-         .InitBlock, classTypeInfo, node, token, unwrap (funcSym or shadowing),
+         .InitBlock, classTypeInfo, node, true, token, unwrap (funcSym or shadowing),
          [], true, .Pri, nil, block, [], [], false, false );
       let initBlockNode = Nodes.DeclMethodNode.create(
          self.nodeManager, firstToken.pos,
@@ -2960,6 +2960,9 @@ fn TransUnit.analyzeDeclFunc(
       // anonymous 関数で pub 等が指定されているのはエラー
       self.addErrMess( firstToken.pos, "The anonymous function must be local." );
    }
+
+   let outsizeOfClass = classTypeInfo == nil;
+   
    let mut needPopFlag = false;
    if token.txt == "." {
       needPopFlag = true;
@@ -3364,7 +3367,7 @@ fn TransUnit.analyzeDeclFunc(
       }
       
       return new Nodes.DeclFuncInfo(
-         funcKind, classTypeInfo, classDeclNode, name, funcSym,
+         funcKind, classTypeInfo, classDeclNode, outsizeOfClass, name, funcSym,
          argList, orgStaticFlag, accessMode, asyncMode, body,
          retTypeInfoList, retTypeNodeList,
          self.has__func__Symbol.has( typeInfo ), overrideFlag );
@@ -3930,6 +3933,8 @@ fn TransUnit.analyzeDeclVar(
    }
 
 
+   let mut nsInfo = self.getCurrentNSInfo();
+   
    let mut symbolInfoList: List<&Ast.SymbolInfo> = [];
 
    let mut varList:List<&Nodes.VarInfo> = [];
@@ -3994,9 +3999,9 @@ fn TransUnit.analyzeDeclVar(
                (index, typeInfo.getTxt(##)) );
          }
       }
-      symbolInfoList.insert(
+      symbolInfoList.insert( nsInfo.registerSym(
          unwrap self.scope.getSymbolInfo( varName.txt, self.scope,
-                                          true, self.scopeAccess ) );
+                                          true, self.scopeAccess ) ) );
    }
    if mode ~= .Sync and self.macroScope {
       self.macroCtrl.registVar( symbolInfoList );
@@ -4123,13 +4128,15 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    
    let mut scope = self.pushScope( false ## );
 
+   let mut nsInfo = self.getCurrentNSInfo();
+
    foreach expType, index in typeInfoList {
       if index > #varNameList {
          break;
       }
       let varName = varNameList[ index ];
-      varList.insert(
-         self.addLocalVar( varName.pos, false, true, varName.txt, expType, .IMut ## ) );
+      varList.insert( nsInfo.registerSym(
+         self.addLocalVar( varName.pos, false, true, varName.txt, expType, .IMut ## ) ) );
       
    }
 

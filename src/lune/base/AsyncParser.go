@@ -89,7 +89,7 @@ func AsyncParser_isLuaKeyword(_env *LnsEnv, txt string) bool {
 }
 
 // 64: decl @lune.@base.@AsyncParser.createReserveInfo
-func AsyncParser_createReserveInfo_1041_(_env *LnsEnv, luaMode LnsAny)(*LnsSet, *LnsSet, *LnsSet, *LnsMap) {
+func AsyncParser_createReserveInfo_1_(_env *LnsEnv, luaMode LnsAny)(*LnsSet, *LnsSet, *LnsSet, *LnsMap) {
     var keywordSet *LnsSet
     keywordSet = NewLnsSet([]LnsAny{})
     var typeSet *LnsSet
@@ -332,7 +332,7 @@ func (self *AsyncParser_Parser) InitAsyncParser_Parser(_env *LnsEnv, streamName 
     var keywordSet *LnsSet
     var typeSet *LnsSet
     var multiCharDelimitMap *LnsMap
-    keywordSet,typeSet,_,multiCharDelimitMap = AsyncParser_createReserveInfo_1041_(_env, luaMode)
+    keywordSet,typeSet,_,multiCharDelimitMap = AsyncParser_createReserveInfo_1_(_env, luaMode)
     self.keywordSet = keywordSet
     
     self.typeSet = typeSet
@@ -360,7 +360,7 @@ func (self *AsyncParser_Parser) InitAsyncParser_Parser(_env *LnsEnv, streamName 
 }
 
 // 257: decl @lune.@base.@AsyncParser.Parser.create
-func AsyncParser_Parser_create_1386_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny)(LnsAny, string) {
+func AsyncParser_Parser_create_2_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny)(LnsAny, string) {
     var createStream func(_env *LnsEnv, mod string,path string)(LnsAny, string)
     createStream = func(_env *LnsEnv, mod string,path string)(LnsAny, string) {
         if stdinFile != nil{
@@ -380,22 +380,22 @@ func AsyncParser_Parser_create_1386_(_env *LnsEnv, parserSrc LnsAny,stdinFile Ln
     }
     var createStreamFrom func(_env *LnsEnv)(string, bool, LnsAny, string)
     createStreamFrom = func(_env *LnsEnv)(string, bool, LnsAny, string) {
-        switch _exp1331 := parserSrc.(type) {
+        switch _matchExp1 := parserSrc.(type) {
         case *Types_ParserSrc__LnsCode:
-        txt := _exp1331.Val1
-        path := _exp1331.Val2
+        txt := _matchExp1.Val1
+        path := _matchExp1.Val2
             return path, false, NewUtil_TxtStream(_env, txt).FP, ""
         case *Types_ParserSrc__LnsPath:
-        path := _exp1331.Val1
-        mod := _exp1331.Val2
+        path := _matchExp1.Val1
+        mod := _matchExp1.Val2
             var stream LnsAny
             var mess string
             stream,mess = createStream(_env, mod, path)
             return path, false, stream, mess
         case *Types_ParserSrc__Parser:
-        path := _exp1331.Val1
-        luaMode := _exp1331.Val2
-        mod := _exp1331.Val3
+        path := _matchExp1.Val1
+        luaMode := _matchExp1.Val2
+        mod := _matchExp1.Val3
             var stream LnsAny
             var mess string
             stream,mess = createStream(_env, mod, path)
@@ -921,7 +921,7 @@ func (self *AsyncParser_Runner) Get_errMess(_env *LnsEnv) string{ return self.er
 // 311: DeclConstr
 func (self *AsyncParser_Runner) InitAsyncParser_Runner(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny) {
     self._syncFlag = &Lns_syncFlag{}
-    self.parser, self.errMess = AsyncParser_Parser_create_1386_(_env, parserSrc, stdinFile, overridePos)
+    self.parser, self.errMess = AsyncParser_Parser_create_2_(_env, parserSrc, stdinFile, overridePos)
     
     {
         __exp := self.parser

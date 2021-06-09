@@ -58,6 +58,7 @@ build = {
       [ "lune.base.GoMod" ] = "src/lune/base/GoMod.lua",
       [ "lune.base.Ast" ] = "src/lune/base/Ast.lua",
       [ "lune.base.Nodes" ] = "src/lune/base/Nodes.lua",
+      [ "lune.base.NodeIndexer" ] = "src/lune/base/NodeIndexer.lua",
       [ "lune.base.Macro" ] = "src/lune/base/Macro.lua",
       [ "lune.base.TransUnitIF" ] = "src/lune/base/TransUnitIF.lua",
       [ "lune.base.BuiltinTransUnit" ] = "src/lune/base/BuiltinTransUnit.lua",

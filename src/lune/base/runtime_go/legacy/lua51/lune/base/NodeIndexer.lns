@@ -1,0 +1,175 @@
+_lune_control default_async_all;
+
+import lune.base.Nodes;
+import lune.base.Ast;
+
+class NamespaceInfo {
+   let depth:int;
+   let parent:NamespaceInfo!;
+   // 親の名前空間から見たときの、この名前空間の ID。
+   let subId:int {pub};
+   // この名前空間が保持する子の名前空間の数
+   let mut childCount:int {pub};
+   // この名前空間の型
+   let nsType:&Ast.TypeInfo {pub};
+
+   let idProvMap:Map<int,Ast.IdProvider>;
+
+   local fn __init( parent:NamespaceInfo!, nsType:&Ast.TypeInfo )
+   {
+      self.parent = parent;
+      self.childCount = 1;
+      let subId;
+      let depth;
+      when! parent {
+         subId = parent.childCount;
+         depth = parent.depth + 1;
+         parent.childCount = parent.childCount + 1;
+      } else {
+         subId = 0;
+         depth = 0;
+      }
+      self.subId = subId;
+      self.depth = depth;
+      self.nsType = nsType;
+
+      self.idProvMap = {};
+   }
+
+   local fn getNewId( nodeKind:int ) mut : int {
+      let! mut idProv = self.idProvMap[ nodeKind ] {
+         let mut work = new Ast.IdProvider( 0, 100000 );
+         self.idProvMap[ nodeKind ] = work;
+         idProv = work;
+      };
+      return idProv.getNewId();
+   }
+
+   pub fn getIdTxt() : str {
+      if! let parent = self.parent {
+         if self.depth < 4 {
+            return "%s_%s" (parent.getIdTxt() ,self.$nsType.$rawTxt);
+         } else {
+            return "%s%s" (parent.getIdTxt(), "_%d" (self.subId));
+         }
+      } else {
+         return "";
+      }
+   }
+}
+
+// 名前空間を定義する NodeKind
+let declNameSpaceNodeKindSet =
+    (@
+      Nodes.NodeKind.$DeclClass,    
+      Nodes.NodeKind.$DeclConstr,   
+      Nodes.NodeKind.$DeclFunc,     
+      Nodes.NodeKind.$ProtoMethod,  
+      Nodes.NodeKind.$DeclMethod,   
+      Nodes.NodeKind.$DeclEnum,     
+      Nodes.NodeKind.$DeclAlge,     
+      Nodes.NodeKind.$DeclMacro
+);
+
+pub class Index {
+   let nsInfo:&NamespaceInfo {local};
+   let index:int {pub};
+
+   local fn __init( nsInfo:&NamespaceInfo, index:int ) {
+      self.nsInfo = nsInfo;
+      self.index = index;
+   }
+
+   pub fn getIdTxt() : str {
+      return "%s_%d" (self.nsInfo.getIdTxt(), self.index);
+   }
+}
+
+/**
+Node の階層を辿って、以下を解析する。
+
+- 名前空間の階層構造
+- 指定されたノード種別の名前空間内の順番 (Indexクラス)
+
+解析した結果は &Map<&Nodes.Node,&Index> で返す。
+
+*/
+pub class Indexer {
+   let mut nsInfo:NamespaceInfo;
+   let processInfo:&Ast.ProcessInfo;
+   let node2Index:Map<&Nodes.Node, &Index> {pub&};
+   let nsType2nsInfo:Map<&Ast.TypeInfo,NamespaceInfo>;
+   let mut targetNodeKindSet:&Set<int>;
+
+   pub fn __init( processInfo:&Ast.ProcessInfo )
+   {
+      self.nsType2nsInfo = {};
+      self.processInfo = processInfo;
+      self.nsInfo = new NamespaceInfo( nil, Ast.headTypeInfo );
+      self.node2Index = {};
+      self.targetNodeKindSet = (@);
+   }
+
+   pub fn getIndex( node:&Nodes.Node ) : &Index {
+      return unwrap self.node2Index[ node ];
+   }
+
+   fn visit( targetNode:&Nodes.Node, dept:int ) mut
+   {
+      targetNode.visit(
+         fn ( node:&Nodes.Node, parent:&Nodes.Node,
+              relation:str, depth:int) : Nodes.NodeVisitMode
+         {
+            if self.targetNodeKindSet.has( node.$kind ) {
+               self.node2Index[ node ] = new Index(
+                  self.nsInfo, self.nsInfo.getNewId( node.$kind ));
+            }
+            
+            if declNameSpaceNodeKindSet.has( node.$kind ) {
+               let mut bakNsInfo = self.nsInfo;
+               let mut parentNsInfo = self.nsInfo;
+
+               if! let declMethodNode = node@@@Nodes.DeclMethodNode {
+                  if declMethodNode.$declInfo.$outsizeOfClass {
+                     parentNsInfo = unwrap self.nsType2nsInfo[ node.$expType.$parentInfo ];
+                  }
+               }
+
+               self.nsInfo = new NamespaceInfo( parentNsInfo, node.$expType );
+               self.nsType2nsInfo[ node.$expType ] = self.nsInfo;
+
+               self.visit( node, depth + 1 );
+               self.nsInfo = bakNsInfo;
+
+               return .Next;
+            }
+            
+            return .Child;
+         },
+         0, (@));
+   }
+
+   pub fn start( targetNode:&Nodes.Node,
+                 targetNodeKindSet:&Set<int> ) mut
+   {
+      self.targetNodeKindSet = targetNodeKindSet;
+      self.visit( targetNode, 0 );
+   }
+
+   pub fn dump() {
+      let mut list:List<&Nodes.Node> = [];
+      foreach _, node in self.node2Index {
+         list.insert( node );
+      }
+      fn comp( node1:&Nodes.Node, node2:&Nodes.Node ) : bool {
+         return node1.$id < node2.$id;
+      }
+      list.sort( comp );
+
+      foreach node in list {
+         let index = unwrap self.node2Index[ node ];
+         print( "%d:%d:" (node.$pos.lineNo, node.$pos.column ),
+                index.getIdTxt(), Nodes.getNodeKindName( node.$kind ) );  
+      }
+   }
+}

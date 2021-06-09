@@ -24,3 +24,4 @@ func Lns_RunMain(mainFunc func(_env *LnsEnv, args *LnsList) LnsInt) {
 
 	exitRuntime(mainFunc(Lns_GetEnv(), NewLnsList(args)))
 }
+

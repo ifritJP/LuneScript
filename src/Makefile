@@ -219,6 +219,7 @@ LNS_SRCS += base/Option
 LNS_SRCS += base/GoMod
 #LNS_SRCS += base/bind
 LNS_SRCS += base/Nodes
+LNS_SRCS += base/NodeIndexer
 LNS_SRCS += base/Formatter
 LNS_SRCS += base/Macro
 LNS_SRCS += base/TransUnitIF
@@ -267,6 +268,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Option)
 	$(call $5,$1,$2,$3,$4,base/GoMod)
 	$(call $5,$1,$2,$3,$4,base/Nodes)
+	$(call $5,$1,$2,$3,$4,base/NodeIndexer)
 	$(call $5,$1,$2,$3,$4,base/Formatter)
 	$(call $5,$1,$2,$3,$4,base/Macro)
 	$(call $5,$1,$2,$3,$4,base/TransUnitIF)
@@ -703,6 +705,7 @@ COMP_TARGETS += test/comp-2.lns@1_test/comp-2.lns@2_17.7.comp
 COMP_TARGETS += test/comp-3.lns@1_test/comp-3.lns@2_17.7.comp
 COMP_TARGETS += test/comp-4.lns@1_test/comp-4.lns@2_17.12.comp
 COMP_TARGETS += test/comp-5.lns@1_test/comp-5.lns@2_17.15.comp
+COMP_TARGETS += test/comp-6.lns@1_test/comp-6.lns@2_2.6.comp
 COMP_TARGETS += test/comp2.lns@1_test/compSub.lns@2_5.6.comp
 COMP_TARGETS += test/comp4.lns@1_test/comp4.lns@2_9.8.comp
 COMP_TARGETS += test/comp5.lns@1_test/comp5.lns@2_7.7.comp

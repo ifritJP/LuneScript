@@ -36,6 +36,7 @@ import lune.base.LuneControl;
 import lune.base.Types;
 import lune.base.Option as LnsOpt;
 import lune.base.Builtin;
+import lune.base.NodeIndexer;
 
 let MaxNilAccNum = 3;
 
@@ -120,6 +121,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut env:Env;
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
    let builtinFuncs:&Builtin.BuiltinFuncType;
+   let indexer: NodeIndexer.Indexer;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:&TransUnit.ASTInfo, option:&Option )
@@ -156,6 +158,8 @@ class convFilter extend Nodes.Filter<Opt> {
          self.builtinFuncs.__lns_runmode_Queue_sym: "%d" (__lns.runMode.Queue),
          self.builtinFuncs.__lns_runmode_Skip_sym: "%d" (__lns.runMode.Skip),
       };
+
+      self.indexer = new NodeIndexer.Indexer( self.processInfo );
    }
 
    fn getVM( typeInfo:&Ast.TypeInfo ) : str! {
@@ -541,13 +545,13 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) mut : str {
                            self.$typeNameCtrl, self.$moduleInfoManager, true );
                         symbolName = "%s_%s_%d_"
                             (parentName.gsub( "[%.@]", "_" ), symbolName,
-                              typeInfo.$typeId.id );
+                              typeInfo.$childId );
                      }
                   } else {
                      if not Ast.isBuiltin( typeInfo.$typeId.id ) and
                         not self.isPubType( typeInfo )
                      {
-                        symbolName = "%s_%d_" (symbolName, typeInfo.$typeId.id);
+                        symbolName = "%s_%d_" (symbolName, typeInfo.$childId);
                      }
                      symbolName = self.concatSymWithType( symbolName, typeInfo );
                   }
@@ -558,7 +562,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) mut : str {
                       ( self.getSymbol( .Type( parentInfo, false ), parentInfo.$rawTxt ),
                         symbolName );
                   if not self.isPubType( typeInfo ) {
-                     symbolName = "%s_%d_" (symbolName, typeInfo.$typeId.id);
+                     symbolName = "%s_%d_" (symbolName, typeInfo.$childId);
                   }
                }
                case .ExtModule {
@@ -1147,12 +1151,13 @@ fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
    return .Conv;
 }
 
-fn convFilter.getConvExpName( nodeId:int, argListNode:&Nodes.ExpListNode ): str
+fn convFilter.getConvExpName( node:&Nodes.Node, argListNode:&Nodes.ExpListNode ): str
 {
+   let nodeId = node.$id;
    return "%s_convExp%d"  ( self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), nodeId);
 }
 
-fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
+fn convFilter.processConvExp( node:&Nodes.Node, dstTypeList:&List<&Ast.TypeInfo>,
                               argListNode:&Nodes.ExpListNode!, hasRetEnv:bool ) mut
 {
    let! argList = argListNode {
@@ -1184,7 +1189,7 @@ fn convFilter.processConvExp( nodeId:int, dstTypeList:&List<&Ast.TypeInfo>,
    expList = workList;
 
    self.writeln( "// for %d" (argList.$pos.lineNo) );
-   self.write( "func %s(" (self.getConvExpName( nodeId, argList )) );
+   self.write( "func %s(" (self.getConvExpName( node, argList )) );
 
 
    if hasRetEnv {
@@ -1768,6 +1773,16 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
 pub override fn convFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
+   self.indexer.start( node, (@
+                               Nodes.NodeKind.$Switch,
+                               Nodes.NodeKind.$Match,
+                               Nodes.NodeKind.$For,
+                               Nodes.NodeKind.$Foreach,
+                               Nodes.NodeKind.$Forsort,
+                               Nodes.NodeKind.$Apply
+   ));
+
+   
    foreach importNode in node.$nodeManager.getImportNodeList() {
       let info = importNode.$info;
       self.moduleType2SymbolMap[ info.$moduleTypeInfo ] = info.$symbolInfo;
@@ -1937,19 +1952,19 @@ pub override fn convFilter.processRoot(
                   symTypeList.insert( Ast.builtinTypeStem_ );
                }
                self.processConvExp(
-                  workNode.$id, symTypeList, workNode.$expList, false );
+                  workNode, symTypeList, workNode.$expList, false );
             } );
    _filter( node.$nodeManager.getExpSetValNodeList(),
             fn ( workNode:&Nodes.ExpSetValNode ) {
                self.processConvExp(
-                  workNode.$id, workNode.$exp1.$expTypeList, workNode.$exp2, false );
+                  workNode, workNode.$exp1.$expTypeList, workNode.$exp2, false );
             });
    
    _filter( node.$nodeManager.getExpCallNodeList(),
             fn ( workNode:&Nodes.ExpCallNode ) {
                let needEnv = not Ast.isBuiltin( workNode.$func.$expType.$typeId.id );
                self.processConvExp(
-                  workNode.$id,     
+                  workNode,     
                   workNode.$func.$expType.$argTypeInfoList,
                   workNode.$argList, needEnv );
             } );
@@ -1957,7 +1972,7 @@ pub override fn convFilter.processRoot(
             fn ( workNode:&Nodes.ExpCallSuperCtorNode ) {
                let needEnv = not Ast.isBuiltin( workNode.$methodType.$typeId.id );
                self.processConvExp(
-                  workNode.$id,     
+                  workNode,     
                   workNode.$methodType.$argTypeInfoList,
                   workNode.$expList, needEnv );
             } );
@@ -1965,7 +1980,7 @@ pub override fn convFilter.processRoot(
             fn ( workNode:&Nodes.ExpCallSuperNode ) {
                let needEnv = not Ast.isBuiltin( workNode.$methodType.$typeId.id );
                self.processConvExp(
-                  workNode.$id,     
+                  workNode,     
                   workNode.$methodType.$argTypeInfoList,
                   workNode.$expList, needEnv );
             } );
@@ -1982,7 +1997,7 @@ pub override fn convFilter.processRoot(
                         }
                      }
                   }
-                  self.processConvExp( workNode.$id, typeList, expList, false );
+                  self.processConvExp( workNode, typeList, expList, false );
                }
             } );
    _filter( node.$nodeManager.getAliasNodeList(),
@@ -2434,7 +2449,7 @@ pub override fn convFilter.processExpCallSuperCtor(
 {
    self.write( "self.%s(" ( self.getConstrSymbol( node.$superType ) ) );
    if! let argList = node.$expList {
-      self.processSetFromExpList( self.getConvExpName( node.$id, argList ), 
+      self.processSetFromExpList( self.getConvExpName( node, argList ), 
                                   node.$methodType.$argTypeInfoList, argList,
                                   self.option.$addEnvArg );
    } else {
@@ -2449,7 +2464,7 @@ pub override fn convFilter.processExpCallSuper(
    self.write( "self.%s.%s(" ( self.getTypeSymbol( node.$methodType.$parentInfo ),
                                self.getFuncSymbol( node.$methodType ) ) );
    if! let argList = node.$expList {
-      self.processSetFromExpList( self.getConvExpName( node.$id, argList ), 
+      self.processSetFromExpList( self.getConvExpName( node, argList ), 
                                   node.$methodType.$argTypeInfoList, argList,
                                   self.option.$addEnvArg );    
    } else {
@@ -2708,7 +2723,7 @@ pub override fn convFilter.processIfUnwrap(
    }
    self.write( " := " );
    self.processSetFromExpList(
-      self.getConvExpName( node.$id, node.$expList ),
+      self.getConvExpName( node, node.$expList ),
       tempTypeList, node.$expList, false );
    self.writeln( "" );
 
@@ -2805,7 +2820,7 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
          }
          self.write( " := " );
          self.processSetFromExpList(
-            self.getConvExpName( node.$id, expList ), tmpVarTypeList, expList, false );
+            self.getConvExpName( node, expList ), tmpVarTypeList, expList, false );
          self.writeln( "" );
 
          // テンポラリに nil が含まれるか確認する
@@ -2885,7 +2900,7 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
          }
          self.write( " = " );
          self.processSetFromExpList(
-            self.getConvExpName( node.$id, expList ), varTypeList, expList, false );
+            self.getConvExpName( node, expList ), varTypeList, expList, false );
          self.writeln( "" );   
       }
    }
@@ -2933,7 +2948,7 @@ pub override fn convFilter.processDeclVar(
          }
          self.write( " = " );
          self.processSetFromExpList(
-            self.getConvExpName( node.$id, expList ), typeList,  expList, false );
+            self.getConvExpName( node, expList ), typeList,  expList, false );
          self.writeln( "" );
          self.write( "if " );
          let mut hasCond = false;
@@ -3132,7 +3147,8 @@ pub override fn convFilter.processIf(
 pub override fn convFilter.processSwitch(
    node: &Nodes.SwitchNode, opt: Opt ) mut
 {
-   let valName = "_switch%d" (node.$id);
+   let nodeIndex = self.indexer.getIndex( node ).$index;
+   let valName = "_switch%d" (nodeIndex);
    self.write( "if %s := " (valName) );
    filter( node.$exp, self, node );
    self.write( "; " );
@@ -3176,8 +3192,9 @@ pub override fn convFilter.processMatch(
       return false;
    }
    let val;
+   let nodeIndex = self.indexer.getIndex( node ).$index;
    if hasAccessing() {
-      val = "_exp%d" (node.$id);
+      val = "_matchExp%d" (nodeIndex);
       self.write( "switch %s := " (val) );
    } else {
       val = ""; 
@@ -3240,11 +3257,12 @@ pub override fn convFilter.processFor(
    self.writeln( "{" );
    self.pushIndent( ## );
 
+   let nodeIndex = self.indexer.getIndex( node ).$index;
    
-   let fromSym = "_from%d" (node.$id);
-   let toSym = "_to%d" (node.$id);
-   let deltaSym = "_delta%d" (node.$id);
-   let workSym = "_work%d" (node.$id);
+   let fromSym = "_forFrom%d" (nodeIndex);
+   let toSym = "_forTo%d" (nodeIndex);
+   let deltaSym = "_forDelta%d" (nodeIndex);
+   let workSym = "_forWork%d" (nodeIndex);
 
    let valType = "%s" (self.type2gotype(node.$init.$expType) );
    self.write( "var %s %s = " (fromSym,valType) );
@@ -3304,10 +3322,11 @@ pub override fn convFilter.processApply(
    self.writeln( "{" );
    self.pushIndent( ## );
 
+   let nodeIndex = self.indexer.getIndex( node ).$index;
    
-   let formSym = "_form%d" (node.$id);
-   let paramSym = "_param%d" (node.$id);
-   let prevSym = "_prev%d" (node.$id);
+   let formSym = "_applyForm%d" (nodeIndex);
+   let paramSym = "_applyParam%d" (nodeIndex);
+   let prevSym = "_applyPrev%d" (nodeIndex);
 
    if node.$expList.$mRetExp {
       self.write( "%s, %s, %s := " (formSym, paramSym, prevSym) );
@@ -3334,7 +3353,7 @@ pub override fn convFilter.processApply(
       setTxt = "%s, %s" ( setTxt, self.getSymbolSym( symInfo ) );
    }
    if node.$expList.$expType.$kind == .Ext {
-      let workSym = "_work%d" (node.$id);
+      let workSym = "_applyWork%d" (nodeIndex);
       self.writeln(
          "%s := %s.(*Lns_luaValue).Call( Lns_2DDD( %s, %s ) )"
          (workSym, formSym, paramSym, prevSym ) );
@@ -3375,15 +3394,17 @@ fn convFilter.outputForeachLua(
    node: &Nodes.Node, sortFlag:bool, exp:&Nodes.Node,
    val:&Ast.SymbolInfo, key:&Ast.SymbolInfo!, block:&Nodes.BlockNode ) mut
 {
+   let nodeIndex = self.indexer.getIndex( node ).$index;
+   
    switch exp.$expType.$extedType.$kind {
       case .List, .Map {
          self.writeln( "{" );
          self.pushIndent( ## );
-         let tmpExp = "_exp%d" (node.$id);
-         let tmpKey = "_key%d" (node.$id);
-         let tmpVal = "_val%d" (node.$id);
-         let tmpIndex = "_index%d" (node.$id);
-         let sorted = "_sorted%d" (node.$id);
+         let tmpExp = "_foreachExp%d" (nodeIndex);
+         let tmpKey = "_foreachKey%d" (nodeIndex);
+         let tmpVal = "_foreachVal%d" (nodeIndex);
+         let tmpIndex = "_foreachIndex%d" (nodeIndex);
+         let sorted = "_foreachSorted%d" (nodeIndex);
          self.write( "%s := " (tmpExp) );
          filter( exp, self, node );
          self.writeln( "" );
@@ -3589,14 +3610,16 @@ pub override fn convFilter.processForsort(
       valSym = node.$val;
    }
 
+   let nodeIndex = self.indexer.getIndex( node ).$index;
+
    
    self.writeln( "{" );
    self.pushIndent(##);
-   let collSym = "__collection%d" (node.$id);
+   let collSym = "__forsortCollection%d" (nodeIndex);
    self.write( "%s := " (collSym) );
    filter( node.$exp,  self, node );
    self.writeln( "" );
-   let sortSym = "__sorted%d" (node.$id);
+   let sortSym = "__forsortSorted%d" (nodeIndex);
    self.write( "%s := %s." (sortSym, collSym) );
    switch keyTypeInfo {
       case Ast.builtinTypeInt {
@@ -3612,11 +3635,14 @@ pub override fn convFilter.processForsort(
          self.writeln( "CreateKeyListStem()" );
       }
    }
-   self.writeln( "%s.Sort( %s, nil )" (sortSym, getLnsItemKind( keyTypeInfo ) ) );
+   self.writeln(
+      "%s.Sort( %s%s, nil )"
+      ( sortSym, getAddEnvArg( 2, self.option.$addEnvArg ),
+        getLnsItemKind( keyTypeInfo ) ) );
 
 
    self.write( "for _, " );
-   let mut key = "__key%d" (node.$id);
+   let mut key = "__forsortKey%d" (nodeIndex);
    when! keySym {
       key = "%s" (self.getSymbolSym( keySym ));
    }
@@ -3695,7 +3721,7 @@ pub override fn convFilter.processExpNew(
       let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, .Normal );
 
       self.processSetFromExpList(
-         self.getConvExpName( node.$id, argList ), 
+         self.getConvExpName( node, argList ), 
          initFuncType.$argTypeInfoList, argList, self.option.$addEnvArg );
    } else {
       self.write( getAddEnvArg( 0, self.option.$addEnvArg ) );
@@ -4799,19 +4825,42 @@ pub override fn convFilter.processExpCall(
          addEnvArg = false;
       }
       case .SortCall( typeInfo ) {
+         self.write( getAddEnvArg( 2, self.option.$addEnvArg ) );
          self.write( "%s, " (getLnsItemKind( typeInfo )) );
          if! let argList = node.$argList {
             if #argList.$expType.$argTypeInfoList == 2 {
                skipArg = true;
                
-               self.write( "LnsComp(func ( val1, val2 LnsAny ) bool {" );
+               self.write(
+                  "LnsComp(func ( %sval1, val2 LnsAny ) bool {"
+                  ( self.getEnvArgDecl( 2 ) ));
                self.write( "return " );
                self.processSetFromExpList(
-                  self.getConvExpName( node.$id, argList ), 
+                  self.getConvExpName( node, argList ), 
                   funcType.$argTypeInfoList, argList, false );
-               let argType = self.type2gotype( argList.$expType.$argTypeInfoList[1]);
-               self.write( "( val1.(%s), val2.(%s) )" (argType,argType ) );
-               self.write( "})" );
+               //let argType = self.type2gotype( argList.$expType.$argTypeInfoList[1]);
+
+               // fn createCastNode( valTxt:str ) : Nodes.Node {
+               //    let statNode = Nodes.ConvStatNode.create(
+               //       self.nodeManager, node.$pos, false,
+               //       [ Ast.builtinTypeStem ], valTxt );
+               //    return Nodes.ExpCastNode.create(
+               //       self.nodeManager, node.$pos, false,
+               //       [ argList.$expType.$argTypeInfoList[1] ], statNode,
+               //       argList.$expType.$argTypeInfoList[1], .Normal );
+               // }
+               
+               self.write( "( %s" (getAddEnvArg( 2, self.option.$addEnvArg ) ) );
+               self.write( "val1" );
+               self.outputStem2Type( argList.$expType.$argTypeInfoList[1] );
+               self.write( ", val2" );
+               self.outputStem2Type( argList.$expType.$argTypeInfoList[1] );
+               // filter( createCastNode( "val1" ), self, node );
+               // self.write( "," );
+               // filter( createCastNode( "val2" ), self, node );
+               // val1.(%s), val2.(%s) )
+               //    (, argType,argType ) );
+               self.write( ")})" );
             }
          }
       }
@@ -4826,7 +4875,7 @@ pub override fn convFilter.processExpCall(
    if not skipArg {
       if! let argList = node.$argList {
          self.processSetFromExpList(
-            self.getConvExpName( node.$id, argList ), 
+            self.getConvExpName( node, argList ), 
             funcType.$argTypeInfoList, argList, addEnvArg );
       } else {
          self.write( getAddEnvArg( 0, addEnvArg ) );
@@ -5094,7 +5143,7 @@ pub override fn convFilter.processExpSetVal(
    }
    self.write( " = " );
    self.processSetFromExpList(
-      self.getConvExpName( node.$id, node.$exp2 ), node.$exp1.$expTypeList,
+      self.getConvExpName( node, node.$exp2 ), node.$exp1.$expTypeList,
       node.$exp2, false );
    self.writeln( "" );
 }
@@ -5686,7 +5735,7 @@ pub override fn convFilter.processLiteralString(
       self.write( '%s.String_format(%s, '
                   (self.env.getLuavm(), str2gostr(txt)));
       self.processSetFromExpList(
-         self.getConvExpName( node.$id, expList ),  [ Ast.builtinTypeDDD ],
+         self.getConvExpName( node, expList ),  [ Ast.builtinTypeDDD ],
          expList, false );
       self.write( ")" );
    } else {

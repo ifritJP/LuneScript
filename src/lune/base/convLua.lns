@@ -75,11 +75,16 @@ pub class Opt {
 '_' として宣言しているシンボルを、他の '_' と被らないように id を付加して返す。
 name が '_' でない場合、そのまま返す。
 */
-fn getSymTxt( name:str, id:str ) : str {
-   if name == "_" {
-      return "_%s" (id);
+fn getSymbolTxt( symbolInfo:&Ast.SymbolInfo ) : str {
+   if symbolInfo.$name == "_" {
+      if! let annonymous = symbolInfo@@@Ast.AnonymousSymbolInfo {
+         return "_%d" (annonymous.$anonymousId);
+      } else {
+         Util.err( "can't cast to AnonymousSymbolInfo. -- %s:%s"
+                   (symbolInfo.$pos$.lineNo, symbolInfo.$pos$.column) );
+      }
    }
-   return name;
+   return symbolInfo.$name;
 }
 
 class ConvFilter extend Nodes.Filter<Opt> (oStream) {
@@ -2177,7 +2182,7 @@ pub override fn ConvFilter.processIfUnwrap(
    self.pushIndent(##);
    self.write( "local " );
    foreach varSym, index in node.$varSymList {
-      self.write( getSymTxt( varSym.$name, "%d" (varSym.$symbolId) ) );
+      self.write( getSymbolTxt( varSym ) );
       if index ~= #node.$varSymList {
          self.write( ", " );
       }
@@ -2194,7 +2199,7 @@ pub override fn ConvFilter.processIfUnwrap(
          if hasSym {
             self.write( " and  " );
          }
-         self.write( "%s ~= nil" (getSymTxt( varSym.$name, "%d" (varSym.$symbolId) )) );
+         self.write( "%s ~= nil" (getSymbolTxt( varSym )) );
          hasSym = true;
       }
    }
@@ -2241,9 +2246,8 @@ pub override fn ConvFilter.processDeclVar(
    if node.$syncBlock {
       self.writeln( "do" );
       self.pushIndent(##);
-      foreach varInfo in node.$syncVarList {
-         self.writeln( "local _sync_%s"
-                       (getSymTxt( varInfo.$name, "%d" (varInfo.$symbolId) )) );
+      foreach varInfo in node.$symbolInfoList {
+         self.writeln( "local _sync_%s" (getSymbolTxt( varInfo )) );
       }
       self.writeln( "do" );
       self.pushIndent(##);
@@ -2259,7 +2263,7 @@ pub override fn ConvFilter.processDeclVar(
       if index > 1 {
          self.write( ", " );
       }
-      let name = getSymTxt( var.$name, "%d" (var.$symbolId) );
+      let name = getSymbolTxt( var );
       self.write( name );
       varNameList.insert( name );
    }
@@ -2307,8 +2311,8 @@ pub override fn ConvFilter.processDeclVar(
 
       let mut syncVarNameList:List<str> = [];
 
-      foreach varInfo in node.$syncVarList {
-         let name = getSymTxt( varInfo.$name, "%d" (varInfo.$symbolId) );
+      foreach varInfo in node.$symbolInfoList {
+         let name = getSymbolTxt( varInfo );
          syncVarNameList.insert( name );
          self.writeln( "_sync_%s = %s" (name, name) );
       }
@@ -2341,7 +2345,7 @@ pub override fn ConvFilter.processDeclVar(
    if self.macroDepth > 0 {
       self.writeln( "" );
       foreach symbolInfo in node.$symbolInfoList {
-         let varName = getSymTxt( symbolInfo.$name, "%d" (symbolInfo.$symbolId) );
+         let varName = getSymbolTxt( symbolInfo );
          self.writeln( "table.insert( macroVar.__names, '%s' )" ( varName ) );
          self.writeln( "macroVar.%s = %s" ( varName, varName ) );
          self.macroVarSymSet.add( symbolInfo );
@@ -2552,7 +2556,7 @@ pub override fn ConvFilter.processRepeat(
 pub override fn ConvFilter.processFor(
    node: &Nodes.ForNode, opt: Opt ) mut
 {
-   self.write( "for %s = " ( getSymTxt( node.$val.$name, "%d" (node.$val.$symbolId) ) ) );
+   self.write( "for %s = " ( getSymbolTxt( node.$val ) ) );
    filter( node.get_init(),  self, node );
    self.write( ", " );
    filter( node.get_to(),  self, node );
@@ -2569,12 +2573,12 @@ pub override fn ConvFilter.processApply(
    node: &Nodes.ApplyNode, opt: Opt ) mut
 {
    self.write( "for " );
-   let varList = node.get_varList();
+   let varList = node.$varList;
    foreach var, index in varList {
       if index > 1 {
          self.write( ", " );
       }
-      self.write( getSymTxt( var.$name, "%d" (var.$symbolId) ) );
+      self.write( getSymbolTxt( var ) );
    }
    self.write( " in " );
    filter( node.$expList,  self, node );
@@ -2599,14 +2603,14 @@ pub override fn ConvFilter.processForeach(
    
    self.write( "for " );
    when! keySym {
-      self.write( getSymTxt( keySym.$name, "%d" (keySym.$symbolId) ) );
+      self.write( getSymbolTxt( keySym ) );
    }
    else {
       self.write( "__index" );
    }
    self.write( ", " );
    when! valSym {
-      self.write( getSymTxt( valSym.$name, "%d" (valSym.$symbolId) ) );
+      self.write( getSymbolTxt( valSym ) );
    }
    else {
       self.write( "__val" );
@@ -2666,15 +2670,14 @@ pub override fn ConvFilter.processForsort(
    self.write( "for __index, " );
    let mut key = "__key";
    when! keySym {
-      key = getSymTxt( keySym.$name, "%d" (keySym.$symbolId) );
+      key = getSymbolTxt( keySym );
    }
    self.write( key );
    self.writeln( " in ipairs( __sorted ) do" );
    self.pushIndent(##);
    when! valSym {
       self.writeln(
-         string.format( "local %s = __map[ %s ]",
-                        getSymTxt( valSym.$name, "%d" (valSym.$symbolId) ), key ) );
+         string.format( "local %s = __map[ %s ]", getSymbolTxt( valSym ), key ) );
    }
    filter( node.$block, self, node );
    //self.popIndent();

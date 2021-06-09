@@ -6,10 +6,50 @@
 
 #+TITLE: TODO
 
+* 機能進化
+- [ ] mut/imut に const を追加する。
+      const は、 new する際に new &Hoge として生成する。
+      つまり、生成したタイミングで imut 。
+     - [ ] const から imut への代入は可能。
+           imut から const への代入は不可能。
+	   ただし、次のケースでは const への代入が可能。
+	   - const 宣言されているクラス
+	   - __trans 宣言されている変数。
+     - [ ] const 宣言されたクラスは、以下のメンバしか持てない。
+           - const 型。
+- [ ] canBeAsyncParam は、以下に限定する。
+      - immortal
+      - __trans 宣言
+      - const	
+  
+- [ ] クラス内からも、アクセッサを通さないとメンバにアクセスできない修飾子を追加する。
+      pri の強力版。
+
+- [ ] innner 関数は、各名前空間内でインナー関数の順番を付けて、
+      それを関数名に付加する。
+      今の id 方式だと、一部の変更が全体に影響する。
+
+- [ ] __trans  指定がメンドイ
+
+- [ ] ログのマクロを __async と __noasync で使い分けが必要。
+
+- [ ] 現状、 allmut 型のメンバを __async から参照するだけでエラーになるが、
+      参照するだけでそのオブジェクトのメンバやメソッドアクセスしなければ、
+      エラーにしなくて良いはず。
+
 * バグ
 
-- [ ] builtinFunc 情報に、 type が var の情報に、 sym 以外に type がある。
+- [ ] go で list.sort のコールバックがビルドエラーする。
+      ※ _env が付かない。
+      list.sort( fn ( node1:&Nodes.Node, node2:&Nodes.Node ) : bool {
+         return node1.$id < node2.$id;
+      } );
   
+- [ ] builtin 型の補完が効かない。
+  
+- [ ] builtinFunc の情報が変ったら、 metaver を変更する必要がある。
+      make にチェックを入れる。
+      
 - [ ] コンストラクタ内のインナー関数で、メンバーをセットしていると、
       実際にはメンバーの初期化もれがあっても検出できていない。
   
@@ -24,27 +64,15 @@ fn sub(): int, int, int {
   
 - [ ] go 版 lnsc で lnsc test/imp.lns exe が出来ない。
       動的な import が処理できていない。  
-- [ ] クラス内からも、アクセッサを通さないとメンバにアクセスできない修飾子を追加する。
-      pri の強力版。
-- [ ] innner 関数は、各名前空間内でインナー関数の順番を付けて、
-      それを関数名に付加する。
-      今の id 方式だと、一部の変更が全体に影響する。
 - [ ] __async のメソッドから __noasync メソッドをコールした場合、エラーにならない。
 - [ ] __async から mutable な static メンバ にアクセスした場合、エラーにする。
-- [ ] __trans  指定がメンドイ
 - [ ] allmut 型のインスタンスで実行するメソッドについて
       - [ ] メソッドコールは __async ではできない。
       - [ ] 戻り値が  の場合は allmut に変更。
 - [ ] allmut 型が、他の型 imut 等に代入できてしまい、チェックを擦り抜けられる。
-- [ ] 現状、 allmut 型のメンバを __async から参照するだけでエラーになるが、
-      参照するだけでそのオブジェクトのメンバやメソッドアクセスしなければ、
-      エラーにしなくて良いはず。
-- [ ] ログのマクロを __async と __noasync で使い分けが必要。
       
 - [ ] メンバーを変更する処理を form で書いて、
       その form を imut のメソッドで実行できてしまう。
-- [ ] luaval<> の処理している箇所は __async では使えなくする。
-      __async では unsafe で括って使えるようにする。
 - [ ] __async は、luaval<> の引数、戻り値を持ってはならない。
       メンバに luaval<> を持つものもダメ。
 - [ ] allmut 変数の getter が async 設定になってしまう。
@@ -168,7 +196,6 @@ lua の場合 val に nil が入らないが、 go では入る。
 
 - [ ] nilable から 非 nilable へのキャストは出来ないが、
       stem! を int! へのキャストはサポートするべき。
-- [ ] accessor/method のアクセス制限に local を指定できない。
 - [ ] class/method の final 対応。
   
 - [ ] let list:List<Super> = [ Sub ]; が出来ない。
@@ -1003,6 +1030,7 @@ hoge.$val = 2; // error しない
     &List<List<int>>  は不完全な immutable なのでアクセス不能。
 - [X] ループ内に定義している 関数内で break が指定できる。
      実際には break 出来ないのでエラーにするべき。
+- [X] accessor/method のアクセス制限に local を指定できない。
   
   
   
@@ -1085,6 +1113,8 @@ hoge.$val = 2; // error しない
 - [X] ソートできないキーの map を forsort に指定できてしまう。
 - [X] match の case で、 alge 型を定義しているモジュールを
   インポートしていない場合のエラーがない。
+- [X] luaval<> の処理している箇所は __async では使えなくする。
+      __async では unsafe で括って使えるようにする。
   
       
 

@@ -61,7 +61,7 @@ func FrontInterface_getLuaModulePath(_env *LnsEnv, mod string,baseDir LnsAny)(st
 // declaration Class -- ModuleId
 var FrontInterface_ModuleId__tempId *FrontInterface_ModuleId
 // 37: decl @lune.@base.@frontInterface.ModuleId.___init
-func FrontInterface_ModuleId____init_1034_(_env *LnsEnv) {
+func FrontInterface_ModuleId____init_5_(_env *LnsEnv) {
     FrontInterface_ModuleId__tempId = NewFrontInterface_ModuleId(_env, 0.0, 0)
     
 }
@@ -688,7 +688,7 @@ func Lns_frontInterface_init(_env *LnsEnv) {
     Lns_Ast_init(_env)
     Lns_LuneControl_init(_env)
     Lns_Runner_init(_env)
-    FrontInterface_ModuleId____init_1034_(_env)
+    FrontInterface_ModuleId____init_5_(_env)
     FrontInterface___luneScript = NewfrontInterface_dummyFront(_env).FP
 }
 func init() {

@@ -465,10 +465,6 @@ end
 function TypeData:__init() 
    self.children = {}
 end
-function TypeData:addChildren( child )
-
-   table.insert( self.children, child )
-end
 function TypeData.setmeta( obj )
   setmetatable( obj, { __index = TypeData  } )
 end
@@ -556,7 +552,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 208, function (  )
+   Log.log( Log.Level.Trace, __func__, 205, function (  )
    
       return "start"
    end )
@@ -1463,6 +1459,7 @@ function TypeInfo.new( scope, processInfo )
    return obj
 end
 function TypeInfo:__init(scope, processInfo) 
+   self.childId = 0
    self.scope = scope
    do
       local _exp = scope
@@ -1695,6 +1692,19 @@ function TypeInfo:get_typeData()
 end
 function TypeInfo:get_processInfo()
    return self.processInfo
+end
+function TypeInfo:get_childId()
+   return self.childId
+end
+function TypeInfo:set_childId( childId )
+   self.childId = childId
+end
+
+
+function TypeData:addChildren( child )
+
+   child:set_childId( #self.children )
+   table.insert( self.children, child )
 end
 
 
@@ -2308,6 +2318,10 @@ function ModifierTypeInfo:get_baseTypeInfo( ... )
    return self.srcTypeInfo:get_baseTypeInfo( ... )
 end
 
+function ModifierTypeInfo:get_childId( ... )
+   return self.srcTypeInfo:get_childId( ... )
+end
+
 function ModifierTypeInfo:get_children( ... )
    return self.srcTypeInfo:get_children( ... )
 end
@@ -2390,6 +2404,10 @@ end
 
 function ModifierTypeInfo:serializeTypeInfoList( ... )
    return self.srcTypeInfo:serializeTypeInfoList( ... )
+end
+
+function ModifierTypeInfo:set_childId( ... )
+   return self.srcTypeInfo:set_childId( ... )
 end
 
 function ModifierTypeInfo:set_imutType( ... )
@@ -2989,6 +3007,10 @@ function NilableTypeInfo:get_baseTypeInfo( ... )
    return self.nonnilableType:get_baseTypeInfo( ... )
 end
 
+function NilableTypeInfo:get_childId( ... )
+   return self.nonnilableType:get_childId( ... )
+end
+
 function NilableTypeInfo:get_children( ... )
    return self.nonnilableType:get_children( ... )
 end
@@ -3071,6 +3093,10 @@ end
 
 function NilableTypeInfo:serializeTypeInfoList( ... )
    return self.nonnilableType:serializeTypeInfoList( ... )
+end
+
+function NilableTypeInfo:set_childId( ... )
+   return self.nonnilableType:set_childId( ... )
 end
 
 function NilableTypeInfo:switchScope( ... )
@@ -3232,6 +3258,10 @@ function AliasTypeInfo:get_baseTypeInfo( ... )
    return self.aliasSrcTypeInfo:get_baseTypeInfo( ... )
 end
 
+function AliasTypeInfo:get_childId( ... )
+   return self.aliasSrcTypeInfo:get_childId( ... )
+end
+
 function AliasTypeInfo:get_children( ... )
    return self.aliasSrcTypeInfo:get_children( ... )
 end
@@ -3302,6 +3332,10 @@ end
 
 function AliasTypeInfo:serializeTypeInfoList( ... )
    return self.aliasSrcTypeInfo:serializeTypeInfoList( ... )
+end
+
+function AliasTypeInfo:set_childId( ... )
+   return self.aliasSrcTypeInfo:set_childId( ... )
 end
 
 function AliasTypeInfo:switchScope( ... )
@@ -4423,6 +4457,157 @@ end
 
 
 
+local AnonymousSymbolInfo = {}
+setmetatable( AnonymousSymbolInfo, { __index = SymbolInfo } )
+_moduleObj.AnonymousSymbolInfo = AnonymousSymbolInfo
+function AnonymousSymbolInfo.new( symbolInfo, id )
+   local obj = {}
+   AnonymousSymbolInfo.setmeta( obj )
+   if obj.__init then obj:__init( symbolInfo, id ); end
+   return obj
+end
+function AnonymousSymbolInfo:__init(symbolInfo, id) 
+   SymbolInfo.__init( self)
+   
+   self.symbolInfo = symbolInfo
+   self.anonymousId = id
+end
+function AnonymousSymbolInfo.setmeta( obj )
+  setmetatable( obj, { __index = AnonymousSymbolInfo  } )
+end
+function AnonymousSymbolInfo:get_anonymousId()
+   return self.anonymousId
+end
+function AnonymousSymbolInfo:canAccess( ... )
+   return self.symbolInfo:canAccess( ... )
+end
+
+function AnonymousSymbolInfo:clearValue( ... )
+   return self.symbolInfo:clearValue( ... )
+end
+
+function AnonymousSymbolInfo:getModule( ... )
+   return self.symbolInfo:getModule( ... )
+end
+
+function AnonymousSymbolInfo:getOrg( ... )
+   return self.symbolInfo:getOrg( ... )
+end
+
+function AnonymousSymbolInfo:get_accessMode( ... )
+   return self.symbolInfo:get_accessMode( ... )
+end
+
+function AnonymousSymbolInfo:get_canBeLeft( ... )
+   return self.symbolInfo:get_canBeLeft( ... )
+end
+
+function AnonymousSymbolInfo:get_canBeRight( ... )
+   return self.symbolInfo:get_canBeRight( ... )
+end
+
+function AnonymousSymbolInfo:get_convModuleParam( ... )
+   return self.symbolInfo:get_convModuleParam( ... )
+end
+
+function AnonymousSymbolInfo:get_hasAccessFromClosure( ... )
+   return self.symbolInfo:get_hasAccessFromClosure( ... )
+end
+
+function AnonymousSymbolInfo:get_hasValueFlag( ... )
+   return self.symbolInfo:get_hasValueFlag( ... )
+end
+
+function AnonymousSymbolInfo:get_isLazyLoad( ... )
+   return self.symbolInfo:get_isLazyLoad( ... )
+end
+
+function AnonymousSymbolInfo:get_kind( ... )
+   return self.symbolInfo:get_kind( ... )
+end
+
+function AnonymousSymbolInfo:get_mutMode( ... )
+   return self.symbolInfo:get_mutMode( ... )
+end
+
+function AnonymousSymbolInfo:get_mutable( ... )
+   return self.symbolInfo:get_mutable( ... )
+end
+
+function AnonymousSymbolInfo:get_name( ... )
+   return self.symbolInfo:get_name( ... )
+end
+
+function AnonymousSymbolInfo:get_namespaceTypeInfo( ... )
+   return self.symbolInfo:get_namespaceTypeInfo( ... )
+end
+
+function AnonymousSymbolInfo:get_pos( ... )
+   return self.symbolInfo:get_pos( ... )
+end
+
+function AnonymousSymbolInfo:get_posForLatestMod( ... )
+   return self.symbolInfo:get_posForLatestMod( ... )
+end
+
+function AnonymousSymbolInfo:get_posForModToRef( ... )
+   return self.symbolInfo:get_posForModToRef( ... )
+end
+
+function AnonymousSymbolInfo:get_scope( ... )
+   return self.symbolInfo:get_scope( ... )
+end
+
+function AnonymousSymbolInfo:get_staticFlag( ... )
+   return self.symbolInfo:get_staticFlag( ... )
+end
+
+function AnonymousSymbolInfo:get_symbolId( ... )
+   return self.symbolInfo:get_symbolId( ... )
+end
+
+function AnonymousSymbolInfo:get_typeInfo( ... )
+   return self.symbolInfo:get_typeInfo( ... )
+end
+
+function AnonymousSymbolInfo:hasAccess( ... )
+   return self.symbolInfo:hasAccess( ... )
+end
+
+function AnonymousSymbolInfo:set_convModuleParam( ... )
+   return self.symbolInfo:set_convModuleParam( ... )
+end
+
+function AnonymousSymbolInfo:set_hasAccessFromClosure( ... )
+   return self.symbolInfo:set_hasAccessFromClosure( ... )
+end
+
+function AnonymousSymbolInfo:set_hasValueFlag( ... )
+   return self.symbolInfo:set_hasValueFlag( ... )
+end
+
+function AnonymousSymbolInfo:set_namespaceTypeInfo( ... )
+   return self.symbolInfo:set_namespaceTypeInfo( ... )
+end
+
+function AnonymousSymbolInfo:set_posForLatestMod( ... )
+   return self.symbolInfo:set_posForLatestMod( ... )
+end
+
+function AnonymousSymbolInfo:set_posForModToRef( ... )
+   return self.symbolInfo:set_posForModToRef( ... )
+end
+
+function AnonymousSymbolInfo:set_typeInfo( ... )
+   return self.symbolInfo:set_typeInfo( ... )
+end
+
+function AnonymousSymbolInfo:updateValue( ... )
+   return self.symbolInfo:updateValue( ... )
+end
+
+
+
 local AlternateTypeInfo = {}
 setmetatable( AlternateTypeInfo, { __index = TypeInfo } )
 _moduleObj.AlternateTypeInfo = AlternateTypeInfo
@@ -4847,6 +5032,10 @@ function BoxTypeInfo:get_baseTypeInfo( ... )
    return self.boxingType:get_baseTypeInfo( ... )
 end
 
+function BoxTypeInfo:get_childId( ... )
+   return self.boxingType:get_childId( ... )
+end
+
 function BoxTypeInfo:get_children( ... )
    return self.boxingType:get_children( ... )
 end
@@ -4909,6 +5098,10 @@ end
 
 function BoxTypeInfo:serializeTypeInfoList( ... )
    return self.boxingType:serializeTypeInfoList( ... )
+end
+
+function BoxTypeInfo:set_childId( ... )
+   return self.boxingType:set_childId( ... )
 end
 
 function BoxTypeInfo:switchScope( ... )
@@ -5222,6 +5415,10 @@ function GenericTypeInfo:get_baseTypeInfo( ... )
    return self.genSrcTypeInfo:get_baseTypeInfo( ... )
 end
 
+function GenericTypeInfo:get_childId( ... )
+   return self.genSrcTypeInfo:get_childId( ... )
+end
+
 function GenericTypeInfo:get_children( ... )
    return self.genSrcTypeInfo:get_children( ... )
 end
@@ -5296,6 +5493,10 @@ end
 
 function GenericTypeInfo:serializeTypeInfoList( ... )
    return self.genSrcTypeInfo:serializeTypeInfoList( ... )
+end
+
+function GenericTypeInfo:set_childId( ... )
+   return self.genSrcTypeInfo:set_childId( ... )
 end
 
 function GenericTypeInfo:switchScope( ... )
@@ -8015,6 +8216,10 @@ function ExtTypeInfo:get_baseTypeInfo( ... )
    return self.extedType:get_baseTypeInfo( ... )
 end
 
+function ExtTypeInfo:get_childId( ... )
+   return self.extedType:get_childId( ... )
+end
+
 function ExtTypeInfo:get_children( ... )
    return self.extedType:get_children( ... )
 end
@@ -8085,6 +8290,10 @@ end
 
 function ExtTypeInfo:serializeTypeInfoList( ... )
    return self.extedType:serializeTypeInfoList( ... )
+end
+
+function ExtTypeInfo:set_childId( ... )
+   return self.extedType:set_childId( ... )
 end
 
 function ExtTypeInfo:switchScope( ... )
@@ -8338,6 +8547,10 @@ function AndExpTypeInfo:get_baseTypeInfo( ... )
    return self.result:get_baseTypeInfo( ... )
 end
 
+function AndExpTypeInfo:get_childId( ... )
+   return self.result:get_childId( ... )
+end
+
 function AndExpTypeInfo:get_children( ... )
    return self.result:get_children( ... )
 end
@@ -8456,6 +8669,10 @@ end
 
 function AndExpTypeInfo:serializeTypeInfoList( ... )
    return self.result:serializeTypeInfoList( ... )
+end
+
+function AndExpTypeInfo:set_childId( ... )
+   return self.result:set_childId( ... )
 end
 
 function AndExpTypeInfo:set_imutType( ... )

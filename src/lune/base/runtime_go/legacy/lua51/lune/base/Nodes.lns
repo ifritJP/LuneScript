@@ -1704,6 +1704,8 @@ pub class DeclFuncInfo {
    let classTypeInfo: &Ast.TypeInfo! { pub };
    /** このメソッドを保持するクラスを定義するノード。 クラスが builtin の場合 nil。 */
    let declClassNode: &DeclClassNode! {pub};
+   /** class 定義の外で定義したメソッドの場合 true */
+   let outsizeOfClass: bool {pub};
    let name: &Parser.Token! { pub };
    let symbol: &Ast.SymbolInfo! { pub };
    let argList: &List<&Node> { pub };
@@ -1721,7 +1723,7 @@ pub static fn DeclFuncInfo.createFrom(
    info:&DeclFuncInfo, name:&Parser.Token, symbol: &Ast.SymbolInfo ): DeclFuncInfo
 {
    return new DeclFuncInfo(
-      info.$kind, info.classTypeInfo, info.declClassNode,
+      info.$kind, info.classTypeInfo, info.declClassNode, info.outsizeOfClass,
       name, symbol, info.argList, info.staticFlag, info.accessMode,
       info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList,
       info.has__func__Symbol, info.overrideFlag );

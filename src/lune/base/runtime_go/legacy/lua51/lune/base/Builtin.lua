@@ -1175,7 +1175,7 @@ function Builtin:getTypeInfo( typeName )
    end
    
    local genTypeList = {}
-   local _511, endIndex = typeName:find( "[%w%.]+<" )
+   local _1, endIndex = typeName:find( "[%w%.]+<" )
    local suffix = ""
    if endIndex ~= nil then
       local genTypeName = typeName:sub( endIndex + 1 )
@@ -1525,7 +1525,7 @@ function Builtin:registBuiltInScope(  )
          end
          
          if name ~= "" then
-            for __index, _653 in ipairs( nameList ) do
+            for __index, _1 in ipairs( nameList ) do
                self.transUnit:popClass(  )
             end
             

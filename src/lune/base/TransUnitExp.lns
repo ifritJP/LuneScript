@@ -2070,7 +2070,24 @@ fn TransUnit.dumpFieldComp(
    writer: Writer.Writer, isPrefixType: bool,
    prefixTypeInfo: &Ast.TypeInfo, pattern: str, getterPattern: str! )
 {
-   let typeInfo = prefixTypeInfo;
+   let typeInfo;
+   switch prefixTypeInfo.get_kind() {
+      case .List {
+         typeInfo = Ast.builtinTypeList;
+      }
+      case .Array {
+         typeInfo = Ast.builtinTypeArray;
+      }
+      case .Set {
+         typeInfo = Ast.builtinTypeSet;
+      }
+      case .Box {
+         typeInfo = Ast.builtinTypeBox;
+      }
+      default {
+         typeInfo = prefixTypeInfo;
+      }
+   }
    let! scope = typeInfo.$scope {
       return;
    };

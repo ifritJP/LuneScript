@@ -196,6 +196,35 @@ function Modifier:set_validMutControl( validMutControl )
 end
 
 
+local IdSetInfo = {}
+_moduleObj.IdSetInfo = IdSetInfo
+function IdSetInfo.new(  )
+   local obj = {}
+   IdSetInfo.setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function IdSetInfo:__init() 
+   self.anonymousFuncId = Ast.IdProvider.new(0, 10000)
+   self.anonymousVarId = Ast.IdProvider.new(0, 10000)
+end
+function IdSetInfo:registerSym( symbol )
+
+   if symbol:get_kind() == Ast.SymbolKind.Var then
+      if symbol:get_name() == "_" then
+         local id = self.anonymousVarId:getNewId(  )
+         return Ast.AnonymousSymbolInfo.new(symbol, id)
+      end
+      
+   end
+   
+   return symbol
+end
+function IdSetInfo.setmeta( obj )
+  setmetatable( obj, { __index = IdSetInfo  } )
+end
+
+
 local NSInfo = {}
 _moduleObj.NSInfo = NSInfo
 function NSInfo:isLockedAsync(  )
@@ -209,6 +238,7 @@ function NSInfo.new( typeInfo, pos )
    return obj
 end
 function NSInfo:__init(typeInfo, pos) 
+   self.idSetInfo = IdSetInfo.new()
    self.nobody = false
    self.lockedAsyncStack = {}
    self.loopScopeQueue = {}
@@ -260,6 +290,10 @@ end
 function NSInfo:get_loopScopeQueue()
    return self.loopScopeQueue
 end
+function NSInfo:registerSym( ... )
+   return self.idSetInfo:registerSym( ... )
+end
+
 
 
 local TransUnitIF = {}
@@ -388,7 +422,7 @@ function TransUnitBase:pushModule( processInfo, externalFlag, name, mutable )
          self.namespace2Scope[typeInfo] = scope
          nsInfo = self:newNSInfo( newType, self:getLatestPos(  ) )
          
-         local _193, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
+         local _1, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:addErrMess( self:getLatestPos(  ), string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getFullName( self.typeNameCtrl, parentScope, false ), existSym:get_name(), parentInfo:getFullName( self.typeNameCtrl, parentScope, false ), modName) )
          end

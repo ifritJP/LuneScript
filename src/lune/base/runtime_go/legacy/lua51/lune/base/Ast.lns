@@ -132,9 +132,6 @@ pub class TypeData {
    pub fn __init() {
       self.children = [];
    }
-   pub fn addChildren( child:&TypeInfo ) mut {
-      self.children.insert( child );
-   }
 }
 
 pub enum IdType {
@@ -801,6 +798,8 @@ pub abstract class TypeInfo {
    pri let typeData: TypeData {local};
    // この TypeInfo の typeId を生成した processInfo
    pri let processInfo:&ProcessInfo {pub};
+   // この TypeInfo が、親の TypeData の何番目の child か示す。 
+   pri let mut childId:int {pub,local};
 
    pub abstract fn get_imutType(): &TypeInfo;
    local abstract fn set_imutType(typeInfo:&TypeInfo) mut;
@@ -830,6 +829,7 @@ pub abstract class TypeInfo {
 
    pub fn __init( scope: Scope!, processInfo:ProcessInfo ) {
       //typeInfo2ScopeMap[ self ] = scope;
+      self.childId = 0;
       self.scope = scope;
       if! scope {
          _exp.set_ownerTypeInfo( self );
@@ -1119,6 +1119,12 @@ static な型か。
       typeNameCtrl:&TypeNameCtrl, importInfo:&ModuleInfoManager, localFlag:bool! ) : str;
    
 }
+
+local fn TypeData.addChildren( child:TypeInfo ) mut {
+   child.set_childId( #self.children );
+   self.children.insert( child );
+}
+
 
 pub alge LuavalResult {
    Err( mess:str ),
@@ -3161,6 +3167,19 @@ pub class AccessSymbolInfo extend SymbolInfo {
    advertise symbolInfo;
 }
 
+pub class AnonymousSymbolInfo extend SymbolInfo {
+   let symbolInfo:&SymbolInfo;
+   let anonymousId:int {pub};
+
+   advertise symbolInfo;
+
+   pub fn __init( symbolInfo: &SymbolInfo, id:int ) 
+   {
+      super();
+      self.symbolInfo = symbolInfo;
+      self.anonymousId = id;
+   }
+}
 
 
 /**

@@ -755,7 +755,7 @@ end
 function NodeManager:__init() 
    self.idSeed = 0
    self.nodeKind2NodeList = {}
-   for kind, _311 in pairs( nodeKind2NameMap ) do
+   for kind, _1 in pairs( nodeKind2NameMap ) do
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
@@ -8296,19 +8296,20 @@ _moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncInfo  } )
 end
-function DeclFuncInfo.new( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
+function DeclFuncInfo.new( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
    local obj = {}
    DeclFuncInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
+      obj:__init( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
    end
    return obj
 end
-function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
+function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
 
    self.kind = kind
    self.classTypeInfo = classTypeInfo
    self.declClassNode = declClassNode
+   self.outsizeOfClass = outsizeOfClass
    self.name = name
    self.symbol = symbol
    self.argList = argList
@@ -8329,6 +8330,9 @@ function DeclFuncInfo:get_classTypeInfo()
 end
 function DeclFuncInfo:get_declClassNode()
    return self.declClassNode
+end
+function DeclFuncInfo:get_outsizeOfClass()
+   return self.outsizeOfClass
 end
 function DeclFuncInfo:get_name()
    return self.name
@@ -8367,7 +8371,7 @@ end
 
 function DeclFuncInfo.createFrom( info, name, symbol )
 
-   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, info.declClassNode, name, symbol, info.argList, info.staticFlag, info.accessMode, info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList, info.has__func__Symbol, info.overrideFlag)
+   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, info.declClassNode, info.outsizeOfClass, name, symbol, info.argList, info.staticFlag, info.accessMode, info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList, info.has__func__Symbol, info.overrideFlag)
 end
 
 
@@ -13538,7 +13542,7 @@ function LiteralMapNode:setupLiteralTokenList( list )
    self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
-   for key, _8808 in pairs( self.map ) do
+   for key, _1 in pairs( self.map ) do
       local literal = key:getLiteral(  )
       if literal ~= nil then
          do
@@ -13573,8 +13577,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
          table.insert( __sorted, __key )
       end
       table.sort( __sorted )
-      for __index, _8822 in ipairs( __sorted ) do
-         local key = __map[ _8822 ]
+      for __index, _2 in ipairs( __sorted ) do
+         local key = __map[ _2 ]
          do
             if not key:setupLiteralTokenList( list ) then
                return false

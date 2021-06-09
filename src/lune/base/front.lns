@@ -49,6 +49,7 @@ import lune.base.Nodes;
 import lune.base.Ast;
 import lune.base.Runner;
 import lune.base.Builtin;
+import lune.base.NodeIndexer;
 
 _lune_control ignore_symbol_;
 
@@ -1999,6 +2000,22 @@ end
          {
             Util.errorLog( mess );
          }
+      }
+      case .Indexer {
+         self.build(
+            .CreateAst,
+            fn ( ast: &TransUnit.ASTInfo ) {
+               let mut indexer = new NodeIndexer.Indexer( ast.$exportInfo.$processInfo );
+               indexer.start(
+                  ast.$node,
+                  (@
+                    Nodes.NodeKind.$Switch,
+                    Nodes.NodeKind.$Match,
+                    Nodes.NodeKind.$For,
+                    Nodes.NodeKind.$Apply
+                  ) );
+               indexer.dump();
+            });
       }
       default {
          print( "illegal mode" );

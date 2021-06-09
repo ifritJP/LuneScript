@@ -332,13 +332,21 @@ function Opt:__init( node )
    self.node = node
 end
 
-local function getSymTxt( name, id )
+local function getSymbolTxt( symbolInfo )
 
-   if name == "_" then
-      return string.format( "_%s", id)
+   if symbolInfo:get_name() == "_" then
+      do
+         local annonymous = _lune.__Cast( symbolInfo, 3, Ast.AnonymousSymbolInfo )
+         if annonymous ~= nil then
+            return string.format( "_%d", annonymous:get_anonymousId())
+         else
+            Util.err( string.format( "can't cast to AnonymousSymbolInfo. -- %s:%s", tostring( _lune.nilacc( symbolInfo:get_pos(), "lineNo" )), tostring( _lune.nilacc( symbolInfo:get_pos(), "column" ))) )
+         end
+      end
+      
    end
    
-   return name
+   return symbolInfo:get_name()
 end
 
 local ConvFilter = {}
@@ -2042,7 +2050,7 @@ end]==], className, className, destTxt) )
          do
             local superInit = (_lune.unwrap( baseInfo:get_scope()) ):getSymbolInfoChild( "__init" )
             if superInit ~= nil then
-               for index, _777 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
+               for index, _1 in ipairs( superInit:get_typeInfo():get_argTypeInfoList() ) do
                   if #superArgTxt > 0 then
                      superArgTxt = superArgTxt .. ", "
                   end
@@ -2630,7 +2638,7 @@ function ConvFilter:processIfUnwrap( node, opt )
    self:pushIndent(  )
    self:write( "local " )
    for index, varSym in ipairs( node:get_varSymList() ) do
-      self:write( getSymTxt( varSym:get_name(), string.format( "%d", varSym:get_symbolId()) ) )
+      self:write( getSymbolTxt( varSym ) )
       if index ~= #node:get_varSymList() then
          self:write( ", " )
       end
@@ -2650,7 +2658,7 @@ function ConvFilter:processIfUnwrap( node, opt )
             self:write( " and  " )
          end
          
-         self:write( string.format( "%s ~= nil", getSymTxt( varSym:get_name(), string.format( "%d", varSym:get_symbolId()) )) )
+         self:write( string.format( "%s ~= nil", getSymbolTxt( varSym )) )
          hasSym = true
       end
       
@@ -2706,8 +2714,8 @@ function ConvFilter:processDeclVar( node, opt )
    if node:get_syncBlock() then
       self:writeln( "do" )
       self:pushIndent(  )
-      for __index, varInfo in ipairs( node:get_syncVarList() ) do
-         self:writeln( string.format( "local _sync_%s", getSymTxt( varInfo:get_name(), string.format( "%d", varInfo:get_symbolId()) )) )
+      for __index, varInfo in ipairs( node:get_symbolInfoList() ) do
+         self:writeln( string.format( "local _sync_%s", getSymbolTxt( varInfo )) )
       end
       
       self:writeln( "do" )
@@ -2727,7 +2735,7 @@ function ConvFilter:processDeclVar( node, opt )
          self:write( ", " )
       end
       
-      local name = getSymTxt( var:get_name(), string.format( "%d", var:get_symbolId()) )
+      local name = getSymbolTxt( var )
       self:write( name )
       table.insert( varNameList, name )
    end
@@ -2792,8 +2800,8 @@ function ConvFilter:processDeclVar( node, opt )
          
          local syncVarNameList = {}
          
-         for __index, varInfo in ipairs( node:get_syncVarList() ) do
-            local name = getSymTxt( varInfo:get_name(), string.format( "%d", varInfo:get_symbolId()) )
+         for __index, varInfo in ipairs( node:get_symbolInfoList() ) do
+            local name = getSymbolTxt( varInfo )
             table.insert( syncVarNameList, name )
             self:writeln( string.format( "_sync_%s = %s", name, name) )
          end
@@ -2831,7 +2839,7 @@ function ConvFilter:processDeclVar( node, opt )
    if self.macroDepth > 0 then
       self:writeln( "" )
       for __index, symbolInfo in ipairs( node:get_symbolInfoList() ) do
-         local varName = getSymTxt( symbolInfo:get_name(), string.format( "%d", symbolInfo:get_symbolId()) )
+         local varName = getSymbolTxt( symbolInfo )
          self:writeln( string.format( "table.insert( macroVar.__names, '%s' )", varName) )
          self:writeln( string.format( "macroVar.%s = %s", varName, varName) )
          self.macroVarSymSet[symbolInfo]= true
@@ -3078,7 +3086,7 @@ end
 
 function ConvFilter:processFor( node, opt )
 
-   self:write( string.format( "for %s = ", getSymTxt( node:get_val():get_name(), string.format( "%d", node:get_val():get_symbolId()) )) )
+   self:write( string.format( "for %s = ", getSymbolTxt( node:get_val() )) )
    filter( node:get_init(  ), self, node )
    self:write( ", " )
    filter( node:get_to(  ), self, node )
@@ -3100,13 +3108,13 @@ end
 function ConvFilter:processApply( node, opt )
 
    self:write( "for " )
-   local varList = node:get_varList(  )
+   local varList = node:get_varList()
    for index, var in ipairs( varList ) do
       if index > 1 then
          self:write( ", " )
       end
       
-      self:write( getSymTxt( var:get_name(), string.format( "%d", var:get_symbolId()) ) )
+      self:write( getSymbolTxt( var ) )
    end
    
    self:write( " in " )
@@ -3136,14 +3144,14 @@ function ConvFilter:processForeach( node, opt )
    
    self:write( "for " )
    if keySym ~= nil then
-      self:write( getSymTxt( keySym:get_name(), string.format( "%d", keySym:get_symbolId()) ) )
+      self:write( getSymbolTxt( keySym ) )
    else
       self:write( "__index" )
    end
    
    self:write( ", " )
    if valSym ~= nil then
-      self:write( getSymTxt( valSym:get_name(), string.format( "%d", valSym:get_symbolId()) ) )
+      self:write( getSymbolTxt( valSym ) )
    else
       self:write( "__val" )
    end
@@ -3203,14 +3211,14 @@ function ConvFilter:processForsort( node, opt )
    self:write( "for __index, " )
    local key = "__key"
    if keySym ~= nil then
-      key = getSymTxt( keySym:get_name(), string.format( "%d", keySym:get_symbolId()) )
+      key = getSymbolTxt( keySym )
    end
    
    self:write( key )
    self:writeln( " in ipairs( __sorted ) do" )
    self:pushIndent(  )
    if valSym ~= nil then
-      self:writeln( string.format( "local %s = __map[ %s ]", getSymTxt( valSym:get_name(), string.format( "%d", valSym:get_symbolId()) ), key ) )
+      self:writeln( string.format( "local %s = __map[ %s ]", getSymbolTxt( valSym ), key ) )
    end
    
    filter( node:get_block(), self, node )
@@ -4334,7 +4342,7 @@ function MacroEvalImp:evalFromMacroCode( code, baseDir )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3650, function (  )
+   Log.log( Log.Level.Trace, __func__, 3653, function (  )
    
       return string.format( "macro: %s", code)
    end )

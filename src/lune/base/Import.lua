@@ -576,9 +576,9 @@ function _TypeInfoAlias:createTypeInfo( param )
    param.typeId2TypeInfoMut[self.typeId] = newTypeInfo
    
    newTypeInfo:get_typeId():set_orgId( self.typeId )
-   local _133 = param:getTypeInfo( self.parentId )
-   if  nil == _133 then
-      local __133 = _133
+   local _1 = param:getTypeInfo( self.parentId )
+   if  nil == _1 then
+      local __1 = _1
    
       return nil, string.format( "%s: not found parentInfo %d %s", __func__, self.parentId, self.rawTxt)
    end
@@ -1949,7 +1949,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
       typeId2Scope[typeId] = self.transUnitIF:get_scope()
    end
    
-   for __index, _629 in ipairs( nameList ) do
+   for __index, _1 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    
@@ -2337,7 +2337,7 @@ end
    end
    
    
-   for __index, _788 in ipairs( nameList ) do
+   for __index, _2 in ipairs( nameList ) do
       self.transUnitIF:popModule(  )
    end
    

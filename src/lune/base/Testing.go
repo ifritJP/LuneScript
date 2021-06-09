@@ -27,11 +27,11 @@ func Testing_registerTestcase(_env *LnsEnv, modName string,caseName string,testc
 // 177: decl @lune.@base.@Testing.run
 func Testing_run(_env *LnsEnv, modPath string) {
     {
-        __collection866 := Testing_testModuleMap
-        __sorted866 := __collection866.CreateKeyListStr()
-        __sorted866.Sort( LnsItemKindStr, nil )
-        for _, _name := range( __sorted866.Items ) {
-            info := __collection866.Items[ _name ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
+        __forsortCollection1 := Testing_testModuleMap
+        __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
+        __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
+        for _, _name := range( __forsortSorted1.Items ) {
+            info := __forsortCollection1.Items[ _name ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
             name := _name.(string)
             if name == modPath{
                 info.FP.Run(_env)
@@ -43,11 +43,11 @@ func Testing_run(_env *LnsEnv, modPath string) {
 // 184: decl @lune.@base.@Testing.runAll
 func Testing_runAll(_env *LnsEnv) {
     {
-        __collection879 := Testing_testModuleMap
-        __sorted879 := __collection879.CreateKeyListStr()
-        __sorted879.Sort( LnsItemKindStr, nil )
-        for _, ___key879 := range( __sorted879.Items ) {
-            info := __collection879.Items[ ___key879 ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
+        __forsortCollection1 := Testing_testModuleMap
+        __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
+        __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
+        for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
+            info := __forsortCollection1.Items[ ___forsortKey1 ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
             info.FP.Run(_env)
         }
     }
@@ -56,11 +56,11 @@ func Testing_runAll(_env *LnsEnv) {
 // 190: decl @lune.@base.@Testing.outputAllResult
 func Testing_outputAllResult(_env *LnsEnv, stream Lns_oStream) {
     {
-        __collection897 := Testing_testModuleMap
-        __sorted897 := __collection897.CreateKeyListStr()
-        __sorted897.Sort( LnsItemKindStr, nil )
-        for _, ___key897 := range( __sorted897.Items ) {
-            info := __collection897.Items[ ___key897 ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
+        __forsortCollection1 := Testing_testModuleMap
+        __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
+        __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
+        for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
+            info := __forsortCollection1.Items[ ___forsortKey1 ].(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
             info.FP.OutputResult(_env, stream)
         }
     }
@@ -392,11 +392,11 @@ func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
     
     Lns_print([]LnsAny{_env.LuaVM.String_format("module: %s %s", []LnsAny{self.name, _env.LuaVM.String_rep("=", 30)})})
     {
-        __collection702 := self.testcaseMap
-        __sorted702 := __collection702.CreateKeyListStr()
-        __sorted702.Sort( LnsItemKindStr, nil )
-        for _, _name := range( __sorted702.Items ) {
-            testcase := __collection702.Items[ _name ].(Testing_TestCaseDownCast).ToTesting_TestCase()
+        __forsortCollection1 := self.testcaseMap
+        __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
+        __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
+        for _, _name := range( __forsortSorted1.Items ) {
+            testcase := __forsortCollection1.Items[ _name ].(Testing_TestCaseDownCast).ToTesting_TestCase()
             name := _name.(string)
             Lns_print([]LnsAny{_env.LuaVM.String_format("%s: %s", []LnsAny{name, _env.LuaVM.String_rep("-", 15)})})
             testcase.FP.Get_func(_env)(_env, NewTesting_Ctrl(_env, testcase.FP.Get_result(_env)))
@@ -411,11 +411,11 @@ func (self *Testing_TestModuleInfo) OutputResult(_env *LnsEnv, stream Lns_oStrea
     }
     Lns_print([]LnsAny{_env.LuaVM.String_format("module: %s %s", []LnsAny{self.name, _env.LuaVM.String_rep("=", 30)})})
     {
-        __collection756 := self.testcaseMap
-        __sorted756 := __collection756.CreateKeyListStr()
-        __sorted756.Sort( LnsItemKindStr, nil )
-        for _, ___key756 := range( __sorted756.Items ) {
-            testcase := __collection756.Items[ ___key756 ].(Testing_TestCaseDownCast).ToTesting_TestCase()
+        __forsortCollection1 := self.testcaseMap
+        __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
+        __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
+        for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
+            testcase := __forsortCollection1.Items[ ___forsortKey1 ].(Testing_TestCaseDownCast).ToTesting_TestCase()
             testcase.FP.Get_result(_env).FP.OutputResult(_env, stream)
         }
     }

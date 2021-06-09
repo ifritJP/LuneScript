@@ -17,7 +17,7 @@ func OutputDepend_createFilter(_env *LnsEnv, stream Lns_oStream) *Nodes_Filter {
 }
 
 // 150: decl @lune.@base.@OutputDepend.Ast2Depend
-func OutputDepend_Ast2Depend_1170_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
+func OutputDepend_Ast2Depend_4_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
     var conv *Nodes_Filter

@@ -52,23 +52,56 @@ pub class Modifier {
    }
 }
 
+pub class IdSetInfo {
+   /** 名前なし関数 */
+   let anonymousFuncId:Ast.IdProvider;
+   /** 名前なし変数 */
+   let anonymousVarId:Ast.IdProvider;
+
+   pub fn __init() {
+      self.anonymousFuncId = new Ast.IdProvider( 0, 10000 );
+      self.anonymousVarId = new Ast.IdProvider( 0, 10000 );
+   }
+
+   pub fn registerSym( symbol:&Ast.SymbolInfo ) mut : &Ast.SymbolInfo {
+      if symbol.$kind == .Var {
+         if symbol.$name == "_" {
+            let id = self.anonymousVarId.getNewId();
+            return new Ast.AnonymousSymbolInfo( symbol, id );
+         }
+      }
+      return symbol;
+   }
+}
+
+
+
+
 pub class NSInfo {
+   /** 関数の本体宣言がないか。 true の場合宣言なし。 */
    let mut nobody:bool {pub,pub};
+   /** この名前空間の型 */
    let typeInfo:Ast.TypeInfo {pub};
+   /** この名前空間の定義位置 */
    let pos:&Parser.Position {pub};
 
-   /** ループ系制御構文(for 等)の Scope */
+   /** この名前空間で処理しているループ系制御構文(for 等)の Scope */
    let mut loopScopeQueue: List<&Ast.Scope> {pub};
    
    /** __asyncLock した時の loopScopeQueue の長さ */
    let mut lockedAsyncStack:List<int>;
 
+   let mut idSetInfo:IdSetInfo;
+
+
+   advertise idSetInfo;
    
    pub fn isLockedAsync() : bool {
       return #self.lockedAsyncStack > 0;
    }
 
    pub fn __init( typeInfo:Ast.TypeInfo, pos:&Parser.Position ) {
+      self.idSetInfo = new IdSetInfo();
       self.nobody = false;
       self.lockedAsyncStack = [];
       self.loopScopeQueue = [];
