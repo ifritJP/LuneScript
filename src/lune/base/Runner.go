@@ -8,7 +8,7 @@ type Runner_RunnerMtd interface {
     GetLnsSyncFlag() *Lns_syncFlag
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
 }
 type Runner_Runner struct {
     _syncFlag *Lns_syncFlag
@@ -47,8 +47,8 @@ func (self *Runner_Runner) Run(_env *LnsEnv) {
 }
 
 // 39: decl @lune.@base.@Runner.Runner.start
-func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt) {
-    LnsRun(_env, self.FP, mode)
+func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt,name LnsAny) {
+    LnsRun(_env, self.FP, mode, name)
 }
 
 

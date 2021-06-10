@@ -524,7 +524,7 @@ function Runner:__init(parserSrc, stdinFile, overridePos)
       local _exp = self.parser
       if _exp ~= nil then
          _exp:start(  )
-         if not _lune._run(self, 2 ) then
+         if not _lune._run(self, 2, string.format( "parser - %s", _exp:get_streamName()) ) then
             _exp:stop(  )
          end
          
@@ -554,11 +554,14 @@ function Runner:get_errMess()
 end
 
 
-local function create( parserSrc, stdinFile, overridePos )
+local function create( parserSrc, stdinFile, overridePos, async )
 
-   local runner = Runner.new(parserSrc, stdinFile, overridePos)
+   if async then
+      local runner = Runner.new(parserSrc, stdinFile, overridePos)
+      return runner:get_parser(), runner:get_errMess()
+   end
    
-   return runner:get_parser(), runner:get_errMess()
+   return Parser.create( parserSrc, stdinFile, overridePos )
 end
 _moduleObj.create = create
 

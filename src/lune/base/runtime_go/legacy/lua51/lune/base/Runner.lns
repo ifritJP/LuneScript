@@ -36,7 +36,7 @@ pub abstract class Runner extend (__Runner) {
    }
 
    
-   pub fn start( mode:int ) mut {
-      __run( self, mode );
+   pub fn start( mode:int, name:str! ) mut {
+      __run( self, mode, name );
    }
 }

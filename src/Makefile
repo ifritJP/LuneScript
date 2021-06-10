@@ -109,7 +109,7 @@ help:
 	@echo "  make go-build [GOTAG=gopherlua]"
 	@echo "  make setup-pkg-lua"
 	@echo "  make test-govslua [NO_BATCH=y] [ONLY_CONV=y]"
-	@echo "  make goprof"
+	@echo "  make goprof [LNSC_OP=]"
 	@echo "  make goprofview"
 
 
@@ -225,6 +225,7 @@ LNS_SRCS += base/Macro
 LNS_SRCS += base/TransUnitIF
 LNS_SRCS += base/BuiltinTransUnit
 LNS_SRCS += base/Builtin
+LNS_SRCS += base/AstInfo
 LNS_SRCS += base/Import
 LNS_SRCS += base/TransUnit
 LNS_SRCS += base/DependLuaOnLns
@@ -274,6 +275,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/TransUnitIF)
 	$(call $5,$1,$2,$3,$4,base/BuiltinTransUnit)
 	$(call $5,$1,$2,$3,$4,base/Builtin)
+	$(call $5,$1,$2,$3,$4,base/AstInfo)
 	$(call $5,$1,$2,$3,$4,base/Import)
 	$(call $5,$1,$2,$3,$4,base/TransUnit)
 	$(call $5,$1,$2,$3,$4,base/DependLuaOnLns)
@@ -1800,7 +1802,9 @@ goprof:
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
 goprofview:
-	go tool pprof -http=0.0.0.0:8888 lnsc @-.profi 
+	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profi
+gotraceview:
+	go tool trace -http=0.0.0.0:8888 -no_browser @-.profitrace 
 
 luaprof:
 	$(call test-buildlns-setup,work/go)

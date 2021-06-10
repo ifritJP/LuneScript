@@ -315,7 +315,7 @@ class Runner extend (__Runner)
 
       if! self.parser {
          _exp.start();
-         if not __run( self, __lns.runMode.Skip ) {
+         if not __run( self, __lns.runMode.Skip, "parser - %s" (_exp.$streamName) ) {
             // スレッドフルの場合、
             // 同期実行せずに getNext() 毎に parser する
             _exp.stop();
@@ -331,11 +331,13 @@ class Runner extend (__Runner)
 }
 
 pub fn create( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
-               overridePos:&Types.Position! ) : Parser!, str
+               overridePos:&Types.Position!, async:bool ) : Parser!, str
 {
-   let mut runner = new Runner( parserSrc, stdinFile, overridePos );
-
-   return runner.$parser, runner.$errMess;
+   if async {
+      let mut runner = new Runner( parserSrc, stdinFile, overridePos );
+      return runner.$parser, runner.$errMess;
+   }
+   return Parser.create( parserSrc, stdinFile, overridePos )**;
 }
 
 

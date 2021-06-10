@@ -70,7 +70,7 @@ end
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
-local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
+local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 
 local DependInfo = {}
 _moduleObj.DependInfo = DependInfo

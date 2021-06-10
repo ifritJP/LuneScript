@@ -372,5 +372,13 @@ local function setRuntimeThreadLimit( limit )
 
 end
 _moduleObj.setRuntimeThreadLimit = setRuntimeThreadLimit
+local function setRunnerLog( limit )
+
+end
+_moduleObj.setRunnerLog = setRunnerLog
+local function dumpRunnerLog( stream )
+
+end
+_moduleObj.dumpRunnerLog = dumpRunnerLog
 
 return _moduleObj

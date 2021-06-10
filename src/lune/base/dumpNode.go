@@ -39,7 +39,7 @@ func dumpNode_getTypeListTxt_4_(_env *LnsEnv, typeList *LnsList) string {
 }
 
 // 882: decl @lune.@base.@dumpNode.Ast2Dump
-func dumpNode_Ast2Dump_5_(_env *LnsEnv, ast *TransUnit_ASTInfo) string {
+func dumpNode_Ast2Dump_5_(_env *LnsEnv, ast *AstInfo_ASTInfo) string {
     var stream *Util_memStream
     stream = NewUtil_memStream(_env)
     var conv *Nodes_Filter
@@ -1261,7 +1261,7 @@ func Lns_dumpNode_init(_env *LnsEnv) {
     Lns_LuneControl_init(_env)
     Lns_Util_init(_env)
     Lns_convLua_init(_env)
-    Lns_TransUnit_init(_env)
+    Lns_AstInfo_init(_env)
 }
 func init() {
     init_dumpNode = false

@@ -63,6 +63,7 @@ build = {
       [ "lune.base.TransUnitIF" ] = "src/lune/base/TransUnitIF.lua",
       [ "lune.base.BuiltinTransUnit" ] = "src/lune/base/BuiltinTransUnit.lua",
       [ "lune.base.Builtin" ] = "src/lune/base/Builtin.lua",
+      [ "lune.base.AstInfo" ] = "src/lune/base/AstInfo.lua",
       [ "lune.base.Import" ] = "src/lune/base/Import.lua",
       [ "lune.base.TransUnit" ] = "src/lune/base/TransUnit.lua",
       [ "lune.base.DependLuaOnLns" ] = "src/lune/base/DependLuaOnLns.lua",

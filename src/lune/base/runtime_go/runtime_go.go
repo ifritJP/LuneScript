@@ -53,6 +53,10 @@ type LnsEnv struct {
 	async bool
 	// async 用の Env かどうか。起動時の設定。
 	orgAsync bool
+	// runner の名前。 runner 実行時にセットする。
+	runnerName string
+	// runner の id
+	runnerId int
 }
 
 // デフォルトのシングルタスクで使用する LnsEnv
@@ -76,10 +80,12 @@ import エラーを回避するため、
 func Lns_InitMod() {
 }
 
-func createEnv(async bool) *LnsEnv {
+func createEnv(async bool, runnerName string, runnerId int) *LnsEnv {
 	env := &LnsEnv{}
 	env.valStack = []LnsAny{}
 	env.nilAccStack = []LnsAny{}
+	env.runnerName = runnerName
+	env.runnerId = runnerId
 	env.LuaVM = createVM()
 	if async {
 		env.CommonLuaVM = cur_LnsEnv.LuaVM
@@ -133,7 +139,7 @@ func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
 		lnsRuntimeOpt = opts[0]
 	}
 
-	cur_LnsEnv = createEnv(false)
+	cur_LnsEnv = createEnv(false, "main", 0)
 
 	Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
 

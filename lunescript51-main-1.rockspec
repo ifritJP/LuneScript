@@ -63,6 +63,7 @@ build = {
       [ "lune.base.TransUnitIF" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/TransUnitIF.lua",
       [ "lune.base.BuiltinTransUnit" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/BuiltinTransUnit.lua",
       [ "lune.base.Builtin" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Builtin.lua",
+      [ "lune.base.AstInfo" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/AstInfo.lua",
       [ "lune.base.Import" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Import.lua",
       [ "lune.base.TransUnit" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/TransUnit.lua",
       [ "lune.base.convLua" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/convLua.lua",

@@ -274,13 +274,13 @@ function StreamParser.setStdinStream( moduleName )
    StreamParser.stdinStreamModuleName = moduleName
    StreamParser.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
 end
-function StreamParser.new( parserSrc, stdinFile, pos )
+function StreamParser.new( parserSrc, async, stdinFile, pos )
    local obj = {}
    StreamParser.setmeta( obj )
-   if obj.__init then obj:__init( parserSrc, stdinFile, pos ); end
+   if obj.__init then obj:__init( parserSrc, async, stdinFile, pos ); end
    return obj
 end
-function StreamParser:__init(parserSrc, stdinFile, pos) 
+function StreamParser:__init(parserSrc, async, stdinFile, pos) 
    Parser.__init( self)
    
    
@@ -288,7 +288,7 @@ function StreamParser:__init(parserSrc, stdinFile, pos)
    self.lineTokenList = {}
    self.overridePos = pos
    
-   local asyncParser, errMess = AsyncParser.create( parserSrc, stdinFile, pos )
+   local asyncParser, errMess = AsyncParser.create( parserSrc, stdinFile, pos, async )
    do
       local _exp = asyncParser
       if _exp ~= nil then
@@ -308,9 +308,9 @@ function StreamParser:getStreamName(  )
 
    return self.streamName
 end
-function StreamParser.create( parserSrc, stdinFile, pos )
+function StreamParser.create( parserSrc, async, stdinFile, pos )
 
-   return StreamParser.new(parserSrc, stdinFile, pos)
+   return StreamParser.new(parserSrc, async, stdinFile, pos)
 end
 function StreamParser:getToken(  )
 
@@ -362,7 +362,7 @@ function DefaultPushbackParser:__init(parser)
 end
 function DefaultPushbackParser.createFromLnsCode( code, name )
 
-   return DefaultPushbackParser.new(StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name})))
+   return DefaultPushbackParser.new(StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name}), false))
 end
 function DefaultPushbackParser:createPosition( lineNo, column )
 
@@ -427,7 +427,7 @@ function DefaultPushbackParser:pushback(  )
 end
 function DefaultPushbackParser:pushbackStr( name, statement, pos )
 
-   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name}), nil, pos)
+   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name}), false, nil, pos)
    
    local list = {}
    while true do
@@ -683,9 +683,9 @@ local function quoteStr( txt )
 end
 _moduleObj.quoteStr = quoteStr
 
-local function createParserFrom( src, stdinFile )
+local function createParserFrom( src, async, stdinFile )
 
-   return StreamParser.new(src, stdinFile, nil)
+   return StreamParser.new(src, async, stdinFile, nil)
 end
 _moduleObj.createParserFrom = createParserFrom
 

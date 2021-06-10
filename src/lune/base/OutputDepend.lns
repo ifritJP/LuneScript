@@ -28,7 +28,7 @@ _lune_control default_async_all;
 import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.Ast;
-import lune.base.TransUnit;
+import lune.base.AstInfo;
 
 pub class DependInfo {
    let targetModule:str;
@@ -147,7 +147,7 @@ __test {
    }
    
 
-   fn Ast2Depend( ast:&TransUnit.ASTInfo ) __noasync : str
+   fn Ast2Depend( ast:&AstInfo.ASTInfo ) __noasync : str
    {
       let mut stream = new Util.memStream();
 

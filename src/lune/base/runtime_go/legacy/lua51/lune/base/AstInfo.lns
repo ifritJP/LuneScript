@@ -1,0 +1,12 @@
+import lune.base.Nodes;
+import lune.base.frontInterface;
+import lune.base.Builtin;
+
+// ビルド高速化の為、 ASTInfo を依存関係の少ないファイルで別途定義する。
+// せこいやり方だが、効果は大きい。
+pub class ASTInfo {
+   pri let node: &Nodes.Node { pub };
+   pri let exportInfo:frontInterface.ExportInfo { pub };
+   pri let streamName:str {pub};
+   pri let builtinFunc:&Builtin.BuiltinFuncType {pub};
+}

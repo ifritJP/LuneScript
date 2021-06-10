@@ -74,3 +74,12 @@ func Depend_setRuntimeLog(_env *LnsEnv, valid bool) {
 func Depend_setRuntimeThreadLimit(_env *LnsEnv, limit int) {
 	Lns_setThreadLimit(limit)
 }
+
+func Depend_setRunnerLog( _env *LnsEnv, valid bool) {
+    depend_setRunnerLog( valid )
+}
+func Depend_dumpRunnerLog( _env *LnsEnv, stream Lns_oStream ) {
+    lns_threadMgrInfo.dumpEventLog( func(txt string) {
+        stream.Write( _env, txt )
+    })
+}

@@ -43,17 +43,17 @@ type LnsRunner interface {
 	GetLnsSyncFlag() *Lns_syncFlag
 }
 
-func lnsRunMain(self LnsRunner, self *Lns_ThreadMgrInfo) {
-	self.Run()
-	self.GetLnsSyncFlag().wg.Done()
+func lnsRunMain(runnerInfo *lnsRunnerInfo, self *Lns_ThreadMgrInfo) {
+	runnerInfo.runner.Run()
+	runnerInfo.runner.GetLnsSyncFlag().wg.Done()
 
-	threadMgrInfo.endToRun(self)
+	threadMgrInfo.endToRun(runnerInfo)
 }
 
 func LnsExecRunner(_env *LnsEnv, runner LnsRunner) {
 	runner.Run()
 }
-func LnsRun(runner LnsRunner, mode int) bool {
+func LnsRun(runner LnsRunner, mode int, nameOp LnsAny) bool {
 	runner.GetLnsSyncFlag().wg.Add(1)
 	runner.Run()
 	runner.GetLnsSyncFlag().wg.Done()

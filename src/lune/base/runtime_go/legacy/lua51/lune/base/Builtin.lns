@@ -197,7 +197,7 @@ _DefBuiltinFuncType( [
          "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },
          "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
          "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
-         "__run": { "arg": [ "__Runner", "int" ], "ret":[ "bool" ] },
+         "__run": { "arg": [ "__Runner", "int", "str!" ], "ret":[ "bool" ] },
          "__join": { "arg": [ "&__Runner" ], "ret":[ "" ] },
       },
    },

@@ -594,7 +594,7 @@ fn pushbackTxt( pushbackParser:Parser.PushbackParser,
    foreach txt in txtList {
       let mut parser = Parser.StreamParser.create(
          Types.ParserSrc.LnsCode(
-            txt, "macro symbol -- %s" (streamName) ), nil, pos.$RawOrgPos );
+            txt, "macro symbol -- %s" (streamName) ), false, nil, pos.$RawOrgPos );
       let mut workParser = new Parser.DefaultPushbackParser( parser );
       while true {
          let worktoken = workParser.getTokenNoErr();

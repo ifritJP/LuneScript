@@ -46,6 +46,7 @@ import lune.base.Macro;
 import lune.base.TransUnitIF;
 import lune.base.Builtin;
 import lune.base.Import;
+import lune.base.AstInfo;
 
 
 _lune_control ignore_symbol_;

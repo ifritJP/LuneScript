@@ -206,3 +206,7 @@ pub fn setRuntimeLog( valid:bool ) {
 
 pub fn setRuntimeThreadLimit( limit:int ) {
 }
+pub fn setRunnerLog( limit:bool ) {
+}
+pub fn dumpRunnerLog( stream:oStream ) {
+}

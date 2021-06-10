@@ -170,7 +170,7 @@ func Macro_pushbackTxt_12_(_env *LnsEnv, pushbackParser Parser_PushbackParser,tx
     for _, _txt := range( txtList.Items ) {
         txt := _txt.(string)
         var parser *Parser_StreamParser
-        parser = Parser_StreamParser_create(_env, &Types_ParserSrc__LnsCode{txt, _env.LuaVM.String_format("macro symbol -- %s", []LnsAny{streamName})}, nil, pos.FP.Get_RawOrgPos(_env))
+        parser = Parser_StreamParser_create(_env, &Types_ParserSrc__LnsCode{txt, _env.LuaVM.String_format("macro symbol -- %s", []LnsAny{streamName})}, false, nil, pos.FP.Get_RawOrgPos(_env))
         var workParser *Parser_DefaultPushbackParser
         workParser = NewParser_DefaultPushbackParser(_env, &parser.Parser_Parser)
         for  {

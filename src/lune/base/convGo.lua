@@ -233,7 +233,7 @@ local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
-local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
+local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
@@ -5857,9 +5857,7 @@ function convFilter:processExpCall( node, opt )
                      if _switchExp == Ast.builtinTypeForm then
                         filter( node:get_func(), self, node )
                         callKind = _lune.newAlge( CallKind.FormCall)
-                     elseif _switchExp == self.builtinFuncs.lns___run then
-                        filter( node:get_func(), self, node )
-                     elseif _switchExp == self.builtinFuncs.lns___join then
+                     elseif _switchExp == self.builtinFuncs.lns___run or _switchExp == self.builtinFuncs.lns___join then
                         filter( node:get_func(), self, node )
                      else 
                         

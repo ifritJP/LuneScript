@@ -877,9 +877,9 @@ pub override fn dumpFilter.processAbbr(
 
 __test {
    import lune.base.convLua;
-   import lune.base.TransUnit;
+   import lune.base.AstInfo;
 
-   fn Ast2Dump( ast:TransUnit.ASTInfo ) : str
+   fn Ast2Dump( ast:AstInfo.ASTInfo ) : str
    {
       let mut stream = new Util.memStream();
 

@@ -523,18 +523,19 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
    }
 }
 
-pub class ASTInfo {
-   pri let node: &Nodes.Node { pub };
-   pri let exportInfo:frontInterface.ExportInfo { pub };
-   pri let streamName:str {pub};
-   pri let builtinFunc:&Builtin.BuiltinFuncType {pub};
-}
+// pub class ASTInfo {
+//    pri let node: &Nodes.Node { pub };
+//    pri let exportInfo:frontInterface.ExportInfo { pub };
+//    pri let streamName:str {pub};
+//    pri let builtinFunc:&Builtin.BuiltinFuncType {pub};
+// }
 
 pub fn TransUnit.createAST(
-   parserSrc: &Types.ParserSrc, baseDir:str!, stdinFile:&Types.StdinFile!,
-   macroFlag: bool, moduleName: str! ) mut : ASTInfo
+   parserSrc: &Types.ParserSrc, asyncParse:bool,
+   baseDir:str!, stdinFile:&Types.StdinFile!,
+   macroFlag: bool, moduleName: str! ) mut : AstInfo.ASTInfo
 {
-   let mut parser = Parser.createParserFrom( parserSrc, stdinFile );
+   let mut parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile );
 
    self.stdinFile = stdinFile;
    self.baseDir = baseDir;
@@ -622,7 +623,7 @@ pub fn TransUnit.createAST(
          }
 
          let mut subParser = Parser.StreamParser.create(
-            Types.ParserSrc.LnsPath( file, subModule ), self.stdinFile, nil );
+            Types.ParserSrc.LnsPath( file, subModule ), true, self.stdinFile, nil );
 
          self.setParser( new Parser.DefaultPushbackParser( subParser ) );
 
@@ -741,7 +742,7 @@ pub fn TransUnit.createAST(
       moduleTypeInfo, provideInfo, self.processInfo, globalSymbolList,
       self.macroCtrl.$declMacroInfoMap );
    
-   return new ASTInfo( ast, exportInfo, parser.getStreamName(), self.builtinFunc );
+   return new AstInfo.ASTInfo( ast, exportInfo, parser.getStreamName(), self.builtinFunc );
 }
 
 

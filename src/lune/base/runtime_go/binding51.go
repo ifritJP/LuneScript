@@ -62,6 +62,8 @@ var lune_base_TransUnitIF []byte
 var lune_base_BuiltinTransUnit []byte
 //go:embed legacy/lua51/lune/base/Builtin.lua
 var lune_base_Builtin []byte
+//go:embed legacy/lua51/lune/base/AstInfo.lua
+var lune_base_AstInfo []byte
 //go:embed legacy/lua51/lune/base/Import.lua
 var lune_base_Import []byte
 //go:embed legacy/lua51/lune/base/TransUnit.lua
@@ -112,6 +114,7 @@ AddlnsSrcInfo( "lune.base.Macro", lune_base_Macro )
 AddlnsSrcInfo( "lune.base.TransUnitIF", lune_base_TransUnitIF )
 AddlnsSrcInfo( "lune.base.BuiltinTransUnit", lune_base_BuiltinTransUnit )
 AddlnsSrcInfo( "lune.base.Builtin", lune_base_Builtin )
+AddlnsSrcInfo( "lune.base.AstInfo", lune_base_AstInfo )
 AddlnsSrcInfo( "lune.base.Import", lune_base_Import )
 AddlnsSrcInfo( "lune.base.TransUnit", lune_base_TransUnit )
 AddlnsSrcInfo( "lune.base.DependLuaOnLns", lune_base_DependLuaOnLns )

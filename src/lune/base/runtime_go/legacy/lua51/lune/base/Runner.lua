@@ -80,9 +80,9 @@ function Runner:run(  )
 
    self:runMain(  )
 end
-function Runner:start( mode )
+function Runner:start( mode, name )
 
-   _lune._run(self, mode )
+   _lune._run(self, mode, name )
 end
 function Runner.setmeta( obj )
   setmetatable( obj, { __index = Runner  } )

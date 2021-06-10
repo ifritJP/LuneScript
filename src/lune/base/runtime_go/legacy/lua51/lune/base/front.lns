@@ -30,6 +30,7 @@ import lune.base.frontInterface;
 import lune.base.Parser;
 import lune.base.convLua;
 import lune.base.convGo;
+import lune.base.AstInfo;
 import lune.base.TransUnit;
 import lune.base.Util;
 import lune.base.Option;
@@ -68,17 +69,17 @@ class LoadInfo {
    pub let mut meta:frontInterface.ModuleMeta;
 }
 
-pub form AstCallback( ast: &TransUnit.ASTInfo );
+pub form AstCallback( ast: &AstInfo.ASTInfo );
 
 alge UptodateInfo {
    /** 最新で更新不要。 .meta から情報を読み込んでいる */
    Uptodate(frontInterface.ModuleMeta),
    /** 更新済み。 .lns から .meta を構築している */
-   Update(&frontInterface.ModuleInfo, &TransUnit.ASTInfo),
+   Update(&frontInterface.ModuleInfo, &AstInfo.ASTInfo),
 }
 
 fn createModuleInfo(
-   ast:&TransUnit.ASTInfo, mod:str,
+   ast:&AstInfo.ASTInfo, mod:str,
    moduleId:&frontInterface.ModuleId ) __async : frontInterface.ModuleInfo
 {
    let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
@@ -108,7 +109,7 @@ class ModuleMgr {
       return self.mod2info.$map[ mod ];
    }
    
-   pub fn getAst( mod:str ) mut : &TransUnit.ASTInfo! {
+   pub fn getAst( mod:str ) mut : &AstInfo.ASTInfo! {
       let! mut info = self.get( mod ) {
          return nil;
       };
@@ -127,7 +128,7 @@ class ModuleMgr {
    }
    
    
-   pub fn add( ast:&TransUnit.ASTInfo,
+   pub fn add( ast:&AstInfo.ASTInfo,
                moduleInfo:&frontInterface.ModuleInfo ) mut
    {
       let mod = moduleInfo.$fullName;
@@ -169,7 +170,7 @@ class AstCreater extend Runner.Runner {
    let builtinFunc:&Builtin.BuiltinFuncType;
    let mod:str;
    let moduleId:&frontInterface.ModuleId;
-   let ast:&TransUnit.ASTInfo!;
+   let ast:&AstInfo.ASTInfo!;
    let mut moduleInfo:frontInterface.ModuleInfo!;
 
    let converter:ConverterFunc;
@@ -178,14 +179,14 @@ class AstCreater extend Runner.Runner {
       importModuleInfo:&frontInterface.ImportModuleInfo,
       mut parserSrc:&Types.ParserSrc, baseDir:str!, stdinFile:&Types.StdinFile!,
       analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
-      pos:&Parser.Position! ) : &TransUnit.ASTInfo
+      pos:&Parser.Position! ) : &AstInfo.ASTInfo
    {
       let mut transUnit = new TransUnit.TransUnit(
          self.moduleId, importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
          analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
          self.option.transCtrlInfo, self.builtinFunc );
 
-      return transUnit.createAST( parserSrc, baseDir, stdinFile, false, self.mod );
+      return transUnit.createAST( parserSrc, true, baseDir, stdinFile, false, self.mod );
    }
    
    local fn __init(
@@ -212,7 +213,7 @@ class AstCreater extend Runner.Runner {
       };
 
 
-      self.start( __lns.runMode.Sync );
+      self.start( __lns.runMode.Sync, "createAst - %s" (mod) );
       //self.converter();
    }
 
@@ -221,7 +222,7 @@ class AstCreater extend Runner.Runner {
    }
    
 
-   local fn getAst() : &TransUnit.ASTInfo, &frontInterface.ModuleInfo {
+   local fn getAst() : &AstInfo.ASTInfo, &frontInterface.ModuleInfo {
       __join( self );
       return unwrap self.ast, unwrap self.moduleInfo;
    }
@@ -345,7 +346,7 @@ fn Front.loadLua( path:str ):Luaval<&stem>! {
 fn createPaser( path:str, mod:str, stdinFile:&Types.StdinFile! ): Parser.Parser
 {
    return Parser.StreamParser.create(
-      Types.ParserSrc.LnsPath( path, mod ), stdinFile, nil );
+      Types.ParserSrc.LnsPath( path, mod ), false, stdinFile, nil );
 }
 
 fn Front.scriptPath2Module( path:str ):str, str! {
@@ -361,11 +362,11 @@ fn Front.createPaser( scriptPath:str ): Parser.Parser
 
 
 alge CreateAstResult {
-   Ast( &TransUnit.ASTInfo ),
+   Ast( &AstInfo.ASTInfo ),
    Creater(AstCreater),
 }
 
-fn getAstFromResult( result:&CreateAstResult ) __async : &TransUnit.ASTInfo {
+fn getAstFromResult( result:&CreateAstResult ) __async : &AstInfo.ASTInfo {
    match result {
       case .Ast( ast ) {
          return ast;
@@ -412,7 +413,7 @@ fn Front.createAstSub(
    return CreateAstResult.Creater( astCreater );
 }
 
-fn Front.applyAstResult( result:&CreateAstResult ) mut : &TransUnit.ASTInfo {
+fn Front.applyAstResult( result:&CreateAstResult ) mut : &AstInfo.ASTInfo {
    _match result {
       case .Ast( ast ) {
          return ast;
@@ -433,7 +434,7 @@ fn Front.createAst(
    parserSrc:&Types.ParserSrc,
    baseDir:str!, mod:str, moduleId:&frontInterface.ModuleId,
    analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
-   pos:&Parser.Position! ) mut : &TransUnit.ASTInfo
+   pos:&Parser.Position! ) mut : &AstInfo.ASTInfo
 {
    return self.applyAstResult( self.createAstSub(
       importModuleInfo, parserSrc, baseDir, mod, 
@@ -442,7 +443,7 @@ fn Front.createAst(
 
 
 fn ast2LuaMain(
-   ast:&TransUnit.ASTInfo, streamName:str, stream:oStream,
+   ast:&AstInfo.ASTInfo, streamName:str, stream:oStream,
    metaStream:oStream, convMode:convLua.ConvMode,
    inMacro:bool, option:&Option.Option ) __async : convLua.FilterInfo
 {
@@ -457,7 +458,7 @@ fn ast2LuaMain(
 }
 
 fn ast2Lua(
-   ast:&TransUnit.ASTInfo, streamName:str, stream:oStream, metaStream:oStream,
+   ast:&AstInfo.ASTInfo, streamName:str, stream:oStream, metaStream:oStream,
    convMode:convLua.ConvMode, inMacro:bool, option:&Option.Option )
 {
    let mut conv = ast2LuaMain(
@@ -493,7 +494,7 @@ fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
 
 
 fn Front.convertFromAst(
-   ast:&TransUnit.ASTInfo, streamName:str, mode:convLua.ConvMode ) : str, str
+   ast:&AstInfo.ASTInfo, streamName:str, mode:convLua.ConvMode ) : str, str
 {
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
@@ -516,7 +517,7 @@ fn Front.loadFromLnsTxt(
       self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc );
 
    let mut ast = transUnit.createAST(
-      Types.ParserSrc.LnsCode( txt, name ), baseDir, self.option.$stdinFile,
+      Types.ParserSrc.LnsCode( txt, name ), false, baseDir, self.option.$stdinFile,
       false, "$load%d" (self.loadCount) );
    self.loadCount = self.loadCount + 1;
 
@@ -1483,7 +1484,7 @@ class LuaConverter extend Runner.Runner {
             ast, path, outStream, oMetaStream, convMode, false, option );
          self.filterInfo.outputLua( unwrap ast.$node@@@Nodes.RootNode );
       };
-      self.start( __lns.runMode.Queue );
+      self.start( __lns.runMode.Queue, "convlua -- %s" (path) );
    }
 
    pro override fn runMain() __async mut {
@@ -1550,7 +1551,7 @@ fn outputDependInfo( stream:oStream!, metaInfo:&MetaForBuildId, mod:str ) {
 
 fn Front.convertToLua(
    scriptPath:str, convMode:convLua.ConvMode,
-   streamLua:oStream, streamMeta:oStream ) mut : &TransUnit.ASTInfo!
+   streamLua:oStream, streamMeta:oStream ) mut : &AstInfo.ASTInfo!
 {
    let mod, baseDir = self.scriptPath2Module( scriptPath );
 
@@ -1618,7 +1619,7 @@ class GoConverter extend Runner.Runner {
             option.testing, path, self.memStream, ast, goOpt );
          ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
       };
-      self.start( __lns.runMode.Queue );
+      self.start( __lns.runMode.Queue, "convgo -- %s" (path) );
    }
 
    pro override fn runMain() __async mut {
@@ -1656,7 +1657,7 @@ local fn Front.saveToGo( scriptPath:str, astResult:&CreateAstResult ) mut : GoCo
 /**
 C に変換しファイルに書き込む
 */
-pub fn Front.saveToC( scriptPath:str, ast:&TransUnit.ASTInfo ) mut {
+pub fn Front.saveToC( scriptPath:str, ast:&AstInfo.ASTInfo ) mut {
    let mut cPath = scriptPath.gsub( "%.lns$", ".c" );
 
    let! mut file = io.open( cPath, "w" ) {
@@ -1952,7 +1953,7 @@ pub fn Front.exec() mut
       case .BuildAst {
          self.build(
             .CreateAst,
-            fn ( ast: &TransUnit.ASTInfo ) {
+            fn ( ast: &AstInfo.ASTInfo ) {
                print( ast.$streamName );
             });
       }
@@ -2004,7 +2005,7 @@ end
       case .Indexer {
          self.build(
             .CreateAst,
-            fn ( ast: &TransUnit.ASTInfo ) {
+            fn ( ast: &AstInfo.ASTInfo ) {
                let mut indexer = new NodeIndexer.Indexer( ast.$exportInfo.$processInfo );
                indexer.start(
                   ast.$node,

@@ -12,51 +12,51 @@ func Json_convExp259(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 123
-func Json_convExp484(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp486(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 144
-func Json_convExp565(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp567(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 149
-func Json_convExp634(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp636(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 154
-func Json_convExp703(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp705(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 159
-func Json_convExp778(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp780(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 164
-func Json_convExp847(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp849(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 169
-func Json_convExp926(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp928(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 174
-func Json_convExp1005(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp1007(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 179
-func Json_convExp1084(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp1086(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 184
-func Json_convExp1153(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp1155(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 201
-func Json_convExp1437(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp1439(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 209
-func Json_convExp1558(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp1560(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // 6: decl @lune.@base.@Json.getRawTxt
@@ -170,7 +170,7 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
 // 119: decl @lune.@base.@Json.fromStr
 func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
     var parser *Parser_DefaultPushbackParser
-    parser = NewParser_DefaultPushbackParser(_env, &Parser_StreamParser_create(_env, &Types_ParserSrc__LnsCode{txt, "json"}, nil, nil).Parser_Parser)
+    parser = NewParser_DefaultPushbackParser(_env, &Parser_StreamParser_create(_env, &Types_ParserSrc__LnsCode{txt, "json"}, false, nil, nil).Parser_Parser)
     var val LnsAny
     var ok bool
     val,ok = Json_getVal_1_(_env, parser)

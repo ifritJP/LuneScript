@@ -28,7 +28,7 @@ import lune.base.Ver;
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
-import lune.base.TransUnit;
+import lune.base.AstInfo;
 //import lune.base.LuaMod;
 import lune.base.LuaVer;
 import lune.base.Parser;
@@ -124,7 +124,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let indexer: NodeIndexer.Indexer;
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
-                  ast:&TransUnit.ASTInfo, option:&Option )
+                  ast:&AstInfo.ASTInfo, option:&Option )
    {
       super(true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope);
@@ -4769,10 +4769,9 @@ pub override fn convFilter.processExpCall(
                   filter( node.$func, self, node );
                   callKind = .FormCall;
                }
-               case self.builtinFuncs.lns___run {
-                  filter( node.$func, self, node );
-               }
-               case self.builtinFuncs.lns___join {
+               case self.builtinFuncs.lns___run,
+                    self.builtinFuncs.lns___join
+               {
                   filter( node.$func, self, node );
                }
                // case Ast.builtinTypeLoadedFunc {
@@ -5810,7 +5809,7 @@ pub override fn convFilter.processAbbr(
 
 pub fn createFilter(
    enableTest:bool, streamName: str,
-   stream: oStream, ast:&TransUnit.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
+   stream: oStream, ast:&AstInfo.ASTInfo, option:&Option ) : Nodes.Filter<Opt>
 {
    return new convFilter( enableTest, streamName, stream, ast, option );
 }
@@ -5818,7 +5817,7 @@ pub fn createFilter(
 __test {
    import lune.base.convLua;
 
-   fn Ast2Code( streamName:str, ast:TransUnit.ASTInfo ) : str
+   fn Ast2Code( streamName:str, ast:AstInfo.ASTInfo ) : str
    {
       let mut stream = new Util.memStream();
 

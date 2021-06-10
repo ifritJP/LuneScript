@@ -214,6 +214,7 @@ local Macro = _lune.loadModule( 'lune.base.Macro' )
 local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local Import = _lune.loadModule( 'lune.base.Import' )
+local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 
 
 
@@ -3508,49 +3509,15 @@ function TransUnit:checkOverriededMethodOfAllClass(  )
 end
 
 
-local ASTInfo = {}
-_moduleObj.ASTInfo = ASTInfo
-function ASTInfo.setmeta( obj )
-  setmetatable( obj, { __index = ASTInfo  } )
-end
-function ASTInfo.new( node, exportInfo, streamName, builtinFunc )
-   local obj = {}
-   ASTInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( node, exportInfo, streamName, builtinFunc )
-   end
-   return obj
-end
-function ASTInfo:__init( node, exportInfo, streamName, builtinFunc )
-
-   self.node = node
-   self.exportInfo = exportInfo
-   self.streamName = streamName
-   self.builtinFunc = builtinFunc
-end
-function ASTInfo:get_node()
-   return self.node
-end
-function ASTInfo:get_exportInfo()
-   return self.exportInfo
-end
-function ASTInfo:get_streamName()
-   return self.streamName
-end
-function ASTInfo:get_builtinFunc()
-   return self.builtinFunc
-end
-
-
-function TransUnit:createAST( parserSrc, baseDir, stdinFile, macroFlag, moduleName )
+function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.createAST'
 
-   local parser = Parser.createParserFrom( parserSrc, stdinFile )
+   local parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile )
    
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 542, function (  )
+   Log.log( Log.Level.Log, __func__, 543, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnit.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s", __func__, parser:getStreamName(  ), baseDir)
@@ -3637,7 +3604,7 @@ function TransUnit:createAST( parserSrc, baseDir, stdinFile, macroFlag, moduleNa
          end
          
          
-         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {file,subModule}), self.stdinFile, nil )
+         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {file,subModule}), true, self.stdinFile, nil )
          
          self:setParser( Parser.DefaultPushbackParser.new(subParser) )
          
@@ -3792,7 +3759,7 @@ function TransUnit:createAST( parserSrc, baseDir, stdinFile, macroFlag, moduleNa
    
    local exportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, self.processInfo, globalSymbolList, self.macroCtrl:get_declMacroInfoMap())
    
-   return ASTInfo.new(ast, exportInfo, parser:getStreamName(  ), self.builtinFunc)
+   return AstInfo.ASTInfo.new(ast, exportInfo, parser:getStreamName(  ), self.builtinFunc)
 end
 
 
@@ -4780,7 +4747,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
          
-         Log.log( Log.Level.Debug, __func__, 1838, function (  )
+         Log.log( Log.Level.Debug, __func__, 1839, function (  )
          
             return string.format( "%s", dummyRetType)
          end )

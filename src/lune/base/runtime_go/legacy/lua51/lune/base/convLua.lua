@@ -205,6 +205,7 @@ local Str = _lune.loadModule( 'lune.base.Str' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
+local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
@@ -4342,7 +4343,7 @@ function MacroEvalImp:evalFromMacroCode( code, baseDir )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3653, function (  )
+   Log.log( Log.Level.Trace, __func__, 3654, function (  )
    
       return string.format( "macro: %s", code)
    end )

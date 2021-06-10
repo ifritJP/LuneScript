@@ -29,7 +29,40 @@ import (
 	"fmt"
 	"io"
 	"sync"
+	"time"
 )
+
+var lns_thread_event_on = false
+
+const (
+	_THREAD_EVENT_REQ   = 0
+	_THREAD_EVENT_START = 1
+	_THREAD_EVENT_END   = 2
+)
+
+type lnsThreadEvent struct {
+	// イベント発生時間
+	time time.Time
+	// runner ID
+	runnerId int
+	// runner の名前
+	runnerName string
+	// イベント
+	kind int
+	// イベント情報。
+	// eventKind が THREAD_EVENT_REQ の時有効。 _RUN_KIND_* の値が入る。
+	info1 int
+	// eventKind が THREAD_EVENT_REQ の時有効。 起動元 runnerId が入る。
+	info2 int
+	// イベント発生時の runNum
+	runNum int
+}
+
+type lnsRunnerInfo struct {
+	runner LnsRunner
+	name   string
+	id     int
+}
 
 type Lns_ThreadMgrInfo struct {
 	// この構造体への排他
@@ -44,8 +77,12 @@ type Lns_ThreadMgrInfo struct {
 	aliveNum int
 	// aliveNum の上限
 	limitNum int
-	// limitNum を越えてリクエストされた runner
+	// 実行中の数 (aliveNum から Wait 中を除く)
+	runNum int
+	// limitNum を越えてリクエストされた runner の &lnsRunnerInfo queue
 	runQueue *list.List
+	// lnsThreadEvent を格納する list
+	eventList *list.List
 }
 
 func (self *Lns_ThreadMgrInfo) lock() {
@@ -55,20 +92,26 @@ func (self *Lns_ThreadMgrInfo) unlock() {
 	self.mutex.Unlock()
 }
 
+func (self *Lns_ThreadMgrInfo) newEvent(
+	runnerInfo *lnsRunnerInfo, eventId int, info1 int, info2 int) *lnsThreadEvent {
+	return &lnsThreadEvent{
+		time.Now(), runnerInfo.id, runnerInfo.name, eventId, info1, info2, self.runNum}
+}
+
 const (
-	RUN_KIND_ASYNC = 0
-	RUN_KIND_QUEUE = 1
-	RUN_KIND_SYNC  = 2
-	RUN_KIND_SKIP  = 3
+	_RUN_KIND_ASYNC = 0
+	_RUN_KIND_QUEUE = 1
+	_RUN_KIND_SYNC  = 2
+	_RUN_KIND_SKIP  = 3
 )
 
 const (
 	// limitNum オーバー時、 スレッドを新規起動せずに、呼び出し元スレッドで動かす
-	RUN_MODE_ON_FULL_SYNC = 0
+	_RUN_MODE_ON_FULL_SYNC = 0
 	// limitNum オーバー時、 キューに入れ、スレッドが空いた時に動かす
-	RUN_MODE_ON_FULL_QUEUE = 1
+	_RUN_MODE_ON_FULL_QUEUE = 1
 	// limitNum オーバー時、 処理を動かさない
-	RUN_MODE_ON_FULL_SKIP = 2
+	_RUN_MODE_ON_FULL_SKIP = 2
 )
 
 /**
@@ -78,9 +121,10 @@ const (
   @param mode モード
   @return 実行した場合 true
 */
-func (self *Lns_ThreadMgrInfo) run(runner LnsRunner, mode int, _env *LnsEnv) bool {
+func (self *Lns_ThreadMgrInfo) run(
+	runner LnsRunner, mode int, _env *LnsEnv, name string) bool {
 
-	process := func() int {
+	process := func() (int, *lnsRunnerInfo) {
 		self.lock()
 		defer self.unlock()
 
@@ -89,37 +133,65 @@ func (self *Lns_ThreadMgrInfo) run(runner LnsRunner, mode int, _env *LnsEnv) boo
 		if self.peakNum < self.threadNum {
 			self.peakNum = self.threadNum
 		}
-		kind := RUN_KIND_ASYNC
+		var runnerName string
+		if name == "" {
+			runnerName = fmt.Sprintf("%d", self.totalReqNum)
+		} else {
+			runnerName = name
+		}
+		runnerInfo := &lnsRunnerInfo{runner, runnerName, self.totalReqNum}
+
+		kind := _RUN_KIND_ASYNC
 		if self.aliveNum >= self.limitNum {
 			if mode == 0 {
-				kind = RUN_KIND_SYNC
+				kind = _RUN_KIND_SYNC
 			} else if mode == 1 {
-				kind = RUN_KIND_QUEUE
+				kind = _RUN_KIND_QUEUE
 			} else if mode == 2 {
-				kind = RUN_KIND_SKIP
+				kind = _RUN_KIND_SKIP
 			} else {
 				panic(fmt.Sprintf("illegal async run mode -- %d", mode))
 			}
 		} else {
 			self.aliveNum++
+			self.runNum++
 		}
-		return kind
+
+		if lns_thread_event_on {
+			self.eventList.PushBack(
+				self.newEvent(runnerInfo, _THREAD_EVENT_REQ, kind, _env.runnerId))
+			if kind == _RUN_KIND_SYNC || kind == _RUN_KIND_ASYNC {
+				self.eventList.PushBack(
+					self.newEvent(runnerInfo, _THREAD_EVENT_START, 0, 0))
+			}
+		}
+
+		return kind, runnerInfo
 	}
 
 	result := true
-	switch kind := process(); kind {
-	case RUN_KIND_ASYNC:
+	switch kind, runnerInfo := process(); kind {
+	case _RUN_KIND_ASYNC:
 		runner.GetLnsSyncFlag().wg.Add(1)
-		go lnsRunMain(runner, self)
-	case RUN_KIND_QUEUE:
+		go lnsRunMain(runnerInfo, self)
+	case _RUN_KIND_QUEUE:
 		runner.GetLnsSyncFlag().wg.Add(1)
-		self.runQueue.PushBack(runner)
-	case RUN_KIND_SYNC:
+		self.runQueue.PushBack(runnerInfo)
+	case _RUN_KIND_SYNC:
 		self.threadNum--
 		runner.GetLnsSyncFlag().wg.Add(1)
+
 		LnsExecRunner(_env, runner)
+
+		if lns_thread_event_on {
+			self.lock()
+			self.eventList.PushBack(
+				self.newEvent(runnerInfo, _THREAD_EVENT_END, 0, 0))
+			self.unlock()
+		}
+
 		runner.GetLnsSyncFlag().wg.Done()
-	case RUN_KIND_SKIP:
+	case _RUN_KIND_SKIP:
 		self.threadNum--
 		result = false
 	default:
@@ -133,27 +205,61 @@ func (self *Lns_ThreadMgrInfo) run(runner LnsRunner, mode int, _env *LnsEnv) boo
 
 runner が runQueue にある場合、先頭の runner を取り出して起動する。
 */
-func (self *Lns_ThreadMgrInfo) endToRun(runner LnsRunner) {
-	process := func() LnsRunner {
+func (self *Lns_ThreadMgrInfo) endToRun(info *lnsRunnerInfo) {
+	process := func() *lnsRunnerInfo {
 		self.lock()
 		defer self.unlock()
 
+		if lns_thread_event_on {
+			self.eventList.PushBack(
+				self.newEvent(info, _THREAD_EVENT_END, 0, 0))
+		}
+
 		self.threadNum--
 		self.aliveNum--
+		self.runNum--
 
 		if self.runQueue.Len() > 0 {
 			self.aliveNum++
+			self.runNum++
 			front := self.runQueue.Front()
-			return self.runQueue.Remove(front).(LnsRunner)
+
+			nextRunnerInfo := self.runQueue.Remove(front).(*lnsRunnerInfo)
+			if lns_thread_event_on {
+				self.eventList.PushBack(
+					self.newEvent(
+						nextRunnerInfo, _THREAD_EVENT_START, 0, 0))
+			}
+			return nextRunnerInfo
 		}
 		return nil
 	}
 
-	nextRunner := process()
-	if nextRunner != nil {
-		go lnsRunMain(nextRunner, self)
+	nextRunnerInfo := process()
+	if nextRunnerInfo != nil {
+		go lnsRunMain(nextRunnerInfo, self)
 	}
 }
+
+func (self *Lns_ThreadMgrInfo) dumpEventLog(write func(txt string)) {
+	self.lock()
+	defer self.unlock()
+
+	element := self.eventList.Front()
+	for element != nil {
+		event := element.Value.(*lnsThreadEvent)
+		element = element.Next()
+
+		delta := event.time.Sub(lns_profStartTime)
+		write(fmt.Sprintf(
+			"%5d:%3d:%d:%d:%3d:%3d:%s", delta.Milliseconds(),
+			event.runnerId, event.kind, event.info1, event.info2,
+			event.runNum, event.runnerName))
+		write("\n")
+
+	}
+}
+
 func (self *Lns_ThreadMgrInfo) SetLimit(limit int) {
 	self.limitNum = limit
 }
@@ -162,6 +268,7 @@ func Lns_setThreadLimit(limit int) {
 }
 
 func (self *Lns_ThreadMgrInfo) dump(writer io.Writer) {
+	writer.Write([]byte(fmt.Sprintf("--------- thread ---------\n")))
 	writer.Write([]byte(fmt.Sprintf("totalReqNum = %d\n", self.totalReqNum)))
 	writer.Write([]byte(fmt.Sprintf("threadNum = %d\n", self.threadNum)))
 	writer.Write([]byte(fmt.Sprintf("peakNum = %d\n", self.peakNum)))
@@ -172,12 +279,16 @@ var lns_threadMgrInfo *Lns_ThreadMgrInfo
 func lns_newThreadMgrInfo() *Lns_ThreadMgrInfo {
 	threadInfo := &Lns_ThreadMgrInfo{}
 	threadInfo.runQueue = list.New()
+	threadInfo.eventList = list.New()
 	threadInfo.limitNum = 200
 	return threadInfo
 }
 
+var lns_profStartTime time.Time
+
 func init() {
 	lns_threadMgrInfo = lns_newThreadMgrInfo()
+	lns_profStartTime = time.Now()
 }
 
 type Lns__pipe struct {
@@ -205,6 +316,15 @@ func (self *Lns__pipe) get() LnsAny {
 		return nil
 	}
 	return <-self.ch
+}
+
+func (self *Lns_ThreadMgrInfo) changeRunNum(delta int) {
+	if lns_thread_event_on {
+		self.lock()
+		defer self.unlock()
+
+		self.runNum += delta
+	}
 }
 
 func Lns_LockEnvSync(_env *LnsEnv, callback func()) {

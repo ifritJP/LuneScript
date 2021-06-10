@@ -29,6 +29,7 @@ import lune.base.Str;
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
+import lune.base.AstInfo;
 import lune.base.TransUnit;
 import lune.base.LuaMod;
 import lune.base.LuaVer;
@@ -3704,7 +3705,7 @@ __test {
 
    pub fn createAstFromStream(
       parserSrc:&Types.ParserSrc, scriptPath:str,
-      stream:iStream, option:&Option.Option ) __noasync: TransUnit.ASTInfo
+      stream:iStream, option:&Option.Option ) __noasync: AstInfo.ASTInfo
    {
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
       let mut moduleInfo = new frontInterface.ImportModuleInfo();
@@ -3718,11 +3719,11 @@ __test {
          moduleId, moduleInfo, new MacroEvalImp(builtinFunc), nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
       
-      return transUnit.createAST( parserSrc, nil, nil, false, mod );
+      return transUnit.createAST( parserSrc, false, nil, nil, false, mod );
    }
    
    
-   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo {
+   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) __noasync: AstInfo.ASTInfo {
       let! mut stream = io.open( scriptPath## ) {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
@@ -3734,7 +3735,7 @@ __test {
    }
    
    pub fn createAst(
-      scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: TransUnit.ASTInfo
+      scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: AstInfo.ASTInfo
    {
       return createAstFromStream(
          Types.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
@@ -3774,7 +3775,7 @@ _ = 1;
   }
 
    fn Ast2Code( option:&Option.Option,
-                ast:TransUnit.ASTInfo, streamName:str ) __noasync : str, str
+                ast:AstInfo.ASTInfo, streamName:str ) __noasync : str, str
    {
       let mut stream = new Util.memStream();
       let mut metaStream = new Util.memStream();

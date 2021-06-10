@@ -34,7 +34,6 @@ import lune.base.Log;
 import lune.base.Runner;
 
 import lune.base.TransUnitIF;
-import lune.base.Builtin;
 
 _lune_control ignore_symbol_;
 
@@ -914,7 +913,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       //self.loaderFunc();
       // 現状、ここを非同期にすると、 lnstags がビルドできない。
       //
-      self.start( __lns.runMode.Sync );
+      self.start( __lns.runMode.Sync, "ModuleLoader - %s" (fullModulePath) );
    }
 
    pro override fn runMain() __async mut {

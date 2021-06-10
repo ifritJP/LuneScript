@@ -30,7 +30,10 @@ import (
 	"path"
 	"runtime"
 	"runtime/pprof"
+	"runtime/trace"
 )
+
+var lns_traceOn = false
 
 // func Lns_Depend_init() {
 // }
@@ -80,9 +83,32 @@ func Depend_profileSub(
 		}
 		defer pprof.StopCPUProfile()
 
+        {
+            depend_setRunnerLog( true )
+            profRunner, err := os.Create(path + "runner")
+            if err != nil {
+                panic( err );
+            }
+            defer lns_threadMgrInfo.dumpEventLog( func(txt string) {
+                profRunner.Write( []byte(txt) )
+            } )
+        }
+
+        if lns_traceOn {
+            // trace
+            proftrace, err := os.Create(path + "trace")
+            if err != nil {
+                panic(err)
+            }
+            if err := trace.Start(proftrace); err != nil {
+                panic( fmt.Sprintf( "failed to start trace: %v", err) )
+            }
+            defer trace.Stop()
+        }
+        
 		// mem
 		printMemInfo("start")
-	}
+    }
 
 	ret := work()
 
@@ -252,4 +278,9 @@ var validRuntimeLog = false
 
 func depend_setRuntimeLog(valid bool) {
 	validRuntimeLog = valid
+}
+
+func depend_setRunnerLog(valid bool) {
+    lns_thread_event_on = valid
+    
 }
