@@ -358,24 +358,13 @@ function ModuleInfo:__init(streamName, fullName, assignName, idMap, moduleId, ex
    self.moduleId = moduleId
    self.fullName = fullName
    self.assignName = assignName
-   self.localTypeInfo2importIdMap = idMap
-   self.importId2localTypeInfoMap = {}
+   local importId2localTypeInfoMap = {}
    for typeInfo, importId in pairs( idMap ) do
-      self.importId2localTypeInfoMap[importId] = typeInfo
+      importId2localTypeInfoMap[importId] = typeInfo
    end
    
+   self.importId2localTypeInfoMap = importId2localTypeInfoMap
    self.importedAliasMap = importedAliasMap
-end
-function ModuleInfo:getImportTypeId( typeInfo )
-
-   do
-      local typeId = self.localTypeInfo2importIdMap[typeInfo]
-      if typeId ~= nil then
-         return typeId
-      end
-   end
-   
-   return nil
 end
 function ModuleInfo:getTypeInfo( localTypeId )
 
@@ -394,7 +383,9 @@ function ModuleInfo:get_modulePath(  )
 end
 function ModuleInfo:assign( assignName )
 
-   return ModuleInfo.new(self.streamName, self.fullName, assignName, self.localTypeInfo2importIdMap, self.moduleId, self.exportInfo, self.importedAliasMap)
+   local info = ModuleInfo.new(self.streamName, self.fullName, assignName, {}, self.moduleId, self.exportInfo, self.importedAliasMap)
+   info.importId2localTypeInfoMap = self.importId2localTypeInfoMap
+   return info
 end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
@@ -404,9 +395,6 @@ function ModuleInfo:get_streamName()
 end
 function ModuleInfo:get_fullName()
    return self.fullName
-end
-function ModuleInfo:get_localTypeInfo2importIdMap()
-   return self.localTypeInfo2importIdMap
 end
 function ModuleInfo:get_importId2localTypeInfoMap()
    return self.importId2localTypeInfoMap

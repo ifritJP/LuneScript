@@ -8,13 +8,27 @@
 
 * 機能進化
 
+- [ ] test ブロックは、通常ビルドでは skip する。
+
 - [ ] ast 解析を、公開型情報と本体情報の step に分ける。
       loadmeta は公開型情報だけで良いので、本体情報を待たずに解析を進められる。
       ただこの場合、公開型情報とは別に、本体情報の ProcessInfo をクローンしないとならない。 
       そうしないと、公開型情報の ProcessInfo に import 先でアクセスした時に、
       競合エラーになる。
       クローンがネックになりそう。
-      それよりは、 Ast 解析の内部を並列化した AST 自体を高速化した方が良い。
+      いまは以下の MetaOrModule で管理している。これの Module を loadedMeta に変更する。
+pub alge MetaOrModule {
+   Meta( Luaval<&stem> ),
+   Module( &ModuleInfo )
+}
+       
+
+      あるいは、 Ast 解析の内部を並列化した AST 解析自体を高速化する。
+      AST 解析高速化には 関数の本体ブロック解析の多重化が有望。
+      この場合、 以下が問題になる。
+      - Scope.setClosure
+      - popScope
+      - processInfo の型登録
       
   
 - [ ] mut/imut に const を追加する。

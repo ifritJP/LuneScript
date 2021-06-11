@@ -505,7 +505,7 @@ func Lns_ToString(val LnsAny) string {
 			}
 			return fmt.Sprintf("%g", real)
 		}
-		return lns_ToStringFromRead(val.(LnsReal))
+		return lns_ToStringFromReal(val.(LnsReal))
 	case bool:
 		return fmt.Sprintf("%v", val)
 	case string:

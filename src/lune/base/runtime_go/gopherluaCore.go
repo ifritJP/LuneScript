@@ -112,7 +112,7 @@ func depend_setup(callback func(ver LnsInt)) {
 	callback(51)
 }
 
-func lns_ToStringFromRead(val LnsReal) string {
+func lns_ToStringFromReal(val LnsReal) string {
 	return fmt.Sprintf("%g", val)
 }
 

@@ -120,15 +120,8 @@ pub class ExportInfo {
 pub class ModuleInfo extend (Ast.ModuleInfoIF) {
    pri let streamName:str {pub};
    pri let fullName:str{ pub };
-   /**
-import した TypeInfo の中で、
-import 元の typeId ではなく、内部の typeId で生成された TypeInfo のマップ。
-key: TypeInfo
-val: import 元の TypeId
-   */
-   pri let localTypeInfo2importIdMap:&Map<&Ast.TypeInfo,int> { pub };
    /** import 元の typeId → 生成されている TypeInfo */
-   pri let mut importId2localTypeInfoMap:Map<int,&Ast.TypeInfo> { pub& };
+   pri let mut importId2localTypeInfoMap:&Map<int,&Ast.TypeInfo> { pub& };
    pri let assignName:str{ pub };
    pri let moduleId:&ModuleId {pub};
    /**
@@ -139,6 +132,14 @@ alias で置き換えている元の Type → alias の型。
 
    pri let exportInfo:&ExportInfo {pub};
 
+   /**
+
+
+@param idMap import した TypeInfo の中で、
+import 元の typeId ではなく、内部の typeId で生成された TypeInfo のマップ。
+key: TypeInfo
+val: import 元の TypeId
+   */
    pub fn __init( streamName:str, fullName:str, assignName:str,
                   idMap:&Map<&Ast.TypeInfo,int>,
                   moduleId:&ModuleId, exportInfo:&ExportInfo,
@@ -149,30 +150,18 @@ alias で置き換えている元の Type → alias の型。
       self.moduleId = moduleId;
       self.fullName = fullName;
       self.assignName = assignName;
-      self.localTypeInfo2importIdMap = idMap;
-      self.importId2localTypeInfoMap = {};
+      let importId2localTypeInfoMap:Map<int,&Ast.TypeInfo> = {};
       foreach importId, typeInfo in idMap {
-         self.importId2localTypeInfoMap[ importId ] = typeInfo;
+         importId2localTypeInfoMap[ importId ] = typeInfo;
       }
+      self.importId2localTypeInfoMap = importId2localTypeInfoMap;
       self.importedAliasMap = importedAliasMap;
-   }
-
-   /** インポートした typeInfo を定義しているモジュール内の typeId を返す。 */
-   pub fn getImportTypeId( typeInfo:&Ast.TypeInfo ) : int! {
-      if! let typeId = self.localTypeInfo2importIdMap[ typeInfo ] {
-         return typeId;
-      }
-      // // if typeInfo.$processInfo == self.processInfo {
-      // //    return typeInfo.$typeId.id;
-      // // }
-      return nil;
    }
 
    pub fn getTypeInfo( localTypeId:int ) : &Ast.TypeInfo! {
       if! let typeInfo = self.importId2localTypeInfoMap[ localTypeId ] {
          return typeInfo;
       }
-      //return self.processInfo.getTypeInfo( localTypeId );
       return nil;
    }
 
@@ -181,9 +170,11 @@ alias で置き換えている元の Type → alias の型。
    }
 
    pub fn assign( assignName: str ) : ModuleInfo {
-      return new ModuleInfo(
-         self.streamName, self.fullName, assignName, self.localTypeInfo2importIdMap,
+      let mut info = new ModuleInfo(
+         self.streamName, self.fullName, assignName, {},
          self.moduleId, self.exportInfo, self.importedAliasMap );
+      info.importId2localTypeInfoMap = self.importId2localTypeInfoMap;
+      return info;
    }
 }
 

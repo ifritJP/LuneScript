@@ -147,7 +147,7 @@ func depend_setup(callback func(ver LnsInt)) {
 	callback(53)
 }
 
-func lns_ToStringFromRead(val LnsReal) string {
+func lns_ToStringFromReal(val LnsReal) string {
 	if digit, frac := math.Modf(val); frac == 0 {
 		return fmt.Sprintf("%g.0", digit)
 	}

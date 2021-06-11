@@ -196,7 +196,88 @@ func string_index(index LnsInt, len LnsInt) LnsInt {
 	return len + index + 1
 }
 
+func String_formatGo(format string, ddd []LnsAny) (string, bool) {
+	if len(ddd) == 0 {
+		return format, true
+	}
+
+	orgFormat := format
+
+	type formatInfo struct {
+		// % までの文字列
+		part string
+		// % の後の文字
+		formType string
+		// % に対する引数
+		arg LnsAny
+	}
+
+	// %書式を確認し、%書式と引数の組み合わせを infoList に格納する
+	infoList := []*formatInfo{}
+	argIndex := 0
+	for {
+		offset := strings.Index(format, "%")
+		if offset < 0 || offset >= len(format) {
+			infoList = append(infoList, &formatInfo{format, "", nil})
+			break
+		}
+		var formType string
+		switch format[offset+1] {
+		case 's':
+			formType = "v"
+		case 'd':
+			formType = "d"
+		case 'c':
+			formType = "c"
+		case 'g':
+			formType = "g"
+		case 'f':
+			formType = "f"
+		case '%':
+			formType = "%"
+		default:
+			return "", false
+		}
+		var arg LnsAny
+		if formType == "%" {
+			arg = nil
+		} else {
+			if len(ddd) < argIndex {
+				panic(fmt.Sprintf("error -- %d, %v", argIndex, orgFormat))
+			}
+			arg = ddd[argIndex]
+			argIndex++
+		}
+
+		infoList = append(infoList, &formatInfo{format[:offset+1], formType, arg})
+		format = format[offset+2:]
+	}
+
+	// % 書式を展開する。
+	goformat := strings.Builder{}
+	for _, info := range infoList {
+		switch info.formType {
+		case "":
+			goformat.Write([]byte(info.part))
+		case "%":
+			goformat.Write([]byte(info.part))
+		case "v":
+			txt := fmt.Sprintf(info.part+info.formType, Lns_ToString(info.arg))
+			goformat.Write([]byte(txt))
+		default:
+			txt := fmt.Sprintf(info.part+info.formType, info.arg)
+			goformat.Write([]byte(txt))
+		}
+	}
+	return goformat.String(), true
+}
+
 func (luaVM *Lns_luaVM) String_format(format string, ddd []LnsAny) string {
+
+	result, ok := String_formatGo(format, ddd)
+	if ok {
+		return result
+	}
 
 	callInfo := luaVM.string_call_setup(lns_c_ptr_format, format)
 
