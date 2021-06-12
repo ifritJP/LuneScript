@@ -1836,7 +1836,7 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
    self.inTestBlock = true;
    let block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
    self.inTestBlock = false;
-o   
+   
 
    self.scopeAccess = .Normal;
 
