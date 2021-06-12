@@ -436,6 +436,7 @@ function MacroParser:getToken(  )
    
    local token = self.tokenList[self.pos]
    self.pos = self.pos + 1
+   
    do
       local _exp = self.overridePos
       if _exp ~= nil then
@@ -600,7 +601,6 @@ end
 function MacroAnalyzeInfo:isAnalyzingSymArg(  )
 
    return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) == Ast.builtinTypeSymbol
-   
 end
 function MacroAnalyzeInfo:isAnalyzingExpArg(  )
 
@@ -701,9 +701,11 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
    
    local function process(  )
    
+      
       local argValMap = {}
       local macroArgValMap = {}
       local macroArgNodeList = macroInfo:getArgList(  )
+      
       local macroArgName2ArgNode = {}
       if expList ~= nil then
          for index, argNode in ipairs( expList:get_expList() ) do
@@ -737,9 +739,12 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       
       
       macroArgValMap["__var"] = self.macroLocalVarMap
+      
       local func = macroInfo.func
       local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
+      
       self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
+      
       for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
          local valInfo = macroInfo.symbol2MacroValInfoMap[name]
          if  nil == valInfo then
@@ -749,6 +754,7 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
          end
          
          local typeInfo = valInfo.typeInfo
+         
          local valMap
          
          do
@@ -863,6 +869,7 @@ end
 function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
 
    local macroObj = self.macroEval:eval( processInfo, node, baseDir )
+   
    local remap = {}
    for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
       if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) then
@@ -881,6 +888,7 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
       end
       
    end
+   
    
    local macroInfo = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
    self.typeId2MacroInfo[node:get_expType():get_typeId()] = macroInfo
@@ -910,9 +918,7 @@ local function expandVal( tokenList, workval, pos )
             
             table.insert( tokenList, Parser.Token.new(kind, num, pos, false) )
          elseif _switchExp == "string" then
-            
             table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, Parser.quoteStr( val ), pos, false) )
-            
          else 
             
                return string.format( "not support ,, List -- %s", type( val ))
@@ -971,6 +977,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       end
       
       if macroVal.argNode then
+         
          return val
       end
       
@@ -1007,6 +1014,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       
       
       if tokenTxt == ',,' then
+         
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
             local txtList = {}
             for __index, txt in ipairs( macroVal2strList( nextToken.txt, macroVal, parser ) ) do
@@ -1048,6 +1056,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
             local enumTypeInfo = _lune.unwrap( _lune.__Cast( macroVal.typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo ))
             local fullname = macroVal.typeInfo:getFullName( typeNameCtrl, scope, true )
+            
             local nameList = Util.splitStr( fullname, "[^%.]+" )
             local enumValInfo = _lune.unwrap( enumTypeInfo:get_val2EnumValInfo()[_lune.unwrap( macroVal.val)])
             nextToken = Parser.Token.new(Parser.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
@@ -1102,9 +1111,11 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             local rawTxt
             
             if txt:find( "^```" ) then
+               
                rawTxt = Parser.quoteStr( txt )
             else
              
+               
                rawTxt = Parser.quoteStr( txt )
             end
             
@@ -1173,7 +1184,6 @@ function MacroCtrl:expandSymbol( parser, inTestBlock, prefixToken, exp, nodeMana
                   format = "' %s '"
                   exp = Nodes.ExpMacroStatListNode.create( nodeManager, prefixToken.pos, inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, exp )
                elseif equalsType( Ast.builtinTypeString, valType ) then
-                  
                elseif equalsType( valType, Ast.builtinTypeInt ) or equalsType( valType, Ast.builtinTypeReal ) then
                   format = "' %s' "
                else
@@ -1262,20 +1272,31 @@ function MacroCtrl:restoreMacroMode(  )
    self.analyzeInfo = self.macroAnalyzeInfoStack[#self.macroAnalyzeInfoStack]
 end
 
-function MacroCtrl:isInAnalyzeArgMode(  )
+
+function MacroCtrl:isInMode( mode )
 
    if #self.macroAnalyzeInfoStack == 0 then
       return false
    end
    
    for __index, info in ipairs( self.macroAnalyzeInfoStack ) do
-      if info:get_mode() == Nodes.MacroMode.AnalyzeArg then
+      if info:get_mode() == mode then
          return true
       end
       
    end
    
    return false
+end
+
+function MacroCtrl:isInAnalyzeArgMode(  )
+
+   return self:isInMode( Nodes.MacroMode.AnalyzeArg )
+end
+
+function MacroCtrl:isInExpandMode(  )
+
+   return self:isInMode( Nodes.MacroMode.Expand )
 end
 
 

@@ -49,7 +49,6 @@ func Log_str2level(_env *LnsEnv, txt string) LnsAny {
     return Log_name2levelMap.Get(txt)
 }
 
-
 // 84: decl @lune.@base.@Log.setLevel
 func Log_setLevel(_env *LnsEnv, level LnsInt) {
     Log_control = NewLog_Control(_env, level)
@@ -68,6 +67,7 @@ func Log_log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback L
 func Log_direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
     Log_control.FP.direct(_env, level, funcName, lineNo, mess)
 }
+
 
 // declaration Class -- Control
 type Log_ControlMtd interface {

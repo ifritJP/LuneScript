@@ -292,6 +292,7 @@ local function createReserveInfo( luaMode )
       typeSet["bool"]= true
    end
    
+   
    local multiCharDelimitMap = {}
    multiCharDelimitMap["="] = {"=="}
    multiCharDelimitMap["<"] = {"<="}
@@ -601,6 +602,7 @@ function Parser:analyzeNumber( token, beginIndex )
    local intFlag = true
    local nonNumChar = string.byte( token, nonNumIndex )
    if nonNumChar == 46 then
+      
       intFlag = false
       nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
       if  nil == nonNumIndex then
@@ -609,10 +611,12 @@ function Parser:analyzeNumber( token, beginIndex )
          return #token, intFlag
       end
       
+      
       nonNumChar = string.byte( token, nonNumIndex )
    end
    
    if nonNumChar == 88 or nonNumChar == 120 then
+      
       nonNumIndex = token:find( '[^%da-fA-F]', nonNumIndex + 1 )
       if  nil == nonNumIndex then
          local _nonNumIndex = nonNumIndex
@@ -624,9 +628,11 @@ function Parser:analyzeNumber( token, beginIndex )
    end
    
    if nonNumChar == 69 or nonNumChar == 101 then
+      
       intFlag = false
       local nextChar = string.byte( token, nonNumIndex + 1 )
       if nextChar == 45 or nextChar == 43 then
+         
          nonNumIndex = token:find( '[^%d]', nonNumIndex + 2 )
          if  nil == nonNumIndex then
             local _nonNumIndex = nonNumIndex
@@ -671,6 +677,7 @@ function Parser:addVal( list, kind, val, column )
    
    local searchIndex = 1
    while true do
+      
       local tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex )
       if  nil == tokenIndex or  nil == tokenEndIndex then
          local _tokenIndex = tokenIndex
@@ -685,6 +692,7 @@ function Parser:addVal( list, kind, val, column )
       local subIndex = 1
       while #token >= subIndex do
          if token:find( '^[%d]', subIndex ) or string.byte( token, subIndex ) == 45 and token:find( '^[%d]', subIndex + 1 ) then
+            
             local checkIndex = subIndex
             if string.byte( token, checkIndex ) == 45 then
                checkIndex = checkIndex + 1
@@ -696,6 +704,7 @@ function Parser:addVal( list, kind, val, column )
             subIndex = endIndex + 1
          else
           
+            
             do
                local _exp = string.find( token, '[^%w_]', subIndex )
                if _exp ~= nil then
@@ -782,6 +791,7 @@ function Parser:parse(  )
       
    end
    
+   
    local function multiComment( comIndex, termStr )
    
       local searchIndex = comIndex
@@ -804,6 +814,7 @@ function Parser:parse(  )
    
    
    local startIndex = 1
+   
    local searchIndex = startIndex
    
    local function getChar( index )
@@ -816,6 +827,7 @@ function Parser:parse(  )
    end
    
    local list = {}
+   
    while true do
       local syncIndexFlag = true
       local pattern = [==[[/%-%?"%'%`].]==]
@@ -823,9 +835,11 @@ function Parser:parse(  )
       if  nil == index then
          local _index = index
       
+         
          self:addVal( list, Types.TokenKind.Symb, rawLine:sub( startIndex ), startIndex )
          return list
       end
+      
       
       local findChar = getChar( index )
       local nextChar = getChar( index + 1 )
@@ -840,6 +854,7 @@ function Parser:parse(  )
          end
          
          if findChar == 39 or findChar == 34 then
+            
             local workIndex = index + 1
             local workPattern = '["\'\\]'
             while true do
@@ -847,15 +862,18 @@ function Parser:parse(  )
                if  nil == endIndex then
                   local _endIndex = endIndex
                
+                  
                   Util.err( string.format( "%s:%d:%d: error: illegal string -- %s", self.streamName, self.lineNo, index, rawLine) )
                end
                
                local workChar = string.byte( rawLine, endIndex )
                if workChar == findChar then
+                  
                   self:addVal( list, Types.TokenKind.Str, rawLine:sub( index, endIndex ), index )
                   searchIndex = endIndex + 1
                   break
                elseif workChar == 92 then
+                  
                   workIndex = endIndex + 2
                else
                 
@@ -866,6 +884,7 @@ function Parser:parse(  )
             
          elseif findChar == 96 then
             if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
+               
                local txt, nextIndex = multiComment( index + 3, '```' )
                self:addVal( list, Types.TokenKind.Str, '```' .. txt, index )
                searchIndex = nextIndex
@@ -896,15 +915,18 @@ function Parser:parse(  )
          else
           
             if self.luaMode and findChar == 45 and nextChar == 45 then
+               
                self:addVal( list, Types.TokenKind.Cmnt, rawLine:sub( index ), index )
                searchIndex = #rawLine + 1
-               
             elseif findChar == 47 then
+               
                if nextChar == 42 then
+                  
                   local comment, nextIndex = multiComment( index + 2, "*/" )
                   self:addVal( list, Types.TokenKind.Cmnt, "/*" .. comment, index )
                   searchIndex = nextIndex
                elseif nextChar == 47 then
+                  
                   self:addVal( list, Types.TokenKind.Cmnt, rawLine:sub( index ), index )
                   searchIndex = #rawLine + 1
                else

@@ -4,7 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_BuiltinTransUnit bool
 var BuiltinTransUnit__mod__ string
 // for 101
-func BuiltinTransUnit_convExp363(arg1 []LnsAny) (LnsAny, LnsAny) {
+func BuiltinTransUnit_convExp437(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
@@ -135,8 +135,8 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
             var existSym LnsAny
             _,existSym = parentScope.FP.AddClass(_env, processInfo, modName, nil, typeInfo)
             if existSym != nil{
-                existSym_70 := existSym.(*Ast_SymbolInfo)
-                self.FP.Error(_env, _env.LuaVM.String_format("module symbols exist -- %s.%s -- %s.%s", []LnsAny{existSym_70.FP.Get_namespaceTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil), existSym_70.FP.Get_name(_env), parentInfo.FP.GetTxt(_env, nil, nil, nil), modName}))
+                existSym_97 := existSym.(*Ast_SymbolInfo)
+                self.FP.Error(_env, _env.LuaVM.String_format("module symbols exist -- %s.%s -- %s.%s", []LnsAny{existSym_97.FP.Get_namespaceTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil), existSym_97.FP.Get_name(_env), parentInfo.FP.GetTxt(_env, nil, nil, nil), modName}))
             }
         }
     }
@@ -198,9 +198,9 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                 self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), Ast_AccessMode_getTxt( accessMode), Ast_AccessMode_getTxt( typeInfo.FP.Get_accessMode(_env))}))
             }
             if baseInfo != nil{
-                baseInfo_110 := baseInfo.(*Ast_TypeInfo)
-                if typeInfo.FP.Get_baseTypeInfo(_env) != baseInfo_110{
-                    self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) base class(%s) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), baseInfo_110.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
+                baseInfo_113 := baseInfo.(*Ast_TypeInfo)
+                if typeInfo.FP.Get_baseTypeInfo(_env) != baseInfo_113{
+                    self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) base class(%s) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), baseInfo_113.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             } else {
                 if typeInfo.FP.HasBase(_env){
@@ -260,8 +260,8 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
             scope = self.FP.PushScope(_env, true, baseInfo, interfaceList)
             var workGenTypeList *LnsList
             if genTypeList != nil{
-                genTypeList_142 := genTypeList.(*LnsList)
-                workGenTypeList = genTypeList_142
+                genTypeList_145 := genTypeList.(*LnsList)
+                workGenTypeList = genTypeList_145
                 
             } else {
                 workGenTypeList = NewLnsList([]LnsAny{})
@@ -277,8 +277,8 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
         }
     }
     if genTypeList != nil{
-        genTypeList_146 := genTypeList.(*LnsList)
-        for _, _genType := range( genTypeList_146.Items ) {
+        genTypeList_149 := genTypeList.(*LnsList)
+        for _, _genType := range( genTypeList_149.Items ) {
             genType := _genType.(Ast_AlternateTypeInfoDownCast).ToAst_AlternateTypeInfo()
             self.scope.FP.AddAlternate(_env, processInfo, accessMode, genType.FP.Get_txt(_env), errPos, &genType.Ast_TypeInfo)
         }

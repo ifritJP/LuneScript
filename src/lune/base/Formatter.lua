@@ -376,7 +376,9 @@ function FormatterFilter:processDeclEnum( node, opt )
 
    self:writeln( string.format( "enum %s {", node:get_name().txt) )
    self:pushIndent(  )
+   
    for __index, name in ipairs( node:get_valueNameList() ) do
+      
       self:write( string.format( "%s", name.txt) )
       self:writeln( "," )
    end
@@ -388,7 +390,6 @@ end
 
 function FormatterFilter:processDeclAlge( node, opt )
 
-   
 end
 
 
@@ -483,9 +484,11 @@ end
 function FormatterFilter:processDeclClass( node, opt )
 
    self:outputDeclClass( false, node:get_expType(), node:get_gluePrefix(), node:get_moduleName() )
+   
    self:writeln( "" )
    self:writeln( "{" )
    self:pushIndent(  )
+   
    for __index, stmt in ipairs( node:get_allStmtList() ) do
       filter( stmt, self, opt:nextOpt( node ) )
    end
@@ -778,6 +781,7 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
    end
    
    if declInfo:get_staticFlag() and _lune.nilacc( declInfo:get_name(), "txt" ) == "__init" then
+      
       self:write( "__init" )
    else
     
@@ -924,6 +928,7 @@ end
 
 function FormatterFilter:processRefType( node, opt )
 
+   
    do
       local mutMode = node:get_mutMode()
       if mutMode ~= nil then

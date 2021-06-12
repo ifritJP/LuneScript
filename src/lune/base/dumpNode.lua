@@ -540,6 +540,7 @@ function dumpFilter:processDeclVar( node, opt )
       end
    end
    
+   
    do
       local _exp = node:get_syncBlock()
       if _exp ~= nil then
@@ -550,10 +551,10 @@ function dumpFilter:processDeclVar( node, opt )
 end
 
 
+
 function dumpFilter:processDeclArg( node, opt )
 
    self:dump( opt, node, string.format( "%s:%s", node:get_name(  ).txt, node:get_expType():getTxt(  )) )
-   
 end
 
 

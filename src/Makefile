@@ -596,6 +596,7 @@ TEST_CASE += import3.lns
 TEST_CASE += import4.lns
 TEST_CASE += import5.lns
 TEST_CASE += import6.lns
+TEST_CASE += import7.lns
 TEST_CASE += strformat.lns
 TEST_CASE += Alge.lns
 TEST_CASE += Alge2.lns

@@ -946,20 +946,32 @@ pub fn MacroCtrl.restoreMacroMode() mut {
    self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack ];
 }
 
+pub fn MacroCtrl.isInMode( mode:Nodes.MacroMode ): bool {
+   if #self.macroAnalyzeInfoStack == 0 {
+      return false;
+   }
+   foreach info in self.macroAnalyzeInfoStack {
+      if info.$mode == mode {
+         return true;
+      }
+   }
+   return false;
+}
+
 /**
 現在の Macroモード が AnalyzeArg か調べる。
 Macroモード がネストされている場合、ネストを辿って調べる。
 */
 pub fn MacroCtrl.isInAnalyzeArgMode(): bool {
-   if #self.macroAnalyzeInfoStack == 0 {
-      return false;
-   }
-   foreach info in self.macroAnalyzeInfoStack {
-      if info.$mode == .AnalyzeArg {
-         return true;
-      }
-   }
-   return false;
+   return self.isInMode( .AnalyzeArg );
+}
+
+/**
+現在の Macroモード が Expand か調べる。
+Macroモード がネストされている場合、ネストを辿って調べる。
+*/
+pub fn MacroCtrl.isInExpandMode(): bool {
+   return self.isInMode( .Expand );
 }
 
 

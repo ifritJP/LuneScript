@@ -242,6 +242,7 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
    do
       local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
       if _exp ~= nil then
+         
          typeInfo = _exp
          
          if typeInfo:get_abstractFlag() ~= abstractFlag then

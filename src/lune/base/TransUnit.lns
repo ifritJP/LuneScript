@@ -503,6 +503,21 @@ class AccessSymbolSetQueue {
    }
 }
 
+class FuncBlockInfo {
+   let declFuncInfo:Nodes.DeclFuncInfo {pub};
+   let funcType:&Ast.TypeInfo{pub};
+   let funcScope:Ast.Scope {pub};
+   let tokenList:&List<&Parser.Token> {pub};
+   let lineNo:int! {pub};
+}
+
+enum AnalyzePhase {
+   /** Meta ファイル用の外部公開の情報を解析する */
+   Meta,
+   /** 全体を解析する */
+   Main,
+}
+
 pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    /** 解析状態 */
@@ -540,7 +555,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    pri let mut commentCtrl: Parser.CommentCtrl;
    
    /** 解析警告メッセージ */
-   pri let mut warnMessList: str[] { pub };
+   pri let mut warnMessList: List<&TransUnitIF.ErrMess> { pub };
 
 
    /** このモジュール内から直接 import しているモジュールのセット */
@@ -622,6 +637,9 @@ alias で置き換えている元の Type → alias の型
    let mut baseDir:str!;
 
    let mut inTestBlock:bool;
+   let mut analyzePhase:AnalyzePhase;
+   let funcBlockInfoList:List<FuncBlockInfo>;
+   let mut funcBlockInfoLinkNo:int!;
 
    static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
       &Types.TransCtrlInfo, Ast.ProcessInfo
@@ -634,13 +652,17 @@ alias で置き換えている元の Type → alias の型
    
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
-                  macroEval: &Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
+                  macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
+                  analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType) 
    {
       super( TransUnit.getSuperParam( ctrl_info )** );
 
+      self.funcBlockInfoLinkNo = nil;
+      self.funcBlockInfoList = [];
+      self.analyzePhase = enableMultiPhase and AnalyzePhase.Meta or AnalyzePhase.Main;
       self.inTestBlock = false;
       self.baseDir = nil;
       self.stdinFile = nil;
@@ -719,9 +741,10 @@ alias で置き換えている元の Type → alias の型
    }
 
    pri fn addWarnMess( pos: &Parser.Position, mess: str ) __async mut {
-      self.warnMessList.insert(
-         "%s:%d:%d: warning: %s" ( self.parser.getStreamName(),
-                                   pos.lineNo, pos.column, mess ) );
+      self.warnMessList.insert( new TransUnitIF.ErrMess(
+         "%s:%d:%d: warning: %s"
+         ( self.parser.getStreamName(),
+           pos.lineNo, pos.column, mess ), pos ) );
    }
 
    pri fn addWarnErrMess( pos:&Parser.Position, err:bool, mess: str ) __async mut {
@@ -896,6 +919,11 @@ alias で置き換えている元の Type → alias の型
    pri fn analyzeRefTypeWithSymbol(
       accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
       symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
+   fn analyzeFuncBlock(
+      analyzingState:AnalyzingState, firstToken: &Parser.Token,
+      classTypeInfo:&Ast.TypeInfo!, funcTypeInfo:&Ast.TypeInfo, funcName:str,
+      funcBodyScope:Ast.Scope,
+      retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode;
 
    pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
 
@@ -996,6 +1024,17 @@ alias で置き換えている元の Type → alias の型
       alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>, validCastToGen:bool,
       dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
       callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!;
+
+   fn getLineNo( token:&Parser.Token ) :int {
+      let mut lineNo = token.pos.lineNo;
+      if! let work = self.funcBlockInfoLinkNo {
+         lineNo = work;
+      }
+      if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+         lineNo = self.macroCtrl.$macroCallLineNo;
+      }
+      return lineNo;
+   }
 }
 
 fn TransUnit.canBeAsyncParam( typeInfo:&Ast.TypeInfo ) : bool {
@@ -1010,20 +1049,20 @@ fn TransUnit.canBeAsyncParam( typeInfo:&Ast.TypeInfo ) : bool {
 let mut opTopLevel = 0;
 
 fn setupOpLevel() : &Map<str,int>, &Map<str,int> {
-   let op2levelMap:Map<str,int> = {};
-   let op1levelMap:Map<str,int> = {};
+   let op2levelMapWork:Map<str,int> = {};
+   let op1levelMapWork:Map<str,int> = {};
    
    let mut opLevelBase = 0;
    fn regOpLevel( opnum: int, opList: str[@] ) __trans {
       opLevelBase = opLevelBase + 1;
       if opnum == 1 {
          foreach op in opList {
-            op1levelMap[ op ] = opLevelBase;
+            op1levelMapWork[ op ] = opLevelBase;
          }
       }
       else {
          foreach op in opList {
-            op2levelMap[ op ] = opLevelBase;
+            op2levelMapWork[ op ] = opLevelBase;
          }
       }
    }
@@ -1044,7 +1083,7 @@ fn setupOpLevel() : &Map<str,int>, &Map<str,int> {
 
    opTopLevel = opLevelBase + 1;
 
-   return op2levelMap, op1levelMap;
+   return op2levelMapWork, op1levelMapWork;
 }
 
 let op2levelMap, op1levelMap = setupOpLevel();
@@ -1087,15 +1126,14 @@ fn TransUnit.createExtType(
    }
 }
 
-
 pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
    self.addErrMess( pos, mess);
 
-   foreach errmess in self.errMessList {
-      Util.errorLog( errmess );
+   foreach errmess in TransUnitIF.sortMess( self.errMessList ) {
+      Util.errorLog( errmess.$mess );
    }
-   foreach warnmess in self.warnMessList {
-      Util.errorLog( warnmess );
+   foreach warnmess in TransUnitIF.sortMess( self.warnMessList ) {
+      Util.errorLog( warnmess.$mess );
    }
    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
       print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
@@ -1848,10 +1886,14 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
       [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
 }
 
-fn TransUnit.skipBlock() mut {
+fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    let mut blockDepth = 0;
+   let tokenList:List<&Parser.Token> = [];
    while true {
       let token = self.getToken( ## );
+      if recordToken {
+         tokenList.insert( token );
+      }
       switch token.txt {
          case "{" {
             blockDepth = blockDepth + 1;
@@ -1866,8 +1908,8 @@ fn TransUnit.skipBlock() mut {
          }
       }
    }
+   return tokenList;
 }
-
 
 fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
 {

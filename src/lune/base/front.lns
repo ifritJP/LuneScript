@@ -170,7 +170,7 @@ class AstCreater extend Runner.Runner {
    let builtinFunc:&Builtin.BuiltinFuncType;
    let mod:str;
    let moduleId:&frontInterface.ModuleId;
-   let ast:&AstInfo.ASTInfo!;
+   let mut ast:&AstInfo.ASTInfo!;
    let mut moduleInfo:frontInterface.ModuleInfo!;
 
    let converter:ConverterFunc;
@@ -183,7 +183,7 @@ class AstCreater extend Runner.Runner {
    {
       let mut transUnit = new TransUnit.TransUnit(
          self.moduleId, importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
-         analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
+         true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
          self.option.transCtrlInfo, self.builtinFunc );
 
       return transUnit.createAST( parserSrc, true, baseDir, stdinFile, false, self.mod );
@@ -202,6 +202,7 @@ class AstCreater extend Runner.Runner {
       self.mod = mod;
       self.moduleId = moduleId;
       self.moduleInfo = nil;
+      self.ast = nil;
       
       self.converter = fn () {
          let ast = self.createAst(
@@ -407,8 +408,8 @@ fn Front.createAstSub(
    }
 
    let mut astCreater = new AstCreater(
-      importModuleInfo, parserSrc, mod, baseDir, moduleId,
-      analyzeModule, analyzeMode, pos, self.builtinFunc, self.option );
+      importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule,
+      analyzeMode, pos, self.builtinFunc, self.option );
    self.mod2astCreate[ mod ] = astCreater;
    return CreateAstResult.Creater( astCreater );
 }
@@ -513,7 +514,8 @@ fn Front.loadFromLnsTxt(
 {
    let mut transUnit = new TransUnit.TransUnit(
       frontInterface.ModuleId.tempId,
-      importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ), nil, nil, nil,
+      importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
+      false, nil, nil, nil,
       self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc );
 
    let mut ast = transUnit.createAST(
@@ -1436,7 +1438,7 @@ class LuaConverter extend Runner.Runner {
    let astResult:&CreateAstResult;
 
    let converterFunc:ConverterFunc;
-   let filterInfo:convLua.FilterInfo;
+   let mut filterInfo:convLua.FilterInfo!;
 
    pub fn __init(
       luaPath:str, metaPath:str, dependsPath:str!, 
@@ -1458,6 +1460,7 @@ class LuaConverter extend Runner.Runner {
       self.metaStreamMem = new Util.memStream();
       self.dependsStreamMem = new Util.memStream();
       self.astResult = astResult;
+      self.filterInfo = nil;
 
       self.converterFunc = fn() __async {
          // 一旦メモリに出力するためのストリーム作成
@@ -1480,9 +1483,10 @@ class LuaConverter extend Runner.Runner {
             oMetaStream = self.byteMetaStream;
          }
 
-         self.filterInfo = ast2LuaMain(
+         let mut filterInfo = ast2LuaMain(
             ast, path, outStream, oMetaStream, convMode, false, option );
-         self.filterInfo.outputLua( unwrap ast.$node@@@Nodes.RootNode );
+         self.filterInfo = filterInfo;
+         filterInfo.outputLua( unwrap ast.$node@@@Nodes.RootNode );
       };
       self.start( __lns.runMode.Queue, "convlua -- %s" (path) );
    }
@@ -1495,7 +1499,7 @@ class LuaConverter extend Runner.Runner {
       __join( self );
 
       let ast = getAstFromResult( self.astResult );
-      self.filterInfo.outputMeta( unwrap ast.$node@@@Nodes.RootNode );
+      self.filterInfo$.outputMeta$( unwrap ast.$node@@@Nodes.RootNode );
       
       
       if self.byteCompile {

@@ -1717,10 +1717,10 @@ pub class DeclFuncInfo {
    let staticFlag: bool { pub };
    let accessMode: Ast.AccessMode { pub };
    let asyncMode: Ast.Async! {pub};
-   let body: &BlockNode! { pub };
+   let mut body: &BlockNode! { pub, pub };
    let retTypeInfoList: &List<&Ast.TypeInfo> { pub };
    let retTypeNodeList: &List<&RefTypeNode> { pub };
-   let has__func__Symbol:bool { pub };
+   let mut has__func__Symbol:bool { pub, pub };
    let overrideFlag: bool { pub };
 }
 

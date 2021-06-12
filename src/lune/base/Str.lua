@@ -76,6 +76,7 @@ local function getLineList( txt )
    local list = {}
    
    do
+      
       for line in string.gmatch( txt, "[^\n]*\n" ) do
          table.insert( list, line )
       end

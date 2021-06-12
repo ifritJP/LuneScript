@@ -4,35 +4,35 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Writer bool
 var Writer__mod__ string
 // for 58
-func Writer_convExp149(arg1 []LnsAny) string {
+func Writer_convExp829(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 59
-func Writer_convExp167(arg1 []LnsAny) string {
+func Writer_convExp847(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 60
-func Writer_convExp185(arg1 []LnsAny) string {
+func Writer_convExp865(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 61
-func Writer_convExp203(arg1 []LnsAny) string {
+func Writer_convExp883(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 62
-func Writer_convExp221(arg1 []LnsAny) string {
+func Writer_convExp901(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 265
-func Writer_convExp1213(arg1 []LnsAny) string {
+func Writer_convExp1720(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 266
-func Writer_convExp1231(arg1 []LnsAny) string {
+func Writer_convExp1738(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 267
-func Writer_convExp1249(arg1 []LnsAny) string {
+func Writer_convExp1756(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 type Writer_Writer interface {
@@ -111,15 +111,15 @@ func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
     }
     var txt string
     txt = _env.LuaVM.String_format("%s", []LnsAny{val})
-    txt = Writer_convExp149(Lns_2DDD(_env.LuaVM.String_gsub(txt, "&", "&amp;")))
+    txt = Writer_convExp829(Lns_2DDD(_env.LuaVM.String_gsub(txt, "&", "&amp;")))
     
-    txt = Writer_convExp167(Lns_2DDD(_env.LuaVM.String_gsub(txt, ">", "&gt;")))
+    txt = Writer_convExp847(Lns_2DDD(_env.LuaVM.String_gsub(txt, ">", "&gt;")))
     
-    txt = Writer_convExp185(Lns_2DDD(_env.LuaVM.String_gsub(txt, "<", "&lt;")))
+    txt = Writer_convExp865(Lns_2DDD(_env.LuaVM.String_gsub(txt, "<", "&lt;")))
     
-    txt = Writer_convExp203(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\"", "&quot;")))
+    txt = Writer_convExp883(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\"", "&quot;")))
     
-    txt = Writer_convExp221(Lns_2DDD(_env.LuaVM.String_gsub(txt, "'", "&apos;")))
+    txt = Writer_convExp901(Lns_2DDD(_env.LuaVM.String_gsub(txt, "'", "&apos;")))
     
     return txt
 }
@@ -434,11 +434,11 @@ func Writer_JSON_convertJsonTxt_12_(_env *LnsEnv, txt string) string {
     if txt == ""{
         return ""
     }
-    txt = Writer_convExp1213(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\"", "\\\"")))
+    txt = Writer_convExp1720(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\"", "\\\"")))
     
-    txt = Writer_convExp1231(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\\", "\\\\")))
+    txt = Writer_convExp1738(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\\", "\\\\")))
     
-    txt = Writer_convExp1249(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\n", "\\n")))
+    txt = Writer_convExp1756(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\n", "\\n")))
     
     return txt
 }

@@ -109,8 +109,8 @@ _section();
    }
 
    fn func1( test:&Test ): int, int {
-      if! let sub = test@@@Sub {
-         print( "OK", sub.sub2() );
+      if! let sub2 = test@@@Sub {
+         print( "OK", sub2.sub2() );
       }
       else {
          print( "CAN'T CAST" );
@@ -119,8 +119,8 @@ _section();
    }
 
    fn func2( test:&stem ) {
-      if! let sub = test@@@Sub {
-         print( "OK", sub.sub2() );
+      if! let sub2 = test@@@Sub {
+         print( "OK", sub2.sub2() );
       }
       else {
          print( "CAN'T CAST" );

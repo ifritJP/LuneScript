@@ -6,11 +6,11 @@ var Builtin__mod__ string
 var Builtin_builtinFunc *Builtin_BuiltinFuncType
 var Builtin_readyBuiltin bool
 // for 463
-func Builtin_convExp11804(arg1 []LnsAny) LnsAny {
+func Builtin_convExp11874(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 455
-func Builtin_convExp11685(arg1 []LnsAny) string {
+func Builtin_convExp11755(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 71
@@ -18,37 +18,17 @@ func Builtin_convExp209(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 458
-func Builtin_convExp11710(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Builtin_convExp11780(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 479
-func Builtin_convExp11859(arg1 []LnsAny) string {
+func Builtin_convExp11929(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 165: decl @lune.@base.@Builtin.getBuiltinFunc
 func Builtin_getBuiltinFunc(_env *LnsEnv) *Builtin_BuiltinFuncType {
     return Builtin_builtinFunc
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // 169: decl @lune.@base.@Builtin.setupBuiltinTypeInfo
 func Builtin_setupBuiltinTypeInfo_4_(_env *LnsEnv, name string,fieldName string,symInfo *Ast_SymbolInfo) {
@@ -712,6 +692,26 @@ func Builtin_getBuiltInInfo_5_(_env *LnsEnv) *LnsList {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // 703: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
 func Builtin_registBuiltInScope__processCopyAlterList_0_(_env *LnsEnv, alterList *LnsList,typeList *LnsList) {
     for _, _typeInfo := range( typeList.Items ) {
@@ -850,22 +850,22 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(typeName,"^&", nil, nil))){
         mutable = false
         
-        typeName = Builtin_convExp11685(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"^&", "")))
+        typeName = Builtin_convExp11755(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"^&", "")))
         
     }
     var genTypeList *LnsList
     genTypeList = NewLnsList([]LnsAny{})
     var endIndex LnsAny
-    _,endIndex = Builtin_convExp11710(Lns_2DDD(_env.LuaVM.String_find(typeName,"[%w%.]+<", nil, nil)))
+    _,endIndex = Builtin_convExp11780(Lns_2DDD(_env.LuaVM.String_find(typeName,"[%w%.]+<", nil, nil)))
     var suffix string
     suffix = ""
     if endIndex != nil{
-        endIndex_523 := endIndex.(LnsInt)
+        endIndex_541 := endIndex.(LnsInt)
         var genTypeName string
-        genTypeName = _env.LuaVM.String_sub(typeName,endIndex_523 + 1, nil)
+        genTypeName = _env.LuaVM.String_sub(typeName,endIndex_541 + 1, nil)
         for  {
             {
-                _tailIndex := Builtin_convExp11804(Lns_2DDD(_env.LuaVM.String_find(genTypeName,"[,>]", nil, nil)))
+                _tailIndex := Builtin_convExp11874(Lns_2DDD(_env.LuaVM.String_find(genTypeName,"[,>]", nil, nil)))
                 if !Lns_IsNil( _tailIndex ) {
                     tailIndex := _tailIndex.(LnsInt)
                     var genType *Ast_TypeInfo
@@ -880,14 +880,14 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                 }
             }
         }
-        typeName = _env.LuaVM.String_sub(typeName,1, endIndex_523 - 1) + suffix
+        typeName = _env.LuaVM.String_sub(typeName,1, endIndex_541 - 1) + suffix
         
     }
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(typeName,"!$", nil, nil))){
         var orgTypeName string
-        orgTypeName = Builtin_convExp11859(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"!$", "")))
+        orgTypeName = Builtin_convExp11929(Lns_2DDD(_env.LuaVM.String_gsub(typeName,"!$", "")))
         {
             __exp := getTypeInfoFromScope(_env, self.transUnit.FP.Get_scope(_env), orgTypeName, genTypeList)
             if !Lns_IsNil( __exp ) {

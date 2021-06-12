@@ -32,9 +32,40 @@ func TransUnitIF_DeclClassMode__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
 func TransUnitIF_DeclClassMode_getTxt(arg1 LnsInt) string {
     return TransUnitIF_DeclClassModeMap_[arg1];
 }
-// for 325
-func TransUnitIF_convExp1112(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 361
+func TransUnitIF_convExp1438(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
+}
+// 169: decl @lune.@base.@TransUnitIF.sortMess
+func TransUnitIF_sortMess(_env *LnsEnv, list *LnsList) *LnsList {
+    list.Sort(_env, LnsItemKindStem, LnsComp(func ( _env *LnsEnv, val1, val2 LnsAny ) bool {return sortMess___anonymous_0_( _env, val1.(TransUnitIF_ErrMessDownCast).ToTransUnitIF_ErrMess(), val2.(TransUnitIF_ErrMessDownCast).ToTransUnitIF_ErrMess())}))
+    return list
+}
+
+func sortMess___anonymous_0_(_env *LnsEnv, mess1 *TransUnitIF_ErrMess,mess2 *TransUnitIF_ErrMess) bool {
+    var pos1 *Types_Position
+    pos1 = mess1.FP.Get_pos(_env).FP.Get_orgPos(_env)
+    var pos2 *Types_Position
+    pos2 = mess2.FP.Get_pos(_env).FP.Get_orgPos(_env)
+    if pos1.StreamName < pos2.StreamName{
+        return true
+    }
+    if pos1.StreamName > pos2.StreamName{
+        return false
+    }
+    if pos1.LineNo < pos2.LineNo{
+        return true
+    }
+    if pos1.LineNo > pos2.LineNo{
+        return false
+    }
+    if pos1.Column < pos2.Column{
+        return true
+    }
+    if pos1.Column > pos2.Column{
+        return false
+    }
+    return mess1.FP.Get_mess(_env) < mess2.FP.Get_mess(_env)
 }
 
 // declaration Class -- Modifier
@@ -271,6 +302,49 @@ func Lns_cast2TransUnitIF_TransUnitIF( obj LnsAny ) LnsAny {
     return nil
 }
 
+// declaration Class -- ErrMess
+type TransUnitIF_ErrMessMtd interface {
+    Get_mess(_env *LnsEnv) string
+    Get_pos(_env *LnsEnv) *Types_Position
+}
+type TransUnitIF_ErrMess struct {
+    Mess string
+    Pos *Types_Position
+    FP TransUnitIF_ErrMessMtd
+}
+func TransUnitIF_ErrMess2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*TransUnitIF_ErrMess).FP
+}
+type TransUnitIF_ErrMessDownCast interface {
+    ToTransUnitIF_ErrMess() *TransUnitIF_ErrMess
+}
+func TransUnitIF_ErrMessDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(TransUnitIF_ErrMessDownCast)
+    if ok { return work.ToTransUnitIF_ErrMess() }
+    return nil
+}
+func (obj *TransUnitIF_ErrMess) ToTransUnitIF_ErrMess() *TransUnitIF_ErrMess {
+    return obj
+}
+func NewTransUnitIF_ErrMess(_env *LnsEnv, arg1 string, arg2 *Types_Position) *TransUnitIF_ErrMess {
+    obj := &TransUnitIF_ErrMess{}
+    obj.FP = obj
+    obj.InitTransUnitIF_ErrMess(_env, arg1, arg2)
+    return obj
+}
+func (self *TransUnitIF_ErrMess) InitTransUnitIF_ErrMess(_env *LnsEnv, arg1 string, arg2 *Types_Position) {
+    self.Mess = arg1
+    self.Pos = arg2
+}
+func (self *TransUnitIF_ErrMess) Get_mess(_env *LnsEnv) string{ return self.Mess }
+func (self *TransUnitIF_ErrMess) Get_pos(_env *LnsEnv) *Types_Position{ return self.Pos }
+
 // declaration Class -- TransUnitBase
 type TransUnitIF_TransUnitBaseMtd interface {
     AddErrMess(_env *LnsEnv, arg1 *Types_Position, arg2 string)
@@ -326,12 +400,12 @@ func (obj *TransUnitIF_TransUnitBase) ToTransUnitIF_TransUnitBase() *TransUnitIF
 }
 func (self *TransUnitIF_TransUnitBase) Get_globalScope(_env *LnsEnv) *Ast_Scope{ return self.GlobalScope }
 func (self *TransUnitIF_TransUnitBase) Get_errMessList(_env *LnsEnv) *LnsList{ return self.ErrMessList }
-// 190: decl @lune.@base.@TransUnitIF.TransUnitBase.get_scope
+// 226: decl @lune.@base.@TransUnitIF.TransUnitBase.get_scope
 func (self *TransUnitIF_TransUnitBase) Get_scope(_env *LnsEnv) *Ast_Scope {
     return self.Scope
 }
 
-// 194: DeclConstr
+// 230: DeclConstr
 func (self *TransUnitIF_TransUnitBase) InitTransUnitIF_TransUnitBase(_env *LnsEnv, ctrl_info *Types_TransCtrlInfo,processInfo *Ast_ProcessInfo) {
     self.TypeId2ClassMap = NewLnsMap( map[LnsAny]LnsAny{})
     
@@ -354,36 +428,36 @@ func (self *TransUnitIF_TransUnitBase) InitTransUnitIF_TransUnitBase(_env *LnsEn
     self.NsInfoMap.Set(subRootTypeInfo,NewTransUnitIF_NSInfo(_env, subRootTypeInfo, NewTypes_Position(_env, 0, 0, "@builtin@")))
 }
 
-// 211: decl @lune.@base.@TransUnitIF.TransUnitBase.addErrMess
+// 247: decl @lune.@base.@TransUnitIF.TransUnitBase.addErrMess
 func (self *TransUnitIF_TransUnitBase) AddErrMess(_env *LnsEnv, pos *Types_Position,mess string) {
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(mess,"type mismatch.*<- &", nil, nil))){
         mess = mess + ". if your code is the old style, use the opiton '--legacy-mutable-control'."
         
     }
-    self.ErrMessList.Insert(_env.LuaVM.String_format("%s:%d:%d: error: %s", []LnsAny{pos.StreamName, pos.LineNo, pos.Column, mess}))
+    self.ErrMessList.Insert(TransUnitIF_ErrMess2Stem(NewTransUnitIF_ErrMess(_env, _env.LuaVM.String_format("%s:%d:%d: error: %s", []LnsAny{pos.StreamName, pos.LineNo, pos.Column, mess}), pos)))
 }
 
 
 
-// 241: decl @lune.@base.@TransUnitIF.TransUnitBase.error
+// 277: decl @lune.@base.@TransUnitIF.TransUnitBase.error
 func (self *TransUnitIF_TransUnitBase) Error(_env *LnsEnv, mess string) {
     self.FP.ErrorAt(_env, self.FP.GetLatestPos(_env), mess)
 }
 
-// 245: decl @lune.@base.@TransUnitIF.TransUnitBase.pushScope
+// 281: decl @lune.@base.@TransUnitIF.TransUnitBase.pushScope
 func (self *TransUnitIF_TransUnitBase) PushScope(_env *LnsEnv, classFlag bool,baseInfo LnsAny,interfaceList LnsAny) *Ast_Scope {
     self.Scope = Ast_TypeInfo_createScope(_env, self.ProcessInfo, self.Scope, classFlag, baseInfo, interfaceList)
     
     return self.Scope
 }
 
-// 253: decl @lune.@base.@TransUnitIF.TransUnitBase.popScope
+// 289: decl @lune.@base.@TransUnitIF.TransUnitBase.popScope
 func (self *TransUnitIF_TransUnitBase) PopScope(_env *LnsEnv) {
     self.Scope = self.Scope.FP.Get_parent(_env)
     
 }
 
-// 261: decl @lune.@base.@TransUnitIF.TransUnitBase.newNSInfo
+// 297: decl @lune.@base.@TransUnitIF.TransUnitBase.newNSInfo
 func (self *TransUnitIF_TransUnitBase) NewNSInfo(_env *LnsEnv, typeInfo *Ast_TypeInfo,pos *Types_Position) *TransUnitIF_NSInfo {
     var nsInfo *TransUnitIF_NSInfo
     nsInfo = NewTransUnitIF_NSInfo(_env, typeInfo, pos)
@@ -391,7 +465,7 @@ func (self *TransUnitIF_TransUnitBase) NewNSInfo(_env *LnsEnv, typeInfo *Ast_Typ
     return nsInfo
 }
 
-// 278: decl @lune.@base.@TransUnitIF.TransUnitBase.getCurrentNamespaceTypeInfoMut
+// 314: decl @lune.@base.@TransUnitIF.TransUnitBase.getCurrentNamespaceTypeInfoMut
 func (self *TransUnitIF_TransUnitBase) GetCurrentNamespaceTypeInfoMut(_env *LnsEnv) *Ast_TypeInfo {
     var typeInfo *Ast_TypeInfo
     typeInfo = self.Scope.FP.GetNamespaceTypeInfo(_env)
@@ -408,12 +482,12 @@ func (self *TransUnitIF_TransUnitBase) GetCurrentNamespaceTypeInfoMut(_env *LnsE
     return nsInfo.FP.Get_typeInfo(_env)
 }
 
-// 287: decl @lune.@base.@TransUnitIF.TransUnitBase.getCurrentNamespaceTypeInfo
+// 323: decl @lune.@base.@TransUnitIF.TransUnitBase.getCurrentNamespaceTypeInfo
 func (self *TransUnitIF_TransUnitBase) GetCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo {
     return self.Scope.FP.GetNamespaceTypeInfo(_env)
 }
 
-// 291: decl @lune.@base.@TransUnitIF.TransUnitBase.pushModule
+// 327: decl @lune.@base.@TransUnitIF.TransUnitBase.pushModule
 func (self *TransUnitIF_TransUnitBase) PushModule(_env *LnsEnv, processInfo *Ast_ProcessInfo,externalFlag bool,name string,mutable bool) *TransUnitIF_NSInfo {
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
@@ -461,8 +535,8 @@ func (self *TransUnitIF_TransUnitBase) PushModule(_env *LnsEnv, processInfo *Ast
             var existSym LnsAny
             _,existSym = parentScope.FP.AddClass(_env, processInfo, modName, nil, typeInfo)
             if existSym != nil{
-                existSym_212 := existSym.(*Ast_SymbolInfo)
-                self.FP.AddErrMess(_env, self.FP.GetLatestPos(_env), _env.LuaVM.String_format("module symbols exist -- %s.%s -- %s.%s", []LnsAny{existSym_212.FP.Get_namespaceTypeInfo(_env).FP.GetFullName(_env, self.TypeNameCtrl, parentScope.FP, false), existSym_212.FP.Get_name(_env), parentInfo.FP.GetFullName(_env, self.TypeNameCtrl, parentScope.FP, false), modName}))
+                existSym_296 := existSym.(*Ast_SymbolInfo)
+                self.FP.AddErrMess(_env, self.FP.GetLatestPos(_env), _env.LuaVM.String_format("module symbols exist -- %s.%s -- %s.%s", []LnsAny{existSym_296.FP.Get_namespaceTypeInfo(_env).FP.GetFullName(_env, self.TypeNameCtrl, parentScope.FP, false), existSym_296.FP.Get_name(_env), parentInfo.FP.GetFullName(_env, self.TypeNameCtrl, parentScope.FP, false), modName}))
             }
         }
     }
@@ -474,17 +548,17 @@ func (self *TransUnitIF_TransUnitBase) PushModule(_env *LnsEnv, processInfo *Ast
     return nsInfo
 }
 
-// 344: decl @lune.@base.@TransUnitIF.TransUnitBase.pushModuleLow
+// 380: decl @lune.@base.@TransUnitIF.TransUnitBase.pushModuleLow
 func (self *TransUnitIF_TransUnitBase) PushModuleLow(_env *LnsEnv, processInfo *Ast_ProcessInfo,externalFlag bool,name string,mutable bool) *Ast_TypeInfo {
     return self.FP.PushModule(_env, processInfo, externalFlag, name, mutable).FP.Get_typeInfo(_env)
 }
 
-// 351: decl @lune.@base.@TransUnitIF.TransUnitBase.popModule
+// 387: decl @lune.@base.@TransUnitIF.TransUnitBase.popModule
 func (self *TransUnitIF_TransUnitBase) PopModule(_env *LnsEnv) {
     self.FP.PopScope(_env)
 }
 
-// 358: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClassScope
+// 394: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClassScope
 func (self *TransUnitIF_TransUnitBase) PushClassScope(_env *LnsEnv, errPos *Types_Position,classTypeInfo *Ast_TypeInfo,scope *Ast_Scope) {
     if self.Scope != _env.NilAccFin(_env.NilAccPush(classTypeInfo.FP.Get_scope(_env)) && 
     Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.Get_parent(_env)})){
@@ -508,7 +582,7 @@ func (self *TransUnitIF_TransUnitBase) PushClassScope(_env *LnsEnv, errPos *Type
             }
         }
         self.FP.AddErrMess(_env, errPos, _env.LuaVM.String_format("This class does not exist in this scope. -- %s -- %s(%d), %s(%d)", []LnsAny{classTypeInfo.FP.GetTxt(_env, nil, nil, nil), _env.NilAccFin(_env.NilAccPush(self.Scope.FP.Get_ownerTypeInfo(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetFullName(_env, self.TypeNameCtrl, self.Scope.FP, false)})/* 376:15 */), _env.PopVal( _env.IncStack() ||
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetFullName(_env, self.TypeNameCtrl, self.Scope.FP, false)})/* 412:15 */), _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(self.Scope.FP.Get_ownerTypeInfo(_env)) && 
             Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.Get_typeId(_env)})&&
             _env.NilAccPush(_env.NilAccPop().(*Ast_IdInfo).Id))) ||
@@ -518,7 +592,7 @@ func (self *TransUnitIF_TransUnitBase) PushClassScope(_env *LnsEnv, errPos *Type
     
 }
 
-// 390: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClass
+// 426: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClass
 func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_ProcessInfo,errPos *Types_Position,mode LnsInt,abstractFlag bool,baseInfo LnsAny,interfaceList LnsAny,genTypeList LnsAny,externalFlag bool,name string,allowMultiple bool,accessMode LnsInt,defNamespace LnsAny) *TransUnitIF_NSInfo {
     var typeInfo *Ast_TypeInfo
     var nsInfo *TransUnitIF_NSInfo
@@ -542,9 +616,9 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
                 self.FP.AddErrMess(_env, errPos, _env.LuaVM.String_format("mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), Ast_AccessMode_getTxt( accessMode), Ast_AccessMode_getTxt( typeInfo.FP.Get_accessMode(_env))}))
             }
             if baseInfo != nil{
-                baseInfo_264 := baseInfo.(*Ast_TypeInfo)
-                if typeInfo.FP.Get_baseTypeInfo(_env) != baseInfo_264{
-                    self.FP.AddErrMess(_env, errPos, _env.LuaVM.String_format("mismatch class(%s) base class(%s) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), baseInfo_264.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
+                baseInfo_317 := baseInfo.(*Ast_TypeInfo)
+                if typeInfo.FP.Get_baseTypeInfo(_env) != baseInfo_317{
+                    self.FP.AddErrMess(_env, errPos, _env.LuaVM.String_format("mismatch class(%s) base class(%s) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), baseInfo_317.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             } else {
                 if typeInfo.FP.HasBase(_env){
@@ -597,8 +671,8 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
             scope = self.FP.PushScope(_env, true, baseInfo, interfaceList)
             var workGenTypeList *LnsList
             if genTypeList != nil{
-                genTypeList_293 := genTypeList.(*LnsList)
-                workGenTypeList = genTypeList_293
+                genTypeList_346 := genTypeList.(*LnsList)
+                workGenTypeList = genTypeList_346
                 
             } else {
                 workGenTypeList = NewLnsList([]LnsAny{})
@@ -615,8 +689,8 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
         }
     }
     if genTypeList != nil{
-        genTypeList_297 := genTypeList.(*LnsList)
-        for _, _genType := range( genTypeList_297.Items ) {
+        genTypeList_350 := genTypeList.(*LnsList)
+        for _, _genType := range( genTypeList_350.Items ) {
             genType := _genType.(Ast_AlternateTypeInfoDownCast).ToAst_AlternateTypeInfo()
             self.Scope.FP.AddAlternate(_env, processInfo, accessMode, genType.FP.Get_txt(_env), errPos, &genType.Ast_TypeInfo)
         }
@@ -636,12 +710,12 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
     return nsInfo
 }
 
-// 542: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClassLow
+// 578: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClassLow
 func (self *TransUnitIF_TransUnitBase) PushClassLow(_env *LnsEnv, processInfo *Ast_ProcessInfo,errPos *Types_Position,mode LnsInt,abstractFlag bool,baseInfo LnsAny,interfaceList LnsAny,genTypeList LnsAny,externalFlag bool,name string,allowMultiple bool,accessMode LnsInt,defNamespace LnsAny) *Ast_TypeInfo {
     return self.FP.PushClass(_env, processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace).FP.Get_typeInfo(_env)
 }
 
-// 556: decl @lune.@base.@TransUnitIF.TransUnitBase.popClass
+// 592: decl @lune.@base.@TransUnitIF.TransUnitBase.popClass
 func (self *TransUnitIF_TransUnitBase) PopClass(_env *LnsEnv) {
     self.FP.PopScope(_env)
 }
@@ -709,12 +783,12 @@ func (self *TransUnitIF_SimpeTransUnit) InitTransUnitIF_SimpeTransUnit(_env *Lns
     self.macroMode = arg4
     self.nearCode = arg5
 }
-// 565: decl @lune.@base.@TransUnitIF.SimpeTransUnit.errorAt
+// 601: decl @lune.@base.@TransUnitIF.SimpeTransUnit.errorAt
 func (self *TransUnitIF_SimpeTransUnit) ErrorAt(_env *LnsEnv, pos *Types_Position,mess string) {
     self.FP.AddErrMess(_env, pos, mess)
     for _, _errmess := range( self.ErrMessList.Items ) {
-        errmess := _errmess.(string)
-        Util_errorLog(_env, errmess)
+        errmess := _errmess.(TransUnitIF_ErrMessDownCast).ToTransUnitIF_ErrMess()
+        Util_errorLog(_env, errmess.FP.Get_mess(_env))
     }
     {
         _nearCode := self.nearCode
@@ -728,7 +802,7 @@ func (self *TransUnitIF_SimpeTransUnit) ErrorAt(_env *LnsEnv, pos *Types_Positio
     Util_err(_env, "has error")
 }
 
-// 579: decl @lune.@base.@TransUnitIF.SimpeTransUnit.getLatestPos
+// 615: decl @lune.@base.@TransUnitIF.SimpeTransUnit.getLatestPos
 func (self *TransUnitIF_SimpeTransUnit) GetLatestPos(_env *LnsEnv) *Types_Position {
     return self.latestPos
 }

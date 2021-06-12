@@ -3722,7 +3722,8 @@ __test {
       
       let mod = Util.scriptPath2Module( scriptPath );
       let mut transUnit = new TransUnit.TransUnit(
-         moduleId, moduleInfo, new MacroEvalImp(builtinFunc), nil, .Compile,
+         moduleId, moduleInfo, new MacroEvalImp(builtinFunc), false,
+         nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
       
       return transUnit.createAST( parserSrc, false, nil, nil, false, mod );

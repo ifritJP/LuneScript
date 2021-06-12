@@ -552,6 +552,7 @@ local dummyFront = {}
 setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
+   
    local loaded = _lune.loadstring52( "return {}" )
    local emptyTable
    

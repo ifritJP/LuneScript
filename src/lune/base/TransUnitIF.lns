@@ -161,6 +161,42 @@ pub interface TransUnitIF {
    pub fn popClass() mut;
 }
 
+pub class ErrMess {
+   pub let mess:str {pub};
+   pub let pos:&Parser.Position {pub};
+}
+
+pub fn sortMess( list:List<&ErrMess> ) : &List<&ErrMess>
+{
+   list.sort(
+      fn ( mess1:&ErrMess, mess2:&ErrMess ) : bool {
+         let pos1 = mess1.$pos.$orgPos;
+         let pos2 = mess2.$pos.$orgPos;
+         if pos1.streamName < pos2.streamName {
+            return true;
+         }
+         if pos1.streamName > pos2.streamName {
+            return false;
+         }
+         if pos1.lineNo < pos2.lineNo {
+            return true;
+         }
+         if pos1.lineNo > pos2.lineNo {
+            return false;
+         }
+         if pos1.column < pos2.column {
+            return true;
+         }
+         if pos1.column > pos2.column {
+            return false;
+         }
+         return mess1.$mess < mess2.$mess;
+      }
+   );
+   return list;
+}
+   
+
 
 pub abstract class TransUnitBase extend (TransUnitIF) {
 
@@ -180,7 +216,7 @@ TypeInfo → NSInfo.
    // /** 解析済みトークンリスト */
    // pri let mut usedTokenList: List<&Parser.Token>;
    /** 解析エラーメッセージ */
-   pro let mut errMessList: str[] { pub };
+   pro let mut errMessList: List<&ErrMess> { pub };
 
    pro let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
@@ -213,8 +249,8 @@ TypeInfo → NSInfo.
          mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
       }
       self.errMessList.insert(
-         "%s:%d:%d: error: %s" ( pos.streamName,
-                                 pos.lineNo, pos.column, mess ) );
+         new ErrMess( "%s:%d:%d: error: %s" ( pos.streamName,
+                                              pos.lineNo, pos.column, mess ), pos ) );
    }
 
    
@@ -566,7 +602,7 @@ pub class SimpeTransUnit extend TransUnitBase {
    {
       self.addErrMess( pos, mess);
       foreach errmess in self.errMessList {
-         Util.errorLog( errmess );
+         Util.errorLog( errmess.$mess );
       }
       if! let nearCode = self.nearCode {
          print( "------ near code -----", self.macroMode );

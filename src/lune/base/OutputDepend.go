@@ -3,6 +3,14 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_OutputDepend bool
 var OutputDepend__mod__ string
+// for 136
+func OutputDepend_convExp638(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
+}
+// for 138
+func OutputDepend_convExp655(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
 // 95: decl @lune.@base.@OutputDepend.createFilter
 func OutputDepend_createFilter(_env *LnsEnv, stream Lns_oStream) *Nodes_Filter {
     return &NewOutputDepend_convFilter(_env, stream).Nodes_Filter

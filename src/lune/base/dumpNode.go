@@ -4,11 +4,11 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_dumpNode bool
 var dumpNode__mod__ string
 // for 62
-func dumpNode_convExp139(arg1 []LnsAny) string {
+func dumpNode_convExp1157(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 475
-func dumpNode_convExp2537(arg1 []LnsAny) (string, LnsInt) {
+func dumpNode_convExp3089(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // 102: decl @lune.@base.@dumpNode.createFilter
@@ -250,7 +250,7 @@ func (self *dumpNode_dumpFilter) InitdumpNode_dumpFilter(_env *LnsEnv, arg1 bool
 // 61: decl @lune.@base.@dumpNode.dumpFilter.writeln
 func (self *dumpNode_dumpFilter) writeln(_env *LnsEnv, opt *DumpNode_Opt,txt string) {
     var prefix string
-    prefix = dumpNode_convExp139(Lns_2DDD(opt.FP.Get(_env)))
+    prefix = dumpNode_convExp1157(Lns_2DDD(opt.FP.Get(_env)))
     self.stream.Write(_env, _env.LuaVM.String_format("%s%s\n", []LnsAny{prefix, Lns_car(_env.LuaVM.String_gsub(txt," *$", "")).(string)}))
 }
 
@@ -994,8 +994,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_Exp
     self.FP.dump(_env, opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_3_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env))
     if indexNode != nil{
-        indexNode_609 := indexNode.(*Nodes_Node)
-        dumpNode_filter_3_(_env, indexNode_609, self, opt.FP.NextOpt(_env))
+        indexNode_758 := indexNode.(*Nodes_Node)
+        dumpNode_filter_3_(_env, indexNode_758, self, opt.FP.NextOpt(_env))
     }
     dumpNode_filter_3_(_env, node.FP.Get_exp2(_env), self, opt.FP.NextOpt(_env))
 }

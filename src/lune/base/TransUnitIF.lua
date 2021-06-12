@@ -314,6 +314,68 @@ function TransUnitIF:__init(  )
 end
 
 
+local ErrMess = {}
+_moduleObj.ErrMess = ErrMess
+function ErrMess.setmeta( obj )
+  setmetatable( obj, { __index = ErrMess  } )
+end
+function ErrMess.new( mess, pos )
+   local obj = {}
+   ErrMess.setmeta( obj )
+   if obj.__init then
+      obj:__init( mess, pos )
+   end
+   return obj
+end
+function ErrMess:__init( mess, pos )
+
+   self.mess = mess
+   self.pos = pos
+end
+function ErrMess:get_mess()
+   return self.mess
+end
+function ErrMess:get_pos()
+   return self.pos
+end
+
+
+local function sortMess( list )
+
+   table.sort( list, function ( mess1, mess2 )
+   
+      local pos1 = mess1:get_pos():get_orgPos()
+      local pos2 = mess2:get_pos():get_orgPos()
+      if pos1.streamName < pos2.streamName then
+         return true
+      end
+      
+      if pos1.streamName > pos2.streamName then
+         return false
+      end
+      
+      if pos1.lineNo < pos2.lineNo then
+         return true
+      end
+      
+      if pos1.lineNo > pos2.lineNo then
+         return false
+      end
+      
+      if pos1.column < pos2.column then
+         return true
+      end
+      
+      if pos1.column > pos2.column then
+         return false
+      end
+      
+      return mess1:get_mess() < mess2:get_mess()
+   end )
+   return list
+end
+_moduleObj.sortMess = sortMess
+
 local TransUnitBase = {}
 setmetatable( TransUnitBase, { ifList = {TransUnitIF,} } )
 _moduleObj.TransUnitBase = TransUnitBase
@@ -345,7 +407,7 @@ function TransUnitBase:addErrMess( pos, mess )
       mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'."
    end
    
-   table.insert( self.errMessList, string.format( "%s:%d:%d: error: %s", pos.streamName, pos.lineNo, pos.column, mess) )
+   table.insert( self.errMessList, ErrMess.new(string.format( "%s:%d:%d: error: %s", pos.streamName, pos.lineNo, pos.column, mess), pos) )
 end
 function TransUnitBase:error( mess )
 
@@ -477,11 +539,13 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
    do
       local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
       if _exp ~= nil then
+         
          typeInfo = _exp
          nsInfo = _lune.unwrap( self.nsInfoMap[typeInfo])
          
          if _lune.nilacc( typeInfo:get_scope(), 'get_parent', 'callmtd' ) ~= self.scope then
             self:addErrMess( errPos, string.format( "multiple class(%s)", typeInfo:getTxt( self.typeNameCtrl )) )
+            
             self:error( "stop by error" )
          end
          
@@ -624,7 +688,7 @@ function SimpeTransUnit:errorAt( pos, mess )
 
    self:addErrMess( pos, mess )
    for __index, errmess in ipairs( self.errMessList ) do
-      Util.errorLog( errmess )
+      Util.errorLog( errmess:get_mess() )
    end
    
    do

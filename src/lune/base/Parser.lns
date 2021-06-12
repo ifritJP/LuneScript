@@ -111,6 +111,43 @@ pub fn convFromRawToStr( txt:str ) : str {
    }
 }
 
+pub class TokenListParser extend Parser {
+   let streamName: str;
+   let tokenList:&List<&Types.Token>;
+   let mut index:int;
+   let overridePos:&Types.Position!;
+   
+   pub fn __init( tokenList:&List<&Types.Token>,
+                  streamName:str, overridePos:&Types.Position! )
+   {
+      super();
+
+      self.index = 1;
+      self.tokenList = tokenList;
+      self.streamName = streamName;
+      self.overridePos = overridePos;
+   }
+
+   pub override fn createPosition( lineNo: int, column: int ) : &Position {
+      return Position.create( lineNo, column, self.getStreamName(), self.overridePos );
+   }
+   
+   pub override fn getStreamName(): str {
+      return self.streamName;
+   }
+
+   pub override fn getToken() mut : &Token! {
+      if #self.tokenList < self.index {
+         return nil;
+      }
+      let token = self.tokenList[ self.index ];
+      self.index = self.index + 1;
+
+      return token;
+   }
+}
+
+
 pub class StreamParser extend Parser {
    /** stdin に紐付けている*/
    static let mut stdinStreamModuleName: str!;

@@ -54,61 +54,73 @@ func convLua_ExportIdKind_getTxt(arg1 LnsInt) string {
 }
 var convLua_stepIndent LnsInt
 type convLua_outputMacroStmtBlock_11_ func (_env *LnsEnv)
+// for 3805
+func convLua_convExp19044(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
 // for 3545
-func convLua_convExp17512(arg1 []LnsAny) LnsInt {
+func convLua_convExp17928(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
+// for 3829
+func convLua_convExp1998(arg1 []LnsAny) (string, string) {
+    return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string)
+}
 // for 299
-func convLua_convExp1201(arg1 []LnsAny) string {
+func convLua_convExp2451(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 1347
-func convLua_convExp6215(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp7374(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1348
-func convLua_convExp6230(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp7389(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1358
-func convLua_convExp6292(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp7451(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1366
-func convLua_convExp6343(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp7502(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1434
-func convLua_convExp6722(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp7871(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1496
-func convLua_convExp7029(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp8144(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1827
-func convLua_convExp8632(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp9736(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 2929
-func convLua_convExp14351(arg1 []LnsAny) LnsAny {
+func convLua_convExp15083(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2944
-func convLua_convExp14427(arg1 []LnsAny) LnsInt {
+func convLua_convExp15159(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
 // for 3640
-func convLua_convExp17905(arg1 []LnsAny) (LnsAny, string) {
+func convLua_convExp18175(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 3662
-func convLua_convExp18026(arg1 []LnsAny) (LnsAny, string) {
+func convLua_convExp18273(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 3828
-func convLua_convExp18418(arg1 []LnsAny) (string, string) {
-    return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string)
+// for 3734
+func convLua_convExp18609(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
+// for 3803
+func convLua_convExp18792(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // 79: decl @lune.@base.@convLua.getSymbolTxt
 func convLua_getSymbolTxt_5_(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) string {
@@ -133,11 +145,6 @@ func convLua_filter_7_(_env *LnsEnv, node *Nodes_Node,filter *convLua_ConvFilter
     node.FP.ProcessFilter(_env, &filter.Nodes_Filter, ConvLua_Opt2Stem(NewConvLua_Opt(_env, parent)))
 }
 
-
-
-
-
-
 // 1275: decl @lune.@base.@convLua.isGenericType
 func convLua_isGenericType_10_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     if Ast_isGenericType(_env, typeInfo){
@@ -150,10 +157,6 @@ func convLua_isGenericType_10_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     }
     return false
 }
-
-
-
-
 
 // 3623: decl @lune.@base.@convLua.createFilter
 func ConvLua_createFilter(_env *LnsEnv, streamName string,stream Lns_oStream,metaStream Lns_oStream,convMode LnsInt,inMacro bool,moduleTypeInfo *Ast_TypeInfo,processInfo *Ast_ProcessInfo,moduleSymbolKind LnsInt,builtinFunc *Builtin_BuiltinFuncType,useLuneRuntime LnsAny,targetLuaVer *LuaVer_LuaVerInfo,enableTest bool,useIpairs bool) *ConvLua_FilterInfo {
@@ -168,17 +171,26 @@ func ConvLua_runLuaOnLns(_env *LnsEnv, code string,baseDir LnsAny)(LnsAny, strin
     var err string
     loadFunc,err = DependLuaOnLns_runLuaOnLns(_env, code, baseDir)
     if loadFunc != nil{
-        loadFunc_1817 := loadFunc.(*Lns_luaValue)
+        loadFunc_1874 := loadFunc.(*Lns_luaValue)
         var mod LnsAny
-        mod = _env.CommonLuaVM.RunLoadedfunc(loadFunc_1817,[]LnsAny{})[0]
+        mod = _env.CommonLuaVM.RunLoadedfunc(loadFunc_1874,[]LnsAny{})[0]
         if mod != nil{
-            mod_1820 := mod
-            return mod_1820, ""
+            mod_1877 := mod
+            return mod_1877, ""
         }
         return nil, "load error"
     }
     return nil, err
 }
+
+
+
+
+
+
+
+
+
 
 
 
@@ -708,7 +720,7 @@ func (self *convLua_ConvFilter) ProcessImport(_env *LnsEnv, node *Nodes_ImportNo
     var modulePath string
     modulePath = info.FP.Get_modulePath(_env)
     var modSym string
-    modSym = convLua_convExp1201(Lns_2DDD(_env.LuaVM.String_gsub(modulePath,".*%.", "")))
+    modSym = convLua_convExp2451(Lns_2DDD(_env.LuaVM.String_gsub(modulePath,".*%.", "")))
     modSym = info.FP.Get_assignName(_env)
     
     self.FP.Write(_env, _env.LuaVM.String_format("local %s = _lune.", []LnsAny{modSym}))
@@ -2979,15 +2991,15 @@ func (self *convLua_ConvFilter) ProcessForeach(_env *LnsEnv, node *Nodes_Foreach
     }
     self.FP.Write(_env, "for ")
     if keySym != nil{
-        keySym_1253 := keySym.(*Ast_SymbolInfo)
-        self.FP.Write(_env, convLua_getSymbolTxt_5_(_env, keySym_1253))
+        keySym_1535 := keySym.(*Ast_SymbolInfo)
+        self.FP.Write(_env, convLua_getSymbolTxt_5_(_env, keySym_1535))
     } else {
         self.FP.Write(_env, "__index")
     }
     self.FP.Write(_env, ", ")
     if valSym != nil{
-        valSym_1256 := valSym.(*Ast_SymbolInfo)
-        self.FP.Write(_env, convLua_getSymbolTxt_5_(_env, valSym_1256))
+        valSym_1538 := valSym.(*Ast_SymbolInfo)
+        self.FP.Write(_env, convLua_getSymbolTxt_5_(_env, valSym_1538))
     } else {
         self.FP.Write(_env, "__val")
     }
@@ -3039,16 +3051,16 @@ func (self *convLua_ConvFilter) ProcessForsort(_env *LnsEnv, node *Nodes_Forsort
     var key string
     key = "__key"
     if keySym != nil{
-        keySym_1275 := keySym.(*Ast_SymbolInfo)
-        key = convLua_getSymbolTxt_5_(_env, keySym_1275)
+        keySym_1552 := keySym.(*Ast_SymbolInfo)
+        key = convLua_getSymbolTxt_5_(_env, keySym_1552)
         
     }
     self.FP.Write(_env, key)
     self.FP.writeln(_env, " in ipairs( __sorted ) do")
     self.FP.pushIndent(_env, nil)
     if valSym != nil{
-        valSym_1277 := valSym.(*Ast_SymbolInfo)
-        self.FP.writeln(_env, _env.LuaVM.String_format("local %s = __map[ %s ]", []LnsAny{convLua_getSymbolTxt_5_(_env, valSym_1277), key}))
+        valSym_1554 := valSym.(*Ast_SymbolInfo)
+        self.FP.writeln(_env, _env.LuaVM.String_format("local %s = __map[ %s ]", []LnsAny{convLua_getSymbolTxt_5_(_env, valSym_1554), key}))
     }
     convLua_filter_7_(_env, &node.FP.Get_block(_env).Nodes_Node, self, &node.Nodes_Node)
     self.FP.writeln(_env, "end")
@@ -3313,10 +3325,10 @@ func (self *convLua_ConvFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCall
                 opList = NewLnsList([]LnsAny{})
                 if expList.Len() > 0{
                     var literal LnsAny
-                    literal = convLua_convExp14351(Lns_2DDD(expList.GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.GetLiteral(_env)))
+                    literal = convLua_convExp15083(Lns_2DDD(expList.GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.GetLiteral(_env)))
                     if literal != nil{
-                        literal_1371 := literal
-                        switch _matchExp1 := literal_1371.(type) {
+                        literal_1638 := literal
+                        switch _matchExp1 := literal_1638.(type) {
                         case *Nodes_Literal__Str:
                         txt := _matchExp1.Val1
                             opList = TransUnit_findForm(_env, txt)
@@ -3333,7 +3345,7 @@ func (self *convLua_ConvFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCall
                         self.FP.Write(_env, ", ")
                         if index - 1 <= opList.Len(){
                             var formType LnsInt
-                            formType = convLua_convExp14427(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index - 1).(string), argNode.FP.Get_expType(_env), self.targetLuaVer)))
+                            formType = convLua_convExp15159(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index - 1).(string), argNode.FP.Get_expType(_env), self.targetLuaVer)))
                             if formType == TransUnit_FormType__NeedConv{
                                 self.FP.Write(_env, "tostring( ")
                                 convLua_filter_7_(_env, argNode, self, &node.Nodes_Node)
@@ -3929,7 +3941,7 @@ func (self *convLua_ConvFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_L
                 var matchFlag LnsInt
                 matchFlag = TransUnit_FormType__Match
                 if index <= opList.Len(){
-                    matchFlag = convLua_convExp17512(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index).(string), val.FP.Get_expType(_env), self.targetLuaVer)))
+                    matchFlag = convLua_convExp17928(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index).(string), val.FP.Get_expType(_env), self.targetLuaVer)))
                     
                 }
                 if matchFlag == TransUnit_FormType__NeedConv{
@@ -4088,8 +4100,8 @@ func (self *ConvLua_MacroEvalImp) evalFromMacroCode(_env *LnsEnv, code string,ba
     var err string
     _func,err = ConvLua_runLuaOnLns(_env, code, baseDir)
     if _func != nil{
-        func_1834 := _func
-        return func_1834.(*Lns_luaValue)
+        func_1884 := _func
+        return func_1884.(*Lns_luaValue)
     }
     Util_err(_env, err)
 // insert a dummy
@@ -4104,8 +4116,8 @@ func (self *ConvLua_MacroEvalImp) EvalFromCode(_env *LnsEnv, processInfo *Ast_Pr
     conv = NewconvLua_ConvFilter(_env, "macro", stream.FP, NewUtil_NullOStream(_env).FP, ConvLua_ConvMode__ConvMeta, true, Ast_headTypeInfo, processInfo, Ast_SymbolKind__Typ, self.builtinFunc, nil, LuaVer_getCurVer(_env), false, true)
     conv.FP.OutputDeclMacro(_env, name, argNameList, convLua_outputMacroStmtBlock_11_(func(_env *LnsEnv) {
         if code != nil{
-            code_1849 := code.(string)
-            conv.FP.Write(_env, code_1849)
+            code_1891 := code.(string)
+            conv.FP.Write(_env, code_1891)
         }
     }))
     return self.FP.evalFromMacroCode(_env, stream.FP.Get_txt(_env), baseDir)

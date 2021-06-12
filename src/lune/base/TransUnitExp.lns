@@ -4154,10 +4154,7 @@ fn TransUnit.analyzeExp(
       exp = self.analyzeStrConst( firstToken, token );
    }
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
-      let mut lineNo = token.pos.lineNo;
-      if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-         lineNo = self.macroCtrl.$macroCallLineNo;
-      }
+      let mut lineNo = self.getLineNo( token );
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],

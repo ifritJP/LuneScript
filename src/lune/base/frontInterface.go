@@ -19,7 +19,7 @@ func (self *FrontInterface_MetaOrModule__Module) GetTxt() string {
 return "MetaOrModule.Module"
 }
 // for 290
-func frontInterface_convExp881(arg1 []LnsAny) LnsAny {
+func frontInterface_convExp1050(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 109: decl @lune.@base.@frontInterface.getRootDependModId
@@ -619,11 +619,11 @@ func (self *frontInterface_dummyFront) InitfrontInterface_dummyFront(_env *LnsEn
 // 288: decl @lune.@base.@frontInterface.dummyFront.loadModule
 func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     var loaded LnsAny
-    loaded = frontInterface_convExp881(Lns_2DDD(_env.CommonLuaVM.Load("return {}", nil)))
+    loaded = frontInterface_convExp1050(Lns_2DDD(_env.CommonLuaVM.Load("return {}", nil)))
     var emptyTable LnsAny
     if loaded != nil{
-        loaded_216 := loaded.(*Lns_luaValue)
-        emptyTable = Lns_unwrap( Lns_car(_env.CommonLuaVM.RunLoadedfunc(loaded_216,Lns_2DDD([]LnsAny{}))[0]))
+        loaded_276 := loaded.(*Lns_luaValue)
+        emptyTable = Lns_unwrap( Lns_car(_env.CommonLuaVM.RunLoadedfunc(loaded_276,Lns_2DDD([]LnsAny{}))[0]))
         
     } else {
         panic("load error")

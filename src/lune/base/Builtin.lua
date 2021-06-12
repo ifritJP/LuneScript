@@ -1161,6 +1161,7 @@ function Builtin:getTypeInfo( typeName )
                         return workType
                      end
                      
+                     
                      return genTypeList[1]
                   elseif _matchExp[1] == Ast.LuavalResult.Err[1] then
                      local mess = _matchExp[2][1]
@@ -1260,6 +1261,7 @@ function Builtin:processField( name, fieldName, info, parentInfo )
          local _switchExp = _lune.nilacc( info['type'], nil, 'item', 1)
          if _switchExp == "var" then
             local symbol = _lune.unwrap( self.transUnit:get_scope():add( self.processInfo, Ast.SymbolKind.Var, false, true, fieldName, nil, self:getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut, true, false ))
+            
             setupBuiltinTypeInfo( name, fieldName, symbol )
          else 
             
@@ -1343,6 +1345,7 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                 
                   asyncMode = Ast.Async.Async
                end
+               
                
                local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable )
                
@@ -1441,6 +1444,7 @@ end
 
 
 local readyBuiltin = false
+
 function Builtin:registBuiltInScope(  )
 
    if readyBuiltin then
@@ -1456,7 +1460,9 @@ function Builtin:registBuiltInScope(  )
    local mapType = self.processInfo:createMap( Ast.AccessMode.Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
    self.transUnit:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "_ENV", nil, mapType, Ast.MutMode.IMutRe, true )
    self.transUnit:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "_G", nil, mapType, Ast.MutMode.IMutRe, true )
+   
    self.transUnit:get_scope():addVar( self.processInfo, Ast.AccessMode.Global, "__line__", nil, Ast.builtinTypeInt, Ast.MutMode.IMut, true )
+   
    local function processCopyAlterList( alterList, typeList )
    
       for __index, typeInfo in ipairs( typeList ) do
@@ -1518,6 +1524,7 @@ function Builtin:registBuiltInScope(  )
                builtinModuleName2Scope[name] = self.transUnit:get_scope()
             end
             
+            
             do
                local __sorted = {}
                local __map = name2FieldInfo
@@ -1553,6 +1560,7 @@ function Builtin:registBuiltInScope(  )
       end
       
    end
+   
    
    local threadSafeSet = {[builtinFunc.lns_error] = true, [builtinFunc.lns_print] = true, [builtinFunc.lns_type] = true, [builtinFunc.lns_tonumber] = true, [builtinFunc.io_open] = true, [builtinFunc.set_has] = true, [builtinFunc.set_add] = true}
    

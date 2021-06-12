@@ -236,11 +236,13 @@ local function convFromRawToStr( txt )
       if  nil == endIndex then
          local _endIndex = endIndex
       
+         
          Util.err( string.format( "error: illegal string -- %s", workTxt) )
       end
       
       local workChar = string.byte( workTxt, endIndex )
       if workChar == findChar then
+         
          return retTxt .. workTxt:sub( setIndex, endIndex - 1 )
       elseif workChar == 92 then
          local quote = string.byte( workTxt, endIndex + 1 )
@@ -265,6 +267,48 @@ local function convFromRawToStr( txt )
    
 end
 _moduleObj.convFromRawToStr = convFromRawToStr
+
+local TokenListParser = {}
+setmetatable( TokenListParser, { __index = Parser } )
+_moduleObj.TokenListParser = TokenListParser
+function TokenListParser.new( tokenList, streamName, overridePos )
+   local obj = {}
+   TokenListParser.setmeta( obj )
+   if obj.__init then obj:__init( tokenList, streamName, overridePos ); end
+   return obj
+end
+function TokenListParser:__init(tokenList, streamName, overridePos) 
+   Parser.__init( self)
+   
+   
+   self.index = 1
+   self.tokenList = tokenList
+   self.streamName = streamName
+   self.overridePos = overridePos
+end
+function TokenListParser:createPosition( lineNo, column )
+
+   return Position.create( lineNo, column, self:getStreamName(  ), self.overridePos )
+end
+function TokenListParser:getStreamName(  )
+
+   return self.streamName
+end
+function TokenListParser:getToken(  )
+
+   if #self.tokenList < self.index then
+      return nil
+   end
+   
+   local token = self.tokenList[self.index]
+   self.index = self.index + 1
+   
+   return token
+end
+function TokenListParser.setmeta( obj )
+  setmetatable( obj, { __index = TokenListParser  } )
+end
+
 
 local StreamParser = {}
 setmetatable( StreamParser, { __index = Parser } )
@@ -473,7 +517,6 @@ function DefaultPushbackParser:getLastPos(  )
    end
    
    return pos
-   
 end
 function DefaultPushbackParser:getNearCode(  )
 
