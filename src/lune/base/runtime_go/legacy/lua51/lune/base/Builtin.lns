@@ -210,6 +210,11 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "__lns.runtime" : {
+         "log": { "arg": [ "str" ], "ret": [] },
+      },
+   },
+   {
       "iStream": {
          "__attrib": { "type": [ "interface" ] },
          "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },

@@ -151,6 +151,7 @@ pub class ProcessInfo {
    let validDetailError:bool {pub};
    let mut topScope:Scope! {non,local};
    let mut dummyParentType:TypeInfo! {non,local};
+   let mut orgInfo:&ProcessInfo {pub};
 
    pub fn get_topScope() mut : Scope {
       return unwrap self.topScope;
@@ -179,6 +180,7 @@ pub class ProcessInfo {
       validCheckingMutable:bool, idProvBase:IdProvider,
       validExtType:bool, validDetailError:bool, typeInfo2Map:TypeInfo2Map! )
    {
+      self.orgInfo = self;
       self.dummyParentType = nil;
       self.topScope = nil;
       self.miscTypeData = new TypeData();
@@ -213,8 +215,8 @@ pub class ProcessInfo {
 }
 
 pub class IdInfo {
-   pub let id:int;
-   pub let processInfo:&ProcessInfo {pub};
+   pub let mut id:int {non,local};
+   let mut processInfo:&ProcessInfo {pub};
    let allmut orgId:int!;
 
    pub fn isSwichingId() : bool {
@@ -768,7 +770,7 @@ pub class SerializeInfo {
       if id >= extStartId {
          return "{ id = %d, mod = 0 }" ( id );
       }
-      let processId = unwrap self.processInfo2Id[ idInfo.processInfo ];
+      let processId = unwrap self.processInfo2Id[ idInfo.$processInfo ];
       return "{ id = %d, mod = %d }" ( idInfo.$orgId, processId );
    }
 }
@@ -1642,7 +1644,6 @@ pub fn ProcessInfo.clone() : ProcessInfo {
    }
    return processInfo;
 }
-   
 
 
 rootProcessInfo.set_typeInfo2Map( new TypeInfo2Map() );
@@ -4262,7 +4263,7 @@ pub class NormalTypeInfo extend TypeInfo {
    // 親のタイプ。メソッドの親はクラスとなる。
    pri let mut parentInfo: &TypeInfo { pub };
    // タイプ ID
-   pri let typeId: &IdInfo { pub };
+   pri let mut typeId: &IdInfo { pub };
    // タイプ名の文字列。配列などの [] は含まない。
    pri let rawTxt: str { pub };
    // タイプの種別
@@ -4443,6 +4444,21 @@ pub class NormalTypeInfo extend TypeInfo {
          }
       }
    }
+
+   local fn cloneForMeta( processInfo:ProcessInfo ) : NormalTypeInfo {
+      let mut newType = new NormalTypeInfo(
+         processInfo, self.abstractFlag, nil,
+         self.baseTypeInfo, self.interfaceList, self.autoFlag,
+         self.externalFlag, self.staticFlag,
+         self.accessMode, self.rawTxt,
+         self.parentInfo, nil, self.kind,
+         self.itemTypeInfoList, self.argTypeInfoList,
+         self.retTypeInfoList, self.mutMode,
+         self.moduleLang, self.asyncMode );
+      newType.typeId = self.typeId;
+      return newType;
+   }
+
 
    pub override fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo> {
       let mut map:Map<&TypeInfo,&TypeInfo> =
@@ -4699,6 +4715,44 @@ pub class NormalTypeInfo extend TypeInfo {
       return self.equalsSub( processInfo, typeInfo, alt2type, checkModifer );
    }
 }
+
+pub fn ProcessInfo.duplicate() : ProcessInfo {
+   let mut processInfo = new ProcessInfo(
+      self.validCheckingMutable, self.idProvBase.clone(),
+      self.validExtType, self.validDetailError, (unwrap self.typeInfo2Map).clone() );
+
+   // let mut scope = new Scope( processInfo, nil, false, nil## );
+   // processInfo.set_topScope( scope );
+   // let mut topType = RootTypeInfo.create( processInfo, processInfo.newIdForSubRoot());
+   // scope.set_ownerTypeInfo( topType );
+   // foreach typeInfo in (unwrap self.dummyParentType).$children {
+   //    topType.$typeData.$children.insert( typeInfo );
+   // }
+   
+   processInfo.orgInfo = self;
+   processInfo.idProvExt = self.idProvExt.clone();
+   processInfo.idProvSym = self.idProvSym.clone();
+   processInfo.idProvScope = self.idProvScope.clone();
+
+   foreach typeInfo, typeId in self.id2TypeInfo {
+      let dupTypeInfo:&TypeInfo;
+      switch typeInfo.$kind {
+         case .Func, .Method {
+            if! let funcTypeInfo = typeInfo@@@NormalTypeInfo {
+               dupTypeInfo = funcTypeInfo.cloneForMeta( processInfo );            
+            } else {
+               dupTypeInfo = typeInfo;
+            }
+         }
+         default {
+            dupTypeInfo = typeInfo;
+         }
+      }
+      processInfo.id2TypeInfo[ typeId ] = dupTypeInfo;
+   }
+   return processInfo;
+}
+
 
 pub fn ProcessInfo.createAlternate(
    belongClassFlag:bool, altIndex:int, txt:str, accessMode:AccessMode,

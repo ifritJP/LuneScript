@@ -802,7 +802,7 @@ pub class ErrorMess {
 }
 
 pub fn MacroCtrl.expandSymbol(
-   parser:Parser.PushbackParser, prefixToken:&Parser.Token,
+   parser:Parser.PushbackParser, inTestBlock:bool, prefixToken:&Parser.Token,
    mut exp:&Nodes.Node, nodeManager:Nodes.NodeManager,
    errMessList:List<&ErrorMess>) mut : &Nodes.LiteralStringNode
 {
@@ -831,7 +831,7 @@ pub fn MacroCtrl.expandSymbol(
             {
                format = "' %s '";
                exp = Nodes.ExpMacroStatListNode.create(
-                  nodeManager, prefixToken.pos,
+                  nodeManager, prefixToken.pos, inTestBlock,
                   self.analyzeInfo.$mode == .AnalyzeArg, [ Ast.builtinTypeString ], exp );
             }
             elseif equalsType( Ast.builtinTypeString, valType ) {
@@ -868,18 +868,22 @@ pub fn MacroCtrl.expandSymbol(
       Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive ## );
 
    let expListNode = Nodes.ExpListNode.create(
-      nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
+      nodeManager, exp.$pos, inTestBlock,
+      self.analyzeInfo.$mode == .AnalyzeArg,
       exp.$expTypeList, [ exp ], nil, false );
    let dddNode = Nodes.ExpToDDDNode.create(
-         nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
+      nodeManager, exp.$pos, inTestBlock,
+      self.analyzeInfo.$mode == .AnalyzeArg,
          exp.$expTypeList, expListNode );
    
    let literalStr = Nodes.LiteralStringNode.create(
-      nodeManager, prefixToken.pos, self.analyzeInfo.$mode == .AnalyzeArg,
+      nodeManager, prefixToken.pos, inTestBlock,
+      self.analyzeInfo.$mode == .AnalyzeArg,
       [ Ast.builtinTypeString ], newToken,
       expListNode,
       Nodes.ExpListNode.create(
-         nodeManager, exp.$pos, self.analyzeInfo.$mode == .AnalyzeArg,
+         nodeManager, exp.$pos, inTestBlock,
+         self.analyzeInfo.$mode == .AnalyzeArg,
          exp.$expTypeList, [ dddNode ], nil, false ) );
    return literalStr;
 }

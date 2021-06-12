@@ -621,6 +621,8 @@ alias で置き換えている元の Type → alias の型
 
    let mut baseDir:str!;
 
+   let mut inTestBlock:bool;
+
    static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
       &Types.TransCtrlInfo, Ast.ProcessInfo
    {
@@ -639,6 +641,7 @@ alias で置き換えている元の Type → alias の型
    {
       super( TransUnit.getSuperParam( ctrl_info )** );
 
+      self.inTestBlock = false;
       self.baseDir = nil;
       self.stdinFile = nil;
       self.builtinFunc = builtinFunc;
@@ -1105,7 +1108,7 @@ pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut
 
 fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
    return Nodes.NoneNode.create(
-      self.nodeManager, pos,
+      self.nodeManager, pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
 }
 
@@ -1402,7 +1405,7 @@ fn TransUnit.analyzeStatementList(
             stmtList.insert(
                Nodes.BlankLineNode.create(
                   self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
-                  self.macroCtrl.isInAnalyzeArgMode(),
+                  self.inTestBlock, self.macroCtrl.isInAnalyzeArgMode(),
                   [ Ast.builtinTypeNone ], blank - 1 ) );
          }
          setLastLineNo( self.parser.getLastPos().lineNo );
@@ -1533,7 +1536,7 @@ fn TransUnit.analyzeLuneControl(
    }
 
    node = Nodes.LuneControlNode.create(
-      self.nodeManager, firstToken.pos,
+      self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], pragma );
    self.helperInfo.pragmaSet.add( pragma );
 
@@ -1560,8 +1563,6 @@ fn TransUnit.analyzeBlock(
    blockKind: Nodes.BlockKind, tentativeMode:TentativeMode, scope: Ast.Scope!,
    refAccessSymPosList:&List<RefAccessSymPos>! ) mut : Nodes.BlockNode
 {
-   let token = self.checkNextToken( "{" );
-
    let mut backScope = self.scope;
    when! scope {
       self.scope = scope;
@@ -1596,13 +1597,18 @@ fn TransUnit.analyzeBlock(
    }
 
    let mut stmtList:List<&Nodes.Node> = [];
+   
+   let token = self.checkNextToken( "{" );
+
    self.analyzeStatementList( stmtList, false, "}" );
 
+   self.checkNextToken( "}" );
+
+   
    if loopFlag {
       nsInfo.$loopScopeQueue.remove(##);
    }
-
-   self.checkNextToken( "}" );
+   
 
    when! scope {
       self.scope = backScope;
@@ -1612,7 +1618,7 @@ fn TransUnit.analyzeBlock(
    }
 
    let mut node = Nodes.BlockNode.create(
-      self.nodeManager, token.pos,
+      self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       blockKind, blockScope, stmtList );
 
@@ -1722,7 +1728,7 @@ fn TransUnit.analyzeImportFor(
       let info = new Nodes.ImportInfo( pos, modulePath, lazyLoad, assignName,
                                        assigned, moduleSymbolInfo, moduleTypeInfo );
       return Nodes.ImportNode.create(
-         self.nodeManager, pos,
+         self.nodeManager, pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );
    }
    self.error( "failed to import -- %s" (modulePath) );
@@ -1827,17 +1833,41 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
 
    self.scopeAccess = .Full;
 
+   self.inTestBlock = true;
    let block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
+   self.inTestBlock = false;
+   
 
    self.scopeAccess = .Normal;
 
    self.popScope();
    
    return Nodes.TestCaseNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
 }
-   
+
+fn TransUnit.skipBlock() mut {
+   let mut blockDepth = 0;
+   while true {
+      let token = self.getToken( ## );
+      switch token.txt {
+         case "{" {
+            blockDepth = blockDepth + 1;
+         }
+         case "}" {
+            blockDepth = blockDepth - 1;
+            if blockDepth == 0 {
+               break;
+            }
+         }
+         default {
+         }
+      }
+   }
+}
+
 
 fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
 {
@@ -1848,12 +1878,18 @@ fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
    }
    self.checkToken( nextToken, "{" );
 
+   self.inTestBlock = true;
+   
    let mut stmtList:List<&Nodes.Node> = [];
    self.analyzeStatementList( stmtList, false, "}" );
    self.checkNextToken( "}" );
 
+   self.inTestBlock = false;
+   
+
    return Nodes.TestBlockNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], stmtList );
 }
 
@@ -1909,7 +1945,8 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Subfil
       }
    }
    return Nodes.SubfileNode.create(
-      self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, token.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], usePath );
 }
 
@@ -1927,7 +1964,7 @@ fn TransUnit.analyzeAsyncLock( asyncToken: &Parser.Token ) mut : Nodes.Node {
    nsInfo.decLock();
    
    return Nodes.AsyncLockNode.create(
-      self.nodeManager, asyncToken.pos,
+      self.nodeManager, asyncToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], block );
 }
 
@@ -1986,7 +2023,8 @@ fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
    }
 
    return Nodes.IfNode.create(
-      self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, token.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], list );
 }
 
@@ -2149,7 +2187,8 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
       firstToken, caseKind, nextToken, #caseList ~= 0 );
    
    return Nodes.SwitchNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], exp, caseList, defaultBlock, caseKind, failSafeDefault );
 }
 
@@ -2237,7 +2276,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       }
       self.popScope();
       let valRefNode = Nodes.ExpRefNode.create(
-         self.nodeManager, valNameToken.pos,
+         self.nodeManager, valNameToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ valInfo.$algeTpye ],
          valInfo.$symbolInfo );
       let matchCase = new Nodes.MatchCase( valInfo, valRefNode, valParamNameList, block );
@@ -2261,7 +2300,8 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       firstToken, caseKind, nextToken, #caseList ~= 0 );
    
    return Nodes.MatchNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], exp, algeTypeInfo, caseList, defaultBlock,
       caseKind, failSafeDefault );
 }
@@ -2287,7 +2327,8 @@ fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
    }
    
    return Nodes.WhileNode.create(
-      self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, token.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], cond, infinit,
       self.analyzeBlock( .While, .Loop, nil, refAccessSymPosList ) );
 }
@@ -2295,7 +2336,7 @@ fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
 fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
    let mut scope = self.pushScope( false## );
    let mut node = Nodes.RepeatNode.create(
-      self.nodeManager, token.pos,
+      self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       self.analyzeBlock( .Repeat, .Loop, scope, nil ),
       self.analyzeExpOneRVal( false, false ## ) );
@@ -2353,7 +2394,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    {
       // いずれかが real の場合、 exp1 を real にキャストする
       exp1 = Nodes.ExpCastNode.create(
-         self.nodeManager, exp1.$pos,
+         self.nodeManager, exp1.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
          exp1, Ast.builtinTypeReal, .Force );
    }
@@ -2364,7 +2405,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       val.pos, false, true, val.txt, exp1.$expType, .IMut## ) );
 
    let mut node = Nodes.ForNode.create(
-      self.nodeManager, firstToken.pos,
+      self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       self.analyzeBlock( .For, .Loop, scope, nil ),
       symbolInfo, exp1, exp2, exp3 );
@@ -2480,7 +2521,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    self.popScope();
 
    return Nodes.ApplyNode.create(
-      self.nodeManager, token.pos,
+      self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       varSymList, expListNode, block );
 }
@@ -2626,13 +2667,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
 
    if sortFlag {
       return Nodes.ForsortNode.create(
-         self.nodeManager, token.pos,
+         self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          mainSym, subSym, exp, block, sortFlag );
    }
    else {
       return Nodes.ForeachNode.create(
-         self.nodeManager, token.pos,
+         self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          mainSym, subSym, exp, block );
    }
@@ -2652,7 +2693,7 @@ fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode
 
 
    let mut node = Nodes.ProvideNode.create(
-      self.nodeManager, firstToken.pos,
+      self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], symbolInfo );
    if self.provideNode {
       self.addErrMess( firstToken.pos, "multiple provide" );
@@ -2731,8 +2772,9 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
    
 
    let mut block = self.analyzeBlock( .Block, TentativeMode.Simple ## );
-   let mut node = Nodes.ScopeNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+   let mut node = Nodes.ScopeNode.create( 
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], scopeKind, self.scope, symList, block );
 
    // スコープを戻す

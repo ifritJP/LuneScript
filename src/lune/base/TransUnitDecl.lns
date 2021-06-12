@@ -61,7 +61,7 @@ fn TransUnit.analyzeRefType(
       let dddSym = unwrap self.moduleScope.getSymbolInfo(
          "...", self.moduleScope, true, .Normal );
       name = Nodes.ExpRefNode.create(
-         self.nodeManager, token.pos,
+         self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ dddSym.$typeInfo ], 
          new Ast.AccessSymbolInfo( self.processInfo, dddSym, .None, true ) );
    }
@@ -288,7 +288,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    }
 
    return Nodes.RefTypeNode.create(
-      self.nodeManager, symbolNode.$pos,
+      self.nodeManager, symbolNode.$pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
       symbolNode, itemNodeList, mutMode, arrayMode );
 }
@@ -330,7 +330,7 @@ fn TransUnit.analyzeDeclArgList(
 
          argList.insert(
             Nodes.DeclArgDDDNode.create(
-               self.nodeManager, argName.pos,
+               self.nodeManager, argName.pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ dddTypeInfo ] ) );
          scope.addLocalVar(
             self.processInfo, true, true, argName.txt, argName.pos, dddTypeInfo, .IMut );
@@ -360,7 +360,7 @@ fn TransUnit.analyzeDeclArgList(
             true, true, argName.txt, argName.pos, refType.$expType, mutable )
          {
             let arg = Nodes.DeclArgNode.create(
-               self.nodeManager, argName.pos,
+               self.nodeManager, argName.pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), refType.$expTypeList,
                argName, symbolInfo, refType );
 
@@ -594,6 +594,7 @@ pub fn TransUnit.createAST(
 
       let mut statement = Nodes.BlankLineNode.create(
          self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
+          self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 0 );
       statement.addComment( self.commentCtrl.$commentList );
       self.commentCtrl.clear();
@@ -641,7 +642,7 @@ pub fn TransUnit.createAST(
 
 
       let mut rootNode = Nodes.RootNode.create(
-         self.nodeManager, self.createPosition( 0, 0 ),
+         self.nodeManager, self.createPosition( 0, 0 ), self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          children, self.moduleScope, self.globalScope,
          self.macroCtrl.$useModuleMacroSet,
@@ -738,8 +739,10 @@ pub fn TransUnit.createAST(
       provideInfo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
    }
 
+   //let processInfo = self.processInfo.duplicate();
+   let processInfo = self.processInfo;
    let mut exportInfo = new Nodes.ExportInfo(
-      moduleTypeInfo, provideInfo, self.processInfo, globalSymbolList,
+      moduleTypeInfo, provideInfo, processInfo, globalSymbolList,
       self.macroCtrl.$declMacroInfoMap );
    
    return new AstInfo.ASTInfo( ast, exportInfo, parser.getStreamName(), self.builtinFunc );
@@ -836,7 +839,8 @@ fn TransUnit.analyzeDeclMacroSub(
       self.analyzeStatementList( stmtList, false, "}" );
 
       stmtNode = Nodes.BlockNode.create(
-         self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+         self.nodeManager, firstToken.pos, self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(),
          [ Ast.builtinTypeNone ], .Macro, macroScope, stmtList );
 
       self.checkNextToken( "}" );
@@ -889,7 +893,7 @@ fn TransUnit.analyzeDeclMacroSub(
    let mut declMacroInfo = new Nodes.DeclMacroInfo(
       pubFlag, nameToken, argList, stmtNode, tokenList ) ;
    let mut node = Nodes.DeclMacroNode.create(
-      self.nodeManager, firstToken.pos,
+      self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], declMacroInfo );
 
    __asyncLock { 
@@ -1219,7 +1223,7 @@ fn TransUnit.analyzeDeclProto(
       self.checkToken( nextToken, ";" );
 
       return Nodes.ProtoClassNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(),  [ classTypeInfo ], name, inheritInfo );
    }
    self.error( "illegal proto" );
@@ -1355,7 +1359,8 @@ fn TransUnit.analyzeDeclEnum(
 
 
    return Nodes.DeclEnumNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(), 
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), 
       [ enumTypeInfo ], enumTypeInfo, accessMode, name, valueList, scope );
 }
 
@@ -1450,7 +1455,8 @@ fn TransUnit.analyzeDeclAlge(
 
 
    return Nodes.DeclAlgeNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ algeTypeInfo ], accessMode, algeTypeInfo, name, algeValList, algeScope );
 }
 
@@ -1512,7 +1518,8 @@ fn TransUnit.analyzeAlias(
    self.checkNextToken( ";" );
 
    return Nodes.AliasNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ newTypeInfo ], newSymbolInfo, symbolNode, newTypeInfo );
 }
 
@@ -1636,7 +1643,8 @@ mut : Nodes.DeclFormNode
       accessMode, asyncMode, nil, retTypeList, retNodeList, false, false );
    
    return Nodes.DeclFormNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ formType ], declFuncInfo );
 }
 
@@ -1884,7 +1892,7 @@ fn TransUnit.analyzeDeclMember(
       }
 
       return Nodes.DeclMemberNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
          varName, refType, workSym, classTypeInfo, 
          staticFlag, accessMode, getterMutable ~= .IMut,
@@ -2006,32 +2014,51 @@ fn TransUnit.analyzeFuncBlock(
       }
    }
 
-   self.pushAnalyzingState( analyzingState );
 
-   let mut body = self.analyzeBlock( .Func, .Ignore, funcBodyScope, nil );
+   let mut body;
+   if not self.inTestBlock or self.ctrl_info.testing {
 
-   self.popAnalyzingState();
+      self.pushAnalyzingState( analyzingState );
+      
+      body = self.analyzeBlock( .Func, .Ignore, funcBodyScope, nil );
 
-   if #retTypeInfoList ~= 0 {
-      let breakKind = body.getBreakKind( .Return );
-      if retTypeInfoList[ 1 ] ~= Ast.builtinTypeNeverRet {
-         switch breakKind {
-            case .Return, .NeverRet {
+      self.popAnalyzingState();
+
+      if #retTypeInfoList ~= 0 {
+         let breakKind = body.getBreakKind( .Return );
+         if retTypeInfoList[ 1 ] ~= Ast.builtinTypeNeverRet {
+            switch breakKind {
+               case .Return, .NeverRet {
+               }
+               default {
+                  self.addErrMess( firstToken.pos,
+                                   "This funcion doesn't have return." );
+               }
             }
-            default {
+         }
+         else {
+            if breakKind ~= .NeverRet {
                self.addErrMess( firstToken.pos,
-                                "This funcion doesn't have return." );
+                                "This funcion must be never return. -- %s"
+                                (breakKind.$_txt ));
             }
          }
       }
-      else {
-         if breakKind ~= .NeverRet {
-            self.addErrMess( firstToken.pos,
-                             "This funcion must be never return. -- %s"
-                             (breakKind.$_txt ));
-         }
-      }
+   } else {
+      // テスト無効の場合、テストブロック内は解析せずにダミーを生成する
+      let blockToken = self.checkNextToken( "{" );
+      self.pushback();
+      let blockScope = self.pushScope( false ## );
+      let stmtList:List<&Nodes.Node> = [];
+      self.popScope();
+      body = Nodes.BlockNode.create(
+         self.nodeManager, blockToken.pos, self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+         .Func, blockScope, stmtList );
+
+      self.skipBlock();
    }
+
    return body;
 }
 
@@ -2149,7 +2176,7 @@ fn TransUnit.analyzeClassBody(
    let mut trustList:List<&Ast.TypeInfo> = [];
    let mut uninitMemberList:List<&Ast.SymbolInfo> = [];
    let mut node = Nodes.DeclClassNode.create(
-      self.nodeManager, firstToken.pos,
+      self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ classTypeInfo ],
       classAccessMode, name, inheritInfo, hasProto, gluePrefix, moduleName,
       moduleLang, lazyLoad, false, allStmtList,
@@ -2298,7 +2325,7 @@ nil の場合、メンバの宣言位置。
          .InitBlock, classTypeInfo, node, true, token, unwrap (funcSym or shadowing),
          [], true, .Pri, nil, block, [], [], false, false );
       let initBlockNode = Nodes.DeclMethodNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ funcTypeInfo ], info );
       initBlockInfo.set_func( initBlockNode );
       allStmtList.insert( initBlockNode );
@@ -2323,7 +2350,7 @@ nil の場合、メンバの宣言位置。
       advertiseList.insert( advInfo );
       allStmtList.insert(
          Nodes.DeclAdvertiseNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], advInfo ) );
       
       self.advertisedTypeSet.add(
@@ -2382,7 +2409,7 @@ nil の場合、メンバの宣言位置。
       self.checkNextToken( ";" );
 
       let ctrlNode = Nodes.LuneControlNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], pragma );
       self.helperInfo.pragmaSet.add( pragma );
       allStmtList.insert( ctrlNode );
@@ -3393,31 +3420,31 @@ fn TransUnit.analyzeDeclFunc(
          
          let info = createDeclFuncInfo( .Ctor );
          node = Nodes.DeclConstrNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], info );
       }
       case Nodes.NodeKind.$DeclDestr {
          let info = createDeclFuncInfo( .Dstr );
          node = Nodes.DeclDestrNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], info );
       }
       case Nodes.NodeKind.$DeclMethod {
          let info = createDeclFuncInfo( .Mtd );
          node = Nodes.DeclMethodNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], info );
       }
       case Nodes.NodeKind.$ProtoMethod {
          let info = createDeclFuncInfo( .Mtd );
          node = Nodes.ProtoMethodNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], info );
       }
       case Nodes.NodeKind.$DeclFunc {
          let info = createDeclFuncInfo( .Func );
          node = Nodes.DeclFuncNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], info );
       }
       default {
@@ -3458,7 +3485,7 @@ fn TransUnit.createExpListNode(
       // }
    }
    return Nodes.ExpListNode.create(
-      self.nodeManager, orgExpList.$pos,
+      self.nodeManager, orgExpList.$pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), newExpTypeList, newExpList,
       orgExpList.$mRetExp, orgExpList.$followOn );
 }
@@ -3653,7 +3680,7 @@ fn TransUnit.analyzeInitExp(
                   updateExpList = true;
                   let exp = newExpList[ index ];
                   newExpList[ index ] = Nodes.BoxingNode.create(
-                     self.nodeManager, exp.$pos,
+                     self.nodeManager, exp.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(), [ varType ], exp );
                   if not Ast.CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2typeMap, 1 ) {
                      self.addErrMess( exp.$pos,
@@ -3919,7 +3946,7 @@ fn TransUnit.analyzeDeclVar(
                   let mut declInfo = Nodes.DeclFuncInfo.createFrom(
                      declNode.$declInfo, letVarInfo.varName, funcSym );
                   return Nodes.DeclFuncNode.create(
-                     self.nodeManager, declNode.$pos,
+                     self.nodeManager, declNode.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(), [ newTypeInfo ], declInfo );
                }
             }
@@ -4079,7 +4106,8 @@ fn TransUnit.analyzeDeclVar(
    self.checkNextToken( ";" );
 
    let mut node = Nodes.DeclVarNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos,  self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], mode, accessMode, false,
       varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock,
       thenBlock, syncSymbolList, syncBlock );
@@ -4191,7 +4219,8 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    }
 
    return Nodes.IfUnwrapNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], varList, expList, block, elseBlock );
 }
 
@@ -4251,6 +4280,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
    }
 
    return Nodes.WhenNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos,  self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], symPairList, block, elseBlock );
 }

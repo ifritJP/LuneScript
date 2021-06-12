@@ -38,15 +38,6 @@ func dumpNode_getTypeListTxt_4_(_env *LnsEnv, typeList *LnsList) string {
     return txt
 }
 
-// 882: decl @lune.@base.@dumpNode.Ast2Dump
-func dumpNode_Ast2Dump_5_(_env *LnsEnv, ast *AstInfo_ASTInfo) string {
-    var stream *Util_memStream
-    stream = NewUtil_memStream(_env)
-    var conv *Nodes_Filter
-    conv = DumpNode_createFilter(_env, ast.FP.Get_exportInfo(_env).FP.Get_moduleTypeInfo(_env), ast.FP.Get_exportInfo(_env).FP.Get_processInfo(_env), stream.FP)
-    ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, DumpNode_Opt2Stem(NewDumpNode_Opt(_env, "", 0)))
-    return stream.FP.Get_txt(_env)
-}
 
 // declaration Class -- Opt
 type DumpNode_OptMtd interface {

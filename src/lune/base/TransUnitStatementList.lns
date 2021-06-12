@@ -71,7 +71,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    }
 
    return Nodes.ReturnNode.create(
-      self.nodeManager, token.pos,
+      self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), retTypeList, expList );
 }
 
@@ -83,7 +83,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
    let mut statement:Nodes.Node! = nil;
    if token.kind == .Sheb {
       statement = Nodes.ShebangNode.create(
-         self.nodeManager, token.pos,
+         self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          token.txt );
       
@@ -101,7 +101,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          if #self.commentCtrl.$commentList > 0 {
             let commentToken = self.commentCtrl.$commentList[ 1 ];
             statement = Nodes.BlankLineNode.create(
-               self.nodeManager, commentToken.pos,
+               self.nodeManager, commentToken.pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 0 );
          }
          self.pushback();
@@ -171,7 +171,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          // statement = self.createNode(
          //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
          statement = Nodes.BreakNode.create(
-            self.nodeManager, token.pos,
+            self.nodeManager, token.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
          
          let nsInfo = self.getCurrentNSInfo();
@@ -240,7 +240,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          // statement = self.createNode(
          //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
          statement = Nodes.StmtExpNode.create(
-            self.nodeManager, exp.$pos,
+            self.nodeManager, exp.$pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], exp );
       }
    }

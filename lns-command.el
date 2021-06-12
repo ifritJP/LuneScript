@@ -88,7 +88,7 @@ function must return string."
 	(setq command-list (list command))
       (setq command-list (list command "-e" "require( 'lune.base.base' )" " ")))
     (lns-command-add-command
-     command-list args)))
+     command-list (append args '("--enableTestBlock")))))
 
 (defun lns-command-sync (&rest arg-list)
   (let ((dir default-directory)

@@ -75,13 +75,6 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
-function _lune.loadstring52( txt, env )
-   if not env then
-      return load( txt )
-   end
-   return load( txt, "", "bt", env )
-end
-
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
       return nil
@@ -618,6 +611,7 @@ function ConvFilter:outputMeta( node )
    
    importProcessInfo2Index[Ast.getRootProcessInfoRo(  )] = frontInterface.getRootDependModId(  )
    importProcessInfo2Index[self.processInfo] = 0
+   importProcessInfo2Index[self.processInfo:get_orgInfo()] = 0
    
    local importNameMap = {}
    do
@@ -640,6 +634,7 @@ function ConvFilter:outputMeta( node )
                index = index + 1
                importModuleType2Index[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = index
                importProcessInfo2Index[moduleInfo:get_exportInfo():get_processInfo()] = index
+               importProcessInfo2Index[moduleInfo:get_exportInfo():get_processInfo():get_orgInfo()] = index
             end
          end
       end
@@ -1105,7 +1100,7 @@ function ConvFilter:outputMeta( node )
    local function outputDepend( typeInfo, moduleTypeInfo )
    
       local typeId = typeInfo:get_typeId()
-      if self.processInfo == typeId:get_processInfo() or not Ast.TypeInfo.hasParent( moduleTypeInfo ) then
+      if self.processInfo:get_orgInfo() == typeId:get_processInfo() or not Ast.TypeInfo.hasParent( moduleTypeInfo ) then
          return ExportIdKind.Normal
       end
       
@@ -3258,13 +3253,18 @@ function ConvFilter:processExpCall( node, opt )
    
    local function fieldCall(  )
    
-      
       local fieldNode = _lune.__Cast( node:get_func(), 3, Nodes.RefFieldNode )
       if  nil == fieldNode then
          local _fieldNode = fieldNode
       
          return true
       end
+      
+      
+      if node:get_func():get_expType() == self.builtinFunc.__lns_runtime_log then
+         return false
+      end
+      
       
       local prefixNode = fieldNode:get_prefix()
       
@@ -4342,7 +4342,7 @@ function MacroEvalImp:evalFromMacroCode( code, baseDir )
    local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
 
    
-   Log.log( Log.Level.Trace, __func__, 3654, function (  )
+   Log.log( Log.Level.Trace, __func__, 3660, function (  )
    
       return string.format( "macro: %s", code)
    end )

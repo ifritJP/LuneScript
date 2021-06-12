@@ -27,11 +27,12 @@ subfile owner lune.base.TransUnit;
 fn TransUnit.MultiTo1( mut exp:Nodes.Node ) mut : Nodes.Node {
    if #exp.$expTypeList > 1 {
       exp = Nodes.ExpMultiTo1Node.create(
-         self.nodeManager, exp.$pos, exp.$macroArgFlag, [ exp.$expType ], exp );
+         self.nodeManager, exp.$pos, self.inTestBlock,
+         exp.$macroArgFlag, [ exp.$expType ], exp );
    } else {
       if! let dddType = exp.$expType@@@Ast.DDDTypeInfo {
          exp = Nodes.ExpMultiTo1Node.create(
-            self.nodeManager, exp.$pos, exp.$macroArgFlag,
+            self.nodeManager, exp.$pos, self.inTestBlock, exp.$macroArgFlag,
             [ dddType.$typeInfo.$nilableTypeInfo ], exp );
       }
    }
@@ -58,7 +59,7 @@ fn TransUnit.analyzeExpOneRVal(
             let exceptOrgType = expectType.$nonnilableType.$srcTypeInfo;
             if expOrgType.isInheritFrom( self.processInfo, exceptOrgType ##) {
                exp = Nodes.ExpCastNode.create(
-                  self.nodeManager, exp.$pos,
+                  self.nodeManager, exp.$pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), [ expectType ],
                   exp, expectType, .Implicit );   
             }
@@ -98,7 +99,7 @@ fn TransUnit.createExpList(
                }
                workList.insert(
                   Nodes.ExpMultiTo1Node.create(
-                     self.nodeManager, exp.$pos,
+                     self.nodeManager, exp.$pos, self.inTestBlock,
                      exp.$macroArgFlag, [ firstType ], exp ) );
             }
             else {
@@ -115,12 +116,12 @@ fn TransUnit.createExpList(
                   if retIndex == 1 {
                      workList.insert( 
                         Nodes.ExpMRetNode.create(
-                           self.nodeManager, exp.$pos,
+                           self.nodeManager, exp.$pos, self.inTestBlock,
                            exp.$macroArgFlag, [ retType ], exp ) );
                   } else {
                      workList.insert( 
                         Nodes.ExpAccessMRetNode.create(
-                           self.nodeManager, exp.$pos,
+                           self.nodeManager, exp.$pos, self.inTestBlock,
                            exp.$macroArgFlag, [ retType ], exp, retIndex ) );
                   }
                }
@@ -137,7 +138,7 @@ fn TransUnit.createExpList(
    }
 
    return Nodes.ExpListNode.create(
-      self.nodeManager, pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, pos, self.inTestBlock, self.macroCtrl.isInAnalyzeArgMode(),
       expTypeList, workList, mRetExp, followOn );
 }
 
@@ -217,7 +218,7 @@ fn TransUnit.analyzeExpList(
       }
       if expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp {
          exp = Nodes.ExpMacroArgExpNode.create(
-            self.nodeManager, exp.$pos,
+            self.nodeManager, exp.$pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
             Macro.nodeToCodeTxt( exp, self.moduleType ) );
          expTypeList.insert( unwrap expectType );
@@ -245,7 +246,7 @@ fn TransUnit.analyzeExpList(
             self.addErrMess( token.pos, "'##' can't use with '...'" );
          }
          abbrNode = Nodes.AbbrNode.create(
-            self.nodeManager, token.pos,
+            self.nodeManager, token.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeAbbr ] );
          self.getToken(##);
          break;
@@ -398,7 +399,8 @@ fn TransUnit.analyzeExpRefItem(
    }
 
    return Nodes.ExpRefItemNode.create(
-      self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, token.pos,  self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ typeInfo ], exp, nilAccess, nil, indexExp );
 }
 
@@ -476,7 +478,7 @@ fn TransUnit.checkImplicitCast(
 
                      if #argList == 0 {
                         return Nodes.ExpSubDDDNode.create(
-                           self.nodeManager, expNode.$pos,
+                           self.nodeManager, expNode.$pos, self.inTestBlock,
                            self.macroCtrl.isInAnalyzeArgMode(),
                            workMRetExp.$exp.$expTypeList,
                            workMRetExp.$exp, index - workMRetExp.$index ), true;
@@ -486,12 +488,12 @@ fn TransUnit.checkImplicitCast(
                      mRetExp = nil;
                   }
                   let newExpListNode = Nodes.ExpListNode.create(
-                     self.nodeManager, expNode.$pos,
+                     self.nodeManager, expNode.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(), argTypeList, argList,
                      mRetExp, expListNode.$followOn );
                   
                   workNode = Nodes.ExpToDDDNode.create(
-                     self.nodeManager, expNode.$pos,
+                     self.nodeManager, expNode.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(),
                      [ dstType ], newExpListNode );
                   return workNode, true;
@@ -504,7 +506,7 @@ fn TransUnit.checkImplicitCast(
                      castType = dstType;
                   }
                   workNode = Nodes.ExpCastNode.create(
-                     self.nodeManager, expNode.$pos,
+                     self.nodeManager, expNode.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(),
                      [ expNode.$expType ], expNode, castType, .Implicit );   
                }
@@ -561,7 +563,8 @@ fn TransUnit.checkImplicitCast(
    }
    
    return Nodes.ExpListNode.create(
-      self.nodeManager, expListNode.$pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, expListNode.$pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       expTypeList, newExpNodeList, newMRetExp, expListNode.$followOn );
 }
 
@@ -686,7 +689,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.
                   autoBoxingCount = autoBoxingCount + 1;
 
                   return Nodes.BoxingNode.create(
-                     self.nodeManager, expNode.$pos,
+                     self.nodeManager, expNode.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(), [ dstType ], expNode );
                }
                return nil;
@@ -916,14 +919,14 @@ fn TransUnit.analyzeListConst(
       typeInfoList = [ self.processInfo.createList( .Local, self.getCurrentClass(),
                                                       [ itemTypeInfo ], .Mut ) ];
       return Nodes.LiteralListNode.create(
-         self.nodeManager, token.pos,
+         self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
    }
    else {
       typeInfoList = [ self.processInfo.createArray( .Local, self.getCurrentClass(),
                                                        [ itemTypeInfo ], .Mut ) ];
       return Nodes.LiteralArrayNode.create(
-         self.nodeManager, token.pos,
+         self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
    }
 }
@@ -964,7 +967,7 @@ fn TransUnit.analyzeSetConst(
    typeInfoList = [ self.processInfo.createSet( .Local, self.getCurrentClass(),
                                                   [ itemTypeInfo ], .Mut ) ];
    return Nodes.LiteralSetNode.create(
-      self.nodeManager, token.pos,
+      self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
 }
 
@@ -1037,7 +1040,7 @@ fn TransUnit.analyzeMapConst(
    // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
    //                      { "map": map, "pairList": pairList } );
    return Nodes.LiteralMapNode.create(
-      self.nodeManager, token.pos,
+      self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], map, pairList );
 }
 
@@ -1158,7 +1161,7 @@ fn TransUnit.evalMacro(
    }
    
    return Nodes.ExpMacroExpNode.create(
-      self.nodeManager, firstToken.pos,
+      self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), expTypeList, macroTypeInfo, stmtList );
 }
 
@@ -1552,13 +1555,13 @@ fn TransUnit.processFunc(
       if! let expList = argList$.$expList {
          if #expList > 0 {
             return Nodes.LuneKindNode.create(
-               self.nodeManager, firstToken.pos,
+               self.nodeManager, firstToken.pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(),
                [ Ast.builtinTypeInt ], expList[ 1 ] );
          }
       }
       return Nodes.LuneKindNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
          self.createNoneNode( firstToken.pos ) );               
    }
@@ -1566,7 +1569,7 @@ fn TransUnit.processFunc(
    when! funcSymbol {
       if funcSymbol.$name == "super" {
          return Nodes.ExpCallSuperNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), retTypeInfoList,
             funcSymbol.$typeInfo.$parentInfo, funcSymbol.$typeInfo, argList );
       }
@@ -1581,7 +1584,8 @@ fn TransUnit.processFunc(
    }
 
    return Nodes.ExpCallNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       retTypeInfoList, funcExp, errorFuncFlag, nilAccess, argList );
 }
 
@@ -1821,7 +1825,8 @@ fn TransUnit.analyzeExpCast(
    }
 
    return Nodes.ExpCastNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ castType ], self.nodeManager.MultiTo1( exp ), castType,
       opTxt ~= "@@@" and Nodes.CastKind.Force or Nodes.CastKind.Normal);
 }
@@ -2325,7 +2330,7 @@ fn TransUnit.analyzeExpField(
 {
    if #prefixExp.$expTypeList > 1 {
       prefixExp = Nodes.ExpMultiTo1Node.create(
-         self.nodeManager, prefixExp.$pos,
+         self.nodeManager, prefixExp.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(),
          [ prefixExp.$expType ], prefixExp );
    }
@@ -2349,7 +2354,7 @@ fn TransUnit.analyzeExpField(
 
       
       return Nodes.RefFieldNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ],
          fieldToken, nil, accessNil, prefixExp );
          //token, accessNil, unwrap prefixExp );
@@ -2501,7 +2506,8 @@ fn TransUnit.analyzeExpField(
             typeInfo = self.createExtType( fieldToken.pos, typeInfo );
          }
          return Nodes.ExpRefItemNode.create(
-            self.nodeManager, fieldToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+            self.nodeManager, fieldToken.pos, self.inTestBlock,
+            self.macroCtrl.isInAnalyzeArgMode(),
             [ typeInfo ], prefixExp, accessNil, fieldToken.txt, nil );
       }
       default {
@@ -2511,7 +2517,8 @@ fn TransUnit.analyzeExpField(
                typeInfo = self.createExtType( fieldToken.pos, typeInfo );
             }
             return Nodes.ExpRefItemNode.create(
-               self.nodeManager, fieldToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+               self.nodeManager, fieldToken.pos, self.inTestBlock,
+               self.macroCtrl.isInAnalyzeArgMode(),
                [ typeInfo ], prefixExp, accessNil, fieldToken.txt, nil );
          }
          else {
@@ -2670,7 +2677,7 @@ fn TransUnit.analyzeExpField(
 
    if! getterTypeInfo {
       return Nodes.GetFieldNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
          fieldToken, accessSymbolInfo, accessNil, prefixExp, _exp );
          //token, canBeLeft, accessNil, prefixExp, _exp );
@@ -2681,7 +2688,7 @@ fn TransUnit.analyzeExpField(
       }
       
       return Nodes.RefFieldNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
          fieldToken, accessSymbolInfo, accessNil, prefixExp );
    }
@@ -2725,7 +2732,7 @@ fn TransUnit.analyzeNewAlge(
       }
 
       return Nodes.NewAlgeValNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ algeTypeInfo ],
          symbolToken, prefix, algeTypeInfo, valInfo, argList );
    }
@@ -2734,7 +2741,7 @@ fn TransUnit.analyzeNewAlge(
          algeTypeInfo.$parentInfo.$scope$.getSymbolInfoChild$( algeTypeInfo.$rawTxt );
       self.addErrMess( symbolToken.pos, "not found Alge -- %s" (symbolToken.txt) );
       return Nodes.NewAlgeValNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ algeTypeInfo ],
          symbolToken, prefix, algeTypeInfo,
          new Ast.AlgeValInfo("", [], algeTypeInfo, unwrap dummySymbol ), [] );
@@ -2771,7 +2778,7 @@ fn TransUnit.analyzeExpSymbol(
    elseif mode == .Symbol {
       if self.macroCtrl.$analyzeInfo.isAnalyzingSymArg() {
          exp = Nodes.LiteralSymbolNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeSymbol ], symbolToken );
       }
       else {
@@ -2878,7 +2885,7 @@ fn TransUnit.analyzeExpSymbol(
          }
 
          exp = Nodes.ExpRefNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], 
             new Ast.AccessSymbolInfo( self.processInfo, symbolInfo, .None, true ) );
       }
@@ -3046,13 +3053,14 @@ fn TransUnit.analyzeExpOpSet(
          index = .SymIdx( unwrap listRefItemNode.$symbol );
       }
       return Nodes.ExpSetItemNode.create(
-         self.nodeManager, exp.$pos,
+         self.nodeManager, exp.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          listRefItemNode.$val, index, expList );
    }
 
    return Nodes.ExpSetValNode.create(
-      self.nodeManager, exp.$pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, exp.$pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], exp, expList, symbolList, initSymSet );
 }
 
@@ -3115,19 +3123,19 @@ fn TransUnit.analyzeExpOpEquals(
             if nonNilType1.isInheritFrom( self.processInfo, nonNilType2 ## ) {
                // exp1 が exp2 を派生している場合、exp1 を exp2 に upcast する。
                exp1 = Nodes.ExpCastNode.create(
-                  self.nodeManager, exp1.$pos,
+                  self.nodeManager, exp1.$pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), [ exp2Type.$nonnilableType ],
                   exp1, exp2Type, .Implicit );   
             } else {
                exp2 = Nodes.ExpCastNode.create(
-                  self.nodeManager, exp2.$pos,
+                  self.nodeManager, exp2.$pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), [ exp1Type.$nonnilableType ],
                   exp2, exp1Type, .Implicit );   
             }
          } else {
             // exp1 が class/if で exp2 が違う場合、 exp1 を stem に cast する。
             exp1 = Nodes.ExpCastNode.create(
-               self.nodeManager, exp1.$pos,
+               self.nodeManager, exp1.$pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ exp1Type ],
                exp1, Ast.builtinTypeStem, .Implicit );   
          }
@@ -3135,7 +3143,7 @@ fn TransUnit.analyzeExpOpEquals(
          if nonNilType2.$kind == .Class or nonNilType2.$kind == .IF {
             // exp2 が class/if で exp1 が違う場合、 exp2 を stem に cast する。
             exp2 = Nodes.ExpCastNode.create(
-               self.nodeManager, exp2.$pos,
+               self.nodeManager, exp2.$pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ exp2Type ],
                exp2, Ast.builtinTypeStem, .Implicit );
          }
@@ -3230,7 +3238,7 @@ fn TransUnit.analyzeExpOp2(
             if exp1Type.$kind == .DDD {
                if! let dddType = exp1Type@@@Ast.DDDTypeInfo {
                   exp = Nodes.ExpMultiTo1Node.create(
-                     self.nodeManager, exp.$pos,
+                     self.nodeManager, exp.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(),
                      [ dddType.$typeInfo.$nilableTypeInfo ], exp );
                }
@@ -3238,7 +3246,7 @@ fn TransUnit.analyzeExpOp2(
             if exp2Type.$kind == .DDD {
                if! let dddType = exp2Type@@@Ast.DDDTypeInfo {
                   exp2 = Nodes.ExpMultiTo1Node.create(
-                     self.nodeManager, exp2.$pos,
+                     self.nodeManager, exp2.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(),
                      [ dddType.$typeInfo.$nilableTypeInfo ], exp2 );
                }
@@ -3470,12 +3478,12 @@ fn TransUnit.analyzeExpOp2(
                      retType = Ast.builtinTypeReal;
                      if exp1Type.equals( self.processInfo, Ast.builtinTypeInt ##) {
                         exp = Nodes.ExpCastNode.create(
-                           self.nodeManager, exp.$pos,
+                           self.nodeManager, exp.$pos, self.inTestBlock,
                            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
                            exp, Ast.builtinTypeReal, .Implicit );   
                      } elseif exp2Type.equals( self.processInfo, Ast.builtinTypeInt ##) {
                         exp2 = Nodes.ExpCastNode.create(
-                           self.nodeManager, exp2.$pos,
+                           self.nodeManager, exp2.$pos, self.inTestBlock,
                            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
                            exp2, Ast.builtinTypeReal, .Implicit );   
                      }
@@ -3491,7 +3499,7 @@ fn TransUnit.analyzeExpOp2(
 
 
             exp = Nodes.ExpOp2Node.create(
-               self.nodeManager, firstToken.pos,
+               self.nodeManager, firstToken.pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ retType ], opToken, 
                self.nodeManager.MultiTo1( exp ), self.nodeManager.MultiTo1( exp2 ) );
          }
@@ -3524,7 +3532,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
             false, true, false, unwrap op1levelMap[ token.txt ] ## );
 
          let literalStr = self.macroCtrl.expandSymbol(
-            self, token, exp, self.nodeManager, errMessList );
+            self, self.inTestBlock, token, exp, self.nodeManager, errMessList );
          foreach errMess in errMessList {
             self.addErrMess( errMess.pos, errMess.mess );
          }
@@ -3554,7 +3562,8 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
          let newToken = new Parser.Token(
             token.kind, string.format( format, token.txt ), token.pos, consecutive ## );
          let literalStr = Nodes.LiteralStringNode.create(
-            self.nodeManager, token.pos, self.macroCtrl.isInAnalyzeArgMode(),
+            self.nodeManager, token.pos, self.inTestBlock,
+            self.macroCtrl.isInAnalyzeArgMode(),
             [ Ast.builtinTypeString ], newToken, nil, nil );
          expStrList.insert( literalStr );
       }
@@ -3562,7 +3571,8 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
    }
 
    return Nodes.ExpMacroStatNode.create(
-      self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeStat ], expStrList );
 }
 
@@ -3601,7 +3611,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
             self.checkMatchValType(
                firstToken.$pos, superCtorType, expList, [], classType );
             return Nodes.ExpCallSuperCtorNode.create(
-               self.nodeManager, firstToken.pos,
+               self.nodeManager, firstToken.pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
                superType, superCtorType, expList );
          }
@@ -3615,11 +3625,11 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
                self.checkMatchValType(
                   firstToken.$pos, superFunc, expList, [], classType );
                let exp = Nodes.ExpCallSuperNode.create(
-                  self.nodeManager, firstToken.pos,
+                  self.nodeManager, firstToken.pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
                   superType, superFunc, expList );
                return Nodes.StmtExpNode.create(
-                  self.nodeManager, exp.$pos,
+                  self.nodeManager, exp.$pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList, exp );
             }
             self.addErrMess( firstToken.pos, "this is not override method." );
@@ -3644,7 +3654,7 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
          self.addErrMess( exp.$pos, "this value is not nilable." );
       }
       return Nodes.StmtExpNode.create(
-         self.nodeManager, nextToken.pos,
+         self.nodeManager, nextToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], exp );
    }
 
@@ -3725,7 +3735,7 @@ fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    }
 
    return Nodes.ExpUnwrapNode.create(
-      self.nodeManager, firstToken.pos,
+      self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ unwrapType ], expNode, insNode );
 }
 
@@ -3772,7 +3782,8 @@ fn TransUnit.analyzeStrConst(
       }
 
       let mut workExp:Nodes.Node = Nodes.LiteralStringNode.create(
-         self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+         self.nodeManager, firstToken.pos,  self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(),
          [ Ast.builtinTypeString ], token, param, dddParam );
       if nextToken.txt == "[" or nextToken.txt == "$[" {
          exp = self.analyzeExpRefItem( nextToken, workExp, nextToken.txt == "$[" );
@@ -3786,7 +3797,8 @@ fn TransUnit.analyzeStrConst(
    }
    else {
       exp = Nodes.LiteralStringNode.create(
-         self.nodeManager, firstToken.pos, self.macroCtrl.isInAnalyzeArgMode(),
+         self.nodeManager, firstToken.pos, self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(),
          [ Ast.builtinTypeString ], token, nil, nil );
    }
    return exp;
@@ -3828,7 +3840,7 @@ fn TransUnit.analyzeExp(
                }
             }  
             let mut exp:Nodes.Node = Nodes.ExpOmitEnumNode.create(
-               self.nodeManager, token.pos,
+               self.nodeManager, token.pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ expType ],
                nextToken, valInfo, aliasType, enumTypeInfo );
             return self.analyzeExpCont( firstToken, exp, false, canLeftExp );
@@ -3937,7 +3949,7 @@ fn TransUnit.analyzeExp(
       }
       
       exp = Nodes.ExpNewNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ classTypeInfo ],
          exp, initTypeInfo, newArgList );
       exp = self.analyzeExpCont( firstToken, exp, false, canLeftExp );
@@ -4046,7 +4058,7 @@ fn TransUnit.analyzeExp(
       }  
 
       exp = Nodes.ExpOp1Node.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], token,
          self.macroCtrl.$analyzeInfo.$mode, self.nodeManager.MultiTo1( exp ) );   
       return self.analyzeExpOp2( firstToken, exp, prevOpLevel ), true;
@@ -4061,7 +4073,7 @@ fn TransUnit.analyzeExp(
          self.addErrMess( token.pos, "illeal syntax -- ##" );
       }
       return Nodes.AbbrNode.create(
-         self.nodeManager, token.pos,
+         self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeAbbr ] );
    }
    
@@ -4096,7 +4108,7 @@ fn TransUnit.analyzeExp(
                              (Nodes.getNodeKindName( exp.$kind) ) );
          }
          exp = Nodes.ExpParenNode.create(
-            self.nodeManager, firstToken.pos,
+            self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ exp.$expType ], exp );
          exp = self.analyzeExpCont( firstToken, exp, false, canLeftExp );
       }
@@ -4116,13 +4128,13 @@ fn TransUnit.analyzeExp(
 
    if token.kind == Parser.TokenKind.Int {
       exp = Nodes.LiteralIntNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
          token, (unwrap tonumber( token.txt ## ) default 0)@@int );
    }  
    elseif token.kind == Parser.TokenKind.Real {
       exp = Nodes.LiteralRealNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
          token, (unwrap tonumber( token.txt ## ) default 0.0));
    }  
@@ -4135,7 +4147,7 @@ fn TransUnit.analyzeExp(
          num = unwrap quotedChar2Code[ token.txt.sub( 2, 2 ) ];
       }  
       exp = Nodes.LiteralCharNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeChar ], token, num );
    }  
    elseif token.kind == Parser.TokenKind.Str {
@@ -4147,7 +4159,7 @@ fn TransUnit.analyzeExp(
          lineNo = self.macroCtrl.$macroCallLineNo;
       }
       exp = Nodes.LiteralIntNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
          new Parser.Token( .Int, "%d" (lineNo),
                            token.pos, false, nil ), token.pos.lineNo );
@@ -4184,7 +4196,7 @@ fn TransUnit.analyzeExp(
          self.error( "unknown type -- %s" ( token.txt ) );
       }; 
       exp = Nodes.ExpRefNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 
          new Ast.AccessSymbolInfo( self.processInfo, symbolTypeInfo, .None, false ) );
    }
@@ -4192,14 +4204,14 @@ fn TransUnit.analyzeExp(
        ( token.txt == "true" or token.txt == "false" )
    {  
       exp = Nodes.LiteralBoolNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeBool ], token );
    }  
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "nil" or token.txt == "null" )
    {  
       exp = Nodes.LiteralNilNode.create(
-         self.nodeManager, firstToken.pos,
+         self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNil ] );
    }
 

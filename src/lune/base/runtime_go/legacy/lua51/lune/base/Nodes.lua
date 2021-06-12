@@ -540,17 +540,18 @@ function Node:getPrefix(  )
 
    return nil
 end
-function Node.new( id, kind, pos, macroArgFlag, expTypeList )
+function Node.new( id, kind, pos, inTestBlock, macroArgFlag, expTypeList )
    local obj = {}
    Node.setmeta( obj )
-   if obj.__init then obj:__init( id, kind, pos, macroArgFlag, expTypeList ); end
+   if obj.__init then obj:__init( id, kind, pos, inTestBlock, macroArgFlag, expTypeList ); end
    return obj
 end
-function Node:__init(id, kind, pos, macroArgFlag, expTypeList) 
+function Node:__init(id, kind, pos, inTestBlock, macroArgFlag, expTypeList) 
    self.isLValue = false
    self.id = id
    self.kind = kind
    self.pos = pos
+   self.inTestBlock = inTestBlock
    self.expTypeList = expTypeList
    self.commentList = nil
    self.tailComment = nil
@@ -654,6 +655,9 @@ function Node:get_isLValue()
 end
 function Node:get_macroArgFlag()
    return self.macroArgFlag
+end
+function Node:get_inTestBlock()
+   return self.inTestBlock
 end
 
 
@@ -884,22 +888,22 @@ function NoneNode:canBeStatement(  )
 
    return true
 end
-function NoneNode.new( id, pos, macroArgFlag, typeList )
+function NoneNode.new( id, pos, inTestBlock, macroArgFlag, typeList )
    local obj = {}
    NoneNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList ); end
    return obj
 end
-function NoneNode:__init(id, pos, macroArgFlag, typeList) 
-   Node.__init( self,id, 0, pos, macroArgFlag, typeList)
+function NoneNode:__init(id, pos, inTestBlock, macroArgFlag, typeList) 
+   Node.__init( self,id, 0, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    
 end
-function NoneNode.create( nodeMan, pos, macroArgFlag, typeList )
+function NoneNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
-   local node = NoneNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList)
+   local node = NoneNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -955,14 +959,14 @@ function ShebangNode:canBeStatement(  )
 
    return true
 end
-function ShebangNode.new( id, pos, macroArgFlag, typeList, cmd )
+function ShebangNode.new( id, pos, inTestBlock, macroArgFlag, typeList, cmd )
    local obj = {}
    ShebangNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, cmd ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, cmd ); end
    return obj
 end
-function ShebangNode:__init(id, pos, macroArgFlag, typeList, cmd) 
-   Node.__init( self,id, 1, pos, macroArgFlag, typeList)
+function ShebangNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, cmd) 
+   Node.__init( self,id, 1, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -970,9 +974,9 @@ function ShebangNode:__init(id, pos, macroArgFlag, typeList, cmd)
    
    
 end
-function ShebangNode.create( nodeMan, pos, macroArgFlag, typeList, cmd )
+function ShebangNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, cmd )
 
-   local node = ShebangNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, cmd)
+   local node = ShebangNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, cmd)
    nodeMan:addNode( node )
    return node
 end
@@ -1031,14 +1035,14 @@ function ConvStatNode:canBeStatement(  )
 
    return false
 end
-function ConvStatNode.new( id, pos, macroArgFlag, typeList, txt )
+function ConvStatNode.new( id, pos, inTestBlock, macroArgFlag, typeList, txt )
    local obj = {}
    ConvStatNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, txt ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, txt ); end
    return obj
 end
-function ConvStatNode:__init(id, pos, macroArgFlag, typeList, txt) 
-   Node.__init( self,id, 2, pos, macroArgFlag, typeList)
+function ConvStatNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, txt) 
+   Node.__init( self,id, 2, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -1046,9 +1050,9 @@ function ConvStatNode:__init(id, pos, macroArgFlag, typeList, txt)
    
    
 end
-function ConvStatNode.create( nodeMan, pos, macroArgFlag, typeList, txt )
+function ConvStatNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, txt )
 
-   local node = ConvStatNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, txt)
+   local node = ConvStatNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, txt)
    nodeMan:addNode( node )
    return node
 end
@@ -1107,14 +1111,14 @@ function BlankLineNode:canBeStatement(  )
 
    return true
 end
-function BlankLineNode.new( id, pos, macroArgFlag, typeList, lineNum )
+function BlankLineNode.new( id, pos, inTestBlock, macroArgFlag, typeList, lineNum )
    local obj = {}
    BlankLineNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, lineNum ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, lineNum ); end
    return obj
 end
-function BlankLineNode:__init(id, pos, macroArgFlag, typeList, lineNum) 
-   Node.__init( self,id, 3, pos, macroArgFlag, typeList)
+function BlankLineNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, lineNum) 
+   Node.__init( self,id, 3, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -1122,9 +1126,9 @@ function BlankLineNode:__init(id, pos, macroArgFlag, typeList, lineNum)
    
    
 end
-function BlankLineNode.create( nodeMan, pos, macroArgFlag, typeList, lineNum )
+function BlankLineNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, lineNum )
 
-   local node = BlankLineNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, lineNum)
+   local node = BlankLineNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, lineNum)
    nodeMan:addNode( node )
    return node
 end
@@ -1182,14 +1186,14 @@ function SubfileNode:canBeStatement(  )
 
    return true
 end
-function SubfileNode.new( id, pos, macroArgFlag, typeList, usePath )
+function SubfileNode.new( id, pos, inTestBlock, macroArgFlag, typeList, usePath )
    local obj = {}
    SubfileNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, usePath ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, usePath ); end
    return obj
 end
-function SubfileNode:__init(id, pos, macroArgFlag, typeList, usePath) 
-   Node.__init( self,id, 4, pos, macroArgFlag, typeList)
+function SubfileNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, usePath) 
+   Node.__init( self,id, 4, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -1197,9 +1201,9 @@ function SubfileNode:__init(id, pos, macroArgFlag, typeList, usePath)
    
    
 end
-function SubfileNode.create( nodeMan, pos, macroArgFlag, typeList, usePath )
+function SubfileNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, usePath )
 
-   local node = SubfileNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, usePath)
+   local node = SubfileNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, usePath)
    nodeMan:addNode( node )
    return node
 end
@@ -1335,14 +1339,14 @@ function ImportNode:canBeStatement(  )
 
    return true
 end
-function ImportNode.new( id, pos, macroArgFlag, typeList, info )
+function ImportNode.new( id, pos, inTestBlock, macroArgFlag, typeList, info )
    local obj = {}
    ImportNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, info ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, info ); end
    return obj
 end
-function ImportNode:__init(id, pos, macroArgFlag, typeList, info) 
-   Node.__init( self,id, 5, pos, macroArgFlag, typeList)
+function ImportNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, info) 
+   Node.__init( self,id, 5, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -1350,9 +1354,9 @@ function ImportNode:__init(id, pos, macroArgFlag, typeList, info)
    
    
 end
-function ImportNode.create( nodeMan, pos, macroArgFlag, typeList, info )
+function ImportNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, info )
 
-   local node = ImportNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, info)
+   local node = ImportNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, info)
    nodeMan:addNode( node )
    return node
 end
@@ -1480,14 +1484,14 @@ function RootNode:canBeStatement(  )
 
    return false
 end
-function RootNode.new( id, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.new( id, pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
    local obj = {}
    RootNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap ); end
    return obj
 end
-function RootNode:__init(id, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
-   Node.__init( self,id, 6, pos, macroArgFlag, typeList)
+function RootNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
+   Node.__init( self,id, 6, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -1507,9 +1511,9 @@ function RootNode:__init(id, pos, macroArgFlag, typeList, children, moduleScope,
    
    
 end
-function RootNode.create( nodeMan, pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
+function RootNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
 
-   local node = RootNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
+   local node = RootNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
    nodeMan:addNode( node )
    return node
 end
@@ -1666,14 +1670,14 @@ function RefTypeNode:canBeStatement(  )
 
    return false
 end
-function RefTypeNode.new( id, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
+function RefTypeNode.new( id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
    local obj = {}
    RefTypeNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array ); end
    return obj
 end
-function RefTypeNode:__init(id, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array) 
-   Node.__init( self,id, 7, pos, macroArgFlag, typeList)
+function RefTypeNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array) 
+   Node.__init( self,id, 7, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -1684,9 +1688,9 @@ function RefTypeNode:__init(id, pos, macroArgFlag, typeList, name, itemNodeList,
    
    
 end
-function RefTypeNode.create( nodeMan, pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
+function RefTypeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
 
-   local node = RefTypeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, itemNodeList, mutMode, array)
+   local node = RefTypeNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array)
    nodeMan:addNode( node )
    return node
 end
@@ -1885,14 +1889,14 @@ function BlockNode:canBeStatement(  )
 
    return true
 end
-function BlockNode.new( id, pos, macroArgFlag, typeList, blockKind, scope, stmtList )
+function BlockNode.new( id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList )
    local obj = {}
    BlockNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, blockKind, scope, stmtList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList ); end
    return obj
 end
-function BlockNode:__init(id, pos, macroArgFlag, typeList, blockKind, scope, stmtList) 
-   Node.__init( self,id, 8, pos, macroArgFlag, typeList)
+function BlockNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList) 
+   Node.__init( self,id, 8, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -1902,9 +1906,9 @@ function BlockNode:__init(id, pos, macroArgFlag, typeList, blockKind, scope, stm
    
    
 end
-function BlockNode.create( nodeMan, pos, macroArgFlag, typeList, blockKind, scope, stmtList )
+function BlockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList )
 
-   local node = BlockNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, blockKind, scope, stmtList)
+   local node = BlockNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -2023,14 +2027,14 @@ function ScopeNode:canBeStatement(  )
 
    return true
 end
-function ScopeNode.new( id, pos, macroArgFlag, typeList, scopeKind, scope, symbolList, block )
+function ScopeNode.new( id, pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block )
    local obj = {}
    ScopeNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, scopeKind, scope, symbolList, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block ); end
    return obj
 end
-function ScopeNode:__init(id, pos, macroArgFlag, typeList, scopeKind, scope, symbolList, block) 
-   Node.__init( self,id, 9, pos, macroArgFlag, typeList)
+function ScopeNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block) 
+   Node.__init( self,id, 9, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2041,9 +2045,9 @@ function ScopeNode:__init(id, pos, macroArgFlag, typeList, scopeKind, scope, sym
    
    
 end
-function ScopeNode.create( nodeMan, pos, macroArgFlag, typeList, scopeKind, scope, symbolList, block )
+function ScopeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block )
 
-   local node = ScopeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, scopeKind, scope, symbolList, block)
+   local node = ScopeNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block)
    nodeMan:addNode( node )
    return node
 end
@@ -2267,14 +2271,14 @@ function IfNode:canBeStatement(  )
 
    return true
 end
-function IfNode.new( id, pos, macroArgFlag, typeList, stmtList )
+function IfNode.new( id, pos, inTestBlock, macroArgFlag, typeList, stmtList )
    local obj = {}
    IfNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, stmtList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, stmtList ); end
    return obj
 end
-function IfNode:__init(id, pos, macroArgFlag, typeList, stmtList) 
-   Node.__init( self,id, 10, pos, macroArgFlag, typeList)
+function IfNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, stmtList) 
+   Node.__init( self,id, 10, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2282,9 +2286,9 @@ function IfNode:__init(id, pos, macroArgFlag, typeList, stmtList)
    
    
 end
-function IfNode.create( nodeMan, pos, macroArgFlag, typeList, stmtList )
+function IfNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, stmtList )
 
-   local node = IfNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, stmtList)
+   local node = IfNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -2460,14 +2464,14 @@ function ExpListNode:canBeStatement(  )
 
    return false
 end
-function ExpListNode.new( id, pos, macroArgFlag, typeList, expList, mRetExp, followOn )
+function ExpListNode.new( id, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn )
    local obj = {}
    ExpListNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, expList, mRetExp, followOn ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn ); end
    return obj
 end
-function ExpListNode:__init(id, pos, macroArgFlag, typeList, expList, mRetExp, followOn) 
-   Node.__init( self,id, 11, pos, macroArgFlag, typeList)
+function ExpListNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn) 
+   Node.__init( self,id, 11, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2477,9 +2481,9 @@ function ExpListNode:__init(id, pos, macroArgFlag, typeList, expList, mRetExp, f
    
    
 end
-function ExpListNode.create( nodeMan, pos, macroArgFlag, typeList, expList, mRetExp, followOn )
+function ExpListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn )
 
-   local node = ExpListNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, expList, mRetExp, followOn)
+   local node = ExpListNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn)
    nodeMan:addNode( node )
    return node
 end
@@ -2700,14 +2704,14 @@ function SwitchNode:canBeStatement(  )
 
    return true
 end
-function SwitchNode.new( id, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
+function SwitchNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
    local obj = {}
    SwitchNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault ); end
    return obj
 end
-function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault) 
-   Node.__init( self,id, 12, pos, macroArgFlag, typeList)
+function SwitchNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault) 
+   Node.__init( self,id, 12, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2719,9 +2723,9 @@ function SwitchNode:__init(id, pos, macroArgFlag, typeList, exp, caseList, defau
    
    
 end
-function SwitchNode.create( nodeMan, pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
+function SwitchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
 
-   local node = SwitchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault)
+   local node = SwitchNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -2983,14 +2987,14 @@ function WhileNode:canBeStatement(  )
 
    return true
 end
-function WhileNode.new( id, pos, macroArgFlag, typeList, exp, infinit, block )
+function WhileNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block )
    local obj = {}
    WhileNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, infinit, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block ); end
    return obj
 end
-function WhileNode:__init(id, pos, macroArgFlag, typeList, exp, infinit, block) 
-   Node.__init( self,id, 13, pos, macroArgFlag, typeList)
+function WhileNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block) 
+   Node.__init( self,id, 13, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3000,9 +3004,9 @@ function WhileNode:__init(id, pos, macroArgFlag, typeList, exp, infinit, block)
    
    
 end
-function WhileNode.create( nodeMan, pos, macroArgFlag, typeList, exp, infinit, block )
+function WhileNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block )
 
-   local node = WhileNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, infinit, block)
+   local node = WhileNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block)
    nodeMan:addNode( node )
    return node
 end
@@ -3114,14 +3118,14 @@ function RepeatNode:canBeStatement(  )
 
    return true
 end
-function RepeatNode.new( id, pos, macroArgFlag, typeList, block, exp )
+function RepeatNode.new( id, pos, inTestBlock, macroArgFlag, typeList, block, exp )
    local obj = {}
    RepeatNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, block, exp ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, block, exp ); end
    return obj
 end
-function RepeatNode:__init(id, pos, macroArgFlag, typeList, block, exp) 
-   Node.__init( self,id, 14, pos, macroArgFlag, typeList)
+function RepeatNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, block, exp) 
+   Node.__init( self,id, 14, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3130,9 +3134,9 @@ function RepeatNode:__init(id, pos, macroArgFlag, typeList, block, exp)
    
    
 end
-function RepeatNode.create( nodeMan, pos, macroArgFlag, typeList, block, exp )
+function RepeatNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, block, exp )
 
-   local node = RepeatNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, block, exp)
+   local node = RepeatNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, block, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -3253,14 +3257,14 @@ function ForNode:canBeStatement(  )
 
    return true
 end
-function ForNode.new( id, pos, macroArgFlag, typeList, block, val, init, to, delta )
+function ForNode.new( id, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta )
    local obj = {}
    ForNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, block, val, init, to, delta ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta ); end
    return obj
 end
-function ForNode:__init(id, pos, macroArgFlag, typeList, block, val, init, to, delta) 
-   Node.__init( self,id, 15, pos, macroArgFlag, typeList)
+function ForNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta) 
+   Node.__init( self,id, 15, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3272,9 +3276,9 @@ function ForNode:__init(id, pos, macroArgFlag, typeList, block, val, init, to, d
    
    
 end
-function ForNode.create( nodeMan, pos, macroArgFlag, typeList, block, val, init, to, delta )
+function ForNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta )
 
-   local node = ForNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, block, val, init, to, delta)
+   local node = ForNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta)
    nodeMan:addNode( node )
    return node
 end
@@ -3455,14 +3459,14 @@ function ApplyNode:canBeStatement(  )
 
    return true
 end
-function ApplyNode.new( id, pos, macroArgFlag, typeList, varList, expList, block )
+function ApplyNode.new( id, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block )
    local obj = {}
    ApplyNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, varList, expList, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block ); end
    return obj
 end
-function ApplyNode:__init(id, pos, macroArgFlag, typeList, varList, expList, block) 
-   Node.__init( self,id, 16, pos, macroArgFlag, typeList)
+function ApplyNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block) 
+   Node.__init( self,id, 16, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3472,9 +3476,9 @@ function ApplyNode:__init(id, pos, macroArgFlag, typeList, varList, expList, blo
    
    
 end
-function ApplyNode.create( nodeMan, pos, macroArgFlag, typeList, varList, expList, block )
+function ApplyNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block )
 
-   local node = ApplyNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, varList, expList, block)
+   local node = ApplyNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, varList, expList, block)
    nodeMan:addNode( node )
    return node
 end
@@ -3598,14 +3602,14 @@ function ForeachNode:canBeStatement(  )
 
    return true
 end
-function ForeachNode.new( id, pos, macroArgFlag, typeList, val, key, exp, block )
+function ForeachNode.new( id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block )
    local obj = {}
    ForeachNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, key, exp, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block ); end
    return obj
 end
-function ForeachNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, block) 
-   Node.__init( self,id, 17, pos, macroArgFlag, typeList)
+function ForeachNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block) 
+   Node.__init( self,id, 17, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3616,9 +3620,9 @@ function ForeachNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, bloc
    
    
 end
-function ForeachNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp, block )
+function ForeachNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block )
 
-   local node = ForeachNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, key, exp, block)
+   local node = ForeachNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block)
    nodeMan:addNode( node )
    return node
 end
@@ -3745,14 +3749,14 @@ function ForsortNode:canBeStatement(  )
 
    return true
 end
-function ForsortNode.new( id, pos, macroArgFlag, typeList, val, key, exp, block, sort )
+function ForsortNode.new( id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort )
    local obj = {}
    ForsortNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, key, exp, block, sort ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort ); end
    return obj
 end
-function ForsortNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, block, sort) 
-   Node.__init( self,id, 18, pos, macroArgFlag, typeList)
+function ForsortNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort) 
+   Node.__init( self,id, 18, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3764,9 +3768,9 @@ function ForsortNode:__init(id, pos, macroArgFlag, typeList, val, key, exp, bloc
    
    
 end
-function ForsortNode.create( nodeMan, pos, macroArgFlag, typeList, val, key, exp, block, sort )
+function ForsortNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort )
 
-   local node = ForsortNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, key, exp, block, sort)
+   local node = ForsortNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort)
    nodeMan:addNode( node )
    return node
 end
@@ -3896,14 +3900,14 @@ function ReturnNode:canBeStatement(  )
 
    return true
 end
-function ReturnNode.new( id, pos, macroArgFlag, typeList, expList )
+function ReturnNode.new( id, pos, inTestBlock, macroArgFlag, typeList, expList )
    local obj = {}
    ReturnNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, expList ); end
    return obj
 end
-function ReturnNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 19, pos, macroArgFlag, typeList)
+function ReturnNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, expList) 
+   Node.__init( self,id, 19, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3911,9 +3915,9 @@ function ReturnNode:__init(id, pos, macroArgFlag, typeList, expList)
    
    
 end
-function ReturnNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
+function ReturnNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
-   local node = ReturnNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, expList)
+   local node = ReturnNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -4006,22 +4010,22 @@ function BreakNode:canBeStatement(  )
 
    return true
 end
-function BreakNode.new( id, pos, macroArgFlag, typeList )
+function BreakNode.new( id, pos, inTestBlock, macroArgFlag, typeList )
    local obj = {}
    BreakNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList ); end
    return obj
 end
-function BreakNode:__init(id, pos, macroArgFlag, typeList) 
-   Node.__init( self,id, 20, pos, macroArgFlag, typeList)
+function BreakNode:__init(id, pos, inTestBlock, macroArgFlag, typeList) 
+   Node.__init( self,id, 20, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    
 end
-function BreakNode.create( nodeMan, pos, macroArgFlag, typeList )
+function BreakNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
-   local node = BreakNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList)
+   local node = BreakNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -4083,14 +4087,14 @@ function ProvideNode:canBeStatement(  )
 
    return true
 end
-function ProvideNode.new( id, pos, macroArgFlag, typeList, symbol )
+function ProvideNode.new( id, pos, inTestBlock, macroArgFlag, typeList, symbol )
    local obj = {}
    ProvideNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, symbol ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, symbol ); end
    return obj
 end
-function ProvideNode:__init(id, pos, macroArgFlag, typeList, symbol) 
-   Node.__init( self,id, 21, pos, macroArgFlag, typeList)
+function ProvideNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, symbol) 
+   Node.__init( self,id, 21, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4098,9 +4102,9 @@ function ProvideNode:__init(id, pos, macroArgFlag, typeList, symbol)
    
    
 end
-function ProvideNode.create( nodeMan, pos, macroArgFlag, typeList, symbol )
+function ProvideNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symbol )
 
-   local node = ProvideNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, symbol)
+   local node = ProvideNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, symbol)
    nodeMan:addNode( node )
    return node
 end
@@ -4159,14 +4163,14 @@ function ExpNewNode:canBeStatement(  )
 
    return true
 end
-function ExpNewNode.new( id, pos, macroArgFlag, typeList, symbol, ctorTypeInfo, argList )
+function ExpNewNode.new( id, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList )
    local obj = {}
    ExpNewNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, symbol, ctorTypeInfo, argList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList ); end
    return obj
 end
-function ExpNewNode:__init(id, pos, macroArgFlag, typeList, symbol, ctorTypeInfo, argList) 
-   Node.__init( self,id, 22, pos, macroArgFlag, typeList)
+function ExpNewNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList) 
+   Node.__init( self,id, 22, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4176,9 +4180,9 @@ function ExpNewNode:__init(id, pos, macroArgFlag, typeList, symbol, ctorTypeInfo
    
    
 end
-function ExpNewNode.create( nodeMan, pos, macroArgFlag, typeList, symbol, ctorTypeInfo, argList )
+function ExpNewNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList )
 
-   local node = ExpNewNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, symbol, ctorTypeInfo, argList)
+   local node = ExpNewNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList)
    nodeMan:addNode( node )
    return node
 end
@@ -4295,14 +4299,14 @@ function ExpUnwrapNode:canBeStatement(  )
 
    return false
 end
-function ExpUnwrapNode.new( id, pos, macroArgFlag, typeList, exp, default )
+function ExpUnwrapNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, default )
    local obj = {}
    ExpUnwrapNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, default ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, default ); end
    return obj
 end
-function ExpUnwrapNode:__init(id, pos, macroArgFlag, typeList, exp, default) 
-   Node.__init( self,id, 23, pos, macroArgFlag, typeList)
+function ExpUnwrapNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, default) 
+   Node.__init( self,id, 23, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4311,9 +4315,9 @@ function ExpUnwrapNode:__init(id, pos, macroArgFlag, typeList, exp, default)
    
    
 end
-function ExpUnwrapNode.create( nodeMan, pos, macroArgFlag, typeList, exp, default )
+function ExpUnwrapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, default )
 
-   local node = ExpUnwrapNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, default)
+   local node = ExpUnwrapNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, default)
    nodeMan:addNode( node )
    return node
 end
@@ -4419,14 +4423,14 @@ function ExpRefNode:canBeStatement(  )
 
    return false
 end
-function ExpRefNode.new( id, pos, macroArgFlag, typeList, symbolInfo )
+function ExpRefNode.new( id, pos, inTestBlock, macroArgFlag, typeList, symbolInfo )
    local obj = {}
    ExpRefNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, symbolInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, symbolInfo ); end
    return obj
 end
-function ExpRefNode:__init(id, pos, macroArgFlag, typeList, symbolInfo) 
-   Node.__init( self,id, 24, pos, macroArgFlag, typeList)
+function ExpRefNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, symbolInfo) 
+   Node.__init( self,id, 24, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4434,9 +4438,9 @@ function ExpRefNode:__init(id, pos, macroArgFlag, typeList, symbolInfo)
    
    
 end
-function ExpRefNode.create( nodeMan, pos, macroArgFlag, typeList, symbolInfo )
+function ExpRefNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symbolInfo )
 
-   local node = ExpRefNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, symbolInfo)
+   local node = ExpRefNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, symbolInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -4508,14 +4512,14 @@ function ExpSetValNode:canBeStatement(  )
 
    return true
 end
-function ExpSetValNode.new( id, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
+function ExpSetValNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
    local obj = {}
    ExpSetValNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet ); end
    return obj
 end
-function ExpSetValNode:__init(id, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet) 
-   Node.__init( self,id, 25, pos, macroArgFlag, typeList)
+function ExpSetValNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet) 
+   Node.__init( self,id, 25, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4526,9 +4530,9 @@ function ExpSetValNode:__init(id, pos, macroArgFlag, typeList, exp1, exp2, LeftS
    
    
 end
-function ExpSetValNode.create( nodeMan, pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
+function ExpSetValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
 
-   local node = ExpSetValNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet)
+   local node = ExpSetValNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet)
    nodeMan:addNode( node )
    return node
 end
@@ -4664,14 +4668,14 @@ function ExpSetItemNode:canBeStatement(  )
 
    return true
 end
-function ExpSetItemNode.new( id, pos, macroArgFlag, typeList, val, index, exp2 )
+function ExpSetItemNode.new( id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 )
    local obj = {}
    ExpSetItemNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, index, exp2 ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 ); end
    return obj
 end
-function ExpSetItemNode:__init(id, pos, macroArgFlag, typeList, val, index, exp2) 
-   Node.__init( self,id, 26, pos, macroArgFlag, typeList)
+function ExpSetItemNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2) 
+   Node.__init( self,id, 26, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4681,9 +4685,9 @@ function ExpSetItemNode:__init(id, pos, macroArgFlag, typeList, val, index, exp2
    
    
 end
-function ExpSetItemNode.create( nodeMan, pos, macroArgFlag, typeList, val, index, exp2 )
+function ExpSetItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 )
 
-   local node = ExpSetItemNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, index, exp2)
+   local node = ExpSetItemNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, index, exp2)
    nodeMan:addNode( node )
    return node
 end
@@ -4795,14 +4799,14 @@ function ExpOp2Node:canBeStatement(  )
 
    return false
 end
-function ExpOp2Node.new( id, pos, macroArgFlag, typeList, op, exp1, exp2 )
+function ExpOp2Node.new( id, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2 )
    local obj = {}
    ExpOp2Node.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, op, exp1, exp2 ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2 ); end
    return obj
 end
-function ExpOp2Node:__init(id, pos, macroArgFlag, typeList, op, exp1, exp2) 
-   Node.__init( self,id, 27, pos, macroArgFlag, typeList)
+function ExpOp2Node:__init(id, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2) 
+   Node.__init( self,id, 27, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4812,9 +4816,9 @@ function ExpOp2Node:__init(id, pos, macroArgFlag, typeList, op, exp1, exp2)
    
    
 end
-function ExpOp2Node.create( nodeMan, pos, macroArgFlag, typeList, op, exp1, exp2 )
+function ExpOp2Node.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2 )
 
-   local node = ExpOp2Node.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, op, exp1, exp2)
+   local node = ExpOp2Node.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2)
    nodeMan:addNode( node )
    return node
 end
@@ -4926,14 +4930,14 @@ function UnwrapSetNode:canBeStatement(  )
 
    return true
 end
-function UnwrapSetNode.new( id, pos, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock )
+function UnwrapSetNode.new( id, pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock )
    local obj = {}
    UnwrapSetNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock ); end
    return obj
 end
-function UnwrapSetNode:__init(id, pos, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock) 
-   Node.__init( self,id, 28, pos, macroArgFlag, typeList)
+function UnwrapSetNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock) 
+   Node.__init( self,id, 28, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4943,9 +4947,9 @@ function UnwrapSetNode:__init(id, pos, macroArgFlag, typeList, dstExpList, srcEx
    
    
 end
-function UnwrapSetNode.create( nodeMan, pos, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock )
+function UnwrapSetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock )
 
-   local node = UnwrapSetNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock)
+   local node = UnwrapSetNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -5085,14 +5089,14 @@ function IfUnwrapNode:canBeStatement(  )
 
    return true
 end
-function IfUnwrapNode.new( id, pos, macroArgFlag, typeList, varSymList, expList, block, nilBlock )
+function IfUnwrapNode.new( id, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock )
    local obj = {}
    IfUnwrapNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, varSymList, expList, block, nilBlock ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock ); end
    return obj
 end
-function IfUnwrapNode:__init(id, pos, macroArgFlag, typeList, varSymList, expList, block, nilBlock) 
-   Node.__init( self,id, 29, pos, macroArgFlag, typeList)
+function IfUnwrapNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock) 
+   Node.__init( self,id, 29, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5103,9 +5107,9 @@ function IfUnwrapNode:__init(id, pos, macroArgFlag, typeList, varSymList, expLis
    
    
 end
-function IfUnwrapNode.create( nodeMan, pos, macroArgFlag, typeList, varSymList, expList, block, nilBlock )
+function IfUnwrapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock )
 
-   local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, varSymList, expList, block, nilBlock)
+   local node = IfUnwrapNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -5356,14 +5360,14 @@ function WhenNode:canBeStatement(  )
 
    return true
 end
-function WhenNode.new( id, pos, macroArgFlag, typeList, symPairList, block, elseBlock )
+function WhenNode.new( id, pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock )
    local obj = {}
    WhenNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, symPairList, block, elseBlock ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock ); end
    return obj
 end
-function WhenNode:__init(id, pos, macroArgFlag, typeList, symPairList, block, elseBlock) 
-   Node.__init( self,id, 30, pos, macroArgFlag, typeList)
+function WhenNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock) 
+   Node.__init( self,id, 30, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5373,9 +5377,9 @@ function WhenNode:__init(id, pos, macroArgFlag, typeList, symPairList, block, el
    
    
 end
-function WhenNode.create( nodeMan, pos, macroArgFlag, typeList, symPairList, block, elseBlock )
+function WhenNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock )
 
-   local node = WhenNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, symPairList, block, elseBlock)
+   local node = WhenNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -5607,14 +5611,14 @@ function ExpCastNode:canBeStatement(  )
 
    return false
 end
-function ExpCastNode.new( id, pos, macroArgFlag, typeList, exp, castType, castKind )
+function ExpCastNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind )
    local obj = {}
    ExpCastNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp, castType, castKind ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind ); end
    return obj
 end
-function ExpCastNode:__init(id, pos, macroArgFlag, typeList, exp, castType, castKind) 
-   Node.__init( self,id, 31, pos, macroArgFlag, typeList)
+function ExpCastNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind) 
+   Node.__init( self,id, 31, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5624,9 +5628,9 @@ function ExpCastNode:__init(id, pos, macroArgFlag, typeList, exp, castType, cast
    
    
 end
-function ExpCastNode.create( nodeMan, pos, macroArgFlag, typeList, exp, castType, castKind )
+function ExpCastNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind )
 
-   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp, castType, castKind)
+   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind)
    nodeMan:addNode( node )
    return node
 end
@@ -5731,14 +5735,14 @@ function ExpToDDDNode:canBeStatement(  )
 
    return false
 end
-function ExpToDDDNode.new( id, pos, macroArgFlag, typeList, expList )
+function ExpToDDDNode.new( id, pos, inTestBlock, macroArgFlag, typeList, expList )
    local obj = {}
    ExpToDDDNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, expList ); end
    return obj
 end
-function ExpToDDDNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 32, pos, macroArgFlag, typeList)
+function ExpToDDDNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, expList) 
+   Node.__init( self,id, 32, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5746,9 +5750,9 @@ function ExpToDDDNode:__init(id, pos, macroArgFlag, typeList, expList)
    
    
 end
-function ExpToDDDNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
+function ExpToDDDNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
-   local node = ExpToDDDNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, expList)
+   local node = ExpToDDDNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -5831,14 +5835,14 @@ function ExpSubDDDNode:canBeStatement(  )
 
    return false
 end
-function ExpSubDDDNode.new( id, pos, macroArgFlag, typeList, src, remainIndex )
+function ExpSubDDDNode.new( id, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex )
    local obj = {}
    ExpSubDDDNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, src, remainIndex ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex ); end
    return obj
 end
-function ExpSubDDDNode:__init(id, pos, macroArgFlag, typeList, src, remainIndex) 
-   Node.__init( self,id, 33, pos, macroArgFlag, typeList)
+function ExpSubDDDNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex) 
+   Node.__init( self,id, 33, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5847,9 +5851,9 @@ function ExpSubDDDNode:__init(id, pos, macroArgFlag, typeList, src, remainIndex)
    
    
 end
-function ExpSubDDDNode.create( nodeMan, pos, macroArgFlag, typeList, src, remainIndex )
+function ExpSubDDDNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex )
 
-   local node = ExpSubDDDNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, src, remainIndex)
+   local node = ExpSubDDDNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, src, remainIndex)
    nodeMan:addNode( node )
    return node
 end
@@ -5968,14 +5972,14 @@ function ExpOp1Node:canBeStatement(  )
 
    return false
 end
-function ExpOp1Node.new( id, pos, macroArgFlag, typeList, op, macroMode, exp )
+function ExpOp1Node.new( id, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp )
    local obj = {}
    ExpOp1Node.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, op, macroMode, exp ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp ); end
    return obj
 end
-function ExpOp1Node:__init(id, pos, macroArgFlag, typeList, op, macroMode, exp) 
-   Node.__init( self,id, 34, pos, macroArgFlag, typeList)
+function ExpOp1Node:__init(id, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp) 
+   Node.__init( self,id, 34, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5985,9 +5989,9 @@ function ExpOp1Node:__init(id, pos, macroArgFlag, typeList, op, macroMode, exp)
    
    
 end
-function ExpOp1Node.create( nodeMan, pos, macroArgFlag, typeList, op, macroMode, exp )
+function ExpOp1Node.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp )
 
-   local node = ExpOp1Node.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, op, macroMode, exp)
+   local node = ExpOp1Node.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -6076,14 +6080,14 @@ function ExpRefItemNode:canBeStatement(  )
 
    return false
 end
-function ExpRefItemNode.new( id, pos, macroArgFlag, typeList, val, nilAccess, symbol, index )
+function ExpRefItemNode.new( id, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index )
    local obj = {}
    ExpRefItemNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, nilAccess, symbol, index ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index ); end
    return obj
 end
-function ExpRefItemNode:__init(id, pos, macroArgFlag, typeList, val, nilAccess, symbol, index) 
-   Node.__init( self,id, 35, pos, macroArgFlag, typeList)
+function ExpRefItemNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index) 
+   Node.__init( self,id, 35, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6094,9 +6098,9 @@ function ExpRefItemNode:__init(id, pos, macroArgFlag, typeList, val, nilAccess, 
    
    
 end
-function ExpRefItemNode.create( nodeMan, pos, macroArgFlag, typeList, val, nilAccess, symbol, index )
+function ExpRefItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index )
 
-   local node = ExpRefItemNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, nilAccess, symbol, index)
+   local node = ExpRefItemNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index)
    nodeMan:addNode( node )
    return node
 end
@@ -6230,14 +6234,14 @@ function ExpCallNode:canBeStatement(  )
 
    return true
 end
-function ExpCallNode.new( id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList )
+function ExpCallNode.new( id, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList )
    local obj = {}
    ExpCallNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList ); end
    return obj
 end
-function ExpCallNode:__init(id, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList) 
-   Node.__init( self,id, 36, pos, macroArgFlag, typeList)
+function ExpCallNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList) 
+   Node.__init( self,id, 36, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6248,9 +6252,9 @@ function ExpCallNode:__init(id, pos, macroArgFlag, typeList, func, errorFunc, ni
    
    
 end
-function ExpCallNode.create( nodeMan, pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList )
+function ExpCallNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList )
 
-   local node = ExpCallNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, func, errorFunc, nilAccess, argList)
+   local node = ExpCallNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList)
    nodeMan:addNode( node )
    return node
 end
@@ -6401,14 +6405,14 @@ function ExpMRetNode:canBeStatement(  )
 
    return false
 end
-function ExpMRetNode.new( id, pos, macroArgFlag, typeList, mRet )
+function ExpMRetNode.new( id, pos, inTestBlock, macroArgFlag, typeList, mRet )
    local obj = {}
    ExpMRetNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, mRet ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, mRet ); end
    return obj
 end
-function ExpMRetNode:__init(id, pos, macroArgFlag, typeList, mRet) 
-   Node.__init( self,id, 37, pos, macroArgFlag, typeList)
+function ExpMRetNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, mRet) 
+   Node.__init( self,id, 37, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6416,9 +6420,9 @@ function ExpMRetNode:__init(id, pos, macroArgFlag, typeList, mRet)
    
    
 end
-function ExpMRetNode.create( nodeMan, pos, macroArgFlag, typeList, mRet )
+function ExpMRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mRet )
 
-   local node = ExpMRetNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, mRet)
+   local node = ExpMRetNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, mRet)
    nodeMan:addNode( node )
    return node
 end
@@ -6506,14 +6510,14 @@ function ExpAccessMRetNode:canBeStatement(  )
 
    return false
 end
-function ExpAccessMRetNode.new( id, pos, macroArgFlag, typeList, mRet, index )
+function ExpAccessMRetNode.new( id, pos, inTestBlock, macroArgFlag, typeList, mRet, index )
    local obj = {}
    ExpAccessMRetNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, mRet, index ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, mRet, index ); end
    return obj
 end
-function ExpAccessMRetNode:__init(id, pos, macroArgFlag, typeList, mRet, index) 
-   Node.__init( self,id, 38, pos, macroArgFlag, typeList)
+function ExpAccessMRetNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, mRet, index) 
+   Node.__init( self,id, 38, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6522,9 +6526,9 @@ function ExpAccessMRetNode:__init(id, pos, macroArgFlag, typeList, mRet, index)
    
    
 end
-function ExpAccessMRetNode.create( nodeMan, pos, macroArgFlag, typeList, mRet, index )
+function ExpAccessMRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mRet, index )
 
-   local node = ExpAccessMRetNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, mRet, index)
+   local node = ExpAccessMRetNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, mRet, index)
    nodeMan:addNode( node )
    return node
 end
@@ -6615,14 +6619,14 @@ function ExpMultiTo1Node:canBeStatement(  )
 
    return false
 end
-function ExpMultiTo1Node.new( id, pos, macroArgFlag, typeList, exp )
+function ExpMultiTo1Node.new( id, pos, inTestBlock, macroArgFlag, typeList, exp )
    local obj = {}
    ExpMultiTo1Node.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp ); end
    return obj
 end
-function ExpMultiTo1Node:__init(id, pos, macroArgFlag, typeList, exp) 
-   Node.__init( self,id, 39, pos, macroArgFlag, typeList)
+function ExpMultiTo1Node:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp) 
+   Node.__init( self,id, 39, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6630,9 +6634,9 @@ function ExpMultiTo1Node:__init(id, pos, macroArgFlag, typeList, exp)
    
    
 end
-function ExpMultiTo1Node.create( nodeMan, pos, macroArgFlag, typeList, exp )
+function ExpMultiTo1Node.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
-   local node = ExpMultiTo1Node.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp)
+   local node = ExpMultiTo1Node.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -6720,14 +6724,14 @@ function ExpParenNode:canBeStatement(  )
 
    return false
 end
-function ExpParenNode.new( id, pos, macroArgFlag, typeList, exp )
+function ExpParenNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp )
    local obj = {}
    ExpParenNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp ); end
    return obj
 end
-function ExpParenNode:__init(id, pos, macroArgFlag, typeList, exp) 
-   Node.__init( self,id, 40, pos, macroArgFlag, typeList)
+function ExpParenNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp) 
+   Node.__init( self,id, 40, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6735,9 +6739,9 @@ function ExpParenNode:__init(id, pos, macroArgFlag, typeList, exp)
    
    
 end
-function ExpParenNode.create( nodeMan, pos, macroArgFlag, typeList, exp )
+function ExpParenNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
-   local node = ExpParenNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp)
+   local node = ExpParenNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -6827,14 +6831,14 @@ function ExpMacroExpNode:canBeStatement(  )
 
    return true
 end
-function ExpMacroExpNode.new( id, pos, macroArgFlag, typeList, macroType, stmtList )
+function ExpMacroExpNode.new( id, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList )
    local obj = {}
    ExpMacroExpNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, macroType, stmtList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList ); end
    return obj
 end
-function ExpMacroExpNode:__init(id, pos, macroArgFlag, typeList, macroType, stmtList) 
-   Node.__init( self,id, 41, pos, macroArgFlag, typeList)
+function ExpMacroExpNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList) 
+   Node.__init( self,id, 41, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6843,9 +6847,9 @@ function ExpMacroExpNode:__init(id, pos, macroArgFlag, typeList, macroType, stmt
    
    
 end
-function ExpMacroExpNode.create( nodeMan, pos, macroArgFlag, typeList, macroType, stmtList )
+function ExpMacroExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList )
 
-   local node = ExpMacroExpNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, macroType, stmtList)
+   local node = ExpMacroExpNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -6977,14 +6981,14 @@ function ExpMacroStatNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroStatNode.new( id, pos, macroArgFlag, typeList, expStrList )
+function ExpMacroStatNode.new( id, pos, inTestBlock, macroArgFlag, typeList, expStrList )
    local obj = {}
    ExpMacroStatNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, expStrList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, expStrList ); end
    return obj
 end
-function ExpMacroStatNode:__init(id, pos, macroArgFlag, typeList, expStrList) 
-   Node.__init( self,id, 42, pos, macroArgFlag, typeList)
+function ExpMacroStatNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, expStrList) 
+   Node.__init( self,id, 42, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6992,9 +6996,9 @@ function ExpMacroStatNode:__init(id, pos, macroArgFlag, typeList, expStrList)
    
    
 end
-function ExpMacroStatNode.create( nodeMan, pos, macroArgFlag, typeList, expStrList )
+function ExpMacroStatNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expStrList )
 
-   local node = ExpMacroStatNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, expStrList)
+   local node = ExpMacroStatNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, expStrList)
    nodeMan:addNode( node )
    return node
 end
@@ -7081,14 +7085,14 @@ function ExpMacroArgExpNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroArgExpNode.new( id, pos, macroArgFlag, typeList, codeTxt )
+function ExpMacroArgExpNode.new( id, pos, inTestBlock, macroArgFlag, typeList, codeTxt )
    local obj = {}
    ExpMacroArgExpNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, codeTxt ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, codeTxt ); end
    return obj
 end
-function ExpMacroArgExpNode:__init(id, pos, macroArgFlag, typeList, codeTxt) 
-   Node.__init( self,id, 43, pos, macroArgFlag, typeList)
+function ExpMacroArgExpNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, codeTxt) 
+   Node.__init( self,id, 43, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7096,9 +7100,9 @@ function ExpMacroArgExpNode:__init(id, pos, macroArgFlag, typeList, codeTxt)
    
    
 end
-function ExpMacroArgExpNode.create( nodeMan, pos, macroArgFlag, typeList, codeTxt )
+function ExpMacroArgExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, codeTxt )
 
-   local node = ExpMacroArgExpNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, codeTxt)
+   local node = ExpMacroArgExpNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, codeTxt)
    nodeMan:addNode( node )
    return node
 end
@@ -7153,14 +7157,14 @@ function StmtExpNode:canBeLeft(  )
 
    return false
 end
-function StmtExpNode.new( id, pos, macroArgFlag, typeList, exp )
+function StmtExpNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp )
    local obj = {}
    StmtExpNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp ); end
    return obj
 end
-function StmtExpNode:__init(id, pos, macroArgFlag, typeList, exp) 
-   Node.__init( self,id, 44, pos, macroArgFlag, typeList)
+function StmtExpNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp) 
+   Node.__init( self,id, 44, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7168,9 +7172,9 @@ function StmtExpNode:__init(id, pos, macroArgFlag, typeList, exp)
    
    
 end
-function StmtExpNode.create( nodeMan, pos, macroArgFlag, typeList, exp )
+function StmtExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
-   local node = StmtExpNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp)
+   local node = StmtExpNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -7264,14 +7268,14 @@ function ExpMacroStatListNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroStatListNode.new( id, pos, macroArgFlag, typeList, exp )
+function ExpMacroStatListNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp )
    local obj = {}
    ExpMacroStatListNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp ); end
    return obj
 end
-function ExpMacroStatListNode:__init(id, pos, macroArgFlag, typeList, exp) 
-   Node.__init( self,id, 45, pos, macroArgFlag, typeList)
+function ExpMacroStatListNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp) 
+   Node.__init( self,id, 45, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7279,9 +7283,9 @@ function ExpMacroStatListNode:__init(id, pos, macroArgFlag, typeList, exp)
    
    
 end
-function ExpMacroStatListNode.create( nodeMan, pos, macroArgFlag, typeList, exp )
+function ExpMacroStatListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
-   local node = ExpMacroStatListNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp)
+   local node = ExpMacroStatListNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -7364,14 +7368,14 @@ function ExpOmitEnumNode:canBeStatement(  )
 
    return false
 end
-function ExpOmitEnumNode.new( id, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo )
+function ExpOmitEnumNode.new( id, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo )
    local obj = {}
    ExpOmitEnumNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo ); end
    return obj
 end
-function ExpOmitEnumNode:__init(id, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo) 
-   Node.__init( self,id, 46, pos, macroArgFlag, typeList)
+function ExpOmitEnumNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo) 
+   Node.__init( self,id, 46, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7382,9 +7386,9 @@ function ExpOmitEnumNode:__init(id, pos, macroArgFlag, typeList, valToken, valIn
    
    
 end
-function ExpOmitEnumNode.create( nodeMan, pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo )
+function ExpOmitEnumNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo )
 
-   local node = ExpOmitEnumNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo)
+   local node = ExpOmitEnumNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -7448,14 +7452,14 @@ function RefFieldNode:canBeStatement(  )
 
    return false
 end
-function RefFieldNode.new( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix )
+function RefFieldNode.new( id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix )
    local obj = {}
    RefFieldNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix ); end
    return obj
 end
-function RefFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix) 
-   Node.__init( self,id, 47, pos, macroArgFlag, typeList)
+function RefFieldNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix) 
+   Node.__init( self,id, 47, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7466,9 +7470,9 @@ function RefFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo,
    
    
 end
-function RefFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix )
+function RefFieldNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix )
 
-   local node = RefFieldNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix)
+   local node = RefFieldNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix)
    nodeMan:addNode( node )
    return node
 end
@@ -7598,14 +7602,14 @@ function GetFieldNode:canBeStatement(  )
 
    return false
 end
-function GetFieldNode.new( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
+function GetFieldNode.new( id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
    local obj = {}
    GetFieldNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo ); end
    return obj
 end
-function GetFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
-   Node.__init( self,id, 48, pos, macroArgFlag, typeList)
+function GetFieldNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
+   Node.__init( self,id, 48, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7617,9 +7621,9 @@ function GetFieldNode:__init(id, pos, macroArgFlag, typeList, field, symbolInfo,
    
    
 end
-function GetFieldNode.create( nodeMan, pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
+function GetFieldNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
 
-   local node = GetFieldNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo)
+   local node = GetFieldNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -7724,14 +7728,14 @@ function AliasNode:canBeStatement(  )
 
    return true
 end
-function AliasNode.new( id, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo )
+function AliasNode.new( id, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo )
    local obj = {}
    AliasNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo ); end
    return obj
 end
-function AliasNode:__init(id, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo) 
-   Node.__init( self,id, 49, pos, macroArgFlag, typeList)
+function AliasNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo) 
+   Node.__init( self,id, 49, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7741,9 +7745,9 @@ function AliasNode:__init(id, pos, macroArgFlag, typeList, newSymbol, srcNode, t
    
    
 end
-function AliasNode.create( nodeMan, pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo )
+function AliasNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo )
 
-   local node = AliasNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, newSymbol, srcNode, typeInfo)
+   local node = AliasNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -7895,14 +7899,14 @@ function DeclVarNode:canBeStatement(  )
 
    return true
 end
-function DeclVarNode.new( id, pos, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode.new( id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
    local obj = {}
    DeclVarNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
    return obj
 end
-function DeclVarNode:__init(id, pos, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
-   Node.__init( self,id, 50, pos, macroArgFlag, typeList)
+function DeclVarNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
+   Node.__init( self,id, 50, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7921,9 +7925,9 @@ function DeclVarNode:__init(id, pos, macroArgFlag, typeList, mode, accessMode, s
    
    
 end
-function DeclVarNode.create( nodeMan, pos, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
 
-   local node = DeclVarNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
+   local node = DeclVarNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -8420,14 +8424,14 @@ function DeclFormNode:canBeStatement(  )
 
    return true
 end
-function DeclFormNode.new( id, pos, macroArgFlag, typeList, declInfo )
+function DeclFormNode.new( id, pos, inTestBlock, macroArgFlag, typeList, declInfo )
    local obj = {}
    DeclFormNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, declInfo ); end
    return obj
 end
-function DeclFormNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 51, pos, macroArgFlag, typeList)
+function DeclFormNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 51, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8435,9 +8439,9 @@ function DeclFormNode:__init(id, pos, macroArgFlag, typeList, declInfo)
    
    
 end
-function DeclFormNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+function DeclFormNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
-   local node = DeclFormNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   local node = DeclFormNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -8558,14 +8562,14 @@ function DeclFuncNode:canBeLeft(  )
 
    return false
 end
-function DeclFuncNode.new( id, pos, macroArgFlag, typeList, declInfo )
+function DeclFuncNode.new( id, pos, inTestBlock, macroArgFlag, typeList, declInfo )
    local obj = {}
    DeclFuncNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, declInfo ); end
    return obj
 end
-function DeclFuncNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 52, pos, macroArgFlag, typeList)
+function DeclFuncNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 52, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8573,9 +8577,9 @@ function DeclFuncNode:__init(id, pos, macroArgFlag, typeList, declInfo)
    
    
 end
-function DeclFuncNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+function DeclFuncNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
-   local node = DeclFuncNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   local node = DeclFuncNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -8714,14 +8718,14 @@ function DeclMethodNode:canBeStatement(  )
 
    return true
 end
-function DeclMethodNode.new( id, pos, macroArgFlag, typeList, declInfo )
+function DeclMethodNode.new( id, pos, inTestBlock, macroArgFlag, typeList, declInfo )
    local obj = {}
    DeclMethodNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, declInfo ); end
    return obj
 end
-function DeclMethodNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 53, pos, macroArgFlag, typeList)
+function DeclMethodNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 53, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8729,9 +8733,9 @@ function DeclMethodNode:__init(id, pos, macroArgFlag, typeList, declInfo)
    
    
 end
-function DeclMethodNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+function DeclMethodNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
-   local node = DeclMethodNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   local node = DeclMethodNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -8860,14 +8864,14 @@ function ProtoMethodNode:canBeStatement(  )
 
    return true
 end
-function ProtoMethodNode.new( id, pos, macroArgFlag, typeList, declInfo )
+function ProtoMethodNode.new( id, pos, inTestBlock, macroArgFlag, typeList, declInfo )
    local obj = {}
    ProtoMethodNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, declInfo ); end
    return obj
 end
-function ProtoMethodNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 54, pos, macroArgFlag, typeList)
+function ProtoMethodNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 54, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8875,9 +8879,9 @@ function ProtoMethodNode:__init(id, pos, macroArgFlag, typeList, declInfo)
    
    
 end
-function ProtoMethodNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+function ProtoMethodNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
-   local node = ProtoMethodNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   local node = ProtoMethodNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -9006,14 +9010,14 @@ function DeclConstrNode:canBeStatement(  )
 
    return true
 end
-function DeclConstrNode.new( id, pos, macroArgFlag, typeList, declInfo )
+function DeclConstrNode.new( id, pos, inTestBlock, macroArgFlag, typeList, declInfo )
    local obj = {}
    DeclConstrNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, declInfo ); end
    return obj
 end
-function DeclConstrNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 55, pos, macroArgFlag, typeList)
+function DeclConstrNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 55, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9021,9 +9025,9 @@ function DeclConstrNode:__init(id, pos, macroArgFlag, typeList, declInfo)
    
    
 end
-function DeclConstrNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+function DeclConstrNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
-   local node = DeclConstrNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   local node = DeclConstrNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -9152,14 +9156,14 @@ function DeclDestrNode:canBeStatement(  )
 
    return true
 end
-function DeclDestrNode.new( id, pos, macroArgFlag, typeList, declInfo )
+function DeclDestrNode.new( id, pos, inTestBlock, macroArgFlag, typeList, declInfo )
    local obj = {}
    DeclDestrNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, declInfo ); end
    return obj
 end
-function DeclDestrNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 56, pos, macroArgFlag, typeList)
+function DeclDestrNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 56, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9167,9 +9171,9 @@ function DeclDestrNode:__init(id, pos, macroArgFlag, typeList, declInfo)
    
    
 end
-function DeclDestrNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+function DeclDestrNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
-   local node = DeclDestrNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   local node = DeclDestrNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -9298,14 +9302,14 @@ function ExpCallSuperCtorNode:canBeStatement(  )
 
    return true
 end
-function ExpCallSuperCtorNode.new( id, pos, macroArgFlag, typeList, superType, methodType, expList )
+function ExpCallSuperCtorNode.new( id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList )
    local obj = {}
    ExpCallSuperCtorNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, superType, methodType, expList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList ); end
    return obj
 end
-function ExpCallSuperCtorNode:__init(id, pos, macroArgFlag, typeList, superType, methodType, expList) 
-   Node.__init( self,id, 57, pos, macroArgFlag, typeList)
+function ExpCallSuperCtorNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
+   Node.__init( self,id, 57, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9315,9 +9319,9 @@ function ExpCallSuperCtorNode:__init(id, pos, macroArgFlag, typeList, superType,
    
    
 end
-function ExpCallSuperCtorNode.create( nodeMan, pos, macroArgFlag, typeList, superType, methodType, expList )
+function ExpCallSuperCtorNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList )
 
-   local node = ExpCallSuperCtorNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, superType, methodType, expList)
+   local node = ExpCallSuperCtorNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -9407,14 +9411,14 @@ function ExpCallSuperNode:canBeStatement(  )
 
    return true
 end
-function ExpCallSuperNode.new( id, pos, macroArgFlag, typeList, superType, methodType, expList )
+function ExpCallSuperNode.new( id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList )
    local obj = {}
    ExpCallSuperNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, superType, methodType, expList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList ); end
    return obj
 end
-function ExpCallSuperNode:__init(id, pos, macroArgFlag, typeList, superType, methodType, expList) 
-   Node.__init( self,id, 58, pos, macroArgFlag, typeList)
+function ExpCallSuperNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
+   Node.__init( self,id, 58, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9424,9 +9428,9 @@ function ExpCallSuperNode:__init(id, pos, macroArgFlag, typeList, superType, met
    
    
 end
-function ExpCallSuperNode.create( nodeMan, pos, macroArgFlag, typeList, superType, methodType, expList )
+function ExpCallSuperNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList )
 
-   local node = ExpCallSuperNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, superType, methodType, expList)
+   local node = ExpCallSuperNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -9525,14 +9529,14 @@ function AsyncLockNode:canBeStatement(  )
 
    return true
 end
-function AsyncLockNode.new( id, pos, macroArgFlag, typeList, block )
+function AsyncLockNode.new( id, pos, inTestBlock, macroArgFlag, typeList, block )
    local obj = {}
    AsyncLockNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, block ); end
    return obj
 end
-function AsyncLockNode:__init(id, pos, macroArgFlag, typeList, block) 
-   Node.__init( self,id, 59, pos, macroArgFlag, typeList)
+function AsyncLockNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, block) 
+   Node.__init( self,id, 59, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9540,9 +9544,9 @@ function AsyncLockNode:__init(id, pos, macroArgFlag, typeList, block)
    
    
 end
-function AsyncLockNode.create( nodeMan, pos, macroArgFlag, typeList, block )
+function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, block )
 
-   local node = AsyncLockNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, block)
+   local node = AsyncLockNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, block)
    nodeMan:addNode( node )
    return node
 end
@@ -9625,14 +9629,14 @@ function DeclMemberNode:canBeStatement(  )
 
    return true
 end
-function DeclMemberNode.new( id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken )
+function DeclMemberNode.new( id, pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken )
    local obj = {}
    DeclMemberNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken ); end
    return obj
 end
-function DeclMemberNode:__init(id, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken) 
-   Node.__init( self,id, 60, pos, macroArgFlag, typeList)
+function DeclMemberNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken) 
+   Node.__init( self,id, 60, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9651,9 +9655,9 @@ function DeclMemberNode:__init(id, pos, macroArgFlag, typeList, name, refType, s
    
    
 end
-function DeclMemberNode.create( nodeMan, pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken )
+function DeclMemberNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken )
 
-   local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken)
+   local node = DeclMemberNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken)
    nodeMan:addNode( node )
    return node
 end
@@ -9789,14 +9793,14 @@ function DeclArgNode:canBeStatement(  )
 
    return false
 end
-function DeclArgNode.new( id, pos, macroArgFlag, typeList, name, symbolInfo, argType )
+function DeclArgNode.new( id, pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType )
    local obj = {}
    DeclArgNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, symbolInfo, argType ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType ); end
    return obj
 end
-function DeclArgNode:__init(id, pos, macroArgFlag, typeList, name, symbolInfo, argType) 
-   Node.__init( self,id, 61, pos, macroArgFlag, typeList)
+function DeclArgNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType) 
+   Node.__init( self,id, 61, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9806,9 +9810,9 @@ function DeclArgNode:__init(id, pos, macroArgFlag, typeList, name, symbolInfo, a
    
    
 end
-function DeclArgNode.create( nodeMan, pos, macroArgFlag, typeList, name, symbolInfo, argType )
+function DeclArgNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType )
 
-   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, symbolInfo, argType)
+   local node = DeclArgNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType)
    nodeMan:addNode( node )
    return node
 end
@@ -9902,22 +9906,22 @@ function DeclArgDDDNode:canBeStatement(  )
 
    return false
 end
-function DeclArgDDDNode.new( id, pos, macroArgFlag, typeList )
+function DeclArgDDDNode.new( id, pos, inTestBlock, macroArgFlag, typeList )
    local obj = {}
    DeclArgDDDNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList ); end
    return obj
 end
-function DeclArgDDDNode:__init(id, pos, macroArgFlag, typeList) 
-   Node.__init( self,id, 62, pos, macroArgFlag, typeList)
+function DeclArgDDDNode:__init(id, pos, inTestBlock, macroArgFlag, typeList) 
+   Node.__init( self,id, 62, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    
 end
-function DeclArgDDDNode.create( nodeMan, pos, macroArgFlag, typeList )
+function DeclArgDDDNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
-   local node = DeclArgDDDNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList)
+   local node = DeclArgDDDNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -10003,14 +10007,14 @@ function DeclAdvertiseNode:canBeStatement(  )
 
    return false
 end
-function DeclAdvertiseNode.new( id, pos, macroArgFlag, typeList, advInfo )
+function DeclAdvertiseNode.new( id, pos, inTestBlock, macroArgFlag, typeList, advInfo )
    local obj = {}
    DeclAdvertiseNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, advInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, advInfo ); end
    return obj
 end
-function DeclAdvertiseNode:__init(id, pos, macroArgFlag, typeList, advInfo) 
-   Node.__init( self,id, 63, pos, macroArgFlag, typeList)
+function DeclAdvertiseNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, advInfo) 
+   Node.__init( self,id, 63, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10018,9 +10022,9 @@ function DeclAdvertiseNode:__init(id, pos, macroArgFlag, typeList, advInfo)
    
    
 end
-function DeclAdvertiseNode.create( nodeMan, pos, macroArgFlag, typeList, advInfo )
+function DeclAdvertiseNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, advInfo )
 
-   local node = DeclAdvertiseNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, advInfo)
+   local node = DeclAdvertiseNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, advInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -10154,14 +10158,14 @@ function ProtoClassNode:canBeStatement(  )
 
    return true
 end
-function ProtoClassNode.new( id, pos, macroArgFlag, typeList, name, inheritInfo )
+function ProtoClassNode.new( id, pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo )
    local obj = {}
    ProtoClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, inheritInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo ); end
    return obj
 end
-function ProtoClassNode:__init(id, pos, macroArgFlag, typeList, name, inheritInfo) 
-   Node.__init( self,id, 64, pos, macroArgFlag, typeList)
+function ProtoClassNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo) 
+   Node.__init( self,id, 64, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10170,9 +10174,9 @@ function ProtoClassNode:__init(id, pos, macroArgFlag, typeList, name, inheritInf
    
    
 end
-function ProtoClassNode.create( nodeMan, pos, macroArgFlag, typeList, name, inheritInfo )
+function ProtoClassNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo )
 
-   local node = ProtoClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, inheritInfo)
+   local node = ProtoClassNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -10264,14 +10268,14 @@ function DeclClassNode:canBeStatement(  )
 
    return true
 end
-function DeclClassNode.new( id, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.new( id, pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
    local obj = {}
    DeclClassNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet ); end
    return obj
 end
-function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
-   Node.__init( self,id, 65, pos, macroArgFlag, typeList)
+function DeclClassNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
+   Node.__init( self,id, 65, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10297,9 +10301,9 @@ function DeclClassNode:__init(id, pos, macroArgFlag, typeList, accessMode, name,
    
    
 end
-function DeclClassNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
+function DeclClassNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
 
-   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
+   local node = DeclClassNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
    nodeMan:addNode( node )
    return node
 end
@@ -10587,14 +10591,14 @@ function DeclEnumNode:canBeStatement(  )
 
    return true
 end
-function DeclEnumNode.new( id, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope )
+function DeclEnumNode.new( id, pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope )
    local obj = {}
    DeclEnumNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope ); end
    return obj
 end
-function DeclEnumNode:__init(id, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope) 
-   Node.__init( self,id, 66, pos, macroArgFlag, typeList)
+function DeclEnumNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope) 
+   Node.__init( self,id, 66, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10606,9 +10610,9 @@ function DeclEnumNode:__init(id, pos, macroArgFlag, typeList, enumType, accessMo
    
    
 end
-function DeclEnumNode.create( nodeMan, pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope )
+function DeclEnumNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope )
 
-   local node = DeclEnumNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope)
+   local node = DeclEnumNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope)
    nodeMan:addNode( node )
    return node
 end
@@ -10729,14 +10733,14 @@ function DeclAlgeNode:canBeStatement(  )
 
    return true
 end
-function DeclAlgeNode.new( id, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope )
+function DeclAlgeNode.new( id, pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope )
    local obj = {}
    DeclAlgeNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope ); end
    return obj
 end
-function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope) 
-   Node.__init( self,id, 67, pos, macroArgFlag, typeList)
+function DeclAlgeNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope) 
+   Node.__init( self,id, 67, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10748,9 +10752,9 @@ function DeclAlgeNode:__init(id, pos, macroArgFlag, typeList, accessMode, algeTy
    
    
 end
-function DeclAlgeNode.create( nodeMan, pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope )
+function DeclAlgeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope )
 
-   local node = DeclAlgeNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope)
+   local node = DeclAlgeNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope)
    nodeMan:addNode( node )
    return node
 end
@@ -10851,14 +10855,14 @@ function NewAlgeValNode:canBeStatement(  )
 
    return false
 end
-function NewAlgeValNode.new( id, pos, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
+function NewAlgeValNode.new( id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
    local obj = {}
    NewAlgeValNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList ); end
    return obj
 end
-function NewAlgeValNode:__init(id, pos, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
-   Node.__init( self,id, 68, pos, macroArgFlag, typeList)
+function NewAlgeValNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
+   Node.__init( self,id, 68, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10870,9 +10874,9 @@ function NewAlgeValNode:__init(id, pos, macroArgFlag, typeList, name, prefix, al
    
    
 end
-function NewAlgeValNode.create( nodeMan, pos, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
+function NewAlgeValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
 
-   local node = NewAlgeValNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
+   local node = NewAlgeValNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
    nodeMan:addNode( node )
    return node
 end
@@ -10999,14 +11003,14 @@ function LuneControlNode:canBeStatement(  )
 
    return true
 end
-function LuneControlNode.new( id, pos, macroArgFlag, typeList, pragma )
+function LuneControlNode.new( id, pos, inTestBlock, macroArgFlag, typeList, pragma )
    local obj = {}
    LuneControlNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, pragma ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, pragma ); end
    return obj
 end
-function LuneControlNode:__init(id, pos, macroArgFlag, typeList, pragma) 
-   Node.__init( self,id, 69, pos, macroArgFlag, typeList)
+function LuneControlNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, pragma) 
+   Node.__init( self,id, 69, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11014,9 +11018,9 @@ function LuneControlNode:__init(id, pos, macroArgFlag, typeList, pragma)
    
    
 end
-function LuneControlNode.create( nodeMan, pos, macroArgFlag, typeList, pragma )
+function LuneControlNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, pragma )
 
-   local node = LuneControlNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, pragma)
+   local node = LuneControlNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, pragma)
    nodeMan:addNode( node )
    return node
 end
@@ -11109,14 +11113,14 @@ function MatchNode:canBeStatement(  )
 
    return true
 end
-function MatchNode.new( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode.new( id, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
    local obj = {}
    MatchNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault ); end
    return obj
 end
-function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault) 
-   Node.__init( self,id, 70, pos, macroArgFlag, typeList)
+function MatchNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault) 
+   Node.__init( self,id, 70, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11129,9 +11133,9 @@ function MatchNode:__init(id, pos, macroArgFlag, typeList, val, algeTypeInfo, ca
    
    
 end
-function MatchNode.create( nodeMan, pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
 
-   local node = MatchNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
+   local node = MatchNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -11393,14 +11397,14 @@ function LuneKindNode:canBeStatement(  )
 
    return false
 end
-function LuneKindNode.new( id, pos, macroArgFlag, typeList, exp )
+function LuneKindNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp )
    local obj = {}
    LuneKindNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, exp ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp ); end
    return obj
 end
-function LuneKindNode:__init(id, pos, macroArgFlag, typeList, exp) 
-   Node.__init( self,id, 71, pos, macroArgFlag, typeList)
+function LuneKindNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp) 
+   Node.__init( self,id, 71, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11408,9 +11412,9 @@ function LuneKindNode:__init(id, pos, macroArgFlag, typeList, exp)
    
    
 end
-function LuneKindNode.create( nodeMan, pos, macroArgFlag, typeList, exp )
+function LuneKindNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
-   local node = LuneKindNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, exp)
+   local node = LuneKindNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp)
    nodeMan:addNode( node )
    return node
 end
@@ -11493,14 +11497,14 @@ function DeclMacroNode:canBeStatement(  )
 
    return true
 end
-function DeclMacroNode.new( id, pos, macroArgFlag, typeList, declInfo )
+function DeclMacroNode.new( id, pos, inTestBlock, macroArgFlag, typeList, declInfo )
    local obj = {}
    DeclMacroNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, declInfo ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, declInfo ); end
    return obj
 end
-function DeclMacroNode:__init(id, pos, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,id, 72, pos, macroArgFlag, typeList)
+function DeclMacroNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
+   Node.__init( self,id, 72, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11508,9 +11512,9 @@ function DeclMacroNode:__init(id, pos, macroArgFlag, typeList, declInfo)
    
    
 end
-function DeclMacroNode.create( nodeMan, pos, macroArgFlag, typeList, declInfo )
+function DeclMacroNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
-   local node = DeclMacroNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, declInfo)
+   local node = DeclMacroNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, declInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -11586,14 +11590,14 @@ function TestCaseNode:canBeStatement(  )
 
    return true
 end
-function TestCaseNode.new( id, pos, macroArgFlag, typeList, name, impNode, ctrlName, block )
+function TestCaseNode.new( id, pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block )
    local obj = {}
    TestCaseNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, name, impNode, ctrlName, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block ); end
    return obj
 end
-function TestCaseNode:__init(id, pos, macroArgFlag, typeList, name, impNode, ctrlName, block) 
-   Node.__init( self,id, 73, pos, macroArgFlag, typeList)
+function TestCaseNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block) 
+   Node.__init( self,id, 73, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11604,9 +11608,9 @@ function TestCaseNode:__init(id, pos, macroArgFlag, typeList, name, impNode, ctr
    
    
 end
-function TestCaseNode.create( nodeMan, pos, macroArgFlag, typeList, name, impNode, ctrlName, block )
+function TestCaseNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block )
 
-   local node = TestCaseNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, name, impNode, ctrlName, block)
+   local node = TestCaseNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block)
    nodeMan:addNode( node )
    return node
 end
@@ -11721,14 +11725,14 @@ function TestBlockNode:canBeStatement(  )
 
    return true
 end
-function TestBlockNode.new( id, pos, macroArgFlag, typeList, stmtList )
+function TestBlockNode.new( id, pos, inTestBlock, macroArgFlag, typeList, stmtList )
    local obj = {}
    TestBlockNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, stmtList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, stmtList ); end
    return obj
 end
-function TestBlockNode:__init(id, pos, macroArgFlag, typeList, stmtList) 
-   Node.__init( self,id, 74, pos, macroArgFlag, typeList)
+function TestBlockNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, stmtList) 
+   Node.__init( self,id, 74, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11736,9 +11740,9 @@ function TestBlockNode:__init(id, pos, macroArgFlag, typeList, stmtList)
    
    
 end
-function TestBlockNode.create( nodeMan, pos, macroArgFlag, typeList, stmtList )
+function TestBlockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, stmtList )
 
-   local node = TestBlockNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, stmtList)
+   local node = TestBlockNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -11835,22 +11839,22 @@ function AbbrNode:canBeStatement(  )
 
    return false
 end
-function AbbrNode.new( id, pos, macroArgFlag, typeList )
+function AbbrNode.new( id, pos, inTestBlock, macroArgFlag, typeList )
    local obj = {}
    AbbrNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList ); end
    return obj
 end
-function AbbrNode:__init(id, pos, macroArgFlag, typeList) 
-   Node.__init( self,id, 75, pos, macroArgFlag, typeList)
+function AbbrNode:__init(id, pos, inTestBlock, macroArgFlag, typeList) 
+   Node.__init( self,id, 75, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    
 end
-function AbbrNode.create( nodeMan, pos, macroArgFlag, typeList )
+function AbbrNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
-   local node = AbbrNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList)
+   local node = AbbrNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -11906,14 +11910,14 @@ function BoxingNode:canBeStatement(  )
 
    return false
 end
-function BoxingNode.new( id, pos, macroArgFlag, typeList, src )
+function BoxingNode.new( id, pos, inTestBlock, macroArgFlag, typeList, src )
    local obj = {}
    BoxingNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, src ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, src ); end
    return obj
 end
-function BoxingNode:__init(id, pos, macroArgFlag, typeList, src) 
-   Node.__init( self,id, 76, pos, macroArgFlag, typeList)
+function BoxingNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, src) 
+   Node.__init( self,id, 76, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11921,9 +11925,9 @@ function BoxingNode:__init(id, pos, macroArgFlag, typeList, src)
    
    
 end
-function BoxingNode.create( nodeMan, pos, macroArgFlag, typeList, src )
+function BoxingNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, src )
 
-   local node = BoxingNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, src)
+   local node = BoxingNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, src)
    nodeMan:addNode( node )
    return node
 end
@@ -12006,14 +12010,14 @@ function UnboxingNode:canBeStatement(  )
 
    return false
 end
-function UnboxingNode.new( id, pos, macroArgFlag, typeList, src )
+function UnboxingNode.new( id, pos, inTestBlock, macroArgFlag, typeList, src )
    local obj = {}
    UnboxingNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, src ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, src ); end
    return obj
 end
-function UnboxingNode:__init(id, pos, macroArgFlag, typeList, src) 
-   Node.__init( self,id, 77, pos, macroArgFlag, typeList)
+function UnboxingNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, src) 
+   Node.__init( self,id, 77, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12021,9 +12025,9 @@ function UnboxingNode:__init(id, pos, macroArgFlag, typeList, src)
    
    
 end
-function UnboxingNode.create( nodeMan, pos, macroArgFlag, typeList, src )
+function UnboxingNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, src )
 
-   local node = UnboxingNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, src)
+   local node = UnboxingNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, src)
    nodeMan:addNode( node )
    return node
 end
@@ -12106,22 +12110,22 @@ function LiteralNilNode:canBeStatement(  )
 
    return false
 end
-function LiteralNilNode.new( id, pos, macroArgFlag, typeList )
+function LiteralNilNode.new( id, pos, inTestBlock, macroArgFlag, typeList )
    local obj = {}
    LiteralNilNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList ); end
    return obj
 end
-function LiteralNilNode:__init(id, pos, macroArgFlag, typeList) 
-   Node.__init( self,id, 78, pos, macroArgFlag, typeList)
+function LiteralNilNode:__init(id, pos, inTestBlock, macroArgFlag, typeList) 
+   Node.__init( self,id, 78, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    
 end
-function LiteralNilNode.create( nodeMan, pos, macroArgFlag, typeList )
+function LiteralNilNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
-   local node = LiteralNilNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList)
+   local node = LiteralNilNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList)
    nodeMan:addNode( node )
    return node
 end
@@ -12177,14 +12181,14 @@ function LiteralCharNode:canBeStatement(  )
 
    return false
 end
-function LiteralCharNode.new( id, pos, macroArgFlag, typeList, token, num )
+function LiteralCharNode.new( id, pos, inTestBlock, macroArgFlag, typeList, token, num )
    local obj = {}
    LiteralCharNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, num ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, token, num ); end
    return obj
 end
-function LiteralCharNode:__init(id, pos, macroArgFlag, typeList, token, num) 
-   Node.__init( self,id, 79, pos, macroArgFlag, typeList)
+function LiteralCharNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
+   Node.__init( self,id, 79, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12193,9 +12197,9 @@ function LiteralCharNode:__init(id, pos, macroArgFlag, typeList, token, num)
    
    
 end
-function LiteralCharNode.create( nodeMan, pos, macroArgFlag, typeList, token, num )
+function LiteralCharNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, num )
 
-   local node = LiteralCharNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, num)
+   local node = LiteralCharNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, token, num)
    nodeMan:addNode( node )
    return node
 end
@@ -12257,14 +12261,14 @@ function LiteralIntNode:canBeStatement(  )
 
    return false
 end
-function LiteralIntNode.new( id, pos, macroArgFlag, typeList, token, num )
+function LiteralIntNode.new( id, pos, inTestBlock, macroArgFlag, typeList, token, num )
    local obj = {}
    LiteralIntNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, num ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, token, num ); end
    return obj
 end
-function LiteralIntNode:__init(id, pos, macroArgFlag, typeList, token, num) 
-   Node.__init( self,id, 80, pos, macroArgFlag, typeList)
+function LiteralIntNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
+   Node.__init( self,id, 80, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12273,9 +12277,9 @@ function LiteralIntNode:__init(id, pos, macroArgFlag, typeList, token, num)
    
    
 end
-function LiteralIntNode.create( nodeMan, pos, macroArgFlag, typeList, token, num )
+function LiteralIntNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, num )
 
-   local node = LiteralIntNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, num)
+   local node = LiteralIntNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, token, num)
    nodeMan:addNode( node )
    return node
 end
@@ -12337,14 +12341,14 @@ function LiteralRealNode:canBeStatement(  )
 
    return false
 end
-function LiteralRealNode.new( id, pos, macroArgFlag, typeList, token, num )
+function LiteralRealNode.new( id, pos, inTestBlock, macroArgFlag, typeList, token, num )
    local obj = {}
    LiteralRealNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, num ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, token, num ); end
    return obj
 end
-function LiteralRealNode:__init(id, pos, macroArgFlag, typeList, token, num) 
-   Node.__init( self,id, 81, pos, macroArgFlag, typeList)
+function LiteralRealNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
+   Node.__init( self,id, 81, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12353,9 +12357,9 @@ function LiteralRealNode:__init(id, pos, macroArgFlag, typeList, token, num)
    
    
 end
-function LiteralRealNode.create( nodeMan, pos, macroArgFlag, typeList, token, num )
+function LiteralRealNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, num )
 
-   local node = LiteralRealNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, num)
+   local node = LiteralRealNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, token, num)
    nodeMan:addNode( node )
    return node
 end
@@ -12417,14 +12421,14 @@ function LiteralArrayNode:canBeStatement(  )
 
    return false
 end
-function LiteralArrayNode.new( id, pos, macroArgFlag, typeList, expList )
+function LiteralArrayNode.new( id, pos, inTestBlock, macroArgFlag, typeList, expList )
    local obj = {}
    LiteralArrayNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, expList ); end
    return obj
 end
-function LiteralArrayNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 82, pos, macroArgFlag, typeList)
+function LiteralArrayNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, expList) 
+   Node.__init( self,id, 82, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12432,9 +12436,9 @@ function LiteralArrayNode:__init(id, pos, macroArgFlag, typeList, expList)
    
    
 end
-function LiteralArrayNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
+function LiteralArrayNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
-   local node = LiteralArrayNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, expList)
+   local node = LiteralArrayNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -12522,14 +12526,14 @@ function LiteralListNode:canBeStatement(  )
 
    return false
 end
-function LiteralListNode.new( id, pos, macroArgFlag, typeList, expList )
+function LiteralListNode.new( id, pos, inTestBlock, macroArgFlag, typeList, expList )
    local obj = {}
    LiteralListNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, expList ); end
    return obj
 end
-function LiteralListNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 83, pos, macroArgFlag, typeList)
+function LiteralListNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, expList) 
+   Node.__init( self,id, 83, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12537,9 +12541,9 @@ function LiteralListNode:__init(id, pos, macroArgFlag, typeList, expList)
    
    
 end
-function LiteralListNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
+function LiteralListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
-   local node = LiteralListNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, expList)
+   local node = LiteralListNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -12627,14 +12631,14 @@ function LiteralSetNode:canBeStatement(  )
 
    return false
 end
-function LiteralSetNode.new( id, pos, macroArgFlag, typeList, expList )
+function LiteralSetNode.new( id, pos, inTestBlock, macroArgFlag, typeList, expList )
    local obj = {}
    LiteralSetNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, expList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, expList ); end
    return obj
 end
-function LiteralSetNode:__init(id, pos, macroArgFlag, typeList, expList) 
-   Node.__init( self,id, 84, pos, macroArgFlag, typeList)
+function LiteralSetNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, expList) 
+   Node.__init( self,id, 84, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12642,9 +12646,9 @@ function LiteralSetNode:__init(id, pos, macroArgFlag, typeList, expList)
    
    
 end
-function LiteralSetNode.create( nodeMan, pos, macroArgFlag, typeList, expList )
+function LiteralSetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
-   local node = LiteralSetNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, expList)
+   local node = LiteralSetNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, expList)
    nodeMan:addNode( node )
    return node
 end
@@ -12757,14 +12761,14 @@ function LiteralMapNode:canBeStatement(  )
 
    return false
 end
-function LiteralMapNode.new( id, pos, macroArgFlag, typeList, map, pairList )
+function LiteralMapNode.new( id, pos, inTestBlock, macroArgFlag, typeList, map, pairList )
    local obj = {}
    LiteralMapNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, map, pairList ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, map, pairList ); end
    return obj
 end
-function LiteralMapNode:__init(id, pos, macroArgFlag, typeList, map, pairList) 
-   Node.__init( self,id, 85, pos, macroArgFlag, typeList)
+function LiteralMapNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, map, pairList) 
+   Node.__init( self,id, 85, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12773,9 +12777,9 @@ function LiteralMapNode:__init(id, pos, macroArgFlag, typeList, map, pairList)
    
    
 end
-function LiteralMapNode.create( nodeMan, pos, macroArgFlag, typeList, map, pairList )
+function LiteralMapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, map, pairList )
 
-   local node = LiteralMapNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, map, pairList)
+   local node = LiteralMapNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, map, pairList)
    nodeMan:addNode( node )
    return node
 end
@@ -12892,14 +12896,14 @@ function LiteralStringNode:canBeStatement(  )
 
    return false
 end
-function LiteralStringNode.new( id, pos, macroArgFlag, typeList, token, orgParam, dddParam )
+function LiteralStringNode.new( id, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam )
    local obj = {}
    LiteralStringNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token, orgParam, dddParam ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam ); end
    return obj
 end
-function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, orgParam, dddParam) 
-   Node.__init( self,id, 86, pos, macroArgFlag, typeList)
+function LiteralStringNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam) 
+   Node.__init( self,id, 86, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12909,9 +12913,9 @@ function LiteralStringNode:__init(id, pos, macroArgFlag, typeList, token, orgPar
    
    
 end
-function LiteralStringNode.create( nodeMan, pos, macroArgFlag, typeList, token, orgParam, dddParam )
+function LiteralStringNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam )
 
-   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token, orgParam, dddParam)
+   local node = LiteralStringNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam)
    nodeMan:addNode( node )
    return node
 end
@@ -13033,14 +13037,14 @@ function LiteralBoolNode:canBeStatement(  )
 
    return false
 end
-function LiteralBoolNode.new( id, pos, macroArgFlag, typeList, token )
+function LiteralBoolNode.new( id, pos, inTestBlock, macroArgFlag, typeList, token )
    local obj = {}
    LiteralBoolNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, token ); end
    return obj
 end
-function LiteralBoolNode:__init(id, pos, macroArgFlag, typeList, token) 
-   Node.__init( self,id, 87, pos, macroArgFlag, typeList)
+function LiteralBoolNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, token) 
+   Node.__init( self,id, 87, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13048,9 +13052,9 @@ function LiteralBoolNode:__init(id, pos, macroArgFlag, typeList, token)
    
    
 end
-function LiteralBoolNode.create( nodeMan, pos, macroArgFlag, typeList, token )
+function LiteralBoolNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token )
 
-   local node = LiteralBoolNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token)
+   local node = LiteralBoolNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, token)
    nodeMan:addNode( node )
    return node
 end
@@ -13109,14 +13113,14 @@ function LiteralSymbolNode:canBeStatement(  )
 
    return false
 end
-function LiteralSymbolNode.new( id, pos, macroArgFlag, typeList, token )
+function LiteralSymbolNode.new( id, pos, inTestBlock, macroArgFlag, typeList, token )
    local obj = {}
    LiteralSymbolNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, macroArgFlag, typeList, token ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, token ); end
    return obj
 end
-function LiteralSymbolNode:__init(id, pos, macroArgFlag, typeList, token) 
-   Node.__init( self,id, 88, pos, macroArgFlag, typeList)
+function LiteralSymbolNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, token) 
+   Node.__init( self,id, 88, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13124,9 +13128,9 @@ function LiteralSymbolNode:__init(id, pos, macroArgFlag, typeList, token)
    
    
 end
-function LiteralSymbolNode.create( nodeMan, pos, macroArgFlag, typeList, token )
+function LiteralSymbolNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token )
 
-   local node = LiteralSymbolNode.new(nodeMan:nextId(  ), pos, macroArgFlag, typeList, token)
+   local node = LiteralSymbolNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, token)
    nodeMan:addNode( node )
    return node
 end
@@ -14038,9 +14042,9 @@ function NodeManager:MultiTo1( node )
 
    local expType = node:get_expType()
    if #node:get_expTypeList() > 1 then
-      return ExpMultiTo1Node.create( self, node:get_pos(), node:get_macroArgFlag(), {expType}, node )
+      return ExpMultiTo1Node.create( self, node:get_pos(), node:get_inTestBlock(), node:get_macroArgFlag(), {expType}, node )
    elseif expType:get_kind() == Ast.TypeInfoKind.DDD then
-      return ExpMultiTo1Node.create( self, node:get_pos(), node:get_macroArgFlag(), expType:get_itemTypeInfoList(), node )
+      return ExpMultiTo1Node.create( self, node:get_pos(), node:get_inTestBlock(), node:get_macroArgFlag(), expType:get_itemTypeInfoList(), node )
    end
    
    return node

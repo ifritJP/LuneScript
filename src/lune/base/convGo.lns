@@ -108,6 +108,7 @@ class convFilter extend Nodes.Filter<Opt> {
    pri let moduleTypeInfo:&Ast.TypeInfo;
    pri let moduleScope:&Ast.Scope;
    pri let mut builtin2runtime:&Map<&Ast.TypeInfo,str>;
+   let mut builtin2runtimeEnv:&Map<&Ast.TypeInfo,str>;
    let builtin2code:&Map<&Ast.SymbolInfo,str>;
 
    pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
@@ -140,6 +141,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.moduleTypeInfo = ast.$exportInfo.$moduleTypeInfo;
       self.moduleScope = unwrap ast.$exportInfo.$moduleTypeInfo.$scope;
       self.builtin2runtime = {};
+      self.builtin2runtimeEnv = {};
       self.type2gotypeMap = {};
       self.nodeManager = new Nodes.NodeManager();
       self.enableTest = enableTest;
@@ -150,7 +152,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.modDir = modDir.gsub( "@", "" ).gsub( "%.$", "" );
 
       self.noneNode = Nodes.NoneNode.create(
-         self.nodeManager, Parser.noneToken.pos, false,
+         self.nodeManager, Parser.noneToken.pos, false, false,
          [ Ast.builtinTypeNone ] );
 
       self.builtin2code = {
@@ -1295,7 +1297,7 @@ fn convFilter.processConvExp( node:&Nodes.Node, dstTypeList:&List<&Ast.TypeInfo>
                                           self.type2gotype( castNode.$exp.$expType ));
                   }
                   let statNode = Nodes.ConvStatNode.create(
-                     self.nodeManager, exp.$pos, false, [ exp.$expType ], srcTxt );
+                     self.nodeManager, exp.$pos, false, false, [ exp.$expType ], srcTxt );
                   self.outputImplicitCast( castNode.$castType, statNode, castNode );
                   wrote = true;
                }
@@ -1773,6 +1775,7 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
 pub override fn convFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
+   __lns.runtime.log( "NodeIndexer.start" );
    self.indexer.start( node, (@
                                Nodes.NodeKind.$Switch,
                                Nodes.NodeKind.$Match,
@@ -1781,6 +1784,7 @@ pub override fn convFilter.processRoot(
                                Nodes.NodeKind.$Forsort,
                                Nodes.NodeKind.$Apply
    ));
+   __lns.runtime.log( "NodeIndexer.stop" );
 
    
    foreach importNode in node.$nodeManager.getImportNodeList() {
@@ -1877,8 +1881,12 @@ pub override fn convFilter.processRoot(
    builtin2runtime[ self.builtinFuncs.math_random ] = "GETVM.Math_random";
    builtin2runtime[ self.builtinFuncs.math_randomseed ] = "GETVM.Math_randomseed";
    
-   
    self.builtin2runtime = builtin2runtime;
+
+   self.builtin2runtimeEnv = {
+      self.builtinFuncs.__lns_runtime_log: "LnsLog"
+   };
+   
 
 
    self.type2gotypeMap = {
@@ -2006,6 +2014,8 @@ pub override fn convFilter.processRoot(
                              ( self.getSymbolSym( workNode.$newSymbol ),
                                self.getTypeSymbol( workNode.$typeInfo.$aliasSrc ) ) );
             } );
+
+   __lns.runtime.log( "NodeIndexer.need" );
    
    self.pushProcessMode( .NonClosureFuncDecl );
    _filter( node.$nodeManager.getDeclFuncNodeList(),
@@ -2510,6 +2520,10 @@ fn convFilter.outputDummyReturn( retTypeInfoList:&List<&Ast.TypeInfo> ) mut {
 pub fn convFilter.outputDeclFuncInfo(
    node: &Nodes.Node, declInfo:&Nodes.DeclFuncInfo ) mut
 {
+   if not self.enableTest and node.$inTestBlock {
+      return;
+   }
+   
    let funcType = node.$expType;
    if funcType.$abstractFlag {
       return;
@@ -4428,6 +4442,10 @@ pub override fn convFilter.processProtoClass(
 pub override fn convFilter.processDeclClass(
    node: &Nodes.DeclClassNode, opt: Opt ) mut
 {
+   if not self.enableTest and node.$inTestBlock {
+      return;
+   }
+   
    if node.isModule() {
       return;
    }
@@ -4494,6 +4512,7 @@ alge CallKind {
    RunLoaded,
    /** */
    BuiltinCall,
+   BuiltinCallEnv,
    /** */
    LuaCall,
 }
@@ -4641,25 +4660,30 @@ pub fn convFilter.outputCallPrefix(
             }
             
             if Ast.isBuiltin( funcType.$typeId.id ) {
-               switch prefixKind {
-                  case .Class {
-                     // class は継承があるので FP 経由で実行する
-                     self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
-                  }
-                  default {
-                     if! let runtime = self.getVM( funcType ) {
-                        self.write ( runtime );
-                        callKind = .BuiltinCall;
+               if! let runtime = self.builtin2runtimeEnv[ funcType ] {
+                  self.write( runtime );
+                  callKind = .BuiltinCallEnv;
+               } else {
+                  switch prefixKind {
+                     case .Class {
+                        // class は継承があるので FP 経由で実行する
+                        self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
                      }
-                     else {
-                        switch funcType {
-                           case self.builtinFuncs.list_sort,
-                                self.builtinFuncs.array_sort
-                           {  
-                              callKind = .SortCall( prefixType.$itemTypeInfoList[ 1 ] );
-                           }
+                     default {
+                        if! let runtime = self.getVM( funcType ) {
+                           self.write( runtime );
+                           callKind = .BuiltinCall;
                         }
-                        self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
+                        else {
+                           switch funcType {
+                              case self.builtinFuncs.list_sort,
+                                   self.builtinFuncs.array_sort
+                              {  
+                                 callKind = .SortCall( prefixType.$itemTypeInfoList[ 1 ] );
+                              }
+                           }
+                           self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
+                        }
                      }
                   }
                }
@@ -4837,34 +4861,19 @@ pub override fn convFilter.processExpCall(
                self.processSetFromExpList(
                   self.getConvExpName( node, argList ), 
                   funcType.$argTypeInfoList, argList, false );
-               //let argType = self.type2gotype( argList.$expType.$argTypeInfoList[1]);
-
-               // fn createCastNode( valTxt:str ) : Nodes.Node {
-               //    let statNode = Nodes.ConvStatNode.create(
-               //       self.nodeManager, node.$pos, false,
-               //       [ Ast.builtinTypeStem ], valTxt );
-               //    return Nodes.ExpCastNode.create(
-               //       self.nodeManager, node.$pos, false,
-               //       [ argList.$expType.$argTypeInfoList[1] ], statNode,
-               //       argList.$expType.$argTypeInfoList[1], .Normal );
-               // }
-               
                self.write( "( %s" (getAddEnvArg( 2, self.option.$addEnvArg ) ) );
                self.write( "val1" );
                self.outputStem2Type( argList.$expType.$argTypeInfoList[1] );
                self.write( ", val2" );
                self.outputStem2Type( argList.$expType.$argTypeInfoList[1] );
-               // filter( createCastNode( "val1" ), self, node );
-               // self.write( "," );
-               // filter( createCastNode( "val2" ), self, node );
-               // val1.(%s), val2.(%s) )
-               //    (, argType,argType ) );
                self.write( ")})" );
             }
          }
       }
       case .BuiltinCall {
          addEnvArg = false;
+      }
+      case .BuiltinCallEnv {
       }
       case .LuaCall {
          closeTxt = ")";

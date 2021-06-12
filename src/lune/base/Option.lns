@@ -510,6 +510,10 @@ usage:
                }
                case "--testing" {
                   option.testing = true;
+                  option.transCtrlInfo.testing = true;
+               }
+               case "--enableTestBlock" {
+                  option.transCtrlInfo.testing = true;
                }
                case "--depends" {
                   option.dependsPath = getNextOp();

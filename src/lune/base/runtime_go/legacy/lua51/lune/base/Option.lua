@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 10247
+   return 10341
 end
 
 
@@ -780,6 +780,9 @@ end
                   
                elseif _switchExp == "--testing" then
                   option.testing = true
+                  option.transCtrlInfo.testing = true
+               elseif _switchExp == "--enableTestBlock" then
+                  option.transCtrlInfo.testing = true
                elseif _switchExp == "--depends" then
                   option.dependsPath = getNextOp(  )
                elseif _switchExp == "--use-ipairs" then
@@ -955,7 +958,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 669, function (  )
+   Log.log( Log.Level.Log, __func__, 673, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

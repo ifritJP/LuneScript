@@ -789,44 +789,6 @@ func (self *Parser_CommentCtrl) Pop(_env *LnsEnv) {
 }
 
 
-// declaration Class -- LowToken
-type Parser_LowToken1526Mtd interface {
-}
-type Parser_LowToken1526 struct {
-    Txt string
-    Kind LnsInt
-    FP Parser_LowToken1526Mtd
-}
-func Parser_LowToken15262Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_LowToken1526).FP
-}
-type Parser_LowToken1526DownCast interface {
-    ToParser_LowToken1526() *Parser_LowToken1526
-}
-func Parser_LowToken1526DownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_LowToken1526DownCast)
-    if ok { return work.ToParser_LowToken1526() }
-    return nil
-}
-func (obj *Parser_LowToken1526) ToParser_LowToken1526() *Parser_LowToken1526 {
-    return obj
-}
-func NewParser_LowToken1526(_env *LnsEnv, arg1 string, arg2 LnsInt) *Parser_LowToken1526 {
-    obj := &Parser_LowToken1526{}
-    obj.FP = obj
-    obj.InitParser_LowToken1526(_env, arg1, arg2)
-    return obj
-}
-func (self *Parser_LowToken1526) InitParser_LowToken1526(_env *LnsEnv, arg1 string, arg2 LnsInt) {
-    self.Txt = arg1
-    self.Kind = arg2
-}
 
 func Lns_Parser_init(_env *LnsEnv) {
     if init_Parser { return }

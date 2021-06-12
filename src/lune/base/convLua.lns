@@ -385,6 +385,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
    importProcessInfo2Index[ Ast.getRootProcessInfoRo() ] =
       frontInterface.getRootDependModId();
    importProcessInfo2Index[ self.processInfo ] = 0;
+   importProcessInfo2Index[ self.processInfo.$orgInfo ] = 0;
    
    let mut importNameMap:Map<str,&frontInterface.ModuleInfo> = {};
    {
@@ -402,6 +403,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
          index = index + 1;
          importModuleType2Index[ moduleInfo.$exportInfo.$moduleTypeInfo ] = index;
          importProcessInfo2Index[ moduleInfo.$exportInfo.$processInfo ] = index;
+         importProcessInfo2Index[ moduleInfo.$exportInfo.$processInfo.$orgInfo ] = index;
       }
    }
 
@@ -797,7 +799,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
 
    fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): ExportIdKind {
       let typeId = typeInfo.$typeId;
-      if self.processInfo == typeId.$processInfo or
+      if self.processInfo.$orgInfo == typeId.$processInfo or
          not Ast.TypeInfo.hasParent( moduleTypeInfo )
       {
          return .Normal;
@@ -2715,10 +2717,14 @@ pub override fn ConvFilter.processExpCall(
    let mut setArgFlag = false;
 
    fn fieldCall():bool {
-
       let! fieldNode = node.$func@@@Nodes.RefFieldNode {
          return true;
       };
+
+      if node.$func.$expType == self.builtinFunc.__lns_runtime_log {
+         return false;
+      }
+      
       let prefixNode = fieldNode.$prefix;
 
       if prefixNode.$expType.isInheritFrom(

@@ -63,6 +63,22 @@ pub alge MetaOrModule {
 
 * バグ
 
+- [ ] 以下のフロー解析が失敗する。
+  
+fn func() : int {
+   return 1;
+}
+while true {
+   let val = func();
+   switch val {
+      case 1 {
+         break;
+      }
+   }
+}
+print( "hoge:" ); // 到達不能エラー
+  
+  
 - [ ] go で list.sort のコールバックがビルドエラーする。
       ※ _env が付かない。
       list.sort( fn ( node1:&Nodes.Node, node2:&Nodes.Node ) : bool {

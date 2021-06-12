@@ -403,6 +403,7 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    self.moduleTypeInfo = ast:get_exportInfo():get_moduleTypeInfo()
    self.moduleScope = _lune.unwrap( ast:get_exportInfo():get_moduleTypeInfo():get_scope())
    self.builtin2runtime = {}
+   self.builtin2runtimeEnv = {}
    self.type2gotypeMap = {}
    self.nodeManager = Nodes.NodeManager.new()
    self.enableTest = enableTest
@@ -411,7 +412,7 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    local modDir = self.moduleTypeInfo:getParentFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), false )
    self.modDir = modDir:gsub( "@", "" ):gsub( "%.$", "" )
    
-   self.noneNode = Nodes.NoneNode.create( self.nodeManager, Parser.noneToken.pos, false, {Ast.builtinTypeNone} )
+   self.noneNode = Nodes.NoneNode.create( self.nodeManager, Parser.noneToken.pos, false, false, {Ast.builtinTypeNone} )
    
    self.builtin2code = {[self.builtinFuncs.__lns_runmode_Sync_sym] = string.format( "%d", 0), [self.builtinFuncs.__lns_runmode_Queue_sym] = string.format( "%d", 1), [self.builtinFuncs.__lns_runmode_Skip_sym] = string.format( "%d", 2)}
    
@@ -1734,7 +1735,7 @@ function convFilter:processConvExp( node, dstTypeList, argListNode, hasRetEnv )
                         srcTxt = string.format( "%s.(%s)", valTxt, self:type2gotype( castNode:get_exp():get_expType() ))
                      end
                      
-                     local statNode = Nodes.ConvStatNode.create( self.nodeManager, exp:get_pos(), false, {exp:get_expType()}, srcTxt )
+                     local statNode = Nodes.ConvStatNode.create( self.nodeManager, exp:get_pos(), false, false, {exp:get_expType()}, srcTxt )
                      self:outputImplicitCast( castNode:get_castType(), statNode, castNode )
                      wrote = true
                   end
@@ -2352,7 +2353,9 @@ end
 
 function convFilter:processRoot( node, opt )
 
+   
    self.indexer:start( node, {[Nodes.NodeKind.get_Switch()] = true, [Nodes.NodeKind.get_Match()] = true, [Nodes.NodeKind.get_For()] = true, [Nodes.NodeKind.get_Foreach()] = true, [Nodes.NodeKind.get_Forsort()] = true, [Nodes.NodeKind.get_Apply()] = true} )
+   
    
    for __index, importNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       local info = importNode:get_info()
@@ -2423,6 +2426,8 @@ function convFilter:processRoot( node, opt )
    builtin2runtime[self.builtinFuncs.math_randomseed] = "GETVM.Math_randomseed"
    
    self.builtin2runtime = builtin2runtime
+   
+   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog"}
    
    self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream"}
    
@@ -2702,6 +2707,8 @@ function convFilter:processRoot( node, opt )
       end
       
    end
+   
+   
    
    
    
@@ -3299,6 +3306,11 @@ end
 
 function convFilter:outputDeclFuncInfo( node, declInfo )
 
+   if not self.enableTest and node:get_inTestBlock() then
+      return 
+   end
+   
+   
    local funcType = node:get_expType()
    if funcType:get_abstractFlag() then
       return 
@@ -5471,6 +5483,11 @@ end
 function convFilter:processDeclClass( node, opt )
    local __func__ = '@lune.@base.@convGo.convFilter.processDeclClass'
 
+   if not self.enableTest and node:get_inTestBlock() then
+      return 
+   end
+   
+   
    if node:isModule(  ) then
       return 
    end
@@ -5545,6 +5562,8 @@ end
 
 CallKind.BuiltinCall = { "BuiltinCall"}
 CallKind._name2Val["BuiltinCall"] = CallKind.BuiltinCall
+CallKind.BuiltinCallEnv = { "BuiltinCallEnv"}
+CallKind._name2Val["BuiltinCallEnv"] = CallKind.BuiltinCallEnv
 CallKind.FormCall = { "FormCall"}
 CallKind._name2Val["FormCall"] = CallKind.FormCall
 CallKind.LuaCall = { "LuaCall"}
@@ -5708,28 +5727,37 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
             
             if Ast.isBuiltin( funcType:get_typeId().id ) then
                do
-                  local _switchExp = prefixKind
-                  if _switchExp == Ast.TypeInfoKind.Class then
-                     self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
-                  else 
-                     
-                        do
-                           local runtime = self:getVM( funcType )
-                           if runtime ~= nil then
-                              self:write( runtime )
-                              callKind = _lune.newAlge( CallKind.BuiltinCall)
-                           else
+                  local runtime = self.builtin2runtimeEnv[funcType]
+                  if runtime ~= nil then
+                     self:write( runtime )
+                     callKind = _lune.newAlge( CallKind.BuiltinCallEnv)
+                  else
+                     do
+                        local _switchExp = prefixKind
+                        if _switchExp == Ast.TypeInfoKind.Class then
+                           self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
+                        else 
+                           
                               do
-                                 local _switchExp = funcType
-                                 if _switchExp == self.builtinFuncs.list_sort or _switchExp == self.builtinFuncs.array_sort then
-                                    callKind = _lune.newAlge( CallKind.SortCall, {prefixType:get_itemTypeInfoList()[1]})
+                                 local runtime = self:getVM( funcType )
+                                 if runtime ~= nil then
+                                    self:write( runtime )
+                                    callKind = _lune.newAlge( CallKind.BuiltinCall)
+                                 else
+                                    do
+                                       local _switchExp = funcType
+                                       if _switchExp == self.builtinFuncs.list_sort or _switchExp == self.builtinFuncs.array_sort then
+                                          callKind = _lune.newAlge( CallKind.SortCall, {prefixType:get_itemTypeInfoList()[1]})
+                                       end
+                                    end
+                                    
+                                    self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
                                  end
                               end
                               
-                              self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
-                           end
                         end
-                        
+                     end
+                     
                   end
                end
                
@@ -5944,6 +5972,8 @@ function convFilter:processExpCall( node, opt )
       elseif _matchExp[1] == CallKind.BuiltinCall[1] then
       
          addEnvArg = false
+      elseif _matchExp[1] == CallKind.BuiltinCallEnv[1] then
+      
       elseif _matchExp[1] == CallKind.LuaCall[1] then
       
          closeTxt = ")"

@@ -95,3 +95,7 @@ func LnsExecRunner(_env *LnsEnv, runner LnsRunner) {
 func LnsJoin(_env *LnsEnv, runner LnsRunner) {
 	runner.GetLnsSyncFlag().Wait(_env)
 }
+
+func LnsLog(_env *LnsEnv, mess string) {
+	lns_threadMgrInfo.log(_env, mess)
+}

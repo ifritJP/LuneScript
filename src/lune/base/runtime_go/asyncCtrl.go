@@ -38,6 +38,7 @@ const (
 	_THREAD_EVENT_REQ   = 0
 	_THREAD_EVENT_START = 1
 	_THREAD_EVENT_END   = 2
+	_THREAD_EVENT_LOG   = 3
 )
 
 type lnsThreadEvent struct {
@@ -56,6 +57,8 @@ type lnsThreadEvent struct {
 	info2 int
 	// イベント発生時の runNum
 	runNum int
+	// メッセージ
+	mess string
 }
 
 type lnsRunnerInfo struct {
@@ -92,10 +95,16 @@ func (self *Lns_ThreadMgrInfo) unlock() {
 	self.mutex.Unlock()
 }
 
+func (self *Lns_ThreadMgrInfo) newThreadEvent(
+	runnerId int, runnerName string,
+	eventId int, info1 int, info2 int, mess string) *lnsThreadEvent {
+	return &lnsThreadEvent{
+		time.Now(), runnerId, runnerName, eventId, info1, info2, self.runNum, mess}
+}
+
 func (self *Lns_ThreadMgrInfo) newEvent(
 	runnerInfo *lnsRunnerInfo, eventId int, info1 int, info2 int) *lnsThreadEvent {
-	return &lnsThreadEvent{
-		time.Now(), runnerInfo.id, runnerInfo.name, eventId, info1, info2, self.runNum}
+	return self.newThreadEvent(runnerInfo.id, runnerInfo.name, eventId, info1, info2, "")
 }
 
 const (
@@ -113,6 +122,16 @@ const (
 	// limitNum オーバー時、 処理を動かさない
 	_RUN_MODE_ON_FULL_SKIP = 2
 )
+
+func (self *Lns_ThreadMgrInfo) log(_env *LnsEnv, mess string) {
+	if lns_thread_event_on {
+		self.lock()
+		defer self.unlock()
+		self.eventList.PushBack(self.newThreadEvent(
+			_env.runnerId, _env.runnerName, _THREAD_EVENT_LOG, 0, 0, mess))
+
+	}
+}
 
 /**
   runner を実行する。
@@ -252,9 +271,9 @@ func (self *Lns_ThreadMgrInfo) dumpEventLog(write func(txt string)) {
 
 		delta := event.time.Sub(lns_profStartTime)
 		write(fmt.Sprintf(
-			"%5d:%3d:%d:%d:%3d:%3d:%s", delta.Milliseconds(),
+			"%5d:%3d:%d:%d:%3d:%3d:%s:%s", delta.Milliseconds(),
 			event.runnerId, event.kind, event.info1, event.info2,
-			event.runNum, event.runnerName))
+			event.runNum, event.runnerName, event.mess))
 		write("\n")
 
 	}

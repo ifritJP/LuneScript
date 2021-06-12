@@ -531,6 +531,7 @@ function ProcessInfo.new( validCheckingMutable, idProvBase, validExtType, validD
    return obj
 end
 function ProcessInfo:__init(validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map) 
+   self.orgInfo = self
    self.dummyParentType = nil
    self.topScope = nil
    self.miscTypeData = TypeData.new()
@@ -552,7 +553,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 205, function (  )
+   Log.log( Log.Level.Trace, __func__, 207, function (  )
    
       return "start"
    end )
@@ -597,6 +598,9 @@ function ProcessInfo:set_topScope( topScope )
 end
 function ProcessInfo:set_dummyParentType( dummyParentType )
    self.dummyParentType = dummyParentType
+end
+function ProcessInfo:get_orgInfo()
+   return self.orgInfo
 end
 
 
@@ -645,6 +649,9 @@ function IdInfo:equals( idInfo )
 end
 function IdInfo.setmeta( obj )
   setmetatable( obj, { __index = IdInfo  } )
+end
+function IdInfo:set_id( id )
+   self.id = id
 end
 function IdInfo:get_processInfo()
    return self.processInfo
@@ -1381,7 +1388,7 @@ function SerializeInfo:serializeId( idInfo )
       return string.format( "{ id = %d, mod = 0 }", id)
    end
    
-   local processId = _lune.unwrap( self.processInfo2Id[idInfo.processInfo])
+   local processId = _lune.unwrap( self.processInfo2Id[idInfo:get_processInfo()])
    return string.format( "{ id = %d, mod = %d }", idInfo:get_orgId(), processId)
 end
 function SerializeInfo.setmeta( obj )
@@ -6190,6 +6197,12 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
    end
    
 end
+function NormalTypeInfo:cloneForMeta( processInfo )
+
+   local newType = NormalTypeInfo.new(processInfo, self.abstractFlag, nil, self.baseTypeInfo, self.interfaceList, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, self.parentInfo, nil, self.kind, self.itemTypeInfoList, self.argTypeInfoList, self.retTypeInfoList, self.mutMode, self.moduleLang, self.asyncMode)
+   newType.typeId = self.typeId
+   return newType
+end
 function NormalTypeInfo:createAlt2typeMap( detectFlag )
 
    local map = self.baseTypeInfo:createAlt2typeMap( detectFlag )
@@ -6484,6 +6497,42 @@ function NormalTypeInfo:get_imutType()
 end
 function NormalTypeInfo:set_imutType( imutType )
    self.imutType = imutType
+end
+
+
+function ProcessInfo:duplicate(  )
+
+   local processInfo = ProcessInfo.new(self.validCheckingMutable, self.idProvBase:clone(  ), self.validExtType, self.validDetailError, (_lune.unwrap( self.typeInfo2Map) ):clone(  ))
+   processInfo.orgInfo = self
+   processInfo.idProvExt = self.idProvExt:clone(  )
+   processInfo.idProvSym = self.idProvSym:clone(  )
+   processInfo.idProvScope = self.idProvScope:clone(  )
+   
+   for typeId, typeInfo in pairs( self.id2TypeInfo ) do
+      local dupTypeInfo
+      
+      do
+         local _switchExp = typeInfo:get_kind()
+         if _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method then
+            do
+               local funcTypeInfo = _lune.__Cast( typeInfo, 3, NormalTypeInfo )
+               if funcTypeInfo ~= nil then
+                  dupTypeInfo = funcTypeInfo:cloneForMeta( processInfo )
+               else
+                  dupTypeInfo = typeInfo
+               end
+            end
+            
+         else 
+            
+               dupTypeInfo = typeInfo
+         end
+      end
+      
+      processInfo.id2TypeInfo[typeId] = dupTypeInfo
+   end
+   
+   return processInfo
 end
 
 

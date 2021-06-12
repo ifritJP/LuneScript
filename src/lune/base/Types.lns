@@ -69,12 +69,13 @@ pub class TransCtrlInfo {
    pub let mut validAsyncCtrl:bool;
    /** async 属性の default を __async にする */
    pub let mut defaultAsync:bool;
+   pub let mut testing:bool;
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
    return new TransCtrlInfo(
       false, false, true, false, .Touch,
-      false, false, true, false, false, false, false );
+      false, false, true, false, false, false, false, false );
 }
 
 

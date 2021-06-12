@@ -257,15 +257,15 @@ _moduleObj.TransCtrlInfo = TransCtrlInfo
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )
 end
-function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync )
+function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync, testing )
    local obj = {}
    TransCtrlInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync )
+      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync, testing )
    end
    return obj
 end
-function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync )
+function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync, testing )
 
    self.warningShadowing = warningShadowing
    self.compatComment = compatComment
@@ -279,12 +279,13 @@ function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAb
    self.validAstDetailError = validAstDetailError
    self.validAsyncCtrl = validAsyncCtrl
    self.defaultAsync = defaultAsync
+   self.testing = testing
 end
 
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false, true, false, false, false, false)
+   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false, true, false, false, false, false, false)
 end
 
 
