@@ -38,7 +38,6 @@ import lune.base.Types;
 import lune.base.Log;
 import lune.base.LuneControl;
 import lune.base.Option;
-import lune.base.DependLuaOnLns;
 import lune.base.frontInterface;
 import lune.base.Builtin;
 
@@ -713,7 +712,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
          self.writeln( "}" );
          self.write( "info.symList = {" );
          let mut firstFlag = true;
-         forsort symInfo, name in macroInfo.symbol2MacroValInfoMap {
+         forsort symInfo, name in macroInfo.$symbol2MacroValInfoMap {
             if firstFlag {
                firstFlag = false;
             }
@@ -1857,7 +1856,7 @@ pub override fn ConvFilter.processExpMacroExp(
 };
 
 
-form outputMacroStmtBlock();
+form outputMacroStmtBlock() __trans;
 
 pub fn ConvFilter.outputDeclMacro(
    name:str, argNameList:&List<str>, callback:outputMacroStmtBlock ) mut
@@ -3636,40 +3635,15 @@ pub fn createFilter(
 
 
 
-pub fn runLuaOnLns( code:str, baseDir:str! ) __noasync : Luaval<&stem>!, str {
-   let loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir );
-   when! loadFunc {
-      let mod = loadFunc();
-      when! mod {
-         return mod, "";
-      }
-      return nil, "load error";
-   }
-   return nil, err;
-}
-
 pub class MacroEvalImp extend Nodes.MacroEval {
 
    let builtinFunc:&Builtin.BuiltinFuncType;
 
    
-   _lune_control default_noasync_this_class;
+   //_lune_control default_noasync_this_class;
    
-   fn evalFromMacroCode( code:str, baseDir:str! ): Luaval<Nodes.macroStatmentProc> {
-
-      Log._log2( .Trace, "macro: %s" (code) );
-      
-      let func, err = runLuaOnLns( code, baseDir );
-      when! func {
-         return func@@Luaval<Nodes.macroStatmentProc>;
-      }
-      Util.err( err );
-   }
-
-   pub override fn evalFromCode(
-      processInfo:Ast.ProcessInfo, 
-      name:str, argNameList:&List<str>, code:str!, baseDir:str! ):
-      Luaval<Nodes.macroStatmentProc>
+   pub override fn evalFromCodeToLuaCode(
+      processInfo:Ast.ProcessInfo, name:str, argNameList:&List<str>, code:str! ): str
    {
       let mut stream = new Util.memStream();
       let mut conv = new ConvFilter(
@@ -3678,19 +3652,17 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 
       conv.outputDeclMacro(
          name, argNameList,
-         fn () {
+         fn () __trans {
             when! code {
                conv.write( code );
             }
          });
 
-      return self.evalFromMacroCode( stream.$txt, baseDir );
+      return stream.$txt;
    }
 
-
-   pub override fn eval( processInfo:Ast.ProcessInfo,
-                         node: Nodes.DeclMacroNode, baseDir:str! ):
-      Luaval<Nodes.macroStatmentProc>
+   pub override fn evalToLuaCode(
+      processInfo:Ast.ProcessInfo, node: Nodes.DeclMacroNode ): str
    {
       let mut stream = new Util.memStream();
       let mut conv = new ConvFilter(
@@ -3700,7 +3672,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 
       conv.processDeclMacro( node, new Opt( node ) );
 
-      return self.evalFromMacroCode( stream.$txt, baseDir );
+      return stream.$txt;
    }
 }
 
@@ -3799,22 +3771,24 @@ _ = 1;
       return metaStream.$txt, stream.$txt;
    }
 
-   pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) __noasync {
-      let loaded, mess = _load( luaCode## );
-      when! loaded {
-         if! let mod = loaded(##) {
-            if! let listobj = mod.outputList {
-               let strList = listobj@@List<str>;
-               if Testing._eq( ctrl, #strList, 4 ) {
-                  Testing._eq( ctrl, strList[ 1 ], "hello world" );
-                  Testing._eq( ctrl, strList[ 2 ], "11" );
-                  Testing._eq( ctrl, strList[ 3 ], "12" );
-                  Testing._eq( ctrl, strList[ 4 ], "13" );
+   pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) {
+      __luago {
+         let loaded, mess = _load( luaCode## );
+         when! loaded {
+            if! let mod = loaded(##) {
+               if! let listobj = mod.outputList {
+                  let strList = listobj@@List<str>;
+                  if Testing._eq( ctrl, #strList, 4 ) {
+                     Testing._eq( ctrl, strList[ 1 ], "hello world" );
+                     Testing._eq( ctrl, strList[ 2 ], "11" );
+                     Testing._eq( ctrl, strList[ 3 ], "12" );
+                     Testing._eq( ctrl, strList[ 4 ], "13" );
+                  }
                }
             }
+         } else {
+            print( mess );
          }
-      } else {
-         print( mess );
       }
    }
 }

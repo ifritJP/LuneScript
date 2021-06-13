@@ -83,32 +83,32 @@ func Depend_profileSub(
 		}
 		defer pprof.StopCPUProfile()
 
-        {
-            depend_setRunnerLog( true )
-            profRunner, err := os.Create(path + "runner")
-            if err != nil {
-                panic( err );
-            }
-            defer lns_threadMgrInfo.dumpEventLog( func(txt string) {
-                profRunner.Write( []byte(txt) )
-            } )
-        }
+		{
+			depend_setRunnerLog(true)
+			profRunner, err := os.Create(path + "runner")
+			if err != nil {
+				panic(err)
+			}
+			defer lns_threadMgrInfo.dumpEventLog(func(txt string) {
+				profRunner.Write([]byte(txt))
+			})
+		}
 
-        if lns_traceOn {
-            // trace
-            proftrace, err := os.Create(path + "trace")
-            if err != nil {
-                panic(err)
-            }
-            if err := trace.Start(proftrace); err != nil {
-                panic( fmt.Sprintf( "failed to start trace: %v", err) )
-            }
-            defer trace.Stop()
-        }
-        
+		if lns_traceOn {
+			// trace
+			proftrace, err := os.Create(path + "trace")
+			if err != nil {
+				panic(err)
+			}
+			if err := trace.Start(proftrace); err != nil {
+				panic(fmt.Sprintf("failed to start trace: %v", err))
+			}
+			defer trace.Stop()
+		}
+
 		// mem
 		printMemInfo("start")
-    }
+	}
 
 	ret := work()
 
@@ -162,7 +162,8 @@ func depend_existFile(path string) bool {
 
 //var dependLuaOnLns_runLuaOnLnsFunc func(luaCode string) (LnsAny, string) = nil
 
-func dependLuaOnLns_runLuaOnLns(luaCode string, baseDir LnsAny) (LnsAny, string) {
+func dependLuaOnLns_runLuaOnLns(
+	_env *LnsEnv, luaCode string, baseDir LnsAny, async bool) (LnsAny, string) {
 
 	setBindListStr := ""
 	for key, _ := range lnsSrcMap {
@@ -239,7 +240,10 @@ local txt=[===[
 return DependLuaOnLns.runLuaOnLns( txt )
     `, setBindListStr, luaCode)
 
-	luaVM := Lns_getVM()
+	luaVM := _env.GetVM()
+	if !async {
+		luaVM = _env.CommonLuaVM
+	}
 	loaded, err := luaVM.Load(txt, nil)
 	if loaded != nil {
 		ret := luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), []LnsAny{})
@@ -281,6 +285,6 @@ func depend_setRuntimeLog(valid bool) {
 }
 
 func depend_setRunnerLog(valid bool) {
-    lns_thread_event_on = valid
-    
+	lns_thread_event_on = valid
+
 }

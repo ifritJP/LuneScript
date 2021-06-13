@@ -804,9 +804,14 @@ macro-statment に定義した処理を表わす関数。
 */
 pub form macroStatmentProc( macroArg:&Map<str,&stem> ): &Map<str,&stem>;
 
+pub alge MacroStatement {
+   /** */
+   Import( name:str, argNameList:&List<str>, luaCode:str!, baseDir:str! ),
+   Local(Luaval<macroStatmentProc>),
+}
 pub abstract class MacroInfo {
-   pub let func: Luaval<macroStatmentProc>;
-   pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
+   let func: Luaval<macroStatmentProc> {pub};
+   let symbol2MacroValInfoMap: Map<str,MacroValInfo> {pub};
    pub abstract fn getArgList():&List<&MacroArgInfo>;
    pub abstract fn getTokenList():&List<&Parser.Token>;
    pub abstract fn get_name():str;
@@ -1340,6 +1345,10 @@ _declNodeClass( "ExpCast", Node, false, true, false,
                 [ { "exp": "&Node" },
                   // キャスト後の型
                   { "castType": "&Ast.TypeInfo" },
+                  // キャスト後の型を指定している Node。
+                  // ソース上に指定がない場合は nil。
+                  { "castTypeNode": "&RefTypeNode!" },
+                  { "castOpe" : "str" },
                   { "castKind": "CastKind" } ]
 );
 
@@ -1783,8 +1792,17 @@ pub override fn ExpCallSuperNode.canBeRight( processInfo:Ast.ProcessInfo ):bool 
    return self.$expType ~= Ast.builtinTypeNone;
 }
 
+pub enum LockKind {
+   /** __asyncLock */
+   AsyncLock,
+   /** __luago */
+   NoasyncLua,
+   /** __unsafe */
+   Unsafe,
+}
 _declNodeClass( "AsyncLock", Node, false, false, true,
-                [ { "block": "&BlockNode" } ]
+                [ { "lockKind": "LockKind" },
+                  { "block": "&BlockNode" } ]
 );
 
 _declNodeClass( "DeclMember", Node, false, false, true,
@@ -2066,17 +2084,20 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
                 [ { "declInfo": "DeclMacroInfo" } ]
 );
 
-
-
 pub abstract class MacroEval {
-   _lune_control default_noasync_this_class;
+   //_lune_control default_noasync_this_class;
    
-   pub abstract fn evalFromCode(
-      processInfo:Ast.ProcessInfo,
-      name:str, argNameList:&List<str>, code:str!, baseDir:str! ) : Luaval<macroStatmentProc>;
-   pub abstract fn eval(
-      processInfo:Ast.ProcessInfo,
-      macroNode: DeclMacroNode, baseDir:str! ) : Luaval<macroStatmentProc>;
+   // pub abstract fn evalFromCode(
+   //    processInfo:Ast.ProcessInfo, name:str,
+   //    argNameList:&List<str>, code:str!, baseDir:str! ) : Luaval<macroStatmentProc>;
+   // pub abstract fn eval(
+   //    processInfo:Ast.ProcessInfo,
+   //    macroNode: DeclMacroNode, baseDir:str! ) : Luaval<macroStatmentProc>;
+
+   pub abstract fn evalFromCodeToLuaCode(
+      processInfo:Ast.ProcessInfo, name:str, argNameList:&List<str>, code:str! ) : str;
+   pub abstract fn evalToLuaCode(
+      processInfo:Ast.ProcessInfo, macroNode: DeclMacroNode ) : str;
 }
 
 

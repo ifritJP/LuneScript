@@ -7286,6 +7286,10 @@ function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, pa
 end
 
 
+local builtinTypeLnsLoad = rootProcessInfo:createFuncAsync( false, true, nil, TypeInfoKind.Func, headTypeInfoMut, false, true, true, AccessMode.Pub, "_lnsLoad", Async.Async, nil, {_moduleObj.builtinTypeString, _moduleObj.builtinTypeString}, {_moduleObj.builtinTypeStem}, false )
+_moduleObj.builtinTypeLnsLoad = builtinTypeLnsLoad
+
+
 function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
 
    local info = NormalTypeInfo.new(self, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self.miscTypeData, TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
@@ -7587,6 +7591,9 @@ _moduleObj.builtinTypeExp = builtinTypeExp
 
 local builtinTypeMultiExp = NormalTypeInfo.createBuiltin( "Exps", "__exps", TypeInfoKind.Prim )
 _moduleObj.builtinTypeMultiExp = builtinTypeMultiExp
+
+local builtinTypeBlockArg = NormalTypeInfo.createBuiltin( "Block", "__block", TypeInfoKind.Prim )
+_moduleObj.builtinTypeBlockArg = builtinTypeBlockArg
 
 
 local CombineType = {}
@@ -9387,7 +9394,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    end
    
    
-   if dest == _moduleObj.builtinTypeExp or dest == _moduleObj.builtinTypeMultiExp then
+   if dest == _moduleObj.builtinTypeExp or dest == _moduleObj.builtinTypeMultiExp or dest == _moduleObj.builtinTypeBlockArg then
       if other == _moduleObj.builtinTypeMultiExp and dest ~= _moduleObj.builtinTypeMultiExp then
          return false, "can't eval from '__exp' to '__exps'."
       end

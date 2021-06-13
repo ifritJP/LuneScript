@@ -553,17 +553,23 @@ setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
    
-   local loaded = _lune.loadstring52( "return {}" )
-   local emptyTable
+   local modVal, moduleMeta
    
-   if loaded ~= nil then
-      emptyTable = _lune.unwrap( loaded(  ))
-   else
-      error( "load error" )
+   do
+      local emptyTable
+      
+      local loaded = _lune.loadstring52( "return {}" )
+      if loaded ~= nil then
+         emptyTable = _lune.unwrap( loaded(  ))
+      else
+         error( "load error" )
+      end
+      
+      moduleMeta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.Meta, {emptyTable}))
+      modVal = require( mod )
    end
    
-   local meta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.Meta, {emptyTable}))
-   return require( mod ), meta
+   return modVal, moduleMeta
 end
 function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
 

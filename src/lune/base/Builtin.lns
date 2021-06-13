@@ -137,6 +137,7 @@ builtin 関数の TypeInfo を保持するクラス。
       let mut allFuncTypeSet:Set<&Ast.TypeInfo> {pub};
       let mut allSymbolSet:Set<&Ast.SymbolInfo> {pub};
       let mut needThreadingTypes:Set<&Ast.TypeInfo> {pub};
+      let luavalFuncTypeSet:Set<&Ast.TypeInfo>;
       
       pub fn __init() {
          ,,initMemberList;
@@ -146,6 +147,15 @@ builtin 関数の TypeInfo を保持するクラス。
          self.allSymbolSet = (@);
          self.allFuncTypeSet = (@);
          self.needThreadingTypes = (@);
+         self.luavalFuncTypeSet = (@);
+      }
+
+      local fn addLuavalFunc( typeInfo:&Ast.TypeInfo ) mut {
+         self.luavalFuncTypeSet.add( typeInfo );
+      }
+      
+      pub fn isLuavalFunc( typeInfo:&Ast.TypeInfo ) __async : bool {
+         return self.luavalFuncTypeSet.has( typeInfo );
       }
 
       pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
@@ -586,12 +596,15 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
             } else {
                asyncMode = .Async;
             }
-            // asyncMode = .Async;
             
             let mut typeInfo = self.processInfo.createFuncAsync(
                abstractFlag, true, scope, kind,
                Ast.getBuiltinMut( parentInfo), false, true, staticFlag, accessMode,
                fieldName, asyncMode, nil, argTypeList, retTypeList, mutable );
+            if self.hasLuaval {
+               builtinFunc.addLuavalFunc( typeInfo );
+            }
+            
 
             self.transUnit.popScope();
 
@@ -739,15 +752,17 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
             default {
                if className.find( "<" ## ) {
                   name = "";
-                  apply token of className.gmatch( "[^<>,%s]+" ) {
-                     if #name == 0 {
-                        name = token;
-                     }
-                     else {
-                        genTypeList.insert(
-                           (self.processInfo.createAlternate(
-                              true, #genTypeList + 1,
-                              token, .Pri, Ast.headTypeInfo ## )) );
+                  __luago {
+                     apply token of className.gmatch( "[^<>,%s]+" ) {
+                        if #name == 0 {
+                           name = token;
+                        }
+                        else {
+                           genTypeList.insert(
+                              (self.processInfo.createAlternate(
+                                 true, #genTypeList + 1,
+                                 token, .Pri, Ast.headTypeInfo ## )) );
+                        }
                      }
                   }
                }

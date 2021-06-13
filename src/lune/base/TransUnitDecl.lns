@@ -715,6 +715,8 @@ pub fn TransUnit.createAST(
       self.analyzePhase = .Main;
 
       __lns.runtime.log( "ready meta" );
+      // self.processInfo.duplicate();
+      // __lns.runtime.log( "duplicated" );
       
       {
          let mut bakParser = self.parser;
@@ -871,7 +873,7 @@ fn TransUnit.analyzeDeclMacroSub(
 {
    if self.macroCtrl.$isDeclaringMacro {
       // macro 定義内に、別のマクロ定義はサポート外
-      self.error( "can't declare macro in the macro." );
+      self.error( "can't declare the macro in the macro." );
    }
    
    self.macroCtrl.startDecl();
@@ -931,13 +933,14 @@ fn TransUnit.analyzeDeclMacroSub(
   
       
 
-      let funcType = self.processInfo.createFuncAsync(
-         false, true, nil, .Func,
-         //Ast.getBuiltinMut( Ast.headTypeInfo ), false, true,
-         self.processInfo.$dummyParentType, false, true,
-         true, .Global, "_lnsLoad", .Async,
-         nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
-         [ Ast.builtinTypeStem ], false );
+      // let funcType = self.processInfo.createFuncAsync(
+      //    false, true, nil, .Func,
+      //    //Ast.getBuiltinMut( Ast.headTypeInfo ), false, true,
+      //    self.processInfo.$dummyParentType, false, true,
+      //    true, .Global, "_lnsLoad", .Async,
+      //    nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
+      //    [ Ast.builtinTypeStem ], false );
+      let funcType = Ast.builtinTypeLnsLoad;
       macroScope.addLocalVar(
          self.processInfo, false, false, "_lnsLoad", nil, funcType, .IMut );
 
@@ -1010,8 +1013,10 @@ fn TransUnit.analyzeDeclMacroSub(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], declMacroInfo );
 
-   __asyncLock { 
-      self.macroCtrl.regist( self.processInfo, node, macroScope, self.baseDir );
+   __asyncLock {
+      if! self.macroCtrl.regist( self.processInfo, node, macroScope, self.baseDir ) {
+         self.errorAt( nameToken.pos, _exp );
+      }
    }
 
    return node;
@@ -3332,7 +3337,7 @@ fn TransUnit.analyzeDeclFunc(
       self.namespace2Scope[ typeInfo ] = funcBodyScope;
    }
    if asyncLocked {
-      nsInfo.incLock();
+      nsInfo.incLock( .AsyncLock );
    }
 
    if overrideFlag {

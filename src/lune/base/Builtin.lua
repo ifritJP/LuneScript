@@ -438,6 +438,15 @@ function BuiltinFuncType:__init()
    self.allSymbolSet = {}
    self.allFuncTypeSet = {}
    self.needThreadingTypes = {}
+   self.luavalFuncTypeSet = {}
+end
+function BuiltinFuncType:addLuavalFunc( typeInfo )
+
+   self.luavalFuncTypeSet[typeInfo]= true
+end
+function BuiltinFuncType:isLuavalFunc( typeInfo )
+
+   return _lune._Set_has(self.luavalFuncTypeSet, typeInfo )
 end
 function BuiltinFuncType:register( symbolInfo )
 
@@ -1348,6 +1357,10 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                
                
                local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable )
+               if self.hasLuaval then
+                  builtinFunc:addLuavalFunc( typeInfo )
+               end
+               
                
                self.transUnit:popScope(  )
                
@@ -1496,12 +1509,15 @@ function Builtin:registBuiltInScope(  )
                
                   if className:find( "<" ) then
                      name = ""
-                     for token in className:gmatch( "[^<>,%s]+" ) do
-                        if #name == 0 then
-                           name = token
-                        else
-                         
-                           table.insert( genTypeList, (self.processInfo:createAlternate( true, #genTypeList + 1, token, Ast.AccessMode.Pri, Ast.headTypeInfo ) ) )
+                     do
+                        for token in className:gmatch( "[^<>,%s]+" ) do
+                           if #name == 0 then
+                              name = token
+                           else
+                            
+                              table.insert( genTypeList, (self.processInfo:createAlternate( true, #genTypeList + 1, token, Ast.AccessMode.Pri, Ast.headTypeInfo ) ) )
+                           end
+                           
                         end
                         
                      end

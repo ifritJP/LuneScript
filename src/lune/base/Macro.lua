@@ -287,30 +287,75 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
+local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
+
 local function loadCode( code )
 
-   local loaded, mess = _lune.loadstring52( code )
-   if loaded ~= nil then
-      do
-         local obj = loaded(  )
-         if obj ~= nil then
-            return obj
+   local ret
+   
+   do
+      local loaded, mess = _lune.loadstring52( code )
+      if loaded ~= nil then
+         do
+            local obj = loaded(  )
+            if obj ~= nil then
+               ret = obj
+            else
+               error( "failed to load" )
+            end
          end
+         
+      else
+         error( string.format( "%s -- %s", mess, code) )
       end
       
-      error( "failed to load" )
    end
    
-   error( string.format( "%s -- %s", mess, code) )
+   return ret
+end
+
+local function runLuaOnLns( code, baseDir, async )
+
+   local loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir, async )
+   if loadFunc ~= nil then
+      local mod = nil
+      if async then
+         do
+            mod = loadFunc(  )
+         end
+         
+      else
+       
+         do
+            mod = loadFunc(  )
+         end
+         
+      end
+      
+      if mod ~= nil then
+         return mod, ""
+      end
+      
+      return nil, "load error"
+   end
+   
+   return nil, err
+end
+
+local function runLuaOnLnsToMacroProc( code, baseDir, async )
+
+   local luaObj, err = runLuaOnLns( code, baseDir, async )
+   if luaObj ~= nil then
+      return luaObj, ""
+   end
+   
+   return nil, err
 end
 
 
-local toListEmpty = loadCode( "return function() return {} end" )
-_moduleObj.toListEmpty = toListEmpty
 
-
-local toLuaval = loadCode( "return function( val ) return val end" )
-_moduleObj.toLuaval = toLuaval
+local toLuavalNoasync = loadCode( "return function( val ) return val end" )
+_moduleObj.toLuavalNoasync = toLuavalNoasync
 
 
 local MacroMetaArgInfo = {}
@@ -422,7 +467,7 @@ function MacroParser:__init(tokenList, name, overridePos)
    self.pos = 1
    self.tokenList = tokenList
    self.name = name
-   self.overridePos = overridePos
+   self.overridePos = _lune.nilacc( overridePos, 'get_orgPos', 'callmtd' )
 end
 function MacroParser:createPosition( lineNo, column )
 
@@ -548,24 +593,28 @@ function ExtMacroInfo:getTokenList(  )
 
    return self.tokenList
 end
-function ExtMacroInfo.new( name, func, symbol2MacroValInfoMap, argList, tokenList )
+function ExtMacroInfo.new( name, func, symbol2MacroValInfoMap, argList, tokenList, baseDir )
    local obj = {}
    ExtMacroInfo.setmeta( obj )
-   if obj.__init then obj:__init( name, func, symbol2MacroValInfoMap, argList, tokenList ); end
+   if obj.__init then obj:__init( name, func, symbol2MacroValInfoMap, argList, tokenList, baseDir ); end
    return obj
 end
-function ExtMacroInfo:__init(name, func, symbol2MacroValInfoMap, argList, tokenList) 
+function ExtMacroInfo:__init(name, func, symbol2MacroValInfoMap, argList, tokenList, baseDir) 
    Nodes.MacroInfo.__init( self,func, symbol2MacroValInfoMap)
    
    self.name = name
    self.argList = argList
    self.tokenList = tokenList
+   self.baseDir = baseDir
 end
 function ExtMacroInfo.setmeta( obj )
   setmetatable( obj, { __index = ExtMacroInfo  } )
 end
 function ExtMacroInfo:get_name()
    return self.name
+end
+function ExtMacroInfo:get_baseDir()
+   return self.baseDir
 end
 
 
@@ -606,6 +655,10 @@ function MacroAnalyzeInfo:isAnalyzingExpArg(  )
 
    return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) == Ast.builtinTypeExp
 end
+function MacroAnalyzeInfo:isAnalyzingBlockArg(  )
+
+   return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) == Ast.builtinTypeBlockArg
+end
 function MacroAnalyzeInfo.setmeta( obj )
   setmetatable( obj, { __index = MacroAnalyzeInfo  } )
 end
@@ -629,6 +682,8 @@ function MacroCtrl.new( macroEval )
    return obj
 end
 function MacroCtrl:__init(macroEval) 
+   self.toLuavalLuaAsync = nil
+   self.useLnsLoad = false
    self.declMacroInfoMap = {}
    self.isDeclaringMacro = false
    self.tokenExpanding = false
@@ -640,8 +695,12 @@ function MacroCtrl:__init(macroEval)
    self.macroCallLineNo = 0
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
    
-   do
-      self.macroLocalVarMap = _moduleObj.toListEmpty(  )
+   self.macroLocalVarMap = nil
+end
+function MacroCtrl:setToUseLnsLoad(  )
+
+   if self.isDeclaringMacro then
+      self.useLnsLoad = true
    end
    
 end
@@ -675,7 +734,7 @@ local function equalsType( typeInfo, builtinType )
 
    return typeInfo:get_srcTypeInfo() == builtinType
 end
-function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
+function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTypeInfo, expList )
 
    self.useModuleMacroSet[macroTypeInfo:getModule(  )]= true
    
@@ -707,72 +766,229 @@ function MacroCtrl:evalMacroOp( streamName, firstToken, macroTypeInfo, expList )
       local macroArgNodeList = macroInfo:getArgList(  )
       
       local macroArgName2ArgNode = {}
-      if expList ~= nil then
-         for index, argNode in ipairs( expList:get_expList() ) do
-            local declArgNode = macroArgNodeList[index]
-            macroArgName2ArgNode[declArgNode:get_name()] = argNode
-            local literal, mess = argNode:getLiteral(  )
-            if literal ~= nil then
-               do
-                  local val = getLiteralMacroVal( literal )
-                  if val ~= nil then
-                     argValMap[index] = val
-                     
-                     if argNode:get_expType() == Ast.builtinTypeSymbol then
-                        macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val[1] )
+      
+      local errmess = nil
+      
+      local innerMacro = macroTypeInfo:getModule(  ) == moduleTypeInfo
+      
+      local toLuaval
+      
+      if innerMacro then
+         local work = self.toLuavalLuaAsync
+         if  nil == work then
+            local _work = work
+         
+            work = loadCode( "return function( val ) return val end" )
+            self.toLuavalLuaAsync = work
+         end
+         
+         
+         toLuaval = _moduleObj.toLuavalNoasync
+      else
+       
+         toLuaval = _moduleObj.toLuavalNoasync
+      end
+      
+      
+      
+      if innerMacro then
+         do
+            do
+               if expList ~= nil then
+                  
+                  for index, argNode in ipairs( expList:get_expList() ) do
+                     local declArgNode = macroArgNodeList[index]
+                     macroArgName2ArgNode[declArgNode:get_name()] = argNode
+                     local literal, mess = argNode:getLiteral(  )
+                     if literal ~= nil then
+                        do
+                           local val = getLiteralMacroVal( literal )
+                           if val ~= nil then
+                              argValMap[index] = val
+                              
+                              if argNode:get_expType() == Ast.builtinTypeSymbol then
+                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
+                              else
+                               
+                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+                              end
+                              
+                           end
+                        end
+                        
                      else
-                      
-                        macroArgValMap[declArgNode:get_name()] = _moduleObj.toLuaval( val )
+                        errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
+                        break
                      end
                      
                   end
+                  
                end
                
-            else
-               local errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
-               return errmess
+               
+               if not errmess then
+                  
+                  local varMap = self.macroLocalVarMap
+                  if  nil == varMap then
+                     local _varMap = varMap
+                  
+                     local toListEmpty = loadCode( "return function() return {} end" )
+                     varMap = toListEmpty(  )
+                  end
+                  
+                  if innerMacro then
+                     macroArgValMap["__var"] = varMap
+                  end
+                  
+                  
+                  local func = macroInfo:get_func()
+                  local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
+                  
+                  if innerMacro then
+                     self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
+                  end
+                  
+                  
+                  for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
+                     local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
+                     if  nil == valInfo then
+                        local _valInfo = valInfo
+                     
+                        Util.err( string.format( "not found macro symbol -- %s", name) )
+                     end
+                     
+                     local typeInfo = valInfo.typeInfo
+                     
+                     local valMap
+                     
+                     do
+                        local val = macroVars[name]
+                        if val ~= nil then
+                           if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
+                              valMap = {[1] = val}
+                           else
+                            
+                              valMap = val
+                           end
+                           
+                        else
+                           valMap = {}
+                        end
+                     end
+                     
+                     self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                  end
+                  
+               end
+               
             end
+            
+            
+            
+         end
+         
+      else
+       
+         do
+            do
+               if expList ~= nil then
+                  
+                  for index, argNode in ipairs( expList:get_expList() ) do
+                     local declArgNode = macroArgNodeList[index]
+                     macroArgName2ArgNode[declArgNode:get_name()] = argNode
+                     local literal, mess = argNode:getLiteral(  )
+                     if literal ~= nil then
+                        do
+                           local val = getLiteralMacroVal( literal )
+                           if val ~= nil then
+                              argValMap[index] = val
+                              
+                              if argNode:get_expType() == Ast.builtinTypeSymbol then
+                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
+                              else
+                               
+                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+                              end
+                              
+                           end
+                        end
+                        
+                     else
+                        errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
+                        break
+                     end
+                     
+                  end
+                  
+               end
+               
+               
+               if not errmess then
+                  
+                  local varMap = self.macroLocalVarMap
+                  if  nil == varMap then
+                     local _varMap = varMap
+                  
+                     local toListEmpty = loadCode( "return function() return {} end" )
+                     varMap = toListEmpty(  )
+                  end
+                  
+                  if innerMacro then
+                     macroArgValMap["__var"] = varMap
+                  end
+                  
+                  
+                  local func = macroInfo:get_func()
+                  local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
+                  
+                  if innerMacro then
+                     self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
+                  end
+                  
+                  
+                  for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
+                     local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
+                     if  nil == valInfo then
+                        local _valInfo = valInfo
+                     
+                        Util.err( string.format( "not found macro symbol -- %s", name) )
+                     end
+                     
+                     local typeInfo = valInfo.typeInfo
+                     
+                     local valMap
+                     
+                     do
+                        local val = macroVars[name]
+                        if val ~= nil then
+                           if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
+                              valMap = {[1] = val}
+                           else
+                            
+                              valMap = val
+                           end
+                           
+                        else
+                           valMap = {}
+                        end
+                     end
+                     
+                     self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                  end
+                  
+               end
+               
+            end
+            
+            
             
          end
          
       end
       
       
-      macroArgValMap["__var"] = self.macroLocalVarMap
-      
-      local func = macroInfo.func
-      local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
-      
-      self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
-      
-      for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
-         local valInfo = macroInfo.symbol2MacroValInfoMap[name]
-         if  nil == valInfo then
-            local _valInfo = valInfo
-         
-            Util.err( string.format( "not found macro symbol -- %s", name) )
-         end
-         
-         local typeInfo = valInfo.typeInfo
-         
-         local valMap
-         
-         do
-            local val = macroVars[name]
-            if val ~= nil then
-               if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
-                  valMap = {[1] = val}
-               else
-                
-                  valMap = val
-               end
-               
-            else
-               valMap = {}
-            end
-         end
-         
-         self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+      if errmess ~= nil then
+         return errmess
       end
       
       
@@ -802,7 +1018,9 @@ end
 
 function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeInfo, typeId2TypeInfo, importedMacroInfoMap, baseDir )
 
-   local macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem )
+   local macroInfo, err
+   
+   macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem )
    if macroInfo ~= nil then
       local orgPos
       
@@ -846,14 +1064,21 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       end
       
       
-      local extMacroInfo = ExtMacroInfo.new(macroInfo.name, self.macroEval:evalFromCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock, baseDir ), symbol2MacroValInfoMap, argList, tokenList)
+      local luaCode = self.macroEval:evalFromCodeToLuaCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock )
+      local macroObj
       
-      self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
-      importedMacroInfoMap[macroTypeInfo:get_typeId()] = extMacroInfo
-   else
-      Util.errorLog( string.format( "macro load fail -- %s: %s ", macroTypeInfo:getTxt(  ), _lune.unwrapDefault( err, "")) )
+      macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false )
+      if macroObj ~= nil then
+         local extMacroInfo = ExtMacroInfo.new(macroInfo.name, macroObj, symbol2MacroValInfoMap, argList, tokenList, baseDir)
+         
+         self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
+         importedMacroInfoMap[macroTypeInfo:get_typeId()] = extMacroInfo
+         return 
+      end
+      
    end
    
+   Util.errorLog( string.format( "macro load fail -- %s: %s ", macroTypeInfo:getTxt(  ), _lune.unwrapDefault( err, "")) )
 end
 
 
@@ -868,34 +1093,43 @@ end
 
 function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
 
-   local macroObj = self.macroEval:eval( processInfo, node, baseDir )
+   local luaCode = self.macroEval:evalToLuaCode( processInfo, node )
+   local macroObj, err
    
-   local remap = {}
-   for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
-      if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) then
-         do
-            local typeInfo = macroScope:getTypeInfoChild( name )
-            if typeInfo ~= nil then
-               remap[name] = Nodes.MacroValInfo.new(macroValInfo.val, typeInfo, macroValInfo.argNode)
-            else
-               remap[name] = macroValInfo
+   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false )
+   
+   if macroObj ~= nil then
+      
+      local remap = {}
+      for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
+         if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) then
+            do
+               local typeInfo = macroScope:getTypeInfoChild( name )
+               if typeInfo ~= nil then
+                  remap[name] = Nodes.MacroValInfo.new(macroValInfo.val, typeInfo, macroValInfo.argNode)
+               else
+                  remap[name] = macroValInfo
+               end
             end
+            
+         else
+          
+            remap[name] = macroValInfo
          end
          
-      else
-       
-         remap[name] = macroValInfo
       end
       
+      
+      local macroInfo = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
+      self.typeId2MacroInfo[node:get_expType():get_typeId()] = macroInfo
+      self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
+      
+      self.symbol2ValueMapForMacro = {}
+      self.isDeclaringMacro = false
+      return nil
    end
    
-   
-   local macroInfo = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
-   self.typeId2MacroInfo[node:get_expType():get_typeId()] = macroInfo
-   self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
-   
-   self.symbol2ValueMapForMacro = {}
-   self.isDeclaringMacro = false
+   return err
 end
 
 
@@ -1022,7 +1256,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             end
             
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
-         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
             local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
             parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ), pos )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
@@ -1106,7 +1340,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             
             nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
             parser:pushbackToken( nextToken )
-         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
             local txt = (_lune.unwrap( macroVal.val) )
             local rawTxt
             
@@ -1178,7 +1412,7 @@ function MacroCtrl:expandSymbol( parser, inTestBlock, prefixToken, exp, nodeMana
             local macroInfo = self.symbol2ValueMapForMacro[symbolInfo:get_name()]
             if macroInfo ~= nil then
                local valType = macroInfo.typeInfo
-               if equalsType( valType, Ast.builtinTypeSymbol ) or equalsType( valType, Ast.builtinTypeExp ) or equalsType( valType, Ast.builtinTypeMultiExp ) or equalsType( valType, Ast.builtinTypeStat ) then
+               if equalsType( valType, Ast.builtinTypeSymbol ) or equalsType( valType, Ast.builtinTypeExp ) or equalsType( valType, Ast.builtinTypeMultiExp ) or equalsType( valType, Ast.builtinTypeBlockArg ) or equalsType( valType, Ast.builtinTypeStat ) then
                   format = "' %s '"
                elseif valType:get_kind() == Ast.TypeInfoKind.List and equalsType( valType:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                   format = "' %s '"
@@ -1194,7 +1428,7 @@ function MacroCtrl:expandSymbol( parser, inTestBlock, prefixToken, exp, nodeMana
             else
                if equalsType( exp:get_expType(), Ast.builtinTypeInt ) or equalsType( exp:get_expType(), Ast.builtinTypeReal ) then
                   format = "' %s' "
-               elseif equalsType( exp:get_expType(), Ast.builtinTypeSymbol ) or equalsType( exp:get_expType(), Ast.builtinTypeExp ) or equalsType( exp:get_expType(), Ast.builtinTypeMultiExp ) or equalsType( exp:get_expType(), Ast.builtinTypeStat ) then
+               elseif equalsType( exp:get_expType(), Ast.builtinTypeSymbol ) or equalsType( exp:get_expType(), Ast.builtinTypeExp ) or equalsType( exp:get_expType(), Ast.builtinTypeMultiExp ) or equalsType( exp:get_expType(), Ast.builtinTypeBlockArg ) or equalsType( exp:get_expType(), Ast.builtinTypeStat ) then
                   format = "' %s '"
                end
                
@@ -1228,6 +1462,7 @@ function MacroCtrl:startDecl(  )
 
    self.symbol2ValueMapForMacro = {}
    self.isDeclaringMacro = true
+   self.useLnsLoad = false
 end
 
 

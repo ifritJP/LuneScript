@@ -662,7 +662,13 @@ alias で置き換えている元の Type → alias の型
 
       self.funcBlockInfoLinkNo = nil;
       self.funcBlockInfoList = [];
-      self.analyzePhase = enableMultiPhase and AnalyzePhase.Meta or AnalyzePhase.Main;
+      let phase:AnalyzePhase;
+      if enableMultiPhase and ( mode == nil or mode == .Compile ) {
+         phase = .Meta;
+      } else {
+         phase = .Main;
+      }
+      self.analyzePhase = phase;
       self.inTestBlock = false;
       self.baseDir = nil;
       self.stdinFile = nil;
@@ -742,9 +748,7 @@ alias で置き換えている元の Type → alias の型
 
    pri fn addWarnMess( pos: &Parser.Position, mess: str ) __async mut {
       self.warnMessList.insert( new TransUnitIF.ErrMess(
-         "%s:%d:%d: warning: %s"
-         ( self.parser.getStreamName(),
-           pos.lineNo, pos.column, mess ), pos ) );
+         "%s: warning: %s" ( pos.getDisplayTxt(), mess ), pos ) );
    }
 
    pri fn addWarnErrMess( pos:&Parser.Position, err:bool, mess: str ) __async mut {
@@ -1992,14 +1996,20 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Subfil
       [ Ast.builtinTypeNone ], usePath );
 }
 
-fn TransUnit.analyzeAsyncLock( asyncToken: &Parser.Token ) mut : Nodes.Node {
-
+fn TransUnit.analyzeAsyncLock(
+   asyncToken: &Parser.Token, lockKind:Nodes.LockKind ) mut : Nodes.Node
+{
    let mut nsInfo = self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
    if nsInfo.isLockedAsync() {
       self.addErrMess( asyncToken.pos, "can't nest __asyncLock." );
    }
+
+   if nsInfo.$typeInfo.$asyncMode == .Noasync and lockKind == .Unsafe {
+      self.addErrMess( asyncToken.pos, "can't use __unsafe on __noasync." );
+   }
    
-   nsInfo.incLock();
+
+   nsInfo.incLock( lockKind );
    
    let block = self.analyzeBlock( .AsyncLock, .Simple, nil, nil );
 
@@ -2007,7 +2017,8 @@ fn TransUnit.analyzeAsyncLock( asyncToken: &Parser.Token ) mut : Nodes.Node {
    
    return Nodes.AsyncLockNode.create(
       self.nodeManager, asyncToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], block );
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      lockKind, block );
 }
 
 fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
@@ -2438,7 +2449,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       exp1 = Nodes.ExpCastNode.create(
          self.nodeManager, exp1.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
-         exp1, Ast.builtinTypeReal, .Force );
+         exp1, Ast.builtinTypeReal, nil, "@@", .Force );
    }
 
 
@@ -2614,11 +2625,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    let exp = self.analyzeExpOneRVal( false, false## );
    if exp.$expType.$kind == .Ext {
       let nsInfo = self.getCurrentNSInfo();
-      if not nsInfo.canAccessNoasync() {
+      if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
+         not nsInfo.canAccessLuaval()
+      {
          // __noasync 以外で Luaval にはアクセスできない。
          self.addErrMess(
             exp.$pos,
-            "can't access the luaval with the foreach on __async. -- %s in %s"
+            "can't access the luaval without __luago. -- %s in %s"
             (exp.$expType.getTxt(##), nsInfo.$typeInfo.getTxt(##)) );
       }
    }

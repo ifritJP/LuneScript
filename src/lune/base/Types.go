@@ -205,6 +205,7 @@ func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
 // declaration Class -- Position
 type Types_PositionMtd interface {
     ToMap() *LnsMap
+    GetDisplayTxt(_env *LnsEnv) string
     Get_RawOrgPos(_env *LnsEnv) LnsAny
     Get_orgPos(_env *LnsEnv) *Types_Position
 }
@@ -333,6 +334,20 @@ func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName 
     return pos
 }
 
+// 122: decl @lune.@base.@Types.Position.getDisplayTxt
+func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
+    var txt string
+    txt = _env.LuaVM.String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
+    var orgPos *Types_Position
+    orgPos = self.FP.Get_orgPos(_env)
+    if self != orgPos{
+        var txt2 string
+        txt2 = _env.LuaVM.String_format("%s:%d:%d", []LnsAny{orgPos.StreamName, orgPos.LineNo, orgPos.Column})
+        return _env.LuaVM.String_format("%s: (%s)", []LnsAny{txt2, txt})
+    }
+    return txt
+}
+
 
 // declaration Class -- Token
 type Types_TokenMtd interface {
@@ -438,7 +453,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 147: DeclConstr
+// 156: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     
@@ -452,7 +467,7 @@ func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,po
     
 }
 
-// 157: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 166: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -467,19 +482,19 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     return ""
 }
 
-// 172: decl @lune.@base.@Types.Token.set_commentList
+// 181: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
     self.commentList = commentList
     
 }
 
-// 176: decl @lune.@base.@Types.Token.getLineCount
+// 185: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
     Lns_LockEnvSync( _env, func () {
         {
-            _applyForm1, _applyParam1, _applyPrev1 := _env.CommonLuaVM.String_gmatch(self.Txt,"\n")
+            _applyForm1, _applyParam1, _applyPrev1 := _env.GetVM().String_gmatch(self.Txt,"\n")
             for {
                 _applyWork1 := _applyForm1.(*Lns_luaValue).Call( Lns_2DDD( _applyParam1, _applyPrev1 ) )
                 _applyPrev1 = Lns_getFromMulti(_applyWork1,0)

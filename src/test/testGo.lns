@@ -498,8 +498,10 @@ _section();
       print( "lower:", txt, txt.lower() );
       print( "upper:", txt, txt.upper() );
       print( "reverse:", txt, txt.reverse() );
-      apply token of txt.gmatch( "[^a]+" ) {
-         print( token );
+      __luago {
+         apply token of txt.gmatch( "[^a]+" ) {
+            print( token );
+         }
       }
    }
    func( "fieoapfjaiopjfeop" );
@@ -667,15 +669,17 @@ _section();
 }
 /*nolua51*/_section();
 /*nolua51*/{
-/*nolua51*/   print( string.format( "%s = %s", "abcd", 123 ) );
-/*nolua51*/   if! let luafn = _load( 'print( "hoge:" )' ## ) {
-/*nolua51*/      luafn(##);
-/*nolua51*/      let bin = string.dump( luafn ## );
-/*nolua51*/      let fn2, mess =  _load( bin ## );
-/*nolua51*/      when! fn2 {
-/*nolua51*/         fn2(##);
-/*nolua51*/      } else {
-/*nolua51*/         print( mess );
+/*nolua51*/   __luago {
+/*nolua51*/      print( string.format( "%s = %s", "abcd", 123 ) );
+/*nolua51*/      if! let luafn = _load( 'print( "hoge:" )' ## ) {
+/*nolua51*/         luafn(##);
+/*nolua51*/         let bin = string.dump( luafn ## );
+/*nolua51*/         let fn2, mess =  _load( bin ## );
+/*nolua51*/         when! fn2 {
+/*nolua51*/            fn2(##);
+/*nolua51*/         } else {
+/*nolua51*/            print( mess );
+/*nolua51*/         }
 /*nolua51*/      }
 /*nolua51*/   }
 /*nolua51*/}
@@ -990,26 +994,30 @@ _section();
       print( index, item )
    end
 end```;
-   let loaded = _load( code ## );
-   when! loaded {
-      let func = loaded(##);
-      when! func {
-         (func@@Luaval<test>)( "hoge:", {1:"a", 2:"b", 3:"c" } );
+   __luago {
+      let loaded = _load( code ## );
+      when! loaded {
+         let func = loaded(##);
+         when! func {
+            (func@@Luaval<test>)( "hoge:", {1:"a", 2:"b", 3:"c" } );
+         }
       }
    }
 }
 _section();
 {
-   let code = ```
+   __luago {
+      let code = ```
       return { 10, 20, 30 }
 ```;
-   let loaded = _load( code ## );
-   when! loaded {
-      if! let obj = loaded(##) {
-         let list = obj@@&List<int>;
-         print( #list );
-         foreach val, key in list {
-            print( key, val );
+      let loaded = _load( code ## );
+      when! loaded {
+         if! let obj = loaded(##) {
+            let list = obj@@&List<int>;
+            print( #list );
+            foreach val, key in list {
+               print( key, val );
+            }
          }
       }
    }
@@ -1022,23 +1030,25 @@ _section();
       return { 1,2,3, "a", "b", { abc = 1, xyz = 10 } }
 ```;
    fn func( txt:str ) {
-      let loaded = _load( txt ## );
-      when! loaded {
-         if! let obj = loaded(##) {
-            foreach val, index in obj@@List<&stem> {
-               if type( val ) == "table" {
-                  forsort val2, key2 in val@@&Map<stem,stem> {
-                     print( key2, val2, type( key2 ), type( val2 ) );
+      __luago {
+         let loaded = _load( txt ## );
+         when! loaded {
+            if! let obj = loaded(##) {
+               foreach val, index in obj@@List<&stem> {
+                  if type( val ) == "table" {
+                     forsort val2, key2 in val@@&Map<stem,stem> {
+                        print( key2, val2, type( key2 ), type( val2 ) );
+                     }
+                  } else {
+                     print( index + 10, val, type( val ) );
                   }
-               } else {
-                  print( index + 10, val, type( val ) );
                }
+            } else {
+               print( "NG", __line__ );
             }
          } else {
             print( "NG", __line__ );
          }
-      } else {
-         print( "NG", __line__ );
       }
    }
    func( code );
@@ -1059,8 +1069,11 @@ return fib
    // Lua コードのロード
    form fibFunc( num:int ):int;
    fn loadLua( txt:str ) : Luaval<fibFunc> {
-      let loaded = unwrap _load( txt ## );
-      let fib = unwrap loaded(##);
+      let fib;
+      __luago {
+         let loaded = unwrap _load( txt ## );
+         fib = unwrap loaded(##);
+      }
       return fib@@fibFunc;
    }
 
@@ -1075,9 +1088,10 @@ return fib
    }
 
    // Lua のコードをロードして実行
-   let fib_lua = loadLua( code );
-   _profile( fib_lua( step ) );
-
+   __luago {
+      let fib_lua = loadLua( code );
+      _profile( fib_lua( step ) );
+   }
 
    // LuneScript のフィボナッチ関数
    fn fib_lns( num:int ) : int {
@@ -1104,18 +1118,20 @@ return obj
    }
    
 
-   let loaded = unwrap _load( code ## );
-   let obj = unwrap loaded(##);
-   let hoge = obj@@=Hoge;
-   let mut keyList:List<str> = [];
-   foreach _, key in hoge.val {
-      keyList.insert( key );
-   }
-   keyList.sort(##);
-   foreach key in keyList {
-      let list = unwrap hoge.val[key];
-      foreach val, index in list {
-         print( key, index, val );
+   __luago {
+      let loaded = unwrap _load( code ## );
+      let obj = unwrap loaded(##);
+      let hoge = obj@@=Hoge;
+      let mut keyList:List<str> = [];
+      foreach _, key in hoge.val {
+         keyList.insert( key );
+      }
+      keyList.sort(##);
+      foreach key in keyList {
+         let list = unwrap hoge.val[key];
+         foreach val, index in list {
+            print( key, index, val );
+         }
       }
    }
 }
@@ -1301,17 +1317,20 @@ _section();
       };
       file.write( txt );
       file.close();
-      let loaded, mess = loadfile( path );
-      when! loaded {
-         let! obj = loaded(##) {
-            print( "load error" );
-            return;
-         };
-         foreach val in obj@@List<stem> {
-            print( val );
+
+      __luago {
+         let loaded, mess = loadfile( path );
+         when! loaded {
+            if! let obj = loaded(##) {
+               foreach val in obj@@List<stem> {
+                  print( expandLuavalMap( val ) );
+               }
+            } else {
+               print( "load error" );
+            }
+         } else {
+            print( mess );
          }
-      } else {
-         print( mess );
       }
    }
    func( "return { 'a', 'b', 'c' }" );
@@ -1319,56 +1338,62 @@ _section();
 _section();
 {
    fn func( txt:str ) {
-      let loaded, mess = _load( txt ## );
-      when! loaded {
-         let! obj = loaded(##) {
-            print( "load error" );
-            return;
-         };
-         class Test {
-            pub let val1:&List<str>;
-            pub let val2:&List<int>;
+      __luago {
+         let loaded, mess = _load( txt ## );
+         when! loaded {
+            if! let obj = loaded(##) {
+               class Test {
+                  pub let val1:&List<str>;
+                  pub let val2:&List<int>;
+               }
+               let test = obj@@=Test;
+               foreach val, index in test.val1 {
+                  print( index, val );
+               }
+               foreach val, index in test.val2 {
+                  print( index, val );
+               }
+            } else {
+               print( "load error" );
+            }
+         } else {
+            print( mess );
          }
-         let test = obj@@=Test;
-         foreach val, index in test.val1 {
-            print( index, val );
-         }
-         foreach val, index in test.val2 {
-            print( index, val );
-         }
-      } else {
-         print( mess );
       }
    }
    func( "return { val1 = {'a', 'b'}, val2 = {10,20} }" );
 }
 _section();
 {
-   let loaded, mess = _load( "return { [1] = 'a', [5] = 'b', [2] = 'c' }"## );
-   when! loaded {
-      let map = unwrap loaded(##);
-      forsort val, key in map@@Map<int,str> {
-         print( key, val );
+   __luago { 
+      let loaded, mess = _load( "return { [1] = 'a', [5] = 'b', [2] = 'c' }"## );
+      when! loaded {
+         let map = unwrap loaded(##);
+         forsort val, key in map@@Map<int,str> {
+            print( key, val );
+         }
+      } else {
+         print( mess );
       }
-   } else {
-      print( mess );
    }
 }
 _section();
 {
-   let loaded, mess = _load( "return { [1] = 'a', [5] = 'b', [2] = 'c' }"## );
-   when! loaded {
-      let map = unwrap loaded(##);
-      forsort val, key in map@@Map<int,str> {
-         print( key, val );
-      }
-      if! let map2 = expandLuavalMap( map ) {
-         forsort val, key in map2@@Map<int,str> {
+   __luago {  
+      let loaded, mess = _load( "return { [1] = 'a', [5] = 'b', [2] = 'c' }"## );
+      when! loaded {
+         let map = unwrap loaded(##);
+         forsort val, key in map@@Map<int,str> {
             print( key, val );
          }
+         if! let map2 = expandLuavalMap( map ) {
+            forsort val, key in map2@@Map<int,str> {
+               print( key, val );
+            }
+         }
+      } else {
+         print( mess );
       }
-   } else {
-      print( mess );
    }
 }
 _section();
@@ -1401,19 +1426,21 @@ _section();
 }
 _section();
 {
-   let loaded, mess = _load( "return { list = { 10, 20, 30 } }"## );
-   when! loaded {
-      let obj = unwrap loaded(##);
-      class Test extend (Mapping) {
-         pub let list:&List<int>;
-      }
-      if! let test = Test._fromStem( expandLuavalMap( obj ) ) {
-         foreach val, key in test.list {
-            print( key, val );
+   __luago {
+      let loaded, mess = _load( "return { list = { 10, 20, 30 } }"## );
+      when! loaded {
+         let obj = unwrap loaded(##);
+         class Test extend (Mapping) {
+            pub let list:&List<int>;
          }
+         if! let test = Test._fromStem( expandLuavalMap( obj ) ) {
+            foreach val, key in test.list {
+               print( key, val );
+            }
+         }
+      } else {
+         print( mess );
       }
-   } else {
-      print( mess );
    }
 }
 
@@ -1421,16 +1448,18 @@ _section();
 {
    fn func( txt:str )
    {
-      let loaded, mess = _load( txt ## );
-      when! loaded {
-         let map = unwrap loaded(##);
-         if! let map2 = expandLuavalMap( map ) {
-            forsort _, key in map2@@Map<str,stem> {
-               print( key );
+      __luago {
+         let loaded, mess = _load( txt ## );
+         when! loaded {
+            let map = unwrap loaded(##);
+            if! let map2 = expandLuavalMap( map ) {
+               forsort _, key in map2@@Map<str,stem> {
+                  print( key );
+               }
             }
+         } else {
+            print( mess );
          }
-      } else {
-         print( mess );
       }
    }
    let txt = ```
@@ -1731,11 +1760,13 @@ _section();
    let code = ```
 return { 1, 2, 3, 4 };
 ```;
-   if! let loaded = _load( code, nil ) {
-      let obj = loaded( ## );
-      if! let map = expandLuavalMap( obj ) {
-         forsort val, key in map@@Map<int,int> {
-            print( key + 10, val + 20 );
+   __luago {
+      if! let loaded = _load( code, nil ) {
+         let obj = loaded( ## );
+         if! let map = expandLuavalMap( obj ) {
+            forsort val, key in map@@Map<int,int> {
+               print( key + 10, val + 20 );
+            }
          }
       }
    }
@@ -1856,21 +1887,30 @@ _section();
 }
 _section();
 {
-   fn loadCode( code:str ) : Luaval<&stem> {
-      let loaded, mess = _load( code ## );
-      when! loaded {
-         if! let obj = loaded(##) {
-            return obj;
+   fn loadCode( code:str ) : Luaval<&stem>! {
+      let ret;
+      __luago {
+         let loaded, mess = _load( code ## );
+         when! loaded {
+            if! let obj = loaded(##) {
+               ret = obj;
+            } else {
+               error( "failed to load" );
+            }
+         } else {
+            error( "%s -- %s" (mess, code) );
          }
-         error( "failed to load" );
       }
-      error( "%s -- %s" (mess, code) );
+      return ret;
    }
    form toListEmptyLua() : &List<&stem>;
-   let toListEmpty = loadCode( "return function() return { 'a', 'b', 'c' } end" )@@toListEmptyLua;
-   let valList = toListEmpty();
-   foreach val, key in valList {
-      print( "%s %s" ( expandLuavalMap( key ), expandLuavalMap( val ) ) );
+   let luaFunc = unwrap loadCode( "return function() return { 'a', 'b', 'c' } end" );
+   let toListEmpty = luaFunc@@toListEmptyLua;
+   __luago {
+      let valList = toListEmpty();
+      foreach val, key in valList {
+         print( "%s %s" ( expandLuavalMap( key ), expandLuavalMap( val ) ) );
+      }
    }
 }
 _section();
@@ -1987,12 +2027,17 @@ _section();
             super();
 
             fn loadlua( code:str ) __noasync : Luaval<&stem> {
-               let! loaded = _load( code, nil ) {
-                  error("load error");
-               };
-               let! obj = loaded( ## ) {
-                  error( "lua func error" );
-               };
+               let obj;
+               __luago {
+                  let! loaded = _load( code, nil ) {
+                     error("load error");
+                  };
+                  if! loaded( ## ) {
+                     obj = _exp;
+                  } else {
+                     error( "lua func error" );
+                  };
+               }
                return obj;
             }
 

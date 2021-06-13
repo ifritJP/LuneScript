@@ -69,6 +69,13 @@ func Lns_GetEnv() *LnsEnv {
 	return cur_LnsEnv
 }
 
+func (self *LnsEnv) GetVM() *Lns_luaVM {
+	if self.async {
+		return self.LuaVM
+	}
+	return self.CommonLuaVM
+}
+
 /**
 各モジュールを初期化する際に実行する関数。
 

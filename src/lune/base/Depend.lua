@@ -205,8 +205,14 @@ end
 
 local function getLoadedMod(  )
 
-   local loaded = _lune.unwrap( _lune.nilacc( _lune.loadstring52( "return package.loaded" ), nil, 'call' ))
-   return loaded
+   local ret
+   
+   do
+      local loaded = _lune.unwrap( _lune.nilacc( _lune.loadstring52( "return package.loaded" ), nil, 'call' ))
+      ret = loaded
+   end
+   
+   return ret
 end
 _moduleObj.getLoadedMod = getLoadedMod
 
@@ -327,12 +333,19 @@ _moduleObj.canUseAsync = canUseAsync
 
 local function runMain( mainFunc, argList )
 
+   local ret
    
-   if mainFunc ~= nil then
-      return (mainFunc )( argList )
+   do
+      
+      if mainFunc ~= nil then
+         ret = (mainFunc )( argList )
+      else
+         ret = 1
+      end
+      
    end
    
-   return -1
+   return ret
 end
 _moduleObj.runMain = runMain
 

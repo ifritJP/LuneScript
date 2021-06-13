@@ -294,7 +294,8 @@ end
 
 function dumpFilter:processAsyncLock( node, opt )
 
-   self:dump( opt, node, "" )
+   self:dump( opt, node, Nodes.LockKind:_getTxt( node:get_lockKind())
+    )
    filter( node:get_block(), self, opt:nextOpt(  ) )
 end
 

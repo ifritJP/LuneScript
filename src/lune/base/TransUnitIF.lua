@@ -225,6 +225,31 @@ function IdSetInfo.setmeta( obj )
 end
 
 
+local LockedAsyncInfo = {}
+function LockedAsyncInfo.setmeta( obj )
+  setmetatable( obj, { __index = LockedAsyncInfo  } )
+end
+function LockedAsyncInfo.new( loopLen, lockKind )
+   local obj = {}
+   LockedAsyncInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( loopLen, lockKind )
+   end
+   return obj
+end
+function LockedAsyncInfo:__init( loopLen, lockKind )
+
+   self.loopLen = loopLen
+   self.lockKind = lockKind
+end
+function LockedAsyncInfo:get_loopLen()
+   return self.loopLen
+end
+function LockedAsyncInfo:get_lockKind()
+   return self.lockKind
+end
+
+
 local NSInfo = {}
 _moduleObj.NSInfo = NSInfo
 function NSInfo:isLockedAsync(  )
@@ -246,9 +271,9 @@ function NSInfo:__init(typeInfo, pos)
    self.typeInfo = typeInfo
    self.pos = pos
 end
-function NSInfo:incLock(  )
+function NSInfo:incLock( lockKind )
 
-   table.insert( self.lockedAsyncStack, #self.loopScopeQueue )
+   table.insert( self.lockedAsyncStack, LockedAsyncInfo.new(#self.loopScopeQueue, lockKind) )
 end
 function NSInfo:decLock(  )
 
@@ -262,11 +287,20 @@ function NSInfo:canBreak(  )
       return loopQueueLen > 0
    end
    
-   return self.lockedAsyncStack[len] < loopQueueLen
+   return self.lockedAsyncStack[len]:get_loopLen() < loopQueueLen
 end
 function NSInfo:canAccessNoasync(  )
 
-   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync or #self.lockedAsyncStack > 0 then
+   local len = #self.lockedAsyncStack
+   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync or (len > 0 and self.lockedAsyncStack[len]:get_lockKind() ~= Nodes.LockKind.Unsafe ) then
+      return true
+   end
+   
+   return false
+end
+function NSInfo:canAccessLuaval(  )
+
+   if #self.lockedAsyncStack > 0 then
       return true
    end
    
@@ -407,7 +441,7 @@ function TransUnitBase:addErrMess( pos, mess )
       mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'."
    end
    
-   table.insert( self.errMessList, ErrMess.new(string.format( "%s:%d:%d: error: %s", pos.streamName, pos.lineNo, pos.column, mess), pos) )
+   table.insert( self.errMessList, ErrMess.new(string.format( "%s: error: %s", pos:getDisplayTxt(  ), mess), pos) )
 end
 function TransUnitBase:error( mess )
 

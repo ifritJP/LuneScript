@@ -42,8 +42,8 @@ lua コードを LuneScript コンパイラ上で動かす。
   成功した場合、ロードした Lua コードを実行するための関数。
 @return エラー内容を示す文字列
 */
-pub fn runLuaOnLns( luaCode:str, baseDir:str! ) __noasync : Luaval<LoadFunc>!, str {
-
+pub fn runLuaOnLns(
+   luaCode:str, baseDir:str!, async:bool ) __async : Luaval<LoadFunc>!, str {
    let mut newEnv:Map<str,stem> = {};
    foreach val, key in _G {
       newEnv[ key ] = val;
@@ -54,7 +54,20 @@ pub fn runLuaOnLns( luaCode:str, baseDir:str! ) __noasync : Luaval<LoadFunc>!, s
       return val;
    };
 
-   let loaded, err = _load( luaCode, newEnv );
+   let loaded, err;
+   if async {
+      __unsafe {
+         loaded, err = _load( luaCode, newEnv );
+      }
+   } else {
+      __luago {
+         loaded, err = _load( luaCode, newEnv );
+      }
+   }
+   // __luago {
+   //    loaded, err = _load( luaCode, newEnv );
+   // }
+
    when! loaded {
       return loaded@@LoadFunc, "";
    }
@@ -63,7 +76,6 @@ pub fn runLuaOnLns( luaCode:str, baseDir:str! ) __noasync : Luaval<LoadFunc>!, s
    }
    return nil, "";
 }
-
 
 global fn __luneGetLocal( varName:str ):stem!
 {

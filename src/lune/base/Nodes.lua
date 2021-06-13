@@ -1419,6 +1419,26 @@ end
 
 
 
+local MacroStatement = {}
+MacroStatement._name2Val = {}
+_moduleObj.MacroStatement = MacroStatement
+function MacroStatement:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "MacroStatement.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function MacroStatement._from( val )
+   return _lune._AlgeFrom( MacroStatement, val )
+end
+
+MacroStatement.Import = { "Import", {{},{},{},{}}}
+MacroStatement._name2Val["Import"] = MacroStatement.Import
+MacroStatement.Local = { "Local", {{}}}
+MacroStatement._name2Val["Local"] = MacroStatement.Local
+
 local MacroInfo = {}
 _moduleObj.MacroInfo = MacroInfo
 function MacroInfo.setmeta( obj )
@@ -1436,6 +1456,12 @@ function MacroInfo:__init( func, symbol2MacroValInfoMap )
 
    self.func = func
    self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
+end
+function MacroInfo:get_func()
+   return self.func
+end
+function MacroInfo:get_symbol2MacroValInfoMap()
+   return self.symbol2MacroValInfoMap
 end
 
 
@@ -5606,26 +5632,28 @@ function ExpCastNode:canBeStatement(  )
 
    return false
 end
-function ExpCastNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind )
+function ExpCastNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind )
    local obj = {}
    ExpCastNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind ); end
    return obj
 end
-function ExpCastNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind) 
+function ExpCastNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind) 
    Node.__init( self,id, 31, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.exp = exp
    self.castType = castType
+   self.castTypeNode = castTypeNode
+   self.castOpe = castOpe
    self.castKind = castKind
    
    
 end
-function ExpCastNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind )
+function ExpCastNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind )
 
-   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind)
+   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind)
    nodeMan:addNode( node )
    return node
 end
@@ -5654,6 +5682,34 @@ function ExpCastNode:visit( visitor, depth, alreadySet )
       
    end
    
+   do
+      do
+         local child = self.castTypeNode
+         if child ~= nil then
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'castTypeNode', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
+                     return false
+                  elseif _switchExp == NodeVisitMode.Next then
+                  end
+               end
+               
+            end
+            
+            
+            
+         end
+      end
+      
+   end
+   
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
@@ -5666,6 +5722,12 @@ function ExpCastNode:get_exp()
 end
 function ExpCastNode:get_castType()
    return self.castType
+end
+function ExpCastNode:get_castTypeNode()
+   return self.castTypeNode
+end
+function ExpCastNode:get_castOpe()
+   return self.castOpe
 end
 function ExpCastNode:get_castKind()
    return self.castKind
@@ -9498,6 +9560,38 @@ function ExpCallSuperNode:canBeRight( processInfo )
 end
 
 
+local LockKind = {}
+_moduleObj.LockKind = LockKind
+LockKind._val2NameMap = {}
+function LockKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "LockKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function LockKind._from( val )
+   if LockKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+LockKind.__allList = {}
+function LockKind.get__allList()
+   return LockKind.__allList
+end
+
+LockKind.AsyncLock = 0
+LockKind._val2NameMap[0] = 'AsyncLock'
+LockKind.__allList[1] = LockKind.AsyncLock
+LockKind.NoasyncLua = 1
+LockKind._val2NameMap[1] = 'NoasyncLua'
+LockKind.__allList[2] = LockKind.NoasyncLua
+LockKind.Unsafe = 2
+LockKind._val2NameMap[2] = 'Unsafe'
+LockKind.__allList[3] = LockKind.Unsafe
+
 function NodeKind.get_AsyncLock(  )
 
    return 59
@@ -9539,24 +9633,25 @@ function AsyncLockNode:canBeStatement(  )
 
    return true
 end
-function AsyncLockNode.new( id, pos, inTestBlock, macroArgFlag, typeList, block )
+function AsyncLockNode.new( id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block )
    local obj = {}
    AsyncLockNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block ); end
    return obj
 end
-function AsyncLockNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, block) 
+function AsyncLockNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block) 
    Node.__init( self,id, 59, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.lockKind = lockKind
    self.block = block
    
    
 end
-function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, block )
+function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, lockKind, block )
 
-   local node = AsyncLockNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, block)
+   local node = AsyncLockNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, lockKind, block)
    nodeMan:addNode( node )
    return node
 end
@@ -9591,6 +9686,9 @@ function AsyncLockNode:visit( visitor, depth, alreadySet )
 end
 function AsyncLockNode.setmeta( obj )
   setmetatable( obj, { __index = AsyncLockNode  } )
+end
+function AsyncLockNode:get_lockKind()
+   return self.lockKind
 end
 function AsyncLockNode:get_block()
    return self.block

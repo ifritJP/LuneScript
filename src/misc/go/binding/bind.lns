@@ -78,13 +78,17 @@ fn compile( src:str ): str! {
    let! code = readFile( src ) {
       return nil; 
    };
-   let loaded, err = _load( code, nil );
-   when! loaded {
-      return string.dump( loaded, true );
+   let byteCode:str!;
+   __luago {
+      let loaded, err = _load( code, nil );
+      when! loaded {
+         byteCode = string.dump( loaded, true );
+      } else {
+         print( "failed to load -- ", src, err );
+         byteCode = nil;
+      }
    }
-   print( "failed to load -- ", src, err );
-   return nil;
-   // return code;
+   return byteCode;
 }
 
 

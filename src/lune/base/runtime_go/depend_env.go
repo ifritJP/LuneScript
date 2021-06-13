@@ -35,8 +35,9 @@ func Depend_canUseAsync(_env *LnsEnv) bool {
 
 var DependLuaOnLns_runLuaOnLnsFunc func(_env *LnsEnv, luaCode string) (LnsAny, string) = nil
 
-func DependLuaOnLns_runLuaOnLns(_env *LnsEnv, luaCode string, baseDir LnsAny) (LnsAny, string) {
-	return dependLuaOnLns_runLuaOnLns(luaCode, baseDir)
+func DependLuaOnLns_runLuaOnLns(
+	_env *LnsEnv, luaCode string, baseDir LnsAny, async bool) (LnsAny, string) {
+	return dependLuaOnLns_runLuaOnLns(_env, luaCode, baseDir, async)
 }
 
 func Lns_DependLuaOnLns_init(_env *LnsEnv) {
@@ -75,11 +76,11 @@ func Depend_setRuntimeThreadLimit(_env *LnsEnv, limit int) {
 	Lns_setThreadLimit(limit)
 }
 
-func Depend_setRunnerLog( _env *LnsEnv, valid bool) {
-    depend_setRunnerLog( valid )
+func Depend_setRunnerLog(_env *LnsEnv, valid bool) {
+	depend_setRunnerLog(valid)
 }
-func Depend_dumpRunnerLog( _env *LnsEnv, stream Lns_oStream ) {
-    lns_threadMgrInfo.dumpEventLog( func(txt string) {
-        stream.Write( _env, txt )
-    })
+func Depend_dumpRunnerLog(_env *LnsEnv, stream Lns_oStream) {
+	lns_threadMgrInfo.dumpEventLog(func(txt string) {
+		stream.Write(_env, txt)
+	})
 }

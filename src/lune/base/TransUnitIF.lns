@@ -76,6 +76,10 @@ pub class IdSetInfo {
 
 
 
+class LockedAsyncInfo {
+   let loopLen:int {pub};
+   let lockKind:Nodes.LockKind {pub};
+}
 
 pub class NSInfo {
    /** 関数の本体宣言がないか。 true の場合宣言なし。 */
@@ -89,7 +93,7 @@ pub class NSInfo {
    let mut loopScopeQueue: List<&Ast.Scope> {pub};
    
    /** __asyncLock した時の loopScopeQueue の長さ */
-   let mut lockedAsyncStack:List<int>;
+   let mut lockedAsyncStack:List<&LockedAsyncInfo>;
 
    let mut idSetInfo:IdSetInfo;
 
@@ -110,8 +114,9 @@ pub class NSInfo {
       self.pos = pos;
    }
 
-   pub fn incLock() mut {
-      self.lockedAsyncStack.insert( #self.loopScopeQueue );
+   pub fn incLock( lockKind: Nodes.LockKind ) mut {
+      self.lockedAsyncStack.insert(
+         new LockedAsyncInfo( #self.loopScopeQueue, lockKind ) );
    }
    pub fn decLock() mut {
       self.lockedAsyncStack.remove(##);
@@ -132,14 +137,27 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
       if len == 0 {
          return loopQueueLen > 0;
       }
-      return self.lockedAsyncStack[ len ] < loopQueueLen;
+      return self.lockedAsyncStack[ len ].$loopLen < loopQueueLen;
    }
 
    /**
 現在の状態で __noasync にアクセス可能かどうか。
 */
    pub fn canAccessNoasync() : bool {
-      if self.typeInfo.$asyncMode == .Noasync or #self.lockedAsyncStack > 0 {
+      let len = #self.lockedAsyncStack;
+      if self.typeInfo.$asyncMode == .Noasync or
+          (len > 0 and self.lockedAsyncStack[len].$lockKind ~= .Unsafe )
+      {
+         return true;
+      }
+      return false;
+   }
+
+   /**
+現在の状態で Luaval にアクセス可能かどうか。
+*/
+   pub fn canAccessLuaval() : bool {
+      if #self.lockedAsyncStack > 0 {
          return true;
       }
       return false;
@@ -249,8 +267,7 @@ TypeInfo → NSInfo.
          mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
       }
       self.errMessList.insert(
-         new ErrMess( "%s:%d:%d: error: %s" ( pos.streamName,
-                                              pos.lineNo, pos.column, mess ), pos ) );
+         new ErrMess( "%s: error: %s" ( pos.getDisplayTxt(), mess ), pos ) );
    }
 
    

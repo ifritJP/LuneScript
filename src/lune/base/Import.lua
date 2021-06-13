@@ -1079,8 +1079,11 @@ function _TypeInfoModule:createTypeInfo( param )
          local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil)
          
          local mutable = false
-         if self.typeId == param.metaInfo.__moduleTypeId then
-            mutable = param.metaInfo.__moduleMutable
+         do
+            if self.typeId == param.metaInfo.__moduleTypeId then
+               mutable = param.metaInfo.__moduleMutable
+            end
+            
          end
          
          local parentInfoMut
@@ -1095,7 +1098,7 @@ function _TypeInfoModule:createTypeInfo( param )
          workTypeInfo:get_typeId():set_orgId( self.typeId )
          parentScope:addClass( param.processInfo, self.txt, nil, workTypeInfo )
          
-         Log.log( Log.Level.Info, __func__, 374, function (  )
+         Log.log( Log.Level.Info, __func__, 376, function (  )
          
             return string.format( "new module -- %s, %s, %d, %d, %d", self.txt, workTypeInfo:getFullName( Ast.defaultTypeNameCtrl, parentScope, false ), self.typeId, workTypeInfo:get_typeId().id, parentScope:get_scopeId())
          end )
@@ -1240,7 +1243,7 @@ function _TypeInfoNormal:createTypeInfo( param )
          do
             local _switchExp = self.kind
             if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-               Log.log( Log.Level.Debug, __func__, 484, function (  )
+               Log.log( Log.Level.Debug, __func__, 486, function (  )
                
                   return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
                end )
@@ -1269,7 +1272,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                
                param.typeId2TypeInfoMut[self.typeId] = workTypeInfo
             elseif _switchExp == Ast.TypeInfoKind.ExtModule then
-               Log.log( Log.Level.Debug, __func__, 521, function (  )
+               Log.log( Log.Level.Debug, __func__, 523, function (  )
                
                   return string.format( "new type -- %d, %s -- %s, %d", self.parentId, self.txt, _lune.nilacc( parentScope:get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, parentScope, false ) or "nil", _lune.nilacc( _lune.nilacc( parentScope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1)
                end )
@@ -1890,396 +1893,410 @@ end
 function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem, fullModulePath, modulePath, nameList, baseDir, depth )
    local __func__ = '@lune.@base.@Import.ModuleLoader.processImportFromFile'
 
-   local metaInfo = metaInfoStem
-   Log.log( Log.Level.Info, __func__, 942, function (  )
+   local moduleInfo
    
-      return string.format( "%s processing", fullModulePath)
-   end )
-   
-   
-   local dependLibId2DependInfo = {}
    do
-      local loaderMap = {}
-      do
-         local __sorted = {}
-         local __map = metaInfo.__dependModuleMap
-         for __key in pairs( __map ) do
-            table.insert( __sorted, __key )
-         end
-         table.sort( __sorted )
-         for __index, dependName in ipairs( __sorted ) do
-            local dependInfo = __map[ dependName ]
-            do
-               
-               local workProcessInfo = processInfo:newUser(  )
-               
-               local moduleLoader = self:processImportMain( workProcessInfo, baseDir, dependName, depth + 1 )
-               
-               local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
-               loaderMap[moduleLoader] = typeId
-            end
-         end
-      end
+      local metaInfo = metaInfoStem
+      Log.log( Log.Level.Info, __func__, 946, function (  )
       
-      for moduleLoader, typeId in pairs( loaderMap ) do
-         local result = moduleLoader:getResult(  )
+         return string.format( "%s processing", fullModulePath)
+      end )
+      
+      
+      local dependLibId2DependInfo = {}
+      do
+         local loaderMap = {}
          do
-            local _exp = result.moduleInfo
-            if _exp ~= nil then
-               self:applyModuleInfo( _exp )
-               dependLibId2DependInfo[typeId] = _exp
-            else
-               self.transUnitIF:error( result.err )
+            local __sorted = {}
+            local __map = metaInfo.__dependModuleMap
+            for __key in pairs( __map ) do
+               table.insert( __sorted, __key )
             end
-         end
-         
-         
-      end
-      
-   end
-   
-   
-   local typeId2TypeInfo = {}
-   local typeId2TypeInfoMut = {}
-   
-   typeId2TypeInfo[Ast.userRootId] = processInfo:get_dummyParentType()
-   local typeId2Scope = {}
-   typeId2Scope[Ast.userRootId] = processInfo:get_topScope()
-   
-   for typeId, dependIdInfo in pairs( metaInfo.__dependIdMap ) do
-      local dependInfo = _lune.unwrap( dependLibId2DependInfo[_lune.unwrap( dependIdInfo[1])])
-      local typeInfo = _lune.unwrap( dependInfo:getTypeInfo( _lune.unwrap( dependIdInfo[2]) ))
-      typeId2TypeInfo[typeId] = typeInfo
-   end
-   
-   
-   local moduleTypeInfo = Ast.headTypeInfo
-   for index, moduleName in ipairs( nameList ) do
-      local mutable = false
-      if index == #nameList then
-         mutable = metaInfo.__moduleMutable
-      end
-      
-      local nsInfo = self.transUnitIF:pushModule( processInfo, true, moduleName, mutable )
-      moduleTypeInfo = nsInfo:get_typeInfo()
-      local typeId = _lune.unwrap( metaInfo.__moduleHierarchy[#nameList - index + 1])
-      typeId2TypeInfo[typeId] = moduleTypeInfo
-      typeId2TypeInfoMut[typeId] = nsInfo:get_typeInfo()
-      typeId2Scope[typeId] = self.transUnitIF:get_scope()
-   end
-   
-   for __index, _1 in ipairs( nameList ) do
-      self.transUnitIF:popModule(  )
-   end
-   
-   
-   for __index, symbolInfo in pairs( Ast.getSym2builtInTypeMap(  ) ) do
-      typeId2TypeInfo[symbolInfo:get_typeInfo():get_typeId(  ).id] = symbolInfo:get_typeInfo()
-   end
-   
-   for __index, builtinTypeInfo in pairs( Ast.getBuiltInTypeIdMap(  ) ) do
-      local typeInfo = builtinTypeInfo:get_typeInfo()
-      typeId2TypeInfo[typeInfo:get_typeId().id] = typeInfo
-   end
-   
-   
-   local newId2OldIdMap = {}
-   
-   local _typeInfoList = {}
-   local id2atomMap = {}
-   local _typeInfoNormalList = {}
-   for __index, atomInfoLua in pairs( metaInfo.__typeInfoList ) do
-      local workAtomInfo = (atomInfoLua )
-      if  nil == workAtomInfo then
-         local _workAtomInfo = workAtomInfo
-      
-         self.transUnitIF:error( "illegal atomInfo" )
-      end
-      
-      local atomInfo = workAtomInfo
-      do
-         local skind = atomInfo['skind']
-         if skind ~= nil then
-            local actInfo = nil
-            local mess = nil
-            local kind = _lune.unwrap( Ast.SerializeKind._from( math.floor(skind) ))
-            do
-               local _switchExp = kind
-               if _switchExp == Ast.SerializeKind.Enum then
-                  actInfo, mess = _TypeInfoEnum._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Alge then
-                  actInfo, mess = _TypeInfoAlge._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Module then
-                  actInfo, mess = _TypeInfoModule._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Normal then
-                  local workInfo
+            table.sort( __sorted )
+            for __index, dependName in ipairs( __sorted ) do
+               local dependInfo = __map[ dependName ]
+               do
                   
-                  workInfo, mess = _TypeInfoNormal._fromMap( atomInfo )
-                  if workInfo ~= nil then
-                     table.insert( _typeInfoNormalList, workInfo )
-                  end
+                  local workProcessInfo = processInfo:newUser(  )
                   
-                  actInfo = workInfo
-               elseif _switchExp == Ast.SerializeKind.Nilable then
-                  actInfo, mess = _TypeInfoNilable._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Alias then
-                  actInfo, mess = _TypeInfoAlias._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.DDD then
-                  actInfo, mess = _TypeInfoDDD._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Alternate then
-                  actInfo, mess = _TypeInfoAlternate._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Generic then
-                  actInfo, mess = _TypeInfoGeneric._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Modifier then
-                  actInfo, mess = _TypeInfoModifier._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Box then
-                  actInfo, mess = _TypeInfoBox._fromMap( atomInfo )
-               elseif _switchExp == Ast.SerializeKind.Ext then
-                  actInfo, mess = _TypeInfoExt._fromMap( atomInfo )
-               end
-            end
-            
-            if actInfo ~= nil then
-               table.insert( _typeInfoList, actInfo )
-               id2atomMap[actInfo.typeId] = actInfo
-            else
-               for key, val in pairs( atomInfo ) do
-                  Util.errorLog( string.format( "table: %s:%s", key, val) )
-               end
-               
-               if mess ~= nil then
-                  Util.errorLog( mess )
-               end
-               
-               Util.err( string.format( "_TypeInfo.%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
-               ) )
-            end
-            
-         end
-      end
-      
-   end
-   
-   
-   local orgId2MacroTypeInfo = {}
-   
-   local lazyModuleSet = {}
-   for __index, typeId in pairs( metaInfo.__lazyModuleList ) do
-      lazyModuleSet[typeId]= true
-   end
-   
-   
-   local modifier = TransUnitIF.Modifier.new(self.validMutControl, processInfo)
-   
-   local importParam = ImportParam.new(self.curPos, modifier, processInfo, typeId2Scope, typeId2TypeInfo, typeId2TypeInfoMut, {}, lazyModuleSet, metaInfo, self.transUnitIF:get_scope(), moduleTypeInfo, Ast.ScopeAccess.Normal, id2atomMap, dependLibId2DependInfo)
-   
-   for __index, atomInfo in ipairs( _typeInfoList ) do
-      local newTypeInfo, errMess = atomInfo:createTypeInfoCache( importParam )
-      do
-         local _exp = errMess
-         if _exp ~= nil then
-            Util.err( string.format( "Failed to createType -- %s: %s(%d): %s", fullModulePath, Ast.SerializeKind:_getTxt( atomInfo.skind)
-            , atomInfo.typeId, _exp) )
-         end
-      end
-      
-      if newTypeInfo ~= nil then
-         if newTypeInfo:get_kind() == Ast.TypeInfoKind.Macro then
-            orgId2MacroTypeInfo[atomInfo.typeId] = newTypeInfo
-         end
-         
-         if newTypeInfo:get_kind() == Ast.TypeInfoKind.Set then
-         end
-         
-         if newTypeInfo:get_accessMode() == Ast.AccessMode.Global then
-            do
-               local _switchExp = newTypeInfo:get_kind()
-               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class then
-                  self.globalScope:addClass( processInfo, newTypeInfo:get_rawTxt(), nil, newTypeInfo )
-               elseif _switchExp == Ast.TypeInfoKind.Func then
-                  self.globalScope:addFunc( processInfo, nil, newTypeInfo, Ast.AccessMode.Global, newTypeInfo:get_staticFlag(), Ast.TypeInfo.isMut( newTypeInfo ) )
-               elseif _switchExp == Ast.TypeInfoKind.Enum then
-                  self.globalScope:addEnum( processInfo, Ast.AccessMode.Global, newTypeInfo:get_rawTxt(), nil, newTypeInfo )
-               elseif _switchExp == Ast.TypeInfoKind.Nilable then
+                  local moduleLoader = self:processImportMain( workProcessInfo, baseDir, dependName, depth + 1 )
                   
-               else 
-                  
-                     Util.err( string.format( "%s: not support kind -- %s", __func__, Ast.TypeInfoKind:_getTxt( newTypeInfo:get_kind())
-                     ) )
+                  local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
+                  loaderMap[moduleLoader] = typeId
                end
             end
-            
          end
          
-      end
-      
-   end
-   
-   
-   for __index, atomInfo in ipairs( _typeInfoNormalList ) do
-      if #atomInfo.children > 0 then
-         importParam:getTypeInfo( atomInfo.typeId )
-         local scope = _lune.unwrap( typeId2Scope[atomInfo.typeId])
-         for __index, childId in ipairs( atomInfo.children ) do
-            local typeInfo = importParam:getTypeInfoFrom( childId )
-            if  nil == typeInfo then
-               local _typeInfo = typeInfo
-            
-               Util.err( string.format( "not found childId -- %s, %d, %s(%d)", fullModulePath, childId.id, atomInfo.txt, atomInfo.typeId) )
-            end
-            
-            local symbolKind = Ast.SymbolKind.Typ
-            local addFlag = true
+         for moduleLoader, typeId in pairs( loaderMap ) do
+            local result = moduleLoader:getResult(  )
             do
-               local _switchExp = typeInfo:get_kind()
-               if _switchExp == Ast.TypeInfoKind.Func then
-                  symbolKind = Ast.SymbolKind.Fun
-               elseif _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
-                  symbolKind = Ast.SymbolKind.Typ
-               elseif _switchExp == Ast.TypeInfoKind.Method then
-                  symbolKind = Ast.SymbolKind.Mtd
-               elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
-                  symbolKind = Ast.SymbolKind.Typ
-               elseif _switchExp == Ast.TypeInfoKind.Enum then
-                  addFlag = false
-               end
-            end
-            
-            
-            if addFlag then
-               scope:add( processInfo, symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), nil, typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutMode(), true, false )
-            end
-            
-         end
-         
-      end
-      
-   end
-   
-   
-   for typeId, typeInfo in pairs( typeId2TypeInfo ) do
-      newId2OldIdMap[typeInfo] = typeId
-   end
-   
-   
-   local function registMember( classTypeId )
-      local __func__ = '@lune.@base.@Import.ModuleLoader.processImportFromFile.registMember'
-   
-      
-      if metaInfo.__dependIdMap[classTypeId] then
-         return 
-      end
-      
-      local classTypeInfo = _lune.unwrap( typeId2TypeInfo[classTypeId])
-      
-      do
-         local _switchExp = (classTypeInfo:get_kind() )
-         if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.ExtModule then
-            local scope = _lune.unwrap( typeId2Scope[classTypeId])
-            self.transUnitIF:pushClassScope( self.curPos, classTypeInfo, scope )
-            
-            do
-               local _exp = metaInfo.__typeId2ClassInfoMap[classTypeId]
+               local _exp = result.moduleInfo
                if _exp ~= nil then
-                  local classInfo = (_exp )
-                  if  nil == classInfo then
-                     local _classInfo = classInfo
-                  
-                     self.transUnitIF:error( "illegal val" )
+                  self:applyModuleInfo( _exp )
+                  dependLibId2DependInfo[typeId] = _exp
+               else
+                  self.transUnitIF:error( result.err )
+               end
+            end
+            
+            
+         end
+         
+      end
+      
+      
+      local typeId2TypeInfo = {}
+      local typeId2TypeInfoMut = {}
+      
+      typeId2TypeInfo[Ast.userRootId] = processInfo:get_dummyParentType()
+      local typeId2Scope = {}
+      typeId2Scope[Ast.userRootId] = processInfo:get_topScope()
+      
+      for typeId, dependIdInfo in pairs( metaInfo.__dependIdMap ) do
+         local dependInfo = _lune.unwrap( dependLibId2DependInfo[_lune.unwrap( dependIdInfo[1])])
+         local typeInfo = _lune.unwrap( dependInfo:getTypeInfo( _lune.unwrap( dependIdInfo[2]) ))
+         typeId2TypeInfo[typeId] = typeInfo
+      end
+      
+      
+      local moduleTypeInfo = Ast.headTypeInfo
+      for index, moduleName in ipairs( nameList ) do
+         local mutable = false
+         if index == #nameList then
+            mutable = metaInfo.__moduleMutable
+         end
+         
+         local nsInfo = self.transUnitIF:pushModule( processInfo, true, moduleName, mutable )
+         moduleTypeInfo = nsInfo:get_typeInfo()
+         local typeId = _lune.unwrap( metaInfo.__moduleHierarchy[#nameList - index + 1])
+         typeId2TypeInfo[typeId] = moduleTypeInfo
+         typeId2TypeInfoMut[typeId] = nsInfo:get_typeInfo()
+         typeId2Scope[typeId] = self.transUnitIF:get_scope()
+      end
+      
+      for __index, _1 in ipairs( nameList ) do
+         self.transUnitIF:popModule(  )
+      end
+      
+      
+      for __index, symbolInfo in pairs( Ast.getSym2builtInTypeMap(  ) ) do
+         typeId2TypeInfo[symbolInfo:get_typeInfo():get_typeId(  ).id] = symbolInfo:get_typeInfo()
+      end
+      
+      for __index, builtinTypeInfo in pairs( Ast.getBuiltInTypeIdMap(  ) ) do
+         local typeInfo = builtinTypeInfo:get_typeInfo()
+         typeId2TypeInfo[typeInfo:get_typeId().id] = typeInfo
+      end
+      
+      
+      local newId2OldIdMap = {}
+      
+      local _typeInfoList = {}
+      local id2atomMap = {}
+      local _typeInfoNormalList = {}
+      for __index, atomInfoLua in pairs( metaInfo.__typeInfoList ) do
+         local workAtomInfo = (atomInfoLua )
+         if  nil == workAtomInfo then
+            local _workAtomInfo = workAtomInfo
+         
+            self.transUnitIF:error( "illegal atomInfo" )
+         end
+         
+         local atomInfo = workAtomInfo
+         do
+            local skind = atomInfo['skind']
+            if skind ~= nil then
+               local actInfo = nil
+               local mess = nil
+               local kind = _lune.unwrap( Ast.SerializeKind._from( math.floor(skind) ))
+               do
+                  local _switchExp = kind
+                  if _switchExp == Ast.SerializeKind.Enum then
+                     actInfo, mess = _TypeInfoEnum._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Alge then
+                     actInfo, mess = _TypeInfoAlge._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Module then
+                     actInfo, mess = _TypeInfoModule._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Normal then
+                     local workInfo
+                     
+                     workInfo, mess = _TypeInfoNormal._fromMap( atomInfo )
+                     if workInfo ~= nil then
+                        table.insert( _typeInfoNormalList, workInfo )
+                     end
+                     
+                     actInfo = workInfo
+                  elseif _switchExp == Ast.SerializeKind.Nilable then
+                     actInfo, mess = _TypeInfoNilable._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Alias then
+                     actInfo, mess = _TypeInfoAlias._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.DDD then
+                     actInfo, mess = _TypeInfoDDD._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Alternate then
+                     actInfo, mess = _TypeInfoAlternate._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Generic then
+                     actInfo, mess = _TypeInfoGeneric._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Modifier then
+                     actInfo, mess = _TypeInfoModifier._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Box then
+                     actInfo, mess = _TypeInfoBox._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Ext then
+                     actInfo, mess = _TypeInfoExt._fromMap( atomInfo )
+                  end
+               end
+               
+               if actInfo ~= nil then
+                  table.insert( _typeInfoList, actInfo )
+                  id2atomMap[actInfo.typeId] = actInfo
+               else
+                  for key, val in pairs( atomInfo ) do
+                     Util.errorLog( string.format( "table: %s:%s", key, val) )
                   end
                   
-                  for fieldName, fieldInfo in pairs( classInfo ) do
-                     do
-                        local typeId = _IdInfo._fromStem( (fieldInfo['typeId'] ) )
-                        if typeId ~= nil then
-                           local fieldTypeInfo = _lune.unwrap( importParam:getTypeInfoFrom( typeId ))
-                           local symbolInfo = self.transUnitIF:get_scope():addMember( processInfo, fieldName, nil, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
-                        else
-                           self.transUnitIF:error( "not found fieldInfo.typeId" )
+                  if mess ~= nil then
+                     Util.errorLog( mess )
+                  end
+                  
+                  Util.err( string.format( "_TypeInfo.%s._fromMap error", Ast.SerializeKind:_getTxt( kind)
+                  ) )
+               end
+               
+            end
+         end
+         
+      end
+      
+      
+      local orgId2MacroTypeInfo = {}
+      
+      local lazyModuleSet = {}
+      for __index, typeId in pairs( metaInfo.__lazyModuleList ) do
+         lazyModuleSet[typeId]= true
+      end
+      
+      
+      local modifier = TransUnitIF.Modifier.new(self.validMutControl, processInfo)
+      
+      local importParam = ImportParam.new(self.curPos, modifier, processInfo, typeId2Scope, typeId2TypeInfo, typeId2TypeInfoMut, {}, lazyModuleSet, metaInfo, self.transUnitIF:get_scope(), moduleTypeInfo, Ast.ScopeAccess.Normal, id2atomMap, dependLibId2DependInfo)
+      
+      for __index, atomInfo in ipairs( _typeInfoList ) do
+         local newTypeInfo, errMess = atomInfo:createTypeInfoCache( importParam )
+         do
+            local _exp = errMess
+            if _exp ~= nil then
+               Util.err( string.format( "Failed to createType -- %s: %s(%d): %s", fullModulePath, Ast.SerializeKind:_getTxt( atomInfo.skind)
+               , atomInfo.typeId, _exp) )
+            end
+         end
+         
+         if newTypeInfo ~= nil then
+            if newTypeInfo:get_kind() == Ast.TypeInfoKind.Macro then
+               orgId2MacroTypeInfo[atomInfo.typeId] = newTypeInfo
+            end
+            
+            if newTypeInfo:get_kind() == Ast.TypeInfoKind.Set then
+            end
+            
+            if newTypeInfo:get_accessMode() == Ast.AccessMode.Global then
+               do
+                  local _switchExp = newTypeInfo:get_kind()
+                  if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class then
+                     self.globalScope:addClass( processInfo, newTypeInfo:get_rawTxt(), nil, newTypeInfo )
+                  elseif _switchExp == Ast.TypeInfoKind.Func then
+                     self.globalScope:addFunc( processInfo, nil, newTypeInfo, Ast.AccessMode.Global, newTypeInfo:get_staticFlag(), Ast.TypeInfo.isMut( newTypeInfo ) )
+                  elseif _switchExp == Ast.TypeInfoKind.Enum then
+                     self.globalScope:addEnum( processInfo, Ast.AccessMode.Global, newTypeInfo:get_rawTxt(), nil, newTypeInfo )
+                  elseif _switchExp == Ast.TypeInfoKind.Nilable then
+                     
+                  else 
+                     
+                        Util.err( string.format( "%s: not support kind -- %s", __func__, Ast.TypeInfoKind:_getTxt( newTypeInfo:get_kind())
+                        ) )
+                  end
+               end
+               
+            end
+            
+         end
+         
+      end
+      
+      
+      for __index, atomInfo in ipairs( _typeInfoNormalList ) do
+         if #atomInfo.children > 0 then
+            importParam:getTypeInfo( atomInfo.typeId )
+            local scope = _lune.unwrap( typeId2Scope[atomInfo.typeId])
+            for __index, childId in ipairs( atomInfo.children ) do
+               local typeInfo = importParam:getTypeInfoFrom( childId )
+               if  nil == typeInfo then
+                  local _typeInfo = typeInfo
+               
+                  Util.err( string.format( "not found childId -- %s, %d, %s(%d)", fullModulePath, childId.id, atomInfo.txt, atomInfo.typeId) )
+               end
+               
+               local symbolKind = Ast.SymbolKind.Typ
+               local addFlag = true
+               do
+                  local _switchExp = typeInfo:get_kind()
+                  if _switchExp == Ast.TypeInfoKind.Func then
+                     symbolKind = Ast.SymbolKind.Fun
+                  elseif _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc then
+                     symbolKind = Ast.SymbolKind.Typ
+                  elseif _switchExp == Ast.TypeInfoKind.Method then
+                     symbolKind = Ast.SymbolKind.Mtd
+                  elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module then
+                     symbolKind = Ast.SymbolKind.Typ
+                  elseif _switchExp == Ast.TypeInfoKind.Enum then
+                     addFlag = false
+                  end
+               end
+               
+               
+               if addFlag then
+                  scope:add( processInfo, symbolKind, false, typeInfo:get_kind() == Ast.TypeInfoKind.Func, typeInfo:getTxt(  ), nil, typeInfo, typeInfo:get_accessMode(), typeInfo:get_staticFlag(), typeInfo:get_mutMode(), true, false )
+               end
+               
+            end
+            
+         end
+         
+      end
+      
+      
+      for typeId, typeInfo in pairs( typeId2TypeInfo ) do
+         newId2OldIdMap[typeInfo] = typeId
+      end
+      
+      
+      local function registMember( classTypeId )
+         local __func__ = '@lune.@base.@Import.ModuleLoader.processImportFromFile.registMember'
+      
+         local skip = false
+         do
+            if metaInfo.__dependIdMap[classTypeId] then
+               skip = true
+            end
+            
+         end
+         
+         if skip then
+            return 
+         end
+         
+         
+         do
+            local classTypeInfo = _lune.unwrap( typeId2TypeInfo[classTypeId])
+            
+            do
+               local _switchExp = (classTypeInfo:get_kind() )
+               if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.ExtModule then
+                  local scope = _lune.unwrap( typeId2Scope[classTypeId])
+                  self.transUnitIF:pushClassScope( self.curPos, classTypeInfo, scope )
+                  
+                  do
+                     local _exp = metaInfo.__typeId2ClassInfoMap[classTypeId]
+                     if _exp ~= nil then
+                        local classInfo = (_exp )
+                        if  nil == classInfo then
+                           local _classInfo = classInfo
+                        
+                           self.transUnitIF:error( "illegal val" )
                         end
+                        
+                        for fieldName, fieldInfo in pairs( classInfo ) do
+                           do
+                              local typeId = _IdInfo._fromStem( (fieldInfo['typeId'] ) )
+                              if typeId ~= nil then
+                                 local fieldTypeInfo = _lune.unwrap( importParam:getTypeInfoFrom( typeId ))
+                                 local symbolInfo = self.transUnitIF:get_scope():addMember( processInfo, fieldName, nil, fieldTypeInfo, _lune.unwrap( Ast.AccessMode._from( math.floor((_lune.unwrap( fieldInfo['accessMode']) )) )), fieldInfo['staticFlag'] and true or false, _lune.unwrap( Ast.MutMode._from( math.floor((_lune.unwrap( fieldInfo['mutMode']) )) )) )
+                              else
+                                 self.transUnitIF:error( "not found fieldInfo.typeId" )
+                              end
+                           end
+                           
+                        end
+                        
+                     else
+                        self.transUnitIF:error( string.format( "not found class -- %s: %d, %s", fullModulePath, classTypeId, classTypeInfo:getTxt(  )) )
+                     end
+                  end
+                  
+               elseif _switchExp == Ast.TypeInfoKind.Module then
+                  self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
+                  Log.log( Log.Level.Debug, __func__, 1264, function (  )
+                  
+                     return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
+                  end )
+                  
+               end
+            end
+            
+            
+            for __index, child in ipairs( classTypeInfo:get_children(  ) ) do
+               if child:get_kind(  ) == Ast.TypeInfoKind.Class or child:get_kind(  ) == Ast.TypeInfoKind.ExtModule or child:get_kind(  ) == Ast.TypeInfoKind.Module or child:get_kind(  ) == Ast.TypeInfoKind.IF then
+                  local oldId = newId2OldIdMap[child]
+                  if oldId then
+                     registMember( _lune.unwrap( oldId) )
+                  end
+                  
+               end
+               
+            end
+            
+            
+            do
+               local _switchExp = classTypeInfo:get_kind()
+               if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.ExtModule then
+                  self.transUnitIF:popClass(  )
+               elseif _switchExp == Ast.TypeInfoKind.Module then
+                  self.transUnitIF:popModule(  )
+               end
+            end
+            
+         end
+         
+      end
+      for __index, atomInfo in ipairs( _typeInfoList ) do
+         do
+            local workInfo = _lune.__Cast( atomInfo, 3, _TypeInfoNormal )
+            if workInfo ~= nil then
+               if workInfo.parentId == Ast.userRootId then
+                  registMember( atomInfo.typeId )
+               end
+               
+            else
+               do
+                  local workInfo = _lune.__Cast( atomInfo, 3, _TypeInfoModule )
+                  if workInfo ~= nil then
+                     if workInfo.parentId == Ast.userRootId then
+                        registMember( atomInfo.typeId )
                      end
                      
                   end
-                  
-               else
-                  self.transUnitIF:error( string.format( "not found class -- %s: %d, %s", fullModulePath, classTypeId, classTypeInfo:getTxt(  )) )
                end
+               
             end
-            
-         elseif _switchExp == Ast.TypeInfoKind.Module then
-            self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-            Log.log( Log.Level.Debug, __func__, 1249, function (  )
-            
-               return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
-            end )
-            
-         end
-      end
-      
-      
-      for __index, child in ipairs( classTypeInfo:get_children(  ) ) do
-         if child:get_kind(  ) == Ast.TypeInfoKind.Class or child:get_kind(  ) == Ast.TypeInfoKind.ExtModule or child:get_kind(  ) == Ast.TypeInfoKind.Module or child:get_kind(  ) == Ast.TypeInfoKind.IF then
-            local oldId = newId2OldIdMap[child]
-            if oldId then
-               registMember( _lune.unwrap( oldId) )
-            end
-            
          end
          
       end
       
       
-      do
-         local _switchExp = classTypeInfo:get_kind()
-         if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.ExtModule then
-            self.transUnitIF:popClass(  )
-         elseif _switchExp == Ast.TypeInfoKind.Module then
-            self.transUnitIF:popModule(  )
+      for index, moduleName in ipairs( nameList ) do
+         local mutable = false
+         if index == #nameList then
+            mutable = metaInfo.__moduleMutable
          end
+         
+         self.transUnitIF:pushModuleLow( processInfo, true, moduleName, mutable )
       end
       
-   end
-   for __index, atomInfo in ipairs( _typeInfoList ) do
-      do
-         local workInfo = _lune.__Cast( atomInfo, 3, _TypeInfoNormal )
-         if workInfo ~= nil then
-            if workInfo.parentId == Ast.userRootId then
-               registMember( atomInfo.typeId )
-            end
-            
-         else
-            do
-               local workInfo = _lune.__Cast( atomInfo, 3, _TypeInfoModule )
-               if workInfo ~= nil then
-                  if workInfo.parentId == Ast.userRootId then
-                     registMember( atomInfo.typeId )
-                  end
-                  
-               end
-            end
-            
-         end
-      end
       
-   end
-   
-   
-   for index, moduleName in ipairs( nameList ) do
-      local mutable = false
-      if index == #nameList then
-         mutable = metaInfo.__moduleMutable
-      end
-      
-      self.transUnitIF:pushModuleLow( processInfo, true, moduleName, mutable )
-   end
-   
-   
-   local VarNameInfo = {}
-   setmetatable( VarNameInfo, { ifList = {Mapping,} } )
-   function VarNameInfo.setmeta( obj )
+      local VarNameInfo = {}
+      setmetatable( VarNameInfo, { ifList = {Mapping,} } )
+      function VarNameInfo.setmeta( obj )
   setmetatable( obj, { __index = VarNameInfo  } )
 end
-   function VarNameInfo.new( typeId, accessMode, mutable )
+      function VarNameInfo.new( typeId, accessMode, mutable )
    local obj = {}
    VarNameInfo.setmeta( obj )
    if obj.__init then
@@ -2289,11 +2306,11 @@ end
 end
 function VarNameInfo:__init( typeId, accessMode, mutable )
 
-      self.typeId = typeId
-      self.accessMode = accessMode
-      self.mutable = mutable
-   end
-   function VarNameInfo:_toMap()
+         self.typeId = typeId
+         self.accessMode = accessMode
+         self.mutable = mutable
+      end
+      function VarNameInfo:_toMap()
   return self
 end
 function VarNameInfo._fromMap( val )
@@ -2307,79 +2324,80 @@ function VarNameInfo._fromStem( val )
   return VarNameInfo._fromMap( val )
 end
 
-   function VarNameInfo._fromMapSub( obj, val )
-      local memInfo = {}
-      table.insert( memInfo, { name = "typeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
-      table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
-      table.insert( memInfo, { name = "mutable", func = _lune._toBool, nilable = false, child = {} } )
-      local result, mess = _lune._fromMap( obj, val, memInfo )
+      function VarNameInfo._fromMapSub( obj, val )
+         local memInfo = {}
+         table.insert( memInfo, { name = "typeId", func = _IdInfo._fromMap, nilable = false, child = {} } )
+         table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+         table.insert( memInfo, { name = "mutable", func = _lune._toBool, nilable = false, child = {} } )
+         local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
    end
    return obj
 end
-   
-   
-   for varName, varInfo in pairs( metaInfo.__varName2InfoMap ) do
       
-      do
-         local varNameInfo = VarNameInfo._fromStem( (varInfo ) )
-         if varNameInfo ~= nil then
-            local typeId = varNameInfo.typeId
-            local scope
-            
-            if varNameInfo.accessMode == Ast.AccessMode.Global then
-               scope = self.globalScope
+      
+      for varName, varInfo in pairs( metaInfo.__varName2InfoMap ) do
+         
+         do
+            local varNameInfo = VarNameInfo._fromStem( (varInfo ) )
+            if varNameInfo ~= nil then
+               local typeId = varNameInfo.typeId
+               local scope
+               
+               if varNameInfo.accessMode == Ast.AccessMode.Global then
+                  scope = self.globalScope
+               else
+                
+                  scope = self.transUnitIF:get_scope()
+               end
+               
+               
+               scope:addExportedVar( processInfo, varNameInfo.mutable, varNameInfo.accessMode, varName, nil, _lune.unwrap( importParam:getTypeInfoFrom( typeId )), varNameInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut )
             else
-             
-               scope = self.transUnitIF:get_scope()
+               self.transUnitIF:error( "illegal varInfo.typeId" )
             end
-            
-            
-            scope:addExportedVar( processInfo, varNameInfo.mutable, varNameInfo.accessMode, varName, nil, _lune.unwrap( importParam:getTypeInfoFrom( typeId )), varNameInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut )
-         else
-            self.transUnitIF:error( "illegal varInfo.typeId" )
          end
+         
       end
       
-   end
-   
-   
-   local importedMacroInfoMap = {}
-   for orgTypeId, macroInfoStem in pairs( metaInfo.__macroName2InfoMap ) do
-      self.macroCtrl:importMacro( processInfo, lnsPath, (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo, importedMacroInfoMap, baseDir )
-   end
-   
-   
-   local globalSymbolList = {}
-   
-   for __index, symbolInfo in pairs( self.globalScope:get_symbol2SymbolInfoMap() ) do
-      if symbolInfo:get_accessMode() == Ast.AccessMode.Global then
-         table.insert( globalSymbolList, symbolInfo )
+      
+      local importedMacroInfoMap = {}
+      for orgTypeId, macroInfoStem in pairs( metaInfo.__macroName2InfoMap ) do
+         self.macroCtrl:importMacro( processInfo, lnsPath, (macroInfoStem ), _lune.unwrap( orgId2MacroTypeInfo[orgTypeId]), typeId2TypeInfo, importedMacroInfoMap, baseDir )
       end
       
-   end
-   
-   
-   for __index, _2 in ipairs( nameList ) do
-      self.transUnitIF:popModule(  )
-   end
-   
-   
-   if depth == 1 then
       
-      for key, val in pairs( importParam.importedAliasMap ) do
-         self.result.importedAliasMap[key] = val
+      local globalSymbolList = {}
+      
+      for __index, symbolInfo in pairs( self.globalScope:get_symbol2SymbolInfoMap() ) do
+         if symbolInfo:get_accessMode() == Ast.AccessMode.Global then
+            table.insert( globalSymbolList, symbolInfo )
+         end
+         
       end
       
+      
+      for __index, _2 in ipairs( nameList ) do
+         self.transUnitIF:popModule(  )
+      end
+      
+      
+      if depth == 1 then
+         
+         for key, val in pairs( importParam.importedAliasMap ) do
+            self.result.importedAliasMap[key] = val
+         end
+         
+      end
+      
+      
+      local moduleProvideInfo = frontInterface.ModuleProvideInfo.new(_lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId]), _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind )), metaInfo.__moduleMutable)
+      
+      local exportInfo = Nodes.ExportInfo.new(moduleTypeInfo, moduleProvideInfo, processInfo, globalSymbolList, importedMacroInfoMap)
+      
+      moduleInfo = frontInterface.ModuleInfo.new(lnsPath, fullModulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), exportInfo, importParam.importedAliasMap)
    end
-   
-   
-   local moduleProvideInfo = frontInterface.ModuleProvideInfo.new(_lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId]), _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind )), metaInfo.__moduleMutable)
-   
-   local exportInfo = Nodes.ExportInfo.new(moduleTypeInfo, moduleProvideInfo, processInfo, globalSymbolList, importedMacroInfoMap)
-   
-   local moduleInfo = frontInterface.ModuleInfo.new(lnsPath, fullModulePath, nameList[#nameList], newId2OldIdMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), exportInfo, importParam.importedAliasMap)
    
    return moduleInfo
 end
@@ -2423,7 +2441,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1445, function (  )
+   Log.log( Log.Level.Info, __func__, 1461, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, baseDir)
    end )
@@ -2432,7 +2450,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local moduleInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if moduleInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1453, function (  )
+      Log.log( Log.Level.Info, __func__, 1469, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2492,7 +2510,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = moduleInfo
    
-   Log.log( Log.Level.Info, __func__, 1505, function (  )
+   Log.log( Log.Level.Info, __func__, 1521, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2511,7 +2529,7 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1520, function (  )
+   Log.log( Log.Level.Info, __func__, 1536, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, baseDir)
    end )

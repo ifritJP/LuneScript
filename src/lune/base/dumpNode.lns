@@ -158,7 +158,7 @@ pub override fn dumpFilter.processSubfile(
 pub override fn dumpFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "" );
+   self.dump( opt, node, node.$lockKind.$_txt );
    filter( node.$block, self, opt.nextOpt() );
 };
 

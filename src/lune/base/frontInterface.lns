@@ -46,7 +46,7 @@ meta ファイルの内容が変らない場合はこのカウンタをインク
    */
    let buildCount:int {pub};
    let idStr:str {pub};
-   pub static let tempId:ModuleId;
+   pub static let tempId:&ModuleId;
 
    pub fn __init( modTime:real, buildCount:int ) {
       self.modTime = modTime;
@@ -235,7 +235,7 @@ pub class ImportModuleInfo {
 }
 
 pub interface ModuleLoader {
-   pub fn getModuleInfo() __noasync mut : &ModuleInfo!;
+   pub fn getModuleInfo() mut : &ModuleInfo!;
 }
 
 pub interface frontInterface {
@@ -249,7 +249,7 @@ Lua からも利用される。
 @return stem! ロードしたモジュール。 失敗した場合 nil
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadModule( mod:str ) __noasync mut: Luaval<&stem>!, ModuleMeta;
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, ModuleMeta;
 
    /**
 指定の LuneScript のモジュールからメタ情報をロードする。
@@ -260,7 +260,7 @@ Lua からも利用される。
    */
    pub fn loadMeta(
       importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
-      baseDir:str!, loader:ModuleLoader ) __noasync mut: ModuleMeta!;
+      baseDir:str!, loader:ModuleLoader ) mut: ModuleMeta!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -271,7 +271,7 @@ LuneScript のコード文字列からロードする。
    */
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo,
-      baseDir:str!, name:str, txt:str ) __noasync mut : Luaval<&stem>;
+      baseDir:str!, name:str, txt:str ) mut : Luaval<&stem>;
 
    /**
 go/github:com.ifritJP. 等の go 用のパスを、
@@ -279,43 +279,47 @@ go/github:com.ifritJP. 等の go 用のパスを、
 
 詳しくは、GoMod.lns を参照。
    */
-   pub fn getLuaModulePath( mod:str, baseDir:str! ) __noasync mut : str,str!, str;
-   pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! ) __noasync mut: str!;
-   pub fn error( message:str ) __noasync;
+   pub fn getLuaModulePath( mod:str, baseDir:str! ) mut : str,str!, str;
+   pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! )  mut: str!;
+   pub fn error( message:str ) ;
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ) __noasync mut: Luaval<&stem>!, ModuleMeta {
+   pub fn loadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
       // error( "not implements" );
-      let loaded = _load( "return {}" ## );
-      let emptyTable;
-      when! loaded {
-         emptyTable = unwrap loaded(##);
-      } else {
-         error( "load error" );
+      let modVal, mut moduleMeta;
+      __luago {
+         let emptyTable;
+         let loaded = _load( "return {}" ## );
+         when! loaded {
+            emptyTable = unwrap loaded(##);
+         } else {
+            error( "load error" );
+         }
+         moduleMeta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
+                                      MetaOrModule.Meta( emptyTable ) );           
+         modVal = require( mod );
       }
-      let mut meta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
-                                     MetaOrModule.Meta( emptyTable ) );           
-      return require( mod ), meta;
+      return modVal, moduleMeta;
    }
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
-                    baseDir:str!, loader:ModuleLoader ) __noasync mut : ModuleMeta!
+                    baseDir:str!, loader:ModuleLoader )  mut : ModuleMeta!
    {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo,
-      baseDir:str!, name:str, txt:str ) __noasync mut : Luaval<&stem>
+      baseDir:str!, name:str, txt:str )  mut : Luaval<&stem>
    {
       error( "not implements" );
    }
-   pub fn getLuaModulePath( mod:str, baseDir:str! ) __noasync mut : str, str!, str {
+   pub fn getLuaModulePath( mod:str, baseDir:str! )  mut : str, str!, str {
       error( "not implements" );
    }
-   pub fn searchModule( mod:str, baseDir:str! , addSearchPath:str!) __noasync mut: str! {
+   pub fn searchModule( mod:str, baseDir:str! , addSearchPath:str!)  mut: str! {
       error( "not implements" );
    }
-   pub fn error( message:str ) __noasync {
+   pub fn error( message:str )  {
       error( "not implements" );
    }
 }

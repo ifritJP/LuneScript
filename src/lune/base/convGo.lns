@@ -66,7 +66,8 @@ class Env {
    }
    local fn getCommonVm() : str {
       if self.addEnvArg {
-         return "_env.CommonLuaVM";
+         //return "_env.CommonLuaVM";
+         return "_env.GetVM()";
       }
       return "Lns_getVM()";
    }
@@ -2116,12 +2117,19 @@ pub override fn convFilter.processSubfile(
 pub override fn convFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
-   self.writeln( "Lns_LockEnvSync( %s, func () {"
-                 (self.env.getEnv()) );
+   _switch node.$lockKind {
+      case .AsyncLock, .NoasyncLua {
+         self.writeln( "Lns_LockEnvSync( %s, func () {"
+            (self.env.getEnv()) );
 
-   filter( node.$block, self, node );
+         filter( node.$block, self, node );
 
-   self.writeln( "})" );
+         self.writeln( "})" );
+      }
+      case .Unsafe {
+         filter( node.$block, self, node );
+      }
+   }
 }
 
 pub override fn convFilter.processBlockSub(

@@ -324,7 +324,17 @@ end
 
 function FormatterFilter:processAsyncLock( node, opt )
 
-   self:writeln( "__asyncLock {" )
+   do
+      local _switchExp = node:get_lockKind()
+      if _switchExp == Nodes.LockKind.AsyncLock then
+         self:writeln( "__asyncLock {" )
+      elseif _switchExp == Nodes.LockKind.NoasyncLua then
+         self:writeln( "__luago {" )
+      elseif _switchExp == Nodes.LockKind.Unsafe then
+         self:writeln( "__unsafe {" )
+      end
+   end
+   
    filter( node:get_block(), self, opt:nextOpt( node ) )
    self:writeln( "}" )
 end
@@ -1249,8 +1259,15 @@ end
 
 function FormatterFilter:processExpCast( node, opt )
 
-   
    filter( node:get_exp(), self, opt:nextOpt( node ) )
+   do
+      local refType = node:get_castTypeNode()
+      if refType ~= nil then
+         self:write( node:get_castOpe() )
+         filter( refType, self, opt:nextOpt( node ) )
+      end
+   end
+   
 end
 
 

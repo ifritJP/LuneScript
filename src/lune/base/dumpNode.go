@@ -8,7 +8,7 @@ func dumpNode_convExp1157(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 475
-func dumpNode_convExp3089(arg1 []LnsAny) (string, LnsInt) {
+func dumpNode_convExp3091(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // 102: decl @lune.@base.@dumpNode.createFilter
@@ -353,7 +353,7 @@ func (self *dumpNode_dumpFilter) ProcessSubfile(_env *LnsEnv, node *Nodes_Subfil
 // 158: decl @lune.@base.@dumpNode.dumpFilter.processAsyncLock
 func (self *dumpNode_dumpFilter) ProcessAsyncLock(_env *LnsEnv, node *Nodes_AsyncLockNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(_env, opt, &node.Nodes_Node, "")
+    self.FP.dump(_env, opt, &node.Nodes_Node, Nodes_LockKind_getTxt( node.FP.Get_lockKind(_env)))
     dumpNode_filter_3_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
 }
 

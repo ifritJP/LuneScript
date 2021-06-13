@@ -66,6 +66,10 @@ pub alge MetaOrModule {
 
 * バグ
 
+- [ ] 公開マクロ内では __var のアクセスを禁止にする。
+  
+- [ ] __noasyncLock 内から __luago せずに、 luaval 系にアクセスできてしまう。
+  
 - [ ] 以下のフロー解析が失敗する。
   
 fn func() : int {

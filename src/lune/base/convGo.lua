@@ -307,7 +307,8 @@ end
 function Env:getCommonVm(  )
 
    if self.addEnvArg then
-      return "_env.CommonLuaVM"
+      
+      return "_env.GetVM()"
    end
    
    return "Lns_getVM()"
@@ -2850,11 +2851,19 @@ end
 
 function convFilter:processAsyncLock( node, opt )
 
-   self:writeln( string.format( "Lns_LockEnvSync( %s, func () {", self.env:getEnv(  )) )
+   do
+      local _switchExp = node:get_lockKind()
+      if _switchExp == Nodes.LockKind.AsyncLock or _switchExp == Nodes.LockKind.NoasyncLua then
+         self:writeln( string.format( "Lns_LockEnvSync( %s, func () {", self.env:getEnv(  )) )
+         
+         filter( node:get_block(), self, node )
+         
+         self:writeln( "})" )
+      elseif _switchExp == Nodes.LockKind.Unsafe then
+         filter( node:get_block(), self, node )
+      end
+   end
    
-   filter( node:get_block(), self, node )
-   
-   self:writeln( "})" )
 end
 
 

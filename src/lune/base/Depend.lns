@@ -79,10 +79,14 @@ fn searchpath51( mod:str, pathPattern:str ) : str! {
    return nil;
 }
 
-pub fn getLoadedMod() __noasync : Luaval<&Map<str,&stem>>
+pub fn getLoadedMod() : Luaval<&Map<str,&stem>>
 {
-   let loaded = unwrap _load( "return package.loaded"## )$(##);
-   return loaded@@Luaval<&Map<str,&stem>>;
+   let ret;
+   __luago {
+      let loaded = unwrap _load( "return package.loaded"## )$(##);
+      ret = loaded@@Luaval<&Map<str,&stem>>;
+   }
+   return ret;
 }
 
 pub fn profile( validTest:bool, func: form, path: str ): stem! {
@@ -177,11 +181,16 @@ pub fn canUseAsync() : bool {
 }
 
 pub fn runMain( mainFunc: &Luaval<stem>!, argList:&List<str> ) __noasync : int {
-   form MainFunc( list:&List<str> ) : int;
-   when! mainFunc {
-      return (mainFunc@@MainFunc)( argList );
+   let ret;
+   __luago {
+      form MainFunc( list:&List<str> ) : int;
+      when! mainFunc {
+         ret = (mainFunc@@MainFunc)( argList );
+      } else {
+         ret = 1;
+      }
    }
-   return -1;
+   return ret;
 }
 
 pub fn getGOPATH() : str! {

@@ -213,7 +213,6 @@ local Types = _lune.loadModule( 'lune.base.Types' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Option = _lune.loadModule( 'lune.base.Option' )
-local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
@@ -1002,7 +1001,7 @@ function ConvFilter:outputMeta( node )
          local firstFlag = true
          do
             local __sorted = {}
-            local __map = macroInfo.symbol2MacroValInfoMap
+            local __map = macroInfo:get_symbol2MacroValInfoMap()
             for __key in pairs( __map ) do
                table.insert( __sorted, __key )
             end
@@ -4363,43 +4362,10 @@ local function createFilter( streamName, stream, metaStream, convMode, inMacro, 
 end
 _moduleObj.createFilter = createFilter
 
-local function runLuaOnLns( code, baseDir )
-
-   local loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir )
-   if loadFunc ~= nil then
-      local mod = loadFunc(  )
-      if mod ~= nil then
-         return mod, ""
-      end
-      
-      return nil, "load error"
-   end
-   
-   return nil, err
-end
-_moduleObj.runLuaOnLns = runLuaOnLns
-
 local MacroEvalImp = {}
 setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
-function MacroEvalImp:evalFromMacroCode( code, baseDir )
-   local __func__ = '@lune.@base.@convLua.MacroEvalImp.evalFromMacroCode'
-
-   
-   Log.log( Log.Level.Trace, __func__, 3660, function (  )
-   
-      return string.format( "macro: %s", code)
-   end )
-   
-   
-   local func, err = runLuaOnLns( code, baseDir )
-   if func ~= nil then
-      return func
-   end
-   
-   Util.err( err )
-end
-function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code, baseDir )
+function MacroEvalImp:evalFromCodeToLuaCode( processInfo, name, argNameList, code )
 
    local stream = Util.memStream.new()
    local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
@@ -4412,16 +4378,16 @@ function MacroEvalImp:evalFromCode( processInfo, name, argNameList, code, baseDi
       
    end )
    
-   return self:evalFromMacroCode( stream:get_txt(), baseDir )
+   return stream:get_txt()
 end
-function MacroEvalImp:eval( processInfo, node, baseDir )
+function MacroEvalImp:evalToLuaCode( processInfo, node )
 
    local stream = Util.memStream.new()
    local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
    
    conv:processDeclMacro( node, Opt.new(node) )
    
-   return self:evalFromMacroCode( stream:get_txt(), baseDir )
+   return stream:get_txt()
 end
 function MacroEvalImp.setmeta( obj )
   setmetatable( obj, { __index = MacroEvalImp  } )
