@@ -4162,13 +4162,10 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
    local node = Nodes.DeclMacroNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, declMacroInfo )
    
    do
-      do
-         local _exp = self.macroCtrl:regist( self.processInfo, node, macroScope, self.baseDir )
-         if _exp ~= nil then
-            self:errorAt( nameToken.pos, _exp )
-         end
+      local _exp = self.macroCtrl:regist( self.processInfo, node, macroScope, self.baseDir )
+      if _exp ~= nil then
+         self:errorAt( nameToken.pos, _exp )
       end
-      
    end
    
    
@@ -5064,7 +5061,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1966, function (  )
+         Log.log( Log.Level.Debug, __func__, 1964, function (  )
          
             return string.format( "%s", dummyRetType)
          end )

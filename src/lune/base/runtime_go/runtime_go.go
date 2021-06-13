@@ -225,7 +225,6 @@ func Lns_tonumber(val string, base LnsAny) LnsAny {
 		return f
 	}
 	if bs, ok := base.(LnsInt); ok {
-		print(fmt.Sprint("hoge: %s %s", val, bs))
 		if dig, err := strconv.ParseInt(val, bs, 64); err != nil {
 			return nil
 		} else {

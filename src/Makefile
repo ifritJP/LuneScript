@@ -1803,7 +1803,11 @@ goprof:
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
 goprofview:
+ifdef BROWSER
+	go tool pprof -http=0.0.0.0:8888 lnsc @-.profi
+else
 	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profi
+endif
 gotraceview:
 	go tool trace -http=0.0.0.0:8888 -no_browser @-.profitrace 
 

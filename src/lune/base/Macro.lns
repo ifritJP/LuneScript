@@ -401,22 +401,34 @@ pub fn MacroCtrl.evalMacroOp(
 
       let innerMacro = macroTypeInfo.getModule() == moduleTypeInfo;
 
+      // マクロの Lua VM 実行を非同期で行なうかどうか。
+      // 内部宣言マクロで、外部公開してないマクロのみ非同期で行なう。
+      // 外部公開マクロは、別のスレッドで実行できるように、
+      // 標準 Lua VM 用に生成される。
+      let asyncMacro =
+         innerMacro and not Ast.isPubToExternal( macroTypeInfo.$accessMode );
 
       let toLuaval;
-      if innerMacro {
+      if asyncMacro {
+         // コンストラクタで生成すると、
+         // 実行時とのスレッドが異なって 
+         // luaval の処理が正常に動作しない可能性があるため、
+         // nilable にして実行時時に生成する。
          let! work = self.toLuavalLuaAsync {
             work = loadCode( "return function( val ) return val end" )@@toLuavalLuaFunc;
             self.toLuavalLuaAsync = work;
          };
-         // toLuaval = work;
-         toLuaval = toLuavalNoasync;
+         toLuaval = work;
       } else {
-         toLuaval = toLuavalNoasync;
+         __asyncLock {
+            toLuaval = toLuavalNoasync;
+         }
       }
       
       macro _callMacroState(block:__block) {
-         if innerMacro {
-            __luago {
+         if asyncMacro {
+            //__luago {
+            __unsafe {
                ,,block;
             }
          } else {
@@ -519,9 +531,7 @@ pub fn MacroCtrl.evalMacroOp(
       return nil;
    }
 
-   __asyncLock {
-      process();
-   }
+   process();
 
    return new MacroParser(
       macroInfo.getTokenList(),
@@ -614,7 +624,9 @@ pub fn MacroCtrl.regist(
 {
    let luaCode = self.macroEval.evalToLuaCode( processInfo, node );
    let macroObj, err;
-   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false );
+   macroObj, err = runLuaOnLnsToMacroProc(
+      luaCode, baseDir, not Ast.isPubToExternal( node.$expType.$accessMode ) );
+   // macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false );
 
 
    when! macroObj {
@@ -1086,14 +1098,12 @@ pub fn MacroCtrl.isInExpandMode(): bool {
 pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ) :str
 {
    let code;
-   __asyncLock {
-      let mut memStream = new Util.memStream();
-      let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
+   let mut memStream = new Util.memStream();
+   let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
 
-      node.processFilter( formatter, new Formatter.Opt( node ) );
-      
-      code = memStream.$txt;
-   }
+   node.processFilter( formatter, new Formatter.Opt( node ) );
+   
+   code = memStream.$txt;
    return code;
 }
 

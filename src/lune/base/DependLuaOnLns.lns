@@ -64,9 +64,6 @@ pub fn runLuaOnLns(
          loaded, err = _load( luaCode, newEnv );
       }
    }
-   // __luago {
-   //    loaded, err = _load( luaCode, newEnv );
-   // }
 
    when! loaded {
       return loaded@@LoadFunc, "";

@@ -771,9 +771,12 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
       
       local innerMacro = macroTypeInfo:getModule(  ) == moduleTypeInfo
       
+      local asyncMacro = innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
+      
       local toLuaval
       
-      if innerMacro then
+      if asyncMacro then
+         
          local work = self.toLuavalLuaAsync
          if  nil == work then
             local _work = work
@@ -782,16 +785,19 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
             self.toLuavalLuaAsync = work
          end
          
-         
-         toLuaval = _moduleObj.toLuavalNoasync
+         toLuaval = work
       else
        
-         toLuaval = _moduleObj.toLuavalNoasync
+         do
+            toLuaval = _moduleObj.toLuavalNoasync
+         end
+         
       end
       
       
       
-      if innerMacro then
+      if asyncMacro then
+         
          do
             do
                if expList ~= nil then
@@ -1007,10 +1013,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
       return nil
    end
    
-   do
-      process(  )
-   end
-   
+   process(  )
    
    return MacroParser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
@@ -1096,7 +1099,7 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
    local luaCode = self.macroEval:evalToLuaCode( processInfo, node )
    local macroObj, err
    
-   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false )
+   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, not Ast.isPubToExternal( node:get_expType():get_accessMode() ) )
    
    if macroObj ~= nil then
       
@@ -1539,15 +1542,12 @@ local function nodeToCodeTxt( node, moduleTypeInfo )
 
    local code
    
-   do
-      local memStream = Util.memStream.new()
-      local formatter = Formatter.createFilter( moduleTypeInfo, memStream )
-      
-      node:processFilter( formatter, Formatter.Opt.new(node) )
-      
-      code = memStream:get_txt()
-   end
+   local memStream = Util.memStream.new()
+   local formatter = Formatter.createFilter( moduleTypeInfo, memStream )
    
+   node:processFilter( formatter, Formatter.Opt.new(node) )
+   
+   code = memStream:get_txt()
    return code
 end
 _moduleObj.nodeToCodeTxt = nodeToCodeTxt

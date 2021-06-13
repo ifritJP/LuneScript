@@ -240,13 +240,26 @@ local txt=[===[
 return DependLuaOnLns.runLuaOnLns( txt )
     `, setBindListStr, luaCode)
 
-	luaVM := _env.GetVM()
-	if !async {
-		luaVM = _env.CommonLuaVM
+	var loaded LnsAny
+	var err LnsAny
+	var ret []LnsAny
+
+	if async {
+		luaVM := _env.GetVM()
+		loaded, err = luaVM.Load(txt, nil)
+		if loaded != nil {
+			ret = luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), []LnsAny{})
+		}
+	} else {
+		Lns_LockEnvSync(_env, func() {
+			luaVM := _env.GetVM()
+			loaded, err = luaVM.Load(txt, nil)
+			if loaded != nil {
+				ret = luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), []LnsAny{})
+			}
+		})
 	}
-	loaded, err := luaVM.Load(txt, nil)
 	if loaded != nil {
-		ret := luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), []LnsAny{})
 		return ret[0], ""
 	}
 	if err != nil {

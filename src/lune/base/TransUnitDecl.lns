@@ -1013,10 +1013,8 @@ fn TransUnit.analyzeDeclMacroSub(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], declMacroInfo );
 
-   __asyncLock {
-      if! self.macroCtrl.regist( self.processInfo, node, macroScope, self.baseDir ) {
-         self.errorAt( nameToken.pos, _exp );
-      }
+   if! self.macroCtrl.regist( self.processInfo, node, macroScope, self.baseDir ) {
+      self.errorAt( nameToken.pos, _exp );
    }
 
    return node;
