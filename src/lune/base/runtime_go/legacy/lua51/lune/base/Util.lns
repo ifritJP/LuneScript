@@ -54,7 +54,7 @@ txt 文字列から、 pattern で構成される文字列を抜き出してリ�
 */
 pub fn splitStr( txt:str, pattern:str ) : List<str> {
    let mut list:List<str> = [];
-   __asyncLock {
+   __unsafe {
       apply token of string.gmatch( txt, pattern ) {
          list.insert( token );
       }

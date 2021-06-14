@@ -167,7 +167,20 @@ pub override fn FormatterFilter.processLuneControl(
 pub override fn FormatterFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt:Opt ) mut
 {
-   self.writeln( "__asyncLock {" );
+   _switch node.$lockKind {
+      case .AsyncLock {
+         self.writeln( "__asyncLock {" );
+      }
+      case .LuaGo {
+         self.writeln( "__luago {" );
+      }
+      case .LuaLock {
+         self.writeln( "__luaLock {" );
+      }
+      case .Unsafe {
+         self.writeln( "__unsafe {" );
+      }
+   }
    filter( node.$block, self, opt.nextOpt( node ) );
    self.writeln( "}" );
 }
@@ -980,8 +993,11 @@ pub override fn FormatterFilter.processExpMultiTo1(
 pub override fn FormatterFilter.processExpCast(
    node: &Nodes.ExpCastNode, opt:Opt ) mut
 {
-   
    filter( node.$exp, self, opt.nextOpt( node ) );
+   if! let refType = node.$castTypeNode {
+      self.write( node.$castOpe );
+      filter( refType, self, opt.nextOpt( node ) );
+   }
 };
 pub override fn FormatterFilter.processExpParen(
    node: &Nodes.ExpParenNode, opt:Opt ) mut

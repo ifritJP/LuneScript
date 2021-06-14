@@ -325,6 +325,17 @@ function Position.create( lineNo, column, streamName, orgPos )
    pos.orgPos = orgPos
    return pos
 end
+function Position:getDisplayTxt(  )
+
+   local txt = string.format( "%s:%d:%d", self.streamName, self.lineNo, self.column)
+   local orgPos = self:get_orgPos()
+   if self ~= orgPos then
+      local txt2 = string.format( "%s:%d:%d", orgPos.streamName, orgPos.lineNo, orgPos.column)
+      return string.format( "%s: (%s)", txt2, txt)
+   end
+   
+   return txt
+end
 function Position.setmeta( obj )
   setmetatable( obj, { __index = Position  } )
 end

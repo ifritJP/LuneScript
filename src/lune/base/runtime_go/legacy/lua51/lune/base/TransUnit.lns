@@ -503,6 +503,21 @@ class AccessSymbolSetQueue {
    }
 }
 
+class FuncBlockInfo {
+   let declFuncInfo:Nodes.DeclFuncInfo {pub};
+   let funcType:&Ast.TypeInfo{pub};
+   let funcScope:Ast.Scope {pub};
+   let tokenList:&List<&Parser.Token> {pub};
+   let lineNo:int! {pub};
+}
+
+enum AnalyzePhase {
+   /** Meta ファイル用の外部公開の情報を解析する */
+   Meta,
+   /** 全体を解析する */
+   Main,
+}
+
 pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    /** 解析状態 */
@@ -540,7 +555,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    pri let mut commentCtrl: Parser.CommentCtrl;
    
    /** 解析警告メッセージ */
-   pri let mut warnMessList: str[] { pub };
+   pri let mut warnMessList: List<&TransUnitIF.ErrMess> { pub };
 
 
    /** このモジュール内から直接 import しているモジュールのセット */
@@ -622,6 +637,9 @@ alias で置き換えている元の Type → alias の型
    let mut baseDir:str!;
 
    let mut inTestBlock:bool;
+   let mut analyzePhase:AnalyzePhase;
+   let funcBlockInfoList:List<FuncBlockInfo>;
+   let mut funcBlockInfoLinkNo:int!;
 
    static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
       &Types.TransCtrlInfo, Ast.ProcessInfo
@@ -634,13 +652,23 @@ alias で置き換えている元の Type → alias の型
    
    pub fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
-                  macroEval: &Nodes.MacroEval, analyzeModule:str!, mode:AnalyzeMode!,
+                  macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
+                  analyzeModule:str!, mode:AnalyzeMode!,
                   pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType) 
    {
       super( TransUnit.getSuperParam( ctrl_info )** );
 
+      self.funcBlockInfoLinkNo = nil;
+      self.funcBlockInfoList = [];
+      let phase:AnalyzePhase;
+      if enableMultiPhase and ( mode == nil or mode == .Compile ) {
+         phase = .Meta;
+      } else {
+         phase = .Main;
+      }
+      self.analyzePhase = phase;
       self.inTestBlock = false;
       self.baseDir = nil;
       self.stdinFile = nil;
@@ -719,9 +747,8 @@ alias で置き換えている元の Type → alias の型
    }
 
    pri fn addWarnMess( pos: &Parser.Position, mess: str ) __async mut {
-      self.warnMessList.insert(
-         "%s:%d:%d: warning: %s" ( self.parser.getStreamName(),
-                                   pos.lineNo, pos.column, mess ) );
+      self.warnMessList.insert( new TransUnitIF.ErrMess(
+         "%s: warning: %s" ( pos.getDisplayTxt(), mess ), pos ) );
    }
 
    pri fn addWarnErrMess( pos:&Parser.Position, err:bool, mess: str ) __async mut {
@@ -896,6 +923,11 @@ alias で置き換えている元の Type → alias の型
    pri fn analyzeRefTypeWithSymbol(
       accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
       symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
+   fn analyzeFuncBlock(
+      analyzingState:AnalyzingState, firstToken: &Parser.Token,
+      classTypeInfo:&Ast.TypeInfo!, funcTypeInfo:&Ast.TypeInfo, funcName:str,
+      funcBodyScope:Ast.Scope,
+      retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode;
 
    pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
 
@@ -996,11 +1028,26 @@ alias で置き換えている元の Type → alias の型
       alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>, validCastToGen:bool,
       dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
       callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!;
+
+   fn getLineNo( token:&Parser.Token ) :int {
+      let mut lineNo = token.pos.lineNo;
+      if! let work = self.funcBlockInfoLinkNo {
+         lineNo = work;
+      }
+      if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+         lineNo = self.macroCtrl.$macroCallLineNo;
+      }
+      return lineNo;
+   }
 }
 
 fn TransUnit.canBeAsyncParam( typeInfo:&Ast.TypeInfo ) : bool {
-   if typeInfo.$nilableTypeInfo.$srcTypeInfo.$genSrcTypeInfo == self.builtinFunc.__pipe_ {
-      return true;
+   switch typeInfo.$nilableTypeInfo.$srcTypeInfo.$genSrcTypeInfo {
+      case self.builtinFunc.__pipe_,
+           self.builtinFunc.__lns_sync_flag_
+      {
+         return true;
+      }
    }
    return Ast.TypeInfo.canBeAsyncParam( typeInfo );
 }
@@ -1010,20 +1057,20 @@ fn TransUnit.canBeAsyncParam( typeInfo:&Ast.TypeInfo ) : bool {
 let mut opTopLevel = 0;
 
 fn setupOpLevel() : &Map<str,int>, &Map<str,int> {
-   let op2levelMap:Map<str,int> = {};
-   let op1levelMap:Map<str,int> = {};
+   let op2levelMapWork:Map<str,int> = {};
+   let op1levelMapWork:Map<str,int> = {};
    
    let mut opLevelBase = 0;
    fn regOpLevel( opnum: int, opList: str[@] ) __trans {
       opLevelBase = opLevelBase + 1;
       if opnum == 1 {
          foreach op in opList {
-            op1levelMap[ op ] = opLevelBase;
+            op1levelMapWork[ op ] = opLevelBase;
          }
       }
       else {
          foreach op in opList {
-            op2levelMap[ op ] = opLevelBase;
+            op2levelMapWork[ op ] = opLevelBase;
          }
       }
    }
@@ -1044,7 +1091,7 @@ fn setupOpLevel() : &Map<str,int>, &Map<str,int> {
 
    opTopLevel = opLevelBase + 1;
 
-   return op2levelMap, op1levelMap;
+   return op2levelMapWork, op1levelMapWork;
 }
 
 let op2levelMap, op1levelMap = setupOpLevel();
@@ -1087,15 +1134,14 @@ fn TransUnit.createExtType(
    }
 }
 
-
 pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
    self.addErrMess( pos, mess);
 
-   foreach errmess in self.errMessList {
-      Util.errorLog( errmess );
+   foreach errmess in TransUnitIF.sortMess( self.errMessList ) {
+      Util.errorLog( errmess.$mess );
    }
-   foreach warnmess in self.warnMessList {
-      Util.errorLog( warnmess );
+   foreach warnmess in TransUnitIF.sortMess( self.warnMessList ) {
+      Util.errorLog( warnmess.$mess );
    }
    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
       print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
@@ -1682,17 +1728,17 @@ fn TransUnit.analyzeImportFor(
    let mut moduleLoader = importObj.processImport(
       modulePath, moduleLoaderParam );
    
-   let moduleInfo;
+   let exportInfo;
    __asyncLock {
       let work, err = importObj.loadModuleInfo( moduleLoader );
       when! work {
-         moduleInfo = work;
+         exportInfo = work;
       } else {
          self.error( err );
       }
    }
 
-   foreach symbol in moduleInfo.$exportInfo.$globalSymbolList {
+   foreach symbol in exportInfo.$globalSymbolList {
       self.globalScope.addSymbolInfo( self.processInfo, symbol );
    }
 
@@ -1704,9 +1750,9 @@ fn TransUnit.analyzeImportFor(
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
 
-   let provideInfo = moduleInfo.$exportInfo.$provideInfo;
+   let provideInfo = exportInfo.$provideInfo;
    let moduleTypeInfo = provideInfo.$typeInfo;
-   self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName ) );
+   self.scope.addModule( moduleTypeInfo, exportInfo.assign( assignName ) );
 
    let moduleSymbolKind = provideInfo.$symbolKind;
    let mut moduleSymbolInfo:&Ast.SymbolInfo!, shadowing = self.scope.add(
@@ -1848,10 +1894,15 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
       [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
 }
 
-fn TransUnit.skipBlock() mut {
+fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    let mut blockDepth = 0;
+   let mut tokenList:List<&Parser.Token> = [];
+   //tokenList = tokenList.__new( 1000 );
    while true {
       let token = self.getToken( ## );
+      if recordToken {
+         tokenList.insert( token );
+      }
       switch token.txt {
          case "{" {
             blockDepth = blockDepth + 1;
@@ -1866,8 +1917,8 @@ fn TransUnit.skipBlock() mut {
          }
       }
    }
+   return tokenList;
 }
-
 
 fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
 {
@@ -1950,14 +2001,39 @@ fn TransUnit.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Subfil
       [ Ast.builtinTypeNone ], usePath );
 }
 
-fn TransUnit.analyzeAsyncLock( asyncToken: &Parser.Token ) mut : Nodes.Node {
-
+fn TransUnit.analyzeAsyncLock(
+   asyncToken: &Parser.Token, lockKind:Nodes.LockKind ) mut : Nodes.Node
+{
    let mut nsInfo = self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
-   if nsInfo.isLockedAsync() {
-      self.addErrMess( asyncToken.pos, "can't nest __asyncLock." );
+   _switch lockKind {
+      case .AsyncLock {
+         if nsInfo.isNoasync() {
+            // noasync 中は __asyncLock できない。
+            self.addErrMess(
+               asyncToken.pos,
+               "can't use __asyncLock on __noasync. -- %s" (nsInfo.$typeInfo.getTxt(##)));
+         }
+      }
+      case .Unsafe, .LuaLock {
+         if nsInfo.isNoasync() {
+            // noasync 中は __unsafe, __luaLock できない。
+            self.addErrMess(
+               asyncToken.pos,
+               "can't use __unsafe or __luaLock on __noasync. -- %s"
+               (nsInfo.$typeInfo.getTxt(##)) );
+         }
+      }
+      case .LuaGo {
+         if not nsInfo.isNoasync() {
+            // async 中は __luago できない。
+            self.addErrMess(
+               asyncToken.pos,
+               "can't use __luago on __async. -- %s" (nsInfo.$typeInfo.getTxt(##)) );
+         }
+      }
    }
-   
-   nsInfo.incLock();
+
+   nsInfo.incLock( lockKind );
    
    let block = self.analyzeBlock( .AsyncLock, .Simple, nil, nil );
 
@@ -1965,7 +2041,8 @@ fn TransUnit.analyzeAsyncLock( asyncToken: &Parser.Token ) mut : Nodes.Node {
    
    return Nodes.AsyncLockNode.create(
       self.nodeManager, asyncToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], block );
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      lockKind, block );
 }
 
 fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
@@ -2396,7 +2473,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
       exp1 = Nodes.ExpCastNode.create(
          self.nodeManager, exp1.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
-         exp1, Ast.builtinTypeReal, .Force );
+         exp1, Ast.builtinTypeReal, nil, "@@", .Force );
    }
 
 
@@ -2572,11 +2649,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    let exp = self.analyzeExpOneRVal( false, false## );
    if exp.$expType.$kind == .Ext {
       let nsInfo = self.getCurrentNSInfo();
-      if not nsInfo.canAccessNoasync() {
+      if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
+         not nsInfo.canAccessLuaval()
+      {
          // __noasync 以外で Luaval にはアクセスできない。
          self.addErrMess(
             exp.$pos,
-            "can't access the luaval with the foreach on __async. -- %s in %s"
+            "can't access the luaval without __luago. -- %s in %s"
             (exp.$expType.getTxt(##), nsInfo.$typeInfo.getTxt(##)) );
       }
    }

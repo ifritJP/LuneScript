@@ -1042,8 +1042,12 @@ alias で置き換えている元の Type → alias の型
 }
 
 fn TransUnit.canBeAsyncParam( typeInfo:&Ast.TypeInfo ) : bool {
-   if typeInfo.$nilableTypeInfo.$srcTypeInfo.$genSrcTypeInfo == self.builtinFunc.__pipe_ {
-      return true;
+   switch typeInfo.$nilableTypeInfo.$srcTypeInfo.$genSrcTypeInfo {
+      case self.builtinFunc.__pipe_,
+           self.builtinFunc.__lns_sync_flag_
+      {
+         return true;
+      }
    }
    return Ast.TypeInfo.canBeAsyncParam( typeInfo );
 }
@@ -1724,17 +1728,17 @@ fn TransUnit.analyzeImportFor(
    let mut moduleLoader = importObj.processImport(
       modulePath, moduleLoaderParam );
    
-   let moduleInfo;
+   let exportInfo;
    __asyncLock {
       let work, err = importObj.loadModuleInfo( moduleLoader );
       when! work {
-         moduleInfo = work;
+         exportInfo = work;
       } else {
          self.error( err );
       }
    }
 
-   foreach symbol in moduleInfo.$exportInfo.$globalSymbolList {
+   foreach symbol in exportInfo.$globalSymbolList {
       self.globalScope.addSymbolInfo( self.processInfo, symbol );
    }
 
@@ -1746,9 +1750,9 @@ fn TransUnit.analyzeImportFor(
    // モジュールの末尾のシンボルでスコープに登録する。
    // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
 
-   let provideInfo = moduleInfo.$exportInfo.$provideInfo;
+   let provideInfo = exportInfo.$provideInfo;
    let moduleTypeInfo = provideInfo.$typeInfo;
-   self.scope.addModule( moduleTypeInfo, moduleInfo.assign( assignName ) );
+   self.scope.addModule( moduleTypeInfo, exportInfo.assign( assignName ) );
 
    let moduleSymbolKind = provideInfo.$symbolKind;
    let mut moduleSymbolInfo:&Ast.SymbolInfo!, shadowing = self.scope.add(

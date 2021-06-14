@@ -465,6 +465,7 @@ function SimpleSourceOStream:get_indent(  )
 end
 function SimpleSourceOStream:write( txt )
 
+   
    local stream = self.nowStream
    for __index, line in ipairs( Str.getLineList( txt ) ) do
       if self.needIndent then
@@ -527,7 +528,6 @@ local function printStackTrace(  )
    errorLog( Depend.getStackTrace(  ) )
 end
 _moduleObj.printStackTrace = printStackTrace
-
 local function getReadyCode( depPath, tgtPath )
    local __func__ = '@lune.@base.@Util.getReadyCode'
 
@@ -536,6 +536,7 @@ local function getReadyCode( depPath, tgtPath )
       local _tgtTime = tgtTime
       local _depTime = depTime
    
+      
       return false
    end
    

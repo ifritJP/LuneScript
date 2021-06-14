@@ -141,7 +141,7 @@ __test {
             when! loaded {
                if! let meta = loaded(##) {
                   moduleMeta = new frontInterface.ModuleMeta(
-                     (metaPath.gsub( "%.meta$", ".lns" )), .Meta( meta ) );
+                     (metaPath.gsub( "%.meta$", ".lns" )), .MetaRaw( meta ) );
                }
             }
          }

@@ -30,27 +30,65 @@ import lune.base.Ast;
 import lune.base.Parser;
 import lune.base.Types;
 import lune.base.Formatter;
-//import lune.base.Depend;
+import lune.base.DependLuaOnLns;
 
 
-fn loadCode( code:str ) __noasync : Luaval<&stem> {
-   let loaded, mess = _load( code ## );
-   when! loaded {
-      if! let obj = loaded(##) {
-         return obj;
+fn loadCode( code:str ) : Luaval<&stem> {
+   let ret;
+   __unsafe {
+      let loaded, mess = _load( code ## );
+      when! loaded {
+         if! let obj = loaded(##) {
+            ret = obj;
+         } else {
+            error( "failed to load" );
+         }
+      } else {
+         error( "%s -- %s" (mess, code) );
       }
-      error( "failed to load" );
    }
-   error( "%s -- %s" (mess, code) );
+   return ret;
 }
+
+fn runLuaOnLns( code:str, baseDir:str!, async:bool ) : Luaval<&stem>!, str {
+   let loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir, async );
+   when! loadFunc {
+      let mut mod:Luaval<&stem>! = nil;
+      if async {
+         __unsafe {
+            mod = loadFunc();
+         }
+      } else {
+         __luaLock {
+            mod = loadFunc();
+         }
+      }
+      when! mod {
+         return mod, "";
+      }
+      return nil, "load error";
+   }
+   return nil, err;
+}
+
+fn runLuaOnLnsToMacroProc(
+   code:str, baseDir:str!, async:bool ) : Luaval<Nodes.macroStatmentProc>!, str
+{
+   let luaObj, err = runLuaOnLns( code, baseDir, async );
+   when! luaObj {
+      return luaObj@@Luaval<Nodes.macroStatmentProc>, "";
+   }
+   return nil, err;
+}
+
    
 
 // pub form toListLua( val:Luaval<&stem> ) __noasync : &List<&stem>;
 // pub let toList = loadCode( "return function( ... ) return { ... } end" )@@toListLua;
-pub form toListEmptyLua() __noasync : &List<&stem>;
-pub let toListEmpty = loadCode( "return function() return {} end" )@@toListEmptyLua;
-pub form toLuavalLua( val:&stem! ) __noasync : &stem!;
-pub let toLuaval = loadCode( "return function( val ) return val end" )@@toLuavalLua;
+pub form toListEmptyLua() : &List<&stem>;
+pub form toLuavalLuaFunc( val:&stem! ) __noasync : &stem!;
+pub let toLuavalNoasync =
+   loadCode( "return function( val ) return val end" )@@toLuavalLuaFunc;
 
 
 class MacroMetaArgInfo extend (Mapping) {
@@ -80,7 +118,7 @@ class MacroParser extend Parser.Parser {
       self.pos = 1;
       self.tokenList = tokenList;
       self.name = name;
-      self.overridePos = overridePos;
+      self.overridePos = overridePos$.$orgPos;
    }
 
    pub override fn createPosition( lineNo: int, column: int ) : &Types.Position {
@@ -172,9 +210,10 @@ fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
 }
 
 class ExtMacroInfo extend Nodes.MacroInfo {
-   pri let mut name:str {pub};
-   pri let mut argList:&List<&Nodes.MacroArgInfo>;
-   pri let mut tokenList:&List<&Parser.Token>;
+   pri let name:str {pub};
+   pri let argList:&List<&Nodes.MacroArgInfo>;
+   pri let tokenList:&List<&Parser.Token>;
+   let baseDir:str! {pub};
 
    pub override fn getArgList():&List<&Nodes.MacroArgInfo> {
       return self.argList;
@@ -186,12 +225,14 @@ class ExtMacroInfo extend Nodes.MacroInfo {
    pub fn __init( name:str, func: Luaval<Nodes.macroStatmentProc>,
                   symbol2MacroValInfoMap: Map<str,Nodes.MacroValInfo>,
                   argList:&List<&Nodes.MacroArgInfo>,
-                  tokenList:&List<&Parser.Token> )
+                  tokenList:&List<&Parser.Token>,
+                  baseDir:str! )
    {
       super( func, symbol2MacroValInfoMap );
       self.name = name;
       self.argList = argList;
       self.tokenList = tokenList;
+      self.baseDir = baseDir;
    }
 }
 
@@ -221,19 +262,12 @@ pub class MacroAnalyzeInfo {
 
    pub fn isAnalyzingSymArg(): bool {
       return self.mode == .AnalyzeArg and self.getCurArgType() == Ast.builtinTypeSymbol;
-      // if self.mode == .AnalyzeArg {
-      //    switch self.getCurArgType() {
-      //       case Ast.builtinTypeExp {
-      //       }
-      //       default {
-      //          return true;
-      //       }
-      //    }
-      // }
-      // return false;
    }
    pub fn isAnalyzingExpArg(): bool {
       return self.mode == .AnalyzeArg and self.getCurArgType() == Ast.builtinTypeExp;
+   }
+   pub fn isAnalyzingBlockArg(): bool {
+      return self.mode == .AnalyzeArg and self.getCurArgType() == Ast.builtinTypeBlockArg;
    }
 }
 
@@ -262,12 +296,21 @@ pub class MacroCtrl
    * マクロ内で利用可能な、マクロ共通ローカルマップ。
    * マクロ横断で共通。
    */
-   pri let mut macroLocalVarMap:Luaval<&stem>;
+   pri let mut macroLocalVarMap:Luaval<&stem>!;
    /** マクロ定義中の場合 true */
    pri let mut isDeclaringMacro:bool {pub};
 
+
+   /** _lnsLoad を使用している場合 true */
+   let mut useLnsLoad:bool;
+
+   let mut toLuavalLuaAsync:Luaval<toLuavalLuaFunc>!;
+
+
    pub fn __init( macroEval: &Nodes.MacroEval )
    {
+      self.toLuavalLuaAsync = nil;
+      self.useLnsLoad = false;
       self.declMacroInfoMap = {};
       self.isDeclaringMacro = false;
       self.tokenExpanding = false;
@@ -279,8 +322,12 @@ pub class MacroCtrl
       self.macroCallLineNo = 0;
       self.macroAnalyzeInfoStack = [ self.analyzeInfo ];
 
-      __asyncLock {
-         self.macroLocalVarMap = toListEmpty();
+      self.macroLocalVarMap = nil;
+   }
+
+   pub fn setToUseLnsLoad() mut {
+      if self.isDeclaringMacro {
+         self.useLnsLoad = true;
       }
    }
 }
@@ -300,6 +347,7 @@ fn equalsType( typeInfo:&Ast.TypeInfo, builtinType:&Ast.TypeInfo ) : bool {
 @return str! マクロ展開に失敗した場合のエラーメッセージ
 */
 pub fn MacroCtrl.evalMacroOp(
+   moduleTypeInfo:&Ast.TypeInfo,
    streamName:str, firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
    expList: &Nodes.ExpListNode! ) mut: Parser.Parser!, str!
 {
@@ -340,74 +388,133 @@ pub fn MacroCtrl.evalMacroOp(
 
    let macroInfo = unwrap self.typeId2MacroInfo[ macroTypeInfo.$typeId ];
    
-   fn process() __noasync : str! {
+   fn process() : str! {
       
-      // マクロに渡す引数をセットする
       let mut argValMap:Map<int,&stem> = {};
       let mut macroArgValMap:Map<str,Luaval<&stem>> = {};
       let macroArgNodeList = macroInfo.getArgList();
 
       // マクロ引数名 → 引数の Node
       let mut macroArgName2ArgNode:Map<str,&Nodes.Node> = {};
-      when! expList {
-         foreach argNode, index in expList.$expList {
-            let declArgNode = macroArgNodeList[ index ];
-            macroArgName2ArgNode[ declArgNode.$name ] = argNode;
-            let literal, mess = argNode.getLiteral();
-            when! literal {
-               if! let val = getLiteralMacroVal( literal ) {
-                  argValMap[ index ] = val;
 
-                  if argNode.$expType == Ast.builtinTypeSymbol {
-                     macroArgValMap[ declArgNode.$name ] = toLuaval( val[ 1 ] );
-                  }
-                  else {
-                     macroArgValMap[ declArgNode.$name ] = toLuaval( val );
-                  }
-               }
+      let mut errmess:str! = nil;
+
+      let innerMacro = macroTypeInfo.getModule() == moduleTypeInfo;
+
+      // マクロの Lua VM 実行を非同期で行なうかどうか。
+      // 内部宣言マクロで、外部公開してないマクロのみ非同期で行なう。
+      // 外部公開マクロは、別のスレッドで実行できるように、
+      // 標準 Lua VM 用に生成される。
+      let asyncMacro =
+         innerMacro and not Ast.isPubToExternal( macroTypeInfo.$accessMode );
+
+      let toLuaval;
+      if asyncMacro {
+         // コンストラクタで生成すると、
+         // 実行時とのスレッドが異なって 
+         // luaval の処理が正常に動作しない可能性があるため、
+         // nilable にして実行時時に生成する。
+         let! work = self.toLuavalLuaAsync {
+            work = loadCode( "return function( val ) return val end" )@@toLuavalLuaFunc;
+            self.toLuavalLuaAsync = work;
+         };
+         toLuaval = work;
+      } else {
+         __asyncLock {
+            toLuaval = toLuavalNoasync;
+         }
+      }
+      
+      macro _callMacroState(block:__block) {
+         if asyncMacro {
+            //__luago {
+            __unsafe {
+               ,,block;
             }
-            else {
-               let errmess = "not support node at arg(%d) -- %s:%s"
-                   ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
-               return errmess;
+         } else {
+            __luaLock {
+               ,,block;
             }
          }
       }
-
-      macroArgValMap[ "__var" ] = self.macroLocalVarMap;
-
-      // マクロの macro-statment を実行
-      let func = macroInfo.func;
-      let mut macroVars = unwrap expandLuavalMap( func( macroArgValMap ) );
-
-      // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
-      // self.macroLocalVarMap に入れなおす。
-      self.macroLocalVarMap = unwrap macroVars.__var;
-
-      // macro-statment の実行結果から、
-      // symbol2ValueMapForMacro にシンボル名と値を紐付け。
-      // macroVars.__names には、 macro-statment で定義された変数シンボル名が入る。
-      // これは convLua の processDeclVar() でセットしている。
-      foreach name in (unwrap macroVars.__names)@@Map<int,str> {
-         let! valInfo = macroInfo.symbol2MacroValInfoMap[ name ] {
-            Util.err( "not found macro symbol -- %s" (name) );
-         };
-         let typeInfo = valInfo.typeInfo;
-         // macro-statment で定義する変数は、
-         // expandLuavalMap 時に Lua の Table が Map として展開されるので、
-         // List ではなく Map で登録してやる。
-         let mut valMap:&stem;
-         if! let mut val = macroVars[ name ] {
-            if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
-               valMap = { 1: val };
-            } else {
-               valMap = val;
+      _callMacroState( {
+         when! expList {
+            // マクロに渡す引数をセットする
+            foreach argNode, index in expList.$expList {
+               let declArgNode = macroArgNodeList[ index ];
+               macroArgName2ArgNode[ declArgNode.$name ] = argNode;
+               let literal, mess = argNode.getLiteral();
+               when! literal {
+                  if! let val = getLiteralMacroVal( literal ) {
+                     argValMap[ index ] = val;
+                     
+                     if argNode.$expType == Ast.builtinTypeSymbol {
+                        macroArgValMap[ declArgNode.$name ] = toLuaval( val[ 1 ] );
+                     }
+                     else {
+                        macroArgValMap[ declArgNode.$name ] = toLuaval( val );
+                     }
+                  }
+               }
+               else {
+                  errmess =
+                  "not support node at arg(%d) -- %s:%s"
+                  ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
+                  break;
+               }
             }
-         } else {
-            valMap = {};
          }
-         self.symbol2ValueMapForMacro[ name ] =
-            new Nodes.MacroValInfo( valMap, typeInfo, nil );
+
+         if not errmess {
+            // マクロ内共通変数 __var の設定
+            let! varMap = self.macroLocalVarMap {
+               let toListEmpty =
+                  loadCode( "return function() return {} end" )@@toListEmptyLua;
+               varMap = toListEmpty();
+            };
+            if innerMacro {
+               macroArgValMap[ "__var" ] = varMap;
+            }
+
+            // マクロの macro-statment を実行
+            let func = macroInfo.$func;
+            let mut macroVars = unwrap expandLuavalMap( func( macroArgValMap ) );
+
+            // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
+            // self.macroLocalVarMap に入れなおす。
+            if innerMacro {
+               self.macroLocalVarMap = unwrap macroVars.__var;
+            }
+
+            // macro-statment の実行結果から、
+            // symbol2ValueMapForMacro にシンボル名と値を紐付け。
+            // macroVars.__names には、 macro-statment で定義された変数シンボル名が入る。
+            // これは convLua の processDeclVar() でセットしている。
+            foreach name in (unwrap macroVars.__names)@@Map<int,str> {
+               let! valInfo = macroInfo.$symbol2MacroValInfoMap[ name ] {
+                  Util.err( "not found macro symbol -- %s" (name) );
+               };
+               let typeInfo = valInfo.typeInfo;
+               // macro-statment で定義する変数は、
+               // expandLuavalMap 時に Lua の Table が Map として展開されるので、
+               // List ではなく Map で登録してやる。
+               let mut valMap:&stem;
+               if! let mut val = macroVars[ name ] {
+                  if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
+                     valMap = { 1: val };
+                  } else {
+                     valMap = val;
+                  }
+               } else {
+                  valMap = {};
+               }
+               self.symbol2ValueMapForMacro[ name ] =
+                  new Nodes.MacroValInfo( valMap, typeInfo, nil );
+            }
+         }
+      });
+      when! errmess {
+         return errmess;
       }
 
       foreach arg, index in macroInfo.getArgList() {
@@ -424,9 +531,7 @@ pub fn MacroCtrl.evalMacroOp(
       return nil;
    }
 
-   __asyncLock {
-      process();
-   }
+   process();
 
    return new MacroParser(
       macroInfo.getTokenList(),
@@ -442,7 +547,8 @@ pub fn MacroCtrl.importMacro(
    typeId2TypeInfo: &Map<int,&Ast.TypeInfo>,
    importedMacroInfoMap:Map<&Ast.IdInfo,&Nodes.MacroInfo>, baseDir:str! ) __noasync mut
 {
-   let macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
+   let macroInfo, mut err;
+   macroInfo, err = MacroMetaInfo._fromStem( macroInfoStem );
    when! macroInfo {
       let orgPos;
       if #macroInfo.pos == 2 {
@@ -465,7 +571,6 @@ pub fn MacroCtrl.importMacro(
             new Nodes.MacroValInfo( nil, symTypeInfo, nil );
       }
 
-
       let mut tokenList:List<&Parser.Token> = [];
       let mut lineNo = 0;
       let mut column = 1;
@@ -486,21 +591,22 @@ pub fn MacroCtrl.importMacro(
          }
       }
 
+      let luaCode = self.macroEval.evalFromCodeToLuaCode(
+         processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock );
+      let macroObj;
+      macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false );
+      when! macroObj {
+         let mut extMacroInfo = new ExtMacroInfo(
+            macroInfo.name, macroObj,
+            symbol2MacroValInfoMap, argList, tokenList, baseDir );
 
-      let extMacroInfo = new ExtMacroInfo(
-         macroInfo.name,
-         self.macroEval.evalFromCode(
-            processInfo, macroInfo.name, argNameList,
-            macroInfo.stmtBlock, baseDir ),
-         symbol2MacroValInfoMap, argList, tokenList );
-
-      self.typeId2MacroInfo[ macroTypeInfo.$typeId ] = extMacroInfo;
-      importedMacroInfoMap[ macroTypeInfo.$typeId ] = extMacroInfo;
+         self.typeId2MacroInfo[ macroTypeInfo.$typeId ] = extMacroInfo;
+         importedMacroInfoMap[ macroTypeInfo.$typeId ] = extMacroInfo;
+         return;
+      }
    }
-   else {
-      Util.errorLog( "macro load fail -- %s: %s "
+   Util.errorLog( "macro load fail -- %s: %s "
                      (macroTypeInfo.getTxt(##), unwrap err default "") );
-   }
 }
 
 pub fn MacroCtrl.importMacroInfo(
@@ -513,32 +619,41 @@ pub fn MacroCtrl.importMacroInfo(
 
 
 pub fn MacroCtrl.regist(
-   processInfo:Ast.ProcessInfo,
-   node:Nodes.DeclMacroNode, macroScope:&Ast.Scope, baseDir:str! ) __noasync mut
+   processInfo:Ast.ProcessInfo, node:Nodes.DeclMacroNode,
+   macroScope:&Ast.Scope, baseDir:str! ) mut : str!
 {
-   let macroObj = self.macroEval.eval( processInfo, node, baseDir );
+   let luaCode = self.macroEval.evalToLuaCode( processInfo, node );
+   let macroObj, err;
+   macroObj, err = runLuaOnLnsToMacroProc(
+      luaCode, baseDir, not Ast.isPubToExternal( node.$expType.$accessMode ) );
+   // macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false );
 
-   // registVar() した時に確定していない変数の型を、ここで確定する。
-   let mut remap:Map<str,Nodes.MacroValInfo> = {};
-   foreach macroValInfo, name in self.symbol2ValueMapForMacro {
-      if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) {
-         if! let typeInfo = macroScope.getTypeInfoChild( name ) {
-            remap[ name ] = new Nodes.MacroValInfo(
-               macroValInfo.val, typeInfo, macroValInfo.argNode );
+
+   when! macroObj {
+      // registVar() した時に確定していない変数の型を、ここで確定する。
+      let mut remap:Map<str,Nodes.MacroValInfo> = {};
+      foreach macroValInfo, name in self.symbol2ValueMapForMacro {
+         if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) {
+            if! let typeInfo = macroScope.getTypeInfoChild( name ) {
+               remap[ name ] = new Nodes.MacroValInfo(
+                  macroValInfo.val, typeInfo, macroValInfo.argNode );
+            } else {
+               remap[ name ] = macroValInfo;
+            }
          } else {
             remap[ name ] = macroValInfo;
          }
-      } else {
-         remap[ name ] = macroValInfo;
       }
-   }
-   // マクロ情報を登録
-   let macroInfo = new Nodes.DefMacroInfo( macroObj, node.$declInfo, remap );
-   self.typeId2MacroInfo[ node.$expType.$typeId ] = macroInfo;
-   self.declMacroInfoMap[ node.$expType.$typeId ] = macroInfo;
+      // マクロ情報を登録
+      let mut macroInfo = new Nodes.DefMacroInfo( macroObj, node.$declInfo, remap );
+      self.typeId2MacroInfo[ node.$expType.$typeId ] = macroInfo;
+      self.declMacroInfoMap[ node.$expType.$typeId ] = macroInfo;
 
-   self.symbol2ValueMapForMacro = {};
-   self.isDeclaringMacro = false;
+      self.symbol2ValueMapForMacro = {};
+      self.isDeclaringMacro = false;
+      return nil;
+   }
+   return err;
 }
 
 fn expandVal( tokenList:List<&Parser.Token>,
@@ -670,7 +785,8 @@ pub fn MacroCtrl.expandMacroVal(
          }
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
             equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
-            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) 
+            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or
+            equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg )
          {
             let pos = macroVal.argNode$.$pos$.$RawOrgPos or
                nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
@@ -765,7 +881,8 @@ pub fn MacroCtrl.expandMacroVal(
          }
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
             equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
-            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp )
+            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or
+            equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) 
          {
             let txt = (unwrap macroVal.val)@@str;
             let rawTxt;
@@ -822,6 +939,7 @@ pub fn MacroCtrl.expandSymbol(
             if equalsType( valType, Ast.builtinTypeSymbol ) or
                equalsType( valType, Ast.builtinTypeExp ) or
                equalsType( valType, Ast.builtinTypeMultiExp ) or
+               equalsType( valType, Ast.builtinTypeBlockArg ) or
                equalsType( valType, Ast.builtinTypeStat )
             {
                format = "' %s '";
@@ -857,6 +975,7 @@ pub fn MacroCtrl.expandSymbol(
             elseif equalsType( exp.$expType, Ast.builtinTypeSymbol ) or
                equalsType( exp.$expType, Ast.builtinTypeExp ) or
                equalsType( exp.$expType, Ast.builtinTypeMultiExp ) or
+               equalsType( exp.$expType, Ast.builtinTypeBlockArg ) or
                equalsType( exp.$expType, Ast.builtinTypeStat )
             {
                format = "' %s '";
@@ -909,6 +1028,7 @@ pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut
 pub fn MacroCtrl.startDecl() mut {
    self.symbol2ValueMapForMacro = {};
    self.isDeclaringMacro = true;   
+   self.useLnsLoad = false;
 }
 
 pub form EvalMacroCallback() __trans;
@@ -946,34 +1066,44 @@ pub fn MacroCtrl.restoreMacroMode() mut {
    self.analyzeInfo = self.macroAnalyzeInfoStack[ #self.macroAnalyzeInfoStack ];
 }
 
-/**
-現在の Macroモード が AnalyzeArg か調べる。
-Macroモード がネストされている場合、ネストを辿って調べる。
-*/
-pub fn MacroCtrl.isInAnalyzeArgMode(): bool {
+pub fn MacroCtrl.isInMode( mode:Nodes.MacroMode ): bool {
    if #self.macroAnalyzeInfoStack == 0 {
       return false;
    }
    foreach info in self.macroAnalyzeInfoStack {
-      if info.$mode == .AnalyzeArg {
+      if info.$mode == mode {
          return true;
       }
    }
    return false;
 }
 
+/**
+現在の Macroモード が AnalyzeArg か調べる。
+Macroモード がネストされている場合、ネストを辿って調べる。
+*/
+pub fn MacroCtrl.isInAnalyzeArgMode(): bool {
+   return self.isInMode( .AnalyzeArg );
+}
+
+/**
+現在の Macroモード が Expand か調べる。
+Macroモード がネストされている場合、ネストを辿って調べる。
+*/
+pub fn MacroCtrl.isInExpandMode(): bool {
+   return self.isInMode( .Expand );
+}
+
 
 pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ) :str
 {
    let code;
-   __asyncLock {
-      let mut memStream = new Util.memStream();
-      let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
+   let mut memStream = new Util.memStream();
+   let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
 
-      node.processFilter( formatter, new Formatter.Opt( node ) );
-      
-      code = memStream.$txt;
-   }
+   node.processFilter( formatter, new Formatter.Opt( node ) );
+   
+   code = memStream.$txt;
    return code;
 }
 

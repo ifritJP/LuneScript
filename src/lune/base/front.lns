@@ -82,15 +82,13 @@ fn createModuleInfo(
    ast:&AstInfo.ASTInfo, mod:str,
    moduleId:&frontInterface.ModuleId ) __async : frontInterface.ModuleInfo
 {
-   let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
-   let rootNode = unwrap ast.$node@@@Nodes.RootNode;
-   foreach node in rootNode.$nodeManager.getAliasNodeList() {
-      importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
-   }
+   // let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
+   // let rootNode = unwrap ast.$node@@@Nodes.RootNode;
+   // foreach node in rootNode.$nodeManager.getAliasNodeList() {
+   //    importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
+   // }
    let mut exportInfo = ast.$exportInfo;
-   return new frontInterface.ModuleInfo(
-      ast.$streamName, mod, exportInfo.$moduleTypeInfo.$rawTxt, {},
-      moduleId, exportInfo, importedAliasMap );
+   return new frontInterface.ModuleInfo( exportInfo );
 }
 
 
@@ -174,20 +172,29 @@ class AstCreater extend Runner.Runner {
    let mut moduleInfo:frontInterface.ModuleInfo!;
 
    let converter:ConverterFunc;
+   let mut exportInfo:&frontInterface.ExportInfo!;
+   let exportInfoReadyFlag:__lns.Sync.Flag!;
    
    pri fn createAst(
       importModuleInfo:&frontInterface.ImportModuleInfo,
       mut parserSrc:&Types.ParserSrc, baseDir:str!, stdinFile:&Types.StdinFile!,
       analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
-      pos:&Parser.Position! ) : &AstInfo.ASTInfo
+      pos:&Parser.Position! ) mut : &AstInfo.ASTInfo
    {
       let mut transUnit = new TransUnit.TransUnit(
          self.moduleId, importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
          true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
-         //true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
          self.option.transCtrlInfo, self.builtinFunc );
 
-      return transUnit.createAST( parserSrc, true, baseDir, stdinFile, false, self.mod );
+      return transUnit.createAST(
+         parserSrc, true, baseDir, stdinFile, false, self.mod,
+         fn ( exportInfo:&frontInterface.ExportInfo ) __trans {
+            self.exportInfo = exportInfo;
+            if! self.exportInfoReadyFlag {
+               _exp.set();
+            }
+         }
+      );
    }
    
    local fn __init(
@@ -203,7 +210,9 @@ class AstCreater extend Runner.Runner {
       self.mod = mod;
       self.moduleId = moduleId;
       self.moduleInfo = nil;
+      self.exportInfo = nil;
       self.ast = nil;
+      self.exportInfoReadyFlag = __lns.Sync.createFlag();
       
       self.converter = fn () {
          let ast = self.createAst(
@@ -227,6 +236,13 @@ class AstCreater extend Runner.Runner {
    local fn getAst() : &AstInfo.ASTInfo, &frontInterface.ModuleInfo {
       __join( self );
       return unwrap self.ast, unwrap self.moduleInfo;
+   }
+
+   local fn getExportInfo() : &frontInterface.ExportInfo! {
+      if! self.exportInfoReadyFlag {
+         _exp.wait();
+      }
+      return self.exportInfo;
    }
    
 }
@@ -544,7 +560,7 @@ fn Front.loadFromLnsTxt(
 
    let mut ast = transUnit.createAST(
       Types.ParserSrc.LnsCode( txt, name ), false, baseDir, self.option.$stdinFile,
-      false, "$load%d" (self.loadCount) );
+      false, "$load%d" (self.loadCount), nil );
    self.loadCount = self.loadCount + 1;
 
    let _, luaTxt = self.convertFromAst( ast, name, .ConvMeta );
@@ -1030,7 +1046,7 @@ fn Front.checkUptodateMeta(
    if not valid {
       return nil;
    }
-   return new frontInterface.ModuleMeta( lnsPath, .Meta( meta ) );
+   return new frontInterface.ModuleMeta( lnsPath, .MetaRaw( meta ) );
 }
 
 /**
@@ -1105,7 +1121,7 @@ fn Front.loadModule( mut mod:str ) __async mut : Luaval<&stem>!, frontInterface.
                // 将来 meta を利用することになった場合は、修正が必要。             
                let mut meta = new frontInterface.ModuleMeta(
                   mod.gsub( "%.", "/" ) .. ".lns",
-                  .Meta( unwrap loadFromLuaTxt( "return {}" ) ) );
+                  .MetaRaw( unwrap loadFromLuaTxt( "return {}" ) ) );
 	       self.setLoadInfo( mod, new LoadInfo( workMod, meta ) );
             }
          }
@@ -1128,16 +1144,20 @@ fn Front.loadMeta(
    baseDir:str!, loader:frontInterface.ModuleLoader ) mut : frontInterface.ModuleMeta!
 {
    if! let mut creater = self.mod2astCreate[ orgMod ] {
-      let ast, moduleInfo = creater.getAst();
-      return new frontInterface.ModuleMeta( ast.$streamName, .Module( moduleInfo ));
-   }
-
-   if! let mut workLoader = self.mod2loader[ orgMod ] {
-      let! moduleInfo = workLoader.getModuleInfo() {
+      let! exportInfo = creater.getExportInfo() {
          return nil;
       };
       let mut meta = new frontInterface.ModuleMeta(
-         moduleInfo.$streamName, .Module( moduleInfo ));
+         exportInfo.$streamName, .Export( exportInfo ));
+      self.moduleMgr.addMeta( orgMod, meta );
+   }
+
+   if! let mut workLoader = self.mod2loader[ orgMod ] {
+      let! exportInfo = workLoader.getExportInfo() {
+         return nil;
+      };
+      let mut meta = new frontInterface.ModuleMeta(
+         exportInfo.$streamName, .Export( exportInfo ));
       self.moduleMgr.addMeta( orgMod, meta );
 
       // self.mod2loader をクリアするのは self.moduleMgr.addMeta() の後にする。

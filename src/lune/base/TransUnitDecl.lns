@@ -573,44 +573,41 @@ fn TransUnit.declFuncPostProcess(
                "__init must call super() with first." );
          }
       }
-      if classTypeInfo.isInheritFrom(
-         self.processInfo, Ast.builtinTypeRunner, nil )
-      {
-         if typeInfo.$accessMode == .Pub and #typeInfo.$retTypeInfoList > 0 {
-            let mut callJoin = false;
-            if! let firstNode = getFirstStmt( workBody.$stmtList ) {
-               if! let stmtNode = firstNode@@@Nodes.StmtExpNode {
-                  if! let callNode = stmtNode.$exp@@@Nodes.ExpCallNode {
-                     if callNode.$func.$expType == self.builtinFunc.lns___join {
-                        callJoin = true;
-                     }
-                  }
-               }
-            }
-            if not callJoin {
-               self.addErrMess(
-                  workBody.$pos,       
-                  "public method to return the value must call __join. -- %s"
-                  (typeInfo.getTxt(##)));
-            }
-         }
-      }
+      // if classTypeInfo.isInheritFrom(
+      //    self.processInfo, Ast.builtinTypeRunner, nil )
+      // {
+      //    if typeInfo.$accessMode == .Pub and #typeInfo.$retTypeInfoList > 0 {
+      //       let mut callJoin = false;
+      //       if! let firstNode = getFirstStmt( workBody.$stmtList ) {
+      //          if! let stmtNode = firstNode@@@Nodes.StmtExpNode {
+      //             if! let callNode = stmtNode.$exp@@@Nodes.ExpCallNode {
+      //                if callNode.$func.$expType == self.builtinFunc.lns___join {
+      //                   callJoin = true;
+      //                }
+      //             }
+      //          }
+      //       }
+      //       if not callJoin {
+      //          self.addErrMess(
+      //             workBody.$pos,       
+      //             "public method to return the value must call __join. -- %s"
+      //             (typeInfo.getTxt(##)));
+      //       }
+      //    }
+      // }
    }
 }
 
-// pub class ASTInfo {
-//    pri let node: &Nodes.Node { pub };
-//    pri let exportInfo:frontInterface.ExportInfo { pub };
-//    pri let streamName:str {pub};
-//    pri let builtinFunc:&Builtin.BuiltinFuncType {pub};
-// }
+pub form ReadyExportInfo( exportInfo:&frontInterface.ExportInfo ) __trans;
 
 pub fn TransUnit.createAST(
    parserSrc: &Types.ParserSrc, asyncParse:bool,
-   baseDir:str!, stdinFile:&Types.StdinFile!,
-   macroFlag: bool, moduleName: str! ) mut : AstInfo.ASTInfo
+   baseDir:str!, stdinFile:&Types.StdinFile!, macroFlag: bool,
+   moduleName: str!, readyExportInfo:ReadyExportInfo! ) mut : AstInfo.ASTInfo
 {
    let mut parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile );
+
+   let streamName = parser.getStreamName();
 
    self.stdinFile = stdinFile;
    self.baseDir = baseDir;
@@ -629,7 +626,6 @@ pub fn TransUnit.createAST(
    }
    
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
-   let mut moduleSymboInfo:&Ast.SymbolInfo! = nil;
 
    __asyncLock {
       when! moduleName {
@@ -656,11 +652,43 @@ pub fn TransUnit.createAST(
 
    
    let ast:Nodes.Node;
-   let globalSymbolList:List<&Ast.SymbolInfo> = [];
+   let exportInfo:Nodes.ExportInfo;
 
+   fn createExportInfo(
+      moduleSymboInfo:&Ast.SymbolInfo!, globalSymbolList:List<&Ast.SymbolInfo>,
+      processInfo:&Ast.ProcessInfo, ) __trans : Nodes.ExportInfo
+   {
+      let provideInfo:frontInterface.ModuleProvideInfo;
+      when! moduleSymboInfo {
+         provideInfo = new frontInterface.ModuleProvideInfo(
+            moduleSymboInfo.$typeInfo, moduleSymboInfo.$kind, moduleSymboInfo.$mutable );
+      } else {
+         provideInfo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
+      }
+
+      //let processInfo = self.processInfo.duplicate();
+      let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
+      foreach node in self.nodeManager.getAliasNodeList() {
+         importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
+      }
+
+      let mut workExportInfo = new Nodes.ExportInfo(
+         moduleTypeInfo, provideInfo, processInfo, globalSymbolList,
+         importedAliasMap, self.moduleId, self.moduleName,
+         moduleTypeInfo.$rawTxt, streamName, {},
+         self.macroCtrl.$declMacroInfoMap );;
+      when! readyExportInfo {
+         readyExportInfo( workExportInfo );
+      }
+      
+      return workExportInfo;
+   }
+   
+   
    let mut lastStatement:&Nodes.Node! = nil;
    if macroFlag {
       ast = self.analyzeBlock( .Macro, .Ignore ##);
+      exportInfo = createExportInfo( nil, [], self.processInfo );
    }
    else {
       let mut children:List<&Nodes.Node> = [];
@@ -714,6 +742,37 @@ pub fn TransUnit.createAST(
       }
       self.analyzePhase = .Main;
 
+      let globalSymbolList:List<&Ast.SymbolInfo> = [];
+      foreach node in children {
+         if! let workNode = node@@@Nodes.DeclVarNode {
+            foreach symbolInfo in workNode.$symbolInfoList {
+               if symbolInfo.$accessMode == .Global {
+                  globalSymbolList.insert( symbolInfo );
+               }
+            }
+         }
+         if! let workNode = node@@@Nodes.DeclFuncNode {
+            if workNode.$declInfo.$accessMode == .Global {
+               if! let symbolInfo = workNode.$declInfo.$symbol {
+                  globalSymbolList.insert( symbolInfo );
+               }
+            }
+         }
+      }
+      let moduleSymboInfo:&Ast.SymbolInfo!;
+      if! self.provideNode {
+         if lastStatement ~= _exp {
+            self.addErrMess( _exp.$pos, "'provide' must be last." );
+         }
+         moduleSymboInfo = _exp.$symbol;
+      } else {
+         moduleSymboInfo = nil;
+      }
+      exportInfo = createExportInfo(
+         moduleSymboInfo, globalSymbolList, self.processInfo.duplicate() );
+      
+      
+
       __lns.runtime.log( "ready meta" );
       // self.processInfo.duplicate();
       // __lns.runtime.log( "duplicated" );
@@ -763,37 +822,13 @@ pub fn TransUnit.createAST(
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          children, self.moduleScope, self.globalScope,
          self.macroCtrl.$useModuleMacroSet,
-         self.moduleId, self.processInfo, moduleTypeInfo, nil,
+         self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode,
          self.helperInfo, self.nodeManager,
-         unwrap self.importCtrl$.$importModule2ModuleInfo default {},
+         unwrap self.importCtrl$.$importModule2ExportInfo default {},
          self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
       ast = rootNode;
-      if! self.provideNode {
-         if lastStatement ~= _exp {
-            self.addErrMess( _exp.$pos, "'provide' must be last." );
-         }
-         rootNode.set_provide( _exp );
-         moduleSymboInfo = _exp.$symbol;
-      }
 
       ClosureFun.checkList( self.closureFunList );
-
-      foreach node in children {
-         if! let workNode = node@@@Nodes.DeclVarNode {
-            foreach symbolInfo in workNode.$symbolInfoList {
-               if symbolInfo.$accessMode == .Global {
-                  globalSymbolList.insert( symbolInfo );
-               }
-            }
-         }
-         if! let workNode = node@@@Nodes.DeclFuncNode {
-            if workNode.$declInfo.$accessMode == .Global {
-               if! let symbolInfo = workNode.$declInfo.$symbol {
-                  globalSymbolList.insert( symbolInfo );
-               }
-            }
-         }
-      }
    }
 
    when! moduleName {
@@ -848,21 +883,8 @@ pub fn TransUnit.createAST(
       }
    }
    
-   let provideInfo:frontInterface.ModuleProvideInfo;
-   when! moduleSymboInfo {
-      provideInfo = new frontInterface.ModuleProvideInfo(
-         moduleSymboInfo.$typeInfo, moduleSymboInfo.$kind, moduleSymboInfo.$mutable );
-   } else {
-      provideInfo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
-   }
-
-   //let processInfo = self.processInfo.duplicate();
-   let processInfo = self.processInfo;
-   let mut exportInfo = new Nodes.ExportInfo(
-      moduleTypeInfo, provideInfo, processInfo, globalSymbolList,
-      self.macroCtrl.$declMacroInfoMap );
-   
-   return new AstInfo.ASTInfo( ast, exportInfo, parser.getStreamName(), self.builtinFunc );
+   return new AstInfo.ASTInfo(
+      ast, exportInfo, parser.getStreamName(), self.builtinFunc );
 }
 
 

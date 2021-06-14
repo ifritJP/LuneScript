@@ -119,6 +119,15 @@ TransUnit においては 擬似的な値にする必要がある。
       return pos;
    }
 
+   pub fn getDisplayTxt() : str {
+      let txt = "%s:%d:%d" (self.streamName, self.lineNo, self.column );
+      let orgPos = self.$orgPos;
+      if self ~= orgPos {
+         let txt2 = "%s:%d:%d" (orgPos.streamName, orgPos.lineNo, orgPos.column );
+         return "%s: (%s)" (txt2, txt);
+      }
+      return txt;
+   }
 }
 
 pub enum TokenKind {
@@ -175,7 +184,7 @@ pub class Token extend (Mapping) {
 
    pub fn getLineCount():int {
       let mut count = 1;
-      __asyncLock {
+      __unsafe {
          apply _ of self.txt.gmatch( "\n" ) {
             count = count + 1;
          }

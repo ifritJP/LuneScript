@@ -213,7 +213,7 @@ _DefBuiltinFuncType( [
    },
    {
       "__lns.runMode" : {
-         "__attrib": { "type": [ "module" ] },
+         "__attrib": { "type": [ "class" ] },
          "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
          "Queue": { "type": [ "var" ], "typeInfo": ["int"] },
          "Skip": { "type": [ "var" ], "typeInfo": ["int"] },
@@ -222,6 +222,19 @@ _DefBuiltinFuncType( [
    {
       "__lns.runtime" : {
          "log": { "arg": [ "str" ], "ret": [] },
+      },
+   },
+   {
+      "__lns.Sync.Flag" : {
+         "__attrib": { "type": [ "interface" ] },
+         "wait": { "type": [ "method" ], "arg": [ ], "ret": [] },
+         "set": { "type": [ "mut" ], "arg": [ ], "ret": [] },
+      },
+   },
+   {
+      "__lns.Sync" : {
+         "__attrib": { "type": [ "class" ] },
+         "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
       },
    },
    {
@@ -402,7 +415,36 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
       scope:&Ast.Scope, symbol:str, genTypeList:List<&Ast.TypeInfo> ) :
    &Ast.TypeInfo!
    {
-      let! typeInfo = scope.getTypeInfo( symbol, scope, false, .Normal ) {
+      fn getTypeInfo( mut workScope:&Ast.Scope ) : &Ast.TypeInfo! {
+         let nameList = Util.splitModule( symbol );
+         if #nameList <= 1 {
+            return workScope.getTypeInfo( symbol, workScope, false, .Normal );
+         } else {
+            foreach name, index in nameList {
+               let workTypeInfo;
+               if index == 1 {
+                  workTypeInfo = workScope.getTypeInfo(
+                     name, workScope, false, .Normal );
+               } else {
+                  workTypeInfo = workScope.getTypeInfoChild( name );
+               }
+               when! workTypeInfo {
+                  if index == #nameList {
+                     return workTypeInfo;
+                  }
+                  if! workTypeInfo.$scope {
+                     workScope = _exp;
+                  } else {
+                     return nil;
+                  }
+               } else {
+                  return nil;
+               };
+            }
+         }
+         return nil;
+      }
+      let! typeInfo = getTypeInfo( scope ) {
          return nil;
       };
       let mut validGenType = false;
@@ -647,12 +689,16 @@ fn Builtin.registClass(
          interfaceList.insert( ifType );
       }
    }
-   fn registerClass(regName:str,index:int) : &Ast.TypeInfo {
+   fn registerClass(regName:str,index:int, last:bool ) : &Ast.TypeInfo {
       let workClassKind;
-      if index == 1 {
+      if last {
          workClassKind = classKind;
       } else {
-         workClassKind = .Class;
+         if index == 1 {
+            workClassKind = .Module;
+         } else {
+            workClassKind = .Class;
+         }
       }
       
       let mut classType:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -683,7 +729,7 @@ fn Builtin.registClass(
    }
    let mut parentInfo = Ast.headTypeInfo;
    foreach name, index in nameList {
-      parentInfo = registerClass( name, index );
+      parentInfo = registerClass( name, index, index == #nameList );
    }
    return parentInfo;
 }

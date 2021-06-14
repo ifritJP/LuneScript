@@ -386,23 +386,23 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
    importProcessInfo2Index[ self.processInfo ] = 0;
    importProcessInfo2Index[ self.processInfo.$orgInfo ] = 0;
    
-   let mut importNameMap:Map<str,&frontInterface.ModuleInfo> = {};
+   let mut importNameMap:Map<str,&frontInterface.ExportInfo> = {};
    {
       // foreach importName, typeInfo in self.typeInfo2ModuleName {
       //    importNameMap[ importName ] = typeInfo;
       // }
 
-      foreach moduleInfo in node.$importModule2moduleInfo {
+      foreach exportInfo in node.$importModule2moduleInfo {
          //importNameMap[ moduleInfo.$fullName ] = typeInfo;
-         importNameMap[ moduleInfo.$fullName ] = moduleInfo;
+         importNameMap[ exportInfo.$fullName ] = exportInfo;
       }
 
       let mut index = 0;
-      forsort moduleInfo in importNameMap {
+      forsort exportInfo in importNameMap {
          index = index + 1;
-         importModuleType2Index[ moduleInfo.$exportInfo.$moduleTypeInfo ] = index;
-         importProcessInfo2Index[ moduleInfo.$exportInfo.$processInfo ] = index;
-         importProcessInfo2Index[ moduleInfo.$exportInfo.$processInfo.$orgInfo ] = index;
+         importModuleType2Index[ exportInfo.$moduleTypeInfo ] = index;
+         importProcessInfo2Index[ exportInfo.$processInfo ] = index;
+         importProcessInfo2Index[ exportInfo.$processInfo.$orgInfo ] = index;
       }
    }
 
@@ -935,8 +935,8 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
    // 依存モジュール情報処理
    self.writeln( "local __dependModuleMap = {}" );
    self.writeln( "_moduleObj.__dependModuleMap = __dependModuleMap" );
-   forsort moduleInfo, name in importNameMap {
-      let moduleTypeInfo = moduleInfo.$exportInfo.$moduleTypeInfo;
+   forsort exportInfo, name in importNameMap {
+      let moduleTypeInfo = exportInfo.$moduleTypeInfo;
       self.writeln(
          "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }"
          ( name, unwrap importModuleType2Index[ moduleTypeInfo ],
@@ -2720,13 +2720,18 @@ pub override fn ConvFilter.processExpCall(
          return true;
       };
 
-      if node.$func.$expType == self.builtinFunc.__lns_runtime_log {
-         return false;
-      }
-
-      if node.$func.$expType == self.builtinFunc.list___new {
-         self.write( "{}" );
-         return false;
+      switch node.$func.$expType {
+         case self.builtinFunc.__lns_runtime_log {
+            return false;
+         }
+         case self.builtinFunc.list___new {
+            self.write( "{}" );
+            return false;
+         }
+         case self.builtinFunc.__lns_sync_createFlag {
+            self.write( "nil" );
+            return false;
+         }
       }
       
       let prefixNode = fieldNode.$prefix;
@@ -3703,7 +3708,7 @@ __test {
          nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
       
-      return transUnit.createAST( parserSrc, false, nil, nil, false, mod );
+      return transUnit.createAST( parserSrc, false, nil, nil, false, mod, nil );
    }
    
    

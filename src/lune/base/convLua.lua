@@ -621,9 +621,9 @@ function ConvFilter:outputMeta( node )
    local importNameMap = {}
    do
       
-      for __index, moduleInfo in pairs( node:get_importModule2moduleInfo() ) do
+      for __index, exportInfo in pairs( node:get_importModule2moduleInfo() ) do
          
-         importNameMap[moduleInfo:get_fullName()] = moduleInfo
+         importNameMap[exportInfo:get_fullName()] = exportInfo
       end
       
       
@@ -636,12 +636,12 @@ function ConvFilter:outputMeta( node )
          end
          table.sort( __sorted )
          for __index, __key in ipairs( __sorted ) do
-            local moduleInfo = __map[ __key ]
+            local exportInfo = __map[ __key ]
             do
                index = index + 1
-               importModuleType2Index[moduleInfo:get_exportInfo():get_moduleTypeInfo()] = index
-               importProcessInfo2Index[moduleInfo:get_exportInfo():get_processInfo()] = index
-               importProcessInfo2Index[moduleInfo:get_exportInfo():get_processInfo():get_orgInfo()] = index
+               importModuleType2Index[exportInfo:get_moduleTypeInfo()] = index
+               importProcessInfo2Index[exportInfo:get_processInfo()] = index
+               importProcessInfo2Index[exportInfo:get_processInfo():get_orgInfo()] = index
             end
          end
       end
@@ -1291,9 +1291,9 @@ function ConvFilter:outputMeta( node )
       end
       table.sort( __sorted )
       for __index, name in ipairs( __sorted ) do
-         local moduleInfo = __map[ name ]
+         local exportInfo = __map[ name ]
          do
-            local moduleTypeInfo = moduleInfo:get_exportInfo():get_moduleTypeInfo()
+            local moduleTypeInfo = exportInfo:get_moduleTypeInfo()
             self:writeln( string.format( "__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", name, _lune.unwrap( importModuleType2Index[moduleTypeInfo]), _lune._Set_has(exportNeedModuleTypeInfo, moduleTypeInfo ), (_lune.unwrap( node:get_importModule2moduleInfo()[moduleTypeInfo]) ):get_moduleId():get_idStr()) )
          end
       end
@@ -3299,14 +3299,17 @@ function ConvFilter:processExpCall( node, opt )
       end
       
       
-      if node:get_func():get_expType() == self.builtinFunc.__lns_runtime_log then
-         return false
-      end
-      
-      
-      if node:get_func():get_expType() == self.builtinFunc.list___new then
-         self:write( "{}" )
-         return false
+      do
+         local _switchExp = node:get_func():get_expType()
+         if _switchExp == self.builtinFunc.__lns_runtime_log then
+            return false
+         elseif _switchExp == self.builtinFunc.list___new then
+            self:write( "{}" )
+            return false
+         elseif _switchExp == self.builtinFunc.__lns_sync_createFlag then
+            self:write( "nil" )
+            return false
+         end
       end
       
       

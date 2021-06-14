@@ -61,7 +61,7 @@ fn TransUnit.analyzeExpOneRVal(
                exp = Nodes.ExpCastNode.create(
                   self.nodeManager, exp.$pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), [ expectType ],
-                  exp, expectType, .Implicit );   
+                  exp, expectType, nil, "", .Implicit );   
             }
          }
       }
@@ -194,13 +194,24 @@ fn TransUnit.analyzeExpList(
 
       let mut exp;
       
-      if self.macroCtrl.$analyzeInfo.$mode == .AnalyzeArg and
-         ( expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp )
-      {
-         self.macroCtrl.switchMacroMode();
-         exp = self.analyzeExp(
-            allowNoneTypeOne, skipOp2Flag, canLeftExp, 0, expectType );
-         self.macroCtrl.restoreMacroMode();
+      if self.macroCtrl.$analyzeInfo.$mode == .AnalyzeArg {
+         switch expectType {
+            case Ast.builtinTypeExp, Ast.builtinTypeMultiExp {
+               self.macroCtrl.switchMacroMode();
+               exp = self.analyzeExp(
+                  allowNoneTypeOne, skipOp2Flag, canLeftExp, 0, expectType );
+               self.macroCtrl.restoreMacroMode();
+            }
+            case Ast.builtinTypeBlockArg {
+               //self.macroCtrl.switchMacroMode();
+               exp = self.analyzeBlock( .Macro, .Ignore ##);
+               //self.macroCtrl.restoreMacroMode();
+            }
+            default {
+               exp = self.analyzeExp(
+                  allowNoneTypeOne, skipOp2Flag, canLeftExp, 0, expectType );
+            }
+         }
       }
       else {
          exp = self.analyzeExp(
@@ -208,7 +219,10 @@ fn TransUnit.analyzeExpList(
       }
 
       
-      if not allowNoneTypeOne and not exp.canBeRight( self.processInfo ) {
+      if not allowNoneTypeOne and
+         expectType ~= Ast.builtinTypeBlockArg and
+         not exp.canBeRight( self.processInfo )
+      {
          self.addErrMess(
             exp.$pos,
             "This arg can't be r-value. -- %s" ( Nodes.getNodeKindName( exp.$kind) ) );
@@ -216,15 +230,17 @@ fn TransUnit.analyzeExpList(
       if not pos {
          pos = exp.$pos;
       }
-      if expectType == Ast.builtinTypeExp or expectType == Ast.builtinTypeMultiExp {
-         exp = Nodes.ExpMacroArgExpNode.create(
-            self.nodeManager, exp.$pos, self.inTestBlock,
-            self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
-            Macro.nodeToCodeTxt( exp, self.moduleType ) );
-         expTypeList.insert( unwrap expectType );
-      }
-      else {
-         expTypeList.insert( exp.$expType );
+      switch expectType {
+         case Ast.builtinTypeExp, Ast.builtinTypeMultiExp, Ast.builtinTypeBlockArg {
+            exp = Nodes.ExpMacroArgExpNode.create(
+               self.nodeManager, exp.$pos, self.inTestBlock,
+               self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
+               Macro.nodeToCodeTxt( exp, self.moduleType ) );
+            expTypeList.insert( unwrap expectType );
+         }
+         default {
+            expTypeList.insert( exp.$expType );
+         }
       }
       expList.insert( exp );
       let mut token = self.getToken( true );
@@ -366,10 +382,12 @@ fn TransUnit.analyzeExpRefItem(
    if Ast.isExtType( exp.$expType.$nonnilableType ) {
       typeInfo = self.createExtType( exp.$pos, typeInfo );
 
-      if not self.getCurrentNSInfo().canAccessNoasync() {
+      if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
+         not self.getCurrentNSInfo().canAccessLuaval()
+      {
          self.addErrMess(
             token.$pos,
-            "can't access Luaval on __async. -- %s" (exp.$expType.getTxt(##)) );
+            "can't access Luaval without __luago. -- %s" (exp.$expType.getTxt(##)) );
       }
    }
 
@@ -508,7 +526,7 @@ fn TransUnit.checkImplicitCast(
                   workNode = Nodes.ExpCastNode.create(
                      self.nodeManager, expNode.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(),
-                     [ expNode.$expType ], expNode, castType, .Implicit );   
+                     [ expNode.$expType ], expNode, castType, nil, "", .Implicit );   
                }
             }
          }
@@ -1064,7 +1082,8 @@ fn TransUnit.evalMacroOp(
    expList: &Nodes.ExpListNode!, evalMacroCallback:Macro.EvalMacroCallback ) mut
 {
    let mut parser, mess = self.macroCtrl.evalMacroOp(
-      self.parser.getStreamName(), firstToken, macroTypeInfo, expList );
+      self.moduleType, self.parser.getStreamName(),
+      firstToken, macroTypeInfo, expList );
 
    let mut bakParser = self.parser;
 
@@ -1593,27 +1612,36 @@ fn TransUnit.processFunc(
 現在の名前空間から funcTypeInfo をコールする上での nosync 系チェック。
 */
 fn TransUnit.checkNoasyncType( pos:&Parser.Position, funcTypeInfo:&Ast.TypeInfo ) mut {
-   if funcTypeInfo.$asyncMode == .Noasync or funcTypeInfo.$kind == .Ext {
+   if self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() {
+      return;
+   }
+   
+   let isExt = funcTypeInfo.$kind == .Ext or
+      self.builtinFunc.isLuavalFunc( funcTypeInfo );
+   if isExt {
+      let curType = self.getCurrentNamespaceTypeInfo();
+      if not self.getNSInfo( curType ).canAccessLuaval()
+      {
+         // async の関数から、 luaval 関数は実行できない。
+         self.addErrMess(
+            pos,        
+            "can't access Luaval function without __luago. -- %s on %s"
+            (funcTypeInfo.getTxt(##), curType.getTxt(##)));
+      }
+   }
+   
+   if funcTypeInfo.$asyncMode == .Noasync {
       let curType = self.getCurrentNamespaceTypeInfo();
       switch curType.$kind {
          case .Func, .Method {
             switch curType.$asyncMode {
                case .Async, .Transient {
                   if not self.getNSInfo( curType ).isLockedAsync() {
-                     if funcTypeInfo.$asyncMode == .Noasync {
-                        // async の関数から、 noasync 関数は実行できない。
-                        self.addErrMess(
-                           pos,        
-                           "can't access noasync function in async. -- %s on %s"
-                           (funcTypeInfo.getTxt(##), curType.getTxt(##)));
-                     }
-                     if funcTypeInfo.$kind == .Ext {
-                        // async の関数から、 luaval 関数は実行できない。
-                        self.addErrMess(
-                           pos,        
-                           "can't access Luaval function in async. -- %s on %s"
-                           (funcTypeInfo.getTxt(##), curType.getTxt(##)));
-                     }
+                     // async の関数から、 noasync 関数は実行できない。
+                     self.addErrMess(
+                        pos,        
+                        "can't access noasync function in async. -- %s on %s"
+                        (funcTypeInfo.getTxt(##), curType.getTxt(##)));
                   }
                }
             }
@@ -1641,6 +1669,9 @@ fn TransUnit.analyzeExpCall(
 
    let funcTypeInfo = funcExp.$expType.$nonnilableType;   
    self.checkNoasyncType( funcExp.$effectivePos, funcTypeInfo );
+   if funcTypeInfo == Ast.builtinTypeLnsLoad {
+      self.macroCtrl.setToUseLnsLoad();
+   }
    
    // 引数の型チェック
    let mut genericTypeList = funcTypeInfo.$itemTypeInfoList;
@@ -1826,8 +1857,8 @@ fn TransUnit.analyzeExpCast(
 
    return Nodes.ExpCastNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(),
-      [ castType ], self.nodeManager.MultiTo1( exp ), castType,
+      self.macroCtrl.isInAnalyzeArgMode(), [ castType ],
+      self.nodeManager.MultiTo1( exp ), castType, castTypeNode, opTxt,
       opTxt ~= "@@@" and Nodes.CastKind.Force or Nodes.CastKind.Normal);
 }
 
@@ -2239,6 +2270,10 @@ fn TransUnit.checkAlgeComp(
 }
 
 fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position ) mut {
+   if not self.supportLang( .Go ) or not self.supportLang( .C ) {
+      return;
+   }
+   
    // 現在の名前空間が async で、
    // mutable な大域変数かクロージャ変数にアクセスしている場合エラー。
    let curNs = self.getCurrentNamespaceTypeInfo();
@@ -2381,10 +2416,13 @@ fn TransUnit.analyzeExpField(
 
    let extFlag;
    if Ast.isExtType( prefixExpType ) {
-      if not self.getCurrentNSInfo().canAccessNoasync() {
+      if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
+         not self.getCurrentNSInfo().canAccessLuaval()
+      {
          self.addErrMess(
             firstToken.$pos,
-            "can't access Luaval on __async. -- %s" (prefixExp.$expType.getTxt(##)) );
+            "can't access Luaval without __luago. -- %s"
+            (prefixExp.$expType.getTxt(##)) );
       }
       
       extFlag = true;
@@ -3125,19 +3163,19 @@ fn TransUnit.analyzeExpOpEquals(
                exp1 = Nodes.ExpCastNode.create(
                   self.nodeManager, exp1.$pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), [ exp2Type.$nonnilableType ],
-                  exp1, exp2Type, .Implicit );   
+                  exp1, exp2Type, nil, "", .Implicit );   
             } else {
                exp2 = Nodes.ExpCastNode.create(
                   self.nodeManager, exp2.$pos, self.inTestBlock,
                   self.macroCtrl.isInAnalyzeArgMode(), [ exp1Type.$nonnilableType ],
-                  exp2, exp1Type, .Implicit );   
+                  exp2, exp1Type, nil, "", .Implicit );   
             }
          } else {
             // exp1 が class/if で exp2 が違う場合、 exp1 を stem に cast する。
             exp1 = Nodes.ExpCastNode.create(
                self.nodeManager, exp1.$pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ exp1Type ],
-               exp1, Ast.builtinTypeStem, .Implicit );   
+               exp1, Ast.builtinTypeStem, nil, "", .Implicit );   
          }
       } else {
          if nonNilType2.$kind == .Class or nonNilType2.$kind == .IF {
@@ -3145,7 +3183,7 @@ fn TransUnit.analyzeExpOpEquals(
             exp2 = Nodes.ExpCastNode.create(
                self.nodeManager, exp2.$pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), [ exp2Type ],
-               exp2, Ast.builtinTypeStem, .Implicit );
+               exp2, Ast.builtinTypeStem, nil, "", .Implicit );
          }
       }
    }
@@ -3480,12 +3518,12 @@ fn TransUnit.analyzeExpOp2(
                         exp = Nodes.ExpCastNode.create(
                            self.nodeManager, exp.$pos, self.inTestBlock,
                            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
-                           exp, Ast.builtinTypeReal, .Implicit );   
+                           exp, Ast.builtinTypeReal, nil, "", .Implicit );   
                      } elseif exp2Type.equals( self.processInfo, Ast.builtinTypeInt ##) {
                         exp2 = Nodes.ExpCastNode.create(
                            self.nodeManager, exp2.$pos, self.inTestBlock,
                            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
-                           exp2, Ast.builtinTypeReal, .Implicit );   
+                           exp2, Ast.builtinTypeReal, nil, "", .Implicit );   
                      }
                   }
                   else {
@@ -3995,10 +4033,12 @@ fn TransUnit.analyzeExp(
                   'unmatch type for "#" -- %s' ( expType.getTxt(##) ) );
             }
             if expType.$kind == .Ext {
-               if not self.getCurrentNSInfo().canAccessNoasync() {
+               if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
+                  not self.getCurrentNSInfo().canAccessLuaval()
+               {
                   self.addErrMess(
                      token.pos,
-                     "can't access the Luaval with '#' in __async. -- %s"
+                     "can't access the Luaval with '#' without __luago. -- %s"
                      ( expType.getTxt(##) ) );
                }
             }
@@ -4154,10 +4194,7 @@ fn TransUnit.analyzeExp(
       exp = self.analyzeStrConst( firstToken, token );
    }
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
-      let mut lineNo = token.pos.lineNo;
-      if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-         lineNo = self.macroCtrl.$macroCallLineNo;
-      }
+      let mut lineNo = self.getLineNo( token );
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],

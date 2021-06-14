@@ -311,24 +311,49 @@ end
 _moduleObj.getRootDependModId = getRootDependModId
 
 local ExportInfo = {}
+setmetatable( ExportInfo, { ifList = {Ast.ModuleInfoIF,} } )
 _moduleObj.ExportInfo = ExportInfo
-function ExportInfo.setmeta( obj )
-  setmetatable( obj, { __index = ExportInfo  } )
-end
-function ExportInfo.new( moduleTypeInfo, provideInfo, processInfo, globalSymbolList )
+function ExportInfo.new( moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, moduleId, fullName, assignName, streamName, idMap )
    local obj = {}
    ExportInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( moduleTypeInfo, provideInfo, processInfo, globalSymbolList )
-   end
+   if obj.__init then obj:__init( moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, moduleId, fullName, assignName, streamName, idMap ); end
    return obj
 end
-function ExportInfo:__init( moduleTypeInfo, provideInfo, processInfo, globalSymbolList )
-
+function ExportInfo:__init(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, moduleId, fullName, assignName, streamName, idMap) 
    self.moduleTypeInfo = moduleTypeInfo
    self.provideInfo = provideInfo
    self.processInfo = processInfo
    self.globalSymbolList = globalSymbolList
+   self.importedAliasMap = importedAliasMap
+   self.moduleId = moduleId
+   self.fullName = fullName
+   self.assignName = assignName
+   self.streamName = streamName
+   
+   local importId2localTypeInfoMap = {}
+   for typeInfo, importId in pairs( idMap ) do
+      importId2localTypeInfoMap[importId] = typeInfo
+   end
+   
+   self.importId2localTypeInfoMap = importId2localTypeInfoMap
+end
+function ExportInfo:get_modulePath(  )
+
+   return self.fullName
+end
+function ExportInfo:getTypeInfo( localTypeId )
+
+   do
+      local typeInfo = self.importId2localTypeInfoMap[localTypeId]
+      if typeInfo ~= nil then
+         return typeInfo
+      end
+   end
+   
+   return nil
+end
+function ExportInfo.setmeta( obj )
+  setmetatable( obj, { __index = ExportInfo  } )
 end
 function ExportInfo:get_moduleTypeInfo()
    return self.moduleTypeInfo
@@ -342,76 +367,109 @@ end
 function ExportInfo:get_globalSymbolList()
    return self.globalSymbolList
 end
-
-
-local ModuleInfo = {}
-setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
-_moduleObj.ModuleInfo = ModuleInfo
-function ModuleInfo.new( streamName, fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap )
-   local obj = {}
-   ModuleInfo.setmeta( obj )
-   if obj.__init then obj:__init( streamName, fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap ); end
-   return obj
+function ExportInfo:get_importedAliasMap()
+   return self.importedAliasMap
 end
-function ModuleInfo:__init(streamName, fullName, assignName, idMap, moduleId, exportInfo, importedAliasMap) 
-   self.streamName = streamName
-   self.exportInfo = exportInfo
-   self.moduleId = moduleId
-   self.fullName = fullName
-   self.assignName = assignName
-   local importId2localTypeInfoMap = {}
-   for typeInfo, importId in pairs( idMap ) do
-      importId2localTypeInfoMap[importId] = typeInfo
-   end
-   
-   self.importId2localTypeInfoMap = importId2localTypeInfoMap
-   self.importedAliasMap = importedAliasMap
+function ExportInfo:get_moduleId()
+   return self.moduleId
 end
-function ModuleInfo:getTypeInfo( localTypeId )
-
-   do
-      local typeInfo = self.importId2localTypeInfoMap[localTypeId]
-      if typeInfo ~= nil then
-         return typeInfo
-      end
-   end
-   
-   return nil
-end
-function ModuleInfo:get_modulePath(  )
-
+function ExportInfo:get_fullName()
    return self.fullName
 end
-function ModuleInfo:assign( assignName )
+function ExportInfo:get_assignName()
+   return self.assignName
+end
+function ExportInfo:get_streamName()
+   return self.streamName
+end
+function ExportInfo:get_importId2localTypeInfoMap()
+   return self.importId2localTypeInfoMap
+end
+function ExportInfo:set_importId2localTypeInfoMap( importId2localTypeInfoMap )
+   self.importId2localTypeInfoMap = importId2localTypeInfoMap
+end
 
-   local info = ModuleInfo.new(self.streamName, self.fullName, assignName, {}, self.moduleId, self.exportInfo, self.importedAliasMap)
+
+function ExportInfo:assign( assignName )
+
+   local info = ExportInfo.new(self.moduleTypeInfo, self.provideInfo, self.processInfo, self.globalSymbolList, self.importedAliasMap, self.moduleId, self.fullName, assignName, self.streamName, {})
    info.importId2localTypeInfoMap = self.importId2localTypeInfoMap
    return info
+end
+
+local ModuleInfo = {}
+_moduleObj.ModuleInfo = ModuleInfo
+function ModuleInfo.new( exportInfo )
+   local obj = {}
+   ModuleInfo.setmeta( obj )
+   if obj.__init then obj:__init( exportInfo ); end
+   return obj
+end
+function ModuleInfo:__init(exportInfo) 
+   self.exportInfo = exportInfo
 end
 function ModuleInfo.setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
 end
-function ModuleInfo:get_streamName()
-   return self.streamName
-end
-function ModuleInfo:get_fullName()
-   return self.fullName
-end
-function ModuleInfo:get_importId2localTypeInfoMap()
-   return self.importId2localTypeInfoMap
-end
-function ModuleInfo:get_assignName()
-   return self.assignName
-end
-function ModuleInfo:get_moduleId()
-   return self.moduleId
-end
-function ModuleInfo:get_importedAliasMap()
-   return self.importedAliasMap
-end
 function ModuleInfo:get_exportInfo()
    return self.exportInfo
 end
+function ModuleInfo:assign( ... )
+   return self.exportInfo:assign( ... )
+end
+
+function ModuleInfo:getTypeInfo( ... )
+   return self.exportInfo:getTypeInfo( ... )
+end
+
+function ModuleInfo:get_assignName( ... )
+   return self.exportInfo:get_assignName( ... )
+end
+
+function ModuleInfo:get_fullName( ... )
+   return self.exportInfo:get_fullName( ... )
+end
+
+function ModuleInfo:get_globalSymbolList( ... )
+   return self.exportInfo:get_globalSymbolList( ... )
+end
+
+function ModuleInfo:get_importId2localTypeInfoMap( ... )
+   return self.exportInfo:get_importId2localTypeInfoMap( ... )
+end
+
+function ModuleInfo:get_importedAliasMap( ... )
+   return self.exportInfo:get_importedAliasMap( ... )
+end
+
+function ModuleInfo:get_moduleId( ... )
+   return self.exportInfo:get_moduleId( ... )
+end
+
+function ModuleInfo:get_modulePath( ... )
+   return self.exportInfo:get_modulePath( ... )
+end
+
+function ModuleInfo:get_moduleTypeInfo( ... )
+   return self.exportInfo:get_moduleTypeInfo( ... )
+end
+
+function ModuleInfo:get_processInfo( ... )
+   return self.exportInfo:get_processInfo( ... )
+end
+
+function ModuleInfo:get_provideInfo( ... )
+   return self.exportInfo:get_provideInfo( ... )
+end
+
+function ModuleInfo:get_streamName( ... )
+   return self.exportInfo:get_streamName( ... )
+end
+
+function ModuleInfo:set_importId2localTypeInfoMap( ... )
+   return self.exportInfo:set_importId2localTypeInfoMap( ... )
+end
+
 
 
 local MetaOrModule = {}
@@ -429,8 +487,10 @@ function MetaOrModule._from( val )
    return _lune._AlgeFrom( MetaOrModule, val )
 end
 
-MetaOrModule.Meta = { "Meta", {{}}}
-MetaOrModule._name2Val["Meta"] = MetaOrModule.Meta
+MetaOrModule.Export = { "Export", {{}}}
+MetaOrModule._name2Val["Export"] = MetaOrModule.Export
+MetaOrModule.MetaRaw = { "MetaRaw", {{}}}
+MetaOrModule._name2Val["MetaRaw"] = MetaOrModule.MetaRaw
 MetaOrModule.Module = { "Module", {{}}}
 MetaOrModule._name2Val["Module"] = MetaOrModule.Module
 
@@ -553,17 +613,24 @@ local dummyFront = {}
 setmetatable( dummyFront, { ifList = {frontInterface,} } )
 function dummyFront:loadModule( mod )
 
-   local loaded = _lune.loadstring51( "return {}" )
-   local emptyTable
    
-   if loaded ~= nil then
-      emptyTable = _lune.unwrap( loaded(  ))
-   else
-      error( "load error" )
+   local modVal, moduleMeta
+   
+   do
+      local emptyTable
+      
+      local loaded = _lune.loadstring51( "return {}" )
+      if loaded ~= nil then
+         emptyTable = _lune.unwrap( loaded(  ))
+      else
+         error( "load error" )
+      end
+      
+      moduleMeta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.MetaRaw, {emptyTable}))
+      modVal = require( mod )
    end
    
-   local meta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.Meta, {emptyTable}))
-   return require( mod ), meta
+   return modVal, moduleMeta
 end
 function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
 

@@ -4674,8 +4674,15 @@ pub fn convFilter.outputCallPrefix(
                } else {
                   switch prefixKind {
                      case .Class {
-                        // class は継承があるので FP 経由で実行する
-                        self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                        switch funcType {
+                           case self.builtinFuncs.__lns_sync_createFlag {
+                              self.write( "LnsCreateSyncFlag" );
+                           }
+                           default {
+                              // class は継承があるので FP 経由で実行する
+                              self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                           }
+                        }
                      }
                      default {
                         if! let runtime = self.getVM( funcType ) {

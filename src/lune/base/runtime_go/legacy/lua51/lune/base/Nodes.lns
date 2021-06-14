@@ -804,9 +804,14 @@ macro-statment に定義した処理を表わす関数。
 */
 pub form macroStatmentProc( macroArg:&Map<str,&stem> ): &Map<str,&stem>;
 
+pub alge MacroStatement {
+   /** */
+   Import( name:str, argNameList:&List<str>, luaCode:str!, baseDir:str! ),
+   Local(Luaval<macroStatmentProc>),
+}
 pub abstract class MacroInfo {
-   pub let func: Luaval<macroStatmentProc>;
-   pub let symbol2MacroValInfoMap: Map<str,MacroValInfo>;
+   let func: Luaval<macroStatmentProc> {pub};
+   let symbol2MacroValInfoMap: Map<str,MacroValInfo> {pub};
    pub abstract fn getArgList():&List<&MacroArgInfo>;
    pub abstract fn getTokenList():&List<&Parser.Token>;
    pub abstract fn get_name():str;
@@ -823,7 +828,7 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "&frontInterface.LuneHelperInfo" },
                   { "@nodeManager": "&NodeManager" },
-                  { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&frontInterface.ModuleInfo>" },
+                  { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&frontInterface.ExportInfo>" },
                   { "typeId2MacroInfo": "&Map<&Ast.IdInfo,&MacroInfo>" },
                   { "typeId2ClassMap": "&Map<&Ast.IdInfo,&NamespaceInfo>" } ]
 );
@@ -1340,6 +1345,10 @@ _declNodeClass( "ExpCast", Node, false, true, false,
                 [ { "exp": "&Node" },
                   // キャスト後の型
                   { "castType": "&Ast.TypeInfo" },
+                  // キャスト後の型を指定している Node。
+                  // ソース上に指定がない場合は nil。
+                  { "castTypeNode": "&RefTypeNode!" },
+                  { "castOpe" : "str" },
                   { "castKind": "CastKind" } ]
 );
 
@@ -1717,10 +1726,10 @@ pub class DeclFuncInfo {
    let staticFlag: bool { pub };
    let accessMode: Ast.AccessMode { pub };
    let asyncMode: Ast.Async! {pub};
-   let body: &BlockNode! { pub };
+   let mut body: &BlockNode! { pub, pub };
    let retTypeInfoList: &List<&Ast.TypeInfo> { pub };
    let retTypeNodeList: &List<&RefTypeNode> { pub };
-   let has__func__Symbol:bool { pub };
+   let mut has__func__Symbol:bool { pub, pub };
    let overrideFlag: bool { pub };
 }
 
@@ -1783,8 +1792,19 @@ pub override fn ExpCallSuperNode.canBeRight( processInfo:Ast.ProcessInfo ):bool 
    return self.$expType ~= Ast.builtinTypeNone;
 }
 
+pub enum LockKind {
+   /** __asyncLock */
+   AsyncLock,
+   /** __luago */
+   LuaGo,
+   /** __luaLock */
+   LuaLock,
+   /** __unsafe */
+   Unsafe,
+}
 _declNodeClass( "AsyncLock", Node, false, false, true,
-                [ { "block": "&BlockNode" } ]
+                [ { "lockKind": "LockKind" },
+                  { "block": "&BlockNode" } ]
 );
 
 _declNodeClass( "DeclMember", Node, false, false, true,
@@ -2066,17 +2086,20 @@ _declNodeClass( "DeclMacro", Node, false, false, true,
                 [ { "declInfo": "DeclMacroInfo" } ]
 );
 
-
-
 pub abstract class MacroEval {
-   _lune_control default_noasync_this_class;
+   //_lune_control default_noasync_this_class;
    
-   pub abstract fn evalFromCode(
-      processInfo:Ast.ProcessInfo,
-      name:str, argNameList:&List<str>, code:str!, baseDir:str! ) : Luaval<macroStatmentProc>;
-   pub abstract fn eval(
-      processInfo:Ast.ProcessInfo,
-      macroNode: DeclMacroNode, baseDir:str! ) : Luaval<macroStatmentProc>;
+   // pub abstract fn evalFromCode(
+   //    processInfo:Ast.ProcessInfo, name:str,
+   //    argNameList:&List<str>, code:str!, baseDir:str! ) : Luaval<macroStatmentProc>;
+   // pub abstract fn eval(
+   //    processInfo:Ast.ProcessInfo,
+   //    macroNode: DeclMacroNode, baseDir:str! ) : Luaval<macroStatmentProc>;
+
+   pub abstract fn evalFromCodeToLuaCode(
+      processInfo:Ast.ProcessInfo, name:str, argNameList:&List<str>, code:str! ) : str;
+   pub abstract fn evalToLuaCode(
+      processInfo:Ast.ProcessInfo, macroNode: DeclMacroNode ) : str;
 }
 
 
@@ -2828,6 +2851,17 @@ pub class DefMacroInfo extend MacroInfo {
 pub class ExportInfo extend frontInterface.ExportInfo {
    let typeId2DefMacroInfo:&Map<&Ast.IdInfo, &MacroInfo> {pub};
 }
+pub override fn ExportInfo.assign( assignName: str ) : frontInterface.ExportInfo
+{
+   let mut info = new ExportInfo( 
+      self.$moduleTypeInfo, self.$provideInfo, self.$processInfo,
+      self.$globalSymbolList, self.$importedAliasMap, self.$moduleId,
+      self.$fullName, assignName, self.$streamName, {},
+      self.typeId2DefMacroInfo );
+   info.set_importId2localTypeInfoMap( self.$importId2localTypeInfoMap );
+   return info;
+}
+
 
 pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
    let expType = node.$expType;

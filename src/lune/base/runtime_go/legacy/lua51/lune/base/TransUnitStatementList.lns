@@ -131,7 +131,16 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          statement = self.analyzeSuper( token );
       }
       elseif token.txt == "__asyncLock" {
-         statement = self.analyzeAsyncLock( token );
+         statement = self.analyzeAsyncLock( token, .AsyncLock );
+      }
+      elseif token.txt == "__luago" {
+         statement = self.analyzeAsyncLock( token, .LuaGo );
+      }
+      elseif token.txt == "__luaLock" {
+         statement = self.analyzeAsyncLock( token, .LuaLock );
+      }
+      elseif token.txt == "__unsafe" {
+         statement = self.analyzeAsyncLock( token, .Unsafe );
       }
       elseif token.txt == "if" {
          statement = self.analyzeIf( token );

@@ -76,6 +76,10 @@ pub class IdSetInfo {
 
 
 
+class LockedAsyncInfo {
+   let loopLen:int {pub};
+   let lockKind:Nodes.LockKind {pub};
+}
 
 pub class NSInfo {
    /** 関数の本体宣言がないか。 true の場合宣言なし。 */
@@ -89,7 +93,7 @@ pub class NSInfo {
    let mut loopScopeQueue: List<&Ast.Scope> {pub};
    
    /** __asyncLock した時の loopScopeQueue の長さ */
-   let mut lockedAsyncStack:List<int>;
+   let mut lockedAsyncStack:List<&LockedAsyncInfo>;
 
    let mut idSetInfo:IdSetInfo;
 
@@ -100,6 +104,20 @@ pub class NSInfo {
       return #self.lockedAsyncStack > 0;
    }
 
+   pub fn isNoasync() : bool {
+      if self.typeInfo.$asyncMode == .Noasync {
+         return true;
+      }
+      foreach info in self.lockedAsyncStack {
+         switch info.$lockKind {
+            case .AsyncLock, .LuaLock {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+   
    pub fn __init( typeInfo:Ast.TypeInfo, pos:&Parser.Position ) {
       self.idSetInfo = new IdSetInfo();
       self.nobody = false;
@@ -110,8 +128,9 @@ pub class NSInfo {
       self.pos = pos;
    }
 
-   pub fn incLock() mut {
-      self.lockedAsyncStack.insert( #self.loopScopeQueue );
+   pub fn incLock( lockKind: Nodes.LockKind ) mut {
+      self.lockedAsyncStack.insert(
+         new LockedAsyncInfo( #self.loopScopeQueue, lockKind ) );
    }
    pub fn decLock() mut {
       self.lockedAsyncStack.remove(##);
@@ -132,14 +151,27 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
       if len == 0 {
          return loopQueueLen > 0;
       }
-      return self.lockedAsyncStack[ len ] < loopQueueLen;
+      return self.lockedAsyncStack[ len ].$loopLen < loopQueueLen;
    }
 
    /**
 現在の状態で __noasync にアクセス可能かどうか。
 */
    pub fn canAccessNoasync() : bool {
-      if self.typeInfo.$asyncMode == .Noasync or #self.lockedAsyncStack > 0 {
+      let len = #self.lockedAsyncStack;
+      if self.typeInfo.$asyncMode == .Noasync or
+          (len > 0 and self.lockedAsyncStack[len].$lockKind ~= .Unsafe )
+      {
+         return true;
+      }
+      return false;
+   }
+
+   /**
+現在の状態で Luaval にアクセス可能かどうか。
+*/
+   pub fn canAccessLuaval() : bool {
+      if #self.lockedAsyncStack > 0 {
          return true;
       }
       return false;
@@ -161,6 +193,42 @@ pub interface TransUnitIF {
    pub fn popClass() mut;
 }
 
+pub class ErrMess {
+   pub let mess:str {pub};
+   pub let pos:&Parser.Position {pub};
+}
+
+pub fn sortMess( list:List<&ErrMess> ) : &List<&ErrMess>
+{
+   list.sort(
+      fn ( mess1:&ErrMess, mess2:&ErrMess ) : bool {
+         let pos1 = mess1.$pos.$orgPos;
+         let pos2 = mess2.$pos.$orgPos;
+         if pos1.streamName < pos2.streamName {
+            return true;
+         }
+         if pos1.streamName > pos2.streamName {
+            return false;
+         }
+         if pos1.lineNo < pos2.lineNo {
+            return true;
+         }
+         if pos1.lineNo > pos2.lineNo {
+            return false;
+         }
+         if pos1.column < pos2.column {
+            return true;
+         }
+         if pos1.column > pos2.column {
+            return false;
+         }
+         return mess1.$mess < mess2.$mess;
+      }
+   );
+   return list;
+}
+   
+
 
 pub abstract class TransUnitBase extend (TransUnitIF) {
 
@@ -180,7 +248,7 @@ TypeInfo → NSInfo.
    // /** 解析済みトークンリスト */
    // pri let mut usedTokenList: List<&Parser.Token>;
    /** 解析エラーメッセージ */
-   pro let mut errMessList: str[] { pub };
+   pro let mut errMessList: List<&ErrMess> { pub };
 
    pro let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
@@ -213,8 +281,7 @@ TypeInfo → NSInfo.
          mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
       }
       self.errMessList.insert(
-         "%s:%d:%d: error: %s" ( pos.streamName,
-                                 pos.lineNo, pos.column, mess ) );
+         new ErrMess( "%s: error: %s" ( pos.getDisplayTxt(), mess ), pos ) );
    }
 
    
@@ -566,7 +633,7 @@ pub class SimpeTransUnit extend TransUnitBase {
    {
       self.addErrMess( pos, mess);
       foreach errmess in self.errMessList {
-         Util.errorLog( errmess );
+         Util.errorLog( errmess.$mess );
       }
       if! let nearCode = self.nearCode {
          print( "------ near code -----", self.macroMode );

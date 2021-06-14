@@ -828,7 +828,7 @@ _declNodeClass( "Root", Node, false, false, false,
                   { "provideNode": "&ProvideNode!" },
                   { "luneHelperInfo": "&frontInterface.LuneHelperInfo" },
                   { "@nodeManager": "&NodeManager" },
-                  { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&frontInterface.ModuleInfo>" },
+                  { "importModule2moduleInfo": "&Map<&Ast.TypeInfo,&frontInterface.ExportInfo>" },
                   { "typeId2MacroInfo": "&Map<&Ast.IdInfo,&MacroInfo>" },
                   { "typeId2ClassMap": "&Map<&Ast.IdInfo,&NamespaceInfo>" } ]
 );
@@ -2851,6 +2851,17 @@ pub class DefMacroInfo extend MacroInfo {
 pub class ExportInfo extend frontInterface.ExportInfo {
    let typeId2DefMacroInfo:&Map<&Ast.IdInfo, &MacroInfo> {pub};
 }
+pub override fn ExportInfo.assign( assignName: str ) : frontInterface.ExportInfo
+{
+   let mut info = new ExportInfo( 
+      self.$moduleTypeInfo, self.$provideInfo, self.$processInfo,
+      self.$globalSymbolList, self.$importedAliasMap, self.$moduleId,
+      self.$fullName, assignName, self.$streamName, {},
+      self.typeId2DefMacroInfo );
+   info.set_importId2localTypeInfoMap( self.$importId2localTypeInfoMap );
+   return info;
+}
+
 
 pub fn NodeManager.MultiTo1(node:&Node) mut : &Node {
    let expType = node.$expType;

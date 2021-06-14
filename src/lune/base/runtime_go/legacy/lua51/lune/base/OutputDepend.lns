@@ -102,7 +102,7 @@ __test {
    import lune.base.frontInterface;
 
    class Front extend (frontInterface.frontInterface) {
-      _lune_control default_noasync_this_class;
+      //_lune_control default_noasync_this_class;
       
       pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &frontInterface.ModuleMeta {
          Util.err( "not implements" );
@@ -133,13 +133,20 @@ __test {
             metaPath = Util.pathJoin( baseDir, metaPath );
          }
          print( metaPath );
-         let loaded, mess = loadfile( metaPath );
-         when! loaded {
-            let! meta = loaded(##) {
-               return nil;
-            };
-            return new frontInterface.ModuleMeta(
-               (metaPath.gsub( "%.meta$", ".lns" )), .Meta( meta ) );
+         let mess;
+         let mut moduleMeta:&frontInterface.ModuleMeta! = nil;
+         __luaLock {
+            let loaded;
+            loaded, mess = loadfile( metaPath );
+            when! loaded {
+               if! let meta = loaded(##) {
+                  moduleMeta = new frontInterface.ModuleMeta(
+                     (metaPath.gsub( "%.meta$", ".lns" )), .MetaRaw( meta ) );
+               }
+            }
+         }
+         when! moduleMeta {
+            return moduleMeta;
          }
          print( mess );
          return nil;

@@ -58,7 +58,7 @@ class ImportParam {
    pub let scopeAccess:Ast.ScopeAccess;
 
    pri let typeId2AtomMap:Map<int,&_TypeInfo>;
-   pri let dependLibId2DependInfo:&Map<int,&frontInterface.ModuleInfo>;
+   pri let dependLibId2DependInfo:&Map<int,&frontInterface.ExportInfo>;
 }
 
 abstract class _TypeInfo extend (Mapping) {
@@ -129,13 +129,13 @@ pub fn ImportParam.getTypeInfoFrom(typeId:&_IdInfo) mut :&Ast.TypeInfo!, str! {
    if typeId.mod == frontInterface.getRootDependModId() {
       return Ast.getRootProcessInfoRo().getTypeInfo( typeId.id), nil;
    }
-   let! moduleInfo = self.dependLibId2DependInfo[ typeId.mod ] {
+   let! exportInfo = self.dependLibId2DependInfo[ typeId.mod ] {
       Util.err( "%s, %d, %d" (self.moduleTypeInfo.getTxt(##), typeId.mod, typeId.id) );
    };
-   if! let typeInfo = moduleInfo.$importId2localTypeInfoMap[ typeId.id ] {
+   if! let typeInfo = exportInfo.$importId2localTypeInfoMap[ typeId.id ] {
       return typeInfo, nil;
    }
-   if! let typeInfo = moduleInfo.$exportInfo.$processInfo.getTypeInfo( typeId.id ) {
+   if! let typeInfo = exportInfo.$processInfo.getTypeInfo( typeId.id ) {
       return typeInfo, nil;
    }
    return nil, "not found type -- %s, %d, %d"
@@ -764,8 +764,8 @@ form LoaderFunc() __async;
 // ここで単純に非同期化すると大量のスレッドが出来てしまいそうなので、
 // 形だけ作っておく。
 
-pub class ModuleLoaderResult {
-   local let mut moduleInfo:&frontInterface.ModuleInfo! {pub};
+class ModuleLoaderResult {
+   local let mut exportInfo:&frontInterface.ExportInfo! {pub};
    local let modulePath:str;
    local let fullModulePath:str;
    local let baseDir:str!;
@@ -804,34 +804,31 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       processInfo:Ast.ProcessInfo, baseDir:str!,
       mut modulePath:str, depth:int ) mut : ModuleLoader;
 
-   fn applyModuleInfo( moduleInfo:&frontInterface.ModuleInfo! ) mut {
-      when! moduleInfo {
-         if! let exportInfo = moduleInfo.$exportInfo@@@Nodes.ExportInfo {
-            self.macroCtrl.importMacroInfo( exportInfo.$typeId2DefMacroInfo );
+   fn applyExportInfo( exportInfo:&frontInterface.ExportInfo! ) mut {
+      when! exportInfo {
+         if! let work = exportInfo@@@Nodes.ExportInfo {
+            self.macroCtrl.importMacroInfo( work.$typeId2DefMacroInfo );
          }
-         // foreach globalSymbol in moduleInfo.$exportInfo.$globalSymbolList {
-         //    self.transUnitIF.$scope.addSymbolInfo( processInfo, globalSymbol );
-         // }     
-         foreach val, key in moduleInfo.$importedAliasMap {
+         foreach val, key in exportInfo.$importedAliasMap {
             self.result.importedAliasMap[key] = val;
          }
-         
-         // foreach globalSymbol in info.$exportInfo.$globalSymbolList {
-         //    self.transUnitIF.$scope.addSymbolInfo( processInfo, globalSymbol );
-         // }
       }
    }
 
    
    fn craeteModuleInfo(
-      moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ModuleInfo
+      moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ExportInfo
    {
       _match moduleMeta.$metaOrModule {
          case .Module( moduleInfo ) {
-            self.applyModuleInfo( moduleInfo );
-            return moduleInfo;
+            self.applyExportInfo( moduleInfo.$exportInfo );
+            return moduleInfo.$exportInfo;
          }
-         case .Meta( metaInfo ) {
+         case .Export( exportInfo ) {
+            self.applyExportInfo( exportInfo );
+            return exportInfo;
+         }
+         case .MetaRaw( metaInfo ) {
             self.importModuleInfo.add( self.result.modulePath );
             self.importProcessInfo.switchIdProvier( .Ext );
 
@@ -847,13 +844,13 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
             
             moduleMeta.set_metaOrModule( .Module( moduleInfo ) );
             
-            return moduleInfo;
+            return moduleInfo.$exportInfo;
          }
       }
    }
 
    
-   pub fn __init( moduleInfo:&frontInterface.ModuleInfo!,
+   pub fn __init( exportInfo:&frontInterface.ExportInfo!,
                   workImportModuleInfo: &frontInterface.ImportModuleInfo,
                   modulePath:str, fullModulePath:str, baseDir:str!,
                   moduleLoaderParam:&ModuleLoaderParam,
@@ -863,7 +860,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 
       self.moduleLoaderParam = moduleLoaderParam;
       self.result = new ModuleLoaderResult( 
-         moduleInfo, 
+         exportInfo, 
          modulePath,
          fullModulePath,
          baseDir,
@@ -889,7 +886,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       
 
       self.loaderFunc = fn () __async {
-         if not self.result.moduleInfo {
+         if not self.result.exportInfo {
             if not self.importModuleInfo.add( fullModulePath ) {
                self.result.err = "recursive import: %s -> %s"
                ( self.importModuleInfo.getFull(), fullModulePath );
@@ -900,7 +897,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
                      fullModulePath, baseDir, self )
                   {
                      let mut moduleMeta = _exp;
-                     self.result.moduleInfo = self.craeteModuleInfo( moduleMeta );
+                     self.result.exportInfo = self.craeteModuleInfo( moduleMeta );
                   } else {
                      self.result.err = "failed to load meta -- %s on %s"
                      (  fullModulePath, baseDir or "./" );
@@ -922,14 +919,14 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       self.loaderFunc();
    }
 
-   pub fn getResult() mut : &ModuleLoaderResult {
+   local fn getResult() mut : &ModuleLoaderResult {
       __join( self );
       return self.result;
    }
 
-   pub fn getModuleInfo() __async mut : &frontInterface.ModuleInfo! {
+   pub fn getExportInfo() __async mut : &frontInterface.ExportInfo! {
       __join( self );
-      return self.result.moduleInfo;
+      return self.result.$exportInfo;
    }
 }
 
@@ -948,7 +945,7 @@ fn ModuleLoader.processImportFromFile(
 
 
       // 依存するモジュールのメタ情報を読み込み
-      let mut dependLibId2DependInfo:Map<int,&frontInterface.ModuleInfo> = {};
+      let mut dependLibId2DependInfo:Map<int,&frontInterface.ExportInfo> = {};
       {
          let loaderMap:Map<ModuleLoader,int> = {};
          forsort dependInfo, dependName in metaInfo.__dependModuleMap {
@@ -965,8 +962,8 @@ fn ModuleLoader.processImportFromFile(
          }
          foreach typeId, moduleLoader in loaderMap {
             let result = moduleLoader.getResult();
-            if! result.moduleInfo {
-               self.applyModuleInfo( _exp );
+            if! result.exportInfo {
+               self.applyExportInfo( _exp );
                dependLibId2DependInfo[ typeId ] = _exp;
             } else {
                self.transUnitIF.error( result.err );
@@ -1384,12 +1381,13 @@ fn ModuleLoader.processImportFromFile(
 
       let mut exportInfo = new Nodes.ExportInfo(
          moduleTypeInfo, moduleProvideInfo, processInfo,
-         globalSymbolList, importedMacroInfoMap );
-      
-      moduleInfo = new frontInterface.ModuleInfo(
-         lnsPath, fullModulePath, nameList[#nameList], newId2OldIdMap, 
+         globalSymbolList,
+         importParam.importedAliasMap,
          frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ),
-         exportInfo, importParam.importedAliasMap );
+         fullModulePath, nameList[#nameList], lnsPath, newId2OldIdMap,
+         importedMacroInfoMap );
+      
+      moduleInfo = new frontInterface.ModuleInfo( exportInfo );
    }
    return moduleInfo;
 }
@@ -1405,14 +1403,14 @@ pub class Import {
 インポートしているモジュールの TypeInfo -> シンボル情報。
 import しているモジュールから、さらに import しているサブモジュールも含まれる。
    */ 
-   let importModule2ModuleInfo: Map<&Ast.TypeInfo,&frontInterface.ModuleInfo> {pub&};
+   let importModule2ExportInfo: Map<&Ast.TypeInfo,&frontInterface.ExportInfo> {pub&};
    /**
 インポートしているモジュール内で定義している alias 情報。
 
 alias で置き換えている元の Type → alias の型
    */
    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>;
-   let importModuleName2ModuleInfo: Map<str,&frontInterface.ModuleInfo>;
+   let importModuleName2ModuleInfo: Map<str,&frontInterface.ExportInfo>;
 
    //let validMutControl: bool;
 
@@ -1439,7 +1437,7 @@ alias で置き換えている元の Type → alias の型
       self.typeNameCtrl = typeNameCtrl;
       self.importedAliasMap = importedAliasMap;
 
-      self.importModule2ModuleInfo = {};
+      self.importModule2ExportInfo = {};
       self.importModuleName2ModuleInfo = {};
    }
 
@@ -1463,34 +1461,34 @@ pub fn Import.createModuleLoader(
                          fullModulePath, baseDir); } );
 
 
-   let mut moduleInfo = self.importModuleName2ModuleInfo[ fullModulePath ];
+   let mut exportInfo = self.importModuleName2ModuleInfo[ fullModulePath ];
 
-   when! moduleInfo {
+   when! exportInfo {
       Log._log( .Info, `{ return "%s already" (fullModulePath); } );
 
       if depth == 1 {
-         self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
+         self.importModule2ExportInfo[ exportInfo.$moduleTypeInfo ] = exportInfo;
       }
       
-      foreach val, key in moduleInfo.$importedAliasMap {
+      foreach val, key in exportInfo.$importedAliasMap {
          self.importedAliasMap[key] = val;
       }
    }
 
 
    return new ModuleLoader(
-      moduleInfo, self.importModuleInfo,
+      exportInfo, self.importModuleInfo,
       modulePath, fullModulePath, baseDir, moduleLoaderParam, depth );
 }
 
 
 
 pub fn Import.loadModuleInfo( moduleLoader:ModuleLoader ) mut :
-   &frontInterface.ModuleInfo!, str
+   &frontInterface.ExportInfo!, str
 {
    let result = moduleLoader.getResult();
    
-   let! mut moduleInfo = result.moduleInfo {
+   let! mut exportInfo = result.exportInfo {
       return nil, result.$err;
    };
    
@@ -1499,11 +1497,10 @@ pub fn Import.loadModuleInfo( moduleLoader:ModuleLoader ) mut :
    
 
 
-
-   if! let exportInfo = moduleInfo.$exportInfo@@@Nodes.ExportInfo {
-      self.macroCtrl.importMacroInfo( exportInfo.$typeId2DefMacroInfo );
+   if! let work = exportInfo@@@Nodes.ExportInfo {
+      self.macroCtrl.importMacroInfo( work.$typeId2DefMacroInfo );
    }
-   foreach val, key in moduleInfo.$importedAliasMap {
+   foreach val, key in exportInfo.$importedAliasMap {
       self.importedAliasMap[key] = val;
    }
    foreach val, key in result.importedAliasMap {
@@ -1513,14 +1510,14 @@ pub fn Import.loadModuleInfo( moduleLoader:ModuleLoader ) mut :
 
    
    if depth == 1 {
-      self.importModule2ModuleInfo[ moduleInfo.$exportInfo.$moduleTypeInfo ] = moduleInfo;
+      self.importModule2ExportInfo[ exportInfo.$moduleTypeInfo ] = exportInfo;
    }
-   self.importModuleName2ModuleInfo[ fullModulePath ] = moduleInfo;
+   self.importModuleName2ModuleInfo[ fullModulePath ] = exportInfo;
 
    
    Log._log( .Info, `{ return "%s complete" (fullModulePath); } );
 
-   return moduleInfo, "";
+   return exportInfo, "";
 }
 
 // fn Import.processImportMain(
@@ -1544,7 +1541,7 @@ fn ModuleLoader.processImportMain(
    // let! moduleInfo = moduleLoader.getResult() {
    //    self.transUnitIF.error( moduleLoader.$err );
    // };
-   // self.applyModuleInfo( moduleInfo );
+   // self.applyExportInfo( moduleInfo );
    
    // return moduleInfo;
 }

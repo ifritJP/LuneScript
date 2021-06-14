@@ -281,6 +281,7 @@ function ModInfo:getLocalModulePathList( path )
          do
             local replacePath = self.replaceMap[mod]
             if replacePath ~= nil then
+               
                table.insert( pathList, Util.pathJoin( replacePath, relativeName ) )
                break
             end
@@ -331,6 +332,7 @@ function ModInfo:getProjRootPath( mod, path )
       projRoot = projRoot:gsub( "/$", "" )
    end
    
+   
    path = Util.parentPath( path )
    local modList = Util.splitStr( mod, "[^%.]+" )
    local startIndex = #modList
@@ -348,6 +350,7 @@ function ModInfo:getProjRootPath( mod, path )
       
       path = Util.parentPath( path )
    end
+   
    
    local convMod = ""
    for index = #modList - startIndex + 1, #modList do
@@ -387,6 +390,7 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
    
    
    local workMod = self:convPath( mod, suffix )
+   
    do
       local _exp = self.path2modProjInfo[workMod]
       if _exp ~= nil then

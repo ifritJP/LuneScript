@@ -523,19 +523,91 @@ fn TransUnit.checkOverriededMethodOfAllClass() mut
    }
 }
 
-// pub class ASTInfo {
-//    pri let node: &Nodes.Node { pub };
-//    pri let exportInfo:frontInterface.ExportInfo { pub };
-//    pri let streamName:str {pub};
-//    pri let builtinFunc:&Builtin.BuiltinFuncType {pub};
-// }
+fn getAnalyzingState( typeInfo:&Ast.TypeInfo ) : AnalyzingState {
+   if typeInfo.$rawTxt == "__init" and typeInfo.$kind == .Method {
+      return .Constructor;
+   }
+   elseif typeInfo.$staticFlag and typeInfo.$kind == .Method {
+      return .ClassMethod;
+   }
+   else {
+      return .Func;
+   }
+}
+
+fn getFirstStmt( stmtList:&List<&Nodes.Node> ) : &Nodes.Node! {
+   foreach stmt in stmtList {
+      switch stmt.$kind {
+         case Nodes.nodeKindEnum.BlankLine {
+         }
+         default {
+            return stmt;
+         }
+      }
+   }
+   return nil;
+}
+
+fn TransUnit.declFuncPostProcess(
+   typeInfo:&Ast.TypeInfo, classTypeInfo: &Ast.TypeInfo!,
+   workBody:Nodes.BlockNode, funcBodyScope:Ast.Scope ) mut
+{
+   if #funcBodyScope.$closureSymList > 0 {
+      funcBodyScope.set_hasClosureAccess( true );
+   }
+   
+   when! classTypeInfo {
+      let isCtorFlag = typeInfo.$rawTxt == "__init";
+      if isCtorFlag and classTypeInfo.hasBase() {
+         // Super クラスを持っている場合、
+         // 先頭の処理で super() をコールしているか調べる
+         let mut needCall = true;
+         if! let firstNode = getFirstStmt( workBody.$stmtList ) {
+            if firstNode.$kind == Nodes.nodeKindEnum.ExpCallSuperCtor {
+               needCall = false;
+            }
+         }
+         if needCall {
+            self.addErrMess(
+               workBody.$pos,             
+               "__init must call super() with first." );
+         }
+      }
+      // if classTypeInfo.isInheritFrom(
+      //    self.processInfo, Ast.builtinTypeRunner, nil )
+      // {
+      //    if typeInfo.$accessMode == .Pub and #typeInfo.$retTypeInfoList > 0 {
+      //       let mut callJoin = false;
+      //       if! let firstNode = getFirstStmt( workBody.$stmtList ) {
+      //          if! let stmtNode = firstNode@@@Nodes.StmtExpNode {
+      //             if! let callNode = stmtNode.$exp@@@Nodes.ExpCallNode {
+      //                if callNode.$func.$expType == self.builtinFunc.lns___join {
+      //                   callJoin = true;
+      //                }
+      //             }
+      //          }
+      //       }
+      //       if not callJoin {
+      //          self.addErrMess(
+      //             workBody.$pos,       
+      //             "public method to return the value must call __join. -- %s"
+      //             (typeInfo.getTxt(##)));
+      //       }
+      //    }
+      // }
+   }
+}
+
+pub form ReadyExportInfo( exportInfo:&frontInterface.ExportInfo ) __trans;
 
 pub fn TransUnit.createAST(
    parserSrc: &Types.ParserSrc, asyncParse:bool,
-   baseDir:str!, stdinFile:&Types.StdinFile!,
-   macroFlag: bool, moduleName: str! ) mut : AstInfo.ASTInfo
+   baseDir:str!, stdinFile:&Types.StdinFile!, macroFlag: bool,
+   moduleName: str!, readyExportInfo:ReadyExportInfo! ) mut : AstInfo.ASTInfo
 {
    let mut parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile );
+
+   let streamName = parser.getStreamName();
 
    self.stdinFile = stdinFile;
    self.baseDir = baseDir;
@@ -554,7 +626,6 @@ pub fn TransUnit.createAST(
    }
    
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
-   let mut moduleSymboInfo:&Ast.SymbolInfo! = nil;
 
    __asyncLock {
       when! moduleName {
@@ -581,11 +652,43 @@ pub fn TransUnit.createAST(
 
    
    let ast:Nodes.Node;
-   let globalSymbolList:List<&Ast.SymbolInfo> = [];
+   let exportInfo:Nodes.ExportInfo;
 
+   fn createExportInfo(
+      moduleSymboInfo:&Ast.SymbolInfo!, globalSymbolList:List<&Ast.SymbolInfo>,
+      processInfo:&Ast.ProcessInfo, ) __trans : Nodes.ExportInfo
+   {
+      let provideInfo:frontInterface.ModuleProvideInfo;
+      when! moduleSymboInfo {
+         provideInfo = new frontInterface.ModuleProvideInfo(
+            moduleSymboInfo.$typeInfo, moduleSymboInfo.$kind, moduleSymboInfo.$mutable );
+      } else {
+         provideInfo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
+      }
+
+      //let processInfo = self.processInfo.duplicate();
+      let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
+      foreach node in self.nodeManager.getAliasNodeList() {
+         importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
+      }
+
+      let mut workExportInfo = new Nodes.ExportInfo(
+         moduleTypeInfo, provideInfo, processInfo, globalSymbolList,
+         importedAliasMap, self.moduleId, self.moduleName,
+         moduleTypeInfo.$rawTxt, streamName, {},
+         self.macroCtrl.$declMacroInfoMap );;
+      when! readyExportInfo {
+         readyExportInfo( workExportInfo );
+      }
+      
+      return workExportInfo;
+   }
+   
+   
    let mut lastStatement:&Nodes.Node! = nil;
    if macroFlag {
       ast = self.analyzeBlock( .Macro, .Ignore ##);
+      exportInfo = createExportInfo( nil, [], self.processInfo );
    }
    else {
       let mut children:List<&Nodes.Node> = [];
@@ -637,30 +740,9 @@ pub fn TransUnit.createAST(
                         token.kind.$_txt, token.txt ) );
          }
       }
+      self.analyzePhase = .Main;
 
-      self.checkOverriededMethodOfAllClass();
-
-
-      let mut rootNode = Nodes.RootNode.create(
-         self.nodeManager, self.createPosition( 0, 0 ), self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         children, self.moduleScope, self.globalScope,
-         self.macroCtrl.$useModuleMacroSet,
-         self.moduleId, self.processInfo, moduleTypeInfo, nil,
-         self.helperInfo, self.nodeManager,
-         unwrap self.importCtrl$.$importModule2ModuleInfo default {},
-         self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
-      ast = rootNode;
-      if! self.provideNode {
-         if lastStatement ~= _exp {
-            self.addErrMess( _exp.$pos, "'provide' must be last." );
-         }
-         rootNode.set_provide( _exp );
-         moduleSymboInfo = _exp.$symbol;
-      }
-
-      ClosureFun.checkList( self.closureFunList );
-
+      let globalSymbolList:List<&Ast.SymbolInfo> = [];
       foreach node in children {
          if! let workNode = node@@@Nodes.DeclVarNode {
             foreach symbolInfo in workNode.$symbolInfoList {
@@ -677,6 +759,76 @@ pub fn TransUnit.createAST(
             }
          }
       }
+      let moduleSymboInfo:&Ast.SymbolInfo!;
+      if! self.provideNode {
+         if lastStatement ~= _exp {
+            self.addErrMess( _exp.$pos, "'provide' must be last." );
+         }
+         moduleSymboInfo = _exp.$symbol;
+      } else {
+         moduleSymboInfo = nil;
+      }
+      exportInfo = createExportInfo(
+         moduleSymboInfo, globalSymbolList, self.processInfo.duplicate() );
+      
+      
+
+      __lns.runtime.log( "ready meta" );
+      // self.processInfo.duplicate();
+      // __lns.runtime.log( "duplicated" );
+      
+      {
+         let mut bakParser = self.parser;
+         foreach funcBlockInfo in self.funcBlockInfoList {
+            let typeInfo = funcBlockInfo.$funcType;
+            self.parser = new Parser.DefaultPushbackParser(
+               new Parser.TokenListParser( funcBlockInfo.$tokenList,
+                                           bakParser.getStreamName(),
+                                           funcBlockInfo.$tokenList[1].pos.orgPos ) );
+
+            let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
+            let classTypeInfo = declFuncInfo.$classTypeInfo;
+
+            self.funcBlockInfoLinkNo = funcBlockInfo.$lineNo;
+            
+            let mut funcBodyScope = funcBlockInfo.$funcScope;
+            let mut backScope = self.scope;
+            self.scope = funcBodyScope;
+            
+            let mut workBody = self.analyzeFuncBlock(
+               getAnalyzingState( typeInfo ),
+               funcBlockInfo.$tokenList[1], classTypeInfo, typeInfo,
+               typeInfo.$rawTxt, funcBodyScope, typeInfo.$retTypeInfoList );
+            self.declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope );
+
+            declFuncInfo.set_body( workBody );
+            declFuncInfo.set_has__func__Symbol(
+               self.has__func__Symbol.has( typeInfo ) );
+            self.has__func__Symbol.del( typeInfo );
+
+            self.scope = backScope;
+            self.funcBlockInfoLinkNo = nil;
+         }
+         self.parser = bakParser;
+      }
+
+      
+
+      self.checkOverriededMethodOfAllClass();
+
+
+      let mut rootNode = Nodes.RootNode.create(
+         self.nodeManager, self.createPosition( 0, 0 ), self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+         children, self.moduleScope, self.globalScope,
+         self.macroCtrl.$useModuleMacroSet,
+         self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode,
+         self.helperInfo, self.nodeManager,
+         unwrap self.importCtrl$.$importModule2ExportInfo default {},
+         self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
+      ast = rootNode;
+
+      ClosureFun.checkList( self.closureFunList );
    }
 
    when! moduleName {
@@ -712,12 +864,12 @@ pub fn TransUnit.createAST(
       }
    }
 
-   foreach mess in self.warnMessList {
-      Util.errorLog( mess );
+   foreach mess in TransUnitIF.sortMess( self.warnMessList ) {
+      Util.errorLog( mess.$mess );
    }
    if #self.errMessList > 0 {
-      foreach mess in self.errMessList {
-         Util.errorLog( mess );
+      foreach mess in TransUnitIF.sortMess( self.errMessList ) {
+         Util.errorLog( mess.$mess );
       }
       Util.err( "has error" );
    }
@@ -731,21 +883,8 @@ pub fn TransUnit.createAST(
       }
    }
    
-   let provideInfo:frontInterface.ModuleProvideInfo;
-   when! moduleSymboInfo {
-      provideInfo = new frontInterface.ModuleProvideInfo(
-         moduleSymboInfo.$typeInfo, moduleSymboInfo.$kind, moduleSymboInfo.$mutable );
-   } else {
-      provideInfo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
-   }
-
-   //let processInfo = self.processInfo.duplicate();
-   let processInfo = self.processInfo;
-   let mut exportInfo = new Nodes.ExportInfo(
-      moduleTypeInfo, provideInfo, processInfo, globalSymbolList,
-      self.macroCtrl.$declMacroInfoMap );
-   
-   return new AstInfo.ASTInfo( ast, exportInfo, parser.getStreamName(), self.builtinFunc );
+   return new AstInfo.ASTInfo(
+      ast, exportInfo, parser.getStreamName(), self.builtinFunc );
 }
 
 
@@ -757,7 +896,7 @@ fn TransUnit.analyzeDeclMacroSub(
 {
    if self.macroCtrl.$isDeclaringMacro {
       // macro 定義内に、別のマクロ定義はサポート外
-      self.error( "can't declare macro in the macro." );
+      self.error( "can't declare the macro in the macro." );
    }
    
    self.macroCtrl.startDecl();
@@ -817,13 +956,14 @@ fn TransUnit.analyzeDeclMacroSub(
   
       
 
-      let funcType = self.processInfo.createFuncAsync(
-         false, true, nil, .Func,
-         //Ast.getBuiltinMut( Ast.headTypeInfo ), false, true,
-         self.processInfo.$dummyParentType, false, true,
-         true, .Global, "_lnsLoad", .Async,
-         nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
-         [ Ast.builtinTypeStem ], false );
+      // let funcType = self.processInfo.createFuncAsync(
+      //    false, true, nil, .Func,
+      //    //Ast.getBuiltinMut( Ast.headTypeInfo ), false, true,
+      //    self.processInfo.$dummyParentType, false, true,
+      //    true, .Global, "_lnsLoad", .Async,
+      //    nil, [ Ast.builtinTypeString, Ast.builtinTypeString ],
+      //    [ Ast.builtinTypeStem ], false );
+      let funcType = Ast.builtinTypeLnsLoad;
       macroScope.addLocalVar(
          self.processInfo, false, false, "_lnsLoad", nil, funcType, .IMut );
 
@@ -896,8 +1036,8 @@ fn TransUnit.analyzeDeclMacroSub(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], declMacroInfo );
 
-   __asyncLock { 
-      self.macroCtrl.regist( self.processInfo, node, macroScope, self.baseDir );
+   if! self.macroCtrl.regist( self.processInfo, node, macroScope, self.baseDir ) {
+      self.errorAt( nameToken.pos, _exp );
    }
 
    return node;
@@ -2056,7 +2196,7 @@ fn TransUnit.analyzeFuncBlock(
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          .Func, blockScope, stmtList );
 
-      self.skipBlock();
+      self.skipBlock( false );
    }
 
    return body;
@@ -2936,19 +3076,6 @@ fn TransUnit.processAddFunc(
    return unwrap (funcSym or shadowing), nsInfo;
 }
 
-fn getFirstStmt( stmtList:&List<&Nodes.Node> ) : &Nodes.Node! {
-   foreach stmt in stmtList {
-      switch stmt.$kind {
-         case Nodes.nodeKindEnum.BlankLine {
-         }
-         default {
-            return stmt;
-         }
-      }
-   }
-   return nil;
-}
-
 
 let CantOverrideMethods = (@ "__init", "__free" );
 
@@ -3025,7 +3152,6 @@ fn TransUnit.analyzeDeclFunc(
    }
 
 
-   let mut isCtorFlag = false;
    let mut kind = Nodes.NodeKind.$DeclConstr;
    let mut typeKind = Ast.TypeInfoKind.Func;
    when! classTypeInfo {
@@ -3034,7 +3160,6 @@ fn TransUnit.analyzeDeclFunc(
       }
       switch (unwrap name).txt {
          case "__init" {
-            isCtorFlag = true;
             kind = Nodes.NodeKind.$DeclConstr;
             foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
                if not symbolInfo.$staticFlag {
@@ -3233,7 +3358,7 @@ fn TransUnit.analyzeDeclFunc(
       self.namespace2Scope[ typeInfo ] = funcBodyScope;
    }
    if asyncLocked {
-      nsInfo.incLock();
+      nsInfo.incLock( .AsyncLock );
    }
 
    if overrideFlag {
@@ -3288,6 +3413,10 @@ fn TransUnit.analyzeDeclFunc(
 
    // 関数 Body の解析
    let mut body:Nodes.BlockNode! = nil;
+   let mut blockTokenList:&List<&Parser.Token> = [];
+   let mut needFuncBlockInfo = false;
+   let inMacroExpand = self.macroCtrl.isInExpandMode();
+   
    if token.txt == ";" {
       // プロトタイプ宣言
       if declFuncMode == .Module or declFuncMode == .Glue {
@@ -3316,67 +3445,57 @@ fn TransUnit.analyzeDeclFunc(
 
       self.pushback();
 
-      let analyzingState:AnalyzingState;
-      if isCtorFlag {
-         analyzingState = .Constructor;
-      }
-      elseif staticFlag and classTypeInfo {
-         analyzingState = .ClassMethod;
-      }
-      else {
-         analyzingState = .Func;
-      }
+      let analyzingState = getAnalyzingState( typeInfo );
+      // if isCtorFlag {
+      //    analyzingState = .Constructor;
+      // }
+      // elseif staticFlag and classTypeInfo {
+      //    analyzingState = .ClassMethod;
+      // }
+      // else {
+      //    analyzingState = .Func;
+      // }
 
       funcBodyScope.addLocalVar(
          self.processInfo, 
          false, false, "__func__", firstToken.pos, Ast.builtinTypeString, .IMut );
-      
-      let mut workBody = self.analyzeFuncBlock(
-         analyzingState, firstToken, classTypeInfo, typeInfo,
-         funcName, funcBodyScope, typeInfo.$retTypeInfoList );
-      body = workBody;
-      if #funcBodyScope.$closureSymList > 0 {
-         funcBodyScope.set_hasClosureAccess( true );
-      }
 
-      when! classTypeInfo {
-         if isCtorFlag and classTypeInfo.hasBase() {
-            // Super クラスを持っている場合、
-            // 先頭の処理で super() をコールしているか調べる
-            let mut needCall = true;
-            if! let firstNode = getFirstStmt( workBody.$stmtList ) {
-               if firstNode.$kind == Nodes.nodeKindEnum.ExpCallSuperCtor {
-                  needCall = false;
-               }
+
+      _switch self.analyzePhase {
+         case .Meta {
+            let declScope:&Ast.Scope!;
+            when! classTypeInfo {
+               declScope = (unwrap classTypeInfo.$scope).$parent;
+            } else {
+               declScope = (unwrap typeInfo.$scope).$parent;
             }
-            if needCall {
-               self.addErrMess(
-                  workBody.$pos,             
-                  "__init must call super() with first." );
-            }
-         }
-         if classTypeInfo.isInheritFrom(
-            self.processInfo, Ast.builtinTypeRunner, nil )
-         {
-            if typeInfo.$accessMode == .Pub and #typeInfo.$retTypeInfoList > 0 {
-               let mut callJoin = false;
-               if! let firstNode = getFirstStmt( workBody.$stmtList ) {
-                  if! let stmtNode = firstNode@@@Nodes.StmtExpNode {
-                     if! let callNode = stmtNode.$exp@@@Nodes.ExpCallNode {
-                        if callNode.$func.$expType == self.builtinFunc.lns___join {
-                           callJoin = true;
-                        }
-                     }
-                  }
-               }
-               if not callJoin {
-                  self.addErrMess(
-                     workBody.$pos,       
-                     "public method to return the value must call __join. -- %s"
-                     (typeInfo.getTxt(##)));
-               }
+            
+            if analyzingState == .Constructor or
+               self.macroCtrl.$isDeclaringMacro or
+               declScope ~= self.moduleScope or
+               name == nil
+            {
+               // 以下のケースは、関数本体処理を解析しないと問題がある。
+               // - コンストラクタは、メンバ設定チェックがある
+               // - マクロの macro-statment は、解析しないとマクロを実行できない
+               // - モジュールスコープと異なる関数は、クロージャチェックが必要
+               // - 名前なしは、 let foo = fn () {} のケースがある
+            } else {
+               needFuncBlockInfo = true;
             }
          }
+         case .Main {
+         }
+      }
+      if needFuncBlockInfo {
+         blockTokenList = self.skipBlock( true );
+      } else {
+         let mut workBody = self.analyzeFuncBlock(
+            analyzingState, firstToken, classTypeInfo, typeInfo,
+            funcName, funcBodyScope, typeInfo.$retTypeInfoList );
+         body = workBody;
+
+         self.declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope );
       }
    }
 
@@ -3393,12 +3512,27 @@ fn TransUnit.analyzeDeclFunc(
       else {
          classDeclNode = nil;
       }
-      
-      return new Nodes.DeclFuncInfo(
+
+      let mut declFuncInfo = new Nodes.DeclFuncInfo(
          funcKind, classTypeInfo, classDeclNode, outsizeOfClass, name, funcSym,
          argList, orgStaticFlag, accessMode, asyncMode, body,
          retTypeInfoList, retTypeNodeList,
          self.has__func__Symbol.has( typeInfo ), overrideFlag );
+
+      if needFuncBlockInfo {
+         let mut lineNo:int!;
+         if inMacroExpand {
+            lineNo = self.getLineNo( blockTokenList[1] );
+         } else {
+            lineNo = nil;
+         }
+         
+         let mut funcBlockInfo = new FuncBlockInfo(
+            declFuncInfo, typeInfo, funcBodyScope, blockTokenList, lineNo );
+         self.funcBlockInfoList.insert( funcBlockInfo );
+      }
+      
+      return declFuncInfo;
    }
 
    switch ( kind ) {

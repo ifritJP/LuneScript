@@ -46,7 +46,7 @@ meta ファイルの内容が変らない場合はこのカウンタをインク
    */
    let buildCount:int {pub};
    let idStr:str {pub};
-   pub static let tempId:ModuleId;
+   pub static let tempId:&ModuleId;
 
    pub fn __init( modTime:real, buildCount:int ) {
       self.modTime = modTime;
@@ -110,27 +110,23 @@ pub fn getRootDependModId() : int {
    return -1;
 }
 
-pub class ExportInfo {
+pub class ExportInfo extend (Ast.ModuleInfoIF) {
    pri let moduleTypeInfo: &Ast.TypeInfo { pub };
    pri let provideInfo:&ModuleProvideInfo { pub };
+   /** exportInfo されている型の情報のみ入っている */
    pri let processInfo: &Ast.ProcessInfo { pub };
    pri let globalSymbolList:&List<&Ast.SymbolInfo> {pub};
-}
-
-pub class ModuleInfo extend (Ast.ModuleInfoIF) {
-   pri let streamName:str {pub};
-   pri let fullName:str{ pub };
-   /** import 元の typeId → 生成されている TypeInfo */
-   pri let mut importId2localTypeInfoMap:&Map<int,&Ast.TypeInfo> { pub& };
-   pri let assignName:str{ pub };
-   pri let moduleId:&ModuleId {pub};
    /**
 import 元のモジュール内で定義されている alias。
 alias で置き換えている元の Type → alias の型。
    */
    pri let importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub};
-
-   pri let exportInfo:&ExportInfo {pub};
+   pri let moduleId:&ModuleId {pub};
+   pri let fullName:str {pub};
+   pri let assignName:str{ pub };
+   pri let streamName:str {pub};
+   /** import 元の typeId → 生成されている TypeInfo */
+   pri let mut importId2localTypeInfoMap:&Map<int,&Ast.TypeInfo> { pub&, pro };
 
    /**
 
@@ -140,22 +136,36 @@ import 元の typeId ではなく、内部の typeId で生成された TypeInfo
 key: TypeInfo
 val: import 元の TypeId
    */
-   pub fn __init( streamName:str, fullName:str, assignName:str,
-                  idMap:&Map<&Ast.TypeInfo,int>,
-                  moduleId:&ModuleId, exportInfo:&ExportInfo,
-                  importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> )
+   pub fn __init( moduleTypeInfo: &Ast.TypeInfo,
+                  provideInfo:&ModuleProvideInfo,
+                  processInfo: &Ast.ProcessInfo,
+                  globalSymbolList:&List<&Ast.SymbolInfo>,
+                  importedAliasMap: &Map<&Ast.TypeInfo,&Ast.AliasTypeInfo>,
+                  moduleId:&ModuleId,
+                  fullName:str,
+                  assignName:str,
+                  streamName:str,
+                  idMap:&Map<&Ast.TypeInfo,int> )
    {
-      self.streamName = streamName;
-      self.exportInfo = exportInfo;
+      self.moduleTypeInfo = moduleTypeInfo;
+      self.provideInfo = provideInfo;
+      self.processInfo = processInfo;
+      self.globalSymbolList = globalSymbolList;
+      self.importedAliasMap = importedAliasMap;
       self.moduleId = moduleId;
       self.fullName = fullName;
       self.assignName = assignName;
+      self.streamName = streamName;
+
       let importId2localTypeInfoMap:Map<int,&Ast.TypeInfo> = {};
       foreach importId, typeInfo in idMap {
          importId2localTypeInfoMap[ importId ] = typeInfo;
       }
       self.importId2localTypeInfoMap = importId2localTypeInfoMap;
-      self.importedAliasMap = importedAliasMap;
+   }
+   
+   pub fn get_modulePath(): str {
+      return self.fullName;
    }
 
    pub fn getTypeInfo( localTypeId:int ) : &Ast.TypeInfo! {
@@ -164,31 +174,40 @@ val: import 元の TypeId
       }
       return nil;
    }
+}
 
-   pub fn get_modulePath(): str {
-      return self.fullName;
-   }
+pub fn ExportInfo.assign( assignName: str ) : ExportInfo {
+   let mut info = new ExportInfo( 
+      self.moduleTypeInfo, self.provideInfo, self.processInfo,
+      self.globalSymbolList, self.importedAliasMap, self.moduleId,
+      self.fullName, assignName, self.streamName, {} );
+   info.importId2localTypeInfoMap = self.importId2localTypeInfoMap;
+   return info;
+}
 
-   pub fn assign( assignName: str ) : ModuleInfo {
-      let mut info = new ModuleInfo(
-         self.streamName, self.fullName, assignName, {},
-         self.moduleId, self.exportInfo, self.importedAliasMap );
-      info.importId2localTypeInfoMap = self.importId2localTypeInfoMap;
-      return info;
+/**
+.lns ファイルの解析終了後の情報。
+*/
+pub class ModuleInfo {
+   pri let exportInfo:&ExportInfo {pub};
+
+   advertise exportInfo;
+   
+   pub fn __init( exportInfo:&ExportInfo )
+   {
+      self.exportInfo = exportInfo;
    }
 }
 
 pub alge MetaOrModule {
-   Meta( Luaval<&stem> ),
+   MetaRaw( Luaval<&stem> ),
+   Export( &ExportInfo ),
    Module( &ModuleInfo )
 }
 
 pub class ModuleMeta {
    let lnsPath:str {pub};
    let mut metaOrModule:MetaOrModule {pub, pub};
-   // let metaInfo:Luaval<&stem> {pub};
-   // // let processInfo:Ast.ProcessInfo! {pub};
-   // let mut moduleInfo:ModuleInfo! {pub,pub};
 }
 
 /**
@@ -235,7 +254,7 @@ pub class ImportModuleInfo {
 }
 
 pub interface ModuleLoader {
-   pub fn getModuleInfo() __noasync mut : &ModuleInfo!;
+   pub fn getExportInfo() mut : &ExportInfo!;
 }
 
 pub interface frontInterface {
@@ -249,7 +268,7 @@ Lua からも利用される。
 @return stem! ロードしたモジュール。 失敗した場合 nil
 @return &stem ロードしたモジュールのメタ情報。
    */
-   pub fn loadModule( mod:str ) __noasync mut: Luaval<&stem>!, ModuleMeta;
+   pub fn loadModule( mod:str ) mut: Luaval<&stem>!, ModuleMeta;
 
    /**
 指定の LuneScript のモジュールからメタ情報をロードする。
@@ -260,7 +279,7 @@ Lua からも利用される。
    */
    pub fn loadMeta(
       importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
-      baseDir:str!, loader:ModuleLoader ) __noasync mut: ModuleMeta!;
+      baseDir:str!, loader:ModuleLoader ) mut: ModuleMeta!;
    /**
 LuneScript のコード文字列からロードする。
 
@@ -271,7 +290,7 @@ LuneScript のコード文字列からロードする。
    */
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo,
-      baseDir:str!, name:str, txt:str ) __noasync mut : Luaval<&stem>;
+      baseDir:str!, name:str, txt:str ) mut : Luaval<&stem>;
 
    /**
 go/github:com.ifritJP. 等の go 用のパスを、
@@ -279,43 +298,47 @@ go/github:com.ifritJP. 等の go 用のパスを、
 
 詳しくは、GoMod.lns を参照。
    */
-   pub fn getLuaModulePath( mod:str, baseDir:str! ) __noasync mut : str,str!, str;
-   pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! ) __noasync mut: str!;
-   pub fn error( message:str ) __noasync;
+   pub fn getLuaModulePath( mod:str, baseDir:str! ) mut : str,str!, str;
+   pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! )  mut: str!;
+   pub fn error( message:str ) ;
 }
 
 class dummyFront extend (frontInterface) {
-   pub fn loadModule( mod:str ) __noasync mut: Luaval<&stem>!, ModuleMeta {
+   pub fn loadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
       // error( "not implements" );
-      let loaded = _load( "return {}" ## );
-      let emptyTable;
-      when! loaded {
-         emptyTable = unwrap loaded(##);
-      } else {
-         error( "load error" );
+      let modVal, mut moduleMeta;
+      __luaLock {
+         let emptyTable;
+         let loaded = _load( "return {}" ## );
+         when! loaded {
+            emptyTable = unwrap loaded(##);
+         } else {
+            error( "load error" );
+         }
+         moduleMeta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
+                                      MetaOrModule.MetaRaw( emptyTable ) );           
+         modVal = require( mod );
       }
-      let mut meta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
-                                     MetaOrModule.Meta( emptyTable ) );           
-      return require( mod ), meta;
+      return modVal, moduleMeta;
    }
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
-                    baseDir:str!, loader:ModuleLoader ) __noasync mut : ModuleMeta!
+                    baseDir:str!, loader:ModuleLoader )  mut : ModuleMeta!
    {
       error( "not implements" );
    }
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo,
-      baseDir:str!, name:str, txt:str ) __noasync mut : Luaval<&stem>
+      baseDir:str!, name:str, txt:str )  mut : Luaval<&stem>
    {
       error( "not implements" );
    }
-   pub fn getLuaModulePath( mod:str, baseDir:str! ) __noasync mut : str, str!, str {
+   pub fn getLuaModulePath( mod:str, baseDir:str! )  mut : str, str!, str {
       error( "not implements" );
    }
-   pub fn searchModule( mod:str, baseDir:str! , addSearchPath:str!) __noasync mut: str! {
+   pub fn searchModule( mod:str, baseDir:str! , addSearchPath:str!)  mut: str! {
       error( "not implements" );
    }
-   pub fn error( message:str ) __noasync {
+   pub fn error( message:str )  {
       error( "not implements" );
    }
 }

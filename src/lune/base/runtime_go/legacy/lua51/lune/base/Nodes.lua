@@ -1423,6 +1423,26 @@ end
 
 
 
+local MacroStatement = {}
+MacroStatement._name2Val = {}
+_moduleObj.MacroStatement = MacroStatement
+function MacroStatement:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "MacroStatement.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function MacroStatement._from( val )
+   return _lune._AlgeFrom( MacroStatement, val )
+end
+
+MacroStatement.Import = { "Import", {{},{},{},{}}}
+MacroStatement._name2Val["Import"] = MacroStatement.Import
+MacroStatement.Local = { "Local", {{}}}
+MacroStatement._name2Val["Local"] = MacroStatement.Local
+
 local MacroInfo = {}
 _moduleObj.MacroInfo = MacroInfo
 function MacroInfo.setmeta( obj )
@@ -1440,6 +1460,12 @@ function MacroInfo:__init( func, symbol2MacroValInfoMap )
 
    self.func = func
    self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
+end
+function MacroInfo:get_func()
+   return self.func
+end
+function MacroInfo:get_symbol2MacroValInfoMap()
+   return self.symbol2MacroValInfoMap
 end
 
 
@@ -4467,7 +4493,6 @@ end
 function ExpRefNode:canBeRight( processInfo )
 
    return self:get_symbolInfo():get_canBeRight() and self:get_symbolInfo():get_hasValueFlag()
-   
 end
 
 
@@ -5611,26 +5636,28 @@ function ExpCastNode:canBeStatement(  )
 
    return false
 end
-function ExpCastNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind )
+function ExpCastNode.new( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind )
    local obj = {}
    ExpCastNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind ); end
    return obj
 end
-function ExpCastNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind) 
+function ExpCastNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind) 
    Node.__init( self,id, 31, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.exp = exp
    self.castType = castType
+   self.castTypeNode = castTypeNode
+   self.castOpe = castOpe
    self.castKind = castKind
    
    
 end
-function ExpCastNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind )
+function ExpCastNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind )
 
-   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, castType, castKind)
+   local node = ExpCastNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind)
    nodeMan:addNode( node )
    return node
 end
@@ -5659,6 +5686,34 @@ function ExpCastNode:visit( visitor, depth, alreadySet )
       
    end
    
+   do
+      do
+         local child = self.castTypeNode
+         if child ~= nil then
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'castTypeNode', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
+                     return false
+                  elseif _switchExp == NodeVisitMode.Next then
+                  end
+               end
+               
+            end
+            
+            
+            
+         end
+      end
+      
+   end
+   
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
@@ -5671,6 +5726,12 @@ function ExpCastNode:get_exp()
 end
 function ExpCastNode:get_castType()
    return self.castType
+end
+function ExpCastNode:get_castTypeNode()
+   return self.castTypeNode
+end
+function ExpCastNode:get_castOpe()
+   return self.castOpe
 end
 function ExpCastNode:get_castKind()
    return self.castKind
@@ -6183,11 +6244,13 @@ function ExpRefItemNode:getPrefix(  )
    return self.val
 end
 
+
 function ExpRefItemNode:canBeLeft(  )
 
    if self.val:get_expType() == Ast.builtinTypeStem then
       return false
    end
+   
    
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
@@ -7534,6 +7597,7 @@ end
 
 function RefFieldNode:canBeLeft(  )
 
+   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
@@ -7541,8 +7605,10 @@ function RefFieldNode:canBeLeft(  )
       end
    end
    
+   
    return false
 end
+
 
 function RefFieldNode:canBeRight( processInfo )
 
@@ -7552,6 +7618,7 @@ function RefFieldNode:canBeRight( processInfo )
          return _exp:get_canBeRight()
       end
    end
+   
    
    return true
 end
@@ -8093,6 +8160,7 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
+   
    local kind = BreakKind.None
    local work = BreakKind.None
    do
@@ -8363,6 +8431,9 @@ end
 function DeclFuncInfo:get_body()
    return self.body
 end
+function DeclFuncInfo:set_body( body )
+   self.body = body
+end
 function DeclFuncInfo:get_retTypeInfoList()
    return self.retTypeInfoList
 end
@@ -8371,6 +8442,9 @@ function DeclFuncInfo:get_retTypeNodeList()
 end
 function DeclFuncInfo:get_has__func__Symbol()
    return self.has__func__Symbol
+end
+function DeclFuncInfo:set_has__func__Symbol( has__func__Symbol )
+   self.has__func__Symbol = has__func__Symbol
 end
 function DeclFuncInfo:get_overrideFlag()
    return self.overrideFlag
@@ -8668,11 +8742,13 @@ end
 
 function DeclFuncNode:canBeRight( processInfo )
 
+   
    return self.declInfo:get_name() == nil
 end
 
 function DeclFuncNode:canBeStatement(  )
 
+   
    return not (self.declInfo:get_name() == nil )
 end
 
@@ -9488,6 +9564,41 @@ function ExpCallSuperNode:canBeRight( processInfo )
 end
 
 
+local LockKind = {}
+_moduleObj.LockKind = LockKind
+LockKind._val2NameMap = {}
+function LockKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "LockKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function LockKind._from( val )
+   if LockKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+LockKind.__allList = {}
+function LockKind.get__allList()
+   return LockKind.__allList
+end
+
+LockKind.AsyncLock = 0
+LockKind._val2NameMap[0] = 'AsyncLock'
+LockKind.__allList[1] = LockKind.AsyncLock
+LockKind.LuaGo = 1
+LockKind._val2NameMap[1] = 'LuaGo'
+LockKind.__allList[2] = LockKind.LuaGo
+LockKind.LuaLock = 2
+LockKind._val2NameMap[2] = 'LuaLock'
+LockKind.__allList[3] = LockKind.LuaLock
+LockKind.Unsafe = 3
+LockKind._val2NameMap[3] = 'Unsafe'
+LockKind.__allList[4] = LockKind.Unsafe
+
 function NodeKind.get_AsyncLock(  )
 
    return 59
@@ -9529,24 +9640,25 @@ function AsyncLockNode:canBeStatement(  )
 
    return true
 end
-function AsyncLockNode.new( id, pos, inTestBlock, macroArgFlag, typeList, block )
+function AsyncLockNode.new( id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block )
    local obj = {}
    AsyncLockNode.setmeta( obj )
-   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, block ); end
+   if obj.__init then obj:__init( id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block ); end
    return obj
 end
-function AsyncLockNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, block) 
+function AsyncLockNode:__init(id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block) 
    Node.__init( self,id, 59, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.lockKind = lockKind
    self.block = block
    
    
 end
-function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, block )
+function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, lockKind, block )
 
-   local node = AsyncLockNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, block)
+   local node = AsyncLockNode.new(nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, lockKind, block)
    nodeMan:addNode( node )
    return node
 end
@@ -9581,6 +9693,9 @@ function AsyncLockNode:visit( visitor, depth, alreadySet )
 end
 function AsyncLockNode.setmeta( obj )
   setmetatable( obj, { __index = AsyncLockNode  } )
+end
+function AsyncLockNode:get_lockKind()
+   return self.lockKind
 end
 function AsyncLockNode:get_block()
    return self.block
@@ -13161,6 +13276,7 @@ function Node:getSymbolInfo(  )
                local refFieldNode = _lune.__Cast( node, 3, RefFieldNode )
                if refFieldNode ~= nil then
                   if refFieldNode:get_nilAccess() then
+                     
                      return {}
                   end
                   
@@ -13268,11 +13384,14 @@ function WhileNode:getBreakKind( checkMode )
       return kind
    else
     
+      
       if not self.infinit then
          return BreakKind.None
       end
       
+      
       local mode = CheckBreakMode.IgnoreFlow
+      
       local kind = BreakKind.None
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
          if stmt:get_kind() ~= NodeKind.get_BlankLine() then
@@ -13805,6 +13924,7 @@ function ExpRefNode:getLiteral(  )
    do
       local enumTypeInfo = _lune.__Cast( typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
+         
          if self.symbolInfo:get_kind() == Ast.SymbolKind.Mbr and self.symbolInfo:get_namespaceTypeInfo():get_kind() == Ast.TypeInfoKind.Enum then
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
             return enumLiteral2Literal( enumval:get_val() )
@@ -13820,6 +13940,7 @@ end
 
 function ExpOmitEnumNode:getLiteral(  )
 
+   
    local enumval = self.valInfo
    return enumLiteral2Literal( enumval:get_val() )
 end
@@ -13827,6 +13948,7 @@ end
 
 function ExpOmitEnumNode:setupLiteralTokenList( list )
 
+   
    local enumval = self.valInfo
    self:addTokenList( list, Parser.TokenKind.Dlmt, "." )
    
@@ -13848,6 +13970,7 @@ function ExpOp2Node:getValType( node )
    
    local intVal, realVal, strVal = 0, 0.0, ""
    local retTypeInfo = Ast.builtinTypeNone
+   
    do
       local _matchExp = literal
       if _matchExp[1] == Literal.Int[1] then
@@ -14020,21 +14143,28 @@ _moduleObj.ExportInfo = ExportInfo
 function ExportInfo.setmeta( obj )
   setmetatable( obj, { __index = ExportInfo  } )
 end
-function ExportInfo.new( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+function ExportInfo.new( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10,typeId2DefMacroInfo )
    local obj = {}
    ExportInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10,typeId2DefMacroInfo )
    end
    return obj
 end
-function ExportInfo:__init( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+function ExportInfo:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10,typeId2DefMacroInfo )
 
-   frontInterface.ExportInfo.__init( self, __superarg1, __superarg2, __superarg3, __superarg4 )
+   frontInterface.ExportInfo.__init( self, __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10 )
    self.typeId2DefMacroInfo = typeId2DefMacroInfo
 end
 function ExportInfo:get_typeId2DefMacroInfo()
    return self.typeId2DefMacroInfo
+end
+
+function ExportInfo:assign( assignName )
+
+   local info = ExportInfo.new(self:get_moduleTypeInfo(), self:get_provideInfo(), self:get_processInfo(), self:get_globalSymbolList(), self:get_importedAliasMap(), self:get_moduleId(), self:get_fullName(), assignName, self:get_streamName(), {}, self.typeId2DefMacroInfo)
+   info:set_importId2localTypeInfoMap( self:get_importId2localTypeInfoMap() )
+   return info
 end
 
 

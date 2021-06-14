@@ -5386,6 +5386,12 @@ pub fn ProcessInfo.createFuncAsync(
    return info;
 }
 
+pub let builtinTypeLnsLoad:&TypeInfo = rootProcessInfo.createFuncAsync(
+   false, true, nil, .Func, headTypeInfoMut, false, true,
+   true, .Pub, "_lnsLoad", .Async, nil, [ builtinTypeString, builtinTypeString ],
+   [ builtinTypeStem ], false );
+
+
 
 //pub static fn NormalTypeInfo.createFunc(
 pub fn ProcessInfo.createDummyNameSpace(
@@ -5675,6 +5681,8 @@ pub let builtinTypeExp:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
 pub let builtinTypeMultiExp:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Exps", "__exps" , .Prim## );
+pub let builtinTypeBlockArg:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "Block", "__block" , .Prim## );
 
 
 pub class CombineType {
@@ -7079,7 +7087,9 @@ pub static fn TypeInfo.canEvalWithBase(
          processInfo, other, canEvalType, alt2type )**;
    }
    
-   if dest == builtinTypeExp or dest == builtinTypeMultiExp {
+   if dest == builtinTypeExp or dest == builtinTypeMultiExp or
+      dest == builtinTypeBlockArg
+   {
       if other == builtinTypeMultiExp and dest ~= builtinTypeMultiExp {
          return false, "can't eval from '__exp' to '__exps'.";
       }

@@ -5774,8 +5774,17 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                      do
                         local _switchExp = prefixKind
                         if _switchExp == Ast.TypeInfoKind.Class then
+                           do
+                              local _switchExp = funcType
+                              if _switchExp == self.builtinFuncs.__lns_sync_createFlag then
+                                 self:write( "LnsCreateSyncFlag" )
+                              else 
+                                 
+                                    
+                                    self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
+                              end
+                           end
                            
-                           self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
                         else 
                            
                               do

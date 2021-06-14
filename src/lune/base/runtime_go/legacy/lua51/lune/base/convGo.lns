@@ -66,7 +66,8 @@ class Env {
    }
    local fn getCommonVm() : str {
       if self.addEnvArg {
-         return "_env.CommonLuaVM";
+         //return "_env.CommonLuaVM";
+         return "_env.GetVM()";
       }
       return "Lns_getVM()";
    }
@@ -2116,12 +2117,19 @@ pub override fn convFilter.processSubfile(
 pub override fn convFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
-   self.writeln( "Lns_LockEnvSync( %s, func () {"
-                 (self.env.getEnv()) );
+   _switch node.$lockKind {
+      case .AsyncLock, .LuaLock {
+         self.writeln( "Lns_LockEnvSync( %s, func () {"
+            (self.env.getEnv()) );
 
-   filter( node.$block, self, node );
+         filter( node.$block, self, node );
 
-   self.writeln( "})" );
+         self.writeln( "})" );
+      }
+      case .Unsafe, .LuaGo {
+         filter( node.$block, self, node );
+      }
+   }
 }
 
 pub override fn convFilter.processBlockSub(
@@ -4666,8 +4674,15 @@ pub fn convFilter.outputCallPrefix(
                } else {
                   switch prefixKind {
                      case .Class {
-                        // class は継承があるので FP 経由で実行する
-                        self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                        switch funcType {
+                           case self.builtinFuncs.__lns_sync_createFlag {
+                              self.write( "LnsCreateSyncFlag" );
+                           }
+                           default {
+                              // class は継承があるので FP 経由で実行する
+                              self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                           }
+                        }
                      }
                      default {
                         if! let runtime = self.getVM( funcType ) {
@@ -4736,6 +4751,13 @@ pub override fn convFilter.processExpCall(
       
       filter( fieldNode.$prefix, self, node );
       self.write( ")" );
+      return;
+   }
+
+   if funcType == self.builtinFuncs.list___new {
+      self.write( "NewLnsList(make([]LnsAny," );
+      filter( unwrap node.$argList, self, node );
+      self.write( ")[0:0])" );
       return;
    }
 

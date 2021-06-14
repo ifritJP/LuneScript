@@ -137,6 +137,7 @@ builtin 関数の TypeInfo を保持するクラス。
       let mut allFuncTypeSet:Set<&Ast.TypeInfo> {pub};
       let mut allSymbolSet:Set<&Ast.SymbolInfo> {pub};
       let mut needThreadingTypes:Set<&Ast.TypeInfo> {pub};
+      let luavalFuncTypeSet:Set<&Ast.TypeInfo>;
       
       pub fn __init() {
          ,,initMemberList;
@@ -146,6 +147,15 @@ builtin 関数の TypeInfo を保持するクラス。
          self.allSymbolSet = (@);
          self.allFuncTypeSet = (@);
          self.needThreadingTypes = (@);
+         self.luavalFuncTypeSet = (@);
+      }
+
+      local fn addLuavalFunc( typeInfo:&Ast.TypeInfo ) mut {
+         self.luavalFuncTypeSet.add( typeInfo );
+      }
+      
+      pub fn isLuavalFunc( typeInfo:&Ast.TypeInfo ) __async : bool {
+         return self.luavalFuncTypeSet.has( typeInfo );
       }
 
       pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
@@ -203,7 +213,7 @@ _DefBuiltinFuncType( [
    },
    {
       "__lns.runMode" : {
-         "__attrib": { "type": [ "module" ] },
+         "__attrib": { "type": [ "class" ] },
          "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
          "Queue": { "type": [ "var" ], "typeInfo": ["int"] },
          "Skip": { "type": [ "var" ], "typeInfo": ["int"] },
@@ -212,6 +222,19 @@ _DefBuiltinFuncType( [
    {
       "__lns.runtime" : {
          "log": { "arg": [ "str" ], "ret": [] },
+      },
+   },
+   {
+      "__lns.Sync.Flag" : {
+         "__attrib": { "type": [ "interface" ] },
+         "wait": { "type": [ "method" ], "arg": [ ], "ret": [] },
+         "set": { "type": [ "mut" ], "arg": [ ], "ret": [] },
+      },
+   },
+   {
+      "__lns.Sync" : {
+         "__attrib": { "type": [ "class" ] },
+         "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
       },
    },
    {
@@ -326,6 +349,7 @@ _DefBuiltinFuncType( [
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+         "__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
       },
    },
    {
@@ -391,7 +415,36 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
       scope:&Ast.Scope, symbol:str, genTypeList:List<&Ast.TypeInfo> ) :
    &Ast.TypeInfo!
    {
-      let! typeInfo = scope.getTypeInfo( symbol, scope, false, .Normal ) {
+      fn getTypeInfo( mut workScope:&Ast.Scope ) : &Ast.TypeInfo! {
+         let nameList = Util.splitModule( symbol );
+         if #nameList <= 1 {
+            return workScope.getTypeInfo( symbol, workScope, false, .Normal );
+         } else {
+            foreach name, index in nameList {
+               let workTypeInfo;
+               if index == 1 {
+                  workTypeInfo = workScope.getTypeInfo(
+                     name, workScope, false, .Normal );
+               } else {
+                  workTypeInfo = workScope.getTypeInfoChild( name );
+               }
+               when! workTypeInfo {
+                  if index == #nameList {
+                     return workTypeInfo;
+                  }
+                  if! workTypeInfo.$scope {
+                     workScope = _exp;
+                  } else {
+                     return nil;
+                  }
+               } else {
+                  return nil;
+               };
+            }
+         }
+         return nil;
+      }
+      let! typeInfo = getTypeInfo( scope ) {
          return nil;
       };
       let mut validGenType = false;
@@ -586,12 +639,15 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
             } else {
                asyncMode = .Async;
             }
-            // asyncMode = .Async;
             
             let mut typeInfo = self.processInfo.createFuncAsync(
                abstractFlag, true, scope, kind,
                Ast.getBuiltinMut( parentInfo), false, true, staticFlag, accessMode,
                fieldName, asyncMode, nil, argTypeList, retTypeList, mutable );
+            if self.hasLuaval {
+               builtinFunc.addLuavalFunc( typeInfo );
+            }
+            
 
             self.transUnit.popScope();
 
@@ -633,12 +689,16 @@ fn Builtin.registClass(
          interfaceList.insert( ifType );
       }
    }
-   fn registerClass(regName:str,index:int) : &Ast.TypeInfo {
+   fn registerClass(regName:str,index:int, last:bool ) : &Ast.TypeInfo {
       let workClassKind;
-      if index == 1 {
+      if last {
          workClassKind = classKind;
       } else {
-         workClassKind = .Class;
+         if index == 1 {
+            workClassKind = .Module;
+         } else {
+            workClassKind = .Class;
+         }
       }
       
       let mut classType:&Ast.TypeInfo = Ast.headTypeInfo;
@@ -669,7 +729,7 @@ fn Builtin.registClass(
    }
    let mut parentInfo = Ast.headTypeInfo;
    foreach name, index in nameList {
-      parentInfo = registerClass( name, index );
+      parentInfo = registerClass( name, index, index == #nameList );
    }
    return parentInfo;
 }
@@ -739,15 +799,17 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
             default {
                if className.find( "<" ## ) {
                   name = "";
-                  apply token of className.gmatch( "[^<>,%s]+" ) {
-                     if #name == 0 {
-                        name = token;
-                     }
-                     else {
-                        genTypeList.insert(
-                           (self.processInfo.createAlternate(
-                              true, #genTypeList + 1,
-                              token, .Pri, Ast.headTypeInfo ## )) );
+                  __luago {
+                     apply token of className.gmatch( "[^<>,%s]+" ) {
+                        if #name == 0 {
+                           name = token;
+                        }
+                        else {
+                           genTypeList.insert(
+                              (self.processInfo.createAlternate(
+                                 true, #genTypeList + 1,
+                                 token, .Pri, Ast.headTypeInfo ## )) );
+                        }
                      }
                   }
                }

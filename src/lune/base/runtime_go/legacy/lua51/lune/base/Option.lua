@@ -177,7 +177,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 10341
+   return 10737
 end
 
 
@@ -542,6 +542,7 @@ usage:
    do
       local file = io.open( "lune.js", "r" )
       if file ~= nil then
+         
          local ProjInfo = {}
          setmetatable( ProjInfo, { ifList = {Mapping,} } )
          function ProjInfo.setmeta( obj )
@@ -982,6 +983,7 @@ local function createDefaultOption( pathList, projDir )
       end
       
    end
+   
    
    option.useLuneModule = getRuntimeModule(  )
    option.useIpairs = true

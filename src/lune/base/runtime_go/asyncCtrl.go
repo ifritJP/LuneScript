@@ -365,6 +365,20 @@ func Lns_LockEnvSync(_env *LnsEnv, callback func()) {
 	}
 }
 
+type G__lns_Flag interface {
+	Set(_env *LnsEnv)
+	Wait(_env *LnsEnv)
+}
+
 type Lns_syncFlag struct {
 	wg sync.WaitGroup
+}
+
+func LnsCreateSyncFlag(_env *LnsEnv) G__lns_Flag {
+	flag := &Lns_syncFlag{}
+	flag.wg.Add(1)
+	return flag
+}
+func (self *Lns_syncFlag) Set(_env *LnsEnv) {
+	self.wg.Done()
 }

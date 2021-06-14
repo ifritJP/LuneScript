@@ -2241,3 +2241,37 @@ _section();
    }
    new Hoge();
 }
+_section();
+{
+   class Runner extend (__Runner) {
+      _lune_control default_async_this_class;
+
+      let mut flag:__lns.Sync.Flag!;
+
+      pub fn __init() {
+         self.flag = __lns.Sync.createFlag();
+         __run( self, __lns.runMode.Queue, "" );
+      }
+      
+      pub fn run() mut {
+         print( "run" );
+         for _ = 1, 100000 {
+         }
+         print( "set" );
+         if! self.flag {
+            _exp.set();
+         }
+      }
+
+      pub fn get() {
+         if! self.flag {
+            _exp.wait();
+         }
+         print( "get" );
+      }
+   }
+
+   let runner = new Runner();
+   runner.get();
+   print( "get2" );
+}

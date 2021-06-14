@@ -79,9 +79,8 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 
 
 
-local function runLuaOnLns( luaCode, baseDir )
+local function runLuaOnLns( luaCode, baseDir, async )
 
-   
    local newEnv = {}
    for key, val in pairs( _G ) do
       newEnv[key] = val
@@ -94,7 +93,22 @@ local function runLuaOnLns( luaCode, baseDir )
       return val
    end
    
-   local loaded, err = _lune.loadstring51( luaCode, newEnv )
+   local loaded, err
+   
+   if async then
+      do
+         loaded, err = _lune.loadstring51( luaCode, newEnv )
+      end
+      
+   else
+    
+      do
+         loaded, err = _lune.loadstring51( luaCode, newEnv )
+      end
+      
+   end
+   
+   
    if loaded ~= nil then
       return loaded, ""
    end
@@ -119,6 +133,7 @@ function __luneGetLocal( varName )
       if not name then
          break
       end
+      
       
       index = index + 1
    end

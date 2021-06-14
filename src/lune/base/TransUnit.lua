@@ -1315,8 +1315,11 @@ end
 
 function TransUnit:canBeAsyncParam( typeInfo )
 
-   if typeInfo:get_nilableTypeInfo():get_srcTypeInfo():get_genSrcTypeInfo() == self.builtinFunc.__pipe_ then
-      return true
+   do
+      local _switchExp = typeInfo:get_nilableTypeInfo():get_srcTypeInfo():get_genSrcTypeInfo()
+      if _switchExp == self.builtinFunc.__pipe_ or _switchExp == self.builtinFunc.__lns_sync_flag_ then
+         return true
+      end
    end
    
    return Ast.TypeInfo.canBeAsyncParam( typeInfo )
@@ -2063,12 +2066,12 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    local moduleLoaderParam = Import.ModuleLoaderParam.new(self.ctrl_info, self.processInfo, self:getLatestPos(  ), macroMode, nearCode, self.validMutControl, self.macroEval)
    local moduleLoader = importObj:processImport( modulePath, moduleLoaderParam )
    
-   local moduleInfo
+   local exportInfo
    
    do
       local work, err = importObj:loadModuleInfo( moduleLoader )
       if work ~= nil then
-         moduleInfo = work
+         exportInfo = work
       else
          self:error( err )
       end
@@ -2076,16 +2079,16 @@ function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazy
    end
    
    
-   for __index, symbol in ipairs( moduleInfo:get_exportInfo():get_globalSymbolList() ) do
+   for __index, symbol in ipairs( exportInfo:get_globalSymbolList() ) do
       self.globalScope:addSymbolInfo( self.processInfo, symbol )
    end
    
    
    self.scope = backupScope
    
-   local provideInfo = moduleInfo:get_exportInfo():get_provideInfo()
+   local provideInfo = exportInfo:get_provideInfo()
    local moduleTypeInfo = provideInfo:get_typeInfo()
-   self.scope:addModule( moduleTypeInfo, moduleInfo:assign( assignName ) )
+   self.scope:addModule( moduleTypeInfo, exportInfo:assign( assignName ) )
    
    local moduleSymbolKind = provideInfo:get_symbolKind()
    local moduleSymbolInfo, shadowing = self.scope:add( self.processInfo, moduleSymbolKind, false, false, assignName, pos, moduleTypeInfo, Ast.AccessMode.Local, true, provideInfo:get_mutable() and Ast.MutMode.Mut or Ast.MutMode.IMut, true, lazyLoad ~= Nodes.LazyLoad.Off )
@@ -3739,52 +3742,24 @@ function TransUnit:declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcB
          
       end
       
-      if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner, nil ) then
-         if typeInfo:get_accessMode() == Ast.AccessMode.Pub and #typeInfo:get_retTypeInfoList() > 0 then
-            local callJoin = false
-            do
-               local firstNode = getFirstStmt( workBody:get_stmtList() )
-               if firstNode ~= nil then
-                  do
-                     local stmtNode = _lune.__Cast( firstNode, 3, Nodes.StmtExpNode )
-                     if stmtNode ~= nil then
-                        do
-                           local callNode = _lune.__Cast( stmtNode:get_exp(), 3, Nodes.ExpCallNode )
-                           if callNode ~= nil then
-                              if callNode:get_func():get_expType() == self.builtinFunc.lns___join then
-                                 callJoin = true
-                              end
-                              
-                           end
-                        end
-                        
-                     end
-                  end
-                  
-               end
-            end
-            
-            if not callJoin then
-               self:addErrMess( workBody:get_pos(), string.format( "public method to return the value must call __join. -- %s", typeInfo:getTxt(  )) )
-            end
-            
-         end
-         
-      end
-      
    end
    
 end
 
-function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName )
+
+
+
+function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName, readyExportInfo )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.createAST'
 
    local parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile )
    
+   local streamName = parser:getStreamName(  )
+   
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 618, function (  )
+   Log.log( Log.Level.Log, __func__, 615, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnit.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s", __func__, parser:getStreamName(  ), baseDir)
@@ -3803,7 +3778,6 @@ function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFl
    
    
    local moduleTypeInfo = Ast.headTypeInfo
-   local moduleSymboInfo = nil
    
    do
       if moduleName ~= nil then
@@ -3827,11 +3801,40 @@ function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFl
    
    local ast
    
-   local globalSymbolList = {}
+   local exportInfo
+   
+   
+   local function createExportInfo( moduleSymboInfo, globalSymbolList, processInfo )
+   
+      local provideInfo
+      
+      if moduleSymboInfo ~= nil then
+         provideInfo = frontInterface.ModuleProvideInfo.new(moduleSymboInfo:get_typeInfo(), moduleSymboInfo:get_kind(), moduleSymboInfo:get_mutable())
+      else
+         provideInfo = frontInterface.ModuleProvideInfo.new(moduleTypeInfo, Ast.SymbolKind.Typ, false)
+      end
+      
+      
+      local importedAliasMap = {}
+      for __index, node in ipairs( self.nodeManager:getAliasNodeList(  ) ) do
+         importedAliasMap[node:get_typeInfo()] = _lune.__Cast( node:get_expType(), 3, Ast.AliasTypeInfo )
+      end
+      
+      
+      local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
+      
+      if readyExportInfo ~= nil then
+         readyExportInfo( workExportInfo )
+      end
+      
+      
+      return workExportInfo
+   end
    
    local lastStatement = nil
    if macroFlag then
       ast = self:analyzeBlock( Nodes.BlockKind.Macro, TentativeMode.Ignore )
+      exportInfo = createExportInfo( nil, {}, self.processInfo )
    else
     
       local children = {}
@@ -3888,6 +3891,56 @@ function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFl
       
       self.analyzePhase = AnalyzePhase.Main
       
+      local globalSymbolList = {}
+      for __index, node in ipairs( children ) do
+         do
+            local workNode = _lune.__Cast( node, 3, Nodes.DeclVarNode )
+            if workNode ~= nil then
+               for __index, symbolInfo in ipairs( workNode:get_symbolInfoList() ) do
+                  if symbolInfo:get_accessMode() == Ast.AccessMode.Global then
+                     table.insert( globalSymbolList, symbolInfo )
+                  end
+                  
+               end
+               
+            end
+         end
+         
+         do
+            local workNode = _lune.__Cast( node, 3, Nodes.DeclFuncNode )
+            if workNode ~= nil then
+               if workNode:get_declInfo():get_accessMode() == Ast.AccessMode.Global then
+                  do
+                     local symbolInfo = workNode:get_declInfo():get_symbol()
+                     if symbolInfo ~= nil then
+                        table.insert( globalSymbolList, symbolInfo )
+                     end
+                  end
+                  
+               end
+               
+            end
+         end
+         
+      end
+      
+      local moduleSymboInfo
+      
+      do
+         local _exp = self.provideNode
+         if _exp ~= nil then
+            if lastStatement ~= _exp then
+               self:addErrMess( _exp:get_pos(), "'provide' must be last." )
+            end
+            
+            moduleSymboInfo = _exp:get_symbol()
+         else
+            moduleSymboInfo = nil
+         end
+      end
+      
+      exportInfo = createExportInfo( moduleSymboInfo, globalSymbolList, self.processInfo:duplicate(  ) )
+      
       
       
       do
@@ -3922,55 +3975,10 @@ function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFl
       
       self:checkOverriededMethodOfAllClass(  )
       
-      local rootNode = Nodes.RootNode.create( self.nodeManager, self:createPosition( 0, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, children, self.moduleScope, self.globalScope, self.macroCtrl:get_useModuleMacroSet(), self.moduleId, self.processInfo, moduleTypeInfo, nil, self.helperInfo, self.nodeManager, _lune.unwrapDefault( _lune.nilacc( self.importCtrl, 'get_importModule2ModuleInfo', 'callmtd' ), {}), self.macroCtrl:get_typeId2MacroInfo(), self.typeId2ClassMap )
+      local rootNode = Nodes.RootNode.create( self.nodeManager, self:createPosition( 0, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, children, self.moduleScope, self.globalScope, self.macroCtrl:get_useModuleMacroSet(), self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode, self.helperInfo, self.nodeManager, _lune.unwrapDefault( _lune.nilacc( self.importCtrl, 'get_importModule2ExportInfo', 'callmtd' ), {}), self.macroCtrl:get_typeId2MacroInfo(), self.typeId2ClassMap )
       ast = rootNode
-      do
-         local _exp = self.provideNode
-         if _exp ~= nil then
-            if lastStatement ~= _exp then
-               self:addErrMess( _exp:get_pos(), "'provide' must be last." )
-            end
-            
-            rootNode:set_provide( _exp )
-            moduleSymboInfo = _exp:get_symbol()
-         end
-      end
-      
       
       ClosureFun.checkList( self.closureFunList )
-      
-      for __index, node in ipairs( children ) do
-         do
-            local workNode = _lune.__Cast( node, 3, Nodes.DeclVarNode )
-            if workNode ~= nil then
-               for __index, symbolInfo in ipairs( workNode:get_symbolInfoList() ) do
-                  if symbolInfo:get_accessMode() == Ast.AccessMode.Global then
-                     table.insert( globalSymbolList, symbolInfo )
-                  end
-                  
-               end
-               
-            end
-         end
-         
-         do
-            local workNode = _lune.__Cast( node, 3, Nodes.DeclFuncNode )
-            if workNode ~= nil then
-               if workNode:get_declInfo():get_accessMode() == Ast.AccessMode.Global then
-                  do
-                     local symbolInfo = workNode:get_declInfo():get_symbol()
-                     if symbolInfo ~= nil then
-                        table.insert( globalSymbolList, symbolInfo )
-                     end
-                  end
-                  
-               end
-               
-            end
-         end
-         
-      end
-      
    end
    
    
@@ -4048,18 +4056,6 @@ function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFl
       end
    end
    
-   
-   local provideInfo
-   
-   if moduleSymboInfo ~= nil then
-      provideInfo = frontInterface.ModuleProvideInfo.new(moduleSymboInfo:get_typeInfo(), moduleSymboInfo:get_kind(), moduleSymboInfo:get_mutable())
-   else
-      provideInfo = frontInterface.ModuleProvideInfo.new(moduleTypeInfo, Ast.SymbolKind.Typ, false)
-   end
-   
-   
-   local processInfo = self.processInfo
-   local exportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, self.macroCtrl:get_declMacroInfoMap())
    
    return AstInfo.ASTInfo.new(ast, exportInfo, parser:getStreamName(  ), self.builtinFunc)
 end
@@ -5077,7 +5073,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1965, function (  )
+         Log.log( Log.Level.Debug, __func__, 1987, function (  )
          
             return string.format( "%s", dummyRetType)
          end )

@@ -14139,21 +14139,28 @@ _moduleObj.ExportInfo = ExportInfo
 function ExportInfo.setmeta( obj )
   setmetatable( obj, { __index = ExportInfo  } )
 end
-function ExportInfo.new( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+function ExportInfo.new( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10,typeId2DefMacroInfo )
    local obj = {}
    ExportInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10,typeId2DefMacroInfo )
    end
    return obj
 end
-function ExportInfo:__init( __superarg1, __superarg2, __superarg3, __superarg4,typeId2DefMacroInfo )
+function ExportInfo:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10,typeId2DefMacroInfo )
 
-   frontInterface.ExportInfo.__init( self, __superarg1, __superarg2, __superarg3, __superarg4 )
+   frontInterface.ExportInfo.__init( self, __superarg1, __superarg2, __superarg3, __superarg4, __superarg5, __superarg6, __superarg7, __superarg8, __superarg9, __superarg10 )
    self.typeId2DefMacroInfo = typeId2DefMacroInfo
 end
 function ExportInfo:get_typeId2DefMacroInfo()
    return self.typeId2DefMacroInfo
+end
+
+function ExportInfo:assign( assignName )
+
+   local info = ExportInfo.new(self:get_moduleTypeInfo(), self:get_provideInfo(), self:get_processInfo(), self:get_globalSymbolList(), self:get_importedAliasMap(), self:get_moduleId(), self:get_fullName(), assignName, self:get_streamName(), {}, self.typeId2DefMacroInfo)
+   info:set_importId2localTypeInfoMap( self:get_importId2localTypeInfoMap() )
+   return info
 end
 
 

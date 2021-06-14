@@ -225,11 +225,54 @@ function IdSetInfo.setmeta( obj )
 end
 
 
+local LockedAsyncInfo = {}
+function LockedAsyncInfo.setmeta( obj )
+  setmetatable( obj, { __index = LockedAsyncInfo  } )
+end
+function LockedAsyncInfo.new( loopLen, lockKind )
+   local obj = {}
+   LockedAsyncInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( loopLen, lockKind )
+   end
+   return obj
+end
+function LockedAsyncInfo:__init( loopLen, lockKind )
+
+   self.loopLen = loopLen
+   self.lockKind = lockKind
+end
+function LockedAsyncInfo:get_loopLen()
+   return self.loopLen
+end
+function LockedAsyncInfo:get_lockKind()
+   return self.lockKind
+end
+
+
 local NSInfo = {}
 _moduleObj.NSInfo = NSInfo
 function NSInfo:isLockedAsync(  )
 
    return #self.lockedAsyncStack > 0
+end
+function NSInfo:isNoasync(  )
+
+   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync then
+      return true
+   end
+   
+   for __index, info in ipairs( self.lockedAsyncStack ) do
+      do
+         local _switchExp = info:get_lockKind()
+         if _switchExp == Nodes.LockKind.AsyncLock or _switchExp == Nodes.LockKind.LuaLock then
+            return true
+         end
+      end
+      
+   end
+   
+   return false
 end
 function NSInfo.new( typeInfo, pos )
    local obj = {}
@@ -246,9 +289,9 @@ function NSInfo:__init(typeInfo, pos)
    self.typeInfo = typeInfo
    self.pos = pos
 end
-function NSInfo:incLock(  )
+function NSInfo:incLock( lockKind )
 
-   table.insert( self.lockedAsyncStack, #self.loopScopeQueue )
+   table.insert( self.lockedAsyncStack, LockedAsyncInfo.new(#self.loopScopeQueue, lockKind) )
 end
 function NSInfo:decLock(  )
 
@@ -262,11 +305,20 @@ function NSInfo:canBreak(  )
       return loopQueueLen > 0
    end
    
-   return self.lockedAsyncStack[len] < loopQueueLen
+   return self.lockedAsyncStack[len]:get_loopLen() < loopQueueLen
 end
 function NSInfo:canAccessNoasync(  )
 
-   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync or #self.lockedAsyncStack > 0 then
+   local len = #self.lockedAsyncStack
+   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync or (len > 0 and self.lockedAsyncStack[len]:get_lockKind() ~= Nodes.LockKind.Unsafe ) then
+      return true
+   end
+   
+   return false
+end
+function NSInfo:canAccessLuaval(  )
+
+   if #self.lockedAsyncStack > 0 then
       return true
    end
    
@@ -314,6 +366,68 @@ function TransUnitIF:__init(  )
 end
 
 
+local ErrMess = {}
+_moduleObj.ErrMess = ErrMess
+function ErrMess.setmeta( obj )
+  setmetatable( obj, { __index = ErrMess  } )
+end
+function ErrMess.new( mess, pos )
+   local obj = {}
+   ErrMess.setmeta( obj )
+   if obj.__init then
+      obj:__init( mess, pos )
+   end
+   return obj
+end
+function ErrMess:__init( mess, pos )
+
+   self.mess = mess
+   self.pos = pos
+end
+function ErrMess:get_mess()
+   return self.mess
+end
+function ErrMess:get_pos()
+   return self.pos
+end
+
+
+local function sortMess( list )
+
+   table.sort( list, function ( mess1, mess2 )
+   
+      local pos1 = mess1:get_pos():get_orgPos()
+      local pos2 = mess2:get_pos():get_orgPos()
+      if pos1.streamName < pos2.streamName then
+         return true
+      end
+      
+      if pos1.streamName > pos2.streamName then
+         return false
+      end
+      
+      if pos1.lineNo < pos2.lineNo then
+         return true
+      end
+      
+      if pos1.lineNo > pos2.lineNo then
+         return false
+      end
+      
+      if pos1.column < pos2.column then
+         return true
+      end
+      
+      if pos1.column > pos2.column then
+         return false
+      end
+      
+      return mess1:get_mess() < mess2:get_mess()
+   end )
+   return list
+end
+_moduleObj.sortMess = sortMess
+
 local TransUnitBase = {}
 setmetatable( TransUnitBase, { ifList = {TransUnitIF,} } )
 _moduleObj.TransUnitBase = TransUnitBase
@@ -345,7 +459,7 @@ function TransUnitBase:addErrMess( pos, mess )
       mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'."
    end
    
-   table.insert( self.errMessList, string.format( "%s:%d:%d: error: %s", pos.streamName, pos.lineNo, pos.column, mess) )
+   table.insert( self.errMessList, ErrMess.new(string.format( "%s: error: %s", pos:getDisplayTxt(  ), mess), pos) )
 end
 function TransUnitBase:error( mess )
 
@@ -477,11 +591,13 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
    do
       local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
       if _exp ~= nil then
+         
          typeInfo = _exp
          nsInfo = _lune.unwrap( self.nsInfoMap[typeInfo])
          
          if _lune.nilacc( typeInfo:get_scope(), 'get_parent', 'callmtd' ) ~= self.scope then
             self:addErrMess( errPos, string.format( "multiple class(%s)", typeInfo:getTxt( self.typeNameCtrl )) )
+            
             self:error( "stop by error" )
          end
          
@@ -624,7 +740,7 @@ function SimpeTransUnit:errorAt( pos, mess )
 
    self:addErrMess( pos, mess )
    for __index, errmess in ipairs( self.errMessList ) do
-      Util.errorLog( errmess )
+      Util.errorLog( errmess:get_mess() )
    end
    
    do
