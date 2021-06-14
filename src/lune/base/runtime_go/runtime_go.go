@@ -89,8 +89,8 @@ func Lns_InitMod() {
 
 func createEnv(async bool, runnerName string, runnerId int) *LnsEnv {
 	env := &LnsEnv{}
-	env.valStack = []LnsAny{}
-	env.nilAccStack = []LnsAny{}
+	env.valStack = make([]LnsAny, 2)
+	env.nilAccStack = make([]LnsAny, 2)
 	env.runnerName = runnerName
 	env.runnerId = runnerId
 	env.LuaVM = createVM()

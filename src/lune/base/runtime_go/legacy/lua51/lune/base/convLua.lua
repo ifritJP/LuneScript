@@ -1116,9 +1116,10 @@ function ConvFilter:outputMeta( node )
    local function outputDepend( typeInfo, moduleTypeInfo )
    
       local typeId = typeInfo:get_typeId()
-      if self.processInfo:get_orgInfo() == typeId:get_processInfo() or not Ast.TypeInfo.hasParent( moduleTypeInfo ) then
+      if self.processInfo:get_orgInfo() == typeId:get_processInfo() then
          return ExportIdKind.Normal
       end
+      
       
       if typeId:isSwichingId(  ) then
          return ExportIdKind.Discarded

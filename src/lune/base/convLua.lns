@@ -798,26 +798,16 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
 
    fn outputDepend( typeInfo:&Ast.TypeInfo, moduleTypeInfo:&Ast.TypeInfo): ExportIdKind {
       let typeId = typeInfo.$typeId;
-      if self.processInfo.$orgInfo == typeId.$processInfo or
-         not Ast.TypeInfo.hasParent( moduleTypeInfo )
-      {
+      if self.processInfo.$orgInfo == typeId.$processInfo {
          return .Normal;
       }
+      // if not Ast.TypeInfo.hasParent( moduleTypeInfo ) {
+      //    return .Discarded;
+      // }
+
+      
       if typeId.isSwichingId() {
          return .Discarded;
-         
-         // // ID の置き換えを行なっている場合、
-         // // 内部 ID との置き換えが必要なので __dependIdMap を出力する
-         // let! moduleIndex = importProcessInfo2Index[ typeId.$processInfo ] {
-         //    Util.err(
-         //       "illeglal processInfo -- %d (%s:%s)"
-         //       ( typeId.id, typeInfo.getTxt(##), self.moduleTypeInfo.getTxt(##) ) );
-         // };
-         // let extId = typeId.$orgId;
-         // self.writeln(
-         //    "__dependIdMap[ %d ] = { %d, %d } -- %s"
-         //    ( typeInfo.$typeId.id, moduleIndex, extId, typeInfo.getTxt(##) ) );
-         // return .Depend;
       }
       if Ast.isExtId( typeInfo ) {
          // 処理内で、外部の型を & などに変換している場合、
@@ -857,6 +847,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
       }
       wroteTypeIdSet.add( typeId );
 
+      //self.writeln( "-- %s" (self.getFullName( typeInfo )));
       self.write( "__typeInfoList[%d] = " (listIndex) );
       listIndex = listIndex + 1;
 
