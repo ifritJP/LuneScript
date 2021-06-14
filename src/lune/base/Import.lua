@@ -1820,13 +1820,13 @@ function ModuleLoader:craeteModuleInfo( moduleMeta )
    end
    
 end
-function ModuleLoader.new( exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth )
+function ModuleLoader.new( enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth )
    local obj = {}
    ModuleLoader.setmeta( obj )
-   if obj.__init then obj:__init( exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth ); end
+   if obj.__init then obj:__init( enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth ); end
    return obj
 end
-function ModuleLoader:__init(exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth) 
+function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth) 
    Runner.Runner.__init( self)
    
    
@@ -1872,7 +1872,14 @@ function ModuleLoader:__init(exportInfo, workImportModuleInfo, modulePath, fullM
       end
       
    end
-   self:start( 0, string.format( "ModuleLoader - %s", fullModulePath) )
+   
+   if enableAsync then
+      self:start( 0, string.format( "ModuleLoader - %s", fullModulePath) )
+   else
+    
+      self.loaderFunc(  )
+   end
+   
 end
 function ModuleLoader:runMain(  )
 
@@ -1900,7 +1907,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
    
    do
       local metaInfo = metaInfoStem
-      Log.log( Log.Level.Info, __func__, 943, function (  )
+      Log.log( Log.Level.Info, __func__, 944, function (  )
       
          return string.format( "%s processing", fullModulePath)
       end )
@@ -2226,7 +2233,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
                   
                elseif _switchExp == Ast.TypeInfoKind.Module then
                   self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-                  Log.log( Log.Level.Debug, __func__, 1261, function (  )
+                  Log.log( Log.Level.Debug, __func__, 1262, function (  )
                   
                      return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
                   end )
@@ -2444,7 +2451,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1459, function (  )
+   Log.log( Log.Level.Info, __func__, 1460, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, baseDir)
    end )
@@ -2453,7 +2460,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local exportInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if exportInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1467, function (  )
+      Log.log( Log.Level.Info, __func__, 1468, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2471,7 +2478,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   return ModuleLoader.new(exportInfo, self.importModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth)
+   return ModuleLoader.new(false, exportInfo, self.importModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth)
 end
 
 
@@ -2513,7 +2520,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = exportInfo
    
-   Log.log( Log.Level.Info, __func__, 1518, function (  )
+   Log.log( Log.Level.Info, __func__, 1519, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2529,13 +2536,13 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    
    modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
    
-   Log.log( Log.Level.Info, __func__, 1532, function (  )
+   Log.log( Log.Level.Info, __func__, 1533, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, baseDir)
    end )
    
    
-   local moduleLoader = ModuleLoader.new(nil, self.importModuleInfo, modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth)
+   local moduleLoader = ModuleLoader.new(false, nil, self.importModuleInfo, modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth)
    return moduleLoader
 end
 

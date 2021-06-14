@@ -190,6 +190,7 @@ class AstCreater extend Runner.Runner {
          parserSrc, true, baseDir, stdinFile, false, self.mod,
          fn ( exportInfo:&frontInterface.ExportInfo ) __trans {
             self.exportInfo = exportInfo;
+            // exportInfo をセットしてから flag をセットする。
             if! self.exportInfoReadyFlag {
                _exp.set();
             }
@@ -223,8 +224,20 @@ class AstCreater extend Runner.Runner {
          Log._log2( .Log, "generated AST -- %s" (mod) );
       };
 
+      let lnsPath;
+      match parserSrc {
+         case .LnsCode( _, path ) {
+            lnsPath = path;
+         }
+         case .LnsPath( path, _ ) {
+            lnsPath = path;
+         }
+         case .Parser( path, _, _ ) {
+            lnsPath = path;
+         }
+      }
 
-      self.start( __lns.runMode.Sync, "createAst - %s" (mod) );
+      self.start( __lns.runMode.Sync, "createAst - %s" (lnsPath) );
       //self.converter();
    }
 
@@ -1688,7 +1701,7 @@ class GoConverter extend Runner.Runner {
             option.testing, path, self.memStream, ast, goOpt );
          ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
       };
-      self.start( __lns.runMode.Queue, "convgo -- %s" (path) );
+      self.start( __lns.runMode.Queue, "convgo -- %s" (scriptPath) );
    }
 
    pro override fn runMain() __async mut {

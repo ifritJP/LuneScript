@@ -850,7 +850,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    }
 
    
-   pub fn __init( exportInfo:&frontInterface.ExportInfo!,
+   pub fn __init( enableAsync:bool, exportInfo:&frontInterface.ExportInfo!,
                   workImportModuleInfo: &frontInterface.ImportModuleInfo,
                   modulePath:str, fullModulePath:str, baseDir:str!,
                   moduleLoaderParam:&ModuleLoaderParam,
@@ -909,10 +909,11 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
          }
       };
 
-      //self.loaderFunc();
-      // 現状、ここを非同期にすると、 lnstags がビルドできない。
-      //
-      self.start( __lns.runMode.Sync, "ModuleLoader - %s" (fullModulePath) );
+      if enableAsync {
+         self.start( __lns.runMode.Sync, "ModuleLoader - %s" (fullModulePath) );
+      } else {
+         self.loaderFunc();
+      }
    }
 
    pro override fn runMain() __async mut {
@@ -949,14 +950,9 @@ fn ModuleLoader.processImportFromFile(
       {
          let loaderMap:Map<ModuleLoader,int> = {};
          forsort dependInfo, dependName in metaInfo.__dependModuleMap {
-            //if dependInfo.use {
-            // Testing.lng などは、 use でなくてもインポートしないとエラーするので、
-            // 常にインポートする。
             let mut workProcessInfo = processInfo.newUser();
-            //let mut moduleInfo = self.processImportMain(
             let mut moduleLoader = self.processImportMain(
                workProcessInfo, baseDir, dependName, depth + 1 );
-            //}
             let typeId = (unwrap dependInfo.typeId)@@int;
             loaderMap[ moduleLoader ] = typeId;
          }
@@ -1429,8 +1425,6 @@ alias で置き換えている元の Type → alias の型
                   validMutControl:bool ) __async
    {
       self.baseDir = baseDir;
-      //self.curPos = curPos;
-      //self.validMutControl = validMutControl;
       self.importModuleInfo = importModuleInfo;
       self.moduleType = moduleType;
       self.macroCtrl = macroCtrl;
@@ -1440,10 +1434,6 @@ alias で置き換えている元の Type → alias の型
       self.importModule2ExportInfo = {};
       self.importModuleName2ModuleInfo = {};
    }
-
-   // fn processImportMain(
-   //    processInfo:Ast.ProcessInfo, baseDir:str!,
-   //    mut modulePath:str, depth:int ) mut : &frontInterface.ModuleInfo;
 }
 
 pub fn Import.createModuleLoader(
@@ -1477,7 +1467,7 @@ pub fn Import.createModuleLoader(
 
 
    return new ModuleLoader(
-      exportInfo, self.importModuleInfo,
+      false, exportInfo, self.importModuleInfo,
       modulePath, fullModulePath, baseDir, moduleLoaderParam, depth );
 }
 
@@ -1520,7 +1510,6 @@ pub fn Import.loadModuleInfo( moduleLoader:ModuleLoader ) mut :
    return exportInfo, "";
 }
 
-// fn Import.processImportMain(
 fn ModuleLoader.processImportMain(
    processInfo:Ast.ProcessInfo, mut baseDir:str!,
    mut modulePath:str, depth:int ) mut : ModuleLoader
@@ -1534,16 +1523,9 @@ fn ModuleLoader.processImportMain(
 
 
    let mut moduleLoader = new ModuleLoader(
-      nil, self.importModuleInfo,
+      false, nil, self.importModuleInfo,
       modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth );
    return moduleLoader;
-
-   // let! moduleInfo = moduleLoader.getResult() {
-   //    self.transUnitIF.error( moduleLoader.$err );
-   // };
-   // self.applyExportInfo( moduleInfo );
-   
-   // return moduleInfo;
 }
 
 pub fn Import.processImport(
