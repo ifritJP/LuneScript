@@ -490,7 +490,7 @@ MetaOrModule.Export = { "Export", {{}}}
 MetaOrModule._name2Val["Export"] = MetaOrModule.Export
 MetaOrModule.MetaRaw = { "MetaRaw", {{}}}
 MetaOrModule._name2Val["MetaRaw"] = MetaOrModule.MetaRaw
-MetaOrModule.Module = { "Module", {{}}}
+MetaOrModule.Module = { "Module", {{},{}}}
 MetaOrModule._name2Val["Module"] = MetaOrModule.Module
 
 

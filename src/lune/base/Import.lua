@@ -1791,10 +1791,11 @@ function ModuleLoader:craeteModuleInfo( moduleMeta )
    do
       local _matchExp = moduleMeta:get_metaOrModule()
       if _matchExp[1] == frontInterface.MetaOrModule.Module[1] then
-         local moduleInfo = _matchExp[2][1]
+         local _ = _matchExp[2][1]
+         local exportInfo = _matchExp[2][2]
       
-         self:applyExportInfo( moduleInfo:get_exportInfo() )
-         return moduleInfo:get_exportInfo()
+         self:applyExportInfo( exportInfo )
+         return exportInfo
       elseif _matchExp[1] == frontInterface.MetaOrModule.Export[1] then
          local exportInfo = _matchExp[2][1]
       
@@ -1813,8 +1814,6 @@ function ModuleLoader:craeteModuleInfo( moduleMeta )
          self.importProcessInfo:switchIdProvier( Ast.IdType.Base )
          self.importModuleInfo:remove(  )
          
-         moduleMeta:set_metaOrModule( _lune.newAlge( frontInterface.MetaOrModule.Module, {moduleInfo}) )
-         
          return moduleInfo:get_exportInfo()
       end
    end
@@ -1830,6 +1829,7 @@ function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modu
    Runner.Runner.__init( self)
    
    
+   self.syncFlag = nil
    self.moduleLoaderParam = moduleLoaderParam
    self.result = ModuleLoaderResult.new(exportInfo, modulePath, fullModulePath, baseDir, "", depth, {})
    
@@ -1838,6 +1838,7 @@ function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modu
    self.curPos = moduleLoaderParam:get_latestPos()
    self.macroCtrl = Macro.MacroCtrl.new(moduleLoaderParam:get_macroEval())
    self.importModuleInfo = workImportModuleInfo:clone(  )
+   self.fullModulePath = fullModulePath
    
    self.importProcessInfo = moduleLoaderParam:get_processInfo():newUser(  )
    
@@ -1877,7 +1878,9 @@ function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modu
       self:start( 0, string.format( "ModuleLoader - %s", fullModulePath) )
    else
     
+      self.syncFlag = nil
       self.loaderFunc(  )
+      _lune.nilacc( self.syncFlag, 'set', 'callmtd'  )
    end
    
 end
@@ -1888,10 +1891,23 @@ end
 function ModuleLoader:getResult(  )
 
    
+   _lune.nilacc( self.syncFlag, 'wait', 'callmtd'  )
+   
    return self.result
 end
 function ModuleLoader:getExportInfo(  )
+   local __func__ = '@lune.@base.@Import.ModuleLoader.getExportInfo'
 
+   
+   _lune.nilacc( self.syncFlag, 'wait', 'callmtd'  )
+   
+   if not self.result:get_exportInfo() then
+      Log.log( Log.Level.Err, __func__, 944, function (  )
+      
+         return string.format( "exportInfo is nil -- %s", self.fullModulePath)
+      end )
+      
+   end
    
    return self.result:get_exportInfo()
 end
@@ -1907,7 +1923,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
    
    do
       local metaInfo = metaInfoStem
-      Log.log( Log.Level.Info, __func__, 944, function (  )
+      Log.log( Log.Level.Info, __func__, 961, function (  )
       
          return string.format( "%s processing", fullModulePath)
       end )
@@ -1926,11 +1942,8 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
             for __index, dependName in ipairs( __sorted ) do
                local dependInfo = __map[ dependName ]
                do
-                  
                   local workProcessInfo = processInfo:newUser(  )
-                  
                   local moduleLoader = self:processImportMain( workProcessInfo, baseDir, dependName, depth + 1 )
-                  
                   local typeId = math.floor((_lune.unwrap( dependInfo['typeId']) ))
                   loaderMap[moduleLoader] = typeId
                end
@@ -2233,7 +2246,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
                   
                elseif _switchExp == Ast.TypeInfoKind.Module then
                   self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-                  Log.log( Log.Level.Debug, __func__, 1262, function (  )
+                  Log.log( Log.Level.Debug, __func__, 1274, function (  )
                   
                      return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
                   end )
@@ -2451,7 +2464,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1460, function (  )
+   Log.log( Log.Level.Info, __func__, 1466, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, baseDir)
    end )
@@ -2460,7 +2473,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local exportInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if exportInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1468, function (  )
+      Log.log( Log.Level.Info, __func__, 1474, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2520,7 +2533,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = exportInfo
    
-   Log.log( Log.Level.Info, __func__, 1519, function (  )
+   Log.log( Log.Level.Info, __func__, 1525, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2529,6 +2542,7 @@ function Import:loadModuleInfo( moduleLoader )
    return exportInfo, ""
 end
 
+
 function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth )
    local __func__ = '@lune.@base.@Import.ModuleLoader.processImportMain'
 
@@ -2536,7 +2550,7 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    
    modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
    
-   Log.log( Log.Level.Info, __func__, 1533, function (  )
+   Log.log( Log.Level.Info, __func__, 1538, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, baseDir)
    end )

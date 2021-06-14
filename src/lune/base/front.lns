@@ -130,20 +130,19 @@ class ModuleMgr {
                moduleInfo:&frontInterface.ModuleInfo ) mut
    {
       let mod = moduleInfo.$fullName;
-      if self.loadedMetaMap[ mod ] {
-         if mod == "lune.base.Testing" {
-            // lune.base.Testing は テストケース解析時に自動で import される。
-            // ここでエラーにするとテスト出来ないので、エラーにしない。
-         } else {
-            // meta を単独で読み込んだ後に AST 解析すると、
-            // Ast.ProcessInfo に不整合が起るので、ここでエラーにする。
-            Util.err( "the meta is already loaded -- %s" (mod) );
-         }
-      }
-      //let mut moduleInfo = createModuleInfo( ast, mod, moduleId );
+      // if self.loadedMetaMap[ mod ] {
+      //    if mod == "lune.base.Testing" {
+      //       // lune.base.Testing は テストケース解析時に自動で import される。
+      //       // ここでエラーにするとテスト出来ないので、エラーにしない。
+      //    } else {
+      //       // meta を単独で読み込んだ後に AST 解析すると、
+      //       // Ast.ProcessInfo に不整合が起るので、ここでエラーにする。
+      //       Util.err( "the meta is already loaded -- %s" (mod) );
+      //    }
+      // }
       self.mod2info.add( mod, UptodateInfo.Update( moduleInfo, ast ) );
-      self.loadedMetaMap[ mod ] = new frontInterface.ModuleMeta(
-         ast.$streamName, .Module( moduleInfo ));
+      // self.loadedMetaMap[ mod ] = new frontInterface.ModuleMeta(
+      //    ast.$streamName, .Module( moduleInfo ));
    }
 
    pub fn addMeta( mod:str, meta:frontInterface.ModuleMeta ) mut {
@@ -246,15 +245,26 @@ class AstCreater extend Runner.Runner {
    }
    
 
-   local fn getAst() : &AstInfo.ASTInfo, &frontInterface.ModuleInfo {
+   local fn getAst() :
+      &AstInfo.ASTInfo, &frontInterface.ModuleInfo, frontInterface.ModuleMeta
+   {
       __join( self );
-      return unwrap self.ast, unwrap self.moduleInfo;
+      let! exportInfo = self.exportInfo {
+         Util.err( "exportInfo is nil -- %s" (self.mod) );
+      };
+      let mut moduleMeta = new frontInterface.ModuleMeta(
+         exportInfo.$streamName, .Export( exportInfo ));
+      return unwrap self.ast, unwrap self.moduleInfo, moduleMeta;
    }
 
    local fn getExportInfo() : &frontInterface.ExportInfo! {
       if! self.exportInfoReadyFlag {
          _exp.wait();
       }
+      if not self.exportInfo {
+         Log._log2( Log.Level.Err, "exportInfo is nil -- %s" (self.mod) );
+      }
+
       return self.exportInfo;
    }
    
@@ -458,8 +468,13 @@ fn Front.applyAstResult( result:&CreateAstResult ) mut : &AstInfo.ASTInfo {
          return ast;
       }
       case .Creater( astCreater ) {
-         let ast, moduleInfo = astCreater.getAst();
+         let ast, moduleInfo, mut meta = astCreater.getAst();
+         Log._log2( .Log, "applyAstResult -- %s" ( ast.$exportInfo.$fullName ));
          self.moduleMgr.add( ast, moduleInfo );
+         self.moduleMgr.addMeta( ast.$exportInfo.$fullName, meta );
+         
+         self.mod2loader[ ast.$exportInfo.$fullName ] = nil;
+         self.mod2astCreate[ ast.$exportInfo.$fullName ] = nil;
          
          return ast;
       }
@@ -949,9 +964,9 @@ fn Front.loadParserToLuaCode(
 
    // let mut meta = new frontInterface.ModuleMeta(
    //    unwrap loadFromLuaTxt( metaTxt ), path, createModuleInfo( ast, mod, moduleId ) );
-   let mut meta = new frontInterface.ModuleMeta(
-      path, .Module( createModuleInfo( ast, mod, moduleId ) ) );
-   return meta, luaTxt;
+   // let mut meta = new frontInterface.ModuleMeta(
+   //    path, .Module( createModuleInfo( ast, mod, moduleId ) ) );
+   return unwrap self.moduleMgr.getMeta(mod), luaTxt;
 }
 
 
@@ -1173,10 +1188,10 @@ fn Front.loadMeta(
          exportInfo.$streamName, .Export( exportInfo ));
       self.moduleMgr.addMeta( orgMod, meta );
 
-      // self.mod2loader をクリアするのは self.moduleMgr.addMeta() の後にする。
-      // こうしないと、self.moduleMgr.getMeta() に反映されないので、
-      // 再度 .meta から読み込んでしまう。
-      self.mod2loader[ orgMod ] = nil;
+      // // self.mod2loader をクリアするのは self.moduleMgr.addMeta() の後にする。
+      // // こうしないと、self.moduleMgr.getMeta() に反映されないので、
+      // // 再度 .meta から読み込んでしまう。
+      // self.mod2loader[ orgMod ] = nil;
       return meta;
    }
 
@@ -1927,7 +1942,7 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
                updateInfo.$scriptPath, .ConvMeta, streamLua, streamMeta );       
          }
          case .CreateAst {
-            if not self.moduleMgr.getAst( mod ) {
+            if not self.mod2astCreate[ mod ] and not self.moduleMgr.getAst( mod ) {     
                let mut result = self.createAstSub(
                   new frontInterface.ImportModuleInfo(),
                   Types.ParserSrc.LnsPath( updateInfo.$scriptPath, mod ), baseDir,

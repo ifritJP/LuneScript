@@ -189,6 +189,7 @@ pub fn ExportInfo.assign( assignName: str ) : ExportInfo {
 .lns ファイルの解析終了後の情報。
 */
 pub class ModuleInfo {
+   /** LoadMeta で利用する ExportInfo とは異なる可能性がある。 */
    pri let exportInfo:&ExportInfo {pub};
 
    advertise exportInfo;
@@ -202,7 +203,7 @@ pub class ModuleInfo {
 pub alge MetaOrModule {
    MetaRaw( Luaval<&stem> ),
    Export( &ExportInfo ),
-   Module( &ModuleInfo )
+   Module( &ModuleInfo, &ExportInfo )
 }
 
 pub class ModuleMeta {

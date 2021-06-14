@@ -786,6 +786,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    let curPos:&Parser.Position;
    let moduleLoaderParam:&ModuleLoaderParam;
    let mut importModuleInfo:frontInterface.ImportModuleInfo;
+   let fullModulePath:str;
    
    let macroCtrl:Macro.MacroCtrl;
    
@@ -795,6 +796,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    
    let loaderFunc:LoaderFunc;
    let importProcessInfo:Ast.ProcessInfo;
+   let mut syncFlag:__lns.Sync.Flag!;
 
    fn processImportFromFile(
       processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
@@ -820,9 +822,9 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ExportInfo
    {
       _match moduleMeta.$metaOrModule {
-         case .Module( moduleInfo ) {
-            self.applyExportInfo( moduleInfo.$exportInfo );
-            return moduleInfo.$exportInfo;
+         case .Module( _, exportInfo ) {
+            self.applyExportInfo( exportInfo );
+            return exportInfo;
          }
          case .Export( exportInfo ) {
             self.applyExportInfo( exportInfo );
@@ -842,15 +844,13 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
             self.importProcessInfo.switchIdProvier( .Base );
             self.importModuleInfo.remove();
             
-            moduleMeta.set_metaOrModule( .Module( moduleInfo ) );
-            
             return moduleInfo.$exportInfo;
          }
       }
    }
 
    
-   pub fn __init( exportInfo:&frontInterface.ExportInfo!,
+   pub fn __init( enableAsync:bool, exportInfo:&frontInterface.ExportInfo!,
                   workImportModuleInfo: &frontInterface.ImportModuleInfo,
                   modulePath:str, fullModulePath:str, baseDir:str!,
                   moduleLoaderParam:&ModuleLoaderParam,
@@ -858,6 +858,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    {
       super();
 
+      self.syncFlag = nil;
       self.moduleLoaderParam = moduleLoaderParam;
       self.result = new ModuleLoaderResult( 
          exportInfo, 
@@ -873,6 +874,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       self.curPos = moduleLoaderParam.$latestPos;
       self.macroCtrl = new Macro.MacroCtrl( moduleLoaderParam.$macroEval );
       self.importModuleInfo = workImportModuleInfo.clone();
+      self.fullModulePath = fullModulePath;
 
       self.importProcessInfo = moduleLoaderParam.$processInfo.newUser();
 
@@ -905,14 +907,22 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
                }
                self.importModuleInfo.remove();
             }
-
          }
       };
 
-      //self.loaderFunc();
-      // 現状、ここを非同期にすると、 lnstags がビルドできない。
-      //
-      self.start( __lns.runMode.Sync, "ModuleLoader - %s" (fullModulePath) );
+      if enableAsync {
+         self.start( __lns.runMode.Sync, "ModuleLoader - %s" (fullModulePath) );
+      } else {
+         // loaderFunc() を実行中に、別のスレッドで LoadMeta されると、
+         // loaderFunc() が終わっていないので、 getExportInfo() が nil になってしまう。
+         // また、 runner は動いていないので __join は素通しされる。
+         // 仮に事前に start させて __join が素通しされないようにしても、
+         // その場合、いつまで runMain() 処理を持続させるかで flag が必要になる。
+         // それなら、 runner を無駄に起動させずに、 flag をここでセットする。
+         self.syncFlag = __lns.Sync.createFlag();
+         self.loaderFunc();
+         self.syncFlag$.set$();
+      }
    }
 
    pro override fn runMain() __async mut {
@@ -921,11 +931,19 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 
    local fn getResult() mut : &ModuleLoaderResult {
       __join( self );
+      self.syncFlag$.wait$();
+      
       return self.result;
    }
 
    pub fn getExportInfo() __async mut : &frontInterface.ExportInfo! {
       __join( self );
+      self.syncFlag$.wait$();
+      
+      if not self.result.$exportInfo {
+         Log._log2( Log.Level.Err,
+                    "exportInfo is nil -- %s" (self.fullModulePath) );
+      }
       return self.result.$exportInfo;
    }
 }
@@ -949,14 +967,9 @@ fn ModuleLoader.processImportFromFile(
       {
          let loaderMap:Map<ModuleLoader,int> = {};
          forsort dependInfo, dependName in metaInfo.__dependModuleMap {
-            //if dependInfo.use {
-            // Testing.lng などは、 use でなくてもインポートしないとエラーするので、
-            // 常にインポートする。
             let mut workProcessInfo = processInfo.newUser();
-            //let mut moduleInfo = self.processImportMain(
             let mut moduleLoader = self.processImportMain(
                workProcessInfo, baseDir, dependName, depth + 1 );
-            //}
             let typeId = (unwrap dependInfo.typeId)@@int;
             loaderMap[ moduleLoader ] = typeId;
          }
@@ -1429,8 +1442,6 @@ alias で置き換えている元の Type → alias の型
                   validMutControl:bool ) __async
    {
       self.baseDir = baseDir;
-      //self.curPos = curPos;
-      //self.validMutControl = validMutControl;
       self.importModuleInfo = importModuleInfo;
       self.moduleType = moduleType;
       self.macroCtrl = macroCtrl;
@@ -1440,10 +1451,6 @@ alias で置き換えている元の Type → alias の型
       self.importModule2ExportInfo = {};
       self.importModuleName2ModuleInfo = {};
    }
-
-   // fn processImportMain(
-   //    processInfo:Ast.ProcessInfo, baseDir:str!,
-   //    mut modulePath:str, depth:int ) mut : &frontInterface.ModuleInfo;
 }
 
 pub fn Import.createModuleLoader(
@@ -1477,7 +1484,7 @@ pub fn Import.createModuleLoader(
 
 
    return new ModuleLoader(
-      exportInfo, self.importModuleInfo,
+      false, exportInfo, self.importModuleInfo,
       modulePath, fullModulePath, baseDir, moduleLoaderParam, depth );
 }
 
@@ -1520,7 +1527,6 @@ pub fn Import.loadModuleInfo( moduleLoader:ModuleLoader ) mut :
    return exportInfo, "";
 }
 
-// fn Import.processImportMain(
 fn ModuleLoader.processImportMain(
    processInfo:Ast.ProcessInfo, mut baseDir:str!,
    mut modulePath:str, depth:int ) mut : ModuleLoader
@@ -1534,16 +1540,9 @@ fn ModuleLoader.processImportMain(
 
 
    let mut moduleLoader = new ModuleLoader(
-      nil, self.importModuleInfo,
+      false, nil, self.importModuleInfo,
       modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth );
    return moduleLoader;
-
-   // let! moduleInfo = moduleLoader.getResult() {
-   //    self.transUnitIF.error( moduleLoader.$err );
-   // };
-   // self.applyExportInfo( moduleInfo );
-   
-   // return moduleInfo;
 }
 
 pub fn Import.processImport(
