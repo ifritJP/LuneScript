@@ -750,6 +750,7 @@ pub fn TransUnit.createAST(
             self.scope = backScope;
             self.funcBlockInfoLinkNo = nil;
          }
+         self.parser = bakParser;
       }
 
       

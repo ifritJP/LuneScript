@@ -328,8 +328,10 @@ function FormatterFilter:processAsyncLock( node, opt )
       local _switchExp = node:get_lockKind()
       if _switchExp == Nodes.LockKind.AsyncLock then
          self:writeln( "__asyncLock {" )
-      elseif _switchExp == Nodes.LockKind.NoasyncLua then
+      elseif _switchExp == Nodes.LockKind.LuaGo then
          self:writeln( "__luago {" )
+      elseif _switchExp == Nodes.LockKind.LuaLock then
+         self:writeln( "__luaLock {" )
       elseif _switchExp == Nodes.LockKind.Unsafe then
          self:writeln( "__unsafe {" )
       end

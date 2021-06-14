@@ -1788,7 +1788,7 @@ function ModuleLoader:applyModuleInfo( moduleInfo )
    end
    
 end
-function ModuleLoader:craeteModuleInfo( moduleMeta, importProcessInfo )
+function ModuleLoader:craeteModuleInfo( moduleMeta )
 
    do
       local _matchExp = moduleMeta:get_metaOrModule()
@@ -1801,13 +1801,13 @@ function ModuleLoader:craeteModuleInfo( moduleMeta, importProcessInfo )
          local metaInfo = _matchExp[2][1]
       
          self.importModuleInfo:add( self.result.modulePath )
-         importProcessInfo:switchIdProvier( Ast.IdType.Ext )
+         self.importProcessInfo:switchIdProvier( Ast.IdType.Ext )
          
          local nameList = Util.splitStr( self.result.modulePath, '[^%./:]+' )
          
-         local moduleInfo = self:processImportFromFile( importProcessInfo, moduleMeta:get_lnsPath(), metaInfo, self.result.fullModulePath, self.result.modulePath, nameList, self.result.baseDir, self.result.depth )
+         local moduleInfo = self:processImportFromFile( self.importProcessInfo, moduleMeta:get_lnsPath(), metaInfo, self.result.fullModulePath, self.result.modulePath, nameList, self.result.baseDir, self.result.depth )
          
-         importProcessInfo:switchIdProvier( Ast.IdType.Base )
+         self.importProcessInfo:switchIdProvier( Ast.IdType.Base )
          self.importModuleInfo:remove(  )
          
          moduleMeta:set_metaOrModule( _lune.newAlge( frontInterface.MetaOrModule.Module, {moduleInfo}) )
@@ -1836,9 +1836,9 @@ function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, fullM
    self.macroCtrl = Macro.MacroCtrl.new(moduleLoaderParam:get_macroEval())
    self.importModuleInfo = workImportModuleInfo:clone(  )
    
-   local importProcessInfo = moduleLoaderParam:get_processInfo():newUser(  )
+   self.importProcessInfo = moduleLoaderParam:get_processInfo():newUser(  )
    
-   local simpleTransUnit = TransUnitIF.SimpeTransUnit.new(moduleLoaderParam:get_ctrl_info(), importProcessInfo, moduleLoaderParam:get_latestPos(), moduleLoaderParam:get_macroMode(), moduleLoaderParam:get_nearCode())
+   local simpleTransUnit = TransUnitIF.SimpeTransUnit.new(moduleLoaderParam:get_ctrl_info(), self.importProcessInfo, moduleLoaderParam:get_latestPos(), moduleLoaderParam:get_macroMode(), moduleLoaderParam:get_nearCode())
    
    self.transUnitIF = simpleTransUnit
    self.globalScope = simpleTransUnit:get_globalScope()
@@ -1855,7 +1855,7 @@ function ModuleLoader:__init(moduleInfo, workImportModuleInfo, modulePath, fullM
                   local _exp = frontInterface.loadMeta( self.importModuleInfo:clone(  ), modulePath, fullModulePath, baseDir, self )
                   if _exp ~= nil then
                      local moduleMeta = _exp
-                     self.result.moduleInfo = self:craeteModuleInfo( moduleMeta, importProcessInfo )
+                     self.result.moduleInfo = self:craeteModuleInfo( moduleMeta )
                   else
                      self.result.err = string.format( "failed to load meta -- %s on %s", fullModulePath, baseDir or "./")
                   end
@@ -2524,12 +2524,9 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
 
    local fullModulePath
    
-   do
-      modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
-   end
+   modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
    
-   
-   Log.log( Log.Level.Info, __func__, 1536, function (  )
+   Log.log( Log.Level.Info, __func__, 1535, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, baseDir)
    end )

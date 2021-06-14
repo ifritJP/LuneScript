@@ -65,7 +65,9 @@ pub alge MetaOrModule {
       エラーにしなくて良いはず。
 
 * バグ
-
+- [ ] anonymous の __noasync チェックが出来ていない。
+      __noasync の anonymous を __async から呼べてしまう。
+  
 - [ ] 公開マクロ内では __var のアクセスを禁止にする。
   
 - [ ] __noasyncLock 内から __luago せずに、 luaval 系にアクセスできてしまう。

@@ -51,7 +51,6 @@ func Util_err(_env *LnsEnv, message string) {
 func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList {
     var list *LnsList
     list = NewLnsList([]LnsAny{})
-    Lns_LockEnvSync( _env, func () {
         {
             _applyForm1, _applyParam1, _applyPrev1 := _env.GetVM().String_gmatch(txt, pattern)
             for {
@@ -62,7 +61,6 @@ func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList {
                 list.Insert(token)
             }
         }
-    })
     return list
 }
 

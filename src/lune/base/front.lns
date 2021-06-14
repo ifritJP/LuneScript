@@ -184,6 +184,7 @@ class AstCreater extend Runner.Runner {
       let mut transUnit = new TransUnit.TransUnit(
          self.moduleId, importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
          true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
+         //true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
          self.option.transCtrlInfo, self.builtinFunc );
 
       return transUnit.createAST( parserSrc, true, baseDir, stdinFile, false, self.mod );
@@ -340,7 +341,7 @@ fn Front.error( message:str ) __async {
 
 fn Front.loadLua( path:str ):Luaval<&stem>! {
    let ret:Luaval<&stem>!;
-   __luago {
+   __luaLock {
       let chunk, err = loadfile( path );
       when! chunk {
          ret = unwrap chunk(##);
@@ -480,7 +481,7 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
       Util.errorLog( err );
    }
    let ret:Luaval<&stem>!;
-   __luago {
+   __luaLock {
       when! chunk {
          if! let mut work = chunk(##) {
             ret = work@@Luaval<stem>;
@@ -497,7 +498,7 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
 pub fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    //--print( txt )
    let chunk, err;
-   __luago {
+   __luaLock {
       chunk, err = _load( txt ## );
    }
    return loadFromChunk( chunk, err );
@@ -974,7 +975,7 @@ fn Front.checkUptodateMeta(
 
    let meta;
    let mut valid = true;
-   __luago {
+   __luaLock {
       meta = metaObj@@=Meta._MetaInfo;
       if meta.$__formatVersion ~= Ver.metaVersion {
          Log._log( .Warn, `{ return "unmatch meta version -- %s" ( metaPath ); } );
@@ -1097,7 +1098,7 @@ fn Front.loadModule( mut mod:str ) __async mut : Luaval<&stem>!, frontInterface.
                // require( mod ) することで、 bind しているモジュールをロードする。
                let workMod;
 
-               __luago {
+               __luaLock {
                   workMod = require( mod );
                }
                // meta は使用しないのでダミーで生成する。

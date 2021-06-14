@@ -288,7 +288,7 @@ class dummyFront extend (frontInterface) {
    pub fn loadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
       // error( "not implements" );
       let modVal, mut moduleMeta;
-      __luago {
+      __luaLock {
          let emptyTable;
          let loaded = _load( "return {}" ## );
          when! loaded {

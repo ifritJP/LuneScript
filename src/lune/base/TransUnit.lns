@@ -1892,7 +1892,8 @@ fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNod
 
 fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    let mut blockDepth = 0;
-   let tokenList:List<&Parser.Token> = [];
+   let mut tokenList:List<&Parser.Token> = [];
+   //tokenList = tokenList.__new( 1000 );
    while true {
       let token = self.getToken( ## );
       if recordToken {
@@ -2000,14 +2001,33 @@ fn TransUnit.analyzeAsyncLock(
    asyncToken: &Parser.Token, lockKind:Nodes.LockKind ) mut : Nodes.Node
 {
    let mut nsInfo = self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
-   if nsInfo.isLockedAsync() {
-      self.addErrMess( asyncToken.pos, "can't nest __asyncLock." );
+   _switch lockKind {
+      case .AsyncLock {
+         if nsInfo.isNoasync() {
+            // noasync 中は __asyncLock できない。
+            self.addErrMess(
+               asyncToken.pos,
+               "can't use __asyncLock on __noasync. -- %s" (nsInfo.$typeInfo.getTxt(##)));
+         }
+      }
+      case .Unsafe, .LuaLock {
+         if nsInfo.isNoasync() {
+            // noasync 中は __unsafe, __luaLock できない。
+            self.addErrMess(
+               asyncToken.pos,
+               "can't use __unsafe or __luaLock on __noasync. -- %s"
+               (nsInfo.$typeInfo.getTxt(##)) );
+         }
+      }
+      case .LuaGo {
+         if not nsInfo.isNoasync() {
+            // async 中は __luago できない。
+            self.addErrMess(
+               asyncToken.pos,
+               "can't use __luago on __async. -- %s" (nsInfo.$typeInfo.getTxt(##)) );
+         }
+      }
    }
-
-   if nsInfo.$typeInfo.$asyncMode == .Noasync and lockKind == .Unsafe {
-      self.addErrMess( asyncToken.pos, "can't use __unsafe on __noasync." );
-   }
-   
 
    nsInfo.incLock( lockKind );
    

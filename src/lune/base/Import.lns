@@ -794,6 +794,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    let globalScope:Ast.Scope;
    
    let loaderFunc:LoaderFunc;
+   let importProcessInfo:Ast.ProcessInfo;
 
    fn processImportFromFile(
       processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
@@ -823,8 +824,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 
    
    fn craeteModuleInfo(
-      moduleMeta:frontInterface.ModuleMeta,
-      importProcessInfo:Ast.ProcessInfo ) mut : &frontInterface.ModuleInfo
+      moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ModuleInfo
    {
       _match moduleMeta.$metaOrModule {
          case .Module( moduleInfo ) {
@@ -833,16 +833,16 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
          }
          case .Meta( metaInfo ) {
             self.importModuleInfo.add( self.result.modulePath );
-            importProcessInfo.switchIdProvier( .Ext );
+            self.importProcessInfo.switchIdProvier( .Ext );
 
             let mut nameList = Util.splitStr(self.result.modulePath, '[^%./:]+' );
 
             let moduleInfo = self.processImportFromFile(
-               importProcessInfo, moduleMeta.$lnsPath, metaInfo,
+               self.importProcessInfo, moduleMeta.$lnsPath, metaInfo,
                self.result.fullModulePath, self.result.modulePath,
                nameList, self.result.baseDir, self.result.depth );
 
-            importProcessInfo.switchIdProvier( .Base );
+            self.importProcessInfo.switchIdProvier( .Base );
             self.importModuleInfo.remove();
             
             moduleMeta.set_metaOrModule( .Module( moduleInfo ) );
@@ -877,17 +877,18 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       self.macroCtrl = new Macro.MacroCtrl( moduleLoaderParam.$macroEval );
       self.importModuleInfo = workImportModuleInfo.clone();
 
-      let mut importProcessInfo = moduleLoaderParam.$processInfo.newUser();
+      self.importProcessInfo = moduleLoaderParam.$processInfo.newUser();
 
       let mut simpleTransUnit = new TransUnitIF.SimpeTransUnit(
-         moduleLoaderParam.$ctrl_info, importProcessInfo, moduleLoaderParam.$latestPos,
+         moduleLoaderParam.$ctrl_info, self.importProcessInfo,
+         moduleLoaderParam.$latestPos,
          moduleLoaderParam.$macroMode, moduleLoaderParam.$nearCode );
 
       self.transUnitIF = simpleTransUnit;
       self.globalScope = simpleTransUnit.$globalScope;
       
 
-      self.loaderFunc = fn () {
+      self.loaderFunc = fn () __async {
          if not self.result.moduleInfo {
             if not self.importModuleInfo.add( fullModulePath ) {
                self.result.err = "recursive import: %s -> %s"
@@ -899,8 +900,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
                      fullModulePath, baseDir, self )
                   {
                      let mut moduleMeta = _exp;
-                     self.result.moduleInfo = self.craeteModuleInfo(
-                        moduleMeta, importProcessInfo );
+                     self.result.moduleInfo = self.craeteModuleInfo( moduleMeta );
                   } else {
                      self.result.err = "failed to load meta -- %s on %s"
                      (  fullModulePath, baseDir or "./" );
@@ -1529,9 +1529,8 @@ fn ModuleLoader.processImportMain(
    mut modulePath:str, depth:int ) mut : ModuleLoader
 {
    let fullModulePath;
-   __asyncLock {
-      modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir );
-   }
+   modulePath, baseDir, fullModulePath =
+      frontInterface.getLuaModulePath( modulePath, baseDir );
    
    Log._log( .Info, `{ return "%s -> %s start on %s"
                        ( self.result.fullModulePath, fullModulePath, baseDir); } );

@@ -2723,6 +2723,11 @@ pub override fn ConvFilter.processExpCall(
       if node.$func.$expType == self.builtinFunc.__lns_runtime_log {
          return false;
       }
+
+      if node.$func.$expType == self.builtinFunc.list___new {
+         self.write( "{}" );
+         return false;
+      }
       
       let prefixNode = fieldNode.$prefix;
 
@@ -3772,7 +3777,7 @@ _ = 1;
    }
 
    pub fn runTestCode( ctrl:Testing.Ctrl, luaCode:str ) {
-      __luago {
+      __luaLock {
          let loaded, mess = _load( luaCode## );
          when! loaded {
             if! let mod = loaded(##) {

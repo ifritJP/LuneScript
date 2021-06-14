@@ -104,6 +104,20 @@ pub class NSInfo {
       return #self.lockedAsyncStack > 0;
    }
 
+   pub fn isNoasync() : bool {
+      if self.typeInfo.$asyncMode == .Noasync {
+         return true;
+      }
+      foreach info in self.lockedAsyncStack {
+         switch info.$lockKind {
+            case .AsyncLock, .LuaLock {
+               return true;
+            }
+         }
+      }
+      return false;
+   }
+   
    pub fn __init( typeInfo:Ast.TypeInfo, pos:&Parser.Position ) {
       self.idSetInfo = new IdSetInfo();
       self.nobody = false;

@@ -2853,13 +2853,13 @@ function convFilter:processAsyncLock( node, opt )
 
    do
       local _switchExp = node:get_lockKind()
-      if _switchExp == Nodes.LockKind.AsyncLock or _switchExp == Nodes.LockKind.NoasyncLua then
+      if _switchExp == Nodes.LockKind.AsyncLock or _switchExp == Nodes.LockKind.LuaLock then
          self:writeln( string.format( "Lns_LockEnvSync( %s, func () {", self.env:getEnv(  )) )
          
          filter( node:get_block(), self, node )
          
          self:writeln( "})" )
-      elseif _switchExp == Nodes.LockKind.Unsafe then
+      elseif _switchExp == Nodes.LockKind.Unsafe or _switchExp == Nodes.LockKind.LuaGo then
          filter( node:get_block(), self, node )
       end
    end
@@ -5861,6 +5861,14 @@ function convFilter:processExpCall( node, opt )
       
       filter( fieldNode:get_prefix(), self, node )
       self:write( ")" )
+      return 
+   end
+   
+   
+   if funcType == self.builtinFuncs.list___new then
+      self:write( "NewLnsList(make([]LnsAny," )
+      filter( _lune.unwrap( node:get_argList()), self, node )
+      self:write( ")[0:0])" )
       return 
    end
    

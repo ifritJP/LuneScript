@@ -9585,12 +9585,15 @@ end
 LockKind.AsyncLock = 0
 LockKind._val2NameMap[0] = 'AsyncLock'
 LockKind.__allList[1] = LockKind.AsyncLock
-LockKind.NoasyncLua = 1
-LockKind._val2NameMap[1] = 'NoasyncLua'
-LockKind.__allList[2] = LockKind.NoasyncLua
-LockKind.Unsafe = 2
-LockKind._val2NameMap[2] = 'Unsafe'
-LockKind.__allList[3] = LockKind.Unsafe
+LockKind.LuaGo = 1
+LockKind._val2NameMap[1] = 'LuaGo'
+LockKind.__allList[2] = LockKind.LuaGo
+LockKind.LuaLock = 2
+LockKind._val2NameMap[2] = 'LuaLock'
+LockKind.__allList[3] = LockKind.LuaLock
+LockKind.Unsafe = 3
+LockKind._val2NameMap[3] = 'Unsafe'
+LockKind.__allList[4] = LockKind.Unsafe
 
 function NodeKind.get_AsyncLock(  )
 

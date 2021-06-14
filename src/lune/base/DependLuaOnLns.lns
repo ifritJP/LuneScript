@@ -60,7 +60,7 @@ pub fn runLuaOnLns(
          loaded, err = _load( luaCode, newEnv );
       }
    } else {
-      __luago {
+      __luaLock {
          loaded, err = _load( luaCode, newEnv );
       }
    }

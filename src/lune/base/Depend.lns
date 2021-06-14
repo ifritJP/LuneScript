@@ -82,7 +82,7 @@ fn searchpath51( mod:str, pathPattern:str ) : str! {
 pub fn getLoadedMod() : Luaval<&Map<str,&stem>>
 {
    let ret;
-   __luago {
+   __luaLock {
       let loaded = unwrap _load( "return package.loaded"## )$(##);
       ret = loaded@@Luaval<&Map<str,&stem>>;
    }

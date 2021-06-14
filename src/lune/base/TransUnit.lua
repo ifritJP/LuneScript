@@ -2242,6 +2242,7 @@ function TransUnit:skipBlock( recordToken )
 
    local blockDepth = 0
    local tokenList = {}
+   
    while true do
       local token = self:getToken(  )
       if recordToken then
@@ -2349,13 +2350,27 @@ end
 function TransUnit:analyzeAsyncLock( asyncToken, lockKind )
 
    local nsInfo = self:getNSInfo( self:getCurrentNamespaceTypeInfo(  ) )
-   if nsInfo:isLockedAsync(  ) then
-      self:addErrMess( asyncToken.pos, "can't nest __asyncLock." )
-   end
-   
-   
-   if nsInfo:get_typeInfo():get_asyncMode() == Ast.Async.Noasync and lockKind == Nodes.LockKind.Unsafe then
-      self:addErrMess( asyncToken.pos, "can't use __unsafe on __noasync." )
+   do
+      local _switchExp = lockKind
+      if _switchExp == Nodes.LockKind.AsyncLock then
+         if nsInfo:isNoasync(  ) then
+            
+            self:addErrMess( asyncToken.pos, string.format( "can't use __asyncLock on __noasync. -- %s", nsInfo:get_typeInfo():getTxt(  )) )
+         end
+         
+      elseif _switchExp == Nodes.LockKind.Unsafe or _switchExp == Nodes.LockKind.LuaLock then
+         if nsInfo:isNoasync(  ) then
+            
+            self:addErrMess( asyncToken.pos, string.format( "can't use __unsafe or __luaLock on __noasync. -- %s", nsInfo:get_typeInfo():getTxt(  )) )
+         end
+         
+      elseif _switchExp == Nodes.LockKind.LuaGo then
+         if not nsInfo:isNoasync(  ) then
+            
+            self:addErrMess( asyncToken.pos, string.format( "can't use __luago on __async. -- %s", nsInfo:get_typeInfo():getTxt(  )) )
+         end
+         
+      end
    end
    
    
@@ -3901,6 +3916,7 @@ function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFl
             self.funcBlockInfoLinkNo = nil
          end
          
+         self.parser = bakParser
       end
       
       
@@ -5061,7 +5077,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1964, function (  )
+         Log.log( Log.Level.Debug, __func__, 1965, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -11556,7 +11572,9 @@ function TransUnit:analyzeStatement( termTxt )
       elseif token.txt == "__asyncLock" then
          statement = self:analyzeAsyncLock( token, Nodes.LockKind.AsyncLock )
       elseif token.txt == "__luago" then
-         statement = self:analyzeAsyncLock( token, Nodes.LockKind.NoasyncLua )
+         statement = self:analyzeAsyncLock( token, Nodes.LockKind.LuaGo )
+      elseif token.txt == "__luaLock" then
+         statement = self:analyzeAsyncLock( token, Nodes.LockKind.LuaLock )
       elseif token.txt == "__unsafe" then
          statement = self:analyzeAsyncLock( token, Nodes.LockKind.Unsafe )
       elseif token.txt == "if" then

@@ -135,7 +135,7 @@ __test {
          print( metaPath );
          let mess;
          let mut moduleMeta:&frontInterface.ModuleMeta! = nil;
-         __luago {
+         __luaLock {
             let loaded;
             loaded, mess = loadfile( metaPath );
             when! loaded {

@@ -2118,7 +2118,7 @@ pub override fn convFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
    _switch node.$lockKind {
-      case .AsyncLock, .NoasyncLua {
+      case .AsyncLock, .LuaLock {
          self.writeln( "Lns_LockEnvSync( %s, func () {"
             (self.env.getEnv()) );
 
@@ -2126,7 +2126,7 @@ pub override fn convFilter.processAsyncLock(
 
          self.writeln( "})" );
       }
-      case .Unsafe {
+      case .Unsafe, .LuaGo {
          filter( node.$block, self, node );
       }
    }
@@ -4744,6 +4744,13 @@ pub override fn convFilter.processExpCall(
       
       filter( fieldNode.$prefix, self, node );
       self.write( ")" );
+      return;
+   }
+
+   if funcType == self.builtinFuncs.list___new {
+      self.write( "NewLnsList(make([]LnsAny," );
+      filter( unwrap node.$argList, self, node );
+      self.write( ")[0:0])" );
       return;
    }
 

@@ -59,7 +59,7 @@ fn runLuaOnLns( code:str, baseDir:str!, async:bool ) : Luaval<&stem>!, str {
             mod = loadFunc();
          }
       } else {
-         __luago {
+         __luaLock {
             mod = loadFunc();
          }
       }
@@ -432,7 +432,7 @@ pub fn MacroCtrl.evalMacroOp(
                ,,block;
             }
          } else {
-            __luago {
+            __luaLock {
                ,,block;
             }
          }

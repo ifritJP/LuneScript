@@ -256,6 +256,24 @@ function NSInfo:isLockedAsync(  )
 
    return #self.lockedAsyncStack > 0
 end
+function NSInfo:isNoasync(  )
+
+   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync then
+      return true
+   end
+   
+   for __index, info in ipairs( self.lockedAsyncStack ) do
+      do
+         local _switchExp = info:get_lockKind()
+         if _switchExp == Nodes.LockKind.AsyncLock or _switchExp == Nodes.LockKind.LuaLock then
+            return true
+         end
+      end
+      
+   end
+   
+   return false
+end
 function NSInfo.new( typeInfo, pos )
    local obj = {}
    NSInfo.setmeta( obj )

@@ -3304,6 +3304,12 @@ function ConvFilter:processExpCall( node, opt )
       end
       
       
+      if node:get_func():get_expType() == self.builtinFunc.list___new then
+         self:write( "{}" )
+         return false
+      end
+      
+      
       local prefixNode = fieldNode:get_prefix()
       
       if prefixNode:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) and node:get_func():get_expType():get_rawTxt() == "_createPipe" then

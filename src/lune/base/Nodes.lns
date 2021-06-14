@@ -1796,7 +1796,9 @@ pub enum LockKind {
    /** __asyncLock */
    AsyncLock,
    /** __luago */
-   NoasyncLua,
+   LuaGo,
+   /** __luaLock */
+   LuaLock,
    /** __unsafe */
    Unsafe,
 }

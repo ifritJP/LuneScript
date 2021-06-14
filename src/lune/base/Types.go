@@ -492,7 +492,6 @@ func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
-    Lns_LockEnvSync( _env, func () {
         {
             _applyForm1, _applyParam1, _applyPrev1 := _env.GetVM().String_gmatch(self.Txt,"\n")
             for {
@@ -503,7 +502,6 @@ func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
                 
             }
         }
-    })
     return count
 }
 

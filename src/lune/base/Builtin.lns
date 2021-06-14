@@ -336,6 +336,7 @@ _DefBuiltinFuncType( [
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+         "__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
       },
    },
    {

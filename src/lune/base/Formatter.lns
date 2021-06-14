@@ -171,8 +171,11 @@ pub override fn FormatterFilter.processAsyncLock(
       case .AsyncLock {
          self.writeln( "__asyncLock {" );
       }
-      case .NoasyncLua {
+      case .LuaGo {
          self.writeln( "__luago {" );
+      }
+      case .LuaLock {
+         self.writeln( "__luaLock {" );
       }
       case .Unsafe {
          self.writeln( "__unsafe {" );
