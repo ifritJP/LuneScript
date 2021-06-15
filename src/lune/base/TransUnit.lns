@@ -521,9 +521,9 @@ enum AnalyzePhase {
 pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    /** 解析状態 */
-   pri let mut analyzingStateQueue:List<AnalyzingState>;
+   pri let analyzingStateQueue:List<AnalyzingState>;
 
-   pri let mut importModuleInfo: frontInterface.ImportModuleInfo;
+   pri let importModuleInfo: frontInterface.ImportModuleInfo;
 
    /** true の場合は mut 制御が有効 */
    pri let mut validMutControl: bool;
@@ -534,7 +534,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    pri let mut moduleType: &Ast.TypeInfo;
 
    // pri let mut globalScope: Ast.Scope;
-   pri let mut topScope: Ast.Scope;
+   pri let topScope: Ast.Scope;
    /** モジュールの最上位スコープ */
    pri let mut moduleScope: Ast.Scope;
    /** macro-statement の最上位スコープ */
@@ -544,7 +544,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    pri let mut tentativeSymbol:TentativeSymbol;
 
    /** クラスの型情報 -> そのクラスを宣言しているノード */
-   pri let mut typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
+   pri let typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
    /** パーサー */
    pri let mut parser: Parser.DefaultPushbackParser;
    pri fn setParser( parser:Parser.DefaultPushbackParser ) mut {
@@ -552,20 +552,20 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    }
    
    /** コメントリスト */
-   pri let mut commentCtrl: Parser.CommentCtrl;
+   pri let commentCtrl: Parser.CommentCtrl;
    
    /** 解析警告メッセージ */
-   pri let mut warnMessList: List<&TransUnitIF.ErrMess> { pub };
+   pri let warnMessList: List<&TransUnitIF.ErrMess> { pub };
 
 
    /** このモジュール内から直接 import しているモジュールのセット */
-   pri let mut importModuleSet: Set<&Ast.TypeInfo>;
+   pri let importModuleSet: Set<&Ast.TypeInfo>;
    
    /** subfile 名のリスト */
-   pri let mut subfileList: str[];
+   pri let subfileList: List<str>;
 
    /** __func__ シンボルを持つ関数 TypeInfo の set */
-   pri let mut has__func__Symbol: Set<&Ast.TypeInfo>;
+   pri let has__func__Symbol: Set<&Ast.TypeInfo>;
 
    /** 解析モード */
    pri let analyzeMode: AnalyzeMode;
@@ -574,12 +574,12 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    /** 解析対象モジュール */
    pri let analyzeModule: str;
 
-   pri let mut helperInfo:frontInterface.LuneHelperInfo;
+   pri let helperInfo:frontInterface.LuneHelperInfo;
 
    /** provide ノード */
    pri let mut provideNode: Nodes.ProvideNode!;
    /** NodeKind -> Node[]  */
-   pri let mut nodeManager: Nodes.NodeManager;
+   pri let nodeManager: Nodes.NodeManager;
 
    /**
 トランスコンパイル先の lua バージョン
@@ -593,7 +593,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    //pri let ctrl_info: &Types.TransCtrlInfo;
 
-   pri let mut macroCtrl:Macro.MacroCtrl;
+   pri let macroCtrl:Macro.MacroCtrl;
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
    pri let macroEval: &Nodes.MacroEval;
    

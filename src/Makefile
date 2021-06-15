@@ -629,12 +629,12 @@ TEST_CASE += async3.lns
 TEST_CASE += async4.lns
 TEST_CASE += async5.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
-TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/,$(addsuffix .log,$(TEST_CASE)))
+TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/error/,$(addsuffix .log,$(TEST_CASE)))
 
 
 
 # テストケースを実行して、テストケース毎にログをログディレクトリに出力する
-$(LOG_DIR)/%.log: test/error/%
+$(LOG_DIR)/error/%.log: test/error/%
 	echo $@ > $@
 	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,exe,$(EXE_OPT) 2>&1)  >> $@
 
@@ -648,6 +648,8 @@ define test-error-all-case
 endef
 
 test-error:
+	-rm $(LOG_DIR)/error/*
+	mkdir -p $(LOG_DIR)/error
 	$(call test-error-all-case,$(LOG_DIR),$(TEST_DIR))
 
 	-$(call exeLune,$(LNSC),$(TEST_DIR),test/error/noexist.lns,exe,2>&1)

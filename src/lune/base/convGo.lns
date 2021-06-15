@@ -103,27 +103,44 @@ pub class Option {
 }
 
 class convFilter extend Nodes.Filter<Opt> {
-   pri let mut stream:Util.SimpleSourceOStream;
-   let mut processMode:ProcessMode;
-   let mut processModeStack:List<ProcessMode>;
-   pri let moduleTypeInfo:&Ast.TypeInfo;
-   pri let moduleScope:&Ast.Scope;
-   pri let mut builtin2runtime:&Map<&Ast.TypeInfo,str>;
-   let mut builtin2runtimeEnv:&Map<&Ast.TypeInfo,str>;
+   let moduleTypeInfo:&Ast.TypeInfo;
+   let moduleScope:&Ast.Scope;
    let builtin2code:&Map<&Ast.SymbolInfo,str>;
-
-   pri let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
-   pri let mut nodeManager:Nodes.NodeManager;
-   pri let mut enableTest:bool;
-   let processInfo: Ast.ProcessInfo;
-   pri let noneNode:Nodes.NoneNode;
+   let enableTest:bool;
+   let noneNode:&Nodes.NoneNode;
    let option:&Option;
    let modDir:str;
-   let mut module2PackSym:Map<&Ast.TypeInfo,str>;
-   let mut env:Env;
-   let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
+   let env:&Env;
    let builtinFuncs:&Builtin.BuiltinFuncType;
+
+   let mut processMode:&ProcessMode;
+   let mut builtin2runtime:&Map<&Ast.TypeInfo,str>;
+   let mut builtin2runtimeEnv:&Map<&Ast.TypeInfo,str>;
+   let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
+
+   let stream:Util.SimpleSourceOStream;
+
+   
+   // processRoot 先頭で設定
    let indexer: NodeIndexer.Indexer;
+   // processRoot 先頭で設定
+   let moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
+
+   // import で設定
+   let module2PackSym:Map<&Ast.TypeInfo,str>;
+
+   // processConvExp で更新
+   let nodeManager:Nodes.NodeManager;
+   
+
+   // processExpCall, outputDeclFunc で更新。
+   // ただし、そのブロック以降のみで利用する。
+   // clone で対応可能
+   let processInfo: Ast.ProcessInfo;
+
+   // 動的な更新は processBlockSub
+   let processModeStack:List<ProcessMode>;
+   
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
                   ast:&AstInfo.ASTInfo, option:&Option )
@@ -2026,6 +2043,8 @@ pub override fn convFilter.processRoot(
             } );
    self.popProcessMode();
 
+   __lns.runtime.log( "start class" );
+
    self.pushProcessMode( .DeclClass );
    _filter( node.$nodeManager.getDeclClassNodeList(),
             fn ( workNode:&Nodes.Node ) {
@@ -2062,6 +2081,8 @@ pub override fn convFilter.processRoot(
       }
    }
 
+   __lns.runtime.log( "process children" );
+   
    foreach child in node.$children {
       if not ignoreNodeInInnerBlockSet.has( child.$kind ) {
          filter( child, self, node );
@@ -4481,7 +4502,9 @@ pub override fn convFilter.processDeclClass(
                self.processInfo, Ast.builtinTypeAsyncItem, nil ) {
                self.outputAsyncItem( node );
             }
-            
+
+            __lns.runtime.log( "class fields (%d) -- %s"
+                               (#node.$fieldList, node.$expType.$rawTxt) );
             foreach fieldNode in node.$fieldList {
                if fieldNode@@@Nodes.DeclMemberNode {
                   // ここではメンバーを処理しない

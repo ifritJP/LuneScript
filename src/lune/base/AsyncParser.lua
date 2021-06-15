@@ -387,7 +387,7 @@ function AsyncItem._fromMapSub( obj, val )
 end
 
 
-local defaultPipeSize = 500
+local defaultPipeSize = 20
 local function setDefaultPipeSize( size )
 
    defaultPipeSize = size

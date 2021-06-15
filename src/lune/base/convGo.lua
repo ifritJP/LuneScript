@@ -2750,6 +2750,8 @@ function convFilter:processRoot( node, opt )
    
    self:popProcessMode(  )
    
+   
+   
    self:pushProcessMode( ProcessMode.DeclClass )
    do
       local function procNode( workNode )
@@ -2790,6 +2792,8 @@ function convFilter:processRoot( node, opt )
       end
       
    end
+   
+   
    
    
    for __index, child in ipairs( node:get_children() ) do
@@ -5556,6 +5560,7 @@ function convFilter:processDeclClass( node, opt )
             if node:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
                self:outputAsyncItem( node )
             end
+            
             
             
             for __index, fieldNode in ipairs( node:get_fieldList() ) do
