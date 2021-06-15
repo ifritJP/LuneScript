@@ -117,6 +117,7 @@ function Pipe:getNext(  )
 end
 function Pipe:run(  )
 
+   self:setup(  )
    local pipe = self.pipe
    if  nil == pipe then
       local _pipe = pipe

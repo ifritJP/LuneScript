@@ -26,6 +26,7 @@ _lune_control default_async_all;
 
 import lune.base.Types;
 import lune.base.Parser;
+import lune.base.AsyncParser;
 import lune.base.Json;
 import lune.base.Util;
 import lune.base.LuaMod;
@@ -352,6 +353,21 @@ usage:
       index = index + 1;
       return argList[ index ];
    }
+   fn getNextOpNonNil():str {
+      if! let nextOp = getNextOp() {
+         return nextOp;
+      }
+      printUsage( 1 );
+   }
+
+   fn getNextOpInt() : int {
+      if! let num = tonumber( getNextOpNonNil() ## ) {
+         return num@@int;
+      }
+      printUsage( 1 );
+   }
+   
+   
 
    Util.setDebugFlag( false );
 
@@ -364,6 +380,9 @@ usage:
             switch ( arg ) {
                case "-i" {
                   useStdInFlag = true;
+               }
+               case "--parserPipeSize" {
+                  AsyncParser.setDefaultPipeSize( getNextOpInt());
                }
                case "-prof" {
                   option.validProf = true;

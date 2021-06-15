@@ -387,20 +387,29 @@ function AsyncItem._fromMapSub( obj, val )
 end
 
 
+local defaultPipeSize = 500
+local function setDefaultPipeSize( size )
+
+   defaultPipeSize = size
+end
+_moduleObj.setDefaultPipeSize = setDefaultPipeSize
+
 local Parser = {}
 setmetatable( Parser, { __index = Async.Pipe } )
 _moduleObj.Parser = Parser
-function Parser.new( streamName, stream, luaMode, overridePos )
+function Parser.new( streamName, stream, luaMode, overridePos, pipeSize )
    local obj = {}
    Parser.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, luaMode, overridePos ); end
+   if obj.__init then obj:__init( streamName, stream, luaMode, overridePos, pipeSize ); end
    return obj
 end
-function Parser:__init(streamName, stream, luaMode, overridePos) 
+function Parser:__init(streamName, stream, luaMode, overridePos, pipeSize) 
    local _
    Async.Pipe.__init( self,nil)
    
    
+   self.stream = stream
+   self.lineList = {}
    self.streamName = streamName
    self.overridePos = overridePos
    self.firstLine = true
@@ -413,10 +422,12 @@ function Parser:__init(streamName, stream, luaMode, overridePos)
    self.keywordSet = keywordSet
    self.typeSet = typeSet
    self.multiCharDelimitMap = multiCharDelimitMap
-   
+end
+function Parser:setup(  )
+
    local lineList = {}
    while true do
-      local line = stream:read( '*l' )
+      local line = self.stream:read( '*l' )
       if  nil == line then
          local _line = line
       
@@ -427,8 +438,7 @@ function Parser:__init(streamName, stream, luaMode, overridePos)
    end
    
    self.lineList = lineList
-   
-   stream:close(  )
+   self.stream:close(  )
 end
 function Parser.create( parserSrc, stdinFile, overridePos )
 
@@ -458,38 +468,35 @@ function Parser.create( parserSrc, stdinFile, overridePos )
          if _matchExp[1] == Types.ParserSrc.LnsCode[1] then
             local txt = _matchExp[2][1]
             local path = _matchExp[2][2]
+            local pipeSize = _matchExp[2][3]
          
-            return path, false, Util.TxtStream.new(txt), ""
+            return path, false, Util.TxtStream.new(txt), "", pipeSize
          elseif _matchExp[1] == Types.ParserSrc.LnsPath[1] then
             local path = _matchExp[2][1]
             local mod = _matchExp[2][2]
+            local pipeSize = _matchExp[2][3]
          
             local stream, mess = createStream( mod, path )
-            return path, false, stream, mess
+            return path, false, stream, mess, pipeSize
          elseif _matchExp[1] == Types.ParserSrc.Parser[1] then
             local path = _matchExp[2][1]
             local luaMode = _matchExp[2][2]
             local mod = _matchExp[2][3]
+            local pipeSize = _matchExp[2][4]
          
             local stream, mess = createStream( mod, path )
-            return path, luaMode, stream, mess
+            return path, luaMode, stream, mess, pipeSize
          end
       end
       
    end
    
-   local streamName, luaMode, stream, mess = createStreamFrom(  )
-   if  nil == streamName or  nil == luaMode or  nil == stream or  nil == mess then
-      local _streamName = streamName
-      local _luaMode = luaMode
-      local _stream = stream
-      local _mess = mess
-   
-      return nil, mess
+   local streamName, luaMode, stream, mess, pipeSize = createStreamFrom(  )
+   if stream ~= nil then
+      return Parser.new(streamName, stream, luaMode, overridePos, pipeSize), ""
    end
    
-   
-   return Parser.new(streamName, stream, luaMode, overridePos), ""
+   return nil, mess
 end
 function Parser:access(  )
 
@@ -562,7 +569,12 @@ local function create( parserSrc, stdinFile, overridePos, async )
       return runner:get_parser(), runner:get_errMess()
    end
    
-   return Parser.create( parserSrc, stdinFile, overridePos )
+   local parser, mess = Parser.create( parserSrc, stdinFile, overridePos )
+   if parser ~= nil then
+      parser:setup(  )
+   end
+   
+   return parser, mess
 end
 _moduleObj.create = create
 

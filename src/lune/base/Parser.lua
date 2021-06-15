@@ -406,7 +406,7 @@ function DefaultPushbackParser:__init(parser)
 end
 function DefaultPushbackParser.createFromLnsCode( code, name )
 
-   return DefaultPushbackParser.new(StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name}), false))
+   return DefaultPushbackParser.new(StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name,nil}), false))
 end
 function DefaultPushbackParser:createPosition( lineNo, column )
 
@@ -471,7 +471,7 @@ function DefaultPushbackParser:pushback(  )
 end
 function DefaultPushbackParser:pushbackStr( name, statement, pos )
 
-   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name}), false, nil, pos)
+   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name,nil}), false, nil, pos)
    
    local list = {}
    while true do

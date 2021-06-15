@@ -3708,7 +3708,7 @@ __test {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
       let mut ast = createAstFromStream(
-         Types.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
+         Types.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
          scriptPath, stream, option );
       stream.close();
       return ast;
@@ -3718,7 +3718,8 @@ __test {
       scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: AstInfo.ASTInfo
    {
       return createAstFromStream(
-         Types.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ) ),
+         Types.ParserSrc.LnsPath(
+            scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
          scriptPath, new Parser.TxtStream( lnsCode ), option );
    }
    

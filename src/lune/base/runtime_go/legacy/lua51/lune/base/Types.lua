@@ -556,12 +556,16 @@ function ParserSrc._from( val )
    return _lune._AlgeFrom( ParserSrc, val )
 end
 
-ParserSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
 ParserSrc._name2Val["LnsCode"] = ParserSrc.LnsCode
-ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
 ParserSrc._name2Val["LnsPath"] = ParserSrc.LnsPath
-ParserSrc.Parser = { "Parser", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} }}}
+ParserSrc.Parser = { "Parser", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
 ParserSrc._name2Val["Parser"] = ParserSrc.Parser
+
+
+local defaultParserPipeSize = 100
+_moduleObj.defaultParserPipeSize = defaultParserPipeSize
 
 
 return _moduleObj

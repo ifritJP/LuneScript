@@ -985,7 +985,6 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.macroEval = macroEval
    self.macroCtrl = Macro.MacroCtrl.new(macroEval)
    self.analyzingStateQueue = {}
-   self.ctrl_info = ctrl_info
    self.ignoreToCheckSymbol_ = false
    self.moduleId = moduleId
    self.helperInfo = frontInterface.LuneHelperInfo.new()
@@ -3875,7 +3874,7 @@ function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFl
          end
          
          
-         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {file,subModule}), true, self.stdinFile, nil )
+         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {file,subModule,nil}), true, self.stdinFile, nil )
          
          self:setParser( Parser.DefaultPushbackParser.new(subParser) )
          

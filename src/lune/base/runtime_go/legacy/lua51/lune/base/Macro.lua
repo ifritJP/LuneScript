@@ -1171,7 +1171,7 @@ local function pushbackTxt( pushbackParser, txtList, streamName, pos )
 
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
-      local parser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName)}), false, nil, pos:get_RawOrgPos() )
+      local parser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
       local workParser = Parser.DefaultPushbackParser.new(parser)
       while true do
          local worktoken = workParser:getTokenNoErr(  )

@@ -69,6 +69,7 @@ pub class TransCtrlInfo {
    pub let mut validAsyncCtrl:bool;
    /** async 属性の default を __async にする */
    pub let mut defaultAsync:bool;
+   /** test を有効にする */
    pub let mut testing:bool;
 }
 
@@ -201,7 +202,9 @@ pub class StdinFile {
 }
 
 pub alge ParserSrc {
-   LnsCode( code:str, path:str ),
-   LnsPath( path:str, moduleName:str ),
-   Parser( path: str, luaMode: bool, moduleName:str ),
+   LnsCode( code:str, path:str, pipeSize:int! ),
+   LnsPath( path:str, moduleName:str, pipeSize:int! ),
+   Parser( path: str, luaMode: bool, moduleName:str, pipeSize:int! ),
 }
+
+pub let defaultParserPipeSize = 100;

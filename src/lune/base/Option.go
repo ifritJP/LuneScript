@@ -103,47 +103,47 @@ func Option_Int2strMode__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
 func Option_Int2strMode_getTxt(arg1 LnsInt) string {
     return Option_Int2strModeMap_[arg1];
 }
-// for 41
-func Option_convExp67(arg1 []LnsAny) LnsAny {
+// for 42
+func Option_convExp68(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 333
-func Option_convExp1006(arg1 []LnsAny) LnsAny {
+// for 334
+func Option_convExp1007(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 328
-func Option_convExp1013(arg1 []LnsAny) LnsAny {
+// for 329
+func Option_convExp1014(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 223
-func Option_convExp815(arg1 []LnsAny) LnsAny {
+// for 224
+func Option_convExp816(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// 51: decl @lune.@base.@Option.getBuildCount
+// 52: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 10783
+    return 10806
 }
 
-// 80: decl @lune.@base.@Option.getRuntimeModule
+// 81: decl @lune.@base.@Option.getRuntimeModule
 func Option_getRuntimeModule(_env *LnsEnv) string {
     return _env.LuaVM.String_format("lune.base.runtime%d", []LnsAny{Ver_luaModVersion})
 }
 
-// 216: decl @lune.@base.@Option.outputLuneMod
+// 217: decl @lune.@base.@Option.outputLuneMod
 func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_141 := path.(string)
-        if path_141 != ""{
-            lune_path = path_141
+        path_142 := path.(string)
+        if path_142 != ""{
+            lune_path = path_142
             
         }
     }
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Option_convExp815(Lns_2DDD(Lns_io_open(lune_path, "w")))
+        _fileObj := Option_convExp816(Lns_2DDD(Lns_io_open(lune_path, "w")))
         if _fileObj == nil{
             return _env.LuaVM.String_format("failed to open -- %s", []LnsAny{lune_path})
         } else {
@@ -159,7 +159,7 @@ func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     return nil
 }
 
-// 261: decl @lune.@base.@Option.analyze
+// 262: decl @lune.@base.@Option.analyze
 func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
     __func__ := "@lune.@base.@Option.analyze"
     var option *Option_Option
@@ -173,11 +173,11 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
     var index LnsInt
     index = 1
     {
-        _file := Option_convExp1013(Lns_2DDD(Lns_io_open("lune.js", "r")))
+        _file := Option_convExp1014(Lns_2DDD(Lns_io_open("lune.js", "r")))
         if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             {
-                _projInfo := Option_convExp1006(Lns_2DDD(Option_ProjInfo1215__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
+                _projInfo := Option_convExp1007(Lns_2DDD(Option_ProjInfo1215__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( file.Read(_env, "*a")) ||
                     _env.SetStackVal( "") ).(string))),nil)))
                 if !Lns_IsNil( _projInfo ) {
@@ -208,6 +208,32 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         
         return argList.GetAt(index).(string)
     }
+    var getNextOpNonNil func(_env *LnsEnv) string
+    getNextOpNonNil = func(_env *LnsEnv) string {
+        {
+            _nextOp := getNextOp(_env)
+            if !Lns_IsNil( _nextOp ) {
+                nextOp := _nextOp.(string)
+                return nextOp
+            }
+        }
+        analyze__printUsage_0_(_env, 1)
+    // insert a dummy
+        return ""
+    }
+    var getNextOpInt func(_env *LnsEnv) LnsInt
+    getNextOpInt = func(_env *LnsEnv) LnsInt {
+        {
+            _num := Lns_tonumber(getNextOpNonNil(_env), nil)
+            if !Lns_IsNil( _num ) {
+                num := _num.(LnsReal)
+                return (LnsInt)(num)
+            }
+        }
+        analyze__printUsage_0_(_env, 1)
+    // insert a dummy
+        return 0
+    }
     Util_setDebugFlag(_env, false)
     var uptodateOpt LnsAny
     uptodateOpt = nil
@@ -219,6 +245,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
                 if _switch1 := (arg); _switch1 == "-i" {
                     useStdInFlag = true
                     
+                } else if _switch1 == "--parserPipeSize" {
+                    AsyncParser_setDefaultPipeSize(_env, getNextOpInt(_env))
                 } else if _switch1 == "-prof" {
                     option.ValidProf = true
                     
@@ -514,8 +542,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         
     }
     if uptodateOpt != nil{
-        uptodateOpt_279 := uptodateOpt.(string)
-        if _switch5 := uptodateOpt_279; _switch5 == "force" {
+        uptodateOpt_291 := uptodateOpt.(string)
+        if _switch5 := uptodateOpt_291; _switch5 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
             
         } else if _switch5 == "forceAll" {
@@ -528,7 +556,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
             
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_279)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_291)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -581,14 +609,14 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 673, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 692, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.LuaVM.String_format("mode is '%s'", []LnsAny{Option_ModeKind_getTxt( option.Mode)})
     }))
     
     return option
 }
 
-// 678: decl @lune.@base.@Option.createDefaultOption
+// 697: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -608,13 +636,13 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
     option.UseIpairs = true
     
     if projDir != nil{
-        projDir_309 := projDir.(string)
-        if projDir_309 != "/"{
-            if Lns_op_not(Lns_car(_env.LuaVM.String_find(projDir_309,"/$", nil, nil))){
-                option.projDir = projDir_309 + "/"
+        projDir_321 := projDir.(string)
+        if projDir_321 != "/"{
+            if Lns_op_not(Lns_car(_env.LuaVM.String_find(projDir_321,"/$", nil, nil))){
+                option.projDir = projDir_321 + "/"
                 
             } else { 
-                option.projDir = projDir_309
+                option.projDir = projDir_321
                 
             }
         }
@@ -622,11 +650,13 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
     return option
 }
 
-// 263: decl @lune.@base.@Option.analyze.printUsage
+// 264: decl @lune.@base.@Option.analyze.printUsage
 func analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
     Lns_print([]LnsAny{"usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> -shebang path\n  <type4> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n  --int2str mode: mode of int to str.\n     - depend: depends the lua version.\n     - need0: with '.0'.\n     - unneed0: without '.0'.\n\n  common_op:\n    --testing: enable test.\n    --projDir <dir>: set the project dir.\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            force: skip check for target lns file.\n            forceAll: skip check for all.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    --default-lazy: set lazy-loading at default.\n    --valid-luaval: enable luaval when transcompie to lua.\n    --package <name>: set the package name for the go-lang.\n    --app <name>: set the application name for the go-lang.\n\n* type2\n  path: output file path.\n"})
     _env.LuaVM.OS_exit(code)
 }
+
+
 
 
 
@@ -665,7 +695,7 @@ func NewOption_RuntimeOpt(_env *LnsEnv) *Option_RuntimeOpt {
     return obj
 }
 func (self *Option_RuntimeOpt) Get_int2strMode(_env *LnsEnv) LnsInt{ return self.int2strMode }
-// 97: DeclConstr
+// 98: DeclConstr
 func (self *Option_RuntimeOpt) InitOption_RuntimeOpt(_env *LnsEnv) {
     self.int2strMode = Option_Int2strMode__Int2strModeDepend
     
@@ -748,7 +778,7 @@ func (self *Option_Option) Get_enableRunner(_env *LnsEnv) bool{ return self.enab
 func (self *Option_Option) Get_validPostBuild(_env *LnsEnv) bool{ return self.validPostBuild }
 func (self *Option_Option) Get_stdinFile(_env *LnsEnv) LnsAny{ return self.stdinFile }
 func (self *Option_Option) Set_stdinFile(_env *LnsEnv, arg1 LnsAny){ self.stdinFile = arg1 }
-// 163: DeclConstr
+// 164: DeclConstr
 func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
     self.stdinFile = nil
     
@@ -810,7 +840,7 @@ func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
     
 }
 
-// 195: decl @lune.@base.@Option.Option.openDepend
+// 196: decl @lune.@base.@Option.Option.openDepend
 func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
     {
         _path := self.DependsPath
@@ -818,12 +848,12 @@ func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_132 := relPath.(string)
+                relPath_133 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(path,"/$", nil, nil))){
-                    filePath = _env.LuaVM.String_format("%s%s", []LnsAny{path, relPath_132})
+                    filePath = _env.LuaVM.String_format("%s%s", []LnsAny{path, relPath_133})
                     
                 } else { 
-                    filePath = _env.LuaVM.String_format("%s/%s", []LnsAny{path, relPath_132})
+                    filePath = _env.LuaVM.String_format("%s/%s", []LnsAny{path, relPath_133})
                     
                 }
             } else {
@@ -926,6 +956,7 @@ func Lns_Option_init(_env *LnsEnv) {
     Lns_InitMod()
     Lns_Types_init(_env)
     Lns_Parser_init(_env)
+    Lns_AsyncParser_init(_env)
     Lns_Json_init(_env)
     Lns_Util_init(_env)
     Lns_LuaMod_init(_env)

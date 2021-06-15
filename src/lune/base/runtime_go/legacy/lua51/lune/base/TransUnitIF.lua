@@ -274,13 +274,13 @@ function NSInfo:isNoasync(  )
    
    return false
 end
-function NSInfo.new( typeInfo, pos )
+function NSInfo.new( typeInfo, pos, validAsyncCtrl )
    local obj = {}
    NSInfo.setmeta( obj )
-   if obj.__init then obj:__init( typeInfo, pos ); end
+   if obj.__init then obj:__init( typeInfo, pos, validAsyncCtrl ); end
    return obj
 end
-function NSInfo:__init(typeInfo, pos) 
+function NSInfo:__init(typeInfo, pos, validAsyncCtrl) 
    self.idSetInfo = IdSetInfo.new()
    self.nobody = false
    self.lockedAsyncStack = {}
@@ -288,6 +288,7 @@ function NSInfo:__init(typeInfo, pos)
    
    self.typeInfo = typeInfo
    self.pos = pos
+   self.validAsyncCtrl = validAsyncCtrl
 end
 function NSInfo:incLock( lockKind )
 
@@ -318,6 +319,10 @@ function NSInfo:canAccessNoasync(  )
 end
 function NSInfo:canAccessLuaval(  )
 
+   if not self.validAsyncCtrl then
+      return true
+   end
+   
    if #self.lockedAsyncStack > 0 then
       return true
    end
@@ -442,6 +447,7 @@ function TransUnitBase.new( ctrl_info, processInfo )
    return obj
 end
 function TransUnitBase:__init(ctrl_info, processInfo) 
+   self.ctrl_info = ctrl_info
    self.typeId2ClassMap = {}
    self.typeNameCtrl = Ast.defaultTypeNameCtrl
    self.errMessList = {}
@@ -451,7 +457,7 @@ function TransUnitBase:__init(ctrl_info, processInfo)
    self.scope = Ast.Scope.new(processInfo, self.globalScope, true, nil)
    self.nsInfoMap = {}
    local subRootTypeInfo = self.processInfo:get_dummyParentType()
-   self.nsInfoMap[subRootTypeInfo] = NSInfo.new(subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"))
+   self.nsInfoMap[subRootTypeInfo] = NSInfo.new(subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
 end
 function TransUnitBase:addErrMess( pos, mess )
 
@@ -476,7 +482,7 @@ function TransUnitBase:popScope(  )
 end
 function TransUnitBase:newNSInfo( typeInfo, pos )
 
-   local nsInfo = NSInfo.new(typeInfo, pos)
+   local nsInfo = NSInfo.new(typeInfo, pos, self.ctrl_info.validAsyncCtrl)
    self.nsInfoMap[typeInfo] = nsInfo
    return nsInfo
 end

@@ -47,6 +47,7 @@ type Async_PipeMtd interface {
     Access(_env *LnsEnv) LnsAny
     GetNext(_env *LnsEnv) LnsAny
     Run(_env *LnsEnv)
+    Setup(_env *LnsEnv)
     Start(_env *LnsEnv)
     Stop(_env *LnsEnv)
 }
@@ -84,7 +85,8 @@ func (self *Async_Pipe) InitAsync_Pipe(_env *LnsEnv, pipe LnsAny) {
 }
 
 
-// 48: decl @lune.@base.@Async.Pipe.getNext
+
+// 49: decl @lune.@base.@Async.Pipe.getNext
 func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
     if self.started{
         {
@@ -108,8 +110,9 @@ func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
     return self.FP.Access(_env)
 }
 
-// 61: decl @lune.@base.@Async.Pipe.run
+// 62: decl @lune.@base.@Async.Pipe.run
 func (self *Async_Pipe) Run(_env *LnsEnv) {
+    self.FP.Setup(_env)
     var pipe *Lns__pipe
     
     {
@@ -136,13 +139,13 @@ func (self *Async_Pipe) Run(_env *LnsEnv) {
     }
 }
 
-// 74: decl @lune.@base.@Async.Pipe.start
+// 76: decl @lune.@base.@Async.Pipe.start
 func (self *Async_Pipe) Start(_env *LnsEnv) {
     self.started = true
     
 }
 
-// 77: decl @lune.@base.@Async.Pipe.stop
+// 79: decl @lune.@base.@Async.Pipe.stop
 func (self *Async_Pipe) Stop(_env *LnsEnv) {
     self.started = false
     

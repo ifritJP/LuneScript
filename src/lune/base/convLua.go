@@ -54,15 +54,15 @@ func convLua_ExportIdKind_getTxt(arg1 LnsInt) string {
 }
 var convLua_stepIndent LnsInt
 type convLua_outputMacroStmtBlock_11_ func (_env *LnsEnv)
-// for 3779
-func convLua_convExp18876(arg1 []LnsAny) LnsAny {
+// for 3780
+func convLua_convExp18880(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3545
 func convLua_convExp17908(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
-// for 3804
+// for 3805
 func convLua_convExp1956(arg1 []LnsAny) (string, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string)
 }
@@ -110,8 +110,8 @@ func convLua_convExp15139(arg1 []LnsAny) LnsInt {
 func convLua_convExp18441(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 3777
-func convLua_convExp18624(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 3778
+func convLua_convExp18628(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // 78: decl @lune.@base.@convLua.getSymbolTxt

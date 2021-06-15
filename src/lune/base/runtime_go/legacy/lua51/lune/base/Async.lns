@@ -43,6 +43,7 @@ pub abstract class Pipe<T> {
       self.started = false;
    }
 
+   pub abstract fn setup() mut;
    pro abstract fn access() mut : PipeItem<T>!;
 
    pub fn getNext() mut : PipeItem<T>! {
@@ -59,6 +60,7 @@ pub abstract class Pipe<T> {
 
    //pro override fn loop() mut {
    pub fn run() mut {
+      self.setup();
       let! mut pipe = self.pipe {
          return;
       };

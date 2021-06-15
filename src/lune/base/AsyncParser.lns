@@ -211,6 +211,11 @@ pub class AsyncItem extend (__AsyncItem,Mapping) {
    pub let list : &List<&Types.Token>;
 }
 
+let mut defaultPipeSize = 500;
+pub fn setDefaultPipeSize( size:int ) {
+   defaultPipeSize = size;
+}
+
 pub class Parser extend Async.Pipe<AsyncItem> {
    let streamName: str {pub};
    let mut lineNo : int;
@@ -219,15 +224,18 @@ pub class Parser extend Async.Pipe<AsyncItem> {
    let typeSet : &Set<str>;
    let multiCharDelimitMap : &Map<str,&Array<str>>;
    let luaMode:bool;
-   let lineList:&List<str>;
+   let mut lineList:&List<str>;
    let mut firstLine:bool;
    let overridePos:&Types.Position!;
+   let stream:iStream;
 
    pub fn __init( streamName:str, stream:iStream, luaMode:bool,
-                  overridePos:&Types.Position! )
+                  overridePos:&Types.Position!, pipeSize:int! )
    {
-      super( AsyncItem._createPipe( 100 ) );
+      super( AsyncItem._createPipe( unwrap pipeSize default defaultPipeSize ) );
 
+      self.stream = stream;
+      self.lineList = [];
       self.streamName = streamName;
       self.overridePos = overridePos;
       self.firstLine = true;
@@ -240,22 +248,23 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       self.keywordSet = keywordSet;
       self.typeSet = typeSet;
       self.multiCharDelimitMap = multiCharDelimitMap;
+   }
 
-
+   pub override fn setup() mut {
       let mut lineList:List<str> = [];
       while true {
-         let! line = stream.read( '*l' ) {
+         let! line = self.stream.read( '*l' ) {
             break;
          };
          lineList.insert( line );
       }
       self.lineList = lineList;
-
-      stream.close();
+      self.stream.close();
    }
 
-   local static fn create( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
-                         overridePos:&Types.Position! ) : Parser!, str
+   local static fn create(
+      parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
+      overridePos:&Types.Position! ) : Parser!, str
    {
       fn createStream(mod:str,path:str) __trans : iStream!, str {
          when! stdinFile {
@@ -270,27 +279,27 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       }
       
 
-      fn createStreamFrom() __trans : str, bool, iStream!, str {
+      fn createStreamFrom() __trans : str, bool, iStream!, str, int! {
          _match parserSrc {
-            case .LnsCode( txt, path ) {
-               return path, false, new Util.TxtStream( txt ), "";
+            case .LnsCode( txt, path, pipeSize ) {
+               return path, false, new Util.TxtStream( txt ), "", pipeSize;
             }
-            case .LnsPath( path, mod ) {
+            case .LnsPath( path, mod, pipeSize ) {
                let mut stream, mess = createStream( mod, path );
-               return path, false, stream, mess;
+               return path, false, stream, mess, pipeSize;
             }
-            case .Parser( path, luaMode, mod ) {
+            case .Parser( path, luaMode, mod, pipeSize ) {
                let mut stream, mess = createStream( mod, path );
-               return path, luaMode, stream, mess;
+               return path, luaMode, stream, mess, pipeSize;
             }
          }
       }
 
-      let! streamName, luaMode, mut stream, mess = createStreamFrom() {
-         return nil, mess;
-      };
-
-      return new Parser( streamName, stream, luaMode, overridePos ), "";
+      let streamName, luaMode, mut stream, mess, pipeSize = createStreamFrom();
+      when! stream {
+         return new Parser( streamName, stream, luaMode, overridePos, pipeSize ), "";
+      }
+      return nil, mess;
    }
 
    pub fn parse() mut : Types.Token[]!;
@@ -337,7 +346,11 @@ pub fn create( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
       let mut runner = new Runner( parserSrc, stdinFile, overridePos );
       return runner.$parser, runner.$errMess;
    }
-   return Parser.create( parserSrc, stdinFile, overridePos )**;
+   let mut parser, mess = Parser.create( parserSrc, stdinFile, overridePos )**;
+   when! parser {
+      parser.setup();
+   }
+   return parser, mess;
 }
 
 

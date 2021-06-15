@@ -238,7 +238,8 @@ pub class DefaultPushbackParser extend (PushbackParser) {
 
    pub static fn createFromLnsCode( code:str, name:str ): DefaultPushbackParser {
       return new DefaultPushbackParser(
-         new StreamParser( Types.ParserSrc.LnsCode( code, name ), false ## ) );
+         new StreamParser(
+            Types.ParserSrc.LnsCode( code, name, nil ), false ## ) );
    }
    
    
@@ -292,7 +293,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    }
    pub fn pushbackStr( name:str, statement: str, pos:&Types.Position ) mut {
       let mut parser = new StreamParser(
-         Types.ParserSrc.LnsCode( statement, name ), false, nil, pos );
+         Types.ParserSrc.LnsCode( statement, name, nil ), false, nil, pos );
 
       let mut list:List<&Token> = [];
       while true {
@@ -503,7 +504,8 @@ fn func():int {
    return "%g" val + 1 + 2.0;
 }```;
       let mut parser =
-         new StreamParser( Types.ParserSrc.LnsCode( txt, "test" ), false ## );
+         new StreamParser(
+            Types.ParserSrc.LnsCode( txt, "test", nil ), false ## );
 
       class LowToken {
          pub let txt:str;
@@ -542,7 +544,8 @@ fn func():int {
 
    {
       let mut parser = new DefaultPushbackParser(
-         new StreamParser(Types.ParserSrc.LnsCode( "1 2 3 4 5", "test" ), false ## ) );
+         new StreamParser(Types.ParserSrc.LnsCode(
+            "1 2 3 4 5", "test", nil ), false ## ) );
 
       __t._eq( ctrl, parser.getTokenNoErr().txt, "1" );
       __t._eq( ctrl, parser.getTokenNoErr().txt, "2" );
@@ -572,7 +575,7 @@ fn func():int {
    }
    {
       let mut parser = new DefaultPushbackParser(
-         new StreamParser(Types.ParserSrc.LnsCode( "int", "test" ), false ## ) );
+         new StreamParser(Types.ParserSrc.LnsCode( "int", "test", nil ), false ## ) );
 
       __t._eq( ctrl, parser.getTokenNoErr().txt, "int" );
       __t._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );

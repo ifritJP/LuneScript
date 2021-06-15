@@ -591,7 +591,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    /** true の場合、 _ で始まるシンボル名チェックをしない */
    pri let mut ignoreToCheckSymbol_:bool;
 
-   pri let ctrl_info: &Types.TransCtrlInfo;
+   //pri let ctrl_info: &Types.TransCtrlInfo;
 
    pri let mut macroCtrl:Macro.MacroCtrl;
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
@@ -691,7 +691,7 @@ alias で置き換えている元の Type → alias の型
       self.macroEval = macroEval;
       self.macroCtrl = new Macro.MacroCtrl( macroEval );
       self.analyzingStateQueue = [];
-      self.ctrl_info = ctrl_info;
+      //self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
       self.moduleId = moduleId;
       self.helperInfo = new frontInterface.LuneHelperInfo();

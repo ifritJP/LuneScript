@@ -164,6 +164,7 @@ end
 
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
+local AsyncParser = _lune.loadModule( 'lune.base.AsyncParser' )
 local Json = _lune.loadModule( 'lune.base.Json' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
@@ -177,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 10783
+   return 10806
 end
 
 
@@ -614,6 +615,29 @@ end
       index = index + 1
       return argList[index]
    end
+   local function getNextOpNonNil(  )
+   
+      do
+         local nextOp = getNextOp(  )
+         if nextOp ~= nil then
+            return nextOp
+         end
+      end
+      
+      printUsage( 1 )
+   end
+   
+   local function getNextOpInt(  )
+   
+      do
+         local num = tonumber( getNextOpNonNil(  ) )
+         if num ~= nil then
+            return math.floor(num)
+         end
+      end
+      
+      printUsage( 1 )
+   end
    
    Util.setDebugFlag( false )
    
@@ -627,6 +651,8 @@ end
                local _switchExp = (arg )
                if _switchExp == "-i" then
                   useStdInFlag = true
+               elseif _switchExp == "--parserPipeSize" then
+                  AsyncParser.setDefaultPipeSize( getNextOpInt(  ) )
                elseif _switchExp == "-prof" then
                   option.validProf = true
                elseif _switchExp == "--noEnvArg" then
@@ -959,7 +985,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 673, function (  )
+   Log.log( Log.Level.Log, __func__, 692, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
