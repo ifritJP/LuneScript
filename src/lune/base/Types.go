@@ -189,33 +189,19 @@ func NewTypes_TransCtrlInfo(_env *LnsEnv) *Types_TransCtrlInfo {
 // 77: DeclConstr
 func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
     self.WarningShadowing = false
-    
     self.CompatComment = false
-    
     self.CheckingDefineAbbr = true
-    
     self.StopByWarning = false
-    
     self.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
-    
     self.ValidLuaval = false
-    
     self.DefaultLazy = false
-    
     self.ValidCheckingMutable = true
-    
     self.LegacyMutableControl = false
-    
     self.ValidAstDetailError = false
-    
     self.ValidAsyncCtrl = false
-    
     self.DefaultAsync = false
-    
     self.Testing = false
-    
     self.ValidMultiPhaseTransUnit = true
-    
 }
 
 // 95: decl @lune.@base.@Types.TransCtrlInfo.create_normal
@@ -321,13 +307,9 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
 // 114: DeclConstr
 func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string) {
     self.LineNo = lineNo
-    
     self.Column = column
-    
     self.StreamName = streamName
-    
     self.OrgPos = nil
-    
 }
 
 // 121: decl @lune.@base.@Types.Position.get_orgPos
@@ -352,7 +334,6 @@ func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName 
     var pos *Types_Position
     pos = NewTypes_Position(_env, lineNo, column, streamName)
     pos.OrgPos = orgPos
-    
     return pos
 }
 
@@ -478,15 +459,10 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
 // 174: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
-    
     self.Txt = txt
-    
     self.Pos = pos
-    
     self.Consecutive = consecutive
-    
     self.commentList = Lns_unwrapDefault( commentList, NewLnsList([]LnsAny{})).(*LnsList)
-    
 }
 
 // 184: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
@@ -507,7 +483,6 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // 199: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
     self.commentList = commentList
-    
 }
 
 // 203: decl @lune.@base.@Types.Token.getLineCount
@@ -521,7 +496,6 @@ func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
                 _applyPrev1 = Lns_getFromMulti(_applyWork1,0)
                 if Lns_IsNil( _applyPrev1 ) { break }
                 count = count + 1
-                
             }
         }
     return count

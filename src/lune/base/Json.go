@@ -81,7 +81,6 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
                         return _map, true
                     } else if _switch4 == "," {
                         key = parser.FP.GetTokenNoErr(_env)
-                        
                         if key.Kind != Types_TokenKind__Str{
                             return nil, false
                         }
@@ -124,7 +123,6 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
                 }
                 list.Set(count,val)
                 count = count + 1
-                
             }
         }
         return nil, false

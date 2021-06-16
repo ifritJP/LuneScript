@@ -58,11 +58,8 @@ func NewOutputDepend_DependInfo(_env *LnsEnv, arg1 string) *OutputDepend_DependI
 // 38: DeclConstr
 func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, targetModule string) {
     self.targetModule = Ast_TypeInfo_getModulePath(_env, targetModule)
-    
     self.importModuleList = NewLnsList([]LnsAny{})
-    
     self.subModList = NewLnsList([]LnsAny{})
-    
 }
 
 // 44: decl @lune.@base.@OutputDepend.DependInfo.addImpotModule
@@ -224,7 +221,6 @@ func NewOutputDepend_convFilter(_env *LnsEnv, arg1 Lns_oStream) *OutputDepend_co
 func (self *OutputDepend_convFilter) InitOutputDepend_convFilter(_env *LnsEnv, stream Lns_oStream) {
     self.InitNodes_Filter(_env, false, nil, nil)
     self.stream = stream
-    
 }
 
 // 76: decl @lune.@base.@OutputDepend.convFilter.processRoot

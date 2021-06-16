@@ -390,6 +390,9 @@ usage:
                case "--noEnvArg" {
                   option.addEnvArg = false;
                }
+               case "--disableMultiPhaseAst" {
+                  option.transCtrlInfo.validMultiPhaseTransUnit = false;
+               }
                case "--disableRunner" {
                   option.enableRunner = false;
                }

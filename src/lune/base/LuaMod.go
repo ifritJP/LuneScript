@@ -136,7 +136,6 @@ func Lns_LuaMod_init(_env *LnsEnv) {
         work.Set(LuaMod_CodeKind__Run,"function _lune._run( runner, mod )\n    runner:run()\n    return false\nend\n")
         work.Set(LuaMod_CodeKind__Finalize,"return _lune\n")
         LuaMod_codeMap = work
-        
     }
 }
 func init() {

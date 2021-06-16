@@ -93,6 +93,7 @@ end
 function Pipe:__init(pipe) 
    self.pipe = pipe
    self.started = false
+   self.setuped = false
 end
 function Pipe:getNext(  )
 
@@ -118,6 +119,7 @@ end
 function Pipe:run(  )
 
    self:setup(  )
+   self.setuped = true
    local pipe = self.pipe
    if  nil == pipe then
       local _pipe = pipe
@@ -145,6 +147,10 @@ end
 function Pipe:stop(  )
 
    self.started = false
+   if not self.setuped then
+      self:setup(  )
+   end
+   
 end
 function Pipe.setmeta( obj )
   setmetatable( obj, { __index = Pipe  } )

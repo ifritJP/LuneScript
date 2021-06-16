@@ -2750,6 +2750,8 @@ function convFilter:processRoot( node, opt )
    
    self:popProcessMode(  )
    
+   
+   
    self:pushProcessMode( ProcessMode.DeclClass )
    do
       local function procNode( workNode )
@@ -2790,6 +2792,8 @@ function convFilter:processRoot( node, opt )
       end
       
    end
+   
+   
    
    
    for __index, child in ipairs( node:get_children() ) do
@@ -5558,6 +5562,7 @@ function convFilter:processDeclClass( node, opt )
             end
             
             
+            
             for __index, fieldNode in ipairs( node:get_fieldList() ) do
                if _lune.__Cast( fieldNode, 3, Nodes.DeclMemberNode ) then
                else
@@ -6333,7 +6338,6 @@ function convFilter:processExpSetVal( node, opt )
    
    self:write( " = " )
    self:processSetFromExpList( self:getConvExpName( node, node:get_exp2() ), node:get_exp1():get_expTypeList(), node:get_exp2(), false )
-   self:writeln( "" )
 end
 
 

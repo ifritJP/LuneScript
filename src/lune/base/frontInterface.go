@@ -37,7 +37,6 @@ func FrontInterface_getRootDependModId(_env *LnsEnv) LnsInt {
 // 349: decl @lune.@base.@frontInterface.setFront
 func FrontInterface_setFront(_env *LnsEnv, newFront FrontInterface_frontInterface) {
     FrontInterface___luneScript = newFront
-    
 }
 
 // 353: decl @lune.@base.@frontInterface.loadModule
@@ -70,7 +69,6 @@ var FrontInterface_ModuleId__tempId *FrontInterface_ModuleId
 // 37: decl @lune.@base.@frontInterface.ModuleId.___init
 func FrontInterface_ModuleId____init_5_(_env *LnsEnv) {
     FrontInterface_ModuleId__tempId = NewFrontInterface_ModuleId(_env, 0.0, 0)
-    
 }
 
 type FrontInterface_ModuleIdMtd interface {
@@ -118,11 +116,8 @@ func (self *FrontInterface_ModuleId) Get_idStr(_env *LnsEnv) string{ return self
 // 51: DeclConstr
 func (self *FrontInterface_ModuleId) InitFrontInterface_ModuleId(_env *LnsEnv, modTime LnsReal,buildCount LnsInt) {
     self.modTime = modTime
-    
     self.buildCount = buildCount
-    
     self.idStr = _env.LuaVM.String_format("%f:%d", []LnsAny{modTime, buildCount})
-    
 }
 
 // 57: decl @lune.@base.@frontInterface.ModuleId.getNextModuleId
@@ -239,29 +234,17 @@ func NewFrontInterface_LuneHelperInfo(_env *LnsEnv) *FrontInterface_LuneHelperIn
 // 93: DeclConstr
 func (self *FrontInterface_LuneHelperInfo) InitFrontInterface_LuneHelperInfo(_env *LnsEnv) {
     self.UseNilAccess = false
-    
     self.UseUnwrapExp = false
-    
     self.HasMappingClassDef = false
-    
     self.UseLoad = false
-    
     self.UseUnpack = false
-    
     self.UseAlge = false
-    
     self.UseSet = false
-    
     self.CallAnonymous = false
-    
     self.PragmaSet = NewLnsSet([]LnsAny{})
-    
     self.UseLazyLoad = false
-    
     self.UseLazyRequire = false
-    
     self.UseRun = false
-    
 }
 
 
@@ -335,23 +318,14 @@ func (self *FrontInterface_ExportInfo) Set_importId2localTypeInfoMap(_env *LnsEn
 // 139: DeclConstr
 func (self *FrontInterface_ExportInfo) InitFrontInterface_ExportInfo(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,provideInfo *FrontInterface_ModuleProvideInfo,processInfo *Ast_ProcessInfo,globalSymbolList *LnsList,importedAliasMap *LnsMap,moduleId *FrontInterface_ModuleId,fullName string,assignName string,streamName string,idMap *LnsMap) {
     self.moduleTypeInfo = moduleTypeInfo
-    
     self.provideInfo = provideInfo
-    
     self.processInfo = processInfo
-    
     self.globalSymbolList = globalSymbolList
-    
     self.importedAliasMap = importedAliasMap
-    
     self.moduleId = moduleId
-    
     self.fullName = fullName
-    
     self.assignName = assignName
-    
     self.streamName = streamName
-    
     var importId2localTypeInfoMap *LnsMap
     importId2localTypeInfoMap = NewLnsMap( map[LnsAny]LnsAny{})
     for _typeInfo, _importId := range( idMap.Items ) {
@@ -360,7 +334,6 @@ func (self *FrontInterface_ExportInfo) InitFrontInterface_ExportInfo(_env *LnsEn
         importId2localTypeInfoMap.Set(importId,typeInfo)
     }
     self.importId2localTypeInfoMap = importId2localTypeInfoMap
-    
 }
 
 // 167: decl @lune.@base.@frontInterface.ExportInfo.get_modulePath
@@ -385,7 +358,6 @@ func (self *FrontInterface_ExportInfo) Assign(_env *LnsEnv, assignName string) *
     var info *FrontInterface_ExportInfo
     info = NewFrontInterface_ExportInfo(_env, self.moduleTypeInfo, self.provideInfo, self.processInfo, self.globalSymbolList, self.importedAliasMap, self.moduleId, self.fullName, assignName, self.streamName, NewLnsMap( map[LnsAny]LnsAny{}))
     info.importId2localTypeInfoMap = self.importId2localTypeInfoMap
-    
     return info
 }
 
@@ -498,7 +470,6 @@ self.exportInfo. FP.Set_importId2localTypeInfoMap( _env, arg1)
 // 197: DeclConstr
 func (self *FrontInterface_ModuleInfo) InitFrontInterface_ModuleInfo(_env *LnsEnv, exportInfo *FrontInterface_ExportInfo) {
     self.exportInfo = exportInfo
-    
 }
 
 
@@ -589,7 +560,6 @@ func NewFrontInterface_ImportModuleInfo(_env *LnsEnv) *FrontInterface_ImportModu
 // 220: DeclConstr
 func (self *FrontInterface_ImportModuleInfo) InitFrontInterface_ImportModuleInfo(_env *LnsEnv) {
     self.orderedSet = NewUtil_OrderedSet(_env)
-    
 }
 
 // 224: decl @lune.@base.@frontInterface.ImportModuleInfo.add
@@ -609,7 +579,6 @@ func (self *FrontInterface_ImportModuleInfo) GetFull(_env *LnsEnv) string {
     for _, _modulePath := range( self.orderedSet.FP.Get_list(_env).Items ) {
         modulePath := _modulePath.(string)
         txt = _env.LuaVM.String_format("%s -> %s", []LnsAny{txt, modulePath})
-        
     }
     return txt
 }
@@ -712,14 +681,11 @@ func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsA
         if loaded != nil{
             loaded_302 := loaded.(*Lns_luaValue)
             emptyTable = Lns_unwrap( Lns_car(_env.GetVM().RunLoadedfunc(loaded_302,Lns_2DDD([]LnsAny{}))[0]))
-            
         } else {
             panic("load error")
         }
         moduleMeta = NewFrontInterface_ModuleMeta(_env, Lns_car(_env.LuaVM.String_gsub(mod,"%.", "/")).(string) + ".lns", &FrontInterface_MetaOrModule__MetaRaw{emptyTable})
-        
         modVal = Lns_require(mod)
-        
     })
     return modVal, moduleMeta
 }

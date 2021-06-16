@@ -94,11 +94,8 @@ func NewWriter_XML(_env *LnsEnv, arg1 Lns_oStream) *Writer_XML {
 // 43: DeclConstr
 func (self *Writer_XML) InitWriter_XML(_env *LnsEnv, stream Lns_oStream) {
     self.stream = stream
-    
     self.elementList = NewLnsList([]LnsAny{})
-    
     self.depth = 0
-    
 }
 
 // 49: decl @lune.@base.@Writer.XML.convertXmlTxt
@@ -112,15 +109,10 @@ func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
     var txt string
     txt = _env.LuaVM.String_format("%s", []LnsAny{val})
     txt = Writer_convExp829(Lns_2DDD(_env.LuaVM.String_gsub(txt, "&", "&amp;")))
-    
     txt = Writer_convExp847(Lns_2DDD(_env.LuaVM.String_gsub(txt, ">", "&gt;")))
-    
     txt = Writer_convExp865(Lns_2DDD(_env.LuaVM.String_gsub(txt, "<", "&lt;")))
-    
     txt = Writer_convExp883(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\"", "&quot;")))
-    
     txt = Writer_convExp901(Lns_2DDD(_env.LuaVM.String_gsub(txt, "'", "&apos;")))
-    
     return txt
 }
 
@@ -129,7 +121,6 @@ func (self *Writer_XML) StartElement(_env *LnsEnv, name string) {
     self.elementList.Insert(name)
     self.stream.Write(_env, _env.LuaVM.String_format("<%s>", []LnsAny{name}))
     self.depth = self.depth + 1
-    
 }
 
 // 72: decl @lune.@base.@Writer.XML.startParent
@@ -143,7 +134,6 @@ func (self *Writer_XML) EndElement(_env *LnsEnv) {
     name = self.elementList.Remove(nil)
     self.stream.Write(_env, _env.LuaVM.String_format("</%s>", []LnsAny{name}))
     self.depth = self.depth - 1
-    
     if self.depth == 0{
         self.stream.Write(_env, "\n")
     } else if self.depth < 0{
@@ -280,11 +270,8 @@ func (self *Writer_JSON) startLayer(_env *LnsEnv, arrayFlag bool,madeByArrayFlag
 // 128: DeclConstr
 func (self *Writer_JSON) InitWriter_JSON(_env *LnsEnv, stream Lns_oStream) {
     self.stream = stream
-    
     self.layerQueue = NewLnsList([]LnsAny{})
-    
     self.prevName = ""
-    
     self.FP.startLayer(_env, false, false)
 }
 
@@ -335,7 +322,6 @@ func (self *Writer_JSON) IsArrayLayer(_env *LnsEnv) bool {
 // 174: decl @lune.@base.@Writer.JSON.setLayerState
 func (self *Writer_JSON) SetLayerState(_env *LnsEnv, state string) {
     self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().State = state
-    
 }
 
 // 178: decl @lune.@base.@Writer.JSON.getLayerName
@@ -378,7 +364,6 @@ func (self *Writer_JSON) StartParent(_env *LnsEnv, name string,arrayFlag bool) {
     self.stream.Write(_env, _env.LuaVM.String_format("\"%s\": ", []LnsAny{name}))
     self.FP.startLayer(_env, arrayFlag, false)
     self.prevName = name
-    
 }
 
 // 214: decl @lune.@base.@Writer.JSON.startElement
@@ -399,11 +384,9 @@ func (self *Writer_JSON) StartElement(_env *LnsEnv, name string) {
         Util_err(_env, "illegal openElement")
     }
     info.OpenElement = true
-    
     self.stream.Write(_env, _env.LuaVM.String_format("\"%s\": ", []LnsAny{name}))
     self.FP.SetLayerState(_env, "named")
     self.prevName = name
-    
 }
 
 // 242: decl @lune.@base.@Writer.JSON.endElement
@@ -417,7 +400,6 @@ func (self *Writer_JSON) EndElement(_env *LnsEnv) {
         info = Lns_unwrap( self.FP.getLayerInfo(_env)).(*Writer_JsonLayer)
         if info.OpenElement{
             info.OpenElement = false
-            
         }
         if Lns_isCondTrue( _env.NilAccFin(_env.NilAccPush(self.FP.getLayerInfo(_env)) && 
         _env.NilAccPush(_env.NilAccPop().(*Writer_JsonLayer).MadeByArrayFlag))){
@@ -435,11 +417,8 @@ func Writer_JSON_convertJsonTxt_12_(_env *LnsEnv, txt string) string {
         return ""
     }
     txt = Writer_convExp1720(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\"", "\\\"")))
-    
     txt = Writer_convExp1738(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\\", "\\\\")))
-    
     txt = Writer_convExp1756(Lns_2DDD(_env.LuaVM.String_gsub(txt, "\n", "\\n")))
-    
     return txt
 }
 
@@ -451,16 +430,13 @@ func (self *Writer_JSON) WriteValue(_env *LnsEnv, val LnsAny) {
     typeId = Lns_type(val)
     if typeId == "number"{
         txt = _env.LuaVM.String_format("%g", []LnsAny{Lns_forceCastReal(val)})
-        
     } else if typeId == "boolean"{
         txt = _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( val) &&
             _env.SetStackVal( "true") ||
             _env.SetStackVal( "false") ).(string)
-        
     } else { 
         txt = _env.LuaVM.String_format("\"%s\"", []LnsAny{Writer_JSON_convertJsonTxt_12_(_env, _env.LuaVM.String_format("%s", []LnsAny{val}))})
-        
     }
     self.stream.Write(_env, txt)
     self.FP.SetLayerState(_env, "valued")

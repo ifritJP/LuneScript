@@ -404,6 +404,10 @@ function DefaultPushbackParser:__init(parser)
    self.usedTokenList = {}
    self.currentToken = Types.noneToken
 end
+function DefaultPushbackParser:getUsedTokenListLen(  )
+
+   return #self.usedTokenList
+end
 function DefaultPushbackParser.createFromLnsCode( code, name )
 
    return DefaultPushbackParser.new(StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name,nil}), false))

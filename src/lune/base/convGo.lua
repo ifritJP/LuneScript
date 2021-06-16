@@ -6338,7 +6338,6 @@ function convFilter:processExpSetVal( node, opt )
    
    self:write( " = " )
    self:processSetFromExpList( self:getConvExpName( node, node:get_exp2() ), node:get_exp1():get_expTypeList(), node:get_exp2(), false )
-   self:writeln( "" )
 end
 
 

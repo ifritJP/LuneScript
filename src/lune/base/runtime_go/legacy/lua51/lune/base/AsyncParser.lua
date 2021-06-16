@@ -387,7 +387,7 @@ function AsyncItem._fromMapSub( obj, val )
 end
 
 
-local defaultPipeSize = 500
+local defaultPipeSize = 20
 local function setDefaultPipeSize( size )
 
    defaultPipeSize = size
@@ -571,7 +571,8 @@ local function create( parserSrc, stdinFile, overridePos, async )
    
    local parser, mess = Parser.create( parserSrc, stdinFile, overridePos )
    if parser ~= nil then
-      parser:setup(  )
+      
+      parser:stop(  )
    end
    
    return parser, mess

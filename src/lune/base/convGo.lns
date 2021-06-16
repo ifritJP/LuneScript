@@ -5198,7 +5198,6 @@ pub override fn convFilter.processExpSetVal(
    self.processSetFromExpList(
       self.getConvExpName( node, node.$exp2 ), node.$exp1.$expTypeList,
       node.$exp2, false );
-   self.writeln( "" );
 }
 
 pub override fn convFilter.processExpSetItem(

@@ -55,7 +55,6 @@ func (self *Formatter_Opt) Get_parent(_env *LnsEnv) *Nodes_Node{ return self.par
 // 37: DeclConstr
 func (self *Formatter_Opt) InitFormatter_Opt(_env *LnsEnv, parent *Nodes_Node) {
     self.parent = parent
-    
 }
 
 // 40: decl @lune.@base.@Formatter.Opt.nextOpt
@@ -231,7 +230,6 @@ self.stream. FP.Writeln( _env, arg1)
 func (self *Formatter_FormatterFilter) InitFormatter_FormatterFilter(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,moduleInfoManager LnsAny,stream Lns_oStream) {
     self.InitNodes_Filter(_env, true, moduleTypeInfo, moduleInfoManager)
     self.stream = NewUtil_SimpleSourceOStream(_env, stream, nil, 3)
-    
 }
 
 // 62: decl @lune.@base.@Formatter.FormatterFilter.outputHeadComment
@@ -593,7 +591,6 @@ func (self *Formatter_FormatterFilter) ProcessWhen(_env *LnsEnv, node *Nodes_Whe
     for _, _symPair := range( node.FP.Get_symPairList(_env).Items ) {
         symPair := _symPair.(Nodes_UnwrapSymbolPairDownCast).ToNodes_UnwrapSymbolPair()
         symTxt = _env.LuaVM.String_format("%s%s ", []LnsAny{symTxt, symPair.FP.Get_src(_env).FP.Get_name(_env)})
-        
     }
     self.FP.Write(_env, symTxt)
     Formatter_filter_3_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))

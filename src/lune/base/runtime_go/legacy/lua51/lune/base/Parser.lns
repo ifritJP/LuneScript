@@ -236,6 +236,10 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       self.currentToken = Types.noneToken;
    }
 
+   pub fn getUsedTokenListLen(): int {
+      return #self.usedTokenList;
+   }
+
    pub static fn createFromLnsCode( code:str, name:str ): DefaultPushbackParser {
       return new DefaultPushbackParser(
          new StreamParser(

@@ -73,7 +73,6 @@ func LuaVer_setCurVer(_env *LnsEnv, ver LnsInt) {
         }
     }
     LuaVer_curVer = Lns_unwrap( LuaVer_kind2verMap.Get(verKind)).(*LuaVer_LuaVerInfo)
-    
 }
 
 // 85: decl @lune.@base.@LuaVer.getCurVer

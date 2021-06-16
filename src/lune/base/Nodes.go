@@ -922,7 +922,6 @@ func Nodes_regKind_17_(_env *LnsEnv, name string) LnsInt {
     var kind LnsInt
     kind = Nodes_nodeKindSeed
     Nodes_nodeKindSeed = Nodes_nodeKindSeed + 1
-    
     Nodes_nodeKind2NameMapWork.Set(kind,name)
     return kind
 }
@@ -966,7 +965,6 @@ func Nodes_getBreakKindForStmtList_42_(_env *LnsEnv, checkMode LnsInt,stmtList *
                             _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                             _env.SetStackVal( kind > work) ).(bool){
                             kind = work
-                            
                         }
                     }
                 }
@@ -1160,26 +1158,21 @@ func (self *Nodes_SimpleModuleInfoManager) InitNodes_SimpleModuleInfoManager(_en
     if moduleInfoManager != nil{
         moduleInfoManager_21 := moduleInfoManager.(Ast_ModuleInfoManager)
         self.ModuleInfoManager = moduleInfoManager_21
-        
     } else {
         self.ModuleInfoManager = Ast_DummyModuleInfoManager_get_instance(_env).FP
-        
     }
     self.moduleInfoManagerHist = NewLnsList([]LnsAny{})
-    
 }
 
 // 49: decl @lune.@base.@Nodes.SimpleModuleInfoManager.push
 func (self *Nodes_SimpleModuleInfoManager) Push(_env *LnsEnv, moduleInfoManager Ast_ModuleInfoManager) {
     self.moduleInfoManagerHist.Insert(self.ModuleInfoManager)
     self.ModuleInfoManager = moduleInfoManager
-    
 }
 
 // 54: decl @lune.@base.@Nodes.SimpleModuleInfoManager.pop
 func (self *Nodes_SimpleModuleInfoManager) Pop(_env *LnsEnv) {
     self.ModuleInfoManager = self.moduleInfoManagerHist.GetAt(self.moduleInfoManagerHist.Len()).(Ast_ModuleInfoManager)
-    
     self.moduleInfoManagerHist.Remove(nil)
 }
 
@@ -1322,9 +1315,7 @@ func (self *Nodes_Filter) Get_optStack(_env *LnsEnv) *LnsList{ return self.optSt
 // 68: DeclConstr
 func (self *Nodes_Filter) InitNodes_Filter(_env *LnsEnv, errorOnDefault bool,moduleTypeInfo LnsAny,moduleInfoManager LnsAny) {
     self.errorOnDefault = errorOnDefault
-    
     self.moduleInfoManager = NewNodes_SimpleModuleInfoManager(_env, moduleInfoManager)
-    
     var process func(_env *LnsEnv) *Ast_TypeNameCtrl
     process = func(_env *LnsEnv) *Ast_TypeNameCtrl {
         if moduleTypeInfo != nil{
@@ -1334,9 +1325,7 @@ func (self *Nodes_Filter) InitNodes_Filter(_env *LnsEnv, errorOnDefault bool,mod
         return Ast_defaultTypeNameCtrl
     }
     self.typeNameCtrl = process(_env)
-    
     self.optStack = NewLnsList([]LnsAny{})
-    
 }
 
 // 84: decl @lune.@base.@Nodes.Filter.pushOpt
@@ -2165,7 +2154,6 @@ func (self *Nodes_Node) Get_effectivePos(_env *LnsEnv) *Types_Position {
 // 241: decl @lune.@base.@Nodes.Node.setLValue
 func (self *Nodes_Node) SetLValue(_env *LnsEnv) {
     self.IsLValue = true
-    
 }
 
 // 245: decl @lune.@base.@Nodes.Node.getPrefix
@@ -2176,23 +2164,14 @@ func (self *Nodes_Node) GetPrefix(_env *LnsEnv) LnsAny {
 // 249: DeclConstr
 func (self *Nodes_Node) InitNodes_Node(_env *LnsEnv, id LnsInt,kind LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,expTypeList *LnsList) {
     self.IsLValue = false
-    
     self.id = id
-    
     self.kind = kind
-    
     self.pos = pos
-    
     self.inTestBlock = inTestBlock
-    
     self.expTypeList = expTypeList
-    
     self.commentList = nil
-    
     self.tailComment = nil
-    
     self.macroArgFlag = macroArgFlag
-    
 }
 
 // 263: decl @lune.@base.@Nodes.Node.addComment
@@ -2204,12 +2183,9 @@ func (self *Nodes_Node) AddComment(_env *LnsEnv, commentList *LnsList) {
             if !Lns_IsNil( __exp ) {
                 _exp := __exp.(*LnsList)
                 workList = _exp
-                
             } else {
                 workList = NewLnsList([]LnsAny{})
-                
                 self.commentList = workList
-                
             }
         }
         for _, _comment := range( commentList.Items ) {
@@ -2511,9 +2487,7 @@ func NewNodes_NodeManager(_env *LnsEnv) *Nodes_NodeManager {
 // 444: DeclConstr
 func (self *Nodes_NodeManager) InitNodes_NodeManager(_env *LnsEnv) {
     self.idSeed = 0
-    
     self.nodeKind2NodeList = NewLnsMap( map[LnsAny]LnsAny{})
-    
     for _kind, _ := range( Nodes_nodeKind2NameMap.Items ) {
         kind := _kind.(LnsInt)
         if Lns_op_not(self.nodeKind2NodeList.Get(kind)){
@@ -2525,7 +2499,6 @@ func (self *Nodes_NodeManager) InitNodes_NodeManager(_env *LnsEnv) {
 // 454: decl @lune.@base.@Nodes.NodeManager.nextId
 func (self *Nodes_NodeManager) NextId(_env *LnsEnv) LnsInt {
     self.idSeed = self.idSeed + 1
-    
     return self.idSeed
 }
 
@@ -2552,7 +2525,6 @@ func (self *Nodes_NodeManager) AddNode(_env *LnsEnv, node *Nodes_Node) {
         _list := self.nodeKind2NodeList.Get(node.FP.Get_kind(_env))
         if _list == nil{
             list = NewLnsList([]LnsAny{})
-            
             self.nodeKind2NodeList.Set(node.FP.Get_kind(_env),list)
         } else {
             list = _list.(*LnsList)
@@ -2580,7 +2552,6 @@ func (self *Nodes_NodeManager) DelNode(_env *LnsEnv, node *Nodes_Node) {
         item := _item.(Nodes_NodeDownCast).ToNodes_Node()
         if item == node{
             findIndex = index
-            
             break
         }
     }
@@ -3717,7 +3688,6 @@ func (self *Nodes_ShebangNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ShebangNode) InitNodes_ShebangNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) {
     self.InitNodes_Node(_env, id, 1, pos, inTestBlock, macroArgFlag, typeList)
     self.cmd = cmd
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ShebangNode.create
@@ -3823,7 +3793,6 @@ func (self *Nodes_ConvStatNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ConvStatNode) InitNodes_ConvStatNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) {
     self.InitNodes_Node(_env, id, 2, pos, inTestBlock, macroArgFlag, typeList)
     self.txt = txt
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ConvStatNode.create
@@ -3929,7 +3898,6 @@ func (self *Nodes_BlankLineNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_BlankLineNode) InitNodes_BlankLineNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) {
     self.InitNodes_Node(_env, id, 3, pos, inTestBlock, macroArgFlag, typeList)
     self.lineNum = lineNum
-    
 }
 
 // 702: decl @lune.@base.@Nodes.BlankLineNode.create
@@ -4035,7 +4003,6 @@ func (self *Nodes_SubfileNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_SubfileNode) InitNodes_SubfileNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) {
     self.InitNodes_Node(_env, id, 4, pos, inTestBlock, macroArgFlag, typeList)
     self.usePath = usePath
-    
 }
 
 // 702: decl @lune.@base.@Nodes.SubfileNode.create
@@ -4204,7 +4171,6 @@ func (self *Nodes_ImportNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ImportNode) InitNodes_ImportNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) {
     self.InitNodes_Node(_env, id, 5, pos, inTestBlock, macroArgFlag, typeList)
     self.info = info
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ImportNode.create
@@ -4474,31 +4440,18 @@ func (self *Nodes_RootNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_RootNode) InitNodes_RootNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) {
     self.InitNodes_Node(_env, id, 6, pos, inTestBlock, macroArgFlag, typeList)
     self.children = children
-    
     self.moduleScope = moduleScope
-    
     self.globalScope = globalScope
-    
     self.useModuleMacroSet = useModuleMacroSet
-    
     self.moduleId = moduleId
-    
     self.processInfo = processInfo
-    
     self.moduleTypeInfo = moduleTypeInfo
-    
     self.provideNode = provideNode
-    
     self.luneHelperInfo = luneHelperInfo
-    
     self.nodeManager = nodeManager
-    
     self.importModule2moduleInfo = importModule2moduleInfo
-    
     self.typeId2MacroInfo = typeId2MacroInfo
-    
     self.typeId2ClassMap = typeId2ClassMap
-    
 }
 
 // 702: decl @lune.@base.@Nodes.RootNode.create
@@ -4556,7 +4509,6 @@ func (self *Nodes_RootNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth 
 // 836: decl @lune.@base.@Nodes.RootNode.set_provide
 func (self *Nodes_RootNode) Set_provide(_env *LnsEnv, node *Nodes_ProvideNode) {
     self.provideNode = node
-    
 }
 
 
@@ -4658,13 +4610,9 @@ func (self *Nodes_RefTypeNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) {
     self.InitNodes_Node(_env, id, 7, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
-    
     self.itemNodeList = itemNodeList
-    
     self.mutMode = mutMode
-    
     self.array = array
-    
 }
 
 // 702: decl @lune.@base.@Nodes.RefTypeNode.create
@@ -4811,11 +4759,8 @@ func (self *Nodes_BlockNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_BlockNode) InitNodes_BlockNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) {
     self.InitNodes_Node(_env, id, 8, pos, inTestBlock, macroArgFlag, typeList)
     self.blockKind = blockKind
-    
     self.scope = scope
-    
     self.stmtList = stmtList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.BlockNode.create
@@ -4954,13 +4899,9 @@ func (self *Nodes_ScopeNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ScopeNode) InitNodes_ScopeNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, id, 9, pos, inTestBlock, macroArgFlag, typeList)
     self.scopeKind = scopeKind
-    
     self.scope = scope
-    
     self.symbolList = symbolList
-    
     self.block = block
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ScopeNode.create
@@ -5129,7 +5070,6 @@ func (self *Nodes_IfNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_IfNode) InitNodes_IfNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
     self.InitNodes_Node(_env, id, 10, pos, inTestBlock, macroArgFlag, typeList)
     self.stmtList = stmtList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.IfNode.create
@@ -5176,14 +5116,12 @@ func (self *Nodes_IfNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
                     _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                     _env.SetStackVal( kind > work) ).(bool){
                     kind = work
-                    
                 }
             }
         }
         
         if stmtInfo.FP.Get_kind(_env) == Nodes_IfKind__Else{
             hasElseFlag = true
-            
         }
     }
     if _env.PopVal( _env.IncStack() ||
@@ -5359,11 +5297,8 @@ func (self *Nodes_ExpListNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpListNode) InitNodes_ExpListNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) {
     self.InitNodes_Node(_env, id, 11, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
-    
     self.mRetExp = mRetExp
-    
     self.followOn = followOn
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpListNode.create
@@ -5425,7 +5360,6 @@ func (self *Nodes_ExpListNode) SetLValue(_env *LnsEnv) {
     for _, _expNode := range( self.FP.Get_expList(_env).Items ) {
         expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
         expNode.IsLValue = true
-        
     }
 }
 
@@ -5611,15 +5545,10 @@ func (self *Nodes_SwitchNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_SwitchNode) InitNodes_SwitchNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) {
     self.InitNodes_Node(_env, id, 12, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
     self.caseList = caseList
-    
     self._default = _default
-    
     self.caseKind = caseKind
-    
     self.failSafeDefault = failSafeDefault
-    
 }
 
 // 702: decl @lune.@base.@Nodes.SwitchNode.create
@@ -5706,7 +5635,6 @@ func (self *Nodes_SwitchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsIn
                     _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                     _env.SetStackVal( kind > work) ).(bool){
                     kind = work
-                    
                 }
             }
         }
@@ -5739,7 +5667,6 @@ func (self *Nodes_SwitchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsIn
                         _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                         _env.SetStackVal( kind > work) ).(bool){
                         kind = work
-                        
                     }
                 }
             }
@@ -5881,11 +5808,8 @@ func (self *Nodes_WhileNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_WhileNode) InitNodes_WhileNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, id, 13, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
     self.infinit = infinit
-    
     self.block = block
-    
 }
 
 // 702: decl @lune.@base.@Nodes.WhileNode.create
@@ -5966,7 +5890,6 @@ func (self *Nodes_WhileNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt
                             _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                             _env.SetStackVal( kind > work) ).(bool){
                             kind = work
-                            
                         }
                     }
                 }
@@ -6011,7 +5934,6 @@ func (self *Nodes_WhileNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt
                             _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                             _env.SetStackVal( kind > work) ).(bool){
                             kind = work
-                            
                         }
                     }
                 }
@@ -6123,9 +6045,7 @@ func (self *Nodes_RepeatNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_RepeatNode) InitNodes_RepeatNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) {
     self.InitNodes_Node(_env, id, 14, pos, inTestBlock, macroArgFlag, typeList)
     self.block = block
-    
     self.exp = exp
-    
 }
 
 // 702: decl @lune.@base.@Nodes.RepeatNode.create
@@ -6285,15 +6205,10 @@ func (self *Nodes_ForNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ForNode) InitNodes_ForNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) {
     self.InitNodes_Node(_env, id, 15, pos, inTestBlock, macroArgFlag, typeList)
     self.block = block
-    
     self.val = val
-    
     self.init = init
-    
     self.to = to
-    
     self.delta = delta
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ForNode.create
@@ -6483,11 +6398,8 @@ func (self *Nodes_ApplyNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ApplyNode) InitNodes_ApplyNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, id, 16, pos, inTestBlock, macroArgFlag, typeList)
     self.varList = varList
-    
     self.expList = expList
-    
     self.block = block
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ApplyNode.create
@@ -6644,13 +6556,9 @@ func (self *Nodes_ForeachNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ForeachNode) InitNodes_ForeachNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, id, 17, pos, inTestBlock, macroArgFlag, typeList)
     self.val = val
-    
     self.key = key
-    
     self.exp = exp
-    
     self.block = block
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ForeachNode.create
@@ -6810,15 +6718,10 @@ func (self *Nodes_ForsortNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ForsortNode) InitNodes_ForsortNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) {
     self.InitNodes_Node(_env, id, 18, pos, inTestBlock, macroArgFlag, typeList)
     self.val = val
-    
     self.key = key
-    
     self.exp = exp
-    
     self.block = block
-    
     self.sort = sort
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ForsortNode.create
@@ -6966,7 +6869,6 @@ func (self *Nodes_ReturnNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ReturnNode) InitNodes_ReturnNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, id, 19, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ReturnNode.create
@@ -7203,7 +7105,6 @@ func (self *Nodes_ProvideNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ProvideNode) InitNodes_ProvideNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) {
     self.InitNodes_Node(_env, id, 21, pos, inTestBlock, macroArgFlag, typeList)
     self.symbol = symbol
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ProvideNode.create
@@ -7315,11 +7216,8 @@ func (self *Nodes_ExpNewNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) {
     self.InitNodes_Node(_env, id, 22, pos, inTestBlock, macroArgFlag, typeList)
     self.symbol = symbol
-    
     self.ctorTypeInfo = ctorTypeInfo
-    
     self.argList = argList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpNewNode.create
@@ -7464,9 +7362,7 @@ func (self *Nodes_ExpUnwrapNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) {
     self.InitNodes_Node(_env, id, 23, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
     self._default = _default
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpUnwrapNode.create
@@ -7598,7 +7494,6 @@ func (self *Nodes_ExpRefNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpRefNode) InitNodes_ExpRefNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) {
     self.InitNodes_Node(_env, id, 24, pos, inTestBlock, macroArgFlag, typeList)
     self.symbolInfo = symbolInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpRefNode.create
@@ -7745,13 +7640,9 @@ func (self *Nodes_ExpSetValNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) {
     self.InitNodes_Node(_env, id, 25, pos, inTestBlock, macroArgFlag, typeList)
     self.exp1 = exp1
-    
     self.exp2 = exp2
-    
     self.LeftSymList = LeftSymList
-    
     self.initSymSet = initSymSet
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpSetValNode.create
@@ -7895,11 +7786,8 @@ func (self *Nodes_ExpSetItemNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) {
     self.InitNodes_Node(_env, id, 26, pos, inTestBlock, macroArgFlag, typeList)
     self.val = val
-    
     self.index = index
-    
     self.exp2 = exp2
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpSetItemNode.create
@@ -8044,11 +7932,8 @@ func (self *Nodes_ExpOp2Node) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) {
     self.InitNodes_Node(_env, id, 27, pos, inTestBlock, macroArgFlag, typeList)
     self.op = op
-    
     self.exp1 = exp1
-    
     self.exp2 = exp2
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpOp2Node.create
@@ -8118,25 +8003,17 @@ func (self *Nodes_ExpOp2Node) getValType(_env *LnsEnv, node *Nodes_Node)(bool, L
     case *Nodes_Literal__Int:
     val := _matchExp1.Val1
         intVal = val
-        
         realVal = (LnsReal)(val)
-        
         retTypeInfo = Ast_builtinTypeInt
-        
     case *Nodes_Literal__Real:
     val := _matchExp1.Val1
         realVal = val
-        
         intVal = (LnsInt)(val)
-        
         retTypeInfo = Ast_builtinTypeReal
-        
     case *Nodes_Literal__Str:
     val := _matchExp1.Val1
         strVal = val
-        
         retTypeInfo = Ast_builtinTypeString
-        
     default:
         return false, 0, 0.0, "", Ast_headTypeInfo
     }
@@ -8203,7 +8080,6 @@ func (self *Nodes_ExpOp2Node) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
             _env.SetStackVal( type1 == Ast_builtinTypeReal) ||
             _env.SetStackVal( type2 == Ast_builtinTypeReal) ).(bool){
             retType = Ast_builtinTypeReal
-            
         }
         if _switch1 := (self.op.Txt); _switch1 == "+" {
             if retType == Ast_builtinTypeInt{
@@ -8334,11 +8210,8 @@ func (self *Nodes_UnwrapSetNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) {
     self.InitNodes_Node(_env, id, 28, pos, inTestBlock, macroArgFlag, typeList)
     self.dstExpList = dstExpList
-    
     self.srcExpList = srcExpList
-    
     self.unwrapBlock = unwrapBlock
-    
 }
 
 // 702: decl @lune.@base.@Nodes.UnwrapSetNode.create
@@ -8505,13 +8378,9 @@ func (self *Nodes_IfUnwrapNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) {
     self.InitNodes_Node(_env, id, 29, pos, inTestBlock, macroArgFlag, typeList)
     self.varSymList = varSymList
-    
     self.expList = expList
-    
     self.block = block
-    
     self.nilBlock = nilBlock
-    
 }
 
 // 702: decl @lune.@base.@Nodes.IfUnwrapNode.create
@@ -8606,7 +8475,6 @@ func (self *Nodes_IfUnwrapNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) Lns
                 _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                 _env.SetStackVal( kind > work) ).(bool){
                 kind = work
-                
             }
         }
     }
@@ -8616,7 +8484,6 @@ func (self *Nodes_IfUnwrapNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) Lns
         if !Lns_IsNil( _block ) {
             block := _block.(*Nodes_BlockNode)
             work = block.FP.GetBreakKind(_env, checkMode)
-            
             if checkMode == Nodes_CheckBreakMode__IgnoreFlowReturn{
                 if work == Nodes_BreakKind__Return{
                     return Nodes_BreakKind__Return
@@ -8638,7 +8505,6 @@ func (self *Nodes_IfUnwrapNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) Lns
                         _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                         _env.SetStackVal( kind > work) ).(bool){
                         kind = work
-                        
                     }
                 }
             }
@@ -8788,11 +8654,8 @@ func (self *Nodes_WhenNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_WhenNode) InitNodes_WhenNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) {
     self.InitNodes_Node(_env, id, 30, pos, inTestBlock, macroArgFlag, typeList)
     self.symPairList = symPairList
-    
     self.block = block
-    
     self.elseBlock = elseBlock
-    
 }
 
 // 702: decl @lune.@base.@Nodes.WhenNode.create
@@ -8871,7 +8734,6 @@ func (self *Nodes_WhenNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt 
                 _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                 _env.SetStackVal( kind > work) ).(bool){
                 kind = work
-                
             }
         }
     }
@@ -8881,7 +8743,6 @@ func (self *Nodes_WhenNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt 
         if !Lns_IsNil( _block ) {
             block := _block.(*Nodes_BlockNode)
             work = block.FP.GetBreakKind(_env, checkMode)
-            
             if checkMode == Nodes_CheckBreakMode__IgnoreFlowReturn{
                 if work == Nodes_BreakKind__Return{
                     return Nodes_BreakKind__Return
@@ -8903,7 +8764,6 @@ func (self *Nodes_WhenNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt 
                         _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                         _env.SetStackVal( kind > work) ).(bool){
                         kind = work
-                        
                     }
                 }
             }
@@ -9016,15 +8876,10 @@ func (self *Nodes_ExpCastNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) {
     self.InitNodes_Node(_env, id, 31, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
     self.castType = castType
-    
     self.castTypeNode = castTypeNode
-    
     self.castOpe = castOpe
-    
     self.castKind = castKind
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpCastNode.create
@@ -9181,7 +9036,6 @@ func (self *Nodes_ExpToDDDNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpToDDDNode) InitNodes_ExpToDDDNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) {
     self.InitNodes_Node(_env, id, 32, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpToDDDNode.create
@@ -9306,9 +9160,7 @@ func (self *Nodes_ExpSubDDDNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) {
     self.InitNodes_Node(_env, id, 33, pos, inTestBlock, macroArgFlag, typeList)
     self.src = src
-    
     self.remainIndex = remainIndex
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpSubDDDNode.create
@@ -9436,11 +9288,8 @@ func (self *Nodes_ExpOp1Node) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) {
     self.InitNodes_Node(_env, id, 34, pos, inTestBlock, macroArgFlag, typeList)
     self.op = op
-    
     self.macroMode = macroMode
-    
     self.exp = exp
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpOp1Node.create
@@ -9571,13 +9420,9 @@ func (self *Nodes_ExpRefItemNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) {
     self.InitNodes_Node(_env, id, 35, pos, inTestBlock, macroArgFlag, typeList)
     self.val = val
-    
     self.nilAccess = nilAccess
-    
     self.symbol = symbol
-    
     self.index = index
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpRefItemNode.create
@@ -9743,13 +9588,9 @@ func (self *Nodes_ExpCallNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) {
     self.InitNodes_Node(_env, id, 36, pos, inTestBlock, macroArgFlag, typeList)
     self._func = _func
-    
     self.errorFunc = errorFunc
-    
     self.nilAccess = nilAccess
-    
     self.argList = argList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpCallNode.create
@@ -9921,7 +9762,6 @@ func (self *Nodes_ExpMRetNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpMRetNode) InitNodes_ExpMRetNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) {
     self.InitNodes_Node(_env, id, 37, pos, inTestBlock, macroArgFlag, typeList)
     self.mRet = mRet
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpMRetNode.create
@@ -10051,9 +9891,7 @@ func (self *Nodes_ExpAccessMRetNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) {
     self.InitNodes_Node(_env, id, 38, pos, inTestBlock, macroArgFlag, typeList)
     self.mRet = mRet
-    
     self.index = index
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpAccessMRetNode.create
@@ -10180,7 +10018,6 @@ func (self *Nodes_ExpMultiTo1Node) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpMultiTo1Node) InitNodes_ExpMultiTo1Node(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, id, 39, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpMultiTo1Node.create
@@ -10307,7 +10144,6 @@ func (self *Nodes_ExpParenNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpParenNode) InitNodes_ExpParenNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, id, 40, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpParenNode.create
@@ -10437,9 +10273,7 @@ func (self *Nodes_ExpMacroExpNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpMacroExpNode) InitNodes_ExpMacroExpNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) {
     self.InitNodes_Node(_env, id, 41, pos, inTestBlock, macroArgFlag, typeList)
     self.macroType = macroType
-    
     self.stmtList = stmtList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpMacroExpNode.create
@@ -10574,7 +10408,6 @@ func (self *Nodes_ExpMacroStatNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpMacroStatNode) InitNodes_ExpMacroStatNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) {
     self.InitNodes_Node(_env, id, 42, pos, inTestBlock, macroArgFlag, typeList)
     self.expStrList = expStrList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpMacroStatNode.create
@@ -10623,7 +10456,6 @@ func (self *Nodes_ExpMacroStatNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
             case *Nodes_Literal__Str:
             work := _matchExp1.Val1
                 txt = _env.LuaVM.String_format("%s%s", []LnsAny{txt, work})
-                
             }
         } else {
             return nil, _env.LuaVM.String_format("illegal literal -- %s", []LnsAny{Nodes_getNodeKindName(_env, token.FP.Get_kind(_env))})
@@ -10722,7 +10554,6 @@ func (self *Nodes_ExpMacroArgExpNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpMacroArgExpNode) InitNodes_ExpMacroArgExpNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) {
     self.InitNodes_Node(_env, id, 43, pos, inTestBlock, macroArgFlag, typeList)
     self.codeTxt = codeTxt
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpMacroArgExpNode.create
@@ -10828,7 +10659,6 @@ func (self *Nodes_StmtExpNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_StmtExpNode) InitNodes_StmtExpNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, id, 44, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
 }
 
 // 702: decl @lune.@base.@Nodes.StmtExpNode.create
@@ -10960,7 +10790,6 @@ func (self *Nodes_ExpMacroStatListNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpMacroStatListNode) InitNodes_ExpMacroStatListNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, id, 45, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpMacroStatListNode.create
@@ -11091,13 +10920,9 @@ func (self *Nodes_ExpOmitEnumNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) {
     self.InitNodes_Node(_env, id, 46, pos, inTestBlock, macroArgFlag, typeList)
     self.valToken = valToken
-    
     self.valInfo = valInfo
-    
     self.aliasType = aliasType
-    
     self.enumTypeInfo = enumTypeInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpOmitEnumNode.create
@@ -11223,13 +11048,9 @@ func (self *Nodes_RefFieldNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) {
     self.InitNodes_Node(_env, id, 47, pos, inTestBlock, macroArgFlag, typeList)
     self.field = field
-    
     self.symbolInfo = symbolInfo
-    
     self.nilAccess = nilAccess
-    
     self.prefix = prefix
-    
 }
 
 // 702: decl @lune.@base.@Nodes.RefFieldNode.create
@@ -11448,15 +11269,10 @@ func (self *Nodes_GetFieldNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) {
     self.InitNodes_Node(_env, id, 48, pos, inTestBlock, macroArgFlag, typeList)
     self.field = field
-    
     self.symbolInfo = symbolInfo
-    
     self.nilAccess = nilAccess
-    
     self.prefix = prefix
-    
     self.getterTypeInfo = getterTypeInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.GetFieldNode.create
@@ -11594,11 +11410,8 @@ func (self *Nodes_AliasNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_AliasNode) InitNodes_AliasNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) {
     self.InitNodes_Node(_env, id, 49, pos, inTestBlock, macroArgFlag, typeList)
     self.newSymbol = newSymbol
-    
     self.srcNode = srcNode
-    
     self.typeInfo = typeInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.AliasNode.create
@@ -11800,29 +11613,17 @@ func (self *Nodes_DeclVarNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) {
     self.InitNodes_Node(_env, id, 50, pos, inTestBlock, macroArgFlag, typeList)
     self.mode = mode
-    
     self.accessMode = accessMode
-    
     self.staticFlag = staticFlag
-    
     self.varList = varList
-    
     self.expList = expList
-    
     self.symbolInfoList = symbolInfoList
-    
     self.typeInfoList = typeInfoList
-    
     self.unwrapFlag = unwrapFlag
-    
     self.unwrapBlock = unwrapBlock
-    
     self.thenBlock = thenBlock
-    
     self.syncVarList = syncVarList
-    
     self.syncBlock = syncBlock
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclVarNode.create
@@ -11929,7 +11730,6 @@ func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsI
         if !Lns_IsNil( _block ) {
             block := _block.(*Nodes_BlockNode)
             work = block.FP.GetBreakKind(_env, checkMode)
-            
             if checkMode == Nodes_CheckBreakMode__IgnoreFlowReturn{
                 if work == Nodes_BreakKind__Return{
                     return Nodes_BreakKind__Return
@@ -11951,7 +11751,6 @@ func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsI
                         _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                         _env.SetStackVal( kind > work) ).(bool){
                         kind = work
-                        
                     }
                 }
             }
@@ -11961,7 +11760,6 @@ func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsI
                 if !Lns_IsNil( _thenBlock ) {
                     thenBlock := _thenBlock.(*Nodes_BlockNode)
                     work = thenBlock.FP.GetBreakKind(_env, checkMode)
-                    
                     if checkMode == Nodes_CheckBreakMode__IgnoreFlowReturn{
                         if work == Nodes_BreakKind__Return{
                             return Nodes_BreakKind__Return
@@ -11983,7 +11781,6 @@ func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsI
                                 _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                                 _env.SetStackVal( kind > work) ).(bool){
                                 kind = work
-                                
                             }
                         }
                     }
@@ -11993,7 +11790,6 @@ func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsI
                         if !Lns_IsNil( _syncBlock ) {
                             syncBlock := _syncBlock.(*Nodes_BlockNode)
                             work = syncBlock.FP.GetBreakKind(_env, checkMode)
-                            
                             if checkMode == Nodes_CheckBreakMode__IgnoreFlowReturn{
                                 if work == Nodes_BreakKind__Return{
                                     return Nodes_BreakKind__Return
@@ -12015,7 +11811,6 @@ func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsI
                                         _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                                         _env.SetStackVal( kind > work) ).(bool){
                                         kind = work
-                                        
                                     }
                                 }
                             }
@@ -12255,7 +12050,6 @@ func (self *Nodes_DeclFormNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclFormNode) InitNodes_DeclFormNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, id, 51, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclFormNode.create
@@ -12401,7 +12195,6 @@ func (self *Nodes_DeclFuncNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclFuncNode) InitNodes_DeclFuncNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, id, 52, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclFuncNode.create
@@ -12567,7 +12360,6 @@ func (self *Nodes_DeclMethodNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclMethodNode) InitNodes_DeclMethodNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, id, 53, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclMethodNode.create
@@ -12723,7 +12515,6 @@ func (self *Nodes_ProtoMethodNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ProtoMethodNode) InitNodes_ProtoMethodNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, id, 54, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ProtoMethodNode.create
@@ -12879,7 +12670,6 @@ func (self *Nodes_DeclConstrNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclConstrNode) InitNodes_DeclConstrNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, id, 55, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclConstrNode.create
@@ -13035,7 +12825,6 @@ func (self *Nodes_DeclDestrNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclDestrNode) InitNodes_DeclDestrNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, id, 56, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclDestrNode.create
@@ -13197,11 +12986,8 @@ func (self *Nodes_ExpCallSuperCtorNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
     self.InitNodes_Node(_env, id, 57, pos, inTestBlock, macroArgFlag, typeList)
     self.superType = superType
-    
     self.methodType = methodType
-    
     self.expList = expList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpCallSuperCtorNode.create
@@ -13328,11 +13114,8 @@ func (self *Nodes_ExpCallSuperNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
     self.InitNodes_Node(_env, id, 58, pos, inTestBlock, macroArgFlag, typeList)
     self.superType = superType
-    
     self.methodType = methodType
-    
     self.expList = expList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ExpCallSuperNode.create
@@ -13466,9 +13249,7 @@ func (self *Nodes_AsyncLockNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_AsyncLockNode) InitNodes_AsyncLockNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, id, 59, pos, inTestBlock, macroArgFlag, typeList)
     self.lockKind = lockKind
-    
     self.block = block
-    
 }
 
 // 702: decl @lune.@base.@Nodes.AsyncLockNode.create
@@ -13625,29 +13406,17 @@ func (self *Nodes_DeclMemberNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) {
     self.InitNodes_Node(_env, id, 60, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
-    
     self.refType = refType
-    
     self.symbolInfo = symbolInfo
-    
     self.classType = classType
-    
     self.staticFlag = staticFlag
-    
     self.accessMode = accessMode
-    
     self.getterMutable = getterMutable
-    
     self.getterMode = getterMode
-    
     self.getterToken = getterToken
-    
     self.getterRetType = getterRetType
-    
     self.setterMode = setterMode
-    
     self.setterToken = setterToken
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclMemberNode.create
@@ -13793,11 +13562,8 @@ func (self *Nodes_DeclArgNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) {
     self.InitNodes_Node(_env, id, 61, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
-    
     self.symbolInfo = symbolInfo
-    
     self.argType = argType
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclArgNode.create
@@ -14071,7 +13837,6 @@ func (self *Nodes_DeclAdvertiseNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclAdvertiseNode) InitNodes_DeclAdvertiseNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) {
     self.InitNodes_Node(_env, id, 63, pos, inTestBlock, macroArgFlag, typeList)
     self.advInfo = advInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclAdvertiseNode.create
@@ -14262,9 +14027,7 @@ func (self *Nodes_ProtoClassNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_ProtoClassNode) InitNodes_ProtoClassNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) {
     self.InitNodes_Node(_env, id, 64, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
-    
     self.inheritInfo = inheritInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.ProtoClassNode.create
@@ -14474,43 +14237,24 @@ func (self *Nodes_DeclClassNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) {
     self.InitNodes_Node(_env, id, 65, pos, inTestBlock, macroArgFlag, typeList)
     self.accessMode = accessMode
-    
     self.name = name
-    
     self.inheritInfo = inheritInfo
-    
     self.hasPrototype = hasPrototype
-    
     self.gluePrefix = gluePrefix
-    
     self.moduleName = moduleName
-    
     self.lang = lang
-    
     self.lazyLoad = lazyLoad
-    
     self.hasOldCtor = hasOldCtor
-    
     self.allStmtList = allStmtList
-    
     self.declStmtList = declStmtList
-    
     self.fieldList = fieldList
-    
     self.memberList = memberList
-    
     self.scope = scope
-    
     self.initBlock = initBlock
-    
     self.advertiseList = advertiseList
-    
     self.trustList = trustList
-    
     self.uninitMemberList = uninitMemberList
-    
     self.outerMethodSet = outerMethodSet
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclClassNode.create
@@ -14653,7 +14397,6 @@ func (self *Nodes_DeclClassNode) CreateMethodNameSetWithoutAdv(_env *LnsEnv) *Ln
 // 1969: decl @lune.@base.@Nodes.DeclClassNode.setHasOldCtor
 func (self *Nodes_DeclClassNode) SetHasOldCtor(_env *LnsEnv) {
     self.hasOldCtor = true
-    
 }
 
 // 1973: decl @lune.@base.@Nodes.DeclClassNode.hasUserInit
@@ -14767,15 +14510,10 @@ func (self *Nodes_DeclEnumNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) {
     self.InitNodes_Node(_env, id, 66, pos, inTestBlock, macroArgFlag, typeList)
     self.enumType = enumType
-    
     self.accessMode = accessMode
-    
     self.name = name
-    
     self.valueNameList = valueNameList
-    
     self.scope = scope
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclEnumNode.create
@@ -14979,15 +14717,10 @@ func (self *Nodes_DeclAlgeNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) {
     self.InitNodes_Node(_env, id, 67, pos, inTestBlock, macroArgFlag, typeList)
     self.accessMode = accessMode
-    
     self.algeType = algeType
-    
     self.name = name
-    
     self.algeValList = algeValList
-    
     self.scope = scope
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclAlgeNode.create
@@ -15128,15 +14861,10 @@ func (self *Nodes_NewAlgeValNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) {
     self.InitNodes_Node(_env, id, 68, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
-    
     self.prefix = prefix
-    
     self.algeTypeInfo = algeTypeInfo
-    
     self.valInfo = valInfo
-    
     self.paramList = paramList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.NewAlgeValNode.create
@@ -15281,7 +15009,6 @@ func (self *Nodes_LuneControlNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LuneControlNode) InitNodes_LuneControlNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) {
     self.InitNodes_Node(_env, id, 69, pos, inTestBlock, macroArgFlag, typeList)
     self.pragma = pragma
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LuneControlNode.create
@@ -15453,17 +15180,11 @@ func (self *Nodes_MatchNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_MatchNode) InitNodes_MatchNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) {
     self.InitNodes_Node(_env, id, 70, pos, inTestBlock, macroArgFlag, typeList)
     self.val = val
-    
     self.algeTypeInfo = algeTypeInfo
-    
     self.caseList = caseList
-    
     self.defaultBlock = defaultBlock
-    
     self.caseKind = caseKind
-    
     self.failSafeDefault = failSafeDefault
-    
 }
 
 // 702: decl @lune.@base.@Nodes.MatchNode.create
@@ -15550,7 +15271,6 @@ func (self *Nodes_MatchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt
                     _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                     _env.SetStackVal( kind > work) ).(bool){
                     kind = work
-                    
                 }
             }
         }
@@ -15583,7 +15303,6 @@ func (self *Nodes_MatchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt
                         _env.SetStackVal( kind == Nodes_BreakKind__None) ||
                         _env.SetStackVal( kind > work) ).(bool){
                         kind = work
-                        
                     }
                 }
             }
@@ -15719,7 +15438,6 @@ func (self *Nodes_LuneKindNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LuneKindNode) InitNodes_LuneKindNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, id, 71, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LuneKindNode.create
@@ -15841,7 +15559,6 @@ func (self *Nodes_DeclMacroNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_DeclMacroNode) InitNodes_DeclMacroNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) {
     self.InitNodes_Node(_env, id, 72, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
-    
 }
 
 // 702: decl @lune.@base.@Nodes.DeclMacroNode.create
@@ -15989,13 +15706,9 @@ func (self *Nodes_TestCaseNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, id, 73, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
-    
     self.impNode = impNode
-    
     self.ctrlName = ctrlName
-    
     self.block = block
-    
 }
 
 // 702: decl @lune.@base.@Nodes.TestCaseNode.create
@@ -16134,7 +15847,6 @@ func (self *Nodes_TestBlockNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_TestBlockNode) InitNodes_TestBlockNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
     self.InitNodes_Node(_env, id, 74, pos, inTestBlock, macroArgFlag, typeList)
     self.stmtList = stmtList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.TestBlockNode.create
@@ -16372,7 +16084,6 @@ func (self *Nodes_BoxingNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_BoxingNode) InitNodes_BoxingNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
     self.InitNodes_Node(_env, id, 76, pos, inTestBlock, macroArgFlag, typeList)
     self.src = src
-    
 }
 
 // 702: decl @lune.@base.@Nodes.BoxingNode.create
@@ -16494,7 +16205,6 @@ func (self *Nodes_UnboxingNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_UnboxingNode) InitNodes_UnboxingNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
     self.InitNodes_Node(_env, id, 77, pos, inTestBlock, macroArgFlag, typeList)
     self.src = src
-    
 }
 
 // 702: decl @lune.@base.@Nodes.UnboxingNode.create
@@ -16731,9 +16441,7 @@ func (self *Nodes_LiteralCharNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
     self.InitNodes_Node(_env, id, 79, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
-    
     self.num = num
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralCharNode.create
@@ -16853,9 +16561,7 @@ func (self *Nodes_LiteralIntNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
     self.InitNodes_Node(_env, id, 80, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
-    
     self.num = num
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralIntNode.create
@@ -16975,9 +16681,7 @@ func (self *Nodes_LiteralRealNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) {
     self.InitNodes_Node(_env, id, 81, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
-    
     self.num = num
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralRealNode.create
@@ -17094,7 +16798,6 @@ func (self *Nodes_LiteralArrayNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralArrayNode) InitNodes_LiteralArrayNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, id, 82, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralArrayNode.create
@@ -17268,7 +16971,6 @@ func (self *Nodes_LiteralListNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralListNode) InitNodes_LiteralListNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, id, 83, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralListNode.create
@@ -17442,7 +17144,6 @@ func (self *Nodes_LiteralSetNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralSetNode) InitNodes_LiteralSetNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, id, 84, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralSetNode.create
@@ -17662,9 +17363,7 @@ func (self *Nodes_LiteralMapNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) {
     self.InitNodes_Node(_env, id, 85, pos, inTestBlock, macroArgFlag, typeList)
     self._map = _map
-    
     self.pairList = pairList
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralMapNode.create
@@ -17892,11 +17591,8 @@ func (self *Nodes_LiteralStringNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) {
     self.InitNodes_Node(_env, id, 86, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
-    
     self.orgParam = orgParam
-    
     self.dddParam = dddParam
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralStringNode.create
@@ -17958,10 +17654,8 @@ func (self *Nodes_LiteralStringNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     txt = self.token.Txt
     if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(txt, "^```", nil, nil))){
         txt = _env.LuaVM.String_sub(txt,4, -4)
-        
     } else { 
         txt = _env.LuaVM.String_sub(txt,2, -2)
-        
     }
     {
         _param := self.FP.Get_orgParam(_env)
@@ -17984,7 +17678,6 @@ func (self *Nodes_LiteralStringNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 }
             }
             txt = _env.LuaVM.String_format(Nodes_convExp52740(txt, Lns_2DDD(paramList.Unpack())))
-            
         }
     }
     return &Nodes_Literal__Str{txt}, nil
@@ -18104,7 +17797,6 @@ func (self *Nodes_LiteralBoolNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralBoolNode) InitNodes_LiteralBoolNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
     self.InitNodes_Node(_env, id, 87, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralBoolNode.create
@@ -18221,7 +17913,6 @@ func (self *Nodes_LiteralSymbolNode) CanBeStatement(_env *LnsEnv) bool {
 func (self *Nodes_LiteralSymbolNode) InitNodes_LiteralSymbolNode(_env *LnsEnv, id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
     self.InitNodes_Node(_env, id, 88, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
-    
 }
 
 // 702: decl @lune.@base.@Nodes.LiteralSymbolNode.create
@@ -18309,9 +18000,7 @@ func (self *Nodes_DefMacroInfo) GetTokenList(_env *LnsEnv) *LnsList {
 func (self *Nodes_DefMacroInfo) InitNodes_DefMacroInfo(_env *LnsEnv, _func *Lns_luaValue,declInfo *Nodes_DeclMacroInfo,symbol2MacroValInfoMap *LnsMap) {
     self.InitNodes_MacroInfo(_env, _func, symbol2MacroValInfoMap)
     self.DeclInfo = declInfo
-    
     self.argList = NewLnsList([]LnsAny{})
-    
     for _, _argNode := range( declInfo.FP.Get_argList(_env).Items ) {
         argNode := _argNode.(Nodes_DeclArgNodeDownCast).ToNodes_DeclArgNode()
         if argNode.FP.Get_kind(_env) == Nodes_NodeKind_get_DeclArg(_env){

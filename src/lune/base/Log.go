@@ -52,7 +52,6 @@ func Log_str2level(_env *LnsEnv, txt string) LnsAny {
 // 83: decl @lune.@base.@Log.setLevel
 func Log_setLevel(_env *LnsEnv, level LnsInt) {
     Log_control = NewLog_Control(_env, level)
-    
     if level >= Log_Level__Log{
         Depend_setRuntimeLog(_env, true)
     }
@@ -146,7 +145,6 @@ func Lns_Log_init(_env *LnsEnv) {
         work.Set("debug",Log_Level__Debug)
         work.Set("trace",Log_Level__Trace)
         Log_name2levelMap = work
-        
     }
     Log_control = NewLog_Control(_env, Log_Level__Err)
 }

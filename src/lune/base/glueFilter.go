@@ -146,19 +146,13 @@ func (self *glueFilter_glueGenerator) getArgInfo(_env *LnsEnv, argNode *Nodes_No
     nilableTypeTxt = ""
     if orgType == Ast_builtinTypeInt{
         typeTxt = "int"
-        
         nilableTypeTxt = typeTxt + " *"
-        
     } else if orgType == Ast_builtinTypeReal{
         typeTxt = "double"
-        
         nilableTypeTxt = typeTxt + " *"
-        
     } else if orgType == Ast_builtinTypeString{
         typeTxt = "const char *"
-        
         nilableTypeTxt = typeTxt
-        
     }
     var argName string
     argName = ""
@@ -167,7 +161,6 @@ func (self *glueFilter_glueGenerator) getArgInfo(_env *LnsEnv, argNode *Nodes_No
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Nodes_DeclArgNode)
             argName = _exp.FP.Get_name(_env).Txt
-            
         }
     }
     return typeTxt, _env.PopVal( _env.IncStack() ||
@@ -259,7 +252,6 @@ func (self *glueFilter_glueGenerator) outputMethod(_env *LnsEnv, node *Nodes_Nod
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Types_Token)
             name = gluePrefix + glueFilter_getFuncName_2_(_env, _exp.Txt)
-            
         } else {
             return 
         }
@@ -295,7 +287,6 @@ func (self *glueFilter_glueGenerator) outputMethod(_env *LnsEnv, node *Nodes_Nod
             if argNode.FP.Get_expType(_env).FP.Get_nilable(_env){
                 if argType != Ast_builtinTypeString{
                     callArgName = _env.LuaVM.String_format("_p%s", []LnsAny{argName})
-                    
                     self.FP.write(_env, _env.LuaVM.String_format("  %s %s = NULL;\n", []LnsAny{argTypeTxt, callArgName}))
                 }
             }
@@ -305,20 +296,14 @@ func (self *glueFilter_glueGenerator) outputMethod(_env *LnsEnv, node *Nodes_Nod
             callTxt = ""
             if _switch2 := argType; _switch2 == Ast_builtinTypeInt {
                 setTxt = _env.LuaVM.String_format("  %s = luaL_checkinteger( pLua, %d );\n", []LnsAny{argName, index + addVal})
-                
                 callTxt = callArgName
-                
             } else if _switch2 == Ast_builtinTypeReal {
                 setTxt = _env.LuaVM.String_format("  %s = luaL_checknumber( pLua, %d );\n", []LnsAny{argName, index + addVal})
-                
                 callTxt = callArgName
-                
             } else if _switch2 == Ast_builtinTypeString {
                 self.FP.write(_env, _env.LuaVM.String_format("  size_t size_%s = 0;\n", []LnsAny{argName}))
                 setTxt = _env.LuaVM.String_format("  %s = luaL_checklstring( pLua, %d, &size_%s );\n", []LnsAny{argName, index + addVal, argName})
-                
                 callTxt = _env.LuaVM.String_format("%s, size_%s", []LnsAny{argName, argName})
-                
             }
             glueArgInfoList.Insert(glueFilter_GlueArgInfo2Stem(NewglueFilter_GlueArgInfo(_env, index + addVal, argName, callArgName, callTxt, setTxt, argNode.FP.Get_expType(_env))))
         }
@@ -591,7 +576,6 @@ func NewglueFilter_glueFilter(_env *LnsEnv, arg1 LnsAny) *glueFilter_glueFilter 
 func (self *glueFilter_glueFilter) InitglueFilter_glueFilter(_env *LnsEnv, outputDir LnsAny) {
     self.InitNodes_Filter(_env, false, nil, nil)
     self.outputDir = outputDir
-    
 }
 
 // 397: decl @lune.@base.@glueFilter.glueFilter.processRoot

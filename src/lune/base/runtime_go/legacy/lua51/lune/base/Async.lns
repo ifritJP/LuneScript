@@ -36,14 +36,16 @@ T 型のデータを生成して返す処理を別スレッドにする。
 pub abstract class Pipe<T> {
    let mut pipe:__pipe<T>!;
    let mut started:bool;
+   let mut setuped:bool;
    
    pro fn __init( pipe:__pipe<T>! ) {
       //super();
       self.pipe = pipe;
       self.started = false;
+      self.setuped = false;
    }
 
-   pub abstract fn setup() mut;
+   pro abstract fn setup() mut;
    pro abstract fn access() mut : PipeItem<T>!;
 
    pub fn getNext() mut : PipeItem<T>! {
@@ -61,6 +63,7 @@ pub abstract class Pipe<T> {
    //pro override fn loop() mut {
    pub fn run() mut {
       self.setup();
+      self.setuped = true;
       let! mut pipe = self.pipe {
          return;
       };
@@ -78,6 +81,9 @@ pub abstract class Pipe<T> {
    }
    pub fn stop() mut {
       self.started = false;
+      if not self.setuped {
+         self.setup();
+      }
    }
 
 }

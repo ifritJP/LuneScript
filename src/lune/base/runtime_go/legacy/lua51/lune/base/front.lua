@@ -475,7 +475,7 @@ local AstCreater = {}
 setmetatable( AstCreater, { __index = Runner.Runner } )
 function AstCreater:createAst( importModuleInfo, parserSrc, baseDir, stdinFile, analyzeModule, analyzeMode, pos )
 
-   local transUnit = TransUnit.TransUnit.new(self.moduleId, importModuleInfo, convLua.MacroEvalImp.new(self.builtinFunc), true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
+   local transUnit = TransUnit.TransUnitCtrl.new(self.moduleId, importModuleInfo, convLua.MacroEvalImp.new(self.builtinFunc), true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
    
    return transUnit:createAST( parserSrc, true, baseDir, stdinFile, false, self.mod, function ( exportInfo )
    
@@ -911,7 +911,7 @@ end
 function Front:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
 
    local _
-   local transUnit = TransUnit.TransUnit.new(frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp.new(self.builtinFunc), false, nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
+   local transUnit = TransUnit.TransUnitCtrl.new(frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp.new(self.builtinFunc), false, nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
    
    local ast = transUnit:createAST( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,name,nil}), false, baseDir, self.option:get_stdinFile(), false, string.format( "$load%d", self.loadCount), nil )
    self.loadCount = self.loadCount + 1

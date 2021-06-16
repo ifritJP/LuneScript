@@ -28,6 +28,7 @@ subfile use lune.base.TransUnitDecl;
 subfile use lune.base.TransUnitExp;
 subfile use lune.base.TransUnitStatementList;
 subfile use lune.base.TransUnitTest;
+subfile use lune.base.TransUnitCtrl;
 
 import lune.base.Types;
 import lune.base.Meta;
@@ -520,128 +521,133 @@ enum AnalyzePhase {
 
 pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
-   /** 解析状態 */
-   pri let mut analyzingStateQueue:List<AnalyzingState>;
-
-   pri let mut importModuleInfo: frontInterface.ImportModuleInfo;
-
-   /** true の場合は mut 制御が有効 */
-   pri let mut validMutControl: bool;
-   pri let modifier:TransUnitIF.Modifier;
-
-   /** モジュール名 */
-   pri let mut moduleName: str;
-   pri let mut moduleType: &Ast.TypeInfo;
-
-   // pri let mut globalScope: Ast.Scope;
-   pri let mut topScope: Ast.Scope;
-   /** モジュールの最上位スコープ */
-   pri let mut moduleScope: Ast.Scope;
-   /** macro-statement の最上位スコープ */
-   pri let mut macroScope: Ast.Scope!;
-
-   /** */
-   pri let mut tentativeSymbol:TentativeSymbol;
-
-   /** クラスの型情報 -> そのクラスを宣言しているノード */
-   pri let mut typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
-   /** パーサー */
-   pri let mut parser: Parser.DefaultPushbackParser;
-   pri fn setParser( parser:Parser.DefaultPushbackParser ) mut {
-      self.parser = parser;
-   }
-   
-   /** コメントリスト */
-   pri let mut commentCtrl: Parser.CommentCtrl;
-   
-   /** 解析警告メッセージ */
-   pri let mut warnMessList: List<&TransUnitIF.ErrMess> { pub };
-
-
-   /** このモジュール内から直接 import しているモジュールのセット */
-   pri let mut importModuleSet: Set<&Ast.TypeInfo>;
-   
-   /** subfile 名のリスト */
-   pri let mut subfileList: str[];
-
-   /** __func__ シンボルを持つ関数 TypeInfo の set */
-   pri let mut has__func__Symbol: Set<&Ast.TypeInfo>;
-
    /** 解析モード */
-   pri let analyzeMode: AnalyzeMode;
+   local let analyzeMode: AnalyzeMode;
    /** 解析対象位置 */
    pri let analyzePos: &Parser.Position;
    /** 解析対象モジュール */
    pri let analyzeModule: str;
-
-   pri let mut helperInfo:frontInterface.LuneHelperInfo;
-
-   /** provide ノード */
-   pri let mut provideNode: Nodes.ProvideNode!;
-   /** NodeKind -> Node[]  */
-   pri let mut nodeManager: Nodes.NodeManager;
-
    /**
 トランスコンパイル先の lua バージョン
    */
    pri let targetLuaVer:&LuaVer.LuaVerInfo;
 
-   pri let moduleId:&frontInterface.ModuleId;
+   pro let moduleId:&frontInterface.ModuleId;
+
+   /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
+   pri let macroEval: &Nodes.MacroEval;
+
+   
+   //===== 解析開始時に設定 ===
+   
+   /** true の場合は mut 制御が有効 */
+   pro let mut validMutControl: bool;
+
+   /** モジュール名 */
+   local let mut moduleName: str;
+   local let mut moduleType: &Ast.TypeInfo;
 
    /** true の場合、 _ で始まるシンボル名チェックをしない */
    pri let mut ignoreToCheckSymbol_:bool;
+   /** async 宣言のデフォルト */
+   let mut defaultAsyncMode: DefaultAsyncMode;
 
-   //pri let ctrl_info: &Types.TransCtrlInfo;
+   local let builtinFunc:&Builtin.BuiltinFuncType;
 
-   pri let mut macroCtrl:Macro.MacroCtrl;
-   /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
-   pri let macroEval: &Nodes.MacroEval;
+   // pro let mut stdinFile:&Types.StdinFile!;
+
+   pro let mut baseDir:str!;
+
+
+   //===== Meta 解析時に設定
+   local let mut analyzePhase:AnalyzePhase;
+   local let funcBlockInfoList:List<FuncBlockInfo>;
+
    
-   
-   // pri let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
-   pri let mut scopeAccess:Ast.ScopeAccess;
+   // ===== 複数持ち 
+   pri let modifier:TransUnitIF.Modifier;
+
+   pro let topScope: Ast.Scope;
+   /** macro-statement の最上位スコープ */
+   pri let mut macroScope: Ast.Scope!;
+
+   /** */
+   pri let mut tentativeSymbol:TentativeSymbol;
+   /** パーサー */
+   pro let mut parser: Parser.DefaultPushbackParser;
+   pro fn setParser( parser:Parser.DefaultPushbackParser ) mut {
+      self.parser = parser;
+   }
+   /** __func__ シンボルを持つ関数 TypeInfo の set */
+   pro let has__func__Symbol: Set<&Ast.TypeInfo>;
+   pro let mut scopeAccess:Ast.ScopeAccess;
+
+   /** 引数解析中の static method の Scope */
+   let mut analyzingStaticMethodArgsScope:&Ast.Scope!;
+
+   local let mut inTestBlock:bool;
+
+   /** Meta 解析後に、各関数ブロックを解析する際の*/  
+   pro let mut funcBlockInfoLinkNo:int!;
+
+   
+   // ==== 複数持ちしてマージ
+   pro let helperInfo:frontInterface.LuneHelperInfo;
+   
+   /** NodeKind -> Node[]  */
+   pro let nodeManager: Nodes.NodeManager;
 
    /** クロージャ候補の関数情報リスト */
-   let mut closureFunList:List<ClosureFun>;
+   local let closureFunList:List<ClosureFun>;
 
+   
+   //===== 初期化後は immutable
+   
+   /** モジュールの最上位スコープ */
+   pro let mut moduleScope: Ast.Scope;
+
+   /** コメントリスト */
+   local let commentCtrl: Parser.CommentCtrl;
+
+   /** 解析警告メッセージ */
+   pro let warnMessList: List<&TransUnitIF.ErrMess> { pub };
+
+
+   //===== clone して複数持ち
+   /** 解析状態 */
+   pri let analyzingStateQueue:List<AnalyzingState>;
+
+   /** クラスの型情報 -> そのクラスを宣言しているノード */
+   pri let typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
+
+   // /** subfile 名のリスト */
+   // pro let subfileList: List<str>;
+   /** マクロ制御 */
+   pro let macroCtrl:Macro.MacroCtrl;
    /** advertise 宣言されているメンバの型の Set */
-   let mut advertisedTypeSet:Set<&Ast.TypeInfo>;
+   let advertisedTypeSet:Set<&Ast.TypeInfo>;
 
    let mut accessSymbolSetQueue:AccessSymbolSetQueue;
 
-   // local let processInfo:Ast.ProcessInfo;
+   // クラス TypeInfo -> defaultAsyncMode
+   let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
 
-   let mut importCtrl:Import.Import!;
-
+   //===== 未対応
+   /** このモジュール内から直接 import しているモジュールのセット */
+   pro let importModuleSet: Set<&Ast.TypeInfo>;
+   // local let mut importCtrl:Import.Import!;
    /**
 インポートしているモジュール内で定義している alias 情報。
 
 alias で置き換えている元の Type → alias の型
    */
-   let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
-
-   /** async 宣言のデフォルト */
-   let mut defaultAsyncMode: DefaultAsyncMode;
-
-   let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
+   pro let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
+   //pro let importModuleInfo: frontInterface.ImportModuleInfo;
+   
 
 
-   /** 引数解析中の static method の Scope */
-   let mut analyzingStaticMethodArgsScope:&Ast.Scope!;
-
-   let builtinFunc:&Builtin.BuiltinFuncType;
-
-   let mut stdinFile:&Types.StdinFile!;
-
-   let mut baseDir:str!;
-
-   let mut inTestBlock:bool;
-   let mut analyzePhase:AnalyzePhase;
-   let funcBlockInfoList:List<FuncBlockInfo>;
-   let mut funcBlockInfoLinkNo:int!;
-
-   static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
+   local static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
       &Types.TransCtrlInfo, Ast.ProcessInfo
    {
       let mut processInfo = Ast.createProcessInfo(
@@ -650,7 +656,7 @@ alias で置き換えている元の Type → alias の型
       return ctrl_info, processInfo;
    }
    
-   pub fn __init( moduleId:&frontInterface.ModuleId,
+   pro fn __init( moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                   analyzeModule:str!, mode:AnalyzeMode!,
@@ -663,7 +669,9 @@ alias で置き換えている元の Type → alias の型
       self.funcBlockInfoLinkNo = nil;
       self.funcBlockInfoList = [];
       let phase:AnalyzePhase;
-      if enableMultiPhase and ( mode == nil or mode == .Compile ) {
+      if ctrl_info.validMultiPhaseTransUnit and
+         enableMultiPhase and ( mode == nil or mode == .Compile )
+      {
          phase = .Meta;
       } else {
          phase = .Main;
@@ -671,7 +679,7 @@ alias で置き換えている元の Type → alias の型
       self.analyzePhase = phase;
       self.inTestBlock = false;
       self.baseDir = nil;
-      self.stdinFile = nil;
+      // self.stdinFile = nil;
       self.builtinFunc = builtinFunc;
       self.analyzingStaticMethodArgsScope = nil;
       self.class2defaultAsyncMode = {};
@@ -696,7 +704,7 @@ alias で置き換えている元の Type → alias の型
       self.moduleId = moduleId;
       self.helperInfo = new frontInterface.LuneHelperInfo();
       self.targetLuaVer = targetLuaVer;
-      self.importModuleInfo = importModuleInfo.clone();
+      //self.importModuleInfo = importModuleInfo.clone();
       self.has__func__Symbol = (@);
       self.nodeManager = new Nodes.NodeManager();
       self.macroScope = nil;
@@ -706,7 +714,7 @@ alias で置き換えている元の Type → alias の型
       self.moduleName = "";
       self.moduleType = Ast.headTypeInfo;
       self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
-      self.subfileList = [];
+      // self.subfileList = [];
       self.topScope = self.scope;
       self.moduleScope = self.scope;
 
@@ -719,9 +727,8 @@ alias で置き換えている元の Type → alias の型
       self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
       self.analyzePos = unwrap pos default self.createPosition( 0, 0 );
       self.analyzeModule = unwrap analyzeModule default "";
-      self.provideNode = nil;
 
-      self.importCtrl = nil;
+      // self.importCtrl = nil;
    }
 
    pub override fn getLatestPos() __async : &Parser.Position {
@@ -970,7 +977,7 @@ alias で置き換えている元の Type → alias の型
       os.exit( 0 );
    }
 
-   fn errorShadowingOp(
+   pro fn errorShadowingOp(
       pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo!, errFlag:bool ) mut
    {
       when! symbolInfo {
@@ -1006,7 +1013,7 @@ alias で置き換えている元の Type → alias の型
    }
 
    
-   pri fn addLocalVar(
+   pro fn addLocalVar(
       pos:&Parser.Position, argFlag:bool, canBeLeft:bool, name:str,
       typeInfo: &Ast.TypeInfo, mutable:Ast.MutMode, allowShadow:bool! ) mut:
       &Ast.SymbolInfo
@@ -1686,214 +1693,6 @@ fn TransUnit.analyzeBlock(
    return node;
 }
 
-fn TransUnit.analyzeImportFor(
-   pos: &Parser.Position, modulePath:str, assignName:str,
-   assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.ImportNode
-{
-   let mut backupScope = self.scope;
-   // スコープをルートに変更
-   self.scope = self.topScope;
-
-   let macroMode;
-   let nearCode:str!;
-   if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-      macroMode = self.macroCtrl.$analyzeInfo.$mode.$_txt;
-      nearCode = self.parser.getNearCode();
-   } else {
-      macroMode = "";
-      nearCode = nil;
-   }
-
-   let! mut importObj = self.importCtrl {
-      importObj = new Import.Import(
-         self.getLatestPos(),
-         self.importModuleInfo,
-         self.moduleType,
-         self.macroCtrl,
-         self.typeNameCtrl,
-         self.importedAliasMap,
-         self.baseDir,
-         self.validMutControl );
-      self.importCtrl = importObj;
-   };
-
-   let moduleLoaderParam = new Import.ModuleLoaderParam(
-      self.ctrl_info,
-      self.processInfo,
-      self.getLatestPos(),
-      macroMode,
-      nearCode,
-      self.validMutControl,
-      self.macroEval );
-   let mut moduleLoader = importObj.processImport(
-      modulePath, moduleLoaderParam );
-   
-   let exportInfo;
-   __asyncLock {
-      let work, err = importObj.loadModuleInfo( moduleLoader );
-      when! work {
-         exportInfo = work;
-      } else {
-         self.error( err );
-      }
-   }
-
-   foreach symbol in exportInfo.$globalSymbolList {
-      self.globalScope.addSymbolInfo( self.processInfo, symbol );
-   }
-
-   
-   // スコープを元に戻す
-   self.scope = backupScope;
-
-
-   // モジュールの末尾のシンボルでスコープに登録する。
-   // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
-
-   let provideInfo = exportInfo.$provideInfo;
-   let moduleTypeInfo = provideInfo.$typeInfo;
-   self.scope.addModule( moduleTypeInfo, exportInfo.assign( assignName ) );
-
-   let moduleSymbolKind = provideInfo.$symbolKind;
-   let mut moduleSymbolInfo:&Ast.SymbolInfo!, shadowing = self.scope.add(
-      self.processInfo, moduleSymbolKind, false, false, assignName, pos,
-      moduleTypeInfo, .Local, true,
-      provideInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut,
-      true, lazyLoad ~= .Off );
-
-   when! shadowing {
-      let err = shadowing.$typeInfo ~= moduleTypeInfo;
-      self.errorShadowingOp( pos, shadowing, err );
-      if err {
-         self.error( "failed to import -- %s" (modulePath) );
-      }
-      moduleSymbolInfo = shadowing;
-   }
-  
-   when! moduleSymbolInfo {
-      let info = new Nodes.ImportInfo( pos, modulePath, lazyLoad, assignName,
-                                       assigned, moduleSymbolInfo, moduleTypeInfo );
-      return Nodes.ImportNode.create(
-         self.nodeManager, pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );
-   }
-   self.error( "failed to import -- %s" (modulePath) );
-}
-
-
-fn TransUnit.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode {
-   let lazyLoad:Nodes.LazyLoad;
-   if self.getToken(##).txt == "." {
-      let modeToken = self.getToken(##);
-      switch modeToken.txt {
-         case "l" {
-            lazyLoad = .On;
-         }
-         case "d" {
-            lazyLoad = .Off;
-         }
-         default {
-            lazyLoad = .Off;
-            self.error( "illegal import mode -- %s" (modeToken.txt) );
-         }
-      }
-   } else {
-      self.pushback();
-      if self.ctrl_info.defaultLazy {
-         lazyLoad = .Auto;
-      } else {
-         lazyLoad = .Off;
-      }
-   }
-   if lazyLoad ~= .Off {
-      self.helperInfo.useLazyLoad = true;
-   }
-   
-
-   let mut moduleToken = self.getToken(##);
-   let mut modulePath = moduleToken.txt;
-   let mut nextToken:&Parser.Token = moduleToken;
-
-   while true {
-      nextToken = self.getToken(##);
-      switch nextToken.txt {
-         case ".", "/", ":" {
-            let demilit = nextToken.txt;
-            nextToken = self.getToken(##);
-            moduleToken = nextToken;
-            modulePath = "%s%s%s" ( modulePath, demilit, moduleToken.txt );
-         }
-         default {
-            break;
-         }
-      }
-   }
-   let mut assignName = moduleToken;
-   let assigned;
-   if nextToken.txt == "as" {
-      assignName = self.getSymbolToken( .MustNot_ );
-      nextToken = self.getToken(##);
-      assigned = true;
-   } else {
-      assigned = false;
-   }
-   self.checkToken( nextToken, ";" );
-
-   let mut node;
-
-   __asyncLock {
-      node = self.analyzeImportFor(
-         opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad );
-   }
-   self.importModuleSet.add( node.$expType );
-   
-   return node;
-}
-
-
-fn TransUnit.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
-{
-   let mut newScope = self.pushScope( false ## );
-
-   let importNode;
-
-   __asyncLock {
-      importNode = self.analyzeImportFor(
-         firstToken.pos, "lune.base.Testing", "__t", false, .Off );
-   }
-   
-   let nameToken = self.getSymbolToken( .MustNot_ );
-
-   self.checkNextToken( "(" );
-
-   let ctrlToken = self.getSymbolToken( .MustNot_ );
-   let ctrlName = ctrlToken.txt;
-   self.checkNextToken( ")" );
-
-   let moduleType = importNode.$expType;
-   let! ctrlType = moduleType.$scope$.getTypeInfoChild$( "Ctrl" ) {
-      self.error( "not found Testing.Ctrl class" );
-   };
-   self.addLocalVar(
-      ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, .IMut, false );
-
-   self.scopeAccess = .Full;
-
-   self.inTestBlock = true;
-   let block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
-   self.inTestBlock = false;
-   
-
-   self.scopeAccess = .Normal;
-
-   self.popScope();
-   
-   return Nodes.TestCaseNode.create(
-      self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
-}
-
 fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    let mut blockDepth = 0;
    let mut tokenList:List<&Parser.Token> = [];
@@ -1920,86 +1719,6 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    return tokenList;
 }
 
-fn TransUnit.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
-{
-   let nextToken = self.getToken( ## );
-   if nextToken.txt ~= "{" {
-      self.pushback();
-      return self.analyzeTestCase( firstToken );
-   }
-   self.checkToken( nextToken, "{" );
-
-   self.inTestBlock = true;
-   
-   let mut stmtList:List<&Nodes.Node> = [];
-   self.analyzeStatementList( stmtList, false, "}" );
-   self.checkNextToken( "}" );
-
-   self.inTestBlock = false;
-   
-
-   return Nodes.TestBlockNode.create(
-      self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], stmtList );
-}
-
-
-fn TransUnit.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode {
-   if self.scope ~= self.moduleScope {
-      self.error( "'module' must be top scope." );
-   }
-
-
-   let mode = self.getToken(##);
-
-   let mut moduleName = "";
-   while true {
-      let nextToken = self.getToken(##);
-      if nextToken.txt == ";" {
-         break;
-      }
-      if moduleName == "" {
-         moduleName = nextToken.txt;
-      }
-      else {
-         moduleName = "%s%s" (moduleName, nextToken.txt);
-      }
-   }
-   let mut usePath:str! = nil;
-   if moduleName == "" {
-      self.addErrMess( token.pos, "illegal subfile" );
-   }
-   else {
-      if mode.txt == "use" {
-         usePath = moduleName;
-         if frontInterface.searchModule( moduleName, self.baseDir, nil ) {
-            self.subfileList.insert( moduleName );
-         }
-         else {
-            self.addErrMess(
-               token.pos, "not found subfile -- %s" ( moduleName ) );
-         }
-      }
-      elseif mode.txt == "owner" {
-         if frontInterface.getLuaModulePath(
-            self.moduleName, self.baseDir ) ~= moduleName
-         {
-            self.addErrMess(
-               token.pos,
-               "illegal owner module -- %s, %s"
-               ( moduleName, self.moduleName ) );
-         }
-      }
-      else {
-         self.addErrMess( mode.pos, "illegal module mode -- %s" ( mode.txt ) );
-      }
-   }
-   return Nodes.SubfileNode.create(
-      self.nodeManager, token.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], usePath );
-}
 
 fn TransUnit.analyzeAsyncLock(
    asyncToken: &Parser.Token, lockKind:Nodes.LockKind ) mut : Nodes.Node
@@ -2756,37 +2475,6 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          mainSym, subSym, exp, block );
    }
-}
-
-fn TransUnit.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode {
-   let token = self.getSymbolToken( .MustNot_ );
-   let symbolNode = self.analyzeExpSymbol(
-      firstToken, token, .Symbol, nil, true, false );
-   self.checkNextToken( ";" );
-
-   let symbolInfoList = symbolNode.getSymbolInfo();
-   if #symbolInfoList ~= 1 {
-      self.error( "'provide' must be symbol." );
-   }
-   let symbolInfo = symbolInfoList[ 1 ];
-
-
-   let mut node = Nodes.ProvideNode.create(
-      self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], symbolInfo );
-   if self.provideNode {
-      self.addErrMess( firstToken.pos, "multiple provide" );
-   }
-   self.provideNode = node;
-
-
-   if symbolInfo.$accessMode ~= .Pub {
-      self.addErrMess( firstToken.pos,
-                       "provide variable must be 'pub'.  -- %s"
-                       (symbolInfo.$accessMode));
-   }
-
-   return node;
 }
 
 fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {

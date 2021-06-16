@@ -30,10 +30,8 @@ func dumpNode_getTypeListTxt_4_(_env *LnsEnv, typeList *LnsList) string {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         if index > 1{
             txt = txt + ", "
-            
         }
         txt = txt + typeInfo.FP.GetTxt(_env, nil, nil, nil)
-        
     }
     return txt
 }
@@ -79,11 +77,8 @@ func NewDumpNode_Opt(_env *LnsEnv, arg1 string, arg2 LnsInt) *DumpNode_Opt {
 // 39: DeclConstr
 func (self *DumpNode_Opt) InitDumpNode_Opt(_env *LnsEnv, prefix string,depth LnsInt) {
     self.prefix = prefix
-    
     self.depth = depth
-    
     self.next = nil
-    
 }
 
 // 44: decl @lune.@base.@dumpNode.Opt.get
@@ -103,7 +98,6 @@ func (self *DumpNode_Opt) NextOpt(_env *LnsEnv) *DumpNode_Opt {
     var opt *DumpNode_Opt
     opt = NewDumpNode_Opt(_env, self.prefix + "  ", self.depth + 1)
     self.next = opt
-    
     return opt
 }
 
@@ -262,7 +256,6 @@ func (self *dumpNode_dumpFilter) dump(_env *LnsEnv, opt *DumpNode_Opt,node *Node
     expType = node.FP.Get_expType(_env)
     if expType.FP.Equals(_env, self.processInfo, Ast_builtinTypeNone, nil, nil){
         typeStr = _env.LuaVM.String_format("(%d:%s:%s)", []LnsAny{expType.FP.Get_typeId(_env).Id, expType.FP.GetTxt(_env, nil, nil, nil), expType.FP.Get_kind(_env)})
-        
     }
     var comment string
     {
@@ -273,14 +266,11 @@ func (self *dumpNode_dumpFilter) dump(_env *LnsEnv, opt *DumpNode_Opt,node *Node
                 _env.SetStackVal( node.FP.Get_tailComment(_env)) &&
                 _env.SetStackVal( 1) ||
                 _env.SetStackVal( 0) ).(LnsInt)})
-            
         } else {
             if Lns_isCondTrue( node.FP.Get_tailComment(_env)){
                 comment = "comment:0,1"
-                
             } else { 
                 comment = ""
-                
             }
         }
     }
@@ -288,11 +278,9 @@ func (self *dumpNode_dumpFilter) dump(_env *LnsEnv, opt *DumpNode_Opt,node *Node
     attrib = ""
     if node.FP.HasNilAccess(_env){
         attrib = _env.LuaVM.String_format("%s %s", []LnsAny{attrib, "nilacc"})
-        
     }
     if len(attrib) != 0{
         attrib = _env.LuaVM.String_format("[%s]", []LnsAny{attrib})
-        
     }
     self.FP.writeln(_env, opt, _env.LuaVM.String_format(": %s:%d(%d:%d) %s %s %s %s", []LnsAny{Nodes_getNodeKindName(_env, node.FP.Get_kind(_env)), node.FP.Get_id(_env), node.FP.Get_effectivePos(_env).LineNo, node.FP.Get_effectivePos(_env).Column, attrib, txt, typeStr, comment}))
 }
@@ -396,15 +384,12 @@ func (self *dumpNode_dumpFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclE
         case *Ast_EnumLiteral__Int:
         x := _matchExp1.Val1
             val = x
-            
         case *Ast_EnumLiteral__Real:
         x := _matchExp1.Val1
             val = x
-            
         case *Ast_EnumLiteral__Str:
         x := _matchExp1.Val1
             val = x
-            
         }
         self.FP.writeln(_env, opt, _env.LuaVM.String_format("  %s: %s, %s", []LnsAny{name.Txt, valInfo.FP.Get_val(_env).(LnsAlgeVal).GetTxt(), val}))
     }
@@ -521,7 +506,6 @@ func (self *dumpNode_dumpFilter) ProcessWhen(_env *LnsEnv, node *Nodes_WhenNode,
     for _, _symPair := range( node.FP.Get_symPairList(_env).Items ) {
         symPair := _symPair.(Nodes_UnwrapSymbolPairDownCast).ToNodes_UnwrapSymbolPair()
         symTxt = _env.LuaVM.String_format("%s %s", []LnsAny{symTxt, symPair.FP.Get_src(_env).FP.Get_name(_env)})
-        
     }
     self.FP.dump(_env, opt, &node.Nodes_Node, symTxt)
     dumpNode_filter_3_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
@@ -544,17 +528,13 @@ func (self *dumpNode_dumpFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVa
         _var := __var.(Nodes_VarInfoDownCast).ToNodes_VarInfo()
         if index > 1{
             varName = varName + ","
-            
         }
         varName = _env.LuaVM.String_format("%s %s", []LnsAny{varName, _var.FP.Get_name(_env).Txt})
-        
     }
     if Lns_isCondTrue( node.FP.Get_unwrapBlock(_env)){
         varName = "!" + varName
-        
     }
     varName = _env.LuaVM.String_format("%s %s", []LnsAny{node.FP.Get_mode(_env), varName})
-    
     self.FP.dump(_env, opt, &node.Nodes_Node, varName)
     for _, __var := range( node.FP.Get_varList(_env).Items ) {
         _var := __var.(Nodes_VarInfoDownCast).ToNodes_VarInfo()
@@ -629,21 +609,17 @@ func (self *dumpNode_dumpFilter) processDeclFuncInfo(_env *LnsEnv, node *Nodes_N
         _env.NilAccPush(_env.NilAccPop().(*Types_Token).Txt))
         if _name == nil{
             name = "<anonymous>"
-            
         } else {
             name = _name.(string)
         }
     }
     name = node.FP.Get_expType(_env).FP.Get_display_stirng_with(_env, name, nil)
-    
     if Ast_TypeInfo_isMut(_env, node.FP.Get_expType(_env)){
         name = name + " mut"
-        
     }
     if Lns_isCondTrue( _env.NilAccFin(_env.NilAccPush(node.FP.Get_expType(_env).FP.Get_scope(_env)) && 
     Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.Get_hasClosureAccess(_env)}))){
         name = name + " closure"
-        
     }
     self.FP.dump(_env, opt, node, name)
     var argList *LnsList
@@ -816,7 +792,6 @@ func (self *dumpNode_dumpFilter) ProcessApply(_env *LnsEnv, node *Nodes_ApplyNod
     for _, __var := range( varList.Items ) {
         _var := __var.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
         varNames = varNames + _var.FP.Get_name(_env) + " "
-        
     }
     self.FP.dump(_env, opt, &node.Nodes_Node, varNames)
     dumpNode_filter_3_(_env, &node.FP.Get_expList(_env).Nodes_Node, self, opt.FP.NextOpt(_env))
@@ -833,7 +808,6 @@ func (self *dumpNode_dumpFilter) ProcessForeach(_env *LnsEnv, node *Nodes_Foreac
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Ast_SymbolInfo)
             index = _exp.FP.Get_name(_env)
-            
         }
     }
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_val(_env).FP.Get_name(_env) + " " + index)
@@ -851,7 +825,6 @@ func (self *dumpNode_dumpFilter) ProcessForsort(_env *LnsEnv, node *Nodes_Forsor
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*Ast_SymbolInfo)
             index = _exp.FP.Get_name(_env)
-            
         }
     }
     self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_val(_env).FP.Get_name(_env) + " " + index)
@@ -898,16 +871,13 @@ func (self *dumpNode_dumpFilter) ProcessExpList(_env *LnsEnv, node *Nodes_ExpLis
         if !Lns_IsNil( _mRetExp ) {
             mRetExp := _mRetExp.(*Nodes_MRetExp)
             mess = _env.LuaVM.String_format("hasMRetExp (%d): ", []LnsAny{mRetExp.FP.Get_index(_env)})
-            
         } else {
             mess = "noMRetExp: "
-            
         }
     }
     for _, _expType := range( node.FP.Get_expTypeList(_env).Items ) {
         expType := _expType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         mess = _env.LuaVM.String_format("%s %s", []LnsAny{mess, expType.FP.GetTxt(_env, nil, nil, nil)})
-        
     }
     self.FP.dump(_env, opt, &node.Nodes_Node, mess)
     var expList *LnsList
@@ -985,11 +955,9 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_Exp
     case *Nodes_IndexVal__NodeIdx:
     index := _matchExp1.Val1
         indexNode = index
-        
     case *Nodes_IndexVal__SymIdx:
     index := _matchExp1.Val1
         indexSym = index
-        
     }
     self.FP.dump(_env, opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_3_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env))

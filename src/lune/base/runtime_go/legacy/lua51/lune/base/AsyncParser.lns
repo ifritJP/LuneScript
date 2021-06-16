@@ -211,7 +211,7 @@ pub class AsyncItem extend (__AsyncItem,Mapping) {
    pub let list : &List<&Types.Token>;
 }
 
-let mut defaultPipeSize = 500;
+let mut defaultPipeSize = 20;
 pub fn setDefaultPipeSize( size:int ) {
    defaultPipeSize = size;
 }
@@ -250,7 +250,7 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       self.multiCharDelimitMap = multiCharDelimitMap;
    }
 
-   pub override fn setup() mut {
+   pro override fn setup() mut {
       let mut lineList:List<str> = [];
       while true {
          let! line = self.stream.read( '*l' ) {
@@ -348,7 +348,8 @@ pub fn create( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
    }
    let mut parser, mess = Parser.create( parserSrc, stdinFile, overridePos )**;
    when! parser {
-      parser.setup();
+      // stop を呼ぶと、 setup() が内部的に呼ばれる。
+      parser.stop();
    }
    return parser, mess;
 }

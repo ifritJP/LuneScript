@@ -75,6 +75,12 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
       self.macroCtrl.isInAnalyzeArgMode(), retTypeList, expList );
 }
 
+pro fn TransUnit.analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+{
+   return nil;
+}
+
+
 fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
 {
    self.commentCtrl.push();
@@ -197,14 +203,11 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       elseif token.txt == "__scope" {
          statement = self.analyzeScope( token );
       }
-      elseif token.txt == "import"  {
-         statement = self.analyzeImport( token );
-      }
-      elseif token.txt == "subfile" {
-         __asyncLock {
-            statement = self.analyzeSubfile( token );
-         }
-      }
+      // elseif token.txt == "subfile" {
+      //    __asyncLock {
+      //       statement = self.analyzeSubfile( token );
+      //    }
+      // }
       elseif token.txt == "_lune_control" {
          if! self.analyzeLuneControl( token ) {
             statement = _exp;
@@ -213,9 +216,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
             statement = self.createNoneNode( token.pos );
          }
       }
-      elseif token.txt == "provide" {
-         statement = self.analyzeProvide( token );
-      }
+      // elseif token.txt == "provide" {
+      //    statement = self.analyzeProvide( token );
+      // }
       elseif token.txt == ";" {
          statement = self.createNoneNode( token.pos );
       }
@@ -223,34 +226,37 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          self.error( "illegal macro op -- %s" (token.txt) );
       }
       else {
-         self.pushback();
+         statement = self.analyzeStatementToken( token );
+         if not statement {
+            self.pushback();
 
-         self.accessSymbolSetQueue.push();
-         
-         let mut exp = self.analyzeExp( true, false, true ## );
-         let mut nextToken = self.getToken(##);
-         if nextToken.txt == "," {
-            let mut expList = self.analyzeExpList( true, true, true, exp ## );
-            exp = self.analyzeExpOp2( token, expList, nil );
-            nextToken = self.getToken(##);
-         }
-         self.checkToken( nextToken, ";" );
-
-         if! let setNode = exp@@@Nodes.ExpSetValNode {
-            let mut set:Set<&Ast.SymbolInfo> = (@);
-            foreach symbol in setNode.$LeftSymList {
-               set.add( symbol.getOrg() );
+            self.accessSymbolSetQueue.push();
+            
+            let mut exp = self.analyzeExp( true, false, true ## );
+            let mut nextToken = self.getToken(##);
+            if nextToken.txt == "," {
+               let mut expList = self.analyzeExpList( true, true, true, exp ## );
+               exp = self.analyzeExpOp2( token, expList, nil );
+               nextToken = self.getToken(##);
             }
-            self.accessSymbolSetQueue.pop( set );
-         } else {
-            self.accessSymbolSetQueue.pop( nil );
+            self.checkToken( nextToken, ";" );
+
+            if! let setNode = exp@@@Nodes.ExpSetValNode {
+               let mut set:Set<&Ast.SymbolInfo> = (@);
+               foreach symbol in setNode.$LeftSymList {
+                  set.add( symbol.getOrg() );
+               }
+               self.accessSymbolSetQueue.pop( set );
+            } else {
+               self.accessSymbolSetQueue.pop( nil );
+            }
+            
+            // statement = self.createNode(
+            //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
+            statement = Nodes.StmtExpNode.create(
+               self.nodeManager, exp.$pos, self.inTestBlock,
+               self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], exp );
          }
-         
-         // statement = self.createNode(
-         //     nodeKindStmtExp, self.currentToken.pos, [ builtinTypeNone ], exp );
-         statement = Nodes.StmtExpNode.create(
-            self.nodeManager, exp.$pos, self.inTestBlock,
-            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], exp );
       }
    }
 

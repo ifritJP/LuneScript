@@ -59,33 +59,22 @@ func (self *NodeIndexer_NamespaceInfo) Get_nsType(_env *LnsEnv) *Ast_TypeInfo{ r
 // 18: DeclConstr
 func (self *NodeIndexer_NamespaceInfo) InitNodeIndexer_NamespaceInfo(_env *LnsEnv, parent LnsAny,nsType *Ast_TypeInfo) {
     self.parent = parent
-    
     self.childCount = 1
-    
     var subId LnsInt
     var depth LnsInt
     if parent != nil{
         parent_26 := parent.(*NodeIndexer_NamespaceInfo)
         subId = parent_26.childCount
-        
         depth = parent_26.depth + 1
-        
         parent_26.childCount = parent_26.childCount + 1
-        
     } else {
         subId = 0
-        
         depth = 0
-        
     }
     self.subId = subId
-    
     self.depth = depth
-    
     self.nsType = nsType
-    
     self.idProvMap = NewLnsMap( map[LnsAny]LnsAny{})
-    
 }
 
 // 39: decl @lune.@base.@NodeIndexer.NamespaceInfo.getNewId
@@ -99,7 +88,6 @@ func (self *NodeIndexer_NamespaceInfo) getNewId(_env *LnsEnv, nodeKind LnsInt) L
             work = NewAst_IdProvider(_env, 0, 100000)
             self.idProvMap.Set(nodeKind,work)
             idProv = work
-            
         } else {
             idProv = _idProv.(*Ast_IdProvider)
         }
@@ -169,9 +157,7 @@ func (self *NodeIndexer_Index) Get_index(_env *LnsEnv) LnsInt{ return self.index
 // 78: DeclConstr
 func (self *NodeIndexer_Index) InitNodeIndexer_Index(_env *LnsEnv, nsInfo *NodeIndexer_NamespaceInfo,index LnsInt) {
     self.nsInfo = nsInfo
-    
     self.index = index
-    
 }
 
 // 83: decl @lune.@base.@NodeIndexer.Index.getIdTxt
@@ -226,15 +212,10 @@ func (self *NodeIndexer_Indexer) Get_node2Index(_env *LnsEnv) *LnsMap{ return se
 // 104: DeclConstr
 func (self *NodeIndexer_Indexer) InitNodeIndexer_Indexer(_env *LnsEnv, processInfo *Ast_ProcessInfo) {
     self.nsType2nsInfo = NewLnsMap( map[LnsAny]LnsAny{})
-    
     self.processInfo = processInfo
-    
     self.nsInfo = NewNodeIndexer_NamespaceInfo(_env, nil, Ast_headTypeInfo)
-    
     self.node2Index = NewLnsMap( map[LnsAny]LnsAny{})
-    
     self.targetNodeKindSet = NewLnsSet([]LnsAny{})
-    
 }
 
 // 113: decl @lune.@base.@NodeIndexer.Indexer.getIndex
@@ -259,16 +240,13 @@ func (self *NodeIndexer_Indexer) visit(_env *LnsEnv, targetNode *Nodes_Node,dept
                     declMethodNode := _declMethodNode.(*Nodes_DeclMethodNode)
                     if declMethodNode.FP.Get_declInfo(_env).FP.Get_outsizeOfClass(_env){
                         parentNsInfo = Lns_unwrap( self.nsType2nsInfo.Get(node.FP.Get_expType(_env).FP.Get_parentInfo(_env))).(*NodeIndexer_NamespaceInfo)
-                        
                     }
                 }
             }
             self.nsInfo = NewNodeIndexer_NamespaceInfo(_env, parentNsInfo, node.FP.Get_expType(_env))
-            
             self.nsType2nsInfo.Set(node.FP.Get_expType(_env),self.nsInfo)
             self.FP.visit(_env, node, depth + 1)
             self.nsInfo = bakNsInfo
-            
             return Nodes_NodeVisitMode__Next
         }
         return Nodes_NodeVisitMode__Child
@@ -278,7 +256,6 @@ func (self *NodeIndexer_Indexer) visit(_env *LnsEnv, targetNode *Nodes_Node,dept
 // 152: decl @lune.@base.@NodeIndexer.Indexer.start
 func (self *NodeIndexer_Indexer) Start(_env *LnsEnv, targetNode *Nodes_Node,targetNodeKindSet *LnsSet) {
     self.targetNodeKindSet = targetNodeKindSet
-    
     self.FP.visit(_env, targetNode, 0)
 }
 

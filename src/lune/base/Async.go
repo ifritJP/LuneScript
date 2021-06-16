@@ -80,11 +80,8 @@ func (obj *Async_Pipe) ToAsync_Pipe() *Async_Pipe {
 // 41: DeclConstr
 func (self *Async_Pipe) InitAsync_Pipe(_env *LnsEnv, pipe LnsAny) {
     self.pipe = pipe
-    
     self.started = false
-    
     self.setuped = false
-    
 }
 
 
@@ -117,7 +114,6 @@ func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
 func (self *Async_Pipe) Run(_env *LnsEnv) {
     self.FP.Setup(_env)
     self.setuped = true
-    
     var pipe *Lns__pipe
     
     {
@@ -147,13 +143,11 @@ func (self *Async_Pipe) Run(_env *LnsEnv) {
 // 79: decl @lune.@base.@Async.Pipe.start
 func (self *Async_Pipe) Start(_env *LnsEnv) {
     self.started = true
-    
 }
 
 // 82: decl @lune.@base.@Async.Pipe.stop
 func (self *Async_Pipe) Stop(_env *LnsEnv) {
     self.started = false
-    
     if Lns_op_not(self.setuped){
         self.FP.Setup(_env)
     }

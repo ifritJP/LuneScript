@@ -484,7 +484,7 @@ pub fn TransUnitCtrl.createAST(
          importedAliasMap, self.moduleId, self.moduleName,
          moduleTypeInfo.$rawTxt, streamName, {},
          self.macroCtrl.$declMacroInfoMap );;
-      __lns.runtime.log( "ready meta" );
+      __lns.runtime.log( "ready meta -- %d" (#self.funcBlockInfoList) );
       Log._log2( .Log, "ready meta -- %s, %d, %s, %s"
                  ( streamName, self.parser.getUsedTokenListLen(),
                    moduleTypeInfo, moduleTypeInfo.$scope ) );
