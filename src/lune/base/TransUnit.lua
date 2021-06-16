@@ -197,6 +197,7 @@ end
 
 
 
+
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Meta = _lune.loadModule( 'lune.base.Meta' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -952,7 +953,7 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.funcBlockInfoList = {}
    local phase
    
-   if enableMultiPhase and (mode == nil or mode == AnalyzeMode.Compile ) then
+   if ctrl_info.validMultiPhaseTransUnit and enableMultiPhase and (mode == nil or mode == AnalyzeMode.Compile ) then
       phase = AnalyzePhase.Meta
    else
     
@@ -962,7 +963,6 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.analyzePhase = phase
    self.inTestBlock = false
    self.baseDir = nil
-   self.stdinFile = nil
    self.builtinFunc = builtinFunc
    self.analyzingStaticMethodArgsScope = nil
    self.class2defaultAsyncMode = {}
@@ -989,7 +989,6 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.moduleId = moduleId
    self.helperInfo = frontInterface.LuneHelperInfo.new()
    self.targetLuaVer = targetLuaVer
-   self.importModuleInfo = importModuleInfo:clone(  )
    self.has__func__Symbol = {}
    self.nodeManager = Nodes.NodeManager.new()
    self.macroScope = nil
@@ -998,7 +997,6 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.moduleName = ""
    self.moduleType = Ast.headTypeInfo
    self.parser = Parser.DefaultPushbackParser.new(Parser.DummyParser.new())
-   self.subfileList = {}
    self.topScope = self.scope
    self.moduleScope = self.scope
    
@@ -1010,9 +1008,7 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.analyzeMode = _lune.unwrapDefault( mode, AnalyzeMode.Compile)
    self.analyzePos = _lune.unwrapDefault( pos, self:createPosition( 0, 0 ))
    self.analyzeModule = _lune.unwrapDefault( analyzeModule, "")
-   self.provideNode = nil
    
-   self.importCtrl = nil
 end
 function TransUnit:getLatestPos(  )
 
@@ -2032,214 +2028,6 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
 end
 
 
-function TransUnit:analyzeImportFor( pos, modulePath, assignName, assigned, lazyLoad )
-
-   local backupScope = self.scope
-   
-   self.scope = self.topScope
-   
-   local macroMode
-   
-   local nearCode
-   
-   if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
-      macroMode = Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
-      
-      nearCode = self.parser:getNearCode(  )
-   else
-    
-      macroMode = ""
-      nearCode = nil
-   end
-   
-   
-   local importObj = self.importCtrl
-   if  nil == importObj then
-      local _importObj = importObj
-   
-      importObj = Import.Import.new(self:getLatestPos(  ), self.importModuleInfo, self.moduleType, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.baseDir, self.validMutControl)
-      self.importCtrl = importObj
-   end
-   
-   
-   local moduleLoaderParam = Import.ModuleLoaderParam.new(self.ctrl_info, self.processInfo, self:getLatestPos(  ), macroMode, nearCode, self.validMutControl, self.macroEval)
-   local moduleLoader = importObj:processImport( modulePath, moduleLoaderParam )
-   
-   local exportInfo
-   
-   do
-      local work, err = importObj:loadModuleInfo( moduleLoader )
-      if work ~= nil then
-         exportInfo = work
-      else
-         self:error( err )
-      end
-      
-   end
-   
-   
-   for __index, symbol in ipairs( exportInfo:get_globalSymbolList() ) do
-      self.globalScope:addSymbolInfo( self.processInfo, symbol )
-   end
-   
-   
-   self.scope = backupScope
-   
-   local provideInfo = exportInfo:get_provideInfo()
-   local moduleTypeInfo = provideInfo:get_typeInfo()
-   self.scope:addModule( moduleTypeInfo, exportInfo:assign( assignName ) )
-   
-   local moduleSymbolKind = provideInfo:get_symbolKind()
-   local moduleSymbolInfo, shadowing = self.scope:add( self.processInfo, moduleSymbolKind, false, false, assignName, pos, moduleTypeInfo, Ast.AccessMode.Local, true, provideInfo:get_mutable() and Ast.MutMode.Mut or Ast.MutMode.IMut, true, lazyLoad ~= Nodes.LazyLoad.Off )
-   
-   if shadowing ~= nil then
-      local err = shadowing:get_typeInfo() ~= moduleTypeInfo
-      self:errorShadowingOp( pos, shadowing, err )
-      if err then
-         self:error( string.format( "failed to import -- %s", modulePath) )
-      end
-      
-      moduleSymbolInfo = shadowing
-   end
-   
-   
-   if moduleSymbolInfo ~= nil then
-      local info = Nodes.ImportInfo.new(pos, modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo)
-      return Nodes.ImportNode.create( self.nodeManager, pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {moduleTypeInfo}, info )
-   end
-   
-   self:error( string.format( "failed to import -- %s", modulePath) )
-end
-
-
-function TransUnit:analyzeImport( opeToken )
-
-   local lazyLoad
-   
-   if self:getToken(  ).txt == "." then
-      local modeToken = self:getToken(  )
-      do
-         local _switchExp = modeToken.txt
-         if _switchExp == "l" then
-            lazyLoad = Nodes.LazyLoad.On
-         elseif _switchExp == "d" then
-            lazyLoad = Nodes.LazyLoad.Off
-         else 
-            
-               lazyLoad = Nodes.LazyLoad.Off
-               self:error( string.format( "illegal import mode -- %s", modeToken.txt) )
-         end
-      end
-      
-   else
-    
-      self:pushback(  )
-      if self.ctrl_info.defaultLazy then
-         lazyLoad = Nodes.LazyLoad.Auto
-      else
-       
-         lazyLoad = Nodes.LazyLoad.Off
-      end
-      
-   end
-   
-   if lazyLoad ~= Nodes.LazyLoad.Off then
-      self.helperInfo.useLazyLoad = true
-   end
-   
-   
-   local moduleToken = self:getToken(  )
-   local modulePath = moduleToken.txt
-   local nextToken = moduleToken
-   
-   while true do
-      nextToken = self:getToken(  )
-      do
-         local _switchExp = nextToken.txt
-         if _switchExp == "." or _switchExp == "/" or _switchExp == ":" then
-            local demilit = nextToken.txt
-            nextToken = self:getToken(  )
-            moduleToken = nextToken
-            modulePath = string.format( "%s%s%s", modulePath, demilit, moduleToken.txt)
-         else 
-            
-               break
-         end
-      end
-      
-   end
-   
-   local assignName = moduleToken
-   local assigned
-   
-   if nextToken.txt == "as" then
-      assignName = self:getSymbolToken( SymbolMode.MustNot_ )
-      nextToken = self:getToken(  )
-      assigned = true
-   else
-    
-      assigned = false
-   end
-   
-   self:checkToken( nextToken, ";" )
-   
-   local node
-   
-   
-   do
-      node = self:analyzeImportFor( opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad )
-   end
-   
-   self.importModuleSet[node:get_expType()]= true
-   
-   return node
-end
-
-
-function TransUnit:analyzeTestCase( firstToken )
-
-   local newScope = self:pushScope( false )
-   
-   local importNode
-   
-   
-   do
-      importNode = self:analyzeImportFor( firstToken.pos, "lune.base.Testing", "__t", false, Nodes.LazyLoad.Off )
-   end
-   
-   
-   local nameToken = self:getSymbolToken( SymbolMode.MustNot_ )
-   
-   self:checkNextToken( "(" )
-   
-   local ctrlToken = self:getSymbolToken( SymbolMode.MustNot_ )
-   local ctrlName = ctrlToken.txt
-   self:checkNextToken( ")" )
-   
-   local moduleType = importNode:get_expType()
-   local ctrlType = _lune.nilacc( moduleType:get_scope(), 'getTypeInfoChild', 'callmtd' , "Ctrl" )
-   if  nil == ctrlType then
-      local _ctrlType = ctrlType
-   
-      self:error( "not found Testing.Ctrl class" )
-   end
-   
-   self:addLocalVar( ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, Ast.MutMode.IMut, false )
-   
-   self.scopeAccess = Ast.ScopeAccess.Full
-   
-   self.inTestBlock = true
-   local block = self:analyzeBlock( Nodes.BlockKind.Test, TentativeMode.Ignore, newScope, nil )
-   self.inTestBlock = false
-   
-   self.scopeAccess = Ast.ScopeAccess.Normal
-   
-   self:popScope(  )
-   
-   return Nodes.TestCaseNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nameToken, importNode, ctrlName, block )
-end
-
-
 function TransUnit:skipBlock( recordToken )
 
    local blockDepth = 0
@@ -2269,83 +2057,6 @@ function TransUnit:skipBlock( recordToken )
    end
    
    return tokenList
-end
-
-
-function TransUnit:analyzeTest( firstToken )
-
-   local nextToken = self:getToken(  )
-   if nextToken.txt ~= "{" then
-      self:pushback(  )
-      return self:analyzeTestCase( firstToken )
-   end
-   
-   self:checkToken( nextToken, "{" )
-   
-   self.inTestBlock = true
-   
-   local stmtList = {}
-   self:analyzeStatementList( stmtList, false, "}" )
-   self:checkNextToken( "}" )
-   
-   self.inTestBlock = false
-   
-   return Nodes.TestBlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, stmtList )
-end
-
-
-function TransUnit:analyzeSubfile( token )
-
-   if self.scope ~= self.moduleScope then
-      self:error( "'module' must be top scope." )
-   end
-   
-   
-   local mode = self:getToken(  )
-   
-   local moduleName = ""
-   while true do
-      local nextToken = self:getToken(  )
-      if nextToken.txt == ";" then
-         break
-      end
-      
-      if moduleName == "" then
-         moduleName = nextToken.txt
-      else
-       
-         moduleName = string.format( "%s%s", moduleName, nextToken.txt)
-      end
-      
-   end
-   
-   local usePath = nil
-   if moduleName == "" then
-      self:addErrMess( token.pos, "illegal subfile" )
-   else
-    
-      if mode.txt == "use" then
-         usePath = moduleName
-         if frontInterface.searchModule( moduleName, self.baseDir, nil ) then
-            table.insert( self.subfileList, moduleName )
-         else
-          
-            self:addErrMess( token.pos, string.format( "not found subfile -- %s", moduleName) )
-         end
-         
-      elseif mode.txt == "owner" then
-         if frontInterface.getLuaModulePath( self.moduleName, self.baseDir ) ~= moduleName then
-            self:addErrMess( token.pos, string.format( "illegal owner module -- %s, %s", moduleName, self.moduleName) )
-         end
-         
-      else
-       
-         self:addErrMess( mode.pos, string.format( "illegal module mode -- %s", mode.txt) )
-      end
-      
-   end
-   
-   return Nodes.SubfileNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, usePath )
 end
 
 
@@ -3104,35 +2815,6 @@ function TransUnit:analyzeForeach( token, sortFlag )
 end
 
 
-function TransUnit:analyzeProvide( firstToken )
-
-   local token = self:getSymbolToken( SymbolMode.MustNot_ )
-   local symbolNode = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, true, false )
-   self:checkNextToken( ";" )
-   
-   local symbolInfoList = symbolNode:getSymbolInfo(  )
-   if #symbolInfoList ~= 1 then
-      self:error( "'provide' must be symbol." )
-   end
-   
-   local symbolInfo = symbolInfoList[1]
-   
-   local node = Nodes.ProvideNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, symbolInfo )
-   if self.provideNode then
-      self:addErrMess( firstToken.pos, "multiple provide" )
-   end
-   
-   self.provideNode = node
-   
-   if symbolInfo:get_accessMode() ~= Ast.AccessMode.Pub then
-      self:addErrMess( firstToken.pos, string.format( "provide variable must be 'pub'.  -- %s", symbolInfo:get_accessMode()) )
-   end
-   
-   
-   return node
-end
-
-
 function TransUnit:analyzeScope( firstToken )
 
    
@@ -3746,318 +3428,6 @@ function TransUnit:declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcB
 end
 
 
-
-
-function TransUnit:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName, readyExportInfo )
-   local __func__ = '@lune.@base.@TransUnit.TransUnit.createAST'
-
-   local parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile )
-   
-   local streamName = parser:getStreamName(  )
-   
-   self.stdinFile = stdinFile
-   self.baseDir = baseDir
-   
-   Log.log( Log.Level.Log, __func__, 615, function (  )
-      local __func__ = '@lune.@base.@TransUnit.TransUnit.createAST.<anonymous>'
-   
-      return string.format( "%s start -- %s on %s", __func__, parser:getStreamName(  ), baseDir)
-   end )
-   
-   
-   self.moduleName = _lune.unwrapDefault( moduleName, "")
-   
-   if moduleName ~= nil then
-      
-      if self.importModuleInfo:len(  ) == 0 and not self.importModuleInfo:add( moduleName ) then
-         self:error( string.format( "already imported -- %s", moduleName) )
-      end
-      
-   end
-   
-   
-   local moduleTypeInfo = Ast.headTypeInfo
-   
-   do
-      if moduleName ~= nil then
-         for txt in string.gmatch( frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' ) do
-            moduleTypeInfo = self:pushModule( self.processInfo, false, txt, true ):get_typeInfo()
-         end
-         
-      end
-      
-   end
-   
-   self.moduleScope = self.scope
-   self.moduleType = moduleTypeInfo
-   self.moduleScope:addVar( self.processInfo, Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
-   
-   self.typeNameCtrl = Ast.TypeNameCtrl.new(moduleTypeInfo)
-   
-   self:setParser( Parser.DefaultPushbackParser.new(parser) )
-   
-   self.scope:addIgnoredVar( self.processInfo )
-   
-   local ast
-   
-   local exportInfo
-   
-   
-   local function createExportInfo( moduleSymboInfo, globalSymbolList, processInfo )
-   
-      local provideInfo
-      
-      if moduleSymboInfo ~= nil then
-         provideInfo = frontInterface.ModuleProvideInfo.new(moduleSymboInfo:get_typeInfo(), moduleSymboInfo:get_kind(), moduleSymboInfo:get_mutable())
-      else
-         provideInfo = frontInterface.ModuleProvideInfo.new(moduleTypeInfo, Ast.SymbolKind.Typ, false)
-      end
-      
-      
-      local importedAliasMap = {}
-      for __index, node in ipairs( self.nodeManager:getAliasNodeList(  ) ) do
-         importedAliasMap[node:get_typeInfo()] = _lune.__Cast( node:get_expType(), 3, Ast.AliasTypeInfo )
-      end
-      
-      
-      local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
-      
-      if readyExportInfo ~= nil then
-         readyExportInfo( workExportInfo )
-      end
-      
-      
-      return workExportInfo
-   end
-   
-   local lastStatement = nil
-   if macroFlag then
-      ast = self:analyzeBlock( Nodes.BlockKind.Macro, TentativeMode.Ignore )
-      exportInfo = createExportInfo( nil, {}, self.processInfo )
-   else
-    
-      local children = {}
-      local lastLineNo
-      
-      lastStatement, lastLineNo = self:analyzeStatementList( children, false )
-      
-      local statement = Nodes.BlankLineNode.create( self.nodeManager, self:createPosition( lastLineNo + 1, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, 0 )
-      statement:addComment( self.commentCtrl:get_commentList() )
-      self.commentCtrl:clear(  )
-      table.insert( children, statement )
-      
-      local token = self:getTokenNoErr(  )
-      if token ~= Parser.getEofToken(  ) then
-         self:error( string.format( "%s:%d:%d:(%s) not eof -- %s", self.parser:getStreamName(  ), token.pos.lineNo, token.pos.column, Types.TokenKind:_getTxt( token.kind)
-         , token.txt) )
-      end
-      
-      
-      for __index, subModule in ipairs( self.subfileList ) do
-         local file
-         
-         do
-            do
-               local _exp = frontInterface.searchModule( subModule, self.baseDir, nil )
-               if _exp ~= nil then
-                  file = _exp
-               else
-                  self:error( string.format( "not found subfile -- %s", subModule) )
-               end
-            end
-            
-         end
-         
-         
-         if self.scope ~= self.moduleScope then
-            self:error( "scope does not close" )
-         end
-         
-         
-         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {file,subModule,nil}), true, self.stdinFile, nil )
-         
-         self:setParser( Parser.DefaultPushbackParser.new(subParser) )
-         
-         lastStatement = self:analyzeStatementListSubfile( children )
-         
-         token = self:getTokenNoErr(  )
-         if token ~= Parser.getEofToken(  ) then
-            Util.err( string.format( "unknown:%d:%d:(%s) %s", token.pos.lineNo, token.pos.column, Types.TokenKind:_getTxt( token.kind)
-            , token.txt) )
-         end
-         
-      end
-      
-      self.analyzePhase = AnalyzePhase.Main
-      
-      local globalSymbolList = {}
-      for __index, node in ipairs( children ) do
-         do
-            local workNode = _lune.__Cast( node, 3, Nodes.DeclVarNode )
-            if workNode ~= nil then
-               for __index, symbolInfo in ipairs( workNode:get_symbolInfoList() ) do
-                  if symbolInfo:get_accessMode() == Ast.AccessMode.Global then
-                     table.insert( globalSymbolList, symbolInfo )
-                  end
-                  
-               end
-               
-            end
-         end
-         
-         do
-            local workNode = _lune.__Cast( node, 3, Nodes.DeclFuncNode )
-            if workNode ~= nil then
-               if workNode:get_declInfo():get_accessMode() == Ast.AccessMode.Global then
-                  do
-                     local symbolInfo = workNode:get_declInfo():get_symbol()
-                     if symbolInfo ~= nil then
-                        table.insert( globalSymbolList, symbolInfo )
-                     end
-                  end
-                  
-               end
-               
-            end
-         end
-         
-      end
-      
-      local moduleSymboInfo
-      
-      do
-         local _exp = self.provideNode
-         if _exp ~= nil then
-            if lastStatement ~= _exp then
-               self:addErrMess( _exp:get_pos(), "'provide' must be last." )
-            end
-            
-            moduleSymboInfo = _exp:get_symbol()
-         else
-            moduleSymboInfo = nil
-         end
-      end
-      
-      exportInfo = createExportInfo( moduleSymboInfo, globalSymbolList, self.processInfo:duplicate(  ) )
-      
-      
-      
-      do
-         local bakParser = self.parser
-         for __index, funcBlockInfo in ipairs( self.funcBlockInfoList ) do
-            local typeInfo = funcBlockInfo:get_funcType()
-            self.parser = Parser.DefaultPushbackParser.new(Parser.TokenListParser.new(funcBlockInfo:get_tokenList(), bakParser:getStreamName(  ), funcBlockInfo:get_tokenList()[1].pos.orgPos))
-            
-            local declFuncInfo = funcBlockInfo:get_declFuncInfo()
-            local classTypeInfo = declFuncInfo:get_classTypeInfo()
-            
-            self.funcBlockInfoLinkNo = funcBlockInfo:get_lineNo()
-            
-            local funcBodyScope = funcBlockInfo:get_funcScope()
-            local backScope = self.scope
-            self.scope = funcBodyScope
-            
-            local workBody = self:analyzeFuncBlock( getAnalyzingState( typeInfo ), funcBlockInfo:get_tokenList()[1], classTypeInfo, typeInfo, typeInfo:get_rawTxt(), funcBodyScope, typeInfo:get_retTypeInfoList() )
-            self:declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope )
-            
-            declFuncInfo:set_body( workBody )
-            declFuncInfo:set_has__func__Symbol( _lune._Set_has(self.has__func__Symbol, typeInfo ) )
-            self.has__func__Symbol[typeInfo]= nil
-            
-            self.scope = backScope
-            self.funcBlockInfoLinkNo = nil
-         end
-         
-         self.parser = bakParser
-      end
-      
-      
-      self:checkOverriededMethodOfAllClass(  )
-      
-      local rootNode = Nodes.RootNode.create( self.nodeManager, self:createPosition( 0, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, children, self.moduleScope, self.globalScope, self.macroCtrl:get_useModuleMacroSet(), self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode, self.helperInfo, self.nodeManager, _lune.unwrapDefault( _lune.nilacc( self.importCtrl, 'get_importModule2ExportInfo', 'callmtd' ), {}), self.macroCtrl:get_typeId2MacroInfo(), self.typeId2ClassMap )
-      ast = rootNode
-      
-      ClosureFun.checkList( self.closureFunList )
-   end
-   
-   
-   if moduleName ~= nil then
-      for __index, _1 in ipairs( Util.splitStr( moduleName, '[^%.]+' ) ) do
-         self:popModule(  )
-      end
-      
-   end
-   
-   
-   local function createId2proto( map )
-   
-      local id2proto = {}
-      for protoType, nsInfo in pairs( map ) do
-         id2proto[protoType:get_typeId().id] = nsInfo
-      end
-      
-      return id2proto
-   end
-   
-   do
-      local __sorted = {}
-      local __map = createId2proto( self.nsInfoMap )
-      for __key in pairs( __map ) do
-         table.insert( __sorted, __key )
-      end
-      table.sort( __sorted )
-      for __index, __key in ipairs( __sorted ) do
-         local nsInfo = __map[ __key ]
-         do
-            if nsInfo:get_nobody() then
-               local protoType = nsInfo:get_typeInfo()
-               local mess
-               
-               do
-                  local _switchExp = protoType:get_kind()
-                  if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
-                     mess = string.format( "This class doesn't have body. -- %s", protoType:getTxt(  ))
-                  else 
-                     
-                        mess = string.format( "This function doesn't have body. -- %s", protoType:getTxt(  ))
-                  end
-               end
-               
-               self:addErrMess( _lune.unwrap( _lune.nilacc( self.nsInfoMap[protoType], 'get_pos', 'callmtd' )), mess )
-            end
-            
-         end
-      end
-   end
-   
-   
-   for __index, mess in ipairs( TransUnitIF.sortMess( self.warnMessList ) ) do
-      Util.errorLog( mess:get_mess() )
-   end
-   
-   if #self.errMessList > 0 then
-      for __index, mess in ipairs( TransUnitIF.sortMess( self.errMessList ) ) do
-         Util.errorLog( mess:get_mess() )
-      end
-      
-      Util.err( "has error" )
-   end
-   
-   if self.ctrl_info.stopByWarning and #self.warnMessList > 0 then
-      Util.err( "has error" )
-   end
-   
-   
-   do
-      local _switchExp = self.analyzeMode
-      if _switchExp == AnalyzeMode.Diag or _switchExp == AnalyzeMode.Complete or _switchExp == AnalyzeMode.Inquire then
-         os.exit( 0 )
-      end
-   end
-   
-   
-   return AstInfo.ASTInfo.new(ast, exportInfo, parser:getStreamName(  ), self.builtinFunc)
-end
 
 
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, workArgList )
@@ -4895,6 +4265,12 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
 end
 
 
+function TransUnit:analyzeDeclToken( accessMode, staticFlag, firstToken, token )
+
+   return nil
+end
+
+
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
 
    if not staticFlag then
@@ -4947,12 +4323,10 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
       return self:analyzeDeclForm( accessMode, firstToken )
    elseif token.txt == "alias" then
       return self:analyzeAlias( accessMode, firstToken )
-   elseif token.txt == "__test" then
-      return self:analyzeTest( firstToken )
    end
    
    
-   return nil
+   return self:analyzeDeclToken( accessMode, staticFlag, firstToken, token )
 end
 
 
@@ -5072,7 +4446,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1987, function (  )
+         Log.log( Log.Level.Debug, __func__, 1708, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -9244,10 +8618,11 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    
    if not fieldTypeInfo then
       for name, val in pairs( classScope:get_symbol2SymbolInfoMap() ) do
-         Util.log( string.format( "debug: %s, %s", name, val) )
+         Util.errorLog( string.format( "debug: %s, %s", name, val) )
       end
       
-      self:error( string.format( "not found field typeInfo: %s.%s -- %s", className, token.txt, Ast.TypeInfoKind:_getTxt( classTypeInfo:get_kind())
+      Util.errorLog( string.format( "class, scope: -- %s, %s", classTypeInfo, classScope) )
+      self:error( string.format( "not found field typeInfo: %s.%s -- %s", classTypeInfo:getFullName( self.typeNameCtrl, self.scope, false ), token.txt, Ast.TypeInfoKind:_getTxt( classTypeInfo:get_kind())
       ) )
    end
    
@@ -11509,6 +10884,12 @@ function TransUnit:analyzeReturn( token )
 end
 
 
+function TransUnit:analyzeStatementToken( token )
+
+   return nil
+end
+
+
 function TransUnit:analyzeStatement( termTxt )
 
    self.commentCtrl:push(  )
@@ -11610,13 +10991,6 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:analyzeDeclVar( Nodes.DeclVarMode.Sync, Ast.AccessMode.Local, token )
       elseif token.txt == "__scope" then
          statement = self:analyzeScope( token )
-      elseif token.txt == "import" then
-         statement = self:analyzeImport( token )
-      elseif token.txt == "subfile" then
-         do
-            statement = self:analyzeSubfile( token )
-         end
-         
       elseif token.txt == "_lune_control" then
          do
             local _exp = self:analyzeLuneControl( token )
@@ -11627,44 +11001,46 @@ function TransUnit:analyzeStatement( termTxt )
             end
          end
          
-      elseif token.txt == "provide" then
-         statement = self:analyzeProvide( token )
       elseif token.txt == ";" then
          statement = self:createNoneNode( token.pos )
       elseif token.txt == ",," or token.txt == ",,," or token.txt == ",,,," then
          self:error( string.format( "illegal macro op -- %s", token.txt) )
       else
        
-         self:pushback(  )
-         
-         self.accessSymbolSetQueue:push(  )
-         
-         local exp = self:analyzeExp( true, false, true )
-         local nextToken = self:getToken(  )
-         if nextToken.txt == "," then
-            local expList = self:analyzeExpList( true, true, true, exp )
-            exp = self:analyzeExpOp2( token, expList, nil )
-            nextToken = self:getToken(  )
-         end
-         
-         self:checkToken( nextToken, ";" )
-         
-         do
-            local setNode = _lune.__Cast( exp, 3, Nodes.ExpSetValNode )
-            if setNode ~= nil then
-               local set = {}
-               for __index, symbol in ipairs( setNode:get_LeftSymList() ) do
-                  set[symbol:getOrg(  )]= true
-               end
-               
-               self.accessSymbolSetQueue:pop( set )
-            else
-               self.accessSymbolSetQueue:pop( nil )
+         statement = self:analyzeStatementToken( token )
+         if not statement then
+            self:pushback(  )
+            
+            self.accessSymbolSetQueue:push(  )
+            
+            local exp = self:analyzeExp( true, false, true )
+            local nextToken = self:getToken(  )
+            if nextToken.txt == "," then
+               local expList = self:analyzeExpList( true, true, true, exp )
+               exp = self:analyzeExpOp2( token, expList, nil )
+               nextToken = self:getToken(  )
             end
+            
+            self:checkToken( nextToken, ";" )
+            
+            do
+               local setNode = _lune.__Cast( exp, 3, Nodes.ExpSetValNode )
+               if setNode ~= nil then
+                  local set = {}
+                  for __index, symbol in ipairs( setNode:get_LeftSymList() ) do
+                     set[symbol:getOrg(  )]= true
+                  end
+                  
+                  self.accessSymbolSetQueue:pop( set )
+               else
+                  self.accessSymbolSetQueue:pop( nil )
+               end
+            end
+            
+            
+            statement = Nodes.StmtExpNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp )
          end
          
-         
-         statement = Nodes.StmtExpNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp )
       end
       
    end
@@ -11682,5 +11058,696 @@ function TransUnit:analyzeStatement( termTxt )
    return statement
 end
 
+
+local TransUnitCtrl = {}
+setmetatable( TransUnitCtrl, { __index = TransUnit } )
+_moduleObj.TransUnitCtrl = TransUnitCtrl
+function TransUnitCtrl.new( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc )
+   local obj = {}
+   TransUnitCtrl.setmeta( obj )
+   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc ); end
+   return obj
+end
+function TransUnitCtrl:__init(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc) 
+   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+   
+   
+   self.macroEval = macroEval
+   self.importModuleInfo = importModuleInfo:clone(  )
+   self.importCtrl = nil
+   
+   self.stdinFile = nil
+   self.subfileList = {}
+   self.provideNode = nil
+   
+end
+function TransUnitCtrl.setmeta( obj )
+  setmetatable( obj, { __index = TransUnitCtrl  } )
+end
+
+
+function TransUnitCtrl:analyzeImportFor( pos, modulePath, assignName, assigned, lazyLoad )
+
+   local backupScope = self.scope
+   
+   self.scope = self.topScope
+   
+   local macroMode
+   
+   local nearCode
+   
+   if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
+      macroMode = Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
+      
+      nearCode = self.parser:getNearCode(  )
+   else
+    
+      macroMode = ""
+      nearCode = nil
+   end
+   
+   
+   local importObj = self.importCtrl
+   if  nil == importObj then
+      local _importObj = importObj
+   
+      importObj = Import.Import.new(self:getLatestPos(  ), self.importModuleInfo, self.moduleType, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.baseDir, self.validMutControl)
+      self.importCtrl = importObj
+   end
+   
+   
+   local moduleLoaderParam = Import.ModuleLoaderParam.new(self.ctrl_info, self.processInfo, self:getLatestPos(  ), macroMode, nearCode, self.validMutControl, self.macroEval)
+   local moduleLoader = importObj:processImport( modulePath, moduleLoaderParam )
+   
+   local exportInfo
+   
+   do
+      local work, err = importObj:loadModuleInfo( moduleLoader )
+      if work ~= nil then
+         exportInfo = work
+      else
+         self:error( err )
+      end
+      
+   end
+   
+   
+   for __index, symbol in ipairs( exportInfo:get_globalSymbolList() ) do
+      self.globalScope:addSymbolInfo( self.processInfo, symbol )
+   end
+   
+   
+   self.scope = backupScope
+   
+   local provideInfo = exportInfo:get_provideInfo()
+   local moduleTypeInfo = provideInfo:get_typeInfo()
+   self.scope:addModule( moduleTypeInfo, exportInfo:assign( assignName ) )
+   
+   local moduleSymbolKind = provideInfo:get_symbolKind()
+   local moduleSymbolInfo, shadowing = self.scope:add( self.processInfo, moduleSymbolKind, false, false, assignName, pos, moduleTypeInfo, Ast.AccessMode.Local, true, provideInfo:get_mutable() and Ast.MutMode.Mut or Ast.MutMode.IMut, true, lazyLoad ~= Nodes.LazyLoad.Off )
+   
+   if shadowing ~= nil then
+      local err = shadowing:get_typeInfo() ~= moduleTypeInfo
+      self:errorShadowingOp( pos, shadowing, err )
+      if err then
+         self:error( string.format( "failed to import -- %s", modulePath) )
+      end
+      
+      moduleSymbolInfo = shadowing
+   end
+   
+   
+   if moduleSymbolInfo ~= nil then
+      local info = Nodes.ImportInfo.new(pos, modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo, moduleTypeInfo)
+      return Nodes.ImportNode.create( self.nodeManager, pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {moduleTypeInfo}, info )
+   end
+   
+   self:error( string.format( "failed to import -- %s", modulePath) )
+end
+
+
+function TransUnitCtrl:analyzeImport( opeToken )
+
+   local lazyLoad
+   
+   if self:getToken(  ).txt == "." then
+      local modeToken = self:getToken(  )
+      do
+         local _switchExp = modeToken.txt
+         if _switchExp == "l" then
+            lazyLoad = Nodes.LazyLoad.On
+         elseif _switchExp == "d" then
+            lazyLoad = Nodes.LazyLoad.Off
+         else 
+            
+               lazyLoad = Nodes.LazyLoad.Off
+               self:error( string.format( "illegal import mode -- %s", modeToken.txt) )
+         end
+      end
+      
+   else
+    
+      self:pushback(  )
+      if self.ctrl_info.defaultLazy then
+         lazyLoad = Nodes.LazyLoad.Auto
+      else
+       
+         lazyLoad = Nodes.LazyLoad.Off
+      end
+      
+   end
+   
+   if lazyLoad ~= Nodes.LazyLoad.Off then
+      self.helperInfo.useLazyLoad = true
+   end
+   
+   
+   local moduleToken = self:getToken(  )
+   local modulePath = moduleToken.txt
+   local nextToken = moduleToken
+   
+   while true do
+      nextToken = self:getToken(  )
+      do
+         local _switchExp = nextToken.txt
+         if _switchExp == "." or _switchExp == "/" or _switchExp == ":" then
+            local demilit = nextToken.txt
+            nextToken = self:getToken(  )
+            moduleToken = nextToken
+            modulePath = string.format( "%s%s%s", modulePath, demilit, moduleToken.txt)
+         else 
+            
+               break
+         end
+      end
+      
+   end
+   
+   local assignName = moduleToken
+   local assigned
+   
+   if nextToken.txt == "as" then
+      assignName = self:getSymbolToken( SymbolMode.MustNot_ )
+      nextToken = self:getToken(  )
+      assigned = true
+   else
+    
+      assigned = false
+   end
+   
+   self:checkToken( nextToken, ";" )
+   
+   local node
+   
+   
+   do
+      node = self:analyzeImportFor( opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad )
+   end
+   
+   self.importModuleSet[node:get_expType()]= true
+   
+   return node
+end
+
+
+function TransUnitCtrl:analyzeTestCase( firstToken )
+
+   local newScope = self:pushScope( false )
+   
+   local importNode
+   
+   
+   do
+      importNode = self:analyzeImportFor( firstToken.pos, "lune.base.Testing", "__t", false, Nodes.LazyLoad.Off )
+   end
+   
+   
+   local nameToken = self:getSymbolToken( SymbolMode.MustNot_ )
+   
+   self:checkNextToken( "(" )
+   
+   local ctrlToken = self:getSymbolToken( SymbolMode.MustNot_ )
+   local ctrlName = ctrlToken.txt
+   self:checkNextToken( ")" )
+   
+   local moduleType = importNode:get_expType()
+   local ctrlType = _lune.nilacc( moduleType:get_scope(), 'getTypeInfoChild', 'callmtd' , "Ctrl" )
+   if  nil == ctrlType then
+      local _ctrlType = ctrlType
+   
+      self:error( "not found Testing.Ctrl class" )
+   end
+   
+   self:addLocalVar( ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, Ast.MutMode.IMut, false )
+   
+   self.scopeAccess = Ast.ScopeAccess.Full
+   
+   self.inTestBlock = true
+   local block = self:analyzeBlock( Nodes.BlockKind.Test, TentativeMode.Ignore, newScope, nil )
+   self.inTestBlock = false
+   
+   self.scopeAccess = Ast.ScopeAccess.Normal
+   
+   self:popScope(  )
+   
+   return Nodes.TestCaseNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nameToken, importNode, ctrlName, block )
+end
+
+
+function TransUnitCtrl:analyzeTest( firstToken )
+
+   local nextToken = self:getToken(  )
+   if nextToken.txt ~= "{" then
+      self:pushback(  )
+      return self:analyzeTestCase( firstToken )
+   end
+   
+   self:checkToken( nextToken, "{" )
+   
+   self.inTestBlock = true
+   
+   local stmtList = {}
+   self:analyzeStatementList( stmtList, false, "}" )
+   self:checkNextToken( "}" )
+   
+   self.inTestBlock = false
+   
+   return Nodes.TestBlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, stmtList )
+end
+
+
+function TransUnitCtrl:analyzeDeclToken( accessMode, staticFlag, firstToken, token )
+
+   if token.txt == "__test" then
+      return self:analyzeTest( firstToken )
+   end
+   
+   return nil
+end
+
+
+function TransUnitCtrl:analyzeSubfile( token )
+
+   if self.scope ~= self.moduleScope then
+      self:error( "'module' must be top scope." )
+   end
+   
+   
+   local mode = self:getToken(  )
+   
+   local moduleName = ""
+   while true do
+      local nextToken = self:getToken(  )
+      if nextToken.txt == ";" then
+         break
+      end
+      
+      if moduleName == "" then
+         moduleName = nextToken.txt
+      else
+       
+         moduleName = string.format( "%s%s", moduleName, nextToken.txt)
+      end
+      
+   end
+   
+   local usePath = nil
+   if moduleName == "" then
+      self:addErrMess( token.pos, "illegal subfile" )
+   else
+    
+      if mode.txt == "use" then
+         usePath = moduleName
+         if frontInterface.searchModule( moduleName, self.baseDir, nil ) then
+            table.insert( self.subfileList, moduleName )
+         else
+          
+            self:addErrMess( token.pos, string.format( "not found subfile -- %s", moduleName) )
+         end
+         
+      elseif mode.txt == "owner" then
+         if frontInterface.getLuaModulePath( self.moduleName, self.baseDir ) ~= moduleName then
+            self:addErrMess( token.pos, string.format( "illegal owner module -- %s, %s", moduleName, self.moduleName) )
+         end
+         
+      else
+       
+         self:addErrMess( mode.pos, string.format( "illegal module mode -- %s", mode.txt) )
+      end
+      
+   end
+   
+   return Nodes.SubfileNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, usePath )
+end
+
+
+function TransUnitCtrl:analyzeProvide( firstToken )
+
+   local token = self:getSymbolToken( SymbolMode.MustNot_ )
+   local symbolNode = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, true, false )
+   self:checkNextToken( ";" )
+   
+   local symbolInfoList = symbolNode:getSymbolInfo(  )
+   if #symbolInfoList ~= 1 then
+      self:error( "'provide' must be symbol." )
+   end
+   
+   local symbolInfo = symbolInfoList[1]
+   
+   local node = Nodes.ProvideNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, symbolInfo )
+   if self.provideNode then
+      self:addErrMess( firstToken.pos, "multiple provide" )
+   end
+   
+   self.provideNode = node
+   
+   if symbolInfo:get_accessMode() ~= Ast.AccessMode.Pub then
+      self:addErrMess( firstToken.pos, string.format( "provide variable must be 'pub'.  -- %s", symbolInfo:get_accessMode()) )
+   end
+   
+   
+   return node
+end
+
+
+function TransUnitCtrl:analyzeStatementToken( token )
+
+   local statement
+   
+   if token.txt == "import" then
+      statement = self:analyzeImport( token )
+   elseif token.txt == "subfile" then
+      do
+         statement = self:analyzeSubfile( token )
+      end
+      
+   elseif token.txt == "provide" then
+      statement = self:analyzeProvide( token )
+   else
+    
+      statement = nil
+   end
+   
+   return statement
+end
+
+
+function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName, readyExportInfo )
+   local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST'
+
+   local parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile )
+   
+   local streamName = parser:getStreamName(  )
+   
+   self.stdinFile = stdinFile
+   self.baseDir = baseDir
+   
+   Log.log( Log.Level.Log, __func__, 421, function (  )
+      local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
+   
+      return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
+      )
+   end )
+   
+   
+   self.moduleName = _lune.unwrapDefault( moduleName, "")
+   
+   if moduleName ~= nil then
+      
+      if self.importModuleInfo:len(  ) == 0 and not self.importModuleInfo:add( moduleName ) then
+         self:error( string.format( "already imported -- %s", moduleName) )
+      end
+      
+   end
+   
+   
+   local moduleTypeInfo = Ast.headTypeInfo
+   
+   do
+      if moduleName ~= nil then
+         for txt in string.gmatch( frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' ) do
+            moduleTypeInfo = self:pushModule( self.processInfo, false, txt, true ):get_typeInfo()
+         end
+         
+      end
+      
+   end
+   
+   self.moduleScope = self.scope
+   self.moduleType = moduleTypeInfo
+   self.moduleScope:addVar( self.processInfo, Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
+   
+   self.typeNameCtrl = Ast.TypeNameCtrl.new(moduleTypeInfo)
+   
+   self:setParser( Parser.DefaultPushbackParser.new(parser) )
+   
+   self.scope:addIgnoredVar( self.processInfo )
+   
+   local ast
+   
+   local exportInfo
+   
+   
+   local function createExportInfo( moduleSymboInfo, globalSymbolList, processInfo )
+      local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.createExportInfo'
+   
+      local provideInfo
+      
+      if moduleSymboInfo ~= nil then
+         provideInfo = frontInterface.ModuleProvideInfo.new(moduleSymboInfo:get_typeInfo(), moduleSymboInfo:get_kind(), moduleSymboInfo:get_mutable())
+      else
+         provideInfo = frontInterface.ModuleProvideInfo.new(moduleTypeInfo, Ast.SymbolKind.Typ, false)
+      end
+      
+      
+      local importedAliasMap = {}
+      for __index, node in ipairs( self.nodeManager:getAliasNodeList(  ) ) do
+         importedAliasMap[node:get_typeInfo()] = _lune.__Cast( node:get_expType(), 3, Ast.AliasTypeInfo )
+      end
+      
+      
+      local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
+      
+      
+      Log.log( Log.Level.Log, __func__, 488, function (  )
+      
+         return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
+      end )
+      
+      
+      if readyExportInfo ~= nil then
+         readyExportInfo( workExportInfo )
+      end
+      
+      
+      return workExportInfo
+   end
+   
+   local lastStatement = nil
+   if macroFlag then
+      ast = self:analyzeBlock( Nodes.BlockKind.Macro, TentativeMode.Ignore )
+      exportInfo = createExportInfo( nil, {}, self.processInfo )
+   else
+    
+      local children = {}
+      local lastLineNo
+      
+      lastStatement, lastLineNo = self:analyzeStatementList( children, false )
+      
+      local statement = Nodes.BlankLineNode.create( self.nodeManager, self:createPosition( lastLineNo + 1, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, 0 )
+      statement:addComment( self.commentCtrl:get_commentList() )
+      self.commentCtrl:clear(  )
+      table.insert( children, statement )
+      
+      local token = self:getTokenNoErr(  )
+      if token ~= Parser.getEofToken(  ) then
+         self:error( string.format( "%s:%d:%d:(%s) not eof -- %s", self.parser:getStreamName(  ), token.pos.lineNo, token.pos.column, Types.TokenKind:_getTxt( token.kind)
+         , token.txt) )
+      end
+      
+      
+      for __index, subModule in ipairs( self.subfileList ) do
+         local file
+         
+         do
+            do
+               local _exp = frontInterface.searchModule( subModule, self.baseDir, nil )
+               if _exp ~= nil then
+                  file = _exp
+               else
+                  self:error( string.format( "not found subfile -- %s", subModule) )
+               end
+            end
+            
+         end
+         
+         
+         if self.scope ~= self.moduleScope then
+            self:error( "scope does not close" )
+         end
+         
+         
+         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {file,subModule,nil}), true, self.stdinFile, nil )
+         
+         self:setParser( Parser.DefaultPushbackParser.new(subParser) )
+         
+         lastStatement = self:analyzeStatementListSubfile( children )
+         
+         token = self:getTokenNoErr(  )
+         if token ~= Parser.getEofToken(  ) then
+            Util.err( string.format( "unknown:%d:%d:(%s) %s", token.pos.lineNo, token.pos.column, Types.TokenKind:_getTxt( token.kind)
+            , token.txt) )
+         end
+         
+      end
+      
+      self.analyzePhase = AnalyzePhase.Main
+      
+      local globalSymbolList = {}
+      for __index, node in ipairs( children ) do
+         do
+            local workNode = _lune.__Cast( node, 3, Nodes.DeclVarNode )
+            if workNode ~= nil then
+               for __index, symbolInfo in ipairs( workNode:get_symbolInfoList() ) do
+                  if symbolInfo:get_accessMode() == Ast.AccessMode.Global then
+                     table.insert( globalSymbolList, symbolInfo )
+                  end
+                  
+               end
+               
+            end
+         end
+         
+         do
+            local workNode = _lune.__Cast( node, 3, Nodes.DeclFuncNode )
+            if workNode ~= nil then
+               if workNode:get_declInfo():get_accessMode() == Ast.AccessMode.Global then
+                  do
+                     local symbolInfo = workNode:get_declInfo():get_symbol()
+                     if symbolInfo ~= nil then
+                        table.insert( globalSymbolList, symbolInfo )
+                     end
+                  end
+                  
+               end
+               
+            end
+         end
+         
+      end
+      
+      local moduleSymboInfo
+      
+      do
+         local _exp = self.provideNode
+         if _exp ~= nil then
+            if lastStatement ~= _exp then
+               self:addErrMess( _exp:get_pos(), "'provide' must be last." )
+            end
+            
+            moduleSymboInfo = _exp:get_symbol()
+         else
+            moduleSymboInfo = nil
+         end
+      end
+      
+      exportInfo = createExportInfo( moduleSymboInfo, globalSymbolList, self.processInfo:duplicate(  ) )
+      
+      do
+         local bakParser = self.parser
+         for __index, funcBlockInfo in ipairs( self.funcBlockInfoList ) do
+            local typeInfo = funcBlockInfo:get_funcType()
+            self.parser = Parser.DefaultPushbackParser.new(Parser.TokenListParser.new(funcBlockInfo:get_tokenList(), bakParser:getStreamName(  ), funcBlockInfo:get_tokenList()[1].pos.orgPos))
+            
+            local declFuncInfo = funcBlockInfo:get_declFuncInfo()
+            local classTypeInfo = declFuncInfo:get_classTypeInfo()
+            
+            self.funcBlockInfoLinkNo = funcBlockInfo:get_lineNo()
+            
+            local funcBodyScope = funcBlockInfo:get_funcScope()
+            local backScope = self.scope
+            self.scope = funcBodyScope
+            
+            local workBody = self:analyzeFuncBlock( getAnalyzingState( typeInfo ), funcBlockInfo:get_tokenList()[1], classTypeInfo, typeInfo, typeInfo:get_rawTxt(), funcBodyScope, typeInfo:get_retTypeInfoList() )
+            self:declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope )
+            
+            declFuncInfo:set_body( workBody )
+            declFuncInfo:set_has__func__Symbol( _lune._Set_has(self.has__func__Symbol, typeInfo ) )
+            self.has__func__Symbol[typeInfo]= nil
+            
+            self.scope = backScope
+            self.funcBlockInfoLinkNo = nil
+         end
+         
+         self.parser = bakParser
+      end
+      
+      
+      self:checkOverriededMethodOfAllClass(  )
+      
+      local rootNode = Nodes.RootNode.create( self.nodeManager, self:createPosition( 0, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, children, self.moduleScope, self.globalScope, self.macroCtrl:get_useModuleMacroSet(), self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode, self.helperInfo, self.nodeManager, _lune.unwrapDefault( _lune.nilacc( self.importCtrl, 'get_importModule2ExportInfo', 'callmtd' ), {}), self.macroCtrl:get_typeId2MacroInfo(), self.typeId2ClassMap )
+      ast = rootNode
+      
+      ClosureFun.checkList( self.closureFunList )
+   end
+   
+   
+   if moduleName ~= nil then
+      for __index, _1 in ipairs( Util.splitStr( moduleName, '[^%.]+' ) ) do
+         self:popModule(  )
+      end
+      
+   end
+   
+   
+   local function createId2proto( map )
+   
+      local id2proto = {}
+      for protoType, nsInfo in pairs( map ) do
+         id2proto[protoType:get_typeId().id] = nsInfo
+      end
+      
+      return id2proto
+   end
+   
+   do
+      local __sorted = {}
+      local __map = createId2proto( self.nsInfoMap )
+      for __key in pairs( __map ) do
+         table.insert( __sorted, __key )
+      end
+      table.sort( __sorted )
+      for __index, __key in ipairs( __sorted ) do
+         local nsInfo = __map[ __key ]
+         do
+            if nsInfo:get_nobody() then
+               local protoType = nsInfo:get_typeInfo()
+               local mess
+               
+               do
+                  local _switchExp = protoType:get_kind()
+                  if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+                     mess = string.format( "This class doesn't have body. -- %s", protoType:getTxt(  ))
+                  else 
+                     
+                        mess = string.format( "This function doesn't have body. -- %s", protoType:getTxt(  ))
+                  end
+               end
+               
+               self:addErrMess( _lune.unwrap( _lune.nilacc( self.nsInfoMap[protoType], 'get_pos', 'callmtd' )), mess )
+            end
+            
+         end
+      end
+   end
+   
+   
+   for __index, mess in ipairs( TransUnitIF.sortMess( self.warnMessList ) ) do
+      Util.errorLog( mess:get_mess() )
+   end
+   
+   if #self.errMessList > 0 then
+      for __index, mess in ipairs( TransUnitIF.sortMess( self.errMessList ) ) do
+         Util.errorLog( mess:get_mess() )
+      end
+      
+      Util.err( "has error" )
+   end
+   
+   if self.ctrl_info.stopByWarning and #self.warnMessList > 0 then
+      Util.err( "has error" )
+   end
+   
+   
+   do
+      local _switchExp = self.analyzeMode
+      if _switchExp == AnalyzeMode.Diag or _switchExp == AnalyzeMode.Complete or _switchExp == AnalyzeMode.Inquire then
+         os.exit( 0 )
+      end
+   end
+   
+   
+   return AstInfo.ASTInfo.new(ast, exportInfo, parser:getStreamName(  ), self.builtinFunc)
+end
 
 return _moduleObj

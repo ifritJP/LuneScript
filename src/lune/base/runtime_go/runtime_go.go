@@ -521,7 +521,10 @@ func Lns_ToString(val LnsAny) string {
 		if value.Kind() == reflect.Func {
 			return fmt.Sprintf("function:%T", val)
 		}
-		return fmt.Sprintf("table:%T", val)
+        if value.CanAddr() {
+            return fmt.Sprintf("table:%T(%p)", val, value.Addr())
+        }
+        return fmt.Sprintf("table:%T(%p)", val, val )
 	}
 }
 

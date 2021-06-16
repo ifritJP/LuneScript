@@ -254,38 +254,36 @@ CheckingUptodateMode._name2Val["Touch"] = CheckingUptodateMode.Touch
 
 local TransCtrlInfo = {}
 _moduleObj.TransCtrlInfo = TransCtrlInfo
-function TransCtrlInfo.setmeta( obj )
-  setmetatable( obj, { __index = TransCtrlInfo  } )
-end
-function TransCtrlInfo.new( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync, testing )
+function TransCtrlInfo.new(  )
    local obj = {}
    TransCtrlInfo.setmeta( obj )
-   if obj.__init then
-      obj:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync, testing )
-   end
+   if obj.__init then obj:__init(  ); end
    return obj
 end
-function TransCtrlInfo:__init( warningShadowing, compatComment, checkingDefineAbbr, stopByWarning, uptodateMode, validLuaval, defaultLazy, validCheckingMutable, legacyMutableControl, validAstDetailError, validAsyncCtrl, defaultAsync, testing )
-
-   self.warningShadowing = warningShadowing
-   self.compatComment = compatComment
-   self.checkingDefineAbbr = checkingDefineAbbr
-   self.stopByWarning = stopByWarning
-   self.uptodateMode = uptodateMode
-   self.validLuaval = validLuaval
-   self.defaultLazy = defaultLazy
-   self.validCheckingMutable = validCheckingMutable
-   self.legacyMutableControl = legacyMutableControl
-   self.validAstDetailError = validAstDetailError
-   self.validAsyncCtrl = validAsyncCtrl
-   self.defaultAsync = defaultAsync
-   self.testing = testing
+function TransCtrlInfo:__init() 
+   self.warningShadowing = false
+   self.compatComment = false
+   self.checkingDefineAbbr = true
+   self.stopByWarning = false
+   self.uptodateMode = _lune.newAlge( CheckingUptodateMode.Touch)
+   self.validLuaval = false
+   self.defaultLazy = false
+   self.validCheckingMutable = true
+   self.legacyMutableControl = false
+   self.validAstDetailError = false
+   self.validAsyncCtrl = false
+   self.defaultAsync = false
+   self.testing = false
+   self.validMultiPhaseTransUnit = true
+end
+function TransCtrlInfo.setmeta( obj )
+  setmetatable( obj, { __index = TransCtrlInfo  } )
 end
 
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new(false, false, true, false, _lune.newAlge( CheckingUptodateMode.Touch), false, false, true, false, false, false, false, false)
+   return TransCtrlInfo.new()
 end
 
 

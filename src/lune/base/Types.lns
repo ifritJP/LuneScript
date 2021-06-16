@@ -71,12 +71,29 @@ pub class TransCtrlInfo {
    pub let mut defaultAsync:bool;
    /** test を有効にする */
    pub let mut testing:bool;
+   /** AST の multi phase 解析を有効化  */
+   pub let mut validMultiPhaseTransUnit:bool;
+
+   pub fn __init() {
+      self.warningShadowing = false;
+      self.compatComment = false;
+      self.checkingDefineAbbr = true;
+      self.stopByWarning = false;
+      self.uptodateMode = .Touch;
+      self.validLuaval = false;
+      self.defaultLazy = false;
+      self.validCheckingMutable = true;
+      self.legacyMutableControl = false;
+      self.validAstDetailError = false;
+      self.validAsyncCtrl = false;
+      self.defaultAsync = false;
+      self.testing = false;
+      self.validMultiPhaseTransUnit = true;
+   }
 }
 
 pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
-   return new TransCtrlInfo(
-      false, false, true, false, .Touch,
-      false, false, true, false, false, false, false, false );
+   return new TransCtrlInfo();
 }
 
 

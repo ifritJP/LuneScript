@@ -8,6 +8,7 @@
 
 * 機能進化
 
+ 
 - [ ] lua 実行を __asyncLock すると、 Lua 実行が重なった箇所で待ちが起る。
       __asyncLock ではない別の方法を考える。
   
@@ -65,6 +66,8 @@ pub alge MetaOrModule {
       エラーにしなくて良いはず。
 
 * バグ
+- [ ] 直接 import しあっているとデッドロックする？
+  
 - [ ] anonymous の __noasync チェックが出来ていない。
       __noasync の anonymous を __async から呼べてしまう。
   

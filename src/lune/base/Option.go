@@ -121,7 +121,7 @@ func Option_convExp816(arg1 []LnsAny) LnsAny {
 }
 // 52: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 10838
+    return 10939
 }
 
 // 81: decl @lune.@base.@Option.getRuntimeModule
@@ -252,6 +252,9 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
                     
                 } else if _switch1 == "--noEnvArg" {
                     option.addEnvArg = false
+                    
+                } else if _switch1 == "--disableMultiPhaseAst" {
+                    option.TransCtrlInfo.ValidMultiPhaseTransUnit = false
                     
                 } else if _switch1 == "--disableRunner" {
                     option.enableRunner = false
@@ -542,8 +545,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         
     }
     if uptodateOpt != nil{
-        uptodateOpt_291 := uptodateOpt.(string)
-        if _switch5 := uptodateOpt_291; _switch5 == "force" {
+        uptodateOpt_292 := uptodateOpt.(string)
+        if _switch5 := uptodateOpt_292; _switch5 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
             
         } else if _switch5 == "forceAll" {
@@ -556,7 +559,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
             
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_291)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_292)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -609,14 +612,14 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 692, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 695, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.LuaVM.String_format("mode is '%s'", []LnsAny{Option_ModeKind_getTxt( option.Mode)})
     }))
     
     return option
 }
 
-// 697: decl @lune.@base.@Option.createDefaultOption
+// 700: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -636,13 +639,13 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
     option.UseIpairs = true
     
     if projDir != nil{
-        projDir_321 := projDir.(string)
-        if projDir_321 != "/"{
-            if Lns_op_not(Lns_car(_env.LuaVM.String_find(projDir_321,"/$", nil, nil))){
-                option.projDir = projDir_321 + "/"
+        projDir_322 := projDir.(string)
+        if projDir_322 != "/"{
+            if Lns_op_not(Lns_car(_env.LuaVM.String_find(projDir_322,"/$", nil, nil))){
+                option.projDir = projDir_322 + "/"
                 
             } else { 
-                option.projDir = projDir_321
+                option.projDir = projDir_322
                 
             }
         }

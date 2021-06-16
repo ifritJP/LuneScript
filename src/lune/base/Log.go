@@ -44,12 +44,12 @@ func Log_Level_getTxt(arg1 LnsInt) string {
 var Log_name2levelMap *LnsMap
 var Log_control *Log_Control
 type Log_CreateMessage func (_env *LnsEnv) string
-// 55: decl @lune.@base.@Log.str2level
+// 54: decl @lune.@base.@Log.str2level
 func Log_str2level(_env *LnsEnv, txt string) LnsAny {
     return Log_name2levelMap.Get(txt)
 }
 
-// 84: decl @lune.@base.@Log.setLevel
+// 83: decl @lune.@base.@Log.setLevel
 func Log_setLevel(_env *LnsEnv, level LnsInt) {
     Log_control = NewLog_Control(_env, level)
     
@@ -58,12 +58,12 @@ func Log_setLevel(_env *LnsEnv, level LnsInt) {
     }
 }
 
-// 92: decl @lune.@base.@Log.log
+// 91: decl @lune.@base.@Log.log
 func Log_log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback Log_CreateMessage) {
     Log_control.FP.log(_env, level, funcName, lineNo, callback)
 }
 
-// 96: decl @lune.@base.@Log.direct
+// 95: decl @lune.@base.@Log.direct
 func Log_direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
     Log_control.FP.direct(_env, level, funcName, lineNo, mess)
 }
@@ -107,7 +107,7 @@ func NewLog_Control(_env *LnsEnv, arg1 LnsInt) *Log_Control {
 func (self *Log_Control) InitLog_Control(_env *LnsEnv, arg1 LnsInt) {
     self.level = arg1
 }
-// 62: decl @lune.@base.@Log.Control.log
+// 61: decl @lune.@base.@Log.Control.log
 func (self *Log_Control) log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback Log_CreateMessage) {
     var logStream Lns_oStream
     logStream = Lns_io_stderr
@@ -120,7 +120,7 @@ func (self *Log_Control) log(_env *LnsEnv, level LnsInt,funcName string,lineNo L
     }
 }
 
-// 74: decl @lune.@base.@Log.Control.direct
+// 73: decl @lune.@base.@Log.Control.direct
 func (self *Log_Control) direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
     self.FP.log(_env, level, funcName, lineNo, Log_CreateMessage(func(_env *LnsEnv) string {
         return mess
@@ -133,7 +133,6 @@ func Lns_Log_init(_env *LnsEnv) {
     init_Log = true
     Log__mod__ = "@lune.@base.@Log"
     Lns_InitMod()
-    Lns_Async_init(_env)
     Lns_LuaVer_init( _env )
     Lns_Depend_init(_env)
     {

@@ -67,7 +67,6 @@ if not _lune4 then
 end
 
 
-local Async = _lune.loadModule( 'lune.base.Async' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 
 local Level = {}

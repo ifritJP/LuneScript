@@ -1,0 +1,696 @@
+subfile owner lune.base.TransUnit;
+
+pub class TransUnitCtrl extend TransUnit {
+
+   /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
+   pri let macroEval: &Nodes.MacroEval;
+   
+//    /** このモジュール内から直接 import しているモジュールのセット */
+//    pri let importModuleSet: Set<&Ast.TypeInfo>;
+   let mut importCtrl:Import.Import!;
+//    /**
+// インポートしているモジュール内で定義している alias 情報。
+
+// alias で置き換えている元の Type → alias の型
+//    */
+//    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
+   pri let importModuleInfo: frontInterface.ImportModuleInfo;
+
+
+   let mut stdinFile:&Types.StdinFile!;
+   // let mut baseDir:str!;
+   // let funcBlockInfoList:List<FuncBlockInfo>;
+
+
+   /** subfile 名のリスト */
+   let subfileList: List<str>;
+   /** provide ノード */
+   let mut provideNode: Nodes.ProvideNode!;
+   
+
+   pub fn __init( moduleId:&frontInterface.ModuleId,
+                  importModuleInfo:&frontInterface.ImportModuleInfo,
+                  macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
+                  analyzeModule:str!, mode:AnalyzeMode!,
+                  pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
+                  ctrl_info: &Types.TransCtrlInfo,
+                  builtinFunc:&Builtin.BuiltinFuncType )
+   {
+      super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
+             analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
+
+      self.macroEval = macroEval;
+
+      // self.importedAliasMap = {};
+      // self.importModuleSet = (@);
+      self.importModuleInfo = importModuleInfo.clone();
+      self.importCtrl = nil;
+
+      self.stdinFile = nil;
+      self.subfileList = [];
+      self.provideNode = nil;
+      // self.baseDir = nil;
+
+
+      // self.funcBlockInfoList = [];
+   }
+
+   fn analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode;
+}
+
+fn TransUnitCtrl.analyzeImportFor(
+   pos: &Parser.Position, modulePath:str, assignName:str,
+   assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.ImportNode
+{
+   let mut backupScope = self.scope;
+   // スコープをルートに変更
+   self.scope = self.topScope;
+
+   let macroMode;
+   let nearCode:str!;
+   if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+      macroMode = self.macroCtrl.$analyzeInfo.$mode.$_txt;
+      nearCode = self.parser.getNearCode();
+   } else {
+      macroMode = "";
+      nearCode = nil;
+   }
+
+   let! mut importObj = self.importCtrl {
+      importObj = new Import.Import(
+         self.getLatestPos(),
+         self.importModuleInfo,
+         self.moduleType,
+         self.macroCtrl,
+         self.typeNameCtrl,
+         self.importedAliasMap,
+         self.baseDir,
+         self.validMutControl );
+      self.importCtrl = importObj;
+   };
+
+   let moduleLoaderParam = new Import.ModuleLoaderParam(
+      self.ctrl_info,
+      self.processInfo,
+      self.getLatestPos(),
+      macroMode,
+      nearCode,
+      self.validMutControl,
+      self.macroEval );
+   let mut moduleLoader = importObj.processImport(
+      modulePath, moduleLoaderParam );
+   
+   let exportInfo;
+   __asyncLock {
+      let work, err = importObj.loadModuleInfo( moduleLoader );
+      when! work {
+         exportInfo = work;
+      } else {
+         self.error( err );
+      }
+   }
+
+   foreach symbol in exportInfo.$globalSymbolList {
+      self.globalScope.addSymbolInfo( self.processInfo, symbol );
+   }
+
+   
+   // スコープを元に戻す
+   self.scope = backupScope;
+
+
+   // モジュールの末尾のシンボルでスコープに登録する。
+   // 例えば hoge.foo.bar をインポートした場合、 bar をスコープに登録する
+
+   let provideInfo = exportInfo.$provideInfo;
+   let moduleTypeInfo = provideInfo.$typeInfo;
+   self.scope.addModule( moduleTypeInfo, exportInfo.assign( assignName ) );
+
+   let moduleSymbolKind = provideInfo.$symbolKind;
+   let mut moduleSymbolInfo:&Ast.SymbolInfo!, shadowing = self.scope.add(
+      self.processInfo, moduleSymbolKind, false, false, assignName, pos,
+      moduleTypeInfo, .Local, true,
+      provideInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut,
+      true, lazyLoad ~= .Off );
+
+   when! shadowing {
+      let err = shadowing.$typeInfo ~= moduleTypeInfo;
+      self.errorShadowingOp( pos, shadowing, err );
+      if err {
+         self.error( "failed to import -- %s" (modulePath) );
+      }
+      moduleSymbolInfo = shadowing;
+   }
+  
+   when! moduleSymbolInfo {
+      let info = new Nodes.ImportInfo( pos, modulePath, lazyLoad, assignName,
+                                       assigned, moduleSymbolInfo, moduleTypeInfo );
+      return Nodes.ImportNode.create(
+         self.nodeManager, pos, self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );
+   }
+   self.error( "failed to import -- %s" (modulePath) );
+}
+
+
+fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode {
+   let lazyLoad:Nodes.LazyLoad;
+   if self.getToken(##).txt == "." {
+      let modeToken = self.getToken(##);
+      switch modeToken.txt {
+         case "l" {
+            lazyLoad = .On;
+         }
+         case "d" {
+            lazyLoad = .Off;
+         }
+         default {
+            lazyLoad = .Off;
+            self.error( "illegal import mode -- %s" (modeToken.txt) );
+         }
+      }
+   } else {
+      self.pushback();
+      if self.ctrl_info.defaultLazy {
+         lazyLoad = .Auto;
+      } else {
+         lazyLoad = .Off;
+      }
+   }
+   if lazyLoad ~= .Off {
+      self.helperInfo.useLazyLoad = true;
+   }
+   
+
+   let mut moduleToken = self.getToken(##);
+   let mut modulePath = moduleToken.txt;
+   let mut nextToken:&Parser.Token = moduleToken;
+
+   while true {
+      nextToken = self.getToken(##);
+      switch nextToken.txt {
+         case ".", "/", ":" {
+            let demilit = nextToken.txt;
+            nextToken = self.getToken(##);
+            moduleToken = nextToken;
+            modulePath = "%s%s%s" ( modulePath, demilit, moduleToken.txt );
+         }
+         default {
+            break;
+         }
+      }
+   }
+   let mut assignName = moduleToken;
+   let assigned;
+   if nextToken.txt == "as" {
+      assignName = self.getSymbolToken( .MustNot_ );
+      nextToken = self.getToken(##);
+      assigned = true;
+   } else {
+      assigned = false;
+   }
+   self.checkToken( nextToken, ";" );
+
+   let mut node;
+
+   __asyncLock {
+      node = self.analyzeImportFor(
+         opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad );
+   }
+   self.importModuleSet.add( node.$expType );
+   
+   return node;
+}
+
+fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
+{
+   let mut newScope = self.pushScope( false ## );
+
+   let importNode;
+
+   __asyncLock {
+      importNode = self.analyzeImportFor(
+         firstToken.pos, "lune.base.Testing", "__t", false, .Off );
+   }
+   
+   let nameToken = self.getSymbolToken( .MustNot_ );
+
+   self.checkNextToken( "(" );
+
+   let ctrlToken = self.getSymbolToken( .MustNot_ );
+   let ctrlName = ctrlToken.txt;
+   self.checkNextToken( ")" );
+
+   let moduleType = importNode.$expType;
+   let! ctrlType = moduleType.$scope$.getTypeInfoChild$( "Ctrl" ) {
+      self.error( "not found Testing.Ctrl class" );
+   };
+   self.addLocalVar(
+      ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, .IMut, false );
+
+   self.scopeAccess = .Full;
+
+   self.inTestBlock = true;
+   let block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
+   self.inTestBlock = false;
+   
+
+   self.scopeAccess = .Normal;
+
+   self.popScope();
+   
+   return Nodes.TestCaseNode.create(
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
+      [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
+}
+
+fn TransUnitCtrl.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
+{
+   let nextToken = self.getToken( ## );
+   if nextToken.txt ~= "{" {
+      self.pushback();
+      return self.analyzeTestCase( firstToken );
+   }
+   self.checkToken( nextToken, "{" );
+
+   self.inTestBlock = true;
+   
+   let mut stmtList:List<&Nodes.Node> = [];
+   self.analyzeStatementList( stmtList, false, "}" );
+   self.checkNextToken( "}" );
+
+   self.inTestBlock = false;
+   
+
+   return Nodes.TestBlockNode.create(
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
+      [ Ast.builtinTypeNone ], stmtList );
+}
+
+
+pro override fn TransUnitCtrl.analyzeDeclToken(
+   accessMode: Ast.AccessMode, mut staticFlag: bool,
+   firstToken: &Parser.Token, mut token: &Parser.Token ) mut : Nodes.Node!
+{
+   if token.txt == "__test" {
+      return self.analyzeTest( firstToken );
+   }
+   return nil;
+}
+
+
+fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode
+{
+   if self.scope ~= self.moduleScope {
+      self.error( "'module' must be top scope." );
+   }
+
+
+   let mode = self.getToken(##);
+
+   let mut moduleName = "";
+   while true {
+      let nextToken = self.getToken(##);
+      if nextToken.txt == ";" {
+         break;
+      }
+      if moduleName == "" {
+         moduleName = nextToken.txt;
+      }
+      else {
+         moduleName = "%s%s" (moduleName, nextToken.txt);
+      }
+   }
+   let mut usePath:str! = nil;
+   if moduleName == "" {
+      self.addErrMess( token.pos, "illegal subfile" );
+   }
+   else {
+      if mode.txt == "use" {
+         usePath = moduleName;
+         if frontInterface.searchModule( moduleName, self.baseDir, nil ) {
+            self.subfileList.insert( moduleName );
+         }
+         else {
+            self.addErrMess(
+               token.pos, "not found subfile -- %s" ( moduleName ) );
+         }
+      }
+      elseif mode.txt == "owner" {
+         if frontInterface.getLuaModulePath(
+            self.moduleName, self.baseDir ) ~= moduleName
+         {
+            self.addErrMess(
+               token.pos,
+               "illegal owner module -- %s, %s"
+               ( moduleName, self.moduleName ) );
+         }
+      }
+      else {
+         self.addErrMess( mode.pos, "illegal module mode -- %s" ( mode.txt ) );
+      }
+   }
+   return Nodes.SubfileNode.create(
+      self.nodeManager, token.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
+      [ Ast.builtinTypeNone ], usePath );
+}
+
+fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode {
+   let token = self.getSymbolToken( .MustNot_ );
+   let symbolNode = self.analyzeExpSymbol(
+      firstToken, token, .Symbol, nil, true, false );
+   self.checkNextToken( ";" );
+
+   let symbolInfoList = symbolNode.getSymbolInfo();
+   if #symbolInfoList ~= 1 {
+      self.error( "'provide' must be symbol." );
+   }
+   let symbolInfo = symbolInfoList[ 1 ];
+
+
+   let mut node = Nodes.ProvideNode.create(
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], symbolInfo );
+   if self.provideNode {
+      self.addErrMess( firstToken.pos, "multiple provide" );
+   }
+   self.provideNode = node;
+
+
+   if symbolInfo.$accessMode ~= .Pub {
+      self.addErrMess( firstToken.pos,
+                       "provide variable must be 'pub'.  -- %s"
+                       (symbolInfo.$accessMode));
+   }
+
+   return node;
+}
+
+pro override fn TransUnitCtrl.analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+{
+   let statement:Nodes.Node!;
+   if token.txt == "import"  {
+      statement = self.analyzeImport( token );
+   } elseif token.txt == "subfile" {
+      __asyncLock {
+         statement = self.analyzeSubfile( token );
+      }
+   } elseif token.txt == "provide" {
+      statement = self.analyzeProvide( token );
+   } else {
+      statement = nil;
+   }   
+   return statement;
+}
+
+pub fn TransUnitCtrl.createAST(
+   parserSrc: &Types.ParserSrc, asyncParse:bool,
+   baseDir:str!, stdinFile:&Types.StdinFile!, macroFlag: bool,
+   moduleName: str!, readyExportInfo:ReadyExportInfo! ) mut : AstInfo.ASTInfo
+{
+   let mut parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile );
+
+   let streamName = parser.getStreamName();
+
+   self.stdinFile = stdinFile;
+   self.baseDir = baseDir;
+   
+   Log._log2( .Log, "%s start -- %s on %s, %s, %s"
+              (__func__, parser.getStreamName(), baseDir,
+                macroFlag, self.analyzePhase.$_txt ) );
+
+   self.moduleName = unwrap moduleName default "";
+
+   when! moduleName {
+      // 自分自身をインポートしないように、self.importModuleInfo に登録する。
+      if self.importModuleInfo.len() == 0 and not self.importModuleInfo.add( moduleName )
+      {
+         self.error( "already imported -- %s" (moduleName) );
+      }
+   }
+   
+   let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+
+   __asyncLock {
+      when! moduleName {
+         apply txt of string.gmatch(
+            frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' )
+         {
+            moduleTypeInfo = self.pushModule(
+               self.processInfo, false, txt, true ).$typeInfo;
+         }
+      }
+   }
+   self.moduleScope = self.scope;
+   self.moduleType = moduleTypeInfo;
+   self.moduleScope.addVar(
+      self.processInfo, 
+      .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
+
+   self.typeNameCtrl = new Ast.TypeNameCtrl( moduleTypeInfo );
+
+
+   self.setParser( new Parser.DefaultPushbackParser( parser ) );
+
+   self.scope.addIgnoredVar( self.processInfo );
+
+   
+   let ast:Nodes.Node;
+   let exportInfo:Nodes.ExportInfo;
+
+   fn createExportInfo(
+      moduleSymboInfo:&Ast.SymbolInfo!, globalSymbolList:List<&Ast.SymbolInfo>,
+      processInfo:&Ast.ProcessInfo, ) __trans : Nodes.ExportInfo
+   {
+      let provideInfo:frontInterface.ModuleProvideInfo;
+      when! moduleSymboInfo {
+         provideInfo = new frontInterface.ModuleProvideInfo(
+            moduleSymboInfo.$typeInfo, moduleSymboInfo.$kind, moduleSymboInfo.$mutable );
+      } else {
+         provideInfo = new frontInterface.ModuleProvideInfo( moduleTypeInfo, .Typ, false );
+      }
+
+      //let processInfo = self.processInfo.duplicate();
+      let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
+      foreach node in self.nodeManager.getAliasNodeList() {
+         importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
+      }
+
+      let mut workExportInfo = new Nodes.ExportInfo(
+         moduleTypeInfo, provideInfo, processInfo, globalSymbolList,
+         importedAliasMap, self.moduleId, self.moduleName,
+         moduleTypeInfo.$rawTxt, streamName, {},
+         self.macroCtrl.$declMacroInfoMap );;
+      __lns.runtime.log( "ready meta" );
+      Log._log2( .Log, "ready meta -- %s, %d, %s, %s"
+                 ( streamName, self.parser.getUsedTokenListLen(),
+                   moduleTypeInfo, moduleTypeInfo.$scope ) );
+      
+      when! readyExportInfo {
+         readyExportInfo( workExportInfo );
+      }
+      
+      return workExportInfo;
+   }
+   
+   
+   let mut lastStatement:&Nodes.Node! = nil;
+   if macroFlag {
+      ast = self.analyzeBlock( .Macro, .Ignore ##);
+      exportInfo = createExportInfo( nil, [], self.processInfo );
+   }
+   else {
+      let mut children:List<&Nodes.Node> = [];
+      let lastLineNo;
+      lastStatement, lastLineNo = self.analyzeStatementList( children, false ## );
+
+      let mut statement = Nodes.BlankLineNode.create(
+         self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
+         self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 0 );
+      statement.addComment( self.commentCtrl.$commentList );
+      self.commentCtrl.clear();
+      children.insert( statement );
+      
+
+      let mut token = self.getTokenNoErr();
+      if token ~= Parser.getEofToken() {
+         self.error( "%s:%d:%d:(%s) not eof -- %s"
+                     ( self.parser.getStreamName(),
+                       token.pos.lineNo, token.pos.column,
+                       token.kind.$_txt, token.txt ) );
+      }
+
+      foreach subModule in self.subfileList {
+         let file;
+         __asyncLock {
+            if! frontInterface.searchModule( subModule, self.baseDir, nil ) {
+               file = _exp;
+            } else {
+               self.error( "not found subfile -- %s" ( subModule ) );
+            }
+         }
+
+         if self.scope ~= self.moduleScope {
+            self.error( "scope does not close" );
+         }
+
+         let mut subParser = Parser.StreamParser.create(
+            Types.ParserSrc.LnsPath( file, subModule, nil ), true, self.stdinFile, nil );
+
+         self.setParser( new Parser.DefaultPushbackParser( subParser ) );
+
+         lastStatement = self.analyzeStatementListSubfile( children );
+
+         token = self.getTokenNoErr();
+         if token ~= Parser.getEofToken() {
+            Util.err( "unknown:%d:%d:(%s) %s"
+                      ( token.pos.lineNo, token.pos.column,
+                        token.kind.$_txt, token.txt ) );
+         }
+      }
+      self.analyzePhase = .Main;
+
+      let globalSymbolList:List<&Ast.SymbolInfo> = [];
+      foreach node in children {
+         if! let workNode = node@@@Nodes.DeclVarNode {
+            foreach symbolInfo in workNode.$symbolInfoList {
+               if symbolInfo.$accessMode == .Global {
+                  globalSymbolList.insert( symbolInfo );
+               }
+            }
+         }
+         if! let workNode = node@@@Nodes.DeclFuncNode {
+            if workNode.$declInfo.$accessMode == .Global {
+               if! let symbolInfo = workNode.$declInfo.$symbol {
+                  globalSymbolList.insert( symbolInfo );
+               }
+            }
+         }
+      }
+      let moduleSymboInfo:&Ast.SymbolInfo!;
+      if! self.provideNode {
+         if lastStatement ~= _exp {
+            self.addErrMess( _exp.$pos, "'provide' must be last." );
+         }
+         moduleSymboInfo = _exp.$symbol;
+      } else {
+         moduleSymboInfo = nil;
+      }
+      exportInfo = createExportInfo(
+         moduleSymboInfo, globalSymbolList, self.processInfo.duplicate() );
+      
+      
+
+      {
+         let mut bakParser = self.parser;
+         foreach funcBlockInfo in self.funcBlockInfoList {
+            let typeInfo = funcBlockInfo.$funcType;
+            self.parser = new Parser.DefaultPushbackParser(
+               new Parser.TokenListParser( funcBlockInfo.$tokenList,
+                                           bakParser.getStreamName(),
+                                           funcBlockInfo.$tokenList[1].pos.orgPos ) );
+
+            let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
+            let classTypeInfo = declFuncInfo.$classTypeInfo;
+
+            self.funcBlockInfoLinkNo = funcBlockInfo.$lineNo;
+            
+            let mut funcBodyScope = funcBlockInfo.$funcScope;
+            let mut backScope = self.scope;
+            self.scope = funcBodyScope;
+            
+            let mut workBody = self.analyzeFuncBlock(
+               getAnalyzingState( typeInfo ),
+               funcBlockInfo.$tokenList[1], classTypeInfo, typeInfo,
+               typeInfo.$rawTxt, funcBodyScope, typeInfo.$retTypeInfoList );
+            self.declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope );
+
+            declFuncInfo.set_body( workBody );
+            declFuncInfo.set_has__func__Symbol(
+               self.has__func__Symbol.has( typeInfo ) );
+            self.has__func__Symbol.del( typeInfo );
+
+            self.scope = backScope;
+            self.funcBlockInfoLinkNo = nil;
+         }
+         self.parser = bakParser;
+      }
+
+      
+
+      self.checkOverriededMethodOfAllClass();
+
+
+      let mut rootNode = Nodes.RootNode.create(
+         self.nodeManager, self.createPosition( 0, 0 ), self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+         children, self.moduleScope, self.globalScope,
+         self.macroCtrl.$useModuleMacroSet,
+         self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode,
+         self.helperInfo, self.nodeManager,
+         unwrap self.importCtrl$.$importModule2ExportInfo default {},
+         self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
+      ast = rootNode;
+
+      ClosureFun.checkList( self.closureFunList );
+   }
+
+   when! moduleName {
+      foreach _ in Util.splitStr( moduleName, '[^%.]+' ) {
+         self.popModule();
+      }
+   }
+
+   fn createId2proto(
+      map:Map<&Ast.TypeInfo,TransUnitIF.NSInfo> ) : &Map<int,&TransUnitIF.NSInfo>
+   {
+      let mut id2proto:Map<int,&TransUnitIF.NSInfo> = {};
+      foreach nsInfo, protoType in map {
+         id2proto[ protoType.$typeId.id ] = nsInfo;
+      }
+      return id2proto;
+   }
+   
+   forsort nsInfo in createId2proto( self.nsInfoMap ) {
+      if nsInfo.$nobody {
+         let protoType = nsInfo.$typeInfo;
+         let mess;
+         switch protoType.$kind {
+            case .Class, .IF {
+               mess = "This class doesn't have body. -- %s" ( protoType.getTxt(##) );
+            }
+            default {
+               mess = "This function doesn't have body. -- %s" ( protoType.getTxt(##) );
+            }
+         }
+         self.addErrMess(
+            unwrap self.nsInfoMap[ protoType ]$.$pos, mess );
+      }
+   }
+
+   foreach mess in TransUnitIF.sortMess( self.warnMessList ) {
+      Util.errorLog( mess.$mess );
+   }
+   if #self.errMessList > 0 {
+      foreach mess in TransUnitIF.sortMess( self.errMessList ) {
+         Util.errorLog( mess.$mess );
+      }
+      Util.err( "has error" );
+   }
+   if self.ctrl_info.stopByWarning and #self.warnMessList > 0 {
+      Util.err( "has error" );
+   }
+
+   switch self.analyzeMode {
+      case .Diag, .Complete, .Inquire {
+         os.exit( 0 );
+      }
+   }
+   
+   return new AstInfo.ASTInfo(
+      ast, exportInfo, parser.getStreamName(), self.builtinFunc );
+}

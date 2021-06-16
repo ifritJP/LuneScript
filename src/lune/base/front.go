@@ -1009,8 +1009,8 @@ func Newfront_AstCreater(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, ar
 }
 // 177: decl @lune.@base.@front.AstCreater.createAst
 func (self *front_AstCreater) createAst(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,parserSrc LnsAny,baseDir LnsAny,stdinFile LnsAny,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny) *AstInfo_ASTInfo {
-    var transUnit *TransUnit_TransUnit
-    transUnit = NewTransUnit_TransUnit(_env, self.moduleId, importModuleInfo, &NewConvLua_MacroEvalImp(_env, self.builtinFunc).Nodes_MacroEval, true, analyzeModule, analyzeMode, pos, self.option.TargetLuaVer, self.option.TransCtrlInfo, self.builtinFunc)
+    var transUnit *TransUnit_TransUnitCtrl
+    transUnit = NewTransUnit_TransUnitCtrl(_env, self.moduleId, importModuleInfo, &NewConvLua_MacroEvalImp(_env, self.builtinFunc).Nodes_MacroEval, true, analyzeModule, analyzeMode, pos, self.option.TargetLuaVer, self.option.TransCtrlInfo, self.builtinFunc)
     return transUnit.FP.CreateAST(_env, parserSrc, true, baseDir, stdinFile, false, self.mod, TransUnit_ReadyExportInfo(func(_env *LnsEnv, exportInfo *FrontInterface_ExportInfo) {
         self.exportInfo = exportInfo
         
@@ -1402,8 +1402,8 @@ func (self *front_Front) convertFromAst(_env *LnsEnv, ast *AstInfo_ASTInfo,strea
 
 // 579: decl @lune.@base.@front.Front.loadFromLnsTxt
 func (self *front_Front) LoadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,baseDir LnsAny,name string,txt string) LnsAny {
-    var transUnit *TransUnit_TransUnit
-    transUnit = NewTransUnit_TransUnit(_env, FrontInterface_ModuleId__tempId, importModuleInfo, &NewConvLua_MacroEvalImp(_env, self.builtinFunc).Nodes_MacroEval, false, nil, nil, nil, self.option.TargetLuaVer, self.option.TransCtrlInfo, self.builtinFunc)
+    var transUnit *TransUnit_TransUnitCtrl
+    transUnit = NewTransUnit_TransUnitCtrl(_env, FrontInterface_ModuleId__tempId, importModuleInfo, &NewConvLua_MacroEvalImp(_env, self.builtinFunc).Nodes_MacroEval, false, nil, nil, nil, self.option.TargetLuaVer, self.option.TransCtrlInfo, self.builtinFunc)
     var ast *AstInfo_ASTInfo
     ast = transUnit.FP.CreateAST(_env, &Types_ParserSrc__LnsCode{txt, name, nil}, false, baseDir, self.option.FP.Get_stdinFile(_env), false, _env.LuaVM.String_format("$load%d", []LnsAny{self.loadCount}), nil)
     self.loadCount = self.loadCount + 1

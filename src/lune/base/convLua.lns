@@ -3694,7 +3694,7 @@ __test {
       let builtinFunc = builtin.registBuiltInScope();
       
       let mod = Util.scriptPath2Module( scriptPath );
-      let mut transUnit = new TransUnit.TransUnit(
+      let mut transUnit = new TransUnit.TransUnitCtrl(
          moduleId, moduleInfo, new MacroEvalImp(builtinFunc), false,
          nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
