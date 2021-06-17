@@ -720,7 +720,7 @@ fn Builtin.registClass(
             classType = self.transUnit.pushModuleLow(
                self.processInfo, true, regName, true );
 
-            self.transUnit.$scope.$parent.add(
+            self.transUnit.$scope.$outerScope.add(
                self.processInfo, .Typ , false, false, regName, nil,
                classType, .Local, true, Ast.MutMode.Mut, true, false );
          }

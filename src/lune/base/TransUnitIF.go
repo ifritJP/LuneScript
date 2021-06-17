@@ -33,7 +33,7 @@ func TransUnitIF_DeclClassMode_getTxt(arg1 LnsInt) string {
     return TransUnitIF_DeclClassModeMap_[arg1];
 }
 // for 405
-func TransUnitIF_convExp1579(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnitIF_convExp1578(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // 210: decl @lune.@base.@TransUnitIF.sortMess
@@ -513,7 +513,7 @@ func (self *TransUnitIF_TransUnitBase) PushScope(_env *LnsEnv, classFlag bool,ba
 
 // 333: decl @lune.@base.@TransUnitIF.TransUnitBase.popScope
 func (self *TransUnitIF_TransUnitBase) PopScope(_env *LnsEnv) {
-    self.Scope = self.Scope.FP.Get_parent(_env)
+    self.Scope = self.Scope.FP.Get_outerScope(_env)
 }
 
 // 341: decl @lune.@base.@TransUnitIF.TransUnitBase.newNSInfo

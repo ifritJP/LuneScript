@@ -1539,7 +1539,7 @@ function Builtin:registClass( nameList, name2FieldInfo, pos, genTypeList )
          elseif _switchExp == TransUnitIF.DeclClassMode.Module then
             classType = self.transUnit:pushModuleLow( self.processInfo, true, regName, true )
             
-            self.transUnit:get_scope():get_parent():add( self.processInfo, Ast.SymbolKind.Typ, false, false, regName, nil, classType, Ast.AccessMode.Local, true, Ast.MutMode.Mut, true, false )
+            self.transUnit:get_scope():get_outerScope():add( self.processInfo, Ast.SymbolKind.Typ, false, false, regName, nil, classType, Ast.AccessMode.Local, true, Ast.MutMode.Mut, true, false )
          end
       end
       

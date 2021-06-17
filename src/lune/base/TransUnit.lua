@@ -821,6 +821,15 @@ function AccessSymbolSet:applyPos( excludeSymList )
    end
    
 end
+function AccessSymbolSet:clone(  )
+
+   local obj = AccessSymbolSet.new()
+   for key, val in pairs( self.accessSym2Pos ) do
+      obj.accessSym2Pos[key] = val
+   end
+   
+   return obj
+end
 function AccessSymbolSet.setmeta( obj )
   setmetatable( obj, { __index = AccessSymbolSet  } )
 end
@@ -856,6 +865,13 @@ function AccessSymbolSetQueue:getMap(  )
 
    return self.queue[#self.queue]:get_accessSym2Pos()
 end
+function AccessSymbolSetQueue:setupFrom( src )
+
+   for __index, symbol in ipairs( src.queue ) do
+      table.insert( self.queue, symbol:clone(  ) )
+   end
+   
+end
 function AccessSymbolSetQueue.setmeta( obj )
   setmetatable( obj, { __index = AccessSymbolSetQueue  } )
 end
@@ -889,6 +905,9 @@ function FuncBlockInfo:get_funcType()
 end
 function FuncBlockInfo:get_funcScope()
    return self.funcScope
+end
+function FuncBlockInfo:set_funcScope( funcScope )
+   self.funcScope = funcScope
 end
 function FuncBlockInfo:get_tokenList()
    return self.tokenList
@@ -934,6 +953,26 @@ function TransUnit:setParser( parser )
 
    self.parser = parser
 end
+function TransUnit:setup( src )
+
+   for __index, state in ipairs( src.analyzingStateQueue ) do
+      table.insert( self.analyzingStateQueue, state )
+   end
+   
+   
+   _lune._Set_or(self.advertisedTypeSet, src.advertisedTypeSet )
+   self.accessSymbolSetQueue:setupFrom( src.accessSymbolSetQueue )
+   _lune._Set_or(self.helperInfo.pragmaSet, src.helperInfo.pragmaSet )
+   for __index, mess in ipairs( src.warnMessList ) do
+      table.insert( self.warnMessList, mess )
+   end
+   
+   _lune._Set_or(self.importModuleSet, src.importModuleSet )
+   for key, val in pairs( src.importedAliasMap ) do
+      self.importedAliasMap[key] = val
+   end
+   
+end
 function TransUnit.getSuperParam( ctrl_info )
 
    local processInfo = Ast.createProcessInfo( ctrl_info.validCheckingMutable, ctrl_info.validLuaval, ctrl_info.validAstDetailError )
@@ -950,7 +989,6 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    
    
    self.funcBlockInfoLinkNo = nil
-   self.funcBlockInfoList = {}
    local phase
    
    if ctrl_info.validMultiPhaseTransUnit and enableMultiPhase and (mode == nil or mode == AnalyzeMode.Compile ) then
@@ -4589,9 +4627,9 @@ end
 function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, funcTypeInfo, funcName, funcBodyScope, retTypeInfoList )
 
    if not funcTypeInfo:get_staticFlag() then
-      if classTypeInfo then
+      if classTypeInfo ~= nil then
          do
-            local overrideType = self.scope:get_parent():getTypeInfoField( funcName, false, funcBodyScope, self.scopeAccess )
+            local overrideType = _lune.nilacc( classTypeInfo:get_scope(), 'getTypeInfoField', 'callmtd' , funcName, false, funcBodyScope, self.scopeAccess )
             if overrideType ~= nil then
                if not overrideType:get_abstractFlag() then
                   funcBodyScope:add( self.processInfo, Ast.SymbolKind.Fun, false, false, "super", nil, overrideType, Ast.AccessMode.Local, false, Ast.MutMode.IMut, true, false )
@@ -5480,6 +5518,12 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfo, alt2type
 end
 
 
+function TransUnit:addFuncBlockInfoList( funcBlockInfo )
+
+   Util.err( "not implemented" )
+end
+
+
 local CantOverrideMethods = {["__init"] = true, ["__free"] = true}
 function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, overrideFlag, accessMode, staticFlag, classTypeInfo, firstToken, name )
 
@@ -5727,7 +5771,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       if name ~= nil then
          local workSym
          
-         workSym, nsInfo = self:processAddFunc( kind == Nodes.NodeKind.get_DeclFunc(), funcBodyScope:get_parent(), name, workTypeInfo, alt2typeMap )
+         workSym, nsInfo = self:processAddFunc( kind == Nodes.NodeKind.get_DeclFunc(), funcBodyScope:get_outerScope(), name, workTypeInfo, alt2typeMap )
          typeInfo = nsInfo:get_typeInfo()
          funcSym = workSym
          
@@ -5911,7 +5955,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
          
          
          local funcBlockInfo = FuncBlockInfo.new(declFuncInfo, typeInfo, funcBodyScope, blockTokenList, lineNo)
-         table.insert( self.funcBlockInfoList, funcBlockInfo )
+         self:addFuncBlockInfoList( funcBlockInfo )
       end
       
       
@@ -6757,6 +6801,79 @@ function TransUnit:analyzeWhen( firstToken )
    
    
    return Nodes.WhenNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, symPairList, block, elseBlock )
+end
+
+
+local FuncBlockResult = {}
+function FuncBlockResult.setmeta( obj )
+  setmetatable( obj, { __index = FuncBlockResult  } )
+end
+function FuncBlockResult.new( funcBlockInfo, body, has_func_sym )
+   local obj = {}
+   FuncBlockResult.setmeta( obj )
+   if obj.__init then
+      obj:__init( funcBlockInfo, body, has_func_sym )
+   end
+   return obj
+end
+function FuncBlockResult:__init( funcBlockInfo, body, has_func_sym )
+
+   self.funcBlockInfo = funcBlockInfo
+   self.body = body
+   self.has_func_sym = has_func_sym
+end
+function FuncBlockResult:get_funcBlockInfo()
+   return self.funcBlockInfo
+end
+function FuncBlockResult:get_body()
+   return self.body
+end
+function FuncBlockResult:get_has_func_sym()
+   return self.has_func_sym
+end
+
+
+function TransUnit:processFuncBlockInfo( funcBlockInfoList, streamName )
+
+   local resultList = {}
+   
+   local bakParser = self.parser
+   
+   local outerScope = self:pushScope( false )
+   
+   for __index, funcBlockInfo in ipairs( funcBlockInfoList ) do
+      
+      local typeInfo = funcBlockInfo:get_funcType()
+      self.parser = Parser.DefaultPushbackParser.new(Parser.TokenListParser.new(funcBlockInfo:get_tokenList(), streamName, funcBlockInfo:get_tokenList()[1].pos.orgPos))
+      
+      local declFuncInfo = funcBlockInfo:get_declFuncInfo()
+      local classTypeInfo = declFuncInfo:get_classTypeInfo()
+      
+      self.funcBlockInfoLinkNo = funcBlockInfo:get_lineNo()
+      
+      local funcBodyScope = Ast.ScopeWithRef.new(self.processInfo, outerScope, funcBlockInfo:get_funcScope(), false)
+      self.scope = funcBodyScope
+      
+      local workBody = self:analyzeFuncBlock( getAnalyzingState( typeInfo ), funcBlockInfo:get_tokenList()[1], classTypeInfo, typeInfo, typeInfo:get_rawTxt(), funcBodyScope, typeInfo:get_retTypeInfoList() )
+      self:declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope )
+      
+      self.funcBlockInfoLinkNo = nil
+      
+      local has_func_sym = _lune._Set_has(self.has__func__Symbol, typeInfo )
+      if has_func_sym then
+         self.has__func__Symbol[typeInfo]= nil
+      end
+      
+      
+      table.insert( resultList, FuncBlockResult.new(funcBlockInfo, workBody, has_func_sym) )
+   end
+   
+   
+   self:popScope(  )
+   
+   self.parser = bakParser
+   
+   return resultList
 end
 
 function TransUnit:MultiTo1( exp )
@@ -11059,6 +11176,23 @@ function TransUnit:analyzeStatement( termTxt )
 end
 
 
+local TransUnitRunner = {}
+setmetatable( TransUnitRunner, { __index = TransUnit } )
+function TransUnitRunner.new( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc )
+   local obj = {}
+   TransUnitRunner.setmeta( obj )
+   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc ); end
+   return obj
+end
+function TransUnitRunner:__init(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc) 
+   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+   
+end
+function TransUnitRunner.setmeta( obj )
+  setmetatable( obj, { __index = TransUnitRunner  } )
+end
+
+
 local TransUnitCtrl = {}
 setmetatable( TransUnitCtrl, { __index = TransUnit } )
 _moduleObj.TransUnitCtrl = TransUnitCtrl
@@ -11079,7 +11213,7 @@ function TransUnitCtrl:__init(moduleId, importModuleInfo, macroEval, enableMulti
    self.stdinFile = nil
    self.subfileList = {}
    self.provideNode = nil
-   
+   self.funcBlockInfoList = {}
 end
 function TransUnitCtrl.setmeta( obj )
   setmetatable( obj, { __index = TransUnitCtrl  } )
@@ -11432,6 +11566,12 @@ function TransUnitCtrl:analyzeStatementToken( token )
 end
 
 
+function TransUnitCtrl:addFuncBlockInfoList( funcBlockInfo )
+
+   table.insert( self.funcBlockInfoList, funcBlockInfo )
+end
+
+
 function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName, readyExportInfo )
    local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST'
 
@@ -11442,7 +11582,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 421, function (  )
+   Log.log( Log.Level.Log, __func__, 440, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -11474,8 +11614,9 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    end
    
    self.moduleScope = self.scope
+   self.scope:addVar( self.processInfo, Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
+   
    self.moduleType = moduleTypeInfo
-   self.moduleScope:addVar( self.processInfo, Ast.AccessMode.Global, "__mod__", nil, Ast.builtinTypeString, Ast.MutMode.IMut, true )
    
    self.typeNameCtrl = Ast.TypeNameCtrl.new(moduleTypeInfo)
    
@@ -11509,7 +11650,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
       
       
-      Log.log( Log.Level.Log, __func__, 488, function (  )
+      Log.log( Log.Level.Log, __func__, 508, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )
@@ -11634,32 +11775,16 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       exportInfo = createExportInfo( moduleSymboInfo, globalSymbolList, self.processInfo:duplicate(  ) )
       
       do
-         local bakParser = self.parser
-         for __index, funcBlockInfo in ipairs( self.funcBlockInfoList ) do
-            local typeInfo = funcBlockInfo:get_funcType()
-            self.parser = Parser.DefaultPushbackParser.new(Parser.TokenListParser.new(funcBlockInfo:get_tokenList(), bakParser:getStreamName(  ), funcBlockInfo:get_tokenList()[1].pos.orgPos))
-            
+         
+         local resultList = self:processFuncBlockInfo( self.funcBlockInfoList, self.parser:getStreamName(  ) )
+         
+         for index, result in ipairs( resultList ) do
+            local funcBlockInfo = self.funcBlockInfoList[index]
             local declFuncInfo = funcBlockInfo:get_declFuncInfo()
-            local classTypeInfo = declFuncInfo:get_classTypeInfo()
-            
-            self.funcBlockInfoLinkNo = funcBlockInfo:get_lineNo()
-            
-            local funcBodyScope = funcBlockInfo:get_funcScope()
-            local backScope = self.scope
-            self.scope = funcBodyScope
-            
-            local workBody = self:analyzeFuncBlock( getAnalyzingState( typeInfo ), funcBlockInfo:get_tokenList()[1], classTypeInfo, typeInfo, typeInfo:get_rawTxt(), funcBodyScope, typeInfo:get_retTypeInfoList() )
-            self:declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope )
-            
-            declFuncInfo:set_body( workBody )
-            declFuncInfo:set_has__func__Symbol( _lune._Set_has(self.has__func__Symbol, typeInfo ) )
-            self.has__func__Symbol[typeInfo]= nil
-            
-            self.scope = backScope
-            self.funcBlockInfoLinkNo = nil
+            declFuncInfo:set_body( result:get_body() )
+            declFuncInfo:set_has__func__Symbol( result:get_has_func_sym() )
          end
          
-         self.parser = bakParser
       end
       
       

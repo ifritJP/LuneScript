@@ -955,7 +955,7 @@ func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2Fi
             Builtin_builtinFunc.FP.RegisterClass(_env, classType)
         } else if _switch1 == TransUnitIF_DeclClassMode__Module {
             classType = self.transUnit.FP.PushModuleLow(_env, self.processInfo, true, regName, true)
-            self.transUnit.FP.Get_scope(_env).FP.Get_parent(_env).FP.Add(_env, self.processInfo, Ast_SymbolKind__Typ, false, false, regName, nil, classType, Ast_AccessMode__Local, true, Ast_MutMode__Mut, true, false)
+            self.transUnit.FP.Get_scope(_env).FP.Get_outerScope(_env).FP.Add(_env, self.processInfo, Ast_SymbolKind__Typ, false, false, regName, nil, classType, Ast_AccessMode__Local, true, Ast_MutMode__Mut, true, false)
         }
         return classType
     }

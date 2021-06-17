@@ -478,7 +478,7 @@ function TransUnitBase:pushScope( classFlag, baseInfo, interfaceList )
 end
 function TransUnitBase:popScope(  )
 
-   self.scope = self.scope:get_parent(  )
+   self.scope = self.scope:get_outerScope()
 end
 function TransUnitBase:newNSInfo( typeInfo, pos )
 

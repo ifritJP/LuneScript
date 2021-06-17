@@ -4,7 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_BuiltinTransUnit bool
 var BuiltinTransUnit__mod__ string
 // for 101
-func BuiltinTransUnit_convExp437(arg1 []LnsAny) (LnsAny, LnsAny) {
+func BuiltinTransUnit_convExp436(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
@@ -78,7 +78,7 @@ func (self *BuiltinTransUnit_TransUnit) PushScope(_env *LnsEnv, classFlag bool,b
 
 // 61: decl @lune.@base.@BuiltinTransUnit.TransUnit.popScope
 func (self *BuiltinTransUnit_TransUnit) PopScope(_env *LnsEnv) {
-    self.scope = self.scope.FP.Get_parent(_env)
+    self.scope = self.scope.FP.Get_outerScope(_env)
 }
 
 // 65: decl @lune.@base.@BuiltinTransUnit.TransUnit.getCurrentNamespaceTypeInfo

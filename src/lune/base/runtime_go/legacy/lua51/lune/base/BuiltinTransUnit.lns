@@ -59,7 +59,7 @@ pub class TransUnit {
    }
 
    pub fn popScope() mut {
-      self.scope = self.scope.get_parent();
+      self.scope = self.scope.$outerScope;
    }
 
    pri fn getCurrentNamespaceTypeInfo() : Ast.TypeInfo {

@@ -2828,7 +2828,7 @@ fn TransUnit.analyzeExpSymbol(
             symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
          {
             if self.analyzeMode ~= .Diag {
-               let mut work = self.scope;
+               let mut work:&Ast.Scope = self.scope;
                while true {
                   print( work, self.moduleScope );
                   if work == work.$parent {

@@ -1863,8 +1863,8 @@ fn TransUnit.analyzeFuncBlock(
    funcBodyScope:Ast.Scope, retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode
 {
    if not funcTypeInfo.$staticFlag {
-      if classTypeInfo {
-         if! let overrideType = self.scope.$parent.getTypeInfoField(
+      when! classTypeInfo {
+         if! let overrideType = classTypeInfo.$scope$.getTypeInfoField$(
             funcName, false, funcBodyScope, self.scopeAccess )
          {
             if not overrideType.$abstractFlag {
@@ -2797,6 +2797,10 @@ fn TransUnit.processAddFunc(
    return unwrap (funcSym or shadowing), nsInfo;
 }
 
+local fn TransUnit.addFuncBlockInfoList( funcBlockInfo:FuncBlockInfo ) mut {
+   Util.err( "not implemented" );
+}
+
 
 let CantOverrideMethods = (@ "__init", "__free" );
 
@@ -3055,7 +3059,7 @@ fn TransUnit.analyzeDeclFunc(
          let workSym;
          workSym, nsInfo = self.processAddFunc(
             kind == Nodes.NodeKind.$DeclFunc,
-            funcBodyScope.$parent, name, workTypeInfo, alt2typeMap );
+            funcBodyScope.$outerScope, name, workTypeInfo, alt2typeMap );
          typeInfo = nsInfo.$typeInfo;
          funcSym = workSym;
 
@@ -3223,7 +3227,7 @@ fn TransUnit.analyzeDeclFunc(
    if staticFlag and classTypeInfo {
       self.analyzingStaticMethodArgsScope = nil;
    }
-   
+
 
    fn createDeclFuncInfo( funcKind:Nodes.FuncKind ) __trans : &Nodes.DeclFuncInfo {
       let classDeclNode:Nodes.DeclClassNode!;
@@ -3250,7 +3254,8 @@ fn TransUnit.analyzeDeclFunc(
          
          let mut funcBlockInfo = new FuncBlockInfo(
             declFuncInfo, typeInfo, funcBodyScope, blockTokenList, lineNo );
-         self.funcBlockInfoList.insert( funcBlockInfo );
+         self.addFuncBlockInfoList( funcBlockInfo );
+         //self.funcBlockInfoList.insert( funcBlockInfo );
       }
       
       return declFuncInfo;
@@ -4139,3 +4144,62 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], symPairList, block, elseBlock );
 }
+
+class FuncBlockResult {
+   let funcBlockInfo:&FuncBlockInfo {pub};
+   let body:Nodes.BlockNode {pub};
+   let has_func_sym:bool {pub};
+}
+
+local fn TransUnit.processFuncBlockInfo(
+   funcBlockInfoList:&List<&FuncBlockInfo>,
+   streamName:str ) mut : &List<FuncBlockResult>
+{
+   let resultList:List<FuncBlockResult> = [];
+
+   let mut bakParser = self.parser;
+   
+   let mut outerScope = self.pushScope( false## );
+   
+   foreach funcBlockInfo in funcBlockInfoList {
+
+      let typeInfo = funcBlockInfo.$funcType;
+      self.parser = new Parser.DefaultPushbackParser(
+         new Parser.TokenListParser(
+            funcBlockInfo.$tokenList, streamName,
+            funcBlockInfo.$tokenList[1].pos.orgPos ) );
+
+      let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
+      let classTypeInfo = declFuncInfo.$classTypeInfo;
+
+      self.funcBlockInfoLinkNo = funcBlockInfo.$lineNo;
+      
+      let mut funcBodyScope = new Ast.ScopeWithRef(
+         self.processInfo, outerScope, funcBlockInfo.$funcScope, false ## );
+      self.scope = funcBodyScope;
+      
+      
+      let mut workBody = self.analyzeFuncBlock(
+         getAnalyzingState( typeInfo ),
+         funcBlockInfo.$tokenList[1], classTypeInfo, typeInfo,
+         typeInfo.$rawTxt, funcBodyScope, typeInfo.$retTypeInfoList );
+      self.declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope );
+
+      self.funcBlockInfoLinkNo = nil;
+
+      let has_func_sym = self.has__func__Symbol.has( typeInfo );
+      if has_func_sym {
+         self.has__func__Symbol.del( typeInfo );
+      }
+
+      resultList.insert(
+         new FuncBlockResult( funcBlockInfo, workBody, has_func_sym ) );
+   }
+
+   self.popScope();
+
+   self.parser = bakParser;
+   
+   return resultList;
+}
+

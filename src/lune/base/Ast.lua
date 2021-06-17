@@ -1191,7 +1191,8 @@ function Scope:__init(processInfo, parent, classFlag, inherit, ifScopeList)
    self.closureInfo = ClosureInfo.new()
    
    self.typeInfo2ModuleInfoMap = {}
-   self.parent = _lune.unwrapDefault( parent, self)
+   self.outerScope = _lune.unwrapDefault( parent, self)
+   self.parent = self.outerScope
    self.symbol2SymbolInfoMap = {}
    self.inherit = inherit
    self.classFlag = classFlag
@@ -1267,11 +1268,17 @@ end
 function Scope:get_scopeId()
    return self.scopeId
 end
-function Scope:get_ownerTypeInfo()
-   return self.ownerTypeInfo
+function Scope:get_outerScope()
+   return self.outerScope
 end
 function Scope:get_parent()
    return self.parent
+end
+function Scope:set_parent( parent )
+   self.parent = parent
+end
+function Scope:get_ownerTypeInfo()
+   return self.ownerTypeInfo
 end
 function Scope:get_symbol2SymbolInfoMap()
    return self.symbol2SymbolInfoMap
@@ -1327,6 +1334,25 @@ function Scope:isInnerOf( scope )
    end
    
    return false
+end
+
+
+local ScopeWithRef = {}
+setmetatable( ScopeWithRef, { __index = Scope } )
+_moduleObj.ScopeWithRef = ScopeWithRef
+function ScopeWithRef.new( processInfo, outerScope, parent, classFlag, inherit, ifScopeList )
+   local obj = {}
+   ScopeWithRef.setmeta( obj )
+   if obj.__init then obj:__init( processInfo, outerScope, parent, classFlag, inherit, ifScopeList ); end
+   return obj
+end
+function ScopeWithRef:__init(processInfo, outerScope, parent, classFlag, inherit, ifScopeList) 
+   Scope.__init( self,processInfo, outerScope, classFlag, inherit, ifScopeList)
+   
+   self:set_parent( parent )
+end
+function ScopeWithRef.setmeta( obj )
+  setmetatable( obj, { __index = ScopeWithRef  } )
 end
 
 
@@ -3971,7 +3997,7 @@ function Scope:setClosure( workSymbol )
             end
          end
          
-         scope = scope:get_parent()
+         scope = scope:get_outerScope()
       until scope:isRoot(  )
       return scope
    end
@@ -3985,7 +4011,7 @@ function Scope:setClosure( workSymbol )
          break
       end
       
-      funcScope = getFuncScope( funcScope.parent )
+      funcScope = getFuncScope( funcScope.outerScope )
       if funcScope == targetFuncScope then
          break
       end

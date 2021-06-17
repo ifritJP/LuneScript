@@ -155,7 +155,7 @@ function TransUnit:pushScope( classFlag, baseInfo, interfaceList )
 end
 function TransUnit:popScope(  )
 
-   self.scope = self.scope:get_parent(  )
+   self.scope = self.scope:get_outerScope()
 end
 function TransUnit:getCurrentNamespaceTypeInfo(  )
 

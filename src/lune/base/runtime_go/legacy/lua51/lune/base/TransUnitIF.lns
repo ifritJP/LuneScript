@@ -331,7 +331,7 @@ TypeInfo → NSInfo.
    }
 
    pub fn popScope() mut {
-      self.scope = self.scope.get_parent();
+      self.scope = self.scope.$outerScope;
    }
 
    /**

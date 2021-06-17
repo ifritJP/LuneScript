@@ -482,6 +482,14 @@ class AccessSymbolSet {
          }
       }
    }
+
+   pub fn clone() : AccessSymbolSet {
+      let mut obj = new AccessSymbolSet();
+      foreach val, key in self.accessSym2Pos {
+         obj.accessSym2Pos[ key ] = val;
+      }
+      return obj;
+   }
 }
 
 class AccessSymbolSetQueue {
@@ -502,12 +510,18 @@ class AccessSymbolSetQueue {
    pub fn getMap() : &Map<&Ast.SymbolInfo,&Parser.Position> {
       return self.queue[ #self.queue ].$accessSym2Pos;
    }
+
+   local fn setupFrom(src:&AccessSymbolSetQueue) mut {
+      foreach symbol in src.queue {
+         self.queue.insert( symbol.clone() );
+      }
+   }
 }
 
 class FuncBlockInfo {
    let declFuncInfo:Nodes.DeclFuncInfo {pub};
    let funcType:&Ast.TypeInfo{pub};
-   let funcScope:Ast.Scope {pub};
+   let mut funcScope:Ast.Scope {pub,local};
    let tokenList:&List<&Parser.Token> {pub};
    let lineNo:int! {pub};
 }
@@ -530,13 +544,14 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    /**
 トランスコンパイル先の lua バージョン
    */
-   pri let targetLuaVer:&LuaVer.LuaVerInfo;
+   pro let targetLuaVer:&LuaVer.LuaVerInfo;
 
    pro let moduleId:&frontInterface.ModuleId;
 
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
    pri let macroEval: &Nodes.MacroEval;
 
+   local let builtinFunc:&Builtin.BuiltinFuncType;
    
    //===== 解析開始時に設定 ===
    
@@ -552,8 +567,6 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    /** async 宣言のデフォルト */
    let mut defaultAsyncMode: DefaultAsyncMode;
 
-   local let builtinFunc:&Builtin.BuiltinFuncType;
-
    // pro let mut stdinFile:&Types.StdinFile!;
 
    pro let mut baseDir:str!;
@@ -561,7 +574,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    //===== Meta 解析時に設定
    local let mut analyzePhase:AnalyzePhase;
-   local let funcBlockInfoList:List<FuncBlockInfo>;
+   //local let funcBlockInfoList:List<FuncBlockInfo>;
 
    
 
@@ -579,8 +592,6 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    pro fn setParser( parser:Parser.DefaultPushbackParser ) mut {
       self.parser = parser;
    }
-   /** __func__ シンボルを持つ関数 TypeInfo の set */
-   pro let has__func__Symbol: Set<&Ast.TypeInfo>;
    pro let mut scopeAccess:Ast.ScopeAccess;
 
    /** 引数解析中の static method の Scope */
@@ -591,35 +602,29 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    /** Meta 解析後に、各関数ブロックを解析する際の*/  
    pro let mut funcBlockInfoLinkNo:int!;
 
+   /** モジュールの最上位スコープ */
+   pro let mut moduleScope: &Ast.Scope;
+
+   /** __func__ シンボルを持つ関数 TypeInfo の set */
+   pro let has__func__Symbol: Set<&Ast.TypeInfo>;
    
    // ==== 複数持ちしてマージ
-   pro let helperInfo:frontInterface.LuneHelperInfo;
-   
    /** NodeKind -> Node[]  */
    pro let nodeManager: Nodes.NodeManager;
 
    /** クロージャ候補の関数情報リスト */
    local let closureFunList:List<ClosureFun>;
 
-   
-   //===== 初期化後は immutable
-   
-   /** モジュールの最上位スコープ */
-   pro let mut moduleScope: Ast.Scope;
-
    /** コメントリスト */
    local let commentCtrl: Parser.CommentCtrl;
 
-   /** 解析警告メッセージ */
-   pro let warnMessList: List<&TransUnitIF.ErrMess> { pub };
 
+   /** クラスの型情報 -> そのクラスを宣言しているノード */
+   pri let typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
 
    //===== clone して複数持ち
    /** 解析状態 */
    pri let analyzingStateQueue:List<AnalyzingState>;
-
-   /** クラスの型情報 -> そのクラスを宣言しているノード */
-   pri let typeInfo2ClassNode: Map<&Ast.TypeInfo,Nodes.DeclClassNode>;
 
    // /** subfile 名のリスト */
    // pro let subfileList: List<str>;
@@ -628,24 +633,51 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    /** advertise 宣言されているメンバの型の Set */
    let advertisedTypeSet:Set<&Ast.TypeInfo>;
 
-   let mut accessSymbolSetQueue:AccessSymbolSetQueue;
+   let accessSymbolSetQueue:AccessSymbolSetQueue;
 
    // クラス TypeInfo -> defaultAsyncMode
    let class2defaultAsyncMode: Map<&Ast.TypeInfo,DefaultAsyncMode>;
 
-   //===== 未対応
+   //===== clone して後でマージ
+
+   pro let helperInfo:frontInterface.LuneHelperInfo;
+
+   /** 解析警告メッセージ */
+   pro let warnMessList: List<&TransUnitIF.ErrMess> { pub };
+   
+   //===== 実行前に設定。
    /** このモジュール内から直接 import しているモジュールのセット */
-   pro let importModuleSet: Set<&Ast.TypeInfo>;
+   pro let mut importModuleSet: Set<&Ast.TypeInfo>;
    // local let mut importCtrl:Import.Import!;
    /**
 インポートしているモジュール内で定義している alias 情報。
 
 alias で置き換えている元の Type → alias の型
    */
-   pro let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
+   pro let mut importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
    //pro let importModuleInfo: frontInterface.ImportModuleInfo;
    
 
+
+   local fn setup( src:&TransUnit ) mut
+   {
+      foreach state in src.analyzingStateQueue {
+         self.analyzingStateQueue.insert( state );
+      }
+      //self.macroCtrl = src.macroCtrl;
+      self.advertisedTypeSet.or(src.advertisedTypeSet );
+      self.accessSymbolSetQueue.setupFrom( src.accessSymbolSetQueue );
+      self.helperInfo.pragmaSet.or( src.helperInfo.pragmaSet );
+      foreach mess in src.warnMessList {
+         self.warnMessList.insert( mess );
+      }
+      self.importModuleSet.or( src.importModuleSet );
+      foreach val, key in src.importedAliasMap {
+         self.importedAliasMap[ key ] = val;
+      }
+   }
+
+   
 
    local static fn getSuperParam( ctrl_info: &Types.TransCtrlInfo ) : 
       &Types.TransCtrlInfo, Ast.ProcessInfo
@@ -667,7 +699,7 @@ alias で置き換えている元の Type → alias の型
       super( TransUnit.getSuperParam( ctrl_info )** );
 
       self.funcBlockInfoLinkNo = nil;
-      self.funcBlockInfoList = [];
+      // self.funcBlockInfoList = [];
       let phase:AnalyzePhase;
       if ctrl_info.validMultiPhaseTransUnit and
          enableMultiPhase and ( mode == nil or mode == .Compile )

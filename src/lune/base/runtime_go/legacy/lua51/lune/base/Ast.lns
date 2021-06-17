@@ -586,19 +586,25 @@ class ClosureInfo {
 }
 
 pub class Scope extend (ModuleInfoManager) {
-   // pri static let mut seedId:int;
-   
-   // __init {
-   //    Scope.seedId = 0;
-   // }
 
    pri let scopeId:int {pub};
-   
+
+   /**
+親のスコープ。
+これが self と等しい場合は root。
+*/
+   pri let mut outerScope: Scope { pub };
+   /**
+親のスコープ。
+これが self と等しい場合は root。
+
+outerScope は、 readonly の Scope の、内部スコープを登録する際に、
+親子関係を表現する際に利用する。
+*/
+   let mut parent: &Scope { pub, local };
    // このスコープのオーナーの TypeInfo。
    // 名前空間に関連する class, function の TypeInfo。
    pri let allmut ownerTypeInfo: &TypeInfo! { pub };
-   // 親のスコープ。 これが self と等しい場合は root。
-   pri let mut parent: Scope { pub };
    // このスコープに登録されているシンボル情報。
    // シンボル名 → SymbolInfo のマップ。
    pri let mut symbol2SymbolInfoMap: Map<str,&SymbolInfo> { pub& };
@@ -633,10 +639,8 @@ pub class Scope extend (ModuleInfoManager) {
       self.closureInfo = new ClosureInfo();
 
       self.typeInfo2ModuleInfoMap = {};
-      // self.closureSymMap = {};
-      // self.closureSym2NumMap = {};
-      // self.closureSymList = [];
-      self.parent = unwrap parent default self;
+      self.outerScope = unwrap parent default self;
+      self.parent = self.outerScope;
       self.symbol2SymbolInfoMap = {};
       self.inherit = inherit;
       self.classFlag = classFlag;
@@ -735,6 +739,16 @@ pub fn Scope.isInnerOf( scope:&Scope ): bool {
       workScope = workScope.parent;
    }
    return false;
+}
+
+pub class ScopeWithRef extend Scope {
+   pub fn __init( processInfo:ProcessInfo, outerScope: Scope,
+                  parent: &Scope, classFlag: bool,
+                  inherit: &Scope!, ifScopeList:List<&Scope>! )
+   {
+      super( processInfo, outerScope, classFlag, inherit, ifScopeList );
+      self.set_parent( parent );
+   }
 }
 
 
@@ -2772,7 +2786,7 @@ pub fn Scope.setClosure( workSymbol:&SymbolInfo ) mut {
                return scope;
             }
          }
-         scope = scope.$parent;
+         scope = scope.$outerScope;
       } scope.isRoot();
       return scope;
    }
@@ -2786,7 +2800,7 @@ pub fn Scope.setClosure( workSymbol:&SymbolInfo ) mut {
       if not funcScope.closureInfo.setClosure( symbol ) {
          break;
       }
-      funcScope = getFuncScope( funcScope.parent );
+      funcScope = getFuncScope( funcScope.outerScope );
       if funcScope == targetFuncScope {
          break;
       }
