@@ -117,7 +117,7 @@ func (self *FrontInterface_ModuleId) Get_idStr(_env *LnsEnv) string{ return self
 func (self *FrontInterface_ModuleId) InitFrontInterface_ModuleId(_env *LnsEnv, modTime LnsReal,buildCount LnsInt) {
     self.modTime = modTime
     self.buildCount = buildCount
-    self.idStr = _env.LuaVM.String_format("%f:%d", []LnsAny{modTime, buildCount})
+    self.idStr = _env.GetVM().String_format("%f:%d", []LnsAny{modTime, buildCount})
 }
 
 // 57: decl @lune.@base.@frontInterface.ModuleId.getNextModuleId
@@ -133,9 +133,9 @@ func FrontInterface_ModuleId_createId(_env *LnsEnv, modTime LnsReal,buildCount L
 // 67: decl @lune.@base.@frontInterface.ModuleId.createIdFromTxt
 func FrontInterface_ModuleId_createIdFromTxt(_env *LnsEnv, idStr string) *FrontInterface_ModuleId {
     var modTime LnsReal
-    modTime = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.LuaVM.String_gsub(idStr,":.*", "")).(string), nil), 0.0).(LnsReal)
+    modTime = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(idStr,":.*", "")).(string), nil), 0.0).(LnsReal)
     var buildCount LnsReal
-    buildCount = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.LuaVM.String_gsub(idStr,".*:", "")).(string), nil), 0.0).(LnsReal)
+    buildCount = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(idStr,".*:", "")).(string), nil), 0.0).(LnsReal)
     return NewFrontInterface_ModuleId(_env, modTime, (LnsInt)(buildCount))
 }
 
@@ -578,7 +578,7 @@ func (self *FrontInterface_ImportModuleInfo) GetFull(_env *LnsEnv) string {
     txt = ""
     for _, _modulePath := range( self.orderedSet.FP.Get_list(_env).Items ) {
         modulePath := _modulePath.(string)
-        txt = _env.LuaVM.String_format("%s -> %s", []LnsAny{txt, modulePath})
+        txt = _env.GetVM().String_format("%s -> %s", []LnsAny{txt, modulePath})
     }
     return txt
 }
@@ -684,7 +684,7 @@ func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsA
         } else {
             panic("load error")
         }
-        moduleMeta = NewFrontInterface_ModuleMeta(_env, Lns_car(_env.LuaVM.String_gsub(mod,"%.", "/")).(string) + ".lns", &FrontInterface_MetaOrModule__MetaRaw{emptyTable})
+        moduleMeta = NewFrontInterface_ModuleMeta(_env, Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string) + ".lns", &FrontInterface_MetaOrModule__MetaRaw{emptyTable})
         modVal = Lns_require(mod)
     })
     return modVal, moduleMeta

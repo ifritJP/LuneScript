@@ -316,7 +316,8 @@ end
 function Env:getLuavm(  )
 
    if self.addEnvArg then
-      return "_env.LuaVM"
+      
+      return "_env.GetVM()"
    end
    
    return "Lns_getVM()"

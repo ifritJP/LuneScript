@@ -102,9 +102,9 @@ func (self *NodeIndexer_NamespaceInfo) GetIdTxt(_env *LnsEnv) string {
         if !Lns_IsNil( _parent ) {
             parent := _parent.(*NodeIndexer_NamespaceInfo)
             if self.depth < 4{
-                return _env.LuaVM.String_format("%s_%s", []LnsAny{parent.FP.GetIdTxt(_env), self.FP.Get_nsType(_env).FP.Get_rawTxt(_env)})
+                return _env.GetVM().String_format("%s_%s", []LnsAny{parent.FP.GetIdTxt(_env), self.FP.Get_nsType(_env).FP.Get_rawTxt(_env)})
             } else { 
-                return _env.LuaVM.String_format("%s%s", []LnsAny{parent.FP.GetIdTxt(_env), _env.LuaVM.String_format("_%d", []LnsAny{self.subId})})
+                return _env.GetVM().String_format("%s%s", []LnsAny{parent.FP.GetIdTxt(_env), _env.GetVM().String_format("_%d", []LnsAny{self.subId})})
             }
         } else {
             return ""
@@ -162,7 +162,7 @@ func (self *NodeIndexer_Index) InitNodeIndexer_Index(_env *LnsEnv, nsInfo *NodeI
 
 // 83: decl @lune.@base.@NodeIndexer.Index.getIdTxt
 func (self *NodeIndexer_Index) GetIdTxt(_env *LnsEnv) string {
-    return _env.LuaVM.String_format("%s_%d", []LnsAny{self.nsInfo.FP.GetIdTxt(_env), self.index})
+    return _env.GetVM().String_format("%s_%d", []LnsAny{self.nsInfo.FP.GetIdTxt(_env), self.index})
 }
 
 
@@ -272,7 +272,7 @@ func (self *NodeIndexer_Indexer) Dump(_env *LnsEnv) {
         node := _node.(Nodes_NodeDownCast).ToNodes_Node()
         var index *NodeIndexer_Index
         index = Lns_unwrap( self.node2Index.Get(node)).(*NodeIndexer_Index)
-        Lns_print([]LnsAny{_env.LuaVM.String_format("%d:%d:", []LnsAny{node.FP.Get_pos(_env).LineNo, node.FP.Get_pos(_env).Column}), index.FP.GetIdTxt(_env), Nodes_getNodeKindName(_env, node.FP.Get_kind(_env))})
+        Lns_print([]LnsAny{_env.GetVM().String_format("%d:%d:", []LnsAny{node.FP.Get_pos(_env).LineNo, node.FP.Get_pos(_env).Column}), index.FP.GetIdTxt(_env), Nodes_getNodeKindName(_env, node.FP.Get_kind(_env))})
     }
 }
 

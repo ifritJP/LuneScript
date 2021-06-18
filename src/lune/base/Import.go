@@ -245,14 +245,14 @@ func (self *Import_ImportParam) GetTypeInfoMut(_env *LnsEnv, typeId LnsInt) *Ast
         {
             _typeInfoMut := self.TypeId2TypeInfoMut.Get(typeId)
             if _typeInfoMut == nil{
-                Util_err(_env, _env.LuaVM.String_format("not found TypeInfoMut for %d: %s", []LnsAny{typeId, typeInfo_416.FP.GetTxt(_env, nil, nil, nil)}))
+                Util_err(_env, _env.GetVM().String_format("not found TypeInfoMut for %d: %s", []LnsAny{typeId, typeInfo_416.FP.GetTxt(_env, nil, nil, nil)}))
             } else {
                 typeInfoMut = _typeInfoMut.(*Ast_TypeInfo)
             }
         }
         return typeInfoMut
     }
-    Util_err(_env, _env.LuaVM.String_format("not found TypeInfo for %d: %s", []LnsAny{typeId, _env.PopVal( _env.IncStack() ||
+    Util_err(_env, _env.GetVM().String_format("not found TypeInfo for %d: %s", []LnsAny{typeId, _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( mess) ||
         _env.SetStackVal( "") ).(string)}))
 // insert a dummy
@@ -272,7 +272,7 @@ func (self *Import_ImportParam) GetTypeInfoFrom(_env *LnsEnv, typeId *Import__Id
     {
         _exportInfo := self.dependLibId2DependInfo.Get(typeId.Mod)
         if _exportInfo == nil{
-            Util_err(_env, _env.LuaVM.String_format("%s, %d, %d", []LnsAny{self.ModuleTypeInfo.FP.GetTxt(_env, nil, nil, nil), typeId.Mod, typeId.Id}))
+            Util_err(_env, _env.GetVM().String_format("%s, %d, %d", []LnsAny{self.ModuleTypeInfo.FP.GetTxt(_env, nil, nil, nil), typeId.Mod, typeId.Id}))
         } else {
             exportInfo = _exportInfo.(*FrontInterface_ExportInfo)
         }
@@ -291,7 +291,7 @@ func (self *Import_ImportParam) GetTypeInfoFrom(_env *LnsEnv, typeId *Import__Id
             return typeInfo, nil
         }
     }
-    return nil, _env.LuaVM.String_format("not found type -- %s, %d, %d", []LnsAny{self.ModuleTypeInfo.FP.GetTxt(_env, nil, nil, nil), typeId.Mod, typeId.Id})
+    return nil, _env.GetVM().String_format("not found type -- %s, %d, %d", []LnsAny{self.ModuleTypeInfo.FP.GetTxt(_env, nil, nil, nil), typeId.Mod, typeId.Id})
 }
 
 
@@ -546,7 +546,7 @@ func (self *Import__TypeInfoNilable) CreateTypeInfo(_env *LnsEnv, param *Import_
     {
         _orgTypeInfo := Import_convExp1744(Lns_2DDD(param.FP.GetTypeInfoFrom(_env, self.OrgTypeId)))
         if _orgTypeInfo == nil{
-            Util_err(_env, _env.LuaVM.String_format("failed to createTypeInfo -- self.orgTypeId = (%d,%d)", []LnsAny{self.OrgTypeId.Mod, self.OrgTypeId.Id}))
+            Util_err(_env, _env.GetVM().String_format("failed to createTypeInfo -- self.orgTypeId = (%d,%d)", []LnsAny{self.OrgTypeId.Mod, self.OrgTypeId.Id}))
         } else {
             orgTypeInfo = _orgTypeInfo.(*Ast_TypeInfo)
         }
@@ -671,7 +671,7 @@ func (self *Import__TypeInfoAlias) CreateTypeInfo(_env *LnsEnv, param *Import_Im
     {
         __ := Import_convExp1885(Lns_2DDD(param.FP.GetTypeInfo(_env, self.ParentId)))
         if __ == nil{
-            return nil, _env.LuaVM.String_format("%s: not found parentInfo %d %s", []LnsAny{__func__, self.ParentId, self.rawTxt})
+            return nil, _env.GetVM().String_format("%s: not found parentInfo %d %s", []LnsAny{__func__, self.ParentId, self.rawTxt})
         } else {
             _ = __.(*Ast_TypeInfo)
         }
@@ -681,7 +681,7 @@ func (self *Import__TypeInfoAlias) CreateTypeInfo(_env *LnsEnv, param *Import_Im
     {
         _parentScope := param.TypeId2Scope.Get(self.ParentId)
         if _parentScope == nil{
-            return nil, _env.LuaVM.String_format("%s: not found parentScope %s %s", []LnsAny{__func__, self.ParentId, self.rawTxt})
+            return nil, _env.GetVM().String_format("%s: not found parentScope %s %s", []LnsAny{__func__, self.ParentId, self.rawTxt})
         } else {
             parentScope = _parentScope.(*Ast_Scope)
         }
@@ -1364,7 +1364,7 @@ func (self *Import__TypeInfoModifier) CreateTypeInfo(_env *LnsEnv, param *Import
     {
         _srcTypeInfo := Import_convExp2421(Lns_2DDD(param.FP.GetTypeInfoFrom(_env, self.SrcTypeId)))
         if _srcTypeInfo == nil{
-            return nil, _env.LuaVM.String_format("not found srcType -- %d", []LnsAny{self.SrcTypeId.Id})
+            return nil, _env.GetVM().String_format("not found srcType -- %d", []LnsAny{self.SrcTypeId.Id})
         } else {
             srcTypeInfo = _srcTypeInfo.(*Ast_TypeInfo)
         }
@@ -1478,7 +1478,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
         {
             _workTypeInfo := Import_convExp2510(Lns_2DDD(param.FP.GetTypeInfo(_env, self.ParentId)))
             if _workTypeInfo == nil{
-                Util_err(_env, _env.LuaVM.String_format("not found parentInfo %d %s", []LnsAny{self.ParentId, self.Txt}))
+                Util_err(_env, _env.GetVM().String_format("not found parentInfo %d %s", []LnsAny{self.ParentId, self.Txt}))
             } else {
                 workTypeInfo = _workTypeInfo.(*Ast_TypeInfo)
             }
@@ -1490,7 +1490,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
     {
         _parentScope := param.TypeId2Scope.Get(self.ParentId)
         if _parentScope == nil{
-            return nil, _env.LuaVM.String_format("%s: not found parentScope %s %s", []LnsAny{__func__, self.ParentId, self.Txt})
+            return nil, _env.GetVM().String_format("%s: not found parentScope %s %s", []LnsAny{__func__, self.ParentId, self.Txt})
         } else {
             parentScope = _parentScope.(*Ast_Scope)
         }
@@ -1519,7 +1519,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
             workTypeInfo.FP.Get_typeId(_env).FP.Set_orgId(_env, self.TypeId)
             parentScope.FP.AddClass(_env, param.ProcessInfo, self.Txt, nil, workTypeInfo)
             Log_log(_env, Log_Level__Info, __func__, 376, Log_CreateMessage(func(_env *LnsEnv) string {
-                return _env.LuaVM.String_format("new module -- %s, %s, %d, %d, %d", []LnsAny{self.Txt, workTypeInfo.FP.GetFullName(_env, Ast_defaultTypeNameCtrl, parentScope.FP, false), self.TypeId, workTypeInfo.FP.Get_typeId(_env).Id, parentScope.FP.Get_scopeId(_env)})
+                return _env.GetVM().String_format("new module -- %s, %s, %d, %d, %d", []LnsAny{self.Txt, workTypeInfo.FP.GetFullName(_env, Ast_defaultTypeNameCtrl, parentScope.FP, false), self.TypeId, workTypeInfo.FP.Get_typeId(_env).Id, parentScope.FP.Get_scopeId(_env)})
             }))
             
         }
@@ -1755,7 +1755,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
             {
                 _workTypeInfo := Import_convExp2925(Lns_2DDD(param.FP.GetTypeInfo(_env, self.ParentId)))
                 if _workTypeInfo == nil{
-                    return nil, _env.LuaVM.String_format("not found parentInfo %d %s", []LnsAny{self.ParentId, self.Txt})
+                    return nil, _env.GetVM().String_format("not found parentInfo %d %s", []LnsAny{self.ParentId, self.Txt})
                 } else {
                     workTypeInfo = _workTypeInfo.(*Ast_TypeInfo)
                 }
@@ -1781,7 +1781,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 argTypeInfo.Insert(Ast_TypeInfo2Stem(argType_514))
             } else {
                 var errmess string
-                errmess = _env.LuaVM.String_format("not found arg (index:%d) -- %s.%s, %d, %d. %s", []LnsAny{index, parentInfo.FP.GetTxt(_env, nil, nil, nil), self.Txt, typeId.Id, self.ArgTypeId.Len(), mess})
+                errmess = _env.GetVM().String_format("not found arg (index:%d) -- %s.%s, %d, %d. %s", []LnsAny{index, parentInfo.FP.GetTxt(_env, nil, nil, nil), self.Txt, typeId.Id, self.ArgTypeId.Len(), mess})
                 return nil, errmess
             }
         }
@@ -1804,7 +1804,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
         {
             _parentScope := param.TypeId2Scope.Get(self.ParentId)
             if _parentScope == nil{
-                return nil, _env.LuaVM.String_format("%s: not found parentScope %s %s", []LnsAny{__func__, self.ParentId, self.Txt})
+                return nil, _env.GetVM().String_format("%s: not found parentScope %s %s", []LnsAny{__func__, self.ParentId, self.Txt})
             } else {
                 parentScope = _parentScope.(*Ast_Scope)
             }
@@ -1832,7 +1832,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
             }
             if _switch1 := self.Kind; _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__IF {
                 Log_log(_env, Log_Level__Debug, __func__, 486, Log_CreateMessage(func(_env *LnsEnv) string {
-                    return _env.LuaVM.String_format("new type -- %d, %s -- %s, %d", []LnsAny{self.ParentId, self.Txt, _env.PopVal( _env.IncStack() ||
+                    return _env.GetVM().String_format("new type -- %d, %s -- %s, %d", []LnsAny{self.ParentId, self.Txt, _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(parentScope.FP.Get_ownerTypeInfo(_env)) && 
                         Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetFullName(_env, Ast_defaultTypeNameCtrl, parentScope.FP, false)})/* 1:65 */)) ||
                         _env.SetStackVal( "nil") ).(string), _env.PopVal( _env.IncStack() ||
@@ -1867,7 +1867,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 param.TypeId2TypeInfoMut.Set(self.TypeId,workTypeInfo)
             } else if _switch1 == Ast_TypeInfoKind__ExtModule {
                 Log_log(_env, Log_Level__Debug, __func__, 523, Log_CreateMessage(func(_env *LnsEnv) string {
-                    return _env.LuaVM.String_format("new type -- %d, %s -- %s, %d", []LnsAny{self.ParentId, self.Txt, _env.PopVal( _env.IncStack() ||
+                    return _env.GetVM().String_format("new type -- %d, %s -- %s, %d", []LnsAny{self.ParentId, self.Txt, _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(parentScope.FP.Get_ownerTypeInfo(_env)) && 
                         Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetFullName(_env, Ast_defaultTypeNameCtrl, parentScope.FP, false)})/* 1:65 */)) ||
                         _env.SetStackVal( "nil") ).(string), _env.PopVal( _env.IncStack() ||
@@ -1933,7 +1933,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 workTypeInfo = param.ProcessInfo.FP.CreateMap(_env, self.AccessMode, parentInfo, itemTypeInfo.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), itemTypeInfo.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), self.MutMode)
                 postProcess(_env, workTypeInfo, nil)
             } else {
-                Util_err(_env, _env.LuaVM.String_format("illegal kind -- %s", []LnsAny{Ast_TypeInfoKind_getTxt( self.Kind)}))
+                Util_err(_env, _env.GetVM().String_format("illegal kind -- %s", []LnsAny{Ast_TypeInfoKind_getTxt( self.Kind)}))
             }
         }
     } else { 
@@ -1946,7 +1946,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
             for _key, _val := range( self.FP.ToMap().Items ) {
                 key := _key.(string)
                 val := _val
-                Util_errorLog(_env, _env.LuaVM.String_format("error: illegal self %s:%s", []LnsAny{key, val}))
+                Util_errorLog(_env, _env.GetVM().String_format("error: illegal self %s:%s", []LnsAny{key, val}))
             }
         }
     }
@@ -2109,7 +2109,7 @@ func (self *Import__TypeInfoEnum) CreateTypeInfo(_env *LnsEnv, param *Import_Imp
         {
             _val := getEnumLiteral(_env, valData)
             if _val == nil{
-                return nil, _env.LuaVM.String_format("unknown enum val type -- %s", []LnsAny{valTypeInfo.FP.GetTxt(_env, nil, nil, nil)})
+                return nil, _env.GetVM().String_format("unknown enum val type -- %s", []LnsAny{valTypeInfo.FP.GetTxt(_env, nil, nil, nil)})
             } else {
                 val = _val
             }
@@ -2634,7 +2634,7 @@ func (self *Import_ModuleLoader) InitImport_ModuleLoader(_env *LnsEnv, enableAsy
     self.loaderFunc = Import_LoaderFunc_19_(func(_env *LnsEnv) {
         if Lns_op_not(self.result.exportInfo){
             if Lns_op_not(self.importModuleInfo.FP.Add(_env, fullModulePath)){
-                self.result.err = _env.LuaVM.String_format("recursive import: %s -> %s", []LnsAny{self.importModuleInfo.FP.GetFull(_env), fullModulePath})
+                self.result.err = _env.GetVM().String_format("recursive import: %s -> %s", []LnsAny{self.importModuleInfo.FP.GetFull(_env), fullModulePath})
             } else { 
                 Lns_LockEnvSync( _env, func () {
                     {
@@ -2645,7 +2645,7 @@ func (self *Import_ModuleLoader) InitImport_ModuleLoader(_env *LnsEnv, enableAsy
                             moduleMeta = _exp
                             self.result.exportInfo = self.FP.craeteModuleInfo(_env, moduleMeta)
                         } else {
-                            self.result.err = _env.LuaVM.String_format("failed to load meta -- %s on %s", []LnsAny{fullModulePath, _env.PopVal( _env.IncStack() ||
+                            self.result.err = _env.GetVM().String_format("failed to load meta -- %s on %s", []LnsAny{fullModulePath, _env.PopVal( _env.IncStack() ||
                                 _env.SetStackVal( baseDir) ||
                                 _env.SetStackVal( "./") ).(string)})
                         }
@@ -2656,7 +2656,7 @@ func (self *Import_ModuleLoader) InitImport_ModuleLoader(_env *LnsEnv, enableAsy
         }
     })
     if enableAsync{
-        self.FP.Start(_env, 0, _env.LuaVM.String_format("ModuleLoader - %s", []LnsAny{fullModulePath}))
+        self.FP.Start(_env, 0, _env.GetVM().String_format("ModuleLoader - %s", []LnsAny{fullModulePath}))
     } else { 
         self.syncFlag = LnsCreateSyncFlag(_env)
         self.loaderFunc(_env)
@@ -2686,7 +2686,7 @@ func (self *Import_ModuleLoader) GetExportInfo(_env *LnsEnv) LnsAny {
     Lns_NilAccCall0( _env, func () {_env.NilAccPop().(G__lns_Flag).Wait(_env)})/* 941:7 */)
     if Lns_op_not(self.result.FP.Get_exportInfo(_env)){
         Log_log(_env, Log_Level__Err, __func__, 944, Log_CreateMessage(func(_env *LnsEnv) string {
-            return _env.LuaVM.String_format("exportInfo is nil -- %s", []LnsAny{self.fullModulePath})
+            return _env.GetVM().String_format("exportInfo is nil -- %s", []LnsAny{self.fullModulePath})
         }))
         
     }
@@ -2700,7 +2700,7 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
         var metaInfo *Lns_luaValue
         metaInfo = metaInfoStem.(*Lns_luaValue)
         Log_log(_env, Log_Level__Info, __func__, 961, Log_CreateMessage(func(_env *LnsEnv) string {
-            return _env.LuaVM.String_format("%s processing", []LnsAny{fullModulePath})
+            return _env.GetVM().String_format("%s processing", []LnsAny{fullModulePath})
         }))
         
         var dependLibId2DependInfo *LnsMap
@@ -2870,13 +2870,13 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                             for _key, _val := range( atomInfo.Items ) {
                                 key := _key.(string)
                                 val := _val
-                                Util_errorLog(_env, _env.LuaVM.String_format("table: %s:%s", []LnsAny{key, val}))
+                                Util_errorLog(_env, _env.GetVM().String_format("table: %s:%s", []LnsAny{key, val}))
                             }
                             if mess != nil{
                                 mess_729 := mess.(string)
                                 Util_errorLog(_env, mess_729)
                             }
-                            Util_err(_env, _env.LuaVM.String_format("_TypeInfo.%s._fromMap error", []LnsAny{Ast_SerializeKind_getTxt( kind)}))
+                            Util_err(_env, _env.GetVM().String_format("_TypeInfo.%s._fromMap error", []LnsAny{Ast_SerializeKind_getTxt( kind)}))
                         }
                     }
                 }
@@ -2909,7 +2909,7 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                 __exp := errMess
                 if !Lns_IsNil( __exp ) {
                     _exp := __exp.(string)
-                    Util_err(_env, _env.LuaVM.String_format("Failed to createType -- %s: %s(%d): %s", []LnsAny{fullModulePath, Ast_SerializeKind_getTxt( atomInfo.Skind), atomInfo.TypeId, _exp}))
+                    Util_err(_env, _env.GetVM().String_format("Failed to createType -- %s: %s(%d): %s", []LnsAny{fullModulePath, Ast_SerializeKind_getTxt( atomInfo.Skind), atomInfo.TypeId, _exp}))
                 }
             }
             if newTypeInfo != nil{
@@ -2928,7 +2928,7 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                         self.globalScope.FP.AddEnum(_env, processInfo, Ast_AccessMode__Global, newTypeInfo_743.FP.Get_rawTxt(_env), nil, newTypeInfo_743)
                     } else if _switch2 == Ast_TypeInfoKind__Nilable {
                     } else {
-                        Util_err(_env, _env.LuaVM.String_format("%s: not support kind -- %s", []LnsAny{__func__, Ast_TypeInfoKind_getTxt( newTypeInfo_743.FP.Get_kind(_env))}))
+                        Util_err(_env, _env.GetVM().String_format("%s: not support kind -- %s", []LnsAny{__func__, Ast_TypeInfoKind_getTxt( newTypeInfo_743.FP.Get_kind(_env))}))
                     }
                 }
             }
@@ -2946,7 +2946,7 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                     {
                         _typeInfo := Import_convExp6481(Lns_2DDD(importParam.FP.GetTypeInfoFrom(_env, childId)))
                         if _typeInfo == nil{
-                            Util_err(_env, _env.LuaVM.String_format("not found childId -- %s, %d, %s(%d)", []LnsAny{fullModulePath, childId.Id, atomInfo.Txt, atomInfo.TypeId}))
+                            Util_err(_env, _env.GetVM().String_format("not found childId -- %s, %d, %s(%d)", []LnsAny{fullModulePath, childId.Id, atomInfo.Txt, atomInfo.TypeId}))
                         } else {
                             typeInfo = _typeInfo.(*Ast_TypeInfo)
                         }
@@ -3027,13 +3027,13 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                                 }
                             }
                         } else {
-                            self.transUnitIF.Error(_env, _env.LuaVM.String_format("not found class -- %s: %d, %s", []LnsAny{fullModulePath, classTypeId, classTypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
+                            self.transUnitIF.Error(_env, _env.GetVM().String_format("not found class -- %s: %d, %s", []LnsAny{fullModulePath, classTypeId, classTypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
                         }
                     }
                 } else if _switch1 == Ast_TypeInfoKind__Module {
                     self.transUnitIF.PushModuleLow(_env, processInfo, true, classTypeInfo.FP.GetTxt(_env, nil, nil, nil), Ast_TypeInfo_isMut(_env, classTypeInfo))
                     Log_log(_env, Log_Level__Debug, __func__, 1274, Log_CreateMessage(func(_env *LnsEnv) string {
-                        return _env.LuaVM.String_format("push module -- %s, %s, %d, %d, %d", []LnsAny{classTypeInfo.FP.GetTxt(_env, nil, nil, nil), _env.PopVal( _env.IncStack() ||
+                        return _env.GetVM().String_format("push module -- %s, %s, %d, %d, %d", []LnsAny{classTypeInfo.FP.GetTxt(_env, nil, nil, nil), _env.PopVal( _env.IncStack() ||
                             _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(self.transUnitIF.Get_scope(_env).FP.Get_ownerTypeInfo(_env)) && 
                             Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetFullName(_env, Ast_defaultTypeNameCtrl, self.transUnitIF.Get_scope(_env).FP, false)})/* 1:67 */)) ||
                             _env.SetStackVal( "nil") ).(string), _env.PopVal( _env.IncStack() ||
@@ -3169,7 +3169,7 @@ func (self *Import_ModuleLoader) processImportMain(_env *LnsEnv, processInfo *As
     var fullModulePath string
     modulePath, baseDir, fullModulePath = FrontInterface_getLuaModulePath(_env, modulePath, baseDir)
     Log_log(_env, Log_Level__Info, __func__, 1538, Log_CreateMessage(func(_env *LnsEnv) string {
-        return _env.LuaVM.String_format("%s -> %s start on %s", []LnsAny{self.result.fullModulePath, fullModulePath, baseDir})
+        return _env.GetVM().String_format("%s -> %s start on %s", []LnsAny{self.result.fullModulePath, fullModulePath, baseDir})
     }))
     
     var moduleLoader *Import_ModuleLoader
@@ -3243,7 +3243,7 @@ func (self *Import_Import) CreateModuleLoader(_env *LnsEnv, baseDir LnsAny,modul
         modulePath, baseDir, fullModulePath = FrontInterface_getLuaModulePath(_env, modulePath, baseDir)
     })
     Log_log(_env, Log_Level__Info, __func__, 1466, Log_CreateMessage(func(_env *LnsEnv) string {
-        return _env.LuaVM.String_format("%s -> %s start on %s", []LnsAny{self.moduleType.FP.GetTxt(_env, self.typeNameCtrl, nil, nil), fullModulePath, baseDir})
+        return _env.GetVM().String_format("%s -> %s start on %s", []LnsAny{self.moduleType.FP.GetTxt(_env, self.typeNameCtrl, nil, nil), fullModulePath, baseDir})
     }))
     
     var exportInfo LnsAny
@@ -3251,7 +3251,7 @@ func (self *Import_Import) CreateModuleLoader(_env *LnsEnv, baseDir LnsAny,modul
     if exportInfo != nil{
         exportInfo_863 := exportInfo.(*FrontInterface_ExportInfo)
         Log_log(_env, Log_Level__Info, __func__, 1474, Log_CreateMessage(func(_env *LnsEnv) string {
-            return _env.LuaVM.String_format("%s already", []LnsAny{fullModulePath})
+            return _env.GetVM().String_format("%s already", []LnsAny{fullModulePath})
         }))
         
         if depth == 1{
@@ -3307,7 +3307,7 @@ func (self *Import_Import) LoadModuleInfo(_env *LnsEnv, moduleLoader *Import_Mod
     }
     self.importModuleName2ModuleInfo.Set(fullModulePath,exportInfo)
     Log_log(_env, Log_Level__Info, __func__, 1525, Log_CreateMessage(func(_env *LnsEnv) string {
-        return _env.LuaVM.String_format("%s complete", []LnsAny{fullModulePath})
+        return _env.GetVM().String_format("%s complete", []LnsAny{fullModulePath})
     }))
     
     return exportInfo, ""

@@ -74,15 +74,15 @@ func (self *OutputDepend_DependInfo) AddSubMod(_env *LnsEnv, path string) {
 
 // 52: decl @lune.@base.@OutputDepend.DependInfo.output
 func (self *OutputDepend_DependInfo) Output(_env *LnsEnv, stream Lns_oStream) {
-    stream.Write(_env, _env.LuaVM.String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.LuaVM.String_gsub(self.targetModule,"%.", "/")).(string)}))
-    stream.Write(_env, _env.LuaVM.String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.LuaVM.String_gsub(self.targetModule,"%.", "/")).(string)}))
+    stream.Write(_env, _env.GetVM().String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
+    stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
     for _, _mod := range( self.importModuleList.Items ) {
         mod := _mod.(string)
-        stream.Write(_env, _env.LuaVM.String_format("  %s.meta \\\n", []LnsAny{Lns_car(_env.LuaVM.String_gsub(mod,"%.", "/")).(string)}))
+        stream.Write(_env, _env.GetVM().String_format("  %s.meta \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string)}))
     }
     for _, _path := range( self.subModList.Items ) {
         path := _path.(string)
-        stream.Write(_env, _env.LuaVM.String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.LuaVM.String_gsub(path,"%.", "/")).(string)}))
+        stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(path,"%.", "/")).(string)}))
     }
 }
 

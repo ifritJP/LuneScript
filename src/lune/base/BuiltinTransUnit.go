@@ -91,10 +91,10 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
     var modName string
-    if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(name,"^@", nil, nil))){
+    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(name,"^@", nil, nil))){
         modName = name
     } else { 
-        modName = _env.LuaVM.String_format("@%s", []LnsAny{name})
+        modName = _env.GetVM().String_format("@%s", []LnsAny{name})
     }
     {
         __exp := self.scope.FP.GetTypeInfoChild(_env, modName)
@@ -107,7 +107,7 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
                     scope := _scope.(*Ast_Scope)
                     self.scope = scope
                 } else {
-                    self.FP.Error(_env, _env.LuaVM.String_format("not found scope -- %s", []LnsAny{name}))
+                    self.FP.Error(_env, _env.GetVM().String_format("not found scope -- %s", []LnsAny{name}))
                 }
             }
         } else {
@@ -126,7 +126,7 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
             _,existSym = parentScope.FP.AddClass(_env, processInfo, modName, nil, typeInfo)
             if existSym != nil{
                 existSym_97 := existSym.(*Ast_SymbolInfo)
-                self.FP.Error(_env, _env.LuaVM.String_format("module symbols exist -- %s.%s -- %s.%s", []LnsAny{existSym_97.FP.Get_namespaceTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil), existSym_97.FP.Get_name(_env), parentInfo.FP.GetTxt(_env, nil, nil, nil), modName}))
+                self.FP.Error(_env, _env.GetVM().String_format("module symbols exist -- %s.%s -- %s.%s", []LnsAny{existSym_97.FP.Get_namespaceTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil), existSym_97.FP.Get_name(_env), parentInfo.FP.GetTxt(_env, nil, nil, nil), modName}))
             }
         }
     }
@@ -157,7 +157,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassScope(_env *LnsEnv, errPos *Typ
                 classParentTypeId = Ast_dummyIdInfo
             }
         }
-        self.FP.Error(_env, _env.LuaVM.String_format("This class does not exist in this scope. -- %s -- %s(%d), %s(%d)", []LnsAny{classTypeInfo.FP.GetTxt(_env, nil, nil, nil), _env.NilAccFin(_env.NilAccPush(self.scope.FP.Get_ownerTypeInfo(_env)) && 
+        self.FP.Error(_env, _env.GetVM().String_format("This class does not exist in this scope. -- %s -- %s(%d), %s(%d)", []LnsAny{classTypeInfo.FP.GetTxt(_env, nil, nil, nil), _env.NilAccFin(_env.NilAccPush(self.scope.FP.Get_ownerTypeInfo(_env)) && 
         Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetTxt(_env, nil, nil, nil)})/* 135:15 */), _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(self.scope.FP.Get_ownerTypeInfo(_env)) && 
             Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.Get_typeId(_env)})&&
@@ -176,19 +176,19 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
             _exp := __exp.(*Ast_TypeInfo)
             typeInfo = _exp
             if typeInfo.FP.Get_abstractFlag(_env) != abstractFlag{
-                self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) abstract for prototpye", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil)}))
+                self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) abstract for prototpye", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil)}))
             }
             if typeInfo.FP.Get_accessMode(_env) != accessMode{
-                self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), Ast_AccessMode_getTxt( accessMode), Ast_AccessMode_getTxt( typeInfo.FP.Get_accessMode(_env))}))
+                self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), Ast_AccessMode_getTxt( accessMode), Ast_AccessMode_getTxt( typeInfo.FP.Get_accessMode(_env))}))
             }
             if baseInfo != nil{
                 baseInfo_113 := baseInfo.(*Ast_TypeInfo)
                 if typeInfo.FP.Get_baseTypeInfo(_env) != baseInfo_113{
-                    self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) base class(%s) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), baseInfo_113.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
+                    self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) base class(%s) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), baseInfo_113.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             } else {
                 if typeInfo.FP.HasBase(_env){
-                    self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) base class(None) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
+                    self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) base class(None) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             }
             var compareList func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string)
@@ -198,11 +198,11 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                         index := _index + 1
                         protoType := _protoType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         if protoType != typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo(){
-                            self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) %s(%s) for prototpye %s(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), message, typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.GetTxt(_env, nil, nil, nil), message, protoType.FP.GetTxt(_env, nil, nil, nil)}))
+                            self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) %s(%s) for prototpye %s(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), message, typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.GetTxt(_env, nil, nil, nil), message, protoType.FP.GetTxt(_env, nil, nil, nil)}))
                         }
                     }
                 } else { 
-                    self.FP.Error(_env, _env.LuaVM.String_format("mismatch class(%s) %s(%d) for prototpye %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), message, typeList.Len(), message, protoList.Len()}))
+                    self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) %s(%d) for prototpye %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), message, typeList.Len(), message, protoList.Len()}))
                 }
             }
             compareList(_env, typeInfo.FP.Get_interfaceList(_env), Lns_unwrapDefault( interfaceList, NewLnsList([]LnsAny{})).(*LnsList), "interface")
@@ -219,18 +219,18 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                             scope := _scope.(*Ast_Scope)
                             self.scope = scope
                         } else {
-                            self.FP.Error(_env, _env.LuaVM.String_format("not find scope -- %s", []LnsAny{name}))
+                            self.FP.Error(_env, _env.GetVM().String_format("not find scope -- %s", []LnsAny{name}))
                         }
                     }
                 }
             }
             if _switch1 := (typeInfo.FP.Get_kind(_env)); _switch1 == Ast_TypeInfoKind__Class {
                 if mode == TransUnitIF_DeclClassMode__Interface{
-                    self.FP.Error(_env, _env.LuaVM.String_format("define interface already -- %s", []LnsAny{name}))
+                    self.FP.Error(_env, _env.GetVM().String_format("define interface already -- %s", []LnsAny{name}))
                 }
             } else if _switch1 == Ast_TypeInfoKind__IF {
                 if mode != TransUnitIF_DeclClassMode__Interface{
-                    self.FP.Error(_env, _env.LuaVM.String_format("define class already -- %s", []LnsAny{name}))
+                    self.FP.Error(_env, _env.GetVM().String_format("define class already -- %s", []LnsAny{name}))
                 }
             }
         } else {

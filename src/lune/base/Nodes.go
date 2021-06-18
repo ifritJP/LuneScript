@@ -1352,7 +1352,7 @@ func (self *Nodes_Filter) GetFull(_env *LnsEnv, typeInfo *Ast_TypeInfo,localFlag
 // 384: decl @lune.@base.@Nodes.Filter.defaultProcess
 func (self *Nodes_Filter) DefaultProcess(_env *LnsEnv, node *Nodes_Node,_opt LnsAny) {
     if self.errorOnDefault{
-        Util_err(_env, _env.LuaVM.String_format("not implement yet -- %s", []LnsAny{Nodes_getNodeKindName(_env, node.FP.Get_kind(_env))}))
+        Util_err(_env, _env.GetVM().String_format("not implement yet -- %s", []LnsAny{Nodes_getNodeKindName(_env, node.FP.Get_kind(_env))}))
     }
 }
 
@@ -7538,7 +7538,7 @@ func (self *Nodes_ExpRefNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
             }
         }
     }
-    return nil, _env.LuaVM.String_format("unsupport refnode -- %s", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil)})
+    return nil, _env.GetVM().String_format("unsupport refnode -- %s", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil)})
 }
 
 
@@ -8029,13 +8029,13 @@ func (self *Nodes_ExpOp2Node) SetupLiteralTokenList(_env *LnsEnv, list *LnsList)
         switch _matchExp1 := literal_9366.(type) {
         case *Nodes_Literal__Int:
         val := _matchExp1.Val1
-            self.FP.AddTokenList(_env, list, Types_TokenKind__Int, _env.LuaVM.String_format("%d", []LnsAny{val}))
+            self.FP.AddTokenList(_env, list, Types_TokenKind__Int, _env.GetVM().String_format("%d", []LnsAny{val}))
         case *Nodes_Literal__Real:
         val := _matchExp1.Val1
-            self.FP.AddTokenList(_env, list, Types_TokenKind__Real, _env.LuaVM.String_format("%g", []LnsAny{val}))
+            self.FP.AddTokenList(_env, list, Types_TokenKind__Real, _env.GetVM().String_format("%g", []LnsAny{val}))
         case *Nodes_Literal__Str:
         val := _matchExp1.Val1
-            self.FP.AddTokenList(_env, list, Types_TokenKind__Str, _env.LuaVM.String_format("%q", []LnsAny{val}))
+            self.FP.AddTokenList(_env, list, Types_TokenKind__Str, _env.GetVM().String_format("%q", []LnsAny{val}))
         default:
             return false
         }
@@ -8062,10 +8062,10 @@ func (self *Nodes_ExpOp2Node) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var type2 *Ast_TypeInfo
     ret2,int2,real2,str2,type2 = self.FP.getValType(_env, self.FP.Get_exp2(_env))
     if Lns_op_not(ret1){
-        return nil, _env.LuaVM.String_format("not support literal -- %s", []LnsAny{Nodes_getNodeKindName(_env, self.FP.Get_exp1(_env).FP.Get_kind(_env))})
+        return nil, _env.GetVM().String_format("not support literal -- %s", []LnsAny{Nodes_getNodeKindName(_env, self.FP.Get_exp1(_env).FP.Get_kind(_env))})
     }
     if Lns_op_not(ret2){
-        return nil, _env.LuaVM.String_format("not support literal -- %s", []LnsAny{Nodes_getNodeKindName(_env, self.FP.Get_exp2(_env).FP.Get_kind(_env))})
+        return nil, _env.GetVM().String_format("not support literal -- %s", []LnsAny{Nodes_getNodeKindName(_env, self.FP.Get_exp2(_env).FP.Get_kind(_env))})
     }
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
@@ -8110,7 +8110,7 @@ func (self *Nodes_ExpOp2Node) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
         }
     }
     var mess string
-    mess = _env.LuaVM.String_format("not support literal operation -- %s %s %s", []LnsAny{type1.FP.GetTxt(_env, nil, nil, nil), self.op.Txt, type2.FP.GetTxt(_env, nil, nil, nil)})
+    mess = _env.GetVM().String_format("not support literal operation -- %s %s %s", []LnsAny{type1.FP.GetTxt(_env, nil, nil, nil), self.op.Txt, type2.FP.GetTxt(_env, nil, nil, nil)})
     return nil, mess
 }
 
@@ -10455,10 +10455,10 @@ func (self *Nodes_ExpMacroStatNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
             switch _matchExp1 := literal_9328.(type) {
             case *Nodes_Literal__Str:
             work := _matchExp1.Val1
-                txt = _env.LuaVM.String_format("%s%s", []LnsAny{txt, work})
+                txt = _env.GetVM().String_format("%s%s", []LnsAny{txt, work})
             }
         } else {
-            return nil, _env.LuaVM.String_format("illegal literal -- %s", []LnsAny{Nodes_getNodeKindName(_env, token.FP.Get_kind(_env))})
+            return nil, _env.GetVM().String_format("illegal literal -- %s", []LnsAny{Nodes_getNodeKindName(_env, token.FP.Get_kind(_env))})
         }
     }
     return &Nodes_Literal__Str{txt}, nil
@@ -10950,7 +10950,7 @@ func (self *Nodes_ExpOmitEnumNode) SetupLiteralTokenList(_env *LnsEnv, list *Lns
     var enumval *Ast_EnumValInfo
     enumval = self.valInfo
     self.FP.AddTokenList(_env, list, Types_TokenKind__Dlmt, ".")
-    self.FP.AddTokenList(_env, list, Types_TokenKind__Symb, Lns_car(_env.LuaVM.String_gsub(enumval.FP.Get_val(_env).(LnsAlgeVal).GetTxt(),".*%.", "")).(string))
+    self.FP.AddTokenList(_env, list, Types_TokenKind__Symb, Lns_car(_env.GetVM().String_gsub(enumval.FP.Get_val(_env).(LnsAlgeVal).GetTxt(),".*%.", "")).(string))
     return true
 }
 
@@ -11149,7 +11149,7 @@ func (self *Nodes_RefFieldNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 tokenList.Insert(symbol)
             }
         default:
-            return nil, _env.LuaVM.String_format("not support -- %s", []LnsAny{literal_9311.(LnsAlgeVal).GetTxt()})
+            return nil, _env.GetVM().String_format("not support -- %s", []LnsAny{literal_9311.(LnsAlgeVal).GetTxt()})
         }
         if self.nilAccess{
             tokenList.Insert("$.")
@@ -13452,7 +13452,7 @@ func (self *Nodes_DeclMemberNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,
 func (self *Nodes_DeclMemberNode) GetGetterSym(_env *LnsEnv) LnsAny {
     if self.getterMode != Ast_AccessMode__None{
         return _env.NilAccFin(_env.NilAccPush(self.classType.FP.Get_scope(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.LuaVM.String_format("get_%s", []LnsAny{self.name.Txt}))})/* 1827:14 */)
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.GetVM().String_format("get_%s", []LnsAny{self.name.Txt}))})/* 1827:14 */)
     }
     return nil
 }
@@ -13461,7 +13461,7 @@ func (self *Nodes_DeclMemberNode) GetGetterSym(_env *LnsEnv) LnsAny {
 func (self *Nodes_DeclMemberNode) GetSetterSym(_env *LnsEnv) LnsAny {
     if self.setterMode != Ast_AccessMode__None{
         return _env.NilAccFin(_env.NilAccPush(self.classType.FP.Get_scope(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.LuaVM.String_format("set_%s", []LnsAny{self.name.Txt}))})/* 1834:14 */)
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.GetVM().String_format("set_%s", []LnsAny{self.name.Txt}))})/* 1834:14 */)
     }
     return nil
 }
@@ -16464,7 +16464,7 @@ func (self *Nodes_LiteralCharNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
 
 // 2322: decl @lune.@base.@Nodes.LiteralCharNode.setupLiteralTokenList
 func (self *Nodes_LiteralCharNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
-    self.FP.AddTokenList(_env, list, Types_TokenKind__Char, _env.LuaVM.String_format("%d", []LnsAny{self.num}))
+    self.FP.AddTokenList(_env, list, Types_TokenKind__Char, _env.GetVM().String_format("%d", []LnsAny{self.num}))
     return true
 }
 
@@ -16584,7 +16584,7 @@ func (self *Nodes_LiteralIntNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
 
 // 2330: decl @lune.@base.@Nodes.LiteralIntNode.setupLiteralTokenList
 func (self *Nodes_LiteralIntNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
-    self.FP.AddTokenList(_env, list, Types_TokenKind__Int, _env.LuaVM.String_format("%d", []LnsAny{self.num}))
+    self.FP.AddTokenList(_env, list, Types_TokenKind__Int, _env.GetVM().String_format("%d", []LnsAny{self.num}))
     return true
 }
 
@@ -16704,7 +16704,7 @@ func (self *Nodes_LiteralRealNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
 
 // 2338: decl @lune.@base.@Nodes.LiteralRealNode.setupLiteralTokenList
 func (self *Nodes_LiteralRealNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
-    self.FP.AddTokenList(_env, list, Types_TokenKind__Real, _env.LuaVM.String_format("%g", []LnsAny{self.num}))
+    self.FP.AddTokenList(_env, list, Types_TokenKind__Real, _env.GetVM().String_format("%g", []LnsAny{self.num}))
     return true
 }
 
@@ -17652,10 +17652,10 @@ func (self *Nodes_LiteralStringNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisit
 func (self *Nodes_LiteralStringNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var txt string
     txt = self.token.Txt
-    if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(txt, "^```", nil, nil))){
-        txt = _env.LuaVM.String_sub(txt,4, -4)
+    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(txt, "^```", nil, nil))){
+        txt = _env.GetVM().String_sub(txt,4, -4)
     } else { 
-        txt = _env.LuaVM.String_sub(txt,2, -2)
+        txt = _env.GetVM().String_sub(txt,2, -2)
     }
     {
         _param := self.FP.Get_orgParam(_env)
@@ -17677,7 +17677,7 @@ func (self *Nodes_LiteralStringNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                     return nil, mess
                 }
             }
-            txt = _env.LuaVM.String_format(Nodes_convExp52740(txt, Lns_2DDD(paramList.Unpack())))
+            txt = _env.GetVM().String_format(Nodes_convExp52740(txt, Lns_2DDD(paramList.Unpack())))
         }
     }
     return &Nodes_Literal__Str{txt}, nil

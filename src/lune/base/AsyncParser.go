@@ -394,7 +394,7 @@ func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAn
                 return _exp, ""
             }
         }
-        return nil, _env.LuaVM.String_format("failed to open -- %s", []LnsAny{path})
+        return nil, _env.GetVM().String_format("failed to open -- %s", []LnsAny{path})
     }
     var createStreamFrom func(_env *LnsEnv)(string, bool, LnsAny, string, LnsAny)
     createStreamFrom = func(_env *LnsEnv)(string, bool, LnsAny, string, LnsAny) {
@@ -485,7 +485,7 @@ func (self *AsyncParser_Parser) analyzeNumber(_env *LnsEnv, token string,beginIn
     var nonNumIndex LnsInt
     
     {
-        _nonNumIndex := AsyncParser_convExp1901(Lns_2DDD(_env.LuaVM.String_find(token,"[^%d]", beginIndex, nil)))
+        _nonNumIndex := AsyncParser_convExp1901(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", beginIndex, nil)))
         if _nonNumIndex == nil{
             return len(token), true
         } else {
@@ -500,7 +500,7 @@ func (self *AsyncParser_Parser) analyzeNumber(_env *LnsEnv, token string,beginIn
         intFlag = false
         {
             var _nonNumIndex LnsAny
-            _nonNumIndex = AsyncParser_convExp1952(Lns_2DDD(_env.LuaVM.String_find(token,"[^%d]", nonNumIndex + 1, nil)))
+            _nonNumIndex = AsyncParser_convExp1952(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 1, nil)))
             if Lns_IsNil( _nonNumIndex ) {
                 return len(token), intFlag
             }
@@ -513,7 +513,7 @@ func (self *AsyncParser_Parser) analyzeNumber(_env *LnsEnv, token string,beginIn
         _env.SetStackVal( nonNumChar == 120) ).(bool){
         {
             var _nonNumIndex LnsAny
-            _nonNumIndex = AsyncParser_convExp2003(Lns_2DDD(_env.LuaVM.String_find(token,"[^%da-fA-F]", nonNumIndex + 1, nil)))
+            _nonNumIndex = AsyncParser_convExp2003(Lns_2DDD(_env.GetVM().String_find(token,"[^%da-fA-F]", nonNumIndex + 1, nil)))
             if Lns_IsNil( _nonNumIndex ) {
                 return len(token), intFlag
             }
@@ -532,7 +532,7 @@ func (self *AsyncParser_Parser) analyzeNumber(_env *LnsEnv, token string,beginIn
             _env.SetStackVal( nextChar == 43) ).(bool){
             {
                 var _nonNumIndex LnsAny
-                _nonNumIndex = AsyncParser_convExp2083(Lns_2DDD(_env.LuaVM.String_find(token,"[^%d]", nonNumIndex + 2, nil)))
+                _nonNumIndex = AsyncParser_convExp2083(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 2, nil)))
                 if Lns_IsNil( _nonNumIndex ) {
                     return len(token), intFlag
                 }
@@ -541,7 +541,7 @@ func (self *AsyncParser_Parser) analyzeNumber(_env *LnsEnv, token string,beginIn
         } else { 
             {
                 var _nonNumIndex LnsAny
-                _nonNumIndex = AsyncParser_convExp2113(Lns_2DDD(_env.LuaVM.String_find(token,"[^%d]", nonNumIndex + 1, nil)))
+                _nonNumIndex = AsyncParser_convExp2113(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 1, nil)))
                 if Lns_IsNil( _nonNumIndex ) {
                     return len(token), intFlag
                 }
@@ -574,7 +574,7 @@ func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,v
         var tokenEndIndex LnsInt
         
         {
-            _tokenIndex, _tokenEndIndex := AsyncParser_convExp2215(Lns_2DDD(_env.LuaVM.String_find(val, "[%p%w]+", searchIndex, nil)))
+            _tokenIndex, _tokenEndIndex := AsyncParser_convExp2215(Lns_2DDD(_env.GetVM().String_find(val, "[%p%w]+", searchIndex, nil)))
             if _tokenIndex == nil || _tokenEndIndex == nil{
                 break
             } else {
@@ -586,14 +586,14 @@ func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,v
         columnIndex = column + tokenIndex - 2
         searchIndex = tokenEndIndex + 1
         var token string
-        token = _env.LuaVM.String_sub(val,tokenIndex, tokenEndIndex)
+        token = _env.GetVM().String_sub(val,tokenIndex, tokenEndIndex)
         var subIndex LnsInt
         subIndex = 1
         for len(token) >= subIndex {
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                _env.SetStackVal( Lns_car(_env.LuaVM.String_find(token,"^[%d]", subIndex, nil))) ||
+                _env.SetStackVal( Lns_car(_env.GetVM().String_find(token,"^[%d]", subIndex, nil))) ||
                 _env.SetStackVal( LnsInt(token[subIndex-1]) == 45) &&
-                _env.SetStackVal( Lns_car(_env.LuaVM.String_find(token,"^[%d]", subIndex + 1, nil))) )){
+                _env.SetStackVal( Lns_car(_env.GetVM().String_find(token,"^[%d]", subIndex + 1, nil))) )){
                 var checkIndex LnsInt
                 checkIndex = subIndex
                 if LnsInt(token[checkIndex-1]) == 45{
@@ -606,23 +606,23 @@ func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,v
                 info = self.FP.createInfo(_env, _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( intFlag) &&
                     _env.SetStackVal( Types_TokenKind__Int) ||
-                    _env.SetStackVal( Types_TokenKind__Real) ).(LnsInt), _env.LuaVM.String_sub(token,subIndex, endIndex), columnIndex + subIndex)
+                    _env.SetStackVal( Types_TokenKind__Real) ).(LnsInt), _env.GetVM().String_sub(token,subIndex, endIndex), columnIndex + subIndex)
                 list.Insert(Types_Token2Stem(info))
                 subIndex = endIndex + 1
             } else { 
                 {
-                    __exp := AsyncParser_convExp2717(Lns_2DDD(_env.LuaVM.String_find(token, "[^%w_]", subIndex, nil)))
+                    __exp := AsyncParser_convExp2717(Lns_2DDD(_env.GetVM().String_find(token, "[^%w_]", subIndex, nil)))
                     if !Lns_IsNil( __exp ) {
                         _exp := __exp.(LnsInt)
                         var index LnsInt
                         index = _exp
                         if index > subIndex{
                             var info *Types_Token
-                            info = self.FP.createInfo(_env, Types_TokenKind__Symb, _env.LuaVM.String_sub(token,subIndex, index - 1), columnIndex + subIndex)
+                            info = self.FP.createInfo(_env, Types_TokenKind__Symb, _env.GetVM().String_sub(token,subIndex, index - 1), columnIndex + subIndex)
                             list.Insert(Types_Token2Stem(info))
                         }
                         var delimit string
-                        delimit = _env.LuaVM.String_sub(token,index, index)
+                        delimit = _env.GetVM().String_sub(token,index, index)
                         var candidateList LnsAny
                         candidateList = self.multiCharDelimitMap.Get(delimit)
                         for Lns_isCondTrue( candidateList) {
@@ -630,7 +630,7 @@ func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,v
                             findFlag = false
                             for _, _candidate := range( Lns_unwrap( (candidateList)).(*LnsList).Items ) {
                                 candidate := _candidate.(string)
-                                if candidate == _env.LuaVM.String_sub(token,index, index + len(candidate) - 1){
+                                if candidate == _env.GetVM().String_sub(token,index, index + len(candidate) - 1){
                                     delimit = candidate
                                     candidateList = self.multiCharDelimitMap.Get(delimit)
                                     findFlag = true
@@ -654,7 +654,7 @@ func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,v
                         }
                         if delimit == "?"{
                             var nextChar string
-                            nextChar = _env.LuaVM.String_sub(token,index, subIndex)
+                            nextChar = _env.GetVM().String_sub(token,index, subIndex)
                             list.Insert(Types_Token2Stem(self.FP.createInfo(_env, Types_TokenKind__Char, nextChar, columnIndex + subIndex)))
                             subIndex = subIndex + 1
                         } else { 
@@ -662,7 +662,7 @@ func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,v
                         }
                     } else {
                         if subIndex <= len(token){
-                            list.Insert(Types_Token2Stem(self.FP.createInfo(_env, Types_TokenKind__Symb, _env.LuaVM.String_sub(token,subIndex, nil), columnIndex + subIndex)))
+                            list.Insert(Types_Token2Stem(self.FP.createInfo(_env, Types_TokenKind__Symb, _env.GetVM().String_sub(token,subIndex, nil), columnIndex + subIndex)))
                         }
                         break
                     }
@@ -686,7 +686,7 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
     }
     if self.firstLine{
         self.firstLine = false
-        if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(rawLine,"^#!", nil, nil))){
+        if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(rawLine,"^#!", nil, nil))){
             var token *Types_Token
             token = NewTypes_Token(_env, Types_TokenKind__Sheb, rawLine, NewTypes_Position(_env, self.lineNo, 1, self.streamName), false, NewLnsList([]LnsAny{}))
             return NewLnsList([]LnsAny{Types_Token2Stem(token)})
@@ -700,14 +700,14 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
         comment = ""
         for  {
             {
-                _, _termEndIndex := AsyncParser_convExp2863(Lns_2DDD(_env.LuaVM.String_find(rawLine, termStr, searchIndex, true)))
+                _, _termEndIndex := AsyncParser_convExp2863(Lns_2DDD(_env.GetVM().String_find(rawLine, termStr, searchIndex, true)))
                 if !Lns_IsNil( _termEndIndex ) {
                     termEndIndex := _termEndIndex.(LnsInt)
-                    comment = comment + _env.LuaVM.String_sub(rawLine,searchIndex, termEndIndex)
+                    comment = comment + _env.GetVM().String_sub(rawLine,searchIndex, termEndIndex)
                     return comment, termEndIndex + 1
                 }
             }
-            comment = comment + _env.LuaVM.String_sub(rawLine,searchIndex, nil) + "\n"
+            comment = comment + _env.GetVM().String_sub(rawLine,searchIndex, nil) + "\n"
             searchIndex = 1
             rawLine = Lns_unwrap( self.FP.readLine(_env)).(string)
         }
@@ -735,9 +735,9 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
         var index LnsInt
         
         {
-            _index := AsyncParser_convExp3008(Lns_2DDD(_env.LuaVM.String_find(rawLine, pattern, searchIndex, nil)))
+            _index := AsyncParser_convExp3008(Lns_2DDD(_env.GetVM().String_find(rawLine, pattern, searchIndex, nil)))
             if _index == nil{
-                self.FP.addVal(_env, list, Types_TokenKind__Symb, _env.LuaVM.String_sub(rawLine,startIndex, nil), startIndex)
+                self.FP.addVal(_env, list, Types_TokenKind__Symb, _env.GetVM().String_sub(rawLine,startIndex, nil), startIndex)
                 return list
             } else {
                 index = _index.(LnsInt)
@@ -754,7 +754,7 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
             syncIndexFlag = false
         } else { 
             if startIndex < index{
-                self.FP.addVal(_env, list, Types_TokenKind__Symb, _env.LuaVM.String_sub(rawLine,startIndex, index - 1), startIndex)
+                self.FP.addVal(_env, list, Types_TokenKind__Symb, _env.GetVM().String_sub(rawLine,startIndex, index - 1), startIndex)
             }
             if _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( findChar == 39) ||
@@ -767,9 +767,9 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
                     var endIndex LnsInt
                     
                     {
-                        _endIndex := AsyncParser_convExp3153(Lns_2DDD(_env.LuaVM.String_find(rawLine, workPattern, workIndex, nil)))
+                        _endIndex := AsyncParser_convExp3153(Lns_2DDD(_env.GetVM().String_find(rawLine, workPattern, workIndex, nil)))
                         if _endIndex == nil{
-                            Util_err(_env, _env.LuaVM.String_format("%s:%d:%d: error: illegal string -- %s", []LnsAny{self.streamName, self.lineNo, index, rawLine}))
+                            Util_err(_env, _env.GetVM().String_format("%s:%d:%d: error: illegal string -- %s", []LnsAny{self.streamName, self.lineNo, index, rawLine}))
                         } else {
                             endIndex = _endIndex.(LnsInt)
                         }
@@ -777,7 +777,7 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
                     var workChar LnsInt
                     workChar = LnsInt(rawLine[endIndex-1])
                     if workChar == findChar{
-                        self.FP.addVal(_env, list, Types_TokenKind__Str, _env.LuaVM.String_sub(rawLine,index, endIndex), index)
+                        self.FP.addVal(_env, list, Types_TokenKind__Str, _env.GetVM().String_sub(rawLine,index, endIndex), index)
                         searchIndex = endIndex + 1
                         break
                     } else if workChar == 92{
@@ -801,12 +801,12 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
                 }
             } else if findChar == 63{
                 var codeChar string
-                codeChar = _env.LuaVM.String_sub(rawLine,index + 1, index + 1)
+                codeChar = _env.GetVM().String_sub(rawLine,index + 1, index + 1)
                 if nextChar == 92{
                     var quoted string
-                    quoted = _env.LuaVM.String_sub(rawLine,index + 2, index + 2)
+                    quoted = _env.GetVM().String_sub(rawLine,index + 2, index + 2)
                     if AsyncParser_quotedCharSet.Has(quoted){
-                        codeChar = _env.LuaVM.String_sub(rawLine,index + 1, index + 2)
+                        codeChar = _env.GetVM().String_sub(rawLine,index + 1, index + 2)
                     } else { 
                         codeChar = quoted
                     }
@@ -820,7 +820,7 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
                     _env.SetStackVal( self.luaMode) &&
                     _env.SetStackVal( findChar == 45) &&
                     _env.SetStackVal( nextChar == 45) ).(bool)){
-                    self.FP.addVal(_env, list, Types_TokenKind__Cmnt, _env.LuaVM.String_sub(rawLine,index, nil), index)
+                    self.FP.addVal(_env, list, Types_TokenKind__Cmnt, _env.GetVM().String_sub(rawLine,index, nil), index)
                     searchIndex = len(rawLine) + 1
                 } else if findChar == 47{
                     if nextChar == 42{
@@ -830,14 +830,14 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
                         self.FP.addVal(_env, list, Types_TokenKind__Cmnt, "/*" + comment, index)
                         searchIndex = nextIndex
                     } else if nextChar == 47{
-                        self.FP.addVal(_env, list, Types_TokenKind__Cmnt, _env.LuaVM.String_sub(rawLine,index, nil), index)
+                        self.FP.addVal(_env, list, Types_TokenKind__Cmnt, _env.GetVM().String_sub(rawLine,index, nil), index)
                         searchIndex = len(rawLine) + 1
                     } else { 
                         self.FP.addVal(_env, list, Types_TokenKind__Ope, "/", index)
                         searchIndex = index + 1
                     }
                 } else { 
-                    Util_err(_env, _env.LuaVM.String_format("%s:%d:%d: error: illegal syntax -- %s", []LnsAny{self.streamName, self.lineNo, index, rawLine}))
+                    Util_err(_env, _env.GetVM().String_format("%s:%d:%d: error: illegal syntax -- %s", []LnsAny{self.streamName, self.lineNo, index, rawLine}))
                 }
             }
         }
@@ -901,7 +901,7 @@ func (self *AsyncParser_Runner) InitAsyncParser_Runner(_env *LnsEnv, parserSrc L
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*AsyncParser_Parser)
             _exp.FP.Start(_env)
-            if Lns_op_not(LnsRun(_env, self.FP, 2, _env.LuaVM.String_format("parser - %s", []LnsAny{_exp.FP.Get_streamName(_env)}))){
+            if Lns_op_not(LnsRun(_env, self.FP, 2, _env.GetVM().String_format("parser - %s", []LnsAny{_exp.FP.Get_streamName(_env)}))){
                 _exp.FP.Stop(_env)
             }
         }

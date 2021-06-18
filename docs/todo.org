@@ -66,6 +66,7 @@ pub alge MetaOrModule {
       エラーにしなくて良いはず。
 
 * バグ
+
 - [ ] 直接 import しあっているとデッドロックする？
   
 - [ ] anonymous の __noasync チェックが出来ていない。
@@ -1083,6 +1084,7 @@ hoge.$val = 2; // error しない
 - [X] ループ内に定義している 関数内で break が指定できる。
      実際には break 出来ないのでエラーにするべき。
 - [X] accessor/method のアクセス制限に local を指定できない。
+- [X] __asyncLock 内から、 大域変数の mutable にアクセスできない。
   
   
   

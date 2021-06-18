@@ -1440,13 +1440,8 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                local scope = self.transUnit:get_scope()
                local asyncMode
                
-               if self.hasLuaval then
-                  asyncMode = Ast.Async.Noasync
-               else
-                
-                  asyncMode = Ast.Async.Async
-               end
                
+               asyncMode = Ast.Async.Async
                
                local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable )
                if self.hasLuaval then

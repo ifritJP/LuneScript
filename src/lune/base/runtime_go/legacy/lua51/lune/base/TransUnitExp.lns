@@ -1636,7 +1636,7 @@ fn TransUnit.checkNoasyncType( pos:&Parser.Position, funcTypeInfo:&Ast.TypeInfo 
          case .Func, .Method {
             switch curType.$asyncMode {
                case .Async, .Transient {
-                  if not self.getNSInfo( curType ).isLockedAsync() {
+                  if not self.getNSInfo( curType ).canAccessNoasync() {
                      // async の関数から、 noasync 関数は実行できない。
                      self.addErrMess(
                         pos,        
@@ -2279,11 +2279,25 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
    // 現在の名前空間が async で、
    // mutable な大域変数かクロージャ変数にアクセスしている場合エラー。
    let curNs = self.getCurrentNamespaceTypeInfo();
+   switch curNs.$kind {
+      case .Func, .Method {
+      }
+      default {
+         return;
+      }
+   }
+   
+   let nsInfo = self.getNSInfo( curNs );
    let mut warn = false;
-   if curNs.$asyncMode == .Async and symbolInfo.$name ~= "self" {
+   if not nsInfo.canAccessNoasync() and symbolInfo.$name ~= "self" {
       switch symbolInfo.$kind {
-         case .Arg, .Mbr, .Var {
+         case .Mbr {
             if not Ast.isPrimitive( symbolInfo.$typeInfo ) {
+               warn = true;
+            }
+         }
+         case .Arg, .Var {
+            if not symbolInfo.$scope.isInnerOf( unwrap curNs.$scope ) {
                warn = true;
             }
          }
@@ -2292,7 +2306,7 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
    if warn {
       switch curNs.$kind {
          case .Func {
-            if symbolInfo.$namespaceTypeInfo ~= curNs and
+            if not nsInfo.canAccessNoasync() and
                curNs.$asyncMode ~= .Transient
             {
                if not self.canBeAsyncParam( symbolInfo.$typeInfo ) {
@@ -2304,7 +2318,7 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
             }
          }
          case .Method {
-            if symbolInfo.$namespaceTypeInfo ~= curNs or
+            if not nsInfo.canAccessNoasync() or
                ( symbolInfo.$staticFlag and symbolInfo.$kind == .Mbr )
             {
                if not self.canBeAsyncParam( symbolInfo.$typeInfo ) {

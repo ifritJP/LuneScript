@@ -73,7 +73,8 @@ class Env {
    }
    local fn getLuavm() : str {
       if self.addEnvArg {
-         return "_env.LuaVM";
+         // return "_env.LuaVM";
+         return "_env.GetVM()";
       }
       return "Lns_getVM()";
    }

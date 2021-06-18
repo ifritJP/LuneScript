@@ -8408,7 +8408,7 @@ function TransUnit:checkNoasyncType( pos, funcTypeInfo )
             do
                local _switchExp = curType:get_asyncMode()
                if _switchExp == Ast.Async.Async or _switchExp == Ast.Async.Transient then
-                  if not self:getNSInfo( curType ):isLockedAsync(  ) then
+                  if not self:getNSInfo( curType ):canAccessNoasync(  ) then
                      
                      self:addErrMess( pos, string.format( "can't access noasync function in async. -- %s on %s", funcTypeInfo:getTxt(  ), curType:getTxt(  )) )
                   end
@@ -9045,12 +9045,28 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
    
    
    local curNs = self:getCurrentNamespaceTypeInfo(  )
+   do
+      local _switchExp = curNs:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Func or _switchExp == Ast.TypeInfoKind.Method then
+      else 
+         
+            return 
+      end
+   end
+   
+   
+   local nsInfo = self:getNSInfo( curNs )
    local warn = false
-   if curNs:get_asyncMode() == Ast.Async.Async and symbolInfo:get_name() ~= "self" then
+   if not nsInfo:canAccessNoasync(  ) and symbolInfo:get_name() ~= "self" then
       do
          local _switchExp = symbolInfo:get_kind()
-         if _switchExp == Ast.SymbolKind.Arg or _switchExp == Ast.SymbolKind.Mbr or _switchExp == Ast.SymbolKind.Var then
+         if _switchExp == Ast.SymbolKind.Mbr then
             if not Ast.isPrimitive( symbolInfo:get_typeInfo() ) then
+               warn = true
+            end
+            
+         elseif _switchExp == Ast.SymbolKind.Arg or _switchExp == Ast.SymbolKind.Var then
+            if not symbolInfo:get_scope():isInnerOf( _lune.unwrap( curNs:get_scope()) ) then
                warn = true
             end
             
@@ -9063,7 +9079,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
       do
          local _switchExp = curNs:get_kind()
          if _switchExp == Ast.TypeInfoKind.Func then
-            if symbolInfo:get_namespaceTypeInfo() ~= curNs and curNs:get_asyncMode() ~= Ast.Async.Transient then
+            if not nsInfo:canAccessNoasync(  ) and curNs:get_asyncMode() ~= Ast.Async.Transient then
                if not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), symbolInfo:get_typeInfo():getTxt(  )) )
                end
@@ -9071,7 +9087,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
             end
             
          elseif _switchExp == Ast.TypeInfoKind.Method then
-            if symbolInfo:get_namespaceTypeInfo() ~= curNs or (symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) then
+            if not nsInfo:canAccessNoasync(  ) or (symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) then
                if not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), symbolInfo:get_typeInfo():getTxt(  )) )
                end

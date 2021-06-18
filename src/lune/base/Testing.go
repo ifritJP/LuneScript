@@ -115,13 +115,13 @@ func (self *Testing_Result) InitTesting_Result(_env *LnsEnv, arg1 string, arg2 L
 }
 // 34: decl @lune.@base.@Testing.Result.outputResult
 func (self *Testing_Result) OutputResult(_env *LnsEnv, stream Lns_oStream) {
-    stream.Write(_env, _env.LuaVM.String_format("test total: %s %d (OK:%d, NG:%d)\n", []LnsAny{self.name, self.okNum + self.ngNum, self.okNum, self.ngNum}))
+    stream.Write(_env, _env.GetVM().String_format("test total: %s %d (OK:%d, NG:%d)\n", []LnsAny{self.name, self.okNum + self.ngNum, self.okNum, self.ngNum}))
 }
 
 // 40: decl @lune.@base.@Testing.Result.err
 func (self *Testing_Result) Err(_env *LnsEnv, mess string,mod string,lineNo LnsInt) {
     self.ngNum = self.ngNum + 1
-    Lns_io_stderr.Write(_env, _env.LuaVM.String_format("error: %s:%d: %s\n", []LnsAny{mod, lineNo, mess}))
+    Lns_io_stderr.Write(_env, _env.GetVM().String_format("error: %s:%d: %s\n", []LnsAny{mod, lineNo, mess}))
 }
 
 // 45: decl @lune.@base.@Testing.Result.isTrue
@@ -130,7 +130,7 @@ func (self *Testing_Result) IsTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg 
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.LuaVM.String_format("not true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("not true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
         _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
     return false
@@ -142,7 +142,7 @@ func (self *Testing_Result) IsNotTrue(_env *LnsEnv, val1 LnsAny,val1txt string,m
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.LuaVM.String_format("is true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("is true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
         _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
     return false
@@ -154,7 +154,7 @@ func (self *Testing_Result) IsNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg L
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.LuaVM.String_format("is not nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("is not nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
         _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
     return false
@@ -166,7 +166,7 @@ func (self *Testing_Result) IsNotNil(_env *LnsEnv, val1 LnsAny,val1txt string,ms
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.LuaVM.String_format("is nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("is nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
         _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
     return false
@@ -178,7 +178,7 @@ func (self *Testing_Result) CheckEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1tx
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.LuaVM.String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
         _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
     return false
@@ -190,7 +190,7 @@ func (self *Testing_Result) CheckNotEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.LuaVM.String_format("equal -- %s:%s:[%s] == %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("equal -- %s:%s:[%s] == %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
         _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
     return false
@@ -378,7 +378,7 @@ func (self *Testing_TestModuleInfo) AddCase(_env *LnsEnv, name string,testCase *
 // 147: decl @lune.@base.@Testing.TestModuleInfo.run
 func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
     self.runned = true
-    Lns_print([]LnsAny{_env.LuaVM.String_format("module: %s %s", []LnsAny{self.name, _env.LuaVM.String_rep("=", 30)})})
+    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
     {
         __forsortCollection1 := self.testcaseMap
         __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
@@ -386,7 +386,7 @@ func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
         for _, _name := range( __forsortSorted1.Items ) {
             testcase := __forsortCollection1.Items[ _name ].(Testing_TestCaseDownCast).ToTesting_TestCase()
             name := _name.(string)
-            Lns_print([]LnsAny{_env.LuaVM.String_format("%s: %s", []LnsAny{name, _env.LuaVM.String_rep("-", 15)})})
+            Lns_print([]LnsAny{_env.GetVM().String_format("%s: %s", []LnsAny{name, _env.GetVM().String_rep("-", 15)})})
             testcase.FP.Get_func(_env)(_env, NewTesting_Ctrl(_env, testcase.FP.Get_result(_env)))
         }
     }
@@ -397,7 +397,7 @@ func (self *Testing_TestModuleInfo) OutputResult(_env *LnsEnv, stream Lns_oStrea
     if Lns_op_not(self.runned){
         return 
     }
-    Lns_print([]LnsAny{_env.LuaVM.String_format("module: %s %s", []LnsAny{self.name, _env.LuaVM.String_rep("=", 30)})})
+    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
     {
         __forsortCollection1 := self.testcaseMap
         __forsortSorted1 := __forsortCollection1.CreateKeyListStr()

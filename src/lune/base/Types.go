@@ -340,13 +340,13 @@ func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName 
 // 140: decl @lune.@base.@Types.Position.getDisplayTxt
 func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     var txt string
-    txt = _env.LuaVM.String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
+    txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
     var orgPos *Types_Position
     orgPos = self.FP.Get_orgPos(_env)
     if self != orgPos{
         var txt2 string
-        txt2 = _env.LuaVM.String_format("%s:%d:%d", []LnsAny{orgPos.StreamName, orgPos.LineNo, orgPos.Column})
-        return _env.LuaVM.String_format("%s: (%s)", []LnsAny{txt2, txt})
+        txt2 = _env.GetVM().String_format("%s:%d:%d", []LnsAny{orgPos.StreamName, orgPos.LineNo, orgPos.Column})
+        return _env.GetVM().String_format("%s: (%s)", []LnsAny{txt2, txt})
     }
     return txt
 }
@@ -471,11 +471,11 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
         return self.Txt
     }
     if _switch1 := LnsInt(self.Txt[1-1]); _switch1 == 39 || _switch1 == 34 {
-        return _env.LuaVM.String_sub(self.Txt,2, len(self.Txt) - 1)
+        return _env.GetVM().String_sub(self.Txt,2, len(self.Txt) - 1)
     } else if _switch1 == 96 {
-        return _env.LuaVM.String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
+        return _env.GetVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
-    panic(_env.LuaVM.String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
+    panic(_env.GetVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
 // insert a dummy
     return ""
 }

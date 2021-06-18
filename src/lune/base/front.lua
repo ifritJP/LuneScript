@@ -2708,14 +2708,14 @@ function Front:exec(  )
          end )
       elseif _switchExp == Option.ModeKind.Shebang then
          do
-            local modObj = self:loadModule( (self:scriptPath2Module( self.option.scriptPath ) ) )
-            if modObj ~= nil then
-               do
+            do
+               local modObj = self:loadModule( (self:scriptPath2Module( self.option.scriptPath ) ) )
+               if modObj ~= nil then
                   local code = Depend.runMain( modObj['__main'], self.option.shebangArgList )
                   os.exit( code )
                end
-               
             end
+            
          end
          
       elseif _switchExp == Option.ModeKind.Exec then

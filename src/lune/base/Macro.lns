@@ -86,7 +86,7 @@ fn runLuaOnLnsToMacroProc(
 // pub form toListLua( val:Luaval<&stem> ) __noasync : &List<&stem>;
 // pub let toList = loadCode( "return function( ... ) return { ... } end" )@@toListLua;
 pub form toListEmptyLua() : &List<&stem>;
-pub form toLuavalLuaFunc( val:&stem! ) __noasync : &stem!;
+pub form toLuavalLuaFunc( val:&stem! ) __async : &stem!;
 pub let toLuavalNoasync =
    loadCode( "return function( val ) return val end" )@@toLuavalLuaFunc;
 

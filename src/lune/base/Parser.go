@@ -29,7 +29,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
     }
     if _switch1 := LnsInt(txt[1-1]); _switch1 == 39 || _switch1 == 34 {
     } else {
-        return _env.LuaVM.String_sub(txt,4, len(txt) - 3)
+        return _env.GetVM().String_sub(txt,4, len(txt) - 3)
     }
     var findChar LnsInt
     findChar = LnsInt(txt[1-1])
@@ -47,9 +47,9 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
         var endIndex LnsInt
         
         {
-            _endIndex := Parser_convExp2761(Lns_2DDD(_env.LuaVM.String_find(workTxt, workPattern, workIndex, nil)))
+            _endIndex := Parser_convExp2761(Lns_2DDD(_env.GetVM().String_find(workTxt, workPattern, workIndex, nil)))
             if _endIndex == nil{
-                Util_err(_env, _env.LuaVM.String_format("error: illegal string -- %s", []LnsAny{workTxt}))
+                Util_err(_env, _env.GetVM().String_format("error: illegal string -- %s", []LnsAny{workTxt}))
             } else {
                 endIndex = _endIndex.(LnsInt)
             }
@@ -57,14 +57,14 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
         var workChar LnsInt
         workChar = LnsInt(workTxt[endIndex-1])
         if workChar == findChar{
-            return retTxt + _env.LuaVM.String_sub(workTxt,setIndex, endIndex - 1)
+            return retTxt + _env.GetVM().String_sub(workTxt,setIndex, endIndex - 1)
         } else if workChar == 92{
             var quote LnsInt
             quote = LnsInt(workTxt[endIndex + 1-1])
             if _switch2 := quote; _switch2 == 39 || _switch2 == 34 {
-                retTxt = _env.LuaVM.String_format("%s%s%c", []LnsAny{retTxt, _env.LuaVM.String_sub(workTxt,setIndex, endIndex - 1), quote})
+                retTxt = _env.GetVM().String_format("%s%s%c", []LnsAny{retTxt, _env.GetVM().String_sub(workTxt,setIndex, endIndex - 1), quote})
             } else {
-                retTxt = _env.LuaVM.String_format("%s%s", []LnsAny{retTxt, _env.LuaVM.String_sub(workTxt,setIndex, endIndex + 1)})
+                retTxt = _env.GetVM().String_format("%s%s", []LnsAny{retTxt, _env.GetVM().String_sub(workTxt,setIndex, endIndex + 1)})
             }
             workIndex = endIndex + 2
             setIndex = workIndex
@@ -115,7 +115,7 @@ func Parser_quoteStr(_env *LnsEnv, txt string) string {
             } else if _switch1 == 92 {
                 part = part + "\\\\"
             } else {
-                part = part + _env.LuaVM.String_format("%c", []LnsAny{char})
+                part = part + _env.GetVM().String_format("%c", []LnsAny{char})
             }
         }
     }
@@ -583,14 +583,14 @@ func (self *Parser_DefaultPushbackParser) GetNearCode(_env *LnsEnv) string {
                 var token *Types_Token
                 token = self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token()
                 if token.Consecutive{
-                    code = _env.LuaVM.String_format("%s%s", []LnsAny{code, self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token().Txt})
+                    code = _env.GetVM().String_format("%s%s", []LnsAny{code, self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token().Txt})
                 } else { 
-                    code = _env.LuaVM.String_format("%s %s", []LnsAny{code, self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token().Txt})
+                    code = _env.GetVM().String_format("%s %s", []LnsAny{code, self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token().Txt})
                 }
             }
         }
     }
-    return _env.LuaVM.String_format("%s -- current '%s'", []LnsAny{code, self.currentToken.Txt})
+    return _env.GetVM().String_format("%s -- current '%s'", []LnsAny{code, self.currentToken.Txt})
 }
 
 // 356: decl @lune.@base.@Parser.DefaultPushbackParser.getStreamName

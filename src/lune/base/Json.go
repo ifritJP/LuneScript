@@ -61,7 +61,7 @@ func Json_convExp1630(arg1 []LnsAny) (LnsAny, bool) {
 }
 // 6: decl @lune.@base.@Json.getRawTxt
 func Json_getRawTxt_0_(_env *LnsEnv, token *Types_Token) string {
-    return _env.LuaVM.String_sub(token.Txt,2, -2)
+    return _env.GetVM().String_sub(token.Txt,2, -2)
 }
 
 // 10: decl @lune.@base.@Json.getVal

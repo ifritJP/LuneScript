@@ -634,11 +634,12 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
 
             let mut scope = self.transUnit.$scope;
             let asyncMode:Ast.Async;
-            if self.hasLuaval {
-               asyncMode = .Noasync;
-            } else {
-               asyncMode = .Async;
-            }
+            // if self.hasLuaval {
+            //    asyncMode = .Noasync;
+            // } else {
+            //    asyncMode = .Async;
+            // }
+            asyncMode = .Async;
             
             let mut typeInfo = self.processInfo.createFuncAsync(
                abstractFlag, true, scope, kind,

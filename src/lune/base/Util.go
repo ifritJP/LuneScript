@@ -42,7 +42,7 @@ func Util_err(_env *LnsEnv, message string) {
         panic(message)
     }
     Util_errorLog(_env, message)
-    _env.LuaVM.OS_exit(Util_errorCode)
+    _env.GetVM().OS_exit(Util_errorCode)
 }
 
 // 55: decl @lune.@base.@Util.splitStr
@@ -98,7 +98,7 @@ func Util_getReadyCode(_env *LnsEnv, depPath string,tgtPath string) bool {
         return true
     }
     Log_log(_env, Log_Level__Warn, __func__, 349, Log_CreateMessage(func(_env *LnsEnv) string {
-        return _env.LuaVM.String_format("not ready %g < %g : %s, %s", []LnsAny{tgtTime, depTime, tgtPath, depPath})
+        return _env.GetVM().String_format("not ready %g < %g : %s, %s", []LnsAny{tgtTime, depTime, tgtPath, depPath})
     }))
     
     return false
@@ -106,12 +106,12 @@ func Util_getReadyCode(_env *LnsEnv, depPath string,tgtPath string) bool {
 
 // 354: decl @lune.@base.@Util.scriptPath2Module
 func Util_scriptPath2Module(_env *LnsEnv, path string) string {
-    if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(path,"^/", nil, nil))){
+    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"^/", nil, nil))){
         Util_err(_env, "script must be relative-path -- " + path)
     }
     var mod string
-    mod = Util_convExp1992(Lns_2DDD(_env.LuaVM.String_gsub(Lns_car(_env.LuaVM.String_gsub(path,"^./", "")).(string),"/", ".")))
-    return Lns_car(_env.LuaVM.String_gsub(mod, "%.lns$", "")).(string)
+    mod = Util_convExp1992(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
+    return Lns_car(_env.GetVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
 // 362: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
@@ -119,33 +119,33 @@ func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny)
     if projDir != nil{
         projDir_301 := projDir.(string)
         var workpath string
-        if Lns_op_not(Lns_car(_env.LuaVM.String_find(projDir_301,"/$", nil, nil))){
+        if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_301,"/$", nil, nil))){
             workpath = projDir_301 + "/"
         } else { 
             workpath = projDir_301
         }
-        path = Util_convExp2062(Lns_2DDD(_env.LuaVM.String_gsub(path,"^" + workpath, "")))
+        path = Util_convExp2062(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
     }
     return Util_scriptPath2Module(_env, path)
 }
 
 // 375: decl @lune.@base.@Util.pathJoin
 func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
-    if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(path,"^/", nil, nil))){
+    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"^/", nil, nil))){
         return path
     }
-    if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(dir,"/$", nil, nil))){
-        return _env.LuaVM.String_format("%s%s", []LnsAny{dir, path})
+    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(dir,"/$", nil, nil))){
+        return _env.GetVM().String_format("%s%s", []LnsAny{dir, path})
     }
-    return _env.LuaVM.String_format("%s/%s", []LnsAny{dir, path})
+    return _env.GetVM().String_format("%s/%s", []LnsAny{dir, path})
 }
 
 // 385: decl @lune.@base.@Util.parentPath
 func Util_parentPath(_env *LnsEnv, path string) string {
-    if Lns_isCondTrue( Lns_car(_env.LuaVM.String_find(path,"/$", nil, nil))){
-        path = Util_convExp2149(Lns_2DDD(_env.LuaVM.String_gsub(path,"/$", "")))
+    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
+        path = Util_convExp2149(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
     }
-    return Lns_car(_env.LuaVM.String_gsub(path,"/[^/]+$", "")).(string)
+    return Lns_car(_env.GetVM().String_gsub(path,"/[^/]+$", "")).(string)
 }
 
 // 392: decl @lune.@base.@Util.searchProjDir
@@ -156,7 +156,7 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
         if Depend_existFile(_env, Util_pathJoin(_env, work, "lune.js")){
             return work
         }
-        work = Util_convExp2209(Lns_2DDD(_env.LuaVM.String_gsub(work,"/[^/]+$", "")))
+        work = Util_convExp2209(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
     }
     return nil
 }
@@ -445,7 +445,7 @@ func (self *Util_TxtStream) GetSubstring(_env *LnsEnv, fromLineNo LnsInt,toLineN
                 _env.SetStackVal( index > self.lineList.Len()) ).(bool){
                 break
             }
-            txt = _env.LuaVM.String_format("%s%s", []LnsAny{txt, self.lineList.GetAt(index).(string)})
+            txt = _env.GetVM().String_format("%s%s", []LnsAny{txt, self.lineList.GetAt(index).(string)})
         }
     }
     return txt
@@ -454,7 +454,7 @@ func (self *Util_TxtStream) GetSubstring(_env *LnsEnv, fromLineNo LnsInt,toLineN
 // 190: decl @lune.@base.@Util.TxtStream.read
 func (self *Util_TxtStream) Read(_env *LnsEnv, mode LnsAny) LnsAny {
     if mode != "*l"{
-        Util_err(_env, _env.LuaVM.String_format("not support -- %s", []LnsAny{mode}))
+        Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{mode}))
     }
     if self.lineNo > self.lineList.Len(){
         return nil
@@ -463,7 +463,7 @@ func (self *Util_TxtStream) Read(_env *LnsEnv, mode LnsAny) LnsAny {
     var line string
     line = self.lineList.GetAt(self.lineNo - 1).(string)
     if Str_endsWith(_env, line, "\n"){
-        return _env.LuaVM.String_sub(line,1, len(line) - 1)
+        return _env.GetVM().String_sub(line,1, len(line) - 1)
     }
     return line
 }
@@ -611,7 +611,7 @@ func (self *Util_SimpleSourceOStream) Write(_env *LnsEnv, txt string) {
     for _, _line := range( Str_getLineList(_env, txt).Items ) {
         line := _line.(string)
         if self.needIndent{
-            stream.Write(_env, _env.LuaVM.String_rep(" ", self.FP.get_indent(_env)))
+            stream.Write(_env, _env.GetVM().String_rep(" ", self.FP.get_indent(_env)))
             self.needIndent = false
         }
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||

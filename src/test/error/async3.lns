@@ -233,3 +233,28 @@ let globalVal2:&List<int> = [];
       }
    }
 }
+{
+   let list:List<int> = [];
+
+   class Hoge extend (__Runner) {
+      fn func() __noasync {
+         list.insert( 1 );
+      }
+      pub fn run() __async mut {
+         __asyncLock {
+            list.insert( 1 );
+            self.func();
+         }
+         __luaLock {
+            list.insert( 1 );
+            self.func();
+         }
+         __unsafe {
+            list.insert( 1 ); // error
+            self.func(); // error
+         }
+         list.insert( 1 ); // error
+         self.func(); // error
+      }
+   }
+}
