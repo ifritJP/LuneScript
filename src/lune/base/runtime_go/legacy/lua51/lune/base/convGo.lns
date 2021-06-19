@@ -1903,7 +1903,11 @@ pub override fn convFilter.processRoot(
    self.builtin2runtime = builtin2runtime;
 
    self.builtin2runtimeEnv = {
-      self.builtinFuncs.__lns_runtime_log: "LnsLog"
+      self.builtinFuncs.__lns_runtime_log: "LnsLog",
+      self.builtinFuncs.__lns_runtime_enableLog: "LnsStartRunnerLog",
+      self.builtinFuncs.__lns_runtime_dumpLog: "LnsDumpRunnerLog",
+      self.builtinFuncs.__lns_sync_createFlag: "LnsCreateSyncFlag",
+      self.builtinFuncs.__lns_sync_createProcesser: "LnsCreateProcessor",
    };
    
 
@@ -1914,6 +1918,7 @@ pub override fn convFilter.processRoot(
       Ast.builtinTypeStem : "LnsAny",
       Ast.builtinTypeString : "string",
       Ast.builtinTypeBool : "bool",
+      Ast.builtinTypeProcessor : "*LnsProcessor",
       self.builtinFuncs.ostream_: "Lns_oStream",
       self.builtinFuncs.istream_: "Lns_iStream",
       self.builtinFuncs.luastream_ : "Lns_luaStream",
@@ -2135,6 +2140,54 @@ pub override fn convFilter.processSubfile(
 {
    //Util.err( "not support -- %s" (__func__) );
 }
+
+pub override fn convFilter.processRequest(
+   node: &Nodes.RequestNode, opt:Opt ) mut
+{
+   self.write( "func() ");
+   self.outputRetType( node.$expTypeList );
+   self.writeln( "{" );
+   self.pushIndent( ## );
+
+   let retVars:List<str> = [];
+   foreach retType, index in node.$expTypeList {
+      let varSym = "ret%d" (index);
+      retVars.insert( varSym );
+      self.writeln( "var %s %s" (varSym, self.type2gotype(retType) ) );
+   }
+   filter( node.$processor, self, node );
+   self.writeln( ".Request( _env, func( _env *LnsEnv ) {");
+   self.pushIndent(##);
+
+   if #retVars > 0 {
+      foreach varSym, index in retVars {
+         self.writeln( varSym );
+         if index ~= #retVars {
+            self.write( "," );
+         }
+      }
+      self.write( "=" );
+   }
+   filter( node.$exp, self, node );
+   self.popIndent();
+   
+   self.writeln( "" );
+   self.write( "}" );
+   self.writeln( ")");
+   self.popIndent();
+
+   if #retVars > 0 {
+      self.write( "return " );
+      foreach varSym, index in retVars {
+         self.writeln( varSym );
+         if index ~= #retVars {
+            self.write( "," );
+         }
+      }
+      self.writeln( "" );
+   }
+   self.write( "}()" );   
+};
 
 pub override fn convFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt: Opt ) mut
@@ -4698,15 +4751,8 @@ pub fn convFilter.outputCallPrefix(
                } else {
                   switch prefixKind {
                      case .Class {
-                        switch funcType {
-                           case self.builtinFuncs.__lns_sync_createFlag {
-                              self.write( "LnsCreateSyncFlag" );
-                           }
-                           default {
-                              // class は継承があるので FP 経由で実行する
-                              self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
-                           }
-                        }
+                        // class は継承があるので FP 経由で実行する
+                        self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
                      }
                      default {
                         if! let runtime = self.getVM( funcType ) {

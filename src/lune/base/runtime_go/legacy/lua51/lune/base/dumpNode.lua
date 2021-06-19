@@ -292,6 +292,15 @@ function dumpFilter:processSubfile( node, opt )
 end
 
 
+function dumpFilter:processRequest( node, opt )
+
+   self:dump( opt, node, "" )
+   filter( node:get_processor(), self, opt:nextOpt(  ) )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
+end
+
+
+
 function dumpFilter:processAsyncLock( node, opt )
 
    self:dump( opt, node, Nodes.LockKind:_getTxt( node:get_lockKind())

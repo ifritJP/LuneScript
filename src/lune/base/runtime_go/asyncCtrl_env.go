@@ -26,6 +26,8 @@ SOFTWARE.
 
 package runtimelns
 
+import "fmt"
+
 type Lns_pipeMtd interface {
 	Put(_env *LnsEnv, val LnsAny)
 	Get(_env *LnsEnv) LnsAny
@@ -98,4 +100,71 @@ func LnsJoin(_env *LnsEnv, runner LnsRunner) {
 
 func LnsLog(_env *LnsEnv, mess string) {
 	lns_threadMgrInfo.log(_env, mess)
+}
+
+func LnsStartRunnerLog(_env *LnsEnv, valid bool) {
+	lns_thread_event_on = valid
+}
+
+func LnsDumpRunnerLog(_env *LnsEnv, stream Lns_oStream) {
+	lns_threadMgrInfo.dumpEventLog(
+		func(txt string) {
+			stream.Write(_env, txt)
+		})
+}
+
+type LnsProcessor struct {
+	running bool
+	// processor 終了管理の flag
+	syncFlag *Lns_syncFlag
+	// processor の名前
+	name string
+	// processor へのリクエスト queue
+	reqQueue chan func(*LnsEnv)
+	// processor へのリクエスト処理終了待ち queue
+	respQueue chan bool
+}
+
+func LnsCreateProcessor(_env *LnsEnv, name string) *LnsProcessor {
+	processor := &LnsProcessor{
+		true,
+		&Lns_syncFlag{},
+		name,
+		make(chan func(*LnsEnv), 1),
+		make(chan bool, 1),
+	}
+
+	lns_threadMgrInfo.run(processor, _RUN_MODE_ON_FULL_IGNORE, _env, name)
+
+	return processor
+}
+
+func (self *LnsProcessor) Run(_env *LnsEnv) {
+	for true {
+		request := <-self.reqQueue
+		if Lns_IsNil(request) {
+			return
+		}
+		request(_env)
+		self.respQueue <- true
+	}
+}
+
+func (self *LnsProcessor) GetLnsSyncFlag() *Lns_syncFlag {
+	return self.syncFlag
+}
+
+func (self *LnsProcessor) Request(_env *LnsEnv, proc func(*LnsEnv)) {
+	if !self.running {
+		panic(fmt.Sprintf("Thie processer is not running -- %s", self.name))
+	}
+	self.reqQueue <- proc
+	<-self.respQueue
+}
+
+func (self *LnsProcessor) End(_env *LnsEnv) {
+	if self.running {
+		self.running = false
+		self.reqQueue <- nil
+	}
 }

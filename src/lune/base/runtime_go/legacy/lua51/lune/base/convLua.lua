@@ -1491,6 +1491,13 @@ function ConvFilter:processSubfile( node, opt )
 end
 
 
+function ConvFilter:processRequest( node, opt )
+
+   filter( node:get_exp(), self, node )
+end
+
+
+
 function ConvFilter:processAsyncLock( node, opt )
 
    filter( node:get_block(), self, node )
@@ -3303,9 +3310,9 @@ function ConvFilter:processExpCall( node, opt )
       
       do
          local _switchExp = node:get_func():get_expType()
-         if _switchExp == self.builtinFunc.__lns_runtime_log then
+         if _switchExp == self.builtinFunc.__lns_runtime_log or _switchExp == self.builtinFunc.__lns_runtime_enableLog or _switchExp == self.builtinFunc.__lns_runtime_dumpLog or _switchExp == self.builtinFunc.__processor_end then
             return false
-         elseif _switchExp == self.builtinFunc.list___new then
+         elseif _switchExp == self.builtinFunc.list___new or _switchExp == self.builtinFunc.__lns_sync_createProcesser then
             self:write( "{}" )
             return false
          elseif _switchExp == self.builtinFunc.__lns_sync_createFlag then

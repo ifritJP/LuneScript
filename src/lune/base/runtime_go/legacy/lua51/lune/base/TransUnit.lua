@@ -2098,6 +2098,19 @@ function TransUnit:skipBlock( recordToken )
 end
 
 
+function TransUnit:analyzeRequest( reqToken )
+
+   local processor = self:analyzeExp( false, true, false, nil, Ast.builtinTypeProcessor )
+   if processor:get_expType() ~= Ast.builtinTypeProcessor then
+      self:addErrMess( processor:get_pos(), string.format( "It must be 'processor'. -- %s", processor:get_expType():getTxt(  )) )
+   end
+   
+   local exp = self:analyzeExp( false, true, false, nil, nil )
+   
+   return Nodes.RequestNode.create( self.nodeManager, reqToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), exp:get_expTypeList(), processor, exp )
+end
+
+
 function TransUnit:analyzeAsyncLock( asyncToken, lockKind )
 
    local nsInfo = self:getNSInfo( self:getCurrentNamespaceTypeInfo(  ) )
@@ -5366,10 +5379,6 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    
    
    if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
-      if not classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeMapping, nil ) then
-         self:addErrMess( firstToken.pos, "__AsyncItem implemented class must inherit Mapping." )
-      end
-      
       
       local pipeType = self.processInfo:createGeneric( self.builtinFunc.__pipe_, {classTypeInfo}, self.moduleType )
       local createPipeFuncTypeInfo = self.processInfo:createFuncAsync( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, true, false, true, Ast.AccessMode.Pub, "_createPipe", Ast.Async.Async, nil, {Ast.builtinTypeInt}, {pipeType:get_nilableTypeInfo()}, true )
@@ -10913,6 +10922,8 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Fn, nil, false, false )
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "unwrap" then
       exp = self:analyzeExpUnwrap( token )
+   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "__request" then
+      exp = self:analyzeRequest( token )
    elseif token.kind == Parser.TokenKind.Symb then
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, false, canLeftExp )
       local symbolInfoList = exp:getSymbolInfo(  )

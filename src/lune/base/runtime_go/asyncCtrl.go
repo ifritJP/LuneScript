@@ -121,6 +121,8 @@ const (
 	_RUN_MODE_ON_FULL_QUEUE = 1
 	// limitNum オーバー時、 処理を動かさない
 	_RUN_MODE_ON_FULL_SKIP = 2
+	// limitNum オーバーを無視する
+	_RUN_MODE_ON_FULL_IGNORE = 3
 )
 
 func (self *Lns_ThreadMgrInfo) log(_env *LnsEnv, mess string) {
@@ -161,12 +163,12 @@ func (self *Lns_ThreadMgrInfo) run(
 		runnerInfo := &lnsRunnerInfo{runner, runnerName, self.totalReqNum}
 
 		kind := _RUN_KIND_ASYNC
-		if self.aliveNum >= self.limitNum {
-			if mode == 0 {
+		if self.aliveNum >= self.limitNum && mode != _RUN_MODE_ON_FULL_IGNORE {
+			if mode == _RUN_MODE_ON_FULL_SYNC {
 				kind = _RUN_KIND_SYNC
-			} else if mode == 1 {
+			} else if mode == _RUN_MODE_ON_FULL_QUEUE {
 				kind = _RUN_KIND_QUEUE
-			} else if mode == 2 {
+			} else if mode == _RUN_MODE_ON_FULL_SKIP {
 				kind = _RUN_KIND_SKIP
 			} else {
 				panic(fmt.Sprintf("illegal async run mode -- %d", mode))

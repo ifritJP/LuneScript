@@ -288,6 +288,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
+local validAsyncMacro = false
 
 local function loadCode( code )
 
@@ -631,6 +632,12 @@ function MacroAnalyzeInfo:__init(typeInfo, mode)
    self.mode = mode
    self.argIndex = 1
 end
+function MacroAnalyzeInfo:clone(  )
+
+   local obj = MacroAnalyzeInfo.new(self.typeInfo, self.mode)
+   obj.argIndex = self.argIndex
+   return obj
+end
 function MacroAnalyzeInfo:equalsArgTypeList( argTypeList )
 
    return self.typeInfo:get_argTypeInfoList() == argTypeList
@@ -696,6 +703,52 @@ function MacroCtrl:__init(macroEval)
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
    
    self.macroLocalVarMap = nil
+end
+function MacroCtrl:clone(  )
+
+   local obj = MacroCtrl.new(self.macroEval)
+   
+   obj.toLuavalLuaAsync = self.toLuavalLuaAsync
+   obj.useLnsLoad = self.useLnsLoad
+   
+   
+   
+   do
+      for key, val in pairs( self.declMacroInfoMap ) do
+         obj.declMacroInfoMap[key] = val
+      end
+      
+   end
+   
+   
+   obj.isDeclaringMacro = self.isDeclaringMacro
+   obj.tokenExpanding = self.tokenExpanding
+   _lune._Set_or(obj.useModuleMacroSet, self.useModuleMacroSet )
+   do
+      for key, val in pairs( self.typeId2MacroInfo ) do
+         obj.typeId2MacroInfo[key] = val
+      end
+      
+   end
+   
+   
+   do
+      for key, val in pairs( self.symbol2ValueMapForMacro ) do
+         obj.symbol2ValueMapForMacro[key] = val
+      end
+      
+   end
+   
+   
+   obj.analyzeInfo = self.analyzeInfo:clone(  )
+   obj.macroCallLineNo = self.macroCallLineNo
+   for __index, val in ipairs( self.macroAnalyzeInfoStack ) do
+      table.insert( obj.macroAnalyzeInfoStack, val )
+   end
+   
+   obj.macroLocalVarMap = nil
+   
+   return obj
 end
 function MacroCtrl:setToUseLnsLoad(  )
 
@@ -771,7 +824,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
       
       local innerMacro = macroTypeInfo:getModule(  ) == moduleTypeInfo
       
-      local asyncMacro = innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
+      local asyncMacro = validAsyncMacro and innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
       
       local toLuaval
       
@@ -1099,7 +1152,7 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
    local luaCode = self.macroEval:evalToLuaCode( processInfo, node )
    local macroObj, err
    
-   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, not Ast.isPubToExternal( node:get_expType():get_accessMode() ) )
+   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, validAsyncMacro and not Ast.isPubToExternal( node:get_expType():get_accessMode() ) )
    
    if macroObj ~= nil then
       

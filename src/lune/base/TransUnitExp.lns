@@ -4223,7 +4223,11 @@ fn TransUnit.analyzeExp(
    }  
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "unwrap" {
       exp = self.analyzeExpUnwrap( token );
-   }  
+   }
+   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "__request" {
+      exp = self.analyzeRequest( token );
+
+   }
    elseif token.kind == Parser.TokenKind.Symb {
       exp = self.analyzeExpSymbol(
          firstToken, token, .Symbol, nil, false, canLeftExp );

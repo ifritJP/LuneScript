@@ -2275,3 +2275,29 @@ _section();
    runner.get();
    print( "get2" );
 }
+_section();
+{
+   fn func() {
+      __lns.runtime.log( "hoge" );
+   }
+
+   __lns.runtime.enableLog( true );
+   
+   let mut processor = __lns.Sync.createProcesser( "test" );
+   __request processor func();
+
+   if! let mut stream = io.open( "log", "w") {
+      __lns.runtime.dumpLog( stream );
+      stream.seek( "set", 0);
+      while true {
+         let! line = stream.read( "*l" ) {
+            break;
+         };
+         print( (line.gsub( "^ *%d+:", "ONLY_GO" )) );
+      }
+      stream.close();
+   }
+   processor.end();
+
+   __lns.runtime.enableLog( false );
+}

@@ -272,6 +272,7 @@ local function createReserveInfo( luaMode )
       keywordSet["pro"]= true
       keywordSet["pri"]= true
       keywordSet["fn"]= true
+      keywordSet["__request"]= true
       keywordSet["each"]= true
       keywordSet["form"]= true
       keywordSet["class"]= true

@@ -4953,6 +4953,8 @@ pub let builtinTypeMapping:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Mapping", "Mapping" , .IF## );
 pub let builtinTypeRunner:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__Runner", "__Runner" , .IF## );
+pub let builtinTypeProcessor:&TypeInfo = NormalTypeInfo.createBuiltin(
+   "__Processor", "__Processor" , .IF, nil, [ builtinTypeRunner ] );
 pub let builtinTypeAsyncItem:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem" , .IF## );
 pub let builtinTypeString:&TypeInfo =

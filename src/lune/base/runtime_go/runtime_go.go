@@ -169,9 +169,9 @@ func Lns_IsNil(val LnsAny) bool {
 		return false
 	default:
 		value := reflect.ValueOf(val)
-		if value.Kind() == reflect.Func {
-			return false
-		}
+		// if value.Kind() == reflect.Func {
+		// 	return false
+		// }
 		return value.IsNil()
 	}
 }
@@ -521,10 +521,10 @@ func Lns_ToString(val LnsAny) string {
 		if value.Kind() == reflect.Func {
 			return fmt.Sprintf("function:%T", val)
 		}
-        if value.CanAddr() {
-            return fmt.Sprintf("table:%T(%p)", val, value.Addr())
-        }
-        return fmt.Sprintf("table:%T(%p)", val, val )
+		if value.CanAddr() {
+			return fmt.Sprintf("table:%T(%p)", val, value.Addr())
+		}
+		return fmt.Sprintf("table:%T(%p)", val, val)
 	}
 }
 

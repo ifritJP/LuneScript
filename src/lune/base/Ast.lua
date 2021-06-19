@@ -6773,6 +6773,9 @@ _moduleObj.builtinTypeMapping = builtinTypeMapping
 local builtinTypeRunner = NormalTypeInfo.createBuiltin( "__Runner", "__Runner", TypeInfoKind.IF )
 _moduleObj.builtinTypeRunner = builtinTypeRunner
 
+local builtinTypeProcessor = NormalTypeInfo.createBuiltin( "__Processor", "__Processor", TypeInfoKind.IF, nil, {_moduleObj.builtinTypeRunner} )
+_moduleObj.builtinTypeProcessor = builtinTypeProcessor
+
 local builtinTypeAsyncItem = NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem", TypeInfoKind.IF )
 _moduleObj.builtinTypeAsyncItem = builtinTypeAsyncItem
 

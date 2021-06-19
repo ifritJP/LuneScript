@@ -84,6 +84,7 @@ Set<str>, Set<str>, Set<str>, Map<str,str[@]>
       keywordSet.add( "pro" );
       keywordSet.add( "pri" );
       keywordSet.add( "fn" );
+      keywordSet.add( "__request" );
       keywordSet.add( "each" );
       keywordSet.add( "form" );
       keywordSet.add( "class" );

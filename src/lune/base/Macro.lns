@@ -32,6 +32,9 @@ import lune.base.Types;
 import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
 
+// マクロ処理を非同期に行なう場合 true
+let validAsyncMacro = false;
+
 
 fn loadCode( code:str ) : Luaval<&stem> {
    let ret;
@@ -247,6 +250,12 @@ pub class MacroAnalyzeInfo {
       self.argIndex = 1;
    }
 
+   pub fn clone() : MacroAnalyzeInfo {
+      let mut obj = new MacroAnalyzeInfo( self.typeInfo, self.mode );
+      obj.argIndex = self.argIndex;
+      return obj;
+   }
+
    pub fn equalsArgTypeList( argTypeList: &List<&Ast.TypeInfo>! ) : bool {
       return self.typeInfo.$argTypeInfoList == argTypeList;
    }
@@ -287,7 +296,7 @@ pub class MacroCtrl
    pri let mut symbol2ValueMapForMacro: Map<str,Nodes.MacroValInfo>;
    /** マクロのモード */
    pri let mut analyzeInfo: MacroAnalyzeInfo {pub};
-   pri let mut macroAnalyzeInfoStack: List<MacroAnalyzeInfo>;
+   pri let macroAnalyzeInfoStack: List<MacroAnalyzeInfo>;
    /** true の場合、Token 展開中 */
    pri let mut tokenExpanding:bool {pub};
    /** マクロをコールしている行番号 */
@@ -323,6 +332,37 @@ pub class MacroCtrl
       self.macroAnalyzeInfoStack = [ self.analyzeInfo ];
 
       self.macroLocalVarMap = nil;
+   }
+
+   pub fn clone() : MacroCtrl {
+      let mut obj = new MacroCtrl( self.macroEval );
+
+      obj.toLuavalLuaAsync = self.toLuavalLuaAsync;
+      obj.useLnsLoad = self.useLnsLoad;
+
+      macro _cloneMap( dst:__exp, src:__exp ) {
+         {}
+         {
+            foreach val, key in ,,src {
+               ,,dst[ key ] = val;
+            }
+         }
+      }
+
+      _cloneMap( obj.declMacroInfoMap, self.declMacroInfoMap );
+      obj.isDeclaringMacro = self.isDeclaringMacro;
+      obj.tokenExpanding = self.tokenExpanding;
+      obj.useModuleMacroSet.or( self.useModuleMacroSet );
+      _cloneMap( obj.typeId2MacroInfo, self.typeId2MacroInfo );
+      _cloneMap( obj.symbol2ValueMapForMacro, self.symbol2ValueMapForMacro );
+      obj.analyzeInfo = self.analyzeInfo.clone();
+      obj.macroCallLineNo = self.macroCallLineNo;
+      foreach val in self.macroAnalyzeInfoStack {
+         obj.macroAnalyzeInfoStack.insert( val );
+      }
+      obj.macroLocalVarMap = nil;
+      
+      return obj;
    }
 
    pub fn setToUseLnsLoad() mut {
@@ -406,7 +446,8 @@ pub fn MacroCtrl.evalMacroOp(
       // 外部公開マクロは、別のスレッドで実行できるように、
       // 標準 Lua VM 用に生成される。
       let asyncMacro =
-         innerMacro and not Ast.isPubToExternal( macroTypeInfo.$accessMode );
+         validAsyncMacro and innerMacro and
+         not Ast.isPubToExternal( macroTypeInfo.$accessMode );
 
       let toLuaval;
       if asyncMacro {
@@ -625,8 +666,8 @@ pub fn MacroCtrl.regist(
    let luaCode = self.macroEval.evalToLuaCode( processInfo, node );
    let macroObj, err;
    macroObj, err = runLuaOnLnsToMacroProc(
-      luaCode, baseDir, not Ast.isPubToExternal( node.$expType.$accessMode ) );
-   // macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false );
+      luaCode, baseDir,
+      validAsyncMacro and not Ast.isPubToExternal( node.$expType.$accessMode ) );
 
 
    when! macroObj {

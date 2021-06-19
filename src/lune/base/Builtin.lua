@@ -263,24 +263,6 @@ function BuiltinFuncType:__init()
    self.lns_tostring_sym = Ast.dummySymbol
    self.lns_type = Ast.headTypeInfo
    self.lns_type_sym = Ast.dummySymbol
-   self.__lns_runmode_ = Ast.headTypeInfo
-   self.__lns_runmode_Queue = Ast.headTypeInfo
-   self.__lns_runmode_Queue_sym = Ast.dummySymbol
-   self.__lns_runmode_Skip = Ast.headTypeInfo
-   self.__lns_runmode_Skip_sym = Ast.dummySymbol
-   self.__lns_runmode_Sync = Ast.headTypeInfo
-   self.__lns_runmode_Sync_sym = Ast.dummySymbol
-   self.__lns_runtime_ = Ast.headTypeInfo
-   self.__lns_runtime_log = Ast.headTypeInfo
-   self.__lns_runtime_log_sym = Ast.dummySymbol
-   self.__lns_sync_flag_ = Ast.headTypeInfo
-   self.__lns_sync_flag_set = Ast.headTypeInfo
-   self.__lns_sync_flag_set_sym = Ast.dummySymbol
-   self.__lns_sync_flag_wait = Ast.headTypeInfo
-   self.__lns_sync_flag_wait_sym = Ast.dummySymbol
-   self.__lns_sync_ = Ast.headTypeInfo
-   self.__lns_sync_createFlag = Ast.headTypeInfo
-   self.__lns_sync_createFlag_sym = Ast.dummySymbol
    self.istream_ = Ast.headTypeInfo
    self.istream_close = Ast.headTypeInfo
    self.istream_close_sym = Ast.dummySymbol
@@ -293,6 +275,30 @@ function BuiltinFuncType:__init()
    self.ostream_flush_sym = Ast.dummySymbol
    self.ostream_write = Ast.headTypeInfo
    self.ostream_write_sym = Ast.dummySymbol
+   self.__lns_runmode_ = Ast.headTypeInfo
+   self.__lns_runmode_Queue = Ast.headTypeInfo
+   self.__lns_runmode_Queue_sym = Ast.dummySymbol
+   self.__lns_runmode_Skip = Ast.headTypeInfo
+   self.__lns_runmode_Skip_sym = Ast.dummySymbol
+   self.__lns_runmode_Sync = Ast.headTypeInfo
+   self.__lns_runmode_Sync_sym = Ast.dummySymbol
+   self.__lns_runtime_ = Ast.headTypeInfo
+   self.__lns_runtime_dumpLog = Ast.headTypeInfo
+   self.__lns_runtime_dumpLog_sym = Ast.dummySymbol
+   self.__lns_runtime_enableLog = Ast.headTypeInfo
+   self.__lns_runtime_enableLog_sym = Ast.dummySymbol
+   self.__lns_runtime_log = Ast.headTypeInfo
+   self.__lns_runtime_log_sym = Ast.dummySymbol
+   self.__lns_sync_flag_ = Ast.headTypeInfo
+   self.__lns_sync_flag_set = Ast.headTypeInfo
+   self.__lns_sync_flag_set_sym = Ast.dummySymbol
+   self.__lns_sync_flag_wait = Ast.headTypeInfo
+   self.__lns_sync_flag_wait_sym = Ast.dummySymbol
+   self.__lns_sync_ = Ast.headTypeInfo
+   self.__lns_sync_createFlag = Ast.headTypeInfo
+   self.__lns_sync_createFlag_sym = Ast.dummySymbol
+   self.__lns_sync_createProcesser = Ast.headTypeInfo
+   self.__lns_sync_createProcesser_sym = Ast.dummySymbol
    self.luastream_ = Ast.headTypeInfo
    self.luastream_close = Ast.headTypeInfo
    self.luastream_close_sym = Ast.dummySymbol
@@ -310,6 +316,9 @@ function BuiltinFuncType:__init()
    self.__runner_ = Ast.headTypeInfo
    self.__runner_run = Ast.headTypeInfo
    self.__runner_run_sym = Ast.dummySymbol
+   self.__processor_ = Ast.headTypeInfo
+   self.__processor_end = Ast.headTypeInfo
+   self.__processor_end_sym = Ast.dummySymbol
    self.__pipe_ = Ast.headTypeInfo
    self.__pipe_get = Ast.headTypeInfo
    self.__pipe_get_sym = Ast.dummySymbol
@@ -470,6 +479,10 @@ function BuiltinFuncType:registerClass( classInfo )
       local _switchExp = classInfo:get_rawTxt()
       if _switchExp == '' then
          self.lns_ = classInfo
+      elseif _switchExp == 'iStream' then
+         self.istream_ = classInfo
+      elseif _switchExp == 'oStream' then
+         self.ostream_ = classInfo
       elseif _switchExp == '__lns_runMode' then
          self.__lns_runmode_ = classInfo
       elseif _switchExp == '__lns_runtime' then
@@ -478,16 +491,14 @@ function BuiltinFuncType:registerClass( classInfo )
          self.__lns_sync_flag_ = classInfo
       elseif _switchExp == '__lns_Sync' then
          self.__lns_sync_ = classInfo
-      elseif _switchExp == 'iStream' then
-         self.istream_ = classInfo
-      elseif _switchExp == 'oStream' then
-         self.ostream_ = classInfo
       elseif _switchExp == 'luaStream' then
          self.luastream_ = classInfo
       elseif _switchExp == 'Mapping' then
          self.mapping_ = classInfo
       elseif _switchExp == '__Runner' then
          self.__runner_ = classInfo
+      elseif _switchExp == '__Processor' then
+         self.__processor_ = classInfo
       elseif _switchExp == '__pipe' then
          self.__pipe_ = classInfo
       elseif _switchExp == 'io' then
@@ -611,66 +622,6 @@ local function setupBuiltinTypeInfo( name, fieldName, symInfo )
       end
       
    end
-   local function process___lns_runMode(  )
-   
-      do
-         local _switchExp = fieldName
-         if _switchExp == 'Queue' then
-            builtinFunc.__lns_runmode_Queue = typeInfo
-            builtinFunc.__lns_runmode_Queue_sym = symInfo
-            builtinFunc:register( symInfo )
-         elseif _switchExp == 'Skip' then
-            builtinFunc.__lns_runmode_Skip = typeInfo
-            builtinFunc.__lns_runmode_Skip_sym = symInfo
-            builtinFunc:register( symInfo )
-         elseif _switchExp == 'Sync' then
-            builtinFunc.__lns_runmode_Sync = typeInfo
-            builtinFunc.__lns_runmode_Sync_sym = symInfo
-            builtinFunc:register( symInfo )
-         end
-      end
-      
-   end
-   local function process___lns_runtime(  )
-   
-      do
-         local _switchExp = fieldName
-         if _switchExp == 'log' then
-            builtinFunc.__lns_runtime_log = typeInfo
-            builtinFunc.__lns_runtime_log_sym = symInfo
-            builtinFunc:register( symInfo )
-         end
-      end
-      
-   end
-   local function process___lns_Sync_Flag(  )
-   
-      do
-         local _switchExp = fieldName
-         if _switchExp == 'set' then
-            builtinFunc.__lns_sync_flag_set = typeInfo
-            builtinFunc.__lns_sync_flag_set_sym = symInfo
-            builtinFunc:register( symInfo )
-         elseif _switchExp == 'wait' then
-            builtinFunc.__lns_sync_flag_wait = typeInfo
-            builtinFunc.__lns_sync_flag_wait_sym = symInfo
-            builtinFunc:register( symInfo )
-         end
-      end
-      
-   end
-   local function process___lns_Sync(  )
-   
-      do
-         local _switchExp = fieldName
-         if _switchExp == 'createFlag' then
-            builtinFunc.__lns_sync_createFlag = typeInfo
-            builtinFunc.__lns_sync_createFlag_sym = symInfo
-            builtinFunc:register( symInfo )
-         end
-      end
-      
-   end
    local function process_iStream(  )
    
       do
@@ -702,6 +653,78 @@ local function setupBuiltinTypeInfo( name, fieldName, symInfo )
          elseif _switchExp == 'write' then
             builtinFunc.ostream_write = typeInfo
             builtinFunc.ostream_write_sym = symInfo
+            builtinFunc:register( symInfo )
+         end
+      end
+      
+   end
+   local function process___lns_runMode(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'Queue' then
+            builtinFunc.__lns_runmode_Queue = typeInfo
+            builtinFunc.__lns_runmode_Queue_sym = symInfo
+            builtinFunc:register( symInfo )
+         elseif _switchExp == 'Skip' then
+            builtinFunc.__lns_runmode_Skip = typeInfo
+            builtinFunc.__lns_runmode_Skip_sym = symInfo
+            builtinFunc:register( symInfo )
+         elseif _switchExp == 'Sync' then
+            builtinFunc.__lns_runmode_Sync = typeInfo
+            builtinFunc.__lns_runmode_Sync_sym = symInfo
+            builtinFunc:register( symInfo )
+         end
+      end
+      
+   end
+   local function process___lns_runtime(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'dumpLog' then
+            builtinFunc.__lns_runtime_dumpLog = typeInfo
+            builtinFunc.__lns_runtime_dumpLog_sym = symInfo
+            builtinFunc:register( symInfo )
+         elseif _switchExp == 'enableLog' then
+            builtinFunc.__lns_runtime_enableLog = typeInfo
+            builtinFunc.__lns_runtime_enableLog_sym = symInfo
+            builtinFunc:register( symInfo )
+         elseif _switchExp == 'log' then
+            builtinFunc.__lns_runtime_log = typeInfo
+            builtinFunc.__lns_runtime_log_sym = symInfo
+            builtinFunc:register( symInfo )
+         end
+      end
+      
+   end
+   local function process___lns_Sync_Flag(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'set' then
+            builtinFunc.__lns_sync_flag_set = typeInfo
+            builtinFunc.__lns_sync_flag_set_sym = symInfo
+            builtinFunc:register( symInfo )
+         elseif _switchExp == 'wait' then
+            builtinFunc.__lns_sync_flag_wait = typeInfo
+            builtinFunc.__lns_sync_flag_wait_sym = symInfo
+            builtinFunc:register( symInfo )
+         end
+      end
+      
+   end
+   local function process___lns_Sync(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'createFlag' then
+            builtinFunc.__lns_sync_createFlag = typeInfo
+            builtinFunc.__lns_sync_createFlag_sym = symInfo
+            builtinFunc:register( symInfo )
+         elseif _switchExp == 'createProcesser' then
+            builtinFunc.__lns_sync_createProcesser = typeInfo
+            builtinFunc.__lns_sync_createProcesser_sym = symInfo
             builtinFunc:register( symInfo )
          end
       end
@@ -754,6 +777,18 @@ local function setupBuiltinTypeInfo( name, fieldName, symInfo )
          if _switchExp == 'run' then
             builtinFunc.__runner_run = typeInfo
             builtinFunc.__runner_run_sym = symInfo
+            builtinFunc:register( symInfo )
+         end
+      end
+      
+   end
+   local function process___Processor(  )
+   
+      do
+         local _switchExp = fieldName
+         if _switchExp == 'end' then
+            builtinFunc.__processor_end = typeInfo
+            builtinFunc.__processor_end_sym = symInfo
             builtinFunc:register( symInfo )
          end
       end
@@ -1098,6 +1133,10 @@ local function setupBuiltinTypeInfo( name, fieldName, symInfo )
       local _switchExp = name
       if _switchExp == '' then
          process_(  )
+      elseif _switchExp == 'iStream' then
+         process_iStream(  )
+      elseif _switchExp == 'oStream' then
+         process_oStream(  )
       elseif _switchExp == '__lns_runMode' then
          process___lns_runMode(  )
       elseif _switchExp == '__lns_runtime' then
@@ -1106,16 +1145,14 @@ local function setupBuiltinTypeInfo( name, fieldName, symInfo )
          process___lns_Sync_Flag(  )
       elseif _switchExp == '__lns_Sync' then
          process___lns_Sync(  )
-      elseif _switchExp == 'iStream' then
-         process_iStream(  )
-      elseif _switchExp == 'oStream' then
-         process_oStream(  )
       elseif _switchExp == 'luaStream' then
          process_luaStream(  )
       elseif _switchExp == 'Mapping' then
          process_Mapping(  )
       elseif _switchExp == '__Runner' then
          process___Runner(  )
+      elseif _switchExp == '__Processor' then
+         process___Processor(  )
       elseif _switchExp == '__pipe' then
          process___pipe(  )
       elseif _switchExp == 'io' then
@@ -1147,7 +1184,7 @@ end
 
 local function getBuiltInInfo(  )
 
-   return {{[""] = {["__join"] = {["arg"] = {"&__Runner"}, ["ret"] = {""}}, ["__run"] = {["arg"] = {"__Runner", "int", "str!"}, ["ret"] = {"bool"}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"Luaval<form>!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["expandLuavalMap"] = {["arg"] = {"Luaval<&stem>!"}, ["ret"] = {"&stem!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<form>!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<stem>"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["__lns.runMode"] = {["Queue"] = {["type"] = {"var"}, ["typeInfo"] = {"int"}}, ["Skip"] = {["type"] = {"var"}, ["typeInfo"] = {"int"}}, ["Sync"] = {["type"] = {"var"}, ["typeInfo"] = {"int"}}, ["__attrib"] = {["type"] = {"class"}}}}, {["__lns.runtime"] = {["log"] = {["arg"] = {"str"}, ["ret"] = {}}}}, {["__lns.Sync.Flag"] = {["__attrib"] = {["type"] = {"interface"}}, ["set"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["wait"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["__lns.Sync"] = {["__attrib"] = {["type"] = {"class"}}, ["createFlag"] = {["arg"] = {}, ["ret"] = {"__lns.Sync.Flag!"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["luaStream"] = {["__attrib"] = {["inplements"] = {"iStream", "oStream"}, ["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["__Runner"] = {["__attrib"] = {["type"] = {"interface"}}, ["run"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}}}, {["__pipe<T>"] = {["get"] = {["arg"] = {}, ["ret"] = {"T!"}, ["type"] = {"method"}}, ["put"] = {["arg"] = {"T!"}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["__attrib"] = {["type"] = {"module"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!", "str!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<luaStream>!"}}, ["stderr"] = {["type"] = {"var"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"var"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"var"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["__attrib"] = {["type"] = {"module"}}, ["path"] = {["type"] = {"var"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["__attrib"] = {["type"] = {"module"}}, ["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"Luaval<stem>!"}}, ["difftime"] = {["arg"] = {"&stem", "&stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["__attrib"] = {["type"] = {"module"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"...<int>"}}, ["dump"] = {["arg"] = {"&Luaval<form>", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"...<int>"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"Luaval<form>", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["inplements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"...<int!>"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"...<int>"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<form>", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["__less"] = {["arg"] = {"T", "T"}, ["ret"] = {"bool"}, ["type"] = {"formfunc"}}, ["__new"] = {["arg"] = {"int"}, ["ret"] = {"List<T>"}, ["type"] = {"method"}}, ["insert"] = {["arg"] = {"T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"__less!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["__less"] = {["arg"] = {"T", "T"}, ["ret"] = {"bool"}, ["type"] = {"formfunc"}}, ["sort"] = {["arg"] = {"__less!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["__attrib"] = {["type"] = {"module"}}, ["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int"}, ["ret"] = {}}}}, {["debug"] = {["__attrib"] = {["type"] = {"module"}}, ["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"Map<str,stem>!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
+   return {{[""] = {["__join"] = {["arg"] = {"&__Runner"}, ["ret"] = {""}}, ["__run"] = {["arg"] = {"__Runner", "int", "str!"}, ["ret"] = {"bool"}}, ["_fcall"] = {["arg"] = {"form", "&..."}, ["ret"] = {""}}, ["_kind"] = {["arg"] = {"stem!"}, ["ret"] = {"int"}}, ["_load"] = {["arg"] = {"str", "stem!"}, ["ret"] = {"Luaval<form>!", "str!"}}, ["collectgarbage"] = {["arg"] = {}, ["ret"] = {}}, ["error"] = {["arg"] = {"str"}, ["ret"] = {"__"}}, ["expandLuavalMap"] = {["arg"] = {"Luaval<&stem>!"}, ["ret"] = {"&stem!"}}, ["loadfile"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<form>!", "str!"}}, ["print"] = {["arg"] = {"&..."}, ["ret"] = {}}, ["require"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<stem>"}}, ["tonumber"] = {["arg"] = {"str", "int!"}, ["ret"] = {"real!"}}, ["tostring"] = {["arg"] = {"&stem"}, ["ret"] = {"str"}}, ["type"] = {["arg"] = {"&stem!"}, ["ret"] = {"str"}}}}, {["iStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}}}, {["oStream"] = {["__attrib"] = {["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["__lns.runMode"] = {["Queue"] = {["type"] = {"var"}, ["typeInfo"] = {"int"}}, ["Skip"] = {["type"] = {"var"}, ["typeInfo"] = {"int"}}, ["Sync"] = {["type"] = {"var"}, ["typeInfo"] = {"int"}}, ["__attrib"] = {["type"] = {"class"}}}}, {["__lns.runtime"] = {["dumpLog"] = {["arg"] = {"oStream"}, ["ret"] = {}}, ["enableLog"] = {["arg"] = {"bool"}, ["ret"] = {}}, ["log"] = {["arg"] = {"str"}, ["ret"] = {}}}}, {["__lns.Sync.Flag"] = {["__attrib"] = {["type"] = {"interface"}}, ["set"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["wait"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["__lns.Sync"] = {["__attrib"] = {["type"] = {"class"}}, ["createFlag"] = {["arg"] = {}, ["ret"] = {"__lns.Sync.Flag!"}}, ["createProcesser"] = {["arg"] = {"str"}, ["ret"] = {"__Processor"}}}}, {["luaStream"] = {["__attrib"] = {["implements"] = {"iStream", "oStream"}, ["type"] = {"interface"}}, ["close"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["flush"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}, ["read"] = {["arg"] = {"stem!"}, ["ret"] = {"str!"}, ["type"] = {"mut"}}, ["seek"] = {["arg"] = {"str", "int"}, ["ret"] = {"int!", "str!"}, ["type"] = {"mut"}}, ["write"] = {["arg"] = {"str"}, ["ret"] = {"stem!", "str!"}, ["type"] = {"mut"}}}}, {["Mapping"] = {["__attrib"] = {["type"] = {"interface"}}, ["_toMap"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"method"}}}}, {["__Runner"] = {["__attrib"] = {["type"] = {"interface"}}, ["run"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}}}, {["__Processor"] = {["__attrib"] = {["implements"] = {"__Runner"}, ["type"] = {"interface"}}, ["end"] = {["arg"] = {}, ["ret"] = {}, ["type"] = {"mut"}}}}, {["__pipe<T>"] = {["get"] = {["arg"] = {}, ["ret"] = {"T!"}, ["type"] = {"method"}}, ["put"] = {["arg"] = {"T!"}, ["ret"] = {}, ["type"] = {"method"}}}}, {["io"] = {["__attrib"] = {["type"] = {"module"}}, ["open"] = {["arg"] = {"str", "str!"}, ["ret"] = {"luaStream!", "str!"}}, ["popen"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<luaStream>!"}}, ["stderr"] = {["type"] = {"var"}, ["typeInfo"] = {"oStream"}}, ["stdin"] = {["type"] = {"var"}, ["typeInfo"] = {"iStream"}}, ["stdout"] = {["type"] = {"var"}, ["typeInfo"] = {"oStream"}}}}, {["package"] = {["__attrib"] = {["type"] = {"module"}}, ["path"] = {["type"] = {"var"}, ["typeInfo"] = {"str"}}, ["searchpath"] = {["arg"] = {"str", "str"}, ["ret"] = {"str!"}}}}, {["os"] = {["__attrib"] = {["type"] = {"module"}}, ["clock"] = {["arg"] = {}, ["ret"] = {"real"}}, ["date"] = {["arg"] = {"str!", "stem!"}, ["ret"] = {"Luaval<stem>!"}}, ["difftime"] = {["arg"] = {"&stem", "&stem"}, ["ret"] = {"int"}}, ["exit"] = {["arg"] = {"int!"}, ["ret"] = {"__"}}, ["remove"] = {["arg"] = {"str"}, ["ret"] = {"bool!", "str!"}}, ["rename"] = {["arg"] = {"str", "str"}, ["ret"] = {"stem!", "str!"}}, ["time"] = {["arg"] = {"stem!"}, ["ret"] = {"stem!"}}}}, {["string"] = {["__attrib"] = {["type"] = {"module"}}, ["byte"] = {["arg"] = {"str", "int!", "int!"}, ["ret"] = {"...<int>"}}, ["dump"] = {["arg"] = {"&Luaval<form>", "bool!"}, ["ret"] = {"str"}}, ["find"] = {["arg"] = {"str", "str", "int!", "bool!"}, ["ret"] = {"...<int>"}}, ["format"] = {["arg"] = {"str", "..."}, ["ret"] = {"str"}}, ["gmatch"] = {["arg"] = {"str", "str"}, ["ret"] = {"Luaval<form>", "stem!", "stem!"}}, ["gsub"] = {["arg"] = {"str", "str", "str"}, ["ret"] = {"str", "int"}}, ["lower"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["rep"] = {["arg"] = {"str", "int"}, ["ret"] = {"str"}}, ["reverse"] = {["arg"] = {"str"}, ["ret"] = {"str"}}, ["sub"] = {["arg"] = {"str", "int", "int!"}, ["ret"] = {"str"}}, ["upper"] = {["arg"] = {"str"}, ["ret"] = {"str"}}}}, {["str"] = {["__attrib"] = {["implements"] = {"Mapping"}}, ["byte"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"...<int!>"}, ["type"] = {"method"}}, ["find"] = {["arg"] = {"str", "int!", "bool!"}, ["ret"] = {"...<int>"}, ["type"] = {"method"}}, ["format"] = {["arg"] = {"&..."}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["gmatch"] = {["arg"] = {"str"}, ["ret"] = {"Luaval<form>", "stem!", "stem!"}, ["type"] = {"method"}}, ["gsub"] = {["arg"] = {"str", "str"}, ["ret"] = {"str", "int"}, ["type"] = {"method"}}, ["lower"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["rep"] = {["arg"] = {"int"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["reverse"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["sub"] = {["arg"] = {"int", "int!"}, ["ret"] = {"str"}, ["type"] = {"method"}}, ["upper"] = {["arg"] = {}, ["ret"] = {"str"}, ["type"] = {"method"}}}}, {["List<T>"] = {["__less"] = {["arg"] = {"T", "T"}, ["ret"] = {"bool"}, ["type"] = {"formfunc"}}, ["__new"] = {["arg"] = {"int"}, ["ret"] = {"List<T>"}, ["type"] = {"method"}}, ["insert"] = {["arg"] = {"T"}, ["ret"] = {""}, ["type"] = {"mut"}}, ["remove"] = {["arg"] = {"int!"}, ["ret"] = {"T!"}, ["type"] = {"mut"}}, ["sort"] = {["arg"] = {"__less!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Array<T>"] = {["__less"] = {["arg"] = {"T", "T"}, ["ret"] = {"bool"}, ["type"] = {"formfunc"}}, ["sort"] = {["arg"] = {"__less!"}, ["ret"] = {}, ["type"] = {"mut"}}, ["unpack"] = {["arg"] = {}, ["ret"] = {"..."}, ["type"] = {"method"}}}}, {["Set<T>"] = {["add"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["and"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["clone"] = {["arg"] = {}, ["ret"] = {"Set<T>"}, ["type"] = {"method"}}, ["del"] = {["arg"] = {"T"}, ["ret"] = {}, ["type"] = {"mut"}}, ["has"] = {["arg"] = {"T"}, ["ret"] = {"bool"}, ["type"] = {"method"}}, ["len"] = {["arg"] = {}, ["ret"] = {"int"}, ["type"] = {"method"}}, ["or"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}, ["sub"] = {["arg"] = {"&Set<T>"}, ["ret"] = {"Set<T>"}, ["type"] = {"mut"}}}}, {["math"] = {["__attrib"] = {["type"] = {"module"}}, ["random"] = {["arg"] = {"int!", "int!"}, ["ret"] = {"real"}}, ["randomseed"] = {["arg"] = {"int"}, ["ret"] = {}}}}, {["debug"] = {["__attrib"] = {["type"] = {"module"}}, ["getinfo"] = {["arg"] = {"int"}, ["ret"] = {"Map<str,stem>!"}}, ["getlocal"] = {["arg"] = {"int", "int"}, ["ret"] = {"str!", "stem!"}}}}, {["Nilable<_T>"] = {["val"] = {["arg"] = {}, ["ret"] = {"_T!"}, ["type"] = {"method"}}}}}
 end
 
 
@@ -1488,7 +1525,7 @@ function Builtin:registClass( nameList, name2FieldInfo, pos, genTypeList )
    
    local interfaceList = {}
    do
-      local _exp = _lune.nilacc( name2FieldInfo['__attrib'], nil, 'item', 'inplements')
+      local _exp = _lune.nilacc( name2FieldInfo['__attrib'], nil, 'item', 'implements')
       if _exp ~= nil then
          for __index, ifname in ipairs( _exp ) do
             local ifType = self:getTypeInfo( ifname )

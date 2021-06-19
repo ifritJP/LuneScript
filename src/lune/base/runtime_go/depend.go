@@ -70,8 +70,8 @@ func printMemInfo(mess string) {
 	fmt.Printf("NumGC: %d\n", ms.NumGC)
 }
 
-func Depend_profileSub(
-	validTest bool, path string, work func() LnsAny) LnsAny {
+func depend_profileSub(
+	_env *LnsEnv, validTest bool, path string, work func() LnsAny) LnsAny {
 	if validTest {
 		// start cpu profile
 		prof, err := os.Create(path)
@@ -84,7 +84,7 @@ func Depend_profileSub(
 		defer pprof.StopCPUProfile()
 
 		{
-			depend_setRunnerLog(true)
+			LnsStartRunnerLog(_env, true)
 			profRunner, err := os.Create(path + "runner")
 			if err != nil {
 				panic(err)
@@ -295,9 +295,4 @@ var validRuntimeLog = false
 
 func depend_setRuntimeLog(valid bool) {
 	validRuntimeLog = valid
-}
-
-func depend_setRunnerLog(valid bool) {
-	lns_thread_event_on = valid
-
 }

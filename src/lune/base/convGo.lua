@@ -2445,9 +2445,9 @@ function convFilter:processRoot( node, opt )
    
    self.builtin2runtime = builtin2runtime
    
-   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog"}
+   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor"}
    
-   self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream"}
+   self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [Ast.builtinTypeProcessor] = "*LnsProcessor", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream"}
    
    self:writeln( "// This code is transcompiled by LuneScript." )
    self:writeln( string.format( "package %s", self.option.packageName) )
@@ -2852,6 +2852,62 @@ end
 function convFilter:processSubfile( node, opt )
 
 end
+
+
+function convFilter:processRequest( node, opt )
+
+   self:write( "func() " )
+   self:outputRetType( node:get_expTypeList() )
+   self:writeln( "{" )
+   self:pushIndent(  )
+   
+   local retVars = {}
+   for index, retType in ipairs( node:get_expTypeList() ) do
+      local varSym = string.format( "ret%d", index)
+      table.insert( retVars, varSym )
+      self:writeln( string.format( "var %s %s", varSym, self:type2gotype( retType )) )
+   end
+   
+   filter( node:get_processor(), self, node )
+   self:writeln( ".Request( _env, func( _env *LnsEnv ) {" )
+   self:pushIndent(  )
+   
+   if #retVars > 0 then
+      for index, varSym in ipairs( retVars ) do
+         self:writeln( varSym )
+         if index ~= #retVars then
+            self:write( "," )
+         end
+         
+      end
+      
+      self:write( "=" )
+   end
+   
+   filter( node:get_exp(), self, node )
+   self:popIndent(  )
+   
+   self:writeln( "" )
+   self:write( "}" )
+   self:writeln( ")" )
+   self:popIndent(  )
+   
+   if #retVars > 0 then
+      self:write( "return " )
+      for index, varSym in ipairs( retVars ) do
+         self:writeln( varSym )
+         if index ~= #retVars then
+            self:write( "," )
+         end
+         
+      end
+      
+      self:writeln( "" )
+   end
+   
+   self:write( "}()" )
+end
+
 
 
 function convFilter:processAsyncLock( node, opt )
@@ -5780,17 +5836,8 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                      do
                         local _switchExp = prefixKind
                         if _switchExp == Ast.TypeInfoKind.Class then
-                           do
-                              local _switchExp = funcType
-                              if _switchExp == self.builtinFuncs.__lns_sync_createFlag then
-                                 self:write( "LnsCreateSyncFlag" )
-                              else 
-                                 
-                                    
-                                    self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
-                              end
-                           end
                            
+                           self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
                         else 
                            
                               do

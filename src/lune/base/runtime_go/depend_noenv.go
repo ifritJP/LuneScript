@@ -68,18 +68,18 @@ func Depend_runMain(mainFunc LnsAny, argList *LnsList) LnsInt {
 }
 
 func Depend_setRuntimeLog(valid bool) {
-	depend_setRuntimeLog(valid)
+	LnsStartLog(Lns_GetEnv(), valid)
 }
 
 func Depend_setRuntimeThreadLimit(limit int) {
 	Lns_setThreadLimit(limit)
 }
 
-func Depend_setRunnerLog( valid bool) {
-    depend_setRunnerLog( valid )
+func Depend_setRunnerLog(valid bool) {
+	LnsStartRunnerLog(valid)
 }
-func Depend_dumpRunnerLog( stream Lns_oStream ) {
-    lns_threadMgrInfo.dumpEventLog( fn func(txt string) {
-        stream.Write( txt )
-    })
+func Depend_dumpRunnerLog(stream Lns_oStream) {
+	lns_threadMgrInfo.dumpEventLog(func(txt string) {
+		stream.Write(txt)
+	})
 }

@@ -1093,6 +1093,12 @@ pub override fn ConvFilter.processSubfile(
 {
 }
 
+pub override fn ConvFilter.processRequest(
+   node: &Nodes.RequestNode, opt:Opt ) mut
+{
+   filter( node.$exp, self, node );
+};
+
 pub override fn ConvFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
@@ -2712,10 +2718,16 @@ pub override fn ConvFilter.processExpCall(
       };
 
       switch node.$func.$expType {
-         case self.builtinFunc.__lns_runtime_log {
+         case self.builtinFunc.__lns_runtime_log,
+              self.builtinFunc.__lns_runtime_enableLog,
+              self.builtinFunc.__lns_runtime_dumpLog,
+              self.builtinFunc.__processor_end
+         {
             return false;
          }
-         case self.builtinFunc.list___new {
+         case self.builtinFunc.list___new,
+              self.builtinFunc.__lns_sync_createProcesser
+         {
             self.write( "{}" );
             return false;
          }

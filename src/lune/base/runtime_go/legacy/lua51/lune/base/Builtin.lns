@@ -212,32 +212,6 @@ _DefBuiltinFuncType( [
       },
    },
    {
-      "__lns.runMode" : {
-         "__attrib": { "type": [ "class" ] },
-         "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
-         "Queue": { "type": [ "var" ], "typeInfo": ["int"] },
-         "Skip": { "type": [ "var" ], "typeInfo": ["int"] },
-      },
-   },
-   {
-      "__lns.runtime" : {
-         "log": { "arg": [ "str" ], "ret": [] },
-      },
-   },
-   {
-      "__lns.Sync.Flag" : {
-         "__attrib": { "type": [ "interface" ] },
-         "wait": { "type": [ "method" ], "arg": [ ], "ret": [] },
-         "set": { "type": [ "mut" ], "arg": [ ], "ret": [] },
-      },
-   },
-   {
-      "__lns.Sync" : {
-         "__attrib": { "type": [ "class" ] },
-         "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
-      },
-   },
-   {
       "iStream": {
          "__attrib": { "type": [ "interface" ] },
          "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
@@ -253,8 +227,37 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "__lns.runMode" : {
+         "__attrib": { "type": [ "class" ] },
+         "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
+         "Queue": { "type": [ "var" ], "typeInfo": ["int"] },
+         "Skip": { "type": [ "var" ], "typeInfo": ["int"] },
+      },
+   },
+   {
+      "__lns.runtime" : {
+         "log": { "arg": [ "str" ], "ret": [] },
+         "enableLog": { "arg": [ "bool" ], "ret": [] },
+         "dumpLog": { "arg": [ "oStream" ], "ret": [] },
+      },
+   },
+   {
+      "__lns.Sync.Flag" : {
+         "__attrib": { "type": [ "interface" ] },
+         "wait": { "type": [ "method" ], "arg": [ ], "ret": [] },
+         "set": { "type": [ "mut" ], "arg": [ ], "ret": [] },
+      },
+   },
+   {
+      "__lns.Sync" : {
+         "__attrib": { "type": [ "class" ] },
+         "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
+         "createProcesser": { "arg": [ "str" ], "ret": [ "__Processor"] },
+      },
+   },
+   {
       "luaStream": {
-         "__attrib": { "type": [ "interface" ], "inplements": [ "iStream", "oStream" ] },
+         "__attrib": { "type": [ "interface" ], "implements": [ "iStream", "oStream" ] },
          "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
          "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!" ] },
          "close": { "type": [ "mut" ], "arg": [], "ret": [] },
@@ -272,6 +275,12 @@ _DefBuiltinFuncType( [
       "__Runner": {
          "__attrib": { "type": [ "interface" ] },
          "run": { "type": [ "mut" ], "arg": [], "ret": [ ] },
+      },
+   },
+   {
+      "__Processor": {
+         "__attrib": { "type": [ "interface" ], "implements": [ "__Runner" ] },
+         "end": { "type": [ "mut" ], "arg": [], "ret": [ ] },
       },
    },
    {
@@ -328,7 +337,7 @@ _DefBuiltinFuncType( [
    },
    {
       "str": {
-         "__attrib": { "inplements": [ "Mapping" ] },
+         "__attrib": { "implements": [ "Mapping" ] },
          "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["...<int>"] },
          "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int!>"] },
          "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
@@ -684,7 +693,7 @@ fn Builtin.registClass(
       }
    }
    let mut interfaceList:List<&Ast.TypeInfo> = [];
-   if! name2FieldInfo.__attrib$.inplements {
+   if! name2FieldInfo.__attrib$.implements {
       foreach ifname in _exp {
          let ifType = self.getTypeInfo( ifname );
          interfaceList.insert( ifType );

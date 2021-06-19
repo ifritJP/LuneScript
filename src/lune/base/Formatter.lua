@@ -322,6 +322,16 @@ function FormatterFilter:processLuneControl( node, opt )
 end
 
 
+function FormatterFilter:processRequest( node, opt )
+
+   self:write( "__request " )
+   filter( node:get_processor(), self, opt:nextOpt( node ) )
+   self:write( " " )
+   filter( node:get_exp(), self, opt:nextOpt( node ) )
+end
+
+
+
 function FormatterFilter:processAsyncLock( node, opt )
 
    do

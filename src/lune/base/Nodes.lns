@@ -1807,6 +1807,11 @@ _declNodeClass( "AsyncLock", Node, false, false, true,
                   { "block": "&BlockNode" } ]
 );
 
+_declNodeClass( "Request", Node, false, true, true,
+                [ { "processor": "&Node" },
+                  { "exp": "&Node" } ]
+);
+
 _declNodeClass( "DeclMember", Node, false, false, true,
                 [ { "name": "&Parser.Token" },
                   { "refType": "&RefTypeNode" },

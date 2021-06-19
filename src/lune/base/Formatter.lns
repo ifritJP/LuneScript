@@ -164,6 +164,15 @@ pub override fn FormatterFilter.processLuneControl(
    self.writeln( ";" );
 }
 
+pub override fn FormatterFilter.processRequest(
+   node: &Nodes.RequestNode, opt:Opt ) mut
+{
+   self.write( "__request " );
+   filter( node.$processor, self, opt.nextOpt( node ) );
+   self.write( " " );
+   filter( node.$exp, self, opt.nextOpt( node ) );
+};
+
 pub override fn FormatterFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt:Opt ) mut
 {

@@ -1508,7 +1508,7 @@ define test-go-one-exec
 	$(call buildGo,$2,test.exe,testgo) > work/result-testGo.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
 		$(call exeLune,$1,$2,$4/$3.lns,shebang) > work/result-testGo2.txt &&	\
-		diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE'			\
+		diff -C 2 -I 'ONLY_GO' -I 'ONLY_LUA' -I 'DIFF_IGNORE'		\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
 endef

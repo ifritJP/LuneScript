@@ -2650,12 +2650,12 @@ fn TransUnit.analyzeDeclClass(
    if classTypeInfo.isInheritFrom(
       self.processInfo, Ast.builtinTypeAsyncItem, nil )
    {
-      if not classTypeInfo.isInheritFrom(
-         self.processInfo, Ast.builtinTypeMapping, nil )
-      {
-         self.addErrMess(
-            firstToken.pos, "__AsyncItem implemented class must inherit Mapping." );
-      }
+      // if not classTypeInfo.isInheritFrom(
+      //    self.processInfo, Ast.builtinTypeMapping, nil )
+      // {
+      //    self.addErrMess(
+      //       firstToken.pos, "__AsyncItem implemented class must inherit Mapping." );
+      // }
 
       //
       let pipeType = self.processInfo.createGeneric(

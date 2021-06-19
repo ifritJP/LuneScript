@@ -1751,6 +1751,21 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    return tokenList;
 }
 
+fn TransUnit.analyzeRequest( reqToken: &Parser.Token ) mut : Nodes.RequestNode
+{
+   let processor = self.analyzeExp( false, true, false, nil, Ast.builtinTypeProcessor );
+   if processor.$expType ~= Ast.builtinTypeProcessor {
+      self.addErrMess(
+         processor.$pos,
+         "It must be 'processor'. -- %s" (processor.$expType.getTxt(##)) );
+   }
+   let exp = self.analyzeExp( false, true, false, nil, nil );
+
+   return Nodes.RequestNode.create(
+      self.nodeManager, reqToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
+      processor, exp );
+}
 
 fn TransUnit.analyzeAsyncLock(
    asyncToken: &Parser.Token, lockKind:Nodes.LockKind ) mut : Nodes.Node
