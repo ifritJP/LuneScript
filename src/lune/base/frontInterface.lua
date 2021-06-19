@@ -298,6 +298,37 @@ function LuneHelperInfo:__init()
    self.useLazyRequire = false
    self.useRun = false
 end
+function LuneHelperInfo:mergeFrom( src )
+
+   
+   
+   self.useNilAccess = self.useNilAccess or src.useNilAccess
+   
+   self.useUnwrapExp = self.useUnwrapExp or src.useUnwrapExp
+   
+   self.hasMappingClassDef = self.hasMappingClassDef or src.hasMappingClassDef
+   
+   self.useLoad = self.useLoad or src.useLoad
+   
+   self.useUnpack = self.useUnpack or src.useUnpack
+   
+   self.useAlge = self.useAlge or src.useAlge
+   
+   self.useSet = self.useSet or src.useSet
+   
+   self.callAnonymous = self.callAnonymous or src.callAnonymous
+   
+   self.useLazyLoad = self.useLazyLoad or src.useLazyLoad
+   
+   self.useLazyRequire = self.useLazyRequire or src.useLazyRequire
+   
+   self.useRun = self.useRun or src.useRun
+   
+   for val, __val in pairs( src.pragmaSet ) do
+      self.pragmaSet[val]= true
+   end
+   
+end
 function LuneHelperInfo.setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end

@@ -619,6 +619,7 @@ TEST_CASE += macro2.lns
 TEST_CASE += macro3.lns
 TEST_CASE += macro4.lns
 TEST_CASE += macro5.lns
+TEST_CASE += macro6.lns
 TEST_CASE += apply.lns
 TEST_CASE += multiple-class.lns
 TEST_CASE += multiple-if.lns

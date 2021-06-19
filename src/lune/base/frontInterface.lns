@@ -104,6 +104,28 @@ pub class LuneHelperInfo {
       self.useLazyRequire = false;
       self.useRun = false;
    }
+
+   pub fn mergeFrom( src:&LuneHelperInfo ) mut {
+      macro _mergeBool( varSym: sym ) {
+         self.,,varSym = self.,,varSym or src.,,varSym;
+      }
+      
+
+      _mergeBool( useNilAccess );
+      _mergeBool( useUnwrapExp );
+      _mergeBool( hasMappingClassDef );
+      _mergeBool( useLoad );
+      _mergeBool( useUnpack );
+      _mergeBool( useAlge );
+      _mergeBool( useSet );
+      _mergeBool( callAnonymous );
+      _mergeBool( useLazyLoad );
+      _mergeBool( useLazyRequire );
+      _mergeBool( useRun );
+      foreach val in src.pragmaSet {
+         self.pragmaSet.add( val );
+      }
+   }
 }
 
 pub fn getRootDependModId() : int {

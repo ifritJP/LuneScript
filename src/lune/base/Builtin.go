@@ -590,7 +590,7 @@ func Builtin_getBuiltInInfo_5_(_env *LnsEnv) *LnsList {
 
 
 
-// 773: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
+// 774: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
 func Builtin_registBuiltInScope__processCopyAlterList_0_(_env *LnsEnv, alterList *LnsList,typeList *LnsList) {
     for _, _typeInfo := range( typeList.Items ) {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -676,12 +676,12 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                         workTypeInfo = workScope.FP.GetTypeInfoChild(_env, name)
                     }
                     if workTypeInfo != nil{
-                        workTypeInfo_578 := workTypeInfo.(*Ast_TypeInfo)
+                        workTypeInfo_577 := workTypeInfo.(*Ast_TypeInfo)
                         if index == nameList.Len(){
-                            return workTypeInfo_578
+                            return workTypeInfo_577
                         }
                         {
-                            __exp := workTypeInfo_578.FP.Get_scope(_env)
+                            __exp := workTypeInfo_577.FP.Get_scope(_env)
                             if !Lns_IsNil( __exp ) {
                                 _exp := __exp.(*Ast_Scope)
                                 workScope = _exp
@@ -765,9 +765,9 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
     var suffix string
     suffix = ""
     if endIndex != nil{
-        endIndex_614 := endIndex.(LnsInt)
+        endIndex_613 := endIndex.(LnsInt)
         var genTypeName string
-        genTypeName = _env.GetVM().String_sub(typeName,endIndex_614 + 1, nil)
+        genTypeName = _env.GetVM().String_sub(typeName,endIndex_613 + 1, nil)
         for  {
             {
                 _tailIndex := Builtin_convExp13088(Lns_2DDD(_env.GetVM().String_find(genTypeName,"[,>]", nil, nil)))
@@ -783,7 +783,7 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                 }
             }
         }
-        typeName = _env.GetVM().String_sub(typeName,1, endIndex_614 - 1) + suffix
+        typeName = _env.GetVM().String_sub(typeName,1, endIndex_613 - 1) + suffix
     }
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
@@ -897,7 +897,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
             var asyncMode LnsInt
             asyncMode = Ast_Async__Async
             var typeInfo *Ast_NormalTypeInfo
-            typeInfo = self.processInfo.FP.CreateFuncAsync(_env, abstractFlag, true, scope, kind, Ast_getBuiltinMut(_env, parentInfo), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable)
+            typeInfo = self.processInfo.FP.CreateFuncAsync(_env, abstractFlag, true, scope, kind, parentInfo, Ast_getBuiltinMut(_env, parentInfo).FP, false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable)
             if self.hasLuaval{
                 Builtin_builtinFunc.FP.addLuavalFunc(_env, &typeInfo.Ast_TypeInfo)
             }
@@ -914,7 +914,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
     }
 }
 
-// 678: decl @lune.@base.@Builtin.Builtin.registClass
+// 679: decl @lune.@base.@Builtin.Builtin.registClass
 func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2FieldInfo *LnsMap,pos *Types_Position,genTypeList *LnsList) *Ast_TypeInfo {
     var classKind LnsInt
     classKind = TransUnitIF_DeclClassMode__Class
@@ -988,7 +988,7 @@ func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2Fi
     return parentInfo
 }
 
-// 749: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
+// 750: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
 func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFuncType {
     if Builtin_readyBuiltin{
         return Builtin_builtinFunc

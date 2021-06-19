@@ -7143,6 +7143,8 @@ function convFilter:processLuneControl( node, opt )
       
       elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
       
+      elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
+      
       end
    end
    

@@ -1,3 +1,5 @@
+_lune_control use_macro_special_var;
+
 import test.subGoPkg.SubPkg;
 
 pub fn __main( args:&List<str> ):int {

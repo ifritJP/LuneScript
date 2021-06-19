@@ -315,6 +315,9 @@ function FormatterFilter:processLuneControl( node, opt )
       elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
       
          self:writeln( "default_noasync_this_class" )
+      elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
+      
+         self:writeln( "use_macro_special_var" )
       end
    end
    

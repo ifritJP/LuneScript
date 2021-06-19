@@ -5896,6 +5896,8 @@ pub override fn convFilter.processLuneControl(
       }
       case .default_noasync_this_class {
       }
+      case .use_macro_special_var {
+      }
    }
 }
 

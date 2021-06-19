@@ -189,6 +189,8 @@ Pragma.run_async_pipe = { "run_async_pipe"}
 Pragma._name2Val["run_async_pipe"] = Pragma.run_async_pipe
 Pragma.use_async = { "use_async"}
 Pragma._name2Val["use_async"] = Pragma.use_async
+Pragma.use_macro_special_var = { "use_macro_special_var"}
+Pragma._name2Val["use_macro_special_var"] = Pragma.use_macro_special_var
 
 
 return _moduleObj

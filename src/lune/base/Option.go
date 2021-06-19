@@ -121,7 +121,7 @@ func Option_convExp816(arg1 []LnsAny) LnsAny {
 }
 // 52: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 11049
+    return 11133
 }
 
 // 81: decl @lune.@base.@Option.getRuntimeModule
@@ -134,9 +134,9 @@ func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_142 := path.(string)
-        if path_142 != ""{
-            lune_path = path_142
+        path_141 := path.(string)
+        if path_141 != ""{
+            lune_path = path_141
         }
     }
     var fileObj Lns_luaStream
@@ -486,8 +486,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         index = index + 1
     }
     if uptodateOpt != nil{
-        uptodateOpt_292 := uptodateOpt.(string)
-        if _switch5 := uptodateOpt_292; _switch5 == "force" {
+        uptodateOpt_291 := uptodateOpt.(string)
+        if _switch5 := uptodateOpt_291; _switch5 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
         } else if _switch5 == "forceAll" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__ForceAll_Obj
@@ -496,7 +496,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         } else if _switch5 == "touch" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_292)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_291)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -570,12 +570,12 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
     option.UseLuneModule = Option_getRuntimeModule(_env)
     option.UseIpairs = true
     if projDir != nil{
-        projDir_322 := projDir.(string)
-        if projDir_322 != "/"{
-            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_322,"/$", nil, nil))){
-                option.projDir = projDir_322 + "/"
+        projDir_321 := projDir.(string)
+        if projDir_321 != "/"{
+            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_321,"/$", nil, nil))){
+                option.projDir = projDir_321 + "/"
             } else { 
-                option.projDir = projDir_322
+                option.projDir = projDir_321
             }
         }
     }
@@ -750,11 +750,11 @@ func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_133 := relPath.(string)
+                relPath_132 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_133})
+                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_132})
                 } else { 
-                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_133})
+                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_132})
                 }
             } else {
                 filePath = path

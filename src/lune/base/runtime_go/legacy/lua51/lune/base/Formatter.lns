@@ -160,6 +160,9 @@ pub override fn FormatterFilter.processLuneControl(
       case .default_noasync_this_class {
          self.writeln( "default_noasync_this_class" );
       }
+      case .use_macro_special_var {
+         self.writeln( "use_macro_special_var" );
+      }
    }
    self.writeln( ";" );
 }

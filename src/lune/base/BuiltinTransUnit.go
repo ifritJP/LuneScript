@@ -4,7 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_BuiltinTransUnit bool
 var BuiltinTransUnit__mod__ string
 // for 101
-func BuiltinTransUnit_convExp436(arg1 []LnsAny) (LnsAny, LnsAny) {
+func BuiltinTransUnit_convExp440(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
@@ -118,7 +118,7 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
             var scope *Ast_Scope
             scope = self.FP.PushScope(_env, true, nil, nil)
             var newType *Ast_TypeInfo
-            newType = processInfo.FP.CreateModule(_env, scope, parentInfo, externalFlag, modName, mutable)
+            newType = processInfo.FP.CreateModule(_env, scope, parentInfo, parentInfo.FP, externalFlag, modName, mutable)
             typeInfo = newType
             self.namespace2Scope.Set(typeInfo,scope)
             Ast_addBuiltinMut(_env, newType, scope)
@@ -248,7 +248,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                 workGenTypeList = NewLnsList([]LnsAny{})
             }
             var newType *Ast_TypeInfo
-            newType = processInfo.FP.CreateClassAsync(_env, mode != TransUnitIF_DeclClassMode__Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name)
+            newType = processInfo.FP.CreateClassAsync(_env, mode != TransUnitIF_DeclClassMode__Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, parentInfo.FP, externalFlag, accessMode, name)
             typeInfo = newType
             self.namespace2Scope.Set(typeInfo,scope)
             Ast_addBuiltinMut(_env, newType, scope)

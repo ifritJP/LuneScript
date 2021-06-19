@@ -85,7 +85,8 @@ pub class NSInfo {
    /** 関数の本体宣言がないか。 true の場合宣言なし。 */
    let mut nobody:bool {pub,pub};
    /** この名前空間の型 */
-   let typeInfo:Ast.TypeInfo {pub};
+   let typeInfo:&Ast.TypeInfo {pub};
+   let typeDataAccessor:Ast.TypeDataAccessor {pub};
    /** この名前空間の定義位置 */
    let pos:&Parser.Position {pub};
 
@@ -121,14 +122,15 @@ pub class NSInfo {
       return false;
    }
    
-   pub fn __init( typeInfo:Ast.TypeInfo,
+   pub fn __init( typeInfo:&Ast.TypeInfo, typeDataAccessor:Ast.TypeDataAccessor,
                   pos:&Parser.Position, validAsyncCtrl:bool )
    {
       self.idSetInfo = new IdSetInfo();
       self.nobody = false;
       self.lockedAsyncStack = [];
       self.loopScopeQueue = [];
-      
+
+      self.typeDataAccessor = typeDataAccessor;
       self.typeInfo = typeInfo;
       self.pos = pos;
       self.validAsyncCtrl = validAsyncCtrl;
@@ -252,17 +254,17 @@ pub abstract class TransUnitBase extend (TransUnitIF) {
 
 TypeInfo → NSInfo.
    */
-   pro let mut nsInfoMap:Map<&Ast.TypeInfo,NSInfo>;
+   pro let nsInfoMap:Map<&Ast.TypeInfo,NSInfo>;
 
    // /** 解析済みトークンリスト */
    // pri let mut usedTokenList: List<&Parser.Token>;
    /** 解析エラーメッセージ */
-   pro let mut errMessList: List<&ErrMess> { pub };
+   pro let errMessList: List<&ErrMess> { pub };
 
    pro let mut typeNameCtrl:&Ast.TypeNameCtrl;
 
    /** クラスの TypeId -> NamespaceInfo */
-   pro let mut typeId2ClassMap: Map<&Ast.IdInfo,&Nodes.NamespaceInfo>;
+   pro let typeId2ClassMap: Map<&Ast.IdInfo,&Nodes.NamespaceInfo>;
 
    pro let ctrl_info: &Types.TransCtrlInfo;
    
@@ -285,7 +287,8 @@ TypeInfo → NSInfo.
       self.nsInfoMap = {};
       let mut subRootTypeInfo = self.processInfo.$dummyParentType;
       self.nsInfoMap[ subRootTypeInfo ] = new NSInfo(
-         subRootTypeInfo, new Types.Position( 0,0, "@builtin@" ),
+         subRootTypeInfo, subRootTypeInfo,
+         new Types.Position( 0,0, "@builtin@" ),
          ctrl_info.validAsyncCtrl );
    }
 
@@ -299,22 +302,6 @@ TypeInfo → NSInfo.
 
    
    pub abstract fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
-   //    self.addErrMess( pos, mess);
-
-   //    foreach errmess in self.errMessList {
-   //       Util.errorLog( errmess );
-   //    }
-   //    foreach warnmess in self.warnMessList {
-   //       Util.errorLog( warnmess );
-   //    }
-   //    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-   //       print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
-   //       print( self.parserPosInfo.getNearCode() );
-   //       print( "------" );
-   //    }
-      
-   //    Util.err( "has error" );
-   // }
 
    pub abstract fn getLatestPos() : &Parser.Position;
 
@@ -334,6 +321,17 @@ TypeInfo → NSInfo.
       self.scope = self.scope.$outerScope;
    }
 
+
+   pro fn newNSInfoWithTypeData(
+      typeInfo:&Ast.TypeInfo, typeDataAccessor:Ast.TypeDataAccessor,
+      pos:&Parser.Position) __async mut : NSInfo
+   {
+      let mut nsInfo = new NSInfo(
+         typeInfo, typeDataAccessor, pos, self.ctrl_info.validAsyncCtrl );
+      self.nsInfoMap[ typeInfo ] = nsInfo;
+      return nsInfo;
+   }
+   
    /**
 解析した名前空間の情報を登録する。
 この情報は、&TypeInfo から imut を外すために利用する。
@@ -341,31 +339,25 @@ TypeInfo → NSInfo.
    pro fn newNSInfo(
       typeInfo:Ast.TypeInfo, pos:&Parser.Position) __async mut : NSInfo
    {
-      let mut nsInfo = new NSInfo( typeInfo, pos, self.ctrl_info.validAsyncCtrl );
+      let mut nsInfo = new NSInfo(
+         typeInfo, typeInfo, pos, self.ctrl_info.validAsyncCtrl );
       self.nsInfoMap[ typeInfo ] = nsInfo;
       return nsInfo;
    }
    
-   /**
-現在のスコープが属する名前空間の型を取得する。
-
-※
-現在のスコープが属する名前空間が、
-この TransUnit で生成した名前空間でない場合はエラーするので注意すること。
-
-例えば、現在のスコープが rootScope だった場合はエラーする。
-*/ 
-   pro fn getCurrentNamespaceTypeInfoMut() __async mut : Ast.TypeInfo {
-      let typeInfo = self.scope.getNamespaceTypeInfo();
-      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
-         self.error( "not found nsInfo -- %s (%d)"
-                     (typeInfo.getTxt(##), typeInfo.$typeId.id) );
-      };
-      return nsInfo.$typeInfo;
-   }
-   
    pro fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
       return self.scope.getNamespaceTypeInfo();
+   }
+
+   pro fn getNSInfo( typeInfo:&Ast.TypeInfo ) mut : NSInfo {
+      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
+         self.error( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
+      };
+      return nsInfo;
+   }
+   
+   pro fn getCurrentNSInfo() mut : NSInfo {
+      return self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
    }
 
    pub fn pushModule(
@@ -393,11 +385,13 @@ TypeInfo → NSInfo.
          nsInfo = unwrap self.nsInfoMap[ typeInfo ];
       }
       else {
-         let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
+         let mut parentNsInfo = self.getCurrentNSInfo();
+         let parentInfo = parentNsInfo.$typeInfo;
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
          let mut newType = processInfo.createModule(
-            scope, parentInfo, externalFlag, modName, mutable );
+            scope, parentInfo, parentNsInfo.$typeDataAccessor,
+            externalFlag, modName, mutable );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
          nsInfo = self.newNSInfo( newType, self.getLatestPos() );
@@ -475,8 +469,9 @@ TypeInfo → NSInfo.
       allowMultiple:bool, accessMode:Ast.AccessMode,
       defNamespace: Nodes.NamespaceInfo! ) mut : NSInfo
    {
-      let typeInfo:&Ast.TypeInfo;
       let mut nsInfo;
+
+      let typeInfo:&Ast.TypeInfo;
       if! self.scope.getTypeInfo( name, self.scope, true, .Normal ) {
          // 宣言済み
          typeInfo = _exp;
@@ -577,7 +572,7 @@ TypeInfo → NSInfo.
          }
       }
       else {
-         let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
+         let mut parentNsInfo = self.getCurrentNSInfo();
 
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true, baseInfo, interfaceList );
@@ -591,7 +586,8 @@ TypeInfo → NSInfo.
 
          let mut newType = processInfo.createClassAsync(
             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
-            workGenTypeList, parentInfo, externalFlag, accessMode, name );
+            workGenTypeList, parentNsInfo.$typeInfo, parentNsInfo.$typeDataAccessor,
+            externalFlag, accessMode, name );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
          nsInfo = self.newNSInfo( newType, errPos );

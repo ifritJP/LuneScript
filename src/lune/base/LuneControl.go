@@ -103,6 +103,12 @@ var LuneControl_Pragma__use_async_Obj = &LuneControl_Pragma__use_async{}
 func (self *LuneControl_Pragma__use_async) GetTxt() string {
 return "Pragma.use_async"
 }
+type LuneControl_Pragma__use_macro_special_var struct{
+}
+var LuneControl_Pragma__use_macro_special_var_Obj = &LuneControl_Pragma__use_macro_special_var{}
+func (self *LuneControl_Pragma__use_macro_special_var) GetTxt() string {
+return "Pragma.use_macro_special_var"
+}
 func Lns_LuneControl_init(_env *LnsEnv) {
     if init_LuneControl { return }
     init_LuneControl = true

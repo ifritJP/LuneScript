@@ -104,8 +104,8 @@ pub enum TypeInfoKind {
 let extStartId = 100000;
 let extMaxId = 10000000;
 
-
-pub proto abstract class TypeInfo;
+pub proto interface TypeDataAccessor;
+pub proto abstract class TypeInfo extend (TypeDataAccessor);
 
 pub interface ModuleInfoIF {
    /** import したモジュールを assign したシンボル名 */
@@ -132,6 +132,10 @@ pub class TypeData {
    pub fn __init() {
       self.children = [];
    }
+}
+
+pub interface TypeDataAccessor {
+   pub fn get_typeData():TypeData;
 }
 
 pub enum IdType {
@@ -806,12 +810,12 @@ Async の要件に次を追加
    Transient,
 }
 
-pub abstract class TypeInfo {
+pub abstract class TypeInfo extend (TypeDataAccessor) {
 
    // この TypeInfo のスコープ。
    // class, func など名前空間を持つ TypeInfo は有効。
    pri let allmut scope: &Scope! {pub};
-   pri let typeData: TypeData {local};
+   pri let typeData: TypeData {pub};
    // この TypeInfo の typeId を生成した processInfo
    pri let processInfo:&ProcessInfo {pub};
    // この TypeInfo が、親の TypeData の何番目の child か示す。 
@@ -3879,7 +3883,8 @@ pub class ModuleTypeInfo extend TypeInfo {
 
    local fn __init(
       processInfo:ProcessInfo, scope: Scope, externalFlag: bool, txt: str,
-      mut parentInfo: TypeInfo, mutable:bool )
+      parentInfo: &TypeInfo, mutable:bool,
+      typeDataAccessor: TypeDataAccessor )
    {
       super( scope, processInfo );
 
@@ -3889,7 +3894,7 @@ pub class ModuleTypeInfo extend TypeInfo {
       self.typeId = processInfo.newId( self );
       self.mutable = mutable;
 
-      parentInfo.$typeData.addChildren( self );
+      typeDataAccessor.$typeData.addChildren( self );
          
       let parentFull = parentInfo.getParentFullName( defaultTypeNameCtrl ## );
       let fullName = "%s.@%s" ( parentFull,txt );
@@ -4031,7 +4036,7 @@ pub class EnumTypeInfo extend TypeInfo {
    
    local fn __init( processInfo:ProcessInfo, scope: Scope, externalFlag:
                     bool, accessMode: AccessMode, txt: str, parentInfo: &TypeInfo!,
-                    typeData:TypeData!, valTypeInfo:&TypeInfo ) 
+                    typeDataAccessor: TypeDataAccessor!, valTypeInfo:&TypeInfo ) 
    {
       super( scope, processInfo );
 
@@ -4046,8 +4051,8 @@ pub class EnumTypeInfo extend TypeInfo {
       self.val2EnumValInfo = {};
 
 
-      when! typeData {
-         typeData.addChildren( self );
+      when! typeDataAccessor {
+         typeDataAccessor.$typeData.addChildren( self );
       }
       
       // if! parentInfo {
@@ -4159,7 +4164,7 @@ pub class AlgeTypeInfo extend TypeInfo {
    local fn __init(
       processInfo:ProcessInfo, scope: Scope, externalFlag: bool,
       accessMode: AccessMode, txt: str,
-      parentInfo: &TypeInfo!, typeData:TypeData! ) 
+      parentInfo: &TypeInfo!, typeDataAccessor: TypeDataAccessor! ) 
    {
       super( scope, processInfo );
 
@@ -4172,8 +4177,8 @@ pub class AlgeTypeInfo extend TypeInfo {
       self.valInfoMap = {};
       self.valInfoNum = 0;
 
-      when! typeData {
-         typeData.addChildren( self );
+      when! typeDataAccessor {
+         typeDataAccessor.$typeData.addChildren( self );
       }
       
       // if! parentInfo {
@@ -4355,7 +4360,7 @@ pub class NormalTypeInfo extend TypeInfo {
       baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>!,
       autoFlag: bool, externalFlag: bool, staticFlag: bool,
       accessMode: AccessMode, txt: str,
-      parentInfo: &TypeInfo!, typeData:TypeData!, kind: TypeInfoKind,
+      parentInfo: &TypeInfo!, typeDataAccessor: TypeDataAccessor!, kind: TypeInfoKind,
       itemTypeInfoList: &List<&TypeInfo>!, argTypeInfoList:&List<&TypeInfo>!,
       retTypeInfoList: &List<&TypeInfo>!, mutMode: MutMode!,
       moduleLang:Types.Lang!, asyncMode:Async ) 
@@ -4430,8 +4435,8 @@ pub class NormalTypeInfo extend TypeInfo {
       if kind == .Root {
       }
       else {
-         when! typeData {
-            typeData.addChildren( self );
+         when! typeDataAccessor {
+            typeDataAccessor.$typeData.addChildren( self );
          }
          // when! parentInfo {
          //    parentInfo.addChildren( self );
@@ -4922,7 +4927,7 @@ local static fn NormalTypeInfo.createBuiltin(
    }
    let mut info = new NormalTypeInfo(
       rootProcessInfo, false, scope, nil, ifList, false, false, false,
-      AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut.$typeData, 
+      AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, 
       kind, genTypeList, argTypeList, retTypeList, .Mut, nil, .Async );
    rootProcessInfo.setupImut( info );
 
@@ -5250,7 +5255,7 @@ pub fn ProcessInfo.createSet(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
-         "Set", self.$dummyParentType, self.miscTypeData, .Set, itemTypeInfo,
+         "Set", self.$dummyParentType, self.$dummyParentType, .Set, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
@@ -5263,7 +5268,7 @@ pub fn ProcessInfo.createList(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
-         "List", self.$dummyParentType, self.miscTypeData, .List, itemTypeInfo,
+         "List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
@@ -5276,7 +5281,7 @@ pub fn ProcessInfo.createArray(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
-         "Array", self.$dummyParentType, self.miscTypeData, .Array, itemTypeInfo,
+         "Array", self.$dummyParentType, self.$dummyParentType, .Array, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
@@ -5289,14 +5294,15 @@ pub fn ProcessInfo.createMap(
       return new NormalTypeInfo(
          self, false, nil, builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
-         "Map", self.$dummyParentType, self.miscTypeData, .Map,
+         "Map", self.$dummyParentType, self.$dummyParentType, .Map,
          [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil, .Async );
    });
 }
 
 
 pub fn ProcessInfo.createModule(
-   scope: Scope, parentInfo: TypeInfo, externalFlag: bool,
+   scope: Scope, parentInfo: &TypeInfo,
+   typeDataAccessor: TypeDataAccessor, externalFlag: bool,
    moduleName: str, mutable:bool ) mut : TypeInfo
 {
    // if! sym2builtInTypeMap[ moduleName ] {
@@ -5309,7 +5315,7 @@ pub fn ProcessInfo.createModule(
    }
 
    let mut info = new ModuleTypeInfo(
-      self, scope, externalFlag, moduleName, parentInfo, mutable );
+      self, scope, externalFlag, moduleName, parentInfo, mutable, typeDataAccessor );
    
    self.setupImut( info );
    
@@ -5319,7 +5325,7 @@ pub fn ProcessInfo.createModule(
 pub fn ProcessInfo.createClassAsync(
    classFlag: bool, abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo!,
    interfaceList: &List<&TypeInfo>!, genTypeList: &List<&AlternateTypeInfo>,
-   parentInfo: TypeInfo, externalFlag: bool,
+   parentInfo: &TypeInfo, typeDataAccessor:TypeDataAccessor, externalFlag: bool,
    accessMode: AccessMode, className: str ) mut : TypeInfo
 {
    if Parser.isLuaKeyword( className ) {
@@ -5330,7 +5336,7 @@ pub fn ProcessInfo.createClassAsync(
    let mut info = new NormalTypeInfo(
       self, abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
-      className, parentInfo, parentInfo.$typeData,
+      className, parentInfo, typeDataAccessor,
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
       genTypeList, nil, nil, .Mut, nil, .Async );
    self.setupImut( info );
@@ -5345,7 +5351,8 @@ pub fn ProcessInfo.createClassAsync(
 
 
 pub fn ProcessInfo.createExtModule(
-   scope: Scope!, parentInfo: TypeInfo, externalFlag: bool,
+   scope: Scope!, parentInfo: &TypeInfo,
+   typeDataAccessor: TypeDataAccessor, externalFlag: bool,
    accessMode: AccessMode, className: str,
    moduleLang:Types.Lang, requirePath:str ) mut : TypeInfo
 {
@@ -5364,7 +5371,7 @@ pub fn ProcessInfo.createExtModule(
    let mut info = new NormalTypeInfo(
       self, false, scope, nil, nil, false,
       externalFlag, false, accessMode,
-      className, parentInfo, parentInfo.$typeData,
+      className, parentInfo, typeDataAccessor,
       .ExtModule, nil, nil, nil, .Mut, moduleLang, .Noasync );
    self.setupImut( info );
    info.set_requirePath(requirePath);
@@ -5374,7 +5381,8 @@ pub fn ProcessInfo.createExtModule(
 
 pub fn ProcessInfo.createFuncAsync(
    abstractFlag: bool, builtinFlag:bool, scope: Scope!, kind: TypeInfoKind,
-   parentInfo: TypeInfo, autoFlag: bool, externalFlag: bool, staticFlag: bool,
+   parentInfo: &TypeInfo, typeDataAccessor:TypeDataAccessor,
+   autoFlag: bool, externalFlag: bool, staticFlag: bool,
    accessMode: AccessMode, funcName: str, asyncMode:Async, altTypeList: &List<&TypeInfo>!,
    argTypeList: &List<&TypeInfo>!, retTypeInfoList: &List<&TypeInfo>!,
    mutable: bool! ) mut : NormalTypeInfo
@@ -5385,7 +5393,7 @@ pub fn ProcessInfo.createFuncAsync(
 
    let mut info = new NormalTypeInfo(
       self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
-      accessMode, funcName, parentInfo, parentInfo.$typeData,
+      accessMode, funcName, parentInfo, typeDataAccessor,
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [],
       mutable and MutMode.Mut or MutMode.IMut, nil, asyncMode );
@@ -5403,7 +5411,7 @@ pub fn ProcessInfo.createFuncAsync(
 }
 
 pub let builtinTypeLnsLoad:&TypeInfo = rootProcessInfo.createFuncAsync(
-   false, true, nil, .Func, headTypeInfoMut, false, true,
+   false, true, nil, .Func, headTypeInfoMut, headTypeInfoMut, false, true,
    true, .Pub, "_lnsLoad", .Async, nil, [ builtinTypeString, builtinTypeString ],
    [ builtinTypeStem ], false );
 
@@ -5415,7 +5423,7 @@ pub fn ProcessInfo.createDummyNameSpace(
 {
    let mut info = new NormalTypeInfo(
       self, false, scope, nil, nil, true, false, true,
-      .Local, "__scope_%d" (scope.$scopeId), parentInfo, self.miscTypeData,
+      .Local, "__scope_%d" (scope.$scopeId), parentInfo, self.$dummyParentType,
       .Func, [], [], [], MutMode.IMut, nil, asyncMode );
    self.setupImut( info );
 
@@ -5424,11 +5432,13 @@ pub fn ProcessInfo.createDummyNameSpace(
 
 //pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
 pub fn ProcessInfo.createAdvertiseMethodFrom(
-   classTypeInfo:TypeInfo, typeInfo:&TypeInfo ) mut : &TypeInfo
+   classTypeInfo:&TypeInfo,
+   typeDataAccessor:TypeDataAccessor, typeInfo:&TypeInfo ) mut : &TypeInfo
 {
    return self.createFuncAsync(
       false, false, nil, typeInfo.$kind,
-      classTypeInfo, true, false, false, typeInfo.$accessMode, typeInfo.$rawTxt,
+      classTypeInfo, typeDataAccessor,
+      true, false, false, typeInfo.$accessMode, typeInfo.$rawTxt,
       typeInfo.$asyncMode, typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
       typeInfo.$retTypeInfoList, TypeInfo.isMut( typeInfo ) );
 }
@@ -6460,7 +6470,8 @@ pub fn isNumberType( typeInfo:&TypeInfo ): bool {
 
 //pub static fn NormalTypeInfo.createEnum(
 pub fn ProcessInfo.createEnum(
-   scope: Scope, parentInfo: TypeInfo, externalFlag: bool, accessMode: AccessMode,
+   scope: Scope, parentInfo: &TypeInfo, typeDataAccessor: TypeDataAccessor, 
+   externalFlag: bool, accessMode: AccessMode,
    enumName: str, valTypeInfo:&TypeInfo ) mut : EnumTypeInfo
 {
    if Parser.isLuaKeyword( enumName ) {
@@ -6470,17 +6481,17 @@ pub fn ProcessInfo.createEnum(
 
    let mut info = new EnumTypeInfo(
       self, scope, externalFlag, accessMode, enumName,
-      parentInfo, parentInfo.$typeData, valTypeInfo );
+      parentInfo, typeDataAccessor, valTypeInfo );
    self.setupImut( info );
 
    let mut getEnumName = self.createFuncAsync(
-      false, true, nil, .Method, info,
+      false, true, nil, .Method, info, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
    scope.addMethod( self, nil, getEnumName, AccessMode.Pub, false, false );
 
    let mut fromVal = self.createFuncAsync(
-      false, true, nil, .Func, info,
+      false, true, nil, .Func, info, info,
       true, externalFlag, true, AccessMode.Pub,
       "_from", .Async, nil, [ self.createModifier( valTypeInfo, .IMut ) ],
       [ info.$nilableTypeInfo ], false );
@@ -6488,7 +6499,7 @@ pub fn ProcessInfo.createEnum(
 
    let allListType = self.createList( .Pub, info, [ info ], .IMut );
    let mut allList = self.createFuncAsync(
-      false, true, nil, .Func, info,
+      false, true, nil, .Func, info, info,
       true, externalFlag, true, AccessMode.Pub,
       "get__allList", .Async, nil, nil,
       [ self.createModifier( allListType, .IMut ) ], false );
@@ -6529,7 +6540,8 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
 
 //pub static fn NormalTypeInfo.createAlge(
 pub fn ProcessInfo.createAlge(
-   scope: Scope, parentInfo: TypeInfo, externalFlag: bool,
+   scope: Scope, parentInfo: &TypeInfo, typeDataAccessor: TypeDataAccessor,
+   externalFlag: bool,
    accessMode: AccessMode, algeName: str ) mut : AlgeTypeInfo
 {
    if Parser.isLuaKeyword( algeName ) {
@@ -6538,11 +6550,11 @@ pub fn ProcessInfo.createAlge(
    }
 
    let mut info = new AlgeTypeInfo(
-      self, scope, externalFlag, accessMode, algeName, parentInfo, parentInfo.$typeData );
+      self, scope, externalFlag, accessMode, algeName, parentInfo, typeDataAccessor );
    self.setupImut( info );
 
    let mut getAlgeName = self.createFuncAsync(
-      false, true, nil, .Method, info,
+      false, true, nil, .Method, info, info,
       true, externalFlag, false, AccessMode.Pub,
       "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
    scope.addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false );
@@ -8047,11 +8059,11 @@ __test case1(ctrl) {
    // Super と Sub の canEvalWith
    let superType = processInfo.createClassAsync(
       true, false, new Scope( processInfo, rootScope, true ## ),
-      nil, nil, [], headTypeInfoMut, false, .Local, "Super" );
+      nil, nil, [], headTypeInfoMut, headTypeInfoMut, false, .Local, "Super" );
    testScope.addClass( processInfo, "Super", nil, superType );   
    let subType = processInfo.createClassAsync(
       true, false, new Scope( processInfo, rootScope, true ## ),
-      superType, nil, [], headTypeInfoMut, false, .Local, "Sub" );
+      superType, nil, [], headTypeInfoMut, headTypeInfoMut, false, .Local, "Sub" );
    testScope.addClass( processInfo, "Sub", nil, subType );   
 
    _checkCanEvalWith( "Super", "Sub", "OK" );
@@ -8129,7 +8141,7 @@ __test case1(ctrl) {
    genTypeList.insert( alter );
    let hogeType = processInfo.createClassAsync(
       true, false, new Scope( processInfo, rootScope, true ## ),
-      nil, nil, genTypeList, headTypeInfoMut, false, .Local, "Hoge" );
+      nil, nil, genTypeList, headTypeInfoMut, headTypeInfoMut, false, .Local, "Hoge" );
    testScope.addClass( processInfo, "Hoge", nil, hogeType );
 
    _checkCanEvalWith( "Hoge<int>", "Hoge<int>", "OK" );

@@ -193,7 +193,7 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
          local parentScope = self.scope
          local scope = self:pushScope( true )
-         local newType = processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
+         local newType = processInfo:createModule( scope, parentInfo, parentInfo, externalFlag, modName, mutable )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )
@@ -335,7 +335,7 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
          end
          
          
-         local newType = processInfo:createClassAsync( mode ~= TransUnitIF.DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
+         local newType = processInfo:createClassAsync( mode ~= TransUnitIF.DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, parentInfo, externalFlag, accessMode, name )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )

@@ -1,0 +1,5 @@
+macro _hoge() {
+   {
+      __var[ "a" ] = 1; // error
+   }
+}

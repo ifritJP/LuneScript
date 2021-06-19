@@ -43,4 +43,5 @@ pub alge Pragma {
    default_async_all,
    default_async_this_class,
    default_noasync_this_class,
+   use_macro_special_var,
 }

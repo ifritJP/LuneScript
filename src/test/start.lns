@@ -1,4 +1,7 @@
+_lune_control use_macro_special_var;
+
 subfile use test.startsub;
+
 import test.macro as Macro;
 import test.simple;
 import lune.base.Writer; // skip-cross

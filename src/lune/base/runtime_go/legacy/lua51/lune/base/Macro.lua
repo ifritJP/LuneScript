@@ -289,7 +289,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
-local validAsyncMacro = false
+local validAsyncMacro = true
 
 local function loadCode( code )
 
@@ -681,6 +681,43 @@ function MacroAnalyzeInfo:get_argIndex()
 end
 
 
+local DefMacroSrc = {}
+function DefMacroSrc.setmeta( obj )
+  setmetatable( obj, { __index = DefMacroSrc  } )
+end
+function DefMacroSrc.new( luaCode, declInfo, symbol2MacroValInfoMap, baseDir, asyncFlag )
+   local obj = {}
+   DefMacroSrc.setmeta( obj )
+   if obj.__init then
+      obj:__init( luaCode, declInfo, symbol2MacroValInfoMap, baseDir, asyncFlag )
+   end
+   return obj
+end
+function DefMacroSrc:__init( luaCode, declInfo, symbol2MacroValInfoMap, baseDir, asyncFlag )
+
+   self.luaCode = luaCode
+   self.declInfo = declInfo
+   self.symbol2MacroValInfoMap = symbol2MacroValInfoMap
+   self.baseDir = baseDir
+   self.asyncFlag = asyncFlag
+end
+function DefMacroSrc:get_luaCode()
+   return self.luaCode
+end
+function DefMacroSrc:get_declInfo()
+   return self.declInfo
+end
+function DefMacroSrc:get_symbol2MacroValInfoMap()
+   return self.symbol2MacroValInfoMap
+end
+function DefMacroSrc:get_baseDir()
+   return self.baseDir
+end
+function DefMacroSrc:get_asyncFlag()
+   return self.asyncFlag
+end
+
+
 local MacroCtrl = {}
 _moduleObj.MacroCtrl = MacroCtrl
 function MacroCtrl.new( macroEval )
@@ -693,6 +730,7 @@ function MacroCtrl:__init(macroEval)
    self.toLuavalLuaAsync = nil
    self.useLnsLoad = false
    self.declMacroInfoMap = {}
+   self.declMacroInfoSrcMap = {}
    self.isDeclaringMacro = false
    self.tokenExpanding = false
    self.useModuleMacroSet = {}
@@ -733,6 +771,12 @@ function MacroCtrl:clone(  )
    end
    
    
+   for key, srcInfo in pairs( self.declMacroInfoSrcMap ) do
+      local macroObj = _lune.unwrap( runLuaOnLnsToMacroProc( srcInfo:get_luaCode(), srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
+      obj.typeId2MacroInfo[key] = Nodes.DefMacroInfo.new(macroObj, srcInfo:get_declInfo(), srcInfo:get_symbol2MacroValInfoMap())
+   end
+   
+   
    do
       for key, val in pairs( self.symbol2ValueMapForMacro ) do
          obj.symbol2ValueMapForMacro[key] = val
@@ -747,7 +791,6 @@ function MacroCtrl:clone(  )
       table.insert( obj.macroAnalyzeInfoStack, val )
    end
    
-   obj.macroLocalVarMap = nil
    
    return obj
 end
@@ -1153,7 +1196,8 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
    local luaCode = self.macroEval:evalToLuaCode( processInfo, node )
    local macroObj, err
    
-   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, validAsyncMacro and not Ast.isPubToExternal( node:get_expType():get_accessMode() ) )
+   local asyncFlag = validAsyncMacro and not Ast.isPubToExternal( node:get_expType():get_accessMode() )
+   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, asyncFlag )
    
    if macroObj ~= nil then
       
@@ -1180,11 +1224,13 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
       local macroInfo = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
       self.typeId2MacroInfo[node:get_expType():get_typeId()] = macroInfo
       self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
+      self.declMacroInfoSrcMap[node:get_expType():get_typeId()] = DefMacroSrc.new(luaCode, node:get_declInfo(), remap, baseDir, asyncFlag)
       
-      self.symbol2ValueMapForMacro = {}
-      self.isDeclaringMacro = false
-      return nil
+      err = nil
    end
+   
+   self.symbol2ValueMapForMacro = {}
+   self.isDeclaringMacro = false
    
    return err
 end

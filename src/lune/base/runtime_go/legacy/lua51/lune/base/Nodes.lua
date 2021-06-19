@@ -233,6 +233,7 @@ if not _lune4 then
 end
 
 
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
@@ -819,6 +820,24 @@ function NodeManager:delNode( node )
    
    if findIndex ~= -1 then
       table.remove( list, findIndex )
+   end
+   
+end
+function NodeManager:addFrom( nodeManager )
+
+   for nodeKind, list in pairs( nodeManager.nodeKind2NodeList ) do
+      local dstList = self.nodeKind2NodeList[nodeKind]
+      if  nil == dstList then
+         local _dstList = dstList
+      
+         dstList = {}
+         self.nodeKind2NodeList[nodeKind] = dstList
+      end
+      
+      for __index, node in ipairs( list ) do
+         table.insert( dstList, node )
+      end
+      
    end
    
 end

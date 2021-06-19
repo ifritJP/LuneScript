@@ -93,7 +93,7 @@ pub class TransUnit {
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( true ## );
          let mut newType = processInfo.createModule(
-            scope, parentInfo, externalFlag, modName, mutable );
+            scope, parentInfo, parentInfo, externalFlag, modName, mutable );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
          Ast.addBuiltinMut( newType, scope );
@@ -252,7 +252,7 @@ pub class TransUnit {
 
          let mut newType = processInfo.createClassAsync(
             mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
-            workGenTypeList, parentInfo, externalFlag, accessMode, name );
+            workGenTypeList, parentInfo, parentInfo, externalFlag, accessMode, name );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;
          Ast.addBuiltinMut( newType, scope );

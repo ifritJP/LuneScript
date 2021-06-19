@@ -790,6 +790,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
          let callback = self.processInfo.createFuncAsync(
             false, false, nil, Ast.TypeInfoKind.Func,
             self.processInfo.$dummyParentType,
+            self.processInfo.$dummyParentType,
             //Ast.getBuiltinMut( Ast.headTypeInfo ),
             false, false, true, .Pri, "sort", .Async, nil,
             [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
@@ -2841,24 +2842,28 @@ fn TransUnit.analyzeExpSymbol(
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
          {
-            if self.analyzeMode ~= .Diag {
-               let mut work:&Ast.Scope = self.scope;
-               while true {
-                  print( work, self.moduleScope );
-                  if work == work.$parent {
-                     break;
+            if self.macroCtrl.$isDeclaringMacro and symbolToken.txt == "__var" {
+               self.error( "declare '_lune_control use_macro_special_var'." );
+            } else {
+               if self.analyzeMode ~= .Diag {
+                  let mut work:&Ast.Scope = self.scope;
+                  while true {
+                     print( work, self.moduleScope );
+                     if work == work.$parent {
+                        break;
+                     }
+                     work = work.$parent;
                   }
-                  work = work.$parent;
-               }
 
-               self.scope.filterSymbolTypeInfo(
-                  self.scope, self.moduleScope, self.scopeAccess,
-                  fn ( workSymbolInfo:&Ast.SymbolInfo ): bool {
-                     print( "sym", workSymbolInfo.$name );
-                     return true;
-                  } );
+                  self.scope.filterSymbolTypeInfo(
+                     self.scope, self.moduleScope, self.scopeAccess,
+                     fn ( workSymbolInfo:&Ast.SymbolInfo ): bool {
+                        print( "sym", workSymbolInfo.$name );
+                        return true;
+                     } );
+               }
+               self.error( "not found type -- " .. symbolToken.txt );
             }
-            self.error( "not found type -- " .. symbolToken.txt );
          };
 
          self.accessSymbol( symbolInfo, canLeftExp );

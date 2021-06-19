@@ -33,7 +33,7 @@ import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
 
 // マクロ処理を非同期に行なう場合 true
-let validAsyncMacro = false;
+let validAsyncMacro = true;
 
 
 fn loadCode( code:str ) : Luaval<&stem> {
@@ -280,6 +280,14 @@ pub class MacroAnalyzeInfo {
    }
 }
 
+class DefMacroSrc {
+   let luaCode:str {pub};
+   let declInfo: Nodes.DeclMacroInfo {pub};
+   let symbol2MacroValInfoMap: Map<str,Nodes.MacroValInfo> {pub};
+   let baseDir:str! {pub};
+   let asyncFlag:bool {pub};
+}
+
 pub class MacroCtrl
 {
    let mut useModuleMacroSet:Set<&Ast.TypeInfo> {pub&};
@@ -289,6 +297,9 @@ pub class MacroCtrl
    let mut typeId2MacroInfo: Map<&Ast.IdInfo,&Nodes.MacroInfo> {pub&};
    /** マクロの TypeId -> マクロ情報. インポートしたマクロは含めない。 */
    let declMacroInfoMap: Map<&Ast.IdInfo,&Nodes.MacroInfo> {pub&};
+   /** declMacroInfoMap の登録ソース */
+   let declMacroInfoSrcMap: Map<&Ast.IdInfo,DefMacroSrc>;
+   
    /**
    * 現在展開中の macro-expand 内で利用できるシンボルと値の紐付けマップ。
    * macro-statment 内の stat の展開でも利用する。
@@ -321,6 +332,7 @@ pub class MacroCtrl
       self.toLuavalLuaAsync = nil;
       self.useLnsLoad = false;
       self.declMacroInfoMap = {};
+      self.declMacroInfoSrcMap = {};
       self.isDeclaringMacro = false;
       self.tokenExpanding = false;
       self.useModuleMacroSet = (@);
@@ -354,13 +366,19 @@ pub class MacroCtrl
       obj.tokenExpanding = self.tokenExpanding;
       obj.useModuleMacroSet.or( self.useModuleMacroSet );
       _cloneMap( obj.typeId2MacroInfo, self.typeId2MacroInfo );
+      foreach srcInfo, key in self.declMacroInfoSrcMap {
+         let macroObj = unwrap runLuaOnLnsToMacroProc(
+            srcInfo.$luaCode, srcInfo.$baseDir, srcInfo.$asyncFlag );
+         obj.typeId2MacroInfo[ key ] = new Nodes.DefMacroInfo(
+            macroObj, srcInfo.$declInfo, srcInfo.$symbol2MacroValInfoMap );
+      }
+
       _cloneMap( obj.symbol2ValueMapForMacro, self.symbol2ValueMapForMacro );
       obj.analyzeInfo = self.analyzeInfo.clone();
       obj.macroCallLineNo = self.macroCallLineNo;
       foreach val in self.macroAnalyzeInfoStack {
          obj.macroAnalyzeInfoStack.insert( val );
       }
-      obj.macroLocalVarMap = nil;
       
       return obj;
    }
@@ -664,10 +682,10 @@ pub fn MacroCtrl.regist(
    macroScope:&Ast.Scope, baseDir:str! ) mut : str!
 {
    let luaCode = self.macroEval.evalToLuaCode( processInfo, node );
-   let macroObj, err;
-   macroObj, err = runLuaOnLnsToMacroProc(
-      luaCode, baseDir,
-      validAsyncMacro and not Ast.isPubToExternal( node.$expType.$accessMode ) );
+   let macroObj, mut err:str!;
+   let asyncFlag =
+      validAsyncMacro and not Ast.isPubToExternal( node.$expType.$accessMode );
+   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, asyncFlag );
 
 
    when! macroObj {
@@ -689,11 +707,15 @@ pub fn MacroCtrl.regist(
       let mut macroInfo = new Nodes.DefMacroInfo( macroObj, node.$declInfo, remap );
       self.typeId2MacroInfo[ node.$expType.$typeId ] = macroInfo;
       self.declMacroInfoMap[ node.$expType.$typeId ] = macroInfo;
+      self.declMacroInfoSrcMap[ node.$expType.$typeId ] =
+         new DefMacroSrc( luaCode, node.$declInfo, remap, baseDir, asyncFlag );
 
-      self.symbol2ValueMapForMacro = {};
-      self.isDeclaringMacro = false;
-      return nil;
+
+      err = nil;
    }
+   self.symbol2ValueMapForMacro = {};
+   self.isDeclaringMacro = false;
+   
    return err;
 }
 

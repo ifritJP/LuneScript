@@ -274,18 +274,19 @@ function NSInfo:isNoasync(  )
    
    return false
 end
-function NSInfo.new( typeInfo, pos, validAsyncCtrl )
+function NSInfo.new( typeInfo, typeDataAccessor, pos, validAsyncCtrl )
    local obj = {}
    NSInfo.setmeta( obj )
-   if obj.__init then obj:__init( typeInfo, pos, validAsyncCtrl ); end
+   if obj.__init then obj:__init( typeInfo, typeDataAccessor, pos, validAsyncCtrl ); end
    return obj
 end
-function NSInfo:__init(typeInfo, pos, validAsyncCtrl) 
+function NSInfo:__init(typeInfo, typeDataAccessor, pos, validAsyncCtrl) 
    self.idSetInfo = IdSetInfo.new()
    self.nobody = false
    self.lockedAsyncStack = {}
    self.loopScopeQueue = {}
    
+   self.typeDataAccessor = typeDataAccessor
    self.typeInfo = typeInfo
    self.pos = pos
    self.validAsyncCtrl = validAsyncCtrl
@@ -340,6 +341,9 @@ function NSInfo:set_nobody( nobody )
 end
 function NSInfo:get_typeInfo()
    return self.typeInfo
+end
+function NSInfo:get_typeDataAccessor()
+   return self.typeDataAccessor
 end
 function NSInfo:get_pos()
    return self.pos
@@ -457,7 +461,7 @@ function TransUnitBase:__init(ctrl_info, processInfo)
    self.scope = Ast.Scope.new(processInfo, self.globalScope, true, nil)
    self.nsInfoMap = {}
    local subRootTypeInfo = self.processInfo:get_dummyParentType()
-   self.nsInfoMap[subRootTypeInfo] = NSInfo.new(subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
+   self.nsInfoMap[subRootTypeInfo] = NSInfo.new(subRootTypeInfo, subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
 end
 function TransUnitBase:addErrMess( pos, mess )
 
@@ -480,27 +484,36 @@ function TransUnitBase:popScope(  )
 
    self.scope = self.scope:get_outerScope()
 end
-function TransUnitBase:newNSInfo( typeInfo, pos )
+function TransUnitBase:newNSInfoWithTypeData( typeInfo, typeDataAccessor, pos )
 
-   local nsInfo = NSInfo.new(typeInfo, pos, self.ctrl_info.validAsyncCtrl)
+   local nsInfo = NSInfo.new(typeInfo, typeDataAccessor, pos, self.ctrl_info.validAsyncCtrl)
    self.nsInfoMap[typeInfo] = nsInfo
    return nsInfo
 end
-function TransUnitBase:getCurrentNamespaceTypeInfoMut(  )
+function TransUnitBase:newNSInfo( typeInfo, pos )
 
-   local typeInfo = self.scope:getNamespaceTypeInfo(  )
-   local nsInfo = self.nsInfoMap[typeInfo]
-   if  nil == nsInfo then
-      local _nsInfo = nsInfo
-   
-      self:error( string.format( "not found nsInfo -- %s (%d)", typeInfo:getTxt(  ), typeInfo:get_typeId().id) )
-   end
-   
-   return nsInfo:get_typeInfo()
+   local nsInfo = NSInfo.new(typeInfo, typeInfo, pos, self.ctrl_info.validAsyncCtrl)
+   self.nsInfoMap[typeInfo] = nsInfo
+   return nsInfo
 end
 function TransUnitBase:getCurrentNamespaceTypeInfo(  )
 
    return self.scope:getNamespaceTypeInfo(  )
+end
+function TransUnitBase:getNSInfo( typeInfo )
+
+   local nsInfo = self.nsInfoMap[typeInfo]
+   if  nil == nsInfo then
+      local _nsInfo = nsInfo
+   
+      self:error( string.format( "not found TypeInfo -- %s", typeInfo:getTxt(  )) )
+   end
+   
+   return nsInfo
+end
+function TransUnitBase:getCurrentNSInfo(  )
+
+   return self:getNSInfo( self:getCurrentNamespaceTypeInfo(  ) )
 end
 function TransUnitBase:pushModule( processInfo, externalFlag, name, mutable )
 
@@ -534,10 +547,11 @@ function TransUnitBase:pushModule( processInfo, externalFlag, name, mutable )
          nsInfo = _lune.unwrap( self.nsInfoMap[typeInfo])
       else
          local _
-         local parentInfo = self:getCurrentNamespaceTypeInfoMut(  )
+         local parentNsInfo = self:getCurrentNSInfo(  )
+         local parentInfo = parentNsInfo:get_typeInfo()
          local parentScope = self.scope
          local scope = self:pushScope( true )
-         local newType = processInfo:createModule( scope, parentInfo, externalFlag, modName, mutable )
+         local newType = processInfo:createModule( scope, parentInfo, parentNsInfo:get_typeDataAccessor(), externalFlag, modName, mutable )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          nsInfo = self:newNSInfo( newType, self:getLatestPos(  ) )
@@ -590,9 +604,10 @@ function TransUnitBase:pushClassScope( errPos, classTypeInfo, scope )
 end
 function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
 
-   local typeInfo
-   
    local nsInfo
+   
+   
+   local typeInfo
    
    do
       local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
@@ -679,7 +694,7 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
          end
          
       else
-         local parentInfo = self:getCurrentNamespaceTypeInfoMut(  )
+         local parentNsInfo = self:getCurrentNSInfo(  )
          
          local parentScope = self.scope
          local scope = self:pushScope( true, baseInfo, interfaceList )
@@ -692,7 +707,7 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
          end
          
          
-         local newType = processInfo:createClassAsync( mode ~= DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, externalFlag, accessMode, name )
+         local newType = processInfo:createClassAsync( mode ~= DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), externalFlag, accessMode, name )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          nsInfo = self:newNSInfo( newType, errPos )

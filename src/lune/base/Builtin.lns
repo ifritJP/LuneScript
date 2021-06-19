@@ -652,7 +652,8 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
             
             let mut typeInfo = self.processInfo.createFuncAsync(
                abstractFlag, true, scope, kind,
-               Ast.getBuiltinMut( parentInfo), false, true, staticFlag, accessMode,
+               parentInfo, Ast.getBuiltinMut( parentInfo),
+               false, true, staticFlag, accessMode,
                fieldName, asyncMode, nil, argTypeList, retTypeList, mutable );
             if self.hasLuaval {
                builtinFunc.addLuavalFunc( typeInfo );

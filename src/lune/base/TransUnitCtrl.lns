@@ -1,16 +1,39 @@
 subfile owner lune.base.TransUnit;
 
-class TransUnitRunner extend TransUnit {
-   pub fn __init( moduleId:&frontInterface.ModuleId,
-                  importModuleInfo:&frontInterface.ImportModuleInfo,
-                  macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
-                  analyzeModule:str!, mode:AnalyzeMode!,
-                  pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
-                  ctrl_info: &Types.TransCtrlInfo,
-                  builtinFunc:&Builtin.BuiltinFuncType )
+class TransUnitRunner extend TransUnit(__Runner) {
+   let srcTranUnit:&TransUnit;
+   let funcBlockInfoList:&List<&FuncBlockInfo>;
+   let mut resultList:&List<FuncBlockResult>;
+   
+   pub fn __init(
+      srcTranUnit:&TransUnit,
+      moduleId:&frontInterface.ModuleId,
+      importModuleInfo:&frontInterface.ImportModuleInfo,
+      macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
+      analyzeModule:str!, mode:AnalyzeMode!,
+      pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
+      ctrl_info: &Types.TransCtrlInfo,
+      builtinFunc:&Builtin.BuiltinFuncType,
+      funcBlockInfoList:&List<&FuncBlockInfo> )
   {
       super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
              analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
+
+     self.srcTranUnit = srcTranUnit;
+     self.funcBlockInfoList = funcBlockInfoList;
+     self.resultList = [];
+  }
+
+  pub fn run() __async mut {
+     self.setup( self.srcTranUnit );
+
+     self.resultList = self.processFuncBlockInfo(
+        self.funcBlockInfoList, self.parser.getStreamName() );
+  }
+
+  pub fn get() mut : &List<FuncBlockResult> {
+     __join( self );
+     return self.resultList;
   }
  }
 
@@ -607,14 +630,17 @@ pub fn TransUnitCtrl.createAST(
 
       {
          // let mut runner = new TransUnitRunner(
+         //    self,
          //    self.moduleId,
          //    self.importModuleInfo,
          //    self.macroEval, false,
          //    self.moduleName, .Compile, nil,
          //    self.targetLuaVer,
          //    self.ctrl_info,
-         //    self.builtinFunc );
-         // runner.setup( self );
+         //    self.builtinFunc,
+         //    self.funcBlockInfoList );
+         // runner.run();
+         // let mut resultList = runner.get();
 
          let mut resultList = self.processFuncBlockInfo(
             self.funcBlockInfoList, self.parser.getStreamName() );

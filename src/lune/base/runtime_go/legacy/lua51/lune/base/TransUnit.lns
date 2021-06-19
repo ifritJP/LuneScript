@@ -52,6 +52,16 @@ import lune.base.AstInfo;
 
 _lune_control ignore_symbol_;
 
+macro _cloneMap( dst:__exp, src:__exp ) {
+   {}
+    {
+       foreach val, key in ,,src {
+          ,,dst[ key ] = val;
+       }
+    }
+}
+      
+
 
 alias DeclClassMode = TransUnitIF.DeclClassMode;
 
@@ -661,6 +671,20 @@ alias で置き換えている元の Type → alias の型
 
    local fn setup( src:&TransUnit ) mut
    {
+      _cloneMap( self.typeId2ClassMap, src.typeId2ClassMap );
+      foreach val in src.errMessList {
+         self.errMessList.insert( val );
+      }
+
+
+      self.globalScope = new Ast.ScopeWithRef(
+         self.processInfo, self.globalScope, src.globalScope, false ## );
+
+      _cloneMap( self.typeId2ClassMap, src.typeId2ClassMap );
+      
+
+      // === self
+      
       foreach state in src.analyzingStateQueue {
          self.analyzingStateQueue.insert( state );
       }
@@ -672,9 +696,42 @@ alias で置き換えている元の Type → alias の型
          self.warnMessList.insert( mess );
       }
       self.importModuleSet.or( src.importModuleSet );
-      foreach val, key in src.importedAliasMap {
-         self.importedAliasMap[ key ] = val;
+      _cloneMap( self.importedAliasMap, src.importedAliasMap );
+   }
+
+   local fn mergeFrom( src:&TransUnit ) mut {
+      self.nodeManager.addFrom( src.nodeManager );
+
+      // /** クロージャ候補の関数情報リスト */
+      foreach val in src.closureFunList {
+         self.closureFunList.insert( val );
       }
+
+      // /** コメントリスト */
+      // local let commentCtrl: Parser.CommentCtrl;
+
+
+      // /** クラスの型情報 -> そのクラスを宣言しているノード */
+      _cloneMap( self.typeInfo2ClassNode, src.typeInfo2ClassNode );
+
+      self.helperInfo.mergeFrom( src.helperInfo );
+
+      fn cloneMessList( dstList:List<&TransUnitIF.ErrMess>,
+                        srcList:&List<&TransUnitIF.ErrMess> )
+      {
+         let set:Set<str> = (@);
+         foreach info in dstList {
+            set.add( info.mess );
+         }
+         foreach info in srcList {
+            if not set.has( info.mess ) {
+               dstList.insert( info );
+            }
+         }
+      }
+
+      cloneMessList( self.warnMessList, src.warnMessList );
+      cloneMessList( self.errMessList, src.errMessList );
    }
 
    
@@ -799,17 +856,6 @@ alias で置き換えている元の Type → alias の型
       }
    }
    
-   fn getNSInfo( typeInfo:&Ast.TypeInfo ) mut : TransUnitIF.NSInfo {
-      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
-         self.error( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
-      };
-      return nsInfo;
-   }
-
-   fn getNSType( typeInfo:&Ast.TypeInfo ) mut : Ast.TypeInfo {
-      return self.getNSInfo( typeInfo ).$typeInfo;
-   }
-
    /** scope を名前空間に属させるためのダミーの関数を定義 */
    fn createDummyNS( scope:Ast.Scope, pos:&Parser.Position, asyncMode:Ast.Async ) mut {
       let mut dummyType = self.processInfo.createDummyNameSpace(
@@ -897,9 +943,6 @@ alias で置き換えている元の Type → alias の型
       return typeInfo;
    }
 
-   fn getCurrentNSInfo() mut : TransUnitIF.NSInfo {
-      return self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
-   }
 
    pri fn pushExtModule(
       externalFlag: bool, name:str, accessMode:Ast.AccessMode, pos:&Parser.Position,
@@ -911,11 +954,12 @@ alias で置き換えている元の Type → alias の型
          self.addErrMess( pos, "multiple define -- %s" (name) );
       }
 
-      let mut parentInfo = self.getCurrentNamespaceTypeInfoMut();
+      let mut parentNsInfo = self.getCurrentNSInfo();
+      let mut parentInfo = parentNsInfo.$typeInfo;
       let mut parentScope = self.scope;
       let mut scope = self.pushScope( true ## );
       let mut typeInfo = self.processInfo.createExtModule(
-         scope, parentInfo, externalFlag,
+         scope, parentInfo, parentNsInfo.$typeDataAccessor, externalFlag,
          accessMode, name, lang, requirePath );
 
       parentScope.addExtModule( self.processInfo, name, pos, typeInfo, lazy, lang );
@@ -1612,6 +1656,9 @@ fn TransUnit.analyzeLuneControl(
       case "default_async_all" {
          pragma = LuneControl.Pragma.default_async_all;
          self.defaultAsyncMode = .AsyncAll;
+      }
+      case "use_macro_special_var" {
+         pragma = LuneControl.Pragma.use_macro_special_var;
       }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );

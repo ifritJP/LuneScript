@@ -1,6 +1,6 @@
 macro _hoge() {
    {
-      macro _foo() {
+      macro _foo() { // error
       }
    }
 }
