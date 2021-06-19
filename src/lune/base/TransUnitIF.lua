@@ -291,6 +291,15 @@ function NSInfo:__init(typeInfo, typeDataAccessor, pos, validAsyncCtrl)
    self.pos = pos
    self.validAsyncCtrl = validAsyncCtrl
 end
+function NSInfo:duplicate(  )
+
+   local typeData = Ast.TypeData.new()
+   local nsInfo = NSInfo.new(self.typeInfo, Ast.SimpleTypeDataAccessor.new(typeData), self.pos, self.validAsyncCtrl)
+   
+   typeData:addFrom( self.typeDataAccessor:get_typeData() )
+   
+   return nsInfo
+end
 function NSInfo:incLock( lockKind )
 
    table.insert( self.lockedAsyncStack, LockedAsyncInfo.new(#self.loopScopeQueue, lockKind) )
@@ -457,8 +466,8 @@ function TransUnitBase:__init(ctrl_info, processInfo)
    self.errMessList = {}
    self.namespace2Scope = {}
    self.processInfo = processInfo
-   self.globalScope = Ast.Scope.new(processInfo, processInfo:get_topScope(), true, nil)
-   self.scope = Ast.Scope.new(processInfo, self.globalScope, true, nil)
+   self.globalScope = Ast.Scope.new(processInfo, processInfo:get_topScope(), Ast.ScopeKind.Module, nil)
+   self.scope = Ast.Scope.new(processInfo, self.globalScope, Ast.ScopeKind.Module, nil)
    self.nsInfoMap = {}
    local subRootTypeInfo = self.processInfo:get_dummyParentType()
    self.nsInfoMap[subRootTypeInfo] = NSInfo.new(subRootTypeInfo, subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
@@ -475,9 +484,9 @@ function TransUnitBase:error( mess )
 
    self:errorAt( self:getLatestPos(  ), mess )
 end
-function TransUnitBase:pushScope( classFlag, baseInfo, interfaceList )
+function TransUnitBase:pushScope( scopeKind, baseInfo, interfaceList )
 
-   self.scope = Ast.TypeInfo.createScope( self.processInfo, self.scope, classFlag, baseInfo, interfaceList )
+   self.scope = Ast.TypeInfo.createScope( self.processInfo, self.scope, scopeKind, baseInfo, interfaceList )
    return self.scope
 end
 function TransUnitBase:popScope(  )
@@ -550,7 +559,7 @@ function TransUnitBase:pushModule( processInfo, externalFlag, name, mutable )
          local parentNsInfo = self:getCurrentNSInfo(  )
          local parentInfo = parentNsInfo:get_typeInfo()
          local parentScope = self.scope
-         local scope = self:pushScope( true )
+         local scope = self:pushScope( Ast.ScopeKind.Module )
          local newType = processInfo:createModule( scope, parentInfo, parentNsInfo:get_typeDataAccessor(), externalFlag, modName, mutable )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
@@ -697,7 +706,7 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
          local parentNsInfo = self:getCurrentNSInfo(  )
          
          local parentScope = self.scope
-         local scope = self:pushScope( true, baseInfo, interfaceList )
+         local scope = self:pushScope( Ast.ScopeKind.Class, baseInfo, interfaceList )
          local workGenTypeList
          
          if genTypeList ~= nil then

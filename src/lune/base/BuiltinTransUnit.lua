@@ -148,9 +148,9 @@ function TransUnit:error( mess )
 
    Util.err( mess )
 end
-function TransUnit:pushScope( classFlag, baseInfo, interfaceList )
+function TransUnit:pushScope( scopeKind, baseInfo, interfaceList )
 
-   self.scope = Ast.TypeInfo.createScope( self.processInfo, self.scope, classFlag, baseInfo, interfaceList )
+   self.scope = Ast.TypeInfo.createScope( self.processInfo, self.scope, scopeKind, baseInfo, interfaceList )
    return self.scope
 end
 function TransUnit:popScope(  )
@@ -192,7 +192,7 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
          local _
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
          local parentScope = self.scope
-         local scope = self:pushScope( true )
+         local scope = self:pushScope( Ast.ScopeKind.Module )
          local newType = processInfo:createModule( scope, parentInfo, parentInfo, externalFlag, modName, mutable )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
@@ -325,7 +325,7 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
          
          local parentScope = self.scope
-         local scope = self:pushScope( true, baseInfo, interfaceList )
+         local scope = self:pushScope( Ast.ScopeKind.Class, baseInfo, interfaceList )
          local workGenTypeList
          
          if genTypeList ~= nil then

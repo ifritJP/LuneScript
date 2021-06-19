@@ -1527,7 +1527,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
             panic("internal error")
         } else {
             var scope *Ast_Scope
-            scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, true, nil, nil)
+            scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Module, nil, nil)
             var mutable bool
             mutable = false
                 if self.TypeId == param.MetaInfo.GetAt( "__moduleTypeId" ).(LnsInt){
@@ -1875,7 +1875,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                     ifScopeList.Insert(Ast_Scope2Stem(Lns_unwrap( ifType.FP.Get_scope(_env)).(*Ast_Scope)))
                 }
                 var scope *Ast_Scope
-                scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, true, baseScope, ifScopeList)
+                scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Class, baseScope, ifScopeList)
                 var altTypeList *LnsList
                 altTypeList = NewLnsList([]LnsAny{})
                 for _, _itemType := range( itemTypeInfo.Items ) {
@@ -1902,7 +1902,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 }))
                 
                 var scope *Ast_Scope
-                scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, true, nil, NewLnsList([]LnsAny{}))
+                scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Module, nil, NewLnsList([]LnsAny{}))
                 var parentTypeDataAccessor Ast_TypeDataAccessor
                 parentTypeDataAccessor = Import_convExp3752(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
                 var workTypeInfo *Ast_TypeInfo
@@ -1918,7 +1918,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 var scope LnsAny
                 scope = nil
                 if self.Kind != Ast_TypeInfoKind__FormFunc{
-                    scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, false, nil, nil)
+                    scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Other, nil, nil)
                 }
                 var parentTypeDataAccessor Ast_TypeDataAccessor
                 parentTypeDataAccessor = Import_convExp3916(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
@@ -2104,7 +2104,7 @@ func (self *Import__TypeInfoEnum) CreateTypeInfo(_env *LnsEnv, param *Import_Imp
     var parentScope *Ast_Scope
     parentScope = Lns_unwrap( param.TypeId2Scope.Get(self.ParentId)).(*Ast_Scope)
     var scope *Ast_Scope
-    scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, true, nil, nil)
+    scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Class, nil, nil)
     param.TypeId2Scope.Set(self.TypeId,scope)
     var valTypeInfo *Ast_TypeInfo
     valTypeInfo = Lns_unwrap( Lns_car(param.FP.GetTypeInfo(_env, self.ValTypeId))).(*Ast_TypeInfo)
@@ -2348,7 +2348,7 @@ func (self *Import__TypeInfoAlge) CreateTypeInfo(_env *LnsEnv, param *Import_Imp
     var parentScope *Ast_Scope
     parentScope = Lns_unwrap( param.TypeId2Scope.Get(self.ParentId)).(*Ast_Scope)
     var scope *Ast_Scope
-    scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, true, nil, nil)
+    scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Class, nil, nil)
     param.TypeId2Scope.Set(self.TypeId,scope)
     var algeTypeInfo *Ast_AlgeTypeInfo
     algeTypeInfo = param.ProcessInfo.FP.CreateAlge(_env, scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.Txt)

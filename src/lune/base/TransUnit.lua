@@ -883,27 +883,32 @@ local FuncBlockInfo = {}
 function FuncBlockInfo.setmeta( obj )
   setmetatable( obj, { __index = FuncBlockInfo  } )
 end
-function FuncBlockInfo.new( declFuncInfo, funcType, funcScope, tokenList, lineNo )
+function FuncBlockInfo.new( declFuncInfo, funcType, typeDataAccessor, funcScope, tokenList, declPos, orgPos )
    local obj = {}
    FuncBlockInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( declFuncInfo, funcType, funcScope, tokenList, lineNo )
+      obj:__init( declFuncInfo, funcType, typeDataAccessor, funcScope, tokenList, declPos, orgPos )
    end
    return obj
 end
-function FuncBlockInfo:__init( declFuncInfo, funcType, funcScope, tokenList, lineNo )
+function FuncBlockInfo:__init( declFuncInfo, funcType, typeDataAccessor, funcScope, tokenList, declPos, orgPos )
 
    self.declFuncInfo = declFuncInfo
    self.funcType = funcType
+   self.typeDataAccessor = typeDataAccessor
    self.funcScope = funcScope
    self.tokenList = tokenList
-   self.lineNo = lineNo
+   self.declPos = declPos
+   self.orgPos = orgPos
 end
 function FuncBlockInfo:get_declFuncInfo()
    return self.declFuncInfo
 end
 function FuncBlockInfo:get_funcType()
    return self.funcType
+end
+function FuncBlockInfo:get_typeDataAccessor()
+   return self.typeDataAccessor
 end
 function FuncBlockInfo:get_funcScope()
    return self.funcScope
@@ -914,8 +919,40 @@ end
 function FuncBlockInfo:get_tokenList()
    return self.tokenList
 end
-function FuncBlockInfo:get_lineNo()
-   return self.lineNo
+function FuncBlockInfo:get_declPos()
+   return self.declPos
+end
+function FuncBlockInfo:get_orgPos()
+   return self.orgPos
+end
+
+
+local FuncBlockResult = {}
+function FuncBlockResult.setmeta( obj )
+  setmetatable( obj, { __index = FuncBlockResult  } )
+end
+function FuncBlockResult.new( funcBlockInfo, body, has_func_sym )
+   local obj = {}
+   FuncBlockResult.setmeta( obj )
+   if obj.__init then
+      obj:__init( funcBlockInfo, body, has_func_sym )
+   end
+   return obj
+end
+function FuncBlockResult:__init( funcBlockInfo, body, has_func_sym )
+
+   self.funcBlockInfo = funcBlockInfo
+   self.body = body
+   self.has_func_sym = has_func_sym
+end
+function FuncBlockResult:get_funcBlockInfo()
+   return self.funcBlockInfo
+end
+function FuncBlockResult:get_body()
+   return self.body
+end
+function FuncBlockResult:get_has_func_sym()
+   return self.has_func_sym
 end
 
 
@@ -970,7 +1007,7 @@ function TransUnit:setup( src )
    end
    
    
-   self.globalScope = Ast.ScopeWithRef.new(self.processInfo, self.globalScope, src.globalScope, false)
+   self.globalScope = Ast.ScopeWithRef.new(self.processInfo, self.globalScope, src.globalScope, Ast.ScopeKind.Other)
    
    do
       for key, val in pairs( src.typeId2ClassMap ) do
@@ -981,11 +1018,16 @@ function TransUnit:setup( src )
    
    
    
+   for typeInfo, nsInfo in pairs( src.nsInfoMap ) do
+      self.nsInfoMap[typeInfo] = nsInfo:duplicate(  )
+   end
+   
+   
    for __index, state in ipairs( src.analyzingStateQueue ) do
       table.insert( self.analyzingStateQueue, state )
    end
    
-   
+   self.macroCtrl = src.macroCtrl:clone(  )
    _lune._Set_or(self.advertisedTypeSet, src.advertisedTypeSet )
    self.accessSymbolSetQueue:setupFrom( src.accessSymbolSetQueue )
    _lune._Set_or(self.helperInfo.pragmaSet, src.helperInfo.pragmaSet )
@@ -1003,7 +1045,7 @@ function TransUnit:setup( src )
    
    
 end
-function TransUnit:mergeFrom( src )
+function TransUnit:mergeFrom( src, funcBlockResultMap )
 
    self.nodeManager:addFrom( src.nodeManager )
    
@@ -1041,6 +1083,27 @@ function TransUnit:mergeFrom( src )
    
    cloneMessList( self.warnMessList, src.warnMessList )
    cloneMessList( self.errMessList, src.errMessList )
+   
+   for typeInfo, nsInfo in pairs( src.nsInfoMap ) do
+      local dstInfo = self.nsInfoMap[typeInfo]
+      if  nil == dstInfo then
+         local _dstInfo = dstInfo
+      
+         dstInfo = self:newNSInfoWithTypeData( nsInfo:get_typeInfo(), nsInfo:get_typeDataAccessor(), nsInfo:get_pos() )
+         self.nsInfoMap[typeInfo] = dstInfo
+      end
+      
+      local dstChildren = dstInfo:get_typeDataAccessor():get_typeData():get_children()
+      local srcChildren = nsInfo:get_typeDataAccessor():get_typeData():get_children()
+      if #dstChildren < #srcChildren then
+         for index = #dstChildren, #srcChildren do
+            table.insert( dstChildren, srcChildren[index] )
+         end
+         
+      end
+      
+   end
+   
 end
 function TransUnit.getSuperParam( ctrl_info )
 
@@ -1280,7 +1343,7 @@ function TransUnit:pushExtModule( externalFlag, name, accessMode, pos, lazy, lan
    local parentNsInfo = self:getCurrentNSInfo(  )
    local parentInfo = parentNsInfo:get_typeInfo()
    local parentScope = self.scope
-   local scope = self:pushScope( true )
+   local scope = self:pushScope( Ast.ScopeKind.Module )
    local typeInfo = self.processInfo:createExtModule( scope, parentInfo, parentNsInfo:get_typeDataAccessor(), externalFlag, accessMode, name, lang, requirePath )
    
    parentScope:addExtModule( self.processInfo, name, pos, typeInfo, lazy, lang )
@@ -1372,19 +1435,19 @@ function TransUnit:addLocalVar( pos, argFlag, canBeLeft, name, typeInfo, mutable
 end
 function TransUnit:getLineNo( token )
 
-   local lineNo = token.pos.lineNo
+   local pos = token.pos
    do
       local work = self.funcBlockInfoLinkNo
       if work ~= nil then
-         lineNo = work
+         pos = work
       end
    end
    
    if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
-      lineNo = self.macroCtrl:get_macroCallLineNo()
+      pos = _lune.unwrap( self.macroCtrl:get_macroCallLineNo())
    end
    
-   return lineNo
+   return pos
 end
 function TransUnit.setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
@@ -2044,7 +2107,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
    if scope ~= nil then
       self.scope = scope
    else
-      self:pushScope( false )
+      self:pushScope( Ast.ScopeKind.Other )
    end
    
    local blockScope = self.scope
@@ -2480,7 +2543,7 @@ function TransUnit:analyzeMatch( firstToken )
       
       local valParamNameList = {}
       nextToken = self:getToken(  )
-      local blockScope = self:pushScope( false )
+      local blockScope = self:pushScope( Ast.ScopeKind.Other )
       if nextToken.txt == "(" then
          for __index, paramType in ipairs( valInfo:get_typeList() ) do
             local paramName = self:getSymbolToken( SymbolMode.MustNot_Or_ )
@@ -2581,7 +2644,7 @@ end
 
 function TransUnit:analyzeRepeat( token )
 
-   local scope = self:pushScope( false )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
    local node = Nodes.RepeatNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, self:analyzeBlock( Nodes.BlockKind.Repeat, TentativeMode.Loop, scope, nil ), self:analyzeExpOneRVal( false, false ) )
    
    self:finishTentativeSymbol( false )
@@ -2596,7 +2659,7 @@ end
 function TransUnit:analyzeFor( firstToken )
 
    
-   local scope = self:pushScope( false )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
    
    local val = self:getToken(  )
    if val.kind ~= Parser.TokenKind.Symb then
@@ -2653,7 +2716,7 @@ end
 
 function TransUnit:analyzeApply( token )
 
-   local scope = self:pushScope( false )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
    local varList = {}
    local nextToken = Parser.getEofToken(  )
    repeat 
@@ -2785,7 +2848,7 @@ end
 
 function TransUnit:analyzeForeach( token, sortFlag )
 
-   local scope = self:pushScope( false )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
    local mainSymToken = Parser.getEofToken(  )
    local subSymToken = nil
    local mainSym
@@ -2972,7 +3035,7 @@ function TransUnit:analyzeScope( firstToken )
    
    local bakScope = self.scope
    self.scope = self.topScope
-   local localScope = self:pushScope( false )
+   local localScope = self:pushScope( Ast.ScopeKind.Other )
    
    self:createDummyNS( localScope, nextToken.pos, asyncMode )
    
@@ -3669,7 +3732,7 @@ function TransUnit:analyzeDeclMacro( accessMode, firstToken )
    local nameToken = self:getSymbolToken( SymbolMode.Must_ )
    self:checkNextToken( "(" )
    
-   local scope = Ast.TypeInfo.createScope( self.processInfo, self.topScope, false, nil, nil )
+   local scope = Ast.TypeInfo.createScope( self.processInfo, self.topScope, Ast.ScopeKind.Other, nil, nil )
    
    self:createDummyNS( scope, nameToken.pos, Ast.Async.Noasync )
    
@@ -3808,7 +3871,7 @@ function TransUnit:analyzePushClass( mode, abstractFlag, firstToken, name, allow
    end
    
    
-   local tempScope = self:pushScope( false )
+   local tempScope = self:pushScope( Ast.ScopeKind.Other )
    for __index, altType in ipairs( altTypeList ) do
       tempScope:addAlternate( self.processInfo, accessMode, altType:get_rawTxt(), name.pos, altType )
    end
@@ -3986,7 +4049,7 @@ function TransUnit:analyzeDeclEnum( accessMode, firstToken )
    
    local valueList = {}
    
-   local scope = self:pushScope( true )
+   local scope = self:pushScope( Ast.ScopeKind.Class )
    
    local workEnumTypeInfo = nil
    
@@ -4121,7 +4184,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    self:checkNextToken( "{" )
    
    local scope = self.scope
-   local algeScope = self:pushScope( true )
+   local algeScope = self:pushScope( Ast.ScopeKind.Class )
    local parentNsInfo = self:getCurrentNSInfo(  )
    
    local algeTypeInfo = self.processInfo:createAlge( algeScope, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), false, accessMode, name.txt )
@@ -4340,7 +4403,7 @@ function TransUnit:analyzeDeclForm( accessMode, firstToken )
    
    self:checkNextToken( "(" )
    local argList = {}
-   local funcBodyScope = self:pushScope( false )
+   local funcBodyScope = self:pushScope( Ast.ScopeKind.Other )
    
    local nextToken = self:analyzeDeclArgList( accessMode, funcBodyScope, argList, Ast.isPubToExternal( accessMode ) )
    
@@ -4679,7 +4742,7 @@ function TransUnit:addDefaultConstructor( pos, classTypeInfo, typeDataAccessor, 
    end
    
    
-   local ctorScope = self:pushScope( false )
+   local ctorScope = self:pushScope( Ast.ScopeKind.Other )
    local initTypeInfo = self.processInfo:createFuncAsync( false, false, ctorScope, Ast.TypeInfoKind.Method, classTypeInfo, typeDataAccessor, true, false, false, Ast.AccessMode.Pub, "__init", Ast.Async.Async, nil, argTypeList, {} )
    if oldFlag then
       
@@ -4756,7 +4819,7 @@ function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, 
       
       local blockToken = self:checkNextToken( "{" )
       self:pushback(  )
-      local blockScope = self:pushScope( false )
+      local blockScope = self:pushScope( Ast.ScopeKind.Other )
       local stmtList = {}
       self:popScope(  )
       body = Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, stmtList )
@@ -4805,7 +4868,7 @@ function TransUnit:addAccessor( memberNode, methodNameSet, classScope, classType
             getterMemberType = self:createModifier( getterMemberType, Ast.MutMode.IMut )
          end
          
-         local retTypeInfo = self.processInfo:createFuncAsync( false, false, self:pushScope( false ), typeKind, classTypeInfo, typeDataAccessor, false, false, memberNode:get_staticFlag(), accessMode, getterName, asyncMode, nil, {}, {getterMemberType} )
+         local retTypeInfo = self.processInfo:createFuncAsync( false, false, self:pushScope( Ast.ScopeKind.Other ), typeKind, classTypeInfo, typeDataAccessor, false, false, memberNode:get_staticFlag(), accessMode, getterName, asyncMode, nil, {}, {getterMemberType} )
          self:popScope(  )
          
          classScope:addMethod( self.processInfo, memberName.pos, retTypeInfo, accessMode, memberNode:get_staticFlag(), false )
@@ -4832,7 +4895,7 @@ function TransUnit:addAccessor( memberNode, methodNameSet, classScope, classType
             mutable = false
          end
          
-         classScope:addMethod( self.processInfo, memberName.pos, self.processInfo:createFuncAsync( false, false, self:pushScope( false ), typeKind, classTypeInfo, typeDataAccessor, false, false, memberNode:get_staticFlag(), accessMode, setterName, asyncMode, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
+         classScope:addMethod( self.processInfo, memberName.pos, self.processInfo:createFuncAsync( false, false, self:pushScope( Ast.ScopeKind.Other ), typeKind, classTypeInfo, typeDataAccessor, false, false, memberNode:get_staticFlag(), accessMode, setterName, asyncMode, nil, {memberType}, nil, mutable ), accessMode, memberNode:get_staticFlag(), true )
          self:popScope(  )
          methodNameSet[setterName]= true
       end
@@ -4982,7 +5045,7 @@ function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode
       
       
       local parentScope = self.scope
-      local initBlockScope = self:pushScope( false )
+      local initBlockScope = self:pushScope( Ast.ScopeKind.Other )
       self:prepareTentativeSymbol( initBlockScope, false, nil )
       
       local ininame = "___init"
@@ -5711,7 +5774,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
    
    
    local parentScope = self.scope
-   local funcBodyScope = self:pushScope( false )
+   local funcBodyScope = self:pushScope( Ast.ScopeKind.Other )
    
    if staticFlag and classTypeInfo then
       self.analyzingStaticMethodArgsScope = funcBodyScope
@@ -5836,6 +5899,8 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
    
    local typeInfo
    
+   local typeDataAccessor
+   
    local funcSym
    
    local nsInfo
@@ -5847,7 +5912,9 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
          local workSym
          
          workSym, nsInfo = self:processAddFunc( kind == Nodes.NodeKind.get_DeclFunc(), funcBodyScope:get_outerScope(), name, workTypeInfo, alt2typeMap )
+         typeDataAccessor = nsInfo:get_typeDataAccessor()
          typeInfo = nsInfo:get_typeInfo()
+         
          funcSym = workSym
          
          if name.txt == "__main" then
@@ -5860,6 +5927,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
          
       else
          typeInfo = workTypeInfo
+         typeDataAccessor = workTypeInfo
          funcSym = nil
          nsInfo = self:newNSInfo( workTypeInfo, firstToken.pos )
       end
@@ -5929,6 +5997,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
    local body = nil
    local blockTokenList = {}
    local needFuncBlockInfo = false
+   
    local inMacroExpand = self.macroCtrl:isInExpandMode(  )
    
    if token.txt == ";" then
@@ -5987,6 +6056,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
          end
       end
       
+      
       if needFuncBlockInfo then
          blockTokenList = self:skipBlock( true )
       else
@@ -6019,17 +6089,18 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       local declFuncInfo = Nodes.DeclFuncInfo.new(funcKind, classTypeInfo, classDeclNode, outsizeOfClass, name, funcSym, argList, orgStaticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, _lune._Set_has(self.has__func__Symbol, typeInfo ), overrideFlag)
       
       if needFuncBlockInfo then
-         local lineNo
+         local pos = self:getLineNo( blockTokenList[1] )
+         local orgPos
          
          if inMacroExpand then
-            lineNo = self:getLineNo( blockTokenList[1] )
+            orgPos = pos
          else
           
-            lineNo = nil
+            orgPos = nil
          end
          
          
-         local funcBlockInfo = FuncBlockInfo.new(declFuncInfo, typeInfo, funcBodyScope, blockTokenList, lineNo)
+         local funcBlockInfo = FuncBlockInfo.new(declFuncInfo, typeInfo, typeDataAccessor, funcBodyScope, blockTokenList, pos, orgPos)
          self:addFuncBlockInfoList( funcBlockInfo )
       end
       
@@ -6559,7 +6630,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    
    local syncScope = self.scope
    if mode == Nodes.DeclVarMode.Sync then
-      syncScope = self:pushScope( false )
+      syncScope = self:pushScope( Ast.ScopeKind.Other )
    end
    
    
@@ -6636,7 +6707,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    local unwrapBlock = nil
    local thenBlock = nil
    if unwrapFlag then
-      local scope = self:pushScope( false )
+      local scope = self:pushScope( Ast.ScopeKind.Other )
       
       for index, letVarInfo in ipairs( letVarList ) do
          if letVarInfo.varName.txt ~= "_" then
@@ -6746,7 +6817,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    end
    
    
-   local scope = self:pushScope( false )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
    
    local nsInfo = self:getCurrentNSInfo(  )
    
@@ -6834,7 +6905,7 @@ function TransUnit:analyzeWhen( firstToken )
    
    local symListNode = self:analyzeExpList( false, false, false )
    
-   local scope = self:pushScope( false )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
    
    local symPairList = {}
    
@@ -6879,42 +6950,13 @@ function TransUnit:analyzeWhen( firstToken )
 end
 
 
-local FuncBlockResult = {}
-function FuncBlockResult.setmeta( obj )
-  setmetatable( obj, { __index = FuncBlockResult  } )
-end
-function FuncBlockResult.new( funcBlockInfo, body, has_func_sym )
-   local obj = {}
-   FuncBlockResult.setmeta( obj )
-   if obj.__init then
-      obj:__init( funcBlockInfo, body, has_func_sym )
-   end
-   return obj
-end
-function FuncBlockResult:__init( funcBlockInfo, body, has_func_sym )
-
-   self.funcBlockInfo = funcBlockInfo
-   self.body = body
-   self.has_func_sym = has_func_sym
-end
-function FuncBlockResult:get_funcBlockInfo()
-   return self.funcBlockInfo
-end
-function FuncBlockResult:get_body()
-   return self.body
-end
-function FuncBlockResult:get_has_func_sym()
-   return self.has_func_sym
-end
-
-
 function TransUnit:processFuncBlockInfo( funcBlockInfoList, streamName )
 
-   local resultList = {}
+   local resultMap = {}
    
    local bakParser = self.parser
    
-   local outerScope = self:pushScope( false )
+   local outerScope = self:pushScope( Ast.ScopeKind.Other )
    
    for __index, funcBlockInfo in ipairs( funcBlockInfoList ) do
       
@@ -6924,9 +6966,9 @@ function TransUnit:processFuncBlockInfo( funcBlockInfoList, streamName )
       local declFuncInfo = funcBlockInfo:get_declFuncInfo()
       local classTypeInfo = declFuncInfo:get_classTypeInfo()
       
-      self.funcBlockInfoLinkNo = funcBlockInfo:get_lineNo()
+      self.funcBlockInfoLinkNo = funcBlockInfo:get_orgPos()
       
-      local funcBodyScope = Ast.ScopeWithRef.new(self.processInfo, outerScope, funcBlockInfo:get_funcScope(), false)
+      local funcBodyScope = Ast.ScopeWithRef.new(self.processInfo, outerScope, funcBlockInfo:get_funcScope(), Ast.ScopeKind.Other)
       self.scope = funcBodyScope
       
       local workBody = self:analyzeFuncBlock( getAnalyzingState( typeInfo ), funcBlockInfo:get_tokenList()[1], classTypeInfo, typeInfo, typeInfo:get_rawTxt(), funcBodyScope, typeInfo:get_retTypeInfoList() )
@@ -6940,7 +6982,7 @@ function TransUnit:processFuncBlockInfo( funcBlockInfoList, streamName )
       end
       
       
-      table.insert( resultList, FuncBlockResult.new(funcBlockInfo, workBody, has_func_sym) )
+      resultMap[funcBlockInfo] = FuncBlockResult.new(funcBlockInfo, workBody, has_func_sym)
    end
    
    
@@ -6948,7 +6990,7 @@ function TransUnit:processFuncBlockInfo( funcBlockInfoList, streamName )
    
    self.parser = bakParser
    
-   return resultList
+   return resultMap
 end
 
 function TransUnit:MultiTo1( exp )
@@ -7936,7 +7978,7 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    end
    
    
-   self.macroCtrl:startExpandMode( firstToken.pos.lineNo, macroTypeInfo, evalMacroCallback )
+   self.macroCtrl:startExpandMode( firstToken.pos, macroTypeInfo, evalMacroCallback )
    
    local nextToken = self:getTokenNoErr(  )
    
@@ -10987,8 +11029,8 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
    elseif token.kind == Parser.TokenKind.Str then
       exp = self:analyzeStrConst( firstToken, token )
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" then
-      local lineNo = self:getLineNo( token )
-      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, Parser.Token.new(Parser.TokenKind.Int, string.format( "%d", lineNo), token.pos, false, nil), token.pos.lineNo )
+      local pos = self:getLineNo( token )
+      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, Parser.Token.new(Parser.TokenKind.Int, string.format( "%d", pos.lineNo), token.pos, false, nil), token.pos.lineNo )
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" then
       
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Fn, nil, false, false )
@@ -11289,18 +11331,18 @@ function TransUnitRunner:__init(srcTranUnit, moduleId, importModuleInfo, macroEv
    
    self.srcTranUnit = srcTranUnit
    self.funcBlockInfoList = funcBlockInfoList
-   self.resultList = {}
+   self.resultMap = {}
 end
 function TransUnitRunner:run(  )
 
    self:setup( self.srcTranUnit )
    
-   self.resultList = self:processFuncBlockInfo( self.funcBlockInfoList, self.parser:getStreamName(  ) )
+   self.resultMap = self:processFuncBlockInfo( self.funcBlockInfoList, self.parser:getStreamName(  ) )
 end
 function TransUnitRunner:get(  )
 
    
-   return self.resultList
+   return self.resultMap
 end
 function TransUnitRunner.setmeta( obj )
   setmetatable( obj, { __index = TransUnitRunner  } )
@@ -11500,7 +11542,7 @@ end
 
 function TransUnitCtrl:analyzeTestCase( firstToken )
 
-   local newScope = self:pushScope( false )
+   local newScope = self:pushScope( Ast.ScopeKind.Other )
    
    local importNode
    
@@ -11890,10 +11932,10 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       do
          
-         local resultList = self:processFuncBlockInfo( self.funcBlockInfoList, self.parser:getStreamName(  ) )
+         local resultMap = self:processFuncBlockInfo( self.funcBlockInfoList, self.parser:getStreamName(  ) )
          
-         for index, result in ipairs( resultList ) do
-            local funcBlockInfo = self.funcBlockInfoList[index]
+         for __index, funcBlockInfo in ipairs( self.funcBlockInfoList ) do
+            local result = _lune.unwrap( resultMap[funcBlockInfo])
             local declFuncInfo = funcBlockInfo:get_declFuncInfo()
             declFuncInfo:set_body( result:get_body() )
             declFuncInfo:set_has__func__Symbol( result:get_has_func_sym() )

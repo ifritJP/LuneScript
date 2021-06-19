@@ -737,7 +737,7 @@ function MacroCtrl:__init(macroEval)
    self.symbol2ValueMapForMacro = {}
    self.macroEval = macroEval
    self.analyzeInfo = MacroAnalyzeInfo.new(Ast.builtinTypeNone, Nodes.MacroMode.None)
-   self.macroCallLineNo = 0
+   self.macroCallLineNo = nil
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
    
    self.macroLocalVarMap = nil
@@ -1577,10 +1577,10 @@ function MacroCtrl:finishMacroMode(  )
 end
 
 
-function MacroCtrl:startExpandMode( lineNo, typeInfo, callback )
+function MacroCtrl:startExpandMode( pos, typeInfo, callback )
 
    self.analyzeInfo = MacroAnalyzeInfo.new(typeInfo, Nodes.MacroMode.Expand)
-   self.macroCallLineNo = lineNo
+   self.macroCallLineNo = pos
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
    
    callback(  )

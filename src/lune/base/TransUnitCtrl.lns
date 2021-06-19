@@ -3,7 +3,7 @@ subfile owner lune.base.TransUnit;
 class TransUnitRunner extend TransUnit(__Runner) {
    let srcTranUnit:&TransUnit;
    let funcBlockInfoList:&List<&FuncBlockInfo>;
-   let mut resultList:&List<FuncBlockResult>;
+   let mut resultMap:&Map<&FuncBlockInfo,FuncBlockResult>;
    
    pub fn __init(
       srcTranUnit:&TransUnit,
@@ -21,19 +21,19 @@ class TransUnitRunner extend TransUnit(__Runner) {
 
      self.srcTranUnit = srcTranUnit;
      self.funcBlockInfoList = funcBlockInfoList;
-     self.resultList = [];
+     self.resultMap = {};
   }
 
   pub fn run() __async mut {
      self.setup( self.srcTranUnit );
 
-     self.resultList = self.processFuncBlockInfo(
+     self.resultMap = self.processFuncBlockInfo(
         self.funcBlockInfoList, self.parser.getStreamName() );
   }
 
-  pub fn get() mut : &List<FuncBlockResult> {
+  pub fn get() mut : &Map<&FuncBlockInfo,FuncBlockResult> {
      __join( self );
-     return self.resultList;
+     return self.resultMap;
   }
  }
 
@@ -262,7 +262,7 @@ fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode
 
 fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
 {
-   let mut newScope = self.pushScope( false ## );
+   let mut newScope = self.pushScope( .Other ## );
 
    let importNode;
 
@@ -640,13 +640,14 @@ pub fn TransUnitCtrl.createAST(
          //    self.builtinFunc,
          //    self.funcBlockInfoList );
          // runner.run();
-         // let mut resultList = runner.get();
+         // let mut resultMap = runner.get();
+         // self.mergeFrom( runner, resultMap );
 
-         let mut resultList = self.processFuncBlockInfo(
+         let mut resultMap = self.processFuncBlockInfo(
             self.funcBlockInfoList, self.parser.getStreamName() );
          
-         foreach result, index in resultList {
-            let mut funcBlockInfo = self.funcBlockInfoList[ index ];
+         foreach funcBlockInfo in self.funcBlockInfoList {
+            let mut result = unwrap resultMap[ funcBlockInfo ];
             let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
             declFuncInfo.set_body( result.$body );
             declFuncInfo.set_has__func__Symbol( result.$has_func_sym );

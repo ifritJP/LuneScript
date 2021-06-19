@@ -1096,7 +1096,7 @@ fn TransUnit.evalMacroOp(
    }
    
    self.macroCtrl.startExpandMode(
-      firstToken.pos.lineNo, macroTypeInfo, evalMacroCallback );
+      firstToken.pos, macroTypeInfo, evalMacroCallback );
 
    // evalMacroCallback();
 
@@ -4215,11 +4215,11 @@ fn TransUnit.analyzeExp(
       exp = self.analyzeStrConst( firstToken, token );
    }
    elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
-      let mut lineNo = self.getLineNo( token );
+      let mut pos = self.getLineNo( token );
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
-         new Parser.Token( .Int, "%d" (lineNo),
+         new Parser.Token( .Int, "%d" (pos.lineNo),
                            token.pos, false, nil ), token.pos.lineNo );
    }
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" {

@@ -136,6 +136,18 @@ pub class NSInfo {
       self.validAsyncCtrl = validAsyncCtrl;
    }
 
+   pub fn duplicate() : NSInfo {
+      let mut typeData = new Ast.TypeData();
+      let mut nsInfo = new NSInfo(
+         self.typeInfo, new Ast.SimpleTypeDataAccessor( typeData ),
+         self.pos, self.validAsyncCtrl );
+
+      typeData.addFrom( self.typeDataAccessor.$typeData );
+      
+      return nsInfo;
+   }
+   
+   
    pub fn incLock( lockKind: Nodes.LockKind ) mut {
       self.lockedAsyncStack.insert(
          new LockedAsyncInfo( #self.loopScopeQueue, lockKind ) );
@@ -282,8 +294,8 @@ TypeInfo → NSInfo.
       self.namespace2Scope = {};
       self.processInfo = processInfo;
       self.globalScope = new Ast.Scope(
-         processInfo, processInfo.$topScope, true, nil ## );
-      self.scope = new Ast.Scope( processInfo, self.globalScope, true, nil ## );
+         processInfo, processInfo.$topScope, .Module, nil ## );
+      self.scope = new Ast.Scope( processInfo, self.globalScope, .Module, nil ## );
       self.nsInfoMap = {};
       let mut subRootTypeInfo = self.processInfo.$dummyParentType;
       self.nsInfoMap[ subRootTypeInfo ] = new NSInfo(
@@ -309,11 +321,11 @@ TypeInfo → NSInfo.
       self.errorAt( self.getLatestPos(), mess );
    }
 
-   pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
+   pub fn pushScope( scopeKind:Ast.ScopeKind, baseInfo: &Ast.TypeInfo!,
                      interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope
    {
       self.scope = Ast.TypeInfo.createScope(
-         self.processInfo, self.scope, classFlag, baseInfo, interfaceList );
+         self.processInfo, self.scope, scopeKind, baseInfo, interfaceList );
       return self.scope;
    }
 
@@ -388,7 +400,7 @@ TypeInfo → NSInfo.
          let mut parentNsInfo = self.getCurrentNSInfo();
          let parentInfo = parentNsInfo.$typeInfo;
          let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true ## );
+         let mut scope = self.pushScope( .Module ## );
          let mut newType = processInfo.createModule(
             scope, parentInfo, parentNsInfo.$typeDataAccessor,
             externalFlag, modName, mutable );
@@ -575,7 +587,7 @@ TypeInfo → NSInfo.
          let mut parentNsInfo = self.getCurrentNSInfo();
 
          let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true, baseInfo, interfaceList );
+         let mut scope = self.pushScope( .Class, baseInfo, interfaceList );
          let workGenTypeList;
          when! genTypeList {
             workGenTypeList = genTypeList;

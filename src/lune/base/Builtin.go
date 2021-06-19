@@ -891,7 +891,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
                 accessMode = Ast_AccessMode__Pub
                 mutable = false
             }
-            self.transUnit.FP.PushScope(_env, false, nil, nil)
+            self.transUnit.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
             var scope *Ast_Scope
             scope = self.transUnit.FP.Get_scope(_env)
             var asyncMode LnsInt

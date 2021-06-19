@@ -1145,6 +1145,7 @@ class Sub2 extend Test2 {
    sub2.func();
 }
 
+Macro._section();
 
 macro _Hoge( val:str )
 {
@@ -1169,6 +1170,8 @@ macro _Hoge( val:str )
 
    print( Testfunc( 0 ), Testfunc( 1 ) );
 }
+
+Macro._section();
 
 class Test4 {
    pub let val:int {pub};
@@ -1198,6 +1201,7 @@ class Test4 {
 {
    print( _kind( "hoge" ), _kind( 1 ), _kind( 1.0 ), _kind( [] ), _kind( {} ) );
 }
+Macro._section();
 {
    fn func() {
       fn func2() {

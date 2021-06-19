@@ -773,7 +773,7 @@ fn TransUnit.analyzeDeclMacro(
    // マクロ内は、独立スコープにするため、
    // マクロ用のスコープを topScope 直下に生成
    let mut scope = Ast.TypeInfo.createScope(
-      self.processInfo, self.topScope, false, nil, nil );
+      self.processInfo, self.topScope, .Other, nil, nil );
 
    // 名前空間に属させるためのダミーの関数を定義
    self.createDummyNS( scope, nameToken.pos, .Noasync );
@@ -932,7 +932,7 @@ fn TransUnit.analyzePushClass(
 
 
    // altTypeList のシンボルにアクセスできるように、一時的にスコープを掘る
-   let mut tempScope = self.pushScope( false## );
+   let mut tempScope = self.pushScope( .Other## );
    foreach altType in altTypeList {
       tempScope.addAlternate(
          self.processInfo, accessMode, altType.$rawTxt, name.pos, altType );
@@ -1106,7 +1106,7 @@ fn TransUnit.analyzeDeclEnum(
    let mut valueList:List<&Parser.Token> = [];
    //let mut valueName2Info:Map<str,Ast.EnumValInfo> = {};
 
-   let mut scope = self.pushScope( true ## );
+   let mut scope = self.pushScope( .Class ## );
 
    let mut workEnumTypeInfo:Ast.EnumTypeInfo! = nil;
 
@@ -1238,7 +1238,7 @@ fn TransUnit.analyzeDeclAlge(
    self.checkNextToken( "{" );
 
    let mut scope = self.scope;
-   let mut algeScope = self.pushScope( true ## );
+   let mut algeScope = self.pushScope( .Class ## );
    let mut parentNsInfo = self.getCurrentNSInfo();
    
    let mut algeTypeInfo = self.processInfo.createAlge(
@@ -1465,7 +1465,7 @@ mut : Nodes.DeclFormNode
    
    self.checkNextToken( "(" );
    let mut argList:List<&Nodes.Node> = [];
-   let mut funcBodyScope = self.pushScope( false ## );
+   let mut funcBodyScope = self.pushScope( .Other ## );
 
    let mut nextToken = self.analyzeDeclArgList(
       accessMode, funcBodyScope, argList, Ast.isPubToExternal( accessMode ) );
@@ -1843,7 +1843,7 @@ fn TransUnit.addDefaultConstructor(
    }
 
    // デフォルトコンストラクタの登録
-   let mut ctorScope = self.pushScope( false ## );
+   let mut ctorScope = self.pushScope( .Other ## );
    let initTypeInfo = self.processInfo.createFuncAsync(
       false, false, ctorScope, .Method, classTypeInfo, typeDataAccessor,
       true, false, false, .Pub, "__init", .Async, nil, argTypeList, [] ## );
@@ -1924,7 +1924,7 @@ fn TransUnit.analyzeFuncBlock(
       // テスト無効の場合、テストブロック内は解析せずにダミーを生成する
       let blockToken = self.checkNextToken( "{" );
       self.pushback();
-      let blockScope = self.pushScope( false ## );
+      let blockScope = self.pushScope( .Other ## );
       let stmtList:List<&Nodes.Node> = [];
       self.popScope();
       body = Nodes.BlockNode.create(
@@ -1972,7 +1972,7 @@ fn TransUnit.addAccessor(
             getterMemberType = self.createModifier( getterMemberType, .IMut );
          }
          let retTypeInfo = self.processInfo.createFuncAsync(
-            false, false, self.pushScope( false ## ),
+            false, false, self.pushScope( .Other ## ),
             typeKind, classTypeInfo, typeDataAccessor,
             false, false, memberNode.$staticFlag, accessMode,
             getterName, asyncMode,
@@ -2004,7 +2004,7 @@ fn TransUnit.addAccessor(
          classScope.addMethod(
             self.processInfo, memberName.pos,
             self.processInfo.createFuncAsync(
-               false, false, self.pushScope( false ## ),
+               false, false, self.pushScope( .Other ## ),
                typeKind, classTypeInfo, typeDataAccessor,
                false, false, memberNode.$staticFlag, accessMode,
                setterName,
@@ -2183,7 +2183,7 @@ nil の場合、メンバの宣言位置。
       }
 
       let mut parentScope = self.scope;
-      let mut initBlockScope = self.pushScope( false## );
+      let mut initBlockScope = self.pushScope( .Other ## );
       self.prepareTentativeSymbol( initBlockScope, false, nil );
 
       let ininame = "___init";
@@ -2944,7 +2944,7 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let mut parentScope = self.scope;
-   let mut funcBodyScope = self.pushScope( false ## );
+   let mut funcBodyScope = self.pushScope( .Other ## );
 
    if staticFlag and classTypeInfo {
       self.analyzingStaticMethodArgsScope = funcBodyScope;
@@ -3067,6 +3067,7 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    let typeInfo:&Ast.TypeInfo;
+   let mut typeDataAccessor:Ast.TypeDataAccessor;
    let funcSym:&Ast.SymbolInfo!;
    let mut nsInfo;
    {
@@ -3084,7 +3085,9 @@ fn TransUnit.analyzeDeclFunc(
          workSym, nsInfo = self.processAddFunc(
             kind == Nodes.NodeKind.$DeclFunc,
             funcBodyScope.$outerScope, name, workTypeInfo, alt2typeMap );
+         typeDataAccessor = nsInfo.$typeDataAccessor;
          typeInfo = nsInfo.$typeInfo;
+
          funcSym = workSym;
 
          if name.txt == "__main" {
@@ -3101,6 +3104,7 @@ fn TransUnit.analyzeDeclFunc(
          }
       } else {
          typeInfo = workTypeInfo;
+         typeDataAccessor = workTypeInfo;
          funcSym = nil;
          nsInfo = self.newNSInfo( workTypeInfo, firstToken.pos );
       }
@@ -3164,6 +3168,7 @@ fn TransUnit.analyzeDeclFunc(
    let mut body:Nodes.BlockNode! = nil;
    let mut blockTokenList:&List<&Parser.Token> = [];
    let mut needFuncBlockInfo = false;
+   
    let inMacroExpand = self.macroCtrl.isInExpandMode();
    
    if token.txt == ";" {
@@ -3236,6 +3241,7 @@ fn TransUnit.analyzeDeclFunc(
          case .Main {
          }
       }
+
       if needFuncBlockInfo {
          blockTokenList = self.skipBlock( true );
       } else {
@@ -3269,17 +3275,18 @@ fn TransUnit.analyzeDeclFunc(
          self.has__func__Symbol.has( typeInfo ), overrideFlag );
 
       if needFuncBlockInfo {
-         let mut lineNo:int!;
+         let pos = self.getLineNo( blockTokenList[1] );
+         let orgPos:&Parser.Position!;
          if inMacroExpand {
-            lineNo = self.getLineNo( blockTokenList[1] );
+            orgPos = pos;
          } else {
-            lineNo = nil;
+            orgPos = nil;
          }
          
          let mut funcBlockInfo = new FuncBlockInfo(
-            declFuncInfo, typeInfo, funcBodyScope, blockTokenList, lineNo );
+            declFuncInfo, typeInfo, typeDataAccessor,
+            funcBodyScope, blockTokenList, pos, orgPos );
          self.addFuncBlockInfoList( funcBlockInfo );
-         //self.funcBlockInfoList.insert( funcBlockInfo );
       }
       
       return declFuncInfo;
@@ -3842,7 +3849,7 @@ fn TransUnit.analyzeDeclVar(
 
    let mut syncScope:Ast.Scope = self.scope;
    if mode == .Sync {
-      syncScope = self.pushScope( false ## );
+      syncScope = self.pushScope( .Other ## );
    }
 
 
@@ -3924,7 +3931,7 @@ fn TransUnit.analyzeDeclVar(
    let mut unwrapBlock: Nodes.BlockNode! = nil;
    let mut thenBlock: Nodes.BlockNode! = nil;
    if unwrapFlag {
-      let mut scope = self.pushScope( false ## );
+      let mut scope = self.pushScope( .Other ## );
 
       // unwrap ブロックに変数を登録
       foreach letVarInfo, index in letVarList {
@@ -4040,7 +4047,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       varNameList.insert( varInfo.varName );
    }
    
-   let mut scope = self.pushScope( false ## );
+   let mut scope = self.pushScope( .Other ## );
 
    let mut nsInfo = self.getCurrentNSInfo();
 
@@ -4121,7 +4128,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
 
    let symListNode = self.analyzeExpList( false, false, false ## );
 
-   let mut scope = self.pushScope( false ## );
+   let mut scope = self.pushScope( .Other ## );
 
    //let mut expNodeList:List<&Nodes.Node> = [];
    let mut symPairList:List<&Nodes.UnwrapSymbolPair> = [];
@@ -4170,21 +4177,15 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       [ Ast.builtinTypeNone ], symPairList, block, elseBlock );
 }
 
-class FuncBlockResult {
-   let funcBlockInfo:&FuncBlockInfo {pub};
-   let body:Nodes.BlockNode {pub};
-   let has_func_sym:bool {pub};
-}
-
 local fn TransUnit.processFuncBlockInfo(
    funcBlockInfoList:&List<&FuncBlockInfo>,
-   streamName:str ) mut : &List<FuncBlockResult>
+   streamName:str ) mut : &Map<&FuncBlockInfo,FuncBlockResult>
 {
-   let resultList:List<FuncBlockResult> = [];
+   let resultMap:Map<&FuncBlockInfo,FuncBlockResult> = {};
 
    let mut bakParser = self.parser;
    
-   let mut outerScope = self.pushScope( false## );
+   let mut outerScope = self.pushScope( .Other## );
    
    foreach funcBlockInfo in funcBlockInfoList {
 
@@ -4197,10 +4198,10 @@ local fn TransUnit.processFuncBlockInfo(
       let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
       let classTypeInfo = declFuncInfo.$classTypeInfo;
 
-      self.funcBlockInfoLinkNo = funcBlockInfo.$lineNo;
+      self.funcBlockInfoLinkNo = funcBlockInfo.$orgPos;
       
       let mut funcBodyScope = new Ast.ScopeWithRef(
-         self.processInfo, outerScope, funcBlockInfo.$funcScope, false ## );
+         self.processInfo, outerScope, funcBlockInfo.$funcScope, .Other ## );
       self.scope = funcBodyScope;
       
       
@@ -4217,14 +4218,14 @@ local fn TransUnit.processFuncBlockInfo(
          self.has__func__Symbol.del( typeInfo );
       }
 
-      resultList.insert(
-         new FuncBlockResult( funcBlockInfo, workBody, has_func_sym ) );
+      resultMap[ funcBlockInfo ] =
+         new FuncBlockResult( funcBlockInfo, workBody, has_func_sym );
    }
 
    self.popScope();
 
    self.parser = bakParser;
    
-   return resultList;
+   return resultMap;
 }
 

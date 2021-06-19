@@ -2956,7 +2956,7 @@ __test {
          "print( 'hoge' );", "test" );
 
       let mut processInfo = Ast.createProcessInfo( true, true, false );
-      let mut scope = new Ast.Scope( processInfo, nil, false ##);
+      let mut scope = new Ast.Scope( processInfo, nil, .Other ##);
 
       let printToken = parser.getTokenNoErr(); // print
       parser.getTokenNoErr(); // (

@@ -4,7 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_BuiltinTransUnit bool
 var BuiltinTransUnit__mod__ string
 // for 101
-func BuiltinTransUnit_convExp440(arg1 []LnsAny) (LnsAny, LnsAny) {
+func BuiltinTransUnit_convExp441(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
@@ -19,7 +19,7 @@ type BuiltinTransUnit_TransUnitMtd interface {
     PushClassLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
     PushClassScope(_env *LnsEnv, arg1 *Types_Position, arg2 *Ast_TypeInfo, arg3 *Ast_Scope)
     PushModuleLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
-    PushScope(_env *LnsEnv, arg1 bool, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
+    PushScope(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
 }
 type BuiltinTransUnit_TransUnit struct {
     processInfo *Ast_ProcessInfo
@@ -71,8 +71,8 @@ func (self *BuiltinTransUnit_TransUnit) Error(_env *LnsEnv, mess string) {
 }
 
 // 53: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushScope
-func (self *BuiltinTransUnit_TransUnit) PushScope(_env *LnsEnv, classFlag bool,baseInfo LnsAny,interfaceList LnsAny) *Ast_Scope {
-    self.scope = Ast_TypeInfo_createScope(_env, self.processInfo, self.scope, classFlag, baseInfo, interfaceList)
+func (self *BuiltinTransUnit_TransUnit) PushScope(_env *LnsEnv, scopeKind LnsInt,baseInfo LnsAny,interfaceList LnsAny) *Ast_Scope {
+    self.scope = Ast_TypeInfo_createScope(_env, self.processInfo, self.scope, scopeKind, baseInfo, interfaceList)
     return self.scope
 }
 
@@ -116,7 +116,7 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
             var parentScope *Ast_Scope
             parentScope = self.scope
             var scope *Ast_Scope
-            scope = self.FP.PushScope(_env, true, nil, nil)
+            scope = self.FP.PushScope(_env, Ast_ScopeKind__Module, nil, nil)
             var newType *Ast_TypeInfo
             newType = processInfo.FP.CreateModule(_env, scope, parentInfo, parentInfo.FP, externalFlag, modName, mutable)
             typeInfo = newType
@@ -239,7 +239,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
             var parentScope *Ast_Scope
             parentScope = self.scope
             var scope *Ast_Scope
-            scope = self.FP.PushScope(_env, true, baseInfo, interfaceList)
+            scope = self.FP.PushScope(_env, Ast_ScopeKind__Class, baseInfo, interfaceList)
             var workGenTypeList *LnsList
             if genTypeList != nil{
                 genTypeList_145 := genTypeList.(*LnsList)
