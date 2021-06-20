@@ -1719,7 +1719,7 @@ go-build:
 
 ifndef NO_TEST
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) $(GO_WORK_DIR)
-	$(MAKE) test-govslua
+	$(MAKE) test-govslua LNSC_OP="--threadPerUnitThread 0"
 	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go \
 		SKIP_SETUP=y SETUP_LUA=y
 
