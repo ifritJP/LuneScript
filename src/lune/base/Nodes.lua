@@ -228,8 +228,6 @@ if not _lune4 then
    _lune4 = _lune
 end
 
-
-
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
@@ -4537,7 +4535,6 @@ end
 function ExpRefNode:canBeRight( processInfo )
 
    return self:get_symbolInfo():get_canBeRight() and self:get_symbolInfo():get_hasValueFlag()
-   
 end
 
 
@@ -6289,11 +6286,13 @@ function ExpRefItemNode:getPrefix(  )
    return self.val
 end
 
+
 function ExpRefItemNode:canBeLeft(  )
 
    if self.val:get_expType() == Ast.builtinTypeStem then
       return false
    end
+   
    
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
@@ -7640,6 +7639,7 @@ end
 
 function RefFieldNode:canBeLeft(  )
 
+   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
@@ -7647,8 +7647,10 @@ function RefFieldNode:canBeLeft(  )
       end
    end
    
+   
    return false
 end
+
 
 function RefFieldNode:canBeRight( processInfo )
 
@@ -7658,6 +7660,7 @@ function RefFieldNode:canBeRight( processInfo )
          return _exp:get_canBeRight()
       end
    end
+   
    
    return true
 end
@@ -8199,6 +8202,7 @@ end
 
 function DeclVarNode:getBreakKind( checkMode )
 
+   
    local kind = BreakKind.None
    local work = BreakKind.None
    do
@@ -8780,11 +8784,13 @@ end
 
 function DeclFuncNode:canBeRight( processInfo )
 
+   
    return self.declInfo:get_name() == nil
 end
 
 function DeclFuncNode:canBeStatement(  )
 
+   
    return not (self.declInfo:get_name() == nil )
 end
 
@@ -13439,6 +13445,7 @@ function Node:getSymbolInfo(  )
                local refFieldNode = _lune.__Cast( node, 3, RefFieldNode )
                if refFieldNode ~= nil then
                   if refFieldNode:get_nilAccess() then
+                     
                      return {}
                   end
                   
@@ -13546,11 +13553,14 @@ function WhileNode:getBreakKind( checkMode )
       return kind
    else
     
+      
       if not self.infinit then
          return BreakKind.None
       end
       
+      
       local mode = CheckBreakMode.IgnoreFlow
+      
       local kind = BreakKind.None
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
          if stmt:get_kind() ~= NodeKind.get_BlankLine() then
@@ -14083,6 +14093,7 @@ function ExpRefNode:getLiteral(  )
    do
       local enumTypeInfo = _lune.__Cast( typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
+         
          if self.symbolInfo:get_kind() == Ast.SymbolKind.Mbr and self.symbolInfo:get_namespaceTypeInfo():get_kind() == Ast.TypeInfoKind.Enum then
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
             return enumLiteral2Literal( enumval:get_val() )
@@ -14098,6 +14109,7 @@ end
 
 function ExpOmitEnumNode:getLiteral(  )
 
+   
    local enumval = self.valInfo
    return enumLiteral2Literal( enumval:get_val() )
 end
@@ -14105,6 +14117,7 @@ end
 
 function ExpOmitEnumNode:setupLiteralTokenList( list )
 
+   
    local enumval = self.valInfo
    self:addTokenList( list, Parser.TokenKind.Dlmt, "." )
    
@@ -14126,6 +14139,7 @@ function ExpOp2Node:getValType( node )
    
    local intVal, realVal, strVal = 0, 0.0, ""
    local retTypeInfo = Ast.builtinTypeNone
+   
    do
       local _matchExp = literal
       if _matchExp[1] == Literal.Int[1] then

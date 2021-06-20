@@ -11400,11 +11400,31 @@ function TransUnitRunner:__init(srcTranUnit, moduleId, importModuleInfo, macroEv
    self.funcBlockCtl = ListFuncBlockCtl.new(list)
    self.resultMap = {}
    self.nodeManager:set_managerId( managerId )
-   self:setup( srcTranUnit )
+   self.srcTranUnit = srcTranUnit
+   self.alreadyToSetup = nil
 end
 function TransUnitRunner:run(  )
 
+   self:setup( self.srcTranUnit )
+   do
+      local _exp = self.alreadyToSetup
+      if _exp ~= nil then
+         _exp:set(  )
+      end
+   end
+   
+   
    self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.parser:getStreamName(  ) )
+end
+function TransUnitRunner:waitToSetup(  )
+
+   do
+      local _exp = self.alreadyToSetup
+      if _exp ~= nil then
+         _exp:wait(  )
+      end
+   end
+   
 end
 function TransUnitRunner:get(  )
 
@@ -11918,6 +11938,11 @@ function TransUnitCtrl:processFuncBlock( streamName )
    else
     
       for __index, runner in ipairs( runnerList ) do
+         runner:waitToSetup(  )
+      end
+      
+      
+      for __index, runner in ipairs( runnerList ) do
          local workMap = runner:get(  )
          self:mergeFrom( runner, resultMap )
          for key, result in pairs( workMap ) do
@@ -11950,7 +11975,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 620, function (  )
+   Log.log( Log.Level.Log, __func__, 639, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12020,7 +12045,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
       
       
-      Log.log( Log.Level.Log, __func__, 692, function (  )
+      Log.log( Log.Level.Log, __func__, 711, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )

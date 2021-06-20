@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
-_lune_control use_macro_special_var;
+//_lune_control use_macro_special_var;
 
 import lune.base.Parser;
 import lune.base.Util;
