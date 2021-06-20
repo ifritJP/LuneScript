@@ -1023,9 +1023,15 @@ function TransUnit:setup( src )
    end
    
    
-   for __index, state in ipairs( src.analyzingStateQueue ) do
-      table.insert( self.analyzingStateQueue, state )
-   end
+   self.defaultAsyncMode = src.defaultAsyncMode
+   self.validMutControl = src.validMutControl
+   self.moduleName = src.moduleName
+   self.moduleType = src.moduleType
+   self.ignoreToCheckSymbol_ = src.ignoreToCheckSymbol_
+   self.baseDir = src.baseDir
+   self.analyzePhase = src.analyzePhase
+   
+   self.typeNameCtrl = Ast.TypeNameCtrl.new(self.moduleType)
    
    self.macroCtrl = src.macroCtrl:clone(  )
    _lune._Set_or(self.advertisedTypeSet, src.advertisedTypeSet )
@@ -1095,7 +1101,12 @@ function TransUnit:mergeFrom( src, funcBlockResultMap )
       
       local dstChildren = dstInfo:get_typeDataAccessor():get_typeData():get_children()
       local srcChildren = nsInfo:get_typeDataAccessor():get_typeData():get_children()
-      if #dstChildren < #srcChildren then
+      if #dstChildren == 0 then
+         for __index, child in ipairs( srcChildren ) do
+            table.insert( dstChildren, child )
+         end
+         
+      elseif #dstChildren < #srcChildren then
          for index = #dstChildren, #srcChildren do
             table.insert( dstChildren, srcChildren[index] )
          end
@@ -2043,6 +2054,10 @@ function TransUnit:analyzeLuneControl( firstToken )
          self.defaultAsyncMode = DefaultAsyncMode.AsyncAll
       elseif _switchExp == "use_macro_special_var" then
          pragma = _lune.newAlge( LuneControl.Pragma.use_macro_special_var)
+         self.analyzePhase = AnalyzePhase.Main
+      elseif _switchExp == "single_phase_ast" then
+         pragma = _lune.newAlge( LuneControl.Pragma.single_phase_ast)
+         self.analyzePhase = AnalyzePhase.Main
       else 
          
             self:addErrMess( nextToken.pos, string.format( "unknown option -- %s", nextToken.txt) )
@@ -11317,6 +11332,8 @@ function TransUnit:analyzeStatement( termTxt )
 end
 
 
+local unsupportStatement = {["import"] = true, ["subfile"] = true, ["provide"] = true}
+
 local TransUnitRunner = {}
 setmetatable( TransUnitRunner, { __index = TransUnit,ifList = {__Runner,} } )
 function TransUnitRunner.new( srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, funcBlockInfoList )
@@ -11343,6 +11360,14 @@ function TransUnitRunner:get(  )
 
    
    return self.resultMap
+end
+function TransUnitRunner:analyzeStatementToken( token )
+
+   if _lune._Set_has(unsupportStatement, token.txt ) then
+      self:errorAt( token.pos, string.format( "unsupport the '%s' statement on the multi phase ast. ", token.txt) .. "please declare '_lune_control single_phase_ast'" )
+   end
+   
+   return nil
 end
 function TransUnitRunner.setmeta( obj )
   setmetatable( obj, { __index = TransUnitRunner  } )
@@ -11738,7 +11763,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 463, function (  )
+   Log.log( Log.Level.Log, __func__, 482, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -11806,7 +11831,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
       
       
-      Log.log( Log.Level.Log, __func__, 531, function (  )
+      Log.log( Log.Level.Log, __func__, 550, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )

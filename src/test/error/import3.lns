@@ -1,3 +1,5 @@
+_lune_control single_phase_ast;
+
 fn func() {
    import test.error.Sub5;
    import test.error.Sub6 as FOO;

@@ -7145,6 +7145,8 @@ function convFilter:processLuneControl( node, opt )
       
       elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
       
+      elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
+      
       end
    end
    

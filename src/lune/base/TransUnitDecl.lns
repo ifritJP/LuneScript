@@ -3282,7 +3282,7 @@ fn TransUnit.analyzeDeclFunc(
          } else {
             orgPos = nil;
          }
-         
+
          let mut funcBlockInfo = new FuncBlockInfo(
             declFuncInfo, typeInfo, typeDataAccessor,
             funcBodyScope, blockTokenList, pos, orgPos );

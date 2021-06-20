@@ -5898,6 +5898,8 @@ pub override fn convFilter.processLuneControl(
       }
       case .use_macro_special_var {
       }
+      case .single_phase_ast {
+      }
    }
 }
 

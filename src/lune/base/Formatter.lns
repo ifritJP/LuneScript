@@ -163,6 +163,9 @@ pub override fn FormatterFilter.processLuneControl(
       case .use_macro_special_var {
          self.writeln( "use_macro_special_var" );
       }
+      case .single_phase_ast {
+         self.writeln( "single_phase_ast" );
+      }
    }
    self.writeln( ";" );
 }

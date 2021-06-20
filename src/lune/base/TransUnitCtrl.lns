@@ -1,5 +1,12 @@
 subfile owner lune.base.TransUnit;
 
+let unsupportStatement =
+    (@
+      "import",
+      "subfile",
+      "provide"
+    );
+
 class TransUnitRunner extend TransUnit(__Runner) {
    let srcTranUnit:&TransUnit;
    let funcBlockInfoList:&List<&FuncBlockInfo>;
@@ -34,6 +41,18 @@ class TransUnitRunner extend TransUnit(__Runner) {
   pub fn get() mut : &Map<&FuncBlockInfo,FuncBlockResult> {
      __join( self );
      return self.resultMap;
+  }
+
+  pro override fn analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+  {
+     if unsupportStatement.has( token.txt ) {
+        self.errorAt(
+           token.pos,
+           "unsupport the '%s' statement on the multi phase ast. " (token.txt) ..
+           "please declare '_lune_control single_phase_ast'"
+        );
+     }
+     return nil;
   }
  }
 

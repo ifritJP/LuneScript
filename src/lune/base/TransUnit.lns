@@ -696,9 +696,16 @@ alias で置き換えている元の Type → alias の型
 
       // === self
       
-      foreach state in src.analyzingStateQueue {
-         self.analyzingStateQueue.insert( state );
-      }
+      self.defaultAsyncMode = src.defaultAsyncMode;
+      self.validMutControl = src.validMutControl;
+      self.moduleName = src.moduleName;
+      self.moduleType = src.moduleType;
+      self.ignoreToCheckSymbol_ = src.ignoreToCheckSymbol_;
+      self.baseDir = src.baseDir;
+      self.analyzePhase = src.analyzePhase;
+
+      self.typeNameCtrl = new Ast.TypeNameCtrl( self.moduleType );
+      
       self.macroCtrl = src.macroCtrl.clone();
       self.advertisedTypeSet.or(src.advertisedTypeSet );
       self.accessSymbolSetQueue.setupFrom( src.accessSymbolSetQueue );
@@ -754,7 +761,11 @@ alias で置き換えている元の Type → alias の型
          };
          let mut dstChildren = dstInfo.$typeDataAccessor.$typeData.$children;
          let mut srcChildren = nsInfo.$typeDataAccessor.$typeData.$children;
-         if #dstChildren < #srcChildren {
+         if #dstChildren == 0 {
+            foreach child in srcChildren {
+               dstChildren.insert( child );
+            }
+         } elseif #dstChildren < #srcChildren {
             for index = #dstChildren, #srcChildren {
                dstChildren.insert( srcChildren[ index ] );
             }
@@ -1688,6 +1699,11 @@ fn TransUnit.analyzeLuneControl(
       }
       case "use_macro_special_var" {
          pragma = LuneControl.Pragma.use_macro_special_var;
+         self.analyzePhase = .Main;
+      }
+      case "single_phase_ast" {
+         pragma = LuneControl.Pragma.single_phase_ast;
+         self.analyzePhase = .Main;
       }
       default {
          self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );

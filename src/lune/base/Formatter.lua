@@ -318,6 +318,9 @@ function FormatterFilter:processLuneControl( node, opt )
       elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
       
          self:writeln( "use_macro_special_var" )
+      elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
+      
+         self:writeln( "single_phase_ast" )
       end
    end
    

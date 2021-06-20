@@ -97,6 +97,12 @@ var LuneControl_Pragma__run_async_pipe_Obj = &LuneControl_Pragma__run_async_pipe
 func (self *LuneControl_Pragma__run_async_pipe) GetTxt() string {
 return "Pragma.run_async_pipe"
 }
+type LuneControl_Pragma__single_phase_ast struct{
+}
+var LuneControl_Pragma__single_phase_ast_Obj = &LuneControl_Pragma__single_phase_ast{}
+func (self *LuneControl_Pragma__single_phase_ast) GetTxt() string {
+return "Pragma.single_phase_ast"
+}
 type LuneControl_Pragma__use_async struct{
 }
 var LuneControl_Pragma__use_async_Obj = &LuneControl_Pragma__use_async{}
