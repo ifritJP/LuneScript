@@ -125,12 +125,12 @@ const (
 	_RUN_MODE_ON_FULL_IGNORE = 3
 )
 
-func (self *Lns_ThreadMgrInfo) log(_env *LnsEnv, mess string) {
+func (self *Lns_ThreadMgrInfo) log(_env *LnsEnv, eventId int, mess string) {
 	if lns_thread_event_on {
 		self.lock()
 		defer self.unlock()
 		self.eventList.PushBack(self.newThreadEvent(
-			_env.runnerId, _env.runnerName, _THREAD_EVENT_LOG, 0, 0, mess))
+			_env.runnerId, _env.runnerName, eventId, 0, 0, mess))
 
 	}
 }
@@ -181,7 +181,7 @@ func (self *Lns_ThreadMgrInfo) run(
 		if lns_thread_event_on {
 			self.eventList.PushBack(
 				self.newEvent(runnerInfo, _THREAD_EVENT_REQ, kind, _env.runnerId))
-			if kind == _RUN_KIND_SYNC || kind == _RUN_KIND_ASYNC {
+			if kind == _RUN_KIND_SYNC {
 				self.eventList.PushBack(
 					self.newEvent(runnerInfo, _THREAD_EVENT_START, 0, 0))
 			}
@@ -246,11 +246,6 @@ func (self *Lns_ThreadMgrInfo) endToRun(info *lnsRunnerInfo) {
 			front := self.runQueue.Front()
 
 			nextRunnerInfo := self.runQueue.Remove(front).(*lnsRunnerInfo)
-			if lns_thread_event_on {
-				self.eventList.PushBack(
-					self.newEvent(
-						nextRunnerInfo, _THREAD_EVENT_START, 0, 0))
-			}
 			return nextRunnerInfo
 		}
 		return nil

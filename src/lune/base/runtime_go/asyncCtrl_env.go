@@ -71,6 +71,8 @@ type LnsRunner interface {
 func lnsRunMain(runnerInfo *lnsRunnerInfo, threadMgrInfo *Lns_ThreadMgrInfo) {
 	env := createEnv(true, runnerInfo.name, runnerInfo.id)
 
+	lns_threadMgrInfo.log(env, _THREAD_EVENT_START, "")
+
 	LnsExecRunner(env, runnerInfo.runner)
 
 	runnerInfo.runner.GetLnsSyncFlag().wg.Done()
@@ -99,7 +101,7 @@ func LnsJoin(_env *LnsEnv, runner LnsRunner) {
 }
 
 func LnsLog(_env *LnsEnv, mess string) {
-	lns_threadMgrInfo.log(_env, mess)
+	lns_threadMgrInfo.log(_env, _THREAD_EVENT_LOG, mess)
 }
 
 func LnsStartRunnerLog(_env *LnsEnv, valid bool) {

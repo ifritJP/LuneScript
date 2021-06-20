@@ -240,8 +240,9 @@ LNS_SRCS += base/front
 LNS_SRCS := $(addprefix "lune/",$(LNS_SRCS))
 
 define selfhost_buildOp_batch
-	echo $(LNS_SRCS) | sed 's/$$/.lns\n/g' | sed 's/ /.lns\n/g' | \
-		(cd $1; $2 @- SAVE $3 $4 $(BYTECOMP) --package lnsc $(COM_OPT) $(LOG_OPT))
+	echo $(LNS_SRCS) | sed 's/$$/.lns\n/g' | sed 's/ /.lns\n/g' |	\
+		(cd $1; $2 @- SAVE $3 $(BYTECOMP)			\
+			--package lnsc $(COM_OPT) $(LOG_OPT) $4 )
 endef
 
 
@@ -868,25 +869,30 @@ define test-new3-batch
 	cp -a $1/lune $2
 	cp -a $1/misc $2
 	-(find $2/lune -name '*.meta' | grep -v runtime_go | xargs rm)
-	$(call selfhost_buildOp_batch,.,$(LNSC),$2,--depends $2/)
+	$(call selfhost_buildOp_batch,.,$(LNSC),$2,--depends $2/ $3)
 endef
 
 
 
 test-new3-sub:
-	$(call test-new3-batch,.,work/3_3_2)
+# カレントから work/3_3_2 に batch ビルド
+	$(call test-new3-batch,.,work/3_3_2,--threadPerUnitThread 0)
 ifeq ($(WITH_GO),y)
 	$(call go-build-lns,work/3_3_2)
 	cp work/3_3_2/lnsc .
 endif
 
-	$(call test-new3-batch,work/3_3_2,work/3_3_3)
+# work/3_3_2 から work/3_3_3 に batch ビルド
+	$(call test-new3-batch,work/3_3_2,work/3_3_3,--threadPerUnitThread 0)
 # ifeq ($(WITH_GO),y)
 # 	$(call go-build-lns,work/3_3_3)
 # 	cp work/3_3_3/lnsc .
 # endif
 
+# 出力結果の確認
 	diff -u -r work/3_3_2/lune work/3_3_3/lune -x '*.lns'
+
+
 
 
 test-parallel: test-org test-org-proj \

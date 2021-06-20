@@ -221,7 +221,8 @@ macro _procVisitor( child:__exp, parent:__exp, name:str ) {
 
 
 pub abstract class Node {
-   pri let id: int { pub };
+   pri let managerId: int;
+   pri let id: int;
    pri let kind: int { pub };
    /** この Node の領域開始位置 */
    pri let pos: &Parser.Position { pub };
@@ -235,6 +236,26 @@ pub abstract class Node {
    /** testblock 内の Node かどうか。*/
    let inTestBlock:bool {pub};
 
+   pub fn comp( node:&Node ) : int {
+      if self.managerId < node.managerId {
+         return -1;
+      }
+      if self.managerId > node.managerId {
+         return 1;
+      }
+      if self.id < node.id {
+         return -1;
+      }
+      if self.id > node.id {
+         return 1;
+      }
+      return 0;
+   }
+
+   pub fn getIdTxt() : str {
+      return "%d_%d" (self.managerId,self.id);
+   }
+   
    pub fn get_effectivePos(): &Parser.Position {
       return self.pos;
    }
@@ -247,10 +268,12 @@ pub abstract class Node {
       return nil;
    }
 
-   pub fn __init( id: int, kind: int, pos: &Parser.Position, inTestBlock:bool, 
-                  macroArgFlag:bool, expTypeList: &List<&Ast.TypeInfo> )
+   pub fn __init(
+      managerId:int, id: int, kind: int, pos: &Parser.Position,
+      inTestBlock:bool,  macroArgFlag:bool, expTypeList: &List<&Ast.TypeInfo> )
    {
       self.isLValue = false;
+      self.managerId = managerId;
       self.id = id;
       self.kind = kind;
       self.pos = pos;
@@ -441,8 +464,10 @@ pro fn Filter.defaultProcess( node: &Node, opt:T ) mut {
 pub class NodeManager {
    let mut nodeKind2NodeList:Map<int,List<&Node>>;
    let mut idSeed:int;
+   let mut managerId:int {pub,pub};
 
    pub fn __init() {
+      self.managerId = 0;
       self.idSeed = 0;
       self.nodeKind2NodeList = {};
       foreach _, kind in nodeKind2NameMap {
@@ -670,7 +695,7 @@ macro _declNodeClass(
       }
       
       let superStat = `{
-         super( id, ,,nodeId, pos, inTestBlock, macroArgFlag, typeList );
+         super( managerId, id, ,,nodeId, pos, inTestBlock, macroArgFlag, typeList );
       };
 
       if baseName ~= "Block" {
@@ -706,7 +731,7 @@ macro _declNodeClass(
    ,,relateStat;
    pub class ,,className extend ,,superClass {
       ,,fieldStatList;
-      pro fn __init( id:int, pos: &Parser.Position,
+      pro fn __init( managerId:int, id:int, pos: &Parser.Position,
                      inTestBlock:bool, macroArgFlag:bool,   
                      typeList: &List<&Ast.TypeInfo>, ,,argList ) {
          ,,superStat;
@@ -717,6 +742,7 @@ macro _declNodeClass(
                             typeList: &List<&Ast.TypeInfo>, ,,argList ) : ,,className
       {
          let mut node = new ,,className(
+            nodeMan.$managerId,
             nodeMan.nextId(), pos, inTestBlock, macroArgFlag, typeList ,,argSymList );
          nodeMan.addNode( node );
          return node;

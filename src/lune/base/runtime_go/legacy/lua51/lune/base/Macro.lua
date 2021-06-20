@@ -289,7 +289,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
-local validAsyncMacro = true
+local validAsyncMacro = false
 
 local function loadCode( code )
 
@@ -738,7 +738,7 @@ function MacroCtrl:__init(macroEval)
    self.symbol2ValueMapForMacro = {}
    self.macroEval = macroEval
    self.analyzeInfo = MacroAnalyzeInfo.new(Ast.builtinTypeNone, Nodes.MacroMode.None)
-   self.macroCallLineNo = 0
+   self.macroCallLineNo = nil
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
    
    self.macroLocalVarMap = nil
@@ -793,6 +793,10 @@ function MacroCtrl:clone(  )
    
    
    return obj
+end
+function MacroCtrl:mergeFrom( macroCtrl )
+
+   _lune._Set_or(self.useModuleMacroSet, macroCtrl.useModuleMacroSet )
 end
 function MacroCtrl:setToUseLnsLoad(  )
 
@@ -1578,10 +1582,10 @@ function MacroCtrl:finishMacroMode(  )
 end
 
 
-function MacroCtrl:startExpandMode( lineNo, typeInfo, callback )
+function MacroCtrl:startExpandMode( pos, typeInfo, callback )
 
    self.analyzeInfo = MacroAnalyzeInfo.new(typeInfo, Nodes.MacroMode.Expand)
-   self.macroCallLineNo = lineNo
+   self.macroCallLineNo = pos
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
    
    callback(  )

@@ -4,59 +4,59 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Json bool
 var Json__mod__ string
 // for 145
-func Json_convExp55(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_55(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 150
-func Json_convExp124(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_124(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 155
-func Json_convExp193(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_193(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 160
-func Json_convExp268(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_268(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 165
-func Json_convExp337(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_337(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 170
-func Json_convExp416(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_416(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 175
-func Json_convExp495(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_495(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 180
-func Json_convExp574(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_574(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 185
-func Json_convExp643(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_643(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 202
-func Json_convExp932(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_932(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 210
-func Json_convExp1053(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Json_convExp0_1053(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 45
-func Json_convExp1321(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_1321(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 67
-func Json_convExp1412(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_1412(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 124
-func Json_convExp1630(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_1630(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // 6: decl @lune.@base.@Json.getRawTxt

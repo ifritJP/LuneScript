@@ -1,5 +1,7 @@
-macro _hoge() {
-   {
-      __var[ "a" ] = 1; // error
+fn func() {
+   macro _hoge() {
+      {
+         __var[ "a" ] = 1; // error
+      }
    }
 }

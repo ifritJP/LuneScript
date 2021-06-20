@@ -528,17 +528,62 @@ class AccessSymbolSetQueue {
    }
 }
 
-class FuncBlockInfo {
+class FuncBlockInfo extend (__AsyncItem) {
    let declFuncInfo:Nodes.DeclFuncInfo {pub};
    let funcType:&Ast.TypeInfo{pub};
+   let typeDataAccessor:Ast.TypeDataAccessor{pub};
    let mut funcScope:Ast.Scope {pub,local};
    let tokenList:&List<&Parser.Token> {pub};
-   let lineNo:int! {pub};
+   let declPos:&Parser.Position {pub};
+   let orgPos:&Parser.Position! {pub};
+}
+
+interface FuncBlockCtlIF {
+   pub fn getNext() mut :&FuncBlockInfo!;
+}
+
+class ListFuncBlockCtl extend (FuncBlockCtlIF) {
+   let list:&List<&FuncBlockInfo>;
+   let mut pos:int;
+
+   pub fn __init( list:&List<&FuncBlockInfo> ) {
+      self.list = list;
+      self.pos = 0;
+   }
+   
+   pub fn getNext() mut : &FuncBlockInfo! {
+      if self.pos >= #self.list {
+         return nil;
+      }
+      self.pos = self.pos + 1;
+      return self.list[ self.pos ];
+   }
+}
+
+class PipeFuncBlockCtl extend (FuncBlockCtlIF) {
+   let pipe:__pipe<&FuncBlockInfo>;
+
+   pub fn __init( pipe:__pipe<&FuncBlockInfo> ) {
+      self.pipe = pipe;
+   }
+   
+   pub fn getNext() mut : &FuncBlockInfo! {
+      return self.pipe.get();
+   }
+}
+
+
+class FuncBlockResult {
+   let funcBlockInfo:&FuncBlockInfo {pub};
+   let body:Nodes.BlockNode {pub};
+   let has_func_sym:bool {pub};
 }
 
 enum AnalyzePhase {
    /** Meta ファイル用の外部公開の情報を解析する */
    Meta,
+   /** Runner で分割解析する */
+   Runner,
    /** 全体を解析する */
    Main,
 }
@@ -573,9 +618,9 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    local let mut moduleType: &Ast.TypeInfo;
 
    /** true の場合、 _ で始まるシンボル名チェックをしない */
-   pri let mut ignoreToCheckSymbol_:bool;
+   pro let mut ignoreToCheckSymbol_:bool;
    /** async 宣言のデフォルト */
-   let mut defaultAsyncMode: DefaultAsyncMode;
+   local let mut defaultAsyncMode: DefaultAsyncMode;
 
    // pro let mut stdinFile:&Types.StdinFile!;
 
@@ -589,7 +634,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    
 
    // ===== 複数持ち 
-   pri let modifier:TransUnitIF.Modifier;
+   pro let modifier:TransUnitIF.Modifier;
 
    pro let topScope: Ast.Scope;
    /** macro-statement の最上位スコープ */
@@ -610,7 +655,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    local let mut inTestBlock:bool;
 
    /** Meta 解析後に、各関数ブロックを解析する際の*/  
-   pro let mut funcBlockInfoLinkNo:int!;
+   pro let mut funcBlockInfoLinkNo:&Parser.Position!;
 
    /** モジュールの最上位スコープ */
    pro let mut moduleScope: &Ast.Scope;
@@ -639,7 +684,7 @@ pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
    // /** subfile 名のリスト */
    // pro let subfileList: List<str>;
    /** マクロ制御 */
-   pro let macroCtrl:Macro.MacroCtrl;
+   pro let mut macroCtrl:Macro.MacroCtrl;
    /** advertise 宣言されているメンバの型の Set */
    let advertisedTypeSet:Set<&Ast.TypeInfo>;
 
@@ -678,17 +723,27 @@ alias で置き換えている元の Type → alias の型
 
 
       self.globalScope = new Ast.ScopeWithRef(
-         self.processInfo, self.globalScope, src.globalScope, false ## );
+         self.processInfo, self.globalScope, src.globalScope, .Other ## );
 
       _cloneMap( self.typeId2ClassMap, src.typeId2ClassMap );
-      
+
+      foreach nsInfo, typeInfo in src.nsInfoMap {
+         self.nsInfoMap[ typeInfo ] = nsInfo.duplicate();
+      }
 
       // === self
       
-      foreach state in src.analyzingStateQueue {
-         self.analyzingStateQueue.insert( state );
-      }
-      //self.macroCtrl = src.macroCtrl;
+      self.defaultAsyncMode = src.defaultAsyncMode;
+      self.validMutControl = src.validMutControl;
+      self.moduleName = src.moduleName;
+      self.moduleType = src.moduleType;
+      self.ignoreToCheckSymbol_ = src.ignoreToCheckSymbol_;
+      self.baseDir = src.baseDir;
+      self.analyzePhase = src.analyzePhase;
+
+      self.typeNameCtrl = new Ast.TypeNameCtrl( self.moduleType );
+      
+      self.macroCtrl = src.macroCtrl.clone();
       self.advertisedTypeSet.or(src.advertisedTypeSet );
       self.accessSymbolSetQueue.setupFrom( src.accessSymbolSetQueue );
       self.helperInfo.pragmaSet.or( src.helperInfo.pragmaSet );
@@ -699,7 +754,9 @@ alias で置き換えている元の Type → alias の型
       _cloneMap( self.importedAliasMap, src.importedAliasMap );
    }
 
-   local fn mergeFrom( src:&TransUnit ) mut {
+   local fn mergeFrom(
+      src:&TransUnit, funcBlockResultMap:&Map<&FuncBlockInfo,FuncBlockResult> ) mut
+   {
       self.nodeManager.addFrom( src.nodeManager );
 
       // /** クロージャ候補の関数情報リスト */
@@ -710,8 +767,8 @@ alias で置き換えている元の Type → alias の型
       // /** コメントリスト */
       // local let commentCtrl: Parser.CommentCtrl;
 
+      self.macroCtrl.mergeFrom( src.macroCtrl );
 
-      // /** クラスの型情報 -> そのクラスを宣言しているノード */
       _cloneMap( self.typeInfo2ClassNode, src.typeInfo2ClassNode );
 
       self.helperInfo.mergeFrom( src.helperInfo );
@@ -732,6 +789,27 @@ alias で置き換えている元の Type → alias の型
 
       cloneMessList( self.warnMessList, src.warnMessList );
       cloneMessList( self.errMessList, src.errMessList );
+
+      foreach nsInfo, typeInfo in src.nsInfoMap {
+         let! mut dstInfo = self.nsInfoMap[ typeInfo ] {
+            dstInfo = self.newNSInfoWithTypeData(
+               nsInfo.$typeInfo,
+               nsInfo.$typeDataAccessor, nsInfo.$pos );
+            self.nsInfoMap[ typeInfo ] = dstInfo;
+         };
+         let mut dstChildren = dstInfo.$typeDataAccessor.$typeData.$children;
+         let mut srcChildren = nsInfo.$typeDataAccessor.$typeData.$children;
+         if #dstChildren == 0 {
+            foreach child in srcChildren {
+               dstChildren.insert( child );
+            }
+         } elseif #dstChildren < #srcChildren {
+            for index = #dstChildren, #srcChildren {
+               dstChildren.insert( srcChildren[ index ] );
+            }
+         }
+      }
+      
    }
 
    
@@ -957,7 +1035,7 @@ alias で置き換えている元の Type → alias の型
       let mut parentNsInfo = self.getCurrentNSInfo();
       let mut parentInfo = parentNsInfo.$typeInfo;
       let mut parentScope = self.scope;
-      let mut scope = self.pushScope( true ## );
+      let mut scope = self.pushScope( .Module ## );
       let mut typeInfo = self.processInfo.createExtModule(
          scope, parentInfo, parentNsInfo.$typeDataAccessor, externalFlag,
          accessMode, name, lang, requirePath );
@@ -1112,15 +1190,15 @@ alias で置き換えている元の Type → alias の型
       dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
       callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!;
 
-   fn getLineNo( token:&Parser.Token ) :int {
-      let mut lineNo = token.pos.lineNo;
+   fn getLineNo( token:&Parser.Token ) : &Parser.Position {
+      let mut pos = token.pos;
       if! let work = self.funcBlockInfoLinkNo {
-         lineNo = work;
+         pos = work;
       }
       if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-         lineNo = self.macroCtrl.$macroCallLineNo;
+         pos = unwrap self.macroCtrl.$macroCallLineNo;
       }
-      return lineNo;
+      return pos;
    }
 }
 
@@ -1585,6 +1663,12 @@ fn TransUnit.supportLang( lang:LuneControl.Code ) : bool {
    return true;
 }
 
+pro fn TransUnit.analyzeLuneControlToken(
+   firstToken:&Parser.Token, controlToken:&Parser.Token ) mut : LuneControl.Pragma!
+{
+   return nil;
+}
+
 fn TransUnit.analyzeLuneControl(
    firstToken: &Parser.Token ) mut : Nodes.LuneControlNode!
 {
@@ -1592,78 +1676,88 @@ fn TransUnit.analyzeLuneControl(
    let nextToken = self.getToken(##);
 
    let pragma;
-   switch ( nextToken.txt ) {
-      case "disable_mut_control" {
-         self.validMutControl = false;
-         self.modifier.set_validMutControl( false );
-         pragma = LuneControl.Pragma.disable_mut_control;
-      }
-      case "ignore_symbol_" {
-         self.ignoreToCheckSymbol_ = true;
-         pragma = LuneControl.Pragma.ignore_symbol_;
-      }
-      case "load__lune_module" {
-         pragma = LuneControl.Pragma.load__lune_module;
-      }
-      case "limit_conv_code" {
-         let mut codeSet:Set<LuneControl.Code> = (@);
-         while true {
-            let token = self.getToken(##);
-            if token.txt == ";" {
-               self.pushback();
-               break;
+
+   if! let work = self.analyzeLuneControlToken( firstToken, nextToken ) {
+      pragma = work;
+   } else {
+      switch ( nextToken.txt ) {
+         // case "disable_mut_control" {
+         //    self.validMutControl = false;
+         //    self.modifier.set_validMutControl( false );
+         //    pragma = LuneControl.Pragma.disable_mut_control;
+         // }
+         // case "ignore_symbol_" {
+         //    self.ignoreToCheckSymbol_ = true;
+         //    pragma = LuneControl.Pragma.ignore_symbol_;
+         // }
+         case "load__lune_module" {
+            pragma = LuneControl.Pragma.load__lune_module;
+         }
+         // case "limit_conv_code" {
+         //    let mut codeSet:Set<LuneControl.Code> = (@);
+         //    while true {
+         //       let token = self.getToken(##);
+         //       if token.txt == ";" {
+         //          self.pushback();
+         //          break;
+         //       }
+         //       if! let code = LuneControl.Code._from( token.txt ) {
+         //          codeSet.add( code );
+         //       }
+         //       else {
+         //          self.addErrMess( token.pos, "illegal code -- '%s'" (token.txt ) );
+         //       }
+         //    }
+         //    pragma = LuneControl.Pragma.limit_conv_code( codeSet );
+         // }
+         // case "use_async" {
+         //    pragma = LuneControl.Pragma.use_async;
+         // }
+         case "run_async_pipe" {
+            if not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async ) {
+               self.addErrMess( nextToken.pos, "must set '_lune_control use_async'" );
             }
-            if! let code = LuneControl.Code._from( token.txt ) {
-               codeSet.add( code );
+            
+            let nowMethod = self.getCurrentNamespaceTypeInfo();
+            let nowClass = nowMethod.$parentInfo;
+            let mut valid = false;
+            if nowMethod.$kind == .Method and Ast.isClass( nowClass ) {
+               if! let loopMethod = nowClass.$scope$.getTypeInfoChild$( "loop" ) {
+                  if loopMethod.$kind == .Method and #loopMethod.$argTypeInfoList == 0 {
+                     valid = true;
+                  }
+               } 
             }
-            else {
-               self.addErrMess( token.pos, "illegal code -- '%s'" (token.txt ) );
+            if valid {
+               pragma = LuneControl.Pragma.run_async_pipe;
+            } else {
+               self.addErrMess(
+                  nextToken.pos, 
+                  "this option only use in method of the class have loop method." );
+               return nil;
             }
          }
-         pragma = LuneControl.Pragma.limit_conv_code( codeSet );
-      }
-      case "use_async" {
-         pragma = LuneControl.Pragma.use_async;
-      }
-      case "run_async_pipe" {
-         if not self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_async ) {
-            self.addErrMess( nextToken.pos, "must set '_lune_control use_async'" );
-         }
-         
-         let nowMethod = self.getCurrentNamespaceTypeInfo();
-         let nowClass = nowMethod.$parentInfo;
-         let mut valid = false;
-         if nowMethod.$kind == .Method and Ast.isClass( nowClass ) {
-            if! let loopMethod = nowClass.$scope$.getTypeInfoChild$( "loop" ) {
-               if loopMethod.$kind == .Method and #loopMethod.$argTypeInfoList == 0 {
-                  valid = true;
-               }
-            } 
-         }
-         if valid {
-            pragma = LuneControl.Pragma.run_async_pipe;
-         } else {
-            self.addErrMess(
-               nextToken.pos, 
-               "this option only use in method of the class have loop method." );
+         // case "default_async_func" {
+         //    pragma = LuneControl.Pragma.default_async_func;
+         //    self.defaultAsyncMode = .AsyncFunc;
+         // }
+         // case "default_async_all" {
+         //    pragma = LuneControl.Pragma.default_async_all;
+         //    self.defaultAsyncMode = .AsyncAll;
+         // }
+         // case "use_macro_special_var" {
+         //    pragma = LuneControl.Pragma.use_macro_special_var;
+         //    self.analyzePhase = .Main;
+         // }
+         // case "single_phase_ast" {
+         //    pragma = LuneControl.Pragma.single_phase_ast;
+         //    self.analyzePhase = .Main;
+         // }
+         default {
+            self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );
+            self.checkNextToken( ";" );
             return nil;
          }
-      }
-      case "default_async_func" {
-         pragma = LuneControl.Pragma.default_async_func;
-         self.defaultAsyncMode = .AsyncFunc;
-      }
-      case "default_async_all" {
-         pragma = LuneControl.Pragma.default_async_all;
-         self.defaultAsyncMode = .AsyncAll;
-      }
-      case "use_macro_special_var" {
-         pragma = LuneControl.Pragma.use_macro_special_var;
-      }
-      default {
-         self.addErrMess( nextToken.pos, "unknown option -- %s" (nextToken.txt) );
-         self.checkNextToken( ";" );
-         return nil;
       }
    }
 
@@ -1700,7 +1794,7 @@ fn TransUnit.analyzeBlock(
       self.scope = scope;
    }
    else {
-      self.pushScope( false ## );
+      self.pushScope( .Other ## );
    }
    let mut blockScope = self.scope;
 
@@ -2128,7 +2222,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       
       let mut valParamNameList:List<&Ast.SymbolInfo> = [];
       nextToken = self.getToken(##);
-      let mut blockScope = self.pushScope( false ## );
+      let mut blockScope = self.pushScope( .Other ## );
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
             let paramName = self.getSymbolToken( .MustNot_Or_ );
@@ -2224,7 +2318,7 @@ fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
 }
 
 fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
-   let mut scope = self.pushScope( false## );
+   let mut scope = self.pushScope( .Other## );
    let mut node = Nodes.RepeatNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
@@ -2244,7 +2338,7 @@ fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
 
 fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
 
-   let mut scope = self.pushScope( false## );
+   let mut scope = self.pushScope( .Other## );
 
    let val = self.getToken(##);
    if val.kind ~= Parser.TokenKind.Symb {
@@ -2305,7 +2399,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
 }
 
 fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
-   let mut scope = self.pushScope( false## );
+   let mut scope = self.pushScope( .Other## );
    let mut varList:List<&Parser.Token> = [];
    let mut nextToken:&Parser.Token = Parser.getEofToken();
    repeat {
@@ -2433,7 +2527,7 @@ fn TransUnit.convToExtTypeList(
 
 
 fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.Node {
-   let mut scope = self.pushScope( false## );
+   let mut scope = self.pushScope( .Other## );
    let mut mainSymToken:&Parser.Token = Parser.getEofToken();
    let mut subSymToken:&Parser.Token! = nil;
    let mut mainSym:&Ast.SymbolInfo;
@@ -2619,7 +2713,7 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
    // スコープを切り替え
    let mut bakScope = self.scope;
    self.scope = self.topScope;
-   let mut localScope = self.pushScope( false ## );
+   let mut localScope = self.pushScope( .Other ## );
 
    // 名前空間に属させるためのダミーの関数を定義
    self.createDummyNS( localScope, nextToken.pos, asyncMode );

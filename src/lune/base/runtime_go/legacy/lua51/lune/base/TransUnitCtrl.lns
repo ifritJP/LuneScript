@@ -1,9 +1,15 @@
 subfile owner lune.base.TransUnit;
 
+let unsupportStatement =
+    (@
+      "import",
+      "subfile",
+      "provide"
+    );
+
 class TransUnitRunner extend TransUnit(__Runner) {
-   let srcTranUnit:&TransUnit;
-   let funcBlockInfoList:&List<&FuncBlockInfo>;
-   let mut resultList:&List<FuncBlockResult>;
+   let funcBlockCtl:FuncBlockCtlIF;
+   let mut resultMap:&Map<&FuncBlockInfo,FuncBlockResult>;
    
    pub fn __init(
       srcTranUnit:&TransUnit,
@@ -14,26 +20,38 @@ class TransUnitRunner extend TransUnit(__Runner) {
       pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
       ctrl_info: &Types.TransCtrlInfo,
       builtinFunc:&Builtin.BuiltinFuncType,
-      funcBlockInfoList:&List<&FuncBlockInfo> )
+      list:&List<&FuncBlockInfo>,
+      managerId:int )
   {
       super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
              analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
 
-     self.srcTranUnit = srcTranUnit;
-     self.funcBlockInfoList = funcBlockInfoList;
-     self.resultList = [];
+     self.funcBlockCtl = new ListFuncBlockCtl( list );
+     self.resultMap = {};
+     self.nodeManager.set_managerId( managerId );
+     self.setup( srcTranUnit );
   }
 
   pub fn run() __async mut {
-     self.setup( self.srcTranUnit );
-
-     self.resultList = self.processFuncBlockInfo(
-        self.funcBlockInfoList, self.parser.getStreamName() );
+     self.resultMap = self.processFuncBlockInfo(
+        self.funcBlockCtl, self.parser.getStreamName() );
   }
 
-  pub fn get() mut : &List<FuncBlockResult> {
+  pub fn get() mut : &Map<&FuncBlockInfo,FuncBlockResult> {
      __join( self );
-     return self.resultList;
+     return self.resultMap;
+  }
+
+  pro override fn analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+  {
+     if unsupportStatement.has( token.txt ) {
+        self.errorAt(
+           token.pos,
+           "unsupport the '%s' statement on the multi phase ast. " (token.txt) ..
+           "please declare '_lune_control single_phase_ast'"
+        );
+     }
+     return nil;
   }
  }
 
@@ -58,6 +76,7 @@ pub class TransUnitCtrl extend TransUnit {
    let mut stdinFile:&Types.StdinFile!;
    // let mut baseDir:str!;
    let funcBlockInfoList:List<FuncBlockInfo>;
+   let mut totalFuncBlockTokenNum:int;
 
 
    /** subfile 名のリスト */
@@ -77,6 +96,7 @@ pub class TransUnitCtrl extend TransUnit {
       super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
              analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
 
+      self.totalFuncBlockTokenNum = 0;
       self.macroEval = macroEval;
 
       // self.importedAliasMap = {};
@@ -95,6 +115,64 @@ pub class TransUnitCtrl extend TransUnit {
 
    fn analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode;
 }
+
+pro override fn TransUnitCtrl.analyzeLuneControlToken(
+   firstToken:&Parser.Token, controlToken:&Parser.Token ) mut : LuneControl.Pragma!
+{
+   let pragma:LuneControl.Pragma!;
+   switch controlToken.txt {
+      case "disable_mut_control" {
+         self.validMutControl = false;
+         self.modifier.set_validMutControl( false );
+         pragma = LuneControl.Pragma.disable_mut_control;
+      }
+      case "ignore_symbol_" {
+         self.ignoreToCheckSymbol_ = true;
+         pragma = LuneControl.Pragma.ignore_symbol_;
+      }
+      case "limit_conv_code" {
+         let mut codeSet:Set<LuneControl.Code> = (@);
+         while true {
+            let token = self.getToken(##);
+            if token.txt == ";" {
+               self.pushback();
+               break;
+            }
+            if! let code = LuneControl.Code._from( token.txt ) {
+               codeSet.add( code );
+            }
+            else {
+               self.addErrMess( token.pos, "illegal code -- '%s'" (token.txt ) );
+            }
+         }
+         pragma = LuneControl.Pragma.limit_conv_code( codeSet );
+      }
+      case "use_async" {
+         pragma = LuneControl.Pragma.use_async;
+      }
+      case "default_async_func" {
+         pragma = LuneControl.Pragma.default_async_func;
+         self.defaultAsyncMode = .AsyncFunc;
+      }
+      case "default_async_all" {
+         pragma = LuneControl.Pragma.default_async_all;
+         self.defaultAsyncMode = .AsyncAll;
+      }
+      case "use_macro_special_var" {
+         pragma = LuneControl.Pragma.use_macro_special_var;
+         self.analyzePhase = .Main;
+      }
+      case "single_phase_ast" {
+         pragma = LuneControl.Pragma.single_phase_ast;
+         self.analyzePhase = .Main;
+      }
+      default {
+         pragma = nil;
+      }
+   }
+   return pragma;
+}
+
 
 fn TransUnitCtrl.analyzeImportFor(
    pos: &Parser.Position, modulePath:str, assignName:str,
@@ -262,7 +340,7 @@ fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode
 
 fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
 {
-   let mut newScope = self.pushScope( false ## );
+   let mut newScope = self.pushScope( .Other ## );
 
    let importNode;
 
@@ -444,8 +522,87 @@ pro override fn TransUnitCtrl.analyzeStatementToken( token:&Parser.Token ) mut :
    return statement;
 }
 
-local override fn TransUnitCtrl.addFuncBlockInfoList( funcBlockInfo:FuncBlockInfo ) mut {
+local override fn TransUnitCtrl.addFuncBlockInfoList( funcBlockInfo:FuncBlockInfo ) mut
+{
+   self.totalFuncBlockTokenNum = self.totalFuncBlockTokenNum + #funcBlockInfo.$tokenList;
    self.funcBlockInfoList.insert( funcBlockInfo );
+}
+
+fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
+   let runnerList:List<TransUnitRunner> = [];
+   let mut resultMap:Map<&FuncBlockInfo,FuncBlockResult> = {};
+
+   if #self.funcBlockInfoList < 20 or self.totalFuncBlockTokenNum < 2000 {
+      __lns.runtime.log(
+         "disable processing async AST. %d, %d"
+         (#self.funcBlockInfoList, self.totalFuncBlockTokenNum) );
+   } else {
+      let divCount = self.ctrl_info.threadPerUnitThread;
+      if divCount > 0 {
+         self.analyzePhase = .Runner;
+         
+         let maxTokenCount = ( self.totalFuncBlockTokenNum + divCount - 1 ) / divCount;
+         let mut offset = 1;
+         let len = #self.funcBlockInfoList;
+
+         for managerId = 1, divCount {
+            let list:List<&FuncBlockInfo> = [];
+            let mut tokenCount = 0;
+            while offset <= len {
+               let funcBlockInfo = self.funcBlockInfoList[ offset ];
+               offset = offset + 1;
+               list.insert( funcBlockInfo );
+               tokenCount = tokenCount + #funcBlockInfo.$tokenList;
+               if tokenCount >= maxTokenCount {
+                  break;
+               }
+            }
+
+            let mut runner = new TransUnitRunner(
+               self,
+               self.moduleId,
+               self.importModuleInfo,
+               self.macroEval, false,
+               self.moduleName, .Compile, nil,
+               self.targetLuaVer,
+               self.ctrl_info,
+               self.builtinFunc,
+               list, managerId );
+
+            if __run( runner, __lns.runMode.Skip, "astMain -- %s" (streamName) ) {
+               runnerList.insert( runner );
+            } else {
+               break;
+            }
+         }
+      }
+   }
+   if #runnerList == 0 {
+      // この場合、非同期処理が一つもないので、
+      // self.funcBlockInfoList 全体を処理して resultMap に設定。
+
+      self.analyzePhase = .Main;
+      
+      resultMap = self.processFuncBlockInfo(
+         new ListFuncBlockCtl( self.funcBlockInfoList ),
+         self.parser.getStreamName() );
+   } else {
+      foreach runner in runnerList {
+         let workMap = runner.get();
+         self.mergeFrom( runner, resultMap );
+         foreach result, key in workMap {
+            resultMap[ key ] = result;
+         }
+      }
+      __lns.runtime.log( "merged AST." );
+   }
+   
+   foreach funcBlockInfo in self.funcBlockInfoList {
+      let mut result = unwrap resultMap[ funcBlockInfo ];
+      let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
+      declFuncInfo.set_body( result.$body );
+      declFuncInfo.set_has__func__Symbol( result.$has_func_sym );
+   }
 }
 
 pub fn TransUnitCtrl.createAST(
@@ -486,7 +643,10 @@ pub fn TransUnitCtrl.createAST(
          }
       }
    }
+   // // moduleScope の変数は、アクセス有無の確認をしない。
+   // self.scope.set_validCheckingUnaccess( false );
    self.moduleScope = self.scope;
+   
    self.scope.addVar(
       self.processInfo, 
       .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
@@ -527,7 +687,8 @@ pub fn TransUnitCtrl.createAST(
          importedAliasMap, self.moduleId, self.moduleName,
          moduleTypeInfo.$rawTxt, streamName, {},
          self.macroCtrl.$declMacroInfoMap );;
-      __lns.runtime.log( "ready meta -- %d" (#self.funcBlockInfoList) );
+      __lns.runtime.log( "ready meta -- %d, %d"
+                         (#self.funcBlockInfoList, self.totalFuncBlockTokenNum ) );
       Log._log2( .Log, "ready meta -- %s, %d, %s, %s"
                  ( streamName, self.parser.getUsedTokenListLen(),
                    moduleTypeInfo, moduleTypeInfo.$scope ) );
@@ -595,7 +756,6 @@ pub fn TransUnitCtrl.createAST(
                         token.kind.$_txt, token.txt ) );
          }
       }
-      self.analyzePhase = .Main;
 
       let globalSymbolList:List<&Ast.SymbolInfo> = [];
       foreach node in children {
@@ -626,34 +786,9 @@ pub fn TransUnitCtrl.createAST(
       exportInfo = createExportInfo(
          moduleSymboInfo, globalSymbolList, self.processInfo.duplicate() );
       
-      
 
-      {
-         // let mut runner = new TransUnitRunner(
-         //    self,
-         //    self.moduleId,
-         //    self.importModuleInfo,
-         //    self.macroEval, false,
-         //    self.moduleName, .Compile, nil,
-         //    self.targetLuaVer,
-         //    self.ctrl_info,
-         //    self.builtinFunc,
-         //    self.funcBlockInfoList );
-         // runner.run();
-         // let mut resultList = runner.get();
-
-         let mut resultList = self.processFuncBlockInfo(
-            self.funcBlockInfoList, self.parser.getStreamName() );
-         
-         foreach result, index in resultList {
-            let mut funcBlockInfo = self.funcBlockInfoList[ index ];
-            let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
-            declFuncInfo.set_body( result.$body );
-            declFuncInfo.set_has__func__Symbol( result.$has_func_sym );
-         }
-      }
-
-      
+      self.processFuncBlock( streamName );
+     
 
       self.checkOverriededMethodOfAllClass();
 

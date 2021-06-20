@@ -2842,7 +2842,9 @@ fn TransUnit.analyzeExpSymbol(
          let! symbolInfo = self.scope.getSymbolTypeInfo(
             symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
          {
-            if self.macroCtrl.$isDeclaringMacro and symbolToken.txt == "__var" {
+            if self.macroCtrl.$isDeclaringMacro and
+               symbolToken.txt == "__var" and self.analyzePhase == .Runner
+            {
                self.error( "declare '_lune_control use_macro_special_var'." );
             } else {
                if self.analyzeMode ~= .Diag {

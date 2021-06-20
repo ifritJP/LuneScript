@@ -7,7 +7,7 @@ var NodeIndexer_declNameSpaceNodeKindSet *LnsSet
 
 // 164: decl @lune.@base.@NodeIndexer.Indexer.dump.comp
 func Indexer_dump__comp_0_(_env *LnsEnv, node1 *Nodes_Node,node2 *Nodes_Node) bool {
-    return node1.FP.Get_id(_env) < node2.FP.Get_id(_env)
+    return node1.FP.Comp(_env, node2) < 0
 }
 
 // declaration Class -- NamespaceInfo

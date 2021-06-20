@@ -6,23 +6,23 @@ var Builtin__mod__ string
 var Builtin_builtinFunc *Builtin_BuiltinFuncType
 var Builtin_readyBuiltin bool
 // for 525
-func Builtin_convExp13088(arg1 []LnsAny) LnsAny {
+func Builtin_convExp0_13088(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 517
-func Builtin_convExp12969(arg1 []LnsAny) string {
+func Builtin_convExp0_12969(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 71
-func Builtin_convExp209(arg1 []LnsAny) string {
+func Builtin_convExp0_209(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 520
-func Builtin_convExp12994(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Builtin_convExp0_12994(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 541
-func Builtin_convExp13143(arg1 []LnsAny) string {
+func Builtin_convExp0_13143(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 175: decl @lune.@base.@Builtin.getBuiltinFunc
@@ -676,12 +676,12 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                         workTypeInfo = workScope.FP.GetTypeInfoChild(_env, name)
                     }
                     if workTypeInfo != nil{
-                        workTypeInfo_577 := workTypeInfo.(*Ast_TypeInfo)
+                        workTypeInfo_578 := workTypeInfo.(*Ast_TypeInfo)
                         if index == nameList.Len(){
-                            return workTypeInfo_577
+                            return workTypeInfo_578
                         }
                         {
-                            __exp := workTypeInfo_577.FP.Get_scope(_env)
+                            __exp := workTypeInfo_578.FP.Get_scope(_env)
                             if !Lns_IsNil( __exp ) {
                                 _exp := __exp.(*Ast_Scope)
                                 workScope = _exp
@@ -756,21 +756,21 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
     mutable = true
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(typeName,"^&", nil, nil))){
         mutable = false
-        typeName = Builtin_convExp12969(Lns_2DDD(_env.GetVM().String_gsub(typeName,"^&", "")))
+        typeName = Builtin_convExp0_12969(Lns_2DDD(_env.GetVM().String_gsub(typeName,"^&", "")))
     }
     var genTypeList *LnsList
     genTypeList = NewLnsList([]LnsAny{})
     var endIndex LnsAny
-    _,endIndex = Builtin_convExp12994(Lns_2DDD(_env.GetVM().String_find(typeName,"[%w%.]+<", nil, nil)))
+    _,endIndex = Builtin_convExp0_12994(Lns_2DDD(_env.GetVM().String_find(typeName,"[%w%.]+<", nil, nil)))
     var suffix string
     suffix = ""
     if endIndex != nil{
-        endIndex_613 := endIndex.(LnsInt)
+        endIndex_614 := endIndex.(LnsInt)
         var genTypeName string
-        genTypeName = _env.GetVM().String_sub(typeName,endIndex_613 + 1, nil)
+        genTypeName = _env.GetVM().String_sub(typeName,endIndex_614 + 1, nil)
         for  {
             {
-                _tailIndex := Builtin_convExp13088(Lns_2DDD(_env.GetVM().String_find(genTypeName,"[,>]", nil, nil)))
+                _tailIndex := Builtin_convExp0_13088(Lns_2DDD(_env.GetVM().String_find(genTypeName,"[,>]", nil, nil)))
                 if !Lns_IsNil( _tailIndex ) {
                     tailIndex := _tailIndex.(LnsInt)
                     var genType *Ast_TypeInfo
@@ -783,13 +783,13 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                 }
             }
         }
-        typeName = _env.GetVM().String_sub(typeName,1, endIndex_613 - 1) + suffix
+        typeName = _env.GetVM().String_sub(typeName,1, endIndex_614 - 1) + suffix
     }
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(typeName,"!$", nil, nil))){
         var orgTypeName string
-        orgTypeName = Builtin_convExp13143(Lns_2DDD(_env.GetVM().String_gsub(typeName,"!$", "")))
+        orgTypeName = Builtin_convExp0_13143(Lns_2DDD(_env.GetVM().String_gsub(typeName,"!$", "")))
         {
             __exp := getTypeInfoFromScope(_env, self.transUnit.FP.Get_scope(_env), orgTypeName, genTypeList)
             if !Lns_IsNil( __exp ) {

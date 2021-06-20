@@ -33,7 +33,7 @@ import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
 
 // マクロ処理を非同期に行なう場合 true
-let validAsyncMacro = true;
+let validAsyncMacro = false;
 
 
 fn loadCode( code:str ) : Luaval<&stem> {
@@ -311,7 +311,7 @@ pub class MacroCtrl
    /** true の場合、Token 展開中 */
    pri let mut tokenExpanding:bool {pub};
    /** マクロをコールしている行番号 */
-   pri let mut macroCallLineNo: int {pub};
+   pri let mut macroCallLineNo: &Parser.Position! {pub};
    /**
    * マクロ内で利用可能な、マクロ共通ローカルマップ。
    * マクロ横断で共通。
@@ -340,7 +340,7 @@ pub class MacroCtrl
       self.symbol2ValueMapForMacro = {};
       self.macroEval = macroEval;
       self.analyzeInfo = new MacroAnalyzeInfo( Ast.builtinTypeNone, .None );
-      self.macroCallLineNo = 0;
+      self.macroCallLineNo = nil;
       self.macroAnalyzeInfoStack = [ self.analyzeInfo ];
 
       self.macroLocalVarMap = nil;
@@ -381,6 +381,10 @@ pub class MacroCtrl
       }
       
       return obj;
+   }
+
+   pub fn mergeFrom( macroCtrl:&MacroCtrl ) mut {
+      self.useModuleMacroSet.or( macroCtrl.useModuleMacroSet );
    }
 
    pub fn setToUseLnsLoad() mut {
@@ -1103,10 +1107,10 @@ pub fn MacroCtrl.finishMacroMode() mut {
 
 
 pub fn MacroCtrl.startExpandMode(
-   lineNo:int, typeInfo:&Ast.TypeInfo, callback:EvalMacroCallback ) mut
+   pos:&Parser.Position, typeInfo:&Ast.TypeInfo, callback:EvalMacroCallback ) mut
 {
    self.analyzeInfo = new MacroAnalyzeInfo( typeInfo, .Expand );
-   self.macroCallLineNo = lineNo;
+   self.macroCallLineNo = pos;
    self.macroAnalyzeInfoStack.insert( self.analyzeInfo );
 
    callback();

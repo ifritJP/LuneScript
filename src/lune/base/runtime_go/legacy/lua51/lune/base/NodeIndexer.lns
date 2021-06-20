@@ -162,7 +162,7 @@ pub class Indexer {
          list.insert( node );
       }
       fn comp( node1:&Nodes.Node, node2:&Nodes.Node ) : bool {
-         return node1.$id < node2.$id;
+         return node1.comp( node2 ) < 0;
       }
       list.sort( comp );
 

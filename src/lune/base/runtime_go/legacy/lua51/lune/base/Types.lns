@@ -73,6 +73,8 @@ pub class TransCtrlInfo {
    pub let mut testing:bool;
    /** AST の multi phase 解析を有効化  */
    pub let mut validMultiPhaseTransUnit:bool;
+   /** 1 つの AST 解析の thread 個数 0 以上。 0 は、同期処理。 */
+   pub let mut threadPerUnitThread:int;
 
    pub fn __init() {
       self.warningShadowing = false;
@@ -89,6 +91,7 @@ pub class TransCtrlInfo {
       self.defaultAsync = false;
       self.testing = false;
       self.validMultiPhaseTransUnit = true;
+      self.threadPerUnitThread = 5;
    }
 }
 

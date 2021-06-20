@@ -33,7 +33,7 @@ import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
 
 // マクロ処理を非同期に行なう場合 true
-let validAsyncMacro = true;
+let validAsyncMacro = false;
 
 
 fn loadCode( code:str ) : Luaval<&stem> {
@@ -381,6 +381,10 @@ pub class MacroCtrl
       }
       
       return obj;
+   }
+
+   pub fn mergeFrom( macroCtrl:&MacroCtrl ) mut {
+      self.useModuleMacroSet.or( macroCtrl.useModuleMacroSet );
    }
 
    pub fn setToUseLnsLoad() mut {

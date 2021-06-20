@@ -352,7 +352,7 @@ class _TypeInfoModule extend _TypeInfo {
          // _exp.$typeId.set_orgId( self.typeId );
       }
       else {
-         let mut scope = new Ast.Scope( param.processInfo, parentScope, true, nil ## );
+         let mut scope = new Ast.Scope( param.processInfo, parentScope, .Module, nil ## );
 
          let mut mutable = false;
          __luago {
@@ -499,7 +499,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   }
 
                   let mut scope = new Ast.Scope(
-                     param.processInfo, parentScope, true, baseScope, ifScopeList );
+                     param.processInfo, parentScope, .Class, baseScope, ifScopeList );
 
                   let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
                   foreach itemType in itemTypeInfo {
@@ -532,7 +532,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   
                   
                   let mut scope = new Ast.Scope(
-                     param.processInfo, parentScope, true, nil, [] );
+                     param.processInfo, parentScope, .Module, nil, [] );
 
                   let mut parentTypeDataAccessor =
                      param.getTypeDataAccessor( self.parentId );
@@ -556,7 +556,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   let mut scope:Ast.Scope! = nil;
                   if self.kind ~= Ast.TypeInfoKind.FormFunc {
                      scope = new Ast.Scope(
-                        param.processInfo, parentScope, false, nil ## );
+                        param.processInfo, parentScope, .Other, nil ## );
                   }
 
                   let mut parentTypeDataAccessor =
@@ -654,7 +654,7 @@ class _TypeInfoEnum extend _TypeInfo {
       let mut parentTypeDataAccessor, parentInfo =
          param.getTypeDataAccessor( self.parentId );
       let mut parentScope = unwrap param.typeId2Scope[ self.parentId ];
-      let mut scope = new Ast.Scope( param.processInfo, parentScope, true, nil ## );
+      let mut scope = new Ast.Scope( param.processInfo, parentScope, .Class, nil ## );
 
       param.typeId2Scope[ self.typeId ] = scope;
       let valTypeInfo = unwrap param.getTypeInfo( self.valTypeId );
@@ -713,7 +713,7 @@ class _TypeInfoAlge extend _TypeInfo {
       //let mut name2AlgeValInfo:Map<str,Ast.AlgeValInfo> = {};
       let mut parentScope = unwrap param.typeId2Scope[ self.parentId ];
       let mut scope = new Ast.Scope(
-         param.processInfo, parentScope, true, nil ## );
+         param.processInfo, parentScope, .Class, nil ## );
 
       param.typeId2Scope[ self.typeId ] = scope;
       let mut algeTypeInfo = param.processInfo.createAlge(

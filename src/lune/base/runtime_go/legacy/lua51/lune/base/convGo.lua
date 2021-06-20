@@ -1051,13 +1051,13 @@ end
 
 function convFilter:getConv2formName( node )
 
-   return string.format( "conv2Form%d", node:get_id())
+   return string.format( "conv2Form%s", node:getIdTxt(  ))
 end
 
 
 function convFilter:getConvGenericsName( node )
 
-   return string.format( "lns_convGenerics%d", node:get_id())
+   return string.format( "lns_convGenerics%s", node:getIdTxt(  ))
 end
 
 
@@ -1575,8 +1575,7 @@ end
 
 function convFilter:getConvExpName( node, argListNode )
 
-   local nodeId = node:get_id()
-   return string.format( "%s_convExp%d", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), nodeId)
+   return string.format( "%s_convExp%s", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), node:getIdTxt(  ))
 end
 
 
@@ -1831,7 +1830,7 @@ function convFilter:outputNilAccCall( node )
          lists = string.format( "%s,list[%d]", lists, count - 1)
       end
       
-      local name = string.format( "%s_%d", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), node:get_id())
+      local name = string.format( "%s_%s", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), node:getIdTxt(  ))
       self:write( string.format( [==[
 func lns_NilAccCall_%s( env *LnsEnv, call func () (%s) ) bool {
     return env.NilAccPush( Lns_2DDD( call() ) )
@@ -2270,7 +2269,7 @@ function convFilter:outputConvExt( funcNode )
       end
    end
    
-   self:write( string.format( "func Lns_callExt%d( args []LnsAny ) (", funcNode:get_id()) )
+   self:write( string.format( "func Lns_callExt%s( args []LnsAny ) (", funcNode:getIdTxt(  )) )
    for index, retType in ipairs( funcNode:get_expType():get_retTypeInfoList() ) do
       if index > 1 then
          self:write( "," )
@@ -3831,7 +3830,7 @@ function convFilter:outputLetVar( node )
                   self:write( "," )
                end
                
-               if symbolInfo:get_posForModToRef() or Ast.isPubToExternal( symbolInfo:get_accessMode() ) then
+               if symbolInfo:get_scope() == self.moduleScope or symbolInfo:get_posForModToRef() or Ast.isPubToExternal( symbolInfo:get_accessMode() ) then
                   self:write( string.format( "%s", self:getSymbolSym( symbolInfo )) )
                else
                 
@@ -5681,7 +5680,7 @@ CallKind._name2Val["SortCall"] = CallKind.SortCall
 function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
 
    local funcType = funcSymbol:get_typeInfo()
-   local nilAccName = string.format( "%s_%d", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), callId)
+   local nilAccName = string.format( "%s_%s", self.moduleTypeInfo:get_rawTxt():gsub( "@", "" ), callId)
    
    local callKind = _lune.newAlge( CallKind.Normal)
    
@@ -5737,7 +5736,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
       
       if extCallFlag then
          if #funcType:get_retTypeInfoList() > 1 then
-            self:write( string.format( "Lns_callExt%d( ", node:get_id()) )
+            self:write( string.format( "Lns_callExt%s( ", node:getIdTxt(  )) )
          end
          
       end
@@ -5798,7 +5797,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
              
                if extCallFlag then
                   if #funcType:get_retTypeInfoList() > 1 then
-                     self:write( string.format( "Lns_callExt%d( ", node:get_id()) )
+                     self:write( string.format( "Lns_callExt%s( ", node:getIdTxt(  )) )
                   end
                   
                end
@@ -5976,7 +5975,7 @@ function convFilter:processExpCall( node, opt )
          
          
          withPrefix = true
-         closeParen, callKind = self:outputCallPrefix( node:get_id(), fieldNode, fieldNode:get_prefix(), _lune.unwrap( fieldNode:get_symbolInfo()) )
+         closeParen, callKind = self:outputCallPrefix( node:getIdTxt(  ), fieldNode, fieldNode:get_prefix(), _lune.unwrap( fieldNode:get_symbolInfo()) )
          
          if funcType:get_kind() == Ast.TypeInfoKind.Ext then
             self:write( ", " )
@@ -6874,7 +6873,7 @@ function convFilter:processGetField( node, opt )
             self:write( string.format( "(%s)", getAddEnvArg( 0, self.option:get_addEnvArg() )) )
          else
           
-            local closeParen = self:outputCallPrefix( node:get_id(), node, node:get_prefix(), symbolInfo )
+            local closeParen = self:outputCallPrefix( node:getIdTxt(  ), node, node:get_prefix(), symbolInfo )
             self:write( string.format( "(%s)", getAddEnvArg( 0, self.option:get_addEnvArg() )) )
             local retType = symbolInfo:get_typeInfo():get_retTypeInfoList()[1]
             if retType:get_kind() == Ast.TypeInfoKind.Alternate and not retType:hasBase(  ) then
@@ -7144,6 +7143,8 @@ function convFilter:processLuneControl( node, opt )
       elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
       
       elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
+      
+      elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
       
       end
    end

@@ -466,6 +466,13 @@ end
 function TypeData:__init() 
    self.children = {}
 end
+function TypeData:addFrom( typeData )
+
+   for __index, child in ipairs( typeData.children ) do
+      table.insert( self.children, child )
+   end
+   
+end
 function TypeData.setmeta( obj )
   setmetatable( obj, { __index = TypeData  } )
 end
@@ -488,6 +495,29 @@ function TypeDataAccessor.new(  )
 end
 function TypeDataAccessor:__init(  )
 
+end
+
+
+local SimpleTypeDataAccessor = {}
+setmetatable( SimpleTypeDataAccessor, { ifList = {TypeDataAccessor,} } )
+_moduleObj.SimpleTypeDataAccessor = SimpleTypeDataAccessor
+function SimpleTypeDataAccessor.setmeta( obj )
+  setmetatable( obj, { __index = SimpleTypeDataAccessor  } )
+end
+function SimpleTypeDataAccessor.new( typeData )
+   local obj = {}
+   SimpleTypeDataAccessor.setmeta( obj )
+   if obj.__init then
+      obj:__init( typeData )
+   end
+   return obj
+end
+function SimpleTypeDataAccessor:__init( typeData )
+
+   self.typeData = typeData
+end
+function SimpleTypeDataAccessor:get_typeData()
+   return self.typeData
 end
 
 
@@ -572,7 +602,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 211, function (  )
+   Log.log( Log.Level.Trace, __func__, 221, function (  )
    
       return "start"
    end )
@@ -1186,6 +1216,39 @@ function ClosureInfo:get_closureSymList()
 end
 
 
+local ScopeKind = {}
+_moduleObj.ScopeKind = ScopeKind
+ScopeKind._val2NameMap = {}
+function ScopeKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "ScopeKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function ScopeKind._from( val )
+   if ScopeKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+ScopeKind.__allList = {}
+function ScopeKind.get__allList()
+   return ScopeKind.__allList
+end
+
+ScopeKind.Module = 0
+ScopeKind._val2NameMap[0] = 'Module'
+ScopeKind.__allList[1] = ScopeKind.Module
+ScopeKind.Class = 1
+ScopeKind._val2NameMap[1] = 'Class'
+ScopeKind.__allList[2] = ScopeKind.Class
+ScopeKind.Other = 2
+ScopeKind._val2NameMap[2] = 'Other'
+ScopeKind.__allList[3] = ScopeKind.Other
+
+
 setmetatable( Scope, { ifList = {ModuleInfoManager,} } )
 _moduleObj.Scope = Scope
 function Scope:get_closureSymList(  )
@@ -1196,13 +1259,13 @@ function Scope:updateClosureRefPos(  )
 
    self.closureInfo:setRefPos(  )
 end
-function Scope.new( processInfo, parent, classFlag, inherit, ifScopeList )
+function Scope.new( processInfo, parent, scopeKind, inherit, ifScopeList )
    local obj = {}
    Scope.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, parent, classFlag, inherit, ifScopeList ); end
+   if obj.__init then obj:__init( processInfo, parent, scopeKind, inherit, ifScopeList ); end
    return obj
 end
-function Scope:__init(processInfo, parent, classFlag, inherit, ifScopeList) 
+function Scope:__init(processInfo, parent, scopeKind, inherit, ifScopeList) 
    self.scopeId = processInfo:get_idProvScope():getNewId(  )
    self.hasClosureAccess = false
    
@@ -1213,7 +1276,7 @@ function Scope:__init(processInfo, parent, classFlag, inherit, ifScopeList)
    self.parent = self.outerScope
    self.symbol2SymbolInfoMap = {}
    self.inherit = inherit
-   self.classFlag = classFlag
+   self.scopeKind = scopeKind
    self.symbolId2DataOwnerInfo = {}
    self.ifScopeList = _lune.unwrapDefault( ifScopeList, {})
    self.ownerTypeInfo = nil
@@ -1317,7 +1380,7 @@ function Scope:set_validCheckingUnaccess( validCheckingUnaccess )
    self.validCheckingUnaccess = validCheckingUnaccess
 end
 
-local rootScope = Scope.new(rootProcessInfo, nil, false, nil)
+local rootScope = Scope.new(rootProcessInfo, nil, ScopeKind.Other, nil)
 local rootScopeRo = rootScope
 rootProcessInfo:set_topScope( rootScope )
 
@@ -1358,14 +1421,14 @@ end
 local ScopeWithRef = {}
 setmetatable( ScopeWithRef, { __index = Scope } )
 _moduleObj.ScopeWithRef = ScopeWithRef
-function ScopeWithRef.new( processInfo, outerScope, parent, classFlag, inherit, ifScopeList )
+function ScopeWithRef.new( processInfo, outerScope, parent, scopeKind, inherit, ifScopeList )
    local obj = {}
    ScopeWithRef.setmeta( obj )
-   if obj.__init then obj:__init( processInfo, outerScope, parent, classFlag, inherit, ifScopeList ); end
+   if obj.__init then obj:__init( processInfo, outerScope, parent, scopeKind, inherit, ifScopeList ); end
    return obj
 end
-function ScopeWithRef:__init(processInfo, outerScope, parent, classFlag, inherit, ifScopeList) 
-   Scope.__init( self,processInfo, outerScope, classFlag, inherit, ifScopeList)
+function ScopeWithRef:__init(processInfo, outerScope, parent, scopeKind, inherit, ifScopeList) 
+   Scope.__init( self,processInfo, outerScope, scopeKind, inherit, ifScopeList)
    
    self:set_parent( parent )
 end
@@ -1717,7 +1780,7 @@ function TypeInfo:serializeTypeInfoList( serializeInfo, name, list, onlyPub )
    
    return work .. "}, "
 end
-function TypeInfo.createScope( processInfo, parent, classFlag, baseInfo, interfaceList )
+function TypeInfo.createScope( processInfo, parent, scopeKind, baseInfo, interfaceList )
 
    local inheritScope = nil
    if baseInfo ~= nil then
@@ -1733,7 +1796,7 @@ function TypeInfo.createScope( processInfo, parent, classFlag, baseInfo, interfa
       
    end
    
-   return Scope.new(processInfo, parent, classFlag, inheritScope, ifScopeList)
+   return Scope.new(processInfo, parent, scopeKind, inheritScope, ifScopeList)
 end
 function TypeInfo.setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
@@ -2024,7 +2087,7 @@ rootProcessInfo:setRootTypeInfo( _moduleObj.headTypeInfo:get_typeId().id, _modul
 function ProcessInfo.createUser( validCheckingMutable, validExtType, validDetailError, typeInfo2Map )
 
    local processInfo = ProcessInfo.new(validCheckingMutable, IdProvider.new(userStartId, extStartId), validExtType, validDetailError, typeInfo2Map)
-   local scope = Scope.new(processInfo, nil, false, nil)
+   local scope = Scope.new(processInfo, nil, ScopeKind.Other, nil)
    processInfo:set_topScope( scope )
    local topType = RootTypeInfo.create( processInfo, processInfo:newIdForSubRoot(  ) )
    scope:set_ownerTypeInfo( topType )
@@ -3405,7 +3468,7 @@ end
 
 function Scope:filterTypeInfoField( includeSelfFlag, fromScope, access, callback )
 
-   if self.classFlag then
+   if self.scopeKind ~= ScopeKind.Other then
       if includeSelfFlag then
          do
             local __sorted = {}
@@ -3448,7 +3511,7 @@ end
 
 function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope, access )
 
-   if self.classFlag then
+   if self.scopeKind ~= ScopeKind.Other then
       if includeSelfFlag then
          do
             local _exp = self.symbol2SymbolInfoMap[name]
@@ -3485,7 +3548,7 @@ end
 
 function Scope:getSymbolInfoIfField( name, fromScope, access )
 
-   if self.classFlag then
+   if self.scopeKind == ScopeKind.Class then
       for __index, scope in ipairs( self.ifScopeList ) do
          do
             local symbolInfo = scope:getSymbolInfoField( name, true, fromScope, access )
@@ -3557,7 +3620,7 @@ end
 
 function Scope:filterTypeInfoFieldAndIF( includeSelfFlag, fromScope, access, callback )
 
-   if self.classFlag then
+   if self.scopeKind ~= ScopeKind.Other then
       if includeSelfFlag then
          do
             local __sorted = {}
@@ -3705,9 +3768,9 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
    do
       local _exp = self.ownerTypeInfo
       if _exp ~= nil then
-         if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or self == moduleScope or self == rootScopeRo then
+         if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or _exp:get_kind() == TypeInfoKind.Module or self == moduleScope or self == rootScopeRo then
             validThisScope = true
-         elseif _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class or _exp:get_kind() == TypeInfoKind.Module then
+         elseif _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class then
             
             limitSymbol = true
             validThisScope = true
@@ -3745,7 +3808,7 @@ end
 
 function Scope:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
 
-   if self.classFlag then
+   if self.scopeKind == ScopeKind.Class then
       do
          local _exp = self.symbol2SymbolInfoMap["self"]
          if _exp ~= nil then
@@ -3755,7 +3818,7 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
       
    end
    
-   if moduleScope == fromScope or moduleScope == self or not self.classFlag then
+   if self.scopeKind ~= ScopeKind.Class then
       for __index, symbolInfo in pairs( self.symbol2SymbolInfoMap ) do
          if not callback( symbolInfo ) then
             return 
@@ -3952,6 +4015,16 @@ function Scope:addExtModule( processInfo, name, pos, typeInfo, lazy, lang )
    return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), false, MutMode.Mut, true, lazy )
 end
 
+
+local function dumpOuterScope( workScope, toScope, prefix )
+
+   workScope:filterSymbolTypeInfo( workScope, toScope, ScopeAccess.Normal, function ( symbolInfo )
+   
+      Util.log( string.format( "scope: %s, %s", prefix, symbolInfo:get_name()) )
+      return true
+   end )
+end
+_moduleObj.dumpOuterScope = dumpOuterScope
 local function dumpScope( workscope, workprefix )
 
    
@@ -4700,7 +4773,7 @@ function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex,
 end
 function AlternateTypeInfo.create( processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
 
-   local scope = TypeInfo.createScope( processInfo, nil, true, baseTypeInfo, interfaceList )
+   local scope = TypeInfo.createScope( processInfo, nil, ScopeKind.Class, baseTypeInfo, interfaceList )
    local newType = AlternateTypeInfo.new(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList)
    processInfo:setupImut( newType )
    
@@ -5224,7 +5297,7 @@ function GenericTypeInfo:__init(processInfo, scope, genSrcTypeInfo, itemTypeInfo
 end
 function GenericTypeInfo.create( processInfo, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
 
-   local scope = TypeInfo.createScope( processInfo, nil, true, genSrcTypeInfo, nil )
+   local scope = TypeInfo.createScope( processInfo, nil, ScopeKind.Class, genSrcTypeInfo, nil )
    local newType = GenericTypeInfo.new(processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo)
    processInfo:setupImut( newType )
    
@@ -6734,7 +6807,21 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    do
       local _switchExp = kind
       if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
-         scope = Scope.new(rootProcessInfo, rootScope, kind == TypeInfoKind.Class or kind == TypeInfoKind.Module or kind == TypeInfoKind.IF or kind == TypeInfoKind.List or kind == TypeInfoKind.Array or kind == TypeInfoKind.Set, nil)
+         local scopeKind
+         
+         do
+            local _switchExp = kind
+            if _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
+               scopeKind = ScopeKind.Class
+            elseif _switchExp == TypeInfoKind.Module then
+               scopeKind = ScopeKind.Module
+            else 
+               
+                  scopeKind = ScopeKind.Other
+            end
+         end
+         
+         scope = Scope.new(rootProcessInfo, rootScope, scopeKind, nil)
       end
    end
    
@@ -7093,7 +7180,7 @@ local builtinTypeBox
 _moduleObj.builtinTypeBox = builtinTypeBox
 
 do
-   local boxRootScope = Scope.new(rootProcessInfo, rootScope, true, nil)
+   local boxRootScope = Scope.new(rootProcessInfo, rootScope, ScopeKind.Class, nil)
    local work = BoxTypeInfo.new(rootProcessInfo, boxRootScope, AccessMode.Pub, boxRootAltType)
    rootProcessInfo:setupImut( work )
    registBuiltin( "Nilable", "Nilable", TypeInfoKind.Box, work, work, _moduleObj.headTypeInfo, boxRootScope )

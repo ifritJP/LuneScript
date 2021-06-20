@@ -4,7 +4,7 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_BuiltinTransUnit bool
 var BuiltinTransUnit__mod__ string
 // for 101
-func BuiltinTransUnit_convExp441(arg1 []LnsAny) (LnsAny, LnsAny) {
+func BuiltinTransUnit_convExp0_441(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 

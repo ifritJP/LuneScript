@@ -1077,7 +1077,7 @@ function _TypeInfoModule:createTypeInfo( param )
          
          error( "internal error" )
       else
-         local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil)
+         local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Module, nil)
          
          local mutable = false
          do
@@ -1255,7 +1255,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                end
                
                
-               local scope = Ast.Scope.new(param.processInfo, parentScope, true, baseScope, ifScopeList)
+               local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Class, baseScope, ifScopeList)
                
                local altTypeList = {}
                for __index, itemType in ipairs( itemTypeInfo ) do
@@ -1277,7 +1277,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                end )
                
                
-               local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil, {})
+               local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Module, nil, {})
                
                local parentTypeDataAccessor = param:getTypeDataAccessor( self.parentId )
                local workTypeInfo = param.processInfo:createExtModule( scope, parentInfo, parentTypeDataAccessor, true, Ast.AccessMode.Pub, self.txt, _lune.unwrap( self.moduleLang), _lune.unwrap( self.requirePath) )
@@ -1294,7 +1294,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                
                local scope = nil
                if self.kind ~= Ast.TypeInfoKind.FormFunc then
-                  scope = Ast.Scope.new(param.processInfo, parentScope, false, nil)
+                  scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Other, nil)
                end
                
                
@@ -1446,7 +1446,7 @@ function _TypeInfoEnum:createTypeInfo( param )
    
    local parentTypeDataAccessor, parentInfo = param:getTypeDataAccessor( self.parentId )
    local parentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-   local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil)
+   local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
    
    param.typeId2Scope[self.typeId] = scope
    local valTypeInfo = _lune.unwrap( param:getTypeInfo( self.valTypeId ))
@@ -1594,7 +1594,7 @@ function _TypeInfoAlge:createTypeInfo( param )
    local parentTypeDataAccessor, parentInfo = param:getTypeDataAccessor( self.parentId )
    
    local parentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-   local scope = Ast.Scope.new(param.processInfo, parentScope, true, nil)
+   local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
    
    param.typeId2Scope[self.typeId] = scope
    local algeTypeInfo = param.processInfo:createAlge( scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt )

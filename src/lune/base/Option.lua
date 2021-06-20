@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 11227
+   return 11302
 end
 
 
@@ -659,6 +659,14 @@ end
                   option.addEnvArg = false
                elseif _switchExp == "--disableMultiPhaseAst" then
                   option.transCtrlInfo.validMultiPhaseTransUnit = false
+               elseif _switchExp == "--disableMultiThreadAst" then
+                  option.transCtrlInfo.threadPerUnitThread = 0
+               elseif _switchExp == "--threadPerUnitThread" then
+                  option.transCtrlInfo.threadPerUnitThread = getNextOpInt(  )
+                  if option.transCtrlInfo.threadPerUnitThread < 0 then
+                     printUsage( 1 )
+                  end
+                  
                elseif _switchExp == "--disableRunner" then
                   option.enableRunner = false
                elseif _switchExp == "--disablePostBuild" then
@@ -987,7 +995,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 695, function (  )
+   Log.log( Log.Level.Log, __func__, 704, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

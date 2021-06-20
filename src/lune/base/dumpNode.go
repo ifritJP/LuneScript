@@ -4,11 +4,11 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_dumpNode bool
 var dumpNode__mod__ string
 // for 62
-func dumpNode_convExp1168(arg1 []LnsAny) string {
+func dumpNode_convExp1_59(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 483
-func dumpNode_convExp3145(arg1 []LnsAny) (string, LnsInt) {
+func dumpNode_convExp3_321(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // 102: decl @lune.@base.@dumpNode.createFilter
@@ -245,7 +245,7 @@ func (self *dumpNode_dumpFilter) InitdumpNode_dumpFilter(_env *LnsEnv, arg1 bool
 // 61: decl @lune.@base.@dumpNode.dumpFilter.writeln
 func (self *dumpNode_dumpFilter) writeln(_env *LnsEnv, opt *DumpNode_Opt,txt string) {
     var prefix string
-    prefix = dumpNode_convExp1168(Lns_2DDD(opt.FP.Get(_env)))
+    prefix = dumpNode_convExp1_59(Lns_2DDD(opt.FP.Get(_env)))
     self.stream.Write(_env, _env.GetVM().String_format("%s%s\n", []LnsAny{prefix, Lns_car(_env.GetVM().String_gsub(txt," *$", "")).(string)}))
 }
 
@@ -283,7 +283,7 @@ func (self *dumpNode_dumpFilter) dump(_env *LnsEnv, opt *DumpNode_Opt,node *Node
     if len(attrib) != 0{
         attrib = _env.GetVM().String_format("[%s]", []LnsAny{attrib})
     }
-    self.FP.writeln(_env, opt, _env.GetVM().String_format(": %s:%d(%d:%d) %s %s %s %s", []LnsAny{Nodes_getNodeKindName(_env, node.FP.Get_kind(_env)), node.FP.Get_id(_env), node.FP.Get_effectivePos(_env).LineNo, node.FP.Get_effectivePos(_env).Column, attrib, txt, typeStr, comment}))
+    self.FP.writeln(_env, opt, _env.GetVM().String_format(": %s:%s(%d:%d) %s %s %s %s", []LnsAny{Nodes_getNodeKindName(_env, node.FP.Get_kind(_env)), node.FP.GetIdTxt(_env), node.FP.Get_effectivePos(_env).LineNo, node.FP.Get_effectivePos(_env).Column, attrib, txt, typeStr, comment}))
 }
 
 // 113: decl @lune.@base.@dumpNode.dumpFilter.processNone
@@ -971,8 +971,8 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_Exp
     self.FP.dump(_env, opt, &node.Nodes_Node, indexSym)
     dumpNode_filter_3_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env))
     if indexNode != nil{
-        indexNode_765 := indexNode.(*Nodes_Node)
-        dumpNode_filter_3_(_env, indexNode_765, self, opt.FP.NextOpt(_env))
+        indexNode_51 := indexNode.(*Nodes_Node)
+        dumpNode_filter_3_(_env, indexNode_51, self, opt.FP.NextOpt(_env))
     }
     dumpNode_filter_3_(_env, node.FP.Get_exp2(_env), self, opt.FP.NextOpt(_env))
 }

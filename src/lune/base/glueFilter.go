@@ -4,23 +4,23 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_glueFilter bool
 var glueFilter__mod__ string
 // for 401
-func glueFilter_convExp1520(arg1 []LnsAny) LnsAny {
+func glueFilter_convExp0_1520(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 111
-func glueFilter_convExp531(arg1 []LnsAny) (string, string, *Ast_TypeInfo, string) {
+func glueFilter_convExp0_531(arg1 []LnsAny) (string, string, *Ast_TypeInfo, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*Ast_TypeInfo), Lns_getFromMulti( arg1, 3 ).(string)
 }
 // for 246
-func glueFilter_convExp808(arg1 []LnsAny) (string, string, *Ast_TypeInfo, string) {
+func glueFilter_convExp0_808(arg1 []LnsAny) (string, string, *Ast_TypeInfo, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string), Lns_getFromMulti( arg1, 2 ).(*Ast_TypeInfo), Lns_getFromMulti( arg1, 3 ).(string)
 }
 // for 333
-func glueFilter_convExp1244(arg1 []LnsAny) string {
+func glueFilter_convExp0_1244(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 409
-func glueFilter_convExp1559(arg1 []LnsAny) string {
+func glueFilter_convExp0_1559(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 69: decl @lune.@base.@glueFilter.getDeclFuncInfo
@@ -335,7 +335,7 @@ func (self *glueFilter_glueGenerator) outputMethod(_env *LnsEnv, node *Nodes_Nod
 // 330: decl @lune.@base.@glueFilter.glueGenerator.outputClass
 func (self *glueFilter_glueGenerator) OutputClass(_env *LnsEnv, moduleFullName string,node *Nodes_DeclClassNode,gluePrefix string) {
     var moduleSymbolFull string
-    moduleSymbolFull = glueFilter_convExp1244(Lns_2DDD(_env.GetVM().String_gsub(moduleFullName,"%.", "_")))
+    moduleSymbolFull = glueFilter_convExp0_1244(Lns_2DDD(_env.GetVM().String_gsub(moduleFullName,"%.", "_")))
     var staticMethodNodeList *LnsList
     staticMethodNodeList = NewLnsList([]LnsAny{})
     var methodNodeList *LnsList
@@ -586,7 +586,7 @@ func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNod
         var filePath string
         filePath = _env.GetVM().String_format("%s/%s", []LnsAny{Lns_unwrapDefault( self.outputDir, ".").(string), filename})
         {
-            __exp := glueFilter_convExp1520(Lns_2DDD(Lns_io_open(filePath, "w")))
+            __exp := glueFilter_convExp0_1520(Lns_2DDD(Lns_io_open(filePath, "w")))
             if !Lns_IsNil( __exp ) {
                 _exp := __exp.(Lns_luaStream)
                 return _exp
@@ -603,7 +603,7 @@ func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNod
             if !Lns_IsNil( _moduleName ) {
                 moduleName := _moduleName.(*Types_Token)
                 var moduleSymbolName string
-                moduleSymbolName = glueFilter_convExp1559(Lns_2DDD(_env.GetVM().String_gsub(moduleName.FP.GetExcludedDelimitTxt(_env),"%.", "_")))
+                moduleSymbolName = glueFilter_convExp0_1559(Lns_2DDD(_env.GetVM().String_gsub(moduleName.FP.GetExcludedDelimitTxt(_env),"%.", "_")))
                 {
                     __exp := declClassNode.FP.Get_gluePrefix(_env)
                     if !Lns_IsNil( __exp ) {

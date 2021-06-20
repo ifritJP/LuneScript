@@ -33,7 +33,7 @@ func TransUnitIF_DeclClassMode_getTxt(arg1 LnsInt) string {
     return TransUnitIF_DeclClassModeMap_[arg1];
 }
 // for 411
-func TransUnitIF_convExp1722(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnitIF_convExp0_1722(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // 224: decl @lune.@base.@TransUnitIF.sortMess

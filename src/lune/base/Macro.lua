@@ -288,7 +288,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
-local validAsyncMacro = true
+local validAsyncMacro = false
 
 local function loadCode( code )
 
@@ -792,6 +792,10 @@ function MacroCtrl:clone(  )
    
    
    return obj
+end
+function MacroCtrl:mergeFrom( macroCtrl )
+
+   _lune._Set_or(self.useModuleMacroSet, macroCtrl.useModuleMacroSet )
 end
 function MacroCtrl:setToUseLnsLoad(  )
 

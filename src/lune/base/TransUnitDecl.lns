@@ -684,12 +684,8 @@ fn TransUnit.analyzeDeclMacroSub(
       let macroLocalVarType = self.processInfo.createMap(
          .Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
 
-      if self.helperInfo.pragmaSet.has( LuneControl.Pragma.use_macro_special_var ) {
-         macroScope.addLocalVar(
-            self.processInfo, false, true, "__var", nil, macroLocalVarType, .IMut );
-      }
-
-      
+      macroScope.addLocalVar(
+         self.processInfo, false, true, "__var", nil, macroLocalVarType, .IMut );
 
       let mut stmtList:List<&Nodes.Node> = [];
       self.prepareTentativeSymbol( self.scope, false, nil );
@@ -3238,7 +3234,7 @@ fn TransUnit.analyzeDeclFunc(
                needFuncBlockInfo = true;
             }
          }
-         case .Main {
+         case .Main, .Runner {
          }
       }
 
@@ -4178,16 +4174,19 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
 }
 
 local fn TransUnit.processFuncBlockInfo(
-   funcBlockInfoList:&List<&FuncBlockInfo>,
-   streamName:str ) mut : &Map<&FuncBlockInfo,FuncBlockResult>
+   funcBlockCtlIF: FuncBlockCtlIF,
+   streamName:str ) mut : Map<&FuncBlockInfo,FuncBlockResult>
 {
    let resultMap:Map<&FuncBlockInfo,FuncBlockResult> = {};
 
    let mut bakParser = self.parser;
    
    let mut outerScope = self.pushScope( .Other## );
-   
-   foreach funcBlockInfo in funcBlockInfoList {
+
+   while true {
+      let! mut funcBlockInfo = funcBlockCtlIF.getNext() {
+         break;
+      };
 
       let typeInfo = funcBlockInfo.$funcType;
       self.parser = new Parser.DefaultPushbackParser(

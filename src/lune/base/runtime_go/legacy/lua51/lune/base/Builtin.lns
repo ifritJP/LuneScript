@@ -639,7 +639,7 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
                }
             }
          
-            self.transUnit.pushScope( false ## );
+            self.transUnit.pushScope( .Other ## );
 
             let mut scope = self.transUnit.$scope;
             let asyncMode:Ast.Async;

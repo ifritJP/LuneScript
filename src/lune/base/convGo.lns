@@ -708,11 +708,11 @@ fn convFilter.outputSymbol( kind:SymbolKind, name:str ) mut {
 }
 
 fn convFilter.getConv2formName( node:&Nodes.Node ) : str {
-   return "conv2Form%d" (node.$id);
+   return "conv2Form%s" (node.getIdTxt());
 }
 
 fn convFilter.getConvGenericsName( node:&Nodes.Node ) : str {
-   return "lns_convGenerics%d" (node.$id);
+   return "lns_convGenerics%s" (node.getIdTxt() );
 }
 
 
@@ -1174,8 +1174,8 @@ fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
 
 fn convFilter.getConvExpName( node:&Nodes.Node, argListNode:&Nodes.ExpListNode ): str
 {
-   let nodeId = node.$id;
-   return "%s_convExp%d"  ( self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), nodeId);
+   return "%s_convExp%s"
+   ( self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), node.getIdTxt() );
 }
 
 fn convFilter.processConvExp( node:&Nodes.Node, dstTypeList:&List<&Ast.TypeInfo>,
@@ -1378,7 +1378,8 @@ fn convFilter.outputNilAccCall( node: &Nodes.ExpCallNode ) mut {
          nils = "%s,nil" (nils);
          lists = "%s,list[%d]" (lists, count - 1);
       }
-      let name = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), node.$id);
+      let name = "%s_%s" ( self.moduleTypeInfo.$rawTxt.gsub( "@", "" ),
+                           node.getIdTxt() );
       self.write(
       ```
 func lns_NilAccCall_%s( env *LnsEnv, call func () (%s) ) bool {
@@ -1706,7 +1707,7 @@ fn convFilter.outputConvExt( funcNode:&Nodes.Node ) mut {
    } else {
       return;
    }
-   self.write( "func Lns_callExt%d( args []LnsAny ) (" (funcNode.$id) );
+   self.write( "func Lns_callExt%s( args []LnsAny ) (" (funcNode.getIdTxt() ) );
    foreach retType, index in funcNode.$expType.$retTypeInfoList {
       if index > 1 {
          self.write( "," );
@@ -2981,7 +2982,7 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
             if index > 1 {
                self.write( "," );
             }
-            if symbolInfo.$posForModToRef or
+            if symbolInfo.$scope == self.moduleScope or symbolInfo.$posForModToRef or
                Ast.isPubToExternal( symbolInfo.$accessMode )
             {
                self.write( "%s" ( self.getSymbolSym( symbolInfo ) ) );
@@ -4617,11 +4618,11 @@ alge CallKind {
 @return CallKind 関数コールの種別
 */
 pub fn convFilter.outputCallPrefix(
-   callId:int, node:&Nodes.Node,
+   callId:str, node:&Nodes.Node,
    prefixNode:&Nodes.Node!, funcSymbol:&Ast.SymbolInfo ) mut : bool, CallKind
 {
    let funcType = funcSymbol.$typeInfo;
-   let nilAccName = "%s_%d" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), callId );
+   let nilAccName = "%s_%s" (self.moduleTypeInfo.$rawTxt.gsub( "@", "" ), callId );
 
    let mut callKind:CallKind = .Normal;
    
@@ -4672,7 +4673,7 @@ pub fn convFilter.outputCallPrefix(
       }
       if extCallFlag {
          if #funcType.$retTypeInfoList > 1 {
-            self.write( "Lns_callExt%d( " (node.$id) );
+            self.write( "Lns_callExt%s( " (node.getIdTxt() ) );
          }
       }
 
@@ -4723,7 +4724,7 @@ pub fn convFilter.outputCallPrefix(
             } else {
                if extCallFlag {
                   if #funcType.$retTypeInfoList > 1 {
-                     self.write( "Lns_callExt%d( " (node.$id) );
+                     self.write( "Lns_callExt%s( " (node.getIdTxt() ) );
                   }
                }
                filter( prefixNode, self, node );
@@ -4866,7 +4867,7 @@ pub override fn convFilter.processExpCall(
       
       withPrefix = true;
       closeParen, callKind = self.outputCallPrefix(
-         node.$id, fieldNode, fieldNode.$prefix, unwrap fieldNode.$symbolInfo );
+         node.getIdTxt(), fieldNode, fieldNode.$prefix, unwrap fieldNode.$symbolInfo );
 
       if funcType.$kind == .Ext {
          self.write( ", " );
@@ -5653,7 +5654,7 @@ pub override fn convFilter.processGetField(
          self.write( "(%s)" (getAddEnvArg( 0, self.option.$addEnvArg )) );
       } else {
          let closeParen = self.outputCallPrefix(
-            node.$id, node, node.$prefix, symbolInfo );
+            node.getIdTxt(), node, node.$prefix, symbolInfo );
          self.write( "(%s)" (getAddEnvArg( 0, self.option.$addEnvArg )) );
          let retType = symbolInfo.$typeInfo.$retTypeInfoList[1];
          if retType.$kind == .Alternate and not retType.hasBase() {

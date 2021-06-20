@@ -324,7 +324,7 @@ function Indexer:dump(  )
    
    local function comp( node1, node2 )
    
-      return node1:get_id() < node2:get_id()
+      return node1:comp( node2 ) < 0
    end
    table.sort( list, comp )
    

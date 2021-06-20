@@ -1472,7 +1472,7 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                end
                
                
-               self.transUnit:pushScope( false )
+               self.transUnit:pushScope( Ast.ScopeKind.Other )
                
                local scope = self.transUnit:get_scope()
                local asyncMode

@@ -132,10 +132,20 @@ pub class TypeData {
    pub fn __init() {
       self.children = [];
    }
+
+   pub fn addFrom( typeData:&TypeData ) mut {
+      foreach child in typeData.children {
+         self.children.insert( child );
+      }
+   }
 }
 
 pub interface TypeDataAccessor {
    pub fn get_typeData():TypeData;
+}
+
+pub class SimpleTypeDataAccessor extend (TypeDataAccessor) {
+   let typeData:TypeData {pub};
 }
 
 pub enum IdType {
@@ -589,6 +599,12 @@ class ClosureInfo {
    }
 }
 
+pub enum ScopeKind {
+   Module,
+   Class,
+   Other
+}
+
 pub class Scope extend (ModuleInfoManager) {
 
    pri let scopeId:int {pub};
@@ -613,7 +629,7 @@ outerScope は、 readonly の Scope の、内部スコープを登録する際�
    // シンボル名 → SymbolInfo のマップ。
    pri let mut symbol2SymbolInfoMap: Map<str,&SymbolInfo> { pub& };
    // このスコープがクラスのスコープかどうか。
-   pri let classFlag: bool;
+   pri let scopeKind: ScopeKind;
    // 継承しているスコープ。
    pri let mut inherit: &Scope! {pub};
    // 継承しているスコープ。
@@ -634,7 +650,7 @@ outerScope は、 readonly の Scope の、内部スコープを登録する際�
    pri let mut validCheckingUnaccess:bool {pub,pub};
    
 
-   pub fn __init( processInfo:ProcessInfo, parent: Scope!, classFlag: bool,
+   pub fn __init( processInfo:ProcessInfo, parent: Scope!, scopeKind: ScopeKind,
                   inherit: &Scope!, ifScopeList:List<&Scope>! )
    {
       self.scopeId = processInfo.$idProvScope.getNewId();
@@ -647,7 +663,7 @@ outerScope は、 readonly の Scope の、内部スコープを登録する際�
       self.parent = self.outerScope;
       self.symbol2SymbolInfoMap = {};
       self.inherit = inherit;
-      self.classFlag = classFlag;
+      self.scopeKind = scopeKind;
       self.symbolId2DataOwnerInfo = {};
       self.ifScopeList = unwrap ifScopeList default [];
       self.ownerTypeInfo = nil;
@@ -711,7 +727,7 @@ outerScope は、 readonly の Scope の、内部スコープを登録する際�
 }
 
 // 最上位のスコープ
-let rootScope:Scope = new Scope( rootProcessInfo, nil, false, nil## );
+let rootScope:Scope = new Scope( rootProcessInfo, nil, .Other, nil## );
 // rootScope の Immutable 版
 let rootScopeRo = rootScope;
 rootProcessInfo.set_topScope( rootScope );
@@ -747,10 +763,10 @@ pub fn Scope.isInnerOf( scope:&Scope ): bool {
 
 pub class ScopeWithRef extend Scope {
    pub fn __init( processInfo:ProcessInfo, outerScope: Scope,
-                  parent: &Scope, classFlag: bool,
+                  parent: &Scope, scopeKind: ScopeKind,
                   inherit: &Scope!, ifScopeList:List<&Scope>! )
    {
-      super( processInfo, outerScope, classFlag, inherit, ifScopeList );
+      super( processInfo, outerScope, scopeKind, inherit, ifScopeList );
       self.set_parent( parent );
    }
 }
@@ -1116,7 +1132,7 @@ static な型か。
    }
 
    pub static fn createScope(
-      processInfo:ProcessInfo, parent: Scope!, classFlag: bool,
+      processInfo:ProcessInfo, parent: Scope!, scopeKind: ScopeKind,
       baseInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) : Scope
    {
       let mut inheritScope:&Scope! = nil;
@@ -1130,7 +1146,7 @@ static な型か。
             ifScopeList.insert( unwrap ifType.$scope );
          }
       }
-      return new Scope( processInfo, parent, classFlag, inheritScope, ifScopeList );
+      return new Scope( processInfo, parent, scopeKind, inheritScope, ifScopeList );
    }
 
    // prototype
@@ -1333,7 +1349,7 @@ local static fn ProcessInfo.createUser(
    let mut processInfo = new ProcessInfo(
       validCheckingMutable, new IdProvider( userStartId, extStartId ),
       validExtType, validDetailError, typeInfo2Map );
-   let mut scope = new Scope( processInfo, nil, false, nil## );
+   let mut scope = new Scope( processInfo, nil, .Other, nil## );
    processInfo.set_topScope( scope );
    let topType = RootTypeInfo.create( processInfo, processInfo.newIdForSubRoot());
    scope.set_ownerTypeInfo( topType );
@@ -2175,7 +2191,7 @@ pub fn Scope.filterTypeInfoField(
    includeSelfFlag: bool!, fromScope:&Scope,
    access:ScopeAccess, callback:filterForm ):bool
 {
-   if self.classFlag {
+   if self.scopeKind ~= .Other {
       if includeSelfFlag {
          forsort symbolInfo in self.symbol2SymbolInfoMap {
             if symbolInfo.canAccess( fromScope, access ) {
@@ -2204,7 +2220,7 @@ pub fn Scope.getSymbolInfoField(
    name: str, includeSelfFlag: bool!,
    fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!
 {
-   if self.classFlag {
+   if self.scopeKind ~= .Other {
       if includeSelfFlag {
          if! self.symbol2SymbolInfoMap[ name ] {
             let! symbolInfo = _exp.canAccess( fromScope, access ) {
@@ -2233,7 +2249,7 @@ pub fn Scope.getSymbolInfoField(
 pub fn Scope.getSymbolInfoIfField(
    name: str, fromScope:&Scope, access:ScopeAccess ) : &SymbolInfo!
 {
-   if self.classFlag {
+   if self.scopeKind == .Class {
       foreach scope in self.ifScopeList {
          if! let symbolInfo =
             scope.getSymbolInfoField( name, true, fromScope, access )
@@ -2307,7 +2323,7 @@ pub fn Scope.filterTypeInfoFieldAndIF(
    includeSelfFlag: bool!, fromScope:&Scope,
    access:ScopeAccess, callback:filterForm ):bool
 {
-   if self.classFlag {
+   if self.scopeKind ~= .Other {
       if includeSelfFlag {
          forsort symbolInfo in self.symbol2SymbolInfoMap {
             if symbolInfo.canAccess( fromScope, access ) {
@@ -2443,12 +2459,12 @@ pub fn Scope.getSymbolTypeInfo(
    let mut limitSymbol = false;
 
    if! self.ownerTypeInfo {
-      if _exp.$kind == .Func or _exp.$kind == .Method or
+      if _exp.$kind == .Func or _exp.$kind == .Method or _exp.$kind == .Module or
          self == moduleScope or self == rootScopeRo
       {
          validThisScope = true;
       }
-      elseif _exp.$kind == .IF or _exp.$kind == .Class or _exp.$kind == .Module
+      elseif _exp.$kind == .IF or _exp.$kind == .Class
       {
          // class 系の場合、アクセスできるシンボルは self と Alternate に限定する
          limitSymbol = true;
@@ -2483,12 +2499,12 @@ pub fn Scope.getSymbolTypeInfo(
 pub fn Scope.filterSymbolTypeInfo(
    fromScope:&Scope, moduleScope:&Scope, access:ScopeAccess, callback:filterForm )
 {
-   if self.classFlag {
+   if self.scopeKind == .Class {
       if! self.symbol2SymbolInfoMap[ "self" ] {
          callback( _exp );
       }
    }
-   if moduleScope == fromScope or moduleScope == self or not self.classFlag {
+   if self.scopeKind ~= .Class {
       foreach symbolInfo in self.symbol2SymbolInfoMap {
          if not callback( symbolInfo ) {
             return;
@@ -2745,6 +2761,16 @@ pub fn Scope.addExtModule(
    return self.add(
       processInfo, .Typ, false, false, name, pos, typeInfo,
       typeInfo.$accessMode, false, .Mut, true, lazy )**;
+}
+
+pub fn dumpOuterScope( workScope: &Scope, toScope:&Scope, prefix:str ) {
+   workScope.filterSymbolTypeInfo(
+      workScope, toScope, .Normal,
+      fn ( symbolInfo:&SymbolInfo ): bool {
+         Util.log( "scope: %s, %s" ( prefix, symbolInfo.$name ) );
+         return true;
+      }
+   );
 }
 
 /**
@@ -3258,7 +3284,7 @@ pub class AlternateTypeInfo extend TypeInfo {
       interfaceList: &List<&TypeInfo>! ) : AlternateTypeInfo, Scope
    {
       let mut scope = TypeInfo.createScope(
-         processInfo, nil, true, baseTypeInfo, interfaceList );
+         processInfo, nil, .Class, baseTypeInfo, interfaceList );
       let mut newType = new AlternateTypeInfo(
          processInfo, scope, belongClassFlag, altIndex,
          txt, accessMode, parentInfo, baseTypeInfo, interfaceList );
@@ -3664,7 +3690,7 @@ pub class GenericTypeInfo extend TypeInfo {
       moduleTypeInfo:&TypeInfo ) : GenericTypeInfo, Scope
    {
       let mut scope = TypeInfo.createScope(
-         processInfo, nil, true, genSrcTypeInfo, nil );
+         processInfo, nil, .Class, genSrcTypeInfo, nil );
       let mut newType = new GenericTypeInfo(
          processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo );
       processInfo.setupImut( newType );
@@ -4905,10 +4931,19 @@ local static fn NormalTypeInfo.createBuiltin(
       case .Array, .List, .Set, .Class, .Module,
            .IF, .Form, .FormFunc, .Func, .Method, .Macro
       {
-         scope = new Scope(
-            rootProcessInfo, rootScope,
-            kind == .Class or kind == .Module or kind == .IF or kind == .List or
-            kind == .Array or kind == .Set, nil## );
+         let scopeKind:ScopeKind;
+         switch kind {
+            case .Class, .IF, .List, .Array, .Set {
+               scopeKind = .Class;
+            }
+            case .Module {
+               scopeKind = .Module;
+            }
+            default {
+               scopeKind = .Other;
+            }
+         }
+         scope = new Scope( rootProcessInfo, rootScope, scopeKind, nil## );
       }
    }
 
@@ -5182,7 +5217,7 @@ pub fn isStruct( typeInfo:&TypeInfo ) : bool {
 
 pub let builtinTypeBox:&BoxTypeInfo;
 {
-   let mut boxRootScope = new Scope( rootProcessInfo, rootScope, true, nil## );
+   let mut boxRootScope = new Scope( rootProcessInfo, rootScope, .Class, nil## );
    let mut work = new BoxTypeInfo( rootProcessInfo, boxRootScope, .Pub, boxRootAltType );
    rootProcessInfo.setupImut( work );
    registBuiltin( "Nilable", "Nilable", .Box, work, work, headTypeInfo, boxRootScope );
@@ -7959,7 +7994,7 @@ __test case1(ctrl) {
 
    let mut processInfo = ProcessInfo.createUser(
       true, true, false, builtinTypeInfo2Map.clone() );
-   let mut testScope = new Scope( processInfo, rootScope, false## );
+   let mut testScope = new Scope( processInfo, rootScope, .Other ## );
 
 
 
@@ -8058,11 +8093,11 @@ __test case1(ctrl) {
 
    // Super と Sub の canEvalWith
    let superType = processInfo.createClassAsync(
-      true, false, new Scope( processInfo, rootScope, true ## ),
+      true, false, new Scope( processInfo, rootScope, .Class ## ),
       nil, nil, [], headTypeInfoMut, headTypeInfoMut, false, .Local, "Super" );
    testScope.addClass( processInfo, "Super", nil, superType );   
    let subType = processInfo.createClassAsync(
-      true, false, new Scope( processInfo, rootScope, true ## ),
+      true, false, new Scope( processInfo, rootScope, .Class ## ),
       superType, nil, [], headTypeInfoMut, headTypeInfoMut, false, .Local, "Sub" );
    testScope.addClass( processInfo, "Sub", nil, subType );   
 
@@ -8140,7 +8175,7 @@ __test case1(ctrl) {
    let mut alter = processInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
    genTypeList.insert( alter );
    let hogeType = processInfo.createClassAsync(
-      true, false, new Scope( processInfo, rootScope, true ## ),
+      true, false, new Scope( processInfo, rootScope, .Class ## ),
       nil, nil, genTypeList, headTypeInfoMut, headTypeInfoMut, false, .Local, "Hoge" );
    testScope.addClass( processInfo, "Hoge", nil, hogeType );
 

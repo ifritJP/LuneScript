@@ -50,11 +50,11 @@ pub class TransUnit {
       Util.err( mess );
    }
 
-   pub fn pushScope( classFlag: bool, baseInfo: &Ast.TypeInfo!,
+   pub fn pushScope( scopeKind:Ast.ScopeKind, baseInfo: &Ast.TypeInfo!,
                      interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope
    {
       self.scope = Ast.TypeInfo.createScope(
-         self.processInfo, self.scope, classFlag, baseInfo, interfaceList );
+         self.processInfo, self.scope, scopeKind, baseInfo, interfaceList );
       return self.scope;
    }
 
@@ -91,7 +91,7 @@ pub class TransUnit {
       else {
          let mut parentInfo = self.getCurrentNamespaceTypeInfo();
          let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true ## );
+         let mut scope = self.pushScope( .Module ## );
          let mut newType = processInfo.createModule(
             scope, parentInfo, parentInfo, externalFlag, modName, mutable );
          typeInfo = newType;
@@ -241,7 +241,7 @@ pub class TransUnit {
          let mut parentInfo = self.getCurrentNamespaceTypeInfo();
 
          let mut parentScope = self.scope;
-         let mut scope = self.pushScope( true, baseInfo, interfaceList );
+         let mut scope = self.pushScope( .Class, baseInfo, interfaceList );
          let workGenTypeList;
          when! genTypeList {
             workGenTypeList = genTypeList;
