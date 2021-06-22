@@ -106,26 +106,6 @@ func NewLog_Control(_env *LnsEnv, arg1 LnsInt) *Log_Control {
 func (self *Log_Control) InitLog_Control(_env *LnsEnv, arg1 LnsInt) {
     self.level = arg1
 }
-// 61: decl @lune.@base.@Log.Control.log
-func (self *Log_Control) log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback Log_CreateMessage) {
-    var logStream Lns_oStream
-    logStream = Lns_io_stderr
-    if level <= self.level{
-        var nowClock LnsReal
-        nowClock = _env.GetVM().OS_clock()
-        logStream.Write(_env, _env.GetVM().String_format("%6d:%s:%s:%d:", []LnsAny{(LnsInt)((nowClock * LnsReal(1000))), Log_Level_getTxt( level), funcName, lineNo}))
-        logStream.Write(_env, callback(_env))
-        logStream.Write(_env, "\n")
-    }
-}
-
-// 73: decl @lune.@base.@Log.Control.direct
-func (self *Log_Control) direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
-    self.FP.log(_env, level, funcName, lineNo, Log_CreateMessage(func(_env *LnsEnv) string {
-        return mess
-    }))
-}
-
 
 func Lns_Log_init(_env *LnsEnv) {
     if init_Log { return }
@@ -150,4 +130,22 @@ func Lns_Log_init(_env *LnsEnv) {
 }
 func init() {
     init_Log = false
+}
+// 61: decl @lune.@base.@Log.Control.log
+func (self *Log_Control) log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback Log_CreateMessage) {
+    var logStream Lns_oStream
+    logStream = Lns_io_stderr
+    if level <= self.level{
+        var nowClock LnsReal
+        nowClock = _env.GetVM().OS_clock()
+        logStream.Write(_env, _env.GetVM().String_format("%6d:%s:%s:%d:", []LnsAny{(LnsInt)((nowClock * LnsReal(1000))), Log_Level_getTxt( level), funcName, lineNo}))
+        logStream.Write(_env, callback(_env))
+        logStream.Write(_env, "\n")
+    }
+}
+// 73: decl @lune.@base.@Log.Control.direct
+func (self *Log_Control) direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
+    self.FP.log(_env, level, funcName, lineNo, Log_CreateMessage(func(_env *LnsEnv) string {
+        return mess
+    }))
 }

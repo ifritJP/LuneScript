@@ -77,15 +77,22 @@ func Async_PipeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Async_Pipe) ToAsync_Pipe() *Async_Pipe {
     return obj
 }
+
+func Lns_Async_init(_env *LnsEnv) {
+    if init_Async { return }
+    init_Async = true
+    Async__mod__ = "@lune.@base.@Async"
+    Lns_InitMod()
+}
+func init() {
+    init_Async = false
+}
 // 41: DeclConstr
 func (self *Async_Pipe) InitAsync_Pipe(_env *LnsEnv, pipe LnsAny) {
     self.pipe = pipe
     self.started = false
     self.setuped = false
 }
-
-
-
 // 51: decl @lune.@base.@Async.Pipe.getNext
 func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
     if self.started{
@@ -109,7 +116,6 @@ func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
     }
     return self.FP.Access(_env)
 }
-
 // 64: decl @lune.@base.@Async.Pipe.run
 func (self *Async_Pipe) Run(_env *LnsEnv) {
     self.FP.Setup(_env)
@@ -139,27 +145,14 @@ func (self *Async_Pipe) Run(_env *LnsEnv) {
         pipe.FP.Put(_env, val.FP.Get_item(_env))
     }
 }
-
 // 79: decl @lune.@base.@Async.Pipe.start
 func (self *Async_Pipe) Start(_env *LnsEnv) {
     self.started = true
 }
-
 // 82: decl @lune.@base.@Async.Pipe.stop
 func (self *Async_Pipe) Stop(_env *LnsEnv) {
     self.started = false
     if Lns_op_not(self.setuped){
         self.FP.Setup(_env)
     }
-}
-
-
-func Lns_Async_init(_env *LnsEnv) {
-    if init_Async { return }
-    init_Async = true
-    Async__mod__ = "@lune.@base.@Async"
-    Lns_InitMod()
-}
-func init() {
-    init_Async = false
 }

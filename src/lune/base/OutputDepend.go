@@ -55,37 +55,6 @@ func NewOutputDepend_DependInfo(_env *LnsEnv, arg1 string) *OutputDepend_DependI
     obj.InitOutputDepend_DependInfo(_env, arg1)
     return obj
 }
-// 38: DeclConstr
-func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, targetModule string) {
-    self.targetModule = Ast_TypeInfo_getModulePath(_env, targetModule)
-    self.importModuleList = NewLnsList([]LnsAny{})
-    self.subModList = NewLnsList([]LnsAny{})
-}
-
-// 44: decl @lune.@base.@OutputDepend.DependInfo.addImpotModule
-func (self *OutputDepend_DependInfo) AddImpotModule(_env *LnsEnv, mod string) {
-    self.importModuleList.Insert(mod)
-}
-
-// 47: decl @lune.@base.@OutputDepend.DependInfo.addSubMod
-func (self *OutputDepend_DependInfo) AddSubMod(_env *LnsEnv, path string) {
-    self.subModList.Insert(path)
-}
-
-// 52: decl @lune.@base.@OutputDepend.DependInfo.output
-func (self *OutputDepend_DependInfo) Output(_env *LnsEnv, stream Lns_oStream) {
-    stream.Write(_env, _env.GetVM().String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
-    stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
-    for _, _mod := range( self.importModuleList.Items ) {
-        mod := _mod.(string)
-        stream.Write(_env, _env.GetVM().String_format("  %s.meta \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string)}))
-    }
-    for _, _path := range( self.subModList.Items ) {
-        path := _path.(string)
-        stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(path,"%.", "/")).(string)}))
-    }
-}
-
 
 // declaration Class -- convFilter
 type OutputDepend_convFilterMtd interface {
@@ -218,12 +187,57 @@ func NewOutputDepend_convFilter(_env *LnsEnv, arg1 Lns_oStream) *OutputDepend_co
     obj.InitOutputDepend_convFilter(_env, arg1)
     return obj
 }
+
+
+func Lns_OutputDepend_init(_env *LnsEnv) {
+    if init_OutputDepend { return }
+    init_OutputDepend = true
+    OutputDepend__mod__ = "@lune.@base.@OutputDepend"
+    Lns_InitMod()
+    Lns_Nodes_init(_env)
+    Lns_Util_init(_env)
+    Lns_Ast_init(_env)
+    Lns_AstInfo_init(_env)
+    Lns_convLua_init(_env)
+    Lns_frontInterface_init(_env)
+    Lns_LuaVer_init(_env)
+    Lns_Option_init(_env)
+}
+func init() {
+    init_OutputDepend = false
+}
+// 38: DeclConstr
+func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, targetModule string) {
+    self.targetModule = Ast_TypeInfo_getModulePath(_env, targetModule)
+    self.importModuleList = NewLnsList([]LnsAny{})
+    self.subModList = NewLnsList([]LnsAny{})
+}
+// 44: decl @lune.@base.@OutputDepend.DependInfo.addImpotModule
+func (self *OutputDepend_DependInfo) AddImpotModule(_env *LnsEnv, mod string) {
+    self.importModuleList.Insert(mod)
+}
+// 47: decl @lune.@base.@OutputDepend.DependInfo.addSubMod
+func (self *OutputDepend_DependInfo) AddSubMod(_env *LnsEnv, path string) {
+    self.subModList.Insert(path)
+}
+// 52: decl @lune.@base.@OutputDepend.DependInfo.output
+func (self *OutputDepend_DependInfo) Output(_env *LnsEnv, stream Lns_oStream) {
+    stream.Write(_env, _env.GetVM().String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
+    stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
+    for _, _mod := range( self.importModuleList.Items ) {
+        mod := _mod.(string)
+        stream.Write(_env, _env.GetVM().String_format("  %s.meta \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string)}))
+    }
+    for _, _path := range( self.subModList.Items ) {
+        path := _path.(string)
+        stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(path,"%.", "/")).(string)}))
+    }
+}
 // 69: DeclConstr
 func (self *OutputDepend_convFilter) InitOutputDepend_convFilter(_env *LnsEnv, stream Lns_oStream) {
     self.InitNodes_Filter(_env, false, nil, nil)
     self.stream = stream
 }
-
 // 76: decl @lune.@base.@OutputDepend.convFilter.processRoot
 func (self *OutputDepend_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_dummy LnsAny) {
     var moduleFull string
@@ -245,24 +259,4 @@ func (self *OutputDepend_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootN
         }
     }
     dependInfo.FP.Output(_env, self.stream)
-}
-
-
-
-func Lns_OutputDepend_init(_env *LnsEnv) {
-    if init_OutputDepend { return }
-    init_OutputDepend = true
-    OutputDepend__mod__ = "@lune.@base.@OutputDepend"
-    Lns_InitMod()
-    Lns_Nodes_init(_env)
-    Lns_Util_init(_env)
-    Lns_Ast_init(_env)
-    Lns_AstInfo_init(_env)
-    Lns_convLua_init(_env)
-    Lns_frontInterface_init(_env)
-    Lns_LuaVer_init(_env)
-    Lns_Option_init(_env)
-}
-func init() {
-    init_OutputDepend = false
 }

@@ -121,7 +121,7 @@ func Option_convExp0_711(arg1 []LnsAny) LnsAny {
 }
 // 52: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 11356
+    return 11367
 }
 
 // 81: decl @lune.@base.@Option.getRuntimeModule
@@ -634,11 +634,6 @@ func NewOption_RuntimeOpt(_env *LnsEnv) *Option_RuntimeOpt {
     return obj
 }
 func (self *Option_RuntimeOpt) Get_int2strMode(_env *LnsEnv) LnsInt{ return self.int2strMode }
-// 98: DeclConstr
-func (self *Option_RuntimeOpt) InitOption_RuntimeOpt(_env *LnsEnv) {
-    self.int2strMode = Option_Int2strMode__Int2strModeDepend
-}
-
 
 // declaration Class -- Option
 type Option_OptionMtd interface {
@@ -716,69 +711,6 @@ func (self *Option_Option) Get_enableRunner(_env *LnsEnv) bool{ return self.enab
 func (self *Option_Option) Get_validPostBuild(_env *LnsEnv) bool{ return self.validPostBuild }
 func (self *Option_Option) Get_stdinFile(_env *LnsEnv) LnsAny{ return self.stdinFile }
 func (self *Option_Option) Set_stdinFile(_env *LnsEnv, arg1 LnsAny){ self.stdinFile = arg1 }
-// 164: DeclConstr
-func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
-    self.stdinFile = nil
-    self.validPostBuild = true
-    self.enableRunner = true
-    self.addEnvArg = true
-    self.projDir = nil
-    self.runtimeOpt = NewOption_RuntimeOpt(_env)
-    self.ShebangArgList = NewLnsList([]LnsAny{})
-    self.OutputPath = nil
-    self.MainModule = ""
-    self.AppName = nil
-    self.PackageName = nil
-    self.Testing = false
-    self.ConvTo = nil
-    self.ValidProf = false
-    self.Mode = Option_ModeKind__Unknown
-    self.ScriptPath = ""
-    self.BatchList = NewLnsList([]LnsAny{})
-    self.UseLuneModule = nil
-    self.UpdateOnLoad = false
-    self.ByteCompile = false
-    self.StripDebugInfo = false
-    self.TargetLuaVer = LuaVer_getCurVer(_env)
-    self.TransCtrlInfo = Types_TransCtrlInfo_create_normal(_env)
-    self.BootPath = nil
-    self.UseIpairs = false
-    self.AnalyzeModule = nil
-    self.OutputDir = nil
-    self.AnalyzePos = nil
-    self.DependsPath = nil
-}
-
-// 196: decl @lune.@base.@Option.Option.openDepend
-func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
-    {
-        _path := self.DependsPath
-        if !Lns_IsNil( _path ) {
-            path := _path.(string)
-            var filePath string
-            if relPath != nil{
-                relPath_131 := relPath.(string)
-                if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_131})
-                } else { 
-                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_131})
-                }
-            } else {
-                filePath = path
-            }
-            return Lns_car(Lns_io_open(filePath, "w"))
-        }
-    }
-    {
-        _path := self.DependsPath
-        if !Lns_IsNil( _path ) {
-            path := _path.(string)
-            return Lns_car(Lns_io_open(path, "w"))
-        }
-    }
-    return nil
-}
-
 
 // declaration Class -- ProjInfo
 type Option_ProjInfo1203Mtd interface {
@@ -876,4 +808,69 @@ func Lns_Option_init(_env *LnsEnv) {
 }
 func init() {
     init_Option = false
+}
+// 98: DeclConstr
+func (self *Option_RuntimeOpt) InitOption_RuntimeOpt(_env *LnsEnv) {
+    self.int2strMode = Option_Int2strMode__Int2strModeDepend
+}
+// 164: DeclConstr
+func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
+    self.stdinFile = nil
+    self.validPostBuild = true
+    self.enableRunner = true
+    self.addEnvArg = true
+    self.projDir = nil
+    self.runtimeOpt = NewOption_RuntimeOpt(_env)
+    self.ShebangArgList = NewLnsList([]LnsAny{})
+    self.OutputPath = nil
+    self.MainModule = ""
+    self.AppName = nil
+    self.PackageName = nil
+    self.Testing = false
+    self.ConvTo = nil
+    self.ValidProf = false
+    self.Mode = Option_ModeKind__Unknown
+    self.ScriptPath = ""
+    self.BatchList = NewLnsList([]LnsAny{})
+    self.UseLuneModule = nil
+    self.UpdateOnLoad = false
+    self.ByteCompile = false
+    self.StripDebugInfo = false
+    self.TargetLuaVer = LuaVer_getCurVer(_env)
+    self.TransCtrlInfo = Types_TransCtrlInfo_create_normal(_env)
+    self.BootPath = nil
+    self.UseIpairs = false
+    self.AnalyzeModule = nil
+    self.OutputDir = nil
+    self.AnalyzePos = nil
+    self.DependsPath = nil
+}
+// 196: decl @lune.@base.@Option.Option.openDepend
+func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
+    {
+        _path := self.DependsPath
+        if !Lns_IsNil( _path ) {
+            path := _path.(string)
+            var filePath string
+            if relPath != nil{
+                relPath_131 := relPath.(string)
+                if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
+                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_131})
+                } else { 
+                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_131})
+                }
+            } else {
+                filePath = path
+            }
+            return Lns_car(Lns_io_open(filePath, "w"))
+        }
+    }
+    {
+        _path := self.DependsPath
+        if !Lns_IsNil( _path ) {
+            path := _path.(string)
+            return Lns_car(Lns_io_open(path, "w"))
+        }
+    }
+    return nil
 }

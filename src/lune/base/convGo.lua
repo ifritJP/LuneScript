@@ -2368,6 +2368,68 @@ function convFilter:outputImport( node )
 end
 
 
+local DeclFieldInfo = {}
+function DeclFieldInfo.setmeta( obj )
+  setmetatable( obj, { __index = DeclFieldInfo  } )
+end
+function DeclFieldInfo.new( classNode, fieldNode )
+   local obj = {}
+   DeclFieldInfo.setmeta( obj )
+   if obj.__init then
+      obj:__init( classNode, fieldNode )
+   end
+   return obj
+end
+function DeclFieldInfo:__init( classNode, fieldNode )
+
+   self.classNode = classNode
+   self.fieldNode = fieldNode
+end
+function DeclFieldInfo:get_classNode()
+   return self.classNode
+end
+function DeclFieldInfo:get_fieldNode()
+   return self.fieldNode
+end
+
+
+function convFilter:processMethodAsync( nodeList )
+
+   
+   local declFuncNodeList = {}
+   for __index, workNode in ipairs( nodeList ) do
+      if self.enableTest or not workNode:get_inTestBlock() and not workNode:isModule(  ) then
+         do
+            local _switchExp = workNode:get_expType():get_kind()
+            if _switchExp == Ast.TypeInfoKind.Class then
+               for __index, fieldNode in ipairs( workNode:get_fieldList() ) do
+                  if _lune.__Cast( fieldNode, 3, Nodes.DeclMemberNode ) then
+                  else
+                   
+                     table.insert( declFuncNodeList, DeclFieldInfo.new(workNode, fieldNode) )
+                  end
+                  
+               end
+               
+            end
+         end
+         
+      end
+      
+   end
+   
+   
+   
+   
+   self:pushProcessMode( ProcessMode.DeclClass )
+   for __index, info in ipairs( declFuncNodeList ) do
+      filter( info:get_fieldNode(), self, info:get_classNode() )
+   end
+   
+   self:popProcessMode(  )
+end
+
+
 function convFilter:processRoot( node, opt )
 
    
@@ -2794,8 +2856,6 @@ function convFilter:processRoot( node, opt )
    end
    
    
-   
-   
    for __index, child in ipairs( node:get_children() ) do
       if not _lune._Set_has(ignoreNodeInInnerBlockSet, child:get_kind() ) then
          filter( child, self, node )
@@ -2845,6 +2905,8 @@ function convFilter:processRoot( node, opt )
    self:writeln( string.format( "%s = false", initModVar) )
    self:popIndent(  )
    self:writeln( "}" )
+   
+   self:processMethodAsync( node:get_nodeManager():getDeclClassNodeList(  ) )
 end
 
 
@@ -5615,18 +5677,6 @@ function convFilter:processDeclClass( node, opt )
             
             if node:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
                self:outputAsyncItem( node )
-            end
-            
-            
-            
-            for __index, fieldNode in ipairs( node:get_fieldList() ) do
-               if _lune.__Cast( fieldNode, 3, Nodes.DeclMemberNode ) then
-               else
-                
-                  filter( fieldNode, self, node )
-                  self:writeln( "" )
-               end
-               
             end
             
          elseif _switchExp == Ast.TypeInfoKind.IF then

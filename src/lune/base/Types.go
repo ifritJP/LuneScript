@@ -187,33 +187,6 @@ func NewTypes_TransCtrlInfo(_env *LnsEnv) *Types_TransCtrlInfo {
     obj.InitTypes_TransCtrlInfo(_env)
     return obj
 }
-// 79: DeclConstr
-func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
-    self.WarningShadowing = false
-    self.CompatComment = false
-    self.CheckingDefineAbbr = true
-    self.StopByWarning = false
-    self.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
-    self.ValidLuaval = false
-    self.DefaultLazy = false
-    self.ValidCheckingMutable = true
-    self.LegacyMutableControl = false
-    self.ValidAstDetailError = false
-    self.ValidAsyncCtrl = false
-    self.DefaultAsync = false
-    self.Testing = false
-    self.ValidMultiPhaseTransUnit = true
-    self.ThreadPerUnitThread = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( true) &&
-        _env.SetStackVal( 5) ||
-        _env.SetStackVal( 0) ).(LnsInt)
-}
-
-// 98: decl @lune.@base.@Types.TransCtrlInfo.create_normal
-func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
-    return NewTypes_TransCtrlInfo(_env)
-}
-
 
 // declaration Class -- Position
 type Types_PositionMtd interface {
@@ -309,53 +282,6 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
     }
     return true, newObj, nil
 }
-// 117: DeclConstr
-func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string) {
-    self.LineNo = lineNo
-    self.Column = column
-    self.StreamName = streamName
-    self.OrgPos = nil
-}
-
-// 124: decl @lune.@base.@Types.Position.get_orgPos
-func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
-    {
-        __exp := self.OrgPos
-        if !Lns_IsNil( __exp ) {
-            _exp := __exp.(*Types_Position)
-            return _exp.FP.Get_orgPos(_env)
-        }
-    }
-    return self
-}
-
-// 131: decl @lune.@base.@Types.Position.get_RawOrgPos
-func (self *Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
-    return self.OrgPos
-}
-
-// 135: decl @lune.@base.@Types.Position.create
-func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
-    var pos *Types_Position
-    pos = NewTypes_Position(_env, lineNo, column, streamName)
-    pos.OrgPos = orgPos
-    return pos
-}
-
-// 143: decl @lune.@base.@Types.Position.getDisplayTxt
-func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
-    var txt string
-    txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
-    var orgPos *Types_Position
-    orgPos = self.FP.Get_orgPos(_env)
-    if self != orgPos{
-        var txt2 string
-        txt2 = _env.GetVM().String_format("%s:%d:%d", []LnsAny{orgPos.StreamName, orgPos.LineNo, orgPos.Column})
-        return _env.GetVM().String_format("%s: (%s)", []LnsAny{txt2, txt})
-    }
-    return txt
-}
-
 
 // declaration Class -- Token
 type Types_TokenMtd interface {
@@ -461,51 +387,6 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 177: DeclConstr
-func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
-    self.Kind = kind
-    self.Txt = txt
-    self.Pos = pos
-    self.Consecutive = consecutive
-    self.commentList = Lns_unwrapDefault( commentList, NewLnsList([]LnsAny{})).(*LnsList)
-}
-
-// 187: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
-func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
-    if self.Kind != Types_TokenKind__Str{
-        return self.Txt
-    }
-    if _switch1 := LnsInt(self.Txt[1-1]); _switch1 == 39 || _switch1 == 34 {
-        return _env.GetVM().String_sub(self.Txt,2, len(self.Txt) - 1)
-    } else if _switch1 == 96 {
-        return _env.GetVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
-    }
-    panic(_env.GetVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
-// insert a dummy
-    return ""
-}
-
-// 202: decl @lune.@base.@Types.Token.set_commentList
-func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
-    self.commentList = commentList
-}
-
-// 206: decl @lune.@base.@Types.Token.getLineCount
-func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
-    var count LnsInt
-    count = 1
-        {
-            _applyForm1, _applyParam1, _applyPrev1 := _env.GetVM().String_gmatch(self.Txt,"\n")
-            for {
-                _applyWork1 := _applyForm1.(*Lns_luaValue).Call( Lns_2DDD( _applyParam1, _applyPrev1 ) )
-                _applyPrev1 = Lns_getFromMulti(_applyWork1,0)
-                if Lns_IsNil( _applyPrev1 ) { break }
-                count = count + 1
-            }
-        }
-    return count
-}
-
 
 // declaration Class -- StdinFile
 type Types_StdinFileMtd interface {
@@ -560,4 +441,112 @@ func Lns_Types_init(_env *LnsEnv) {
 }
 func init() {
     init_Types = false
+}
+// 79: DeclConstr
+func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
+    self.WarningShadowing = false
+    self.CompatComment = false
+    self.CheckingDefineAbbr = true
+    self.StopByWarning = false
+    self.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
+    self.ValidLuaval = false
+    self.DefaultLazy = false
+    self.ValidCheckingMutable = true
+    self.LegacyMutableControl = false
+    self.ValidAstDetailError = false
+    self.ValidAsyncCtrl = false
+    self.DefaultAsync = false
+    self.Testing = false
+    self.ValidMultiPhaseTransUnit = true
+    self.ThreadPerUnitThread = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( true) &&
+        _env.SetStackVal( 5) ||
+        _env.SetStackVal( 0) ).(LnsInt)
+}
+// 98: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
+    return NewTypes_TransCtrlInfo(_env)
+}
+// 117: DeclConstr
+func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string) {
+    self.LineNo = lineNo
+    self.Column = column
+    self.StreamName = streamName
+    self.OrgPos = nil
+}
+// 124: decl @lune.@base.@Types.Position.get_orgPos
+func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
+    {
+        __exp := self.OrgPos
+        if !Lns_IsNil( __exp ) {
+            _exp := __exp.(*Types_Position)
+            return _exp.FP.Get_orgPos(_env)
+        }
+    }
+    return self
+}
+// 131: decl @lune.@base.@Types.Position.get_RawOrgPos
+func (self *Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
+    return self.OrgPos
+}
+// 135: decl @lune.@base.@Types.Position.create
+func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
+    var pos *Types_Position
+    pos = NewTypes_Position(_env, lineNo, column, streamName)
+    pos.OrgPos = orgPos
+    return pos
+}
+// 143: decl @lune.@base.@Types.Position.getDisplayTxt
+func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
+    var txt string
+    txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
+    var orgPos *Types_Position
+    orgPos = self.FP.Get_orgPos(_env)
+    if self != orgPos{
+        var txt2 string
+        txt2 = _env.GetVM().String_format("%s:%d:%d", []LnsAny{orgPos.StreamName, orgPos.LineNo, orgPos.Column})
+        return _env.GetVM().String_format("%s: (%s)", []LnsAny{txt2, txt})
+    }
+    return txt
+}
+// 177: DeclConstr
+func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
+    self.Kind = kind
+    self.Txt = txt
+    self.Pos = pos
+    self.Consecutive = consecutive
+    self.commentList = Lns_unwrapDefault( commentList, NewLnsList([]LnsAny{})).(*LnsList)
+}
+// 187: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
+    if self.Kind != Types_TokenKind__Str{
+        return self.Txt
+    }
+    if _switch1 := LnsInt(self.Txt[1-1]); _switch1 == 39 || _switch1 == 34 {
+        return _env.GetVM().String_sub(self.Txt,2, len(self.Txt) - 1)
+    } else if _switch1 == 96 {
+        return _env.GetVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
+    }
+    panic(_env.GetVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
+// insert a dummy
+    return ""
+}
+// 202: decl @lune.@base.@Types.Token.set_commentList
+func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
+    self.commentList = commentList
+}
+// 206: decl @lune.@base.@Types.Token.getLineCount
+func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
+    var count LnsInt
+    count = 1
+        {
+            _applyForm1, _applyParam1, _applyPrev1 := _env.GetVM().String_gmatch(self.Txt,"\n")
+            for {
+                _applyWork1 := _applyForm1.(*Lns_luaValue).Call( Lns_2DDD( _applyParam1, _applyPrev1 ) )
+                _applyPrev1 = Lns_getFromMulti(_applyWork1,0)
+                if Lns_IsNil( _applyPrev1 ) { break }
+                count = count + 1
+            }
+        }
+    return count
 }

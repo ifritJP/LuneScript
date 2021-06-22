@@ -1793,6 +1793,39 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
    self.module2PackSym[ info.$moduleTypeInfo ] = packSym;
 }
 
+class DeclFieldInfo {
+   let classNode:&Nodes.DeclClassNode {pub};
+   let fieldNode:&Nodes.Node {pub};
+}
+
+fn convFilter.processMethodAsync( nodeList:&List<&Nodes.DeclClassNode> ) mut {
+
+   let declFuncNodeList:List<&DeclFieldInfo> = [];
+   foreach workNode in nodeList {
+      if self.enableTest or not workNode.$inTestBlock and not workNode.isModule() {
+         switch workNode.$expType.$kind {
+            case .Class {
+               foreach fieldNode in workNode.$fieldList {
+                  if fieldNode@@@Nodes.DeclMemberNode {
+                     // ここではメンバーを処理しない
+                  } else {
+                     declFuncNodeList.insert( new DeclFieldInfo( workNode, fieldNode ) );
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   __lns.runtime.log( "class fields (%d)" (#declFuncNodeList) );
+   
+   self.pushProcessMode( .DeclClass );
+   foreach info in declFuncNodeList {
+      filter( info.$fieldNode, self, info.$classNode );
+   }
+   self.popProcessMode();
+}
+
 pub override fn convFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
@@ -2089,8 +2122,6 @@ pub override fn convFilter.processRoot(
       }
    }
 
-   __lns.runtime.log( "process children" );
-   
    foreach child in node.$children {
       if not ignoreNodeInInnerBlockSet.has( child.$kind ) {
          filter( child, self, node );
@@ -2135,6 +2166,9 @@ pub override fn convFilter.processRoot(
    self.writeln( "%s = false" (initModVar) );
    self.popIndent();
    self.writeln( "}" );
+
+
+   self.processMethodAsync( node.$nodeManager.getDeclClassNodeList() );
 }
 
 pub override fn convFilter.processSubfile(
@@ -4559,16 +4593,14 @@ pub override fn convFilter.processDeclClass(
                self.outputAsyncItem( node );
             }
 
-            __lns.runtime.log( "class fields (%d) -- %s"
-                               (#node.$fieldList, node.$expType.$rawTxt) );
-            foreach fieldNode in node.$fieldList {
-               if fieldNode@@@Nodes.DeclMemberNode {
-                  // ここではメンバーを処理しない
-               } else {
-                  filter( fieldNode, self, node );
-                  self.writeln( "" );
-               }
-            }
+            // foreach fieldNode in node.$fieldList {
+            //    if fieldNode@@@Nodes.DeclMemberNode {
+            //       // ここではメンバーを処理しない
+            //    } else {
+            //       filter( fieldNode, self, node );
+            //       self.writeln( "" );
+            //    }
+            // }
          }
          case .IF {
             self.outputInterfaceType( node );

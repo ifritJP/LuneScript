@@ -53,39 +53,49 @@ func NewBuiltinTransUnit_TransUnit(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2
     obj.InitBuiltinTransUnit_TransUnit(_env, arg1, arg2)
     return obj
 }
+
+func Lns_BuiltinTransUnit_init(_env *LnsEnv) {
+    if init_BuiltinTransUnit { return }
+    init_BuiltinTransUnit = true
+    BuiltinTransUnit__mod__ = "@lune.@base.@BuiltinTransUnit"
+    Lns_InitMod()
+    Lns_Types_init(_env)
+    Lns_Parser_init(_env)
+    Lns_Util_init(_env)
+    Lns_Ast_init(_env)
+    Lns_Nodes_init(_env)
+    Lns_TransUnitIF_init(_env)
+}
+func init() {
+    init_BuiltinTransUnit = false
+}
 // 38: decl @lune.@base.@BuiltinTransUnit.TransUnit.get_scope
 func (self *BuiltinTransUnit_TransUnit) Get_scope(_env *LnsEnv) *Ast_Scope {
     return self.scope
 }
-
 // 42: DeclConstr
 func (self *BuiltinTransUnit_TransUnit) InitBuiltinTransUnit_TransUnit(_env *LnsEnv, ctrl_info *Types_TransCtrlInfo,processInfo *Ast_ProcessInfo) {
     self.namespace2Scope = NewLnsMap( map[LnsAny]LnsAny{})
     self.processInfo = processInfo
     self.scope = processInfo.FP.Get_topScope(_env)
 }
-
 // 49: decl @lune.@base.@BuiltinTransUnit.TransUnit.error
 func (self *BuiltinTransUnit_TransUnit) Error(_env *LnsEnv, mess string) {
     Util_err(_env, mess)
 }
-
 // 53: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushScope
 func (self *BuiltinTransUnit_TransUnit) PushScope(_env *LnsEnv, scopeKind LnsInt,baseInfo LnsAny,interfaceList LnsAny) *Ast_Scope {
     self.scope = Ast_TypeInfo_createScope(_env, self.processInfo, self.scope, scopeKind, baseInfo, interfaceList)
     return self.scope
 }
-
 // 61: decl @lune.@base.@BuiltinTransUnit.TransUnit.popScope
 func (self *BuiltinTransUnit_TransUnit) PopScope(_env *LnsEnv) {
     self.scope = self.scope.FP.Get_outerScope(_env)
 }
-
 // 65: decl @lune.@base.@BuiltinTransUnit.TransUnit.getCurrentNamespaceTypeInfo
 func (self *BuiltinTransUnit_TransUnit) getCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo {
     return Ast_getBuiltinMut(_env, self.scope.FP.GetNamespaceTypeInfo(_env))
 }
-
 // 69: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushModuleLow
 func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo *Ast_ProcessInfo,externalFlag bool,name string,mutable bool) *Ast_TypeInfo {
     var typeInfo *Ast_TypeInfo
@@ -132,12 +142,10 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
     }
     return typeInfo
 }
-
 // 112: decl @lune.@base.@BuiltinTransUnit.TransUnit.popModule
 func (self *BuiltinTransUnit_TransUnit) PopModule(_env *LnsEnv) {
     self.FP.PopScope(_env)
 }
-
 // 119: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushClassScope
 func (self *BuiltinTransUnit_TransUnit) PushClassScope(_env *LnsEnv, errPos *Types_Position,classTypeInfo *Ast_TypeInfo,scope *Ast_Scope) {
     if self.scope != _env.NilAccFin(_env.NilAccPush(classTypeInfo.FP.Get_scope(_env)) && 
@@ -166,7 +174,6 @@ func (self *BuiltinTransUnit_TransUnit) PushClassScope(_env *LnsEnv, errPos *Typ
     }
     self.scope = scope
 }
-
 // 147: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushClassLow
 func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *Ast_ProcessInfo,errPos *Types_Position,mode LnsInt,abstractFlag bool,baseInfo LnsAny,interfaceList LnsAny,genTypeList LnsAny,externalFlag bool,name string,allowMultiple bool,accessMode LnsInt,defNamespace LnsAny) *Ast_TypeInfo {
     var typeInfo *Ast_TypeInfo
@@ -264,25 +271,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
     }
     return typeInfo
 }
-
 // 272: decl @lune.@base.@BuiltinTransUnit.TransUnit.popClass
 func (self *BuiltinTransUnit_TransUnit) PopClass(_env *LnsEnv) {
     self.FP.PopScope(_env)
-}
-
-
-func Lns_BuiltinTransUnit_init(_env *LnsEnv) {
-    if init_BuiltinTransUnit { return }
-    init_BuiltinTransUnit = true
-    BuiltinTransUnit__mod__ = "@lune.@base.@BuiltinTransUnit"
-    Lns_InitMod()
-    Lns_Types_init(_env)
-    Lns_Parser_init(_env)
-    Lns_Util_init(_env)
-    Lns_Ast_init(_env)
-    Lns_Nodes_init(_env)
-    Lns_TransUnitIF_init(_env)
-}
-func init() {
-    init_BuiltinTransUnit = false
 }

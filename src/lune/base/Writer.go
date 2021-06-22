@@ -91,72 +91,6 @@ func NewWriter_XML(_env *LnsEnv, arg1 Lns_oStream) *Writer_XML {
     obj.InitWriter_XML(_env, arg1)
     return obj
 }
-// 43: DeclConstr
-func (self *Writer_XML) InitWriter_XML(_env *LnsEnv, stream Lns_oStream) {
-    self.stream = stream
-    self.elementList = NewLnsList([]LnsAny{})
-    self.depth = 0
-}
-
-// 49: decl @lune.@base.@Writer.XML.convertXmlTxt
-func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
-    if val == ""{
-        return ""
-    }
-    if Lns_type(val) == "number"{
-        return _env.GetVM().String_format("%g", []LnsAny{Lns_forceCastReal(val)})
-    }
-    var txt string
-    txt = _env.GetVM().String_format("%s", []LnsAny{val})
-    txt = Writer_convExp0_344(Lns_2DDD(_env.GetVM().String_gsub(txt, "&", "&amp;")))
-    txt = Writer_convExp0_362(Lns_2DDD(_env.GetVM().String_gsub(txt, ">", "&gt;")))
-    txt = Writer_convExp0_380(Lns_2DDD(_env.GetVM().String_gsub(txt, "<", "&lt;")))
-    txt = Writer_convExp0_398(Lns_2DDD(_env.GetVM().String_gsub(txt, "\"", "&quot;")))
-    txt = Writer_convExp0_416(Lns_2DDD(_env.GetVM().String_gsub(txt, "'", "&apos;")))
-    return txt
-}
-
-// 66: decl @lune.@base.@Writer.XML.startElement
-func (self *Writer_XML) StartElement(_env *LnsEnv, name string) {
-    self.elementList.Insert(name)
-    self.stream.Write(_env, _env.GetVM().String_format("<%s>", []LnsAny{name}))
-    self.depth = self.depth + 1
-}
-
-// 72: decl @lune.@base.@Writer.XML.startParent
-func (self *Writer_XML) StartParent(_env *LnsEnv, name string,arrayFlag bool) {
-    self.FP.StartElement(_env, name)
-}
-
-// 75: decl @lune.@base.@Writer.XML.endElement
-func (self *Writer_XML) EndElement(_env *LnsEnv) {
-    var name LnsAny
-    name = self.elementList.Remove(nil)
-    self.stream.Write(_env, _env.GetVM().String_format("</%s>", []LnsAny{name}))
-    self.depth = self.depth - 1
-    if self.depth == 0{
-        self.stream.Write(_env, "\n")
-    } else if self.depth < 0{
-        Util_err(_env, "illegal depth")
-    }
-}
-
-// 86: decl @lune.@base.@Writer.XML.writeValue
-func (self *Writer_XML) WriteValue(_env *LnsEnv, val LnsAny) {
-    self.stream.Write(_env, Writer_XML_convertXmlTxt_1_(_env, val))
-}
-
-// 89: decl @lune.@base.@Writer.XML.write
-func (self *Writer_XML) Write(_env *LnsEnv, name string,val LnsAny) {
-    self.FP.StartElement(_env, name)
-    self.FP.WriteValue(_env, val)
-    self.FP.EndElement(_env)
-}
-
-// 94: decl @lune.@base.@Writer.XML.fin
-func (self *Writer_XML) Fin(_env *LnsEnv) {
-}
-
 
 // declaration Class -- JsonLayer
 type Writer_JsonLayerMtd interface {
@@ -256,6 +190,75 @@ func NewWriter_JSON(_env *LnsEnv, arg1 Lns_oStream) *Writer_JSON {
     obj.InitWriter_JSON(_env, arg1)
     return obj
 }
+
+func Lns_Writer_init(_env *LnsEnv) {
+    if init_Writer { return }
+    init_Writer = true
+    Writer__mod__ = "@lune.@base.@Writer"
+    Lns_InitMod()
+    Lns_Util_init(_env)
+}
+func init() {
+    init_Writer = false
+}
+// 43: DeclConstr
+func (self *Writer_XML) InitWriter_XML(_env *LnsEnv, stream Lns_oStream) {
+    self.stream = stream
+    self.elementList = NewLnsList([]LnsAny{})
+    self.depth = 0
+}
+// 49: decl @lune.@base.@Writer.XML.convertXmlTxt
+func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
+    if val == ""{
+        return ""
+    }
+    if Lns_type(val) == "number"{
+        return _env.GetVM().String_format("%g", []LnsAny{Lns_forceCastReal(val)})
+    }
+    var txt string
+    txt = _env.GetVM().String_format("%s", []LnsAny{val})
+    txt = Writer_convExp0_344(Lns_2DDD(_env.GetVM().String_gsub(txt, "&", "&amp;")))
+    txt = Writer_convExp0_362(Lns_2DDD(_env.GetVM().String_gsub(txt, ">", "&gt;")))
+    txt = Writer_convExp0_380(Lns_2DDD(_env.GetVM().String_gsub(txt, "<", "&lt;")))
+    txt = Writer_convExp0_398(Lns_2DDD(_env.GetVM().String_gsub(txt, "\"", "&quot;")))
+    txt = Writer_convExp0_416(Lns_2DDD(_env.GetVM().String_gsub(txt, "'", "&apos;")))
+    return txt
+}
+// 66: decl @lune.@base.@Writer.XML.startElement
+func (self *Writer_XML) StartElement(_env *LnsEnv, name string) {
+    self.elementList.Insert(name)
+    self.stream.Write(_env, _env.GetVM().String_format("<%s>", []LnsAny{name}))
+    self.depth = self.depth + 1
+}
+// 72: decl @lune.@base.@Writer.XML.startParent
+func (self *Writer_XML) StartParent(_env *LnsEnv, name string,arrayFlag bool) {
+    self.FP.StartElement(_env, name)
+}
+// 75: decl @lune.@base.@Writer.XML.endElement
+func (self *Writer_XML) EndElement(_env *LnsEnv) {
+    var name LnsAny
+    name = self.elementList.Remove(nil)
+    self.stream.Write(_env, _env.GetVM().String_format("</%s>", []LnsAny{name}))
+    self.depth = self.depth - 1
+    if self.depth == 0{
+        self.stream.Write(_env, "\n")
+    } else if self.depth < 0{
+        Util_err(_env, "illegal depth")
+    }
+}
+// 86: decl @lune.@base.@Writer.XML.writeValue
+func (self *Writer_XML) WriteValue(_env *LnsEnv, val LnsAny) {
+    self.stream.Write(_env, Writer_XML_convertXmlTxt_1_(_env, val))
+}
+// 89: decl @lune.@base.@Writer.XML.write
+func (self *Writer_XML) Write(_env *LnsEnv, name string,val LnsAny) {
+    self.FP.StartElement(_env, name)
+    self.FP.WriteValue(_env, val)
+    self.FP.EndElement(_env)
+}
+// 94: decl @lune.@base.@Writer.XML.fin
+func (self *Writer_XML) Fin(_env *LnsEnv) {
+}
 // 114: decl @lune.@base.@Writer.JSON.startLayer
 func (self *Writer_JSON) startLayer(_env *LnsEnv, arrayFlag bool,madeByArrayFlag bool) {
     var info *Writer_JsonLayer
@@ -266,7 +269,6 @@ func (self *Writer_JSON) startLayer(_env *LnsEnv, arrayFlag bool,madeByArrayFlag
         _env.SetStackVal( "[") ||
         _env.SetStackVal( "{") ).(string))
 }
-
 // 128: DeclConstr
 func (self *Writer_JSON) InitWriter_JSON(_env *LnsEnv, stream Lns_oStream) {
     self.stream = stream
@@ -274,7 +276,6 @@ func (self *Writer_JSON) InitWriter_JSON(_env *LnsEnv, stream Lns_oStream) {
     self.prevName = ""
     self.FP.startLayer(_env, false, false)
 }
-
 // 135: decl @lune.@base.@Writer.JSON.getLayerInfo
 func (self *Writer_JSON) getLayerInfo(_env *LnsEnv) LnsAny {
     if self.layerQueue.Len() == 0{
@@ -282,7 +283,6 @@ func (self *Writer_JSON) getLayerInfo(_env *LnsEnv) LnsAny {
     }
     return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer()
 }
-
 // 142: decl @lune.@base.@Writer.JSON.endLayer
 func (self *Writer_JSON) EndLayer(_env *LnsEnv) {
     if self.layerQueue.Len() == 0{
@@ -308,27 +308,22 @@ func (self *Writer_JSON) EndLayer(_env *LnsEnv) {
         self.stream.Write(_env, "\n")
     }
 }
-
 // 166: decl @lune.@base.@Writer.JSON.equalLayerState
 func (self *Writer_JSON) EqualLayerState(_env *LnsEnv, state string) bool {
     return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().State == state
 }
-
 // 170: decl @lune.@base.@Writer.JSON.isArrayLayer
 func (self *Writer_JSON) IsArrayLayer(_env *LnsEnv) bool {
     return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().ArrayFlag
 }
-
 // 174: decl @lune.@base.@Writer.JSON.setLayerState
 func (self *Writer_JSON) SetLayerState(_env *LnsEnv, state string) {
     self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().State = state
 }
-
 // 178: decl @lune.@base.@Writer.JSON.getLayerName
 func (self *Writer_JSON) GetLayerName(_env *LnsEnv) string {
     return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().Name
 }
-
 // 182: decl @lune.@base.@Writer.JSON.addElementName
 func (self *Writer_JSON) AddElementName(_env *LnsEnv, name string) {
     var info *Writer_JsonLayer
@@ -342,7 +337,6 @@ func (self *Writer_JSON) AddElementName(_env *LnsEnv, name string) {
     }
     nameSet.Add(name)
 }
-
 // 191: decl @lune.@base.@Writer.JSON.startParent
 func (self *Writer_JSON) StartParent(_env *LnsEnv, name string,arrayFlag bool) {
     self.FP.AddElementName(_env, name)
@@ -365,7 +359,6 @@ func (self *Writer_JSON) StartParent(_env *LnsEnv, name string,arrayFlag bool) {
     self.FP.startLayer(_env, arrayFlag, false)
     self.prevName = name
 }
-
 // 214: decl @lune.@base.@Writer.JSON.startElement
 func (self *Writer_JSON) StartElement(_env *LnsEnv, name string) {
     self.FP.AddElementName(_env, name)
@@ -388,7 +381,6 @@ func (self *Writer_JSON) StartElement(_env *LnsEnv, name string) {
     self.FP.SetLayerState(_env, "named")
     self.prevName = name
 }
-
 // 242: decl @lune.@base.@Writer.JSON.endElement
 func (self *Writer_JSON) EndElement(_env *LnsEnv) {
     if _env.PopVal( _env.IncStack() ||
@@ -410,7 +402,6 @@ func (self *Writer_JSON) EndElement(_env *LnsEnv) {
     }
     self.FP.SetLayerState(_env, "termed")
 }
-
 // 261: decl @lune.@base.@Writer.JSON.convertJsonTxt
 func Writer_JSON_convertJsonTxt_12_(_env *LnsEnv, txt string) string {
     if txt == ""{
@@ -421,7 +412,6 @@ func Writer_JSON_convertJsonTxt_12_(_env *LnsEnv, txt string) string {
     txt = Writer_convExp0_1271(Lns_2DDD(_env.GetVM().String_gsub(txt, "\n", "\\n")))
     return txt
 }
-
 // 272: decl @lune.@base.@Writer.JSON.writeValue
 func (self *Writer_JSON) WriteValue(_env *LnsEnv, val LnsAny) {
     var txt string
@@ -441,14 +431,12 @@ func (self *Writer_JSON) WriteValue(_env *LnsEnv, val LnsAny) {
     self.stream.Write(_env, txt)
     self.FP.SetLayerState(_env, "valued")
 }
-
 // 289: decl @lune.@base.@Writer.JSON.write
 func (self *Writer_JSON) Write(_env *LnsEnv, name string,val LnsAny) {
     self.FP.StartElement(_env, name)
     self.FP.WriteValue(_env, val)
     self.FP.EndElement(_env)
 }
-
 // 295: decl @lune.@base.@Writer.JSON.fin
 func (self *Writer_JSON) Fin(_env *LnsEnv) {
     if _env.PopVal( _env.IncStack() ||
@@ -458,16 +446,4 @@ func (self *Writer_JSON) Fin(_env *LnsEnv) {
     } else { 
         Util_err(_env, "illegal")
     }
-}
-
-
-func Lns_Writer_init(_env *LnsEnv) {
-    if init_Writer { return }
-    init_Writer = true
-    Writer__mod__ = "@lune.@base.@Writer"
-    Lns_InitMod()
-    Lns_Util_init(_env)
-}
-func init() {
-    init_Writer = false
 }

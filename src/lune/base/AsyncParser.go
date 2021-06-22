@@ -337,6 +337,67 @@ func NewAsyncParser_Parser(_env *LnsEnv, arg1 string, arg2 Lns_iStream, arg3 boo
     return obj
 }
 func (self *AsyncParser_Parser) Get_streamName(_env *LnsEnv) string{ return self.streamName }
+
+// declaration Class -- Runner
+type AsyncParser_RunnerMtd interface {
+    GetLnsSyncFlag() *Lns_syncFlag
+    Get_errMess(_env *LnsEnv) string
+    Get_parser(_env *LnsEnv) LnsAny
+    Run(_env *LnsEnv)
+}
+type AsyncParser_Runner struct {
+    _syncFlag *Lns_syncFlag
+    parser LnsAny
+    errMess string
+    FP AsyncParser_RunnerMtd
+}
+func (self *AsyncParser_Runner) GetLnsSyncFlag() *Lns_syncFlag { return self._syncFlag }
+func AsyncParser_Runner2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*AsyncParser_Runner).FP
+}
+type AsyncParser_RunnerDownCast interface {
+    ToAsyncParser_Runner() *AsyncParser_Runner
+}
+func AsyncParser_RunnerDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(AsyncParser_RunnerDownCast)
+    if ok { return work.ToAsyncParser_Runner() }
+    return nil
+}
+func (obj *AsyncParser_Runner) ToAsyncParser_Runner() *AsyncParser_Runner {
+    return obj
+}
+func NewAsyncParser_Runner(_env *LnsEnv, arg1 LnsAny, arg2 LnsAny, arg3 LnsAny) *AsyncParser_Runner {
+    obj := &AsyncParser_Runner{}
+    obj.FP = obj
+    obj.InitAsyncParser_Runner(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *AsyncParser_Runner) Get_parser(_env *LnsEnv) LnsAny{ return self.parser }
+func (self *AsyncParser_Runner) Get_errMess(_env *LnsEnv) string{ return self.errMess }
+
+func Lns_AsyncParser_init(_env *LnsEnv) {
+    if init_AsyncParser { return }
+    init_AsyncParser = true
+    AsyncParser__mod__ = "@lune.@base.@AsyncParser"
+    Lns_InitMod()
+    Lns_Util_init(_env)
+    Lns_Types_init(_env)
+    Lns_Async_init(_env)
+    AsyncParser_luaKeywordSet = NewLnsSet([]LnsAny{"if", "else", "elseif", "while", "for", "in", "return", "break", "nil", "true", "false", "{", "}", "do", "require", "function", "then", "end", "repeat", "until", "goto", "local"})
+    AsyncParser_quotedCharSet = NewLnsSet([]LnsAny{"a", "b", "f", "n", "r", "t", "v", "\\", "\"", "'"})
+    AsyncParser_op2Set = NewLnsSet([]LnsAny{"+", "-", "*", "/", "^", "%", "&", "~", "|", "|>>", "|<<", "..", "<", "<=", ">", ">=", "==", "~=", "and", "or", "@", "@@", "@@@", "="})
+    AsyncParser_op1Set = NewLnsSet([]LnsAny{"-", "not", "#", "~", "*", "`", ",,", ",,,", ",,,,"})
+    AsyncParser_defaultPipeSize = 100
+}
+func init() {
+    init_AsyncParser = false
+}
 // 233: DeclConstr
 func (self *AsyncParser_Parser) InitAsyncParser_Parser(_env *LnsEnv, streamName string,stream Lns_iStream,luaMode bool,overridePos LnsAny,pipeSize LnsAny) {
     self.InitAsync_Pipe(_env, AsyncParser_AsyncItem__createPipe(_env, Lns_unwrapDefault( pipeSize, AsyncParser_defaultPipeSize).(LnsInt)))
@@ -356,7 +417,6 @@ func (self *AsyncParser_Parser) InitAsyncParser_Parser(_env *LnsEnv, streamName 
     self.typeSet = typeSet
     self.multiCharDelimitMap = multiCharDelimitMap
 }
-
 // 254: decl @lune.@base.@AsyncParser.Parser.setup
 func (self *AsyncParser_Parser) Setup(_env *LnsEnv) {
     var lineList *LnsList
@@ -377,7 +437,6 @@ func (self *AsyncParser_Parser) Setup(_env *LnsEnv) {
     self.lineList = lineList
     self.stream.Close(_env)
 }
-
 // 266: decl @lune.@base.@AsyncParser.Parser.create
 func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny)(LnsAny, string) {
     var createStream func(_env *LnsEnv, mod string,path string)(LnsAny, string)
@@ -438,8 +497,6 @@ func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAn
     }
     return nil, mess
 }
-
-
 // 308: decl @lune.@base.@AsyncParser.Parser.access
 func (self *AsyncParser_Parser) Access(_env *LnsEnv) LnsAny {
     var tokenList *LnsList
@@ -454,7 +511,6 @@ func (self *AsyncParser_Parser) Access(_env *LnsEnv) LnsAny {
     }
     return NewAsync_PipeItem(_env, AsyncParser_AsyncItem2Stem(NewAsyncParser_AsyncItem(_env, tokenList)))
 }
-
 // 361: decl @lune.@base.@AsyncParser.Parser.createInfo
 func (self *AsyncParser_Parser) createInfo(_env *LnsEnv, tokenKind LnsInt,token string,tokenColumn LnsInt) *Types_Token {
     if tokenKind == Types_TokenKind__Symb{
@@ -480,7 +536,6 @@ func (self *AsyncParser_Parser) createInfo(_env *LnsEnv, tokenKind LnsInt,token 
     self.prevToken = newToken
     return newToken
 }
-
 // 399: decl @lune.@base.@AsyncParser.Parser.analyzeNumber
 func (self *AsyncParser_Parser) analyzeNumber(_env *LnsEnv, token string,beginIndex LnsInt)(LnsInt, bool) {
     var nonNumIndex LnsInt
@@ -552,7 +607,6 @@ func (self *AsyncParser_Parser) analyzeNumber(_env *LnsEnv, token string,beginIn
     }
     return nonNumIndex - 1, intFlag
 }
-
 // 440: decl @lune.@base.@AsyncParser.Parser.readLine
 func (self *AsyncParser_Parser) readLine(_env *LnsEnv) LnsAny {
     if self.lineNo >= self.lineList.Len(){
@@ -561,7 +615,6 @@ func (self *AsyncParser_Parser) readLine(_env *LnsEnv) LnsAny {
     self.lineNo = self.lineNo + 1
     return self.lineList.GetAt(self.lineNo).(string)
 }
-
 // 459: decl @lune.@base.@AsyncParser.Parser.addVal
 func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,val string,column LnsInt) {
     if kind != Types_TokenKind__Symb{
@@ -672,7 +725,6 @@ func (self *AsyncParser_Parser) addVal(_env *LnsEnv, list *LnsList,kind LnsInt,v
         }
     }
 }
-
 // 557: decl @lune.@base.@AsyncParser.Parser.parse
 func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
     var rawLine string
@@ -849,50 +901,6 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
 // insert a dummy
     return nil
 }
-
-
-// declaration Class -- Runner
-type AsyncParser_RunnerMtd interface {
-    GetLnsSyncFlag() *Lns_syncFlag
-    Get_errMess(_env *LnsEnv) string
-    Get_parser(_env *LnsEnv) LnsAny
-    Run(_env *LnsEnv)
-}
-type AsyncParser_Runner struct {
-    _syncFlag *Lns_syncFlag
-    parser LnsAny
-    errMess string
-    FP AsyncParser_RunnerMtd
-}
-func (self *AsyncParser_Runner) GetLnsSyncFlag() *Lns_syncFlag { return self._syncFlag }
-func AsyncParser_Runner2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*AsyncParser_Runner).FP
-}
-type AsyncParser_RunnerDownCast interface {
-    ToAsyncParser_Runner() *AsyncParser_Runner
-}
-func AsyncParser_RunnerDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(AsyncParser_RunnerDownCast)
-    if ok { return work.ToAsyncParser_Runner() }
-    return nil
-}
-func (obj *AsyncParser_Runner) ToAsyncParser_Runner() *AsyncParser_Runner {
-    return obj
-}
-func NewAsyncParser_Runner(_env *LnsEnv, arg1 LnsAny, arg2 LnsAny, arg3 LnsAny) *AsyncParser_Runner {
-    obj := &AsyncParser_Runner{}
-    obj.FP = obj
-    obj.InitAsyncParser_Runner(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *AsyncParser_Runner) Get_parser(_env *LnsEnv) LnsAny{ return self.parser }
-func (self *AsyncParser_Runner) Get_errMess(_env *LnsEnv) string{ return self.errMess }
 // 321: DeclConstr
 func (self *AsyncParser_Runner) InitAsyncParser_Runner(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny) {
     self._syncFlag = &Lns_syncFlag{}
@@ -908,7 +916,6 @@ func (self *AsyncParser_Runner) InitAsyncParser_Runner(_env *LnsEnv, parserSrc L
         }
     }
 }
-
 // 336: decl @lune.@base.@AsyncParser.Runner.run
 func (self *AsyncParser_Runner) Run(_env *LnsEnv) {
     {
@@ -918,23 +925,4 @@ func (self *AsyncParser_Runner) Run(_env *LnsEnv) {
             _exp.FP.Run(_env)
         }
     }
-}
-
-
-func Lns_AsyncParser_init(_env *LnsEnv) {
-    if init_AsyncParser { return }
-    init_AsyncParser = true
-    AsyncParser__mod__ = "@lune.@base.@AsyncParser"
-    Lns_InitMod()
-    Lns_Util_init(_env)
-    Lns_Types_init(_env)
-    Lns_Async_init(_env)
-    AsyncParser_luaKeywordSet = NewLnsSet([]LnsAny{"if", "else", "elseif", "while", "for", "in", "return", "break", "nil", "true", "false", "{", "}", "do", "require", "function", "then", "end", "repeat", "until", "goto", "local"})
-    AsyncParser_quotedCharSet = NewLnsSet([]LnsAny{"a", "b", "f", "n", "r", "t", "v", "\\", "\"", "'"})
-    AsyncParser_op2Set = NewLnsSet([]LnsAny{"+", "-", "*", "/", "^", "%", "&", "~", "|", "|>>", "|<<", "..", "<", "<=", ">", ">=", "==", "~=", "and", "or", "@", "@@", "@@@", "="})
-    AsyncParser_op1Set = NewLnsSet([]LnsAny{"-", "not", "#", "~", "*", "`", ",,", ",,,", ",,,,"})
-    AsyncParser_defaultPipeSize = 100
-}
-func init() {
-    init_AsyncParser = false
 }

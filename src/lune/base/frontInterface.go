@@ -113,32 +113,6 @@ func NewFrontInterface_ModuleId(_env *LnsEnv, arg1 LnsReal, arg2 LnsInt) *FrontI
 func (self *FrontInterface_ModuleId) Get_modTime(_env *LnsEnv) LnsReal{ return self.modTime }
 func (self *FrontInterface_ModuleId) Get_buildCount(_env *LnsEnv) LnsInt{ return self.buildCount }
 func (self *FrontInterface_ModuleId) Get_idStr(_env *LnsEnv) string{ return self.idStr }
-// 51: DeclConstr
-func (self *FrontInterface_ModuleId) InitFrontInterface_ModuleId(_env *LnsEnv, modTime LnsReal,buildCount LnsInt) {
-    self.modTime = modTime
-    self.buildCount = buildCount
-    self.idStr = _env.GetVM().String_format("%f:%d", []LnsAny{modTime, buildCount})
-}
-
-// 57: decl @lune.@base.@frontInterface.ModuleId.getNextModuleId
-func (self *FrontInterface_ModuleId) GetNextModuleId(_env *LnsEnv) *FrontInterface_ModuleId {
-    return NewFrontInterface_ModuleId(_env, self.modTime, self.buildCount + 1)
-}
-
-// 64: decl @lune.@base.@frontInterface.ModuleId.createId
-func FrontInterface_ModuleId_createId(_env *LnsEnv, modTime LnsReal,buildCount LnsInt) *FrontInterface_ModuleId {
-    return NewFrontInterface_ModuleId(_env, modTime, buildCount)
-}
-
-// 67: decl @lune.@base.@frontInterface.ModuleId.createIdFromTxt
-func FrontInterface_ModuleId_createIdFromTxt(_env *LnsEnv, idStr string) *FrontInterface_ModuleId {
-    var modTime LnsReal
-    modTime = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(idStr,":.*", "")).(string), nil), 0.0).(LnsReal)
-    var buildCount LnsReal
-    buildCount = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(idStr,".*:", "")).(string), nil), 0.0).(LnsReal)
-    return NewFrontInterface_ModuleId(_env, modTime, (LnsInt)(buildCount))
-}
-
 
 // declaration Class -- ModuleProvideInfo
 type FrontInterface_ModuleProvideInfoMtd interface {
@@ -232,74 +206,6 @@ func NewFrontInterface_LuneHelperInfo(_env *LnsEnv) *FrontInterface_LuneHelperIn
     obj.InitFrontInterface_LuneHelperInfo(_env)
     return obj
 }
-// 93: DeclConstr
-func (self *FrontInterface_LuneHelperInfo) InitFrontInterface_LuneHelperInfo(_env *LnsEnv) {
-    self.UseNilAccess = false
-    self.UseUnwrapExp = false
-    self.HasMappingClassDef = false
-    self.UseLoad = false
-    self.UseUnpack = false
-    self.UseAlge = false
-    self.UseSet = false
-    self.CallAnonymous = false
-    self.PragmaSet = NewLnsSet([]LnsAny{})
-    self.UseLazyLoad = false
-    self.UseLazyRequire = false
-    self.UseRun = false
-}
-
-// 108: decl @lune.@base.@frontInterface.LuneHelperInfo.mergeFrom
-func (self *FrontInterface_LuneHelperInfo) MergeFrom(_env *LnsEnv, src *FrontInterface_LuneHelperInfo) {
-    self.UseNilAccess = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseNilAccess) ||
-        _env.SetStackVal( src.UseNilAccess) ).(bool)
-    
-    self.UseUnwrapExp = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseUnwrapExp) ||
-        _env.SetStackVal( src.UseUnwrapExp) ).(bool)
-    
-    self.HasMappingClassDef = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.HasMappingClassDef) ||
-        _env.SetStackVal( src.HasMappingClassDef) ).(bool)
-    
-    self.UseLoad = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseLoad) ||
-        _env.SetStackVal( src.UseLoad) ).(bool)
-    
-    self.UseUnpack = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseUnpack) ||
-        _env.SetStackVal( src.UseUnpack) ).(bool)
-    
-    self.UseAlge = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseAlge) ||
-        _env.SetStackVal( src.UseAlge) ).(bool)
-    
-    self.UseSet = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseSet) ||
-        _env.SetStackVal( src.UseSet) ).(bool)
-    
-    self.CallAnonymous = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.CallAnonymous) ||
-        _env.SetStackVal( src.CallAnonymous) ).(bool)
-    
-    self.UseLazyLoad = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseLazyLoad) ||
-        _env.SetStackVal( src.UseLazyLoad) ).(bool)
-    
-    self.UseLazyRequire = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseLazyRequire) ||
-        _env.SetStackVal( src.UseLazyRequire) ).(bool)
-    
-    self.UseRun = _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.UseRun) ||
-        _env.SetStackVal( src.UseRun) ).(bool)
-    
-    for _val := range( src.PragmaSet.Items ) {
-        val := _val
-        self.PragmaSet.Add(val)
-    }
-}
-
 
 // declaration Class -- ExportInfo
 type FrontInterface_ExportInfoMtd interface {
@@ -368,52 +274,6 @@ func (self *FrontInterface_ExportInfo) Get_assignName(_env *LnsEnv) string{ retu
 func (self *FrontInterface_ExportInfo) Get_streamName(_env *LnsEnv) string{ return self.streamName }
 func (self *FrontInterface_ExportInfo) Get_importId2localTypeInfoMap(_env *LnsEnv) *LnsMap{ return self.importId2localTypeInfoMap }
 func (self *FrontInterface_ExportInfo) Set_importId2localTypeInfoMap(_env *LnsEnv, arg1 *LnsMap){ self.importId2localTypeInfoMap = arg1 }
-// 161: DeclConstr
-func (self *FrontInterface_ExportInfo) InitFrontInterface_ExportInfo(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,provideInfo *FrontInterface_ModuleProvideInfo,processInfo *Ast_ProcessInfo,globalSymbolList *LnsList,importedAliasMap *LnsMap,moduleId *FrontInterface_ModuleId,fullName string,assignName string,streamName string,idMap *LnsMap) {
-    self.moduleTypeInfo = moduleTypeInfo
-    self.provideInfo = provideInfo
-    self.processInfo = processInfo
-    self.globalSymbolList = globalSymbolList
-    self.importedAliasMap = importedAliasMap
-    self.moduleId = moduleId
-    self.fullName = fullName
-    self.assignName = assignName
-    self.streamName = streamName
-    var importId2localTypeInfoMap *LnsMap
-    importId2localTypeInfoMap = NewLnsMap( map[LnsAny]LnsAny{})
-    for _typeInfo, _importId := range( idMap.Items ) {
-        typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-        importId := _importId.(LnsInt)
-        importId2localTypeInfoMap.Set(importId,typeInfo)
-    }
-    self.importId2localTypeInfoMap = importId2localTypeInfoMap
-}
-
-// 189: decl @lune.@base.@frontInterface.ExportInfo.get_modulePath
-func (self *FrontInterface_ExportInfo) Get_modulePath(_env *LnsEnv) string {
-    return self.fullName
-}
-
-// 193: decl @lune.@base.@frontInterface.ExportInfo.getTypeInfo
-func (self *FrontInterface_ExportInfo) GetTypeInfo(_env *LnsEnv, localTypeId LnsInt) LnsAny {
-    {
-        _typeInfo := self.importId2localTypeInfoMap.Get(localTypeId)
-        if !Lns_IsNil( _typeInfo ) {
-            typeInfo := _typeInfo.(*Ast_TypeInfo)
-            return typeInfo
-        }
-    }
-    return nil
-}
-
-// 201: decl @lune.@base.@frontInterface.ExportInfo.assign
-func (self *FrontInterface_ExportInfo) Assign(_env *LnsEnv, assignName string) *FrontInterface_ExportInfo {
-    var info *FrontInterface_ExportInfo
-    info = NewFrontInterface_ExportInfo(_env, self.moduleTypeInfo, self.provideInfo, self.processInfo, self.globalSymbolList, self.importedAliasMap, self.moduleId, self.fullName, assignName, self.streamName, NewLnsMap( map[LnsAny]LnsAny{}))
-    info.importId2localTypeInfoMap = self.importId2localTypeInfoMap
-    return info
-}
-
 
 // declaration Class -- ModuleInfo
 type FrontInterface_ModuleInfoMtd interface {
@@ -520,11 +380,6 @@ func (self *FrontInterface_ModuleInfo) Get_streamName(_env *LnsEnv) string {
 func (self *FrontInterface_ModuleInfo) Set_importId2localTypeInfoMap(_env *LnsEnv, arg1 *LnsMap) {
 self.exportInfo. FP.Set_importId2localTypeInfoMap( _env, arg1)
 }
-// 219: DeclConstr
-func (self *FrontInterface_ModuleInfo) InitFrontInterface_ModuleInfo(_env *LnsEnv, exportInfo *FrontInterface_ExportInfo) {
-    self.exportInfo = exportInfo
-}
-
 
 // declaration Class -- ModuleMeta
 type FrontInterface_ModuleMetaMtd interface {
@@ -610,53 +465,6 @@ func NewFrontInterface_ImportModuleInfo(_env *LnsEnv) *FrontInterface_ImportModu
     obj.InitFrontInterface_ImportModuleInfo(_env)
     return obj
 }
-// 242: DeclConstr
-func (self *FrontInterface_ImportModuleInfo) InitFrontInterface_ImportModuleInfo(_env *LnsEnv) {
-    self.orderedSet = NewUtil_OrderedSet(_env)
-}
-
-// 246: decl @lune.@base.@frontInterface.ImportModuleInfo.add
-func (self *FrontInterface_ImportModuleInfo) Add(_env *LnsEnv, modulePath string) bool {
-    return self.orderedSet.FP.Add(_env, modulePath)
-}
-
-// 250: decl @lune.@base.@frontInterface.ImportModuleInfo.remove
-func (self *FrontInterface_ImportModuleInfo) Remove(_env *LnsEnv) {
-    self.orderedSet.FP.RemoveLast(_env)
-}
-
-// 254: decl @lune.@base.@frontInterface.ImportModuleInfo.getFull
-func (self *FrontInterface_ImportModuleInfo) GetFull(_env *LnsEnv) string {
-    var txt string
-    txt = ""
-    for _, _modulePath := range( self.orderedSet.FP.Get_list(_env).Items ) {
-        modulePath := _modulePath.(string)
-        txt = _env.GetVM().String_format("%s -> %s", []LnsAny{txt, modulePath})
-    }
-    return txt
-}
-
-// 262: decl @lune.@base.@frontInterface.ImportModuleInfo.clone
-func (self *FrontInterface_ImportModuleInfo) Clone(_env *LnsEnv) *FrontInterface_ImportModuleInfo {
-    var info *FrontInterface_ImportModuleInfo
-    info = NewFrontInterface_ImportModuleInfo(_env)
-    for _, _mod := range( self.orderedSet.FP.Get_list(_env).Items ) {
-        mod := _mod.(string)
-        info.FP.Add(_env, mod)
-    }
-    return info
-}
-
-// 270: decl @lune.@base.@frontInterface.ImportModuleInfo.len
-func (self *FrontInterface_ImportModuleInfo) Len(_env *LnsEnv) LnsInt {
-    return self.orderedSet.FP.Get_list(_env).Len()
-}
-
-// 274: decl @lune.@base.@frontInterface.ImportModuleInfo.list
-func (self *FrontInterface_ImportModuleInfo) List(_env *LnsEnv) *LnsList {
-    return self.orderedSet.FP.Get_list(_env)
-}
-
 
 type FrontInterface_ModuleLoader interface {
         GetExportInfo(_env *LnsEnv) LnsAny
@@ -723,6 +531,196 @@ func NewfrontInterface_dummyFront(_env *LnsEnv) *frontInterface_dummyFront {
 }
 func (self *frontInterface_dummyFront) InitfrontInterface_dummyFront(_env *LnsEnv) {
 }
+
+func Lns_frontInterface_init(_env *LnsEnv) {
+    if init_frontInterface { return }
+    init_frontInterface = true
+    frontInterface__mod__ = "@lune.@base.@frontInterface"
+    Lns_InitMod()
+    Lns_Util_init(_env)
+    Lns_Ast_init(_env)
+    Lns_LuneControl_init(_env)
+    Lns_Runner_init(_env)
+    FrontInterface_ModuleId____init_5_(_env)
+    FrontInterface___luneScript = NewfrontInterface_dummyFront(_env).FP
+}
+func init() {
+    init_frontInterface = false
+}
+// 51: DeclConstr
+func (self *FrontInterface_ModuleId) InitFrontInterface_ModuleId(_env *LnsEnv, modTime LnsReal,buildCount LnsInt) {
+    self.modTime = modTime
+    self.buildCount = buildCount
+    self.idStr = _env.GetVM().String_format("%f:%d", []LnsAny{modTime, buildCount})
+}
+// 57: decl @lune.@base.@frontInterface.ModuleId.getNextModuleId
+func (self *FrontInterface_ModuleId) GetNextModuleId(_env *LnsEnv) *FrontInterface_ModuleId {
+    return NewFrontInterface_ModuleId(_env, self.modTime, self.buildCount + 1)
+}
+// 64: decl @lune.@base.@frontInterface.ModuleId.createId
+func FrontInterface_ModuleId_createId(_env *LnsEnv, modTime LnsReal,buildCount LnsInt) *FrontInterface_ModuleId {
+    return NewFrontInterface_ModuleId(_env, modTime, buildCount)
+}
+// 67: decl @lune.@base.@frontInterface.ModuleId.createIdFromTxt
+func FrontInterface_ModuleId_createIdFromTxt(_env *LnsEnv, idStr string) *FrontInterface_ModuleId {
+    var modTime LnsReal
+    modTime = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(idStr,":.*", "")).(string), nil), 0.0).(LnsReal)
+    var buildCount LnsReal
+    buildCount = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(idStr,".*:", "")).(string), nil), 0.0).(LnsReal)
+    return NewFrontInterface_ModuleId(_env, modTime, (LnsInt)(buildCount))
+}
+// 93: DeclConstr
+func (self *FrontInterface_LuneHelperInfo) InitFrontInterface_LuneHelperInfo(_env *LnsEnv) {
+    self.UseNilAccess = false
+    self.UseUnwrapExp = false
+    self.HasMappingClassDef = false
+    self.UseLoad = false
+    self.UseUnpack = false
+    self.UseAlge = false
+    self.UseSet = false
+    self.CallAnonymous = false
+    self.PragmaSet = NewLnsSet([]LnsAny{})
+    self.UseLazyLoad = false
+    self.UseLazyRequire = false
+    self.UseRun = false
+}
+// 108: decl @lune.@base.@frontInterface.LuneHelperInfo.mergeFrom
+func (self *FrontInterface_LuneHelperInfo) MergeFrom(_env *LnsEnv, src *FrontInterface_LuneHelperInfo) {
+    self.UseNilAccess = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseNilAccess) ||
+        _env.SetStackVal( src.UseNilAccess) ).(bool)
+    
+    self.UseUnwrapExp = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseUnwrapExp) ||
+        _env.SetStackVal( src.UseUnwrapExp) ).(bool)
+    
+    self.HasMappingClassDef = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.HasMappingClassDef) ||
+        _env.SetStackVal( src.HasMappingClassDef) ).(bool)
+    
+    self.UseLoad = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseLoad) ||
+        _env.SetStackVal( src.UseLoad) ).(bool)
+    
+    self.UseUnpack = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseUnpack) ||
+        _env.SetStackVal( src.UseUnpack) ).(bool)
+    
+    self.UseAlge = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseAlge) ||
+        _env.SetStackVal( src.UseAlge) ).(bool)
+    
+    self.UseSet = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseSet) ||
+        _env.SetStackVal( src.UseSet) ).(bool)
+    
+    self.CallAnonymous = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.CallAnonymous) ||
+        _env.SetStackVal( src.CallAnonymous) ).(bool)
+    
+    self.UseLazyLoad = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseLazyLoad) ||
+        _env.SetStackVal( src.UseLazyLoad) ).(bool)
+    
+    self.UseLazyRequire = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseLazyRequire) ||
+        _env.SetStackVal( src.UseLazyRequire) ).(bool)
+    
+    self.UseRun = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.UseRun) ||
+        _env.SetStackVal( src.UseRun) ).(bool)
+    
+    for _val := range( src.PragmaSet.Items ) {
+        val := _val
+        self.PragmaSet.Add(val)
+    }
+}
+// 161: DeclConstr
+func (self *FrontInterface_ExportInfo) InitFrontInterface_ExportInfo(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,provideInfo *FrontInterface_ModuleProvideInfo,processInfo *Ast_ProcessInfo,globalSymbolList *LnsList,importedAliasMap *LnsMap,moduleId *FrontInterface_ModuleId,fullName string,assignName string,streamName string,idMap *LnsMap) {
+    self.moduleTypeInfo = moduleTypeInfo
+    self.provideInfo = provideInfo
+    self.processInfo = processInfo
+    self.globalSymbolList = globalSymbolList
+    self.importedAliasMap = importedAliasMap
+    self.moduleId = moduleId
+    self.fullName = fullName
+    self.assignName = assignName
+    self.streamName = streamName
+    var importId2localTypeInfoMap *LnsMap
+    importId2localTypeInfoMap = NewLnsMap( map[LnsAny]LnsAny{})
+    for _typeInfo, _importId := range( idMap.Items ) {
+        typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
+        importId := _importId.(LnsInt)
+        importId2localTypeInfoMap.Set(importId,typeInfo)
+    }
+    self.importId2localTypeInfoMap = importId2localTypeInfoMap
+}
+// 189: decl @lune.@base.@frontInterface.ExportInfo.get_modulePath
+func (self *FrontInterface_ExportInfo) Get_modulePath(_env *LnsEnv) string {
+    return self.fullName
+}
+// 193: decl @lune.@base.@frontInterface.ExportInfo.getTypeInfo
+func (self *FrontInterface_ExportInfo) GetTypeInfo(_env *LnsEnv, localTypeId LnsInt) LnsAny {
+    {
+        _typeInfo := self.importId2localTypeInfoMap.Get(localTypeId)
+        if !Lns_IsNil( _typeInfo ) {
+            typeInfo := _typeInfo.(*Ast_TypeInfo)
+            return typeInfo
+        }
+    }
+    return nil
+}
+// 201: decl @lune.@base.@frontInterface.ExportInfo.assign
+func (self *FrontInterface_ExportInfo) Assign(_env *LnsEnv, assignName string) *FrontInterface_ExportInfo {
+    var info *FrontInterface_ExportInfo
+    info = NewFrontInterface_ExportInfo(_env, self.moduleTypeInfo, self.provideInfo, self.processInfo, self.globalSymbolList, self.importedAliasMap, self.moduleId, self.fullName, assignName, self.streamName, NewLnsMap( map[LnsAny]LnsAny{}))
+    info.importId2localTypeInfoMap = self.importId2localTypeInfoMap
+    return info
+}
+// 219: DeclConstr
+func (self *FrontInterface_ModuleInfo) InitFrontInterface_ModuleInfo(_env *LnsEnv, exportInfo *FrontInterface_ExportInfo) {
+    self.exportInfo = exportInfo
+}
+// 242: DeclConstr
+func (self *FrontInterface_ImportModuleInfo) InitFrontInterface_ImportModuleInfo(_env *LnsEnv) {
+    self.orderedSet = NewUtil_OrderedSet(_env)
+}
+// 246: decl @lune.@base.@frontInterface.ImportModuleInfo.add
+func (self *FrontInterface_ImportModuleInfo) Add(_env *LnsEnv, modulePath string) bool {
+    return self.orderedSet.FP.Add(_env, modulePath)
+}
+// 250: decl @lune.@base.@frontInterface.ImportModuleInfo.remove
+func (self *FrontInterface_ImportModuleInfo) Remove(_env *LnsEnv) {
+    self.orderedSet.FP.RemoveLast(_env)
+}
+// 254: decl @lune.@base.@frontInterface.ImportModuleInfo.getFull
+func (self *FrontInterface_ImportModuleInfo) GetFull(_env *LnsEnv) string {
+    var txt string
+    txt = ""
+    for _, _modulePath := range( self.orderedSet.FP.Get_list(_env).Items ) {
+        modulePath := _modulePath.(string)
+        txt = _env.GetVM().String_format("%s -> %s", []LnsAny{txt, modulePath})
+    }
+    return txt
+}
+// 262: decl @lune.@base.@frontInterface.ImportModuleInfo.clone
+func (self *FrontInterface_ImportModuleInfo) Clone(_env *LnsEnv) *FrontInterface_ImportModuleInfo {
+    var info *FrontInterface_ImportModuleInfo
+    info = NewFrontInterface_ImportModuleInfo(_env)
+    for _, _mod := range( self.orderedSet.FP.Get_list(_env).Items ) {
+        mod := _mod.(string)
+        info.FP.Add(_env, mod)
+    }
+    return info
+}
+// 270: decl @lune.@base.@frontInterface.ImportModuleInfo.len
+func (self *FrontInterface_ImportModuleInfo) Len(_env *LnsEnv) LnsInt {
+    return self.orderedSet.FP.Get_list(_env).Len()
+}
+// 274: decl @lune.@base.@frontInterface.ImportModuleInfo.list
+func (self *FrontInterface_ImportModuleInfo) List(_env *LnsEnv) *LnsList {
+    return self.orderedSet.FP.Get_list(_env)
+}
 // 330: decl @lune.@base.@frontInterface.dummyFront.loadModule
 func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     var modVal LnsAny
@@ -742,53 +740,31 @@ func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsA
     })
     return modVal, moduleMeta
 }
-
 // 347: decl @lune.@base.@frontInterface.dummyFront.loadMeta
 func (self *frontInterface_dummyFront) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string,orgMod string,baseDir LnsAny,loader FrontInterface_ModuleLoader) LnsAny {
     panic("not implements")
 // insert a dummy
     return nil
 }
-
 // 352: decl @lune.@base.@frontInterface.dummyFront.loadFromLnsTxt
 func (self *frontInterface_dummyFront) LoadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,baseDir LnsAny,name string,txt string) LnsAny {
     panic("not implements")
 // insert a dummy
     return nil
 }
-
 // 358: decl @lune.@base.@frontInterface.dummyFront.getLuaModulePath
 func (self *frontInterface_dummyFront) GetLuaModulePath(_env *LnsEnv, mod string,baseDir LnsAny)(string, LnsAny, string) {
     panic("not implements")
 // insert a dummy
     return "",nil,""
 }
-
 // 361: decl @lune.@base.@frontInterface.dummyFront.searchModule
 func (self *frontInterface_dummyFront) SearchModule(_env *LnsEnv, mod string,baseDir LnsAny,addSearchPath LnsAny) LnsAny {
     panic("not implements")
 // insert a dummy
     return nil
 }
-
 // 364: decl @lune.@base.@frontInterface.dummyFront.error
 func (self *frontInterface_dummyFront) Error(_env *LnsEnv, message string) {
     panic("not implements")
-}
-
-
-func Lns_frontInterface_init(_env *LnsEnv) {
-    if init_frontInterface { return }
-    init_frontInterface = true
-    frontInterface__mod__ = "@lune.@base.@frontInterface"
-    Lns_InitMod()
-    Lns_Util_init(_env)
-    Lns_Ast_init(_env)
-    Lns_LuneControl_init(_env)
-    Lns_Runner_init(_env)
-    FrontInterface_ModuleId____init_5_(_env)
-    FrontInterface___luneScript = NewfrontInterface_dummyFront(_env).FP
-}
-func init() {
-    init_frontInterface = false
 }
