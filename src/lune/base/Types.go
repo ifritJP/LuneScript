@@ -203,7 +203,10 @@ func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
     self.DefaultAsync = false
     self.Testing = false
     self.ValidMultiPhaseTransUnit = true
-    self.ThreadPerUnitThread = 5
+    self.ThreadPerUnitThread = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( true) &&
+        _env.SetStackVal( 5) ||
+        _env.SetStackVal( 0) ).(LnsInt)
 }
 
 // 98: decl @lune.@base.@Types.TransCtrlInfo.create_normal

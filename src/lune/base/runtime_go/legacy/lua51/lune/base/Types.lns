@@ -91,7 +91,7 @@ pub class TransCtrlInfo {
       self.defaultAsync = false;
       self.testing = false;
       self.validMultiPhaseTransUnit = true;
-      self.threadPerUnitThread = 5;
+      self.threadPerUnitThread = __lns.capability.async and 5 or 0;
    }
 }
 

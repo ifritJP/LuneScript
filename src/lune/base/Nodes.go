@@ -820,63 +820,63 @@ return "IndexVal.SymIdx"
 type Nodes_NodeVisitor func (_env *LnsEnv, arg1 *Nodes_Node,arg2 *Nodes_Node,arg3 string,arg4 LnsInt) LnsInt
 type Nodes_macroStatmentProc func (_env *LnsEnv, arg1 *LnsMap) *LnsMap
 // for 2569
-func Nodes_convExp5_2579(arg1 string, arg2 []LnsAny) (string, []LnsAny) {
+func Nodes_convExp5_2512(arg1 string, arg2 []LnsAny) (string, []LnsAny) {
     return arg1, Lns_2DDD( arg2[0:])
 }
 // for 580
-func Nodes_convExp0_948(arg1 []LnsAny) string {
+func Nodes_convExp0_947(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 2391
-func Nodes_convExp5_1815(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Nodes_convExp5_1748(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2424
-func Nodes_convExp5_1952(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Nodes_convExp5_1885(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2458
-func Nodes_convExp5_2089(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Nodes_convExp5_2022(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2490
-func Nodes_convExp5_2223(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Nodes_convExp5_2156(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2491
-func Nodes_convExp5_2231(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Nodes_convExp5_2164(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2513
-func Nodes_convExp5_2321(arg1 []LnsAny) LnsAny {
+func Nodes_convExp5_2254(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2561
-func Nodes_convExp5_2532(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Nodes_convExp5_2465(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2639
-func Nodes_convExp5_2855(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Nodes_convExp5_2788(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2670
-func Nodes_convExp5_2975(arg1 []LnsAny) LnsAny {
+func Nodes_convExp5_2908(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2730
-func Nodes_convExp5_3206(arg1 []LnsAny) LnsAny {
+func Nodes_convExp5_3139(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2780
-func Nodes_convExp5_3330(arg1 []LnsAny) LnsAny {
+func Nodes_convExp5_3263(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2806
-func Nodes_convExp5_3428(arg1 []LnsAny) (bool, LnsInt, LnsReal, string, *Ast_TypeInfo) {
+func Nodes_convExp5_3361(arg1 []LnsAny) (bool, LnsInt, LnsReal, string, *Ast_TypeInfo) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(LnsInt), Lns_getFromMulti( arg1, 2 ).(LnsReal), Lns_getFromMulti( arg1, 3 ).(string), Lns_getFromMulti( arg1, 4 ).(*Ast_TypeInfo)
 }
 // for 2807
-func Nodes_convExp5_3444(arg1 []LnsAny) (bool, LnsInt, LnsReal, string, *Ast_TypeInfo) {
+func Nodes_convExp5_3377(arg1 []LnsAny) (bool, LnsInt, LnsReal, string, *Ast_TypeInfo) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(LnsInt), Lns_getFromMulti( arg1, 2 ).(LnsReal), Lns_getFromMulti( arg1, 3 ).(string), Lns_getFromMulti( arg1, 4 ).(*Ast_TypeInfo)
 }
 
@@ -4358,12 +4358,12 @@ func (self *Nodes_MacroArgInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return
 type Nodes_MacroInfoMtd interface {
     GetArgList(_env *LnsEnv) *LnsList
     GetTokenList(_env *LnsEnv) *LnsList
-    Get_func(_env *LnsEnv) *Lns_luaValue
+    Get_func(_env *LnsEnv) LnsAny
     Get_name(_env *LnsEnv) string
     Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
 }
 type Nodes_MacroInfo struct {
-    _func *Lns_luaValue
+    _func LnsAny
     symbol2MacroValInfoMap *LnsMap
     FP Nodes_MacroInfoMtd
 }
@@ -4387,11 +4387,11 @@ func Nodes_MacroInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_MacroInfo) ToNodes_MacroInfo() *Nodes_MacroInfo {
     return obj
 }
-func (self *Nodes_MacroInfo) InitNodes_MacroInfo(_env *LnsEnv, arg1 *Lns_luaValue, arg2 *LnsMap) {
+func (self *Nodes_MacroInfo) InitNodes_MacroInfo(_env *LnsEnv, arg1 LnsAny, arg2 *LnsMap) {
     self._func = arg1
     self.symbol2MacroValInfoMap = arg2
 }
-func (self *Nodes_MacroInfo) Get_func(_env *LnsEnv) *Lns_luaValue{ return self._func }
+func (self *Nodes_MacroInfo) Get_func(_env *LnsEnv) LnsAny{ return self._func }
 func (self *Nodes_MacroInfo) Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap{ return self.symbol2MacroValInfoMap }
 
 
@@ -8091,7 +8091,7 @@ func (self *Nodes_ExpOp2Node) getValType(_env *LnsEnv, node *Nodes_Node)(bool, L
     var literal LnsAny
     
     {
-        _literal := Nodes_convExp5_3206(Lns_2DDD(node.FP.GetLiteral(_env)))
+        _literal := Nodes_convExp5_3139(Lns_2DDD(node.FP.GetLiteral(_env)))
         if _literal == nil{
             return false, 0, 0.0, "", Ast_headTypeInfo
         } else {
@@ -8128,10 +8128,10 @@ func (self *Nodes_ExpOp2Node) getValType(_env *LnsEnv, node *Nodes_Node)(bool, L
 // 2779: decl @lune.@base.@Nodes.ExpOp2Node.setupLiteralTokenList
 func (self *Nodes_ExpOp2Node) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     var literal LnsAny
-    literal = Nodes_convExp5_3330(Lns_2DDD(self.FP.GetLiteral(_env)))
+    literal = Nodes_convExp5_3263(Lns_2DDD(self.FP.GetLiteral(_env)))
     if literal != nil{
-        literal_397 := literal
-        switch _matchExp1 := literal_397.(type) {
+        literal_387 := literal
+        switch _matchExp1 := literal_387.(type) {
         case *Nodes_Literal__Int:
         val := _matchExp1.Val1
             self.FP.AddTokenList(_env, list, Types_TokenKind__Int, _env.GetVM().String_format("%d", []LnsAny{val}))
@@ -10569,10 +10569,10 @@ func (self *Nodes_ExpMacroStatNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     for _, _token := range( self.expStrList.Items ) {
         token := _token.(Nodes_NodeDownCast).ToNodes_Node()
         var literal LnsAny
-        literal = Nodes_convExp5_2975(Lns_2DDD(token.FP.GetLiteral(_env)))
+        literal = Nodes_convExp5_2908(Lns_2DDD(token.FP.GetLiteral(_env)))
         if literal != nil{
-            literal_359 := literal
-            switch _matchExp1 := literal_359.(type) {
+            literal_349 := literal
+            switch _matchExp1 := literal_349.(type) {
             case *Nodes_Literal__Str:
             work := _matchExp1.Val1
                 txt = _env.GetVM().String_format("%s%s", []LnsAny{txt, work})
@@ -11262,8 +11262,8 @@ func (self *Nodes_RefFieldNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var mess LnsAny
     literal,mess = self.prefix.FP.GetLiteral(_env)
     if literal != nil{
-        literal_342 := literal
-        switch _matchExp1 := literal_342.(type) {
+        literal_332 := literal
+        switch _matchExp1 := literal_332.(type) {
         case *Nodes_Literal__Symbol:
         symbol := _matchExp1.Val1
             tokenList.Insert(symbol)
@@ -11274,7 +11274,7 @@ func (self *Nodes_RefFieldNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 tokenList.Insert(symbol)
             }
         default:
-            return nil, _env.GetVM().String_format("not support -- %s", []LnsAny{literal_342.(LnsAlgeVal).GetTxt()})
+            return nil, _env.GetVM().String_format("not support -- %s", []LnsAny{literal_332.(LnsAlgeVal).GetTxt()})
         }
         if self.nilAccess{
             tokenList.Insert("$.")
@@ -17149,8 +17149,8 @@ func (self *Nodes_LiteralArrayNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral(_env)
                 if literal != nil{
-                    literal_201 := literal
-                    literalList.Insert(literal_201)
+                    literal_191 := literal
+                    literalList.Insert(literal_191)
                 } else {
                     return nil, mess
                 }
@@ -17323,8 +17323,8 @@ func (self *Nodes_LiteralListNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral(_env)
                 if literal != nil{
-                    literal_222 := literal
-                    literalList.Insert(literal_222)
+                    literal_212 := literal
+                    literalList.Insert(literal_212)
                 } else {
                     return nil, mess
                 }
@@ -17497,8 +17497,8 @@ func (self *Nodes_LiteralSetNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 var mess LnsAny
                 literal,mess = node.FP.GetLiteral(_env)
                 if literal != nil{
-                    literal_243 := literal
-                    literalList.Insert(literal_243)
+                    literal_233 := literal
+                    literalList.Insert(literal_233)
                 } else {
                     return nil, mess
                 }
@@ -17738,9 +17738,9 @@ func (self *Nodes_LiteralMapNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
         var valMess LnsAny
         valLiteral,valMess = val.FP.GetLiteral(_env)
         if keyLiteral != nil && valLiteral != nil{
-            keyLiteral_265 := keyLiteral
-            valLiteral_266 := valLiteral
-            litMap.Set(keyLiteral_265,valLiteral_266)
+            keyLiteral_255 := keyLiteral
+            valLiteral_256 := valLiteral
+            litMap.Set(keyLiteral_255,valLiteral_256)
         } else {
             if Lns_op_not(keyLiteral){
                 return nil, keyMess
@@ -17761,10 +17761,10 @@ func (self *Nodes_LiteralMapNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsL
     for _key, _ := range( self._map.Items ) {
         key := _key.(Nodes_NodeDownCast).ToNodes_Node()
         var literal LnsAny
-        literal = Nodes_convExp5_2321(Lns_2DDD(key.FP.GetLiteral(_env)))
+        literal = Nodes_convExp5_2254(Lns_2DDD(key.FP.GetLiteral(_env)))
         if literal != nil{
-            literal_278 := literal
-            switch _matchExp1 := literal_278.(type) {
+            literal_268 := literal
+            switch _matchExp1 := literal_268.(type) {
             case *Nodes_Literal__Int:
             param := _matchExp1.Val1
                 lit2valNode.Set(param,key)
@@ -17977,13 +17977,13 @@ func (self *Nodes_LiteralStringNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
                 var mess LnsAny
                 arg,mess = argNode.FP.GetLiteral(_env)
                 if arg != nil{
-                    arg_305 := arg
-                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(_env, arg_305))
+                    arg_295 := arg
+                    paramList.Set(paramList.Len() + 1,Nodes_getLiteralObj(_env, arg_295))
                 } else {
                     return nil, mess
                 }
             }
-            txt = _env.GetVM().String_format(Nodes_convExp5_2579(txt, Lns_2DDD(paramList.Unpack())))
+            txt = _env.GetVM().String_format(Nodes_convExp5_2512(txt, Lns_2DDD(paramList.Unpack())))
         }
     }
     return &Nodes_Literal__Str{txt}, nil
@@ -18252,7 +18252,7 @@ func (self *Nodes_LiteralSymbolNode) SetupLiteralTokenList(_env *LnsEnv, list *L
 type Nodes_DefMacroInfoMtd interface {
     GetArgList(_env *LnsEnv) *LnsList
     GetTokenList(_env *LnsEnv) *LnsList
-    Get_func(_env *LnsEnv) *Lns_luaValue
+    Get_func(_env *LnsEnv) LnsAny
     Get_name(_env *LnsEnv) string
     Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
 }
@@ -18282,7 +18282,7 @@ func Nodes_DefMacroInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DefMacroInfo) ToNodes_DefMacroInfo() *Nodes_DefMacroInfo {
     return obj
 }
-func NewNodes_DefMacroInfo(_env *LnsEnv, arg1 *Lns_luaValue, arg2 *Nodes_DeclMacroInfo, arg3 *LnsMap) *Nodes_DefMacroInfo {
+func NewNodes_DefMacroInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_DeclMacroInfo, arg3 *LnsMap) *Nodes_DefMacroInfo {
     obj := &Nodes_DefMacroInfo{}
     obj.FP = obj
     obj.Nodes_MacroInfo.FP = obj
@@ -18305,7 +18305,7 @@ func (self *Nodes_DefMacroInfo) GetTokenList(_env *LnsEnv) *LnsList {
 }
 
 // 2878: DeclConstr
-func (self *Nodes_DefMacroInfo) InitNodes_DefMacroInfo(_env *LnsEnv, _func *Lns_luaValue,declInfo *Nodes_DeclMacroInfo,symbol2MacroValInfoMap *LnsMap) {
+func (self *Nodes_DefMacroInfo) InitNodes_DefMacroInfo(_env *LnsEnv, _func LnsAny,declInfo *Nodes_DeclMacroInfo,symbol2MacroValInfoMap *LnsMap) {
     self.InitNodes_MacroInfo(_env, _func, symbol2MacroValInfoMap)
     self.DeclInfo = declInfo
     self.argList = NewLnsList([]LnsAny{})

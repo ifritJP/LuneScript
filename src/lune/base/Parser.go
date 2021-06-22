@@ -6,11 +6,11 @@ var Parser__mod__ string
 var Parser_noneToken *Types_Token
 var Parser_eofToken *Types_Token
 // for 182
-func Parser_convExp0_314(arg1 []LnsAny) (LnsAny, string) {
+func Parser_convExp0_317(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 87
-func Parser_convExp0_2761(arg1 []LnsAny) LnsAny {
+func Parser_convExp0_846(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 type Parser_TxtStream = Util_TxtStream
@@ -47,7 +47,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
         var endIndex LnsInt
         
         {
-            _endIndex := Parser_convExp0_2761(Lns_2DDD(_env.GetVM().String_find(workTxt, workPattern, workIndex, nil)))
+            _endIndex := Parser_convExp0_846(Lns_2DDD(_env.GetVM().String_find(workTxt, workPattern, workIndex, nil)))
             if _endIndex == nil{
                 Util_err(_env, _env.GetVM().String_format("error: illegal string -- %s", []LnsAny{workTxt}))
             } else {
@@ -167,7 +167,7 @@ type Parser_PushbackParser interface {
         CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
         Error(_env *LnsEnv, arg1 string)
         GetStreamName(_env *LnsEnv) string
-        GetTokenNoErr(_env *LnsEnv) *Types_Token
+        GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
         NewPushback(_env *LnsEnv, arg1 *LnsList)
         Pushback(_env *LnsEnv)
         PushbackStr(_env *LnsEnv, arg1 string, arg2 string, arg3 *Types_Position)
@@ -379,7 +379,7 @@ type Parser_DefaultPushbackParserMtd interface {
     GetLastPos(_env *LnsEnv) *Types_Position
     GetNearCode(_env *LnsEnv) string
     GetStreamName(_env *LnsEnv) string
-    GetTokenNoErr(_env *LnsEnv) *Types_Token
+    GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
     GetUsedTokenListLen(_env *LnsEnv) LnsInt
     Get_currentToken(_env *LnsEnv) *Types_Token
     NewPushback(_env *LnsEnv, arg1 *LnsList)
@@ -445,7 +445,7 @@ func (self *Parser_DefaultPushbackParser) CreatePosition(_env *LnsEnv, lineNo Ln
 }
 
 // 254: decl @lune.@base.@Parser.DefaultPushbackParser.getTokenNoErr
-func (self *Parser_DefaultPushbackParser) GetTokenNoErr(_env *LnsEnv) *Types_Token {
+func (self *Parser_DefaultPushbackParser) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *Types_Token {
     if self.pushbackedList.Len() > 0{
         self.currentToken = self.pushbackedList.GetAt(self.pushbackedList.Len()).(Types_TokenDownCast).ToTypes_Token()
         self.pushbackedList.Remove(nil)
@@ -816,7 +816,6 @@ func (self *Parser_CommentCtrl) Pop(_env *LnsEnv) {
     self.layer = self.layerStack.GetAt(self.layerStack.Len()).(Parser_CommentLayerDownCast).ToParser_CommentLayer()
     self.layerStack.Remove(nil)
 }
-
 
 
 func Lns_Parser_init(_env *LnsEnv) {

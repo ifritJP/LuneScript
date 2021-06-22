@@ -85,7 +85,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
 {
    self.commentCtrl.push();
 
-   let token = self.getTokenNoErr();
+   let token = self.getTokenNoErr(##);
    let mut statement:Nodes.Node! = nil;
    if token.kind == .Sheb {
       statement = Nodes.ShebangNode.create(

@@ -3,60 +3,16 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Json bool
 var Json__mod__ string
-// for 145
-func Json_convExp0_55(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 150
-func Json_convExp0_124(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 155
-func Json_convExp0_193(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 160
-func Json_convExp0_268(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 165
-func Json_convExp0_337(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 170
-func Json_convExp0_416(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 175
-func Json_convExp0_495(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 180
-func Json_convExp0_574(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 185
-func Json_convExp0_643(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 202
-func Json_convExp0_932(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
-// for 210
-func Json_convExp0_1053(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
 // for 45
-func Json_convExp0_1321(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_198(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 67
-func Json_convExp0_1412(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_292(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 124
-func Json_convExp0_1630(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_510(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // 6: decl @lune.@base.@Json.getRawTxt
@@ -67,20 +23,20 @@ func Json_getRawTxt_0_(_env *LnsEnv, token *Types_Token) string {
 // 10: decl @lune.@base.@Json.getVal
 func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
     var token *Types_Token
-    token = parser.FP.GetTokenNoErr(_env)
+    token = parser.FP.GetTokenNoErr(_env, nil)
     if _switch1 := token.Kind; _switch1 == Types_TokenKind__Dlmt {
         if _switch2 := token.Txt; _switch2 == "{" {
             var _map *LnsMap
             _map = NewLnsMap( map[LnsAny]LnsAny{})
             for  {
                 var key *Types_Token
-                key = parser.FP.GetTokenNoErr(_env)
+                key = parser.FP.GetTokenNoErr(_env, nil)
                 if _switch3 := key.Kind; _switch3 == Types_TokenKind__Str {
                 } else if _switch3 == Types_TokenKind__Dlmt {
                     if _switch4 := key.Txt; _switch4 == "}" {
                         return _map, true
                     } else if _switch4 == "," {
-                        key = parser.FP.GetTokenNoErr(_env)
+                        key = parser.FP.GetTokenNoErr(_env, nil)
                         if key.Kind != Types_TokenKind__Str{
                             return nil, false
                         }
@@ -90,7 +46,7 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
                 } else {
                     return nil, false
                 }
-                if parser.FP.GetTokenNoErr(_env).Txt != ":"{
+                if parser.FP.GetTokenNoErr(_env, nil).Txt != ":"{
                     return nil, false
                 }
                 var val LnsAny
@@ -108,7 +64,7 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
             count = 1
             for  {
                 var nextToken *Types_Token
-                nextToken = parser.FP.GetTokenNoErr(_env)
+                nextToken = parser.FP.GetTokenNoErr(_env, nil)
                 if _switch5 := nextToken.Txt; _switch5 == "]" {
                     return list, true
                 } else if _switch5 == "," {
@@ -177,7 +133,6 @@ func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
     }
     return val, nil
 }
-
 
 func Lns_Json_init(_env *LnsEnv) {
     if init_Json { return }

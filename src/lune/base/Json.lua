@@ -5,19 +5,6 @@ local _lune = {}
 if _lune4 then
    _lune = _lune4
 end
-function _lune.unwrap( val )
-   if val == nil then
-      __luneScript:error( 'unwrap val is nil' )
-   end
-   return val
-end
-function _lune.unwrapDefault( val, defval )
-   if val == nil then
-      return defval
-   end
-   return val
-end
-
 function _lune.loadModule( mod )
    if __luneScript then
       return  __luneScript:loadModule( mod )

@@ -1102,7 +1102,7 @@ fn TransUnit.evalMacroOp(
 
    // self.macroCtrl.finishMacroMode();
 
-   let nextToken = self.getTokenNoErr();
+   let nextToken = self.getTokenNoErr(##);
 
    self.setParser( bakParser );
    
@@ -1734,7 +1734,7 @@ fn TransUnit.analyzeExpCall(
          alt2typeMap, genericTypeList, genericsClass, argList );
    }
 
-   return exp, self.getTokenNoErr();
+   return exp, self.getTokenNoErr(##);
 }
 
 fn TransUnit.analyzeExpCast(
@@ -3221,7 +3221,7 @@ fn TransUnit.analyzeExpOp2(
    firstToken: &Parser.Token, mut exp: Nodes.Node, prevOpLevel: int! ) mut : Nodes.Node
 {
    while true {
-      let opToken = self.getTokenNoErr();
+      let opToken = self.getTokenNoErr(##);
       let opTxt = opToken.txt;
 
       if opToken.txt == "@@" or opToken.txt == "@@@" or opToken.txt ==  "@@=" {

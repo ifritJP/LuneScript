@@ -178,6 +178,7 @@ class convFilter extend Nodes.Filter<Opt> {
          self.builtinFuncs.__lns_runmode_Sync_sym: "%d" (__lns.runMode.Sync),
          self.builtinFuncs.__lns_runmode_Queue_sym: "%d" (__lns.runMode.Queue),
          self.builtinFuncs.__lns_runmode_Skip_sym: "%d" (__lns.runMode.Skip),
+         self.builtinFuncs.__lns_capability_async_sym: "true",
       };
 
       self.indexer = new NodeIndexer.Indexer( self.processInfo );
@@ -5936,12 +5937,11 @@ __test {
 }
 
 __test case1(ctrl ) {
-   import lune.base.Option;
    
    LuaVer.setCurVer( 53 );
    
    let scriptPath = "test.lns";
-   let option = Option.createDefaultOption( [scriptPath], nil );
+   let option = LnsOpt.createDefaultOption( [scriptPath], nil );
    let mut ast = convLua.createAst( scriptPath, convLua.getTestLnsCode(), option );
    let goCode = Ast2Code( scriptPath, ast);
    print( goCode );

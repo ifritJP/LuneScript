@@ -172,6 +172,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
          builtinFunc.__lns_runmode_Sync_sym: "%d" (__lns.runMode.Sync),
          builtinFunc.__lns_runmode_Queue_sym: "%d" (__lns.runMode.Queue),
          builtinFunc.__lns_runmode_Skip_sym: "%d" (__lns.runMode.Skip),
+         builtinFunc.__lns_capability_async_sym: "false",
       };
    }
 

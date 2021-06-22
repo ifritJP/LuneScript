@@ -886,6 +886,8 @@ pub override fn dumpFilter.processAbbr(
 __test {
    import lune.base.convLua;
    import lune.base.AstInfo;
+   import lune.base.LuaVer;
+   import lune.base.Option;
 
    fn Ast2Dump( ast:AstInfo.ASTInfo ) : str
    {
@@ -901,8 +903,6 @@ __test {
 }
 
 __test case1(ctrl) {
-   import lune.base.LuaVer;
-   import lune.base.Option;
    
    LuaVer.setCurVer( 53 );
 

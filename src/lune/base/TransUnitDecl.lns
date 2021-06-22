@@ -691,10 +691,12 @@ fn TransUnit.analyzeDeclMacroSub(
       self.prepareTentativeSymbol( self.scope, false, nil );
       self.analyzeStatementList( stmtList, false, "}" );
 
-      stmtNode = Nodes.BlockNode.create(
-         self.nodeManager, firstToken.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(),
-         [ Ast.builtinTypeNone ], .Macro, macroScope, stmtList );
+      if #stmtList > 0 {
+         stmtNode = Nodes.BlockNode.create(
+            self.nodeManager, firstToken.pos, self.inTestBlock,
+            self.macroCtrl.isInAnalyzeArgMode(),
+            [ Ast.builtinTypeNone ], .Macro, macroScope, stmtList );
+      }
 
       self.checkNextToken( "}" );
       //self.finishTentativeSymbol( false );
@@ -1918,17 +1920,18 @@ fn TransUnit.analyzeFuncBlock(
       }
    } else {
       // テスト無効の場合、テストブロック内は解析せずにダミーを生成する
-      let blockToken = self.checkNextToken( "{" );
-      self.pushback();
-      let blockScope = self.pushScope( .Other ## );
-      let stmtList:List<&Nodes.Node> = [];
-      self.popScope();
-      body = Nodes.BlockNode.create(
-         self.nodeManager, blockToken.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         .Func, blockScope, stmtList );
+      body = self.skipAndCreateDummyBlock();
+      // let blockToken = self.checkNextToken( "{" );
+      // self.pushback();
+      // let blockScope = self.pushScope( .Other ## );
+      // let stmtList:List<&Nodes.Node> = [];
+      // self.popScope();
+      // body = Nodes.BlockNode.create(
+      //    self.nodeManager, blockToken.pos, self.inTestBlock,
+      //    self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      //    .Func, blockScope, stmtList );
 
-      self.skipBlock( false );
+      // self.skipBlock( false );
    }
 
    return body;

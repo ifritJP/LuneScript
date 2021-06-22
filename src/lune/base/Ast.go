@@ -666,44 +666,8 @@ func Ast_convExp4_1960(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 7926
-func Ast_convExp5_4160(arg1 []LnsAny) *Ast_TypeInfo {
+func Ast_convExp5_4180(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo).Ast_TypeInfo
-}
-// for 8007
-func Ast_convExp0_11051(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8007
-func Ast_convExp0_11208(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8007
-func Ast_convExp0_11373(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8007
-func Ast_convExp0_11543(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8007
-func Ast_convExp0_11708(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8007
-func Ast_convExp0_11915(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8007
-func Ast_convExp0_12091(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8007
-func Ast_convExp0_12248(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 8175
-func Ast_convExp0_22566(arg1 []LnsAny) *Ast_AlternateTypeInfo {
-    return Lns_getFromMulti( arg1, 0 ).(*Ast_AlternateTypeInfo)
 }
 // for 1593
 func Ast_convExp1_2208(arg1 []LnsAny) (bool, LnsAny) {
@@ -794,7 +758,7 @@ func Ast_convExp5_2935(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 7871
-func Ast_convExp5_3689(arg1 []LnsAny) LnsAny {
+func Ast_convExp5_3706(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 271: decl @lune.@base.@Ast.getRootProcessInfo
@@ -1264,7 +1228,6 @@ func Ast_isPrimitive(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     }
     return false
 }
-
 
 func ProcessInfo_switchIdProvier___anonymous_0_(_env *LnsEnv) string {
     return "start"
@@ -11797,20 +11760,20 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeFromTxt(_env *LnsEnv, txt string,scope 
 // 7785: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeSub
 func (self *Ast_TypeAnalyzer) analyzeTypeSub(_env *LnsEnv, allowDDD bool)(LnsAny, LnsAny, LnsAny) {
     var firstToken *Types_Token
-    firstToken = self.parser.GetTokenNoErr(_env)
+    firstToken = self.parser.GetTokenNoErr(_env, nil)
     var token *Types_Token
     token = firstToken
     var refFlag bool
     refFlag = false
     if token.Txt == "&"{
         refFlag = true
-        token = self.parser.GetTokenNoErr(_env)
+        token = self.parser.GetTokenNoErr(_env, nil)
     }
     var mutFlag bool
     mutFlag = false
     if token.Txt == "mut"{
         mutFlag = true
-        token = self.parser.GetTokenNoErr(_env)
+        token = self.parser.GetTokenNoErr(_env, nil)
     }
     var typeInfo *Ast_TypeInfo
     if token.Txt == "..."{
@@ -11843,12 +11806,12 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
         return nil, pos, _env.GetVM().String_format("This type must be public. -- %s", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil)})
     }
     var token *Types_Token
-    token = self.parser.GetTokenNoErr(_env)
+    token = self.parser.GetTokenNoErr(_env, nil)
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( token.Consecutive) &&
         _env.SetStackVal( token.Txt == "!") ).(bool)){
         typeInfo = typeInfo.FP.Get_nilableTypeInfo(_env)
-        token = self.parser.GetTokenNoErr(_env)
+        token = self.parser.GetTokenNoErr(_env, nil)
     }
     var genericRefList *LnsList
     genericRefList = NewLnsList([]LnsAny{})
@@ -11861,7 +11824,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
             } else { 
                 typeInfo = self.processInfo.FP.CreateArray(_env, self.accessMode, self.parentInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), Ast_MutMode__Mut)
             }
-            token = self.parser.GetTokenNoErr(_env)
+            token = self.parser.GetTokenNoErr(_env, nil)
             if token.Txt != "]"{
                 return nil, token.Pos, "not found -- ']'"
             }
@@ -11873,13 +11836,13 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
             nextToken = Parser_getEofToken(_env)
             for {
                 var refType LnsAny
-                refType = Ast_convExp5_3689(Lns_2DDD(self.FP.analyzeTypeSub(_env, false)))
+                refType = Ast_convExp5_3706(Lns_2DDD(self.FP.analyzeTypeSub(_env, false)))
                 if refType != nil{
                     refType_260 := refType.(*Ast_RefTypeInfo)
                     genericRefList.Insert(Ast_RefTypeInfo2Stem(refType_260))
                     genericList.Insert(Ast_TypeInfo2Stem(refType_260.FP.Get_typeInfo(_env)))
                 }
-                nextToken = self.parser.GetTokenNoErr(_env)
+                nextToken = self.parser.GetTokenNoErr(_env, nil)
                 if nextToken.Txt != ","{ break }
             }
             if nextToken.Txt != ">"{
@@ -11929,7 +11892,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
                         return nil, pos, mess
                     }
                 }
-                typeInfo = Ast_convExp5_4160(Lns_2DDD(self.processInfo.FP.CreateGeneric(_env, typeInfo, genericList, self.moduleType)))
+                typeInfo = Ast_convExp5_4180(Lns_2DDD(self.processInfo.FP.CreateGeneric(_env, typeInfo, genericList, self.moduleType)))
             } else if _switch1 == Ast_TypeInfoKind__Box {
                 if genericList.Len() != 1{
                     return nil, pos, _env.GetVM().String_format("generic type count is unmatch. -- %d", []LnsAny{genericList.Len()})
@@ -11956,11 +11919,11 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
             self.parser.Pushback(_env)
             break
         }
-        token = self.parser.GetTokenNoErr(_env)
+        token = self.parser.GetTokenNoErr(_env, nil)
     }
     if token.Txt == "!"{
         typeInfo = typeInfo.FP.Get_nilableTypeInfo(_env)
-        self.parser.GetTokenNoErr(_env)
+        self.parser.GetTokenNoErr(_env, nil)
     }
     if Lns_op_not(allowDDD){
         if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__DDD{

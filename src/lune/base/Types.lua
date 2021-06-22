@@ -275,7 +275,7 @@ function TransCtrlInfo:__init()
    self.defaultAsync = false
    self.testing = false
    self.validMultiPhaseTransUnit = true
-   self.threadPerUnitThread = 5
+   self.threadPerUnitThread = false and 5 or 0
 end
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )

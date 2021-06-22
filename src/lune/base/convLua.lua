@@ -393,7 +393,7 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.targetLuaVer = targetLuaVer
    self.useIpairs = useIpairs
    
-   self.builtinSym2code = {[builtinFunc.__lns_runmode_Sync_sym] = string.format( "%d", 0), [builtinFunc.__lns_runmode_Queue_sym] = string.format( "%d", 1), [builtinFunc.__lns_runmode_Skip_sym] = string.format( "%d", 2)}
+   self.builtinSym2code = {[builtinFunc.__lns_runmode_Sync_sym] = string.format( "%d", 0), [builtinFunc.__lns_runmode_Queue_sym] = string.format( "%d", 1), [builtinFunc.__lns_runmode_Skip_sym] = string.format( "%d", 2), [builtinFunc.__lns_capability_async_sym] = "false"}
 end
 function ConvFilter:get_indent(  )
 

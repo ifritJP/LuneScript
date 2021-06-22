@@ -10,6 +10,8 @@ let unsupportStatement =
 class TransUnitRunner extend TransUnit(__Runner) {
    let funcBlockCtl:FuncBlockCtlIF;
    let mut resultMap:&Map<&FuncBlockInfo,FuncBlockResult>;
+   let srcTranUnit:&TransUnit;
+   let alreadyToSetup:__lns.Sync.Flag!;
    
    pub fn __init(
       srcTranUnit:&TransUnit,
@@ -29,12 +31,24 @@ class TransUnitRunner extend TransUnit(__Runner) {
      self.funcBlockCtl = new ListFuncBlockCtl( list );
      self.resultMap = {};
      self.nodeManager.set_managerId( managerId );
-     self.setup( srcTranUnit );
+     self.srcTranUnit = srcTranUnit;
+     self.alreadyToSetup = __lns.Sync.createFlag();
   }
 
   pub fn run() __async mut {
+     self.setup( self.srcTranUnit );
+     if! self.alreadyToSetup {
+        _exp.set();
+     }
+     
      self.resultMap = self.processFuncBlockInfo(
         self.funcBlockCtl, self.parser.getStreamName() );
+  }
+
+  pub fn waitToSetup() {
+     if! self.alreadyToSetup {
+        _exp.wait();
+     }
   }
 
   pub fn get() mut : &Map<&FuncBlockInfo,FuncBlockResult> {
@@ -367,7 +381,13 @@ fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCas
    self.scopeAccess = .Full;
 
    self.inTestBlock = true;
-   let block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
+   let block;
+   if self.ctrl_info.testing {
+      block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
+   } else {
+      // テスト無効な場合、高速化のためテストケースを解析しない。
+      block = self.skipAndCreateDummyBlock();
+   }
    self.inTestBlock = false;
    
 
@@ -588,6 +608,11 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
          self.parser.getStreamName() );
    } else {
       foreach runner in runnerList {
+         runner.waitToSetup();
+      }
+      // runner の setup が終るのを待ってからマージしないと、
+      // runner の setup とマージが競合する。
+      foreach runner in runnerList {
          let workMap = runner.get();
          self.mergeFrom( runner, resultMap );
          foreach result, key in workMap {
@@ -720,7 +745,7 @@ pub fn TransUnitCtrl.createAST(
       children.insert( statement );
       
 
-      let mut token = self.getTokenNoErr();
+      let mut token = self.getTokenNoErr(##);
       if token ~= Parser.getEofToken() {
          self.error( "%s:%d:%d:(%s) not eof -- %s"
                      ( self.parser.getStreamName(),
@@ -749,7 +774,7 @@ pub fn TransUnitCtrl.createAST(
 
          lastStatement = self.analyzeStatementListSubfile( children );
 
-         token = self.getTokenNoErr();
+         token = self.getTokenNoErr(##);
          if token ~= Parser.getEofToken() {
             Util.err( "unknown:%d:%d:(%s) %s"
                       ( token.pos.lineNo, token.pos.column,

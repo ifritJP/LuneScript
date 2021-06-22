@@ -771,7 +771,17 @@ function MacroCtrl:clone(  )
    
    
    for key, srcInfo in pairs( self.declMacroInfoSrcMap ) do
-      local macroObj = _lune.unwrap( runLuaOnLnsToMacroProc( srcInfo:get_luaCode(), srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
+      local macroObj
+      
+      do
+         local luaCode = srcInfo:get_luaCode()
+         if luaCode ~= nil then
+            macroObj = _lune.unwrap( runLuaOnLnsToMacroProc( luaCode, srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
+         else
+            macroObj = nil
+         end
+      end
+      
       obj.typeId2MacroInfo[key] = Nodes.DefMacroInfo.new(macroObj, srcInfo:get_declInfo(), srcInfo:get_symbol2MacroValInfoMap())
    end
    
@@ -862,7 +872,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
    
       
       local argValMap = {}
-      local macroArgValMap = {}
       local macroArgNodeList = macroInfo:getArgList(  )
       
       local macroArgName2ArgNode = {}
@@ -895,96 +904,125 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
       end
       
       
+      local macroArgValMap = {}
       
       if asyncMacro then
          
          do
             do
-               if expList ~= nil then
-                  
-                  for index, argNode in ipairs( expList:get_expList() ) do
-                     local declArgNode = macroArgNodeList[index]
-                     macroArgName2ArgNode[declArgNode:get_name()] = argNode
-                     local literal, mess = argNode:getLiteral(  )
-                     if literal ~= nil then
-                        do
-                           local val = getLiteralMacroVal( literal )
-                           if val ~= nil then
-                              argValMap[index] = val
-                              
-                              if argNode:get_expType() == Ast.builtinTypeSymbol then
-                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
-                              else
-                               
-                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+               do
+                  local func = macroInfo:get_func()
+                  if func ~= nil then
+                     if expList ~= nil then
+                        
+                        for index, argNode in ipairs( expList:get_expList() ) do
+                           local declArgNode = macroArgNodeList[index]
+                           macroArgName2ArgNode[declArgNode:get_name()] = argNode
+                           local literal, mess = argNode:getLiteral(  )
+                           if literal ~= nil then
+                              do
+                                 local val = getLiteralMacroVal( literal )
+                                 if val ~= nil then
+                                    argValMap[index] = val
+                                    
+                                    if argNode:get_expType() == Ast.builtinTypeSymbol then
+                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
+                                    else
+                                     
+                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+                                    end
+                                    
+                                 end
                               end
                               
-                           end
-                        end
-                        
-                     else
-                        errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
-                        break
-                     end
-                     
-                  end
-                  
-               end
-               
-               
-               if not errmess then
-                  
-                  local varMap = self.macroLocalVarMap
-                  if  nil == varMap then
-                     local _varMap = varMap
-                  
-                     local toListEmpty = loadCode( "return function() return {} end" )
-                     varMap = toListEmpty(  )
-                  end
-                  
-                  if innerMacro then
-                     macroArgValMap["__var"] = varMap
-                  end
-                  
-                  
-                  local func = macroInfo:get_func()
-                  local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
-                  
-                  if innerMacro then
-                     self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
-                  end
-                  
-                  
-                  for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
-                     local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
-                     if  nil == valInfo then
-                        local _valInfo = valInfo
-                     
-                        Util.err( string.format( "not found macro symbol -- %s", name) )
-                     end
-                     
-                     local typeInfo = valInfo.typeInfo
-                     
-                     local valMap
-                     
-                     do
-                        local val = macroVars[name]
-                        if val ~= nil then
-                           if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
-                              valMap = {[1] = val}
                            else
-                            
-                              valMap = val
+                              errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
+                              break
                            end
                            
-                        else
-                           valMap = {}
                         end
+                        
                      end
                      
-                     self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                     
+                     if not errmess then
+                        
+                        local varMap = self.macroLocalVarMap
+                        if  nil == varMap then
+                           local _varMap = varMap
+                        
+                           local toListEmpty = loadCode( "return function() return {} end" )
+                           varMap = toListEmpty(  )
+                        end
+                        
+                        if innerMacro then
+                           macroArgValMap["__var"] = varMap
+                        end
+                        
+                        
+                        local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
+                        
+                        if innerMacro then
+                           self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
+                        end
+                        
+                        
+                        for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
+                           local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
+                           if  nil == valInfo then
+                              local _valInfo = valInfo
+                           
+                              Util.err( string.format( "not found macro symbol -- %s", name) )
+                           end
+                           
+                           local typeInfo = valInfo.typeInfo
+                           
+                           local valMap
+                           
+                           do
+                              local val = macroVars[name]
+                              if val ~= nil then
+                                 if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
+                                    valMap = {[1] = val}
+                                 else
+                                  
+                                    valMap = val
+                                 end
+                                 
+                              else
+                                 valMap = {}
+                              end
+                           end
+                           
+                           self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                        end
+                        
+                     end
+                     
+                  else
+                     if expList ~= nil then
+                        for index, argNode in ipairs( expList:get_expList() ) do
+                           local declArgNode = macroArgNodeList[index]
+                           macroArgName2ArgNode[declArgNode:get_name()] = argNode
+                           local literal, mess = argNode:getLiteral(  )
+                           if literal ~= nil then
+                              do
+                                 local val = getLiteralMacroVal( literal )
+                                 if val ~= nil then
+                                    argValMap[index] = val
+                                 end
+                              end
+                              
+                           else
+                              errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
+                              break
+                           end
+                           
+                        end
+                        
+                     end
+                     
                   end
-                  
                end
                
             end
@@ -997,91 +1035,119 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
        
          do
             do
-               if expList ~= nil then
-                  
-                  for index, argNode in ipairs( expList:get_expList() ) do
-                     local declArgNode = macroArgNodeList[index]
-                     macroArgName2ArgNode[declArgNode:get_name()] = argNode
-                     local literal, mess = argNode:getLiteral(  )
-                     if literal ~= nil then
-                        do
-                           local val = getLiteralMacroVal( literal )
-                           if val ~= nil then
-                              argValMap[index] = val
-                              
-                              if argNode:get_expType() == Ast.builtinTypeSymbol then
-                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
-                              else
-                               
-                                 macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+               do
+                  local func = macroInfo:get_func()
+                  if func ~= nil then
+                     if expList ~= nil then
+                        
+                        for index, argNode in ipairs( expList:get_expList() ) do
+                           local declArgNode = macroArgNodeList[index]
+                           macroArgName2ArgNode[declArgNode:get_name()] = argNode
+                           local literal, mess = argNode:getLiteral(  )
+                           if literal ~= nil then
+                              do
+                                 local val = getLiteralMacroVal( literal )
+                                 if val ~= nil then
+                                    argValMap[index] = val
+                                    
+                                    if argNode:get_expType() == Ast.builtinTypeSymbol then
+                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
+                                    else
+                                     
+                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+                                    end
+                                    
+                                 end
                               end
                               
-                           end
-                        end
-                        
-                     else
-                        errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
-                        break
-                     end
-                     
-                  end
-                  
-               end
-               
-               
-               if not errmess then
-                  
-                  local varMap = self.macroLocalVarMap
-                  if  nil == varMap then
-                     local _varMap = varMap
-                  
-                     local toListEmpty = loadCode( "return function() return {} end" )
-                     varMap = toListEmpty(  )
-                  end
-                  
-                  if innerMacro then
-                     macroArgValMap["__var"] = varMap
-                  end
-                  
-                  
-                  local func = macroInfo:get_func()
-                  local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
-                  
-                  if innerMacro then
-                     self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
-                  end
-                  
-                  
-                  for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
-                     local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
-                     if  nil == valInfo then
-                        local _valInfo = valInfo
-                     
-                        Util.err( string.format( "not found macro symbol -- %s", name) )
-                     end
-                     
-                     local typeInfo = valInfo.typeInfo
-                     
-                     local valMap
-                     
-                     do
-                        local val = macroVars[name]
-                        if val ~= nil then
-                           if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
-                              valMap = {[1] = val}
                            else
-                            
-                              valMap = val
+                              errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
+                              break
                            end
                            
-                        else
-                           valMap = {}
                         end
+                        
                      end
                      
-                     self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                     
+                     if not errmess then
+                        
+                        local varMap = self.macroLocalVarMap
+                        if  nil == varMap then
+                           local _varMap = varMap
+                        
+                           local toListEmpty = loadCode( "return function() return {} end" )
+                           varMap = toListEmpty(  )
+                        end
+                        
+                        if innerMacro then
+                           macroArgValMap["__var"] = varMap
+                        end
+                        
+                        
+                        local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
+                        
+                        if innerMacro then
+                           self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
+                        end
+                        
+                        
+                        for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
+                           local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
+                           if  nil == valInfo then
+                              local _valInfo = valInfo
+                           
+                              Util.err( string.format( "not found macro symbol -- %s", name) )
+                           end
+                           
+                           local typeInfo = valInfo.typeInfo
+                           
+                           local valMap
+                           
+                           do
+                              local val = macroVars[name]
+                              if val ~= nil then
+                                 if equalsType( typeInfo, Ast.builtinTypeSymbol ) then
+                                    valMap = {[1] = val}
+                                 else
+                                  
+                                    valMap = val
+                                 end
+                                 
+                              else
+                                 valMap = {}
+                              end
+                           end
+                           
+                           self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                        end
+                        
+                     end
+                     
+                  else
+                     if expList ~= nil then
+                        for index, argNode in ipairs( expList:get_expList() ) do
+                           local declArgNode = macroArgNodeList[index]
+                           macroArgName2ArgNode[declArgNode:get_name()] = argNode
+                           local literal, mess = argNode:getLiteral(  )
+                           if literal ~= nil then
+                              do
+                                 local val = getLiteralMacroVal( literal )
+                                 if val ~= nil then
+                                    argValMap[index] = val
+                                 end
+                              end
+                              
+                           else
+                              errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), mess)
+                              break
+                           end
+                           
+                        end
+                        
+                     end
+                     
                   end
-                  
                end
                
             end
@@ -1113,7 +1179,13 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
       return nil
    end
    
-   process(  )
+   do
+      local mess = process(  )
+      if mess ~= nil then
+         return nil, mess
+      end
+   end
+   
    
    return MacroParser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
@@ -1196,13 +1268,34 @@ end
 
 function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
 
-   local luaCode = self.macroEval:evalToLuaCode( processInfo, node )
+   local luaCode
+   
    local macroObj, err
    
    local asyncFlag = validAsyncMacro and not Ast.isPubToExternal( node:get_expType():get_accessMode() )
-   macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, asyncFlag )
+   local ok
    
-   if macroObj ~= nil then
+   if node:get_declInfo():get_stmtBlock() then
+      local workCode = self.macroEval:evalToLuaCode( processInfo, node )
+      luaCode = workCode
+      macroObj, err = runLuaOnLnsToMacroProc( workCode, baseDir, asyncFlag )
+      if macroObj then
+         ok = true
+         err = nil
+      else
+       
+         ok = false
+      end
+      
+   else
+    
+      ok = true
+      macroObj, err = nil, nil
+      luaCode = nil
+   end
+   
+   
+   if ok then
       
       local remap = {}
       for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
@@ -1228,9 +1321,8 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
       self.typeId2MacroInfo[node:get_expType():get_typeId()] = macroInfo
       self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
       self.declMacroInfoSrcMap[node:get_expType():get_typeId()] = DefMacroSrc.new(luaCode, node:get_declInfo(), remap, baseDir, asyncFlag)
-      
-      err = nil
    end
+   
    
    self.symbol2ValueMapForMacro = {}
    self.isDeclaringMacro = false

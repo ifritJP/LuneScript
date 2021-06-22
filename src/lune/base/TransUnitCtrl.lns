@@ -381,7 +381,13 @@ fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCas
    self.scopeAccess = .Full;
 
    self.inTestBlock = true;
-   let block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
+   let block;
+   if self.ctrl_info.testing {
+      block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
+   } else {
+      // テスト無効な場合、高速化のためテストケースを解析しない。
+      block = self.skipAndCreateDummyBlock();
+   }
    self.inTestBlock = false;
    
 
@@ -739,7 +745,7 @@ pub fn TransUnitCtrl.createAST(
       children.insert( statement );
       
 
-      let mut token = self.getTokenNoErr();
+      let mut token = self.getTokenNoErr(##);
       if token ~= Parser.getEofToken() {
          self.error( "%s:%d:%d:(%s) not eof -- %s"
                      ( self.parser.getStreamName(),
@@ -768,7 +774,7 @@ pub fn TransUnitCtrl.createAST(
 
          lastStatement = self.analyzeStatementListSubfile( children );
 
-         token = self.getTokenNoErr();
+         token = self.getTokenNoErr(##);
          if token ~= Parser.getEofToken() {
             Util.err( "unknown:%d:%d:(%s) %s"
                       ( token.pos.lineNo, token.pos.column,

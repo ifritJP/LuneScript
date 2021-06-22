@@ -242,6 +242,12 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "__lns.capability" : {
+         // 非同期処理が可能かどうか。 lua 変換時は false。 go 変換時は true。
+         "async": { "type": [ "var" ], "typeInfo": ["bool"] },
+      },
+   },
+   {
       "__lns.Sync.Flag" : {
          "__attrib": { "type": [ "interface" ] },
          "wait": { "type": [ "method" ], "arg": [ ], "ret": [] },

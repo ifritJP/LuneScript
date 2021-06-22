@@ -30,7 +30,7 @@ import lune.base.frontInterface;
 
 _lune_control ignore_symbol_;
 
-pub form LoadFunc() __async :&stem!;
+pub form LoadFunc(...) __async :&stem!;
 
 /**
 lua コードを LuneScript コンパイラ上で動かす。

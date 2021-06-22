@@ -4,35 +4,35 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Writer bool
 var Writer__mod__ string
 // for 58
-func Writer_convExp0_829(arg1 []LnsAny) string {
+func Writer_convExp0_344(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 59
-func Writer_convExp0_847(arg1 []LnsAny) string {
+func Writer_convExp0_362(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 60
-func Writer_convExp0_865(arg1 []LnsAny) string {
+func Writer_convExp0_380(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 61
-func Writer_convExp0_883(arg1 []LnsAny) string {
+func Writer_convExp0_398(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 62
-func Writer_convExp0_901(arg1 []LnsAny) string {
+func Writer_convExp0_416(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 265
-func Writer_convExp0_1720(arg1 []LnsAny) string {
+func Writer_convExp0_1235(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 266
-func Writer_convExp0_1738(arg1 []LnsAny) string {
+func Writer_convExp0_1253(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 267
-func Writer_convExp0_1756(arg1 []LnsAny) string {
+func Writer_convExp0_1271(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 type Writer_Writer interface {
@@ -108,11 +108,11 @@ func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
     }
     var txt string
     txt = _env.GetVM().String_format("%s", []LnsAny{val})
-    txt = Writer_convExp0_829(Lns_2DDD(_env.GetVM().String_gsub(txt, "&", "&amp;")))
-    txt = Writer_convExp0_847(Lns_2DDD(_env.GetVM().String_gsub(txt, ">", "&gt;")))
-    txt = Writer_convExp0_865(Lns_2DDD(_env.GetVM().String_gsub(txt, "<", "&lt;")))
-    txt = Writer_convExp0_883(Lns_2DDD(_env.GetVM().String_gsub(txt, "\"", "&quot;")))
-    txt = Writer_convExp0_901(Lns_2DDD(_env.GetVM().String_gsub(txt, "'", "&apos;")))
+    txt = Writer_convExp0_344(Lns_2DDD(_env.GetVM().String_gsub(txt, "&", "&amp;")))
+    txt = Writer_convExp0_362(Lns_2DDD(_env.GetVM().String_gsub(txt, ">", "&gt;")))
+    txt = Writer_convExp0_380(Lns_2DDD(_env.GetVM().String_gsub(txt, "<", "&lt;")))
+    txt = Writer_convExp0_398(Lns_2DDD(_env.GetVM().String_gsub(txt, "\"", "&quot;")))
+    txt = Writer_convExp0_416(Lns_2DDD(_env.GetVM().String_gsub(txt, "'", "&apos;")))
     return txt
 }
 
@@ -416,9 +416,9 @@ func Writer_JSON_convertJsonTxt_12_(_env *LnsEnv, txt string) string {
     if txt == ""{
         return ""
     }
-    txt = Writer_convExp0_1720(Lns_2DDD(_env.GetVM().String_gsub(txt, "\"", "\\\"")))
-    txt = Writer_convExp0_1738(Lns_2DDD(_env.GetVM().String_gsub(txt, "\\", "\\\\")))
-    txt = Writer_convExp0_1756(Lns_2DDD(_env.GetVM().String_gsub(txt, "\n", "\\n")))
+    txt = Writer_convExp0_1235(Lns_2DDD(_env.GetVM().String_gsub(txt, "\"", "\\\"")))
+    txt = Writer_convExp0_1253(Lns_2DDD(_env.GetVM().String_gsub(txt, "\\", "\\\\")))
+    txt = Writer_convExp0_1271(Lns_2DDD(_env.GetVM().String_gsub(txt, "\n", "\\n")))
     return txt
 }
 

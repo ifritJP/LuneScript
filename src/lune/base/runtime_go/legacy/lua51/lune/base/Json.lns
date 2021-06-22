@@ -8,14 +8,14 @@ fn getRawTxt( token:Parser.Token ) : str {
 }
 
 fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
-   let token = parser.getTokenNoErr();
+   let token = parser.getTokenNoErr(##);
    switch token.kind {
       case .Dlmt {
          switch token.txt {
             case "{" {
                let mut map:Map<str,stem> = {};
                while true {
-                  let mut key = parser.getTokenNoErr();
+                  let mut key = parser.getTokenNoErr(##);
                   switch key.kind {
                      case .Str {
                      }
@@ -25,7 +25,7 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                               return map, true;
                            }
                            case "," {
-                              key = parser.getTokenNoErr();
+                              key = parser.getTokenNoErr(##);
                               if key.kind ~= .Str {
                                  return nil, false;
                               }
@@ -39,7 +39,7 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                         return nil, false;
                      }
                   }
-                  if parser.getTokenNoErr().txt ~= ":" {
+                  if parser.getTokenNoErr(##).txt ~= ":" {
                      return nil, false;
                   }
                   let mut val, ok = getVal( parser );
@@ -53,7 +53,7 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                let mut list:List<stem!> = [];
                let mut count = 1;
                while true {
-                  let nextToken = parser.getTokenNoErr();
+                  let nextToken = parser.getTokenNoErr(##);
                   switch nextToken.txt {
                      case "]" {
                         return list, true;

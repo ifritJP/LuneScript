@@ -416,7 +416,7 @@ function DefaultPushbackParser:createPosition( lineNo, column )
 
    return self.parser:createPosition( lineNo, column )
 end
-function DefaultPushbackParser:getTokenNoErr(  )
+function DefaultPushbackParser:getTokenNoErr( skipFlag )
 
    if #self.pushbackedList > 0 then
       self.currentToken = self.pushbackedList[#self.pushbackedList]

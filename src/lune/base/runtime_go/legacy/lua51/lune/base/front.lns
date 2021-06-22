@@ -37,6 +37,7 @@ import lune.base.Option;
 import lune.base.dumpNode;
 import lune.base.glueFilter;
 import lune.base.Depend;
+import lune.base.DependLuaOnLns;
 import lune.base.OutputDepend;
 import lune.base.Ver;
 import lune.base.LuaVer;
@@ -2069,6 +2070,8 @@ pub fn Front.exec() mut
          }
       }
       case .Exec {
+         // LuneScript の runtime をロードするために runLuaOnLns() を実行
+         DependLuaOnLns.runLuaOnLns( "", nil, false );
          let modObj = self.loadModule(
             (self.scriptPath2Module( self.option.scriptPath )) );
 
@@ -2080,7 +2083,7 @@ return function( path )
   Testing.outputAllResult( io.stdout );
 end
 ```;
-            __unsafe {
+            __luaLock {
                let loaded, mess = _load( code ## );
                when! loaded {
                   if! let mod = loaded(##) {

@@ -933,7 +933,7 @@ func Lns_AsyncParser_init(_env *LnsEnv) {
     AsyncParser_quotedCharSet = NewLnsSet([]LnsAny{"a", "b", "f", "n", "r", "t", "v", "\\", "\"", "'"})
     AsyncParser_op2Set = NewLnsSet([]LnsAny{"+", "-", "*", "/", "^", "%", "&", "~", "|", "|>>", "|<<", "..", "<", "<=", ">", ">=", "==", "~=", "and", "or", "@", "@@", "@@@", "="})
     AsyncParser_op1Set = NewLnsSet([]LnsAny{"-", "not", "#", "~", "*", "`", ",,", ",,,", ",,,,"})
-    AsyncParser_defaultPipeSize = 20
+    AsyncParser_defaultPipeSize = 100
 }
 func init() {
     init_AsyncParser = false

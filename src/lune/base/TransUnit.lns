@@ -1080,7 +1080,7 @@ alias で置き換えている元の Type → alias の型
       allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, expNode: &Nodes.Node!,
       expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ) mut : Nodes.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
-   pub fn getTokenNoErr() __async mut : &Parser.Token;
+   pub fn getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
       accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
       symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
@@ -1336,19 +1336,22 @@ pub fn TransUnit.createPosition( lineNo: int, column: int ) __async : &Parser.Po
    return self.parser.createPosition( lineNo, column );
 }
 
-fn TransUnit.getTokenNoErr() __async mut : &Parser.Token
+fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
 {
    let mut token;
 
    let mut commentList:List<&Parser.Token> = [];
-   let mut workToken = self.parser.getTokenNoErr();
+   let mut workToken = self.parser.getTokenNoErr(##);
    while workToken.kind == Parser.TokenKind.Cmnt {
       commentList.insert( workToken );
-      workToken = self.parser.getTokenNoErr();
+      workToken = self.parser.getTokenNoErr(##);
    }
    if workToken.$kind ~= .Eof {
       token = workToken;
-      if self.macroCtrl.$analyzeInfo.$mode ~= .None {
+      if self.macroCtrl.$analyzeInfo.$mode ~= .None and
+         ( not skipFlag or not self.inTestBlock or self.ctrl_info.testing )
+      {
+         // テストブロック内のマクロ展開は、テストが有効な時に行なう。
          token = self.macroCtrl.expandMacroVal(
             self.typeNameCtrl, self.scope, self, token );
       }
@@ -1371,10 +1374,10 @@ fn TransUnit.getTokenNoErr() __async mut : &Parser.Token
 
 
 fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
-   let token = self.getTokenNoErr();
+   let token = self.getTokenNoErr(##);
    if token == Parser.getEofToken() {
       if allowEof {
-         return Parser.getEofToken();
+         return token;
       }
       self.error( "EOF" );
    };
@@ -1871,9 +1874,12 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    let mut tokenList:List<&Parser.Token> = [];
    //tokenList = tokenList.__new( 1000 );
    while true {
-      let token = self.getToken( ## );
+      let token = self.getTokenNoErr( not recordToken );
       if recordToken {
          tokenList.insert( token );
+      }
+      if token.kind == .Eof {
+         self.error( "EOF" );
       }
       switch token.txt {
          case "{" {
@@ -1881,7 +1887,7 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
          }
          case "}" {
             blockDepth = blockDepth - 1;
-            if blockDepth == 0 {
+            if blockDepth <= 0 {
                break;
             }
          }
@@ -1889,8 +1895,28 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
          }
       }
    }
+   if blockDepth < 0 {
+      self.error( "mismatch '}'" );
+   }
+
    return tokenList;
 }
+
+fn TransUnit.skipAndCreateDummyBlock() mut : Nodes.BlockNode {
+   let blockToken = self.checkNextToken( "{" );
+   self.pushback();
+   let blockScope = self.pushScope( .Other ## );
+   let stmtList:List<&Nodes.Node> = [];
+   self.popScope();
+
+   self.skipBlock( false );
+   
+   return Nodes.BlockNode.create(
+      self.nodeManager, blockToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      .Func, blockScope, stmtList );
+}
+
 
 fn TransUnit.analyzeRequest( reqToken: &Parser.Token ) mut : Nodes.RequestNode
 {

@@ -100,6 +100,9 @@ pub fn createFilter( stream: oStream ) : Nodes.Filter<int>
 __test {
    import lune.base.convLua;
    import lune.base.frontInterface;
+   import lune.base.LuaVer;
+   import lune.base.Option;
+
 
    class Front extend (frontInterface.frontInterface) {
       //_lune_control default_noasync_this_class;
@@ -168,9 +171,6 @@ __test {
 }
 
 __test case1(ctrl) {
-   import lune.base.LuaVer;
-   import lune.base.Option;
-
    LuaVer.setCurVer( 53 );
 
    let mut front = new Front();

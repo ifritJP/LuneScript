@@ -1691,7 +1691,7 @@ function TransUnit:createPosition( lineNo, column )
 end
 
 
-function TransUnit:getTokenNoErr(  )
+function TransUnit:getTokenNoErr( skipFlag )
 
    local token
    
@@ -1705,7 +1705,8 @@ function TransUnit:getTokenNoErr(  )
    
    if workToken.kind ~= Parser.TokenKind.Eof then
       token = workToken
-      if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
+      if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None and (not skipFlag or not self.inTestBlock or self.ctrl_info.testing ) then
+         
          token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self.scope, self, token )
       end
       
@@ -1734,7 +1735,7 @@ function TransUnit:getToken( allowEof )
    local token = self:getTokenNoErr(  )
    if token == Parser.getEofToken(  ) then
       if allowEof then
-         return Parser.getEofToken(  )
+         return token
       end
       
       self:error( "EOF" )
@@ -2250,9 +2251,13 @@ function TransUnit:skipBlock( recordToken )
    local tokenList = {}
    
    while true do
-      local token = self:getToken(  )
+      local token = self:getTokenNoErr( not recordToken )
       if recordToken then
          table.insert( tokenList, token )
+      end
+      
+      if token.kind == Parser.TokenKind.Eof then
+         self:error( "EOF" )
       end
       
       do
@@ -2261,7 +2266,7 @@ function TransUnit:skipBlock( recordToken )
             blockDepth = blockDepth + 1
          elseif _switchExp == "}" then
             blockDepth = blockDepth - 1
-            if blockDepth == 0 then
+            if blockDepth <= 0 then
                break
             end
             
@@ -2272,7 +2277,26 @@ function TransUnit:skipBlock( recordToken )
       
    end
    
+   if blockDepth < 0 then
+      self:error( "mismatch '}'" )
+   end
+   
+   
    return tokenList
+end
+
+
+function TransUnit:skipAndCreateDummyBlock(  )
+
+   local blockToken = self:checkNextToken( "{" )
+   self:pushback(  )
+   local blockScope = self:pushScope( Ast.ScopeKind.Other )
+   local stmtList = {}
+   self:popScope(  )
+   
+   self:skipBlock( false )
+   
+   return Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, stmtList )
 end
 
 
@@ -3735,7 +3759,10 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
       self:prepareTentativeSymbol( self.scope, false, nil )
       self:analyzeStatementList( stmtList, false, "}" )
       
-      stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, stmtList )
+      if #stmtList > 0 then
+         stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, stmtList )
+      end
+      
       
       self:checkNextToken( "}" )
       
@@ -4681,7 +4708,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1718, function (  )
+         Log.log( Log.Level.Debug, __func__, 1720, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -4876,14 +4903,7 @@ function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, 
    else
     
       
-      local blockToken = self:checkNextToken( "{" )
-      self:pushback(  )
-      local blockScope = self:pushScope( Ast.ScopeKind.Other )
-      local stmtList = {}
-      self:popScope(  )
-      body = Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, stmtList )
-      
-      self:skipBlock( false )
+      body = self:skipAndCreateDummyBlock(  )
    end
    
    
@@ -11400,11 +11420,31 @@ function TransUnitRunner:__init(srcTranUnit, moduleId, importModuleInfo, macroEv
    self.funcBlockCtl = ListFuncBlockCtl.new(list)
    self.resultMap = {}
    self.nodeManager:set_managerId( managerId )
-   self:setup( srcTranUnit )
+   self.srcTranUnit = srcTranUnit
+   self.alreadyToSetup = nil
 end
 function TransUnitRunner:run(  )
 
+   self:setup( self.srcTranUnit )
+   do
+      local _exp = self.alreadyToSetup
+      if _exp ~= nil then
+         _exp:set(  )
+      end
+   end
+   
+   
    self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.parser:getStreamName(  ) )
+end
+function TransUnitRunner:waitToSetup(  )
+
+   do
+      local _exp = self.alreadyToSetup
+      if _exp ~= nil then
+         _exp:wait(  )
+      end
+   end
+   
 end
 function TransUnitRunner:get(  )
 
@@ -11707,7 +11747,16 @@ function TransUnitCtrl:analyzeTestCase( firstToken )
    self.scopeAccess = Ast.ScopeAccess.Full
    
    self.inTestBlock = true
-   local block = self:analyzeBlock( Nodes.BlockKind.Test, TentativeMode.Ignore, newScope, nil )
+   local block
+   
+   if self.ctrl_info.testing then
+      block = self:analyzeBlock( Nodes.BlockKind.Test, TentativeMode.Ignore, newScope, nil )
+   else
+    
+      
+      block = self:skipAndCreateDummyBlock(  )
+   end
+   
    self.inTestBlock = false
    
    self.scopeAccess = Ast.ScopeAccess.Normal
@@ -11918,6 +11967,11 @@ function TransUnitCtrl:processFuncBlock( streamName )
    else
     
       for __index, runner in ipairs( runnerList ) do
+         runner:waitToSetup(  )
+      end
+      
+      
+      for __index, runner in ipairs( runnerList ) do
          local workMap = runner:get(  )
          self:mergeFrom( runner, resultMap )
          for key, result in pairs( workMap ) do
@@ -11950,7 +12004,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 620, function (  )
+   Log.log( Log.Level.Log, __func__, 645, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), tostring( baseDir), tostring( macroFlag), AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12020,7 +12074,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
       
       
-      Log.log( Log.Level.Log, __func__, 692, function (  )
+      Log.log( Log.Level.Log, __func__, 717, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), tostring( moduleTypeInfo), tostring( moduleTypeInfo:get_scope()))
       end )

@@ -849,7 +849,7 @@ pub alge MacroStatement {
    Local(Luaval<macroStatmentProc>),
 }
 pub abstract class MacroInfo {
-   let func: Luaval<macroStatmentProc> {pub};
+   let func: Luaval<macroStatmentProc>! {pub};
    let symbol2MacroValInfoMap: Map<str,MacroValInfo> {pub};
    pub abstract fn getArgList():&List<&MacroArgInfo>;
    pub abstract fn getTokenList():&List<&Parser.Token>;
@@ -2875,7 +2875,7 @@ pub class DefMacroInfo extend MacroInfo {
       return self.declInfo.$tokenList;
    }
    
-   pub fn __init( func: Luaval<macroStatmentProc>, declInfo: DeclMacroInfo, 
+   pub fn __init( func: Luaval<macroStatmentProc>!, declInfo: DeclMacroInfo, 
                   symbol2MacroValInfoMap: Map<str,MacroValInfo> )
    {
       super( func, symbol2MacroValInfoMap );
@@ -2984,11 +2984,11 @@ __test {
       let mut processInfo = Ast.createProcessInfo( true, true, false );
       let mut scope = new Ast.Scope( processInfo, nil, .Other ##);
 
-      let printToken = parser.getTokenNoErr(); // print
-      parser.getTokenNoErr(); // (
-      let hogeToken = parser.getTokenNoErr(); // 'hoge'
-      parser.getTokenNoErr(); // )
-      parser.getTokenNoErr(); // ;
+      let printToken = parser.getTokenNoErr(##); // print
+      parser.getTokenNoErr(##); // (
+      let hogeToken = parser.getTokenNoErr(##); // 'hoge'
+      parser.getTokenNoErr(##); // )
+      parser.getTokenNoErr(##); // ;
 
       let symbol = unwrap scope.addFunc(
          processInfo, nil, Ast.builtinTypeForm, .Global, true, false);

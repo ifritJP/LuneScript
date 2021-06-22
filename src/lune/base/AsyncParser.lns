@@ -212,7 +212,7 @@ pub class AsyncItem extend (__AsyncItem,Mapping) {
    pub let list : &List<&Types.Token>;
 }
 
-let mut defaultPipeSize = 20;
+let mut defaultPipeSize = 100;
 pub fn setDefaultPipeSize( size:int ) {
    defaultPipeSize = size;
 }

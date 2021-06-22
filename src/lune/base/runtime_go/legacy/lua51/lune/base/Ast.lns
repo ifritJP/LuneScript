@@ -7785,17 +7785,17 @@ class TypeAnalyzer {
 pub fn TypeAnalyzer.analyzeTypeSub( allowDDD:bool ) __noasync mut :
    &RefTypeInfo!, &Parser.Position!, str!
 {
-   let firstToken = self.parser.getTokenNoErr();
+   let firstToken = self.parser.getTokenNoErr(##);
    let mut token = firstToken;
    let mut refFlag = false;
    if token.txt == "&" {
       refFlag = true;
-      token = self.parser.getTokenNoErr();
+      token = self.parser.getTokenNoErr(##);
    }
    let mut mutFlag = false;
    if token.txt == "mut" {
       mutFlag = true;
-      token = self.parser.getTokenNoErr();
+      token = self.parser.getTokenNoErr(##);
    }
    // builtin の型名などは _ で始まることもあるので、シンボル名チェックしない
    // self.checkSymbol( token, .MustNot_ );
@@ -7836,11 +7836,11 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
    }
    
 
-   let mut token = self.parser.getTokenNoErr();
+   let mut token = self.parser.getTokenNoErr(##);
    
    if token.consecutive and token.txt == "!" {
       typeInfo = typeInfo.$nilableTypeInfo;
-      token = self.parser.getTokenNoErr();
+      token = self.parser.getTokenNoErr(##);
    }
 
    macro _checkToken( workToken:sym, oneChar:str ) {
@@ -7861,7 +7861,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             typeInfo = self.processInfo.createArray(
                self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
          }
-         token = self.parser.getTokenNoErr();
+         token = self.parser.getTokenNoErr(##);
          _checkToken( token, ']' );
       }
       elseif token.txt == "<" {
@@ -7873,7 +7873,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
                genericRefList.insert( refType );
                genericList.insert( refType.$typeInfo );
             }
-            nextToken = self.parser.getTokenNoErr();
+            nextToken = self.parser.getTokenNoErr(##);
          } nextToken.txt ~= ",";
          _checkToken( nextToken, '>' );
 
@@ -7950,11 +7950,11 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
          self.parser.pushback();
          break;
       }
-      token = self.parser.getTokenNoErr();
+      token = self.parser.getTokenNoErr(##);
    }
    if token.txt == "!" {
       typeInfo = typeInfo.get_nilableTypeInfo();
-      self.parser.getTokenNoErr();
+      self.parser.getTokenNoErr(##);
    }
 
    if not allowDDD {

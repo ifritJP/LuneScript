@@ -108,20 +108,20 @@ func Option_convExp0_68(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 334
-func Option_convExp0_1007(arg1 []LnsAny) LnsAny {
+func Option_convExp0_902(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 329
-func Option_convExp0_1014(arg1 []LnsAny) LnsAny {
+func Option_convExp0_909(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 224
-func Option_convExp0_816(arg1 []LnsAny) LnsAny {
+func Option_convExp0_711(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 52: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 11307
+    return 11356
 }
 
 // 81: decl @lune.@base.@Option.getRuntimeModule
@@ -134,15 +134,15 @@ func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_142 := path.(string)
-        if path_142 != ""{
-            lune_path = path_142
+        path_140 := path.(string)
+        if path_140 != ""{
+            lune_path = path_140
         }
     }
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Option_convExp0_816(Lns_2DDD(Lns_io_open(lune_path, "w")))
+        _fileObj := Option_convExp0_711(Lns_2DDD(Lns_io_open(lune_path, "w")))
         if _fileObj == nil{
             return _env.GetVM().String_format("failed to open -- %s", []LnsAny{lune_path})
         } else {
@@ -172,15 +172,15 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
     var index LnsInt
     index = 1
     {
-        _file := Option_convExp0_1014(Lns_2DDD(Lns_io_open("lune.js", "r")))
+        _file := Option_convExp0_909(Lns_2DDD(Lns_io_open("lune.js", "r")))
         if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             {
-                _projInfo := Option_convExp0_1007(Lns_2DDD(Option_ProjInfo1215__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
+                _projInfo := Option_convExp0_902(Lns_2DDD(Option_ProjInfo1203__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( file.Read(_env, "*a")) ||
                     _env.SetStackVal( "") ).(string))),nil)))
                 if !Lns_IsNil( _projInfo ) {
-                    projInfo := _projInfo.(*Option_ProjInfo1215)
+                    projInfo := _projInfo.(*Option_ProjInfo1203)
                     var workArgList *LnsList
                     workArgList = NewLnsList([]LnsAny{})
                     for _, _arg := range( projInfo.Cmd_option.Items ) {
@@ -493,8 +493,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         index = index + 1
     }
     if uptodateOpt != nil{
-        uptodateOpt_295 := uptodateOpt.(string)
-        if _switch5 := uptodateOpt_295; _switch5 == "force" {
+        uptodateOpt_293 := uptodateOpt.(string)
+        if _switch5 := uptodateOpt_293; _switch5 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
         } else if _switch5 == "forceAll" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__ForceAll_Obj
@@ -503,7 +503,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         } else if _switch5 == "touch" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_295)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_293)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -577,12 +577,12 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
     option.UseLuneModule = Option_getRuntimeModule(_env)
     option.UseIpairs = true
     if projDir != nil{
-        projDir_325 := projDir.(string)
-        if projDir_325 != "/"{
-            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_325,"/$", nil, nil))){
-                option.projDir = projDir_325 + "/"
+        projDir_323 := projDir.(string)
+        if projDir_323 != "/"{
+            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_323,"/$", nil, nil))){
+                option.projDir = projDir_323 + "/"
             } else { 
-                option.projDir = projDir_325
+                option.projDir = projDir_323
             }
         }
     }
@@ -757,11 +757,11 @@ func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_133 := relPath.(string)
+                relPath_131 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_133})
+                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_131})
                 } else { 
-                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_133})
+                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_131})
                 }
             } else {
                 filePath = path
@@ -781,71 +781,71 @@ func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
 
 
 // declaration Class -- ProjInfo
-type Option_ProjInfo1215Mtd interface {
+type Option_ProjInfo1203Mtd interface {
     ToMap() *LnsMap
 }
-type Option_ProjInfo1215 struct {
+type Option_ProjInfo1203 struct {
     Cmd_option *LnsList
-    FP Option_ProjInfo1215Mtd
+    FP Option_ProjInfo1203Mtd
 }
-func Option_ProjInfo12152Stem( obj LnsAny ) LnsAny {
+func Option_ProjInfo12032Stem( obj LnsAny ) LnsAny {
     if obj == nil {
         return nil
     }
-    return obj.(*Option_ProjInfo1215).FP
+    return obj.(*Option_ProjInfo1203).FP
 }
-type Option_ProjInfo1215DownCast interface {
-    ToOption_ProjInfo1215() *Option_ProjInfo1215
+type Option_ProjInfo1203DownCast interface {
+    ToOption_ProjInfo1203() *Option_ProjInfo1203
 }
-func Option_ProjInfo1215DownCastF( multi ...LnsAny ) LnsAny {
+func Option_ProjInfo1203DownCastF( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 { return nil }
     obj := multi[ 0 ]
     if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Option_ProjInfo1215DownCast)
-    if ok { return work.ToOption_ProjInfo1215() }
+    work, ok := obj.(Option_ProjInfo1203DownCast)
+    if ok { return work.ToOption_ProjInfo1203() }
     return nil
 }
-func (obj *Option_ProjInfo1215) ToOption_ProjInfo1215() *Option_ProjInfo1215 {
+func (obj *Option_ProjInfo1203) ToOption_ProjInfo1203() *Option_ProjInfo1203 {
     return obj
 }
-func NewOption_ProjInfo1215(_env *LnsEnv, arg1 *LnsList) *Option_ProjInfo1215 {
-    obj := &Option_ProjInfo1215{}
+func NewOption_ProjInfo1203(_env *LnsEnv, arg1 *LnsList) *Option_ProjInfo1203 {
+    obj := &Option_ProjInfo1203{}
     obj.FP = obj
-    obj.InitOption_ProjInfo1215(_env, arg1)
+    obj.InitOption_ProjInfo1203(_env, arg1)
     return obj
 }
-func (self *Option_ProjInfo1215) InitOption_ProjInfo1215(_env *LnsEnv, arg1 *LnsList) {
+func (self *Option_ProjInfo1203) InitOption_ProjInfo1203(_env *LnsEnv, arg1 *LnsList) {
     self.Cmd_option = arg1
 }
-func (self *Option_ProjInfo1215) ToMapSetup( obj *LnsMap ) *LnsMap {
+func (self *Option_ProjInfo1203) ToMapSetup( obj *LnsMap ) *LnsMap {
     obj.Items["cmd_option"] = Lns_ToCollection( self.Cmd_option )
     return obj
 }
-func (self *Option_ProjInfo1215) ToMap() *LnsMap {
+func (self *Option_ProjInfo1203) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Option_ProjInfo1215__fromMap_2_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Option_ProjInfo1215_FromMap( arg1, paramList )
+func Option_ProjInfo1203__fromMap_2_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Option_ProjInfo1203_FromMap( arg1, paramList )
 }
-func Option_ProjInfo1215__fromStem_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Option_ProjInfo1215_FromMap( arg1, paramList )
+func Option_ProjInfo1203__fromStem_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Option_ProjInfo1203_FromMap( arg1, paramList )
 }
-func Option_ProjInfo1215_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := Option_ProjInfo1215_FromMapSub(obj,false, paramList);
+func Option_ProjInfo1203_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
+    _,conv,mess := Option_ProjInfo1203_FromMapSub(obj,false, paramList);
     return conv,mess
 }
-func Option_ProjInfo1215_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+func Option_ProjInfo1203_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
     var objMap *LnsMap
     if work, ok := obj.(*LnsMap); !ok {
        return false, nil, "no map -- " + Lns_ToString(obj)
     } else {
        objMap = work
     }
-    newObj := &Option_ProjInfo1215{}
+    newObj := &Option_ProjInfo1203{}
     newObj.FP = newObj
-    return Option_ProjInfo1215_FromMapMain( newObj, objMap, paramList )
+    return Option_ProjInfo1203_FromMapMain( newObj, objMap, paramList )
 }
-func Option_ProjInfo1215_FromMapMain( newObj *Option_ProjInfo1215, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+func Option_ProjInfo1203_FromMapMain( newObj *Option_ProjInfo1203, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
     if ok,conv,mess := Lns_ToListSub( objMap.Items["cmd_option"], false, []Lns_ToObjParam{Lns_ToObjParam{
             Lns_ToStrSub, false,nil}}); !ok {
        return false,nil,"cmd_option:" + mess.(string)

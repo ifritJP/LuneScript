@@ -416,7 +416,7 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    
    self.noneNode = Nodes.NoneNode.create( self.nodeManager, Parser.noneToken.pos, false, false, {Ast.builtinTypeNone} )
    
-   self.builtin2code = {[self.builtinFuncs.__lns_runmode_Sync_sym] = string.format( "%d", 0), [self.builtinFuncs.__lns_runmode_Queue_sym] = string.format( "%d", 1), [self.builtinFuncs.__lns_runmode_Skip_sym] = string.format( "%d", 2)}
+   self.builtin2code = {[self.builtinFuncs.__lns_runmode_Sync_sym] = string.format( "%d", 0), [self.builtinFuncs.__lns_runmode_Queue_sym] = string.format( "%d", 1), [self.builtinFuncs.__lns_runmode_Skip_sym] = string.format( "%d", 2), [self.builtinFuncs.__lns_capability_async_sym] = "true"}
    
    self.indexer = NodeIndexer.Indexer.new(self.processInfo)
 end

@@ -49,7 +49,7 @@ pub abstract class Parser {
 }
 
 pub interface PushbackParser {
-   pub fn getTokenNoErr() mut : &Token;
+   pub fn getTokenNoErr(skipFlag:bool!) mut : &Token;
    pub fn pushback() mut;
    pub fn pushbackToken( token: &Token ) mut;
    pub fn pushbackStr( name:str, statement: str, pos:&Types.Position ) mut;
@@ -251,7 +251,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       return self.parser.createPosition( lineNo, column );
    }
 
-   pub fn getTokenNoErr() mut : &Token {
+   pub fn getTokenNoErr(skipFlag:bool!) mut : &Token {
       if #self.pushbackedList > 0 {
          self.currentToken = self.pushbackedList[ #self.pushbackedList ];
          self.pushbackedList.remove(##);
@@ -551,38 +551,38 @@ fn func():int {
          new StreamParser(Types.ParserSrc.LnsCode(
             "1 2 3 4 5", "test", nil ), false ## ) );
 
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "1" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "2" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "3" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "1" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "2" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "3" );
       parser.pushback(); // 3
       parser.pushback(); // 2
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "2" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "3" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "4" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "2" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "3" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "4" );
       parser.pushbackStr( "dummy", "a b", parser.createPosition( 0, -1 ) );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "a" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "b" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "a" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "b" );
       parser.pushback(); // b
       parser.pushback(); // a
       parser.pushback(); // 4
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "4" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "a" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "4" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "a" );
       parser.newPushback(
          [ new Token( .Symb, "z", parser.createPosition( 0, -1 ), false, [] ),
            new Token( .Symb, "y", parser.createPosition( 0, -1 ), false, [] ) ] );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "z" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "y" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "b" );
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "5" );
-      __t._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
-      __t._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "z" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "y" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "b" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "5" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).kind, TokenKind.Eof );
+      __t._eq( ctrl, parser.getTokenNoErr(##).kind, TokenKind.Eof );
    }
    {
       let mut parser = new DefaultPushbackParser(
          new StreamParser(Types.ParserSrc.LnsCode( "int", "test", nil ), false ## ) );
 
-      __t._eq( ctrl, parser.getTokenNoErr().txt, "int" );
-      __t._eq( ctrl, parser.getTokenNoErr().kind, TokenKind.Eof );
+      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "int" );
+      __t._eq( ctrl, parser.getTokenNoErr(##).kind, TokenKind.Eof );
    }
 
    {
