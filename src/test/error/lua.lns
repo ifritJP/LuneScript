@@ -1,3 +1,4 @@
+let val:Luaval<&stem> = nil;
 interface IF {
    pub fn func(): Luaval<&List<str>>;
 }

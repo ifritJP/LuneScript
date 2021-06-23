@@ -367,7 +367,7 @@ pub class MacroCtrl
       obj.useModuleMacroSet.or( self.useModuleMacroSet );
       _cloneMap( obj.typeId2MacroInfo, self.typeId2MacroInfo );
       foreach srcInfo, key in self.declMacroInfoSrcMap {
-         let macroObj;
+         let macroObj:Luaval<Nodes.macroStatmentProc>!;
          if! let luaCode = srcInfo.$luaCode {
             macroObj = unwrap runLuaOnLnsToMacroProc(
                luaCode, srcInfo.$baseDir, srcInfo.$asyncFlag );

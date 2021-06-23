@@ -5077,6 +5077,10 @@ enum LuavalConvKind {
    ToLua,
 }
 
+pub let builtinTypeNil:&TypeInfo = registBuiltin(
+   "Nil", "nil", .Prim, nil, new NilTypeInfo( rootProcessInfo ), headTypeInfo, nil );
+
+
 /**
 typeInfo の Luaval を生成可能かどうかを調べる。
 
@@ -5717,8 +5721,8 @@ pub fn ProcessInfo.createDDD(
 
 
 
-pub let builtinTypeNil:&TypeInfo = registBuiltin(
-   "Nil", "nil", .Prim, nil, new NilTypeInfo( rootProcessInfo ), headTypeInfo, nil );
+// pub let builtinTypeNil:&TypeInfo = registBuiltin(
+//    "Nil", "nil", .Prim, nil, new NilTypeInfo( rootProcessInfo ), headTypeInfo, nil );
 
    
 
@@ -6303,6 +6307,10 @@ pub class ExtTypeInfo extend TypeInfo {
          return self.extedType.canEvalWith(
             processInfo, otherExtedType, canEvalType, alt2type )**;
       }
+      if other.$nilable {
+         return false, nil;
+      }
+      
       if! failCreateLuavalWith( other, .ToLua, true ) {
          return false, _exp;
       }

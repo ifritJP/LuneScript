@@ -7011,6 +7011,11 @@ LuavalConvKind.ToLua = 1
 LuavalConvKind._val2NameMap[1] = 'ToLua'
 LuavalConvKind.__allList[2] = LuavalConvKind.ToLua
 
+
+local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilTypeInfo.new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
+_moduleObj.builtinTypeNil = builtinTypeNil
+
+
 local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
 
    
@@ -7702,10 +7707,6 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
 end
 
 
-local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilTypeInfo.new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
-_moduleObj.builtinTypeNil = builtinTypeNil
-
-
 local builtinTypeDDD = registBuiltin( "DDD", "...", TypeInfoKind.DDD, rootProcessInfo:createDDD( _moduleObj.builtinTypeStem_, true, false ), nil, _moduleObj.headTypeInfo, nil )
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
@@ -8316,6 +8317,11 @@ function ExtTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
          return self.extedType:canEvalWith( processInfo, otherExtedType, canEvalType, alt2type )
       end
    end
+   
+   if other:get_nilable() then
+      return false, nil
+   end
+   
    
    do
       local _exp = failCreateLuavalWith( other, LuavalConvKind.ToLua, true )
