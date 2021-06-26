@@ -27,7 +27,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
     if len(txt) == 0{
         return txt
     }
-    if _switch1 := LnsInt(txt[1-1]); _switch1 == 39 || _switch1 == 34 {
+    if _switch0 := LnsInt(txt[1-1]); _switch0 == 39 || _switch0 == 34 {
     } else {
         return _env.GetVM().String_sub(txt,4, len(txt) - 3)
     }
@@ -61,7 +61,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
         } else if workChar == 92{
             var quote LnsInt
             quote = LnsInt(workTxt[endIndex + 1-1])
-            if _switch2 := quote; _switch2 == 39 || _switch2 == 34 {
+            if _switch1 := quote; _switch1 == 39 || _switch1 == 34 {
                 retTxt = _env.GetVM().String_format("%s%s%c", []LnsAny{retTxt, _env.GetVM().String_sub(workTxt,setIndex, endIndex - 1), quote})
             } else {
                 retTxt = _env.GetVM().String_format("%s%s", []LnsAny{retTxt, _env.GetVM().String_sub(workTxt,setIndex, endIndex + 1)})
@@ -98,21 +98,21 @@ func Parser_quoteStr(_env *LnsEnv, txt string) string {
     var part string
     part = "\""
     {
-        var _forFrom1 LnsInt = 1
-        var _forTo1 LnsInt = len(work)
-        for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-            index := _forWork1
+        var _forFrom0 LnsInt = 1
+        var _forTo0 LnsInt = len(work)
+        for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+            index := _forWork0
             var char LnsInt
             char = LnsInt(work[index-1])
-            if _switch1 := char; _switch1 == 10 {
+            if _switch0 := char; _switch0 == 10 {
                 part = part + "\\n"
-            } else if _switch1 == 13 {
+            } else if _switch0 == 13 {
                 part = part + "\\r"
-            } else if _switch1 == 9 {
+            } else if _switch0 == 9 {
                 part = part + "\\t"
-            } else if _switch1 == 34 {
+            } else if _switch0 == 34 {
                 part = part + "\\\""
-            } else if _switch1 == 92 {
+            } else if _switch0 == 92 {
                 part = part + "\\\\"
             } else {
                 part = part + _env.GetVM().String_format("%c", []LnsAny{char})
@@ -655,38 +655,38 @@ func (self *Parser_DefaultPushbackParser) PushbackStr(_env *LnsEnv, name string,
         }
     }
     {
-        var _forFrom1 LnsInt = list.Len()
-        var _forTo1 LnsInt = 1
-        _forWork1 := _forFrom1
-        _forDelta1 := -1
+        var _forFrom0 LnsInt = list.Len()
+        var _forTo0 LnsInt = 1
+        _forWork0 := _forFrom0
+        _forDelta0 := -1
         for {
-            if _forDelta1 > 0 {
-               if _forWork1 > _forTo1 { break }
+            if _forDelta0 > 0 {
+               if _forWork0 > _forTo0 { break }
             } else {
-               if _forWork1 < _forTo1 { break }
+               if _forWork0 < _forTo0 { break }
             }
-            index := _forWork1
+            index := _forWork0
             self.FP.PushbackToken(_env, list.GetAt(index).(Types_TokenDownCast).ToTypes_Token())
-            _forWork1 += _forDelta1
+            _forWork0 += _forDelta0
         }
     }
 }
 // 315: decl @lune.@base.@Parser.DefaultPushbackParser.newPushback
 func (self *Parser_DefaultPushbackParser) NewPushback(_env *LnsEnv, tokenList *LnsList) {
     {
-        var _forFrom1 LnsInt = tokenList.Len()
-        var _forTo1 LnsInt = 1
-        _forWork1 := _forFrom1
-        _forDelta1 := -1
+        var _forFrom0 LnsInt = tokenList.Len()
+        var _forTo0 LnsInt = 1
+        _forWork0 := _forFrom0
+        _forDelta0 := -1
         for {
-            if _forDelta1 > 0 {
-               if _forWork1 > _forTo1 { break }
+            if _forDelta0 > 0 {
+               if _forWork0 > _forTo0 { break }
             } else {
-               if _forWork1 < _forTo1 { break }
+               if _forWork0 < _forTo0 { break }
             }
-            index := _forWork1
+            index := _forWork0
             self.FP.PushbackToken(_env, tokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token())
-            _forWork1 += _forDelta1
+            _forWork0 += _forDelta0
         }
     }
 }
@@ -714,10 +714,10 @@ func (self *Parser_DefaultPushbackParser) GetNearCode(_env *LnsEnv) string {
     var code string
     code = ""
     {
-        var _forFrom1 LnsInt = self.usedTokenList.Len() - 30
-        var _forTo1 LnsInt = self.usedTokenList.Len()
-        for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-            index := _forWork1
+        var _forFrom0 LnsInt = self.usedTokenList.Len() - 30
+        var _forTo0 LnsInt = self.usedTokenList.Len()
+        for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+            index := _forWork0
             if index > 1{
                 var token *Types_Token
                 token = self.usedTokenList.GetAt(index).(Types_TokenDownCast).ToTypes_Token()

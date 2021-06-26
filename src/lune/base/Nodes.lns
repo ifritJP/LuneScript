@@ -1127,7 +1127,8 @@ pub enum CaseKind {
    MustFull,
 }
 _declNodeClass( "Switch", Node, false, false, true,
-                [ { "exp": "&Node" },
+                [ { "idInNS": "int" },
+                  { "exp": "&Node" },
                   { "caseList": "List<&CaseInfo>" },
                   { "default": "&BlockNode!" },
                   // case で全ての条件が網羅されているかどうか
@@ -1195,7 +1196,8 @@ _declNodeClass( "Repeat", Node, false, false, true,
 _declLoopGetBreakKind( RepeatNode, block );
 
 _declNodeClass( "For", Node, false, false, true,
-                [ { "block": "&BlockNode" },
+                [ { "idInNS": "int" },
+                  { "block": "&BlockNode" },
                   { "val": "&Ast.SymbolInfo" },
                   { "init": "&Node" },
                   { "to": "&Node" },
@@ -1206,7 +1208,8 @@ _declLoopGetBreakKind( ForNode, block );
 
 
 _declNodeClass( "Apply", Node, false, false, true,
-                [ { "varList": "&List<&Ast.SymbolInfo>" },
+                [ { "idInNS": "int" },
+                  { "varList": "&List<&Ast.SymbolInfo>" },
                   { "expList": "&ExpListNode" },
                   { "block": "&BlockNode" } ]
 );
@@ -1215,7 +1218,8 @@ _declLoopGetBreakKind( ApplyNode, block );
 
 
 _declNodeClass( "Foreach", Node, false, false, true,
-                [ { "val": "&Ast.SymbolInfo" },
+                [ { "idInNS": "int" },
+                  { "val": "&Ast.SymbolInfo" },
                   { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
                   { "block": "&BlockNode" } ]
@@ -1225,7 +1229,8 @@ _declLoopGetBreakKind( ForeachNode, block );
 
 
 _declNodeClass( "Forsort", Node, false, false, true,
-                [ { "val": "&Ast.SymbolInfo" },
+                [ { "idInNS": "int" },
+                  { "val": "&Ast.SymbolInfo" },
                   { "key": "&Ast.SymbolInfo!" },
                   { "exp": "&Node" },
                   { "block": "&BlockNode" },
@@ -1770,6 +1775,8 @@ pub class DeclFuncInfo {
    let retTypeNodeList: &List<&RefTypeNode> { pub };
    let mut has__func__Symbol:bool { pub, pub };
    let overrideFlag: bool { pub };
+   // この関数を構成する stmt 数。
+   let stmtNum:int {pub};
 }
 
 pub static fn DeclFuncInfo.createFrom(
@@ -1779,7 +1786,7 @@ pub static fn DeclFuncInfo.createFrom(
       info.$kind, info.classTypeInfo, info.declClassNode, info.outsizeOfClass,
       name, symbol, info.argList, info.staticFlag, info.accessMode,
       info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList,
-      info.has__func__Symbol, info.overrideFlag );
+      info.has__func__Symbol, info.overrideFlag, info.stmtNum );
 }
 
 _declNodeClass( "DeclForm", Node, false, false, true,
@@ -2078,7 +2085,8 @@ pub class MatchCase {
 }
 
 _declNodeClass( "Match", Node, false, false, true,
-                [ { "val": "&Node" },
+                [ { "idInNS": "int" },
+                  { "val": "&Node" },
                   { "algeTypeInfo": "&Ast.AlgeTypeInfo" },
                   { "caseList": "&List<&MatchCase>" },
                   { "defaultBlock": "&Node!" },

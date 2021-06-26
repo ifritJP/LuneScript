@@ -522,9 +522,9 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
     }
-    if _switch1 := LnsInt(self.Txt[1-1]); _switch1 == 39 || _switch1 == 34 {
+    if _switch0 := LnsInt(self.Txt[1-1]); _switch0 == 39 || _switch0 == 34 {
         return _env.GetVM().String_sub(self.Txt,2, len(self.Txt) - 1)
-    } else if _switch1 == 96 {
+    } else if _switch0 == 96 {
         return _env.GetVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
     panic(_env.GetVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
@@ -540,11 +540,11 @@ func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
         {
-            _applyForm1, _applyParam1, _applyPrev1 := _env.GetVM().String_gmatch(self.Txt,"\n")
+            _applyForm0, _applyParam0, _applyPrev0 := _env.GetVM().String_gmatch(self.Txt,"\n")
             for {
-                _applyWork1 := _applyForm1.(*Lns_luaValue).Call( Lns_2DDD( _applyParam1, _applyPrev1 ) )
-                _applyPrev1 = Lns_getFromMulti(_applyWork1,0)
-                if Lns_IsNil( _applyPrev1 ) { break }
+                _applyWork0 := _applyForm0.(*Lns_luaValue).Call( Lns_2DDD( _applyParam0, _applyPrev0 ) )
+                _applyPrev0 = Lns_getFromMulti(_applyWork0,0)
+                if Lns_IsNil( _applyPrev0 ) { break }
                 count = count + 1
             }
         }

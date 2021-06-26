@@ -240,8 +240,6 @@ local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local LnsOpt = _lune.loadModule( 'lune.base.Option' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
-local NodeIndexer = _lune.loadModule( 'lune.base.NodeIndexer' )
-
 local MaxNilAccNum = 3
 
 local Opt = {}
@@ -418,7 +416,6 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    
    self.builtin2code = {[self.builtinFuncs.__lns_runmode_Sync_sym] = string.format( "%d", 0), [self.builtinFuncs.__lns_runmode_Queue_sym] = string.format( "%d", 1), [self.builtinFuncs.__lns_runmode_Skip_sym] = string.format( "%d", 2), [self.builtinFuncs.__lns_capability_async_sym] = "true"}
    
-   self.indexer = NodeIndexer.Indexer.new(self.processInfo)
 end
 function convFilter:getVM( typeInfo )
 
@@ -2433,9 +2430,6 @@ end
 function convFilter:processRoot( node, opt )
 
    
-   self.indexer:start( node, {[Nodes.NodeKind.get_Switch()] = true, [Nodes.NodeKind.get_Match()] = true, [Nodes.NodeKind.get_For()] = true, [Nodes.NodeKind.get_Foreach()] = true, [Nodes.NodeKind.get_Forsort()] = true, [Nodes.NodeKind.get_Apply()] = true} )
-   
-   
    for __index, importNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       local info = importNode:get_info()
       self.moduleType2SymbolMap[info:get_moduleTypeInfo()] = info:get_symbolInfo()
@@ -2786,8 +2780,6 @@ function convFilter:processRoot( node, opt )
       end
       
    end
-   
-   
    
    
    
@@ -4179,7 +4171,8 @@ end
 
 function convFilter:processSwitch( node, opt )
 
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   
+   local nodeIndex = node:get_idInNS()
    local valName = string.format( "_switch%d", nodeIndex)
    self:write( string.format( "if %s := ", valName) )
    filter( node:get_exp(), self, node )
@@ -4236,7 +4229,8 @@ function convFilter:processMatch( node, opt )
    end
    local val
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   
+   local nodeIndex = node:get_idInNS()
    if hasAccessing(  ) then
       val = string.format( "_matchExp%d", nodeIndex)
       self:write( string.format( "switch %s := ", val) )
@@ -4310,7 +4304,7 @@ function convFilter:processFor( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   local nodeIndex = node:get_idInNS()
    
    local fromSym = string.format( "_forFrom%d", nodeIndex)
    local toSym = string.format( "_forTo%d", nodeIndex)
@@ -4377,7 +4371,7 @@ function convFilter:processApply( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   local nodeIndex = node:get_idInNS()
    
    local formSym = string.format( "_applyForm%d", nodeIndex)
    local paramSym = string.format( "_applyParam%d", nodeIndex)
@@ -4447,7 +4441,26 @@ end
 function convFilter:outputForeachLua( node, sortFlag, exp, val, key, block )
    local __func__ = '@lune.@base.@convGo.convFilter.outputForeachLua'
 
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   
+   local nodeIndex
+   
+   do
+      local _exp = _lune.__Cast( node, 3, Nodes.ForeachNode )
+      if _exp ~= nil then
+         nodeIndex = _exp:get_idInNS()
+      else
+         do
+            local _exp = _lune.__Cast( node, 3, Nodes.ForsortNode )
+            if _exp ~= nil then
+               nodeIndex = _exp:get_idInNS()
+            else
+               Util.err( string.format( "illegal node -- %s", Nodes.getNodeKindName( node:get_kind() )) )
+            end
+         end
+         
+      end
+   end
+   
    
    do
       local _switchExp = exp:get_expType():get_extedType():get_kind()
@@ -4745,7 +4758,7 @@ function convFilter:processForsort( node, opt )
    end
    
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   local nodeIndex = node:get_idInNS()
    
    self:writeln( "{" )
    self:pushIndent(  )

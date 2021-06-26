@@ -368,7 +368,7 @@ complete は false を指定する。
 
          macro _syncToParent( set:sym ) {
             foreach symbolInfo in self.,,set {
-               if symbolInfo.$scope ~= self.scope {
+               if symbolInfo.$scope ~= self.$scope {
                   parent.,,set.add( symbolInfo );
                }
             }
@@ -530,6 +530,7 @@ class AccessSymbolSetQueue {
 
 class FuncBlockInfo extend (__AsyncItem) {
    let declFuncInfo:Nodes.DeclFuncInfo {pub};
+   let nsInfo:TransUnitIF.NSInfo {pub};
    let funcType:&Ast.TypeInfo{pub};
    let typeDataAccessor:Ast.TypeDataAccessor{pub};
    let mut funcScope:Ast.Scope {pub,local};
@@ -882,8 +883,8 @@ alias で置き換えている元の Type → alias の型
       self.moduleType = Ast.headTypeInfo;
       self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
       // self.subfileList = [];
-      self.topScope = self.scope;
-      self.moduleScope = self.scope;
+      self.topScope = self.$scope;
+      self.moduleScope = self.$scope;
 
       self.tentativeSymbol = new TentativeSymbol(
          nil, self.globalScope, self.moduleScope, false, nil );
@@ -1007,9 +1008,9 @@ alias で置き換えている元の Type → alias の型
    }
 
 
-   pri fn getCurrentClass() : &Ast.TypeInfo {
+   pri fn getCurrentClass() mut : &Ast.TypeInfo {
       let typeInfo = Ast.headTypeInfo;
-      let mut scope = self.scope;
+      let mut scope:&Ast.Scope = self.$scope;
       repeat {
          if! scope.$ownerTypeInfo {
             if _exp.$kind == .Class or _exp.$kind == .Module or _exp.$kind == .IF {
@@ -1028,13 +1029,13 @@ alias で置き換えている元の Type → alias の型
    {
 
       let modName = name;
-      if! self.scope.getTypeInfoChild( modName ) {
+      if! self.$scope.getTypeInfoChild( modName ) {
          self.addErrMess( pos, "multiple define -- %s" (name) );
       }
 
-      let mut parentNsInfo = self.getCurrentNSInfo();
+      let mut parentNsInfo = self.$curNsInfo;
       let mut parentInfo = parentNsInfo.$typeInfo;
-      let mut parentScope = self.scope;
+      let mut parentScope = self.$scope;
       let mut scope = self.pushScope( .Module ## );
       let mut typeInfo = self.processInfo.createExtModule(
          scope, parentInfo, parentNsInfo.$typeDataAccessor, externalFlag,
@@ -1043,7 +1044,7 @@ alias で置き換えている元の Type → alias の型
       parentScope.addExtModule( self.processInfo, name, pos, typeInfo, lazy, lang );
 
       if not self.typeId2ClassMap[ typeInfo.$typeId ] {
-         let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
+         let namespace = new Nodes.NamespaceInfo( modName, self.$scope, typeInfo );
          self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
       }
 
@@ -1086,8 +1087,8 @@ alias で置き換えている元の Type → alias の型
       symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
    fn analyzeFuncBlock(
       analyzingState:AnalyzingState, firstToken: &Parser.Token,
-      classTypeInfo:&Ast.TypeInfo!, funcTypeInfo:&Ast.TypeInfo, funcName:str,
-      funcBodyScope:Ast.Scope,
+      classTypeInfo:&Ast.TypeInfo!, funcTypeInfo:&Ast.TypeInfo,
+      funcName:str, funcBodyScope:Ast.Scope,
       retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode;
 
    pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
@@ -1157,7 +1158,7 @@ alias で置き換えている元の Type → alias の型
       if name == "_" {
          return;
       }
-      let! symbolInfo = self.scope.getSymbolTypeInfo(
+      let! symbolInfo = self.$scope.getSymbolTypeInfo(
          name, scope, self.moduleScope, self.scopeAccess )
       {
          return;
@@ -1173,14 +1174,14 @@ alias で置き換えている元の Type → alias の型
       &Ast.SymbolInfo
    {
       if not allowShadow {
-         self.checkShadowing( pos, name, self.scope );
+         self.checkShadowing( pos, name, self.$scope );
       }
 
       if self.analyzeMode == .Inquire and self.isTargetTokenPos( name, pos ) {
          self.dumpSymbolType( .Local, name, typeInfo );
       }
       
-      return unwrap self.scope.addLocalVar(
+      return unwrap self.$scope.addLocalVar(
          self.processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable );
    }
 
@@ -1353,7 +1354,7 @@ fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
       {
          // テストブロック内のマクロ展開は、テストが有効な時に行なう。
          token = self.macroCtrl.expandMacroVal(
-            self.typeNameCtrl, self.scope, self, token );
+            self.typeNameCtrl, self.$scope, self, token );
       }
       if not self.ctrl_info.compatComment {
          self.commentCtrl.addDirect( commentList );
@@ -1640,8 +1641,10 @@ fn TransUnit.analyzeStatementList(
    return lastStatement, lastLineNo;
 }
 
-fn TransUnit.analyzeStatementListSubfile( stmtList: List<&Nodes.Node> ) mut : &Nodes.Node! {
-   let statement = self.analyzeStatement(##);
+fn TransUnit.analyzeStatementListSubfile(
+   stmtList: List<&Nodes.Node> ) mut : &Nodes.Node!
+{
+   let statement = self.analyzeStatement( ##);
 
    if! statement {
       if _exp.$kind ~= Nodes.NodeKind.$Subfile {
@@ -1789,31 +1792,33 @@ enum TentativeMode {
 }
 
 fn TransUnit.analyzeBlock(
-   blockKind: Nodes.BlockKind, tentativeMode:TentativeMode, scope: Ast.Scope!,
+   blockKind: Nodes.BlockKind,
+   tentativeMode:TentativeMode, scope: Ast.Scope!,
    refAccessSymPosList:&List<RefAccessSymPos>! ) mut : Nodes.BlockNode
 {
-   let mut backScope = self.scope;
+   let mut backScope = self.$scope;
    when! scope {
-      self.scope = scope;
+      self.setScope( scope, .FromScope );
    }
    else {
       self.pushScope( .Other ## );
    }
-   let mut blockScope = self.scope;
+   let mut blockScope = self.$scope;
 
    blockScope.addIgnoredVar( self.processInfo );
 
-   let mut nsInfo = self.getCurrentNSInfo();
-
+   //let mut nsInfo = self.$curNsInfo;
+   let mut nsInfo = self.$curNsInfo;
+   
    switch tentativeMode {
       case .Loop {
-         self.prepareTentativeSymbol( self.scope, true, refAccessSymPosList );
+         self.prepareTentativeSymbol( self.$scope, true, refAccessSymPosList );
       }
       case .Simple, .Start, .Ignore {
-         self.prepareTentativeSymbol( self.scope, false, nil );
+         self.prepareTentativeSymbol( self.$scope, false, nil );
       }
       case .Merge, .Finish {
-         self.mergeTentativeSymbol( self.scope );
+         self.mergeTentativeSymbol( self.$scope );
       }
    }
 
@@ -1821,7 +1826,7 @@ fn TransUnit.analyzeBlock(
    switch blockKind {
       case .For, .Apply, .While, .Repeat, .Foreach {
          loopFlag = true;
-         nsInfo.$loopScopeQueue.insert( self.scope );
+         nsInfo.$loopScopeQueue.insert( self.$scope );
       }
    }
 
@@ -1840,7 +1845,8 @@ fn TransUnit.analyzeBlock(
    
 
    when! scope {
-      self.scope = backScope;
+      //self.scope = backScope;
+      self.setScope( backScope, .FromScope );
    }
    else {
       self.popScope();
@@ -1978,7 +1984,9 @@ fn TransUnit.analyzeAsyncLock(
       lockKind, block );
 }
 
-fn TransUnit.analyzeIf( token: &Parser.Token ) mut : Nodes.Node {
+fn TransUnit.analyzeIf(
+   token: &Parser.Token ) mut : Nodes.Node
+{
    let mut nextToken, continueFlag = self.getContinueToken();
    if continueFlag and nextToken.txt == "!" {
       return self.analyzeIfUnwrap( token );
@@ -2195,11 +2203,13 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 
    let defaultBlock, failSafeDefault = self.processCaseDefault(
       firstToken, caseKind, nextToken, #caseList ~= 0 );
+   let mut nsInfo = self.$curNsInfo;
    
    return Nodes.SwitchNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], exp, caseList, defaultBlock, caseKind, failSafeDefault );
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      nsInfo.getNextStmtId( .Switch ), exp, caseList,
+      defaultBlock, caseKind, failSafeDefault );
 }
 
 
@@ -2216,7 +2226,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       if not self.importModuleSet.has( algeTypeInfo.getModule() ) {
          // alge を宣言しているモジュールを import していない場合
          let fullname = algeTypeInfo.getFullName(
-            self.typeNameCtrl, self.scope, true );
+            self.typeNameCtrl, self.$scope, true );
          self.addErrMess(
             firstToken.pos,              
             "need to import module -- %s (%s)"
@@ -2252,7 +2262,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       if nextToken.txt == "(" {
          foreach paramType in valInfo.$typeList {
             let paramName = self.getSymbolToken( .MustNot_Or_ );
-            self.checkShadowing( paramName.pos, paramName.txt, self.scope );
+            self.checkShadowing( paramName.pos, paramName.txt, self.$scope );
 
             let mut workType = paramType;
             if Ast.TypeInfo.isMut( paramType ) and
@@ -2308,19 +2318,21 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
 
    let defaultBlock, failSafeDefault = self.processCaseDefault(
       firstToken, caseKind, nextToken, #caseList ~= 0 );
+
+   let mut nsInfo = self.$curNsInfo;
    
    return Nodes.MatchNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], exp, algeTypeInfo, caseList, defaultBlock,
-      caseKind, failSafeDefault );
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      nsInfo.getNextStmtId( .Match ), exp, algeTypeInfo,
+      caseList, defaultBlock, caseKind, failSafeDefault );
 }
 
 
 
 fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
 
-   let refAccessSymPosList = clearThePosForModToRef( self.scope, self.moduleScope );
+   let refAccessSymPosList = clearThePosForModToRef( self.$scope, self.moduleScope );
    
    let cond = self.analyzeExpOneRVal( false, false## );
    let mut infinit = false;
@@ -2410,14 +2422,14 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    }
 
 
-   let mut nsInfo = self.getCurrentNSInfo();
+   let mut nsInfo = self.$curNsInfo;
    let symbolInfo = nsInfo.registerSym( self.addLocalVar(
       val.pos, false, true, val.txt, exp1.$expType, .IMut## ) );
 
    let mut node = Nodes.ForNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      self.analyzeBlock( .For, .Loop, scope, nil ),
+      nsInfo.getNextStmtId( .For ), self.analyzeBlock( .For, .Loop, scope, nil ),
       symbolInfo, exp1, exp2, exp3 );
    self.popScope();
 
@@ -2515,7 +2527,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    }
 
 
-   let nsInfo = self.getCurrentNSInfo();
+   let mut nsInfo = self.$curNsInfo;
    let mut varSymList:List<&Ast.SymbolInfo> = [];
    foreach var, index in varList {
       let mut itemType = defaultItemType;
@@ -2533,7 +2545,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    return Nodes.ApplyNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      varSymList, expListNode, block );
+      nsInfo.getNextStmtId( .Apply ), varSymList, expListNode, block );
 }
 
 fn TransUnit.convToExtTypeList(
@@ -2581,7 +2593,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    
    let exp = self.analyzeExpOneRVal( false, false## );
    if exp.$expType.$kind == .Ext {
-      let nsInfo = self.getCurrentNSInfo();
+      let nsInfo = self.$curNsInfo;
       if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
          not nsInfo.canAccessLuaval()
       {
@@ -2615,7 +2627,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    }
    
 
-   let mut nsInfo = self.getCurrentNSInfo();
+   let mut nsInfo = self.$curNsInfo;
   
    let expType = exp.$expType.$extedType;
    let itemTypeInfoList = self.convToExtTypeList(
@@ -2681,13 +2693,13 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
       return Nodes.ForsortNode.create(
          self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         mainSym, subSym, exp, block, sortFlag );
+         nsInfo.getNextStmtId( .Forsort ), mainSym, subSym, exp, block, sortFlag );
    }
    else {
       return Nodes.ForeachNode.create(
          self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         mainSym, subSym, exp, block );
+         nsInfo.getNextStmtId( .Foreach ), mainSym, subSym, exp, block );
    }
 }
 
@@ -2737,8 +2749,9 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
    let asyncMode = self.getDefaultAsync( .Func, nil, nil );
    
    // スコープを切り替え
-   let mut bakScope = self.scope;
-   self.scope = self.topScope;
+   let mut bakScope = self.$scope;
+   //self.scope = self.topScope;
+   self.setScope( self.topScope, .FromScope );
    let mut localScope = self.pushScope( .Other ## );
 
    // 名前空間に属させるためのダミーの関数を定義
@@ -2746,7 +2759,7 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
 
    // 継承するシンボル情報をスコープに設定設定
    foreach symInfo in symList {
-      self.scope.addAlias(
+      self.$scope.addAlias(
          self.processInfo, symInfo.$name, nextToken.pos, false, symInfo.$accessMode,
          symInfo.$typeInfo.$parentInfo, symInfo );
    }
@@ -2756,10 +2769,11 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
    let mut node = Nodes.ScopeNode.create( 
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], scopeKind, self.scope, symList, block );
+      [ Ast.builtinTypeNone ], scopeKind, self.$scope, symList, block );
 
    // スコープを戻す
-   self.scope = bakScope;
+   //self.scope = bakScope;
+   self.setScope( bakScope, .FromScope );
    
    return node;
 }

@@ -36,7 +36,7 @@ import lune.base.LuneControl;
 import lune.base.Types;
 import lune.base.Option as LnsOpt;
 import lune.base.Builtin;
-import lune.base.NodeIndexer;
+//import lune.base.NodeIndexer;
 
 let MaxNilAccNum = 3;
 
@@ -123,7 +123,7 @@ class convFilter extend Nodes.Filter<Opt> {
 
    
    // processRoot 先頭で設定
-   let indexer: NodeIndexer.Indexer;
+   // let indexer: NodeIndexer.Indexer;
    // processRoot 先頭で設定
    let moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
@@ -181,7 +181,7 @@ class convFilter extend Nodes.Filter<Opt> {
          self.builtinFuncs.__lns_capability_async_sym: "true",
       };
 
-      self.indexer = new NodeIndexer.Indexer( self.processInfo );
+      //self.indexer = new NodeIndexer.Indexer( self.processInfo );
    }
 
    fn getVM( typeInfo:&Ast.TypeInfo ) : str! {
@@ -1829,16 +1829,16 @@ fn convFilter.processMethodAsync( nodeList:&List<&Nodes.DeclClassNode> ) mut {
 pub override fn convFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
-   __lns.runtime.log( "NodeIndexer.start" );
-   self.indexer.start( node, (@
-                               Nodes.NodeKind.$Switch,
-                               Nodes.NodeKind.$Match,
-                               Nodes.NodeKind.$For,
-                               Nodes.NodeKind.$Foreach,
-                               Nodes.NodeKind.$Forsort,
-                               Nodes.NodeKind.$Apply
-   ));
-   __lns.runtime.log( "NodeIndexer.stop" );
+   // __lns.runtime.log( "NodeIndexer.start" );
+   // self.indexer.start( node, (@
+   //                             Nodes.NodeKind.$Switch,
+   //                             Nodes.NodeKind.$Match,
+   //                             Nodes.NodeKind.$For,
+   //                             Nodes.NodeKind.$Foreach,
+   //                             Nodes.NodeKind.$Forsort,
+   //                             Nodes.NodeKind.$Apply
+   // ));
+   // __lns.runtime.log( "NodeIndexer.stop" );
 
    
    foreach importNode in node.$nodeManager.getImportNodeList() {
@@ -2074,7 +2074,7 @@ pub override fn convFilter.processRoot(
                                self.getTypeSymbol( workNode.$typeInfo.$aliasSrc ) ) );
             } );
 
-   __lns.runtime.log( "NodeIndexer.need" );
+   // __lns.runtime.log( "NodeIndexer.need" );
    
    self.pushProcessMode( .NonClosureFuncDecl );
    _filter( node.$nodeManager.getDeclFuncNodeList(),
@@ -3280,7 +3280,8 @@ pub override fn convFilter.processIf(
 pub override fn convFilter.processSwitch(
    node: &Nodes.SwitchNode, opt: Opt ) mut
 {
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
    let valName = "_switch%d" (nodeIndex);
    self.write( "if %s := " (valName) );
    filter( node.$exp, self, node );
@@ -3325,7 +3326,8 @@ pub override fn convFilter.processMatch(
       return false;
    }
    let val;
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
    if hasAccessing() {
       val = "_matchExp%d" (nodeIndex);
       self.write( "switch %s := " (val) );
@@ -3390,7 +3392,8 @@ pub override fn convFilter.processFor(
    self.writeln( "{" );
    self.pushIndent( ## );
 
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
    
    let fromSym = "_forFrom%d" (nodeIndex);
    let toSym = "_forTo%d" (nodeIndex);
@@ -3455,7 +3458,9 @@ pub override fn convFilter.processApply(
    self.writeln( "{" );
    self.pushIndent( ## );
 
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
+
    
    let formSym = "_applyForm%d" (nodeIndex);
    let paramSym = "_applyParam%d" (nodeIndex);
@@ -3527,7 +3532,18 @@ fn convFilter.outputForeachLua(
    node: &Nodes.Node, sortFlag:bool, exp:&Nodes.Node,
    val:&Ast.SymbolInfo, key:&Ast.SymbolInfo!, block:&Nodes.BlockNode ) mut
 {
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex;
+   if! node@@@Nodes.ForeachNode {
+      nodeIndex = _exp.$idInNS;
+   } else {
+      if! node@@@Nodes.ForsortNode {
+         nodeIndex = _exp.$idInNS;
+      } else {
+         Util.err( "illegal node -- %s" (Nodes.getNodeKindName( node.$kind )) );
+      }
+   }
+
    
    switch exp.$expType.$extedType.$kind {
       case .List, .Map {
@@ -3743,7 +3759,9 @@ pub override fn convFilter.processForsort(
       valSym = node.$val;
    }
 
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
+
 
    
    self.writeln( "{" );

@@ -192,9 +192,10 @@ fn TransUnitCtrl.analyzeImportFor(
    pos: &Parser.Position, modulePath:str, assignName:str,
    assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.ImportNode
 {
-   let mut backupScope = self.scope;
+   let mut backupScope = self.$scope;
    // スコープをルートに変更
-   self.scope = self.topScope;
+   //self.scope = self.topScope;
+   self.setScope( self.topScope, .FromScope );
 
    let macroMode;
    let nearCode:str!;
@@ -246,7 +247,8 @@ fn TransUnitCtrl.analyzeImportFor(
 
    
    // スコープを元に戻す
-   self.scope = backupScope;
+   //self.scope = backupScope;
+   self.setScope( backupScope, .FromScope );
 
 
    // モジュールの末尾のシンボルでスコープに登録する。
@@ -254,10 +256,10 @@ fn TransUnitCtrl.analyzeImportFor(
 
    let provideInfo = exportInfo.$provideInfo;
    let moduleTypeInfo = provideInfo.$typeInfo;
-   self.scope.addModule( moduleTypeInfo, exportInfo.assign( assignName ) );
+   self.$scope.addModule( moduleTypeInfo, exportInfo.assign( assignName ) );
 
    let moduleSymbolKind = provideInfo.$symbolKind;
-   let mut moduleSymbolInfo:&Ast.SymbolInfo!, shadowing = self.scope.add(
+   let mut moduleSymbolInfo:&Ast.SymbolInfo!, shadowing = self.$scope.add(
       self.processInfo, moduleSymbolKind, false, false, assignName, pos,
       moduleTypeInfo, .Local, true,
       provideInfo.$mutable and Ast.MutMode.Mut or Ast.MutMode.IMut,
@@ -439,7 +441,7 @@ pro override fn TransUnitCtrl.analyzeDeclToken(
 
 fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode
 {
-   if self.scope ~= self.moduleScope {
+   if self.$scope ~= self.moduleScope {
       self.error( "'module' must be top scope." );
    }
 
@@ -670,9 +672,9 @@ pub fn TransUnitCtrl.createAST(
    }
    // // moduleScope の変数は、アクセス有無の確認をしない。
    // self.scope.set_validCheckingUnaccess( false );
-   self.moduleScope = self.scope;
+   self.moduleScope = self.$scope;
    
-   self.scope.addVar(
+   self.$scope.addVar(
       self.processInfo, 
       .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
    
@@ -683,7 +685,7 @@ pub fn TransUnitCtrl.createAST(
 
    self.setParser( new Parser.DefaultPushbackParser( parser ) );
 
-   self.scope.addIgnoredVar( self.processInfo );
+   self.$scope.addIgnoredVar( self.processInfo );
 
    
    let ast:Nodes.Node;
@@ -763,7 +765,7 @@ pub fn TransUnitCtrl.createAST(
             }
          }
 
-         if self.scope ~= self.moduleScope {
+         if self.$scope ~= self.moduleScope {
             self.error( "scope does not close" );
          }
 

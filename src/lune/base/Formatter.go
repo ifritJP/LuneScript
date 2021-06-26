@@ -263,9 +263,9 @@ func (self *Formatter_FormatterFilter) ProcessShebang(_env *LnsEnv, node *Nodes_
 // 89: decl @lune.@base.@Formatter.FormatterFilter.processBlankLine
 func (self *Formatter_FormatterFilter) ProcessBlankLine(_env *LnsEnv, node *Nodes_BlankLineNode,_opt LnsAny) {
     {
-        var _forFrom1 LnsInt = 1
-        var _forTo1 LnsInt = node.FP.Get_lineNum(_env)
-        for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
+        var _forFrom0 LnsInt = 1
+        var _forTo0 LnsInt = node.FP.Get_lineNum(_env)
+        for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
             self.FP.Writeln(_env, "")
         }
     }
@@ -294,7 +294,7 @@ func (self *Formatter_FormatterFilter) ProcessSubfile(_env *LnsEnv, node *Nodes_
 // 119: decl @lune.@base.@Formatter.FormatterFilter.processLuneControl
 func (self *Formatter_FormatterFilter) ProcessLuneControl(_env *LnsEnv, node *Nodes_LuneControlNode,_opt LnsAny) {
     self.FP.Writeln(_env, "_lune_control ")
-    switch _matchExp1 := node.FP.Get_pragma(_env).(type) {
+    switch _matchExp0 := node.FP.Get_pragma(_env).(type) {
     case *LuneControl_Pragma__default__init:
         self.FP.Writeln(_env, "default__init")
     case *LuneControl_Pragma__default__init_old:
@@ -306,7 +306,7 @@ func (self *Formatter_FormatterFilter) ProcessLuneControl(_env *LnsEnv, node *No
     case *LuneControl_Pragma__load__lune_module:
         self.FP.Writeln(_env, "load__lune_module")
     case *LuneControl_Pragma__limit_conv_code:
-    codeSet := _matchExp1.Val1
+    codeSet := _matchExp0.Val1
         self.FP.Writeln(_env, "limit_conv_code")
         for _code := range( codeSet.Items ) {
             code := _code.(string)
@@ -342,13 +342,13 @@ func (self *Formatter_FormatterFilter) ProcessRequest(_env *LnsEnv, node *Nodes_
 // 182: decl @lune.@base.@Formatter.FormatterFilter.processAsyncLock
 func (self *Formatter_FormatterFilter) ProcessAsyncLock(_env *LnsEnv, node *Nodes_AsyncLockNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    if _switch1 := node.FP.Get_lockKind(_env); _switch1 == Nodes_LockKind__AsyncLock {
+    if _switch0 := node.FP.Get_lockKind(_env); _switch0 == Nodes_LockKind__AsyncLock {
         self.FP.Writeln(_env, "__asyncLock {")
-    } else if _switch1 == Nodes_LockKind__LuaGo {
+    } else if _switch0 == Nodes_LockKind__LuaGo {
         self.FP.Writeln(_env, "__luago {")
-    } else if _switch1 == Nodes_LockKind__LuaLock {
+    } else if _switch0 == Nodes_LockKind__LuaLock {
         self.FP.Writeln(_env, "__luaLock {")
-    } else if _switch1 == Nodes_LockKind__Unsafe {
+    } else if _switch0 == Nodes_LockKind__Unsafe {
         self.FP.Writeln(_env, "__unsafe {")
     }
     Formatter_filter_3_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
@@ -364,7 +364,7 @@ func (self *Formatter_FormatterFilter) ProcessBlockSub(_env *LnsEnv, node *Nodes
         Formatter_filter_3_(_env, statement, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     }
     self.FP.PopIndent(_env)
-    if _switch1 := node.FP.Get_blockKind(_env); _switch1 == Nodes_BlockKind__LetUnwrap || _switch1 == Nodes_BlockKind__Repeat {
+    if _switch0 := node.FP.Get_blockKind(_env); _switch0 == Nodes_BlockKind__LetUnwrap || _switch0 == Nodes_BlockKind__Repeat {
         self.FP.Write(_env, "}")
     } else {
         self.FP.Writeln(_env, "}")
@@ -413,13 +413,13 @@ func (self *Formatter_FormatterFilter) outputDeclClass(_env *LnsEnv, protoFlag b
     if classType.FP.Get_accessMode(_env) == Ast_AccessMode__Pub{
         self.FP.Write(_env, "pub ")
     }
-    if _switch1 := classType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Class {
+    if _switch0 := classType.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Class {
         if Lns_isCondTrue( moduleName){
             self.FP.Write(_env, "module ")
         } else { 
             self.FP.Write(_env, "class ")
         }
-    } else if _switch1 == Ast_TypeInfoKind__IF {
+    } else if _switch0 == Ast_TypeInfoKind__IF {
         self.FP.Write(_env, "interface ")
     }
     self.FP.Write(_env, classType.FP.Get_rawTxt(_env))
@@ -491,7 +491,7 @@ func (self *Formatter_FormatterFilter) ProcessDeclAdvertise(_env *LnsEnv, node *
 // 415: decl @lune.@base.@Formatter.FormatterFilter.processDeclMember
 func (self *Formatter_FormatterFilter) ProcessDeclMember(_env *LnsEnv, node *Nodes_DeclMemberNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    if _switch1 := node.FP.Get_accessMode(_env); _switch1 == Ast_AccessMode__Pub || _switch1 == Ast_AccessMode__Pro || _switch1 == Ast_AccessMode__None || _switch1 == Ast_AccessMode__Local {
+    if _switch0 := node.FP.Get_accessMode(_env); _switch0 == Ast_AccessMode__Pub || _switch0 == Ast_AccessMode__Pro || _switch0 == Ast_AccessMode__None || _switch0 == Ast_AccessMode__Local {
         self.FP.Write(_env, Ast_accessMode2txt(_env, node.FP.Get_accessMode(_env)))
         self.FP.Write(_env, " ")
     }
@@ -608,16 +608,16 @@ func (self *Formatter_FormatterFilter) ProcessWhen(_env *LnsEnv, node *Nodes_Whe
 // 542: decl @lune.@base.@Formatter.FormatterFilter.processDeclVar
 func (self *Formatter_FormatterFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVarNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
-    if _switch1 := node.FP.Get_accessMode(_env); _switch1 == Ast_AccessMode__Pub {
+    if _switch0 := node.FP.Get_accessMode(_env); _switch0 == Ast_AccessMode__Pub {
         self.FP.Write(_env, "pub ")
     }
-    if _switch2 := node.FP.Get_mode(_env); _switch2 == Nodes_DeclVarMode__Let {
+    if _switch1 := node.FP.Get_mode(_env); _switch1 == Nodes_DeclVarMode__Let {
         if node.FP.Get_unwrapFlag(_env){
             self.FP.Write(_env, "let! ")
         } else { 
             self.FP.Write(_env, "let ")
         }
-    } else if _switch2 == Nodes_DeclVarMode__Unwrap {
+    } else if _switch1 == Nodes_DeclVarMode__Unwrap {
         self.FP.Write(_env, "unwrap! ")
     }
     for _index, _symInfo := range( node.FP.Get_symbolInfoList(_env).Items ) {
@@ -759,11 +759,11 @@ func (self *Formatter_FormatterFilter) processDeclFuncInfo(_env *LnsEnv, node *N
         _asyncMode := declInfo.FP.Get_asyncMode(_env)
         if !Lns_IsNil( _asyncMode ) {
             asyncMode := _asyncMode.(LnsInt)
-            if _switch1 := asyncMode; _switch1 == Ast_Async__Async {
+            if _switch0 := asyncMode; _switch0 == Ast_Async__Async {
                 self.FP.Write(_env, " __async")
-            } else if _switch1 == Ast_Async__Noasync {
+            } else if _switch0 == Ast_Async__Noasync {
                 self.FP.Write(_env, " __noasync")
-            } else if _switch1 == Ast_Async__Transient {
+            } else if _switch0 == Ast_Async__Transient {
                 self.FP.Write(_env, " __trans")
             }
         }
@@ -843,9 +843,9 @@ func (self *Formatter_FormatterFilter) ProcessRefType(_env *LnsEnv, node *Nodes_
         _mutMode := node.FP.Get_mutMode(_env)
         if !Lns_IsNil( _mutMode ) {
             mutMode := _mutMode.(LnsInt)
-            if _switch1 := mutMode; _switch1 == Ast_MutMode__IMut {
+            if _switch0 := mutMode; _switch0 == Ast_MutMode__IMut {
                 self.FP.Write(_env, "&")
-            } else if _switch1 == Ast_MutMode__AllMut {
+            } else if _switch0 == Ast_MutMode__AllMut {
                 self.FP.Write(_env, "allmut")
             }
         }
@@ -853,11 +853,11 @@ func (self *Formatter_FormatterFilter) ProcessRefType(_env *LnsEnv, node *Nodes_
     Formatter_filter_3_(_env, node.FP.Get_name(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     var expType *Ast_TypeInfo
     expType = node.FP.Get_expType(_env).FP.Get_nonnilableType(_env)
-    if _switch2 := expType.FP.Get_kind(_env); _switch2 == Ast_TypeInfoKind__List || _switch2 == Ast_TypeInfoKind__Set {
+    if _switch1 := expType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__List || _switch1 == Ast_TypeInfoKind__Set {
         self.FP.Write(_env, "<")
         Formatter_filter_3_(_env, node.FP.Get_itemNodeList(_env).GetAt(1).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         self.FP.Write(_env, ">")
-    } else if _switch2 == Ast_TypeInfoKind__Map {
+    } else if _switch1 == Ast_TypeInfoKind__Map {
         self.FP.Write(_env, "<")
         Formatter_filter_3_(_env, node.FP.Get_itemNodeList(_env).GetAt(1).(Nodes_NodeDownCast).ToNodes_Node(), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         self.FP.Write(_env, ",")
@@ -875,11 +875,11 @@ func (self *Formatter_FormatterFilter) ProcessIf(_env *LnsEnv, node *Nodes_IfNod
     stmtList = node.FP.Get_stmtList(_env)
     for _, _stmt := range( stmtList.Items ) {
         stmt := _stmt.(Nodes_IfStmtInfoDownCast).ToNodes_IfStmtInfo()
-        if _switch1 := stmt.FP.Get_kind(_env); _switch1 == Nodes_IfKind__If {
+        if _switch0 := stmt.FP.Get_kind(_env); _switch0 == Nodes_IfKind__If {
             self.FP.Write(_env, "if ")
-        } else if _switch1 == Nodes_IfKind__ElseIf {
+        } else if _switch0 == Nodes_IfKind__ElseIf {
             self.FP.Write(_env, "elseif ")
-        } else if _switch1 == Nodes_IfKind__Else {
+        } else if _switch0 == Nodes_IfKind__Else {
             self.FP.Write(_env, "else ")
         }
         Formatter_filter_3_(_env, stmt.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
@@ -1079,7 +1079,7 @@ func (self *Formatter_FormatterFilter) ProcessExpAccessMRet(_env *LnsEnv, node *
 func (self *Formatter_FormatterFilter) ProcessExpOp1(_env *LnsEnv, node *Nodes_ExpOp1Node,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     self.FP.Write(_env, node.FP.Get_op(_env).Txt)
-    if _switch1 := node.FP.Get_op(_env).Txt; _switch1 == "not" {
+    if _switch0 := node.FP.Get_op(_env).Txt; _switch0 == "not" {
         self.FP.Write(_env, " ")
     }
     Formatter_filter_3_(_env, node.FP.Get_exp(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
@@ -1125,14 +1125,14 @@ func (self *Formatter_FormatterFilter) ProcessExpSetVal(_env *LnsEnv, node *Node
 func (self *Formatter_FormatterFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_ExpSetItemNode,_opt LnsAny) {
     opt := _opt.(*Formatter_Opt)
     Formatter_filter_3_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
-    switch _matchExp1 := node.FP.Get_index(_env).(type) {
+    switch _matchExp0 := node.FP.Get_index(_env).(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _matchExp1.Val1
+    index := _matchExp0.Val1
         self.FP.Write(_env, "[")
         Formatter_filter_3_(_env, index, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         self.FP.Write(_env, "]")
     case *Nodes_IndexVal__SymIdx:
-    index := _matchExp1.Val1
+    index := _matchExp0.Val1
         self.FP.Write(_env, _env.GetVM().String_format(".%s", []LnsAny{index}))
     }
     self.FP.Write(_env, " = ")

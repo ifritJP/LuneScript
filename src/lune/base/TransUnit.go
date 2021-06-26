@@ -278,20 +278,20 @@ var TransUnit_unsupportStatement *LnsSet
 type TransUnit_checkImplicitCastCallback_10_ func (_env *LnsEnv, arg1 *Ast_TypeInfo,arg2 *Nodes_Node) LnsAny
 type TransUnit_ReadyExportInfo func (_env *LnsEnv, arg1 *FrontInterface_ExportInfo)
 type TransUnit_checkCompForm_31_ func (_env *LnsEnv, arg1 *Writer_JSON,arg2 string)
-// for 2128
-func TransUnit_convExp1_6653(arg1 []LnsAny) LnsAny {
+// for 2136
+func TransUnit_convExp1_6659(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 2328
-func TransUnit_convExp1_7702(arg1 []LnsAny) LnsAny {
+// for 2340
+func TransUnit_convExp1_7733(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 358
-func TransUnit_convExp1_11805(arg1 []LnsAny) LnsAny {
+func TransUnit_convExp2_400(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 408
-func TransUnit_convExp3_9277(arg1 []LnsAny) LnsAny {
+func TransUnit_convExp3_9314(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 1201
@@ -307,95 +307,95 @@ func TransUnit_convExp4_1769(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2774
-func TransUnit_convExp4_8623(arg1 []LnsAny) (LnsAny, LnsAny, LnsAny) {
+func TransUnit_convExp4_8622(arg1 []LnsAny) (LnsAny, LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 )
 }
 // for 3415
-func TransUnit_convExp4_11921(arg1 []LnsAny) LnsAny {
+func TransUnit_convExp4_11920(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 57
-func TransUnit_convExp5_4417(arg1 []LnsAny) (LnsAny, LnsAny, LnsAny) {
+func TransUnit_convExp5_4416(arg1 []LnsAny) (LnsAny, LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 )
 }
 // for 243
-func TransUnit_convExp1_11133(arg1 []LnsAny) *Ast_TypeInfo {
+func TransUnit_convExp1_11193(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo).Ast_TypeInfo
 }
-// for 945
-func TransUnit_convExp2_2455(arg1 []LnsAny) (*Types_Token, LnsAny, LnsAny, *LnsMap, *Nodes_ClassInheritInfo) {
+// for 946
+func TransUnit_convExp2_2898(arg1 []LnsAny) (*Types_Token, LnsAny, LnsAny, *LnsMap, *Nodes_ClassInheritInfo) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*LnsMap), Lns_getFromMulti( arg1, 4 ).(*Nodes_ClassInheritInfo)
 }
-// for 1016
-func TransUnit_convExp2_2847(arg1 []LnsAny) (*Types_Token, LnsAny, *LnsList) {
+// for 1017
+func TransUnit_convExp2_3290(arg1 []LnsAny) (*Types_Token, LnsAny, *LnsList) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 ).(*LnsList)
 }
-// for 1053
-func TransUnit_convExp2_3037(arg1 []LnsAny) (*Types_Token, *LnsList) {
+// for 1054
+func TransUnit_convExp2_3480(arg1 []LnsAny) (*Types_Token, *LnsList) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*LnsList)
 }
-// for 1073
-func TransUnit_convExp2_3139(arg1 []LnsAny) (*Types_Token, *TransUnitIF_NSInfo, *Nodes_ClassInheritInfo) {
+// for 1074
+func TransUnit_convExp2_3582(arg1 []LnsAny) (*Types_Token, *TransUnitIF_NSInfo, *Nodes_ClassInheritInfo) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*TransUnitIF_NSInfo), Lns_getFromMulti( arg1, 2 ).(*Nodes_ClassInheritInfo)
 }
-// for 1474
-func TransUnit_convExp2_5310(arg1 []LnsAny) (*Types_Token, bool, LnsAny) {
+// for 1475
+func TransUnit_convExp2_5751(arg1 []LnsAny) (*Types_Token, bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 )
 }
-// for 1479
-func TransUnit_convExp2_5360(arg1 []LnsAny) (*LnsList, *Types_Token, *LnsList) {
+// for 1480
+func TransUnit_convExp2_5801(arg1 []LnsAny) (*LnsList, *Types_Token, *LnsList) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsList), Lns_getFromMulti( arg1, 1 ).(*Types_Token), Lns_getFromMulti( arg1, 2 ).(*LnsList)
 }
-// for 1696
-func TransUnit_convExp2_6507(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
+// for 1697
+func TransUnit_convExp2_6949(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*Ast_TypeInfo), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*Types_Token)
 }
-// for 1711
-func TransUnit_convExp2_6603(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
+// for 1712
+func TransUnit_convExp2_7045(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*Ast_TypeInfo), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*Types_Token)
 }
-// for 2457
-func TransUnit_convExp2_10190(arg1 []LnsAny) (*Types_Token, *LnsList) {
+// for 2458
+func TransUnit_convExp2_10636(arg1 []LnsAny) (*Types_Token, *LnsList) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*LnsList)
 }
-// for 2812
+// for 2813
 func TransUnit_convExp3_598(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2816
+// for 2817
 func TransUnit_convExp3_640(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2956
-func TransUnit_convExp3_1174(arg1 []LnsAny) (*Types_Token, *LnsList) {
+// for 2959
+func TransUnit_convExp3_1183(arg1 []LnsAny) (*Types_Token, *LnsList) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*LnsList)
 }
-// for 2984
-func TransUnit_convExp3_1320(arg1 []LnsAny) (*Types_Token, bool, LnsAny) {
+// for 2987
+func TransUnit_convExp3_1329(arg1 []LnsAny) (*Types_Token, bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 )
 }
-// for 3046
-func TransUnit_convExp3_1653(arg1 []LnsAny) (*LnsList, *Types_Token, *LnsList) {
+// for 3049
+func TransUnit_convExp3_1662(arg1 []LnsAny) (*LnsList, *Types_Token, *LnsList) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsList), Lns_getFromMulti( arg1, 1 ).(*Types_Token), Lns_getFromMulti( arg1, 2 ).(*LnsList)
 }
-// for 3084
-func TransUnit_convExp3_1823(arg1 []LnsAny) (*Ast_SymbolInfo, *TransUnitIF_NSInfo) {
+// for 3088
+func TransUnit_convExp3_1831(arg1 []LnsAny) (*Ast_SymbolInfo, *TransUnitIF_NSInfo) {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_SymbolInfo), Lns_getFromMulti( arg1, 1 ).(*TransUnitIF_NSInfo)
 }
-// for 4025
-func TransUnit_convExp3_6394(arg1 []LnsAny) (*LnsList, *LnsList, *LnsList, LnsAny) {
+// for 4034
+func TransUnit_convExp3_6431(arg1 []LnsAny) (*LnsList, *LnsList, *LnsList, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsList), Lns_getFromMulti( arg1, 1 ).(*LnsList), Lns_getFromMulti( arg1, 2 ).(*LnsList), Lns_getFromMulti( arg1, 3 )
 }
-// for 4034
-func TransUnit_convExp3_6482(arg1 []LnsAny) (*LnsList, *LnsList, *LnsList, LnsAny) {
+// for 4043
+func TransUnit_convExp3_6519(arg1 []LnsAny) (*LnsList, *LnsList, *LnsList, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsList), Lns_getFromMulti( arg1, 1 ).(*LnsList), Lns_getFromMulti( arg1, 2 ).(*LnsList), Lns_getFromMulti( arg1, 3 )
 }
 // for 548
-func TransUnit_convExp3_9887(arg1 []LnsAny) (*Nodes_Node, bool) {
+func TransUnit_convExp3_9924(arg1 []LnsAny) (*Nodes_Node, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Nodes_Node), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 556
-func TransUnit_convExp3_9939(arg1 []LnsAny) (*Nodes_Node, bool) {
+func TransUnit_convExp3_9976(arg1 []LnsAny) (*Nodes_Node, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Nodes_Node), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 1887
@@ -407,175 +407,175 @@ func TransUnit_convExp4_5743(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 2474
-func TransUnit_convExp4_7045(arg1 []LnsAny) (*Ast_TypeInfo, LnsAny, bool) {
+func TransUnit_convExp4_7044(arg1 []LnsAny) (*Ast_TypeInfo, LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_TypeInfo), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 ).(bool)
 }
 // for 3487
-func TransUnit_convExp4_12309(arg1 []LnsAny) (*Nodes_Node, *Nodes_Node) {
+func TransUnit_convExp4_12308(arg1 []LnsAny) (*Nodes_Node, *Nodes_Node) {
     return Lns_getFromMulti( arg1, 0 ).(*Nodes_Node), Lns_getFromMulti( arg1, 1 ).(*Nodes_Node)
 }
 // for 4006
 func TransUnit_convExp5_2325(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo).Ast_TypeInfo
 }
-// for 737
-func TransUnit_convExp5_8771(arg1 []LnsAny) (LnsAny, LnsInt) {
+// for 739
+func TransUnit_convExp5_8769(arg1 []LnsAny) (LnsAny, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
-// for 834
-func TransUnit_convExp0_871(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, *Types_TransCtrlInfo, *Ast_ProcessInfo) {
+// for 835
+func TransUnit_convExp0_875(_env *LnsEnv, arg1 []LnsAny) (*LnsEnv, *Types_TransCtrlInfo, *Ast_ProcessInfo) {
     return _env, Lns_getFromMulti( arg1, 0 ).(*Types_TransCtrlInfo), Lns_getFromMulti( arg1, 1 ).(*Ast_ProcessInfo)
 }
-// for 1258
-func TransUnit_convExp0_1964(arg1 []LnsAny) (*LnsMap, *LnsMap) {
+// for 1259
+func TransUnit_convExp0_1968(arg1 []LnsAny) (*LnsMap, *LnsMap) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsMap), Lns_getFromMulti( arg1, 1 ).(*LnsMap)
 }
-// for 1982
-func TransUnit_convExp1_5750(arg1 []LnsAny) (*Types_Token, bool) {
+// for 1990
+func TransUnit_convExp1_5756(arg1 []LnsAny) (*Types_Token, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 2049
-func TransUnit_convExp1_6116(arg1 []LnsAny) string {
+// for 2057
+func TransUnit_convExp1_6122(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 2196
-func TransUnit_convExp1_6886(arg1 []LnsAny) (LnsAny, bool) {
+// for 2204
+func TransUnit_convExp1_6892(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 2309
-func TransUnit_convExp1_7599(arg1 []LnsAny) (LnsAny, bool) {
+// for 2319
+func TransUnit_convExp1_7617(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 2546
-func TransUnit_convExp1_8890(arg1 []LnsAny) (LnsAny, string) {
+// for 2558
+func TransUnit_convExp1_8933(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 132
-func TransUnit_convExp1_10465(arg1 []LnsAny) (*Types_Token, bool) {
+func TransUnit_convExp1_10525(arg1 []LnsAny) (*Types_Token, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 321
-func TransUnit_convExp1_11513(arg1 []LnsAny) (*Types_Token, bool) {
+func TransUnit_convExp2_108(arg1 []LnsAny) (*Types_Token, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 428
-func TransUnit_convExp2_293(arg1 []LnsAny) (bool, LnsAny) {
+func TransUnit_convExp2_733(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
-// for 803
-func TransUnit_convExp2_1696(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 804
+func TransUnit_convExp2_2139(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 892
-func TransUnit_convExp2_2208(arg1 []LnsAny) (bool, LnsAny) {
+// for 893
+func TransUnit_convExp2_2651(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
-// for 1020
-func TransUnit_convExp2_2876(arg1 []LnsAny) *Ast_AlternateTypeInfo {
+// for 1021
+func TransUnit_convExp2_3319(arg1 []LnsAny) *Ast_AlternateTypeInfo {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_AlternateTypeInfo)
 }
-// for 1133
-func TransUnit_convExp2_3440(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 1134
+func TransUnit_convExp2_3882(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 1216
-func TransUnit_convExp2_3890(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 1217
+func TransUnit_convExp2_4332(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 1245
-func TransUnit_convExp2_4041(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 1246
+func TransUnit_convExp2_4482(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 1299
-func TransUnit_convExp2_4388(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 1300
+func TransUnit_convExp2_4829(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 1357
-func TransUnit_convExp2_4745(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 1358
+func TransUnit_convExp2_5186(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 1502
-func TransUnit_convExp2_5488(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 1503
+func TransUnit_convExp2_5928(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 1758
-func TransUnit_convExp2_6939(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 1759
+func TransUnit_convExp2_7381(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2192
-func TransUnit_convExp2_8838(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 2193
+func TransUnit_convExp2_9280(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2361
-func TransUnit_convExp2_9849(arg1 []LnsAny) (*LnsMap, LnsAny) {
+// for 2362
+func TransUnit_convExp2_10295(arg1 []LnsAny) (*LnsMap, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsMap), Lns_getFromMulti( arg1, 1 )
 }
-// for 2491
-func TransUnit_convExp2_10391(arg1 []LnsAny) string {
+// for 2492
+func TransUnit_convExp2_10837(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 2519
-func TransUnit_convExp2_10546(arg1 []LnsAny) (*Types_Token, *TransUnitIF_NSInfo, *Nodes_ClassInheritInfo) {
+// for 2520
+func TransUnit_convExp2_10992(arg1 []LnsAny) (*Types_Token, *TransUnitIF_NSInfo, *Nodes_ClassInheritInfo) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*TransUnitIF_NSInfo), Lns_getFromMulti( arg1, 2 ).(*Nodes_ClassInheritInfo)
 }
-// for 2575
-func TransUnit_convExp2_10867(arg1 []LnsAny) (*Nodes_DeclClassNode, *Types_Token, *LnsSet) {
+// for 2576
+func TransUnit_convExp2_11313(arg1 []LnsAny) (*Nodes_DeclClassNode, *Types_Token, *LnsSet) {
     return Lns_getFromMulti( arg1, 0 ).(*Nodes_DeclClassNode), Lns_getFromMulti( arg1, 1 ).(*Types_Token), Lns_getFromMulti( arg1, 2 ).(*LnsSet)
 }
-// for 2680
-func TransUnit_convExp2_11372(arg1 []LnsAny) *Ast_GenericTypeInfo {
+// for 2681
+func TransUnit_convExp2_11818(arg1 []LnsAny) *Ast_GenericTypeInfo {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo)
 }
-// for 2727
+// for 2728
 func TransUnit_convExp3_122(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 2736
+// for 2737
 func TransUnit_convExp3_175(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 2745
+// for 2746
 func TransUnit_convExp3_222(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
-// for 3551
-func TransUnit_convExp3_3974(arg1 []LnsAny) (bool, LnsAny) {
+// for 3560
+func TransUnit_convExp3_4012(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
-// for 3777
-func TransUnit_convExp3_5078(arg1 []LnsAny) (*Types_Token, bool) {
+// for 3786
+func TransUnit_convExp3_5116(arg1 []LnsAny) (*Types_Token, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 3795
-func TransUnit_convExp3_5184(arg1 []LnsAny) (*LnsList, *LnsList, *LnsList, LnsAny) {
+// for 3804
+func TransUnit_convExp3_5222(arg1 []LnsAny) (*LnsList, *LnsList, *LnsList, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsList), Lns_getFromMulti( arg1, 1 ).(*LnsList), Lns_getFromMulti( arg1, 2 ).(*LnsList), Lns_getFromMulti( arg1, 3 )
 }
-// for 3832
-func TransUnit_convExp3_5426(arg1 []LnsAny) *Ast_SymbolInfo {
+// for 3841
+func TransUnit_convExp3_5464(arg1 []LnsAny) *Ast_SymbolInfo {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_SymbolInfo)
 }
-// for 4120
-func TransUnit_convExp3_6866(arg1 []LnsAny) (*Types_Token, bool) {
+// for 4129
+func TransUnit_convExp3_6902(arg1 []LnsAny) (*Types_Token, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 677
-func TransUnit_convExp3_10382(arg1 []LnsAny) (LnsInt, string) {
+func TransUnit_convExp3_10419(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 775
-func TransUnit_convExp3_10744(arg1 []LnsAny) (LnsAny, string) {
+func TransUnit_convExp3_10781(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 841
-func TransUnit_convExp3_11095(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
+func TransUnit_convExp3_11132(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 )
 }
 // for 910
-func TransUnit_convExp3_11417(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
+func TransUnit_convExp3_11454(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 )
 }
 // for 932
-func TransUnit_convExp3_11503(arg1 []LnsAny) (LnsAny, *Ast_TypeInfo) {
+func TransUnit_convExp3_11540(arg1 []LnsAny) (LnsAny, *Ast_TypeInfo) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(*Ast_TypeInfo)
 }
 // for 968
@@ -619,7 +619,7 @@ func TransUnit_convExp4_5798(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 3041
-func TransUnit_convExp4_9947(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny, *LnsList) {
+func TransUnit_convExp4_9946(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny, *LnsList) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*LnsList)
 }
 // for 3707
@@ -635,15 +635,15 @@ func TransUnit_convExp5_2213(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 )
 }
 // for 4185
-func TransUnit_convExp5_3397(arg1 []LnsAny) (*Nodes_Node, bool) {
+func TransUnit_convExp5_3396(arg1 []LnsAny) (*Nodes_Node, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Nodes_Node), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 235
-func TransUnit_convExp5_6197(arg1 []LnsAny) (LnsAny, string) {
+// for 236
+func TransUnit_convExp5_6193(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 260
-func TransUnit_convExp5_6334(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 262
+func TransUnit_convExp5_6332(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 type TransUnit_DeclClassMode = TransUnitIF_DeclClassMode
@@ -661,7 +661,7 @@ func TransUnit_clearThePosForModToRef_7_(_env *LnsEnv, scope *Ast_Scope,moduleSc
     return list
 }
 
-// 1220: decl @lune.@base.@TransUnit.setupOpLevel
+// 1221: decl @lune.@base.@TransUnit.setupOpLevel
 func TransUnit_setupOpLevel_21_(_env *LnsEnv)(*LnsMap, *LnsMap) {
     var op2levelMapWork *LnsMap
     op2levelMapWork = NewLnsMap( map[LnsAny]LnsAny{})
@@ -723,7 +723,7 @@ func TransUnit_getAnalyzingState_24_(_env *LnsEnv, typeInfo *Ast_TypeInfo) LnsIn
 func TransUnit_getFirstStmt_25_(_env *LnsEnv, stmtList *LnsList) LnsAny {
     for _, _stmt := range( stmtList.Items ) {
         stmt := _stmt.(Nodes_NodeDownCast).ToNodes_Node()
-        if _switch1 := stmt.FP.Get_kind(_env); _switch1 == Nodes_nodeKindEnum__BlankLine {
+        if _switch0 := stmt.FP.Get_kind(_env); _switch0 == Nodes_nodeKindEnum__BlankLine {
         } else {
             return stmt
         }
@@ -781,17 +781,17 @@ func TransUnit_isMatchStringFormatType(_env *LnsEnv, opKind string,argType *Ast_
             argType = enumType.FP.Get_valTypeInfo(_env)
         }
     }
-    if _switch1 := LnsInt(opKind[len(opKind)-1]); _switch1 == 115 {
+    if _switch0 := LnsInt(opKind[len(opKind)-1]); _switch0 == 115 {
         if argType.FP.Get_srcTypeInfo(_env) != Ast_builtinTypeString{
             if Lns_op_not(luaVer.FP.Get_canFormStem2Str(_env)){
                 return TransUnit_FormType__NeedConv, Ast_builtinTypeString
             }
         }
-    } else if _switch1 == 113 {
+    } else if _switch0 == 113 {
         if argType.FP.Get_srcTypeInfo(_env) != Ast_builtinTypeString{
             return TransUnit_FormType__Unmatch, Ast_builtinTypeString
         }
-    } else if _switch1 == 65 || _switch1 == 97 || _switch1 == 69 || _switch1 == 101 || _switch1 == 102 || _switch1 == 71 || _switch1 == 103 {
+    } else if _switch0 == 65 || _switch0 == 97 || _switch0 == 69 || _switch0 == 101 || _switch0 == 102 || _switch0 == 71 || _switch0 == 103 {
         if argType.FP.Get_srcTypeInfo(_env) != Ast_builtinTypeReal{
             return TransUnit_FormType__Unmatch, Ast_builtinTypeReal
         }
@@ -806,7 +806,7 @@ func TransUnit_isMatchStringFormatType(_env *LnsEnv, opKind string,argType *Ast_
 }
 
 
-// 776: decl @lune.@base.@TransUnit.TransUnit.mergeFrom.cloneMessList
+// 777: decl @lune.@base.@TransUnit.TransUnit.mergeFrom.cloneMessList
 func TransUnit_mergeFrom__cloneMessList_0_(_env *LnsEnv, dstList *LnsList,srcList *LnsList) {
     var set *LnsSet
     set = NewLnsSet([]LnsAny{})
@@ -823,11 +823,11 @@ func TransUnit_mergeFrom__cloneMessList_0_(_env *LnsEnv, dstList *LnsList,srcLis
 }
 
 
-// 1490: decl @lune.@base.@TransUnit.TransUnit.getDefaultAsync.process
+// 1491: decl @lune.@base.@TransUnit.TransUnit.getDefaultAsync.process
 func TransUnit_getDefaultAsync__process_0_(_env *LnsEnv, defaultAsyncMode LnsInt) LnsInt {
-    if _switch1 := defaultAsyncMode; _switch1 == TransUnit_DefaultAsyncMode__AsyncAll || _switch1 == TransUnit_DefaultAsyncMode__AsyncFunc {
+    if _switch0 := defaultAsyncMode; _switch0 == TransUnit_DefaultAsyncMode__AsyncAll || _switch0 == TransUnit_DefaultAsyncMode__AsyncFunc {
         return Ast_Async__Async
-    } else if _switch1 == TransUnit_DefaultAsyncMode__NoAsync {
+    } else if _switch0 == TransUnit_DefaultAsyncMode__NoAsync {
         return Ast_Async__Noasync
     }
 // insert a dummy
@@ -887,7 +887,7 @@ func TransUnit_analyzeExpOpSet__process_0_(_env *LnsEnv, lValNode *Nodes_Node) L
             refItemNode = _refItemNode.(*Nodes_ExpRefItemNode)
         }
     }
-    if _switch1 := refItemNode.FP.Get_val(_env).FP.Get_expType(_env).FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__List || _switch1 == Ast_TypeInfoKind__Map {
+    if _switch0 := refItemNode.FP.Get_val(_env).FP.Get_expType(_env).FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Map {
         return refItemNode
     }
     return nil
@@ -911,7 +911,7 @@ func TransUnit_analyzeExpOpEquals__getType_0_(_env *LnsEnv, typeInfo *Ast_TypeIn
 
 
 
-// 841: decl @lune.@base.@TransUnit.TransUnitCtrl.createAST.createId2proto
+// 843: decl @lune.@base.@TransUnit.TransUnitCtrl.createAST.createId2proto
 func TransUnitCtrl_createAST__createId2proto_2_(_env *LnsEnv, _map *LnsMap) *LnsMap {
     var id2proto *LnsMap
     id2proto = NewLnsMap( map[LnsAny]LnsAny{})
@@ -1194,6 +1194,7 @@ type TransUnit_FuncBlockInfoMtd interface {
     Get_declPos(_env *LnsEnv) *Types_Position
     Get_funcScope(_env *LnsEnv) *Ast_Scope
     Get_funcType(_env *LnsEnv) *Ast_TypeInfo
+    Get_nsInfo(_env *LnsEnv) *TransUnitIF_NSInfo
     Get_orgPos(_env *LnsEnv) LnsAny
     Get_tokenList(_env *LnsEnv) *LnsList
     Get_typeDataAccessor(_env *LnsEnv) Ast_TypeDataAccessor
@@ -1201,6 +1202,7 @@ type TransUnit_FuncBlockInfoMtd interface {
 }
 type TransUnit_FuncBlockInfo struct {
     declFuncInfo *Nodes_DeclFuncInfo
+    nsInfo *TransUnitIF_NSInfo
     funcType *Ast_TypeInfo
     typeDataAccessor Ast_TypeDataAccessor
     funcScope *Ast_Scope
@@ -1229,22 +1231,24 @@ func TransUnit_FuncBlockInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *TransUnit_FuncBlockInfo) ToTransUnit_FuncBlockInfo() *TransUnit_FuncBlockInfo {
     return obj
 }
-func NewTransUnit_FuncBlockInfo(_env *LnsEnv, arg1 *Nodes_DeclFuncInfo, arg2 *Ast_TypeInfo, arg3 Ast_TypeDataAccessor, arg4 *Ast_Scope, arg5 *LnsList, arg6 *Types_Position, arg7 LnsAny) *TransUnit_FuncBlockInfo {
+func NewTransUnit_FuncBlockInfo(_env *LnsEnv, arg1 *Nodes_DeclFuncInfo, arg2 *TransUnitIF_NSInfo, arg3 *Ast_TypeInfo, arg4 Ast_TypeDataAccessor, arg5 *Ast_Scope, arg6 *LnsList, arg7 *Types_Position, arg8 LnsAny) *TransUnit_FuncBlockInfo {
     obj := &TransUnit_FuncBlockInfo{}
     obj.FP = obj
-    obj.InitTransUnit_FuncBlockInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    obj.InitTransUnit_FuncBlockInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
     return obj
 }
-func (self *TransUnit_FuncBlockInfo) InitTransUnit_FuncBlockInfo(_env *LnsEnv, arg1 *Nodes_DeclFuncInfo, arg2 *Ast_TypeInfo, arg3 Ast_TypeDataAccessor, arg4 *Ast_Scope, arg5 *LnsList, arg6 *Types_Position, arg7 LnsAny) {
+func (self *TransUnit_FuncBlockInfo) InitTransUnit_FuncBlockInfo(_env *LnsEnv, arg1 *Nodes_DeclFuncInfo, arg2 *TransUnitIF_NSInfo, arg3 *Ast_TypeInfo, arg4 Ast_TypeDataAccessor, arg5 *Ast_Scope, arg6 *LnsList, arg7 *Types_Position, arg8 LnsAny) {
     self.declFuncInfo = arg1
-    self.funcType = arg2
-    self.typeDataAccessor = arg3
-    self.funcScope = arg4
-    self.tokenList = arg5
-    self.declPos = arg6
-    self.orgPos = arg7
+    self.nsInfo = arg2
+    self.funcType = arg3
+    self.typeDataAccessor = arg4
+    self.funcScope = arg5
+    self.tokenList = arg6
+    self.declPos = arg7
+    self.orgPos = arg8
 }
 func (self *TransUnit_FuncBlockInfo) Get_declFuncInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declFuncInfo }
+func (self *TransUnit_FuncBlockInfo) Get_nsInfo(_env *LnsEnv) *TransUnitIF_NSInfo{ return self.nsInfo }
 func (self *TransUnit_FuncBlockInfo) Get_funcType(_env *LnsEnv) *Ast_TypeInfo{ return self.funcType }
 func (self *TransUnit_FuncBlockInfo) Get_typeDataAccessor(_env *LnsEnv) Ast_TypeDataAccessor{ return self.typeDataAccessor }
 func (self *TransUnit_FuncBlockInfo) Get_funcScope(_env *LnsEnv) *Ast_Scope{ return self.funcScope }
@@ -1252,7 +1256,7 @@ func (self *TransUnit_FuncBlockInfo) set_funcScope(_env *LnsEnv, arg1 *Ast_Scope
 func (self *TransUnit_FuncBlockInfo) Get_tokenList(_env *LnsEnv) *LnsList{ return self.tokenList }
 func (self *TransUnit_FuncBlockInfo) Get_declPos(_env *LnsEnv) *Types_Position{ return self.declPos }
 func (self *TransUnit_FuncBlockInfo) Get_orgPos(_env *LnsEnv) LnsAny{ return self.orgPos }
-func TransUnit_FuncBlockInfo__createPipe_9_(_env *LnsEnv, arg1 LnsInt) LnsAny{
+func TransUnit_FuncBlockInfo__createPipe_10_(_env *LnsEnv, arg1 LnsInt) LnsAny{
    return NewLnspipe( arg1 )
 }
 
@@ -1512,7 +1516,6 @@ type TransUnit_TransUnitMtd interface {
     finishTentativeSymbol(_env *LnsEnv, arg1 bool)
     getContinueToken(_env *LnsEnv)(*Types_Token, bool)
     getCurrentClass(_env *LnsEnv) *Ast_TypeInfo
-    GetCurrentNSInfo(_env *LnsEnv) *TransUnitIF_NSInfo
     GetCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo
     getDefaultAsync(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny) LnsInt
     GetLatestPos(_env *LnsEnv) *Types_Position
@@ -1523,10 +1526,12 @@ type TransUnit_TransUnitMtd interface {
     getSymbolToken(_env *LnsEnv, arg1 LnsInt) *Types_Token
     getToken(_env *LnsEnv, arg1 LnsAny) *Types_Token
     GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
+    Get_curNsInfo(_env *LnsEnv) *TransUnitIF_NSInfo
     Get_errMessList(_env *LnsEnv) *LnsList
     Get_globalScope(_env *LnsEnv) *Ast_Scope
     Get_importedAliasMap(_env *LnsEnv) *LnsMap
     Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_scopeRO(_env *LnsEnv) *Ast_Scope
     Get_warnMessList(_env *LnsEnv) *LnsList
     inAnalyzingState(_env *LnsEnv, arg1 LnsInt) bool
     isTargetToken(_env *LnsEnv, arg1 *Types_Token) bool
@@ -1558,6 +1563,8 @@ type TransUnit_TransUnitMtd interface {
     PushbackStr(_env *LnsEnv, arg1 string, arg2 string, arg3 *Types_Position)
     PushbackToken(_env *LnsEnv, arg1 *Types_Token)
     SetParser(_env *LnsEnv, arg1 *Parser_DefaultPushbackParser)
+    SetScope(_env *LnsEnv, arg1 *Ast_Scope, arg2 LnsInt)
+    Set_curNsInfo(_env *LnsEnv, arg1 *TransUnitIF_NSInfo)
     setup(_env *LnsEnv, arg1 *TransUnit_TransUnit)
     skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_BlockNode
     skipBlock(_env *LnsEnv, arg1 bool) *LnsList
@@ -1796,7 +1803,6 @@ type TransUnit_TransUnitRunnerMtd interface {
     evalMacroOp(_env *LnsEnv, arg1 *Types_Token, arg2 *Ast_TypeInfo, arg3 LnsAny, arg4 Macro_EvalMacroCallback)
     Get(_env *LnsEnv) *LnsMap
     getContinueToken(_env *LnsEnv)(*Types_Token, bool)
-    GetCurrentNSInfo(_env *LnsEnv) *TransUnitIF_NSInfo
     GetCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo
     getDefaultAsync(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny) LnsInt
     GetLatestPos(_env *LnsEnv) *Types_Position
@@ -1806,10 +1812,12 @@ type TransUnit_TransUnitRunnerMtd interface {
     getSymbolToken(_env *LnsEnv, arg1 LnsInt) *Types_Token
     getToken(_env *LnsEnv, arg1 LnsAny) *Types_Token
     GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
+    Get_curNsInfo(_env *LnsEnv) *TransUnitIF_NSInfo
     Get_errMessList(_env *LnsEnv) *LnsList
     Get_globalScope(_env *LnsEnv) *Ast_Scope
     Get_importedAliasMap(_env *LnsEnv) *LnsMap
     Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_scopeRO(_env *LnsEnv) *Ast_Scope
     Get_warnMessList(_env *LnsEnv) *LnsList
     mergeFrom(_env *LnsEnv, arg1 *TransUnit_TransUnit, arg2 *LnsMap)
     NewNSInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *Types_Position) *TransUnitIF_NSInfo
@@ -1834,6 +1842,8 @@ type TransUnit_TransUnitRunnerMtd interface {
     PushbackToken(_env *LnsEnv, arg1 *Types_Token)
     Run(_env *LnsEnv)
     SetParser(_env *LnsEnv, arg1 *Parser_DefaultPushbackParser)
+    SetScope(_env *LnsEnv, arg1 *Ast_Scope, arg2 LnsInt)
+    Set_curNsInfo(_env *LnsEnv, arg1 *TransUnitIF_NSInfo)
     setup(_env *LnsEnv, arg1 *TransUnit_TransUnit)
     skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_BlockNode
     skipBlock(_env *LnsEnv, arg1 bool) *LnsList
@@ -2004,7 +2014,6 @@ type TransUnit_TransUnitCtrlMtd interface {
     evalMacro(_env *LnsEnv, arg1 *Types_Token, arg2 *Ast_TypeInfo, arg3 LnsAny) *Nodes_ExpMacroExpNode
     evalMacroOp(_env *LnsEnv, arg1 *Types_Token, arg2 *Ast_TypeInfo, arg3 LnsAny, arg4 Macro_EvalMacroCallback)
     getContinueToken(_env *LnsEnv)(*Types_Token, bool)
-    GetCurrentNSInfo(_env *LnsEnv) *TransUnitIF_NSInfo
     GetCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo
     getDefaultAsync(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny) LnsInt
     GetLatestPos(_env *LnsEnv) *Types_Position
@@ -2014,10 +2023,12 @@ type TransUnit_TransUnitCtrlMtd interface {
     getSymbolToken(_env *LnsEnv, arg1 LnsInt) *Types_Token
     getToken(_env *LnsEnv, arg1 LnsAny) *Types_Token
     GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
+    Get_curNsInfo(_env *LnsEnv) *TransUnitIF_NSInfo
     Get_errMessList(_env *LnsEnv) *LnsList
     Get_globalScope(_env *LnsEnv) *Ast_Scope
     Get_importedAliasMap(_env *LnsEnv) *LnsMap
     Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_scopeRO(_env *LnsEnv) *Ast_Scope
     Get_warnMessList(_env *LnsEnv) *LnsList
     mergeFrom(_env *LnsEnv, arg1 *TransUnit_TransUnit, arg2 *LnsMap)
     NewNSInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *Types_Position) *TransUnitIF_NSInfo
@@ -2042,6 +2053,8 @@ type TransUnit_TransUnitCtrlMtd interface {
     PushbackStr(_env *LnsEnv, arg1 string, arg2 string, arg3 *Types_Position)
     PushbackToken(_env *LnsEnv, arg1 *Types_Token)
     SetParser(_env *LnsEnv, arg1 *Parser_DefaultPushbackParser)
+    SetScope(_env *LnsEnv, arg1 *Ast_Scope, arg2 LnsInt)
+    Set_curNsInfo(_env *LnsEnv, arg1 *TransUnitIF_NSInfo)
     setup(_env *LnsEnv, arg1 *TransUnit_TransUnit)
     skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_BlockNode
     skipBlock(_env *LnsEnv, arg1 bool) *LnsList
@@ -2300,21 +2313,21 @@ func (self *TransUnit_TentativeSymbol) Finish(_env *LnsEnv, complete bool) LnsAn
             }
             for _symbolInfo := range( self.initSymSet.Items ) {
                 symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
-                if symbolInfo.FP.Get_scope(_env) != self.scope{
+                if symbolInfo.FP.Get_scope(_env) != self.FP.Get_scope(_env){
                     parent.initSymSet.Add(Ast_SymbolInfo2Stem(symbolInfo))
                 }
             }
             
             for _symbolInfo := range( self.accessSymSet.Items ) {
                 symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
-                if symbolInfo.FP.Get_scope(_env) != self.scope{
+                if symbolInfo.FP.Get_scope(_env) != self.FP.Get_scope(_env){
                     parent.accessSymSet.Add(Ast_SymbolInfo2Stem(symbolInfo))
                 }
             }
             
             for _symbolInfo := range( self.modSymbolSet.Items ) {
                 symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
-                if symbolInfo.FP.Get_scope(_env) != self.scope{
+                if symbolInfo.FP.Get_scope(_env) != self.FP.Get_scope(_env){
                     parent.modSymbolSet.Add(Ast_SymbolInfo2Stem(symbolInfo))
                 }
             }
@@ -2438,12 +2451,12 @@ func (self *TransUnit_AccessSymbolSetQueue) setupFrom(_env *LnsEnv, src *TransUn
         self.queue.Insert(TransUnit_AccessSymbolSet2Stem(symbol.FP.Clone(_env)))
     }
 }
-// 549: DeclConstr
+// 550: DeclConstr
 func (self *TransUnit_ListFuncBlockCtl) InitTransUnit_ListFuncBlockCtl(_env *LnsEnv, list *LnsList) {
     self.list = list
     self.pos = 0
 }
-// 554: decl @lune.@base.@TransUnit.ListFuncBlockCtl.getNext
+// 555: decl @lune.@base.@TransUnit.ListFuncBlockCtl.getNext
 func (self *TransUnit_ListFuncBlockCtl) GetNext(_env *LnsEnv) LnsAny {
     if self.pos >= self.list.Len(){
         return nil
@@ -2451,19 +2464,19 @@ func (self *TransUnit_ListFuncBlockCtl) GetNext(_env *LnsEnv) LnsAny {
     self.pos = self.pos + 1
     return self.list.GetAt(self.pos).(TransUnit_FuncBlockInfoDownCast).ToTransUnit_FuncBlockInfo()
 }
-// 566: DeclConstr
+// 567: DeclConstr
 func (self *TransUnit_PipeFuncBlockCtl) InitTransUnit_PipeFuncBlockCtl(_env *LnsEnv, pipe *Lns__pipe) {
     self.pipe = pipe
 }
-// 570: decl @lune.@base.@TransUnit.PipeFuncBlockCtl.getNext
+// 571: decl @lune.@base.@TransUnit.PipeFuncBlockCtl.getNext
 func (self *TransUnit_PipeFuncBlockCtl) GetNext(_env *LnsEnv) LnsAny {
     return self.pipe.FP.Get(_env)
 }
-// 647: decl @lune.@base.@TransUnit.TransUnit.setParser
+// 648: decl @lune.@base.@TransUnit.TransUnit.setParser
 func (self *TransUnit_TransUnit) SetParser(_env *LnsEnv, parser *Parser_DefaultPushbackParser) {
     self.Parser = parser
 }
-// 717: decl @lune.@base.@TransUnit.TransUnit.setup
+// 718: decl @lune.@base.@TransUnit.TransUnit.setup
 func (self *TransUnit_TransUnit) setup(_env *LnsEnv, src *TransUnit_TransUnit) {
     {
         for _key, _val := range( src.TypeId2ClassMap.Items ) {
@@ -2517,7 +2530,7 @@ func (self *TransUnit_TransUnit) setup(_env *LnsEnv, src *TransUnit_TransUnit) {
     }
     
 }
-// 757: decl @lune.@base.@TransUnit.TransUnit.mergeFrom
+// 758: decl @lune.@base.@TransUnit.TransUnit.mergeFrom
 func (self *TransUnit_TransUnit) mergeFrom(_env *LnsEnv, src *TransUnit_TransUnit,funcBlockResultMap *LnsMap) {
     self.NodeManager.FP.AddFrom(_env, src.NodeManager)
     for _, _val := range( src.closureFunList.Items ) {
@@ -2561,25 +2574,25 @@ func (self *TransUnit_TransUnit) mergeFrom(_env *LnsEnv, src *TransUnit_TransUni
             }
         } else if dstChildren.Len() < srcChildren.Len(){
             {
-                var _forFrom1 LnsInt = dstChildren.Len()
-                var _forTo1 LnsInt = srcChildren.Len()
-                for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-                    index := _forWork1
+                var _forFrom0 LnsInt = dstChildren.Len()
+                var _forTo0 LnsInt = srcChildren.Len()
+                for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+                    index := _forWork0
                     dstChildren.Insert(Ast_TypeInfo2Stem(srcChildren.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo()))
                 }
             }
         }
     }
 }
-// 817: decl @lune.@base.@TransUnit.TransUnit.getSuperParam
+// 818: decl @lune.@base.@TransUnit.TransUnit.getSuperParam
 func TransUnit_TransUnit_getSuperParam_5_(_env *LnsEnv, ctrl_info *Types_TransCtrlInfo)(*Types_TransCtrlInfo, *Ast_ProcessInfo) {
     var processInfo *Ast_ProcessInfo
     processInfo = Ast_createProcessInfo(_env, ctrl_info.ValidCheckingMutable, ctrl_info.ValidLuaval, ctrl_info.ValidAstDetailError)
     return ctrl_info, processInfo
 }
-// 826: DeclConstr
+// 827: DeclConstr
 func (self *TransUnit_TransUnit) InitTransUnit_TransUnit(_env *LnsEnv, moduleId *FrontInterface_ModuleId,importModuleInfo *FrontInterface_ImportModuleInfo,macroEval *Nodes_MacroEval,enableMultiPhase bool,analyzeModule LnsAny,mode LnsAny,pos LnsAny,targetLuaVer *LuaVer_LuaVerInfo,ctrl_info *Types_TransCtrlInfo,builtinFunc *Builtin_BuiltinFuncType) {
-    self.InitTransUnitIF_TransUnitBase(TransUnit_convExp0_871(_env, Lns_2DDD(TransUnit_TransUnit_getSuperParam_5_(_env, ctrl_info))))
+    self.InitTransUnitIF_TransUnitBase(TransUnit_convExp0_875(_env, Lns_2DDD(TransUnit_TransUnit_getSuperParam_5_(_env, ctrl_info))))
     self.FuncBlockInfoLinkNo = nil
     var phase LnsInt
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -2626,8 +2639,8 @@ func (self *TransUnit_TransUnit) InitTransUnit_TransUnit(_env *LnsEnv, moduleId 
     self.moduleName = ""
     self.moduleType = Ast_headTypeInfo
     self.Parser = NewParser_DefaultPushbackParser(_env, &NewParser_DummyParser(_env).Parser_Parser)
-    self.TopScope = self.Scope
-    self.ModuleScope = self.Scope
+    self.TopScope = self.FP.Get_scope(_env)
+    self.ModuleScope = self.FP.Get_scope(_env)
     self.tentativeSymbol = NewTransUnit_TentativeSymbol(_env, nil, self.GlobalScope, self.ModuleScope, false, nil)
     self.typeInfo2ClassNode = NewLnsMap( map[LnsAny]LnsAny{})
     self.commentCtrl = NewParser_CommentCtrl(_env)
@@ -2636,33 +2649,33 @@ func (self *TransUnit_TransUnit) InitTransUnit_TransUnit(_env *LnsEnv, moduleId 
     self.analyzePos = Lns_unwrapDefault( pos, self.FP.CreatePosition(_env, 0, 0)).(*Types_Position)
     self.analyzeModule = Lns_unwrapDefault( analyzeModule, "").(string)
 }
-// 901: decl @lune.@base.@TransUnit.TransUnit.getLatestPos
+// 902: decl @lune.@base.@TransUnit.TransUnit.getLatestPos
 func (self *TransUnit_TransUnit) GetLatestPos(_env *LnsEnv) *Types_Position {
     return self.Parser.FP.GetLastPos(_env)
 }
-// 905: decl @lune.@base.@TransUnit.TransUnit.pushAnalyzingState
+// 906: decl @lune.@base.@TransUnit.TransUnit.pushAnalyzingState
 func (self *TransUnit_TransUnit) pushAnalyzingState(_env *LnsEnv, state LnsInt) {
     self.analyzingStateQueue.Insert(state)
 }
-// 909: decl @lune.@base.@TransUnit.TransUnit.popAnalyzingState
+// 910: decl @lune.@base.@TransUnit.TransUnit.popAnalyzingState
 func (self *TransUnit_TransUnit) popAnalyzingState(_env *LnsEnv) {
     if self.analyzingStateQueue.Len() == 0{
         self.FP.Error(_env, "underflow analyzingStateQueue")
     }
     self.analyzingStateQueue.Remove(nil)
 }
-// 916: decl @lune.@base.@TransUnit.TransUnit.inAnalyzingState
+// 917: decl @lune.@base.@TransUnit.TransUnit.inAnalyzingState
 func (self *TransUnit_TransUnit) inAnalyzingState(_env *LnsEnv, state LnsInt) bool {
     if self.analyzingStateQueue.Len() > 0{
         return self.analyzingStateQueue.GetAt(self.analyzingStateQueue.Len()).(LnsInt) == state
     }
     return false
 }
-// 923: decl @lune.@base.@TransUnit.TransUnit.addWarnMess
+// 924: decl @lune.@base.@TransUnit.TransUnit.addWarnMess
 func (self *TransUnit_TransUnit) addWarnMess(_env *LnsEnv, pos *Types_Position,mess string) {
     self.WarnMessList.Insert(TransUnitIF_ErrMess2Stem(NewTransUnitIF_ErrMess(_env, _env.GetVM().String_format("%s: warning: %s", []LnsAny{pos.FP.GetDisplayTxt(_env), mess}), pos)))
 }
-// 928: decl @lune.@base.@TransUnit.TransUnit.addWarnErrMess
+// 929: decl @lune.@base.@TransUnit.TransUnit.addWarnErrMess
 func (self *TransUnit_TransUnit) addWarnErrMess(_env *LnsEnv, pos *Types_Position,err bool,mess string) {
     if err{
         self.FP.AddErrMess(_env, pos, mess)
@@ -2670,17 +2683,17 @@ func (self *TransUnit_TransUnit) addWarnErrMess(_env *LnsEnv, pos *Types_Positio
         self.FP.addWarnMess(_env, pos, mess)
     }
 }
-// 938: decl @lune.@base.@TransUnit.TransUnit.createDummyNS
+// 939: decl @lune.@base.@TransUnit.TransUnit.createDummyNS
 func (self *TransUnit_TransUnit) createDummyNS(_env *LnsEnv, scope *Ast_Scope,pos *Types_Position,asyncMode LnsInt) {
     var dummyType *Ast_NormalTypeInfo
     dummyType = self.ProcessInfo.FP.CreateDummyNameSpace(_env, scope, Ast_headTypeInfo, asyncMode)
     self.FP.NewNSInfo(_env, &dummyType.Ast_TypeInfo, pos)
 }
-// 946: decl @lune.@base.@TransUnit.TransUnit.prepareTentativeSymbol
+// 947: decl @lune.@base.@TransUnit.TransUnit.prepareTentativeSymbol
 func (self *TransUnit_TransUnit) prepareTentativeSymbol(_env *LnsEnv, scope *Ast_Scope,loopFlag bool,list LnsAny) {
     self.tentativeSymbol = NewTransUnit_TentativeSymbol(_env, self.tentativeSymbol, scope, self.ModuleScope, loopFlag, list)
 }
-// 953: decl @lune.@base.@TransUnit.TransUnit.checkAccesSym
+// 954: decl @lune.@base.@TransUnit.TransUnit.checkAccesSym
 func (self *TransUnit_TransUnit) checkAccesSym(_env *LnsEnv) {
     for _, _accessSym := range( self.tentativeSymbol.FP.Get_accessSymList(_env).Items ) {
         accessSym := _accessSym.(TransUnit_AccessSymPosDownCast).ToTransUnit_AccessSymPos()
@@ -2692,7 +2705,7 @@ func (self *TransUnit_TransUnit) checkAccesSym(_env *LnsEnv) {
     }
     self.tentativeSymbol.FP.ClearAccessSym(_env)
 }
-// 966: decl @lune.@base.@TransUnit.TransUnit.finishTentativeSymbol
+// 967: decl @lune.@base.@TransUnit.TransUnit.finishTentativeSymbol
 func (self *TransUnit_TransUnit) finishTentativeSymbol(_env *LnsEnv, complete bool) {
     self.FP.checkAccesSym(_env)
     var tentativeSymbol *TransUnit_TentativeSymbol
@@ -2710,22 +2723,22 @@ func (self *TransUnit_TransUnit) finishTentativeSymbol(_env *LnsEnv, complete bo
             }
         }
         {
-            __forsortCollection1 := errSymMap
-            __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
-            __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
-            for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
-                symbolInfo := __forsortCollection1.Items[ ___forsortKey1 ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
+            __forsortCollection0 := errSymMap
+            __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
+            __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
+            for _, ___forsortKey0 := range( __forsortSorted0.Items ) {
+                symbolInfo := __forsortCollection0.Items[ ___forsortKey0 ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                 self.FP.AddErrMess(_env, self.Parser.FP.GetLastPos(_env), _env.GetVM().String_format("There is the case no initialized value for '%s'", []LnsAny{symbolInfo.FP.Get_name(_env)}))
             }
         }
     }
     if tentativeSymbol.FP.Get_scope(_env).FP.Get_validCheckingUnaccess(_env){
         {
-            __forsortCollection2 := tentativeSymbol.FP.Get_scope(_env).FP.Get_symbol2SymbolInfoMap(_env)
-            __forsortSorted2 := __forsortCollection2.CreateKeyListStr()
-            __forsortSorted2.Sort( _env, LnsItemKindStr, nil )
-            for _, ___forsortKey2 := range( __forsortSorted2.Items ) {
-                symbolInfo := __forsortCollection2.Items[ ___forsortKey2 ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
+            __forsortCollection1 := tentativeSymbol.FP.Get_scope(_env).FP.Get_symbol2SymbolInfoMap(_env)
+            __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
+            __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
+            for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
+                symbolInfo := __forsortCollection1.Items[ ___forsortKey1 ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( Lns_op_not(symbolInfo.FP.Get_posForModToRef(_env))) ||
@@ -2749,17 +2762,17 @@ func (self *TransUnit_TransUnit) finishTentativeSymbol(_env *LnsEnv, complete bo
         }
     }
 }
-// 1004: decl @lune.@base.@TransUnit.TransUnit.mergeTentativeSymbol
+// 1005: decl @lune.@base.@TransUnit.TransUnit.mergeTentativeSymbol
 func (self *TransUnit_TransUnit) mergeTentativeSymbol(_env *LnsEnv, scope *Ast_Scope) {
     self.FP.checkAccesSym(_env)
     self.tentativeSymbol.FP.NewSet(_env, scope)
 }
-// 1010: decl @lune.@base.@TransUnit.TransUnit.getCurrentClass
+// 1011: decl @lune.@base.@TransUnit.TransUnit.getCurrentClass
 func (self *TransUnit_TransUnit) getCurrentClass(_env *LnsEnv) *Ast_TypeInfo {
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
     var scope *Ast_Scope
-    scope = self.Scope
+    scope = self.FP.Get_scope(_env)
     for {
         {
             __exp := scope.FP.Get_ownerTypeInfo(_env)
@@ -2778,22 +2791,22 @@ func (self *TransUnit_TransUnit) getCurrentClass(_env *LnsEnv) *Ast_TypeInfo {
     }
     return typeInfo
 }
-// 1025: decl @lune.@base.@TransUnit.TransUnit.pushExtModule
+// 1026: decl @lune.@base.@TransUnit.TransUnit.pushExtModule
 func (self *TransUnit_TransUnit) pushExtModule(_env *LnsEnv, externalFlag bool,name string,accessMode LnsInt,pos *Types_Position,lazy bool,lang LnsInt,requirePath string) *TransUnitIF_NSInfo {
     var modName string
     modName = name
     {
-        __ := self.Scope.FP.GetTypeInfoChild(_env, modName)
+        __ := self.FP.Get_scope(_env).FP.GetTypeInfoChild(_env, modName)
         if !Lns_IsNil( __ ) {
             self.FP.AddErrMess(_env, pos, _env.GetVM().String_format("multiple define -- %s", []LnsAny{name}))
         }
     }
     var parentNsInfo *TransUnitIF_NSInfo
-    parentNsInfo = self.FP.GetCurrentNSInfo(_env)
+    parentNsInfo = self.FP.Get_curNsInfo(_env)
     var parentInfo *Ast_TypeInfo
     parentInfo = parentNsInfo.FP.Get_typeInfo(_env)
     var parentScope *Ast_Scope
-    parentScope = self.Scope
+    parentScope = self.FP.Get_scope(_env)
     var scope *Ast_Scope
     scope = self.FP.PushScope(_env, Ast_ScopeKind__Module, nil, nil)
     var typeInfo *Ast_TypeInfo
@@ -2801,12 +2814,12 @@ func (self *TransUnit_TransUnit) pushExtModule(_env *LnsEnv, externalFlag bool,n
     parentScope.FP.AddExtModule(_env, self.ProcessInfo, name, pos, typeInfo, lazy, lang)
     if Lns_op_not(self.TypeId2ClassMap.Get(typeInfo.FP.Get_typeId(_env))){
         var namespace *Nodes_NamespaceInfo
-        namespace = NewNodes_NamespaceInfo(_env, modName, self.Scope, typeInfo)
+        namespace = NewNodes_NamespaceInfo(_env, modName, self.FP.Get_scope(_env), typeInfo)
         self.TypeId2ClassMap.Set(typeInfo.FP.Get_typeId(_env),namespace)
     }
     return self.FP.NewNSInfo(_env, typeInfo, pos)
 }
-// 1104: decl @lune.@base.@TransUnit.TransUnit.isTargetTokenPos
+// 1105: decl @lune.@base.@TransUnit.TransUnit.isTargetTokenPos
 func (self *TransUnit_TransUnit) isTargetTokenPos(_env *LnsEnv, txt string,pos *Types_Position) bool {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( self.analyzePos.LineNo == pos.LineNo) &&
@@ -2816,11 +2829,11 @@ func (self *TransUnit_TransUnit) isTargetTokenPos(_env *LnsEnv, txt string,pos *
     }
     return false
 }
-// 1114: decl @lune.@base.@TransUnit.TransUnit.isTargetToken
+// 1115: decl @lune.@base.@TransUnit.TransUnit.isTargetToken
 func (self *TransUnit_TransUnit) isTargetToken(_env *LnsEnv, token *Types_Token) bool {
     return self.FP.isTargetTokenPos(_env, token.Txt, token.Pos)
 }
-// 1118: decl @lune.@base.@TransUnit.TransUnit.dumpSymbolType
+// 1119: decl @lune.@base.@TransUnit.TransUnit.dumpSymbolType
 func (self *TransUnit_TransUnit) dumpSymbolType(_env *LnsEnv, accessMode LnsInt,name string,typeInfo *Ast_TypeInfo) {
     var writer *Writer_JSON
     writer = NewWriter_JSON(_env, Lns_io_stdout)
@@ -2837,7 +2850,7 @@ func (self *TransUnit_TransUnit) dumpSymbolType(_env *LnsEnv, accessMode LnsInt,
     writer.FP.Fin(_env)
     _env.GetVM().OS_exit(0)
 }
-// 1134: decl @lune.@base.@TransUnit.TransUnit.errorShadowingOp
+// 1135: decl @lune.@base.@TransUnit.TransUnit.errorShadowingOp
 func (self *TransUnit_TransUnit) ErrorShadowingOp(_env *LnsEnv, pos *Types_Position,symbolInfo LnsAny,errFlag bool) {
     if symbolInfo != nil{
         symbolInfo_231 := symbolInfo.(*Ast_SymbolInfo)
@@ -2859,11 +2872,11 @@ func (self *TransUnit_TransUnit) ErrorShadowingOp(_env *LnsEnv, pos *Types_Posit
         self.FP.addWarnErrMess(_env, pos, errFlag, mess)
     }
 }
-// 1152: decl @lune.@base.@TransUnit.TransUnit.errorShadowing
+// 1153: decl @lune.@base.@TransUnit.TransUnit.errorShadowing
 func (self *TransUnit_TransUnit) errorShadowing(_env *LnsEnv, pos *Types_Position,symbolInfo LnsAny) {
     self.FP.ErrorShadowingOp(_env, pos, symbolInfo, Lns_op_not(self.Ctrl_info.WarningShadowing))
 }
-// 1156: decl @lune.@base.@TransUnit.TransUnit.checkShadowing
+// 1157: decl @lune.@base.@TransUnit.TransUnit.checkShadowing
 func (self *TransUnit_TransUnit) checkShadowing(_env *LnsEnv, pos *Types_Position,name string,scope *Ast_Scope) {
     if name == "_"{
         return 
@@ -2871,7 +2884,7 @@ func (self *TransUnit_TransUnit) checkShadowing(_env *LnsEnv, pos *Types_Positio
     var symbolInfo *Ast_SymbolInfo
     
     {
-        _symbolInfo := self.Scope.FP.GetSymbolTypeInfo(_env, name, scope, self.ModuleScope, self.ScopeAccess)
+        _symbolInfo := self.FP.Get_scope(_env).FP.GetSymbolTypeInfo(_env, name, scope, self.ModuleScope, self.ScopeAccess)
         if _symbolInfo == nil{
             return 
         } else {
@@ -2880,19 +2893,19 @@ func (self *TransUnit_TransUnit) checkShadowing(_env *LnsEnv, pos *Types_Positio
     }
     self.FP.errorShadowing(_env, pos, symbolInfo)
 }
-// 1170: decl @lune.@base.@TransUnit.TransUnit.addLocalVar
+// 1171: decl @lune.@base.@TransUnit.TransUnit.addLocalVar
 func (self *TransUnit_TransUnit) AddLocalVar(_env *LnsEnv, pos *Types_Position,argFlag bool,canBeLeft bool,name string,typeInfo *Ast_TypeInfo,mutable LnsInt,allowShadow LnsAny) *Ast_SymbolInfo {
     if Lns_op_not(allowShadow){
-        self.FP.checkShadowing(_env, pos, name, self.Scope)
+        self.FP.checkShadowing(_env, pos, name, self.FP.Get_scope(_env))
     }
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( self.analyzeMode == TransUnit_AnalyzeMode__Inquire) &&
         _env.SetStackVal( self.FP.isTargetTokenPos(_env, name, pos)) ).(bool)){
         self.FP.dumpSymbolType(_env, Ast_AccessMode__Local, name, typeInfo)
     }
-    return Lns_unwrap( Lns_car(self.Scope.FP.AddLocalVar(_env, self.ProcessInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable))).(*Ast_SymbolInfo)
+    return Lns_unwrap( Lns_car(self.FP.Get_scope(_env).FP.AddLocalVar(_env, self.ProcessInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable))).(*Ast_SymbolInfo)
 }
-// 1193: decl @lune.@base.@TransUnit.TransUnit.getLineNo
+// 1194: decl @lune.@base.@TransUnit.TransUnit.getLineNo
 func (self *TransUnit_TransUnit) getLineNo(_env *LnsEnv, token *Types_Token) *Types_Position {
     var pos *Types_Position
     pos = token.Pos
@@ -2908,35 +2921,35 @@ func (self *TransUnit_TransUnit) getLineNo(_env *LnsEnv, token *Types_Token) *Ty
     }
     return pos
 }
-// 1205: decl @lune.@base.@TransUnit.TransUnit.canBeAsyncParam
+// 1206: decl @lune.@base.@TransUnit.TransUnit.canBeAsyncParam
 func (self *TransUnit_TransUnit) canBeAsyncParam(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
-    if _switch1 := typeInfo.FP.Get_nilableTypeInfo(_env).FP.Get_srcTypeInfo(_env).FP.Get_genSrcTypeInfo(_env); _switch1 == self.builtinFunc.G__pipe_ || _switch1 == self.builtinFunc.G__lns_sync_flag_ {
+    if _switch0 := typeInfo.FP.Get_nilableTypeInfo(_env).FP.Get_srcTypeInfo(_env).FP.Get_genSrcTypeInfo(_env); _switch0 == self.builtinFunc.G__pipe_ || _switch0 == self.builtinFunc.G__lns_sync_flag_ {
         return true
     }
     return Ast_TypeInfo_canBeAsyncParam(_env, typeInfo)
 }
-// 1275: decl @lune.@base.@TransUnit.TransUnit.createModifier
+// 1276: decl @lune.@base.@TransUnit.TransUnit.createModifier
 func (self *TransUnit_TransUnit) createModifier(_env *LnsEnv, typeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
     if Lns_op_not(self.ValidMutControl){
         return typeInfo
     }
     return self.ProcessInfo.FP.CreateModifier(_env, typeInfo, mutMode)
 }
-// 1284: decl @lune.@base.@TransUnit.TransUnit.createExtType
+// 1285: decl @lune.@base.@TransUnit.TransUnit.createExtType
 func (self *TransUnit_TransUnit) createExtType(_env *LnsEnv, pos *Types_Position,typeInfo *Ast_TypeInfo) *Ast_TypeInfo {
-    switch _matchExp1 := self.ProcessInfo.FP.CreateLuaval(_env, typeInfo, true).(type) {
+    switch _matchExp0 := self.ProcessInfo.FP.CreateLuaval(_env, typeInfo, true).(type) {
     case *Ast_LuavalResult__OK:
-    work := _matchExp1.Val1
+    work := _matchExp0.Val1
         return work
     case *Ast_LuavalResult__Err:
-    err := _matchExp1.Val1
+    err := _matchExp0.Val1
         self.FP.AddErrMess(_env, pos, _env.GetVM().String_format("not support -- %s", []LnsAny{err}))
         return typeInfo
     }
 // insert a dummy
     return nil
 }
-// 1298: decl @lune.@base.@TransUnit.TransUnit.errorAt
+// 1299: decl @lune.@base.@TransUnit.TransUnit.errorAt
 func (self *TransUnit_TransUnit) ErrorAt(_env *LnsEnv, pos *Types_Position,mess string) {
     self.FP.AddErrMess(_env, pos, mess)
     for _, _errmess := range( TransUnitIF_sortMess(_env, self.ErrMessList).Items ) {
@@ -2954,27 +2967,27 @@ func (self *TransUnit_TransUnit) ErrorAt(_env *LnsEnv, pos *Types_Position,mess 
     }
     Util_err(_env, "has error")
 }
-// 1316: decl @lune.@base.@TransUnit.TransUnit.createNoneNode
+// 1317: decl @lune.@base.@TransUnit.TransUnit.createNoneNode
 func (self *TransUnit_TransUnit) createNoneNode(_env *LnsEnv, pos *Types_Position) *Nodes_Node {
     return &Nodes_NoneNode_create(_env, self.NodeManager, pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)})).Nodes_Node
 }
-// 1322: decl @lune.@base.@TransUnit.TransUnit.pushbackToken
+// 1323: decl @lune.@base.@TransUnit.TransUnit.pushbackToken
 func (self *TransUnit_TransUnit) PushbackToken(_env *LnsEnv, token *Types_Token) {
     self.Parser.FP.PushbackToken(_env, token)
 }
-// 1327: decl @lune.@base.@TransUnit.TransUnit.newPushback
+// 1328: decl @lune.@base.@TransUnit.TransUnit.newPushback
 func (self *TransUnit_TransUnit) NewPushback(_env *LnsEnv, tokenList *LnsList) {
     self.Parser.FP.NewPushback(_env, tokenList)
 }
-// 1331: decl @lune.@base.@TransUnit.TransUnit.getStreamName
+// 1332: decl @lune.@base.@TransUnit.TransUnit.getStreamName
 func (self *TransUnit_TransUnit) GetStreamName(_env *LnsEnv) string {
     return self.Parser.FP.GetStreamName(_env)
 }
-// 1335: decl @lune.@base.@TransUnit.TransUnit.createPosition
+// 1336: decl @lune.@base.@TransUnit.TransUnit.createPosition
 func (self *TransUnit_TransUnit) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
     return self.Parser.FP.CreatePosition(_env, lineNo, column)
 }
-// 1339: decl @lune.@base.@TransUnit.TransUnit.getTokenNoErr
+// 1340: decl @lune.@base.@TransUnit.TransUnit.getTokenNoErr
 func (self *TransUnit_TransUnit) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *Types_Token {
     var token *Types_Token
     var commentList *LnsList
@@ -2993,7 +3006,7 @@ func (self *TransUnit_TransUnit) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *T
                 _env.SetStackVal( Lns_op_not(skipFlag)) ||
                 _env.SetStackVal( Lns_op_not(self.inTestBlock)) ||
                 _env.SetStackVal( self.Ctrl_info.Testing) ).(bool))) ).(bool)){
-            token = self.MacroCtrl.FP.ExpandMacroVal(_env, self.TypeNameCtrl, self.Scope, self.FP, token)
+            token = self.MacroCtrl.FP.ExpandMacroVal(_env, self.TypeNameCtrl, self.FP.Get_scope(_env), self.FP, token)
         }
         if Lns_op_not(self.Ctrl_info.CompatComment){
             self.commentCtrl.FP.AddDirect(_env, commentList)
@@ -3007,7 +3020,7 @@ func (self *TransUnit_TransUnit) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *T
     }
     return token
 }
-// 1376: decl @lune.@base.@TransUnit.TransUnit.getToken
+// 1377: decl @lune.@base.@TransUnit.TransUnit.getToken
 func (self *TransUnit_TransUnit) getToken(_env *LnsEnv, allowEof LnsAny) *Types_Token {
     var token *Types_Token
     token = self.FP.GetTokenNoErr(_env, nil)
@@ -3019,15 +3032,15 @@ func (self *TransUnit_TransUnit) getToken(_env *LnsEnv, allowEof LnsAny) *Types_
     }
     return token
 }
-// 1388: decl @lune.@base.@TransUnit.TransUnit.pushback
+// 1389: decl @lune.@base.@TransUnit.TransUnit.pushback
 func (self *TransUnit_TransUnit) Pushback(_env *LnsEnv) {
     self.Parser.FP.Pushback(_env)
 }
-// 1392: decl @lune.@base.@TransUnit.TransUnit.pushbackStr
+// 1393: decl @lune.@base.@TransUnit.TransUnit.pushbackStr
 func (self *TransUnit_TransUnit) PushbackStr(_env *LnsEnv, name string,statement string,pos *Types_Position) {
     self.Parser.FP.PushbackStr(_env, name, statement, pos)
 }
-// 1418: decl @lune.@base.@TransUnit.TransUnit.checkSymbol
+// 1419: decl @lune.@base.@TransUnit.TransUnit.checkSymbol
 func (self *TransUnit_TransUnit) checkSymbol(_env *LnsEnv, token *Types_Token,mode LnsInt) *Types_Token {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( token.Kind != Types_TokenKind__Symb) &&
@@ -3062,28 +3075,28 @@ func (self *TransUnit_TransUnit) checkSymbol(_env *LnsEnv, token *Types_Token,mo
     }
     return token
 }
-// 1454: decl @lune.@base.@TransUnit.TransUnit.getSymbolToken
+// 1455: decl @lune.@base.@TransUnit.TransUnit.getSymbolToken
 func (self *TransUnit_TransUnit) getSymbolToken(_env *LnsEnv, mode LnsInt) *Types_Token {
     return self.FP.checkSymbol(_env, self.FP.getToken(_env, nil), mode)
 }
-// 1459: decl @lune.@base.@TransUnit.TransUnit.checkToken
+// 1460: decl @lune.@base.@TransUnit.TransUnit.checkToken
 func (self *TransUnit_TransUnit) checkToken(_env *LnsEnv, token *Types_Token,txt string) *Types_Token {
     if token.Txt != txt{
         self.FP.Error(_env, _env.GetVM().String_format("not found -- %s. expects %s", []LnsAny{txt, token.Txt}))
     }
     return token
 }
-// 1466: decl @lune.@base.@TransUnit.TransUnit.checkNextToken
+// 1467: decl @lune.@base.@TransUnit.TransUnit.checkNextToken
 func (self *TransUnit_TransUnit) checkNextToken(_env *LnsEnv, txt string) *Types_Token {
     return self.FP.checkToken(_env, self.FP.getToken(_env, nil), txt)
 }
-// 1476: decl @lune.@base.@TransUnit.TransUnit.getContinueToken
+// 1477: decl @lune.@base.@TransUnit.TransUnit.getContinueToken
 func (self *TransUnit_TransUnit) getContinueToken(_env *LnsEnv)(*Types_Token, bool) {
     var token *Types_Token
     token = self.FP.getToken(_env, nil)
     return token, token.Consecutive
 }
-// 1482: decl @lune.@base.@TransUnit.TransUnit.getDefaultAsync
+// 1483: decl @lune.@base.@TransUnit.TransUnit.getDefaultAsync
 func (self *TransUnit_TransUnit) getDefaultAsync(_env *LnsEnv, kind LnsInt,classTypeInfo LnsAny,asyncMode LnsAny) LnsInt {
     if asyncMode != nil{
         asyncMode_321 := asyncMode.(LnsInt)
@@ -3099,16 +3112,16 @@ func (self *TransUnit_TransUnit) getDefaultAsync(_env *LnsEnv, kind LnsInt,class
             }
         }
     }
-    if _switch1 := kind; _switch1 == Ast_TypeInfoKind__Method {
+    if _switch0 := kind; _switch0 == Ast_TypeInfoKind__Method {
         if self.defaultAsyncMode == TransUnit_DefaultAsyncMode__AsyncAll{
             return Ast_Async__Async
         }
-    } else if _switch1 == Ast_TypeInfoKind__Func || _switch1 == Ast_TypeInfoKind__FormFunc {
+    } else if _switch0 == Ast_TypeInfoKind__Func || _switch0 == Ast_TypeInfoKind__FormFunc {
         return TransUnit_getDefaultAsync__process_0_(_env, self.defaultAsyncMode)
     }
     return Ast_Async__Noasync
 }
-// 1529: decl @lune.@base.@TransUnit.TransUnit.analyzeStatementList
+// 1530: decl @lune.@base.@TransUnit.TransUnit.analyzeStatementList
 func (self *TransUnit_TransUnit) analyzeStatementList(_env *LnsEnv, stmtList *LnsList,firstSwitchingParser bool,termTxt LnsAny)(LnsAny, LnsInt) {
     var breakKind LnsInt
     breakKind = Nodes_BreakKind__None
@@ -3209,7 +3222,7 @@ func (self *TransUnit_TransUnit) analyzeStatementList(_env *LnsEnv, stmtList *Ln
     }
     return lastStatement, lastLineNo
 }
-// 1643: decl @lune.@base.@TransUnit.TransUnit.analyzeStatementListSubfile
+// 1644: decl @lune.@base.@TransUnit.TransUnit.analyzeStatementListSubfile
 func (self *TransUnit_TransUnit) analyzeStatementListSubfile(_env *LnsEnv, stmtList *LnsList) LnsAny {
     var statement LnsAny
     statement = self.FP.analyzeStatement(_env, nil)
@@ -3226,23 +3239,23 @@ func (self *TransUnit_TransUnit) analyzeStatementListSubfile(_env *LnsEnv, stmtL
     }
     return Lns_car(self.FP.analyzeStatementList(_env, stmtList, true, nil))
 }
-// 1658: decl @lune.@base.@TransUnit.TransUnit.supportLang
+// 1661: decl @lune.@base.@TransUnit.TransUnit.supportLang
 func (self *TransUnit_TransUnit) supportLang(_env *LnsEnv, lang string) bool {
     for _pragma := range( self.HelperInfo.PragmaSet.Items ) {
         pragma := _pragma
-        switch _matchExp1 := pragma.(type) {
+        switch _matchExp0 := pragma.(type) {
         case *LuneControl_Pragma__limit_conv_code:
-        codeSet := _matchExp1.Val1
+        codeSet := _matchExp0.Val1
             return codeSet.Has(lang)
         }
     }
     return true
 }
-// 1669: decl @lune.@base.@TransUnit.TransUnit.analyzeLuneControlToken
+// 1672: decl @lune.@base.@TransUnit.TransUnit.analyzeLuneControlToken
 func (self *TransUnit_TransUnit) AnalyzeLuneControlToken(_env *LnsEnv, firstToken *Types_Token,controlToken *Types_Token) LnsAny {
     return nil
 }
-// 1675: decl @lune.@base.@TransUnit.TransUnit.analyzeLuneControl
+// 1678: decl @lune.@base.@TransUnit.TransUnit.analyzeLuneControl
 func (self *TransUnit_TransUnit) analyzeLuneControl(_env *LnsEnv, firstToken *Types_Token) LnsAny {
     var node LnsAny
     node = nil
@@ -3255,9 +3268,9 @@ func (self *TransUnit_TransUnit) analyzeLuneControl(_env *LnsEnv, firstToken *Ty
             work := _work
             pragma = work
         } else {
-            if _switch1 := (nextToken.Txt); _switch1 == "load__lune_module" {
+            if _switch0 := (nextToken.Txt); _switch0 == "load__lune_module" {
                 pragma = LuneControl_Pragma__load__lune_module_Obj
-            } else if _switch1 == "run_async_pipe" {
+            } else if _switch0 == "run_async_pipe" {
                 if Lns_op_not(self.HelperInfo.PragmaSet.Has(LuneControl_Pragma__use_async_Obj)){
                     self.FP.AddErrMess(_env, nextToken.Pos, "must set '_lune_control use_async'")
                 }
@@ -3272,7 +3285,7 @@ func (self *TransUnit_TransUnit) analyzeLuneControl(_env *LnsEnv, firstToken *Ty
                     _env.SetStackVal( Ast_isClass(_env, nowClass)) ).(bool)){
                     {
                         _loopMethod := _env.NilAccFin(_env.NilAccPush(nowClass.FP.Get_scope(_env)) && 
-                        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoChild(_env, "loop")})/* 1728:37 */)
+                        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoChild(_env, "loop")})/* 1731:37 */)
                         if !Lns_IsNil( _loopMethod ) {
                             loopMethod := _loopMethod.(*Ast_TypeInfo)
                             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -3301,33 +3314,33 @@ func (self *TransUnit_TransUnit) analyzeLuneControl(_env *LnsEnv, firstToken *Ty
     self.FP.checkNextToken(_env, ";")
     return node
 }
-// 1791: decl @lune.@base.@TransUnit.TransUnit.analyzeBlock
+// 1794: decl @lune.@base.@TransUnit.TransUnit.analyzeBlock
 func (self *TransUnit_TransUnit) analyzeBlock(_env *LnsEnv, blockKind LnsInt,tentativeMode LnsInt,scope LnsAny,refAccessSymPosList LnsAny) *Nodes_BlockNode {
     var backScope *Ast_Scope
-    backScope = self.Scope
+    backScope = self.FP.Get_scope(_env)
     if scope != nil{
         scope_417 := scope.(*Ast_Scope)
-        self.Scope = scope_417
+        self.FP.SetScope(_env, scope_417, TransUnitIF_SetNSInfo__FromScope)
     } else {
         self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
     }
     var blockScope *Ast_Scope
-    blockScope = self.Scope
+    blockScope = self.FP.Get_scope(_env)
     blockScope.FP.AddIgnoredVar(_env, self.ProcessInfo)
     var nsInfo *TransUnitIF_NSInfo
-    nsInfo = self.FP.GetCurrentNSInfo(_env)
-    if _switch1 := tentativeMode; _switch1 == TransUnit_TentativeMode__Loop {
-        self.FP.prepareTentativeSymbol(_env, self.Scope, true, refAccessSymPosList)
-    } else if _switch1 == TransUnit_TentativeMode__Simple || _switch1 == TransUnit_TentativeMode__Start || _switch1 == TransUnit_TentativeMode__Ignore {
-        self.FP.prepareTentativeSymbol(_env, self.Scope, false, nil)
-    } else if _switch1 == TransUnit_TentativeMode__Merge || _switch1 == TransUnit_TentativeMode__Finish {
-        self.FP.mergeTentativeSymbol(_env, self.Scope)
+    nsInfo = self.FP.Get_curNsInfo(_env)
+    if _switch0 := tentativeMode; _switch0 == TransUnit_TentativeMode__Loop {
+        self.FP.prepareTentativeSymbol(_env, self.FP.Get_scope(_env), true, refAccessSymPosList)
+    } else if _switch0 == TransUnit_TentativeMode__Simple || _switch0 == TransUnit_TentativeMode__Start || _switch0 == TransUnit_TentativeMode__Ignore {
+        self.FP.prepareTentativeSymbol(_env, self.FP.Get_scope(_env), false, nil)
+    } else if _switch0 == TransUnit_TentativeMode__Merge || _switch0 == TransUnit_TentativeMode__Finish {
+        self.FP.mergeTentativeSymbol(_env, self.FP.Get_scope(_env))
     }
     var loopFlag bool
     loopFlag = false
-    if _switch2 := blockKind; _switch2 == Nodes_BlockKind__For || _switch2 == Nodes_BlockKind__Apply || _switch2 == Nodes_BlockKind__While || _switch2 == Nodes_BlockKind__Repeat || _switch2 == Nodes_BlockKind__Foreach {
+    if _switch1 := blockKind; _switch1 == Nodes_BlockKind__For || _switch1 == Nodes_BlockKind__Apply || _switch1 == Nodes_BlockKind__While || _switch1 == Nodes_BlockKind__Repeat || _switch1 == Nodes_BlockKind__Foreach {
         loopFlag = true
-        nsInfo.FP.Get_loopScopeQueue(_env).Insert(Ast_Scope2Stem(self.Scope))
+        nsInfo.FP.Get_loopScopeQueue(_env).Insert(Ast_Scope2Stem(self.FP.Get_scope(_env)))
     }
     var stmtList *LnsList
     stmtList = NewLnsList([]LnsAny{})
@@ -3339,7 +3352,7 @@ func (self *TransUnit_TransUnit) analyzeBlock(_env *LnsEnv, blockKind LnsInt,ten
         nsInfo.FP.Get_loopScopeQueue(_env).Remove(nil)
     }
     if scope != nil{
-        self.Scope = backScope
+        self.FP.SetScope(_env, backScope, TransUnitIF_SetNSInfo__FromScope)
     } else {
         self.FP.PopScope(_env)
     }
@@ -3349,15 +3362,15 @@ func (self *TransUnit_TransUnit) analyzeBlock(_env *LnsEnv, blockKind LnsInt,ten
         self.tentativeSymbol.FP.Skip(_env)
     }
     if blockKind != Nodes_BlockKind__Repeat{
-        if _switch3 := tentativeMode; _switch3 == TransUnit_TentativeMode__Simple || _switch3 == TransUnit_TentativeMode__Finish {
+        if _switch2 := tentativeMode; _switch2 == TransUnit_TentativeMode__Simple || _switch2 == TransUnit_TentativeMode__Finish {
             self.FP.finishTentativeSymbol(_env, true)
-        } else if _switch3 == TransUnit_TentativeMode__Ignore || _switch3 == TransUnit_TentativeMode__Loop {
+        } else if _switch2 == TransUnit_TentativeMode__Ignore || _switch2 == TransUnit_TentativeMode__Loop {
             self.FP.finishTentativeSymbol(_env, false)
         }
     }
     return node
 }
-// 1872: decl @lune.@base.@TransUnit.TransUnit.skipBlock
+// 1878: decl @lune.@base.@TransUnit.TransUnit.skipBlock
 func (self *TransUnit_TransUnit) skipBlock(_env *LnsEnv, recordToken bool) *LnsList {
     var blockDepth LnsInt
     blockDepth = 0
@@ -3372,9 +3385,9 @@ func (self *TransUnit_TransUnit) skipBlock(_env *LnsEnv, recordToken bool) *LnsL
         if token.Kind == Types_TokenKind__Eof{
             self.FP.Error(_env, "EOF")
         }
-        if _switch1 := token.Txt; _switch1 == "{" {
+        if _switch0 := token.Txt; _switch0 == "{" {
             blockDepth = blockDepth + 1
-        } else if _switch1 == "}" {
+        } else if _switch0 == "}" {
             blockDepth = blockDepth - 1
             if blockDepth <= 0{
                 break
@@ -3387,7 +3400,7 @@ func (self *TransUnit_TransUnit) skipBlock(_env *LnsEnv, recordToken bool) *LnsL
     }
     return tokenList
 }
-// 1905: decl @lune.@base.@TransUnit.TransUnit.skipAndCreateDummyBlock
+// 1911: decl @lune.@base.@TransUnit.TransUnit.skipAndCreateDummyBlock
 func (self *TransUnit_TransUnit) skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_BlockNode {
     var blockToken *Types_Token
     blockToken = self.FP.checkNextToken(_env, "{")
@@ -3400,7 +3413,7 @@ func (self *TransUnit_TransUnit) skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_Bl
     self.FP.skipBlock(_env, false)
     return Nodes_BlockNode_create(_env, self.NodeManager, blockToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), Nodes_BlockKind__Func, blockScope, stmtList)
 }
-// 1921: decl @lune.@base.@TransUnit.TransUnit.analyzeRequest
+// 1927: decl @lune.@base.@TransUnit.TransUnit.analyzeRequest
 func (self *TransUnit_TransUnit) analyzeRequest(_env *LnsEnv, reqToken *Types_Token) *Nodes_RequestNode {
     var processor *Nodes_Node
     processor = self.FP.analyzeExp(_env, false, true, false, nil, Ast_builtinTypeProcessor)
@@ -3411,19 +3424,19 @@ func (self *TransUnit_TransUnit) analyzeRequest(_env *LnsEnv, reqToken *Types_To
     exp = self.FP.analyzeExp(_env, false, true, false, nil, nil)
     return Nodes_RequestNode_create(_env, self.NodeManager, reqToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), exp.FP.Get_expTypeList(_env), processor, exp)
 }
-// 1937: decl @lune.@base.@TransUnit.TransUnit.analyzeAsyncLock
+// 1943: decl @lune.@base.@TransUnit.TransUnit.analyzeAsyncLock
 func (self *TransUnit_TransUnit) analyzeAsyncLock(_env *LnsEnv, asyncToken *Types_Token,lockKind LnsInt) *Nodes_Node {
     var nsInfo *TransUnitIF_NSInfo
     nsInfo = self.FP.GetNSInfo(_env, self.FP.GetCurrentNamespaceTypeInfo(_env))
-    if _switch1 := lockKind; _switch1 == Nodes_LockKind__AsyncLock {
+    if _switch0 := lockKind; _switch0 == Nodes_LockKind__AsyncLock {
         if nsInfo.FP.IsNoasync(_env){
             self.FP.AddErrMess(_env, asyncToken.Pos, _env.GetVM().String_format("can't use __asyncLock on __noasync. -- %s", []LnsAny{nsInfo.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
         }
-    } else if _switch1 == Nodes_LockKind__Unsafe || _switch1 == Nodes_LockKind__LuaLock {
+    } else if _switch0 == Nodes_LockKind__Unsafe || _switch0 == Nodes_LockKind__LuaLock {
         if nsInfo.FP.IsNoasync(_env){
             self.FP.AddErrMess(_env, asyncToken.Pos, _env.GetVM().String_format("can't use __unsafe or __luaLock on __noasync. -- %s", []LnsAny{nsInfo.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
         }
-    } else if _switch1 == Nodes_LockKind__LuaGo {
+    } else if _switch0 == Nodes_LockKind__LuaGo {
         if Lns_op_not(nsInfo.FP.IsNoasync(_env)){
             self.FP.AddErrMess(_env, asyncToken.Pos, _env.GetVM().String_format("can't use __luago on __async. -- %s", []LnsAny{nsInfo.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
         }
@@ -3434,7 +3447,7 @@ func (self *TransUnit_TransUnit) analyzeAsyncLock(_env *LnsEnv, asyncToken *Type
     nsInfo.FP.DecLock(_env)
     return &Nodes_AsyncLockNode_create(_env, self.NodeManager, asyncToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), lockKind, block).Nodes_Node
 }
-// 1981: decl @lune.@base.@TransUnit.TransUnit.analyzeIf
+// 1987: decl @lune.@base.@TransUnit.TransUnit.analyzeIf
 func (self *TransUnit_TransUnit) analyzeIf(_env *LnsEnv, token *Types_Token) *Nodes_Node {
     var nextToken *Types_Token
     var continueFlag bool
@@ -3452,8 +3465,8 @@ func (self *TransUnit_TransUnit) analyzeIf(_env *LnsEnv, token *Types_Token) *No
     list.Insert(Nodes_IfStmtInfo2Stem(NewNodes_IfStmtInfo(_env, Nodes_IfKind__If, ifExp, self.FP.analyzeBlock(_env, Nodes_BlockKind__If, TransUnit_TentativeMode__Start, nil, nil))))
     var checkCond func(_env *LnsEnv, condExp *Nodes_Node)
     checkCond = func(_env *LnsEnv, condExp *Nodes_Node) {
-        if _switch1 := condExp.FP.Get_expType(_env).FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Nilable || _switch1 == Ast_TypeInfoKind__Stem {
-        } else if _switch1 == Ast_TypeInfoKind__Prim {
+        if _switch0 := condExp.FP.Get_expType(_env).FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Nilable || _switch0 == Ast_TypeInfoKind__Stem {
+        } else if _switch0 == Ast_TypeInfoKind__Prim {
             if Lns_op_not(condExp.FP.Get_expType(_env).FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeBool, nil, nil)){
                 self.FP.AddErrMess(_env, condExp.FP.Get_pos(_env), _env.GetVM().String_format("This exp never be false -- %s", []LnsAny{condExp.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
             }
@@ -3480,10 +3493,10 @@ func (self *TransUnit_TransUnit) analyzeIf(_env *LnsEnv, token *Types_Token) *No
     }
     return &Nodes_IfNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), list).Nodes_Node
 }
-// 2044: decl @lune.@base.@TransUnit.TransUnit.processCaseDefault
+// 2052: decl @lune.@base.@TransUnit.TransUnit.processCaseDefault
 func (self *TransUnit_TransUnit) processCaseDefault(_env *LnsEnv, firstToken *Types_Token,caseKind LnsInt,nextToken *Types_Token,hasCase bool)(LnsAny, bool) {
     var keyword string
-    keyword = TransUnit_convExp1_6116(Lns_2DDD(_env.GetVM().String_gsub(firstToken.Txt,"_", "")))
+    keyword = TransUnit_convExp1_6122(Lns_2DDD(_env.GetVM().String_gsub(firstToken.Txt,"_", "")))
     var fullKeyword string
     fullKeyword = _env.GetVM().String_format("_%s", []LnsAny{keyword})
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -3525,7 +3538,7 @@ func (self *TransUnit_TransUnit) processCaseDefault(_env *LnsEnv, firstToken *Ty
     }
     return defaultBlock, failSafeDefault
 }
-// 2096: decl @lune.@base.@TransUnit.TransUnit.analyzeSwitch
+// 2104: decl @lune.@base.@TransUnit.TransUnit.analyzeSwitch
 func (self *TransUnit_TransUnit) analyzeSwitch(_env *LnsEnv, firstToken *Types_Token) *Nodes_SwitchNode {
     var exp *Nodes_Node
     exp = self.FP.analyzeExpOneRVal(_env, false, false, nil, nil)
@@ -3564,7 +3577,7 @@ func (self *TransUnit_TransUnit) analyzeSwitch(_env *LnsEnv, firstToken *Types_T
                 }
             }
             {
-                _condLiteral := TransUnit_convExp1_6653(Lns_2DDD(condExp.FP.GetLiteral(_env)))
+                _condLiteral := TransUnit_convExp1_6659(Lns_2DDD(condExp.FP.GetLiteral(_env)))
                 if !Lns_IsNil( _condLiteral ) {
                     condLiteral := _condLiteral
                     var literalObj LnsAny
@@ -3633,9 +3646,11 @@ func (self *TransUnit_TransUnit) analyzeSwitch(_env *LnsEnv, firstToken *Types_T
     var defaultBlock LnsAny
     var failSafeDefault bool
     defaultBlock,failSafeDefault = self.FP.processCaseDefault(_env, firstToken, caseKind, nextToken, caseList.Len() != 0)
-    return Nodes_SwitchNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), exp, caseList, defaultBlock, caseKind, failSafeDefault)
+    var nsInfo *TransUnitIF_NSInfo
+    nsInfo = self.FP.Get_curNsInfo(_env)
+    return Nodes_SwitchNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), nsInfo.FP.GetNextStmtId(_env, TransUnitIF_StmtKind__Switch), exp, caseList, defaultBlock, caseKind, failSafeDefault)
 }
-// 2206: decl @lune.@base.@TransUnit.TransUnit.analyzeMatch
+// 2216: decl @lune.@base.@TransUnit.TransUnit.analyzeMatch
 func (self *TransUnit_TransUnit) analyzeMatch(_env *LnsEnv, firstToken *Types_Token) *Nodes_MatchNode {
     var exp *Nodes_Node
     exp = self.FP.analyzeExpOneRVal(_env, false, false, nil, nil)
@@ -3652,7 +3667,7 @@ func (self *TransUnit_TransUnit) analyzeMatch(_env *LnsEnv, firstToken *Types_To
     if Lns_op_not(self.moduleType.FP.Equals(_env, self.ProcessInfo, algeTypeInfo.FP.GetModule(_env), nil, nil)){
         if Lns_op_not(self.ImportModuleSet.Has(Ast_TypeInfo2Stem(algeTypeInfo.FP.GetModule(_env)))){
             var fullname string
-            fullname = algeTypeInfo.FP.GetFullName(_env, self.TypeNameCtrl, self.Scope.FP, true)
+            fullname = algeTypeInfo.FP.GetFullName(_env, self.TypeNameCtrl, self.FP.Get_scope(_env).FP, true)
             self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("need to import module -- %s (%s)", []LnsAny{fullname, algeTypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
         }
     }
@@ -3694,7 +3709,7 @@ func (self *TransUnit_TransUnit) analyzeMatch(_env *LnsEnv, firstToken *Types_To
                 paramType := _paramType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 var paramName *Types_Token
                 paramName = self.FP.getSymbolToken(_env, TransUnit_SymbolMode__MustNot_Or_)
-                self.FP.checkShadowing(_env, paramName.Pos, paramName.Txt, self.Scope)
+                self.FP.checkShadowing(_env, paramName.Pos, paramName.Txt, self.FP.Get_scope(_env))
                 var workType *Ast_TypeInfo
                 workType = paramType
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -3746,24 +3761,26 @@ func (self *TransUnit_TransUnit) analyzeMatch(_env *LnsEnv, firstToken *Types_To
     var defaultBlock LnsAny
     var failSafeDefault bool
     defaultBlock,failSafeDefault = self.FP.processCaseDefault(_env, firstToken, caseKind, nextToken, caseList.Len() != 0)
-    return Nodes_MatchNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), exp, algeTypeInfo, caseList, Nodes_NodeDownCastF(defaultBlock), caseKind, failSafeDefault)
+    var nsInfo *TransUnitIF_NSInfo
+    nsInfo = self.FP.Get_curNsInfo(_env)
+    return Nodes_MatchNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), nsInfo.FP.GetNextStmtId(_env, TransUnitIF_StmtKind__Match), exp, algeTypeInfo, caseList, Nodes_NodeDownCastF(defaultBlock), caseKind, failSafeDefault)
 }
-// 2321: decl @lune.@base.@TransUnit.TransUnit.analyzeWhile
+// 2333: decl @lune.@base.@TransUnit.TransUnit.analyzeWhile
 func (self *TransUnit_TransUnit) analyzeWhile(_env *LnsEnv, token *Types_Token) *Nodes_WhileNode {
     var refAccessSymPosList *LnsList
-    refAccessSymPosList = TransUnit_clearThePosForModToRef_7_(_env, self.Scope, self.ModuleScope)
+    refAccessSymPosList = TransUnit_clearThePosForModToRef_7_(_env, self.FP.Get_scope(_env), self.ModuleScope)
     var cond *Nodes_Node
     cond = self.FP.analyzeExpOneRVal(_env, false, false, nil, nil)
     var infinit bool
     infinit = false
     if cond.FP.Get_expType(_env) == Ast_builtinTypeBool{
         {
-            _literal := TransUnit_convExp1_7702(Lns_2DDD(cond.FP.GetLiteral(_env)))
+            _literal := TransUnit_convExp1_7733(Lns_2DDD(cond.FP.GetLiteral(_env)))
             if !Lns_IsNil( _literal ) {
                 literal := _literal
-                switch _matchExp1 := literal.(type) {
+                switch _matchExp0 := literal.(type) {
                 case *Nodes_Literal__Bool:
-                val := _matchExp1.Val1
+                val := _matchExp0.Val1
                     infinit = val
                 }
             }
@@ -3773,7 +3790,7 @@ func (self *TransUnit_TransUnit) analyzeWhile(_env *LnsEnv, token *Types_Token) 
     }
     return Nodes_WhileNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), cond, infinit, self.FP.analyzeBlock(_env, Nodes_BlockKind__While, TransUnit_TentativeMode__Loop, nil, refAccessSymPosList))
 }
-// 2346: decl @lune.@base.@TransUnit.TransUnit.analyzeRepeat
+// 2358: decl @lune.@base.@TransUnit.TransUnit.analyzeRepeat
 func (self *TransUnit_TransUnit) analyzeRepeat(_env *LnsEnv, token *Types_Token) *Nodes_RepeatNode {
     var scope *Ast_Scope
     scope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
@@ -3784,7 +3801,7 @@ func (self *TransUnit_TransUnit) analyzeRepeat(_env *LnsEnv, token *Types_Token)
     self.FP.checkNextToken(_env, ";")
     return node
 }
-// 2365: decl @lune.@base.@TransUnit.TransUnit.analyzeFor
+// 2377: decl @lune.@base.@TransUnit.TransUnit.analyzeFor
 func (self *TransUnit_TransUnit) analyzeFor(_env *LnsEnv, firstToken *Types_Token) *Nodes_ForNode {
     var scope *Ast_Scope
     scope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
@@ -3831,15 +3848,15 @@ func (self *TransUnit_TransUnit) analyzeFor(_env *LnsEnv, firstToken *Types_Toke
         exp1 = &Nodes_ExpCastNode_create(_env, self.NodeManager, exp1.FP.Get_pos(_env), self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeReal)}), exp1, Ast_builtinTypeReal, nil, "@@", Nodes_CastKind__Force).Nodes_Node
     }
     var nsInfo *TransUnitIF_NSInfo
-    nsInfo = self.FP.GetCurrentNSInfo(_env)
+    nsInfo = self.FP.Get_curNsInfo(_env)
     var symbolInfo *Ast_SymbolInfo
     symbolInfo = nsInfo.FP.RegisterSym(_env, self.FP.AddLocalVar(_env, val.Pos, false, true, val.Txt, exp1.FP.Get_expType(_env), Ast_MutMode__IMut, nil))
     var node *Nodes_ForNode
-    node = Nodes_ForNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), self.FP.analyzeBlock(_env, Nodes_BlockKind__For, TransUnit_TentativeMode__Loop, scope, nil), symbolInfo, exp1, exp2, exp3)
+    node = Nodes_ForNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), nsInfo.FP.GetNextStmtId(_env, TransUnitIF_StmtKind__For), self.FP.analyzeBlock(_env, Nodes_BlockKind__For, TransUnit_TentativeMode__Loop, scope, nil), symbolInfo, exp1, exp2, exp3)
     self.FP.PopScope(_env)
     return node
 }
-// 2427: decl @lune.@base.@TransUnit.TransUnit.analyzeApply
+// 2439: decl @lune.@base.@TransUnit.TransUnit.analyzeApply
 func (self *TransUnit_TransUnit) analyzeApply(_env *LnsEnv, token *Types_Token) *Nodes_ApplyNode {
     var scope *Ast_Scope
     scope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
@@ -3891,7 +3908,7 @@ func (self *TransUnit_TransUnit) analyzeApply(_env *LnsEnv, token *Types_Token) 
         }
     }
     if Lns_op_not(readyFlag){
-        if _switch1 := itFunc.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Func || _switch1 == Ast_TypeInfoKind__FormFunc || _switch1 == Ast_TypeInfoKind__Form {
+        if _switch0 := itFunc.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Func || _switch0 == Ast_TypeInfoKind__FormFunc || _switch0 == Ast_TypeInfoKind__Form {
         } else {
             self.FP.AddErrMess(_env, expListNode.FP.Get_pos(_env), _env.GetVM().String_format("The 1st value must be iterator function. -- %s", []LnsAny{itFunc.FP.GetTxt(_env, nil, nil, nil)}))
         }
@@ -3927,7 +3944,7 @@ func (self *TransUnit_TransUnit) analyzeApply(_env *LnsEnv, token *Types_Token) 
         }
     }
     var nsInfo *TransUnitIF_NSInfo
-    nsInfo = self.FP.GetCurrentNSInfo(_env)
+    nsInfo = self.FP.Get_curNsInfo(_env)
     var varSymList *LnsList
     varSymList = NewLnsList([]LnsAny{})
     for _index, __var := range( varList.Items ) {
@@ -3943,9 +3960,9 @@ func (self *TransUnit_TransUnit) analyzeApply(_env *LnsEnv, token *Types_Token) 
     var block *Nodes_BlockNode
     block = self.FP.analyzeBlock(_env, Nodes_BlockKind__Apply, TransUnit_TentativeMode__Loop, scope, nil)
     self.FP.PopScope(_env)
-    return Nodes_ApplyNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), varSymList, expListNode, block)
+    return Nodes_ApplyNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), nsInfo.FP.GetNextStmtId(_env, TransUnitIF_StmtKind__Apply), varSymList, expListNode, block)
 }
-// 2539: decl @lune.@base.@TransUnit.TransUnit.convToExtTypeList
+// 2551: decl @lune.@base.@TransUnit.TransUnit.convToExtTypeList
 func (self *TransUnit_TransUnit) convToExtTypeList(_env *LnsEnv, pos *Types_Position,typeInfo *Ast_TypeInfo,list *LnsList) *LnsList {
     if typeInfo.FP.Get_nonnilableType(_env).FP.Get_kind(_env) != Ast_TypeInfoKind__Ext{
         return list
@@ -3954,13 +3971,13 @@ func (self *TransUnit_TransUnit) convToExtTypeList(_env *LnsEnv, pos *Types_Posi
     var mess string
     newList,mess = Ast_convToExtTypeList(_env, self.ProcessInfo, list)
     if newList != nil{
-        newList_667 := newList.(*LnsList)
-        return newList_667
+        newList_669 := newList.(*LnsList)
+        return newList_669
     }
     self.FP.AddErrMess(_env, pos, mess)
     return list
 }
-// 2555: decl @lune.@base.@TransUnit.TransUnit.analyzeForeach
+// 2567: decl @lune.@base.@TransUnit.TransUnit.analyzeForeach
 func (self *TransUnit_TransUnit) analyzeForeach(_env *LnsEnv, token *Types_Token,sortFlag bool) *Nodes_Node {
     var scope *Ast_Scope
     scope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
@@ -3974,10 +3991,10 @@ func (self *TransUnit_TransUnit) analyzeForeach(_env *LnsEnv, token *Types_Token
     var nextToken *Types_Token
     nextToken = Parser_getEofToken(_env)
     {
-        var _forFrom1 LnsInt = 1
-        var _forTo1 LnsInt = 2
-        for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-            index := _forWork1
+        var _forFrom0 LnsInt = 1
+        var _forTo0 LnsInt = 2
+        for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+            index := _forWork0
             var symbol *Types_Token
             symbol = self.FP.getToken(_env, nil)
             if symbol.Kind != Types_TokenKind__Symb{
@@ -3999,7 +4016,7 @@ func (self *TransUnit_TransUnit) analyzeForeach(_env *LnsEnv, token *Types_Token
     exp = self.FP.analyzeExpOneRVal(_env, false, false, nil, nil)
     if exp.FP.Get_expType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
         var nsInfo *TransUnitIF_NSInfo
-        nsInfo = self.FP.GetCurrentNSInfo(_env)
+        nsInfo = self.FP.Get_curNsInfo(_env)
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( Lns_op_not(self.MacroCtrl.FP.Get_analyzeInfo(_env).FP.IsAnalyzingBlockArg(_env))) &&
             _env.SetStackVal( Lns_op_not(nsInfo.FP.CanAccessLuaval(_env))) ).(bool)){
@@ -4009,19 +4026,19 @@ func (self *TransUnit_TransUnit) analyzeForeach(_env *LnsEnv, token *Types_Token
     var checkSortType func(_env *LnsEnv, sortKeyType *Ast_TypeInfo)
     checkSortType = func(_env *LnsEnv, sortKeyType *Ast_TypeInfo) {
         if sortFlag{
-            if _switch1 := sortKeyType.FP.Get_srcTypeInfo(_env).FP.Get_extedType(_env); _switch1 == Ast_builtinTypeString || _switch1 == Ast_builtinTypeInt || _switch1 == Ast_builtinTypeReal || _switch1 == Ast_builtinTypeStem {
+            if _switch0 := sortKeyType.FP.Get_srcTypeInfo(_env).FP.Get_extedType(_env); _switch0 == Ast_builtinTypeString || _switch0 == Ast_builtinTypeInt || _switch0 == Ast_builtinTypeReal || _switch0 == Ast_builtinTypeStem {
             } else {
                 self.FP.AddErrMess(_env, exp.FP.Get_pos(_env), _env.GetVM().String_format("This type can't use forsort -- %s", []LnsAny{sortKeyType.FP.GetTxt(_env, nil, nil, nil)}))
             }
         }
     }
     var nsInfo *TransUnitIF_NSInfo
-    nsInfo = self.FP.GetCurrentNSInfo(_env)
+    nsInfo = self.FP.Get_curNsInfo(_env)
     var expType *Ast_TypeInfo
     expType = exp.FP.Get_expType(_env).FP.Get_extedType(_env)
     var itemTypeInfoList *LnsList
     itemTypeInfoList = self.FP.convToExtTypeList(_env, token.Pos, exp.FP.Get_expType(_env), expType.FP.Get_itemTypeInfoList(_env))
-    if _switch1 := expType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Map {
+    if _switch0 := expType.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Map {
         mainSym = nsInfo.FP.RegisterSym(_env, self.FP.AddLocalVar(_env, mainSymToken.Pos, false, true, mainSymToken.Txt, itemTypeInfoList.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_MutMode__IMut, nil))
         {
             __exp := subSymToken
@@ -4031,14 +4048,14 @@ func (self *TransUnit_TransUnit) analyzeForeach(_env *LnsEnv, token *Types_Token
             }
         }
         checkSortType(_env, itemTypeInfoList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
-    } else if _switch1 == Ast_TypeInfoKind__Set {
+    } else if _switch0 == Ast_TypeInfoKind__Set {
         if subSymToken != nil{
-            subSymToken_701 := subSymToken.(*Types_Token)
-            self.FP.AddErrMess(_env, subSymToken_701.Pos, "Set can't use index")
+            subSymToken_703 := subSymToken.(*Types_Token)
+            self.FP.AddErrMess(_env, subSymToken_703.Pos, "Set can't use index")
         }
         mainSym = nsInfo.FP.RegisterSym(_env, self.FP.AddLocalVar(_env, mainSymToken.Pos, false, true, mainSymToken.Txt, itemTypeInfoList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_MutMode__IMut, nil))
         checkSortType(_env, itemTypeInfoList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
-    } else if _switch1 == Ast_TypeInfoKind__List || _switch1 == Ast_TypeInfoKind__Array {
+    } else if _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array {
         if sortFlag{
             self.FP.AddErrMess(_env, exp.FP.Get_pos(_env), _env.GetVM().String_format("'%s' doesn't support forsort.", []LnsAny{Ast_TypeInfoKind_getTxt( expType.FP.Get_kind(_env))}))
         }
@@ -4072,24 +4089,24 @@ func (self *TransUnit_TransUnit) analyzeForeach(_env *LnsEnv, token *Types_Token
     var block *Nodes_BlockNode
     block = self.FP.analyzeBlock(_env, Nodes_BlockKind__Foreach, TransUnit_TentativeMode__Loop, scope, nil)
     if seqSym != nil{
-        seqSym_714 := seqSym.(string)
-        scope.FP.Remove(_env, seqSym_714)
+        seqSym_716 := seqSym.(string)
+        scope.FP.Remove(_env, seqSym_716)
     }
     self.FP.PopScope(_env)
     if sortFlag{
-        return &Nodes_ForsortNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), mainSym, subSym, exp, block, sortFlag).Nodes_Node
+        return &Nodes_ForsortNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), nsInfo.FP.GetNextStmtId(_env, TransUnitIF_StmtKind__Forsort), mainSym, subSym, exp, block, sortFlag).Nodes_Node
     } else { 
-        return &Nodes_ForeachNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), mainSym, subSym, exp, block).Nodes_Node
+        return &Nodes_ForeachNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), nsInfo.FP.GetNextStmtId(_env, TransUnitIF_StmtKind__Foreach), mainSym, subSym, exp, block).Nodes_Node
     }
 // insert a dummy
     return nil
 }
-// 2694: decl @lune.@base.@TransUnit.TransUnit.analyzeScope
+// 2706: decl @lune.@base.@TransUnit.TransUnit.analyzeScope
 func (self *TransUnit_TransUnit) analyzeScope(_env *LnsEnv, firstToken *Types_Token) *Nodes_ScopeNode {
     var nextToken *Types_Token
     nextToken = self.FP.getToken(_env, nil)
     var scopeKind LnsInt
-    if _switch1 := nextToken.Txt; _switch1 == "root" {
+    if _switch0 := nextToken.Txt; _switch0 == "root" {
         scopeKind = Nodes_ScopeKind__Root
     } else {
         self.FP.Error(_env, _env.GetVM().String_format("illegal scope kind. -- %s", []LnsAny{nextToken.Txt}))
@@ -4108,8 +4125,8 @@ func (self *TransUnit_TransUnit) analyzeScope(_env *LnsEnv, firstToken *Types_To
                 symList.Insert(Ast_SymbolInfo2Stem(workSymList.GetAt(1).(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()))
             }
             nextToken = self.FP.getToken(_env, nil)
-            if _switch2 := nextToken.Txt; _switch2 == ")" {
-            } else if _switch2 == "," {
+            if _switch1 := nextToken.Txt; _switch1 == ")" {
+            } else if _switch1 == "," {
                 nextToken = self.FP.getToken(_env, nil)
             } else {
                 self.FP.Error(_env, _env.GetVM().String_format("illegal token: expects ')' or ',' but -- %s", []LnsAny{nextToken.Txt}))
@@ -4121,20 +4138,20 @@ func (self *TransUnit_TransUnit) analyzeScope(_env *LnsEnv, firstToken *Types_To
     var asyncMode LnsInt
     asyncMode = self.FP.getDefaultAsync(_env, Ast_TypeInfoKind__Func, nil, nil)
     var bakScope *Ast_Scope
-    bakScope = self.Scope
-    self.Scope = self.TopScope
+    bakScope = self.FP.Get_scope(_env)
+    self.FP.SetScope(_env, self.TopScope, TransUnitIF_SetNSInfo__FromScope)
     var localScope *Ast_Scope
     localScope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
     self.FP.createDummyNS(_env, localScope, nextToken.Pos, asyncMode)
     for _, _symInfo := range( symList.Items ) {
         symInfo := _symInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
-        self.Scope.FP.AddAlias(_env, self.ProcessInfo, symInfo.FP.Get_name(_env), nextToken.Pos, false, symInfo.FP.Get_accessMode(_env), symInfo.FP.Get_typeInfo(_env).FP.Get_parentInfo(_env), symInfo)
+        self.FP.Get_scope(_env).FP.AddAlias(_env, self.ProcessInfo, symInfo.FP.Get_name(_env), nextToken.Pos, false, symInfo.FP.Get_accessMode(_env), symInfo.FP.Get_typeInfo(_env).FP.Get_parentInfo(_env), symInfo)
     }
     var block *Nodes_BlockNode
     block = self.FP.analyzeBlock(_env, Nodes_BlockKind__Block, TransUnit_TentativeMode__Simple, nil, nil)
     var node *Nodes_ScopeNode
-    node = Nodes_ScopeNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), scopeKind, self.Scope, symList, block)
-    self.Scope = bakScope
+    node = Nodes_ScopeNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), scopeKind, self.FP.Get_scope(_env), symList, block)
+    self.FP.SetScope(_env, bakScope, TransUnitIF_SetNSInfo__FromScope)
     return node
 }
 // 34: decl @lune.@base.@TransUnit.TransUnit.analyzeRefType
@@ -4144,10 +4161,10 @@ func (self *TransUnit_TransUnit) analyzeRefType(_env *LnsEnv, accessMode LnsInt,
     var token *Types_Token
     token = firstToken
     var mutMode LnsAny
-    if _switch1 := token.Txt; _switch1 == "&" {
+    if _switch0 := token.Txt; _switch0 == "&" {
         mutMode = Ast_MutMode__IMut
         token = self.FP.getToken(_env, nil)
-    } else if _switch1 == "allmut" {
+    } else if _switch0 == "allmut" {
         mutMode = Ast_MutMode__AllMut
         token = self.FP.getToken(_env, nil)
     } else {
@@ -4192,7 +4209,7 @@ func (self *TransUnit_TransUnit) analyzeRefTypeWithSymbol(_env *LnsEnv, accessMo
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( Lns_op_not(self.ImportModuleSet.Has(Ast_TypeInfo2Stem(aliasSrc.FP.GetModule(_env))))) &&
                 _env.SetStackVal( self.moduleType.FP.Get_parentInfo(_env) != aliasSrc.FP.GetModule(_env).FP.Get_parentInfo(_env)) ).(bool)){
-                self.FP.AddErrMess(_env, symbolNode.FP.Get_pos(_env), _env.GetVM().String_format("must import '%s' for this alias -- %s (%s,%s)", []LnsAny{aliasSrc.FP.GetModule(_env).FP.GetFullName(_env, self.TypeNameCtrl, self.Scope.FP, false), symbolNode.FP.GetSymbolInfo(_env).GetAt(1).(Ast_SymbolInfoDownCast).ToAst_SymbolInfo().FP.Get_name(_env), self.moduleType.FP.Get_typeId(_env).Id, aliasSrc.FP.GetModule(_env).FP.Get_typeId(_env).Id}))
+                self.FP.AddErrMess(_env, symbolNode.FP.Get_pos(_env), _env.GetVM().String_format("must import '%s' for this alias -- %s (%s,%s)", []LnsAny{aliasSrc.FP.GetModule(_env).FP.GetFullName(_env, self.TypeNameCtrl, self.FP.Get_scope(_env).FP, false), symbolNode.FP.GetSymbolInfo(_env).GetAt(1).(Ast_SymbolInfoDownCast).ToAst_SymbolInfo().FP.Get_name(_env), self.moduleType.FP.Get_typeId(_env).Id, aliasSrc.FP.GetModule(_env).FP.Get_typeId(_env).Id}))
             }
         }
     }
@@ -4256,30 +4273,30 @@ func (self *TransUnit_TransUnit) analyzeRefTypeWithSymbol(_env *LnsEnv, accessMo
                 }
                 return true
             }
-            if _switch1 := typeInfo.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Map {
+            if _switch0 := typeInfo.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Map {
                 if genericList.Len() != 2{
                     self.FP.AddErrMess(_env, symbolNode.FP.Get_pos(_env), "Key or value type is unknown")
                     typeInfo = self.ProcessInfo.FP.CreateMap(_env, accessMode, self.FP.getCurrentClass(_env), Ast_builtinTypeStem, Ast_builtinTypeStem, Ast_MutMode__Mut)
                 } else { 
                     typeInfo = self.ProcessInfo.FP.CreateMap(_env, accessMode, self.FP.getCurrentClass(_env), genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), genericList.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_MutMode__Mut)
                 }
-            } else if _switch1 == Ast_TypeInfoKind__List {
+            } else if _switch0 == Ast_TypeInfoKind__List {
                 if checkAlternateTypeCount(_env, 1){
                     typeInfo = self.ProcessInfo.FP.CreateList(_env, accessMode, self.FP.getCurrentClass(_env), genericList, Ast_MutMode__Mut)
                 }
-            } else if _switch1 == Ast_TypeInfoKind__Array {
+            } else if _switch0 == Ast_TypeInfoKind__Array {
                 if checkAlternateTypeCount(_env, 1){
                     typeInfo = self.ProcessInfo.FP.CreateArray(_env, accessMode, self.FP.getCurrentClass(_env), genericList, Ast_MutMode__Mut)
                 }
-            } else if _switch1 == Ast_TypeInfoKind__Set {
+            } else if _switch0 == Ast_TypeInfoKind__Set {
                 if checkAlternateTypeCount(_env, 1){
                     typeInfo = self.ProcessInfo.FP.CreateSet(_env, accessMode, self.FP.getCurrentClass(_env), genericList, Ast_MutMode__Mut)
                 }
-            } else if _switch1 == Ast_TypeInfoKind__DDD {
+            } else if _switch0 == Ast_TypeInfoKind__DDD {
                 if checkAlternateTypeCount(_env, 1){
                     typeInfo = &self.ProcessInfo.FP.CreateDDD(_env, genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), false, false).Ast_TypeInfo
                 }
-            } else if _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__IF {
+            } else if _switch0 == Ast_TypeInfoKind__Class || _switch0 == Ast_TypeInfoKind__IF {
                 if checkAlternateTypeCount(_env, typeInfo.FP.Get_itemTypeInfoList(_env).Len()){
                     for _, _itemType := range( genericList.Items ) {
                         itemType := _itemType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -4296,13 +4313,13 @@ func (self *TransUnit_TransUnit) analyzeRefTypeWithSymbol(_env *LnsEnv, accessMo
                             self.FP.AddErrMess(_env, symbolNode.FP.Get_pos(_env), _env.GetVM().String_format("'%s' of %s doesn't inherit '%s'", []LnsAny{itemType.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.GetTxt(_env, nil, nil, nil), itemType.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                         }
                     }
-                    typeInfo = TransUnit_convExp1_11133(Lns_2DDD(self.ProcessInfo.FP.CreateGeneric(_env, typeInfo, genericList, self.moduleType)))
+                    typeInfo = TransUnit_convExp1_11193(Lns_2DDD(self.ProcessInfo.FP.CreateGeneric(_env, typeInfo, genericList, self.moduleType)))
                 }
-            } else if _switch1 == Ast_TypeInfoKind__Box {
+            } else if _switch0 == Ast_TypeInfoKind__Box {
                 if checkAlternateTypeCount(_env, 1){
                     typeInfo = self.ProcessInfo.FP.CreateBox(_env, accessMode, genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
                 }
-            } else if _switch1 == Ast_TypeInfoKind__Ext {
+            } else if _switch0 == Ast_TypeInfoKind__Ext {
                 if checkAlternateTypeCount(_env, 1){
                     typeInfo = self.FP.createExtType(_env, symbolNode.FP.Get_pos(_env), genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())
                 }
@@ -4325,9 +4342,9 @@ func (self *TransUnit_TransUnit) analyzeRefTypeWithSymbol(_env *LnsEnv, accessMo
         }
     }
     if mutMode != nil{
-        mutMode_814 := mutMode.(LnsInt)
-        if typeInfo.FP.Get_mutMode(_env) != mutMode_814{
-            typeInfo = self.FP.createModifier(_env, typeInfo, mutMode_814)
+        mutMode_816 := mutMode.(LnsInt)
+        if typeInfo.FP.Get_mutMode(_env) != mutMode_816{
+            typeInfo = self.FP.createModifier(_env, typeInfo, mutMode_816)
         }
     }
     if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Module{
@@ -4391,7 +4408,7 @@ func (self *TransUnit_TransUnit) analyzeDeclArgList(_env *LnsEnv, accessMode Lns
                 }
             }
             {
-                _symbolInfo := TransUnit_convExp1_11805(Lns_2DDD(scope.FP.AddLocalVar(_env, self.ProcessInfo, true, true, argName.Txt, argName.Pos, refType.FP.Get_expType(_env), mutable)))
+                _symbolInfo := TransUnit_convExp2_400(Lns_2DDD(scope.FP.AddLocalVar(_env, self.ProcessInfo, true, true, argName.Txt, argName.Pos, refType.FP.Get_expType(_env), mutable)))
                 if !Lns_IsNil( _symbolInfo ) {
                     symbolInfo := _symbolInfo.(*Ast_SymbolInfo)
                     var arg *Nodes_DeclArgNode
@@ -4459,8 +4476,8 @@ func (self *TransUnit_TransUnit) checkOverrideMethod(_env *LnsEnv, overrideType 
     matchFlag,err = overrideType.FP.CanEvalWith(_env, self.ProcessInfo, typeInfo, Ast_CanEvalType__SetEq, alt2typeMap)
     if Lns_op_not(matchFlag){
         if err != nil{
-            err_28 := err.(string)
-            addErr(_env, _env.GetVM().String_format("mismatch method type -- %s", []LnsAny{err_28}))
+            err_51 := err.(string)
+            addErr(_env, _env.GetVM().String_format("mismatch method type -- %s", []LnsAny{err_51}))
         } else {
             addErr(_env, "mismatch method type")
         }
@@ -4528,11 +4545,11 @@ func (self *TransUnit_TransUnit) checkOverriededMethodOfAllClass(_env *LnsEnv) {
         typeId2DeclClassNode.Set(classTypeInfo.FP.Get_typeId(_env).Id,classNode)
     }
     {
-        __forsortCollection1 := typeId2DeclClassNode
-        __forsortSorted1 := __forsortCollection1.CreateKeyListInt()
-        __forsortSorted1.Sort( _env, LnsItemKindInt, nil )
-        for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
-            classNode := __forsortCollection1.Items[ ___forsortKey1 ].(Nodes_DeclClassNodeDownCast).ToNodes_DeclClassNode()
+        __forsortCollection0 := typeId2DeclClassNode
+        __forsortSorted0 := __forsortCollection0.CreateKeyListInt()
+        __forsortSorted0.Sort( _env, LnsItemKindInt, nil )
+        for _, ___forsortKey0 := range( __forsortSorted0.Items ) {
+            classNode := __forsortCollection0.Items[ ___forsortKey0 ].(Nodes_DeclClassNodeDownCast).ToNodes_DeclClassNode()
             var classTypeInfo *Ast_TypeInfo
             classTypeInfo = classNode.FP.Get_expType(_env)
             var workTypeInfo *Ast_TypeInfo
@@ -4563,12 +4580,12 @@ func (self *TransUnit_TransUnit) declFuncPostProcess(_env *LnsEnv, typeInfo *Ast
         funcBodyScope.FP.Set_hasClosureAccess(_env, true)
     }
     if classTypeInfo != nil{
-        classTypeInfo_86 := classTypeInfo.(*Ast_TypeInfo)
+        classTypeInfo_109 := classTypeInfo.(*Ast_TypeInfo)
         var isCtorFlag bool
         isCtorFlag = typeInfo.FP.Get_rawTxt(_env) == "__init"
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( isCtorFlag) &&
-            _env.SetStackVal( classTypeInfo_86.FP.HasBase(_env)) ).(bool)){
+            _env.SetStackVal( classTypeInfo_109.FP.HasBase(_env)) ).(bool)){
             var needCall bool
             needCall = true
             {
@@ -4594,9 +4611,9 @@ func (self *TransUnit_TransUnit) analyzeDeclMacroSub(_env *LnsEnv, accessMode Ln
     self.MacroCtrl.FP.StartDecl(_env)
     var pubFlag bool
     pubFlag = false
-    if _switch1 := accessMode; _switch1 == Ast_AccessMode__Pub {
+    if _switch0 := accessMode; _switch0 == Ast_AccessMode__Pub {
         pubFlag = true
-    } else if _switch1 == Ast_AccessMode__Local || _switch1 == Ast_AccessMode__None {
+    } else if _switch0 == Ast_AccessMode__Local || _switch0 == Ast_AccessMode__None {
     } else {
         self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("macro not support this access mode. -- %s", []LnsAny{Ast_AccessMode_getTxt( accessMode)}))
     }
@@ -4643,7 +4660,7 @@ func (self *TransUnit_TransUnit) analyzeDeclMacroSub(_env *LnsEnv, accessMode Ln
         macroScope.FP.AddLocalVar(_env, self.ProcessInfo, false, true, "__var", nil, macroLocalVarType, Ast_MutMode__IMut)
         var stmtList *LnsList
         stmtList = NewLnsList([]LnsAny{})
-        self.FP.prepareTentativeSymbol(_env, self.Scope, false, nil)
+        self.FP.prepareTentativeSymbol(_env, self.FP.Get_scope(_env), false, nil)
         self.FP.analyzeStatementList(_env, stmtList, false, "}")
         if stmtList.Len() > 0{
             stmtNode = Nodes_BlockNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), Nodes_BlockKind__Macro, macroScope, stmtList)
@@ -4697,24 +4714,24 @@ func (self *TransUnit_TransUnit) analyzeDeclMacro(_env *LnsEnv, accessMode LnsIn
     workArgList = NewLnsList([]LnsAny{})
     self.FP.analyzeDeclArgList(_env, accessMode, scope, workArgList, false)
     var parentNsInfo *TransUnitIF_NSInfo
-    parentNsInfo = self.FP.GetCurrentNSInfo(_env)
+    parentNsInfo = self.FP.Get_curNsInfo(_env)
     var parentInfo *Ast_TypeInfo
     parentInfo = parentNsInfo.FP.Get_typeInfo(_env)
     var backScope *Ast_Scope
-    backScope = self.Scope
-    self.Scope = scope
-    self.Scope.FP.AddIgnoredVar(_env, self.ProcessInfo)
+    backScope = self.FP.Get_scope(_env)
+    self.FP.SetScope(_env, scope, TransUnitIF_SetNSInfo__FromScope)
+    self.FP.Get_scope(_env).FP.AddIgnoredVar(_env, self.ProcessInfo)
     var node *Nodes_DeclMacroNode
     node = self.FP.analyzeDeclMacroSub(_env, accessMode, firstToken, nameToken, scope, parentInfo, parentNsInfo.FP.Get_typeDataAccessor(_env), workArgList)
-    self.Scope = backScope
+    self.FP.SetScope(_env, backScope, TransUnitIF_SetNSInfo__FromScope)
     var existSym LnsAny
-    _,existSym = self.Scope.FP.AddMacro(_env, self.ProcessInfo, nameToken.Pos, node.FP.Get_expType(_env), accessMode)
+    _,existSym = self.FP.Get_scope(_env).FP.AddMacro(_env, self.ProcessInfo, nameToken.Pos, node.FP.Get_expType(_env), accessMode)
     if Lns_isCondTrue( existSym){
         self.FP.AddErrMess(_env, nameToken.Pos, _env.GetVM().String_format("multiple define symbol -- %s", []LnsAny{nameToken.Txt}))
     }
     return node
 }
-// 813: decl @lune.@base.@TransUnit.TransUnit.analyzeExtend
+// 814: decl @lune.@base.@TransUnit.TransUnit.analyzeExtend
 func (self *TransUnit_TransUnit) analyzeExtend(_env *LnsEnv, accessMode LnsInt,firstPos *Types_Position)(*Types_Token, LnsAny, *LnsList, *LnsMap, *Nodes_ClassInheritInfo) {
     var baseRef LnsAny
     baseRef = nil
@@ -4786,7 +4803,7 @@ func (self *TransUnit_TransUnit) analyzeExtend(_env *LnsEnv, accessMode LnsInt,f
     for _, _ifType := range( interfaceList.Items ) {
         ifType := _ifType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         _env.NilAccFin(_env.NilAccPush(ifType.FP.Get_scope(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.FilterTypeInfoField(_env, true, self.Scope, self.ScopeAccess, Ast_filterForm(func(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) bool {
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.FilterTypeInfoField(_env, true, self.FP.Get_scope(_env), self.ScopeAccess, Ast_filterForm(func(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) bool {
             if symbolInfo.FP.Get_kind(_env) == Ast_SymbolKind__Mtd{
                 {
                     _ifFuncType := symbol2TypeInfo.Get(symbolInfo.FP.Get_name(_env))
@@ -4804,21 +4821,21 @@ func (self *TransUnit_TransUnit) analyzeExtend(_env *LnsEnv, accessMode LnsInt,f
                 }
             }
             return true
-        }))})/* 887:7 */)
+        }))})/* 888:7 */)
     }
     var baseTypeInfo LnsAny
     baseTypeInfo = nil
     if baseRef != nil{
-        baseRef_180 := baseRef.(*Nodes_RefTypeNode)
-        baseTypeInfo = baseRef_180.FP.Get_expType(_env)
+        baseRef_203 := baseRef.(*Nodes_RefTypeNode)
+        baseTypeInfo = baseRef_203.FP.Get_expType(_env)
     }
     return nextToken, baseTypeInfo, interfaceList, ifAlt2typeMap, NewNodes_ClassInheritInfo(_env, baseRef, ifRefList)
 }
-// 920: decl @lune.@base.@TransUnit.TransUnit.analyzePushClass
+// 921: decl @lune.@base.@TransUnit.TransUnit.analyzePushClass
 func (self *TransUnit_TransUnit) analyzePushClass(_env *LnsEnv, mode LnsInt,abstractFlag bool,firstToken *Types_Token,name *Types_Token,allowMultiple bool,requirePath LnsAny,moduleLang LnsAny,accessMode LnsInt,altTypeList *LnsList)(*Types_Token, *TransUnitIF_NSInfo, *Nodes_ClassInheritInfo) {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( Ast_isPubToExternal(_env, accessMode)) &&
-        _env.SetStackVal( self.ModuleScope != self.Scope) ).(bool)){
+        _env.SetStackVal( self.ModuleScope != self.FP.Get_scope(_env)) ).(bool)){
         self.FP.AddErrMess(_env, firstToken.Pos, "The public class must declare at top scope.")
     }
     var tempScope *Ast_Scope
@@ -4837,10 +4854,10 @@ func (self *TransUnit_TransUnit) analyzePushClass(_env *LnsEnv, mode LnsInt,abst
     if nextToken.Txt == "extend"{
         nextToken, baseTypeInfo, interfaceList, _, inheritInfo = self.FP.analyzeExtend(_env, accessMode, firstToken.Pos)
         if baseTypeInfo != nil{
-            baseTypeInfo_192 := baseTypeInfo.(*Ast_TypeInfo)
+            baseTypeInfo_215 := baseTypeInfo.(*Ast_TypeInfo)
             {
-                _initTypeInfo := _env.NilAccFin(_env.NilAccPush(baseTypeInfo_192.FP.Get_scope(_env)) && 
-                Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoChild(_env, "__init")})/* 949:33 */)
+                _initTypeInfo := _env.NilAccFin(_env.NilAccPush(baseTypeInfo_215.FP.Get_scope(_env)) && 
+                Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoChild(_env, "__init")})/* 950:33 */)
                 if !Lns_IsNil( _initTypeInfo ) {
                     initTypeInfo := _initTypeInfo.(*Ast_TypeInfo)
                     if initTypeInfo.FP.Get_accessMode(_env) == Ast_AccessMode__Pri{
@@ -4854,15 +4871,15 @@ func (self *TransUnit_TransUnit) analyzePushClass(_env *LnsEnv, mode LnsInt,abst
     }
     self.FP.PopScope(_env)
     var nsInfo *TransUnitIF_NSInfo
-    if _switch1 := mode; _switch1 == TransUnitIF_DeclClassMode__Module || _switch1 == TransUnitIF_DeclClassMode__LazyModule {
-        _ = self.Scope
+    if _switch0 := mode; _switch0 == TransUnitIF_DeclClassMode__Module || _switch0 == TransUnitIF_DeclClassMode__LazyModule {
+        _ = self.FP.Get_scope(_env)
         nsInfo = self.FP.pushExtModule(_env, false, name.Txt, accessMode, name.Pos, mode == TransUnitIF_DeclClassMode__LazyModule, Lns_unwrap( moduleLang).(LnsInt), (Lns_unwrap( requirePath).(*Types_Token)).FP.GetExcludedDelimitTxt(_env))
-    } else if _switch1 == TransUnitIF_DeclClassMode__Class || _switch1 == TransUnitIF_DeclClassMode__Interface {
+    } else if _switch0 == TransUnitIF_DeclClassMode__Class || _switch0 == TransUnitIF_DeclClassMode__Interface {
         nsInfo = self.FP.PushClass(_env, self.ProcessInfo, firstToken.Pos, mode, abstractFlag, baseTypeInfo, interfaceList, altTypeList, false, name.Txt, allowMultiple, accessMode, nil)
     }
     return nextToken, nsInfo, inheritInfo
 }
-// 982: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclAlternateType
+// 983: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclAlternateType
 func (self *TransUnit_TransUnit) analyzeDeclAlternateType(_env *LnsEnv, belongClassFlag bool,token *Types_Token,accessMode LnsInt)(*Types_Token, *LnsList) {
     var altTypeList *LnsList
     altTypeList = NewLnsList([]LnsAny{})
@@ -4876,7 +4893,7 @@ func (self *TransUnit_TransUnit) analyzeDeclAlternateType(_env *LnsEnv, belongCl
         altIndex = altIndex + 1
         var genericSymToken *Types_Token
         genericSymToken = self.FP.getSymbolToken(_env, TransUnit_SymbolMode__MustNot_)
-        if Lns_isCondTrue( self.Scope.FP.GetTypeInfo(_env, genericSymToken.Txt, self.Scope, false, self.ScopeAccess)){
+        if Lns_isCondTrue( self.FP.Get_scope(_env).FP.GetTypeInfo(_env, genericSymToken.Txt, self.FP.Get_scope(_env), false, self.ScopeAccess)){
             self.FP.AddErrMess(_env, genericSymToken.Pos, _env.GetVM().String_format("shadowing Type -- %s", []LnsAny{genericSymToken.Txt}))
         } else { 
             if altNameSet.Has(genericSymToken.Txt){
@@ -4896,10 +4913,10 @@ func (self *TransUnit_TransUnit) analyzeDeclAlternateType(_env *LnsEnv, belongCl
         var interfaceList *LnsList
         interfaceList = NewLnsList([]LnsAny{})
         if workToken.Txt == ":"{
-            workToken, baseTypeInfo, interfaceList = TransUnit_convExp2_2847(Lns_2DDD(self.FP.analyzeExtend(_env, accessMode, token.Pos)))
+            workToken, baseTypeInfo, interfaceList = TransUnit_convExp2_3290(Lns_2DDD(self.FP.analyzeExtend(_env, accessMode, token.Pos)))
         }
         var altType *Ast_AlternateTypeInfo
-        altType = TransUnit_convExp2_2876(Lns_2DDD(self.ProcessInfo.FP.CreateAlternate(_env, belongClassFlag, altIndex, genericSymToken.Txt, accessMode, self.moduleType, baseTypeInfo, interfaceList)))
+        altType = TransUnit_convExp2_3319(Lns_2DDD(self.ProcessInfo.FP.CreateAlternate(_env, belongClassFlag, altIndex, genericSymToken.Txt, accessMode, self.moduleType, baseTypeInfo, interfaceList)))
         altTypeList.Insert(Ast_AlternateTypeInfo2Stem(altType))
         if workToken.Txt == ">"{
             nextToken = self.FP.getToken(_env, nil)
@@ -4909,7 +4926,7 @@ func (self *TransUnit_TransUnit) analyzeDeclAlternateType(_env *LnsEnv, belongCl
     }
     return nextToken, altTypeList
 }
-// 1034: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclProto
+// 1035: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclProto
 func (self *TransUnit_TransUnit) analyzeDeclProto(_env *LnsEnv, accessMode LnsInt,firstToken *Types_Token) *Nodes_Node {
     var nextToken *Types_Token
     nextToken = self.FP.getToken(_env, nil)
@@ -4958,12 +4975,12 @@ func (self *TransUnit_TransUnit) analyzeDeclProto(_env *LnsEnv, accessMode LnsIn
 // insert a dummy
     return nil
 }
-// 1090: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclEnum
+// 1091: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclEnum
 func (self *TransUnit_TransUnit) analyzeDeclEnum(_env *LnsEnv, accessMode LnsInt,firstToken *Types_Token) *Nodes_DeclEnumNode {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( Ast_isPubToExternal(_env, accessMode)) &&
-        _env.SetStackVal( self.Scope != self.ModuleScope) &&
-        _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(self.Scope.FP.Get_ownerTypeInfo(_env)) && 
+        _env.SetStackVal( self.FP.Get_scope(_env) != self.ModuleScope) &&
+        _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(self.FP.Get_scope(_env).FP.Get_ownerTypeInfo(_env)) && 
         Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.Get_kind(_env)})) != Ast_TypeInfoKind__Class) ).(bool)){
         self.FP.AddErrMess(_env, firstToken.Pos, "can't external at inner scope.")
     }
@@ -4977,7 +4994,7 @@ func (self *TransUnit_TransUnit) analyzeDeclEnum(_env *LnsEnv, accessMode LnsInt
     var workEnumTypeInfo LnsAny
     workEnumTypeInfo = nil
     var parentNsInfo *TransUnitIF_NSInfo
-    parentNsInfo = self.FP.GetCurrentNSInfo(_env)
+    parentNsInfo = self.FP.Get_curNsInfo(_env)
     var nextToken *Types_Token
     nextToken = self.FP.getToken(_env, nil)
     var number LnsReal
@@ -4992,8 +5009,8 @@ func (self *TransUnit_TransUnit) analyzeDeclEnum(_env *LnsEnv, accessMode LnsInt
         nextToken = self.FP.getToken(_env, nil)
         var enumVal LnsAny
         enumVal = &Ast_EnumLiteral__Real{number}
-        if _switch1 := (prevValTypeInfo); _switch1 == Ast_builtinTypeReal {
-        } else if _switch1 == Ast_builtinTypeInt || _switch1 == Ast_headTypeInfo {
+        if _switch0 := (prevValTypeInfo); _switch0 == Ast_builtinTypeReal {
+        } else if _switch0 == Ast_builtinTypeInt || _switch0 == Ast_headTypeInfo {
             enumVal = &Ast_EnumLiteral__Int{(LnsInt)(number)}
         }
         if nextToken.Txt == "="{
@@ -5003,33 +5020,33 @@ func (self *TransUnit_TransUnit) analyzeDeclEnum(_env *LnsEnv, accessMode LnsInt
             var mess LnsAny
             literal,mess = exp.FP.GetLiteral(_env)
             if literal != nil{
-                literal_257 := literal
-                switch _matchExp1 := literal_257.(type) {
+                literal_280 := literal
+                switch _matchExp0 := literal_280.(type) {
                 case *Nodes_Literal__Int:
-                val := _matchExp1.Val1
+                val := _matchExp0.Val1
                     enumVal = &Ast_EnumLiteral__Int{val}
                     number = (LnsReal)(val)
                     valTypeInfo = Ast_builtinTypeInt
                 case *Nodes_Literal__Real:
-                val := _matchExp1.Val1
+                val := _matchExp0.Val1
                     enumVal = &Ast_EnumLiteral__Real{val}
                     number = val
                     valTypeInfo = Ast_builtinTypeReal
                 case *Nodes_Literal__Str:
-                val := _matchExp1.Val1
+                val := _matchExp0.Val1
                     enumVal = &Ast_EnumLiteral__Str{val}
                     valTypeInfo = Ast_builtinTypeString
                 default:
-                    self.FP.Error(_env, _env.GetVM().String_format("illegal enum val -- %s", []LnsAny{literal_257.(LnsAlgeVal).GetTxt()}))
+                    self.FP.Error(_env, _env.GetVM().String_format("illegal enum val -- %s", []LnsAny{literal_280.(LnsAlgeVal).GetTxt()}))
                 }
             } else {
                 self.FP.Error(_env, _env.GetVM().String_format("illegal enum val -- %s", []LnsAny{mess}))
             }
             nextToken = self.FP.getToken(_env, nil)
         } else { 
-            if _switch2 := (prevValTypeInfo); _switch2 == Ast_headTypeInfo {
+            if _switch1 := (prevValTypeInfo); _switch1 == Ast_headTypeInfo {
                 valTypeInfo = Ast_builtinTypeInt
-            } else if _switch2 == Ast_builtinTypeInt || _switch2 == Ast_builtinTypeReal {
+            } else if _switch1 == Ast_builtinTypeInt || _switch1 == Ast_builtinTypeReal {
                 valTypeInfo = prevValTypeInfo
             } else {
                 self.FP.AddErrMess(_env, valName.Pos, _env.GetVM().String_format("illegal enum val type -- %s", []LnsAny{valTypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
@@ -5045,13 +5062,13 @@ func (self *TransUnit_TransUnit) analyzeDeclEnum(_env *LnsEnv, accessMode LnsInt
             workEnumTypeInfo = self.ProcessInfo.FP.CreateEnum(_env, scope, parentNsInfo.FP.Get_typeInfo(_env), parentNsInfo.FP.Get_typeDataAccessor(_env), false, accessMode, name.Txt, valTypeInfo)
         }
         if workEnumTypeInfo != nil{
-            workEnumTypeInfo_273 := workEnumTypeInfo.(*Ast_EnumTypeInfo)
+            workEnumTypeInfo_296 := workEnumTypeInfo.(*Ast_EnumTypeInfo)
             var evalValSym *Ast_SymbolInfo
-            evalValSym = Lns_unwrap( Lns_car(scope.FP.AddEnumVal(_env, self.ProcessInfo, valName.Txt, valName.Pos, &workEnumTypeInfo_273.Ast_TypeInfo))).(*Ast_SymbolInfo)
+            evalValSym = Lns_unwrap( Lns_car(scope.FP.AddEnumVal(_env, self.ProcessInfo, valName.Txt, valName.Pos, &workEnumTypeInfo_296.Ast_TypeInfo))).(*Ast_SymbolInfo)
             var enumValInfo *Ast_EnumValInfo
             enumValInfo = NewAst_EnumValInfo(_env, valName.Txt, enumVal, evalValSym)
             valueList.Insert(Types_Token2Stem(valName))
-            workEnumTypeInfo_273.FP.AddEnumValInfo(_env, enumValInfo)
+            workEnumTypeInfo_296.FP.AddEnumValInfo(_env, enumValInfo)
         }
         if nextToken.Txt == "}"{
             break
@@ -5072,22 +5089,22 @@ func (self *TransUnit_TransUnit) analyzeDeclEnum(_env *LnsEnv, accessMode LnsInt
     }
     self.FP.PopScope(_env)
     var shadowing LnsAny
-    _,shadowing = self.Scope.FP.AddEnum(_env, self.ProcessInfo, accessMode, name.Txt, name.Pos, &enumTypeInfo.Ast_TypeInfo)
+    _,shadowing = self.FP.Get_scope(_env).FP.AddEnum(_env, self.ProcessInfo, accessMode, name.Txt, name.Pos, &enumTypeInfo.Ast_TypeInfo)
     self.FP.errorShadowing(_env, name.Pos, shadowing)
     return Nodes_DeclEnumNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_EnumTypeInfo2Stem(enumTypeInfo)}), enumTypeInfo, accessMode, name, valueList, scope)
 }
-// 1229: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclAlge
+// 1230: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclAlge
 func (self *TransUnit_TransUnit) analyzeDeclAlge(_env *LnsEnv, accessMode LnsInt,firstToken *Types_Token) *Nodes_DeclAlgeNode {
     self.HelperInfo.UseAlge = true
     var name *Types_Token
     name = self.FP.getSymbolToken(_env, TransUnit_SymbolMode__MustNot_)
     self.FP.checkNextToken(_env, "{")
     var scope *Ast_Scope
-    scope = self.Scope
+    scope = self.FP.Get_scope(_env)
     var algeScope *Ast_Scope
     algeScope = self.FP.PushScope(_env, Ast_ScopeKind__Class, nil, nil)
     var parentNsInfo *TransUnitIF_NSInfo
-    parentNsInfo = self.FP.GetCurrentNSInfo(_env)
+    parentNsInfo = self.FP.Get_curNsInfo(_env)
     var algeTypeInfo *Ast_AlgeTypeInfo
     algeTypeInfo = self.ProcessInfo.FP.CreateAlge(_env, algeScope, parentNsInfo.FP.Get_typeInfo(_env), parentNsInfo.FP.Get_typeDataAccessor(_env), false, accessMode, name.Txt)
     var shadowing LnsAny
@@ -5160,9 +5177,9 @@ func (self *TransUnit_TransUnit) analyzeDeclAlge(_env *LnsEnv, accessMode LnsInt
     self.FP.PopScope(_env)
     return Nodes_DeclAlgeNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_AlgeTypeInfo2Stem(algeTypeInfo)}), accessMode, algeTypeInfo, name, algeValList, algeScope)
 }
-// 1325: decl @lune.@base.@TransUnit.TransUnit.analyzeAlias
+// 1326: decl @lune.@base.@TransUnit.TransUnit.analyzeAlias
 func (self *TransUnit_TransUnit) analyzeAlias(_env *LnsEnv, accessMode LnsInt,firstToken *Types_Token) *Nodes_AliasNode {
-    if self.Scope != self.ModuleScope{
+    if self.FP.Get_scope(_env) != self.ModuleScope{
         self.FP.AddErrMess(_env, firstToken.Pos, "alias must use at top scope.")
     }
     var newToken *Types_Token
@@ -5188,14 +5205,14 @@ func (self *TransUnit_TransUnit) analyzeAlias(_env *LnsEnv, accessMode LnsInt,fi
             _env.SetStackVal( Lns_car(_env.GetVM().String_find(srcToken.Txt,"^_", nil, nil))) )){
             self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("alias symbol unmatch. %s %s", []LnsAny{newToken.Txt, newToken.Txt}))
         } else { 
-            if _switch1 := symbolInfo.FP.Get_kind(_env); _switch1 == Ast_SymbolKind__Typ || _switch1 == Ast_SymbolKind__Fun {
+            if _switch0 := symbolInfo.FP.Get_kind(_env); _switch0 == Ast_SymbolKind__Typ || _switch0 == Ast_SymbolKind__Fun {
                 var aliasSymbolInfo LnsAny
                 var shadowing LnsAny
-                aliasSymbolInfo,shadowing = self.Scope.FP.AddAlias(_env, self.ProcessInfo, newToken.Txt, newToken.Pos, false, accessMode, self.moduleType, symbolInfo)
+                aliasSymbolInfo,shadowing = self.FP.Get_scope(_env).FP.AddAlias(_env, self.ProcessInfo, newToken.Txt, newToken.Pos, false, accessMode, self.moduleType, symbolInfo)
                 if aliasSymbolInfo != nil{
-                    aliasSymbolInfo_328 := aliasSymbolInfo.(*Ast_SymbolInfo)
-                    newTypeInfo = aliasSymbolInfo_328.FP.Get_typeInfo(_env)
-                    newSymbolInfo = aliasSymbolInfo_328
+                    aliasSymbolInfo_351 := aliasSymbolInfo.(*Ast_SymbolInfo)
+                    newTypeInfo = aliasSymbolInfo_351.FP.Get_typeInfo(_env)
+                    newSymbolInfo = aliasSymbolInfo_351
                 } else {
                     self.FP.errorShadowing(_env, newToken.Pos, shadowing)
                 }
@@ -5209,7 +5226,7 @@ func (self *TransUnit_TransUnit) analyzeAlias(_env *LnsEnv, accessMode LnsInt,fi
     self.FP.checkNextToken(_env, ";")
     return Nodes_AliasNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(newTypeInfo)}), newSymbolInfo, symbolNode, newTypeInfo)
 }
-// 1390: decl @lune.@base.@TransUnit.TransUnit.analyzeRetTypeList
+// 1391: decl @lune.@base.@TransUnit.TransUnit.analyzeRetTypeList
 func (self *TransUnit_TransUnit) analyzeRetTypeList(_env *LnsEnv, pubToExtFlag bool,accessMode LnsInt,token *Types_Token,parentPub bool)(*LnsList, *Types_Token, *LnsList) {
     var retTypeInfoList *LnsList
     retTypeInfoList = NewLnsList([]LnsAny{})
@@ -5244,7 +5261,7 @@ func (self *TransUnit_TransUnit) analyzeRetTypeList(_env *LnsEnv, pubToExtFlag b
     }
     return retTypeInfoList, token, retTypeNodeList
 }
-// 1425: decl @lune.@base.@TransUnit.TransUnit.getMutableAsync
+// 1426: decl @lune.@base.@TransUnit.TransUnit.getMutableAsync
 func (self *TransUnit_TransUnit) getMutableAsync(_env *LnsEnv, token *Types_Token)(*Types_Token, bool, LnsAny) {
     var mutable bool
     mutable = false
@@ -5269,12 +5286,12 @@ func (self *TransUnit_TransUnit) getMutableAsync(_env *LnsEnv, token *Types_Toke
     }
     return token, mutable, asyncMode
 }
-// 1451: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclForm
+// 1452: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclForm
 func (self *TransUnit_TransUnit) analyzeDeclForm(_env *LnsEnv, accessMode LnsInt,firstToken *Types_Token) *Nodes_DeclFormNode {
     var name *Types_Token
     name = self.FP.getSymbolToken(_env, TransUnit_SymbolMode__MustNot_)
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( self.Scope != self.ModuleScope) &&
+        _env.SetStackVal( self.FP.Get_scope(_env) != self.ModuleScope) &&
         _env.SetStackVal( Ast_isPubToExternal(_env, accessMode)) ).(bool)){
         self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("You must declare this form at the outside scope. -- %s", []LnsAny{name.Txt}))
     }
@@ -5301,24 +5318,24 @@ func (self *TransUnit_TransUnit) analyzeDeclForm(_env *LnsEnv, accessMode LnsInt
         argTypeInfoList.Insert(Ast_TypeInfo2Stem(argNode.FP.Get_expType(_env)))
     }
     var parentNsInfo *TransUnitIF_NSInfo
-    parentNsInfo = self.FP.GetCurrentNSInfo(_env)
+    parentNsInfo = self.FP.Get_curNsInfo(_env)
     var formType *Ast_NormalTypeInfo
     formType = self.ProcessInfo.FP.CreateFuncAsync(_env, false, false, nil, Ast_TypeInfoKind__FormFunc, parentNsInfo.FP.Get_typeInfo(_env), parentNsInfo.FP.Get_typeDataAccessor(_env), false, false, true, accessMode, name.Txt, self.FP.getDefaultAsync(_env, Ast_TypeInfoKind__FormFunc, self.FP.getCurrentClass(_env), asyncMode), nil, argTypeInfoList, retTypeList, false)
     var formSymbol LnsAny
     var shadowing LnsAny
-    formSymbol,shadowing = self.Scope.FP.AddForm(_env, self.ProcessInfo, name.Pos, &formType.Ast_TypeInfo, accessMode)
+    formSymbol,shadowing = self.FP.Get_scope(_env).FP.AddForm(_env, self.ProcessInfo, name.Pos, &formType.Ast_TypeInfo, accessMode)
     self.FP.errorShadowing(_env, name.Pos, shadowing)
     var declFuncInfo *Nodes_DeclFuncInfo
     declFuncInfo = NewNodes_DeclFuncInfo(_env, Nodes_FuncKind__Form, nil, nil, false, name, _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( formSymbol) ||
-        _env.SetStackVal( shadowing) ), argList, false, accessMode, asyncMode, nil, retTypeList, retNodeList, false, false)
+        _env.SetStackVal( shadowing) ), argList, false, accessMode, asyncMode, nil, retTypeList, retNodeList, false, false, 0)
     return Nodes_DeclFormNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_NormalTypeInfo2Stem(formType)}), declFuncInfo)
 }
-// 1516: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclToken
+// 1517: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclToken
 func (self *TransUnit_TransUnit) AnalyzeDeclToken(_env *LnsEnv, accessMode LnsInt,staticFlag bool,firstToken *Types_Token,token *Types_Token) LnsAny {
     return nil
 }
-// 1523: decl @lune.@base.@TransUnit.TransUnit.analyzeDecl
+// 1524: decl @lune.@base.@TransUnit.TransUnit.analyzeDecl
 func (self *TransUnit_TransUnit) analyzeDecl(_env *LnsEnv, accessMode LnsInt,staticFlag bool,firstToken *Types_Token,token *Types_Token) LnsAny {
     if Lns_op_not(staticFlag){
         if token.Txt == "static"{
@@ -5373,7 +5390,7 @@ func (self *TransUnit_TransUnit) analyzeDecl(_env *LnsEnv, accessMode LnsInt,sta
     }
     return self.FP.AnalyzeDeclToken(_env, accessMode, staticFlag, firstToken, token)
 }
-// 1602: decl @lune.@base.@TransUnit.TransUnit.checkPublic
+// 1603: decl @lune.@base.@TransUnit.TransUnit.checkPublic
 func (self *TransUnit_TransUnit) checkPublic(_env *LnsEnv, pos *Types_Position,typeInfo *Ast_TypeInfo) {
     var checkedTypeSet *LnsSet
     checkedTypeSet = NewLnsSet([]LnsAny{})
@@ -5399,17 +5416,17 @@ func (self *TransUnit_TransUnit) checkPublic(_env *LnsEnv, pos *Types_Position,t
     }
     checkPub(_env, typeInfo)
 }
-// 1624: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclMember
+// 1625: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclMember
 func (self *TransUnit_TransUnit) analyzeDeclMember(_env *LnsEnv, classTypeInfo *Ast_TypeInfo,accessMode LnsInt,staticFlag bool,firstToken *Types_Token) *Nodes_DeclMemberNode {
     __func__ := "@lune.@base.@TransUnit.TransUnit.analyzeDeclMember"
     var nextToken *Types_Token
     nextToken = self.FP.getToken(_env, nil)
     var mutMode LnsInt
     mutMode = Ast_MutMode__IMut
-    if _switch1 := nextToken.Txt; _switch1 == "mut" {
+    if _switch0 := nextToken.Txt; _switch0 == "mut" {
         mutMode = Ast_MutMode__Mut
         nextToken = self.FP.getToken(_env, nil)
-    } else if _switch1 == "allmut" {
+    } else if _switch0 == "allmut" {
         mutMode = Ast_MutMode__AllMut
         nextToken = self.FP.getToken(_env, nil)
     }
@@ -5446,7 +5463,7 @@ func (self *TransUnit_TransUnit) analyzeDeclMember(_env *LnsEnv, classTypeInfo *
             accessorToken = self.FP.getToken(_env, nil)
             var workToken *Types_Token
             workToken = accessorToken
-            if _switch1 := workToken.Txt; _switch1 == "pub" || _switch1 == "pri" || _switch1 == "pro" || _switch1 == "local" {
+            if _switch0 := workToken.Txt; _switch0 == "pub" || _switch0 == "pri" || _switch0 == "pro" || _switch0 == "local" {
                 mode = Lns_unwrap( Ast_txt2AccessMode(_env, workToken.Txt)).(LnsInt)
                 workToken = self.FP.getToken(_env, nil)
                 if workToken.Txt == "&"{
@@ -5459,7 +5476,7 @@ func (self *TransUnit_TransUnit) analyzeDeclMember(_env *LnsEnv, classTypeInfo *
                     retType = typeNode.FP.Get_expType(_env)
                     workToken = self.FP.getToken(_env, nil)
                 }
-            } else if _switch1 == "non" {
+            } else if _switch0 == "non" {
                 workToken = self.FP.getToken(_env, nil)
             } else {
                 self.FP.AddErrMess(_env, workToken.Pos, _env.GetVM().String_format("access mode is invalid -- %s", []LnsAny{workToken.Txt}))
@@ -5484,7 +5501,7 @@ func (self *TransUnit_TransUnit) analyzeDeclMember(_env *LnsEnv, classTypeInfo *
                 _env.SetStackVal( mutMode == Ast_MutMode__IMut) ).(bool)){
                 self.FP.AddErrMess(_env, varName.Pos, _env.GetVM().String_format("This member can't have setter, this member is immutable. -- %s", []LnsAny{varName.Txt}))
             }
-            Log_log(_env, Log_Level__Debug, __func__, 1720, Log_CreateMessage(func(_env *LnsEnv) string {
+            Log_log(_env, Log_Level__Debug, __func__, 1721, Log_CreateMessage(func(_env *LnsEnv) string {
                 return _env.GetVM().String_format("%s", []LnsAny{dummyRetType})
             }))
             
@@ -5527,24 +5544,24 @@ func (self *TransUnit_TransUnit) analyzeDeclMember(_env *LnsEnv, classTypeInfo *
     }
     var symbolInfo LnsAny
     var shadowing LnsAny
-    symbolInfo,shadowing = self.Scope.FP.AddMember(_env, self.ProcessInfo, varName.Txt, varName.Pos, typeInfo, accessMode, staticFlag, mutMode)
+    symbolInfo,shadowing = self.FP.Get_scope(_env).FP.AddMember(_env, self.ProcessInfo, varName.Txt, varName.Pos, typeInfo, accessMode, staticFlag, mutMode)
     var workSym *Ast_SymbolInfo
     workSym = Lns_unwrap( (_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( symbolInfo) ||
         _env.SetStackVal( shadowing) ))).(*Ast_SymbolInfo)
     if shadowing != nil{
-        shadowing_455 := shadowing.(*Ast_SymbolInfo)
-        self.FP.errorShadowing(_env, varName.Pos, shadowing_455)
+        shadowing_478 := shadowing.(*Ast_SymbolInfo)
+        self.FP.errorShadowing(_env, varName.Pos, shadowing_478)
     }
     return Nodes_DeclMemberNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), varName, refType, workSym, classTypeInfo, staticFlag, accessMode, getterMutable != Ast_MutMode__IMut, getterMode, getterToken, getterRetType, setterMode, setterToken)
 }
-// 1775: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclMethod
+// 1776: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclMethod
 func (self *TransUnit_TransUnit) analyzeDeclMethod(_env *LnsEnv, classTypeInfo *Ast_TypeInfo,declFuncMode LnsInt,abstractFlag bool,overrideFlag bool,accessMode LnsInt,staticFlag bool,firstToken *Types_Token,name *Types_Token) *Nodes_Node {
     var node *Nodes_Node
     node = self.FP.analyzeDeclFunc(_env, declFuncMode, false, abstractFlag, overrideFlag, accessMode, staticFlag, classTypeInfo, name, name)
     return node
 }
-// 1796: decl @lune.@base.@TransUnit.TransUnit.addDefaultConstructor
+// 1797: decl @lune.@base.@TransUnit.TransUnit.addDefaultConstructor
 func (self *TransUnit_TransUnit) addDefaultConstructor(_env *LnsEnv, pos *Types_Position,classTypeInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,classScope *Ast_Scope,memberNodeList *LnsList,methodNameSet *LnsSet,oldFlag bool) {
     if Lns_isCondTrue( classScope.FP.GetTypeInfoChild(_env, "__init")){
         self.FP.AddErrMess(_env, pos, "already declare __init().")
@@ -5598,14 +5615,14 @@ func (self *TransUnit_TransUnit) addDefaultConstructor(_env *LnsEnv, pos *Types_
         }
     }
 }
-// 1873: decl @lune.@base.@TransUnit.TransUnit.analyzeFuncBlock
+// 1874: decl @lune.@base.@TransUnit.TransUnit.analyzeFuncBlock
 func (self *TransUnit_TransUnit) analyzeFuncBlock(_env *LnsEnv, analyzingState LnsInt,firstToken *Types_Token,classTypeInfo LnsAny,funcTypeInfo *Ast_TypeInfo,funcName string,funcBodyScope *Ast_Scope,retTypeInfoList *LnsList) *Nodes_BlockNode {
     if Lns_op_not(funcTypeInfo.FP.Get_staticFlag(_env)){
         if classTypeInfo != nil{
-            classTypeInfo_485 := classTypeInfo.(*Ast_TypeInfo)
+            classTypeInfo_508 := classTypeInfo.(*Ast_TypeInfo)
             {
-                _overrideType := _env.NilAccFin(_env.NilAccPush(classTypeInfo_485.FP.Get_scope(_env)) && 
-                Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoField(_env, funcName, false, funcBodyScope, self.ScopeAccess)})/* 1880:33 */)
+                _overrideType := _env.NilAccFin(_env.NilAccPush(classTypeInfo_508.FP.Get_scope(_env)) && 
+                Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoField(_env, funcName, false, funcBodyScope, self.ScopeAccess)})/* 1881:33 */)
                 if !Lns_IsNil( _overrideType ) {
                     overrideType := _overrideType.(*Ast_TypeInfo)
                     if Lns_op_not(overrideType.FP.Get_abstractFlag(_env)){
@@ -5626,7 +5643,7 @@ func (self *TransUnit_TransUnit) analyzeFuncBlock(_env *LnsEnv, analyzingState L
             var breakKind LnsInt
             breakKind = body.FP.GetBreakKind(_env, Nodes_CheckBreakMode__Return)
             if retTypeInfoList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo() != Ast_builtinTypeNeverRet{
-                if _switch1 := breakKind; _switch1 == Nodes_BreakKind__Return || _switch1 == Nodes_BreakKind__NeverRet {
+                if _switch0 := breakKind; _switch0 == Nodes_BreakKind__Return || _switch0 == Nodes_BreakKind__NeverRet {
                 } else {
                     self.FP.AddErrMess(_env, firstToken.Pos, "This funcion doesn't have return.")
                 }
@@ -5641,7 +5658,7 @@ func (self *TransUnit_TransUnit) analyzeFuncBlock(_env *LnsEnv, analyzingState L
     }
     return body
 }
-// 1940: decl @lune.@base.@TransUnit.TransUnit.addAccessor
+// 1941: decl @lune.@base.@TransUnit.TransUnit.addAccessor
 func (self *TransUnit_TransUnit) addAccessor(_env *LnsEnv, memberNode *Nodes_DeclMemberNode,methodNameSet *LnsSet,classScope *Ast_Scope,classTypeInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor) {
     var memberType *Ast_TypeInfo
     memberType = memberNode.FP.Get_expType(_env)
@@ -5702,7 +5719,7 @@ func (self *TransUnit_TransUnit) addAccessor(_env *LnsEnv, memberNode *Nodes_Dec
         }
     }
 }
-// 2035: decl @lune.@base.@TransUnit.TransUnit.analyzeClassBody
+// 2036: decl @lune.@base.@TransUnit.TransUnit.analyzeClassBody
 func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,classAccessMode LnsInt,firstToken *Types_Token,mode LnsInt,gluePrefix LnsAny,classTypeInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,name *Types_Token,moduleLang LnsAny,moduleName LnsAny,lazyLoad LnsInt,nextToken *Types_Token,inheritInfo *Nodes_ClassInheritInfo)(*Nodes_DeclClassNode, *Types_Token, *LnsSet) {
     var memberName2Node *LnsMap
     memberName2Node = NewLnsMap( map[LnsAny]LnsAny{})
@@ -5725,7 +5742,7 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
     var uninitMemberList *LnsList
     uninitMemberList = NewLnsList([]LnsAny{})
     var node *Nodes_DeclClassNode
-    node = Nodes_DeclClassNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(classTypeInfo)}), classAccessMode, name, inheritInfo, hasProto, gluePrefix, moduleName, moduleLang, lazyLoad, false, allStmtList, declStmtList, fieldList, memberList, self.Scope, initBlockInfo, advertiseList, trustList, uninitMemberList, NewLnsSet([]LnsAny{}))
+    node = Nodes_DeclClassNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(classTypeInfo)}), classAccessMode, name, inheritInfo, hasProto, gluePrefix, moduleName, moduleLang, lazyLoad, false, allStmtList, declStmtList, fieldList, memberList, self.FP.Get_scope(_env), initBlockInfo, advertiseList, trustList, uninitMemberList, NewLnsSet([]LnsAny{}))
     self.typeInfo2ClassNode.Set(classTypeInfo,node)
     var alreadyCtorFlag bool
     alreadyCtorFlag = false
@@ -5734,7 +5751,7 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
     var hasStaticMember bool
     hasStaticMember = false
     var classScope *Ast_Scope
-    classScope = self.Scope
+    classScope = self.FP.Get_scope(_env)
     var processLet func(_env *LnsEnv, token *Types_Token,staticFlag bool,accessMode LnsInt,alreadyFlag bool)
     processLet = func(_env *LnsEnv, token *Types_Token,staticFlag bool,accessMode LnsInt,alreadyFlag bool) {
         if staticFlag{
@@ -5767,7 +5784,7 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
             memberNode := _memberNode.(Nodes_DeclMemberNodeDownCast).ToNodes_DeclMemberNode()
             if memberNode.FP.Get_staticFlag(_env) == staticFlag{
                 var symbolInfo *Ast_SymbolInfo
-                symbolInfo = Lns_unwrap( self.Scope.FP.GetSymbolInfoChild(_env, memberName)).(*Ast_SymbolInfo)
+                symbolInfo = Lns_unwrap( self.FP.Get_scope(_env).FP.GetSymbolInfoChild(_env, memberName)).(*Ast_SymbolInfo)
                 var typeInfo *Ast_TypeInfo
                 typeInfo = symbolInfo.FP.Get_typeInfo(_env)
                 if Lns_op_not(symbolInfo.FP.Get_hasValueFlag(_env)){
@@ -5803,7 +5820,7 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
             }
         }
         if nameToken.Txt == "__init"{
-            for _, _symbolInfo := range( self.Scope.FP.Get_symbol2SymbolInfoMap(_env).Items ) {
+            for _, _symbolInfo := range( self.FP.Get_scope(_env).FP.Get_symbol2SymbolInfoMap(_env).Items ) {
                 symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                 if Lns_op_not(symbolInfo.FP.Get_staticFlag(_env)){
                     symbolInfo.FP.ClearValue(_env)
@@ -5830,14 +5847,14 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
             self.FP.Error(_env, _env.GetVM().String_format("%s can not have __init block.", []LnsAny{mode}))
         }
         hasInitBlock = true
-        for _, _symbolInfo := range( self.Scope.FP.Get_symbol2SymbolInfoMap(_env).Items ) {
+        for _, _symbolInfo := range( self.FP.Get_scope(_env).FP.Get_symbol2SymbolInfoMap(_env).Items ) {
             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
             if symbolInfo.FP.Get_staticFlag(_env){
                 symbolInfo.FP.ClearValue(_env)
             }
         }
         var parentScope *Ast_Scope
-        parentScope = self.Scope
+        parentScope = self.FP.Get_scope(_env)
         var initBlockScope *Ast_Scope
         initBlockScope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
         self.FP.prepareTentativeSymbol(_env, initBlockScope, false, nil)
@@ -5848,13 +5865,14 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
         var funcSym LnsAny
         var shadowing LnsAny
         funcSym,shadowing = parentScope.FP.AddFunc(_env, self.ProcessInfo, token.Pos, &funcTypeInfo.Ast_TypeInfo, Ast_AccessMode__Pri, true, true)
-        self.FP.NewNSInfo(_env, &funcTypeInfo.Ast_TypeInfo, token.Pos)
+        var nsInfo *TransUnitIF_NSInfo
+        nsInfo = self.FP.NewNSInfo(_env, &funcTypeInfo.Ast_TypeInfo, token.Pos)
         var block *Nodes_BlockNode
         block = self.FP.analyzeFuncBlock(_env, TransUnit_AnalyzingState__InitBlock, token, classTypeInfo, &funcTypeInfo.Ast_TypeInfo, ininame, initBlockScope, funcTypeInfo.FP.Get_retTypeInfoList(_env))
         var info *Nodes_DeclFuncInfo
         info = NewNodes_DeclFuncInfo(_env, Nodes_FuncKind__InitBlock, classTypeInfo, node, true, token, Lns_unwrap( (_env.PopVal( _env.IncStack() ||
             _env.SetStackVal( funcSym) ||
-            _env.SetStackVal( shadowing) ))).(*Ast_SymbolInfo), NewLnsList([]LnsAny{}), true, Ast_AccessMode__Pri, nil, block, NewLnsList([]LnsAny{}), NewLnsList([]LnsAny{}), false, false)
+            _env.SetStackVal( shadowing) ))).(*Ast_SymbolInfo), NewLnsList([]LnsAny{}), true, Ast_AccessMode__Pri, nil, block, NewLnsList([]LnsAny{}), NewLnsList([]LnsAny{}), false, false, nsInfo.FP.Get_stmtNum(_env))
         var initBlockNode *Nodes_DeclMethodNode
         initBlockNode = Nodes_DeclMethodNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_NormalTypeInfo2Stem(funcTypeInfo)}), info)
         initBlockInfo.FP.Set_func(_env, initBlockNode)
@@ -5910,19 +5928,19 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
     processLuneControl = func(_env *LnsEnv) {
         nextToken = self.FP.getToken(_env, nil)
         var pragma LnsAny
-        if _switch1 := nextToken.Txt; _switch1 == "default__init" {
+        if _switch0 := nextToken.Txt; _switch0 == "default__init" {
             pragma = LuneControl_Pragma__default__init_Obj
             alreadyCtorFlag = true
-            self.FP.addDefaultConstructor(_env, nextToken.Pos, classTypeInfo, typeDataAccessor, self.Scope, memberList, methodNameSet, false)
-        } else if _switch1 == "default__init_old" {
+            self.FP.addDefaultConstructor(_env, nextToken.Pos, classTypeInfo, typeDataAccessor, self.FP.Get_scope(_env), memberList, methodNameSet, false)
+        } else if _switch0 == "default__init_old" {
             pragma = LuneControl_Pragma__default__init_old_Obj
             alreadyCtorFlag = true
-            self.FP.addDefaultConstructor(_env, nextToken.Pos, classTypeInfo, typeDataAccessor, self.Scope, memberList, methodNameSet, true)
+            self.FP.addDefaultConstructor(_env, nextToken.Pos, classTypeInfo, typeDataAccessor, self.FP.Get_scope(_env), memberList, methodNameSet, true)
             node.FP.SetHasOldCtor(_env)
-        } else if _switch1 == "default_async_this_class" {
+        } else if _switch0 == "default_async_this_class" {
             pragma = LuneControl_Pragma__default_async_this_class_Obj
             self.class2defaultAsyncMode.Set(self.FP.GetCurrentNamespaceTypeInfo(_env),TransUnit_DefaultAsyncMode__AsyncAll)
-        } else if _switch1 == "default_noasync_this_class" {
+        } else if _switch0 == "default_noasync_this_class" {
             pragma = LuneControl_Pragma__default_noasync_this_class_Obj
             self.class2defaultAsyncMode.Set(self.FP.GetCurrentNamespaceTypeInfo(_env),TransUnit_DefaultAsyncMode__NoAsync)
         } else {
@@ -5995,7 +6013,7 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
                 processLuneControl(_env)
             } else { 
                 {
-                    _symbolInfo := self.Scope.FP.GetSymbolInfo(_env, token.Txt, self.Scope, false, self.ScopeAccess)
+                    _symbolInfo := self.FP.Get_scope(_env).FP.GetSymbolInfo(_env, token.Txt, self.FP.Get_scope(_env), false, self.ScopeAccess)
                     if !Lns_IsNil( _symbolInfo ) {
                         symbolInfo := _symbolInfo.(*Ast_SymbolInfo)
                         if symbolInfo.FP.Get_kind(_env) == Ast_SymbolKind__Mac{
@@ -6017,7 +6035,7 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
         }
     }
     processClassFields(_env, false)
-    if _switch1 := mode; _switch1 == TransUnitIF_DeclClassMode__Module || _switch1 == TransUnitIF_DeclClassMode__LazyModule {
+    if _switch0 := mode; _switch0 == TransUnitIF_DeclClassMode__Module || _switch0 == TransUnitIF_DeclClassMode__LazyModule {
     } else {
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( hasStaticMember) &&
@@ -6028,13 +6046,13 @@ func (self *TransUnit_TransUnit) analyzeClassBody(_env *LnsEnv, hasProto bool,cl
     }
     return node, nextToken, methodNameSet
 }
-// 2403: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclClass
+// 2404: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclClass
 func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFlag bool,classAccessMode LnsInt,firstToken *Types_Token,mode LnsInt) *Nodes_DeclClassNode {
     if mode == TransUnitIF_DeclClassMode__Module{
         if self.FP.getToken(_env, nil).Txt == "."{
-            if _switch1 := self.FP.getToken(_env, nil).Txt; _switch1 == "l" {
+            if _switch0 := self.FP.getToken(_env, nil).Txt; _switch0 == "l" {
                 mode = TransUnitIF_DeclClassMode__LazyModule
-            } else if _switch1 == "d" {
+            } else if _switch0 == "d" {
                 mode = TransUnitIF_DeclClassMode__Module
             }
         } else { 
@@ -6047,11 +6065,11 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
     if mode == TransUnitIF_DeclClassMode__LazyModule{
         self.HelperInfo.UseLazyRequire = true
     }
-    if _switch2 := mode; _switch2 == TransUnitIF_DeclClassMode__Module || _switch2 == TransUnitIF_DeclClassMode__LazyModule {
+    if _switch3 := mode; _switch3 == TransUnitIF_DeclClassMode__Module || _switch3 == TransUnitIF_DeclClassMode__LazyModule {
     } else {
-        if _switch3 := self.FP.GetCurrentNamespaceTypeInfo(_env).FP.Get_kind(_env); _switch3 == Ast_TypeInfoKind__IF || _switch3 == Ast_TypeInfoKind__Class || _switch3 == Ast_TypeInfoKind__Module {
-        } else if _switch3 == Ast_TypeInfoKind__Func || _switch3 == Ast_TypeInfoKind__Method {
-            if _switch4 := classAccessMode; _switch4 == Ast_AccessMode__Pub || _switch4 == Ast_AccessMode__Global {
+        if _switch2 := self.FP.GetCurrentNamespaceTypeInfo(_env).FP.Get_kind(_env); _switch2 == Ast_TypeInfoKind__IF || _switch2 == Ast_TypeInfoKind__Class || _switch2 == Ast_TypeInfoKind__Module {
+        } else if _switch2 == Ast_TypeInfoKind__Func || _switch2 == Ast_TypeInfoKind__Method {
+            if _switch1 := classAccessMode; _switch1 == Ast_AccessMode__Pub || _switch1 == Ast_AccessMode__Global {
                 self.FP.AddErrMess(_env, firstToken.Pos, "Class can't declare on here.")
             }
         } else {
@@ -6107,7 +6125,7 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
                         if !Lns_IsNil( __exp ) {
                             _exp := __exp.(LnsInt)
                             var ldName string
-                            ldName = TransUnit_convExp2_10391(Lns_2DDD(_env.GetVM().String_gsub(Types_Lang_getTxt( _exp),".*%.", "")))
+                            ldName = TransUnit_convExp2_10837(Lns_2DDD(_env.GetVM().String_gsub(Types_Lang_getTxt( _exp),".*%.", "")))
                             if ldName == langIdToken{
                                 moduleLang = _exp
                                 break
@@ -6130,7 +6148,7 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
         }
     }
     var existSymbolInfo LnsAny
-    existSymbolInfo = self.Scope.FP.GetSymbolTypeInfo(_env, name.Txt, self.Scope, self.Scope, self.ScopeAccess)
+    existSymbolInfo = self.FP.Get_scope(_env).FP.GetSymbolTypeInfo(_env, name.Txt, self.FP.Get_scope(_env), self.FP.Get_scope(_env), self.ScopeAccess)
     var nextToken *Types_Token
     var nsInfo *TransUnitIF_NSInfo
     var inheritInfo *Nodes_ClassInheritInfo
@@ -6152,7 +6170,7 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
         }
     }
     var classScope *Ast_Scope
-    classScope = self.Scope
+    classScope = self.FP.Get_scope(_env)
     self.FP.checkToken(_env, nextToken, "{")
     var mapType *Ast_TypeInfo
     mapType = self.ProcessInfo.FP.CreateMap(_env, Ast_AccessMode__Pub, classTypeInfo, Ast_builtinTypeString, self.FP.createModifier(_env, Ast_builtinTypeStem, Ast_MutMode__IMut), Ast_MutMode__IMut)
@@ -6168,9 +6186,9 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
         classScope.FP.AddMethod(_env, self.ProcessInfo, nil, &toMapFuncTypeInfo.Ast_TypeInfo, Ast_AccessMode__Pub, false, false)
     }
     var lazyLoad LnsInt
-    if _switch5 := mode; _switch5 == TransUnitIF_DeclClassMode__LazyModule {
+    if _switch4 := mode; _switch4 == TransUnitIF_DeclClassMode__LazyModule {
         lazyLoad = Nodes_LazyLoad__On
-    } else if _switch5 == TransUnitIF_DeclClassMode__Module || _switch5 == TransUnitIF_DeclClassMode__Class || _switch5 == TransUnitIF_DeclClassMode__Interface {
+    } else if _switch4 == TransUnitIF_DeclClassMode__Module || _switch4 == TransUnitIF_DeclClassMode__Class || _switch4 == TransUnitIF_DeclClassMode__Interface {
         lazyLoad = Nodes_LazyLoad__Off
     }
     var node *Nodes_DeclClassNode
@@ -6191,7 +6209,7 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
         advertiseInfo := _advertiseInfo.(Nodes_AdvertiseInfoDownCast).ToNodes_AdvertiseInfo()
         var memberType *Ast_TypeInfo
         memberType = advertiseInfo.FP.Get_member(_env).FP.Get_expType(_env)
-        if _switch6 := memberType.FP.Get_kind(_env); _switch6 == Ast_TypeInfoKind__Class || _switch6 == Ast_TypeInfoKind__IF {
+        if _switch5 := memberType.FP.Get_kind(_env); _switch5 == Ast_TypeInfoKind__Class || _switch5 == Ast_TypeInfoKind__IF {
             for _, _mtdName := range( Ast_getAllMethodName(_env, memberType, Ast_MethodKind__Object).FP.Get_list(_env).Items ) {
                 mtdName := _mtdName.(string)
                 var scope *Ast_Scope
@@ -6236,7 +6254,7 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
     }
     if classTypeInfo.FP.IsInheritFrom(_env, self.ProcessInfo, Ast_builtinTypeAsyncItem, nil){
         var pipeType *Ast_GenericTypeInfo
-        pipeType = TransUnit_convExp2_11372(Lns_2DDD(self.ProcessInfo.FP.CreateGeneric(_env, self.builtinFunc.G__pipe_, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(classTypeInfo)}), self.moduleType)))
+        pipeType = TransUnit_convExp2_11818(Lns_2DDD(self.ProcessInfo.FP.CreateGeneric(_env, self.builtinFunc.G__pipe_, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(classTypeInfo)}), self.moduleType)))
         var createPipeFuncTypeInfo *Ast_NormalTypeInfo
         createPipeFuncTypeInfo = self.ProcessInfo.FP.CreateFuncAsync(_env, false, false, nil, Ast_TypeInfoKind__Func, classTypeInfo, typeDataAccessor, true, false, true, Ast_AccessMode__Pub, "_createPipe", Ast_Async__Async, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeInt)}), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(pipeType.FP.Get_nilableTypeInfo(_env))}), true)
         classScope.FP.AddMethod(_env, self.ProcessInfo, nil, &createPipeFuncTypeInfo.Ast_TypeInfo, Ast_AccessMode__Pub, true, false)
@@ -6244,14 +6262,14 @@ func (self *TransUnit_TransUnit) analyzeDeclClass(_env *LnsEnv, classAbstructFla
     self.FP.PopClass(_env)
     return node
 }
-// 2697: decl @lune.@base.@TransUnit.TransUnit.addMethod
+// 2698: decl @lune.@base.@TransUnit.TransUnit.addMethod
 func (self *TransUnit_TransUnit) addMethod(_env *LnsEnv, classTypeInfo *Ast_TypeInfo,methodNode *Nodes_Node,name string) {
     var classNodeInfo *Nodes_DeclClassNode
     classNodeInfo = Lns_unwrap( self.typeInfo2ClassNode.Get(classTypeInfo)).(*Nodes_DeclClassNode)
     classNodeInfo.FP.Get_outerMethodSet(_env).Add(name)
     classNodeInfo.FP.Get_fieldList(_env).Insert(Nodes_Node2Stem(methodNode))
 }
-// 2706: decl @lune.@base.@TransUnit.TransUnit.processAddFunc
+// 2707: decl @lune.@base.@TransUnit.TransUnit.processAddFunc
 func (self *TransUnit_TransUnit) processAddFunc(_env *LnsEnv, isFunc bool,parentScope *Ast_Scope,name *Types_Token,typeInfoMut *Ast_TypeInfo,alt2typeMap *LnsMap)(*Ast_SymbolInfo, *TransUnitIF_NSInfo) {
     var accessMode LnsInt
     accessMode = typeInfoMut.FP.Get_accessMode(_env)
@@ -6365,15 +6383,16 @@ func (self *TransUnit_TransUnit) processAddFunc(_env *LnsEnv, isFunc bool,parent
     } else { 
         funcSym, shadowing = parentScope.FP.AddMethod(_env, self.ProcessInfo, name.Pos, typeInfo, accessMode, staticFlag, mutable)
     }
+    self.FP.Set_curNsInfo(_env, nsInfo)
     return Lns_unwrap( (_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( funcSym) ||
         _env.SetStackVal( shadowing) ))).(*Ast_SymbolInfo), nsInfo
 }
-// 2822: decl @lune.@base.@TransUnit.TransUnit.addFuncBlockInfoList
+// 2825: decl @lune.@base.@TransUnit.TransUnit.addFuncBlockInfoList
 func (self *TransUnit_TransUnit) addFuncBlockInfoList(_env *LnsEnv, funcBlockInfo *TransUnit_FuncBlockInfo) {
     Util_err(_env, "not implemented")
 }
-// 2834: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclFunc
+// 2837: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclFunc
 func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsInt,asyncLocked bool,abstractFlag bool,overrideFlag bool,accessMode LnsInt,staticFlag bool,classTypeInfo LnsAny,firstToken *Types_Token,name LnsAny) *Nodes_Node {
     var token *Types_Token
     token = self.FP.getToken(_env, nil)
@@ -6419,7 +6438,7 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
             name_64 := name.(*Types_Token)
             var className string
             className = name_64.Txt
-            classTypeInfo = self.Scope.FP.GetTypeInfoChild(_env, className)
+            classTypeInfo = self.FP.Get_scope(_env).FP.GetTypeInfoChild(_env, className)
             if classTypeInfo != nil{
                 classTypeInfo_67 := classTypeInfo.(*Ast_TypeInfo)
                 self.FP.PushClassScope(_env, name_64.Pos, classTypeInfo_67, Lns_unwrap( self.Namespace2Scope.Get(classTypeInfo_67)).(*Ast_Scope))
@@ -6440,15 +6459,15 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
         if Lns_op_not(staticFlag){
             typeKind = Ast_TypeInfoKind__Method
         }
-        if _switch1 := (Lns_unwrap( name).(*Types_Token)).Txt; _switch1 == "__init" {
+        if _switch0 := (Lns_unwrap( name).(*Types_Token)).Txt; _switch0 == "__init" {
             kind = Nodes_NodeKind_get_DeclConstr(_env)
-            for _, _symbolInfo := range( self.Scope.FP.Get_symbol2SymbolInfoMap(_env).Items ) {
+            for _, _symbolInfo := range( self.FP.Get_scope(_env).FP.Get_symbol2SymbolInfoMap(_env).Items ) {
                 symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                 if Lns_op_not(symbolInfo.FP.Get_staticFlag(_env)){
                     symbolInfo.FP.ClearValue(_env)
                 }
             }
-        } else if _switch1 == "__free" {
+        } else if _switch0 == "__free" {
             kind = Nodes_NodeKind_get_DeclDestr(_env)
             if Lns_op_not(self.TargetLuaVer.FP.Get_canUseMetaGc(_env)){
                 self.FP.AddErrMess(_env, firstToken.Pos, "this lua version is not support __free.")
@@ -6468,7 +6487,7 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
         staticFlag = true
     }
     var parentScope *Ast_Scope
-    parentScope = self.Scope
+    parentScope = self.FP.Get_scope(_env)
     var funcBodyScope *Ast_Scope
     funcBodyScope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -6534,7 +6553,7 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
                 workClass = self.FP.createModifier(_env, workClass, Ast_MutMode__IMut)
             }
             if Lns_op_not(staticFlag){
-                self.Scope.FP.Add(_env, self.ProcessInfo, Ast_SymbolKind__Arg, false, true, "self", nil, workClass, Ast_AccessMode__Pri, false, _env.PopVal( _env.IncStack() ||
+                self.FP.Get_scope(_env).FP.Add(_env, self.ProcessInfo, Ast_SymbolKind__Arg, false, true, "self", nil, workClass, Ast_AccessMode__Pri, false, _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( mutable) &&
                     _env.SetStackVal( Ast_MutMode__Mut) ||
                     _env.SetStackVal( Ast_MutMode__IMut) ).(LnsInt), true, false)
@@ -6561,14 +6580,14 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
     var retTypeNodeList *LnsList
     retTypeInfoList, token, retTypeNodeList = self.FP.analyzeRetTypeList(_env, pubToExtFlag, accessMode, token, parentPub)
     var parentNsInfo *TransUnitIF_NSInfo
-    parentNsInfo = self.FP.GetCurrentNSInfo(_env)
+    parentNsInfo = self.FP.Get_curNsInfo(_env)
     var funcName string
     funcName = ""
     if name != nil{
         name_124 := name.(*Types_Token)
         funcName = name_124.Txt
         if kind == Nodes_NodeKind_get_DeclFunc(_env){
-            if _switch2 := accessMode; _switch2 == Ast_AccessMode__Pub || _switch2 == Ast_AccessMode__Global {
+            if _switch1 := accessMode; _switch1 == Ast_AccessMode__Pub || _switch1 == Ast_AccessMode__Global {
                 if parentScope != self.ModuleScope{
                     self.FP.AddErrMess(_env, firstToken.Pos, "'global' or 'pub' function must exist top scope.")
                 }
@@ -6622,7 +6641,7 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
             self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("This method can't override -- %s", []LnsAny{funcName}))
         }
         {
-            _overrideType := self.Scope.FP.Get_parent(_env).FP.GetTypeInfoField(_env, funcName, false, funcBodyScope, self.ScopeAccess)
+            _overrideType := self.FP.Get_scope(_env).FP.Get_parent(_env).FP.GetTypeInfoField(_env, funcName, false, funcBodyScope, self.ScopeAccess)
             if !Lns_IsNil( _overrideType ) {
                 overrideType := _overrideType.(*Ast_TypeInfo)
                 for _, _err := range( self.FP.checkOverrideMethod(_env, overrideType, typeInfo).Items ) {
@@ -6637,11 +6656,11 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
         if name != nil{
             name_152 := name.(*Types_Token)
             if Lns_op_not(TransUnit_CantOverrideMethods.Has(name_152.Txt)){
-                if Lns_isCondTrue( self.Scope.FP.Get_parent(_env).FP.GetTypeInfoField(_env, name_152.Txt, false, funcBodyScope, Ast_ScopeAccess__Full)){
+                if Lns_isCondTrue( self.FP.Get_scope(_env).FP.Get_parent(_env).FP.GetTypeInfoField(_env, name_152.Txt, false, funcBodyScope, Ast_ScopeAccess__Full)){
                     self.FP.AddErrMess(_env, firstToken.Pos, "mismatch override --" + funcName)
                 } else { 
                     {
-                        _ifFunc := self.Scope.FP.Get_parent(_env).FP.GetSymbolInfoIfField(_env, name_152.Txt, funcBodyScope, Ast_ScopeAccess__Full)
+                        _ifFunc := self.FP.Get_scope(_env).FP.Get_parent(_env).FP.GetSymbolInfoIfField(_env, name_152.Txt, funcBodyScope, Ast_ScopeAccess__Full)
                         if !Lns_IsNil( _ifFunc ) {
                             ifFunc := _ifFunc.(*Ast_SymbolInfo)
                             if Lns_op_not(Lns_car(ifFunc.FP.Get_typeInfo(_env).FP.CanEvalWith(_env, self.ProcessInfo, typeInfo, Ast_CanEvalType__SetEq, alt2typeMap)).(bool)){
@@ -6663,6 +6682,7 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
     needFuncBlockInfo = false
     var inMacroExpand bool
     inMacroExpand = self.MacroCtrl.FP.IsInExpandMode(_env)
+    var stmtNum LnsInt
     if token.Txt == ";"{
         if _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( declFuncMode == TransUnit_DeclFuncMode__Module) ||
@@ -6679,6 +6699,7 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
                 }
             }
         }
+        stmtNum = 0
     } else { 
         if abstractFlag{
             self.FP.AddErrMess(_env, token.Pos, "abstract method can't have body.")
@@ -6687,11 +6708,11 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
         var analyzingState LnsInt
         analyzingState = TransUnit_getAnalyzingState_24_(_env, typeInfo)
         funcBodyScope.FP.AddLocalVar(_env, self.ProcessInfo, false, false, "__func__", firstToken.Pos, Ast_builtinTypeString, Ast_MutMode__IMut)
-        if _switch3 := self.analyzePhase; _switch3 == TransUnit_AnalyzePhase__Meta {
+        if _switch2 := self.analyzePhase; _switch2 == TransUnit_AnalyzePhase__Meta {
             var declScope LnsAny
             if classTypeInfo != nil{
-                classTypeInfo_177 := classTypeInfo.(*Ast_TypeInfo)
-                declScope = (Lns_unwrap( classTypeInfo_177.FP.Get_scope(_env)).(*Ast_Scope)).FP.Get_parent(_env)
+                classTypeInfo_178 := classTypeInfo.(*Ast_TypeInfo)
+                declScope = (Lns_unwrap( classTypeInfo_178.FP.Get_scope(_env)).(*Ast_Scope)).FP.Get_parent(_env)
             } else {
                 declScope = (Lns_unwrap( typeInfo.FP.Get_scope(_env)).(*Ast_Scope)).FP.Get_parent(_env)
             }
@@ -6703,15 +6724,17 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
             } else { 
                 needFuncBlockInfo = true
             }
-        } else if _switch3 == TransUnit_AnalyzePhase__Main || _switch3 == TransUnit_AnalyzePhase__Runner {
+        } else if _switch2 == TransUnit_AnalyzePhase__Main || _switch2 == TransUnit_AnalyzePhase__Runner {
         }
         if needFuncBlockInfo{
             blockTokenList = self.FP.skipBlock(_env, true)
+            stmtNum = blockTokenList.Len()
         } else { 
             var workBody *Nodes_BlockNode
             workBody = self.FP.analyzeFuncBlock(_env, analyzingState, firstToken, classTypeInfo, typeInfo, funcName, funcBodyScope, typeInfo.FP.Get_retTypeInfoList(_env))
             body = workBody
             self.FP.declFuncPostProcess(_env, typeInfo, classTypeInfo, workBody, funcBodyScope)
+            stmtNum = nsInfo.FP.Get_stmtNum(_env)
         }
     }
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -6723,13 +6746,13 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
     createDeclFuncInfo = func(_env *LnsEnv, funcKind LnsInt) *Nodes_DeclFuncInfo {
         var classDeclNode LnsAny
         if classTypeInfo != nil{
-            classTypeInfo_192 := classTypeInfo.(*Ast_TypeInfo)
-            classDeclNode = self.typeInfo2ClassNode.Get(classTypeInfo_192)
+            classTypeInfo_193 := classTypeInfo.(*Ast_TypeInfo)
+            classDeclNode = self.typeInfo2ClassNode.Get(classTypeInfo_193)
         } else {
             classDeclNode = nil
         }
         var declFuncInfo *Nodes_DeclFuncInfo
-        declFuncInfo = NewNodes_DeclFuncInfo(_env, funcKind, classTypeInfo, classDeclNode, outsizeOfClass, name, funcSym, argList, orgStaticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, self.Has__func__Symbol.Has(Ast_TypeInfo2Stem(typeInfo)), overrideFlag)
+        declFuncInfo = NewNodes_DeclFuncInfo(_env, funcKind, classTypeInfo, classDeclNode, outsizeOfClass, name, funcSym, argList, orgStaticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, self.Has__func__Symbol.Has(Ast_TypeInfo2Stem(typeInfo)), overrideFlag, stmtNum)
         if needFuncBlockInfo{
             var pos *Types_Position
             pos = self.FP.getLineNo(_env, blockTokenList.GetAt(1).(Types_TokenDownCast).ToTypes_Token())
@@ -6740,14 +6763,14 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
                 orgPos = nil
             }
             var funcBlockInfo *TransUnit_FuncBlockInfo
-            funcBlockInfo = NewTransUnit_FuncBlockInfo(_env, declFuncInfo, typeInfo, typeDataAccessor, funcBodyScope, blockTokenList, pos, orgPos)
+            funcBlockInfo = NewTransUnit_FuncBlockInfo(_env, declFuncInfo, nsInfo, typeInfo, typeDataAccessor, funcBodyScope, blockTokenList, pos, orgPos)
             self.FP.addFuncBlockInfoList(_env, funcBlockInfo)
         }
         return declFuncInfo
     }
-    if _switch4 := (kind); _switch4 == Nodes_NodeKind_get_DeclConstr(_env) {
+    if _switch3 := (kind); _switch3 == Nodes_NodeKind_get_DeclConstr(_env) {
         if Lns_isCondTrue( _env.NilAccFin(_env.NilAccPush(classTypeInfo) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.IsInheritFrom(_env, self.ProcessInfo, Ast_builtinTypeRunner, nil)})/* 3296:13 */)){
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.IsInheritFrom(_env, self.ProcessInfo, Ast_builtinTypeRunner, nil)})/* 3305:13 */)){
             if typeInfo.FP.Get_asyncMode(_env) != Ast_Async__Async{
                 var message string
                 message = _env.GetVM().String_format("The constructor of the class extended __Runner must be __async. -- %s", []LnsAny{typeInfo.FP.Get_parentInfo(_env).FP.GetTxt(_env, nil, nil, nil)})
@@ -6757,19 +6780,19 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
         var info *Nodes_DeclFuncInfo
         info = createDeclFuncInfo(_env, Nodes_FuncKind__Ctor)
         node = &Nodes_DeclConstrNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), info).Nodes_Node
-    } else if _switch4 == Nodes_NodeKind_get_DeclDestr(_env) {
+    } else if _switch3 == Nodes_NodeKind_get_DeclDestr(_env) {
         var info *Nodes_DeclFuncInfo
         info = createDeclFuncInfo(_env, Nodes_FuncKind__Dstr)
         node = &Nodes_DeclDestrNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), info).Nodes_Node
-    } else if _switch4 == Nodes_NodeKind_get_DeclMethod(_env) {
+    } else if _switch3 == Nodes_NodeKind_get_DeclMethod(_env) {
         var info *Nodes_DeclFuncInfo
         info = createDeclFuncInfo(_env, Nodes_FuncKind__Mtd)
         node = &Nodes_DeclMethodNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), info).Nodes_Node
-    } else if _switch4 == Nodes_NodeKind_get_ProtoMethod(_env) {
+    } else if _switch3 == Nodes_NodeKind_get_ProtoMethod(_env) {
         var info *Nodes_DeclFuncInfo
         info = createDeclFuncInfo(_env, Nodes_FuncKind__Mtd)
         node = &Nodes_ProtoMethodNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), info).Nodes_Node
-    } else if _switch4 == Nodes_NodeKind_get_DeclFunc(_env) {
+    } else if _switch3 == Nodes_NodeKind_get_DeclFunc(_env) {
         var info *Nodes_DeclFuncInfo
         info = createDeclFuncInfo(_env, Nodes_FuncKind__Func)
         node = &Nodes_DeclFuncNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), info).Nodes_Node
@@ -6784,7 +6807,7 @@ func (self *TransUnit_TransUnit) analyzeDeclFunc(_env *LnsEnv, declFuncMode LnsI
     }
     return node
 }
-// 3356: decl @lune.@base.@TransUnit.TransUnit.createExpListNode
+// 3365: decl @lune.@base.@TransUnit.TransUnit.createExpListNode
 func (self *TransUnit_TransUnit) createExpListNode(_env *LnsEnv, orgExpList *Nodes_ExpListNode,newExpList *LnsList) *Nodes_ExpListNode {
     var newExpTypeList *LnsList
     newExpTypeList = NewLnsList([]LnsAny{})
@@ -6807,7 +6830,7 @@ func (self *TransUnit_TransUnit) createExpListNode(_env *LnsEnv, orgExpList *Nod
     }
     return Nodes_ExpListNode_create(_env, self.NodeManager, orgExpList.FP.Get_pos(_env), self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), newExpTypeList, newExpList, orgExpList.FP.Get_mRetExp(_env), orgExpList.FP.Get_followOn(_env))
 }
-// 3384: decl @lune.@base.@TransUnit.TransUnit.checkLiteralEmptyCollection
+// 3393: decl @lune.@base.@TransUnit.TransUnit.checkLiteralEmptyCollection
 func (self *TransUnit_TransUnit) checkLiteralEmptyCollection(_env *LnsEnv, pos *Types_Position,symbolName string,expType *Ast_TypeInfo) {
     for _, _itemType := range( expType.FP.Get_itemTypeInfoList(_env).Items ) {
         itemType := _itemType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -6817,13 +6840,13 @@ func (self *TransUnit_TransUnit) checkLiteralEmptyCollection(_env *LnsEnv, pos *
         }
     }
 }
-// 3399: decl @lune.@base.@TransUnit.TransUnit.accessSymbol
+// 3408: decl @lune.@base.@TransUnit.TransUnit.accessSymbol
 func (self *TransUnit_TransUnit) accessSymbol(_env *LnsEnv, symbolInfo *Ast_SymbolInfo,canLeftExp bool) {
     if symbolInfo.FP.Get_kind(_env) == Ast_SymbolKind__Fun{
-        self.Scope.FP.AccessSymbol(_env, self.ModuleScope, symbolInfo)
+        self.FP.Get_scope(_env).FP.AccessSymbol(_env, self.ModuleScope, symbolInfo)
         symbolInfo.FP.Set_posForModToRef(_env, symbolInfo.FP.Get_posForLatestMod(_env))
-        if self.Scope.FP.IsClosureAccess(_env, self.ModuleScope, symbolInfo){
-            self.closureFunList.Insert(TransUnit_ClosureFun2Stem(NewTransUnit_ClosureFun(_env, symbolInfo, self.Scope)))
+        if self.FP.Get_scope(_env).FP.IsClosureAccess(_env, self.ModuleScope, symbolInfo){
+            self.closureFunList.Insert(TransUnit_ClosureFun2Stem(NewTransUnit_ClosureFun(_env, symbolInfo, self.FP.Get_scope(_env))))
         }
         {
             _scope := symbolInfo.FP.Get_typeInfo(_env).FP.Get_scope(_env)
@@ -6833,7 +6856,7 @@ func (self *TransUnit_TransUnit) accessSymbol(_env *LnsEnv, symbolInfo *Ast_Symb
             }
         }
     } else { 
-        self.Scope.FP.AccessSymbol(_env, self.ModuleScope, symbolInfo)
+        self.FP.Get_scope(_env).FP.AccessSymbol(_env, self.ModuleScope, symbolInfo)
         if canLeftExp{
             self.accessSymbolSetQueue.FP.Add(_env, symbolInfo)
         } else { 
@@ -6841,7 +6864,7 @@ func (self *TransUnit_TransUnit) accessSymbol(_env *LnsEnv, symbolInfo *Ast_Symb
         }
     }
 }
-// 3435: decl @lune.@base.@TransUnit.TransUnit.analyzeInitExp
+// 3444: decl @lune.@base.@TransUnit.TransUnit.analyzeInitExp
 func (self *TransUnit_TransUnit) analyzeInitExp(_env *LnsEnv, firstPos *Types_Position,accessMode LnsInt,unwrapFlag bool,letVarList *LnsList,typeInfoList *LnsList)(*LnsList, *LnsList, *LnsList, LnsAny) {
     var expList LnsAny
     expList = nil
@@ -6859,13 +6882,13 @@ func (self *TransUnit_TransUnit) analyzeInitExp(_env *LnsEnv, firstPos *Types_Po
     var orgExpTypeList *LnsList
     orgExpTypeList = NewLnsList([]LnsAny{})
     if expList != nil{
-        expList_244 := expList.(*Nodes_ExpListNode)
+        expList_245 := expList.(*Nodes_ExpListNode)
         if unwrapFlag{
             var hasNilable bool
             hasNilable = false
             for _index, _ := range( letVarList.Items ) {
                 index := _index + 1
-                if expList_244.FP.GetExpTypeAt(_env, index).FP.Get_nilable(_env){
+                if expList_245.FP.GetExpTypeAt(_env, index).FP.Get_nilable(_env){
                     hasNilable = true
                     break
                 }
@@ -6875,7 +6898,7 @@ func (self *TransUnit_TransUnit) analyzeInitExp(_env *LnsEnv, firstPos *Types_Po
             }
         }
         var workList *Nodes_ExpListNode
-        workList = expList_244
+        workList = expList_245
         var updateExpList bool
         updateExpList = false
         var newExpList *LnsList
@@ -6902,10 +6925,10 @@ func (self *TransUnit_TransUnit) analyzeInitExp(_env *LnsEnv, firstPos *Types_Po
                     dddItemType = expType.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.Get_nilableTypeInfo(_env)
                 }
                 {
-                    var _forFrom1 LnsInt = index
-                    var _forTo1 LnsInt = letVarList.Len()
-                    for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-                        subIndex := _forWork1
+                    var _forFrom0 LnsInt = index
+                    var _forTo0 LnsInt = letVarList.Len()
+                    for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+                        subIndex := _forWork0
                         var argType *Ast_TypeInfo
                         argType = typeInfoList.GetAt(subIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         var checkType *Ast_TypeInfo
@@ -7044,13 +7067,13 @@ func (self *TransUnit_TransUnit) analyzeInitExp(_env *LnsEnv, firstPos *Types_Po
                     workName = ""
                 }
                 typeInfoList.Set(index,workType)
-                if _switch1 := workType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Func {
+                if _switch0 := workType.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Func {
                     if _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( expTypeList.Len() != 1) ||
                         _env.SetStackVal( workType.FP.Get_rawTxt(_env) != "") ).(bool){
                         self.FP.AddErrMess(_env, firstPos, _env.GetVM().String_format("must set the type of variable for function. -- %s", []LnsAny{workName}))
                     }
-                } else if _switch1 == Ast_TypeInfoKind__List || _switch1 == Ast_TypeInfoKind__Array || _switch1 == Ast_TypeInfoKind__Set || _switch1 == Ast_TypeInfoKind__Map {
+                } else if _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array || _switch0 == Ast_TypeInfoKind__Set || _switch0 == Ast_TypeInfoKind__Map {
                     self.FP.checkLiteralEmptyCollection(_env, workPos, workName, workType)
                 }
             }
@@ -7059,7 +7082,7 @@ func (self *TransUnit_TransUnit) analyzeInitExp(_env *LnsEnv, firstPos *Types_Po
     }
     return typeInfoList, letVarList, orgExpTypeList, nil
 }
-// 3696: decl @lune.@base.@TransUnit.TransUnit.analyzeLetAndInitExp
+// 3705: decl @lune.@base.@TransUnit.TransUnit.analyzeLetAndInitExp
 func (self *TransUnit_TransUnit) analyzeLetAndInitExp(_env *LnsEnv, firstPos *Types_Position,letFlag bool,initMutable LnsInt,accessMode LnsInt,unwrapFlag bool)(*LnsList, *LnsList, *LnsList, LnsAny) {
     var typeInfoList *LnsList
     typeInfoList = NewLnsList([]LnsAny{})
@@ -7109,11 +7132,11 @@ func (self *TransUnit_TransUnit) analyzeLetAndInitExp(_env *LnsEnv, firstPos *Ty
             symbolToken = self.FP.getToken(_env, nil)
             nextToken = self.FP.getToken(_env, nil)
             var verSym LnsAny
-            verSym = self.Scope.FP.GetSymbolTypeInfo(_env, symbolToken.Txt, self.Scope, self.ModuleScope, self.ScopeAccess)
+            verSym = self.FP.Get_scope(_env).FP.GetSymbolTypeInfo(_env, symbolToken.Txt, self.FP.Get_scope(_env), self.ModuleScope, self.ScopeAccess)
             if verSym != nil{
-                verSym_343 := verSym.(*Ast_SymbolInfo)
-                letVarList.Insert(TransUnit_LetVarInfo2Stem(NewTransUnit_LetVarInfo(_env, verSym_343.FP.Get_mutMode(_env), symbolToken, nil)))
-                typeInfoList.Insert(Ast_TypeInfo2Stem(verSym_343.FP.Get_typeInfo(_env)))
+                verSym_344 := verSym.(*Ast_SymbolInfo)
+                letVarList.Insert(TransUnit_LetVarInfo2Stem(NewTransUnit_LetVarInfo(_env, verSym_344.FP.Get_mutMode(_env), symbolToken, nil)))
+                typeInfoList.Insert(Ast_TypeInfo2Stem(verSym_344.FP.Get_typeInfo(_env)))
             } else {
                 self.FP.AddErrMess(_env, symbolToken.Pos, _env.GetVM().String_format("not found symbol -- %s", []LnsAny{symbolToken.Txt}))
             }
@@ -7130,7 +7153,7 @@ func (self *TransUnit_TransUnit) analyzeLetAndInitExp(_env *LnsEnv, firstPos *Ty
     }
     return self.FP.analyzeInitExp(_env, firstPos, accessMode, unwrapFlag, letVarList, typeInfoList)
 }
-// 3772: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclVar
+// 3781: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclVar
 func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,accessMode LnsInt,firstToken *Types_Token) *Nodes_Node {
     var unwrapFlag bool
     unwrapFlag = false
@@ -7148,7 +7171,7 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
         }
     }
     if accessMode == Ast_AccessMode__Pub{
-        if self.Scope != self.ModuleScope{
+        if self.FP.Get_scope(_env) != self.ModuleScope{
             self.FP.AddErrMess(_env, firstToken.Pos, "'pub' variable must exist top scope.")
         }
     }
@@ -7164,16 +7187,16 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
         _env.SetStackVal( mode == Nodes_DeclVarMode__Let) &&
         _env.SetStackVal( typeInfoList.Len() == 1) ).(bool)){
         if expList != nil{
-            expList_363 := expList.(*Nodes_ExpListNode)
+            expList_364 := expList.(*Nodes_ExpListNode)
             var typeInfo *Ast_TypeInfo
             typeInfo = typeInfoList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
             var letVaInfo *TransUnit_LetVarInfo
             letVaInfo = letVarList.GetAt(1).(TransUnit_LetVarInfoDownCast).ToTransUnit_LetVarInfo()
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                _env.SetStackVal( expList_363.FP.Get_expList(_env).Len() == 1) &&
+                _env.SetStackVal( expList_364.FP.Get_expList(_env).Len() == 1) &&
                 _env.SetStackVal( typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Func) ).(bool)){
                 var valExp *Nodes_Node
-                valExp = expList_363.FP.Get_expList(_env).GetAt(1).(Nodes_NodeDownCast).ToNodes_Node()
+                valExp = expList_364.FP.Get_expList(_env).GetAt(1).(Nodes_NodeDownCast).ToNodes_Node()
                 {
                     _macroExp := Nodes_ExpMacroExpNodeDownCastF(valExp.FP)
                     if !Lns_IsNil( _macroExp ) {
@@ -7198,7 +7221,7 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
                             var newTypeInfo *Ast_NormalTypeInfo
                             newTypeInfo = self.ProcessInfo.FP.CreateFuncAsync(_env, typeInfo.FP.Get_abstractFlag(_env), false, Lns_unwrap( self.Namespace2Scope.Get(typeInfo)).(*Ast_Scope), typeInfo.FP.Get_kind(_env), typeInfo.FP.Get_parentInfo(_env), self.FP.GetNSInfo(_env, typeInfo.FP.Get_parentInfo(_env)).FP.Get_typeDataAccessor(_env), false, false, typeInfo.FP.Get_staticFlag(_env), accessMode, letVarInfo.VarName.Txt, typeInfo.FP.Get_asyncMode(_env), typeInfo.FP.Get_itemTypeInfoList(_env), typeInfo.FP.Get_argTypeInfoList(_env), typeInfo.FP.Get_retTypeInfoList(_env), Ast_TypeInfo_isMut(_env, typeInfo))
                             var funcSym *Ast_SymbolInfo
-                            funcSym = TransUnit_convExp3_5426(Lns_2DDD(self.FP.processAddFunc(_env, true, self.Scope, letVarInfo.VarName, &newTypeInfo.Ast_TypeInfo, Ast_CanEvalCtrlTypeInfo_createDefaultAlt2typeMap(_env, false))))
+                            funcSym = TransUnit_convExp3_5464(Lns_2DDD(self.FP.processAddFunc(_env, true, self.FP.Get_scope(_env), letVarInfo.VarName, &newTypeInfo.Ast_TypeInfo, Ast_CanEvalCtrlTypeInfo_createDefaultAlt2typeMap(_env, false))))
                             self.NodeManager.FP.DelNode(_env, &declNode.Nodes_Node)
                             var declInfo *Nodes_DeclFuncInfo
                             declInfo = Nodes_DeclFuncInfo_createFrom(_env, declNode.FP.Get_declInfo(_env), letVarInfo.VarName, funcSym)
@@ -7210,12 +7233,12 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
         }
     }
     var syncScope *Ast_Scope
-    syncScope = self.Scope
+    syncScope = self.FP.Get_scope(_env)
     if mode == Nodes_DeclVarMode__Sync{
         syncScope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
     }
     var nsInfo *TransUnitIF_NSInfo
-    nsInfo = self.FP.GetCurrentNSInfo(_env)
+    nsInfo = self.FP.Get_curNsInfo(_env)
     var symbolInfoList *LnsList
     symbolInfoList = NewLnsList([]LnsAny{})
     var varList *LnsList
@@ -7242,7 +7265,7 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
         }
         if mode == Nodes_DeclVarMode__Sync{
             {
-                _symInfo := self.Scope.FP.GetSymbolInfo(_env, varName.Txt, self.Scope, true, self.ScopeAccess)
+                _symInfo := self.FP.Get_scope(_env).FP.GetSymbolInfo(_env, varName.Txt, self.FP.Get_scope(_env), true, self.ScopeAccess)
                 if !Lns_IsNil( _symInfo ) {
                     symInfo := _symInfo.(*Ast_SymbolInfo)
                     syncSymbolList.Insert(Ast_SymbolInfo2Stem(symInfo))
@@ -7253,7 +7276,7 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
             _env.SetStackVal( mode == Nodes_DeclVarMode__Let) ||
             _env.SetStackVal( mode == Nodes_DeclVarMode__Sync) ).(bool){
             if mode == Nodes_DeclVarMode__Let{
-                self.FP.checkShadowing(_env, varName.Pos, varName.Txt, self.Scope)
+                self.FP.checkShadowing(_env, varName.Pos, varName.Txt, self.FP.Get_scope(_env))
             }
             var orgExpType *Ast_TypeInfo
             orgExpType = Ast_builtinTypeStem_
@@ -7272,12 +7295,12 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
                 _env.SetStackVal( Lns_op_not(orgExpType.FP.Get_nilable(_env))) ).(bool){
                 hasValue = true
             }
-            self.Scope.FP.AddVar(_env, self.ProcessInfo, accessMode, varName.Txt, varName.Pos, typeInfo, letVarInfo.Mutable, hasValue)
+            self.FP.Get_scope(_env).FP.AddVar(_env, self.ProcessInfo, accessMode, varName.Txt, varName.Pos, typeInfo, letVarInfo.Mutable, hasValue)
             if typeInfo.FP.Get_asyncMode(_env) == Ast_Async__Transient{
                 self.FP.AddErrMess(_env, varName.Pos, _env.GetVM().String_format("can't set the __trans type -- index:%d, %s", []LnsAny{index, typeInfo.FP.GetTxt(_env, nil, nil, nil)}))
             }
         }
-        symbolInfoList.Insert(Ast_SymbolInfo2Stem(nsInfo.FP.RegisterSym(_env, Lns_unwrap( self.Scope.FP.GetSymbolInfo(_env, varName.Txt, self.Scope, true, self.ScopeAccess)).(*Ast_SymbolInfo))))
+        symbolInfoList.Insert(Ast_SymbolInfo2Stem(nsInfo.FP.RegisterSym(_env, Lns_unwrap( self.FP.Get_scope(_env).FP.GetSymbolInfo(_env, varName.Txt, self.FP.Get_scope(_env), true, self.ScopeAccess)).(*Ast_SymbolInfo))))
     }
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( mode != Nodes_DeclVarMode__Sync) &&
@@ -7301,10 +7324,10 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
         unwrapBlock = self.FP.analyzeBlock(_env, Nodes_BlockKind__LetUnwrap, TransUnit_TentativeMode__Start, scope, nil)
         self.FP.PopScope(_env)
         if unwrapBlock != nil{
-            unwrapBlock_414 := unwrapBlock.(*Nodes_BlockNode)
-            if _switch1 := mode; _switch1 == Nodes_DeclVarMode__Let || _switch1 == Nodes_DeclVarMode__Sync {
+            unwrapBlock_415 := unwrapBlock.(*Nodes_BlockNode)
+            if _switch0 := mode; _switch0 == Nodes_DeclVarMode__Let || _switch0 == Nodes_DeclVarMode__Sync {
                 var breakKind LnsInt
-                breakKind = unwrapBlock_414.FP.GetBreakKind(_env, Nodes_CheckBreakMode__Normal)
+                breakKind = unwrapBlock_415.FP.GetBreakKind(_env, Nodes_CheckBreakMode__Normal)
                 for _, _symbolInfo := range( symbolInfoList.Items ) {
                     symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                     if breakKind != Nodes_BreakKind__None{
@@ -7315,12 +7338,12 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
                             _env.SetStackVal( symbolInfo.FP.Get_name(_env) != "_") &&
                             _env.SetStackVal( Lns_op_not(self.tentativeSymbol.FP.CheckAndExclude(_env, symbolInfo))) ).(bool)){
                             if Lns_op_not(symbolInfo.FP.Get_hasValueFlag(_env)){
-                                self.FP.AddErrMess(_env, unwrapBlock_414.FP.Get_pos(_env), "This variable isn't set -- " + (symbolInfo.FP.Get_name(_env)))
+                                self.FP.AddErrMess(_env, unwrapBlock_415.FP.Get_pos(_env), "This variable isn't set -- " + (symbolInfo.FP.Get_name(_env)))
                             }
                         }
                     }
                 }
-            } else if _switch1 == Nodes_DeclVarMode__Unwrap {
+            } else if _switch0 == Nodes_DeclVarMode__Unwrap {
                 for _, _symbolInfo := range( symbolInfoList.Items ) {
                     symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                     symbolInfo.FP.UpdateValue(_env, firstToken.Pos)
@@ -7347,7 +7370,7 @@ func (self *TransUnit_TransUnit) analyzeDeclVar(_env *LnsEnv, mode LnsInt,access
     node = Nodes_DeclVarNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), mode, accessMode, false, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncSymbolList, syncBlock)
     return &node.Nodes_Node
 }
-// 4015: decl @lune.@base.@TransUnit.TransUnit.analyzeIfUnwrap
+// 4024: decl @lune.@base.@TransUnit.TransUnit.analyzeIfUnwrap
 func (self *TransUnit_TransUnit) analyzeIfUnwrap(_env *LnsEnv, firstToken *Types_Token) *Nodes_IfUnwrapNode {
     var nextToken *Types_Token
     nextToken = self.FP.getToken(_env, nil)
@@ -7373,8 +7396,8 @@ func (self *TransUnit_TransUnit) analyzeIfUnwrap(_env *LnsEnv, firstToken *Types
     }
     typeInfoList = workTypeInfoList
     if workExpList != nil{
-        workExpList_445 := workExpList.(*Nodes_ExpListNode)
-        expList = workExpList_445
+        workExpList_446 := workExpList.(*Nodes_ExpListNode)
+        expList = workExpList_446
     } else {
         self.FP.AddErrMess(_env, nextToken.Pos, "if! let has illegal init val.")
         self.FP.Error(_env, "system error")
@@ -7386,7 +7409,7 @@ func (self *TransUnit_TransUnit) analyzeIfUnwrap(_env *LnsEnv, firstToken *Types
     var scope *Ast_Scope
     scope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
     var nsInfo *TransUnitIF_NSInfo
-    nsInfo = self.FP.GetCurrentNSInfo(_env)
+    nsInfo = self.FP.Get_curNsInfo(_env)
     for _index, _expType := range( typeInfoList.Items ) {
         index := _index + 1
         expType := _expType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -7434,7 +7457,7 @@ func (self *TransUnit_TransUnit) analyzeIfUnwrap(_env *LnsEnv, firstToken *Types
     }
     for _, _varSym := range( varList.Items ) {
         varSym := _varSym.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
-        if _switch1 := varSym.FP.Get_name(_env); _switch1 == "_" || _switch1 == "_exp" {
+        if _switch0 := varSym.FP.Get_name(_env); _switch0 == "_" || _switch0 == "_exp" {
         } else {
             if Lns_op_not(varSym.FP.Get_posForModToRef(_env)){
                 self.FP.addWarnMess(_env, Lns_unwrap( varSym.FP.Get_pos(_env)).(*Types_Position), _env.GetVM().String_format("This symbol has no referer -- %s", []LnsAny{varSym.FP.Get_name(_env)}))
@@ -7443,7 +7466,7 @@ func (self *TransUnit_TransUnit) analyzeIfUnwrap(_env *LnsEnv, firstToken *Types
     }
     return Nodes_IfUnwrapNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), varList, expList, block, elseBlock)
 }
-// 4118: decl @lune.@base.@TransUnit.TransUnit.analyzeWhen
+// 4127: decl @lune.@base.@TransUnit.TransUnit.analyzeWhen
 func (self *TransUnit_TransUnit) analyzeWhen(_env *LnsEnv, firstToken *Types_Token) *Nodes_Node {
     var nextToken *Types_Token
     var continueFlag bool
@@ -7494,7 +7517,7 @@ func (self *TransUnit_TransUnit) analyzeWhen(_env *LnsEnv, firstToken *Types_Tok
     }
     return &Nodes_WhenNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), symPairList, block, elseBlock).Nodes_Node
 }
-// 4179: decl @lune.@base.@TransUnit.TransUnit.processFuncBlockInfo
+// 4188: decl @lune.@base.@TransUnit.TransUnit.processFuncBlockInfo
 func (self *TransUnit_TransUnit) processFuncBlockInfo(_env *LnsEnv, funcBlockCtlIF TransUnit_FuncBlockCtlIF,streamName string) *LnsMap {
     var resultMap *LnsMap
     resultMap = NewLnsMap( map[LnsAny]LnsAny{})
@@ -7523,7 +7546,7 @@ func (self *TransUnit_TransUnit) processFuncBlockInfo(_env *LnsEnv, funcBlockCtl
         self.FuncBlockInfoLinkNo = funcBlockInfo.FP.Get_orgPos(_env)
         var funcBodyScope *Ast_ScopeWithRef
         funcBodyScope = NewAst_ScopeWithRef(_env, self.ProcessInfo, outerScope, funcBlockInfo.FP.Get_funcScope(_env), Ast_ScopeKind__Other, nil, nil)
-        self.Scope = &funcBodyScope.Ast_Scope
+        self.FP.SetScope(_env, &funcBodyScope.Ast_Scope, TransUnitIF_SetNSInfo__FromScope)
         var workBody *Nodes_BlockNode
         workBody = self.FP.analyzeFuncBlock(_env, TransUnit_getAnalyzingState_24_(_env, typeInfo), funcBlockInfo.FP.Get_tokenList(_env).GetAt(1).(Types_TokenDownCast).ToTypes_Token(), classTypeInfo, typeInfo, typeInfo.FP.Get_rawTxt(_env), &funcBodyScope.Ast_Scope, typeInfo.FP.Get_retTypeInfoList(_env))
         self.FP.declFuncPostProcess(_env, typeInfo, classTypeInfo, workBody, &funcBodyScope.Ast_Scope)
@@ -7560,14 +7583,14 @@ func (self *TransUnit_TransUnit) analyzeExpOneRVal(_env *LnsEnv, allowNoneType b
     exp = self.FP.analyzeExp(_env, allowNoneType, skipOp2Flag, false, opLevel, expectType)
     exp = self.FP.MultiTo1(_env, exp)
     if expectType != nil{
-        expectType_519 := expectType.(*Ast_TypeInfo)
-        if _switch1 := expectType_519.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__IF || _switch1 == Ast_TypeInfoKind__Class {
+        expectType_520 := expectType.(*Ast_TypeInfo)
+        if _switch0 := expectType_520.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__IF || _switch0 == Ast_TypeInfoKind__Class {
             var expOrgType *Ast_TypeInfo
             expOrgType = exp.FP.Get_expType(_env).FP.Get_nonnilableType(_env).FP.Get_srcTypeInfo(_env)
             var exceptOrgType *Ast_TypeInfo
-            exceptOrgType = expectType_519.FP.Get_nonnilableType(_env).FP.Get_srcTypeInfo(_env)
+            exceptOrgType = expectType_520.FP.Get_nonnilableType(_env).FP.Get_srcTypeInfo(_env)
             if expOrgType.FP.IsInheritFrom(_env, self.ProcessInfo, exceptOrgType, nil){
-                exp = &Nodes_ExpCastNode_create(_env, self.NodeManager, exp.FP.Get_pos(_env), self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(expectType_519)}), exp, expectType_519, nil, "", Nodes_CastKind__Implicit).Nodes_Node
+                exp = &Nodes_ExpCastNode_create(_env, self.NodeManager, exp.FP.Get_pos(_env), self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(expectType_520)}), exp, expectType_520, nil, "", Nodes_CastKind__Implicit).Nodes_Node
             }
         }
     }
@@ -7623,8 +7646,8 @@ func (self *TransUnit_TransUnit) createExpList(_env *LnsEnv, pos *Types_Position
         }
     }
     if abbrNode != nil{
-        abbrNode_549 := abbrNode.(*Nodes_AbbrNode)
-        workList.Insert(Nodes_AbbrNode2Stem(abbrNode_549))
+        abbrNode_550 := abbrNode.(*Nodes_AbbrNode)
+        workList.Insert(Nodes_AbbrNode2Stem(abbrNode_550))
     }
     return Nodes_ExpListNode_create(_env, self.NodeManager, pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), expTypeList, workList, mRetExp, followOn)
 }
@@ -7637,10 +7660,10 @@ func (self *TransUnit_TransUnit) analyzeExpList(_env *LnsEnv, allowNoneType bool
     var expTypeList *LnsList
     expTypeList = NewLnsList([]LnsAny{})
     if expNode != nil{
-        expNode_555 := expNode.(*Nodes_Node)
-        pos = expNode_555.FP.Get_pos(_env)
-        expList.Insert(Nodes_Node2Stem(expNode_555))
-        expTypeList.Insert(Ast_TypeInfo2Stem(expNode_555.FP.Get_expType(_env)))
+        expNode_556 := expNode.(*Nodes_Node)
+        pos = expNode_556.FP.Get_pos(_env)
+        expList.Insert(Nodes_Node2Stem(expNode_556))
+        expTypeList.Insert(Ast_TypeInfo2Stem(expNode_556.FP.Get_expType(_env)))
     }
     var index LnsInt
     index = 1
@@ -7654,20 +7677,20 @@ func (self *TransUnit_TransUnit) analyzeExpList(_env *LnsEnv, allowNoneType bool
         var allowNoneTypeOne bool
         allowNoneTypeOne = allowNoneType
         if expectTypeList != nil{
-            expectTypeList_563 := expectTypeList.(*LnsList)
-            if expectTypeList_563.Len() > 0{
+            expectTypeList_564 := expectTypeList.(*LnsList)
+            if expectTypeList_564.Len() > 0{
                 var checkIndex LnsInt
                 checkIndex = index
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                    _env.SetStackVal( index > expectTypeList_563.Len()) &&
+                    _env.SetStackVal( index > expectTypeList_564.Len()) &&
                     _env.SetStackVal( contExpect) )){
-                    checkIndex = expectTypeList_563.Len()
+                    checkIndex = expectTypeList_564.Len()
                 }
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                    _env.SetStackVal( checkIndex <= expectTypeList_563.Len()) &&
-                    _env.SetStackVal( expectTypeList_563.GetAt(checkIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo() != Ast_builtinTypeNone) ).(bool)){
+                    _env.SetStackVal( checkIndex <= expectTypeList_564.Len()) &&
+                    _env.SetStackVal( expectTypeList_564.GetAt(checkIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo() != Ast_builtinTypeNone) ).(bool)){
                     var worktype *Ast_TypeInfo
-                    worktype = expectTypeList_563.GetAt(checkIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
+                    worktype = expectTypeList_564.GetAt(checkIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                     expectType = worktype
                     if worktype == Ast_builtinTypeExp{
                         allowNoneTypeOne = true
@@ -7677,11 +7700,11 @@ func (self *TransUnit_TransUnit) analyzeExpList(_env *LnsEnv, allowNoneType bool
         }
         var exp *Nodes_Node
         if self.MacroCtrl.FP.Get_analyzeInfo(_env).FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg{
-            if _switch1 := expectType; _switch1 == Ast_builtinTypeExp || _switch1 == Ast_builtinTypeMultiExp {
+            if _switch0 := expectType; _switch0 == Ast_builtinTypeExp || _switch0 == Ast_builtinTypeMultiExp {
                 self.MacroCtrl.FP.SwitchMacroMode(_env)
                 exp = self.FP.analyzeExp(_env, allowNoneTypeOne, skipOp2Flag, canLeftExp, 0, expectType)
                 self.MacroCtrl.FP.RestoreMacroMode(_env)
-            } else if _switch1 == Ast_builtinTypeBlockArg {
+            } else if _switch0 == Ast_builtinTypeBlockArg {
                 exp = &self.FP.analyzeBlock(_env, Nodes_BlockKind__Macro, TransUnit_TentativeMode__Ignore, nil, nil).Nodes_Node
             } else {
                 exp = self.FP.analyzeExp(_env, allowNoneTypeOne, skipOp2Flag, canLeftExp, 0, expectType)
@@ -7698,7 +7721,7 @@ func (self *TransUnit_TransUnit) analyzeExpList(_env *LnsEnv, allowNoneType bool
         if Lns_op_not(pos){
             pos = exp.FP.Get_pos(_env)
         }
-        if _switch2 := expectType; _switch2 == Ast_builtinTypeExp || _switch2 == Ast_builtinTypeMultiExp || _switch2 == Ast_builtinTypeBlockArg {
+        if _switch1 := expectType; _switch1 == Ast_builtinTypeExp || _switch1 == Ast_builtinTypeMultiExp || _switch1 == Ast_builtinTypeBlockArg {
             exp = &Nodes_ExpMacroArgExpNode_create(_env, self.NodeManager, exp.FP.Get_pos(_env), self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), exp.FP.Get_expTypeList(_env), Macro_nodeToCodeTxt(_env, exp, self.moduleType)).Nodes_Node
             expTypeList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( expectType).(*Ast_TypeInfo)))
         } else {
@@ -7813,7 +7836,7 @@ func (self *TransUnit_TransUnit) analyzeExpRefItem(_env *LnsEnv, token *Types_To
         typeInfo = self.FP.createExtType(_env, exp.FP.Get_pos(_env), typeInfo)
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( Lns_op_not(self.MacroCtrl.FP.Get_analyzeInfo(_env).FP.IsAnalyzingBlockArg(_env))) &&
-            _env.SetStackVal( Lns_op_not(self.FP.GetCurrentNSInfo(_env).FP.CanAccessLuaval(_env))) ).(bool)){
+            _env.SetStackVal( Lns_op_not(self.FP.Get_curNsInfo(_env).FP.CanAccessLuaval(_env))) ).(bool)){
             self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("can't access Luaval without __luago. -- %s", []LnsAny{exp.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
         }
     }
@@ -7830,12 +7853,12 @@ func (self *TransUnit_TransUnit) analyzeExpRefItem(_env *LnsEnv, token *Types_To
         _env.SetStackVal( expType.FP.Get_kind(_env) == Ast_TypeInfoKind__Array) ||
         _env.SetStackVal( expType.FP.Get_kind(_env) == Ast_TypeInfoKind__List) ).(bool){
         {
-            _indexLit := TransUnit_convExp3_9277(Lns_2DDD(indexExp.FP.GetLiteral(_env)))
+            _indexLit := TransUnit_convExp3_9314(Lns_2DDD(indexExp.FP.GetLiteral(_env)))
             if !Lns_IsNil( _indexLit ) {
                 indexLit := _indexLit
-                switch _matchExp1 := indexLit.(type) {
+                switch _matchExp0 := indexLit.(type) {
                 case *Nodes_Literal__Int:
-                val := _matchExp1.Val1
+                val := _matchExp0.Val1
                     if val <= 0{
                         self.FP.addWarnMess(_env, indexExp.FP.Get_pos(_env), _env.GetVM().String_format("index <= -1 (%d)", []LnsAny{val}))
                     }
@@ -7881,10 +7904,10 @@ func (self *TransUnit_TransUnit) checkImplicitCast(_env *LnsEnv, alt2typeMap *Ln
                             var argTypeList *LnsList
                             argTypeList = NewLnsList([]LnsAny{})
                             {
-                                var _forFrom1 LnsInt = index
-                                var _forTo1 LnsInt = expNodeList.Len()
-                                for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-                                    workIndex := _forWork1
+                                var _forFrom0 LnsInt = index
+                                var _forTo0 LnsInt = expNodeList.Len()
+                                for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+                                    workIndex := _forWork0
                                     var appNode *Nodes_Node
                                     appNode = expNodeList.GetAt(workIndex).(Nodes_NodeDownCast).ToNodes_Node()
                                     argList.Insert(Nodes_Node2Stem(appNode))
@@ -7942,10 +7965,10 @@ func (self *TransUnit_TransUnit) checkImplicitCast(_env *LnsEnv, alt2typeMap *Ln
                 _env.SetStackVal( index == expNodeList.Len()) &&
                 _env.SetStackVal( expNode.FP.Get_expType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__DDD) ).(bool)){
                 {
-                    var _forFrom1 LnsInt = index
-                    var _forTo1 LnsInt = dstTypeList.Len()
-                    for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-                        dstIndex := _forWork1
+                    var _forFrom0 LnsInt = index
+                    var _forTo0 LnsInt = dstTypeList.Len()
+                    for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+                        dstIndex := _forWork0
                         workNode = expNode
                         workNode, stopFlag = process(_env, dstIndex, dstTypeList.GetAt(dstIndex).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), expNode, workNode)
                         newExpNodeList.Insert(Nodes_Node2Stem(workNode))
@@ -8049,8 +8072,8 @@ func (self *TransUnit_TransUnit) checkMatchType(_env *LnsEnv, message string,pos
     }
     var alt2typeMap *LnsMap
     if workAlt2typeMap != nil{
-        workAlt2typeMap_710 := workAlt2typeMap.(*LnsMap)
-        alt2typeMap = workAlt2typeMap_710
+        workAlt2typeMap_711 := workAlt2typeMap.(*LnsMap)
+        alt2typeMap = workAlt2typeMap_711
     } else {
         alt2typeMap = Ast_CanEvalCtrlTypeInfo_createDefaultAlt2typeMap(_env, false)
     }
@@ -8058,9 +8081,9 @@ func (self *TransUnit_TransUnit) checkMatchType(_env *LnsEnv, message string,pos
     var result LnsInt
     var mess string
     result,mess = Ast_TypeInfo_checkMatchType(_env, self.ProcessInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2typeMap)
-    if _switch1 := result; _switch1 == Ast_MatchType__Error {
+    if _switch0 := result; _switch0 == Ast_MatchType__Error {
         self.FP.AddErrMess(_env, pos, _env.GetVM().String_format("%s: %s", []LnsAny{message, mess}))
-    } else if _switch1 == Ast_MatchType__Warn {
+    } else if _switch0 == Ast_MatchType__Warn {
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( Lns_op_not(self.Ctrl_info.CheckingDefineAbbr)) &&
             _env.SetStackVal( Code_isMessageOf(_env, Code_ID__nothing_define_abbr, mess)) ).(bool)){
@@ -8069,7 +8092,7 @@ func (self *TransUnit_TransUnit) checkMatchType(_env *LnsEnv, message string,pos
         }
     }
     if expListNode != nil{
-        expListNode_719 := expListNode.(*Nodes_ExpListNode)
+        expListNode_720 := expListNode.(*Nodes_ExpListNode)
         var autoBoxingCount LnsInt
         autoBoxingCount = 0
         var hasImplictCast bool
@@ -8077,7 +8100,7 @@ func (self *TransUnit_TransUnit) checkMatchType(_env *LnsEnv, message string,pos
         var newExpListNode LnsAny
         if result != Ast_MatchType__Error{
             {
-                _workList := self.FP.checkImplicitCast(_env, alt2typeMap, false, dstTypeList, expListNode_719, TransUnit_checkImplicitCastCallback_10_(func(_env *LnsEnv, dstType *Ast_TypeInfo,expNode *Nodes_Node) LnsAny {
+                _workList := self.FP.checkImplicitCast(_env, alt2typeMap, false, dstTypeList, expListNode_720, TransUnit_checkImplicitCastCallback_10_(func(_env *LnsEnv, dstType *Ast_TypeInfo,expNode *Nodes_Node) LnsAny {
                     if Ast_CanEvalCtrlTypeInfo_canAutoBoxing(_env, dstType, expNode.FP.Get_expType(_env)){
                         autoBoxingCount = autoBoxingCount + 1
                         return &Nodes_BoxingNode_create(_env, self.NodeManager, expNode.FP.Get_pos(_env), self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(dstType)}), expNode).Nodes_Node
@@ -8121,42 +8144,42 @@ func (self *TransUnit_TransUnit) checkMatchValType(_env *LnsEnv, pos *Types_Posi
         var mess string
         extTypeList,mess = Ast_convToExtTypeList(_env, self.ProcessInfo, argTypeList)
         if extTypeList != nil{
-            extTypeList_744 := extTypeList.(*LnsList)
-            argTypeList = extTypeList_744
+            extTypeList_745 := extTypeList.(*LnsList)
+            argTypeList = extTypeList_745
         } else {
             self.FP.AddErrMess(_env, pos, _env.GetVM().String_format("not support argType on Luaval -- %s", []LnsAny{mess}))
         }
     }
-    if _switch1 := funcTypeInfo; _switch1 == self.builtinFunc.List_insert || _switch1 == self.builtinFunc.Set_add || _switch1 == self.builtinFunc.Set_del {
-    } else if _switch1 == self.builtinFunc.List_sort {
+    if _switch0 := funcTypeInfo; _switch0 == self.builtinFunc.List_insert || _switch0 == self.builtinFunc.Set_add || _switch0 == self.builtinFunc.Set_del {
+    } else if _switch0 == self.builtinFunc.List_sort {
         _ = Ast_CanEvalCtrlTypeInfo_createDefaultAlt2typeMap(_env, false)
         var callback *Ast_NormalTypeInfo
         callback = self.ProcessInfo.FP.CreateFuncAsync(_env, false, false, nil, Ast_TypeInfoKind__Func, self.ProcessInfo.FP.Get_dummyParentType(_env), self.ProcessInfo.FP.Get_dummyParentType(_env).FP, false, false, true, Ast_AccessMode__Pri, "sort", Ast_Async__Async, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(genericTypeList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()), Ast_TypeInfo2Stem(genericTypeList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo())}), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeBool)}), false)
         argTypeList = NewLnsList([]LnsAny{Ast_TypeInfo2Stem(callback.FP.Get_nilableTypeInfo(_env))})
-    } else if _switch1 == self.builtinFunc.List_remove {
-    } else if _switch1 == self.builtinFunc.Lns___run {
+    } else if _switch0 == self.builtinFunc.List_remove {
+    } else if _switch0 == self.builtinFunc.Lns___run {
         self.HelperInfo.UseRun = true
     }
     var warnForFollow bool
     warnForFollow = true
     if expList != nil{
-        expList_754 := expList.(*Nodes_ExpListNode)
-        if expList_754.FP.Get_followOn(_env){
+        expList_755 := expList.(*Nodes_ExpListNode)
+        if expList_755.FP.Get_followOn(_env){
             warnForFollow = false
         }
     }
     var alt2typeMap *LnsMap
     if funcTypeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Method{
         if genericsClass != nil{
-            genericsClass_759 := genericsClass.(*Ast_TypeInfo)
+            genericsClass_760 := genericsClass.(*Ast_TypeInfo)
             if funcTypeInfo.FP.Get_rawTxt(_env) == "__init"{
-                alt2typeMap = genericsClass_759.FP.CreateAlt2typeMap(_env, true)
+                alt2typeMap = genericsClass_760.FP.CreateAlt2typeMap(_env, true)
             } else { 
                 if funcTypeInfo.FP.Get_itemTypeInfoList(_env).Len() == 0{
-                    alt2typeMap = genericsClass_759.FP.CreateAlt2typeMap(_env, false)
+                    alt2typeMap = genericsClass_760.FP.CreateAlt2typeMap(_env, false)
                 } else { 
-                    alt2typeMap = genericsClass_759.FP.CreateAlt2typeMap(_env, true)
-                    for _, _itemType := range( genericsClass_759.FP.Get_itemTypeInfoList(_env).Items ) {
+                    alt2typeMap = genericsClass_760.FP.CreateAlt2typeMap(_env, true)
+                    for _, _itemType := range( genericsClass_760.FP.Get_itemTypeInfoList(_env).Items ) {
                         itemType := _itemType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                             _env.SetStackVal( itemType.FP.Get_kind(_env) == Ast_TypeInfoKind__Alternate) &&
@@ -8174,7 +8197,7 @@ func (self *TransUnit_TransUnit) checkMatchValType(_env *LnsEnv, pos *Types_Posi
     }
     var matchResult LnsInt
     var newExpNodeList LnsAny
-    matchResult,_,newExpNodeList = TransUnit_convExp3_11095(Lns_2DDD(self.FP.checkMatchType(_env, funcTypeInfo.FP.GetTxt(_env, nil, nil, nil), pos, argTypeList, expList, false, warnForFollow, alt2typeMap)))
+    matchResult,_,newExpNodeList = TransUnit_convExp3_11132(Lns_2DDD(self.FP.checkMatchType(_env, funcTypeInfo.FP.GetTxt(_env, nil, nil, nil), pos, argTypeList, expList, false, warnForFollow, alt2typeMap)))
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( expList) &&
         _env.SetStackVal( newExpNodeList) )){
@@ -8200,12 +8223,12 @@ func (self *TransUnit_TransUnit) analyzeListItems(_env *LnsEnv, firstPos *Types_
         }
     }
     var itemTypeInfo *Ast_TypeInfo
-    switch _matchExp1 := itemCommonType.(type) {
+    switch _matchExp0 := itemCommonType.(type) {
     case *Ast_CommonType__Normal:
-    info := _matchExp1.Val1
+    info := _matchExp0.Val1
         itemTypeInfo = info
     case *Ast_CommonType__Combine:
-    info := _matchExp1.Val1
+    info := _matchExp0.Val1
         itemTypeInfo = info.FP.Get_typeInfo(_env, self.ProcessInfo)
     }
     if itemTypeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__DDD{
@@ -8219,18 +8242,18 @@ func (self *TransUnit_TransUnit) analyzeListItems(_env *LnsEnv, firstPos *Types_
         var expTypeList *LnsList
         expTypeList = NewLnsList([]LnsAny{})
         if expList != nil{
-            expList_791 := expList.(*Nodes_ExpListNode)
-            for _index, _expNode := range( expList_791.FP.Get_expList(_env).Items ) {
+            expList_792 := expList.(*Nodes_ExpListNode)
+            for _index, _expNode := range( expList_792.FP.Get_expList(_env).Items ) {
                 index := _index + 1
                 expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
-                if index == expList_791.FP.Get_expList(_env).Len(){
+                if index == expList_792.FP.Get_expList(_env).Len(){
                     if expNode.FP.Get_expType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__DDD{
                         expTypeList.Insert(Ast_TypeInfo2Stem(expNode.FP.Get_expType(_env)))
                     } else { 
                         {
-                            var _forFrom1 LnsInt = 1
-                            var _forTo1 LnsInt = expNode.FP.Get_expTypeList(_env).Len()
-                            for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
+                            var _forFrom0 LnsInt = 1
+                            var _forTo0 LnsInt = expNode.FP.Get_expTypeList(_env).Len()
+                            for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
                                 expTypeList.Insert(Ast_TypeInfo2Stem(itemTypeInfo))
                             }
                         }
@@ -8241,10 +8264,10 @@ func (self *TransUnit_TransUnit) analyzeListItems(_env *LnsEnv, firstPos *Types_
             }
         }
         var workExpList LnsAny
-        _,_,workExpList = TransUnit_convExp3_11417(Lns_2DDD(self.FP.checkMatchType(_env, "List constructor", firstPos, expTypeList, expList, false, false, nil)))
+        _,_,workExpList = TransUnit_convExp3_11454(Lns_2DDD(self.FP.checkMatchType(_env, "List constructor", firstPos, expTypeList, expList, false, false, nil)))
         if workExpList != nil{
-            workExpList_805 := workExpList.(*Nodes_ExpListNode)
-            expList = workExpList_805
+            workExpList_806 := workExpList.(*Nodes_ExpListNode)
+            expList = workExpList_806
         }
     }
     return expList, itemTypeInfo
@@ -8534,9 +8557,9 @@ func (self *TransUnit_TransUnit) checkArgForStringForm(_env *LnsEnv, firstToken 
             _literal := TransUnit_convExp4_1769(Lns_2DDD(argNode.FP.GetLiteral(_env)))
             if !Lns_IsNil( _literal ) {
                 literal := _literal
-                switch _matchExp1 := literal.(type) {
+                switch _matchExp0 := literal.(type) {
                 case *Nodes_Literal__Str:
-                val := _matchExp1.Val1
+                val := _matchExp0.Val1
                     formatTxt = val
                 }
             }
@@ -8624,7 +8647,7 @@ func (self *TransUnit_TransUnit) processFunc(_env *LnsEnv, firstToken *Types_Tok
             _extType := Ast_ExtTypeInfoDownCastF(funcTypeInfo.FP)
             if !Lns_IsNil( _extType ) {
                 extType := _extType.(*Ast_ExtTypeInfo)
-                if _switch2 := (extType.FP.Get_extedType(_env).FP.Get_kind(_env)); _switch2 == Ast_TypeInfoKind__Method || _switch2 == Ast_TypeInfoKind__Func || _switch2 == Ast_TypeInfoKind__Form || _switch2 == Ast_TypeInfoKind__FormFunc {
+                if _switch0 := (extType.FP.Get_extedType(_env).FP.Get_kind(_env)); _switch0 == Ast_TypeInfoKind__Method || _switch0 == Ast_TypeInfoKind__Func || _switch0 == Ast_TypeInfoKind__Form || _switch0 == Ast_TypeInfoKind__FormFunc {
                 } else {
                     self.FP.Error(_env, _env.GetVM().String_format("can't call the type -- %s, %s", []LnsAny{funcTypeInfo.FP.GetTxt(_env, nil, nil, nil), Ast_TypeInfoKind_getTxt( funcTypeInfo.FP.Get_kind(_env))}))
                 }
@@ -8700,9 +8723,9 @@ func (self *TransUnit_TransUnit) processFunc(_env *LnsEnv, firstToken *Types_Tok
     }
     if argList != nil{
         argList_207 := argList.(*Nodes_ExpListNode)
-        if _switch3 := funcTypeInfo; _switch3 == self.builtinFunc.String_format {
+        if _switch2 := funcTypeInfo; _switch2 == self.builtinFunc.String_format {
             self.FP.checkArgForStringForm(_env, firstToken, argList_207)
-        } else if _switch3 == self.builtinFunc.List_sort || _switch3 == self.builtinFunc.Array_sort {
+        } else if _switch2 == self.builtinFunc.List_sort || _switch2 == self.builtinFunc.Array_sort {
             self.FP.checkArgForSort(_env, firstToken, genericTypeList, argList_207)
         }
     }
@@ -8758,7 +8781,7 @@ func (self *TransUnit_TransUnit) checkNoasyncType(_env *LnsEnv, pos *Types_Posit
         var curType *Ast_TypeInfo
         curType = self.FP.GetCurrentNamespaceTypeInfo(_env)
         if _switch1 := curType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Func || _switch1 == Ast_TypeInfoKind__Method {
-            if _switch2 := curType.FP.Get_asyncMode(_env); _switch2 == Ast_Async__Async || _switch2 == Ast_Async__Transient {
+            if _switch0 := curType.FP.Get_asyncMode(_env); _switch0 == Ast_Async__Async || _switch0 == Ast_Async__Transient {
                 if Lns_op_not(self.FP.GetNSInfo(_env, curType).FP.CanAccessNoasync(_env)){
                     self.FP.AddErrMess(_env, pos, _env.GetVM().String_format("can't access noasync function in async. -- %s on %s", []LnsAny{funcTypeInfo.FP.GetTxt(_env, nil, nil, nil), curType.FP.GetTxt(_env, nil, nil, nil)}))
                 }
@@ -8862,7 +8885,7 @@ func (self *TransUnit_TransUnit) analyzeExpCast(_env *LnsEnv, firstToken *Types_
         if castType.FP.Get_itemTypeInfoList(_env).Len() > 0{
             self.FP.AddErrMess(_env, castTypeNode.FP.Get_pos(_env), _env.GetVM().String_format("not support cast for generics class yet -- %s", []LnsAny{castType.FP.GetTxt(_env, nil, nil, nil)}))
         }
-        if _switch1 := castType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__IF || _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__Prim {
+        if _switch0 := castType.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__IF || _switch0 == Ast_TypeInfoKind__Class || _switch0 == Ast_TypeInfoKind__Prim {
         } else {
             if opTxt != "@@="{
                 self.FP.AddErrMess(_env, castTypeNode.FP.Get_pos(_env), _env.GetVM().String_format("not support cast -- %s", []LnsAny{castType.FP.GetTxt(_env, nil, nil, nil)}))
@@ -8957,18 +8980,18 @@ func (self *TransUnit_TransUnit) analyzeExpCont(_env *LnsEnv, firstToken *Types_
             }
             if Lns_op_not(matchFlag){ break }
         }
-        if _switch1 := nextToken.Txt; _switch1 == "@@" || _switch1 == "@@@" || _switch1 == "@@=" {
+        if _switch0 := nextToken.Txt; _switch0 == "@@" || _switch0 == "@@@" || _switch0 == "@@=" {
             exp = self.FP.analyzeExpCast(_env, firstToken, nextToken.Txt, exp)
             nextToken = self.FP.getToken(_env, nil)
         }
     }
-    if _switch2 := nextToken.Txt; _switch2 == "." {
+    if _switch1 := nextToken.Txt; _switch1 == "." {
         return self.FP.analyzeExpSymbol(_env, firstToken, self.FP.getToken(_env, nil), TransUnit_ExpSymbolMode__Field, exp, skipFlag, canLeftExp)
-    } else if _switch2 == "$." {
+    } else if _switch1 == "$." {
         return self.FP.analyzeExpSymbol(_env, firstToken, self.FP.getToken(_env, nil), TransUnit_ExpSymbolMode__FieldNil, exp, skipFlag, canLeftExp)
-    } else if _switch2 == ".$" {
+    } else if _switch1 == ".$" {
         return self.FP.analyzeExpSymbol(_env, firstToken, self.FP.getToken(_env, nil), TransUnit_ExpSymbolMode__Get, exp, skipFlag, canLeftExp)
-    } else if _switch2 == "$.$" {
+    } else if _switch1 == "$.$" {
         return self.FP.analyzeExpSymbol(_env, firstToken, self.FP.getToken(_env, nil), TransUnit_ExpSymbolMode__GetNil, exp, skipFlag, canLeftExp)
     }
     self.FP.Pushback(_env)
@@ -8976,13 +8999,13 @@ func (self *TransUnit_TransUnit) analyzeExpCont(_env *LnsEnv, firstToken *Types_
 }
 // 1924: decl @lune.@base.@TransUnit.TransUnit.analyzeAccessClassField
 func (self *TransUnit_TransUnit) analyzeAccessClassField(_env *LnsEnv, classTypeInfo *Ast_TypeInfo,mode LnsInt,token *Types_Token)(*Ast_TypeInfo, LnsAny, bool) {
-    if _switch1 := classTypeInfo.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__List {
+    if _switch0 := classTypeInfo.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__List {
         classTypeInfo = Ast_builtinTypeList
-    } else if _switch1 == Ast_TypeInfoKind__Array {
+    } else if _switch0 == Ast_TypeInfoKind__Array {
         classTypeInfo = Ast_builtinTypeArray
-    } else if _switch1 == Ast_TypeInfoKind__Set {
+    } else if _switch0 == Ast_TypeInfoKind__Set {
         classTypeInfo = Ast_builtinTypeSet
-    } else if _switch1 == Ast_TypeInfoKind__Box {
+    } else if _switch0 == Ast_TypeInfoKind__Box {
         classTypeInfo = &Ast_builtinTypeBox.Ast_TypeInfo
     }
     var className string
@@ -9007,7 +9030,7 @@ func (self *TransUnit_TransUnit) analyzeAccessClassField(_env *LnsEnv, classType
         _env.SetStackVal( mode == TransUnit_ExpSymbolMode__Get) ||
         _env.SetStackVal( mode == TransUnit_ExpSymbolMode__GetNil) ).(bool){
         var fieldSymbolInfo LnsAny
-        fieldSymbolInfo = classScope.FP.GetSymbolInfo(_env, _env.GetVM().String_format("get_%s", []LnsAny{token.Txt}), self.Scope, false, self.ScopeAccess)
+        fieldSymbolInfo = classScope.FP.GetSymbolInfo(_env, _env.GetVM().String_format("get_%s", []LnsAny{token.Txt}), self.FP.Get_scope(_env), false, self.ScopeAccess)
         if fieldSymbolInfo != nil{
             fieldSymbolInfo_317 := fieldSymbolInfo.(*Ast_SymbolInfo)
             if (_env.PopVal( _env.IncStack() ||
@@ -9035,9 +9058,9 @@ func (self *TransUnit_TransUnit) analyzeAccessClassField(_env *LnsEnv, classType
         }
     }
     if Lns_op_not(symbolInfo){
-        symbolInfo = classScope.FP.GetSymbolInfoField(_env, token.Txt, true, self.Scope, self.ScopeAccess)
+        symbolInfo = classScope.FP.GetSymbolInfoField(_env, token.Txt, true, self.FP.Get_scope(_env), self.ScopeAccess)
         if Lns_op_not(symbolInfo){
-            symbolInfo = classScope.FP.GetSymbolInfoIfField(_env, token.Txt, self.Scope, self.ScopeAccess)
+            symbolInfo = classScope.FP.GetSymbolInfoIfField(_env, token.Txt, self.FP.Get_scope(_env), self.ScopeAccess)
         }
         if symbolInfo != nil{
             symbolInfo_328 := symbolInfo.(*Ast_SymbolInfo)
@@ -9051,7 +9074,7 @@ func (self *TransUnit_TransUnit) analyzeAccessClassField(_env *LnsEnv, classType
             Util_errorLog(_env, _env.GetVM().String_format("debug: %s, %s", []LnsAny{name, val}))
         }
         Util_errorLog(_env, _env.GetVM().String_format("class, scope: -- %s, %s", []LnsAny{classTypeInfo, classScope}))
-        self.FP.Error(_env, _env.GetVM().String_format("not found field typeInfo: %s.%s -- %s", []LnsAny{classTypeInfo.FP.GetFullName(_env, self.TypeNameCtrl, self.Scope.FP, false), token.Txt, Ast_TypeInfoKind_getTxt( classTypeInfo.FP.Get_kind(_env))}))
+        self.FP.Error(_env, _env.GetVM().String_format("not found field typeInfo: %s.%s -- %s", []LnsAny{classTypeInfo.FP.GetFullName(_env, self.TypeNameCtrl, self.FP.Get_scope(_env).FP, false), token.Txt, Ast_TypeInfoKind_getTxt( classTypeInfo.FP.Get_kind(_env))}))
     }
     var typeInfo *Ast_TypeInfo
     typeInfo = Lns_unwrapDefault( fieldTypeInfo, Ast_builtinTypeNone).(*Ast_TypeInfo)
@@ -9115,9 +9138,9 @@ func (self *TransUnit_TransUnit) dumpComp(_env *LnsEnv, writer Writer_Writer,pat
             var typeInfo *Ast_TypeInfo
             typeInfo = symbolInfo.FP.Get_typeInfo(_env)
             writer.Write(_env, "type", _env.GetVM().String_format("%s", []LnsAny{Ast_SymbolKind_getTxt( symbolInfo.FP.Get_kind(_env))}))
-            if _switch1 := (symbolInfo.FP.Get_kind(_env)); _switch1 == Ast_SymbolKind__Mtd || _switch1 == Ast_SymbolKind__Fun || _switch1 == Ast_SymbolKind__Mac {
+            if _switch0 := (symbolInfo.FP.Get_kind(_env)); _switch0 == Ast_SymbolKind__Mtd || _switch0 == Ast_SymbolKind__Fun || _switch0 == Ast_SymbolKind__Mac {
                 writer.Write(_env, "displayTxt", _env.GetVM().String_format("$%s", []LnsAny{Lns_car(_env.GetVM().String_gsub(typeInfo.FP.Get_rawTxt(_env),"^get_", "")).(string)}))
-            } else if _switch1 == Ast_SymbolKind__Mbr {
+            } else if _switch0 == Ast_SymbolKind__Mbr {
                 writer.Write(_env, "displayTxt", _env.GetVM().String_format("$%s: %s", []LnsAny{symbolInfo.FP.Get_name(_env), typeInfo.FP.GetTxt(_env, nil, nil, nil)}))
             }
         } else { 
@@ -9125,9 +9148,9 @@ func (self *TransUnit_TransUnit) dumpComp(_env *LnsEnv, writer Writer_Writer,pat
             var typeInfo *Ast_TypeInfo
             typeInfo = symbolInfo.FP.Get_typeInfo(_env)
             writer.Write(_env, "type", _env.GetVM().String_format("%s", []LnsAny{Ast_SymbolKind_getTxt( symbolInfo.FP.Get_kind(_env))}))
-            if _switch2 := (symbolInfo.FP.Get_kind(_env)); _switch2 == Ast_SymbolKind__Fun || _switch2 == Ast_SymbolKind__Mtd || _switch2 == Ast_SymbolKind__Mac {
+            if _switch1 := (symbolInfo.FP.Get_kind(_env)); _switch1 == Ast_SymbolKind__Fun || _switch1 == Ast_SymbolKind__Mtd || _switch1 == Ast_SymbolKind__Mac {
                 writer.Write(_env, "displayTxt", typeInfo.FP.Get_display_stirng_with(_env, symbolInfo.FP.Get_name(_env), nil))
-            } else if _switch2 == Ast_SymbolKind__Mbr || _switch2 == Ast_SymbolKind__Var || _switch2 == Ast_SymbolKind__Arg {
+            } else if _switch1 == Ast_SymbolKind__Mbr || _switch1 == Ast_SymbolKind__Var || _switch1 == Ast_SymbolKind__Arg {
                 var name string
                 name = symbolInfo.FP.Get_name(_env)
                 {
@@ -9155,7 +9178,7 @@ func (self *TransUnit_TransUnit) dumpComp(_env *LnsEnv, writer Writer_Writer,pat
                     }
                 }
                 writer.Write(_env, "displayTxt", _env.GetVM().String_format("%s: %s", []LnsAny{name, typeInfo.FP.Get_display_stirng(_env)}))
-            } else if _switch2 == Ast_SymbolKind__Typ {
+            } else if _switch1 == Ast_SymbolKind__Typ {
                 writer.Write(_env, "displayTxt", _env.GetVM().String_format("%s", []LnsAny{Lns_car(_env.GetVM().String_gsub(typeInfo.FP.Get_display_stirng(_env),"@", "")).(string)}))
             }
         }
@@ -9166,13 +9189,13 @@ func (self *TransUnit_TransUnit) dumpComp(_env *LnsEnv, writer Writer_Writer,pat
 // 2108: decl @lune.@base.@TransUnit.TransUnit.dumpFieldComp
 func (self *TransUnit_TransUnit) dumpFieldComp(_env *LnsEnv, writer Writer_Writer,isPrefixType bool,prefixTypeInfo *Ast_TypeInfo,pattern string,getterPattern LnsAny) {
     var typeInfo *Ast_TypeInfo
-    if _switch1 := prefixTypeInfo.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__List {
+    if _switch0 := prefixTypeInfo.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__List {
         typeInfo = Ast_builtinTypeList
-    } else if _switch1 == Ast_TypeInfoKind__Array {
+    } else if _switch0 == Ast_TypeInfoKind__Array {
         typeInfo = Ast_builtinTypeArray
-    } else if _switch1 == Ast_TypeInfoKind__Set {
+    } else if _switch0 == Ast_TypeInfoKind__Set {
         typeInfo = Ast_builtinTypeSet
-    } else if _switch1 == Ast_TypeInfoKind__Box {
+    } else if _switch0 == Ast_TypeInfoKind__Box {
         typeInfo = &Ast_builtinTypeBox.Ast_TypeInfo
     } else {
         typeInfo = prefixTypeInfo
@@ -9187,7 +9210,7 @@ func (self *TransUnit_TransUnit) dumpFieldComp(_env *LnsEnv, writer Writer_Write
             scope = _scope.(*Ast_Scope)
         }
     }
-    scope.FP.FilterTypeInfoField(_env, true, self.Scope, self.ScopeAccess, Ast_filterForm(func(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) bool {
+    scope.FP.FilterTypeInfoField(_env, true, self.FP.Get_scopeRO(_env), self.ScopeAccess, Ast_filterForm(func(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) bool {
         if (isPrefixType){
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( Lns_op_not(symbolInfo.FP.Get_staticFlag(_env))) &&
@@ -9308,7 +9331,7 @@ func (self *TransUnit_TransUnit) checkEnumComp(_env *LnsEnv, token *Types_Token,
             _env.SetStackVal( prefix == "") &&
             _env.SetStackVal( "") ||
             _env.SetStackVal( "^" + prefix) ).(string)
-        scope.FP.FilterTypeInfoField(_env, true, self.Scope, self.ScopeAccess, Ast_filterForm(func(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) bool {
+        scope.FP.FilterTypeInfoField(_env, true, self.FP.Get_scopeRO(_env), self.ScopeAccess, Ast_filterForm(func(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) bool {
             if symbolInfo.FP.Get_kind(_env) == Ast_SymbolKind__Mbr{
                 return self.FP.dumpComp(_env, jsonWriter.FP, pattern, symbolInfo, false)
             }
@@ -9337,7 +9360,7 @@ func (self *TransUnit_TransUnit) checkAsyncSymbol(_env *LnsEnv, symbolInfo *Ast_
     }
     var curNs *Ast_TypeInfo
     curNs = self.FP.GetCurrentNamespaceTypeInfo(_env)
-    if _switch1 := curNs.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Func || _switch1 == Ast_TypeInfoKind__Method {
+    if _switch0 := curNs.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Func || _switch0 == Ast_TypeInfoKind__Method {
     } else {
         return 
     }
@@ -9348,18 +9371,18 @@ func (self *TransUnit_TransUnit) checkAsyncSymbol(_env *LnsEnv, symbolInfo *Ast_
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( Lns_op_not(nsInfo.FP.CanAccessNoasync(_env))) &&
         _env.SetStackVal( symbolInfo.FP.Get_name(_env) != "self") ).(bool)){
-        if _switch2 := symbolInfo.FP.Get_kind(_env); _switch2 == Ast_SymbolKind__Mbr {
+        if _switch1 := symbolInfo.FP.Get_kind(_env); _switch1 == Ast_SymbolKind__Mbr {
             if Lns_op_not(Ast_isPrimitive(_env, symbolInfo.FP.Get_typeInfo(_env))){
                 warn = true
             }
-        } else if _switch2 == Ast_SymbolKind__Arg || _switch2 == Ast_SymbolKind__Var {
+        } else if _switch1 == Ast_SymbolKind__Arg || _switch1 == Ast_SymbolKind__Var {
             if Lns_op_not(symbolInfo.FP.Get_scope(_env).FP.IsInnerOf(_env, Lns_unwrap( curNs.FP.Get_scope(_env)).(*Ast_Scope))){
                 warn = true
             }
         }
     }
     if warn{
-        if _switch3 := curNs.FP.Get_kind(_env); _switch3 == Ast_TypeInfoKind__Func {
+        if _switch2 := curNs.FP.Get_kind(_env); _switch2 == Ast_TypeInfoKind__Func {
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( Lns_op_not(nsInfo.FP.CanAccessNoasync(_env))) &&
                 _env.SetStackVal( curNs.FP.Get_asyncMode(_env) != Ast_Async__Transient) ).(bool)){
@@ -9367,7 +9390,7 @@ func (self *TransUnit_TransUnit) checkAsyncSymbol(_env *LnsEnv, symbolInfo *Ast_
                     self.FP.AddErrMess(_env, pos, _env.GetVM().String_format("can't access the mutable type's symbol(%s) from async (%s).", []LnsAny{symbolInfo.FP.Get_name(_env), symbolInfo.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             }
-        } else if _switch3 == Ast_TypeInfoKind__Method {
+        } else if _switch2 == Ast_TypeInfoKind__Method {
             if _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( Lns_op_not(nsInfo.FP.CanAccessNoasync(_env))) ||
                 _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
@@ -9407,7 +9430,7 @@ func (self *TransUnit_TransUnit) checkAsyncField(_env *LnsEnv, symbolInfo *Ast_S
 // 2368: decl @lune.@base.@TransUnit.TransUnit.checkSymbolComp
 func (self *TransUnit_TransUnit) checkSymbolComp(_env *LnsEnv, token *Types_Token) {
     self.FP.checkComp(_env, token, TransUnit_checkCompForm_31_(func(_env *LnsEnv, jsonWriter *Writer_JSON,prefix string) {
-        self.FP.dumpSymbolComp(_env, jsonWriter.FP, self.Scope, _env.PopVal( _env.IncStack() ||
+        self.FP.dumpSymbolComp(_env, jsonWriter.FP, self.FP.Get_scopeRO(_env), _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( prefix == "") &&
             _env.SetStackVal( "") ||
             _env.SetStackVal( "^" + prefix) ).(string))
@@ -9452,7 +9475,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
     if Ast_isExtType(_env, prefixExpType){
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( Lns_op_not(self.MacroCtrl.FP.Get_analyzeInfo(_env).FP.IsAnalyzingBlockArg(_env))) &&
-            _env.SetStackVal( Lns_op_not(self.FP.GetCurrentNSInfo(_env).FP.CanAccessLuaval(_env))) ).(bool)){
+            _env.SetStackVal( Lns_op_not(self.FP.Get_curNsInfo(_env).FP.CanAccessLuaval(_env))) ).(bool)){
             self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("can't access Luaval without __luago. -- %s", []LnsAny{prefixExp.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
         }
         extFlag = true
@@ -9465,7 +9488,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
         _env.SetStackVal( mode == TransUnit_ExpSymbolMode__GetNil) ).(bool), fieldToken, prefixExp)
     if accessNil{
         self.HelperInfo.UseNilAccess = true
-        if _switch1 := prefixExpType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Set || _switch1 == Ast_TypeInfoKind__Enum || _switch1 == Ast_TypeInfoKind__Alge || _switch1 == Ast_TypeInfoKind__Box {
+        if _switch0 := prefixExpType.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Set || _switch0 == Ast_TypeInfoKind__Enum || _switch0 == Ast_TypeInfoKind__Alge || _switch0 == Ast_TypeInfoKind__Box {
             self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("%s does not support $.", []LnsAny{prefixExpType.FP.GetTxt(_env, nil, nil, nil)}))
         }
     }
@@ -9476,7 +9499,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
     getterTypeInfo = nil
     var symbolInfo LnsAny
     symbolInfo = nil
-    if _switch2 := prefixExpType.FP.Get_kind(_env); _switch2 == Ast_TypeInfoKind__Class || _switch2 == Ast_TypeInfoKind__Module || _switch2 == Ast_TypeInfoKind__ExtModule || _switch2 == Ast_TypeInfoKind__IF || _switch2 == Ast_TypeInfoKind__List || _switch2 == Ast_TypeInfoKind__Array || _switch2 == Ast_TypeInfoKind__Set || _switch2 == Ast_TypeInfoKind__Box || _switch2 == Ast_TypeInfoKind__Alternate {
+    if _switch1 := prefixExpType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__Module || _switch1 == Ast_TypeInfoKind__ExtModule || _switch1 == Ast_TypeInfoKind__IF || _switch1 == Ast_TypeInfoKind__List || _switch1 == Ast_TypeInfoKind__Array || _switch1 == Ast_TypeInfoKind__Set || _switch1 == Ast_TypeInfoKind__Box || _switch1 == Ast_TypeInfoKind__Alternate {
         var getterFlag bool
         getterFlag = false
         typeInfo, symbolInfo, getterFlag = self.FP.analyzeAccessClassField(_env, prefixExpType, mode, fieldToken)
@@ -9490,7 +9513,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
                 }
             }
         }
-    } else if _switch2 == Ast_TypeInfoKind__Enum || _switch2 == Ast_TypeInfoKind__Alge {
+    } else if _switch1 == Ast_TypeInfoKind__Enum || _switch1 == Ast_TypeInfoKind__Alge {
         var scope *Ast_Scope
         scope = Lns_unwrap( prefixExpType.FP.Get_scope(_env)).(*Ast_Scope)
         var fieldName string
@@ -9509,7 +9532,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
             moduleType = prefixExpType.FP.GetModule(_env)
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( Lns_op_not(moduleType.FP.Equals(_env, self.ProcessInfo, self.moduleType, nil, nil))) &&
-                _env.SetStackVal( Lns_op_not(self.Scope.FP.GetModuleInfo(_env, moduleType))) ).(bool)){
+                _env.SetStackVal( Lns_op_not(self.FP.Get_scope(_env).FP.GetModuleInfo(_env, moduleType))) ).(bool)){
                 if Lns_op_not(self.ImportedAliasMap.Get(prefixExpType)){
                     self.FP.AddErrMess(_env, fieldToken.Pos, _env.GetVM().String_format("need to import module -- %s", []LnsAny{prefixExpType.FP.GetModule(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
@@ -9557,7 +9580,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
                 }
             }
         }
-    } else if _switch2 == Ast_TypeInfoKind__Map {
+    } else if _switch1 == Ast_TypeInfoKind__Map {
         var work *Ast_TypeInfo
         work = prefixExpType.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         if Lns_op_not(work.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeString, nil, nil)){
@@ -9589,7 +9612,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
             __exp := prefixScope
             if !Lns_IsNil( __exp ) {
                 _exp := __exp.(*Ast_Scope)
-                symbolInfo = _exp.FP.GetSymbolInfoField(_env, fieldToken.Txt, true, self.Scope, self.ScopeAccess)
+                symbolInfo = _exp.FP.GetSymbolInfoField(_env, fieldToken.Txt, true, self.FP.Get_scope(_env), self.ScopeAccess)
             }
         }
     }
@@ -9622,7 +9645,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
             var curType *Ast_TypeInfo
             curType = self.FP.GetCurrentNamespaceTypeInfo(_env)
             if _switch3 := curType.FP.Get_kind(_env); _switch3 == Ast_TypeInfoKind__Func || _switch3 == Ast_TypeInfoKind__Method {
-                if _switch4 := curType.FP.Get_asyncMode(_env); _switch4 == Ast_Async__Async || _switch4 == Ast_Async__Transient {
+                if _switch2 := curType.FP.Get_asyncMode(_env); _switch2 == Ast_Async__Async || _switch2 == Ast_Async__Transient {
                     if _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( curType.FP.Get_kind(_env) != Ast_TypeInfoKind__Method) ||
                         _env.SetStackVal( curType.FP.Get_rawTxt(_env) != "__init") ).(bool){
@@ -9644,7 +9667,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
             typeInfo = workSymInfo.FP.Get_typeInfo(_env)
         }
         accessSymbolInfo = workSymInfo
-        if _switch5 := mode; _switch5 == TransUnit_ExpSymbolMode__Field || _switch5 == TransUnit_ExpSymbolMode__FieldNil {
+        if _switch4 := mode; _switch4 == TransUnit_ExpSymbolMode__Field || _switch4 == TransUnit_ExpSymbolMode__FieldNil {
             symbolMutMode = symbolInfo_554.FP.Get_mutMode(_env)
         }
     }
@@ -9685,7 +9708,7 @@ func (self *TransUnit_TransUnit) analyzeExpField(_env *LnsEnv, firstToken *Types
                 _env.SetStackVal( prefixType.FP.Get_kind(_env) == Ast_TypeInfoKind__Class) &&
                 _env.SetStackVal( prefixType.FP.Get_itemTypeInfoList(_env).Len() > 0) &&
                 _env.SetStackVal( Lns_op_not(Ast_isGenericType(_env, prefixType))) &&
-                _env.SetStackVal( Lns_op_not(self.Scope.FP.IsInnerOf(_env, Lns_unwrap( prefixType.FP.Get_scope(_env)).(*Ast_Scope)))) ).(bool)){
+                _env.SetStackVal( Lns_op_not(self.FP.Get_scope(_env).FP.IsInnerOf(_env, Lns_unwrap( prefixType.FP.Get_scope(_env)).(*Ast_Scope)))) ).(bool)){
                 var accessErr bool
                 accessErr = false
                 if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Func{
@@ -9755,7 +9778,7 @@ func (self *TransUnit_TransUnit) analyzeNewAlge(_env *LnsEnv, firstToken *Types_
                 argListNode = nil
             }
             {
-                _, _, _newExpNodeList := TransUnit_convExp4_8623(Lns_2DDD(self.FP.checkMatchType(_env, "call", symbolToken.Pos, valInfo.FP.Get_typeList(_env), argListNode, false, true, nil)))
+                _, _, _newExpNodeList := TransUnit_convExp4_8622(Lns_2DDD(self.FP.checkMatchType(_env, "call", symbolToken.Pos, valInfo.FP.Get_typeList(_env), argListNode, false, true, nil)))
                 if !Lns_IsNil( _newExpNodeList ) {
                     newExpNodeList := _newExpNodeList.(*Nodes_ExpListNode)
                     argList = newExpNodeList.FP.Get_expList(_env)
@@ -9763,9 +9786,9 @@ func (self *TransUnit_TransUnit) analyzeNewAlge(_env *LnsEnv, firstToken *Types_
             }
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( algeTypeInfo.FP.Get_externalFlag(_env)) &&
-                _env.SetStackVal( Lns_op_not(self.Scope.FP.GetModuleInfo(_env, algeTypeInfo.FP.GetModule(_env).FP.Get_srcTypeInfo(_env)))) ).(bool)){
+                _env.SetStackVal( Lns_op_not(self.FP.Get_scope(_env).FP.GetModuleInfo(_env, algeTypeInfo.FP.GetModule(_env).FP.Get_srcTypeInfo(_env)))) ).(bool)){
                 var fullname string
-                fullname = algeTypeInfo.FP.GetFullName(_env, self.TypeNameCtrl, self.Scope.FP, true)
+                fullname = algeTypeInfo.FP.GetFullName(_env, self.TypeNameCtrl, self.FP.Get_scope(_env).FP, true)
                 self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("This module not import -- %s", []LnsAny{fullname}))
             }
             return Nodes_NewAlgeValNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_AlgeTypeInfo2Stem(algeTypeInfo)}), symbolToken, prefix, algeTypeInfo, valInfo, argList)
@@ -9818,7 +9841,7 @@ func (self *TransUnit_TransUnit) analyzeExpSymbol(_env *LnsEnv, firstToken *Type
             var symbolInfo *Ast_SymbolInfo
             
             {
-                _symbolInfo := self.Scope.FP.GetSymbolTypeInfo(_env, symbolToken.Txt, self.Scope, self.ModuleScope, self.ScopeAccess)
+                _symbolInfo := self.FP.Get_scope(_env).FP.GetSymbolTypeInfo(_env, symbolToken.Txt, self.FP.Get_scope(_env), self.ModuleScope, self.ScopeAccess)
                 if _symbolInfo == nil{
                     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( self.MacroCtrl.FP.Get_isDeclaringMacro(_env)) &&
@@ -9828,7 +9851,7 @@ func (self *TransUnit_TransUnit) analyzeExpSymbol(_env *LnsEnv, firstToken *Type
                     } else { 
                         if self.analyzeMode != TransUnit_AnalyzeMode__Diag{
                             var work *Ast_Scope
-                            work = self.Scope
+                            work = self.FP.Get_scope(_env)
                             for  {
                                 Lns_print([]LnsAny{work, self.ModuleScope})
                                 if work == work.FP.Get_parent(_env){
@@ -9836,7 +9859,7 @@ func (self *TransUnit_TransUnit) analyzeExpSymbol(_env *LnsEnv, firstToken *Type
                                 }
                                 work = work.FP.Get_parent(_env)
                             }
-                            self.Scope.FP.FilterSymbolTypeInfo(_env, self.Scope, self.ModuleScope, self.ScopeAccess, Ast_filterForm(TransUnit_analyzeExpSymbol___anonymous_0_))
+                            self.FP.Get_scope(_env).FP.FilterSymbolTypeInfo(_env, self.FP.Get_scope(_env), self.ModuleScope, self.ScopeAccess, Ast_filterForm(TransUnit_analyzeExpSymbol___anonymous_0_))
                         }
                         self.FP.Error(_env, "not found type -- " + symbolToken.Txt)
                     }
@@ -9855,7 +9878,7 @@ func (self *TransUnit_TransUnit) analyzeExpSymbol(_env *LnsEnv, firstToken *Type
                 _env.SetStackVal( symbolInfo.FP.Get_scope(_env) != self.analyzingStaticMethodArgsScope) ).(bool)){
                 self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("The static method can't use the type parameter. -- %s", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil)}))
             }
-            if _switch1 := symbolInfo.FP.Get_kind(_env); _switch1 == Ast_SymbolKind__Typ {
+            if _switch0 := symbolInfo.FP.Get_kind(_env); _switch0 == Ast_SymbolKind__Typ {
                 {
                     _algeType := Ast_AlgeTypeInfoDownCastF(typeInfo.FP)
                     if !Lns_IsNil( _algeType ) {
@@ -9868,7 +9891,7 @@ func (self *TransUnit_TransUnit) analyzeExpSymbol(_env *LnsEnv, firstToken *Type
                         self.FP.Pushback(_env)
                     }
                 }
-            } else if _switch1 == Ast_SymbolKind__Var {
+            } else if _switch0 == Ast_SymbolKind__Var {
                 self.tentativeSymbol.FP.AddAccessSym(_env, symbolInfo)
                 if Lns_op_not(symbolInfo.FP.Get_hasValueFlag(_env)){
                     var nsTypeInfo *Ast_TypeInfo
@@ -9884,18 +9907,18 @@ func (self *TransUnit_TransUnit) analyzeExpSymbol(_env *LnsEnv, firstToken *Type
             if typeInfo.FP.Equals(_env, self.ProcessInfo, self.builtinFunc.Lns__load, nil, nil){
                 self.HelperInfo.UseLoad = true
             }
-            if _switch2 := symbolToken.Txt; _switch2 == "__func__" {
+            if _switch1 := symbolToken.Txt; _switch1 == "__func__" {
                 var funcTypeInfo *Ast_TypeInfo
                 funcTypeInfo = self.FP.GetCurrentNamespaceTypeInfo(_env)
                 self.Has__func__Symbol.Add(Ast_TypeInfo2Stem(funcTypeInfo))
-            } else if _switch2 == "_G" || _switch2 == "_ENV" {
+            } else if _switch1 == "_G" || _switch1 == "_ENV" {
                 var valid bool
                 valid = false
                 for _pragma := range( self.HelperInfo.PragmaSet.Items ) {
                     pragma := _pragma
-                    switch _matchExp1 := pragma.(type) {
+                    switch _matchExp0 := pragma.(type) {
                     case *LuneControl_Pragma__limit_conv_code:
-                    codeSet := _matchExp1.Val1
+                    codeSet := _matchExp0.Val1
                         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                             _env.SetStackVal( codeSet.Len() == 1) &&
                             _env.SetStackVal( codeSet.Has(LuneControl_Code__Lua)) ).(bool)){
@@ -9907,7 +9930,7 @@ func (self *TransUnit_TransUnit) analyzeExpSymbol(_env *LnsEnv, firstToken *Type
                 if Lns_op_not(valid){
                     self.FP.AddErrMess(_env, firstToken.Pos, "'_G' and '_ENV' only can access with transcompiling to lua.")
                 }
-            } else if _switch2 == "_" {
+            } else if _switch1 == "_" {
                 if Lns_op_not(canLeftExp){
                     self.FP.AddErrMess(_env, firstToken.Pos, "It can't access the symbol '_'.")
                 }
@@ -10004,11 +10027,11 @@ func (self *TransUnit_TransUnit) analyzeExpOpSet(_env *LnsEnv, exp *Nodes_Node,o
                 if symbolInfo.FP.Get_typeInfo(_env) == Ast_builtinTypeEmpty{
                     var expType *Ast_TypeInfo
                     expType = expTypeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-                    if _switch2 := expType.FP.Get_kind(_env); _switch2 == Ast_TypeInfoKind__DDD {
+                    if _switch0 := expType.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__DDD {
                         if expType.FP.Get_itemTypeInfoList(_env).Len() > 0{
                             expType = expType.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.Get_nilableTypeInfo(_env)
                         }
-                    } else if _switch2 == Ast_TypeInfoKind__List || _switch2 == Ast_TypeInfoKind__Array || _switch2 == Ast_TypeInfoKind__Set || _switch2 == Ast_TypeInfoKind__Map {
+                    } else if _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array || _switch0 == Ast_TypeInfoKind__Set || _switch0 == Ast_TypeInfoKind__Map {
                         var workPos *Types_Position
                         if index <= expList.FP.Get_expList(_env).Len(){
                             workPos = expList.FP.Get_expList(_env).GetAt(index).(Nodes_NodeDownCast).ToNodes_Node().FP.Get_pos(_env)
@@ -10029,7 +10052,7 @@ func (self *TransUnit_TransUnit) analyzeExpOpSet(_env *LnsEnv, exp *Nodes_Node,o
         }
         if _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( symbolInfo.FP.Get_kind(_env) != Ast_SymbolKind__Var) ||
-            _env.SetStackVal( self.Scope.FP.GetNamespaceTypeInfo(_env) == symbolInfo.FP.Get_scope(_env).FP.GetNamespaceTypeInfo(_env)) ).(bool){
+            _env.SetStackVal( self.FP.Get_scope(_env).FP.GetNamespaceTypeInfo(_env) == symbolInfo.FP.Get_scope(_env).FP.GetNamespaceTypeInfo(_env)) ).(bool){
             symbolInfo.FP.UpdateValue(_env, exp.FP.Get_pos(_env))
         }
     }
@@ -10226,7 +10249,7 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
                         }
                     }
                 }
-                if _switch1 := opTxt; _switch1 == "or" {
+                if _switch0 := opTxt; _switch0 == "or" {
                     var is3op bool
                     {
                         _opExpType := Ast_AndExpTypeInfoDownCastF(exp1Type.FP)
@@ -10283,7 +10306,7 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
                         _env.SetStackVal( Lns_op_not(exp2Type.FP.Get_nilable(_env))) ).(bool)){
                         retType = retType.FP.Get_nonnilableType(_env)
                     }
-                } else if _switch1 == "and" {
+                } else if _switch0 == "and" {
                     _ = self.FP.getToken(_env, nil)
                     self.FP.Pushback(_env)
                     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -10293,7 +10316,7 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
                         self.FP.addWarnMess(_env, exp.FP.Get_pos(_env), "this value never be 'false'")
                     } else if exp2.FP.Get_kind(_env) == Nodes_NodeKind_get_LiteralBool(_env){
                         {
-                            _literal := TransUnit_convExp4_11921(Lns_2DDD(exp2.FP.GetLiteral(_env)))
+                            _literal := TransUnit_convExp4_11920(Lns_2DDD(exp2.FP.GetLiteral(_env)))
                             if !Lns_IsNil( _literal ) {
                                 literal := _literal
                                 if Lns_op_not(Nodes_getLiteralObj(_env, literal)){
@@ -10328,7 +10351,7 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
                         retType = exp2Type
                     }
                     retType = &NewAst_AndExpTypeInfo(_env, self.ProcessInfo, exp1Type, exp2Type, retType).Ast_TypeInfo
-                } else if _switch1 == "<" || _switch1 == ">" || _switch1 == "<=" || _switch1 == ">=" {
+                } else if _switch0 == "<" || _switch0 == ">" || _switch0 == "<=" || _switch0 == ">=" {
                     if _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( Lns_car(Ast_builtinTypeString.FP.CanEvalWith(_env, self.ProcessInfo, exp1Type, Ast_CanEvalType__SetOp, NewLnsMap( map[LnsAny]LnsAny{}))).(bool)) &&
                         _env.SetStackVal( Lns_car(Ast_builtinTypeString.FP.CanEvalWith(_env, self.ProcessInfo, exp2Type, Ast_CanEvalType__SetOp, NewLnsMap( map[LnsAny]LnsAny{}))).(bool)) ||
@@ -10342,10 +10365,10 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
                         self.FP.AddErrMess(_env, opToken.Pos, _env.GetVM().String_format("no numeric type '%s' or '%s'", []LnsAny{exp1Type.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), exp2Type.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil)}))
                     }
                     retType = Ast_builtinTypeBool
-                } else if _switch1 == "~=" || _switch1 == "==" {
+                } else if _switch0 == "~=" || _switch0 == "==" {
                     exp, exp2 = self.FP.analyzeExpOpEquals(_env, firstToken.Pos, opToken, exp, exp2)
                     retType = Ast_builtinTypeBool
-                } else if _switch1 == "^" || _switch1 == "|" || _switch1 == "~" || _switch1 == "&" || _switch1 == "|<<" || _switch1 == "|>>" {
+                } else if _switch0 == "^" || _switch0 == "|" || _switch0 == "~" || _switch0 == "&" || _switch0 == "|<<" || _switch0 == "|>>" {
                     if self.TargetLuaVer.FP.Get_hasBitOp(_env) == LuaVer_BitOp__Cant{
                         self.FP.AddErrMess(_env, opToken.Pos, "this lua version can't use bit operand.")
                     }
@@ -10355,14 +10378,14 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
                         self.FP.AddErrMess(_env, opToken.Pos, _env.GetVM().String_format("no int type '%s' or '%s'", []LnsAny{exp1Type.FP.GetTxt(_env, nil, nil, nil), exp2Type.FP.GetTxt(_env, nil, nil, nil)}))
                     }
                     retType = Ast_builtinTypeInt
-                } else if _switch1 == ".." {
+                } else if _switch0 == ".." {
                     if _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( Lns_op_not(exp1Type.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeString, nil, nil))) ||
                         _env.SetStackVal( Lns_op_not(exp2Type.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeString, nil, nil))) ).(bool){
                         self.FP.AddErrMess(_env, opToken.Pos, _env.GetVM().String_format("no string type '%s' or '%s'", []LnsAny{exp1Type.FP.GetTxt(_env, nil, nil, nil), exp2Type.FP.GetTxt(_env, nil, nil, nil)}))
                     }
                     retType = Ast_builtinTypeString
-                } else if _switch1 == "+" || _switch1 == "-" || _switch1 == "*" || _switch1 == "/" || _switch1 == "%" {
+                } else if _switch0 == "+" || _switch0 == "-" || _switch0 == "*" || _switch0 == "/" || _switch0 == "%" {
                     if _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
                             _env.SetStackVal( Lns_op_not(Lns_car(Ast_builtinTypeInt.FP.CanEvalWith(_env, self.ProcessInfo, exp1Type, Ast_CanEvalType__Math, NewLnsMap( map[LnsAny]LnsAny{}))).(bool))) &&
@@ -10504,7 +10527,7 @@ func (self *TransUnit_TransUnit) analyzeSuper(_env *LnsEnv, firstToken *Types_To
                 return &Nodes_ExpCallSuperCtorNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), superType, superCtorType, expList).Nodes_Node
             } else { 
                 {
-                    _superFunc := (Lns_unwrap( superType.FP.Get_scope(_env)).(*Ast_Scope)).FP.GetTypeInfoField(_env, currentFunc.FP.Get_rawTxt(_env), true, self.Scope, self.ScopeAccess)
+                    _superFunc := (Lns_unwrap( superType.FP.Get_scope(_env)).(*Ast_Scope)).FP.GetTypeInfoField(_env, currentFunc.FP.Get_rawTxt(_env), true, self.FP.Get_scope(_env), self.ScopeAccess)
                     if !Lns_IsNil( _superFunc ) {
                         superFunc := _superFunc.(*Ast_TypeInfo)
                         if superFunc.FP.Get_abstractFlag(_env){
@@ -10593,12 +10616,12 @@ func (self *TransUnit_TransUnit) analyzeExpUnwrap(_env *LnsEnv, firstToken *Type
     }
     self.HelperInfo.UseUnwrapExp = true
     if Ast_isExtType(_env, expType.FP.Get_nonnilableType(_env)){
-        switch _matchExp1 := self.ProcessInfo.FP.CreateLuaval(_env, unwrapType, false).(type) {
+        switch _matchExp0 := self.ProcessInfo.FP.CreateLuaval(_env, unwrapType, false).(type) {
         case *Ast_LuavalResult__OK:
-        work := _matchExp1.Val1
+        work := _matchExp0.Val1
             unwrapType = work
         case *Ast_LuavalResult__Err:
-        err := _matchExp1.Val1
+        err := _matchExp0.Val1
             self.FP.AddErrMess(_env, firstToken.Pos, err)
         }
     }
@@ -10681,7 +10704,7 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
                             if Lns_op_not(self.ImportModuleSet.Has(Ast_TypeInfo2Stem(orgExpectType.FP.GetModule(_env)))){
                                 if Lns_op_not(aliasType){
                                     var fullname string
-                                    fullname = orgExpectType.FP.GetFullName(_env, self.TypeNameCtrl, self.Scope.FP, true)
+                                    fullname = orgExpectType.FP.GetFullName(_env, self.TypeNameCtrl, self.FP.Get_scope(_env).FP, true)
                                     self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("need to import module -- %s (%s)", []LnsAny{fullname, enumTypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
                                 }
                             }
@@ -10711,7 +10734,7 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
         exp = &self.FP.analyzeRefType(_env, Ast_AccessMode__Local, false, false).Nodes_Node
         var classTypeInfo *Ast_TypeInfo
         classTypeInfo = exp.FP.Get_expType(_env)
-        if _switch1 := classTypeInfo.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__IF {
+        if _switch0 := classTypeInfo.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Class || _switch0 == Ast_TypeInfoKind__IF {
             if classTypeInfo.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeString, nil, nil){
                 self.FP.Error(_env, _env.GetVM().String_format("'new' can't use this type -- %s", []LnsAny{classTypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
             }
@@ -10719,7 +10742,7 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
             self.FP.Error(_env, _env.GetVM().String_format("'new' can't use this type -- %s", []LnsAny{classTypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
         }
         if classTypeInfo.FP.Get_externalFlag(_env){
-            if _switch2 := classTypeInfo.FP.Get_accessMode(_env); _switch2 == Ast_AccessMode__Pri || _switch2 == Ast_AccessMode__Local {
+            if _switch1 := classTypeInfo.FP.Get_accessMode(_env); _switch1 == Ast_AccessMode__Pri || _switch1 == Ast_AccessMode__Local {
                 self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("Can't access -- %s", []LnsAny{Ast_AccessMode_getTxt( classTypeInfo.FP.Get_accessMode(_env))}))
             }
         }
@@ -10753,8 +10776,8 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
             _env.SetStackVal( initTypeInfo.FP.Get_accessMode(_env) == Ast_AccessMode__Pub) ||
             _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( initTypeInfo.FP.Get_accessMode(_env) == Ast_AccessMode__Pro) &&
-                _env.SetStackVal( self.Scope.FP.GetClassTypeInfo(_env).FP.IsInheritFrom(_env, self.ProcessInfo, classTypeInfo, nil)) ).(bool))) ||
-            _env.SetStackVal( (self.Scope.FP.GetClassTypeInfo(_env) == classTypeInfo)) ||
+                _env.SetStackVal( self.FP.Get_scope(_env).FP.GetClassTypeInfo(_env).FP.IsInheritFrom(_env, self.ProcessInfo, classTypeInfo, nil)) ).(bool))) ||
+            _env.SetStackVal( (self.FP.Get_scope(_env).FP.GetClassTypeInfo(_env) == classTypeInfo)) ||
             _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( initTypeInfo.FP.Get_accessMode(_env) == Ast_AccessMode__Local) &&
                 _env.SetStackVal( initTypeInfo.FP.GetModule(_env) == self.moduleType) ).(bool))) ).(bool){
@@ -10809,14 +10832,14 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
         if expType.FP.Get_kind(_env) == Ast_TypeInfoKind__DDD{
             self.FP.AddErrMess(_env, exp.FP.Get_pos(_env), _env.GetVM().String_format("... can't evaluate for '%s'.", []LnsAny{token.Txt}))
         }
-        if _switch1 := (token.Txt); _switch1 == "-" {
+        if _switch0 := (token.Txt); _switch0 == "-" {
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( Lns_op_not(expType.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeInt, nil, nil))) &&
                 _env.SetStackVal( Lns_op_not(expType.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeReal, nil, nil))) ).(bool)){
                 self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("unmatch type for \"-\" -- %s", []LnsAny{expType.FP.GetTxt(_env, nil, nil, nil)}))
             }
             typeInfo = expType
-        } else if _switch1 == "#" {
+        } else if _switch0 == "#" {
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( expType.FP.Get_extedType(_env).FP.Get_kind(_env) != Ast_TypeInfoKind__List) &&
                 _env.SetStackVal( expType.FP.Get_extedType(_env).FP.Get_kind(_env) != Ast_TypeInfoKind__Array) &&
@@ -10826,12 +10849,12 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
             if expType.FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( Lns_op_not(self.MacroCtrl.FP.Get_analyzeInfo(_env).FP.IsAnalyzingBlockArg(_env))) &&
-                    _env.SetStackVal( Lns_op_not(self.FP.GetCurrentNSInfo(_env).FP.CanAccessLuaval(_env))) ).(bool)){
+                    _env.SetStackVal( Lns_op_not(self.FP.Get_curNsInfo(_env).FP.CanAccessLuaval(_env))) ).(bool)){
                     self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("can't access the Luaval with '#' without __luago. -- %s", []LnsAny{expType.FP.GetTxt(_env, nil, nil, nil)}))
                 }
             }
             typeInfo = Ast_builtinTypeInt
-        } else if _switch1 == "not" {
+        } else if _switch0 == "not" {
             typeInfo = Ast_builtinTypeBool
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( Lns_op_not(expType.FP.Get_nilable(_env))) &&
@@ -10840,24 +10863,24 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
                 _env.SetStackVal( expType.FP.Get_kind(_env) != Ast_TypeInfoKind__DDD) ).(bool)){
                 self.FP.AddErrMess(_env, token.Pos, "this 'not' operand never be false")
             }
-        } else if _switch1 == ",," {
+        } else if _switch0 == ",," {
             macroExpFlag = true
             typeInfo = expType
-        } else if _switch1 == ",,," {
+        } else if _switch0 == ",,," {
             macroExpFlag = true
             if Lns_op_not(expType.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeString, nil, nil)){
                 self.FP.Error(_env, "unmatch ,,, type, need string type")
             }
             typeInfo = Ast_builtinTypeSymbol
-        } else if _switch1 == ",,,," {
+        } else if _switch0 == ",,,," {
             macroExpFlag = true
             if Lns_op_not(expType.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeSymbol, nil, nil)){
                 self.FP.Error(_env, "unmatch ,,, type, need symbol type")
             }
             typeInfo = Ast_builtinTypeString
-        } else if _switch1 == "`" {
+        } else if _switch0 == "`" {
             typeInfo = Ast_builtinTypeNone
-        } else if _switch1 == "~" {
+        } else if _switch0 == "~" {
             if Lns_op_not(expType.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeInt, nil, nil)){
                 self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("unmatch type for \"~\" -- %s", []LnsAny{expType.FP.GetTxt(_env, nil, nil, nil)}))
             }
@@ -11048,7 +11071,7 @@ func (self *TransUnit_TransUnit) analyzeReturn(_env *LnsEnv, token *Types_Token)
         if !Lns_IsNil( _workList ) {
             workList := _workList.(*Nodes_ExpListNode)
             {
-                _, _, _newExpNodeList := TransUnit_convExp5_4417(Lns_2DDD(self.FP.checkMatchType(_env, "return", token.Pos, retTypeList, workList, false, Lns_op_not(workList.FP.Get_followOn(_env)), nil)))
+                _, _, _newExpNodeList := TransUnit_convExp5_4416(Lns_2DDD(self.FP.checkMatchType(_env, "return", token.Pos, retTypeList, workList, false, Lns_op_not(workList.FP.Get_followOn(_env)), nil)))
                 if !Lns_IsNil( _newExpNodeList ) {
                     newExpNodeList := _newExpNodeList.(*Nodes_ExpListNode)
                     expList = newExpNodeList
@@ -11158,9 +11181,7 @@ func (self *TransUnit_TransUnit) analyzeStatement(_env *LnsEnv, termTxt LnsAny) 
         } else if token.Txt == "break"{
             self.FP.checkNextToken(_env, ";")
             statement = &Nodes_BreakNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)})).Nodes_Node
-            var nsInfo *TransUnitIF_NSInfo
-            nsInfo = self.FP.GetCurrentNSInfo(_env)
-            if Lns_op_not(nsInfo.FP.CanBreak(_env)){
+            if Lns_op_not(self.FP.Get_curNsInfo(_env).FP.CanBreak(_env)){
                 self.FP.AddErrMess(_env, token.Pos, "no loop syntax.")
             }
         } else if token.Txt == "unwrap"{
@@ -11222,9 +11243,9 @@ func (self *TransUnit_TransUnit) analyzeStatement(_env *LnsEnv, termTxt LnsAny) 
         }
     }
     if statement != nil{
-        statement_315 := statement.(*Nodes_Node)
-        if Lns_op_not(statement_315.FP.CanBeStatement(_env)){
-            self.FP.AddErrMess(_env, statement_315.FP.Get_pos(_env), _env.GetVM().String_format("This node can't be statement. -- %s", []LnsAny{Nodes_getNodeKindName(_env, statement_315.FP.Get_kind(_env))}))
+        statement_314 := statement.(*Nodes_Node)
+        if Lns_op_not(statement_314.FP.CanBeStatement(_env)){
+            self.FP.AddErrMess(_env, statement_314.FP.Get_pos(_env), _env.GetVM().String_format("This node can't be statement. -- %s", []LnsAny{Nodes_getNodeKindName(_env, statement_314.FP.Get_kind(_env))}))
         }
     }
     self.commentCtrl.FP.Pop(_env)
@@ -11289,14 +11310,14 @@ func (self *TransUnit_TransUnitCtrl) InitTransUnit_TransUnitCtrl(_env *LnsEnv, m
 // 133: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeLuneControlToken
 func (self *TransUnit_TransUnitCtrl) AnalyzeLuneControlToken(_env *LnsEnv, firstToken *Types_Token,controlToken *Types_Token) LnsAny {
     var pragma LnsAny
-    if _switch1 := controlToken.Txt; _switch1 == "disable_mut_control" {
+    if _switch0 := controlToken.Txt; _switch0 == "disable_mut_control" {
         self.ValidMutControl = false
         self.Modifier.FP.Set_validMutControl(_env, false)
         pragma = LuneControl_Pragma__disable_mut_control_Obj
-    } else if _switch1 == "ignore_symbol_" {
+    } else if _switch0 == "ignore_symbol_" {
         self.IgnoreToCheckSymbol_ = true
         pragma = LuneControl_Pragma__ignore_symbol__Obj
-    } else if _switch1 == "limit_conv_code" {
+    } else if _switch0 == "limit_conv_code" {
         var codeSet *LnsSet
         codeSet = NewLnsSet([]LnsAny{})
         for  {
@@ -11317,18 +11338,18 @@ func (self *TransUnit_TransUnitCtrl) AnalyzeLuneControlToken(_env *LnsEnv, first
             }
         }
         pragma = &LuneControl_Pragma__limit_conv_code{codeSet}
-    } else if _switch1 == "use_async" {
+    } else if _switch0 == "use_async" {
         pragma = LuneControl_Pragma__use_async_Obj
-    } else if _switch1 == "default_async_func" {
+    } else if _switch0 == "default_async_func" {
         pragma = LuneControl_Pragma__default_async_func_Obj
         self.defaultAsyncMode = TransUnit_DefaultAsyncMode__AsyncFunc
-    } else if _switch1 == "default_async_all" {
+    } else if _switch0 == "default_async_all" {
         pragma = LuneControl_Pragma__default_async_all_Obj
         self.defaultAsyncMode = TransUnit_DefaultAsyncMode__AsyncAll
-    } else if _switch1 == "use_macro_special_var" {
+    } else if _switch0 == "use_macro_special_var" {
         pragma = LuneControl_Pragma__use_macro_special_var_Obj
         self.analyzePhase = TransUnit_AnalyzePhase__Main
-    } else if _switch1 == "single_phase_ast" {
+    } else if _switch0 == "single_phase_ast" {
         pragma = LuneControl_Pragma__single_phase_ast_Obj
         self.analyzePhase = TransUnit_AnalyzePhase__Main
     } else {
@@ -11339,8 +11360,8 @@ func (self *TransUnit_TransUnitCtrl) AnalyzeLuneControlToken(_env *LnsEnv, first
 // 191: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeImportFor
 func (self *TransUnit_TransUnitCtrl) analyzeImportFor(_env *LnsEnv, pos *Types_Position,modulePath string,assignName string,assigned bool,lazyLoad LnsInt) *Nodes_ImportNode {
     var backupScope *Ast_Scope
-    backupScope = self.Scope
-    self.Scope = self.TopScope
+    backupScope = self.FP.Get_scope(_env)
+    self.FP.SetScope(_env, self.TopScope, TransUnitIF_SetNSInfo__FromScope)
     var macroMode string
     var nearCode LnsAny
     if self.MacroCtrl.FP.Get_analyzeInfo(_env).FP.Get_mode(_env) != Nodes_MacroMode__None{
@@ -11371,8 +11392,8 @@ func (self *TransUnit_TransUnitCtrl) analyzeImportFor(_env *LnsEnv, pos *Types_P
         var err string
         work,err = importObj.FP.LoadModuleInfo(_env, moduleLoader)
         if work != nil{
-            work_362 := work.(*FrontInterface_ExportInfo)
-            exportInfo = work_362
+            work_361 := work.(*FrontInterface_ExportInfo)
+            exportInfo = work_361
         } else {
             self.FP.Error(_env, err)
         }
@@ -11381,49 +11402,49 @@ func (self *TransUnit_TransUnitCtrl) analyzeImportFor(_env *LnsEnv, pos *Types_P
         symbol := _symbol.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
         self.GlobalScope.FP.AddSymbolInfo(_env, self.ProcessInfo, symbol)
     }
-    self.Scope = backupScope
+    self.FP.SetScope(_env, backupScope, TransUnitIF_SetNSInfo__FromScope)
     var provideInfo *FrontInterface_ModuleProvideInfo
     provideInfo = exportInfo.FP.Get_provideInfo(_env)
     var moduleTypeInfo *Ast_TypeInfo
     moduleTypeInfo = provideInfo.FP.Get_typeInfo(_env)
-    self.Scope.FP.AddModule(_env, moduleTypeInfo, exportInfo.FP.Assign(_env, assignName).FP)
+    self.FP.Get_scope(_env).FP.AddModule(_env, moduleTypeInfo, exportInfo.FP.Assign(_env, assignName).FP)
     var moduleSymbolKind LnsInt
     moduleSymbolKind = provideInfo.FP.Get_symbolKind(_env)
     var moduleSymbolInfo LnsAny
     var shadowing LnsAny
-    moduleSymbolInfo,shadowing = self.Scope.FP.Add(_env, self.ProcessInfo, moduleSymbolKind, false, false, assignName, pos, moduleTypeInfo, Ast_AccessMode__Local, true, _env.PopVal( _env.IncStack() ||
+    moduleSymbolInfo,shadowing = self.FP.Get_scope(_env).FP.Add(_env, self.ProcessInfo, moduleSymbolKind, false, false, assignName, pos, moduleTypeInfo, Ast_AccessMode__Local, true, _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( provideInfo.FP.Get_mutable(_env)) &&
         _env.SetStackVal( Ast_MutMode__Mut) ||
         _env.SetStackVal( Ast_MutMode__IMut) ).(LnsInt), true, lazyLoad != Nodes_LazyLoad__Off)
     if shadowing != nil{
-        shadowing_372 := shadowing.(*Ast_SymbolInfo)
+        shadowing_371 := shadowing.(*Ast_SymbolInfo)
         var err bool
-        err = shadowing_372.FP.Get_typeInfo(_env) != moduleTypeInfo
-        self.FP.ErrorShadowingOp(_env, pos, shadowing_372, err)
+        err = shadowing_371.FP.Get_typeInfo(_env) != moduleTypeInfo
+        self.FP.ErrorShadowingOp(_env, pos, shadowing_371, err)
         if err{
             self.FP.Error(_env, _env.GetVM().String_format("failed to import -- %s", []LnsAny{modulePath}))
         }
-        moduleSymbolInfo = shadowing_372
+        moduleSymbolInfo = shadowing_371
     }
     if moduleSymbolInfo != nil{
-        moduleSymbolInfo_376 := moduleSymbolInfo.(*Ast_SymbolInfo)
+        moduleSymbolInfo_375 := moduleSymbolInfo.(*Ast_SymbolInfo)
         var info *Nodes_ImportInfo
-        info = NewNodes_ImportInfo(_env, pos, modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo_376, moduleTypeInfo)
+        info = NewNodes_ImportInfo(_env, pos, modulePath, lazyLoad, assignName, assigned, moduleSymbolInfo_375, moduleTypeInfo)
         return Nodes_ImportNode_create(_env, self.NodeManager, pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(moduleTypeInfo)}), info)
     }
     self.FP.Error(_env, _env.GetVM().String_format("failed to import -- %s", []LnsAny{modulePath}))
 // insert a dummy
     return nil
 }
-// 286: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeImport
+// 288: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeImport
 func (self *TransUnit_TransUnitCtrl) analyzeImport(_env *LnsEnv, opeToken *Types_Token) *Nodes_ImportNode {
     var lazyLoad LnsInt
     if self.FP.getToken(_env, nil).Txt == "."{
         var modeToken *Types_Token
         modeToken = self.FP.getToken(_env, nil)
-        if _switch1 := modeToken.Txt; _switch1 == "l" {
+        if _switch0 := modeToken.Txt; _switch0 == "l" {
             lazyLoad = Nodes_LazyLoad__On
-        } else if _switch1 == "d" {
+        } else if _switch0 == "d" {
             lazyLoad = Nodes_LazyLoad__Off
         } else {
             lazyLoad = Nodes_LazyLoad__Off
@@ -11448,7 +11469,7 @@ func (self *TransUnit_TransUnitCtrl) analyzeImport(_env *LnsEnv, opeToken *Types
     nextToken = moduleToken
     for  {
         nextToken = self.FP.getToken(_env, nil)
-        if _switch2 := nextToken.Txt; _switch2 == "." || _switch2 == "/" || _switch2 == ":" {
+        if _switch1 := nextToken.Txt; _switch1 == "." || _switch1 == "/" || _switch1 == ":" {
             var demilit string
             demilit = nextToken.Txt
             nextToken = self.FP.getToken(_env, nil)
@@ -11476,7 +11497,7 @@ func (self *TransUnit_TransUnitCtrl) analyzeImport(_env *LnsEnv, opeToken *Types
     self.ImportModuleSet.Add(Ast_TypeInfo2Stem(node.FP.Get_expType(_env)))
     return node
 }
-// 355: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeTestCase
+// 357: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeTestCase
 func (self *TransUnit_TransUnitCtrl) analyzeTestCase(_env *LnsEnv, firstToken *Types_Token) *Nodes_TestCaseNode {
     var newScope *Ast_Scope
     newScope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
@@ -11498,7 +11519,7 @@ func (self *TransUnit_TransUnitCtrl) analyzeTestCase(_env *LnsEnv, firstToken *T
     
     {
         _ctrlType := _env.NilAccFin(_env.NilAccPush(moduleType.FP.Get_scope(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoChild(_env, "Ctrl")})/* 375:20 */)
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetTypeInfoChild(_env, "Ctrl")})/* 377:20 */)
         if _ctrlType == nil{
             self.FP.Error(_env, "not found Testing.Ctrl class")
         } else {
@@ -11519,7 +11540,7 @@ func (self *TransUnit_TransUnitCtrl) analyzeTestCase(_env *LnsEnv, firstToken *T
     self.FP.PopScope(_env)
     return Nodes_TestCaseNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), nameToken, &importNode.Nodes_Node, ctrlName, block)
 }
-// 404: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeTest
+// 406: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeTest
 func (self *TransUnit_TransUnitCtrl) analyzeTest(_env *LnsEnv, firstToken *Types_Token) *Nodes_Node {
     var nextToken *Types_Token
     nextToken = self.FP.getToken(_env, nil)
@@ -11536,16 +11557,16 @@ func (self *TransUnit_TransUnitCtrl) analyzeTest(_env *LnsEnv, firstToken *Types
     self.inTestBlock = false
     return &Nodes_TestBlockNode_create(_env, self.NodeManager, firstToken.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), stmtList).Nodes_Node
 }
-// 429: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeDeclToken
+// 431: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeDeclToken
 func (self *TransUnit_TransUnitCtrl) AnalyzeDeclToken(_env *LnsEnv, accessMode LnsInt,staticFlag bool,firstToken *Types_Token,token *Types_Token) LnsAny {
     if token.Txt == "__test"{
         return self.FP.analyzeTest(_env, firstToken)
     }
     return nil
 }
-// 440: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeSubfile
+// 442: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeSubfile
 func (self *TransUnit_TransUnitCtrl) analyzeSubfile(_env *LnsEnv, token *Types_Token) *Nodes_SubfileNode {
-    if self.Scope != self.ModuleScope{
+    if self.FP.Get_scope(_env) != self.ModuleScope{
         self.FP.Error(_env, "'module' must be top scope.")
     }
     var mode *Types_Token
@@ -11586,7 +11607,7 @@ func (self *TransUnit_TransUnitCtrl) analyzeSubfile(_env *LnsEnv, token *Types_T
     }
     return Nodes_SubfileNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}), usePath)
 }
-// 497: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeProvide
+// 499: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeProvide
 func (self *TransUnit_TransUnitCtrl) analyzeProvide(_env *LnsEnv, firstToken *Types_Token) *Nodes_ProvideNode {
     var token *Types_Token
     token = self.FP.getSymbolToken(_env, TransUnit_SymbolMode__MustNot_)
@@ -11611,7 +11632,7 @@ func (self *TransUnit_TransUnitCtrl) analyzeProvide(_env *LnsEnv, firstToken *Ty
     }
     return node
 }
-// 528: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeStatementToken
+// 530: decl @lune.@base.@TransUnit.TransUnitCtrl.analyzeStatementToken
 func (self *TransUnit_TransUnitCtrl) AnalyzeStatementToken(_env *LnsEnv, token *Types_Token) LnsAny {
     var statement LnsAny
     if token.Txt == "import"{
@@ -11627,12 +11648,12 @@ func (self *TransUnit_TransUnitCtrl) AnalyzeStatementToken(_env *LnsEnv, token *
     }
     return statement
 }
-// 545: decl @lune.@base.@TransUnit.TransUnitCtrl.addFuncBlockInfoList
+// 547: decl @lune.@base.@TransUnit.TransUnitCtrl.addFuncBlockInfoList
 func (self *TransUnit_TransUnitCtrl) addFuncBlockInfoList(_env *LnsEnv, funcBlockInfo *TransUnit_FuncBlockInfo) {
     self.totalFuncBlockTokenNum = self.totalFuncBlockTokenNum + funcBlockInfo.FP.Get_tokenList(_env).Len()
     self.funcBlockInfoList.Insert(TransUnit_FuncBlockInfo2Stem(funcBlockInfo))
 }
-// 551: decl @lune.@base.@TransUnit.TransUnitCtrl.processFuncBlock
+// 553: decl @lune.@base.@TransUnit.TransUnitCtrl.processFuncBlock
 func (self *TransUnit_TransUnitCtrl) processFuncBlock(_env *LnsEnv, streamName string) {
     var runnerList *LnsList
     runnerList = NewLnsList([]LnsAny{})
@@ -11654,10 +11675,10 @@ func (self *TransUnit_TransUnitCtrl) processFuncBlock(_env *LnsEnv, streamName s
             var len LnsInt
             len = self.funcBlockInfoList.Len()
             {
-                var _forFrom1 LnsInt = 1
-                var _forTo1 LnsInt = divCount
-                for _forWork1 := _forFrom1; _forWork1 <= _forTo1; _forWork1++ {
-                    managerId := _forWork1
+                var _forFrom0 LnsInt = 1
+                var _forTo0 LnsInt = divCount
+                for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+                    managerId := _forWork0
                     var list *LnsList
                     list = NewLnsList([]LnsAny{})
                     var tokenCount LnsInt
@@ -11714,7 +11735,7 @@ func (self *TransUnit_TransUnitCtrl) processFuncBlock(_env *LnsEnv, streamName s
         declFuncInfo.FP.Set_has__func__Symbol(_env, result.FP.Get_has_func_sym(_env))
     }
 }
-// 633: decl @lune.@base.@TransUnit.TransUnitCtrl.createAST
+// 635: decl @lune.@base.@TransUnit.TransUnitCtrl.createAST
 func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, parserSrc LnsAny,asyncParse bool,baseDir LnsAny,stdinFile LnsAny,macroFlag bool,moduleName LnsAny,readyExportInfo LnsAny) *AstInfo_ASTInfo {
     __func__ := "@lune.@base.@TransUnit.TransUnitCtrl.createAST"
     var parser *Parser_Parser
@@ -11723,43 +11744,43 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, parserSrc LnsAny,as
     streamName = parser.FP.GetStreamName(_env)
     self.stdinFile = stdinFile
     self.BaseDir = baseDir
-    Log_log(_env, Log_Level__Log, __func__, 645, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 647, Log_CreateMessage(func(_env *LnsEnv) string {
         __func__ := "@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>"
         return _env.GetVM().String_format("%s start -- %s on %s, %s, %s", []LnsAny{__func__, parser.FP.GetStreamName(_env), baseDir, macroFlag, TransUnit_AnalyzePhase_getTxt( self.analyzePhase)})
     }))
     
     self.moduleName = Lns_unwrapDefault( moduleName, "").(string)
     if moduleName != nil{
-        moduleName_500 := moduleName.(string)
+        moduleName_499 := moduleName.(string)
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( self.importModuleInfo.FP.Len(_env) == 0) &&
-            _env.SetStackVal( Lns_op_not(self.importModuleInfo.FP.Add(_env, moduleName_500))) ).(bool)){
-            self.FP.Error(_env, _env.GetVM().String_format("already imported -- %s", []LnsAny{moduleName_500}))
+            _env.SetStackVal( Lns_op_not(self.importModuleInfo.FP.Add(_env, moduleName_499))) ).(bool)){
+            self.FP.Error(_env, _env.GetVM().String_format("already imported -- %s", []LnsAny{moduleName_499}))
         }
     }
     var moduleTypeInfo *Ast_TypeInfo
     moduleTypeInfo = Ast_headTypeInfo
     Lns_LockEnvSync( _env, func () {
         if moduleName != nil{
-            moduleName_505 := moduleName.(string)
+            moduleName_504 := moduleName.(string)
             {
-                _applyForm1, _applyParam1, _applyPrev1 := _env.GetVM().String_gmatch(Lns_car(FrontInterface_getLuaModulePath(_env, moduleName_505, baseDir)).(string), "[^%.]+")
+                _applyForm0, _applyParam0, _applyPrev0 := _env.GetVM().String_gmatch(Lns_car(FrontInterface_getLuaModulePath(_env, moduleName_504, baseDir)).(string), "[^%.]+")
                 for {
-                    _applyWork1 := _applyForm1.(*Lns_luaValue).Call( Lns_2DDD( _applyParam1, _applyPrev1 ) )
-                    _applyPrev1 = Lns_getFromMulti(_applyWork1,0)
-                    if Lns_IsNil( _applyPrev1 ) { break }
-                    txt := _applyPrev1.(string)
+                    _applyWork0 := _applyForm0.(*Lns_luaValue).Call( Lns_2DDD( _applyParam0, _applyPrev0 ) )
+                    _applyPrev0 = Lns_getFromMulti(_applyWork0,0)
+                    if Lns_IsNil( _applyPrev0 ) { break }
+                    txt := _applyPrev0.(string)
                     moduleTypeInfo = self.FP.PushModule(_env, self.ProcessInfo, false, txt, true).FP.Get_typeInfo(_env)
                 }
             }
         }
     })
-    self.ModuleScope = self.Scope
-    self.Scope.FP.AddVar(_env, self.ProcessInfo, Ast_AccessMode__Global, "__mod__", nil, Ast_builtinTypeString, Ast_MutMode__IMut, true)
+    self.ModuleScope = self.FP.Get_scope(_env)
+    self.FP.Get_scope(_env).FP.AddVar(_env, self.ProcessInfo, Ast_AccessMode__Global, "__mod__", nil, Ast_builtinTypeString, Ast_MutMode__IMut, true)
     self.moduleType = moduleTypeInfo
     self.TypeNameCtrl = NewAst_TypeNameCtrl(_env, moduleTypeInfo)
     self.FP.SetParser(_env, NewParser_DefaultPushbackParser(_env, parser))
-    self.Scope.FP.AddIgnoredVar(_env, self.ProcessInfo)
+    self.FP.Get_scope(_env).FP.AddIgnoredVar(_env, self.ProcessInfo)
     var ast *Nodes_Node
     var exportInfo *Nodes_ExportInfo
     var createExportInfo func(_env *LnsEnv, moduleSymboInfo LnsAny,globalSymbolList *LnsList,processInfo *Ast_ProcessInfo) *Nodes_ExportInfo
@@ -11767,8 +11788,8 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, parserSrc LnsAny,as
         __func__ := "@lune.@base.@TransUnit.TransUnitCtrl.createAST.createExportInfo"
         var provideInfo *FrontInterface_ModuleProvideInfo
         if moduleSymboInfo != nil{
-            moduleSymboInfo_518 := moduleSymboInfo.(*Ast_SymbolInfo)
-            provideInfo = NewFrontInterface_ModuleProvideInfo(_env, moduleSymboInfo_518.FP.Get_typeInfo(_env), moduleSymboInfo_518.FP.Get_kind(_env), moduleSymboInfo_518.FP.Get_mutable(_env))
+            moduleSymboInfo_517 := moduleSymboInfo.(*Ast_SymbolInfo)
+            provideInfo = NewFrontInterface_ModuleProvideInfo(_env, moduleSymboInfo_517.FP.Get_typeInfo(_env), moduleSymboInfo_517.FP.Get_kind(_env), moduleSymboInfo_517.FP.Get_mutable(_env))
         } else {
             provideInfo = NewFrontInterface_ModuleProvideInfo(_env, moduleTypeInfo, Ast_SymbolKind__Typ, false)
         }
@@ -11781,13 +11802,13 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, parserSrc LnsAny,as
         var workExportInfo *Nodes_ExportInfo
         workExportInfo = NewNodes_ExportInfo(_env, moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.ModuleId, self.moduleName, moduleTypeInfo.FP.Get_rawTxt(_env), streamName, NewLnsMap( map[LnsAny]LnsAny{}), self.MacroCtrl.FP.Get_declMacroInfoMap(_env))
         LnsLog(_env, _env.GetVM().String_format("ready meta -- %d, %d", []LnsAny{self.funcBlockInfoList.Len(), self.totalFuncBlockTokenNum}))
-        Log_log(_env, Log_Level__Log, __func__, 717, Log_CreateMessage(func(_env *LnsEnv) string {
+        Log_log(_env, Log_Level__Log, __func__, 719, Log_CreateMessage(func(_env *LnsEnv) string {
             return _env.GetVM().String_format("ready meta -- %s, %d, %s, %s", []LnsAny{streamName, self.Parser.FP.GetUsedTokenListLen(_env), moduleTypeInfo, moduleTypeInfo.FP.Get_scope(_env)})
         }))
         
         if readyExportInfo != nil{
-            readyExportInfo_527 := readyExportInfo.(TransUnit_ReadyExportInfo)
-            readyExportInfo_527(_env, &workExportInfo.FrontInterface_ExportInfo)
+            readyExportInfo_526 := readyExportInfo.(TransUnit_ReadyExportInfo)
+            readyExportInfo_526(_env, &workExportInfo.FrontInterface_ExportInfo)
         }
         return workExportInfo
     }
@@ -11825,7 +11846,7 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, parserSrc LnsAny,as
                     }
                 }
             })
-            if self.Scope != self.ModuleScope{
+            if self.FP.Get_scope(_env) != self.ModuleScope{
                 self.FP.Error(_env, "scope does not close")
             }
             var subParser *Parser_StreamParser
@@ -11892,22 +11913,22 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, parserSrc LnsAny,as
         TransUnit_ClosureFun_checkList_1_(_env, self.closureFunList)
     }
     if moduleName != nil{
-        moduleName_566 := moduleName.(string)
-        for range( Util_splitStr(_env, moduleName_566, "[^%.]+").Items ) {
+        moduleName_565 := moduleName.(string)
+        for range( Util_splitStr(_env, moduleName_565, "[^%.]+").Items ) {
             self.FP.PopModule(_env)
         }
     }
     {
-        __forsortCollection1 := TransUnitCtrl_createAST__createId2proto_2_(_env, self.NsInfoMap)
-        __forsortSorted1 := __forsortCollection1.CreateKeyListInt()
-        __forsortSorted1.Sort( _env, LnsItemKindInt, nil )
-        for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
-            nsInfo := __forsortCollection1.Items[ ___forsortKey1 ].(TransUnitIF_NSInfoDownCast).ToTransUnitIF_NSInfo()
+        __forsortCollection0 := TransUnitCtrl_createAST__createId2proto_2_(_env, self.NsInfoMap)
+        __forsortSorted0 := __forsortCollection0.CreateKeyListInt()
+        __forsortSorted0.Sort( _env, LnsItemKindInt, nil )
+        for _, ___forsortKey0 := range( __forsortSorted0.Items ) {
+            nsInfo := __forsortCollection0.Items[ ___forsortKey0 ].(TransUnitIF_NSInfoDownCast).ToTransUnitIF_NSInfo()
             if nsInfo.FP.Get_nobody(_env){
                 var protoType *Ast_TypeInfo
                 protoType = nsInfo.FP.Get_typeInfo(_env)
                 var mess string
-                if _switch1 := protoType.FP.Get_kind(_env); _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__IF {
+                if _switch0 := protoType.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Class || _switch0 == Ast_TypeInfoKind__IF {
                     mess = _env.GetVM().String_format("This class doesn't have body. -- %s", []LnsAny{protoType.FP.GetTxt(_env, nil, nil, nil)})
                 } else {
                     mess = _env.GetVM().String_format("This function doesn't have body. -- %s", []LnsAny{protoType.FP.GetTxt(_env, nil, nil, nil)})
@@ -11933,7 +11954,7 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, parserSrc LnsAny,as
         _env.SetStackVal( self.WarnMessList.Len() > 0) ).(bool)){
         Util_err(_env, "has error")
     }
-    if _switch2 := self.analyzeMode; _switch2 == TransUnit_AnalyzeMode__Diag || _switch2 == TransUnit_AnalyzeMode__Complete || _switch2 == TransUnit_AnalyzeMode__Inquire {
+    if _switch1 := self.analyzeMode; _switch1 == TransUnit_AnalyzeMode__Diag || _switch1 == TransUnit_AnalyzeMode__Complete || _switch1 == TransUnit_AnalyzeMode__Inquire {
         _env.GetVM().OS_exit(0)
     }
     return NewAstInfo_ASTInfo(_env, ast, &exportInfo.FrontInterface_ExportInfo, parser.FP.GetStreamName(_env), self.builtinFunc)

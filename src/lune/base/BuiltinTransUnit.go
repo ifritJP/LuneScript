@@ -231,11 +231,11 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                     }
                 }
             }
-            if _switch1 := (typeInfo.FP.Get_kind(_env)); _switch1 == Ast_TypeInfoKind__Class {
+            if _switch0 := (typeInfo.FP.Get_kind(_env)); _switch0 == Ast_TypeInfoKind__Class {
                 if mode == TransUnitIF_DeclClassMode__Interface{
                     self.FP.Error(_env, _env.GetVM().String_format("define interface already -- %s", []LnsAny{name}))
                 }
-            } else if _switch1 == Ast_TypeInfoKind__IF {
+            } else if _switch0 == Ast_TypeInfoKind__IF {
                 if mode != TransUnitIF_DeclClassMode__Interface{
                     self.FP.Error(_env, _env.GetVM().String_format("define class already -- %s", []LnsAny{name}))
                 }

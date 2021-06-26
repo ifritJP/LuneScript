@@ -472,11 +472,11 @@ func (self *glueFilter_glueGenerator) outputMethod(_env *LnsEnv, node *Nodes_Nod
             var callArgName string
             callArgName = argName
             self.FP.write(_env, _env.GetVM().String_format("  %s %s = ", []LnsAny{typeTxt, argName}))
-            if _switch1 := argType; _switch1 == Ast_builtinTypeInt {
+            if _switch0 := argType; _switch0 == Ast_builtinTypeInt {
                 self.FP.write(_env, "0;\n")
-            } else if _switch1 == Ast_builtinTypeReal {
+            } else if _switch0 == Ast_builtinTypeReal {
                 self.FP.write(_env, "0.0;\n")
-            } else if _switch1 == Ast_builtinTypeString {
+            } else if _switch0 == Ast_builtinTypeString {
                 self.FP.write(_env, "NULL;\n")
             }
             if argNode.FP.Get_expType(_env).FP.Get_nilable(_env){
@@ -489,13 +489,13 @@ func (self *glueFilter_glueGenerator) outputMethod(_env *LnsEnv, node *Nodes_Nod
             setTxt = ""
             var callTxt string
             callTxt = ""
-            if _switch2 := argType; _switch2 == Ast_builtinTypeInt {
+            if _switch1 := argType; _switch1 == Ast_builtinTypeInt {
                 setTxt = _env.GetVM().String_format("  %s = luaL_checkinteger( pLua, %d );\n", []LnsAny{argName, index + addVal})
                 callTxt = callArgName
-            } else if _switch2 == Ast_builtinTypeReal {
+            } else if _switch1 == Ast_builtinTypeReal {
                 setTxt = _env.GetVM().String_format("  %s = luaL_checknumber( pLua, %d );\n", []LnsAny{argName, index + addVal})
                 callTxt = callArgName
-            } else if _switch2 == Ast_builtinTypeString {
+            } else if _switch1 == Ast_builtinTypeString {
                 self.FP.write(_env, _env.GetVM().String_format("  size_t size_%s = 0;\n", []LnsAny{argName}))
                 setTxt = _env.GetVM().String_format("  %s = luaL_checklstring( pLua, %d, &size_%s );\n", []LnsAny{argName, index + addVal, argName})
                 callTxt = _env.GetVM().String_format("%s, size_%s", []LnsAny{argName, argName})

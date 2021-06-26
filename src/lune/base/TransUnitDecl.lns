@@ -111,7 +111,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             symbolNode.$pos,
             "must import '%s' for this alias -- %s (%s,%s)"
             ( aliasSrc.getModule().getFullName(
-               self.typeNameCtrl, self.scope, false ),
+               self.typeNameCtrl, self.$scope, false ),
               symbolNode.getSymbolInfo()[1].$name,
               self.moduleType.$typeId.id,
               aliasSrc.getModule().$typeId.id ) );
@@ -688,7 +688,7 @@ fn TransUnit.analyzeDeclMacroSub(
          self.processInfo, false, true, "__var", nil, macroLocalVarType, .IMut );
 
       let mut stmtList:List<&Nodes.Node> = [];
-      self.prepareTentativeSymbol( self.scope, false, nil );
+      self.prepareTentativeSymbol( self.$scope, false, nil );
       self.analyzeStatementList( stmtList, false, "}" );
 
       if #stmtList > 0 {
@@ -783,14 +783,14 @@ fn TransUnit.analyzeDeclMacro(
    self.analyzeDeclArgList( accessMode, scope, workArgList, false );
 
    // マクロ解析用スコープに変更する前に、登録する namespace を取っおく
-   let mut parentNsInfo = self.getCurrentNSInfo();
+   let mut parentNsInfo = self.$curNsInfo;
    let mut parentInfo = parentNsInfo.$typeInfo;
    
    // スコープをマクロ用スコープに変更
-   let mut backScope = self.scope;
-   self.scope = scope;
+   let mut backScope = self.$scope;
+   self.setScope( scope, .FromScope );
 
-   self.scope.addIgnoredVar( self.processInfo );
+   self.$scope.addIgnoredVar( self.processInfo );
    
 
    let mut node = self.analyzeDeclMacroSub(
@@ -798,9 +798,10 @@ fn TransUnit.analyzeDeclMacro(
       parentInfo, parentNsInfo.$typeDataAccessor, workArgList );
 
    // スコープを元に戻す
-   self.scope = backScope;
+   //self.$scope = backScope;
+   self.setScope( backScope, .FromScope );
 
-   let _, existSym = self.scope.addMacro(
+   let _, existSym = self.$scope.addMacro(
       self.processInfo, nameToken.pos, node.$expType, accessMode );
    if existSym {
       self.addErrMess(
@@ -885,7 +886,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
    let mut symbol2TypeInfo:Map<str,&Ast.TypeInfo> = {};
    foreach ifType in interfaceList {
       ifType.$scope$.filterTypeInfoField$(
-         true, self.scope, self.scopeAccess,
+         true, self.$scope, self.scopeAccess,
          fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
             if symbolInfo.$kind == .Mtd {
                if! let ifFuncType = symbol2TypeInfo[ symbolInfo.$name ] {
@@ -923,7 +924,7 @@ fn TransUnit.analyzePushClass(
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, TransUnitIF.NSInfo, &Nodes.ClassInheritInfo
 {
-   if Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self.scope
+   if Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self.$scope
    {
       self.addErrMess( firstToken.pos, "The public class must declare at top scope." );
    }
@@ -964,7 +965,7 @@ fn TransUnit.analyzePushClass(
    let mut nsInfo;
    _switch mode {
       case .Module, .LazyModule {
-         let mut parentScope = self.scope;
+         let mut parentScope = self.$scope;
          nsInfo = self.pushExtModule(
             false, name.txt, accessMode, name.pos, mode == .LazyModule,
             unwrap moduleLang, (unwrap requirePath).getExcludedDelimitTxt() );
@@ -990,8 +991,8 @@ fn TransUnit.analyzeDeclAlternateType(
    while true {
       altIndex = altIndex + 1;
       let genericSymToken = self.getSymbolToken( .MustNot_ );
-      if self.scope.getTypeInfo(
-         genericSymToken.txt, self.scope, false, self.scopeAccess)
+      if self.$scope.getTypeInfo(
+         genericSymToken.txt, self.$scope, false, self.scopeAccess)
       {
          self.addErrMess( genericSymToken.pos,
                           "shadowing Type -- %s" (genericSymToken.txt) );
@@ -1091,8 +1092,8 @@ fn TransUnit.analyzeDeclEnum(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Nodes.DeclEnumNode
 {
    if Ast.isPubToExternal( accessMode ) and
-      self.scope ~= self.moduleScope and
-      self.scope.$ownerTypeInfo$.$kind ~= .Class
+      self.$scope ~= self.moduleScope and
+      self.$scope.$ownerTypeInfo$.$kind ~= .Class
    {
       self.addErrMess( firstToken.pos, "can't external at inner scope." );
    }
@@ -1108,7 +1109,7 @@ fn TransUnit.analyzeDeclEnum(
 
    let mut workEnumTypeInfo:Ast.EnumTypeInfo! = nil;
 
-   let mut parentNsInfo = self.getCurrentNSInfo();
+   let mut parentNsInfo = self.$curNsInfo;
    
    let mut nextToken = self.getToken(##);
    let mut number = 0.0;
@@ -1213,7 +1214,7 @@ fn TransUnit.analyzeDeclEnum(
 
    self.popScope();
 
-   let _, shadowing = self.scope.addEnum(
+   let _, shadowing = self.$scope.addEnum(
       self.processInfo, accessMode, name.txt, name.pos, enumTypeInfo );
    self.errorShadowing( name.pos, shadowing );
 
@@ -1235,9 +1236,9 @@ fn TransUnit.analyzeDeclAlge(
 
    self.checkNextToken( "{" );
 
-   let mut scope = self.scope;
+   let mut scope = self.$scope;
    let mut algeScope = self.pushScope( .Class ## );
-   let mut parentNsInfo = self.getCurrentNSInfo();
+   let mut parentNsInfo = self.$curNsInfo;
    
    let mut algeTypeInfo = self.processInfo.createAlge(
       algeScope, parentNsInfo.$typeInfo, parentNsInfo.$typeDataAccessor,
@@ -1325,7 +1326,7 @@ fn TransUnit.analyzeDeclAlge(
 fn TransUnit.analyzeAlias(
    accessMode: Ast.AccessMode, firstToken:&Parser.Token ) mut : Nodes.AliasNode
 {
-   if self.scope ~= self.moduleScope {
+   if self.$scope ~= self.moduleScope {
       self.addErrMess( firstToken.pos, "alias must use at top scope." );
    }
 
@@ -1354,7 +1355,7 @@ fn TransUnit.analyzeAlias(
       else {
          switch symbolInfo.$kind {
             case .Typ, .Fun {
-               let aliasSymbolInfo, shadowing = self.scope.addAlias(
+               let aliasSymbolInfo, shadowing = self.$scope.addAlias(
                   self.processInfo, newToken.txt, newToken.pos,
                   false, accessMode, self.moduleType, symbolInfo );
                when! aliasSymbolInfo {
@@ -1453,7 +1454,7 @@ mut : Nodes.DeclFormNode
 {
    let name = self.getSymbolToken( .MustNot_ );
 
-   if self.scope ~= self.moduleScope and Ast.isPubToExternal( accessMode ) {
+   if self.$scope ~= self.moduleScope and Ast.isPubToExternal( accessMode ) {
       self.addErrMess(
          firstToken.pos,
          "You must declare this form at the outside scope. -- %s"
@@ -1489,7 +1490,7 @@ mut : Nodes.DeclFormNode
       argTypeInfoList.insert( argNode.$expType );
    }
 
-   let mut parentNsInfo = self.getCurrentNSInfo();
+   let mut parentNsInfo = self.$curNsInfo;
    let formType = self.processInfo.createFuncAsync(
       false, false, nil, .FormFunc,
       parentNsInfo.$typeInfo,
@@ -1499,13 +1500,13 @@ mut : Nodes.DeclFormNode
       self.getDefaultAsync( .FormFunc, self.getCurrentClass(), asyncMode ),
       nil, argTypeInfoList, retTypeList, false );
 
-   let formSymbol, shadowing = self.scope.addForm(
+   let formSymbol, shadowing = self.$scope.addForm(
       self.processInfo, name.pos, formType, accessMode );
    self.errorShadowing( name.pos, shadowing );
 
    let declFuncInfo = new Nodes.DeclFuncInfo(
       .Form, nil, nil, false, name, formSymbol or shadowing, argList, false,
-      accessMode, asyncMode, nil, retTypeList, retNodeList, false, false );
+      accessMode, asyncMode, nil, retTypeList, retNodeList, false, false, 0 );
    
    return Nodes.DeclFormNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
@@ -1755,7 +1756,7 @@ fn TransUnit.analyzeDeclMember(
          }
       }
 
-      let symbolInfo, shadowing = self.scope.addMember(
+      let symbolInfo, shadowing = self.$scope.addMember(
          self.processInfo, varName.txt, varName.pos,
          typeInfo, accessMode, staticFlag, mutMode );
 
@@ -2057,13 +2058,13 @@ fn TransUnit.analyzeClassBody(
       self.macroCtrl.isInAnalyzeArgMode(), [ classTypeInfo ],
       classAccessMode, name, inheritInfo, hasProto, gluePrefix, moduleName,
       moduleLang, lazyLoad, false, allStmtList,
-      declStmtList, fieldList, memberList, self.scope, initBlockInfo,
+      declStmtList, fieldList, memberList, self.$scope, initBlockInfo,
       advertiseList, trustList, uninitMemberList, (@) );
    self.typeInfo2ClassNode[ classTypeInfo ] = node;
    let mut alreadyCtorFlag = false;
    let mut hasInitBlock = false;
    let mut hasStaticMember = false;
-   let mut classScope = self.scope;
+   let mut classScope = self.$scope;
 
    fn processLet( token:&Parser.Token, staticFlag:bool,
                   accessMode:Ast.AccessMode, alreadyFlag:bool ) __trans
@@ -2102,7 +2103,7 @@ nil の場合、メンバの宣言位置。
    fn checkInitializeMember( staticFlag:bool, pos:&Parser.Position! ) __trans {
       foreach memberNode, memberName in memberName2Node {
          if memberNode.$staticFlag == staticFlag {
-            let symbolInfo = unwrap self.scope.getSymbolInfoChild( memberName );
+            let symbolInfo = unwrap self.$scope.getSymbolInfoChild( memberName );
             let typeInfo = symbolInfo.$typeInfo;
             if not symbolInfo.$hasValueFlag {
                let msg;
@@ -2140,7 +2141,7 @@ nil の場合、メンバの宣言位置。
       }
 
       if nameToken.txt == "__init" {
-         foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
+         foreach symbolInfo in self.$scope.$symbol2SymbolInfoMap {
             if not symbolInfo.$staticFlag {
                // 一旦全てのメンバを値なし状態にセットする
                symbolInfo.clearValue();
@@ -2174,14 +2175,14 @@ nil の場合、メンバの宣言位置。
          self.error( "%s can not have __init block." (mode) );
       }
       hasInitBlock = true;
-      foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
+      foreach symbolInfo in self.$scope.$symbol2SymbolInfoMap {
          if symbolInfo.$staticFlag {
             // 一旦全てのメンバを値なし状態にセットする
             symbolInfo.clearValue();
          }
       }
 
-      let mut parentScope = self.scope;
+      let mut parentScope = self.$scope;
       let mut initBlockScope = self.pushScope( .Other ## );
       self.prepareTentativeSymbol( initBlockScope, false, nil );
 
@@ -2192,7 +2193,7 @@ nil の場合、メンバの宣言位置。
       let funcSym, shadowing = parentScope.addFunc(
          self.processInfo, token.$pos, funcTypeInfo, .Pri, true, true );
 
-      self.newNSInfo( funcTypeInfo, token.pos );
+      let mut nsInfo = self.newNSInfo( funcTypeInfo, token.pos );
       
       
       let block = self.analyzeFuncBlock(
@@ -2201,7 +2202,7 @@ nil の場合、メンバの宣言位置。
 
       let mut info = new Nodes.DeclFuncInfo(
          .InitBlock, classTypeInfo, node, true, token, unwrap (funcSym or shadowing),
-         [], true, .Pri, nil, block, [], [], false, false );
+         [], true, .Pri, nil, block, [], [], false, false, nsInfo.$stmtNum );
       let initBlockNode = Nodes.DeclMethodNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ funcTypeInfo ], info );
@@ -2261,7 +2262,7 @@ nil の場合、メンバの宣言位置。
             
             self.addDefaultConstructor(
                nextToken.pos, classTypeInfo, typeDataAccessor,
-               self.scope, memberList, methodNameSet, false );
+               self.$scope, memberList, methodNameSet, false );
          }
          case "default__init_old" {
             pragma = LuneControl.Pragma.default__init_old;
@@ -2269,7 +2270,7 @@ nil の場合、メンバの宣言位置。
             alreadyCtorFlag = true;
             self.addDefaultConstructor(
                nextToken.pos, classTypeInfo, typeDataAccessor,
-               self.scope, memberList, methodNameSet, true );
+               self.$scope, memberList, methodNameSet, true );
             node.setHasOldCtor();
          }
          case "default_async_this_class" {
@@ -2351,8 +2352,8 @@ nil の場合、メンバの宣言位置。
             processLuneControl();
          }
          else {
-            if! let symbolInfo = self.scope.getSymbolInfo(
-               token.txt, self.scope, false, self.scopeAccess )
+            if! let symbolInfo = self.$scope.getSymbolInfo(
+               token.txt, self.$scope, false, self.scopeAccess )
             {
                if symbolInfo.$kind == .Mac {
 
@@ -2513,8 +2514,8 @@ fn TransUnit.analyzeDeclClass(
       }
    }
 
-   let existSymbolInfo = self.scope.getSymbolTypeInfo(
-      name.txt, self.scope, self.scope, self.scopeAccess );
+   let existSymbolInfo = self.$scope.getSymbolTypeInfo(
+      name.txt, self.$scope, self.$scope, self.scopeAccess );
 
    let mut nextToken, mut nsInfo, inheritInfo = self.analyzePushClass(
       mode, classAbstructFlag, firstToken, name, true, moduleName,
@@ -2534,7 +2535,7 @@ fn TransUnit.analyzeDeclClass(
    }
 
 
-   let mut classScope = self.scope;
+   let mut classScope = self.$scope;
 
    self.checkToken( nextToken, "{" );
 
@@ -2816,6 +2817,8 @@ fn TransUnit.processAddFunc(
       funcSym, shadowing = parentScope.addMethod(
          self.processInfo, name.pos, typeInfo, accessMode, staticFlag, mutable );
    }
+
+   self.set_curNsInfo( nsInfo );
    return unwrap (funcSym or shadowing), nsInfo;
 }
 
@@ -2872,7 +2875,7 @@ fn TransUnit.analyzeDeclFunc(
       when! name {
          let className = name.txt;
 
-         classTypeInfo = self.scope.getTypeInfoChild( className );
+         classTypeInfo = self.$scope.getTypeInfoChild( className );
 
          when! classTypeInfo {
             // self.pushClass(
@@ -2908,7 +2911,7 @@ fn TransUnit.analyzeDeclFunc(
       switch (unwrap name).txt {
          case "__init" {
             kind = Nodes.NodeKind.$DeclConstr;
-            foreach symbolInfo in self.scope.$symbol2SymbolInfoMap {
+            foreach symbolInfo in self.$scope.$symbol2SymbolInfoMap {
                if not symbolInfo.$staticFlag {
                   // 一旦全てのメンバを値なし状態にセットする
                   symbolInfo.clearValue();
@@ -2942,7 +2945,7 @@ fn TransUnit.analyzeDeclFunc(
       staticFlag = true;
    }
 
-   let mut parentScope = self.scope;
+   let mut parentScope = self.$scope;
    let mut funcBodyScope = self.pushScope( .Other ## );
 
    if staticFlag and classTypeInfo {
@@ -3014,7 +3017,7 @@ fn TransUnit.analyzeDeclFunc(
             workClass = self.createModifier( workClass, .IMut );
          }
          if not staticFlag {
-            self.scope.add(
+            self.$scope.add(
                self.processInfo, .Arg, false, true, "self", nil,
                workClass, .Pri, false,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
@@ -3046,7 +3049,8 @@ fn TransUnit.analyzeDeclFunc(
    retTypeInfoList, token, retTypeNodeList = self.analyzeRetTypeList(
       pubToExtFlag, accessMode, token, parentPub );
 
-   let mut parentNsInfo = self.getCurrentNSInfo();
+   // let mut parentNsInfo = self.getCurrentNSInfoFromScope();
+   let mut parentNsInfo = self.$curNsInfo;
 
    let mut funcName = "";
    when! name {
@@ -3122,7 +3126,7 @@ fn TransUnit.analyzeDeclFunc(
       if CantOverrideMethods.has( funcName ) {
          self.addErrMess( firstToken.pos, "This method can't override -- %s" (funcName) );
       }
-      if! let overrideType = self.scope.$parent.getTypeInfoField(
+      if! let overrideType = self.$scope.$parent.getTypeInfoField(
          funcName, false, funcBodyScope, self.scopeAccess )
       {
          foreach err in self.checkOverrideMethod( overrideType, typeInfo ) {
@@ -3137,7 +3141,7 @@ fn TransUnit.analyzeDeclFunc(
    else {
       when! name {
          if not CantOverrideMethods.has( name.txt ) {
-            if self.scope.$parent.getTypeInfoField(
+            if self.$scope.$parent.getTypeInfoField(
                name.txt, false, funcBodyScope, .Full )
             {
                // override 宣言していないのに、オーバーライドしている場合エラー
@@ -3145,7 +3149,7 @@ fn TransUnit.analyzeDeclFunc(
                                 "mismatch override --" .. funcName );
             } else {
                if! let ifFunc =
-                  self.scope.$parent.getSymbolInfoIfField(
+                  self.$scope.$parent.getSymbolInfoIfField(
                      name.txt, funcBodyScope, .Full )
                {
                   if not ifFunc.$typeInfo.canEvalWith(
@@ -3170,6 +3174,8 @@ fn TransUnit.analyzeDeclFunc(
    
    let inMacroExpand = self.macroCtrl.isInExpandMode();
    
+   let stmtNum;
+      
    if token.txt == ";" {
       // プロトタイプ宣言
       if declFuncMode == .Module or declFuncMode == .Glue {
@@ -3188,6 +3194,7 @@ fn TransUnit.analyzeDeclFunc(
             }
          }
       }
+      stmtNum = 0;
    }
    else {
       //needNode = true;
@@ -3243,6 +3250,7 @@ fn TransUnit.analyzeDeclFunc(
 
       if needFuncBlockInfo {
          blockTokenList = self.skipBlock( true );
+         stmtNum = #blockTokenList;
       } else {
          let mut workBody = self.analyzeFuncBlock(
             analyzingState, firstToken, classTypeInfo, typeInfo,
@@ -3250,6 +3258,7 @@ fn TransUnit.analyzeDeclFunc(
          body = workBody;
 
          self.declFuncPostProcess( typeInfo, classTypeInfo, workBody, funcBodyScope );
+         stmtNum = nsInfo.$stmtNum;
       }
    }
 
@@ -3271,7 +3280,7 @@ fn TransUnit.analyzeDeclFunc(
          funcKind, classTypeInfo, classDeclNode, outsizeOfClass, name, funcSym,
          argList, orgStaticFlag, accessMode, asyncMode, body,
          retTypeInfoList, retTypeNodeList,
-         self.has__func__Symbol.has( typeInfo ), overrideFlag );
+         self.has__func__Symbol.has( typeInfo ), overrideFlag, stmtNum );
 
       if needFuncBlockInfo {
          let pos = self.getLineNo( blockTokenList[1] );
@@ -3283,7 +3292,7 @@ fn TransUnit.analyzeDeclFunc(
          }
 
          let mut funcBlockInfo = new FuncBlockInfo(
-            declFuncInfo, typeInfo, typeDataAccessor,
+            declFuncInfo, nsInfo, typeInfo, typeDataAccessor,
             funcBodyScope, blockTokenList, pos, orgPos );
          self.addFuncBlockInfoList( funcBlockInfo );
       }
@@ -3398,14 +3407,14 @@ fn TransUnit.checkLiteralEmptyCollection(
 
 fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo, canLeftExp:bool ) mut {
    if symbolInfo.$kind == .Fun {
-      self.scope.accessSymbol( self.moduleScope, symbolInfo );
+      self.$scope.accessSymbol( self.moduleScope, symbolInfo );
       symbolInfo.set_posForModToRef( symbolInfo.$posForLatestMod );
 
       
-      if self.scope.isClosureAccess( self.moduleScope, symbolInfo ) {
+      if self.$scope.isClosureAccess( self.moduleScope, symbolInfo ) {
          // 関数の場合、AST 解析中の時点ではクロージャ処理が必要かどうかが
          // 判定できないので、リストに保持して AST 解析後に別途処理する。
-         self.closureFunList.insert( new ClosureFun( symbolInfo, self.scope ) );
+         self.closureFunList.insert( new ClosureFun( symbolInfo, self.$scope ) );
       }
 
       
@@ -3415,7 +3424,7 @@ fn TransUnit.accessSymbol( symbolInfo:&Ast.SymbolInfo, canLeftExp:bool ) mut {
       }
    }
    else {
-      self.scope.accessSymbol( self.moduleScope, symbolInfo );
+      self.$scope.accessSymbol( self.moduleScope, symbolInfo );
       if canLeftExp {
          self.accessSymbolSetQueue.add( symbolInfo );
       } else {
@@ -3744,8 +3753,8 @@ fn TransUnit.analyzeLetAndInitExp(
          let symbolToken = self.getToken(##);
          nextToken = self.getToken(##);
 
-         let verSym = self.scope.getSymbolTypeInfo(
-            symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess );
+         let verSym = self.$scope.getSymbolTypeInfo(
+            symbolToken.txt, self.$scope, self.moduleScope, self.scopeAccess );
          when! verSym {
             letVarList.insert( new LetVarInfo( verSym.$mutMode, symbolToken, nil ) );
             typeInfoList.insert( verSym.$typeInfo );
@@ -3786,7 +3795,7 @@ fn TransUnit.analyzeDeclVar(
    }
 
    if accessMode == .Pub {
-      if self.scope ~= self.moduleScope {
+      if self.$scope ~= self.moduleScope {
          self.addErrMess( firstToken.pos, "'pub' variable must exist top scope." );
       }
    }
@@ -3830,7 +3839,7 @@ fn TransUnit.analyzeDeclVar(
                      typeInfo.$argTypeInfoList, typeInfo.$retTypeInfoList,
                      Ast.TypeInfo.isMut( typeInfo ) );
                   let funcSym = self.processAddFunc(
-                     true, self.scope, letVarInfo.varName, newTypeInfo,
+                     true, self.$scope, letVarInfo.varName, newTypeInfo,
                      Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
                   self.nodeManager.delNode( declNode );
 
@@ -3846,13 +3855,13 @@ fn TransUnit.analyzeDeclVar(
    }
 
 
-   let mut syncScope:Ast.Scope = self.scope;
+   let mut syncScope:Ast.Scope = self.$scope;
    if mode == .Sync {
       syncScope = self.pushScope( .Other ## );
    }
 
 
-   let mut nsInfo = self.getCurrentNSInfo();
+   let mut nsInfo = self.$curNsInfo;
    
    let mut symbolInfoList: List<&Ast.SymbolInfo> = [];
 
@@ -3877,8 +3886,8 @@ fn TransUnit.analyzeDeclVar(
       }
       if mode == .Sync {
          // スコープに登録する前に、シンボルを検索
-         if! let symInfo = self.scope.getSymbolInfo(
-            varName.txt, self.scope, true, self.scopeAccess )
+         if! let symInfo = self.$scope.getSymbolInfo(
+            varName.txt, self.$scope, true, self.scopeAccess )
          {
             syncSymbolList.insert( symInfo );
          }
@@ -3886,7 +3895,7 @@ fn TransUnit.analyzeDeclVar(
       // スコープに変数を登録
       if mode == .Let or mode == .Sync {
          if mode == .Let {
-            self.checkShadowing( varName.pos, varName.txt, self.scope );
+            self.checkShadowing( varName.pos, varName.txt, self.$scope );
             // if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
             //    self.addErrMess( varName.pos,
             //                     "shadowing variable -- %s" (varName.txt) );
@@ -3906,7 +3915,7 @@ fn TransUnit.analyzeDeclVar(
          {
             hasValue = true;
          }
-         self.scope.addVar(
+         self.$scope.addVar(
             self.processInfo, accessMode, varName.txt, varName.pos,
             typeInfo, letVarInfo.mutable, hasValue );
 
@@ -3919,7 +3928,7 @@ fn TransUnit.analyzeDeclVar(
          }
       }
       symbolInfoList.insert( nsInfo.registerSym(
-         unwrap self.scope.getSymbolInfo( varName.txt, self.scope,
+         unwrap self.$scope.getSymbolInfo( varName.txt, self.$scope,
                                           true, self.scopeAccess ) ) );
    }
    if mode ~= .Sync and self.macroScope {
@@ -4048,7 +4057,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    
    let mut scope = self.pushScope( .Other ## );
 
-   let mut nsInfo = self.getCurrentNSInfo();
+   let mut nsInfo = self.$curNsInfo;
 
    foreach expType, index in typeInfoList {
       if index > #varNameList {
@@ -4204,7 +4213,7 @@ local fn TransUnit.processFuncBlockInfo(
       
       let mut funcBodyScope = new Ast.ScopeWithRef(
          self.processInfo, outerScope, funcBlockInfo.$funcScope, .Other ## );
-      self.scope = funcBodyScope;
+      self.setScope( funcBodyScope, .FromScope );
       
       
       let mut workBody = self.analyzeFuncBlock(

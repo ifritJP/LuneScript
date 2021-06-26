@@ -389,15 +389,15 @@ func (self *dumpNode_dumpFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclE
         var valInfo *Ast_EnumValInfo
         valInfo = Lns_unwrap( enumTypeInfo.FP.GetEnumValInfo(_env, name.Txt)).(*Ast_EnumValInfo)
         var val LnsAny
-        switch _matchExp1 := valInfo.FP.Get_val(_env).(type) {
+        switch _matchExp0 := valInfo.FP.Get_val(_env).(type) {
         case *Ast_EnumLiteral__Int:
-        x := _matchExp1.Val1
+        x := _matchExp0.Val1
             val = x
         case *Ast_EnumLiteral__Real:
-        x := _matchExp1.Val1
+        x := _matchExp0.Val1
             val = x
         case *Ast_EnumLiteral__Str:
-        x := _matchExp1.Val1
+        x := _matchExp0.Val1
             val = x
         }
         self.FP.writeln(_env, opt, _env.GetVM().String_format("  %s: %s, %s", []LnsAny{name.Txt, valInfo.FP.Get_val(_env).(LnsAlgeVal).GetTxt(), val}))
@@ -410,11 +410,11 @@ func (self *dumpNode_dumpFilter) ProcessDeclAlge(_env *LnsEnv, node *Nodes_DeclA
     algeTypeInfo = node.FP.Get_algeType(_env)
     self.FP.dump(_env, opt, &node.Nodes_Node, algeTypeInfo.FP.Get_rawTxt(_env))
     {
-        __forsortCollection1 := algeTypeInfo.FP.Get_valInfoMap(_env)
-        __forsortSorted1 := __forsortCollection1.CreateKeyListStr()
-        __forsortSorted1.Sort( _env, LnsItemKindStr, nil )
-        for _, ___forsortKey1 := range( __forsortSorted1.Items ) {
-            valInfo := __forsortCollection1.Items[ ___forsortKey1 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
+        __forsortCollection0 := algeTypeInfo.FP.Get_valInfoMap(_env)
+        __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
+        __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
+        for _, ___forsortKey0 := range( __forsortSorted0.Items ) {
+            valInfo := __forsortCollection0.Items[ ___forsortKey0 ].(Ast_AlgeValInfoDownCast).ToAst_AlgeValInfo()
             self.FP.writeln(_env, opt, _env.GetVM().String_format("  %s: %s", []LnsAny{algeTypeInfo.FP.Get_rawTxt(_env), valInfo.FP.Get_name(_env)}))
         }
     }
@@ -914,12 +914,12 @@ func (self *dumpNode_dumpFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_Exp
     indexSym = ""
     var indexNode LnsAny
     indexNode = nil
-    switch _matchExp1 := node.FP.Get_index(_env).(type) {
+    switch _matchExp0 := node.FP.Get_index(_env).(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _matchExp1.Val1
+    index := _matchExp0.Val1
         indexNode = index
     case *Nodes_IndexVal__SymIdx:
-    index := _matchExp1.Val1
+    index := _matchExp0.Val1
         indexSym = index
     }
     self.FP.dump(_env, opt, &node.Nodes_Node, indexSym)
