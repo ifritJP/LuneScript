@@ -8,76 +8,9 @@ func BuiltinTransUnit_convExp0_441(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
-// declaration Class -- TransUnit
-type BuiltinTransUnit_TransUnitMtd interface {
-    Error(_env *LnsEnv, arg1 string)
-    getCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_scope(_env *LnsEnv) *Ast_Scope
-    PopClass(_env *LnsEnv)
-    PopModule(_env *LnsEnv)
-    PopScope(_env *LnsEnv)
-    PushClassLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
-    PushClassScope(_env *LnsEnv, arg1 *Types_Position, arg2 *Ast_TypeInfo, arg3 *Ast_Scope)
-    PushModuleLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
-    PushScope(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
-}
-type BuiltinTransUnit_TransUnit struct {
-    processInfo *Ast_ProcessInfo
-    scope *Ast_Scope
-    namespace2Scope *LnsMap
-    FP BuiltinTransUnit_TransUnitMtd
-}
-func BuiltinTransUnit_TransUnit2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*BuiltinTransUnit_TransUnit).FP
-}
-type BuiltinTransUnit_TransUnitDownCast interface {
-    ToBuiltinTransUnit_TransUnit() *BuiltinTransUnit_TransUnit
-}
-func BuiltinTransUnit_TransUnitDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(BuiltinTransUnit_TransUnitDownCast)
-    if ok { return work.ToBuiltinTransUnit_TransUnit() }
-    return nil
-}
-func (obj *BuiltinTransUnit_TransUnit) ToBuiltinTransUnit_TransUnit() *BuiltinTransUnit_TransUnit {
-    return obj
-}
-func NewBuiltinTransUnit_TransUnit(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2 *Ast_ProcessInfo) *BuiltinTransUnit_TransUnit {
-    obj := &BuiltinTransUnit_TransUnit{}
-    obj.FP = obj
-    obj.InitBuiltinTransUnit_TransUnit(_env, arg1, arg2)
-    return obj
-}
-
-func Lns_BuiltinTransUnit_init(_env *LnsEnv) {
-    if init_BuiltinTransUnit { return }
-    init_BuiltinTransUnit = true
-    BuiltinTransUnit__mod__ = "@lune.@base.@BuiltinTransUnit"
-    Lns_InitMod()
-    Lns_Types_init(_env)
-    Lns_Parser_init(_env)
-    Lns_Util_init(_env)
-    Lns_Ast_init(_env)
-    Lns_Nodes_init(_env)
-    Lns_TransUnitIF_init(_env)
-}
-func init() {
-    init_BuiltinTransUnit = false
-}
 // 38: decl @lune.@base.@BuiltinTransUnit.TransUnit.get_scope
 func (self *BuiltinTransUnit_TransUnit) Get_scope(_env *LnsEnv) *Ast_Scope {
     return self.scope
-}
-// 42: DeclConstr
-func (self *BuiltinTransUnit_TransUnit) InitBuiltinTransUnit_TransUnit(_env *LnsEnv, ctrl_info *Types_TransCtrlInfo,processInfo *Ast_ProcessInfo) {
-    self.namespace2Scope = NewLnsMap( map[LnsAny]LnsAny{})
-    self.processInfo = processInfo
-    self.scope = processInfo.FP.Get_topScope(_env)
 }
 // 49: decl @lune.@base.@BuiltinTransUnit.TransUnit.error
 func (self *BuiltinTransUnit_TransUnit) Error(_env *LnsEnv, mess string) {
@@ -274,4 +207,72 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
 // 272: decl @lune.@base.@BuiltinTransUnit.TransUnit.popClass
 func (self *BuiltinTransUnit_TransUnit) PopClass(_env *LnsEnv) {
     self.FP.PopScope(_env)
+}
+// declaration Class -- TransUnit
+type BuiltinTransUnit_TransUnitMtd interface {
+    Error(_env *LnsEnv, arg1 string)
+    getCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo
+    Get_scope(_env *LnsEnv) *Ast_Scope
+    PopClass(_env *LnsEnv)
+    PopModule(_env *LnsEnv)
+    PopScope(_env *LnsEnv)
+    PushClassLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Types_Position, arg3 LnsInt, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 LnsAny, arg8 bool, arg9 string, arg10 bool, arg11 LnsInt, arg12 LnsAny) *Ast_TypeInfo
+    PushClassScope(_env *LnsEnv, arg1 *Types_Position, arg2 *Ast_TypeInfo, arg3 *Ast_Scope)
+    PushModuleLow(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 bool, arg3 string, arg4 bool) *Ast_TypeInfo
+    PushScope(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny) *Ast_Scope
+}
+type BuiltinTransUnit_TransUnit struct {
+    processInfo *Ast_ProcessInfo
+    scope *Ast_Scope
+    namespace2Scope *LnsMap
+    FP BuiltinTransUnit_TransUnitMtd
+}
+func BuiltinTransUnit_TransUnit2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*BuiltinTransUnit_TransUnit).FP
+}
+type BuiltinTransUnit_TransUnitDownCast interface {
+    ToBuiltinTransUnit_TransUnit() *BuiltinTransUnit_TransUnit
+}
+func BuiltinTransUnit_TransUnitDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(BuiltinTransUnit_TransUnitDownCast)
+    if ok { return work.ToBuiltinTransUnit_TransUnit() }
+    return nil
+}
+func (obj *BuiltinTransUnit_TransUnit) ToBuiltinTransUnit_TransUnit() *BuiltinTransUnit_TransUnit {
+    return obj
+}
+func NewBuiltinTransUnit_TransUnit(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2 *Ast_ProcessInfo) *BuiltinTransUnit_TransUnit {
+    obj := &BuiltinTransUnit_TransUnit{}
+    obj.FP = obj
+    obj.InitBuiltinTransUnit_TransUnit(_env, arg1, arg2)
+    return obj
+}
+// 42: DeclConstr
+func (self *BuiltinTransUnit_TransUnit) InitBuiltinTransUnit_TransUnit(_env *LnsEnv, ctrl_info *Types_TransCtrlInfo,processInfo *Ast_ProcessInfo) {
+    self.namespace2Scope = NewLnsMap( map[LnsAny]LnsAny{})
+    self.processInfo = processInfo
+    self.scope = processInfo.FP.Get_topScope(_env)
+}
+
+
+func Lns_BuiltinTransUnit_init(_env *LnsEnv) {
+    if init_BuiltinTransUnit { return }
+    init_BuiltinTransUnit = true
+    BuiltinTransUnit__mod__ = "@lune.@base.@BuiltinTransUnit"
+    Lns_InitMod()
+    Lns_Types_init(_env)
+    Lns_Parser_init(_env)
+    Lns_Util_init(_env)
+    Lns_Ast_init(_env)
+    Lns_Nodes_init(_env)
+    Lns_TransUnitIF_init(_env)
+}
+func init() {
+    init_BuiltinTransUnit = false
 }

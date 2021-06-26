@@ -151,123 +151,6 @@ func GoMod_getGoMap(_env *LnsEnv) *GoMod_ModInfo {
 
 
 
-// declaration Class -- ModProjInfo
-type GoMod_ModProjInfoMtd interface {
-    Get_fullMod(_env *LnsEnv) string
-    Get_mod(_env *LnsEnv) string
-    Get_path(_env *LnsEnv) string
-    Get_projRoot(_env *LnsEnv) string
-}
-type GoMod_ModProjInfo struct {
-    path string
-    projRoot string
-    mod string
-    fullMod string
-    FP GoMod_ModProjInfoMtd
-}
-func GoMod_ModProjInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*GoMod_ModProjInfo).FP
-}
-type GoMod_ModProjInfoDownCast interface {
-    ToGoMod_ModProjInfo() *GoMod_ModProjInfo
-}
-func GoMod_ModProjInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(GoMod_ModProjInfoDownCast)
-    if ok { return work.ToGoMod_ModProjInfo() }
-    return nil
-}
-func (obj *GoMod_ModProjInfo) ToGoMod_ModProjInfo() *GoMod_ModProjInfo {
-    return obj
-}
-func NewGoMod_ModProjInfo(_env *LnsEnv, arg1 string, arg2 string, arg3 string, arg4 string) *GoMod_ModProjInfo {
-    obj := &GoMod_ModProjInfo{}
-    obj.FP = obj
-    obj.InitGoMod_ModProjInfo(_env, arg1, arg2, arg3, arg4)
-    return obj
-}
-func (self *GoMod_ModProjInfo) InitGoMod_ModProjInfo(_env *LnsEnv, arg1 string, arg2 string, arg3 string, arg4 string) {
-    self.path = arg1
-    self.projRoot = arg2
-    self.mod = arg3
-    self.fullMod = arg4
-}
-func (self *GoMod_ModProjInfo) Get_path(_env *LnsEnv) string{ return self.path }
-func (self *GoMod_ModProjInfo) Get_projRoot(_env *LnsEnv) string{ return self.projRoot }
-func (self *GoMod_ModProjInfo) Get_mod(_env *LnsEnv) string{ return self.mod }
-func (self *GoMod_ModProjInfo) Get_fullMod(_env *LnsEnv) string{ return self.fullMod }
-
-// declaration Class -- ModInfo
-type GoMod_ModInfoMtd interface {
-    ConvLocalModulePath(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny) LnsAny
-    convPath(_env *LnsEnv, arg1 string, arg2 string) string
-    getGoModPath(_env *LnsEnv, arg1 string, arg2 string) *LnsList
-    GetLatestProjRoot(_env *LnsEnv) LnsAny
-    getLocalModulePathList(_env *LnsEnv, arg1 string) *LnsList
-    GetLuaModulePath(_env *LnsEnv, arg1 string, arg2 LnsAny)(string, LnsAny, string)
-    getProjRootPath(_env *LnsEnv, arg1 string, arg2 string)(string, string)
-    Get_moduleMap(_env *LnsEnv) *LnsMap
-    Get_name(_env *LnsEnv) string
-    Get_replaceMap(_env *LnsEnv) *LnsMap
-}
-type GoMod_ModInfo struct {
-    name string
-    moduleMap *LnsMap
-    replaceMap *LnsMap
-    path2modProjInfo *LnsMap
-    goModDir2Path *LnsMap
-    latestModProjInfo LnsAny
-    FP GoMod_ModInfoMtd
-}
-func GoMod_ModInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*GoMod_ModInfo).FP
-}
-type GoMod_ModInfoDownCast interface {
-    ToGoMod_ModInfo() *GoMod_ModInfo
-}
-func GoMod_ModInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(GoMod_ModInfoDownCast)
-    if ok { return work.ToGoMod_ModInfo() }
-    return nil
-}
-func (obj *GoMod_ModInfo) ToGoMod_ModInfo() *GoMod_ModInfo {
-    return obj
-}
-func NewGoMod_ModInfo(_env *LnsEnv, arg1 string, arg2 *LnsMap, arg3 *LnsMap) *GoMod_ModInfo {
-    obj := &GoMod_ModInfo{}
-    obj.FP = obj
-    obj.InitGoMod_ModInfo(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *GoMod_ModInfo) Get_name(_env *LnsEnv) string{ return self.name }
-func (self *GoMod_ModInfo) Get_moduleMap(_env *LnsEnv) *LnsMap{ return self.moduleMap }
-func (self *GoMod_ModInfo) Get_replaceMap(_env *LnsEnv) *LnsMap{ return self.replaceMap }
-
-func Lns_GoMod_init(_env *LnsEnv) {
-    if init_GoMod { return }
-    init_GoMod = true
-    GoMod__mod__ = "@lune.@base.@GoMod"
-    Lns_InitMod()
-    Lns_Types_init(_env)
-    Lns_Util_init(_env)
-    Lns_LuaVer_init( _env )
-    Lns_Depend_init(_env)
-    Lns_Log_init(_env)
-}
-func init() {
-    init_GoMod = false
-}
 // 42: decl @lune.@base.@GoMod.ModInfo.getGoModPath
 func (self *GoMod_ModInfo) getGoModPath(_env *LnsEnv, ver string,mod string) *LnsList {
     var pathList *LnsList
@@ -297,28 +180,6 @@ func (self *GoMod_ModInfo) getGoModPath(_env *LnsEnv, ver string,mod string) *Ln
         }
     }
     return pathList
-}
-// 65: DeclConstr
-func (self *GoMod_ModInfo) InitGoMod_ModInfo(_env *LnsEnv, name string,moduleMap *LnsMap,replaceMap *LnsMap) {
-    self.name = name
-    self.moduleMap = moduleMap
-    self.replaceMap = replaceMap
-    self.goModDir2Path = NewLnsMap( map[LnsAny]LnsAny{})
-    self.path2modProjInfo = NewLnsMap( map[LnsAny]LnsAny{})
-    self.latestModProjInfo = nil
-    for _mod, _dst := range( replaceMap.Items ) {
-        mod := _mod.(string)
-        dst := _dst.(string)
-        self.goModDir2Path.Set(dst,mod)
-    }
-    for _mod, _ver := range( moduleMap.Items ) {
-        mod := _mod.(string)
-        ver := _ver.(string)
-        for _, _path := range( self.FP.getGoModPath(_env, ver, mod).Items ) {
-            path := _path.(string)
-            self.goModDir2Path.Set(path,mod)
-        }
-    }
 }
 // 83: decl @lune.@base.@GoMod.ModInfo.getLatestProjRoot
 func (self *GoMod_ModInfo) GetLatestProjRoot(_env *LnsEnv) LnsAny {
@@ -490,4 +351,144 @@ func (self *GoMod_ModInfo) GetLuaModulePath(_env *LnsEnv, mod string,baseDir Lns
         info = workInfo
     }
     return info.FP.Get_mod(_env), info.FP.Get_projRoot(_env), info.FP.Get_fullMod(_env)
+}
+// declaration Class -- ModProjInfo
+type GoMod_ModProjInfoMtd interface {
+    Get_fullMod(_env *LnsEnv) string
+    Get_mod(_env *LnsEnv) string
+    Get_path(_env *LnsEnv) string
+    Get_projRoot(_env *LnsEnv) string
+}
+type GoMod_ModProjInfo struct {
+    path string
+    projRoot string
+    mod string
+    fullMod string
+    FP GoMod_ModProjInfoMtd
+}
+func GoMod_ModProjInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*GoMod_ModProjInfo).FP
+}
+type GoMod_ModProjInfoDownCast interface {
+    ToGoMod_ModProjInfo() *GoMod_ModProjInfo
+}
+func GoMod_ModProjInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(GoMod_ModProjInfoDownCast)
+    if ok { return work.ToGoMod_ModProjInfo() }
+    return nil
+}
+func (obj *GoMod_ModProjInfo) ToGoMod_ModProjInfo() *GoMod_ModProjInfo {
+    return obj
+}
+func NewGoMod_ModProjInfo(_env *LnsEnv, arg1 string, arg2 string, arg3 string, arg4 string) *GoMod_ModProjInfo {
+    obj := &GoMod_ModProjInfo{}
+    obj.FP = obj
+    obj.InitGoMod_ModProjInfo(_env, arg1, arg2, arg3, arg4)
+    return obj
+}
+func (self *GoMod_ModProjInfo) InitGoMod_ModProjInfo(_env *LnsEnv, arg1 string, arg2 string, arg3 string, arg4 string) {
+    self.path = arg1
+    self.projRoot = arg2
+    self.mod = arg3
+    self.fullMod = arg4
+}
+func (self *GoMod_ModProjInfo) Get_path(_env *LnsEnv) string{ return self.path }
+func (self *GoMod_ModProjInfo) Get_projRoot(_env *LnsEnv) string{ return self.projRoot }
+func (self *GoMod_ModProjInfo) Get_mod(_env *LnsEnv) string{ return self.mod }
+func (self *GoMod_ModProjInfo) Get_fullMod(_env *LnsEnv) string{ return self.fullMod }
+
+// declaration Class -- ModInfo
+type GoMod_ModInfoMtd interface {
+    ConvLocalModulePath(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny) LnsAny
+    convPath(_env *LnsEnv, arg1 string, arg2 string) string
+    getGoModPath(_env *LnsEnv, arg1 string, arg2 string) *LnsList
+    GetLatestProjRoot(_env *LnsEnv) LnsAny
+    getLocalModulePathList(_env *LnsEnv, arg1 string) *LnsList
+    GetLuaModulePath(_env *LnsEnv, arg1 string, arg2 LnsAny)(string, LnsAny, string)
+    getProjRootPath(_env *LnsEnv, arg1 string, arg2 string)(string, string)
+    Get_moduleMap(_env *LnsEnv) *LnsMap
+    Get_name(_env *LnsEnv) string
+    Get_replaceMap(_env *LnsEnv) *LnsMap
+}
+type GoMod_ModInfo struct {
+    name string
+    moduleMap *LnsMap
+    replaceMap *LnsMap
+    path2modProjInfo *LnsMap
+    goModDir2Path *LnsMap
+    latestModProjInfo LnsAny
+    FP GoMod_ModInfoMtd
+}
+func GoMod_ModInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*GoMod_ModInfo).FP
+}
+type GoMod_ModInfoDownCast interface {
+    ToGoMod_ModInfo() *GoMod_ModInfo
+}
+func GoMod_ModInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(GoMod_ModInfoDownCast)
+    if ok { return work.ToGoMod_ModInfo() }
+    return nil
+}
+func (obj *GoMod_ModInfo) ToGoMod_ModInfo() *GoMod_ModInfo {
+    return obj
+}
+func NewGoMod_ModInfo(_env *LnsEnv, arg1 string, arg2 *LnsMap, arg3 *LnsMap) *GoMod_ModInfo {
+    obj := &GoMod_ModInfo{}
+    obj.FP = obj
+    obj.InitGoMod_ModInfo(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *GoMod_ModInfo) Get_name(_env *LnsEnv) string{ return self.name }
+func (self *GoMod_ModInfo) Get_moduleMap(_env *LnsEnv) *LnsMap{ return self.moduleMap }
+func (self *GoMod_ModInfo) Get_replaceMap(_env *LnsEnv) *LnsMap{ return self.replaceMap }
+// 65: DeclConstr
+func (self *GoMod_ModInfo) InitGoMod_ModInfo(_env *LnsEnv, name string,moduleMap *LnsMap,replaceMap *LnsMap) {
+    self.name = name
+    self.moduleMap = moduleMap
+    self.replaceMap = replaceMap
+    self.goModDir2Path = NewLnsMap( map[LnsAny]LnsAny{})
+    self.path2modProjInfo = NewLnsMap( map[LnsAny]LnsAny{})
+    self.latestModProjInfo = nil
+    for _mod, _dst := range( replaceMap.Items ) {
+        mod := _mod.(string)
+        dst := _dst.(string)
+        self.goModDir2Path.Set(dst,mod)
+    }
+    for _mod, _ver := range( moduleMap.Items ) {
+        mod := _mod.(string)
+        ver := _ver.(string)
+        for _, _path := range( self.FP.getGoModPath(_env, ver, mod).Items ) {
+            path := _path.(string)
+            self.goModDir2Path.Set(path,mod)
+        }
+    }
+}
+
+
+func Lns_GoMod_init(_env *LnsEnv) {
+    if init_GoMod { return }
+    init_GoMod = true
+    GoMod__mod__ = "@lune.@base.@GoMod"
+    Lns_InitMod()
+    Lns_Types_init(_env)
+    Lns_Util_init(_env)
+    Lns_LuaVer_init( _env )
+    Lns_Depend_init(_env)
+    Lns_Log_init(_env)
+}
+func init() {
+    init_GoMod = false
 }

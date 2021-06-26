@@ -8515,6 +8515,9 @@ end
 function DeclFuncInfo:get_stmtNum()
    return self.stmtNum
 end
+function DeclFuncInfo:set_stmtNum( stmtNum )
+   self.stmtNum = stmtNum
+end
 
 
 function DeclFuncInfo.createFrom( info, name, symbol )

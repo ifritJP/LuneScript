@@ -201,222 +201,6 @@ func AsyncParser_create(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,override
 
 
 
-// declaration Class -- AsyncItem
-type AsyncParser_AsyncItemMtd interface {
-    ToMap() *LnsMap
-}
-type AsyncParser_AsyncItem struct {
-    List *LnsList
-    FP AsyncParser_AsyncItemMtd
-}
-func AsyncParser_AsyncItem2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*AsyncParser_AsyncItem).FP
-}
-type AsyncParser_AsyncItemDownCast interface {
-    ToAsyncParser_AsyncItem() *AsyncParser_AsyncItem
-}
-func AsyncParser_AsyncItemDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(AsyncParser_AsyncItemDownCast)
-    if ok { return work.ToAsyncParser_AsyncItem() }
-    return nil
-}
-func (obj *AsyncParser_AsyncItem) ToAsyncParser_AsyncItem() *AsyncParser_AsyncItem {
-    return obj
-}
-func NewAsyncParser_AsyncItem(_env *LnsEnv, arg1 *LnsList) *AsyncParser_AsyncItem {
-    obj := &AsyncParser_AsyncItem{}
-    obj.FP = obj
-    obj.InitAsyncParser_AsyncItem(_env, arg1)
-    return obj
-}
-func (self *AsyncParser_AsyncItem) InitAsyncParser_AsyncItem(_env *LnsEnv, arg1 *LnsList) {
-    self.List = arg1
-}
-func (self *AsyncParser_AsyncItem) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["list"] = Lns_ToCollection( self.List )
-    return obj
-}
-func (self *AsyncParser_AsyncItem) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func AsyncParser_AsyncItem__fromMap(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return AsyncParser_AsyncItem_FromMap( arg1, paramList )
-}
-func AsyncParser_AsyncItem__fromStem(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return AsyncParser_AsyncItem_FromMap( arg1, paramList )
-}
-func AsyncParser_AsyncItem_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := AsyncParser_AsyncItem_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func AsyncParser_AsyncItem_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &AsyncParser_AsyncItem{}
-    newObj.FP = newObj
-    return AsyncParser_AsyncItem_FromMapMain( newObj, objMap, paramList )
-}
-func AsyncParser_AsyncItem_FromMapMain( newObj *AsyncParser_AsyncItem, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,conv,mess := Lns_ToListSub( objMap.Items["list"], false, []Lns_ToObjParam{Lns_ToObjParam{
-            Types_Token_FromMapSub, false,nil}}); !ok {
-       return false,nil,"list:" + mess.(string)
-    } else {
-       newObj.List = conv.(*LnsList)
-    }
-    return true, newObj, nil
-}
-func AsyncParser_AsyncItem__createPipe(_env *LnsEnv, arg1 LnsInt) LnsAny{
-   return NewLnspipe( arg1 )
-}
-
-// declaration Class -- Parser
-type AsyncParser_ParserMtd interface {
-    Access(_env *LnsEnv) LnsAny
-    addVal(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string, arg4 LnsInt)
-    analyzeNumber(_env *LnsEnv, arg1 string, arg2 LnsInt)(LnsInt, bool)
-    createInfo(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 LnsInt) *Types_Token
-    GetNext(_env *LnsEnv) LnsAny
-    Get_streamName(_env *LnsEnv) string
-    Parse(_env *LnsEnv) LnsAny
-    readLine(_env *LnsEnv) LnsAny
-    Run(_env *LnsEnv)
-    Setup(_env *LnsEnv)
-    Start(_env *LnsEnv)
-    Stop(_env *LnsEnv)
-}
-type AsyncParser_Parser struct {
-    Async_Pipe
-    streamName string
-    lineNo LnsInt
-    prevToken *Types_Token
-    keywordSet *LnsSet
-    typeSet *LnsSet
-    multiCharDelimitMap *LnsMap
-    luaMode bool
-    lineList *LnsList
-    firstLine bool
-    overridePos LnsAny
-    stream Lns_iStream
-    FP AsyncParser_ParserMtd
-}
-func AsyncParser_Parser2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*AsyncParser_Parser).FP
-}
-type AsyncParser_ParserDownCast interface {
-    ToAsyncParser_Parser() *AsyncParser_Parser
-}
-func AsyncParser_ParserDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(AsyncParser_ParserDownCast)
-    if ok { return work.ToAsyncParser_Parser() }
-    return nil
-}
-func (obj *AsyncParser_Parser) ToAsyncParser_Parser() *AsyncParser_Parser {
-    return obj
-}
-func NewAsyncParser_Parser(_env *LnsEnv, arg1 string, arg2 Lns_iStream, arg3 bool, arg4 LnsAny, arg5 LnsAny) *AsyncParser_Parser {
-    obj := &AsyncParser_Parser{}
-    obj.FP = obj
-    obj.Async_Pipe.FP = obj
-    obj.InitAsyncParser_Parser(_env, arg1, arg2, arg3, arg4, arg5)
-    return obj
-}
-func (self *AsyncParser_Parser) Get_streamName(_env *LnsEnv) string{ return self.streamName }
-
-// declaration Class -- Runner
-type AsyncParser_RunnerMtd interface {
-    GetLnsSyncFlag() *Lns_syncFlag
-    Get_errMess(_env *LnsEnv) string
-    Get_parser(_env *LnsEnv) LnsAny
-    Run(_env *LnsEnv)
-}
-type AsyncParser_Runner struct {
-    _syncFlag *Lns_syncFlag
-    parser LnsAny
-    errMess string
-    FP AsyncParser_RunnerMtd
-}
-func (self *AsyncParser_Runner) GetLnsSyncFlag() *Lns_syncFlag { return self._syncFlag }
-func AsyncParser_Runner2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*AsyncParser_Runner).FP
-}
-type AsyncParser_RunnerDownCast interface {
-    ToAsyncParser_Runner() *AsyncParser_Runner
-}
-func AsyncParser_RunnerDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(AsyncParser_RunnerDownCast)
-    if ok { return work.ToAsyncParser_Runner() }
-    return nil
-}
-func (obj *AsyncParser_Runner) ToAsyncParser_Runner() *AsyncParser_Runner {
-    return obj
-}
-func NewAsyncParser_Runner(_env *LnsEnv, arg1 LnsAny, arg2 LnsAny, arg3 LnsAny) *AsyncParser_Runner {
-    obj := &AsyncParser_Runner{}
-    obj.FP = obj
-    obj.InitAsyncParser_Runner(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *AsyncParser_Runner) Get_parser(_env *LnsEnv) LnsAny{ return self.parser }
-func (self *AsyncParser_Runner) Get_errMess(_env *LnsEnv) string{ return self.errMess }
-
-func Lns_AsyncParser_init(_env *LnsEnv) {
-    if init_AsyncParser { return }
-    init_AsyncParser = true
-    AsyncParser__mod__ = "@lune.@base.@AsyncParser"
-    Lns_InitMod()
-    Lns_Util_init(_env)
-    Lns_Types_init(_env)
-    Lns_Async_init(_env)
-    AsyncParser_luaKeywordSet = NewLnsSet([]LnsAny{"if", "else", "elseif", "while", "for", "in", "return", "break", "nil", "true", "false", "{", "}", "do", "require", "function", "then", "end", "repeat", "until", "goto", "local"})
-    AsyncParser_quotedCharSet = NewLnsSet([]LnsAny{"a", "b", "f", "n", "r", "t", "v", "\\", "\"", "'"})
-    AsyncParser_op2Set = NewLnsSet([]LnsAny{"+", "-", "*", "/", "^", "%", "&", "~", "|", "|>>", "|<<", "..", "<", "<=", ">", ">=", "==", "~=", "and", "or", "@", "@@", "@@@", "="})
-    AsyncParser_op1Set = NewLnsSet([]LnsAny{"-", "not", "#", "~", "*", "`", ",,", ",,,", ",,,,"})
-    AsyncParser_defaultPipeSize = 100
-}
-func init() {
-    init_AsyncParser = false
-}
-// 233: DeclConstr
-func (self *AsyncParser_Parser) InitAsyncParser_Parser(_env *LnsEnv, streamName string,stream Lns_iStream,luaMode bool,overridePos LnsAny,pipeSize LnsAny) {
-    self.InitAsync_Pipe(_env, AsyncParser_AsyncItem__createPipe(_env, Lns_unwrapDefault( pipeSize, AsyncParser_defaultPipeSize).(LnsInt)))
-    self.stream = stream
-    self.lineList = NewLnsList([]LnsAny{})
-    self.streamName = streamName
-    self.overridePos = overridePos
-    self.firstLine = true
-    self.lineNo = 0
-    self.prevToken = Types_noneToken
-    self.luaMode = luaMode
-    var keywordSet *LnsSet
-    var typeSet *LnsSet
-    var multiCharDelimitMap *LnsMap
-    keywordSet,typeSet,_,multiCharDelimitMap = AsyncParser_createReserveInfo_1_(_env, luaMode)
-    self.keywordSet = keywordSet
-    self.typeSet = typeSet
-    self.multiCharDelimitMap = multiCharDelimitMap
-}
 // 254: decl @lune.@base.@AsyncParser.Parser.setup
 func (self *AsyncParser_Parser) Setup(_env *LnsEnv) {
     var lineList *LnsList
@@ -901,6 +685,216 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
 // insert a dummy
     return nil
 }
+// 336: decl @lune.@base.@AsyncParser.Runner.run
+func (self *AsyncParser_Runner) Run(_env *LnsEnv) {
+    {
+        __exp := self.parser
+        if !Lns_IsNil( __exp ) {
+            _exp := __exp.(*AsyncParser_Parser)
+            _exp.FP.Run(_env)
+        }
+    }
+}
+// declaration Class -- AsyncItem
+type AsyncParser_AsyncItemMtd interface {
+    ToMap() *LnsMap
+}
+type AsyncParser_AsyncItem struct {
+    List *LnsList
+    FP AsyncParser_AsyncItemMtd
+}
+func AsyncParser_AsyncItem2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*AsyncParser_AsyncItem).FP
+}
+type AsyncParser_AsyncItemDownCast interface {
+    ToAsyncParser_AsyncItem() *AsyncParser_AsyncItem
+}
+func AsyncParser_AsyncItemDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(AsyncParser_AsyncItemDownCast)
+    if ok { return work.ToAsyncParser_AsyncItem() }
+    return nil
+}
+func (obj *AsyncParser_AsyncItem) ToAsyncParser_AsyncItem() *AsyncParser_AsyncItem {
+    return obj
+}
+func NewAsyncParser_AsyncItem(_env *LnsEnv, arg1 *LnsList) *AsyncParser_AsyncItem {
+    obj := &AsyncParser_AsyncItem{}
+    obj.FP = obj
+    obj.InitAsyncParser_AsyncItem(_env, arg1)
+    return obj
+}
+func (self *AsyncParser_AsyncItem) InitAsyncParser_AsyncItem(_env *LnsEnv, arg1 *LnsList) {
+    self.List = arg1
+}
+func (self *AsyncParser_AsyncItem) ToMapSetup( obj *LnsMap ) *LnsMap {
+    obj.Items["list"] = Lns_ToCollection( self.List )
+    return obj
+}
+func (self *AsyncParser_AsyncItem) ToMap() *LnsMap {
+    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
+}
+func AsyncParser_AsyncItem__fromMap(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return AsyncParser_AsyncItem_FromMap( arg1, paramList )
+}
+func AsyncParser_AsyncItem__fromStem(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return AsyncParser_AsyncItem_FromMap( arg1, paramList )
+}
+func AsyncParser_AsyncItem_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
+    _,conv,mess := AsyncParser_AsyncItem_FromMapSub(obj,false, paramList);
+    return conv,mess
+}
+func AsyncParser_AsyncItem_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    var objMap *LnsMap
+    if work, ok := obj.(*LnsMap); !ok {
+       return false, nil, "no map -- " + Lns_ToString(obj)
+    } else {
+       objMap = work
+    }
+    newObj := &AsyncParser_AsyncItem{}
+    newObj.FP = newObj
+    return AsyncParser_AsyncItem_FromMapMain( newObj, objMap, paramList )
+}
+func AsyncParser_AsyncItem_FromMapMain( newObj *AsyncParser_AsyncItem, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if ok,conv,mess := Lns_ToListSub( objMap.Items["list"], false, []Lns_ToObjParam{Lns_ToObjParam{
+            Types_Token_FromMapSub, false,nil}}); !ok {
+       return false,nil,"list:" + mess.(string)
+    } else {
+       newObj.List = conv.(*LnsList)
+    }
+    return true, newObj, nil
+}
+func AsyncParser_AsyncItem__createPipe(_env *LnsEnv, arg1 LnsInt) LnsAny{
+   return NewLnspipe( arg1 )
+}
+
+// declaration Class -- Parser
+type AsyncParser_ParserMtd interface {
+    Access(_env *LnsEnv) LnsAny
+    addVal(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string, arg4 LnsInt)
+    analyzeNumber(_env *LnsEnv, arg1 string, arg2 LnsInt)(LnsInt, bool)
+    createInfo(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 LnsInt) *Types_Token
+    GetNext(_env *LnsEnv) LnsAny
+    Get_streamName(_env *LnsEnv) string
+    Parse(_env *LnsEnv) LnsAny
+    readLine(_env *LnsEnv) LnsAny
+    Run(_env *LnsEnv)
+    Setup(_env *LnsEnv)
+    Start(_env *LnsEnv)
+    Stop(_env *LnsEnv)
+}
+type AsyncParser_Parser struct {
+    Async_Pipe
+    streamName string
+    lineNo LnsInt
+    prevToken *Types_Token
+    keywordSet *LnsSet
+    typeSet *LnsSet
+    multiCharDelimitMap *LnsMap
+    luaMode bool
+    lineList *LnsList
+    firstLine bool
+    overridePos LnsAny
+    stream Lns_iStream
+    FP AsyncParser_ParserMtd
+}
+func AsyncParser_Parser2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*AsyncParser_Parser).FP
+}
+type AsyncParser_ParserDownCast interface {
+    ToAsyncParser_Parser() *AsyncParser_Parser
+}
+func AsyncParser_ParserDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(AsyncParser_ParserDownCast)
+    if ok { return work.ToAsyncParser_Parser() }
+    return nil
+}
+func (obj *AsyncParser_Parser) ToAsyncParser_Parser() *AsyncParser_Parser {
+    return obj
+}
+func NewAsyncParser_Parser(_env *LnsEnv, arg1 string, arg2 Lns_iStream, arg3 bool, arg4 LnsAny, arg5 LnsAny) *AsyncParser_Parser {
+    obj := &AsyncParser_Parser{}
+    obj.FP = obj
+    obj.Async_Pipe.FP = obj
+    obj.InitAsyncParser_Parser(_env, arg1, arg2, arg3, arg4, arg5)
+    return obj
+}
+func (self *AsyncParser_Parser) Get_streamName(_env *LnsEnv) string{ return self.streamName }
+// 233: DeclConstr
+func (self *AsyncParser_Parser) InitAsyncParser_Parser(_env *LnsEnv, streamName string,stream Lns_iStream,luaMode bool,overridePos LnsAny,pipeSize LnsAny) {
+    self.InitAsync_Pipe(_env, AsyncParser_AsyncItem__createPipe(_env, Lns_unwrapDefault( pipeSize, AsyncParser_defaultPipeSize).(LnsInt)))
+    self.stream = stream
+    self.lineList = NewLnsList([]LnsAny{})
+    self.streamName = streamName
+    self.overridePos = overridePos
+    self.firstLine = true
+    self.lineNo = 0
+    self.prevToken = Types_noneToken
+    self.luaMode = luaMode
+    var keywordSet *LnsSet
+    var typeSet *LnsSet
+    var multiCharDelimitMap *LnsMap
+    keywordSet,typeSet,_,multiCharDelimitMap = AsyncParser_createReserveInfo_1_(_env, luaMode)
+    self.keywordSet = keywordSet
+    self.typeSet = typeSet
+    self.multiCharDelimitMap = multiCharDelimitMap
+}
+
+
+
+// declaration Class -- Runner
+type AsyncParser_RunnerMtd interface {
+    GetLnsSyncFlag() *Lns_syncFlag
+    Get_errMess(_env *LnsEnv) string
+    Get_parser(_env *LnsEnv) LnsAny
+    Run(_env *LnsEnv)
+}
+type AsyncParser_Runner struct {
+    _syncFlag *Lns_syncFlag
+    parser LnsAny
+    errMess string
+    FP AsyncParser_RunnerMtd
+}
+func (self *AsyncParser_Runner) GetLnsSyncFlag() *Lns_syncFlag { return self._syncFlag }
+func AsyncParser_Runner2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*AsyncParser_Runner).FP
+}
+type AsyncParser_RunnerDownCast interface {
+    ToAsyncParser_Runner() *AsyncParser_Runner
+}
+func AsyncParser_RunnerDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(AsyncParser_RunnerDownCast)
+    if ok { return work.ToAsyncParser_Runner() }
+    return nil
+}
+func (obj *AsyncParser_Runner) ToAsyncParser_Runner() *AsyncParser_Runner {
+    return obj
+}
+func NewAsyncParser_Runner(_env *LnsEnv, arg1 LnsAny, arg2 LnsAny, arg3 LnsAny) *AsyncParser_Runner {
+    obj := &AsyncParser_Runner{}
+    obj.FP = obj
+    obj.InitAsyncParser_Runner(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *AsyncParser_Runner) Get_parser(_env *LnsEnv) LnsAny{ return self.parser }
+func (self *AsyncParser_Runner) Get_errMess(_env *LnsEnv) string{ return self.errMess }
 // 321: DeclConstr
 func (self *AsyncParser_Runner) InitAsyncParser_Runner(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny) {
     self._syncFlag = &Lns_syncFlag{}
@@ -916,13 +910,22 @@ func (self *AsyncParser_Runner) InitAsyncParser_Runner(_env *LnsEnv, parserSrc L
         }
     }
 }
-// 336: decl @lune.@base.@AsyncParser.Runner.run
-func (self *AsyncParser_Runner) Run(_env *LnsEnv) {
-    {
-        __exp := self.parser
-        if !Lns_IsNil( __exp ) {
-            _exp := __exp.(*AsyncParser_Parser)
-            _exp.FP.Run(_env)
-        }
-    }
+
+
+func Lns_AsyncParser_init(_env *LnsEnv) {
+    if init_AsyncParser { return }
+    init_AsyncParser = true
+    AsyncParser__mod__ = "@lune.@base.@AsyncParser"
+    Lns_InitMod()
+    Lns_Util_init(_env)
+    Lns_Types_init(_env)
+    Lns_Async_init(_env)
+    AsyncParser_luaKeywordSet = NewLnsSet([]LnsAny{"if", "else", "elseif", "while", "for", "in", "return", "break", "nil", "true", "false", "{", "}", "do", "require", "function", "then", "end", "repeat", "until", "goto", "local"})
+    AsyncParser_quotedCharSet = NewLnsSet([]LnsAny{"a", "b", "f", "n", "r", "t", "v", "\\", "\"", "'"})
+    AsyncParser_op2Set = NewLnsSet([]LnsAny{"+", "-", "*", "/", "^", "%", "&", "~", "|", "|>>", "|<<", "..", "<", "<=", ">", ">=", "==", "~=", "and", "or", "@", "@@", "@@@", "="})
+    AsyncParser_op1Set = NewLnsSet([]LnsAny{"-", "not", "#", "~", "*", "`", ",,", ",,,", ",,,,"})
+    AsyncParser_defaultPipeSize = 100
+}
+func init() {
+    init_AsyncParser = false
 }

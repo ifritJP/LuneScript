@@ -29,14 +29,12 @@ import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.AstInfo;
-//import lune.base.LuaMod;
 import lune.base.LuaVer;
 import lune.base.Parser;
 import lune.base.LuneControl;
 import lune.base.Types;
 import lune.base.Option as LnsOpt;
 import lune.base.Builtin;
-//import lune.base.NodeIndexer;
 
 let MaxNilAccNum = 3;
 
@@ -1793,23 +1791,25 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
    self.module2PackSym[ info.$moduleTypeInfo ] = packSym;
 }
 
-class DeclFieldInfo {
+class ProcessDeclMethodItem {
    let classNode:&Nodes.DeclClassNode {pub};
-   let fieldNode:&Nodes.Node {pub};
+   let fieldNode:&Nodes.DeclMethodNode {pub};
 }
 
-fn convFilter.processMethodAsync( nodeList:&List<&Nodes.DeclClassNode> ) mut {
-
-   let declFuncNodeList:List<&DeclFieldInfo> = [];
+fn convFilter.processMethodAsync(
+   nodeList:&List<&Nodes.DeclClassNode> ) mut
+{
+   let mut totalStmtNum = 0;
+   let declMethodNodeList:List<&ProcessDeclMethodItem> = [];
    foreach workNode in nodeList {
       if self.enableTest or not workNode.$inTestBlock and not workNode.isModule() {
          switch workNode.$expType.$kind {
             case .Class {
                foreach fieldNode in workNode.$fieldList {
-                  if fieldNode@@@Nodes.DeclMemberNode {
-                     // ここではメンバーを処理しない
-                  } else {
-                     declFuncNodeList.insert( new DeclFieldInfo( workNode, fieldNode ) );
+                  if! let declMethodNode = fieldNode@@@Nodes.DeclMethodNode {
+                     declMethodNodeList.insert(
+                        new ProcessDeclMethodItem( workNode, declMethodNode ) );
+                     totalStmtNum = totalStmtNum + declMethodNode.$declInfo.$stmtNum;
                   }
                }
             }
@@ -1817,11 +1817,42 @@ fn convFilter.processMethodAsync( nodeList:&List<&Nodes.DeclClassNode> ) mut {
       }
    }
 
-   __lns.runtime.log( "class fields (%d)" (#declFuncNodeList) );
+   __lns.runtime.log( "class fields (%d)" (#declMethodNodeList) );
+
+   let divList:List<&List<&ProcessDeclMethodItem>> = [];
+
+   // declMethodNodeList を divList に分割
+   let divCount = 3;
+   if divCount > 0 {
+      let maxStmtCount = ( totalStmtNum + divCount - 1 ) / divCount;
+      let mut offset = 1;
+      let len = #declMethodNodeList;
+
+      for _ = 1, divCount {
+         let list:List<&ProcessDeclMethodItem> = [];
+         let mut stmtCount = 0;
+         while offset <= len {
+            let declFieldInfo = declMethodNodeList[ offset ];
+            offset = offset + 1;
+            list.insert( declFieldInfo );
+            let declMethodNode = declFieldInfo.$fieldNode;
+            stmtCount = stmtCount + declMethodNode.$declInfo.$stmtNum;
+            if stmtCount >= maxStmtCount {
+               break;
+            }
+         }
+         divList.insert( list );
+      }
+   }
+   
    
    self.pushProcessMode( .DeclClass );
-   foreach info in declFuncNodeList {
-      filter( info.$fieldNode, self, info.$classNode );
+   // 分割した divList を処理
+   foreach list in divList {
+      __lns.runtime.log( "class fields div (%d)" (#list) );
+      foreach info in list {
+         filter( info.$fieldNode, self, info.$classNode );
+      }
    }
    self.popProcessMode();
 }
@@ -1829,18 +1860,6 @@ fn convFilter.processMethodAsync( nodeList:&List<&Nodes.DeclClassNode> ) mut {
 pub override fn convFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
-   // __lns.runtime.log( "NodeIndexer.start" );
-   // self.indexer.start( node, (@
-   //                             Nodes.NodeKind.$Switch,
-   //                             Nodes.NodeKind.$Match,
-   //                             Nodes.NodeKind.$For,
-   //                             Nodes.NodeKind.$Foreach,
-   //                             Nodes.NodeKind.$Forsort,
-   //                             Nodes.NodeKind.$Apply
-   // ));
-   // __lns.runtime.log( "NodeIndexer.stop" );
-
-   
    foreach importNode in node.$nodeManager.getImportNodeList() {
       let info = importNode.$info;
       self.moduleType2SymbolMap[ info.$moduleTypeInfo ] = info.$symbolInfo;
@@ -2084,9 +2103,10 @@ pub override fn convFilter.processRoot(
             } );
    self.popProcessMode();
 
-   __lns.runtime.log( "start class" );
-
-   self.pushProcessMode( .DeclClass );
+   self.processMethodAsync(
+      node.$nodeManager.getDeclClassNodeList() );
+   
+    self.pushProcessMode( .DeclClass );
    _filter( node.$nodeManager.getDeclClassNodeList(),
             fn ( workNode:&Nodes.Node ) {
                filter( workNode, self, node );
@@ -2166,9 +2186,6 @@ pub override fn convFilter.processRoot(
    self.writeln( "%s = false" (initModVar) );
    self.popIndent();
    self.writeln( "}" );
-
-
-   self.processMethodAsync( node.$nodeManager.getDeclClassNodeList() );
 }
 
 pub override fn convFilter.processSubfile(
@@ -4611,14 +4628,18 @@ pub override fn convFilter.processDeclClass(
                self.outputAsyncItem( node );
             }
 
-            // foreach fieldNode in node.$fieldList {
-            //    if fieldNode@@@Nodes.DeclMemberNode {
-            //       // ここではメンバーを処理しない
-            //    } else {
-            //       filter( fieldNode, self, node );
-            //       self.writeln( "" );
-            //    }
-            // }
+            foreach fieldNode in node.$fieldList {
+               switch fieldNode.$kind {
+                  case Nodes.NodeKind.$DeclMember, Nodes.NodeKind.$DeclMethod
+                  {
+                     // ここでは処理しない
+                  }
+                  default {
+                     filter( fieldNode, self, node );
+                     self.writeln( "" );
+                  }
+               }
+            }
          }
          case .IF {
             self.outputInterfaceType( node );

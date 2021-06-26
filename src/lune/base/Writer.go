@@ -35,178 +35,6 @@ func Writer_convExp0_1253(arg1 []LnsAny) string {
 func Writer_convExp0_1271(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-type Writer_Writer interface {
-        EndElement(_env *LnsEnv)
-        Fin(_env *LnsEnv)
-        StartElement(_env *LnsEnv, arg1 string)
-        StartParent(_env *LnsEnv, arg1 string, arg2 bool)
-        Write(_env *LnsEnv, arg1 string, arg2 LnsAny)
-        WriteValue(_env *LnsEnv, arg1 LnsAny)
-}
-func Lns_cast2Writer_Writer( obj LnsAny ) LnsAny {
-    if _, ok := obj.(Writer_Writer); ok { 
-        return obj
-    }
-    return nil
-}
-
-// declaration Class -- XML
-type Writer_XMLMtd interface {
-    EndElement(_env *LnsEnv)
-    Fin(_env *LnsEnv)
-    StartElement(_env *LnsEnv, arg1 string)
-    StartParent(_env *LnsEnv, arg1 string, arg2 bool)
-    Write(_env *LnsEnv, arg1 string, arg2 LnsAny)
-    WriteValue(_env *LnsEnv, arg1 LnsAny)
-}
-type Writer_XML struct {
-    stream Lns_oStream
-    elementList *LnsList
-    depth LnsInt
-    FP Writer_XMLMtd
-}
-func Writer_XML2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Writer_XML).FP
-}
-type Writer_XMLDownCast interface {
-    ToWriter_XML() *Writer_XML
-}
-func Writer_XMLDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Writer_XMLDownCast)
-    if ok { return work.ToWriter_XML() }
-    return nil
-}
-func (obj *Writer_XML) ToWriter_XML() *Writer_XML {
-    return obj
-}
-func NewWriter_XML(_env *LnsEnv, arg1 Lns_oStream) *Writer_XML {
-    obj := &Writer_XML{}
-    obj.FP = obj
-    obj.InitWriter_XML(_env, arg1)
-    return obj
-}
-
-// declaration Class -- JsonLayer
-type Writer_JsonLayerMtd interface {
-}
-type Writer_JsonLayer struct {
-    State string
-    ArrayFlag bool
-    Name string
-    MadeByArrayFlag bool
-    ElementNameSet *LnsSet
-    ParentFlag bool
-    OpenElement bool
-    FP Writer_JsonLayerMtd
-}
-func Writer_JsonLayer2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Writer_JsonLayer).FP
-}
-type Writer_JsonLayerDownCast interface {
-    ToWriter_JsonLayer() *Writer_JsonLayer
-}
-func Writer_JsonLayerDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Writer_JsonLayerDownCast)
-    if ok { return work.ToWriter_JsonLayer() }
-    return nil
-}
-func (obj *Writer_JsonLayer) ToWriter_JsonLayer() *Writer_JsonLayer {
-    return obj
-}
-func NewWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet, arg6 bool, arg7 bool) *Writer_JsonLayer {
-    obj := &Writer_JsonLayer{}
-    obj.FP = obj
-    obj.InitWriter_JsonLayer(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Writer_JsonLayer) InitWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet, arg6 bool, arg7 bool) {
-    self.State = arg1
-    self.ArrayFlag = arg2
-    self.Name = arg3
-    self.MadeByArrayFlag = arg4
-    self.ElementNameSet = arg5
-    self.ParentFlag = arg6
-    self.OpenElement = arg7
-}
-
-// declaration Class -- JSON
-type Writer_JSONMtd interface {
-    AddElementName(_env *LnsEnv, arg1 string)
-    EndElement(_env *LnsEnv)
-    EndLayer(_env *LnsEnv)
-    EqualLayerState(_env *LnsEnv, arg1 string) bool
-    Fin(_env *LnsEnv)
-    getLayerInfo(_env *LnsEnv) LnsAny
-    GetLayerName(_env *LnsEnv) string
-    IsArrayLayer(_env *LnsEnv) bool
-    SetLayerState(_env *LnsEnv, arg1 string)
-    StartElement(_env *LnsEnv, arg1 string)
-    startLayer(_env *LnsEnv, arg1 bool, arg2 bool)
-    StartParent(_env *LnsEnv, arg1 string, arg2 bool)
-    Write(_env *LnsEnv, arg1 string, arg2 LnsAny)
-    WriteValue(_env *LnsEnv, arg1 LnsAny)
-}
-type Writer_JSON struct {
-    stream Lns_oStream
-    layerQueue *LnsList
-    prevName string
-    FP Writer_JSONMtd
-}
-func Writer_JSON2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Writer_JSON).FP
-}
-type Writer_JSONDownCast interface {
-    ToWriter_JSON() *Writer_JSON
-}
-func Writer_JSONDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Writer_JSONDownCast)
-    if ok { return work.ToWriter_JSON() }
-    return nil
-}
-func (obj *Writer_JSON) ToWriter_JSON() *Writer_JSON {
-    return obj
-}
-func NewWriter_JSON(_env *LnsEnv, arg1 Lns_oStream) *Writer_JSON {
-    obj := &Writer_JSON{}
-    obj.FP = obj
-    obj.InitWriter_JSON(_env, arg1)
-    return obj
-}
-
-func Lns_Writer_init(_env *LnsEnv) {
-    if init_Writer { return }
-    init_Writer = true
-    Writer__mod__ = "@lune.@base.@Writer"
-    Lns_InitMod()
-    Lns_Util_init(_env)
-}
-func init() {
-    init_Writer = false
-}
-// 43: DeclConstr
-func (self *Writer_XML) InitWriter_XML(_env *LnsEnv, stream Lns_oStream) {
-    self.stream = stream
-    self.elementList = NewLnsList([]LnsAny{})
-    self.depth = 0
-}
 // 49: decl @lune.@base.@Writer.XML.convertXmlTxt
 func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
     if val == ""{
@@ -268,13 +96,6 @@ func (self *Writer_JSON) startLayer(_env *LnsEnv, arrayFlag bool,madeByArrayFlag
         _env.SetStackVal( arrayFlag) &&
         _env.SetStackVal( "[") ||
         _env.SetStackVal( "{") ).(string))
-}
-// 128: DeclConstr
-func (self *Writer_JSON) InitWriter_JSON(_env *LnsEnv, stream Lns_oStream) {
-    self.stream = stream
-    self.layerQueue = NewLnsList([]LnsAny{})
-    self.prevName = ""
-    self.FP.startLayer(_env, false, false)
 }
 // 135: decl @lune.@base.@Writer.JSON.getLayerInfo
 func (self *Writer_JSON) getLayerInfo(_env *LnsEnv) LnsAny {
@@ -446,4 +267,185 @@ func (self *Writer_JSON) Fin(_env *LnsEnv) {
     } else { 
         Util_err(_env, "illegal")
     }
+}
+type Writer_Writer interface {
+        EndElement(_env *LnsEnv)
+        Fin(_env *LnsEnv)
+        StartElement(_env *LnsEnv, arg1 string)
+        StartParent(_env *LnsEnv, arg1 string, arg2 bool)
+        Write(_env *LnsEnv, arg1 string, arg2 LnsAny)
+        WriteValue(_env *LnsEnv, arg1 LnsAny)
+}
+func Lns_cast2Writer_Writer( obj LnsAny ) LnsAny {
+    if _, ok := obj.(Writer_Writer); ok { 
+        return obj
+    }
+    return nil
+}
+
+// declaration Class -- XML
+type Writer_XMLMtd interface {
+    EndElement(_env *LnsEnv)
+    Fin(_env *LnsEnv)
+    StartElement(_env *LnsEnv, arg1 string)
+    StartParent(_env *LnsEnv, arg1 string, arg2 bool)
+    Write(_env *LnsEnv, arg1 string, arg2 LnsAny)
+    WriteValue(_env *LnsEnv, arg1 LnsAny)
+}
+type Writer_XML struct {
+    stream Lns_oStream
+    elementList *LnsList
+    depth LnsInt
+    FP Writer_XMLMtd
+}
+func Writer_XML2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Writer_XML).FP
+}
+type Writer_XMLDownCast interface {
+    ToWriter_XML() *Writer_XML
+}
+func Writer_XMLDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Writer_XMLDownCast)
+    if ok { return work.ToWriter_XML() }
+    return nil
+}
+func (obj *Writer_XML) ToWriter_XML() *Writer_XML {
+    return obj
+}
+func NewWriter_XML(_env *LnsEnv, arg1 Lns_oStream) *Writer_XML {
+    obj := &Writer_XML{}
+    obj.FP = obj
+    obj.InitWriter_XML(_env, arg1)
+    return obj
+}
+// 43: DeclConstr
+func (self *Writer_XML) InitWriter_XML(_env *LnsEnv, stream Lns_oStream) {
+    self.stream = stream
+    self.elementList = NewLnsList([]LnsAny{})
+    self.depth = 0
+}
+
+
+// declaration Class -- JsonLayer
+type Writer_JsonLayerMtd interface {
+}
+type Writer_JsonLayer struct {
+    State string
+    ArrayFlag bool
+    Name string
+    MadeByArrayFlag bool
+    ElementNameSet *LnsSet
+    ParentFlag bool
+    OpenElement bool
+    FP Writer_JsonLayerMtd
+}
+func Writer_JsonLayer2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Writer_JsonLayer).FP
+}
+type Writer_JsonLayerDownCast interface {
+    ToWriter_JsonLayer() *Writer_JsonLayer
+}
+func Writer_JsonLayerDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Writer_JsonLayerDownCast)
+    if ok { return work.ToWriter_JsonLayer() }
+    return nil
+}
+func (obj *Writer_JsonLayer) ToWriter_JsonLayer() *Writer_JsonLayer {
+    return obj
+}
+func NewWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet, arg6 bool, arg7 bool) *Writer_JsonLayer {
+    obj := &Writer_JsonLayer{}
+    obj.FP = obj
+    obj.InitWriter_JsonLayer(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Writer_JsonLayer) InitWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet, arg6 bool, arg7 bool) {
+    self.State = arg1
+    self.ArrayFlag = arg2
+    self.Name = arg3
+    self.MadeByArrayFlag = arg4
+    self.ElementNameSet = arg5
+    self.ParentFlag = arg6
+    self.OpenElement = arg7
+}
+
+// declaration Class -- JSON
+type Writer_JSONMtd interface {
+    AddElementName(_env *LnsEnv, arg1 string)
+    EndElement(_env *LnsEnv)
+    EndLayer(_env *LnsEnv)
+    EqualLayerState(_env *LnsEnv, arg1 string) bool
+    Fin(_env *LnsEnv)
+    getLayerInfo(_env *LnsEnv) LnsAny
+    GetLayerName(_env *LnsEnv) string
+    IsArrayLayer(_env *LnsEnv) bool
+    SetLayerState(_env *LnsEnv, arg1 string)
+    StartElement(_env *LnsEnv, arg1 string)
+    startLayer(_env *LnsEnv, arg1 bool, arg2 bool)
+    StartParent(_env *LnsEnv, arg1 string, arg2 bool)
+    Write(_env *LnsEnv, arg1 string, arg2 LnsAny)
+    WriteValue(_env *LnsEnv, arg1 LnsAny)
+}
+type Writer_JSON struct {
+    stream Lns_oStream
+    layerQueue *LnsList
+    prevName string
+    FP Writer_JSONMtd
+}
+func Writer_JSON2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Writer_JSON).FP
+}
+type Writer_JSONDownCast interface {
+    ToWriter_JSON() *Writer_JSON
+}
+func Writer_JSONDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Writer_JSONDownCast)
+    if ok { return work.ToWriter_JSON() }
+    return nil
+}
+func (obj *Writer_JSON) ToWriter_JSON() *Writer_JSON {
+    return obj
+}
+func NewWriter_JSON(_env *LnsEnv, arg1 Lns_oStream) *Writer_JSON {
+    obj := &Writer_JSON{}
+    obj.FP = obj
+    obj.InitWriter_JSON(_env, arg1)
+    return obj
+}
+// 128: DeclConstr
+func (self *Writer_JSON) InitWriter_JSON(_env *LnsEnv, stream Lns_oStream) {
+    self.stream = stream
+    self.layerQueue = NewLnsList([]LnsAny{})
+    self.prevName = ""
+    self.FP.startLayer(_env, false, false)
+}
+
+
+func Lns_Writer_init(_env *LnsEnv) {
+    if init_Writer { return }
+    init_Writer = true
+    Writer__mod__ = "@lune.@base.@Writer"
+    Lns_InitMod()
+    Lns_Util_init(_env)
+}
+func init() {
+    init_Writer = false
 }

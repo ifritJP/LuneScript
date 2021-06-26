@@ -609,350 +609,6 @@ func Builtin_registBuiltInScope__processCopyAlterList_0_(_env *LnsEnv, alterList
     }
 }
 
-// declaration Class -- Builtin
-type Builtin_BuiltinMtd interface {
-    getTypeInfo(_env *LnsEnv, arg1 string) *Ast_TypeInfo
-    processField(_env *LnsEnv, arg1 string, arg2 string, arg3 *LnsMap, arg4 *Ast_TypeInfo)
-    RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFuncType
-    registClass(_env *LnsEnv, arg1 *LnsList, arg2 *LnsMap, arg3 *Types_Position, arg4 *LnsList) *Ast_TypeInfo
-}
-type Builtin_Builtin struct {
-    transUnit *BuiltinTransUnit_TransUnit
-    targetLuaVer *LuaVer_LuaVerInfo
-    ctrl_info *Types_TransCtrlInfo
-    processInfo *Ast_ProcessInfo
-    modifier *TransUnitIF_Modifier
-    hasLuaval bool
-    FP Builtin_BuiltinMtd
-}
-func Builtin_Builtin2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Builtin_Builtin).FP
-}
-type Builtin_BuiltinDownCast interface {
-    ToBuiltin_Builtin() *Builtin_Builtin
-}
-func Builtin_BuiltinDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Builtin_BuiltinDownCast)
-    if ok { return work.ToBuiltin_Builtin() }
-    return nil
-}
-func (obj *Builtin_Builtin) ToBuiltin_Builtin() *Builtin_Builtin {
-    return obj
-}
-func NewBuiltin_Builtin(_env *LnsEnv, arg1 *LuaVer_LuaVerInfo, arg2 *Types_TransCtrlInfo) *Builtin_Builtin {
-    obj := &Builtin_Builtin{}
-    obj.FP = obj
-    obj.InitBuiltin_Builtin(_env, arg1, arg2)
-    return obj
-}
-
-// declaration Class -- BuiltinFuncType
-type Builtin_BuiltinFuncTypeMtd interface {
-    addLuavalFunc(_env *LnsEnv, arg1 *Ast_TypeInfo)
-    Get_allClass(_env *LnsEnv) *LnsList
-    Get_allFuncTypeSet(_env *LnsEnv) *LnsSet
-    Get_allSymbol(_env *LnsEnv) *LnsList
-    Get_allSymbolSet(_env *LnsEnv) *LnsSet
-    Get_needThreadingTypes(_env *LnsEnv) *LnsSet
-    IsLuavalFunc(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    IsStrFormFunc(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    Register(_env *LnsEnv, arg1 *Ast_SymbolInfo)
-    RegisterClass(_env *LnsEnv, arg1 *Ast_TypeInfo)
-}
-type Builtin_BuiltinFuncType struct {
-    Lns_ *Ast_TypeInfo
-    Lns___join *Ast_TypeInfo
-    Lns___join_sym *Ast_SymbolInfo
-    Lns___run *Ast_TypeInfo
-    Lns___run_sym *Ast_SymbolInfo
-    Lns__fcall *Ast_TypeInfo
-    Lns__fcall_sym *Ast_SymbolInfo
-    Lns__kind *Ast_TypeInfo
-    Lns__kind_sym *Ast_SymbolInfo
-    Lns__load *Ast_TypeInfo
-    Lns__load_sym *Ast_SymbolInfo
-    Lns_collectgarbage *Ast_TypeInfo
-    Lns_collectgarbage_sym *Ast_SymbolInfo
-    Lns_error *Ast_TypeInfo
-    Lns_error_sym *Ast_SymbolInfo
-    Lns_expandLuavalMap *Ast_TypeInfo
-    Lns_expandLuavalMap_sym *Ast_SymbolInfo
-    Lns_loadfile *Ast_TypeInfo
-    Lns_loadfile_sym *Ast_SymbolInfo
-    Lns_print *Ast_TypeInfo
-    Lns_print_sym *Ast_SymbolInfo
-    Lns_require *Ast_TypeInfo
-    Lns_require_sym *Ast_SymbolInfo
-    Lns_tonumber *Ast_TypeInfo
-    Lns_tonumber_sym *Ast_SymbolInfo
-    Lns_tostring *Ast_TypeInfo
-    Lns_tostring_sym *Ast_SymbolInfo
-    Lns_type *Ast_TypeInfo
-    Lns_type_sym *Ast_SymbolInfo
-    Istream_ *Ast_TypeInfo
-    Istream_close *Ast_TypeInfo
-    Istream_close_sym *Ast_SymbolInfo
-    Istream_read *Ast_TypeInfo
-    Istream_read_sym *Ast_SymbolInfo
-    Ostream_ *Ast_TypeInfo
-    Ostream_close *Ast_TypeInfo
-    Ostream_close_sym *Ast_SymbolInfo
-    Ostream_flush *Ast_TypeInfo
-    Ostream_flush_sym *Ast_SymbolInfo
-    Ostream_write *Ast_TypeInfo
-    Ostream_write_sym *Ast_SymbolInfo
-    G__lns_runmode_ *Ast_TypeInfo
-    G__lns_runmode_Queue *Ast_TypeInfo
-    G__lns_runmode_Queue_sym *Ast_SymbolInfo
-    G__lns_runmode_Skip *Ast_TypeInfo
-    G__lns_runmode_Skip_sym *Ast_SymbolInfo
-    G__lns_runmode_Sync *Ast_TypeInfo
-    G__lns_runmode_Sync_sym *Ast_SymbolInfo
-    G__lns_runtime_ *Ast_TypeInfo
-    G__lns_runtime_dumpLog *Ast_TypeInfo
-    G__lns_runtime_dumpLog_sym *Ast_SymbolInfo
-    G__lns_runtime_enableLog *Ast_TypeInfo
-    G__lns_runtime_enableLog_sym *Ast_SymbolInfo
-    G__lns_runtime_log *Ast_TypeInfo
-    G__lns_runtime_log_sym *Ast_SymbolInfo
-    G__lns_capability_ *Ast_TypeInfo
-    G__lns_capability_async *Ast_TypeInfo
-    G__lns_capability_async_sym *Ast_SymbolInfo
-    G__lns_sync_flag_ *Ast_TypeInfo
-    G__lns_sync_flag_set *Ast_TypeInfo
-    G__lns_sync_flag_set_sym *Ast_SymbolInfo
-    G__lns_sync_flag_wait *Ast_TypeInfo
-    G__lns_sync_flag_wait_sym *Ast_SymbolInfo
-    G__lns_sync_ *Ast_TypeInfo
-    G__lns_sync_createFlag *Ast_TypeInfo
-    G__lns_sync_createFlag_sym *Ast_SymbolInfo
-    G__lns_sync_createProcesser *Ast_TypeInfo
-    G__lns_sync_createProcesser_sym *Ast_SymbolInfo
-    Luastream_ *Ast_TypeInfo
-    Luastream_close *Ast_TypeInfo
-    Luastream_close_sym *Ast_SymbolInfo
-    Luastream_flush *Ast_TypeInfo
-    Luastream_flush_sym *Ast_SymbolInfo
-    Luastream_read *Ast_TypeInfo
-    Luastream_read_sym *Ast_SymbolInfo
-    Luastream_seek *Ast_TypeInfo
-    Luastream_seek_sym *Ast_SymbolInfo
-    Luastream_write *Ast_TypeInfo
-    Luastream_write_sym *Ast_SymbolInfo
-    Mapping_ *Ast_TypeInfo
-    Mapping__toMap *Ast_TypeInfo
-    Mapping__toMap_sym *Ast_SymbolInfo
-    G__runner_ *Ast_TypeInfo
-    G__runner_run *Ast_TypeInfo
-    G__runner_run_sym *Ast_SymbolInfo
-    G__processor_ *Ast_TypeInfo
-    G__processor_end *Ast_TypeInfo
-    G__processor_end_sym *Ast_SymbolInfo
-    G__pipe_ *Ast_TypeInfo
-    G__pipe_get *Ast_TypeInfo
-    G__pipe_get_sym *Ast_SymbolInfo
-    G__pipe_put *Ast_TypeInfo
-    G__pipe_put_sym *Ast_SymbolInfo
-    Io_ *Ast_TypeInfo
-    Io_open *Ast_TypeInfo
-    Io_open_sym *Ast_SymbolInfo
-    Io_popen *Ast_TypeInfo
-    Io_popen_sym *Ast_SymbolInfo
-    Io_stderr *Ast_TypeInfo
-    Io_stderr_sym *Ast_SymbolInfo
-    Io_stdin *Ast_TypeInfo
-    Io_stdin_sym *Ast_SymbolInfo
-    Io_stdout *Ast_TypeInfo
-    Io_stdout_sym *Ast_SymbolInfo
-    Package_ *Ast_TypeInfo
-    Package_path *Ast_TypeInfo
-    Package_path_sym *Ast_SymbolInfo
-    Package_searchpath *Ast_TypeInfo
-    Package_searchpath_sym *Ast_SymbolInfo
-    Os_ *Ast_TypeInfo
-    Os_clock *Ast_TypeInfo
-    Os_clock_sym *Ast_SymbolInfo
-    Os_date *Ast_TypeInfo
-    Os_date_sym *Ast_SymbolInfo
-    Os_difftime *Ast_TypeInfo
-    Os_difftime_sym *Ast_SymbolInfo
-    Os_exit *Ast_TypeInfo
-    Os_exit_sym *Ast_SymbolInfo
-    Os_remove *Ast_TypeInfo
-    Os_remove_sym *Ast_SymbolInfo
-    Os_rename *Ast_TypeInfo
-    Os_rename_sym *Ast_SymbolInfo
-    Os_time *Ast_TypeInfo
-    Os_time_sym *Ast_SymbolInfo
-    String_ *Ast_TypeInfo
-    String_byte *Ast_TypeInfo
-    String_byte_sym *Ast_SymbolInfo
-    String_dump *Ast_TypeInfo
-    String_dump_sym *Ast_SymbolInfo
-    String_find *Ast_TypeInfo
-    String_find_sym *Ast_SymbolInfo
-    String_format *Ast_TypeInfo
-    String_format_sym *Ast_SymbolInfo
-    String_gmatch *Ast_TypeInfo
-    String_gmatch_sym *Ast_SymbolInfo
-    String_gsub *Ast_TypeInfo
-    String_gsub_sym *Ast_SymbolInfo
-    String_lower *Ast_TypeInfo
-    String_lower_sym *Ast_SymbolInfo
-    String_rep *Ast_TypeInfo
-    String_rep_sym *Ast_SymbolInfo
-    String_reverse *Ast_TypeInfo
-    String_reverse_sym *Ast_SymbolInfo
-    String_sub *Ast_TypeInfo
-    String_sub_sym *Ast_SymbolInfo
-    String_upper *Ast_TypeInfo
-    String_upper_sym *Ast_SymbolInfo
-    Str_ *Ast_TypeInfo
-    Str_byte *Ast_TypeInfo
-    Str_byte_sym *Ast_SymbolInfo
-    Str_find *Ast_TypeInfo
-    Str_find_sym *Ast_SymbolInfo
-    Str_format *Ast_TypeInfo
-    Str_format_sym *Ast_SymbolInfo
-    Str_gmatch *Ast_TypeInfo
-    Str_gmatch_sym *Ast_SymbolInfo
-    Str_gsub *Ast_TypeInfo
-    Str_gsub_sym *Ast_SymbolInfo
-    Str_lower *Ast_TypeInfo
-    Str_lower_sym *Ast_SymbolInfo
-    Str_rep *Ast_TypeInfo
-    Str_rep_sym *Ast_SymbolInfo
-    Str_reverse *Ast_TypeInfo
-    Str_reverse_sym *Ast_SymbolInfo
-    Str_sub *Ast_TypeInfo
-    Str_sub_sym *Ast_SymbolInfo
-    Str_upper *Ast_TypeInfo
-    Str_upper_sym *Ast_SymbolInfo
-    List_ *Ast_TypeInfo
-    List___less *Ast_TypeInfo
-    List___less_sym *Ast_SymbolInfo
-    List___new *Ast_TypeInfo
-    List___new_sym *Ast_SymbolInfo
-    List_insert *Ast_TypeInfo
-    List_insert_sym *Ast_SymbolInfo
-    List_remove *Ast_TypeInfo
-    List_remove_sym *Ast_SymbolInfo
-    List_sort *Ast_TypeInfo
-    List_sort_sym *Ast_SymbolInfo
-    List_unpack *Ast_TypeInfo
-    List_unpack_sym *Ast_SymbolInfo
-    Array_ *Ast_TypeInfo
-    Array___less *Ast_TypeInfo
-    Array___less_sym *Ast_SymbolInfo
-    Array_sort *Ast_TypeInfo
-    Array_sort_sym *Ast_SymbolInfo
-    Array_unpack *Ast_TypeInfo
-    Array_unpack_sym *Ast_SymbolInfo
-    Set_ *Ast_TypeInfo
-    Set_add *Ast_TypeInfo
-    Set_add_sym *Ast_SymbolInfo
-    Set_and *Ast_TypeInfo
-    Set_and_sym *Ast_SymbolInfo
-    Set_clone *Ast_TypeInfo
-    Set_clone_sym *Ast_SymbolInfo
-    Set_del *Ast_TypeInfo
-    Set_del_sym *Ast_SymbolInfo
-    Set_has *Ast_TypeInfo
-    Set_has_sym *Ast_SymbolInfo
-    Set_len *Ast_TypeInfo
-    Set_len_sym *Ast_SymbolInfo
-    Set_or *Ast_TypeInfo
-    Set_or_sym *Ast_SymbolInfo
-    Set_sub *Ast_TypeInfo
-    Set_sub_sym *Ast_SymbolInfo
-    Math_ *Ast_TypeInfo
-    Math_random *Ast_TypeInfo
-    Math_random_sym *Ast_SymbolInfo
-    Math_randomseed *Ast_TypeInfo
-    Math_randomseed_sym *Ast_SymbolInfo
-    Debug_ *Ast_TypeInfo
-    Debug_getinfo *Ast_TypeInfo
-    Debug_getinfo_sym *Ast_SymbolInfo
-    Debug_getlocal *Ast_TypeInfo
-    Debug_getlocal_sym *Ast_SymbolInfo
-    Nilable_ *Ast_TypeInfo
-    Nilable_val *Ast_TypeInfo
-    Nilable_val_sym *Ast_SymbolInfo
-    allSymbol *LnsList
-    allClass *LnsList
-    allFuncTypeSet *LnsSet
-    allSymbolSet *LnsSet
-    needThreadingTypes *LnsSet
-    luavalFuncTypeSet *LnsSet
-    FP Builtin_BuiltinFuncTypeMtd
-}
-func Builtin_BuiltinFuncType2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Builtin_BuiltinFuncType).FP
-}
-type Builtin_BuiltinFuncTypeDownCast interface {
-    ToBuiltin_BuiltinFuncType() *Builtin_BuiltinFuncType
-}
-func Builtin_BuiltinFuncTypeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Builtin_BuiltinFuncTypeDownCast)
-    if ok { return work.ToBuiltin_BuiltinFuncType() }
-    return nil
-}
-func (obj *Builtin_BuiltinFuncType) ToBuiltin_BuiltinFuncType() *Builtin_BuiltinFuncType {
-    return obj
-}
-func NewBuiltin_BuiltinFuncType(_env *LnsEnv) *Builtin_BuiltinFuncType {
-    obj := &Builtin_BuiltinFuncType{}
-    obj.FP = obj
-    obj.InitBuiltin_BuiltinFuncType(_env)
-    return obj
-}
-func (self *Builtin_BuiltinFuncType) Get_allSymbol(_env *LnsEnv) *LnsList{ return self.allSymbol }
-func (self *Builtin_BuiltinFuncType) Get_allClass(_env *LnsEnv) *LnsList{ return self.allClass }
-func (self *Builtin_BuiltinFuncType) Get_allFuncTypeSet(_env *LnsEnv) *LnsSet{ return self.allFuncTypeSet }
-func (self *Builtin_BuiltinFuncType) Get_allSymbolSet(_env *LnsEnv) *LnsSet{ return self.allSymbolSet }
-func (self *Builtin_BuiltinFuncType) Get_needThreadingTypes(_env *LnsEnv) *LnsSet{ return self.needThreadingTypes }
-
-func Lns_Builtin_init(_env *LnsEnv) {
-    if init_Builtin { return }
-    init_Builtin = true
-    Builtin__mod__ = "@lune.@base.@Builtin"
-    Lns_InitMod()
-    Lns_Types_init(_env)
-    Lns_Parser_init(_env)
-    Lns_Util_init(_env)
-    Lns_Ast_init(_env)
-    Lns_LuaVer_init(_env)
-    Lns_Log_init(_env)
-    Lns_TransUnitIF_init(_env)
-    Lns_BuiltinTransUnit_init(_env)
-    Builtin_builtinFunc = NewBuiltin_BuiltinFuncType(_env)
-    
-    Builtin_readyBuiltin = false
-}
-func init() {
-    init_Builtin = false
-}
-// 49: DeclConstr
-func (self *Builtin_Builtin) InitBuiltin_Builtin(_env *LnsEnv, targetLuaVer *LuaVer_LuaVerInfo,ctrl_info *Types_TransCtrlInfo) {
-    self.hasLuaval = false
-    self.processInfo = Ast_getRootProcessInfo(_env)
-    self.transUnit = NewBuiltinTransUnit_TransUnit(_env, ctrl_info, self.processInfo)
-    self.targetLuaVer = targetLuaVer
-    self.ctrl_info = ctrl_info
-    self.modifier = NewTransUnitIF_Modifier(_env, true, self.processInfo)
-}
 // 418: decl @lune.@base.@Builtin.Builtin.getTypeInfo
 func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_TypeInfo {
     if _switch0 := typeName; _switch0 == "_T" {
@@ -1387,6 +1043,403 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
     }
     return Builtin_builtinFunc
 }
+// 153: decl @lune.@base.@Builtin.BuiltinFuncType.addLuavalFunc
+func (self *Builtin_BuiltinFuncType) addLuavalFunc(_env *LnsEnv, typeInfo *Ast_TypeInfo) {
+    self.luavalFuncTypeSet.Add(Ast_TypeInfo2Stem(typeInfo))
+}
+// 157: decl @lune.@base.@Builtin.BuiltinFuncType.isLuavalFunc
+func (self *Builtin_BuiltinFuncType) IsLuavalFunc(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
+    return self.luavalFuncTypeSet.Has(Ast_TypeInfo2Stem(typeInfo))
+}
+// 161: decl @lune.@base.@Builtin.BuiltinFuncType.register
+func (self *Builtin_BuiltinFuncType) Register(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) {
+    self.allSymbol.Insert(Ast_SymbolInfo2Stem(symbolInfo))
+    self.allSymbolSet.Add(Ast_SymbolInfo2Stem(symbolInfo))
+}
+// 165: decl @lune.@base.@Builtin.BuiltinFuncType.registerClass
+func (self *Builtin_BuiltinFuncType) RegisterClass(_env *LnsEnv, classInfo *Ast_TypeInfo) {
+    self.allClass.Insert(Ast_TypeInfo2Stem(classInfo))
+    if _switch0 := classInfo.FP.Get_rawTxt(_env); _switch0 == "" {
+        self.Lns_ = classInfo
+    } else if _switch0 == "iStream" {
+        self.Istream_ = classInfo
+    } else if _switch0 == "oStream" {
+        self.Ostream_ = classInfo
+    } else if _switch0 == "__lns_runMode" {
+        self.G__lns_runmode_ = classInfo
+    } else if _switch0 == "__lns_runtime" {
+        self.G__lns_runtime_ = classInfo
+    } else if _switch0 == "__lns_capability" {
+        self.G__lns_capability_ = classInfo
+    } else if _switch0 == "__lns_Sync_Flag" {
+        self.G__lns_sync_flag_ = classInfo
+    } else if _switch0 == "__lns_Sync" {
+        self.G__lns_sync_ = classInfo
+    } else if _switch0 == "luaStream" {
+        self.Luastream_ = classInfo
+    } else if _switch0 == "Mapping" {
+        self.Mapping_ = classInfo
+    } else if _switch0 == "__Runner" {
+        self.G__runner_ = classInfo
+    } else if _switch0 == "__Processor" {
+        self.G__processor_ = classInfo
+    } else if _switch0 == "__pipe" {
+        self.G__pipe_ = classInfo
+    } else if _switch0 == "io" {
+        self.Io_ = classInfo
+    } else if _switch0 == "package" {
+        self.Package_ = classInfo
+    } else if _switch0 == "os" {
+        self.Os_ = classInfo
+    } else if _switch0 == "string" {
+        self.String_ = classInfo
+    } else if _switch0 == "str" {
+        self.Str_ = classInfo
+    } else if _switch0 == "List" {
+        self.List_ = classInfo
+    } else if _switch0 == "Array" {
+        self.Array_ = classInfo
+    } else if _switch0 == "Set" {
+        self.Set_ = classInfo
+    } else if _switch0 == "math" {
+        self.Math_ = classInfo
+    } else if _switch0 == "debug" {
+        self.Debug_ = classInfo
+    } else if _switch0 == "Nilable" {
+        self.Nilable_ = classInfo
+    }
+}
+// 411: decl @lune.@base.@Builtin.BuiltinFuncType.isStrFormFunc
+func (self *Builtin_BuiltinFuncType) IsStrFormFunc(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
+    if typeInfo.FP.Get_srcTypeInfo(_env) == self.String_format{
+        return true
+    }
+    return false
+}
+// declaration Class -- Builtin
+type Builtin_BuiltinMtd interface {
+    getTypeInfo(_env *LnsEnv, arg1 string) *Ast_TypeInfo
+    processField(_env *LnsEnv, arg1 string, arg2 string, arg3 *LnsMap, arg4 *Ast_TypeInfo)
+    RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFuncType
+    registClass(_env *LnsEnv, arg1 *LnsList, arg2 *LnsMap, arg3 *Types_Position, arg4 *LnsList) *Ast_TypeInfo
+}
+type Builtin_Builtin struct {
+    transUnit *BuiltinTransUnit_TransUnit
+    targetLuaVer *LuaVer_LuaVerInfo
+    ctrl_info *Types_TransCtrlInfo
+    processInfo *Ast_ProcessInfo
+    modifier *TransUnitIF_Modifier
+    hasLuaval bool
+    FP Builtin_BuiltinMtd
+}
+func Builtin_Builtin2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Builtin_Builtin).FP
+}
+type Builtin_BuiltinDownCast interface {
+    ToBuiltin_Builtin() *Builtin_Builtin
+}
+func Builtin_BuiltinDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Builtin_BuiltinDownCast)
+    if ok { return work.ToBuiltin_Builtin() }
+    return nil
+}
+func (obj *Builtin_Builtin) ToBuiltin_Builtin() *Builtin_Builtin {
+    return obj
+}
+func NewBuiltin_Builtin(_env *LnsEnv, arg1 *LuaVer_LuaVerInfo, arg2 *Types_TransCtrlInfo) *Builtin_Builtin {
+    obj := &Builtin_Builtin{}
+    obj.FP = obj
+    obj.InitBuiltin_Builtin(_env, arg1, arg2)
+    return obj
+}
+// 49: DeclConstr
+func (self *Builtin_Builtin) InitBuiltin_Builtin(_env *LnsEnv, targetLuaVer *LuaVer_LuaVerInfo,ctrl_info *Types_TransCtrlInfo) {
+    self.hasLuaval = false
+    self.processInfo = Ast_getRootProcessInfo(_env)
+    self.transUnit = NewBuiltinTransUnit_TransUnit(_env, ctrl_info, self.processInfo)
+    self.targetLuaVer = targetLuaVer
+    self.ctrl_info = ctrl_info
+    self.modifier = NewTransUnitIF_Modifier(_env, true, self.processInfo)
+}
+
+
+// declaration Class -- BuiltinFuncType
+type Builtin_BuiltinFuncTypeMtd interface {
+    addLuavalFunc(_env *LnsEnv, arg1 *Ast_TypeInfo)
+    Get_allClass(_env *LnsEnv) *LnsList
+    Get_allFuncTypeSet(_env *LnsEnv) *LnsSet
+    Get_allSymbol(_env *LnsEnv) *LnsList
+    Get_allSymbolSet(_env *LnsEnv) *LnsSet
+    Get_needThreadingTypes(_env *LnsEnv) *LnsSet
+    IsLuavalFunc(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
+    IsStrFormFunc(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
+    Register(_env *LnsEnv, arg1 *Ast_SymbolInfo)
+    RegisterClass(_env *LnsEnv, arg1 *Ast_TypeInfo)
+}
+type Builtin_BuiltinFuncType struct {
+    Lns_ *Ast_TypeInfo
+    Lns___join *Ast_TypeInfo
+    Lns___join_sym *Ast_SymbolInfo
+    Lns___run *Ast_TypeInfo
+    Lns___run_sym *Ast_SymbolInfo
+    Lns__fcall *Ast_TypeInfo
+    Lns__fcall_sym *Ast_SymbolInfo
+    Lns__kind *Ast_TypeInfo
+    Lns__kind_sym *Ast_SymbolInfo
+    Lns__load *Ast_TypeInfo
+    Lns__load_sym *Ast_SymbolInfo
+    Lns_collectgarbage *Ast_TypeInfo
+    Lns_collectgarbage_sym *Ast_SymbolInfo
+    Lns_error *Ast_TypeInfo
+    Lns_error_sym *Ast_SymbolInfo
+    Lns_expandLuavalMap *Ast_TypeInfo
+    Lns_expandLuavalMap_sym *Ast_SymbolInfo
+    Lns_loadfile *Ast_TypeInfo
+    Lns_loadfile_sym *Ast_SymbolInfo
+    Lns_print *Ast_TypeInfo
+    Lns_print_sym *Ast_SymbolInfo
+    Lns_require *Ast_TypeInfo
+    Lns_require_sym *Ast_SymbolInfo
+    Lns_tonumber *Ast_TypeInfo
+    Lns_tonumber_sym *Ast_SymbolInfo
+    Lns_tostring *Ast_TypeInfo
+    Lns_tostring_sym *Ast_SymbolInfo
+    Lns_type *Ast_TypeInfo
+    Lns_type_sym *Ast_SymbolInfo
+    Istream_ *Ast_TypeInfo
+    Istream_close *Ast_TypeInfo
+    Istream_close_sym *Ast_SymbolInfo
+    Istream_read *Ast_TypeInfo
+    Istream_read_sym *Ast_SymbolInfo
+    Ostream_ *Ast_TypeInfo
+    Ostream_close *Ast_TypeInfo
+    Ostream_close_sym *Ast_SymbolInfo
+    Ostream_flush *Ast_TypeInfo
+    Ostream_flush_sym *Ast_SymbolInfo
+    Ostream_write *Ast_TypeInfo
+    Ostream_write_sym *Ast_SymbolInfo
+    G__lns_runmode_ *Ast_TypeInfo
+    G__lns_runmode_Queue *Ast_TypeInfo
+    G__lns_runmode_Queue_sym *Ast_SymbolInfo
+    G__lns_runmode_Skip *Ast_TypeInfo
+    G__lns_runmode_Skip_sym *Ast_SymbolInfo
+    G__lns_runmode_Sync *Ast_TypeInfo
+    G__lns_runmode_Sync_sym *Ast_SymbolInfo
+    G__lns_runtime_ *Ast_TypeInfo
+    G__lns_runtime_dumpLog *Ast_TypeInfo
+    G__lns_runtime_dumpLog_sym *Ast_SymbolInfo
+    G__lns_runtime_enableLog *Ast_TypeInfo
+    G__lns_runtime_enableLog_sym *Ast_SymbolInfo
+    G__lns_runtime_log *Ast_TypeInfo
+    G__lns_runtime_log_sym *Ast_SymbolInfo
+    G__lns_capability_ *Ast_TypeInfo
+    G__lns_capability_async *Ast_TypeInfo
+    G__lns_capability_async_sym *Ast_SymbolInfo
+    G__lns_sync_flag_ *Ast_TypeInfo
+    G__lns_sync_flag_set *Ast_TypeInfo
+    G__lns_sync_flag_set_sym *Ast_SymbolInfo
+    G__lns_sync_flag_wait *Ast_TypeInfo
+    G__lns_sync_flag_wait_sym *Ast_SymbolInfo
+    G__lns_sync_ *Ast_TypeInfo
+    G__lns_sync_createFlag *Ast_TypeInfo
+    G__lns_sync_createFlag_sym *Ast_SymbolInfo
+    G__lns_sync_createProcesser *Ast_TypeInfo
+    G__lns_sync_createProcesser_sym *Ast_SymbolInfo
+    Luastream_ *Ast_TypeInfo
+    Luastream_close *Ast_TypeInfo
+    Luastream_close_sym *Ast_SymbolInfo
+    Luastream_flush *Ast_TypeInfo
+    Luastream_flush_sym *Ast_SymbolInfo
+    Luastream_read *Ast_TypeInfo
+    Luastream_read_sym *Ast_SymbolInfo
+    Luastream_seek *Ast_TypeInfo
+    Luastream_seek_sym *Ast_SymbolInfo
+    Luastream_write *Ast_TypeInfo
+    Luastream_write_sym *Ast_SymbolInfo
+    Mapping_ *Ast_TypeInfo
+    Mapping__toMap *Ast_TypeInfo
+    Mapping__toMap_sym *Ast_SymbolInfo
+    G__runner_ *Ast_TypeInfo
+    G__runner_run *Ast_TypeInfo
+    G__runner_run_sym *Ast_SymbolInfo
+    G__processor_ *Ast_TypeInfo
+    G__processor_end *Ast_TypeInfo
+    G__processor_end_sym *Ast_SymbolInfo
+    G__pipe_ *Ast_TypeInfo
+    G__pipe_get *Ast_TypeInfo
+    G__pipe_get_sym *Ast_SymbolInfo
+    G__pipe_put *Ast_TypeInfo
+    G__pipe_put_sym *Ast_SymbolInfo
+    Io_ *Ast_TypeInfo
+    Io_open *Ast_TypeInfo
+    Io_open_sym *Ast_SymbolInfo
+    Io_popen *Ast_TypeInfo
+    Io_popen_sym *Ast_SymbolInfo
+    Io_stderr *Ast_TypeInfo
+    Io_stderr_sym *Ast_SymbolInfo
+    Io_stdin *Ast_TypeInfo
+    Io_stdin_sym *Ast_SymbolInfo
+    Io_stdout *Ast_TypeInfo
+    Io_stdout_sym *Ast_SymbolInfo
+    Package_ *Ast_TypeInfo
+    Package_path *Ast_TypeInfo
+    Package_path_sym *Ast_SymbolInfo
+    Package_searchpath *Ast_TypeInfo
+    Package_searchpath_sym *Ast_SymbolInfo
+    Os_ *Ast_TypeInfo
+    Os_clock *Ast_TypeInfo
+    Os_clock_sym *Ast_SymbolInfo
+    Os_date *Ast_TypeInfo
+    Os_date_sym *Ast_SymbolInfo
+    Os_difftime *Ast_TypeInfo
+    Os_difftime_sym *Ast_SymbolInfo
+    Os_exit *Ast_TypeInfo
+    Os_exit_sym *Ast_SymbolInfo
+    Os_remove *Ast_TypeInfo
+    Os_remove_sym *Ast_SymbolInfo
+    Os_rename *Ast_TypeInfo
+    Os_rename_sym *Ast_SymbolInfo
+    Os_time *Ast_TypeInfo
+    Os_time_sym *Ast_SymbolInfo
+    String_ *Ast_TypeInfo
+    String_byte *Ast_TypeInfo
+    String_byte_sym *Ast_SymbolInfo
+    String_dump *Ast_TypeInfo
+    String_dump_sym *Ast_SymbolInfo
+    String_find *Ast_TypeInfo
+    String_find_sym *Ast_SymbolInfo
+    String_format *Ast_TypeInfo
+    String_format_sym *Ast_SymbolInfo
+    String_gmatch *Ast_TypeInfo
+    String_gmatch_sym *Ast_SymbolInfo
+    String_gsub *Ast_TypeInfo
+    String_gsub_sym *Ast_SymbolInfo
+    String_lower *Ast_TypeInfo
+    String_lower_sym *Ast_SymbolInfo
+    String_rep *Ast_TypeInfo
+    String_rep_sym *Ast_SymbolInfo
+    String_reverse *Ast_TypeInfo
+    String_reverse_sym *Ast_SymbolInfo
+    String_sub *Ast_TypeInfo
+    String_sub_sym *Ast_SymbolInfo
+    String_upper *Ast_TypeInfo
+    String_upper_sym *Ast_SymbolInfo
+    Str_ *Ast_TypeInfo
+    Str_byte *Ast_TypeInfo
+    Str_byte_sym *Ast_SymbolInfo
+    Str_find *Ast_TypeInfo
+    Str_find_sym *Ast_SymbolInfo
+    Str_format *Ast_TypeInfo
+    Str_format_sym *Ast_SymbolInfo
+    Str_gmatch *Ast_TypeInfo
+    Str_gmatch_sym *Ast_SymbolInfo
+    Str_gsub *Ast_TypeInfo
+    Str_gsub_sym *Ast_SymbolInfo
+    Str_lower *Ast_TypeInfo
+    Str_lower_sym *Ast_SymbolInfo
+    Str_rep *Ast_TypeInfo
+    Str_rep_sym *Ast_SymbolInfo
+    Str_reverse *Ast_TypeInfo
+    Str_reverse_sym *Ast_SymbolInfo
+    Str_sub *Ast_TypeInfo
+    Str_sub_sym *Ast_SymbolInfo
+    Str_upper *Ast_TypeInfo
+    Str_upper_sym *Ast_SymbolInfo
+    List_ *Ast_TypeInfo
+    List___less *Ast_TypeInfo
+    List___less_sym *Ast_SymbolInfo
+    List___new *Ast_TypeInfo
+    List___new_sym *Ast_SymbolInfo
+    List_insert *Ast_TypeInfo
+    List_insert_sym *Ast_SymbolInfo
+    List_remove *Ast_TypeInfo
+    List_remove_sym *Ast_SymbolInfo
+    List_sort *Ast_TypeInfo
+    List_sort_sym *Ast_SymbolInfo
+    List_unpack *Ast_TypeInfo
+    List_unpack_sym *Ast_SymbolInfo
+    Array_ *Ast_TypeInfo
+    Array___less *Ast_TypeInfo
+    Array___less_sym *Ast_SymbolInfo
+    Array_sort *Ast_TypeInfo
+    Array_sort_sym *Ast_SymbolInfo
+    Array_unpack *Ast_TypeInfo
+    Array_unpack_sym *Ast_SymbolInfo
+    Set_ *Ast_TypeInfo
+    Set_add *Ast_TypeInfo
+    Set_add_sym *Ast_SymbolInfo
+    Set_and *Ast_TypeInfo
+    Set_and_sym *Ast_SymbolInfo
+    Set_clone *Ast_TypeInfo
+    Set_clone_sym *Ast_SymbolInfo
+    Set_del *Ast_TypeInfo
+    Set_del_sym *Ast_SymbolInfo
+    Set_has *Ast_TypeInfo
+    Set_has_sym *Ast_SymbolInfo
+    Set_len *Ast_TypeInfo
+    Set_len_sym *Ast_SymbolInfo
+    Set_or *Ast_TypeInfo
+    Set_or_sym *Ast_SymbolInfo
+    Set_sub *Ast_TypeInfo
+    Set_sub_sym *Ast_SymbolInfo
+    Math_ *Ast_TypeInfo
+    Math_random *Ast_TypeInfo
+    Math_random_sym *Ast_SymbolInfo
+    Math_randomseed *Ast_TypeInfo
+    Math_randomseed_sym *Ast_SymbolInfo
+    Debug_ *Ast_TypeInfo
+    Debug_getinfo *Ast_TypeInfo
+    Debug_getinfo_sym *Ast_SymbolInfo
+    Debug_getlocal *Ast_TypeInfo
+    Debug_getlocal_sym *Ast_SymbolInfo
+    Nilable_ *Ast_TypeInfo
+    Nilable_val *Ast_TypeInfo
+    Nilable_val_sym *Ast_SymbolInfo
+    allSymbol *LnsList
+    allClass *LnsList
+    allFuncTypeSet *LnsSet
+    allSymbolSet *LnsSet
+    needThreadingTypes *LnsSet
+    luavalFuncTypeSet *LnsSet
+    FP Builtin_BuiltinFuncTypeMtd
+}
+func Builtin_BuiltinFuncType2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Builtin_BuiltinFuncType).FP
+}
+type Builtin_BuiltinFuncTypeDownCast interface {
+    ToBuiltin_BuiltinFuncType() *Builtin_BuiltinFuncType
+}
+func Builtin_BuiltinFuncTypeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Builtin_BuiltinFuncTypeDownCast)
+    if ok { return work.ToBuiltin_BuiltinFuncType() }
+    return nil
+}
+func (obj *Builtin_BuiltinFuncType) ToBuiltin_BuiltinFuncType() *Builtin_BuiltinFuncType {
+    return obj
+}
+func NewBuiltin_BuiltinFuncType(_env *LnsEnv) *Builtin_BuiltinFuncType {
+    obj := &Builtin_BuiltinFuncType{}
+    obj.FP = obj
+    obj.InitBuiltin_BuiltinFuncType(_env)
+    return obj
+}
+func (self *Builtin_BuiltinFuncType) Get_allSymbol(_env *LnsEnv) *LnsList{ return self.allSymbol }
+func (self *Builtin_BuiltinFuncType) Get_allClass(_env *LnsEnv) *LnsList{ return self.allClass }
+func (self *Builtin_BuiltinFuncType) Get_allFuncTypeSet(_env *LnsEnv) *LnsSet{ return self.allFuncTypeSet }
+func (self *Builtin_BuiltinFuncType) Get_allSymbolSet(_env *LnsEnv) *LnsSet{ return self.allSymbolSet }
+func (self *Builtin_BuiltinFuncType) Get_needThreadingTypes(_env *LnsEnv) *LnsSet{ return self.needThreadingTypes }
 // 142: DeclConstr
 func (self *Builtin_BuiltinFuncType) InitBuiltin_BuiltinFuncType(_env *LnsEnv) {
     self.Lns_ = Ast_headTypeInfo
@@ -1614,76 +1667,25 @@ func (self *Builtin_BuiltinFuncType) InitBuiltin_BuiltinFuncType(_env *LnsEnv) {
     self.needThreadingTypes = NewLnsSet([]LnsAny{})
     self.luavalFuncTypeSet = NewLnsSet([]LnsAny{})
 }
-// 153: decl @lune.@base.@Builtin.BuiltinFuncType.addLuavalFunc
-func (self *Builtin_BuiltinFuncType) addLuavalFunc(_env *LnsEnv, typeInfo *Ast_TypeInfo) {
-    self.luavalFuncTypeSet.Add(Ast_TypeInfo2Stem(typeInfo))
+
+
+func Lns_Builtin_init(_env *LnsEnv) {
+    if init_Builtin { return }
+    init_Builtin = true
+    Builtin__mod__ = "@lune.@base.@Builtin"
+    Lns_InitMod()
+    Lns_Types_init(_env)
+    Lns_Parser_init(_env)
+    Lns_Util_init(_env)
+    Lns_Ast_init(_env)
+    Lns_LuaVer_init(_env)
+    Lns_Log_init(_env)
+    Lns_TransUnitIF_init(_env)
+    Lns_BuiltinTransUnit_init(_env)
+    Builtin_builtinFunc = NewBuiltin_BuiltinFuncType(_env)
+    
+    Builtin_readyBuiltin = false
 }
-// 157: decl @lune.@base.@Builtin.BuiltinFuncType.isLuavalFunc
-func (self *Builtin_BuiltinFuncType) IsLuavalFunc(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
-    return self.luavalFuncTypeSet.Has(Ast_TypeInfo2Stem(typeInfo))
-}
-// 161: decl @lune.@base.@Builtin.BuiltinFuncType.register
-func (self *Builtin_BuiltinFuncType) Register(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) {
-    self.allSymbol.Insert(Ast_SymbolInfo2Stem(symbolInfo))
-    self.allSymbolSet.Add(Ast_SymbolInfo2Stem(symbolInfo))
-}
-// 165: decl @lune.@base.@Builtin.BuiltinFuncType.registerClass
-func (self *Builtin_BuiltinFuncType) RegisterClass(_env *LnsEnv, classInfo *Ast_TypeInfo) {
-    self.allClass.Insert(Ast_TypeInfo2Stem(classInfo))
-    if _switch0 := classInfo.FP.Get_rawTxt(_env); _switch0 == "" {
-        self.Lns_ = classInfo
-    } else if _switch0 == "iStream" {
-        self.Istream_ = classInfo
-    } else if _switch0 == "oStream" {
-        self.Ostream_ = classInfo
-    } else if _switch0 == "__lns_runMode" {
-        self.G__lns_runmode_ = classInfo
-    } else if _switch0 == "__lns_runtime" {
-        self.G__lns_runtime_ = classInfo
-    } else if _switch0 == "__lns_capability" {
-        self.G__lns_capability_ = classInfo
-    } else if _switch0 == "__lns_Sync_Flag" {
-        self.G__lns_sync_flag_ = classInfo
-    } else if _switch0 == "__lns_Sync" {
-        self.G__lns_sync_ = classInfo
-    } else if _switch0 == "luaStream" {
-        self.Luastream_ = classInfo
-    } else if _switch0 == "Mapping" {
-        self.Mapping_ = classInfo
-    } else if _switch0 == "__Runner" {
-        self.G__runner_ = classInfo
-    } else if _switch0 == "__Processor" {
-        self.G__processor_ = classInfo
-    } else if _switch0 == "__pipe" {
-        self.G__pipe_ = classInfo
-    } else if _switch0 == "io" {
-        self.Io_ = classInfo
-    } else if _switch0 == "package" {
-        self.Package_ = classInfo
-    } else if _switch0 == "os" {
-        self.Os_ = classInfo
-    } else if _switch0 == "string" {
-        self.String_ = classInfo
-    } else if _switch0 == "str" {
-        self.Str_ = classInfo
-    } else if _switch0 == "List" {
-        self.List_ = classInfo
-    } else if _switch0 == "Array" {
-        self.Array_ = classInfo
-    } else if _switch0 == "Set" {
-        self.Set_ = classInfo
-    } else if _switch0 == "math" {
-        self.Math_ = classInfo
-    } else if _switch0 == "debug" {
-        self.Debug_ = classInfo
-    } else if _switch0 == "Nilable" {
-        self.Nilable_ = classInfo
-    }
-}
-// 411: decl @lune.@base.@Builtin.BuiltinFuncType.isStrFormFunc
-func (self *Builtin_BuiltinFuncType) IsStrFormFunc(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
-    if typeInfo.FP.Get_srcTypeInfo(_env) == self.String_format{
-        return true
-    }
-    return false
+func init() {
+    init_Builtin = false
 }

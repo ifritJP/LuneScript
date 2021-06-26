@@ -17,6 +17,49 @@ func OutputDepend_createFilter(_env *LnsEnv, stream Lns_oStream) *Nodes_Filter {
 }
 
 
+// 44: decl @lune.@base.@OutputDepend.DependInfo.addImpotModule
+func (self *OutputDepend_DependInfo) AddImpotModule(_env *LnsEnv, mod string) {
+    self.importModuleList.Insert(mod)
+}
+// 47: decl @lune.@base.@OutputDepend.DependInfo.addSubMod
+func (self *OutputDepend_DependInfo) AddSubMod(_env *LnsEnv, path string) {
+    self.subModList.Insert(path)
+}
+// 52: decl @lune.@base.@OutputDepend.DependInfo.output
+func (self *OutputDepend_DependInfo) Output(_env *LnsEnv, stream Lns_oStream) {
+    stream.Write(_env, _env.GetVM().String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
+    stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
+    for _, _mod := range( self.importModuleList.Items ) {
+        mod := _mod.(string)
+        stream.Write(_env, _env.GetVM().String_format("  %s.meta \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string)}))
+    }
+    for _, _path := range( self.subModList.Items ) {
+        path := _path.(string)
+        stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(path,"%.", "/")).(string)}))
+    }
+}
+// 76: decl @lune.@base.@OutputDepend.convFilter.processRoot
+func (self *OutputDepend_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_dummy LnsAny) {
+    var moduleFull string
+    moduleFull = node.FP.Get_moduleTypeInfo(_env).FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), Ast_DummyModuleInfoManager_get_instance(_env).FP, nil)
+    var dependInfo *OutputDepend_DependInfo
+    dependInfo = NewOutputDepend_DependInfo(_env, moduleFull)
+    for _, _impNode := range( node.FP.Get_nodeManager(_env).FP.GetImportNodeList(_env).Items ) {
+        impNode := _impNode.(Nodes_ImportNodeDownCast).ToNodes_ImportNode()
+        dependInfo.FP.AddImpotModule(_env, impNode.FP.Get_info(_env).FP.Get_modulePath(_env))
+    }
+    for _, _subfileNode := range( node.FP.Get_nodeManager(_env).FP.GetSubfileNodeList(_env).Items ) {
+        subfileNode := _subfileNode.(Nodes_SubfileNodeDownCast).ToNodes_SubfileNode()
+        {
+            _usePath := subfileNode.FP.Get_usePath(_env)
+            if !Lns_IsNil( _usePath ) {
+                usePath := _usePath.(string)
+                dependInfo.FP.AddSubMod(_env, usePath)
+            }
+        }
+    }
+    dependInfo.FP.Output(_env, self.stream)
+}
 // declaration Class -- DependInfo
 type OutputDepend_DependInfoMtd interface {
     AddImpotModule(_env *LnsEnv, arg1 string)
@@ -55,6 +98,13 @@ func NewOutputDepend_DependInfo(_env *LnsEnv, arg1 string) *OutputDepend_DependI
     obj.InitOutputDepend_DependInfo(_env, arg1)
     return obj
 }
+// 38: DeclConstr
+func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, targetModule string) {
+    self.targetModule = Ast_TypeInfo_getModulePath(_env, targetModule)
+    self.importModuleList = NewLnsList([]LnsAny{})
+    self.subModList = NewLnsList([]LnsAny{})
+}
+
 
 // declaration Class -- convFilter
 type OutputDepend_convFilterMtd interface {
@@ -187,6 +237,12 @@ func NewOutputDepend_convFilter(_env *LnsEnv, arg1 Lns_oStream) *OutputDepend_co
     obj.InitOutputDepend_convFilter(_env, arg1)
     return obj
 }
+// 69: DeclConstr
+func (self *OutputDepend_convFilter) InitOutputDepend_convFilter(_env *LnsEnv, stream Lns_oStream) {
+    self.InitNodes_Filter(_env, false, nil, nil)
+    self.stream = stream
+}
+
 
 
 func Lns_OutputDepend_init(_env *LnsEnv) {
@@ -205,58 +261,4 @@ func Lns_OutputDepend_init(_env *LnsEnv) {
 }
 func init() {
     init_OutputDepend = false
-}
-// 38: DeclConstr
-func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, targetModule string) {
-    self.targetModule = Ast_TypeInfo_getModulePath(_env, targetModule)
-    self.importModuleList = NewLnsList([]LnsAny{})
-    self.subModList = NewLnsList([]LnsAny{})
-}
-// 44: decl @lune.@base.@OutputDepend.DependInfo.addImpotModule
-func (self *OutputDepend_DependInfo) AddImpotModule(_env *LnsEnv, mod string) {
-    self.importModuleList.Insert(mod)
-}
-// 47: decl @lune.@base.@OutputDepend.DependInfo.addSubMod
-func (self *OutputDepend_DependInfo) AddSubMod(_env *LnsEnv, path string) {
-    self.subModList.Insert(path)
-}
-// 52: decl @lune.@base.@OutputDepend.DependInfo.output
-func (self *OutputDepend_DependInfo) Output(_env *LnsEnv, stream Lns_oStream) {
-    stream.Write(_env, _env.GetVM().String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
-    stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
-    for _, _mod := range( self.importModuleList.Items ) {
-        mod := _mod.(string)
-        stream.Write(_env, _env.GetVM().String_format("  %s.meta \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string)}))
-    }
-    for _, _path := range( self.subModList.Items ) {
-        path := _path.(string)
-        stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(path,"%.", "/")).(string)}))
-    }
-}
-// 69: DeclConstr
-func (self *OutputDepend_convFilter) InitOutputDepend_convFilter(_env *LnsEnv, stream Lns_oStream) {
-    self.InitNodes_Filter(_env, false, nil, nil)
-    self.stream = stream
-}
-// 76: decl @lune.@base.@OutputDepend.convFilter.processRoot
-func (self *OutputDepend_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_dummy LnsAny) {
-    var moduleFull string
-    moduleFull = node.FP.Get_moduleTypeInfo(_env).FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), Ast_DummyModuleInfoManager_get_instance(_env).FP, nil)
-    var dependInfo *OutputDepend_DependInfo
-    dependInfo = NewOutputDepend_DependInfo(_env, moduleFull)
-    for _, _impNode := range( node.FP.Get_nodeManager(_env).FP.GetImportNodeList(_env).Items ) {
-        impNode := _impNode.(Nodes_ImportNodeDownCast).ToNodes_ImportNode()
-        dependInfo.FP.AddImpotModule(_env, impNode.FP.Get_info(_env).FP.Get_modulePath(_env))
-    }
-    for _, _subfileNode := range( node.FP.Get_nodeManager(_env).FP.GetSubfileNodeList(_env).Items ) {
-        subfileNode := _subfileNode.(Nodes_SubfileNodeDownCast).ToNodes_SubfileNode()
-        {
-            _usePath := subfileNode.FP.Get_usePath(_env)
-            if !Lns_IsNil( _usePath ) {
-                usePath := _usePath.(string)
-                dependInfo.FP.AddSubMod(_env, usePath)
-            }
-        }
-    }
-    dependInfo.FP.Output(_env, self.stream)
 }

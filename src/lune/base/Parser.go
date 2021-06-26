@@ -128,370 +128,6 @@ func Parser_createParserFrom(_env *LnsEnv, src LnsAny,async bool,stdinFile LnsAn
     return &NewParser_StreamParser(_env, src, async, stdinFile, nil).Parser_Parser
 }
 
-// declaration Class -- Parser
-type Parser_ParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
-    GetStreamName(_env *LnsEnv) string
-    GetToken(_env *LnsEnv) LnsAny
-}
-type Parser_Parser struct {
-    FP Parser_ParserMtd
-}
-func Parser_Parser2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_Parser).FP
-}
-type Parser_ParserDownCast interface {
-    ToParser_Parser() *Parser_Parser
-}
-func Parser_ParserDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_ParserDownCast)
-    if ok { return work.ToParser_Parser() }
-    return nil
-}
-func (obj *Parser_Parser) ToParser_Parser() *Parser_Parser {
-    return obj
-}
-func (self *Parser_Parser) InitParser_Parser(_env *LnsEnv) {
-}
-
-type Parser_PushbackParser interface {
-        CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
-        Error(_env *LnsEnv, arg1 string)
-        GetStreamName(_env *LnsEnv) string
-        GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
-        NewPushback(_env *LnsEnv, arg1 *LnsList)
-        Pushback(_env *LnsEnv)
-        PushbackStr(_env *LnsEnv, arg1 string, arg2 string, arg3 *Types_Position)
-        PushbackToken(_env *LnsEnv, arg1 *Types_Token)
-}
-func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
-    if _, ok := obj.(Parser_PushbackParser); ok { 
-        return obj
-    }
-    return nil
-}
-
-// declaration Class -- TokenListParser
-type Parser_TokenListParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
-    GetStreamName(_env *LnsEnv) string
-    GetToken(_env *LnsEnv) LnsAny
-}
-type Parser_TokenListParser struct {
-    Parser_Parser
-    streamName string
-    tokenList *LnsList
-    index LnsInt
-    overridePos LnsAny
-    FP Parser_TokenListParserMtd
-}
-func Parser_TokenListParser2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_TokenListParser).FP
-}
-type Parser_TokenListParserDownCast interface {
-    ToParser_TokenListParser() *Parser_TokenListParser
-}
-func Parser_TokenListParserDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_TokenListParserDownCast)
-    if ok { return work.ToParser_TokenListParser() }
-    return nil
-}
-func (obj *Parser_TokenListParser) ToParser_TokenListParser() *Parser_TokenListParser {
-    return obj
-}
-func NewParser_TokenListParser(_env *LnsEnv, arg1 *LnsList, arg2 string, arg3 LnsAny) *Parser_TokenListParser {
-    obj := &Parser_TokenListParser{}
-    obj.FP = obj
-    obj.Parser_Parser.FP = obj
-    obj.InitParser_TokenListParser(_env, arg1, arg2, arg3)
-    return obj
-}
-
-// declaration Class -- StreamParser
-var Parser_StreamParser__stdinStreamModuleName LnsAny
-var Parser_StreamParser__stdinTxt string
-// 151: decl @lune.@base.@Parser.StreamParser.___init
-func Parser_StreamParser____init_0_(_env *LnsEnv) {
-    Parser_StreamParser__stdinStreamModuleName = nil
-    Parser_StreamParser__stdinTxt = ""
-}
-
-type Parser_StreamParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
-    GetStreamName(_env *LnsEnv) string
-    GetToken(_env *LnsEnv) LnsAny
-}
-type Parser_StreamParser struct {
-    Parser_Parser
-    stdinStreamModuleName LnsAny
-    stdinTxt string
-    streamName string
-    pos LnsInt
-    lineTokenList *LnsList
-    asyncParser *AsyncParser_Parser
-    overridePos LnsAny
-    FP Parser_StreamParserMtd
-}
-func Parser_StreamParser2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_StreamParser).FP
-}
-type Parser_StreamParserDownCast interface {
-    ToParser_StreamParser() *Parser_StreamParser
-}
-func Parser_StreamParserDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_StreamParserDownCast)
-    if ok { return work.ToParser_StreamParser() }
-    return nil
-}
-func (obj *Parser_StreamParser) ToParser_StreamParser() *Parser_StreamParser {
-    return obj
-}
-func NewParser_StreamParser(_env *LnsEnv, arg1 LnsAny, arg2 bool, arg3 LnsAny, arg4 LnsAny) *Parser_StreamParser {
-    obj := &Parser_StreamParser{}
-    obj.FP = obj
-    obj.Parser_Parser.FP = obj
-    obj.InitParser_StreamParser(_env, arg1, arg2, arg3, arg4)
-    return obj
-}
-
-// declaration Class -- DefaultPushbackParser
-type Parser_DefaultPushbackParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
-    Error(_env *LnsEnv, arg1 string)
-    GetLastPos(_env *LnsEnv) *Types_Position
-    GetNearCode(_env *LnsEnv) string
-    GetStreamName(_env *LnsEnv) string
-    GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
-    GetUsedTokenListLen(_env *LnsEnv) LnsInt
-    Get_currentToken(_env *LnsEnv) *Types_Token
-    NewPushback(_env *LnsEnv, arg1 *LnsList)
-    Pushback(_env *LnsEnv)
-    PushbackStr(_env *LnsEnv, arg1 string, arg2 string, arg3 *Types_Position)
-    PushbackToken(_env *LnsEnv, arg1 *Types_Token)
-}
-type Parser_DefaultPushbackParser struct {
-    parser *Parser_Parser
-    pushbackedList *LnsList
-    usedTokenList *LnsList
-    currentToken *Types_Token
-    FP Parser_DefaultPushbackParserMtd
-}
-func Parser_DefaultPushbackParser2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_DefaultPushbackParser).FP
-}
-type Parser_DefaultPushbackParserDownCast interface {
-    ToParser_DefaultPushbackParser() *Parser_DefaultPushbackParser
-}
-func Parser_DefaultPushbackParserDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_DefaultPushbackParserDownCast)
-    if ok { return work.ToParser_DefaultPushbackParser() }
-    return nil
-}
-func (obj *Parser_DefaultPushbackParser) ToParser_DefaultPushbackParser() *Parser_DefaultPushbackParser {
-    return obj
-}
-func NewParser_DefaultPushbackParser(_env *LnsEnv, arg1 *Parser_Parser) *Parser_DefaultPushbackParser {
-    obj := &Parser_DefaultPushbackParser{}
-    obj.FP = obj
-    obj.InitParser_DefaultPushbackParser(_env, arg1)
-    return obj
-}
-func (self *Parser_DefaultPushbackParser) Get_currentToken(_env *LnsEnv) *Types_Token{ return self.currentToken }
-
-// declaration Class -- DummyParser
-type Parser_DummyParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
-    GetStreamName(_env *LnsEnv) string
-    GetToken(_env *LnsEnv) LnsAny
-}
-type Parser_DummyParser struct {
-    Parser_Parser
-    FP Parser_DummyParserMtd
-}
-func Parser_DummyParser2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_DummyParser).FP
-}
-type Parser_DummyParserDownCast interface {
-    ToParser_DummyParser() *Parser_DummyParser
-}
-func Parser_DummyParserDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_DummyParserDownCast)
-    if ok { return work.ToParser_DummyParser() }
-    return nil
-}
-func (obj *Parser_DummyParser) ToParser_DummyParser() *Parser_DummyParser {
-    return obj
-}
-func NewParser_DummyParser(_env *LnsEnv) *Parser_DummyParser {
-    obj := &Parser_DummyParser{}
-    obj.FP = obj
-    obj.Parser_Parser.FP = obj
-    obj.InitParser_DummyParser(_env)
-    return obj
-}
-func (self *Parser_DummyParser) InitParser_DummyParser(_env *LnsEnv) {
-    self.Parser_Parser.InitParser_Parser( _env)
-}
-
-// declaration Class -- CommentLayer
-type Parser_CommentLayerMtd interface {
-    Add(_env *LnsEnv, arg1 *Types_Token)
-    AddDirect(_env *LnsEnv, arg1 *LnsList)
-    Clear(_env *LnsEnv)
-    Get_commentList(_env *LnsEnv) *LnsList
-    HasInvalidComment(_env *LnsEnv) LnsAny
-}
-type Parser_CommentLayer struct {
-    commentList *LnsList
-    tokenSet *LnsSet
-    tokenList *LnsList
-    FP Parser_CommentLayerMtd
-}
-func Parser_CommentLayer2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_CommentLayer).FP
-}
-type Parser_CommentLayerDownCast interface {
-    ToParser_CommentLayer() *Parser_CommentLayer
-}
-func Parser_CommentLayerDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_CommentLayerDownCast)
-    if ok { return work.ToParser_CommentLayer() }
-    return nil
-}
-func (obj *Parser_CommentLayer) ToParser_CommentLayer() *Parser_CommentLayer {
-    return obj
-}
-func NewParser_CommentLayer(_env *LnsEnv) *Parser_CommentLayer {
-    obj := &Parser_CommentLayer{}
-    obj.FP = obj
-    obj.InitParser_CommentLayer(_env)
-    return obj
-}
-func (self *Parser_CommentLayer) Get_commentList(_env *LnsEnv) *LnsList{ return self.commentList }
-
-// declaration Class -- CommentCtrl
-type Parser_CommentCtrlMtd interface {
-    Add(_env *LnsEnv, arg1 *Types_Token)
-    AddDirect(_env *LnsEnv, arg1 *LnsList)
-    Clear(_env *LnsEnv)
-    Get_commentList(_env *LnsEnv) *LnsList
-    HasInvalidComment(_env *LnsEnv) LnsAny
-    Pop(_env *LnsEnv)
-    Push(_env *LnsEnv)
-}
-type Parser_CommentCtrl struct {
-    layerStack *LnsList
-    layer *Parser_CommentLayer
-    FP Parser_CommentCtrlMtd
-}
-func Parser_CommentCtrl2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Parser_CommentCtrl).FP
-}
-type Parser_CommentCtrlDownCast interface {
-    ToParser_CommentCtrl() *Parser_CommentCtrl
-}
-func Parser_CommentCtrlDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Parser_CommentCtrlDownCast)
-    if ok { return work.ToParser_CommentCtrl() }
-    return nil
-}
-func (obj *Parser_CommentCtrl) ToParser_CommentCtrl() *Parser_CommentCtrl {
-    return obj
-}
-func NewParser_CommentCtrl(_env *LnsEnv) *Parser_CommentCtrl {
-    obj := &Parser_CommentCtrl{}
-    obj.FP = obj
-    obj.InitParser_CommentCtrl(_env)
-    return obj
-}
-// advertise -- 439
-func (self *Parser_CommentCtrl) Add(_env *LnsEnv, arg1 *Types_Token) {
-self.layer. FP.Add( _env, arg1)
-}
-// advertise -- 439
-func (self *Parser_CommentCtrl) AddDirect(_env *LnsEnv, arg1 *LnsList) {
-self.layer. FP.AddDirect( _env, arg1)
-}
-// advertise -- 439
-func (self *Parser_CommentCtrl) Clear(_env *LnsEnv) {
-self.layer. FP.Clear( _env)
-}
-// advertise -- 439
-func (self *Parser_CommentCtrl) Get_commentList(_env *LnsEnv) *LnsList {
-    return self.layer. FP.Get_commentList( _env)
-}
-// advertise -- 439
-func (self *Parser_CommentCtrl) HasInvalidComment(_env *LnsEnv) LnsAny {
-    return self.layer. FP.HasInvalidComment( _env)
-}
-
-func Lns_Parser_init(_env *LnsEnv) {
-    if init_Parser { return }
-    init_Parser = true
-    Parser__mod__ = "@lune.@base.@Parser"
-    Lns_InitMod()
-    Lns_Util_init(_env)
-    Lns_Str_init(_env)
-    Lns_Types_init(_env)
-    Lns_Async_init(_env)
-    Lns_AsyncParser_init(_env)
-    Parser_noneToken = Types_noneToken
-    Parser_StreamParser____init_0_(_env)
-    Parser_eofToken = NewTypes_Token(_env, Types_TokenKind__Eof, "<EOF>", NewTypes_Position(_env, 0, 0, "eof"), false, NewLnsList([]LnsAny{}))
-}
-func init() {
-    init_Parser = false
-}
-// 120: DeclConstr
-func (self *Parser_TokenListParser) InitParser_TokenListParser(_env *LnsEnv, tokenList *LnsList,streamName string,overridePos LnsAny) {
-    self.InitParser_Parser(_env)
-    self.index = 1
-    self.tokenList = tokenList
-    self.streamName = streamName
-    self.overridePos = overridePos
-}
 // 131: decl @lune.@base.@Parser.TokenListParser.createPosition
 func (self *Parser_TokenListParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
     return Types_Position_create(_env, lineNo, column, self.FP.GetStreamName(_env), self.overridePos)
@@ -514,26 +150,6 @@ func (self *Parser_TokenListParser) GetToken(_env *LnsEnv) LnsAny {
 func Parser_StreamParser_setStdinStream(_env *LnsEnv, moduleName string) {
     Parser_StreamParser__stdinStreamModuleName = moduleName
     Parser_StreamParser__stdinTxt = Lns_unwrapDefault( Lns_io_stdin.Read(_env, "*a"), "").(string)
-}
-// 172: DeclConstr
-func (self *Parser_StreamParser) InitParser_StreamParser(_env *LnsEnv, parserSrc LnsAny,async bool,stdinFile LnsAny,pos LnsAny) {
-    self.InitParser_Parser(_env)
-    self.pos = 1
-    self.lineTokenList = NewLnsList([]LnsAny{})
-    self.overridePos = pos
-    var asyncParser LnsAny
-    var errMess string
-    asyncParser,errMess = AsyncParser_create(_env, parserSrc, stdinFile, pos, async)
-    {
-        __exp := asyncParser
-        if !Lns_IsNil( __exp ) {
-            _exp := __exp.(*AsyncParser_Parser)
-            self.asyncParser = _exp
-        } else {
-            Util_err(_env, errMess)
-        }
-    }
-    self.streamName = self.asyncParser.FP.Get_streamName(_env)
 }
 // 191: decl @lune.@base.@Parser.StreamParser.createPosition
 func (self *Parser_StreamParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
@@ -570,13 +186,6 @@ func (self *Parser_StreamParser) GetToken(_env *LnsEnv) LnsAny {
     token = self.lineTokenList.GetAt(self.pos).(Types_TokenDownCast).ToTypes_Token()
     self.pos = self.pos + 1
     return token
-}
-// 232: DeclConstr
-func (self *Parser_DefaultPushbackParser) InitParser_DefaultPushbackParser(_env *LnsEnv, parser *Parser_Parser) {
-    self.parser = parser
-    self.pushbackedList = NewLnsList([]LnsAny{})
-    self.usedTokenList = NewLnsList([]LnsAny{})
-    self.currentToken = Types_noneToken
 }
 // 239: decl @lune.@base.@Parser.DefaultPushbackParser.getUsedTokenListLen
 func (self *Parser_DefaultPushbackParser) GetUsedTokenListLen(_env *LnsEnv) LnsInt {
@@ -747,12 +356,6 @@ func (self *Parser_DummyParser) GetStreamName(_env *LnsEnv) string {
 func (self *Parser_DummyParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
     return Types_Position_create(_env, lineNo, column, self.FP.GetStreamName(_env), nil)
 }
-// 397: DeclConstr
-func (self *Parser_CommentLayer) InitParser_CommentLayer(_env *LnsEnv) {
-    self.commentList = NewLnsList([]LnsAny{})
-    self.tokenSet = NewLnsSet([]LnsAny{})
-    self.tokenList = NewLnsList([]LnsAny{})
-}
 // 403: decl @lune.@base.@Parser.CommentLayer.addDirect
 func (self *Parser_CommentLayer) AddDirect(_env *LnsEnv, commentList *LnsList) {
     for _, _comment := range( commentList.Items ) {
@@ -783,11 +386,6 @@ func (self *Parser_CommentLayer) HasInvalidComment(_env *LnsEnv) LnsAny {
         _env.SetStackVal( self.tokenList.GetAt(2).(Types_TokenDownCast).ToTypes_Token().FP.Get_commentList(_env).GetAt(1).(Types_TokenDownCast).ToTypes_Token()) ||
         _env.SetStackVal( nil) )
 }
-// 443: DeclConstr
-func (self *Parser_CommentCtrl) InitParser_CommentCtrl(_env *LnsEnv) {
-    self.layer = NewParser_CommentLayer(_env)
-    self.layerStack = NewLnsList([]LnsAny{Parser_CommentLayer2Stem(self.layer)})
-}
 // 448: decl @lune.@base.@Parser.CommentCtrl.push
 func (self *Parser_CommentCtrl) Push(_env *LnsEnv) {
     self.layer = NewParser_CommentLayer(_env)
@@ -797,4 +395,414 @@ func (self *Parser_CommentCtrl) Push(_env *LnsEnv) {
 func (self *Parser_CommentCtrl) Pop(_env *LnsEnv) {
     self.layer = self.layerStack.GetAt(self.layerStack.Len()).(Parser_CommentLayerDownCast).ToParser_CommentLayer()
     self.layerStack.Remove(nil)
+}
+// declaration Class -- Parser
+type Parser_ParserMtd interface {
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    GetStreamName(_env *LnsEnv) string
+    GetToken(_env *LnsEnv) LnsAny
+}
+type Parser_Parser struct {
+    FP Parser_ParserMtd
+}
+func Parser_Parser2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Parser_Parser).FP
+}
+type Parser_ParserDownCast interface {
+    ToParser_Parser() *Parser_Parser
+}
+func Parser_ParserDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Parser_ParserDownCast)
+    if ok { return work.ToParser_Parser() }
+    return nil
+}
+func (obj *Parser_Parser) ToParser_Parser() *Parser_Parser {
+    return obj
+}
+func (self *Parser_Parser) InitParser_Parser(_env *LnsEnv) {
+}
+
+
+
+
+type Parser_PushbackParser interface {
+        CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+        Error(_env *LnsEnv, arg1 string)
+        GetStreamName(_env *LnsEnv) string
+        GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
+        NewPushback(_env *LnsEnv, arg1 *LnsList)
+        Pushback(_env *LnsEnv)
+        PushbackStr(_env *LnsEnv, arg1 string, arg2 string, arg3 *Types_Position)
+        PushbackToken(_env *LnsEnv, arg1 *Types_Token)
+}
+func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
+    if _, ok := obj.(Parser_PushbackParser); ok { 
+        return obj
+    }
+    return nil
+}
+
+// declaration Class -- TokenListParser
+type Parser_TokenListParserMtd interface {
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    GetStreamName(_env *LnsEnv) string
+    GetToken(_env *LnsEnv) LnsAny
+}
+type Parser_TokenListParser struct {
+    Parser_Parser
+    streamName string
+    tokenList *LnsList
+    index LnsInt
+    overridePos LnsAny
+    FP Parser_TokenListParserMtd
+}
+func Parser_TokenListParser2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Parser_TokenListParser).FP
+}
+type Parser_TokenListParserDownCast interface {
+    ToParser_TokenListParser() *Parser_TokenListParser
+}
+func Parser_TokenListParserDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Parser_TokenListParserDownCast)
+    if ok { return work.ToParser_TokenListParser() }
+    return nil
+}
+func (obj *Parser_TokenListParser) ToParser_TokenListParser() *Parser_TokenListParser {
+    return obj
+}
+func NewParser_TokenListParser(_env *LnsEnv, arg1 *LnsList, arg2 string, arg3 LnsAny) *Parser_TokenListParser {
+    obj := &Parser_TokenListParser{}
+    obj.FP = obj
+    obj.Parser_Parser.FP = obj
+    obj.InitParser_TokenListParser(_env, arg1, arg2, arg3)
+    return obj
+}
+// 120: DeclConstr
+func (self *Parser_TokenListParser) InitParser_TokenListParser(_env *LnsEnv, tokenList *LnsList,streamName string,overridePos LnsAny) {
+    self.InitParser_Parser(_env)
+    self.index = 1
+    self.tokenList = tokenList
+    self.streamName = streamName
+    self.overridePos = overridePos
+}
+
+
+// declaration Class -- StreamParser
+var Parser_StreamParser__stdinStreamModuleName LnsAny
+var Parser_StreamParser__stdinTxt string
+// 151: decl @lune.@base.@Parser.StreamParser.___init
+func Parser_StreamParser____init_0_(_env *LnsEnv) {
+    Parser_StreamParser__stdinStreamModuleName = nil
+    Parser_StreamParser__stdinTxt = ""
+}
+
+type Parser_StreamParserMtd interface {
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    GetStreamName(_env *LnsEnv) string
+    GetToken(_env *LnsEnv) LnsAny
+}
+type Parser_StreamParser struct {
+    Parser_Parser
+    stdinStreamModuleName LnsAny
+    stdinTxt string
+    streamName string
+    pos LnsInt
+    lineTokenList *LnsList
+    asyncParser *AsyncParser_Parser
+    overridePos LnsAny
+    FP Parser_StreamParserMtd
+}
+func Parser_StreamParser2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Parser_StreamParser).FP
+}
+type Parser_StreamParserDownCast interface {
+    ToParser_StreamParser() *Parser_StreamParser
+}
+func Parser_StreamParserDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Parser_StreamParserDownCast)
+    if ok { return work.ToParser_StreamParser() }
+    return nil
+}
+func (obj *Parser_StreamParser) ToParser_StreamParser() *Parser_StreamParser {
+    return obj
+}
+func NewParser_StreamParser(_env *LnsEnv, arg1 LnsAny, arg2 bool, arg3 LnsAny, arg4 LnsAny) *Parser_StreamParser {
+    obj := &Parser_StreamParser{}
+    obj.FP = obj
+    obj.Parser_Parser.FP = obj
+    obj.InitParser_StreamParser(_env, arg1, arg2, arg3, arg4)
+    return obj
+}
+// 172: DeclConstr
+func (self *Parser_StreamParser) InitParser_StreamParser(_env *LnsEnv, parserSrc LnsAny,async bool,stdinFile LnsAny,pos LnsAny) {
+    self.InitParser_Parser(_env)
+    self.pos = 1
+    self.lineTokenList = NewLnsList([]LnsAny{})
+    self.overridePos = pos
+    var asyncParser LnsAny
+    var errMess string
+    asyncParser,errMess = AsyncParser_create(_env, parserSrc, stdinFile, pos, async)
+    {
+        __exp := asyncParser
+        if !Lns_IsNil( __exp ) {
+            _exp := __exp.(*AsyncParser_Parser)
+            self.asyncParser = _exp
+        } else {
+            Util_err(_env, errMess)
+        }
+    }
+    self.streamName = self.asyncParser.FP.Get_streamName(_env)
+}
+
+
+// declaration Class -- DefaultPushbackParser
+type Parser_DefaultPushbackParserMtd interface {
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    Error(_env *LnsEnv, arg1 string)
+    GetLastPos(_env *LnsEnv) *Types_Position
+    GetNearCode(_env *LnsEnv) string
+    GetStreamName(_env *LnsEnv) string
+    GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
+    GetUsedTokenListLen(_env *LnsEnv) LnsInt
+    Get_currentToken(_env *LnsEnv) *Types_Token
+    NewPushback(_env *LnsEnv, arg1 *LnsList)
+    Pushback(_env *LnsEnv)
+    PushbackStr(_env *LnsEnv, arg1 string, arg2 string, arg3 *Types_Position)
+    PushbackToken(_env *LnsEnv, arg1 *Types_Token)
+}
+type Parser_DefaultPushbackParser struct {
+    parser *Parser_Parser
+    pushbackedList *LnsList
+    usedTokenList *LnsList
+    currentToken *Types_Token
+    FP Parser_DefaultPushbackParserMtd
+}
+func Parser_DefaultPushbackParser2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Parser_DefaultPushbackParser).FP
+}
+type Parser_DefaultPushbackParserDownCast interface {
+    ToParser_DefaultPushbackParser() *Parser_DefaultPushbackParser
+}
+func Parser_DefaultPushbackParserDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Parser_DefaultPushbackParserDownCast)
+    if ok { return work.ToParser_DefaultPushbackParser() }
+    return nil
+}
+func (obj *Parser_DefaultPushbackParser) ToParser_DefaultPushbackParser() *Parser_DefaultPushbackParser {
+    return obj
+}
+func NewParser_DefaultPushbackParser(_env *LnsEnv, arg1 *Parser_Parser) *Parser_DefaultPushbackParser {
+    obj := &Parser_DefaultPushbackParser{}
+    obj.FP = obj
+    obj.InitParser_DefaultPushbackParser(_env, arg1)
+    return obj
+}
+func (self *Parser_DefaultPushbackParser) Get_currentToken(_env *LnsEnv) *Types_Token{ return self.currentToken }
+// 232: DeclConstr
+func (self *Parser_DefaultPushbackParser) InitParser_DefaultPushbackParser(_env *LnsEnv, parser *Parser_Parser) {
+    self.parser = parser
+    self.pushbackedList = NewLnsList([]LnsAny{})
+    self.usedTokenList = NewLnsList([]LnsAny{})
+    self.currentToken = Types_noneToken
+}
+
+
+// declaration Class -- DummyParser
+type Parser_DummyParserMtd interface {
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    GetStreamName(_env *LnsEnv) string
+    GetToken(_env *LnsEnv) LnsAny
+}
+type Parser_DummyParser struct {
+    Parser_Parser
+    FP Parser_DummyParserMtd
+}
+func Parser_DummyParser2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Parser_DummyParser).FP
+}
+type Parser_DummyParserDownCast interface {
+    ToParser_DummyParser() *Parser_DummyParser
+}
+func Parser_DummyParserDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Parser_DummyParserDownCast)
+    if ok { return work.ToParser_DummyParser() }
+    return nil
+}
+func (obj *Parser_DummyParser) ToParser_DummyParser() *Parser_DummyParser {
+    return obj
+}
+func NewParser_DummyParser(_env *LnsEnv) *Parser_DummyParser {
+    obj := &Parser_DummyParser{}
+    obj.FP = obj
+    obj.Parser_Parser.FP = obj
+    obj.InitParser_DummyParser(_env)
+    return obj
+}
+func (self *Parser_DummyParser) InitParser_DummyParser(_env *LnsEnv) {
+    self.Parser_Parser.InitParser_Parser( _env)
+}
+
+// declaration Class -- CommentLayer
+type Parser_CommentLayerMtd interface {
+    Add(_env *LnsEnv, arg1 *Types_Token)
+    AddDirect(_env *LnsEnv, arg1 *LnsList)
+    Clear(_env *LnsEnv)
+    Get_commentList(_env *LnsEnv) *LnsList
+    HasInvalidComment(_env *LnsEnv) LnsAny
+}
+type Parser_CommentLayer struct {
+    commentList *LnsList
+    tokenSet *LnsSet
+    tokenList *LnsList
+    FP Parser_CommentLayerMtd
+}
+func Parser_CommentLayer2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Parser_CommentLayer).FP
+}
+type Parser_CommentLayerDownCast interface {
+    ToParser_CommentLayer() *Parser_CommentLayer
+}
+func Parser_CommentLayerDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Parser_CommentLayerDownCast)
+    if ok { return work.ToParser_CommentLayer() }
+    return nil
+}
+func (obj *Parser_CommentLayer) ToParser_CommentLayer() *Parser_CommentLayer {
+    return obj
+}
+func NewParser_CommentLayer(_env *LnsEnv) *Parser_CommentLayer {
+    obj := &Parser_CommentLayer{}
+    obj.FP = obj
+    obj.InitParser_CommentLayer(_env)
+    return obj
+}
+func (self *Parser_CommentLayer) Get_commentList(_env *LnsEnv) *LnsList{ return self.commentList }
+// 397: DeclConstr
+func (self *Parser_CommentLayer) InitParser_CommentLayer(_env *LnsEnv) {
+    self.commentList = NewLnsList([]LnsAny{})
+    self.tokenSet = NewLnsSet([]LnsAny{})
+    self.tokenList = NewLnsList([]LnsAny{})
+}
+
+
+// declaration Class -- CommentCtrl
+type Parser_CommentCtrlMtd interface {
+    Add(_env *LnsEnv, arg1 *Types_Token)
+    AddDirect(_env *LnsEnv, arg1 *LnsList)
+    Clear(_env *LnsEnv)
+    Get_commentList(_env *LnsEnv) *LnsList
+    HasInvalidComment(_env *LnsEnv) LnsAny
+    Pop(_env *LnsEnv)
+    Push(_env *LnsEnv)
+}
+type Parser_CommentCtrl struct {
+    layerStack *LnsList
+    layer *Parser_CommentLayer
+    FP Parser_CommentCtrlMtd
+}
+func Parser_CommentCtrl2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Parser_CommentCtrl).FP
+}
+type Parser_CommentCtrlDownCast interface {
+    ToParser_CommentCtrl() *Parser_CommentCtrl
+}
+func Parser_CommentCtrlDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Parser_CommentCtrlDownCast)
+    if ok { return work.ToParser_CommentCtrl() }
+    return nil
+}
+func (obj *Parser_CommentCtrl) ToParser_CommentCtrl() *Parser_CommentCtrl {
+    return obj
+}
+func NewParser_CommentCtrl(_env *LnsEnv) *Parser_CommentCtrl {
+    obj := &Parser_CommentCtrl{}
+    obj.FP = obj
+    obj.InitParser_CommentCtrl(_env)
+    return obj
+}
+// advertise -- 439
+func (self *Parser_CommentCtrl) Add(_env *LnsEnv, arg1 *Types_Token) {
+self.layer. FP.Add( _env, arg1)
+}
+// advertise -- 439
+func (self *Parser_CommentCtrl) AddDirect(_env *LnsEnv, arg1 *LnsList) {
+self.layer. FP.AddDirect( _env, arg1)
+}
+// advertise -- 439
+func (self *Parser_CommentCtrl) Clear(_env *LnsEnv) {
+self.layer. FP.Clear( _env)
+}
+// advertise -- 439
+func (self *Parser_CommentCtrl) Get_commentList(_env *LnsEnv) *LnsList {
+    return self.layer. FP.Get_commentList( _env)
+}
+// advertise -- 439
+func (self *Parser_CommentCtrl) HasInvalidComment(_env *LnsEnv) LnsAny {
+    return self.layer. FP.HasInvalidComment( _env)
+}
+// 443: DeclConstr
+func (self *Parser_CommentCtrl) InitParser_CommentCtrl(_env *LnsEnv) {
+    self.layer = NewParser_CommentLayer(_env)
+    self.layerStack = NewLnsList([]LnsAny{Parser_CommentLayer2Stem(self.layer)})
+}
+
+
+func Lns_Parser_init(_env *LnsEnv) {
+    if init_Parser { return }
+    init_Parser = true
+    Parser__mod__ = "@lune.@base.@Parser"
+    Lns_InitMod()
+    Lns_Util_init(_env)
+    Lns_Str_init(_env)
+    Lns_Types_init(_env)
+    Lns_Async_init(_env)
+    Lns_AsyncParser_init(_env)
+    Parser_noneToken = Types_noneToken
+    Parser_StreamParser____init_0_(_env)
+    Parser_eofToken = NewTypes_Token(_env, Types_TokenKind__Eof, "<EOF>", NewTypes_Position(_env, 0, 0, "eof"), false, NewLnsList([]LnsAny{}))
+}
+func init() {
+    init_Parser = false
 }

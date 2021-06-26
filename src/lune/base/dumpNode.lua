@@ -605,7 +605,7 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
       name = name .. " closure"
    end
    
-   self:dump( opt, node, name )
+   self:dump( opt, node, string.format( "%s -- stmt:%d", name, declInfo:get_stmtNum()) )
    local argList = declInfo:get_argList(  )
    for __index, arg in ipairs( argList ) do
       filter( arg, self, opt:nextOpt(  ) )

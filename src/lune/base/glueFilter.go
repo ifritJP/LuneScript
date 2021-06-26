@@ -72,259 +72,6 @@ func GlueFilter_createFilter(_env *LnsEnv, outputDir LnsAny) *Nodes_Filter {
 }
 
 
-// declaration Class -- glueGenerator
-type glueFilter_glueGeneratorMtd interface {
-    getArgInfo(_env *LnsEnv, arg1 *Nodes_Node)(string, string, *Ast_TypeInfo, string)
-    OutputClass(_env *LnsEnv, arg1 string, arg2 *Nodes_DeclClassNode, arg3 string)
-    outputCommonFunc(_env *LnsEnv, arg1 string)
-    outputFuncReg(_env *LnsEnv, arg1 string, arg2 *LnsList)
-    outputMethod(_env *LnsEnv, arg1 *Nodes_Node, arg2 string)
-    outputPrototype(_env *LnsEnv, arg1 *Nodes_Node)
-    outputPrototypeList(_env *LnsEnv, arg1 *LnsList)
-    outputUserPrototype(_env *LnsEnv, arg1 *Nodes_Node, arg2 string)
-    outputUserPrototypeList(_env *LnsEnv, arg1 *LnsList, arg2 string)
-    write(_env *LnsEnv, arg1 string)
-    writeHeader(_env *LnsEnv, arg1 string)
-}
-type glueFilter_glueGenerator struct {
-    srcStream Lns_oStream
-    headerStream Lns_oStream
-    FP glueFilter_glueGeneratorMtd
-}
-func glueFilter_glueGenerator2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*glueFilter_glueGenerator).FP
-}
-type glueFilter_glueGeneratorDownCast interface {
-    ToglueFilter_glueGenerator() *glueFilter_glueGenerator
-}
-func glueFilter_glueGeneratorDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(glueFilter_glueGeneratorDownCast)
-    if ok { return work.ToglueFilter_glueGenerator() }
-    return nil
-}
-func (obj *glueFilter_glueGenerator) ToglueFilter_glueGenerator() *glueFilter_glueGenerator {
-    return obj
-}
-func NewglueFilter_glueGenerator(_env *LnsEnv, arg1 Lns_oStream, arg2 Lns_oStream) *glueFilter_glueGenerator {
-    obj := &glueFilter_glueGenerator{}
-    obj.FP = obj
-    obj.InitglueFilter_glueGenerator(_env, arg1, arg2)
-    return obj
-}
-func (self *glueFilter_glueGenerator) InitglueFilter_glueGenerator(_env *LnsEnv, arg1 Lns_oStream, arg2 Lns_oStream) {
-    self.srcStream = arg1
-    self.headerStream = arg2
-}
-
-// declaration Class -- GlueArgInfo
-type glueFilter_GlueArgInfoMtd interface {
-    Get_argName(_env *LnsEnv) string
-    Get_callArgName(_env *LnsEnv) string
-    Get_callTxt(_env *LnsEnv) string
-    Get_index(_env *LnsEnv) LnsInt
-    Get_setTxt(_env *LnsEnv) string
-    Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
-}
-type glueFilter_GlueArgInfo struct {
-    index LnsInt
-    argName string
-    callArgName string
-    callTxt string
-    setTxt string
-    typeInfo *Ast_TypeInfo
-    FP glueFilter_GlueArgInfoMtd
-}
-func glueFilter_GlueArgInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*glueFilter_GlueArgInfo).FP
-}
-type glueFilter_GlueArgInfoDownCast interface {
-    ToglueFilter_GlueArgInfo() *glueFilter_GlueArgInfo
-}
-func glueFilter_GlueArgInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(glueFilter_GlueArgInfoDownCast)
-    if ok { return work.ToglueFilter_GlueArgInfo() }
-    return nil
-}
-func (obj *glueFilter_GlueArgInfo) ToglueFilter_GlueArgInfo() *glueFilter_GlueArgInfo {
-    return obj
-}
-func NewglueFilter_GlueArgInfo(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 string, arg4 string, arg5 string, arg6 *Ast_TypeInfo) *glueFilter_GlueArgInfo {
-    obj := &glueFilter_GlueArgInfo{}
-    obj.FP = obj
-    obj.InitglueFilter_GlueArgInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6)
-    return obj
-}
-func (self *glueFilter_GlueArgInfo) InitglueFilter_GlueArgInfo(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 string, arg4 string, arg5 string, arg6 *Ast_TypeInfo) {
-    self.index = arg1
-    self.argName = arg2
-    self.callArgName = arg3
-    self.callTxt = arg4
-    self.setTxt = arg5
-    self.typeInfo = arg6
-}
-func (self *glueFilter_GlueArgInfo) Get_index(_env *LnsEnv) LnsInt{ return self.index }
-func (self *glueFilter_GlueArgInfo) Get_argName(_env *LnsEnv) string{ return self.argName }
-func (self *glueFilter_GlueArgInfo) Get_callArgName(_env *LnsEnv) string{ return self.callArgName }
-func (self *glueFilter_GlueArgInfo) Get_callTxt(_env *LnsEnv) string{ return self.callTxt }
-func (self *glueFilter_GlueArgInfo) Get_setTxt(_env *LnsEnv) string{ return self.setTxt }
-func (self *glueFilter_GlueArgInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
-
-// declaration Class -- glueFilter
-type glueFilter_glueFilterMtd interface {
-    DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
-    GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
-    Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
-    Get_optStack(_env *LnsEnv) *LnsList
-    Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
-    ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
-    ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
-    ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
-    ProcessAsyncLock(_env *LnsEnv, arg1 *Nodes_AsyncLockNode, arg2 LnsAny)
-    ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
-    ProcessBlock(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
-    ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
-    ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
-    ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
-    ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
-    ProcessDeclArg(_env *LnsEnv, arg1 *Nodes_DeclArgNode, arg2 LnsAny)
-    ProcessDeclArgDDD(_env *LnsEnv, arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
-    ProcessDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 LnsAny)
-    ProcessDeclConstr(_env *LnsEnv, arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
-    ProcessDeclDestr(_env *LnsEnv, arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
-    ProcessDeclEnum(_env *LnsEnv, arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
-    ProcessDeclForm(_env *LnsEnv, arg1 *Nodes_DeclFormNode, arg2 LnsAny)
-    ProcessDeclFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
-    ProcessDeclMacro(_env *LnsEnv, arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
-    ProcessDeclMember(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
-    ProcessDeclMethod(_env *LnsEnv, arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
-    ProcessDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 LnsAny)
-    ProcessExpAccessMRet(_env *LnsEnv, arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
-    ProcessExpCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsAny)
-    ProcessExpCallSuper(_env *LnsEnv, arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
-    ProcessExpCallSuperCtor(_env *LnsEnv, arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
-    ProcessExpCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode, arg2 LnsAny)
-    ProcessExpList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 LnsAny)
-    ProcessExpMRet(_env *LnsEnv, arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
-    ProcessExpMacroArgExp(_env *LnsEnv, arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
-    ProcessExpMacroExp(_env *LnsEnv, arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
-    ProcessExpMacroStat(_env *LnsEnv, arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
-    ProcessExpMacroStatList(_env *LnsEnv, arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
-    ProcessExpMultiTo1(_env *LnsEnv, arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
-    ProcessExpNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode, arg2 LnsAny)
-    ProcessExpOmitEnum(_env *LnsEnv, arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
-    ProcessExpOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
-    ProcessExpOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
-    ProcessExpParen(_env *LnsEnv, arg1 *Nodes_ExpParenNode, arg2 LnsAny)
-    ProcessExpRef(_env *LnsEnv, arg1 *Nodes_ExpRefNode, arg2 LnsAny)
-    ProcessExpRefItem(_env *LnsEnv, arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
-    ProcessExpSetItem(_env *LnsEnv, arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
-    ProcessExpSetVal(_env *LnsEnv, arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
-    ProcessExpSubDDD(_env *LnsEnv, arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
-    ProcessExpToDDD(_env *LnsEnv, arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
-    ProcessExpUnwrap(_env *LnsEnv, arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
-    ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
-    ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
-    ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
-    ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
-    ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
-    ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
-    ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
-    ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
-    ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
-    ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
-    ProcessLiteralInt(_env *LnsEnv, arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
-    ProcessLiteralList(_env *LnsEnv, arg1 *Nodes_LiteralListNode, arg2 LnsAny)
-    ProcessLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
-    ProcessLiteralNil(_env *LnsEnv, arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
-    ProcessLiteralReal(_env *LnsEnv, arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
-    ProcessLiteralSet(_env *LnsEnv, arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
-    ProcessLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
-    ProcessLiteralSymbol(_env *LnsEnv, arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
-    ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
-    ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
-    ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
-    ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
-    ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
-    ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
-    ProcessProtoMethod(_env *LnsEnv, arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
-    ProcessProvide(_env *LnsEnv, arg1 *Nodes_ProvideNode, arg2 LnsAny)
-    ProcessRefField(_env *LnsEnv, arg1 *Nodes_RefFieldNode, arg2 LnsAny)
-    ProcessRefType(_env *LnsEnv, arg1 *Nodes_RefTypeNode, arg2 LnsAny)
-    ProcessRepeat(_env *LnsEnv, arg1 *Nodes_RepeatNode, arg2 LnsAny)
-    ProcessRequest(_env *LnsEnv, arg1 *Nodes_RequestNode, arg2 LnsAny)
-    ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
-    ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
-    ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
-    ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
-    ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
-    ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
-    ProcessSwitch(_env *LnsEnv, arg1 *Nodes_SwitchNode, arg2 LnsAny)
-    ProcessTestBlock(_env *LnsEnv, arg1 *Nodes_TestBlockNode, arg2 LnsAny)
-    ProcessTestCase(_env *LnsEnv, arg1 *Nodes_TestCaseNode, arg2 LnsAny)
-    ProcessUnboxing(_env *LnsEnv, arg1 *Nodes_UnboxingNode, arg2 LnsAny)
-    ProcessUnwrapSet(_env *LnsEnv, arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
-    ProcessWhen(_env *LnsEnv, arg1 *Nodes_WhenNode, arg2 LnsAny)
-    ProcessWhile(_env *LnsEnv, arg1 *Nodes_WhileNode, arg2 LnsAny)
-}
-type glueFilter_glueFilter struct {
-    Nodes_Filter
-    outputDir LnsAny
-    FP glueFilter_glueFilterMtd
-}
-func glueFilter_glueFilter2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*glueFilter_glueFilter).FP
-}
-type glueFilter_glueFilterDownCast interface {
-    ToglueFilter_glueFilter() *glueFilter_glueFilter
-}
-func glueFilter_glueFilterDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(glueFilter_glueFilterDownCast)
-    if ok { return work.ToglueFilter_glueFilter() }
-    return nil
-}
-func (obj *glueFilter_glueFilter) ToglueFilter_glueFilter() *glueFilter_glueFilter {
-    return obj
-}
-func NewglueFilter_glueFilter(_env *LnsEnv, arg1 LnsAny) *glueFilter_glueFilter {
-    obj := &glueFilter_glueFilter{}
-    obj.FP = obj
-    obj.Nodes_Filter.FP = obj
-    obj.InitglueFilter_glueFilter(_env, arg1)
-    return obj
-}
-
-func Lns_glueFilter_init(_env *LnsEnv) {
-    if init_glueFilter { return }
-    init_glueFilter = true
-    glueFilter__mod__ = "@lune.@base.@glueFilter"
-    Lns_InitMod()
-    Lns_Ast_init(_env)
-    Lns_Nodes_init(_env)
-    Lns_Util_init(_env)
-}
-func init() {
-    init_glueFilter = false
-}
 // 37: decl @lune.@base.@glueFilter.glueGenerator.write
 func (self *glueFilter_glueGenerator) write(_env *LnsEnv, txt string) {
     self.srcStream.Write(_env, txt)
@@ -575,11 +322,6 @@ func (self *glueFilter_glueGenerator) OutputClass(_env *LnsEnv, moduleFullName s
         self.FP.outputMethod(_env, methodNode, gluePrefix)
     }
 }
-// 387: DeclConstr
-func (self *glueFilter_glueFilter) InitglueFilter_glueFilter(_env *LnsEnv, outputDir LnsAny) {
-    self.InitNodes_Filter(_env, false, nil, nil)
-    self.outputDir = outputDir
-}
 // 397: decl @lune.@base.@glueFilter.glueFilter.processRoot
 func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_dummy LnsAny) {
     var createFile func(_env *LnsEnv, filename string) Lns_oStream
@@ -623,4 +365,263 @@ func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNod
             }
         }
     }
+}
+// declaration Class -- glueGenerator
+type glueFilter_glueGeneratorMtd interface {
+    getArgInfo(_env *LnsEnv, arg1 *Nodes_Node)(string, string, *Ast_TypeInfo, string)
+    OutputClass(_env *LnsEnv, arg1 string, arg2 *Nodes_DeclClassNode, arg3 string)
+    outputCommonFunc(_env *LnsEnv, arg1 string)
+    outputFuncReg(_env *LnsEnv, arg1 string, arg2 *LnsList)
+    outputMethod(_env *LnsEnv, arg1 *Nodes_Node, arg2 string)
+    outputPrototype(_env *LnsEnv, arg1 *Nodes_Node)
+    outputPrototypeList(_env *LnsEnv, arg1 *LnsList)
+    outputUserPrototype(_env *LnsEnv, arg1 *Nodes_Node, arg2 string)
+    outputUserPrototypeList(_env *LnsEnv, arg1 *LnsList, arg2 string)
+    write(_env *LnsEnv, arg1 string)
+    writeHeader(_env *LnsEnv, arg1 string)
+}
+type glueFilter_glueGenerator struct {
+    srcStream Lns_oStream
+    headerStream Lns_oStream
+    FP glueFilter_glueGeneratorMtd
+}
+func glueFilter_glueGenerator2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*glueFilter_glueGenerator).FP
+}
+type glueFilter_glueGeneratorDownCast interface {
+    ToglueFilter_glueGenerator() *glueFilter_glueGenerator
+}
+func glueFilter_glueGeneratorDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(glueFilter_glueGeneratorDownCast)
+    if ok { return work.ToglueFilter_glueGenerator() }
+    return nil
+}
+func (obj *glueFilter_glueGenerator) ToglueFilter_glueGenerator() *glueFilter_glueGenerator {
+    return obj
+}
+func NewglueFilter_glueGenerator(_env *LnsEnv, arg1 Lns_oStream, arg2 Lns_oStream) *glueFilter_glueGenerator {
+    obj := &glueFilter_glueGenerator{}
+    obj.FP = obj
+    obj.InitglueFilter_glueGenerator(_env, arg1, arg2)
+    return obj
+}
+func (self *glueFilter_glueGenerator) InitglueFilter_glueGenerator(_env *LnsEnv, arg1 Lns_oStream, arg2 Lns_oStream) {
+    self.srcStream = arg1
+    self.headerStream = arg2
+}
+
+// declaration Class -- GlueArgInfo
+type glueFilter_GlueArgInfoMtd interface {
+    Get_argName(_env *LnsEnv) string
+    Get_callArgName(_env *LnsEnv) string
+    Get_callTxt(_env *LnsEnv) string
+    Get_index(_env *LnsEnv) LnsInt
+    Get_setTxt(_env *LnsEnv) string
+    Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
+}
+type glueFilter_GlueArgInfo struct {
+    index LnsInt
+    argName string
+    callArgName string
+    callTxt string
+    setTxt string
+    typeInfo *Ast_TypeInfo
+    FP glueFilter_GlueArgInfoMtd
+}
+func glueFilter_GlueArgInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*glueFilter_GlueArgInfo).FP
+}
+type glueFilter_GlueArgInfoDownCast interface {
+    ToglueFilter_GlueArgInfo() *glueFilter_GlueArgInfo
+}
+func glueFilter_GlueArgInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(glueFilter_GlueArgInfoDownCast)
+    if ok { return work.ToglueFilter_GlueArgInfo() }
+    return nil
+}
+func (obj *glueFilter_GlueArgInfo) ToglueFilter_GlueArgInfo() *glueFilter_GlueArgInfo {
+    return obj
+}
+func NewglueFilter_GlueArgInfo(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 string, arg4 string, arg5 string, arg6 *Ast_TypeInfo) *glueFilter_GlueArgInfo {
+    obj := &glueFilter_GlueArgInfo{}
+    obj.FP = obj
+    obj.InitglueFilter_GlueArgInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6)
+    return obj
+}
+func (self *glueFilter_GlueArgInfo) InitglueFilter_GlueArgInfo(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 string, arg4 string, arg5 string, arg6 *Ast_TypeInfo) {
+    self.index = arg1
+    self.argName = arg2
+    self.callArgName = arg3
+    self.callTxt = arg4
+    self.setTxt = arg5
+    self.typeInfo = arg6
+}
+func (self *glueFilter_GlueArgInfo) Get_index(_env *LnsEnv) LnsInt{ return self.index }
+func (self *glueFilter_GlueArgInfo) Get_argName(_env *LnsEnv) string{ return self.argName }
+func (self *glueFilter_GlueArgInfo) Get_callArgName(_env *LnsEnv) string{ return self.callArgName }
+func (self *glueFilter_GlueArgInfo) Get_callTxt(_env *LnsEnv) string{ return self.callTxt }
+func (self *glueFilter_GlueArgInfo) Get_setTxt(_env *LnsEnv) string{ return self.setTxt }
+func (self *glueFilter_GlueArgInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
+
+// declaration Class -- glueFilter
+type glueFilter_glueFilterMtd interface {
+    DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
+    GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
+    Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
+    Get_optStack(_env *LnsEnv) *LnsList
+    Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
+    ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
+    ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
+    ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
+    ProcessAsyncLock(_env *LnsEnv, arg1 *Nodes_AsyncLockNode, arg2 LnsAny)
+    ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
+    ProcessBlock(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
+    ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
+    ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
+    ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
+    ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
+    ProcessDeclArg(_env *LnsEnv, arg1 *Nodes_DeclArgNode, arg2 LnsAny)
+    ProcessDeclArgDDD(_env *LnsEnv, arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
+    ProcessDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 LnsAny)
+    ProcessDeclConstr(_env *LnsEnv, arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
+    ProcessDeclDestr(_env *LnsEnv, arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
+    ProcessDeclEnum(_env *LnsEnv, arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
+    ProcessDeclForm(_env *LnsEnv, arg1 *Nodes_DeclFormNode, arg2 LnsAny)
+    ProcessDeclFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
+    ProcessDeclMacro(_env *LnsEnv, arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
+    ProcessDeclMember(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
+    ProcessDeclMethod(_env *LnsEnv, arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
+    ProcessDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 LnsAny)
+    ProcessExpAccessMRet(_env *LnsEnv, arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
+    ProcessExpCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsAny)
+    ProcessExpCallSuper(_env *LnsEnv, arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
+    ProcessExpCallSuperCtor(_env *LnsEnv, arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
+    ProcessExpCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode, arg2 LnsAny)
+    ProcessExpList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 LnsAny)
+    ProcessExpMRet(_env *LnsEnv, arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
+    ProcessExpMacroArgExp(_env *LnsEnv, arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
+    ProcessExpMacroExp(_env *LnsEnv, arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
+    ProcessExpMacroStat(_env *LnsEnv, arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
+    ProcessExpMacroStatList(_env *LnsEnv, arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
+    ProcessExpMultiTo1(_env *LnsEnv, arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
+    ProcessExpNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode, arg2 LnsAny)
+    ProcessExpOmitEnum(_env *LnsEnv, arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
+    ProcessExpOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
+    ProcessExpOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
+    ProcessExpParen(_env *LnsEnv, arg1 *Nodes_ExpParenNode, arg2 LnsAny)
+    ProcessExpRef(_env *LnsEnv, arg1 *Nodes_ExpRefNode, arg2 LnsAny)
+    ProcessExpRefItem(_env *LnsEnv, arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
+    ProcessExpSetItem(_env *LnsEnv, arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
+    ProcessExpSetVal(_env *LnsEnv, arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
+    ProcessExpSubDDD(_env *LnsEnv, arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
+    ProcessExpToDDD(_env *LnsEnv, arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
+    ProcessExpUnwrap(_env *LnsEnv, arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
+    ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
+    ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
+    ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
+    ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
+    ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
+    ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
+    ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
+    ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
+    ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
+    ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
+    ProcessLiteralInt(_env *LnsEnv, arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
+    ProcessLiteralList(_env *LnsEnv, arg1 *Nodes_LiteralListNode, arg2 LnsAny)
+    ProcessLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
+    ProcessLiteralNil(_env *LnsEnv, arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
+    ProcessLiteralReal(_env *LnsEnv, arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
+    ProcessLiteralSet(_env *LnsEnv, arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
+    ProcessLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
+    ProcessLiteralSymbol(_env *LnsEnv, arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
+    ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
+    ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
+    ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
+    ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
+    ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
+    ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
+    ProcessProtoMethod(_env *LnsEnv, arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
+    ProcessProvide(_env *LnsEnv, arg1 *Nodes_ProvideNode, arg2 LnsAny)
+    ProcessRefField(_env *LnsEnv, arg1 *Nodes_RefFieldNode, arg2 LnsAny)
+    ProcessRefType(_env *LnsEnv, arg1 *Nodes_RefTypeNode, arg2 LnsAny)
+    ProcessRepeat(_env *LnsEnv, arg1 *Nodes_RepeatNode, arg2 LnsAny)
+    ProcessRequest(_env *LnsEnv, arg1 *Nodes_RequestNode, arg2 LnsAny)
+    ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
+    ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
+    ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
+    ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
+    ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
+    ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
+    ProcessSwitch(_env *LnsEnv, arg1 *Nodes_SwitchNode, arg2 LnsAny)
+    ProcessTestBlock(_env *LnsEnv, arg1 *Nodes_TestBlockNode, arg2 LnsAny)
+    ProcessTestCase(_env *LnsEnv, arg1 *Nodes_TestCaseNode, arg2 LnsAny)
+    ProcessUnboxing(_env *LnsEnv, arg1 *Nodes_UnboxingNode, arg2 LnsAny)
+    ProcessUnwrapSet(_env *LnsEnv, arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
+    ProcessWhen(_env *LnsEnv, arg1 *Nodes_WhenNode, arg2 LnsAny)
+    ProcessWhile(_env *LnsEnv, arg1 *Nodes_WhileNode, arg2 LnsAny)
+}
+type glueFilter_glueFilter struct {
+    Nodes_Filter
+    outputDir LnsAny
+    FP glueFilter_glueFilterMtd
+}
+func glueFilter_glueFilter2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*glueFilter_glueFilter).FP
+}
+type glueFilter_glueFilterDownCast interface {
+    ToglueFilter_glueFilter() *glueFilter_glueFilter
+}
+func glueFilter_glueFilterDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(glueFilter_glueFilterDownCast)
+    if ok { return work.ToglueFilter_glueFilter() }
+    return nil
+}
+func (obj *glueFilter_glueFilter) ToglueFilter_glueFilter() *glueFilter_glueFilter {
+    return obj
+}
+func NewglueFilter_glueFilter(_env *LnsEnv, arg1 LnsAny) *glueFilter_glueFilter {
+    obj := &glueFilter_glueFilter{}
+    obj.FP = obj
+    obj.Nodes_Filter.FP = obj
+    obj.InitglueFilter_glueFilter(_env, arg1)
+    return obj
+}
+// 387: DeclConstr
+func (self *glueFilter_glueFilter) InitglueFilter_glueFilter(_env *LnsEnv, outputDir LnsAny) {
+    self.InitNodes_Filter(_env, false, nil, nil)
+    self.outputDir = outputDir
+}
+
+
+func Lns_glueFilter_init(_env *LnsEnv) {
+    if init_glueFilter { return }
+    init_glueFilter = true
+    glueFilter__mod__ = "@lune.@base.@glueFilter"
+    Lns_InitMod()
+    Lns_Ast_init(_env)
+    Lns_Nodes_init(_env)
+    Lns_Util_init(_env)
+}
+func init() {
+    init_glueFilter = false
 }

@@ -3,6 +3,14 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Runner bool
 var Runner__mod__ string
+// 34: decl @lune.@base.@Runner.Runner.run
+func (self *Runner_Runner) Run(_env *LnsEnv) {
+    self.FP.RunMain(_env)
+}
+// 39: decl @lune.@base.@Runner.Runner.start
+func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt,name LnsAny) {
+    LnsRun(_env, self.FP, mode, name)
+}
 // declaration Class -- Runner
 type Runner_RunnerMtd interface {
     GetLnsSyncFlag() *Lns_syncFlag
@@ -35,6 +43,12 @@ func Runner_RunnerDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Runner_Runner) ToRunner_Runner() *Runner_Runner {
     return obj
 }
+// 29: DeclConstr
+func (self *Runner_Runner) InitRunner_Runner(_env *LnsEnv) {
+    self._syncFlag = &Lns_syncFlag{}
+}
+
+
 
 func Lns_Runner_init(_env *LnsEnv) {
     if init_Runner { return }
@@ -44,16 +58,4 @@ func Lns_Runner_init(_env *LnsEnv) {
 }
 func init() {
     init_Runner = false
-}
-// 29: DeclConstr
-func (self *Runner_Runner) InitRunner_Runner(_env *LnsEnv) {
-    self._syncFlag = &Lns_syncFlag{}
-}
-// 34: decl @lune.@base.@Runner.Runner.run
-func (self *Runner_Runner) Run(_env *LnsEnv) {
-    self.FP.RunMain(_env)
-}
-// 39: decl @lune.@base.@Runner.Runner.start
-func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt,name LnsAny) {
-    LnsRun(_env, self.FP, mode, name)
 }

@@ -1004,19 +1004,20 @@ local FuncBlockResult = {}
 function FuncBlockResult.setmeta( obj )
   setmetatable( obj, { __index = FuncBlockResult  } )
 end
-function FuncBlockResult.new( funcBlockInfo, body, has_func_sym )
+function FuncBlockResult.new( funcBlockInfo, body, has_func_sym, stmtNum )
    local obj = {}
    FuncBlockResult.setmeta( obj )
    if obj.__init then
-      obj:__init( funcBlockInfo, body, has_func_sym )
+      obj:__init( funcBlockInfo, body, has_func_sym, stmtNum )
    end
    return obj
 end
-function FuncBlockResult:__init( funcBlockInfo, body, has_func_sym )
+function FuncBlockResult:__init( funcBlockInfo, body, has_func_sym, stmtNum )
 
    self.funcBlockInfo = funcBlockInfo
    self.body = body
    self.has_func_sym = has_func_sym
+   self.stmtNum = stmtNum
 end
 function FuncBlockResult:get_funcBlockInfo()
    return self.funcBlockInfo
@@ -1026,6 +1027,9 @@ function FuncBlockResult:get_body()
 end
 function FuncBlockResult:get_has_func_sym()
    return self.has_func_sym
+end
+function FuncBlockResult:get_stmtNum()
+   return self.stmtNum
 end
 
 
@@ -2210,6 +2214,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
    local token = self:checkNextToken( "{" )
    
    self:analyzeStatementList( stmtList, false, "}" )
+   nsInfo:addStmtNum( #stmtList )
    
    self:checkNextToken( "}" )
    
@@ -7085,7 +7090,7 @@ function TransUnit:processFuncBlockInfo( funcBlockCtlIF, streamName )
       end
       
       
-      resultMap[funcBlockInfo] = FuncBlockResult.new(funcBlockInfo, workBody, has_func_sym)
+      resultMap[funcBlockInfo] = FuncBlockResult.new(funcBlockInfo, workBody, has_func_sym, self:get_curNsInfo():get_stmtNum())
    end
    
    
@@ -12005,6 +12010,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
       local declFuncInfo = funcBlockInfo:get_declFuncInfo()
       declFuncInfo:set_body( result:get_body() )
       declFuncInfo:set_has__func__Symbol( result:get_has_func_sym() )
+      declFuncInfo:set_stmtNum( result:get_stmtNum() )
    end
    
 end
@@ -12020,7 +12026,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 647, function (  )
+   Log.log( Log.Level.Log, __func__, 648, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12090,7 +12096,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
       
       
-      Log.log( Log.Level.Log, __func__, 719, function (  )
+      Log.log( Log.Level.Log, __func__, 720, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )

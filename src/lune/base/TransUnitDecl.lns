@@ -4229,8 +4229,9 @@ local fn TransUnit.processFuncBlockInfo(
          self.has__func__Symbol.del( typeInfo );
       }
 
-      resultMap[ funcBlockInfo ] =
-         new FuncBlockResult( funcBlockInfo, workBody, has_func_sym );
+      resultMap[ funcBlockInfo ] = new FuncBlockResult(
+         funcBlockInfo, workBody, has_func_sym, self.$curNsInfo.$stmtNum );  
+
    }
 
    self.popScope();

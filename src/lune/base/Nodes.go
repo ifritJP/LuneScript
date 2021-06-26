@@ -1115,8131 +1115,6 @@ func Node_getSymbolInfo__processExpNode_0_(_env *LnsEnv, node *Nodes_Node) *LnsL
     return NewLnsList([]LnsAny{})
 }
 
-// declaration Class -- SimpleModuleInfoManager
-type Nodes_SimpleModuleInfoManagerMtd interface {
-    GetModuleInfo(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny
-    Pop(_env *LnsEnv)
-    Push(_env *LnsEnv, arg1 Ast_ModuleInfoManager)
-}
-type Nodes_SimpleModuleInfoManager struct {
-    ModuleInfoManager Ast_ModuleInfoManager
-    moduleInfoManagerHist *LnsList
-    FP Nodes_SimpleModuleInfoManagerMtd
-}
-func Nodes_SimpleModuleInfoManager2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_SimpleModuleInfoManager).FP
-}
-type Nodes_SimpleModuleInfoManagerDownCast interface {
-    ToNodes_SimpleModuleInfoManager() *Nodes_SimpleModuleInfoManager
-}
-func Nodes_SimpleModuleInfoManagerDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_SimpleModuleInfoManagerDownCast)
-    if ok { return work.ToNodes_SimpleModuleInfoManager() }
-    return nil
-}
-func (obj *Nodes_SimpleModuleInfoManager) ToNodes_SimpleModuleInfoManager() *Nodes_SimpleModuleInfoManager {
-    return obj
-}
-func NewNodes_SimpleModuleInfoManager(_env *LnsEnv, arg1 LnsAny) *Nodes_SimpleModuleInfoManager {
-    obj := &Nodes_SimpleModuleInfoManager{}
-    obj.FP = obj
-    obj.InitNodes_SimpleModuleInfoManager(_env, arg1)
-    return obj
-}
-// advertise -- 35
-func (self *Nodes_SimpleModuleInfoManager) GetModuleInfo(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny {
-    return self.ModuleInfoManager. GetModuleInfo( _env, arg1)
-}
-
-// declaration Class -- Filter
-type Nodes_FilterMtd interface {
-    DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
-    GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
-    Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
-    Get_optStack(_env *LnsEnv) *LnsList
-    Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
-    popOpt(_env *LnsEnv, arg1 LnsAny)
-    ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
-    ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
-    ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
-    ProcessAsyncLock(_env *LnsEnv, arg1 *Nodes_AsyncLockNode, arg2 LnsAny)
-    ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
-    ProcessBlock(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
-    ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
-    ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
-    ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
-    ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
-    ProcessDeclArg(_env *LnsEnv, arg1 *Nodes_DeclArgNode, arg2 LnsAny)
-    ProcessDeclArgDDD(_env *LnsEnv, arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
-    ProcessDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 LnsAny)
-    ProcessDeclConstr(_env *LnsEnv, arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
-    ProcessDeclDestr(_env *LnsEnv, arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
-    ProcessDeclEnum(_env *LnsEnv, arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
-    ProcessDeclForm(_env *LnsEnv, arg1 *Nodes_DeclFormNode, arg2 LnsAny)
-    ProcessDeclFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
-    ProcessDeclMacro(_env *LnsEnv, arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
-    ProcessDeclMember(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
-    ProcessDeclMethod(_env *LnsEnv, arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
-    ProcessDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 LnsAny)
-    ProcessExpAccessMRet(_env *LnsEnv, arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
-    ProcessExpCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsAny)
-    ProcessExpCallSuper(_env *LnsEnv, arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
-    ProcessExpCallSuperCtor(_env *LnsEnv, arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
-    ProcessExpCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode, arg2 LnsAny)
-    ProcessExpList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 LnsAny)
-    ProcessExpMRet(_env *LnsEnv, arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
-    ProcessExpMacroArgExp(_env *LnsEnv, arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
-    ProcessExpMacroExp(_env *LnsEnv, arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
-    ProcessExpMacroStat(_env *LnsEnv, arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
-    ProcessExpMacroStatList(_env *LnsEnv, arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
-    ProcessExpMultiTo1(_env *LnsEnv, arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
-    ProcessExpNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode, arg2 LnsAny)
-    ProcessExpOmitEnum(_env *LnsEnv, arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
-    ProcessExpOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
-    ProcessExpOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
-    ProcessExpParen(_env *LnsEnv, arg1 *Nodes_ExpParenNode, arg2 LnsAny)
-    ProcessExpRef(_env *LnsEnv, arg1 *Nodes_ExpRefNode, arg2 LnsAny)
-    ProcessExpRefItem(_env *LnsEnv, arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
-    ProcessExpSetItem(_env *LnsEnv, arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
-    ProcessExpSetVal(_env *LnsEnv, arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
-    ProcessExpSubDDD(_env *LnsEnv, arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
-    ProcessExpToDDD(_env *LnsEnv, arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
-    ProcessExpUnwrap(_env *LnsEnv, arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
-    ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
-    ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
-    ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
-    ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
-    ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
-    ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
-    ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
-    ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
-    ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
-    ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
-    ProcessLiteralInt(_env *LnsEnv, arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
-    ProcessLiteralList(_env *LnsEnv, arg1 *Nodes_LiteralListNode, arg2 LnsAny)
-    ProcessLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
-    ProcessLiteralNil(_env *LnsEnv, arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
-    ProcessLiteralReal(_env *LnsEnv, arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
-    ProcessLiteralSet(_env *LnsEnv, arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
-    ProcessLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
-    ProcessLiteralSymbol(_env *LnsEnv, arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
-    ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
-    ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
-    ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
-    ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
-    ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
-    ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
-    ProcessProtoMethod(_env *LnsEnv, arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
-    ProcessProvide(_env *LnsEnv, arg1 *Nodes_ProvideNode, arg2 LnsAny)
-    ProcessRefField(_env *LnsEnv, arg1 *Nodes_RefFieldNode, arg2 LnsAny)
-    ProcessRefType(_env *LnsEnv, arg1 *Nodes_RefTypeNode, arg2 LnsAny)
-    ProcessRepeat(_env *LnsEnv, arg1 *Nodes_RepeatNode, arg2 LnsAny)
-    ProcessRequest(_env *LnsEnv, arg1 *Nodes_RequestNode, arg2 LnsAny)
-    ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
-    ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
-    ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
-    ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
-    ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
-    ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
-    ProcessSwitch(_env *LnsEnv, arg1 *Nodes_SwitchNode, arg2 LnsAny)
-    ProcessTestBlock(_env *LnsEnv, arg1 *Nodes_TestBlockNode, arg2 LnsAny)
-    ProcessTestCase(_env *LnsEnv, arg1 *Nodes_TestCaseNode, arg2 LnsAny)
-    ProcessUnboxing(_env *LnsEnv, arg1 *Nodes_UnboxingNode, arg2 LnsAny)
-    ProcessUnwrapSet(_env *LnsEnv, arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
-    ProcessWhen(_env *LnsEnv, arg1 *Nodes_WhenNode, arg2 LnsAny)
-    ProcessWhile(_env *LnsEnv, arg1 *Nodes_WhileNode, arg2 LnsAny)
-    pushOpt(_env *LnsEnv, arg1 LnsAny)
-}
-type Nodes_Filter struct {
-    moduleInfoManager *Nodes_SimpleModuleInfoManager
-    typeNameCtrl *Ast_TypeNameCtrl
-    errorOnDefault bool
-    optStack *LnsList
-    FP Nodes_FilterMtd
-}
-func Nodes_Filter2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_Filter).FP
-}
-type Nodes_FilterDownCast interface {
-    ToNodes_Filter() *Nodes_Filter
-}
-func Nodes_FilterDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_FilterDownCast)
-    if ok { return work.ToNodes_Filter() }
-    return nil
-}
-func (obj *Nodes_Filter) ToNodes_Filter() *Nodes_Filter {
-    return obj
-}
-func NewNodes_Filter(_env *LnsEnv, arg1 bool, arg2 LnsAny, arg3 LnsAny) *Nodes_Filter {
-    obj := &Nodes_Filter{}
-    obj.FP = obj
-    obj.InitNodes_Filter(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *Nodes_Filter) Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl{ return self.typeNameCtrl }
-func (self *Nodes_Filter) Get_optStack(_env *LnsEnv) *LnsList{ return self.optStack }
-
-// declaration Class -- Node
-type Nodes_NodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_Node struct {
-    managerId LnsInt
-    id LnsInt
-    kind LnsInt
-    pos *Types_Position
-    expTypeList *LnsList
-    commentList LnsAny
-    tailComment LnsAny
-    IsLValue bool
-    macroArgFlag bool
-    inTestBlock bool
-    FP Nodes_NodeMtd
-}
-func Nodes_Node2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_Node).FP
-}
-type Nodes_NodeDownCast interface {
-    ToNodes_Node() *Nodes_Node
-}
-func Nodes_NodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_NodeDownCast)
-    if ok { return work.ToNodes_Node() }
-    return nil
-}
-func (obj *Nodes_Node) ToNodes_Node() *Nodes_Node {
-    return obj
-}
-func (self *Nodes_Node) Get_kind(_env *LnsEnv) LnsInt{ return self.kind }
-func (self *Nodes_Node) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
-func (self *Nodes_Node) Get_expTypeList(_env *LnsEnv) *LnsList{ return self.expTypeList }
-func (self *Nodes_Node) Get_commentList(_env *LnsEnv) LnsAny{ return self.commentList }
-func (self *Nodes_Node) Get_tailComment(_env *LnsEnv) LnsAny{ return self.tailComment }
-func (self *Nodes_Node) Set_tailComment(_env *LnsEnv, arg1 LnsAny){ self.tailComment = arg1 }
-func (self *Nodes_Node) Get_isLValue(_env *LnsEnv) bool{ return self.IsLValue }
-func (self *Nodes_Node) Get_macroArgFlag(_env *LnsEnv) bool{ return self.macroArgFlag }
-func (self *Nodes_Node) Get_inTestBlock(_env *LnsEnv) bool{ return self.inTestBlock }
-
-// declaration Class -- NamespaceInfo
-type Nodes_NamespaceInfoMtd interface {
-}
-type Nodes_NamespaceInfo struct {
-    Name string
-    Scope *Ast_Scope
-    TypeInfo *Ast_TypeInfo
-    FP Nodes_NamespaceInfoMtd
-}
-func Nodes_NamespaceInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_NamespaceInfo).FP
-}
-type Nodes_NamespaceInfoDownCast interface {
-    ToNodes_NamespaceInfo() *Nodes_NamespaceInfo
-}
-func Nodes_NamespaceInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_NamespaceInfoDownCast)
-    if ok { return work.ToNodes_NamespaceInfo() }
-    return nil
-}
-func (obj *Nodes_NamespaceInfo) ToNodes_NamespaceInfo() *Nodes_NamespaceInfo {
-    return obj
-}
-func NewNodes_NamespaceInfo(_env *LnsEnv, arg1 string, arg2 *Ast_Scope, arg3 *Ast_TypeInfo) *Nodes_NamespaceInfo {
-    obj := &Nodes_NamespaceInfo{}
-    obj.FP = obj
-    obj.InitNodes_NamespaceInfo(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *Nodes_NamespaceInfo) InitNodes_NamespaceInfo(_env *LnsEnv, arg1 string, arg2 *Ast_Scope, arg3 *Ast_TypeInfo) {
-    self.Name = arg1
-    self.Scope = arg2
-    self.TypeInfo = arg3
-}
-
-// declaration Class -- DeclMacroInfo
-type Nodes_DeclMacroInfoMtd interface {
-    Get_argList(_env *LnsEnv) *LnsList
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_pubFlag(_env *LnsEnv) bool
-    Get_stmtBlock(_env *LnsEnv) LnsAny
-    Get_tokenList(_env *LnsEnv) *LnsList
-}
-type Nodes_DeclMacroInfo struct {
-    pubFlag bool
-    name *Types_Token
-    argList *LnsList
-    stmtBlock LnsAny
-    tokenList *LnsList
-    FP Nodes_DeclMacroInfoMtd
-}
-func Nodes_DeclMacroInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclMacroInfo).FP
-}
-type Nodes_DeclMacroInfoDownCast interface {
-    ToNodes_DeclMacroInfo() *Nodes_DeclMacroInfo
-}
-func Nodes_DeclMacroInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclMacroInfoDownCast)
-    if ok { return work.ToNodes_DeclMacroInfo() }
-    return nil
-}
-func (obj *Nodes_DeclMacroInfo) ToNodes_DeclMacroInfo() *Nodes_DeclMacroInfo {
-    return obj
-}
-func NewNodes_DeclMacroInfo(_env *LnsEnv, arg1 bool, arg2 *Types_Token, arg3 *LnsList, arg4 LnsAny, arg5 *LnsList) *Nodes_DeclMacroInfo {
-    obj := &Nodes_DeclMacroInfo{}
-    obj.FP = obj
-    obj.InitNodes_DeclMacroInfo(_env, arg1, arg2, arg3, arg4, arg5)
-    return obj
-}
-func (self *Nodes_DeclMacroInfo) InitNodes_DeclMacroInfo(_env *LnsEnv, arg1 bool, arg2 *Types_Token, arg3 *LnsList, arg4 LnsAny, arg5 *LnsList) {
-    self.pubFlag = arg1
-    self.name = arg2
-    self.argList = arg3
-    self.stmtBlock = arg4
-    self.tokenList = arg5
-}
-func (self *Nodes_DeclMacroInfo) Get_pubFlag(_env *LnsEnv) bool{ return self.pubFlag }
-func (self *Nodes_DeclMacroInfo) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_DeclMacroInfo) Get_argList(_env *LnsEnv) *LnsList{ return self.argList }
-func (self *Nodes_DeclMacroInfo) Get_stmtBlock(_env *LnsEnv) LnsAny{ return self.stmtBlock }
-func (self *Nodes_DeclMacroInfo) Get_tokenList(_env *LnsEnv) *LnsList{ return self.tokenList }
-
-// declaration Class -- NodeManager
-type Nodes_NodeManagerMtd interface {
-    MultiTo1(_env *LnsEnv, arg1 *Nodes_Node) *Nodes_Node
-    AddFrom(_env *LnsEnv, arg1 *Nodes_NodeManager)
-    AddNode(_env *LnsEnv, arg1 *Nodes_Node)
-    DelNode(_env *LnsEnv, arg1 *Nodes_Node)
-    GetAbbrNodeList(_env *LnsEnv) *LnsList
-    GetAliasNodeList(_env *LnsEnv) *LnsList
-    GetApplyNodeList(_env *LnsEnv) *LnsList
-    GetAsyncLockNodeList(_env *LnsEnv) *LnsList
-    GetBlankLineNodeList(_env *LnsEnv) *LnsList
-    GetBlockNodeList(_env *LnsEnv) *LnsList
-    GetBoxingNodeList(_env *LnsEnv) *LnsList
-    GetBreakNodeList(_env *LnsEnv) *LnsList
-    GetConvStatNodeList(_env *LnsEnv) *LnsList
-    GetDeclAdvertiseNodeList(_env *LnsEnv) *LnsList
-    GetDeclAlgeNodeList(_env *LnsEnv) *LnsList
-    GetDeclArgDDDNodeList(_env *LnsEnv) *LnsList
-    GetDeclArgNodeList(_env *LnsEnv) *LnsList
-    GetDeclClassNodeList(_env *LnsEnv) *LnsList
-    GetDeclConstrNodeList(_env *LnsEnv) *LnsList
-    GetDeclDestrNodeList(_env *LnsEnv) *LnsList
-    GetDeclEnumNodeList(_env *LnsEnv) *LnsList
-    GetDeclFormNodeList(_env *LnsEnv) *LnsList
-    GetDeclFuncNodeList(_env *LnsEnv) *LnsList
-    GetDeclMacroNodeList(_env *LnsEnv) *LnsList
-    GetDeclMemberNodeList(_env *LnsEnv) *LnsList
-    GetDeclMethodNodeList(_env *LnsEnv) *LnsList
-    GetDeclVarNodeList(_env *LnsEnv) *LnsList
-    GetExpAccessMRetNodeList(_env *LnsEnv) *LnsList
-    GetExpCallNodeList(_env *LnsEnv) *LnsList
-    GetExpCallSuperCtorNodeList(_env *LnsEnv) *LnsList
-    GetExpCallSuperNodeList(_env *LnsEnv) *LnsList
-    GetExpCastNodeList(_env *LnsEnv) *LnsList
-    GetExpListNodeList(_env *LnsEnv) *LnsList
-    GetExpMRetNodeList(_env *LnsEnv) *LnsList
-    GetExpMacroArgExpNodeList(_env *LnsEnv) *LnsList
-    GetExpMacroExpNodeList(_env *LnsEnv) *LnsList
-    GetExpMacroStatListNodeList(_env *LnsEnv) *LnsList
-    GetExpMacroStatNodeList(_env *LnsEnv) *LnsList
-    GetExpMultiTo1NodeList(_env *LnsEnv) *LnsList
-    GetExpNewNodeList(_env *LnsEnv) *LnsList
-    GetExpOmitEnumNodeList(_env *LnsEnv) *LnsList
-    GetExpOp1NodeList(_env *LnsEnv) *LnsList
-    GetExpOp2NodeList(_env *LnsEnv) *LnsList
-    GetExpParenNodeList(_env *LnsEnv) *LnsList
-    GetExpRefItemNodeList(_env *LnsEnv) *LnsList
-    GetExpRefNodeList(_env *LnsEnv) *LnsList
-    GetExpSetItemNodeList(_env *LnsEnv) *LnsList
-    GetExpSetValNodeList(_env *LnsEnv) *LnsList
-    GetExpSubDDDNodeList(_env *LnsEnv) *LnsList
-    GetExpToDDDNodeList(_env *LnsEnv) *LnsList
-    GetExpUnwrapNodeList(_env *LnsEnv) *LnsList
-    GetForNodeList(_env *LnsEnv) *LnsList
-    GetForeachNodeList(_env *LnsEnv) *LnsList
-    GetForsortNodeList(_env *LnsEnv) *LnsList
-    GetGetFieldNodeList(_env *LnsEnv) *LnsList
-    GetIfNodeList(_env *LnsEnv) *LnsList
-    GetIfUnwrapNodeList(_env *LnsEnv) *LnsList
-    GetImportNodeList(_env *LnsEnv) *LnsList
-    GetList(_env *LnsEnv, arg1 LnsInt) *LnsList
-    GetLiteralArrayNodeList(_env *LnsEnv) *LnsList
-    GetLiteralBoolNodeList(_env *LnsEnv) *LnsList
-    GetLiteralCharNodeList(_env *LnsEnv) *LnsList
-    GetLiteralIntNodeList(_env *LnsEnv) *LnsList
-    GetLiteralListNodeList(_env *LnsEnv) *LnsList
-    GetLiteralMapNodeList(_env *LnsEnv) *LnsList
-    GetLiteralNilNodeList(_env *LnsEnv) *LnsList
-    GetLiteralRealNodeList(_env *LnsEnv) *LnsList
-    GetLiteralSetNodeList(_env *LnsEnv) *LnsList
-    GetLiteralStringNodeList(_env *LnsEnv) *LnsList
-    GetLiteralSymbolNodeList(_env *LnsEnv) *LnsList
-    GetLuneControlNodeList(_env *LnsEnv) *LnsList
-    GetLuneKindNodeList(_env *LnsEnv) *LnsList
-    GetMatchNodeList(_env *LnsEnv) *LnsList
-    GetNewAlgeValNodeList(_env *LnsEnv) *LnsList
-    GetNoneNodeList(_env *LnsEnv) *LnsList
-    GetProtoClassNodeList(_env *LnsEnv) *LnsList
-    GetProtoMethodNodeList(_env *LnsEnv) *LnsList
-    GetProvideNodeList(_env *LnsEnv) *LnsList
-    GetRefFieldNodeList(_env *LnsEnv) *LnsList
-    GetRefTypeNodeList(_env *LnsEnv) *LnsList
-    GetRepeatNodeList(_env *LnsEnv) *LnsList
-    GetRequestNodeList(_env *LnsEnv) *LnsList
-    GetReturnNodeList(_env *LnsEnv) *LnsList
-    GetRootNodeList(_env *LnsEnv) *LnsList
-    GetScopeNodeList(_env *LnsEnv) *LnsList
-    GetShebangNodeList(_env *LnsEnv) *LnsList
-    GetStmtExpNodeList(_env *LnsEnv) *LnsList
-    GetSubfileNodeList(_env *LnsEnv) *LnsList
-    GetSwitchNodeList(_env *LnsEnv) *LnsList
-    GetTestBlockNodeList(_env *LnsEnv) *LnsList
-    GetTestCaseNodeList(_env *LnsEnv) *LnsList
-    GetUnboxingNodeList(_env *LnsEnv) *LnsList
-    GetUnwrapSetNodeList(_env *LnsEnv) *LnsList
-    GetWhenNodeList(_env *LnsEnv) *LnsList
-    GetWhileNodeList(_env *LnsEnv) *LnsList
-    Get_managerId(_env *LnsEnv) LnsInt
-    NextId(_env *LnsEnv) LnsInt
-    Set_managerId(_env *LnsEnv, arg1 LnsInt)
-}
-type Nodes_NodeManager struct {
-    nodeKind2NodeList *LnsMap
-    idSeed LnsInt
-    managerId LnsInt
-    FP Nodes_NodeManagerMtd
-}
-func Nodes_NodeManager2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_NodeManager).FP
-}
-type Nodes_NodeManagerDownCast interface {
-    ToNodes_NodeManager() *Nodes_NodeManager
-}
-func Nodes_NodeManagerDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_NodeManagerDownCast)
-    if ok { return work.ToNodes_NodeManager() }
-    return nil
-}
-func (obj *Nodes_NodeManager) ToNodes_NodeManager() *Nodes_NodeManager {
-    return obj
-}
-func NewNodes_NodeManager(_env *LnsEnv) *Nodes_NodeManager {
-    obj := &Nodes_NodeManager{}
-    obj.FP = obj
-    obj.InitNodes_NodeManager(_env)
-    return obj
-}
-func (self *Nodes_NodeManager) Get_managerId(_env *LnsEnv) LnsInt{ return self.managerId }
-func (self *Nodes_NodeManager) Set_managerId(_env *LnsEnv, arg1 LnsInt){ self.managerId = arg1 }
-
-// declaration Class -- NodeKind
-type Nodes_NodeKindMtd interface {
-}
-type Nodes_NodeKind struct {
-    FP Nodes_NodeKindMtd
-}
-func Nodes_NodeKind2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_NodeKind).FP
-}
-type Nodes_NodeKindDownCast interface {
-    ToNodes_NodeKind() *Nodes_NodeKind
-}
-func Nodes_NodeKindDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_NodeKindDownCast)
-    if ok { return work.ToNodes_NodeKind() }
-    return nil
-}
-func (obj *Nodes_NodeKind) ToNodes_NodeKind() *Nodes_NodeKind {
-    return obj
-}
-func NewNodes_NodeKind(_env *LnsEnv) *Nodes_NodeKind {
-    obj := &Nodes_NodeKind{}
-    obj.FP = obj
-    obj.InitNodes_NodeKind(_env)
-    return obj
-}
-func (self *Nodes_NodeKind) InitNodes_NodeKind(_env *LnsEnv) {
-}
-
-// declaration Class -- NoneNode
-type Nodes_NoneNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_NoneNode struct {
-    Nodes_Node
-    FP Nodes_NoneNodeMtd
-}
-func Nodes_NoneNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_NoneNode).FP
-}
-type Nodes_NoneNodeDownCast interface {
-    ToNodes_NoneNode() *Nodes_NoneNode
-}
-func Nodes_NoneNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_NoneNodeDownCast)
-    if ok { return work.ToNodes_NoneNode() }
-    return nil
-}
-func (obj *Nodes_NoneNode) ToNodes_NoneNode() *Nodes_NoneNode {
-    return obj
-}
-func NewNodes_NoneNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_NoneNode {
-    obj := &Nodes_NoneNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_NoneNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
-    return obj
-}
-
-// declaration Class -- ShebangNode
-type Nodes_ShebangNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_cmd(_env *LnsEnv) string
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ShebangNode struct {
-    Nodes_Node
-    cmd string
-    FP Nodes_ShebangNodeMtd
-}
-func Nodes_ShebangNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ShebangNode).FP
-}
-type Nodes_ShebangNodeDownCast interface {
-    ToNodes_ShebangNode() *Nodes_ShebangNode
-}
-func Nodes_ShebangNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ShebangNodeDownCast)
-    if ok { return work.ToNodes_ShebangNode() }
-    return nil
-}
-func (obj *Nodes_ShebangNode) ToNodes_ShebangNode() *Nodes_ShebangNode {
-    return obj
-}
-func NewNodes_ShebangNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ShebangNode {
-    obj := &Nodes_ShebangNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ShebangNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ShebangNode) Get_cmd(_env *LnsEnv) string{ return self.cmd }
-
-// declaration Class -- ConvStatNode
-type Nodes_ConvStatNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_txt(_env *LnsEnv) string
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ConvStatNode struct {
-    Nodes_Node
-    txt string
-    FP Nodes_ConvStatNodeMtd
-}
-func Nodes_ConvStatNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ConvStatNode).FP
-}
-type Nodes_ConvStatNodeDownCast interface {
-    ToNodes_ConvStatNode() *Nodes_ConvStatNode
-}
-func Nodes_ConvStatNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ConvStatNodeDownCast)
-    if ok { return work.ToNodes_ConvStatNode() }
-    return nil
-}
-func (obj *Nodes_ConvStatNode) ToNodes_ConvStatNode() *Nodes_ConvStatNode {
-    return obj
-}
-func NewNodes_ConvStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ConvStatNode {
-    obj := &Nodes_ConvStatNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ConvStatNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ConvStatNode) Get_txt(_env *LnsEnv) string{ return self.txt }
-
-// declaration Class -- BlankLineNode
-type Nodes_BlankLineNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_lineNum(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_BlankLineNode struct {
-    Nodes_Node
-    lineNum LnsInt
-    FP Nodes_BlankLineNodeMtd
-}
-func Nodes_BlankLineNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_BlankLineNode).FP
-}
-type Nodes_BlankLineNodeDownCast interface {
-    ToNodes_BlankLineNode() *Nodes_BlankLineNode
-}
-func Nodes_BlankLineNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_BlankLineNodeDownCast)
-    if ok { return work.ToNodes_BlankLineNode() }
-    return nil
-}
-func (obj *Nodes_BlankLineNode) ToNodes_BlankLineNode() *Nodes_BlankLineNode {
-    return obj
-}
-func NewNodes_BlankLineNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt) *Nodes_BlankLineNode {
-    obj := &Nodes_BlankLineNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_BlankLineNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_BlankLineNode) Get_lineNum(_env *LnsEnv) LnsInt{ return self.lineNum }
-
-// declaration Class -- SubfileNode
-type Nodes_SubfileNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_usePath(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_SubfileNode struct {
-    Nodes_Node
-    usePath LnsAny
-    FP Nodes_SubfileNodeMtd
-}
-func Nodes_SubfileNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_SubfileNode).FP
-}
-type Nodes_SubfileNodeDownCast interface {
-    ToNodes_SubfileNode() *Nodes_SubfileNode
-}
-func Nodes_SubfileNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_SubfileNodeDownCast)
-    if ok { return work.ToNodes_SubfileNode() }
-    return nil
-}
-func (obj *Nodes_SubfileNode) ToNodes_SubfileNode() *Nodes_SubfileNode {
-    return obj
-}
-func NewNodes_SubfileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_SubfileNode {
-    obj := &Nodes_SubfileNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_SubfileNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_SubfileNode) Get_usePath(_env *LnsEnv) LnsAny{ return self.usePath }
-
-// declaration Class -- ImportInfo
-type Nodes_ImportInfoMtd interface {
-    Get_assignName(_env *LnsEnv) string
-    Get_assigned(_env *LnsEnv) bool
-    Get_lazy(_env *LnsEnv) LnsInt
-    Get_modulePath(_env *LnsEnv) string
-    Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
-}
-type Nodes_ImportInfo struct {
-    pos *Types_Position
-    modulePath string
-    lazy LnsInt
-    assignName string
-    assigned bool
-    symbolInfo *Ast_SymbolInfo
-    moduleTypeInfo *Ast_TypeInfo
-    FP Nodes_ImportInfoMtd
-}
-func Nodes_ImportInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ImportInfo).FP
-}
-type Nodes_ImportInfoDownCast interface {
-    ToNodes_ImportInfo() *Nodes_ImportInfo
-}
-func Nodes_ImportInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ImportInfoDownCast)
-    if ok { return work.ToNodes_ImportInfo() }
-    return nil
-}
-func (obj *Nodes_ImportInfo) ToNodes_ImportInfo() *Nodes_ImportInfo {
-    return obj
-}
-func NewNodes_ImportInfo(_env *LnsEnv, arg1 *Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) *Nodes_ImportInfo {
-    obj := &Nodes_ImportInfo{}
-    obj.FP = obj
-    obj.InitNodes_ImportInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ImportInfo) InitNodes_ImportInfo(_env *LnsEnv, arg1 *Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) {
-    self.pos = arg1
-    self.modulePath = arg2
-    self.lazy = arg3
-    self.assignName = arg4
-    self.assigned = arg5
-    self.symbolInfo = arg6
-    self.moduleTypeInfo = arg7
-}
-func (self *Nodes_ImportInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
-func (self *Nodes_ImportInfo) Get_modulePath(_env *LnsEnv) string{ return self.modulePath }
-func (self *Nodes_ImportInfo) Get_lazy(_env *LnsEnv) LnsInt{ return self.lazy }
-func (self *Nodes_ImportInfo) Get_assignName(_env *LnsEnv) string{ return self.assignName }
-func (self *Nodes_ImportInfo) Get_assigned(_env *LnsEnv) bool{ return self.assigned }
-func (self *Nodes_ImportInfo) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
-func (self *Nodes_ImportInfo) Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.moduleTypeInfo }
-
-// declaration Class -- ImportNode
-type Nodes_ImportNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_info(_env *LnsEnv) *Nodes_ImportInfo
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ImportNode struct {
-    Nodes_Node
-    info *Nodes_ImportInfo
-    FP Nodes_ImportNodeMtd
-}
-func Nodes_ImportNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ImportNode).FP
-}
-type Nodes_ImportNodeDownCast interface {
-    ToNodes_ImportNode() *Nodes_ImportNode
-}
-func Nodes_ImportNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ImportNodeDownCast)
-    if ok { return work.ToNodes_ImportNode() }
-    return nil
-}
-func (obj *Nodes_ImportNode) ToNodes_ImportNode() *Nodes_ImportNode {
-    return obj
-}
-func NewNodes_ImportNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ImportInfo) *Nodes_ImportNode {
-    obj := &Nodes_ImportNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ImportNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ImportNode) Get_info(_env *LnsEnv) *Nodes_ImportInfo{ return self.info }
-
-// declaration Class -- MacroValInfo
-type Nodes_MacroValInfoMtd interface {
-}
-type Nodes_MacroValInfo struct {
-    Val LnsAny
-    TypeInfo *Ast_TypeInfo
-    ArgNode LnsAny
-    FP Nodes_MacroValInfoMtd
-}
-func Nodes_MacroValInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_MacroValInfo).FP
-}
-type Nodes_MacroValInfoDownCast interface {
-    ToNodes_MacroValInfo() *Nodes_MacroValInfo
-}
-func Nodes_MacroValInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_MacroValInfoDownCast)
-    if ok { return work.ToNodes_MacroValInfo() }
-    return nil
-}
-func (obj *Nodes_MacroValInfo) ToNodes_MacroValInfo() *Nodes_MacroValInfo {
-    return obj
-}
-func NewNodes_MacroValInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Ast_TypeInfo, arg3 LnsAny) *Nodes_MacroValInfo {
-    obj := &Nodes_MacroValInfo{}
-    obj.FP = obj
-    obj.InitNodes_MacroValInfo(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *Nodes_MacroValInfo) InitNodes_MacroValInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Ast_TypeInfo, arg3 LnsAny) {
-    self.Val = arg1
-    self.TypeInfo = arg2
-    self.ArgNode = arg3
-}
-
-// declaration Class -- MacroArgInfo
-type Nodes_MacroArgInfoMtd interface {
-    Get_name(_env *LnsEnv) string
-    Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
-}
-type Nodes_MacroArgInfo struct {
-    name string
-    typeInfo *Ast_TypeInfo
-    FP Nodes_MacroArgInfoMtd
-}
-func Nodes_MacroArgInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_MacroArgInfo).FP
-}
-type Nodes_MacroArgInfoDownCast interface {
-    ToNodes_MacroArgInfo() *Nodes_MacroArgInfo
-}
-func Nodes_MacroArgInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_MacroArgInfoDownCast)
-    if ok { return work.ToNodes_MacroArgInfo() }
-    return nil
-}
-func (obj *Nodes_MacroArgInfo) ToNodes_MacroArgInfo() *Nodes_MacroArgInfo {
-    return obj
-}
-func NewNodes_MacroArgInfo(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo) *Nodes_MacroArgInfo {
-    obj := &Nodes_MacroArgInfo{}
-    obj.FP = obj
-    obj.InitNodes_MacroArgInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_MacroArgInfo) InitNodes_MacroArgInfo(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo) {
-    self.name = arg1
-    self.typeInfo = arg2
-}
-func (self *Nodes_MacroArgInfo) Get_name(_env *LnsEnv) string{ return self.name }
-func (self *Nodes_MacroArgInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
-
-// declaration Class -- MacroInfo
-type Nodes_MacroInfoMtd interface {
-    GetArgList(_env *LnsEnv) *LnsList
-    GetTokenList(_env *LnsEnv) *LnsList
-    Get_func(_env *LnsEnv) LnsAny
-    Get_name(_env *LnsEnv) string
-    Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
-}
-type Nodes_MacroInfo struct {
-    _func LnsAny
-    symbol2MacroValInfoMap *LnsMap
-    FP Nodes_MacroInfoMtd
-}
-func Nodes_MacroInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_MacroInfo).FP
-}
-type Nodes_MacroInfoDownCast interface {
-    ToNodes_MacroInfo() *Nodes_MacroInfo
-}
-func Nodes_MacroInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_MacroInfoDownCast)
-    if ok { return work.ToNodes_MacroInfo() }
-    return nil
-}
-func (obj *Nodes_MacroInfo) ToNodes_MacroInfo() *Nodes_MacroInfo {
-    return obj
-}
-func (self *Nodes_MacroInfo) InitNodes_MacroInfo(_env *LnsEnv, arg1 LnsAny, arg2 *LnsMap) {
-    self._func = arg1
-    self.symbol2MacroValInfoMap = arg2
-}
-func (self *Nodes_MacroInfo) Get_func(_env *LnsEnv) LnsAny{ return self._func }
-func (self *Nodes_MacroInfo) Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap{ return self.symbol2MacroValInfoMap }
-
-// declaration Class -- RootNode
-type Nodes_RootNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_children(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_globalScope(_env *LnsEnv) *Ast_Scope
-    Get_importModule2moduleInfo(_env *LnsEnv) *LnsMap
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_luneHelperInfo(_env *LnsEnv) *FrontInterface_LuneHelperInfo
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
-    Get_moduleScope(_env *LnsEnv) *Ast_Scope
-    Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_nodeManager(_env *LnsEnv) *Nodes_NodeManager
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo
-    Get_provideNode(_env *LnsEnv) LnsAny
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_typeId2ClassMap(_env *LnsEnv) *LnsMap
-    Get_typeId2MacroInfo(_env *LnsEnv) *LnsMap
-    Get_useModuleMacroSet(_env *LnsEnv) *LnsSet
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_provide(_env *LnsEnv, arg1 *Nodes_ProvideNode)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_RootNode struct {
-    Nodes_Node
-    children *LnsList
-    moduleScope *Ast_Scope
-    globalScope *Ast_Scope
-    useModuleMacroSet *LnsSet
-    moduleId *FrontInterface_ModuleId
-    processInfo *Ast_ProcessInfo
-    moduleTypeInfo *Ast_TypeInfo
-    provideNode LnsAny
-    luneHelperInfo *FrontInterface_LuneHelperInfo
-    nodeManager *Nodes_NodeManager
-    importModule2moduleInfo *LnsMap
-    typeId2MacroInfo *LnsMap
-    typeId2ClassMap *LnsMap
-    FP Nodes_RootNodeMtd
-}
-func Nodes_RootNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_RootNode).FP
-}
-type Nodes_RootNodeDownCast interface {
-    ToNodes_RootNode() *Nodes_RootNode
-}
-func Nodes_RootNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_RootNodeDownCast)
-    if ok { return work.ToNodes_RootNode() }
-    return nil
-}
-func (obj *Nodes_RootNode) ToNodes_RootNode() *Nodes_RootNode {
-    return obj
-}
-func NewNodes_RootNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Ast_Scope, arg9 *Ast_Scope, arg10 *LnsSet, arg11 *FrontInterface_ModuleId, arg12 *Ast_ProcessInfo, arg13 *Ast_TypeInfo, arg14 LnsAny, arg15 *FrontInterface_LuneHelperInfo, arg16 *Nodes_NodeManager, arg17 *LnsMap, arg18 *LnsMap, arg19 *LnsMap) *Nodes_RootNode {
-    obj := &Nodes_RootNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_RootNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19)
-    return obj
-}
-func (self *Nodes_RootNode) Get_children(_env *LnsEnv) *LnsList{ return self.children }
-func (self *Nodes_RootNode) Get_moduleScope(_env *LnsEnv) *Ast_Scope{ return self.moduleScope }
-func (self *Nodes_RootNode) Get_globalScope(_env *LnsEnv) *Ast_Scope{ return self.globalScope }
-func (self *Nodes_RootNode) Get_useModuleMacroSet(_env *LnsEnv) *LnsSet{ return self.useModuleMacroSet }
-func (self *Nodes_RootNode) Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId{ return self.moduleId }
-func (self *Nodes_RootNode) Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo{ return self.processInfo }
-func (self *Nodes_RootNode) Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.moduleTypeInfo }
-func (self *Nodes_RootNode) Get_provideNode(_env *LnsEnv) LnsAny{ return self.provideNode }
-func (self *Nodes_RootNode) Get_luneHelperInfo(_env *LnsEnv) *FrontInterface_LuneHelperInfo{ return self.luneHelperInfo }
-func (self *Nodes_RootNode) Get_nodeManager(_env *LnsEnv) *Nodes_NodeManager{ return self.nodeManager }
-func (self *Nodes_RootNode) Get_importModule2moduleInfo(_env *LnsEnv) *LnsMap{ return self.importModule2moduleInfo }
-func (self *Nodes_RootNode) Get_typeId2MacroInfo(_env *LnsEnv) *LnsMap{ return self.typeId2MacroInfo }
-func (self *Nodes_RootNode) Get_typeId2ClassMap(_env *LnsEnv) *LnsMap{ return self.typeId2ClassMap }
-
-// declaration Class -- RefTypeNode
-type Nodes_RefTypeNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_array(_env *LnsEnv) string
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_itemNodeList(_env *LnsEnv) *LnsList
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_mutMode(_env *LnsEnv) LnsAny
-    Get_name(_env *LnsEnv) *Nodes_Node
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_RefTypeNode struct {
-    Nodes_Node
-    name *Nodes_Node
-    itemNodeList *LnsList
-    mutMode LnsAny
-    array string
-    FP Nodes_RefTypeNodeMtd
-}
-func Nodes_RefTypeNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_RefTypeNode).FP
-}
-type Nodes_RefTypeNodeDownCast interface {
-    ToNodes_RefTypeNode() *Nodes_RefTypeNode
-}
-func Nodes_RefTypeNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_RefTypeNodeDownCast)
-    if ok { return work.ToNodes_RefTypeNode() }
-    return nil
-}
-func (obj *Nodes_RefTypeNode) ToNodes_RefTypeNode() *Nodes_RefTypeNode {
-    return obj
-}
-func NewNodes_RefTypeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *LnsList, arg9 LnsAny, arg10 string) *Nodes_RefTypeNode {
-    obj := &Nodes_RefTypeNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_RefTypeNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_RefTypeNode) Get_name(_env *LnsEnv) *Nodes_Node{ return self.name }
-func (self *Nodes_RefTypeNode) Get_itemNodeList(_env *LnsEnv) *LnsList{ return self.itemNodeList }
-func (self *Nodes_RefTypeNode) Get_mutMode(_env *LnsEnv) LnsAny{ return self.mutMode }
-func (self *Nodes_RefTypeNode) Get_array(_env *LnsEnv) string{ return self.array }
-
-// declaration Class -- BlockNode
-type Nodes_BlockNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_blockKind(_env *LnsEnv) LnsInt
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_scope(_env *LnsEnv) *Ast_Scope
-    Get_stmtList(_env *LnsEnv) *LnsList
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_BlockNode struct {
-    Nodes_Node
-    blockKind LnsInt
-    scope *Ast_Scope
-    stmtList *LnsList
-    FP Nodes_BlockNodeMtd
-}
-func Nodes_BlockNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_BlockNode).FP
-}
-type Nodes_BlockNodeDownCast interface {
-    ToNodes_BlockNode() *Nodes_BlockNode
-}
-func Nodes_BlockNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_BlockNodeDownCast)
-    if ok { return work.ToNodes_BlockNode() }
-    return nil
-}
-func (obj *Nodes_BlockNode) ToNodes_BlockNode() *Nodes_BlockNode {
-    return obj
-}
-func NewNodes_BlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList) *Nodes_BlockNode {
-    obj := &Nodes_BlockNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_BlockNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_BlockNode) Get_blockKind(_env *LnsEnv) LnsInt{ return self.blockKind }
-func (self *Nodes_BlockNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
-func (self *Nodes_BlockNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
-
-// declaration Class -- ScopeNode
-type Nodes_ScopeNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_scope(_env *LnsEnv) *Ast_Scope
-    Get_scopeKind(_env *LnsEnv) LnsInt
-    Get_symbolList(_env *LnsEnv) *LnsList
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ScopeNode struct {
-    Nodes_Node
-    scopeKind LnsInt
-    scope *Ast_Scope
-    symbolList *LnsList
-    block *Nodes_BlockNode
-    FP Nodes_ScopeNodeMtd
-}
-func Nodes_ScopeNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ScopeNode).FP
-}
-type Nodes_ScopeNodeDownCast interface {
-    ToNodes_ScopeNode() *Nodes_ScopeNode
-}
-func Nodes_ScopeNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ScopeNodeDownCast)
-    if ok { return work.ToNodes_ScopeNode() }
-    return nil
-}
-func (obj *Nodes_ScopeNode) ToNodes_ScopeNode() *Nodes_ScopeNode {
-    return obj
-}
-func NewNodes_ScopeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList, arg10 *Nodes_BlockNode) *Nodes_ScopeNode {
-    obj := &Nodes_ScopeNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ScopeNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_ScopeNode) Get_scopeKind(_env *LnsEnv) LnsInt{ return self.scopeKind }
-func (self *Nodes_ScopeNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
-func (self *Nodes_ScopeNode) Get_symbolList(_env *LnsEnv) *LnsList{ return self.symbolList }
-func (self *Nodes_ScopeNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- IfStmtInfo
-type Nodes_IfStmtInfoMtd interface {
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_kind(_env *LnsEnv) LnsInt
-}
-type Nodes_IfStmtInfo struct {
-    kind LnsInt
-    exp *Nodes_Node
-    block *Nodes_BlockNode
-    FP Nodes_IfStmtInfoMtd
-}
-func Nodes_IfStmtInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_IfStmtInfo).FP
-}
-type Nodes_IfStmtInfoDownCast interface {
-    ToNodes_IfStmtInfo() *Nodes_IfStmtInfo
-}
-func Nodes_IfStmtInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_IfStmtInfoDownCast)
-    if ok { return work.ToNodes_IfStmtInfo() }
-    return nil
-}
-func (obj *Nodes_IfStmtInfo) ToNodes_IfStmtInfo() *Nodes_IfStmtInfo {
-    return obj
-}
-func NewNodes_IfStmtInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Nodes_Node, arg3 *Nodes_BlockNode) *Nodes_IfStmtInfo {
-    obj := &Nodes_IfStmtInfo{}
-    obj.FP = obj
-    obj.InitNodes_IfStmtInfo(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *Nodes_IfStmtInfo) InitNodes_IfStmtInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Nodes_Node, arg3 *Nodes_BlockNode) {
-    self.kind = arg1
-    self.exp = arg2
-    self.block = arg3
-}
-func (self *Nodes_IfStmtInfo) Get_kind(_env *LnsEnv) LnsInt{ return self.kind }
-func (self *Nodes_IfStmtInfo) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_IfStmtInfo) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- IfNode
-type Nodes_IfNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_stmtList(_env *LnsEnv) *LnsList
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_IfNode struct {
-    Nodes_Node
-    stmtList *LnsList
-    FP Nodes_IfNodeMtd
-}
-func Nodes_IfNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_IfNode).FP
-}
-type Nodes_IfNodeDownCast interface {
-    ToNodes_IfNode() *Nodes_IfNode
-}
-func Nodes_IfNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_IfNodeDownCast)
-    if ok { return work.ToNodes_IfNode() }
-    return nil
-}
-func (obj *Nodes_IfNode) ToNodes_IfNode() *Nodes_IfNode {
-    return obj
-}
-func NewNodes_IfNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_IfNode {
-    obj := &Nodes_IfNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_IfNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_IfNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
-
-// declaration Class -- MRetExp
-type Nodes_MRetExpMtd interface {
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_index(_env *LnsEnv) LnsInt
-}
-type Nodes_MRetExp struct {
-    exp *Nodes_Node
-    index LnsInt
-    FP Nodes_MRetExpMtd
-}
-func Nodes_MRetExp2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_MRetExp).FP
-}
-type Nodes_MRetExpDownCast interface {
-    ToNodes_MRetExp() *Nodes_MRetExp
-}
-func Nodes_MRetExpDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_MRetExpDownCast)
-    if ok { return work.ToNodes_MRetExp() }
-    return nil
-}
-func (obj *Nodes_MRetExp) ToNodes_MRetExp() *Nodes_MRetExp {
-    return obj
-}
-func NewNodes_MRetExp(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsInt) *Nodes_MRetExp {
-    obj := &Nodes_MRetExp{}
-    obj.FP = obj
-    obj.InitNodes_MRetExp(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_MRetExp) InitNodes_MRetExp(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsInt) {
-    self.exp = arg1
-    self.index = arg2
-}
-func (self *Nodes_MRetExp) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_MRetExp) Get_index(_env *LnsEnv) LnsInt{ return self.index }
-
-// declaration Class -- ExpListNode
-type Nodes_ExpListNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetExpTypeAt(_env *LnsEnv, arg1 LnsInt) *Ast_TypeInfo
-    GetExpTypeNoDDDAt(_env *LnsEnv, arg1 LnsInt) *Ast_TypeInfo
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) *LnsList
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_followOn(_env *LnsEnv) bool
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_mRetExp(_env *LnsEnv) LnsAny
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpListNode struct {
-    Nodes_Node
-    expList *LnsList
-    mRetExp LnsAny
-    followOn bool
-    FP Nodes_ExpListNodeMtd
-}
-func Nodes_ExpListNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpListNode).FP
-}
-type Nodes_ExpListNodeDownCast interface {
-    ToNodes_ExpListNode() *Nodes_ExpListNode
-}
-func Nodes_ExpListNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpListNodeDownCast)
-    if ok { return work.ToNodes_ExpListNode() }
-    return nil
-}
-func (obj *Nodes_ExpListNode) ToNodes_ExpListNode() *Nodes_ExpListNode {
-    return obj
-}
-func NewNodes_ExpListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 LnsAny, arg9 bool) *Nodes_ExpListNode {
-    obj := &Nodes_ExpListNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpListNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_ExpListNode) Get_expList(_env *LnsEnv) *LnsList{ return self.expList }
-func (self *Nodes_ExpListNode) Get_mRetExp(_env *LnsEnv) LnsAny{ return self.mRetExp }
-func (self *Nodes_ExpListNode) Get_followOn(_env *LnsEnv) bool{ return self.followOn }
-
-// declaration Class -- CaseInfo
-type Nodes_CaseInfoMtd interface {
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
-}
-type Nodes_CaseInfo struct {
-    expList *Nodes_ExpListNode
-    block *Nodes_BlockNode
-    FP Nodes_CaseInfoMtd
-}
-func Nodes_CaseInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_CaseInfo).FP
-}
-type Nodes_CaseInfoDownCast interface {
-    ToNodes_CaseInfo() *Nodes_CaseInfo
-}
-func Nodes_CaseInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_CaseInfoDownCast)
-    if ok { return work.ToNodes_CaseInfo() }
-    return nil
-}
-func (obj *Nodes_CaseInfo) ToNodes_CaseInfo() *Nodes_CaseInfo {
-    return obj
-}
-func NewNodes_CaseInfo(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 *Nodes_BlockNode) *Nodes_CaseInfo {
-    obj := &Nodes_CaseInfo{}
-    obj.FP = obj
-    obj.InitNodes_CaseInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_CaseInfo) InitNodes_CaseInfo(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 *Nodes_BlockNode) {
-    self.expList = arg1
-    self.block = arg2
-}
-func (self *Nodes_CaseInfo) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
-func (self *Nodes_CaseInfo) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- SwitchNode
-type Nodes_SwitchNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_caseKind(_env *LnsEnv) LnsInt
-    Get_caseList(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_default(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_failSafeDefault(_env *LnsEnv) bool
-    Get_idInNS(_env *LnsEnv) LnsInt
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_SwitchNode struct {
-    Nodes_Node
-    idInNS LnsInt
-    exp *Nodes_Node
-    caseList *LnsList
-    _default LnsAny
-    caseKind LnsInt
-    failSafeDefault bool
-    FP Nodes_SwitchNodeMtd
-}
-func Nodes_SwitchNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_SwitchNode).FP
-}
-type Nodes_SwitchNodeDownCast interface {
-    ToNodes_SwitchNode() *Nodes_SwitchNode
-}
-func Nodes_SwitchNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_SwitchNodeDownCast)
-    if ok { return work.ToNodes_SwitchNode() }
-    return nil
-}
-func (obj *Nodes_SwitchNode) ToNodes_SwitchNode() *Nodes_SwitchNode {
-    return obj
-}
-func NewNodes_SwitchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *LnsList, arg10 LnsAny, arg11 LnsInt, arg12 bool) *Nodes_SwitchNode {
-    obj := &Nodes_SwitchNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_SwitchNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
-    return obj
-}
-func (self *Nodes_SwitchNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
-func (self *Nodes_SwitchNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_SwitchNode) Get_caseList(_env *LnsEnv) *LnsList{ return self.caseList }
-func (self *Nodes_SwitchNode) Get_default(_env *LnsEnv) LnsAny{ return self._default }
-func (self *Nodes_SwitchNode) Get_caseKind(_env *LnsEnv) LnsInt{ return self.caseKind }
-func (self *Nodes_SwitchNode) Get_failSafeDefault(_env *LnsEnv) bool{ return self.failSafeDefault }
-
-// declaration Class -- WhileNode
-type Nodes_WhileNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_infinit(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_WhileNode struct {
-    Nodes_Node
-    exp *Nodes_Node
-    infinit bool
-    block *Nodes_BlockNode
-    FP Nodes_WhileNodeMtd
-}
-func Nodes_WhileNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_WhileNode).FP
-}
-type Nodes_WhileNodeDownCast interface {
-    ToNodes_WhileNode() *Nodes_WhileNode
-}
-func Nodes_WhileNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_WhileNodeDownCast)
-    if ok { return work.ToNodes_WhileNode() }
-    return nil
-}
-func (obj *Nodes_WhileNode) ToNodes_WhileNode() *Nodes_WhileNode {
-    return obj
-}
-func NewNodes_WhileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 *Nodes_BlockNode) *Nodes_WhileNode {
-    obj := &Nodes_WhileNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_WhileNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_WhileNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_WhileNode) Get_infinit(_env *LnsEnv) bool{ return self.infinit }
-func (self *Nodes_WhileNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- RepeatNode
-type Nodes_RepeatNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_RepeatNode struct {
-    Nodes_Node
-    block *Nodes_BlockNode
-    exp *Nodes_Node
-    FP Nodes_RepeatNodeMtd
-}
-func Nodes_RepeatNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_RepeatNode).FP
-}
-type Nodes_RepeatNodeDownCast interface {
-    ToNodes_RepeatNode() *Nodes_RepeatNode
-}
-func Nodes_RepeatNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_RepeatNodeDownCast)
-    if ok { return work.ToNodes_RepeatNode() }
-    return nil
-}
-func (obj *Nodes_RepeatNode) ToNodes_RepeatNode() *Nodes_RepeatNode {
-    return obj
-}
-func NewNodes_RepeatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_BlockNode, arg8 *Nodes_Node) *Nodes_RepeatNode {
-    obj := &Nodes_RepeatNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_RepeatNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_RepeatNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-func (self *Nodes_RepeatNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- ForNode
-type Nodes_ForNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_delta(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_idInNS(_env *LnsEnv) LnsInt
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_init(_env *LnsEnv) *Nodes_Node
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_to(_env *LnsEnv) *Nodes_Node
-    Get_val(_env *LnsEnv) *Ast_SymbolInfo
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ForNode struct {
-    Nodes_Node
-    idInNS LnsInt
-    block *Nodes_BlockNode
-    val *Ast_SymbolInfo
-    init *Nodes_Node
-    to *Nodes_Node
-    delta LnsAny
-    FP Nodes_ForNodeMtd
-}
-func Nodes_ForNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ForNode).FP
-}
-type Nodes_ForNodeDownCast interface {
-    ToNodes_ForNode() *Nodes_ForNode
-}
-func Nodes_ForNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ForNodeDownCast)
-    if ok { return work.ToNodes_ForNode() }
-    return nil
-}
-func (obj *Nodes_ForNode) ToNodes_ForNode() *Nodes_ForNode {
-    return obj
-}
-func NewNodes_ForNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode, arg9 *Ast_SymbolInfo, arg10 *Nodes_Node, arg11 *Nodes_Node, arg12 LnsAny) *Nodes_ForNode {
-    obj := &Nodes_ForNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ForNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
-    return obj
-}
-func (self *Nodes_ForNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
-func (self *Nodes_ForNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-func (self *Nodes_ForNode) Get_val(_env *LnsEnv) *Ast_SymbolInfo{ return self.val }
-func (self *Nodes_ForNode) Get_init(_env *LnsEnv) *Nodes_Node{ return self.init }
-func (self *Nodes_ForNode) Get_to(_env *LnsEnv) *Nodes_Node{ return self.to }
-func (self *Nodes_ForNode) Get_delta(_env *LnsEnv) LnsAny{ return self.delta }
-
-// declaration Class -- ApplyNode
-type Nodes_ApplyNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_idInNS(_env *LnsEnv) LnsInt
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_varList(_env *LnsEnv) *LnsList
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ApplyNode struct {
-    Nodes_Node
-    idInNS LnsInt
-    varList *LnsList
-    expList *Nodes_ExpListNode
-    block *Nodes_BlockNode
-    FP Nodes_ApplyNodeMtd
-}
-func Nodes_ApplyNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ApplyNode).FP
-}
-type Nodes_ApplyNodeDownCast interface {
-    ToNodes_ApplyNode() *Nodes_ApplyNode
-}
-func Nodes_ApplyNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ApplyNodeDownCast)
-    if ok { return work.ToNodes_ApplyNode() }
-    return nil
-}
-func (obj *Nodes_ApplyNode) ToNodes_ApplyNode() *Nodes_ApplyNode {
-    return obj
-}
-func NewNodes_ApplyNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *LnsList, arg9 *Nodes_ExpListNode, arg10 *Nodes_BlockNode) *Nodes_ApplyNode {
-    obj := &Nodes_ApplyNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ApplyNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_ApplyNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
-func (self *Nodes_ApplyNode) Get_varList(_env *LnsEnv) *LnsList{ return self.varList }
-func (self *Nodes_ApplyNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
-func (self *Nodes_ApplyNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- ForeachNode
-type Nodes_ForeachNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_idInNS(_env *LnsEnv) LnsInt
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_key(_env *LnsEnv) LnsAny
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_val(_env *LnsEnv) *Ast_SymbolInfo
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ForeachNode struct {
-    Nodes_Node
-    idInNS LnsInt
-    val *Ast_SymbolInfo
-    key LnsAny
-    exp *Nodes_Node
-    block *Nodes_BlockNode
-    FP Nodes_ForeachNodeMtd
-}
-func Nodes_ForeachNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ForeachNode).FP
-}
-type Nodes_ForeachNodeDownCast interface {
-    ToNodes_ForeachNode() *Nodes_ForeachNode
-}
-func Nodes_ForeachNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ForeachNodeDownCast)
-    if ok { return work.ToNodes_ForeachNode() }
-    return nil
-}
-func (obj *Nodes_ForeachNode) ToNodes_ForeachNode() *Nodes_ForeachNode {
-    return obj
-}
-func NewNodes_ForeachNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode) *Nodes_ForeachNode {
-    obj := &Nodes_ForeachNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ForeachNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
-    return obj
-}
-func (self *Nodes_ForeachNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
-func (self *Nodes_ForeachNode) Get_val(_env *LnsEnv) *Ast_SymbolInfo{ return self.val }
-func (self *Nodes_ForeachNode) Get_key(_env *LnsEnv) LnsAny{ return self.key }
-func (self *Nodes_ForeachNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_ForeachNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- ForsortNode
-type Nodes_ForsortNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_idInNS(_env *LnsEnv) LnsInt
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_key(_env *LnsEnv) LnsAny
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_sort(_env *LnsEnv) bool
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_val(_env *LnsEnv) *Ast_SymbolInfo
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ForsortNode struct {
-    Nodes_Node
-    idInNS LnsInt
-    val *Ast_SymbolInfo
-    key LnsAny
-    exp *Nodes_Node
-    block *Nodes_BlockNode
-    sort bool
-    FP Nodes_ForsortNodeMtd
-}
-func Nodes_ForsortNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ForsortNode).FP
-}
-type Nodes_ForsortNodeDownCast interface {
-    ToNodes_ForsortNode() *Nodes_ForsortNode
-}
-func Nodes_ForsortNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ForsortNodeDownCast)
-    if ok { return work.ToNodes_ForsortNode() }
-    return nil
-}
-func (obj *Nodes_ForsortNode) ToNodes_ForsortNode() *Nodes_ForsortNode {
-    return obj
-}
-func NewNodes_ForsortNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode, arg12 bool) *Nodes_ForsortNode {
-    obj := &Nodes_ForsortNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ForsortNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
-    return obj
-}
-func (self *Nodes_ForsortNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
-func (self *Nodes_ForsortNode) Get_val(_env *LnsEnv) *Ast_SymbolInfo{ return self.val }
-func (self *Nodes_ForsortNode) Get_key(_env *LnsEnv) LnsAny{ return self.key }
-func (self *Nodes_ForsortNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_ForsortNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-func (self *Nodes_ForsortNode) Get_sort(_env *LnsEnv) bool{ return self.sort }
-
-// declaration Class -- ReturnNode
-type Nodes_ReturnNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ReturnNode struct {
-    Nodes_Node
-    expList LnsAny
-    FP Nodes_ReturnNodeMtd
-}
-func Nodes_ReturnNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ReturnNode).FP
-}
-type Nodes_ReturnNodeDownCast interface {
-    ToNodes_ReturnNode() *Nodes_ReturnNode
-}
-func Nodes_ReturnNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ReturnNodeDownCast)
-    if ok { return work.ToNodes_ReturnNode() }
-    return nil
-}
-func (obj *Nodes_ReturnNode) ToNodes_ReturnNode() *Nodes_ReturnNode {
-    return obj
-}
-func NewNodes_ReturnNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_ReturnNode {
-    obj := &Nodes_ReturnNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ReturnNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ReturnNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
-
-// declaration Class -- BreakNode
-type Nodes_BreakNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_BreakNode struct {
-    Nodes_Node
-    FP Nodes_BreakNodeMtd
-}
-func Nodes_BreakNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_BreakNode).FP
-}
-type Nodes_BreakNodeDownCast interface {
-    ToNodes_BreakNode() *Nodes_BreakNode
-}
-func Nodes_BreakNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_BreakNodeDownCast)
-    if ok { return work.ToNodes_BreakNode() }
-    return nil
-}
-func (obj *Nodes_BreakNode) ToNodes_BreakNode() *Nodes_BreakNode {
-    return obj
-}
-func NewNodes_BreakNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_BreakNode {
-    obj := &Nodes_BreakNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_BreakNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
-    return obj
-}
-
-// declaration Class -- ProvideNode
-type Nodes_ProvideNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_symbol(_env *LnsEnv) *Ast_SymbolInfo
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ProvideNode struct {
-    Nodes_Node
-    symbol *Ast_SymbolInfo
-    FP Nodes_ProvideNodeMtd
-}
-func Nodes_ProvideNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ProvideNode).FP
-}
-type Nodes_ProvideNodeDownCast interface {
-    ToNodes_ProvideNode() *Nodes_ProvideNode
-}
-func Nodes_ProvideNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ProvideNodeDownCast)
-    if ok { return work.ToNodes_ProvideNode() }
-    return nil
-}
-func (obj *Nodes_ProvideNode) ToNodes_ProvideNode() *Nodes_ProvideNode {
-    return obj
-}
-func NewNodes_ProvideNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ProvideNode {
-    obj := &Nodes_ProvideNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ProvideNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ProvideNode) Get_symbol(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbol }
-
-// declaration Class -- ExpNewNode
-type Nodes_ExpNewNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_argList(_env *LnsEnv) LnsAny
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_ctorTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_symbol(_env *LnsEnv) *Nodes_Node
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpNewNode struct {
-    Nodes_Node
-    symbol *Nodes_Node
-    ctorTypeInfo *Ast_TypeInfo
-    argList LnsAny
-    FP Nodes_ExpNewNodeMtd
-}
-func Nodes_ExpNewNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpNewNode).FP
-}
-type Nodes_ExpNewNodeDownCast interface {
-    ToNodes_ExpNewNode() *Nodes_ExpNewNode
-}
-func Nodes_ExpNewNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpNewNodeDownCast)
-    if ok { return work.ToNodes_ExpNewNode() }
-    return nil
-}
-func (obj *Nodes_ExpNewNode) ToNodes_ExpNewNode() *Nodes_ExpNewNode {
-    return obj
-}
-func NewNodes_ExpNewNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpNewNode {
-    obj := &Nodes_ExpNewNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpNewNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_ExpNewNode) Get_symbol(_env *LnsEnv) *Nodes_Node{ return self.symbol }
-func (self *Nodes_ExpNewNode) Get_ctorTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.ctorTypeInfo }
-func (self *Nodes_ExpNewNode) Get_argList(_env *LnsEnv) LnsAny{ return self.argList }
-
-// declaration Class -- ExpUnwrapNode
-type Nodes_ExpUnwrapNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_default(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpUnwrapNode struct {
-    Nodes_Node
-    exp *Nodes_Node
-    _default LnsAny
-    FP Nodes_ExpUnwrapNodeMtd
-}
-func Nodes_ExpUnwrapNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpUnwrapNode).FP
-}
-type Nodes_ExpUnwrapNodeDownCast interface {
-    ToNodes_ExpUnwrapNode() *Nodes_ExpUnwrapNode
-}
-func Nodes_ExpUnwrapNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpUnwrapNodeDownCast)
-    if ok { return work.ToNodes_ExpUnwrapNode() }
-    return nil
-}
-func (obj *Nodes_ExpUnwrapNode) ToNodes_ExpUnwrapNode() *Nodes_ExpUnwrapNode {
-    return obj
-}
-func NewNodes_ExpUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny) *Nodes_ExpUnwrapNode {
-    obj := &Nodes_ExpUnwrapNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpUnwrapNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_ExpUnwrapNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_ExpUnwrapNode) Get_default(_env *LnsEnv) LnsAny{ return self._default }
-
-// declaration Class -- ExpRefNode
-type Nodes_ExpRefNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpRefNode struct {
-    Nodes_Node
-    symbolInfo *Ast_SymbolInfo
-    FP Nodes_ExpRefNodeMtd
-}
-func Nodes_ExpRefNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpRefNode).FP
-}
-type Nodes_ExpRefNodeDownCast interface {
-    ToNodes_ExpRefNode() *Nodes_ExpRefNode
-}
-func Nodes_ExpRefNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpRefNodeDownCast)
-    if ok { return work.ToNodes_ExpRefNode() }
-    return nil
-}
-func (obj *Nodes_ExpRefNode) ToNodes_ExpRefNode() *Nodes_ExpRefNode {
-    return obj
-}
-func NewNodes_ExpRefNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ExpRefNode {
-    obj := &Nodes_ExpRefNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpRefNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpRefNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
-
-// declaration Class -- ExpSetValNode
-type Nodes_ExpSetValNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_LeftSymList(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp1(_env *LnsEnv) *Nodes_Node
-    Get_exp2(_env *LnsEnv) *Nodes_ExpListNode
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_initSymSet(_env *LnsEnv) *LnsSet
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpSetValNode struct {
-    Nodes_Node
-    exp1 *Nodes_Node
-    exp2 *Nodes_ExpListNode
-    LeftSymList *LnsList
-    initSymSet *LnsSet
-    FP Nodes_ExpSetValNodeMtd
-}
-func Nodes_ExpSetValNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpSetValNode).FP
-}
-type Nodes_ExpSetValNodeDownCast interface {
-    ToNodes_ExpSetValNode() *Nodes_ExpSetValNode
-}
-func Nodes_ExpSetValNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpSetValNodeDownCast)
-    if ok { return work.ToNodes_ExpSetValNode() }
-    return nil
-}
-func (obj *Nodes_ExpSetValNode) ToNodes_ExpSetValNode() *Nodes_ExpSetValNode {
-    return obj
-}
-func NewNodes_ExpSetValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_ExpListNode, arg9 *LnsList, arg10 *LnsSet) *Nodes_ExpSetValNode {
-    obj := &Nodes_ExpSetValNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpSetValNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_ExpSetValNode) Get_exp1(_env *LnsEnv) *Nodes_Node{ return self.exp1 }
-func (self *Nodes_ExpSetValNode) Get_exp2(_env *LnsEnv) *Nodes_ExpListNode{ return self.exp2 }
-func (self *Nodes_ExpSetValNode) Get_LeftSymList(_env *LnsEnv) *LnsList{ return self.LeftSymList }
-func (self *Nodes_ExpSetValNode) Get_initSymSet(_env *LnsEnv) *LnsSet{ return self.initSymSet }
-
-// declaration Class -- ExpSetItemNode
-type Nodes_ExpSetItemNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp2(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_index(_env *LnsEnv) LnsAny
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_val(_env *LnsEnv) *Nodes_Node
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpSetItemNode struct {
-    Nodes_Node
-    val *Nodes_Node
-    index LnsAny
-    exp2 *Nodes_Node
-    FP Nodes_ExpSetItemNodeMtd
-}
-func Nodes_ExpSetItemNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpSetItemNode).FP
-}
-type Nodes_ExpSetItemNodeDownCast interface {
-    ToNodes_ExpSetItemNode() *Nodes_ExpSetItemNode
-}
-func Nodes_ExpSetItemNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpSetItemNodeDownCast)
-    if ok { return work.ToNodes_ExpSetItemNode() }
-    return nil
-}
-func (obj *Nodes_ExpSetItemNode) ToNodes_ExpSetItemNode() *Nodes_ExpSetItemNode {
-    return obj
-}
-func NewNodes_ExpSetItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny, arg9 *Nodes_Node) *Nodes_ExpSetItemNode {
-    obj := &Nodes_ExpSetItemNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpSetItemNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_ExpSetItemNode) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
-func (self *Nodes_ExpSetItemNode) Get_index(_env *LnsEnv) LnsAny{ return self.index }
-func (self *Nodes_ExpSetItemNode) Get_exp2(_env *LnsEnv) *Nodes_Node{ return self.exp2 }
-
-// declaration Class -- ExpOp2Node
-type Nodes_ExpOp2NodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    getValType(_env *LnsEnv, arg1 *Nodes_Node)(bool, LnsInt, LnsReal, string, *Ast_TypeInfo)
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp1(_env *LnsEnv) *Nodes_Node
-    Get_exp2(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_op(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpOp2Node struct {
-    Nodes_Node
-    op *Types_Token
-    exp1 *Nodes_Node
-    exp2 *Nodes_Node
-    FP Nodes_ExpOp2NodeMtd
-}
-func Nodes_ExpOp2Node2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpOp2Node).FP
-}
-type Nodes_ExpOp2NodeDownCast interface {
-    ToNodes_ExpOp2Node() *Nodes_ExpOp2Node
-}
-func Nodes_ExpOp2NodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpOp2NodeDownCast)
-    if ok { return work.ToNodes_ExpOp2Node() }
-    return nil
-}
-func (obj *Nodes_ExpOp2Node) ToNodes_ExpOp2Node() *Nodes_ExpOp2Node {
-    return obj
-}
-func NewNodes_ExpOp2Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 *Nodes_Node) *Nodes_ExpOp2Node {
-    obj := &Nodes_ExpOp2Node{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpOp2Node(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_ExpOp2Node) Get_op(_env *LnsEnv) *Types_Token{ return self.op }
-func (self *Nodes_ExpOp2Node) Get_exp1(_env *LnsEnv) *Nodes_Node{ return self.exp1 }
-func (self *Nodes_ExpOp2Node) Get_exp2(_env *LnsEnv) *Nodes_Node{ return self.exp2 }
-
-// declaration Class -- UnwrapSetNode
-type Nodes_UnwrapSetNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_dstExpList(_env *LnsEnv) *Nodes_ExpListNode
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_srcExpList(_env *LnsEnv) *Nodes_ExpListNode
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_unwrapBlock(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_UnwrapSetNode struct {
-    Nodes_Node
-    dstExpList *Nodes_ExpListNode
-    srcExpList *Nodes_ExpListNode
-    unwrapBlock LnsAny
-    FP Nodes_UnwrapSetNodeMtd
-}
-func Nodes_UnwrapSetNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_UnwrapSetNode).FP
-}
-type Nodes_UnwrapSetNodeDownCast interface {
-    ToNodes_UnwrapSetNode() *Nodes_UnwrapSetNode
-}
-func Nodes_UnwrapSetNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_UnwrapSetNodeDownCast)
-    if ok { return work.ToNodes_UnwrapSetNode() }
-    return nil
-}
-func (obj *Nodes_UnwrapSetNode) ToNodes_UnwrapSetNode() *Nodes_UnwrapSetNode {
-    return obj
-}
-func NewNodes_UnwrapSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode, arg8 *Nodes_ExpListNode, arg9 LnsAny) *Nodes_UnwrapSetNode {
-    obj := &Nodes_UnwrapSetNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_UnwrapSetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_UnwrapSetNode) Get_dstExpList(_env *LnsEnv) *Nodes_ExpListNode{ return self.dstExpList }
-func (self *Nodes_UnwrapSetNode) Get_srcExpList(_env *LnsEnv) *Nodes_ExpListNode{ return self.srcExpList }
-func (self *Nodes_UnwrapSetNode) Get_unwrapBlock(_env *LnsEnv) LnsAny{ return self.unwrapBlock }
-
-// declaration Class -- IfUnwrapNode
-type Nodes_IfUnwrapNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_nilBlock(_env *LnsEnv) LnsAny
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_varSymList(_env *LnsEnv) *LnsList
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_IfUnwrapNode struct {
-    Nodes_Node
-    varSymList *LnsList
-    expList *Nodes_ExpListNode
-    block *Nodes_BlockNode
-    nilBlock LnsAny
-    FP Nodes_IfUnwrapNodeMtd
-}
-func Nodes_IfUnwrapNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_IfUnwrapNode).FP
-}
-type Nodes_IfUnwrapNodeDownCast interface {
-    ToNodes_IfUnwrapNode() *Nodes_IfUnwrapNode
-}
-func Nodes_IfUnwrapNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_IfUnwrapNodeDownCast)
-    if ok { return work.ToNodes_IfUnwrapNode() }
-    return nil
-}
-func (obj *Nodes_IfUnwrapNode) ToNodes_IfUnwrapNode() *Nodes_IfUnwrapNode {
-    return obj
-}
-func NewNodes_IfUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_ExpListNode, arg9 *Nodes_BlockNode, arg10 LnsAny) *Nodes_IfUnwrapNode {
-    obj := &Nodes_IfUnwrapNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_IfUnwrapNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_IfUnwrapNode) Get_varSymList(_env *LnsEnv) *LnsList{ return self.varSymList }
-func (self *Nodes_IfUnwrapNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
-func (self *Nodes_IfUnwrapNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-func (self *Nodes_IfUnwrapNode) Get_nilBlock(_env *LnsEnv) LnsAny{ return self.nilBlock }
-
-// declaration Class -- UnwrapSymbolPair
-type Nodes_UnwrapSymbolPairMtd interface {
-    Get_dst(_env *LnsEnv) *Ast_SymbolInfo
-    Get_src(_env *LnsEnv) *Ast_SymbolInfo
-}
-type Nodes_UnwrapSymbolPair struct {
-    src *Ast_SymbolInfo
-    dst *Ast_SymbolInfo
-    FP Nodes_UnwrapSymbolPairMtd
-}
-func Nodes_UnwrapSymbolPair2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_UnwrapSymbolPair).FP
-}
-type Nodes_UnwrapSymbolPairDownCast interface {
-    ToNodes_UnwrapSymbolPair() *Nodes_UnwrapSymbolPair
-}
-func Nodes_UnwrapSymbolPairDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_UnwrapSymbolPairDownCast)
-    if ok { return work.ToNodes_UnwrapSymbolPair() }
-    return nil
-}
-func (obj *Nodes_UnwrapSymbolPair) ToNodes_UnwrapSymbolPair() *Nodes_UnwrapSymbolPair {
-    return obj
-}
-func NewNodes_UnwrapSymbolPair(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *Ast_SymbolInfo) *Nodes_UnwrapSymbolPair {
-    obj := &Nodes_UnwrapSymbolPair{}
-    obj.FP = obj
-    obj.InitNodes_UnwrapSymbolPair(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_UnwrapSymbolPair) InitNodes_UnwrapSymbolPair(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *Ast_SymbolInfo) {
-    self.src = arg1
-    self.dst = arg2
-}
-func (self *Nodes_UnwrapSymbolPair) Get_src(_env *LnsEnv) *Ast_SymbolInfo{ return self.src }
-func (self *Nodes_UnwrapSymbolPair) Get_dst(_env *LnsEnv) *Ast_SymbolInfo{ return self.dst }
-
-// declaration Class -- WhenNode
-type Nodes_WhenNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_elseBlock(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_symPairList(_env *LnsEnv) *LnsList
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_WhenNode struct {
-    Nodes_Node
-    symPairList *LnsList
-    block *Nodes_BlockNode
-    elseBlock LnsAny
-    FP Nodes_WhenNodeMtd
-}
-func Nodes_WhenNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_WhenNode).FP
-}
-type Nodes_WhenNodeDownCast interface {
-    ToNodes_WhenNode() *Nodes_WhenNode
-}
-func Nodes_WhenNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_WhenNodeDownCast)
-    if ok { return work.ToNodes_WhenNode() }
-    return nil
-}
-func (obj *Nodes_WhenNode) ToNodes_WhenNode() *Nodes_WhenNode {
-    return obj
-}
-func NewNodes_WhenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_BlockNode, arg9 LnsAny) *Nodes_WhenNode {
-    obj := &Nodes_WhenNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_WhenNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_WhenNode) Get_symPairList(_env *LnsEnv) *LnsList{ return self.symPairList }
-func (self *Nodes_WhenNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-func (self *Nodes_WhenNode) Get_elseBlock(_env *LnsEnv) LnsAny{ return self.elseBlock }
-
-// declaration Class -- ExpCastNode
-type Nodes_ExpCastNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_castKind(_env *LnsEnv) LnsInt
-    Get_castOpe(_env *LnsEnv) string
-    Get_castType(_env *LnsEnv) *Ast_TypeInfo
-    Get_castTypeNode(_env *LnsEnv) LnsAny
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpCastNode struct {
-    Nodes_Node
-    exp *Nodes_Node
-    castType *Ast_TypeInfo
-    castTypeNode LnsAny
-    castOpe string
-    castKind LnsInt
-    FP Nodes_ExpCastNodeMtd
-}
-func Nodes_ExpCastNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpCastNode).FP
-}
-type Nodes_ExpCastNodeDownCast interface {
-    ToNodes_ExpCastNode() *Nodes_ExpCastNode
-}
-func Nodes_ExpCastNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpCastNodeDownCast)
-    if ok { return work.ToNodes_ExpCastNode() }
-    return nil
-}
-func (obj *Nodes_ExpCastNode) ToNodes_ExpCastNode() *Nodes_ExpCastNode {
-    return obj
-}
-func NewNodes_ExpCastNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny, arg10 string, arg11 LnsInt) *Nodes_ExpCastNode {
-    obj := &Nodes_ExpCastNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpCastNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
-    return obj
-}
-func (self *Nodes_ExpCastNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-func (self *Nodes_ExpCastNode) Get_castType(_env *LnsEnv) *Ast_TypeInfo{ return self.castType }
-func (self *Nodes_ExpCastNode) Get_castTypeNode(_env *LnsEnv) LnsAny{ return self.castTypeNode }
-func (self *Nodes_ExpCastNode) Get_castOpe(_env *LnsEnv) string{ return self.castOpe }
-func (self *Nodes_ExpCastNode) Get_castKind(_env *LnsEnv) LnsInt{ return self.castKind }
-
-// declaration Class -- ExpToDDDNode
-type Nodes_ExpToDDDNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpToDDDNode struct {
-    Nodes_Node
-    expList *Nodes_ExpListNode
-    FP Nodes_ExpToDDDNodeMtd
-}
-func Nodes_ExpToDDDNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpToDDDNode).FP
-}
-type Nodes_ExpToDDDNodeDownCast interface {
-    ToNodes_ExpToDDDNode() *Nodes_ExpToDDDNode
-}
-func Nodes_ExpToDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpToDDDNodeDownCast)
-    if ok { return work.ToNodes_ExpToDDDNode() }
-    return nil
-}
-func (obj *Nodes_ExpToDDDNode) ToNodes_ExpToDDDNode() *Nodes_ExpToDDDNode {
-    return obj
-}
-func NewNodes_ExpToDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
-    obj := &Nodes_ExpToDDDNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpToDDDNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpToDDDNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
-
-// declaration Class -- ExpSubDDDNode
-type Nodes_ExpSubDDDNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_remainIndex(_env *LnsEnv) LnsInt
-    Get_src(_env *LnsEnv) *Nodes_Node
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpSubDDDNode struct {
-    Nodes_Node
-    src *Nodes_Node
-    remainIndex LnsInt
-    FP Nodes_ExpSubDDDNodeMtd
-}
-func Nodes_ExpSubDDDNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpSubDDDNode).FP
-}
-type Nodes_ExpSubDDDNodeDownCast interface {
-    ToNodes_ExpSubDDDNode() *Nodes_ExpSubDDDNode
-}
-func Nodes_ExpSubDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpSubDDDNodeDownCast)
-    if ok { return work.ToNodes_ExpSubDDDNode() }
-    return nil
-}
-func (obj *Nodes_ExpSubDDDNode) ToNodes_ExpSubDDDNode() *Nodes_ExpSubDDDNode {
-    return obj
-}
-func NewNodes_ExpSubDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpSubDDDNode {
-    obj := &Nodes_ExpSubDDDNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpSubDDDNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_ExpSubDDDNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
-func (self *Nodes_ExpSubDDDNode) Get_remainIndex(_env *LnsEnv) LnsInt{ return self.remainIndex }
-
-// declaration Class -- ExpOp1Node
-type Nodes_ExpOp1NodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_macroMode(_env *LnsEnv) LnsInt
-    Get_op(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpOp1Node struct {
-    Nodes_Node
-    op *Types_Token
-    macroMode LnsInt
-    exp *Nodes_Node
-    FP Nodes_ExpOp1NodeMtd
-}
-func Nodes_ExpOp1Node2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpOp1Node).FP
-}
-type Nodes_ExpOp1NodeDownCast interface {
-    ToNodes_ExpOp1Node() *Nodes_ExpOp1Node
-}
-func Nodes_ExpOp1NodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpOp1NodeDownCast)
-    if ok { return work.ToNodes_ExpOp1Node() }
-    return nil
-}
-func (obj *Nodes_ExpOp1Node) ToNodes_ExpOp1Node() *Nodes_ExpOp1Node {
-    return obj
-}
-func NewNodes_ExpOp1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt, arg9 *Nodes_Node) *Nodes_ExpOp1Node {
-    obj := &Nodes_ExpOp1Node{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpOp1Node(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_ExpOp1Node) Get_op(_env *LnsEnv) *Types_Token{ return self.op }
-func (self *Nodes_ExpOp1Node) Get_macroMode(_env *LnsEnv) LnsInt{ return self.macroMode }
-func (self *Nodes_ExpOp1Node) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- ExpRefItemNode
-type Nodes_ExpRefItemNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_index(_env *LnsEnv) LnsAny
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_symbol(_env *LnsEnv) LnsAny
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_val(_env *LnsEnv) *Nodes_Node
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpRefItemNode struct {
-    Nodes_Node
-    val *Nodes_Node
-    nilAccess bool
-    symbol LnsAny
-    index LnsAny
-    FP Nodes_ExpRefItemNodeMtd
-}
-func Nodes_ExpRefItemNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpRefItemNode).FP
-}
-type Nodes_ExpRefItemNodeDownCast interface {
-    ToNodes_ExpRefItemNode() *Nodes_ExpRefItemNode
-}
-func Nodes_ExpRefItemNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpRefItemNodeDownCast)
-    if ok { return work.ToNodes_ExpRefItemNode() }
-    return nil
-}
-func (obj *Nodes_ExpRefItemNode) ToNodes_ExpRefItemNode() *Nodes_ExpRefItemNode {
-    return obj
-}
-func NewNodes_ExpRefItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 LnsAny, arg10 LnsAny) *Nodes_ExpRefItemNode {
-    obj := &Nodes_ExpRefItemNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpRefItemNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_ExpRefItemNode) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
-func (self *Nodes_ExpRefItemNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
-func (self *Nodes_ExpRefItemNode) Get_symbol(_env *LnsEnv) LnsAny{ return self.symbol }
-func (self *Nodes_ExpRefItemNode) Get_index(_env *LnsEnv) LnsAny{ return self.index }
-
-// declaration Class -- ExpCallNode
-type Nodes_ExpCallNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_argList(_env *LnsEnv) LnsAny
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_errorFunc(_env *LnsEnv) bool
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_func(_env *LnsEnv) *Nodes_Node
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpCallNode struct {
-    Nodes_Node
-    _func *Nodes_Node
-    errorFunc bool
-    nilAccess bool
-    argList LnsAny
-    FP Nodes_ExpCallNodeMtd
-}
-func Nodes_ExpCallNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpCallNode).FP
-}
-type Nodes_ExpCallNodeDownCast interface {
-    ToNodes_ExpCallNode() *Nodes_ExpCallNode
-}
-func Nodes_ExpCallNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpCallNodeDownCast)
-    if ok { return work.ToNodes_ExpCallNode() }
-    return nil
-}
-func (obj *Nodes_ExpCallNode) ToNodes_ExpCallNode() *Nodes_ExpCallNode {
-    return obj
-}
-func NewNodes_ExpCallNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 bool, arg10 LnsAny) *Nodes_ExpCallNode {
-    obj := &Nodes_ExpCallNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpCallNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_ExpCallNode) Get_func(_env *LnsEnv) *Nodes_Node{ return self._func }
-func (self *Nodes_ExpCallNode) Get_errorFunc(_env *LnsEnv) bool{ return self.errorFunc }
-func (self *Nodes_ExpCallNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
-func (self *Nodes_ExpCallNode) Get_argList(_env *LnsEnv) LnsAny{ return self.argList }
-
-// declaration Class -- ExpMRetNode
-type Nodes_ExpMRetNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_mRet(_env *LnsEnv) *Nodes_Node
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpMRetNode struct {
-    Nodes_Node
-    mRet *Nodes_Node
-    FP Nodes_ExpMRetNodeMtd
-}
-func Nodes_ExpMRetNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpMRetNode).FP
-}
-type Nodes_ExpMRetNodeDownCast interface {
-    ToNodes_ExpMRetNode() *Nodes_ExpMRetNode
-}
-func Nodes_ExpMRetNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpMRetNodeDownCast)
-    if ok { return work.ToNodes_ExpMRetNode() }
-    return nil
-}
-func (obj *Nodes_ExpMRetNode) ToNodes_ExpMRetNode() *Nodes_ExpMRetNode {
-    return obj
-}
-func NewNodes_ExpMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMRetNode {
-    obj := &Nodes_ExpMRetNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpMRetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpMRetNode) Get_mRet(_env *LnsEnv) *Nodes_Node{ return self.mRet }
-
-// declaration Class -- ExpAccessMRetNode
-type Nodes_ExpAccessMRetNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_index(_env *LnsEnv) LnsInt
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_mRet(_env *LnsEnv) *Nodes_Node
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpAccessMRetNode struct {
-    Nodes_Node
-    mRet *Nodes_Node
-    index LnsInt
-    FP Nodes_ExpAccessMRetNodeMtd
-}
-func Nodes_ExpAccessMRetNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpAccessMRetNode).FP
-}
-type Nodes_ExpAccessMRetNodeDownCast interface {
-    ToNodes_ExpAccessMRetNode() *Nodes_ExpAccessMRetNode
-}
-func Nodes_ExpAccessMRetNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpAccessMRetNodeDownCast)
-    if ok { return work.ToNodes_ExpAccessMRetNode() }
-    return nil
-}
-func (obj *Nodes_ExpAccessMRetNode) ToNodes_ExpAccessMRetNode() *Nodes_ExpAccessMRetNode {
-    return obj
-}
-func NewNodes_ExpAccessMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpAccessMRetNode {
-    obj := &Nodes_ExpAccessMRetNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpAccessMRetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_ExpAccessMRetNode) Get_mRet(_env *LnsEnv) *Nodes_Node{ return self.mRet }
-func (self *Nodes_ExpAccessMRetNode) Get_index(_env *LnsEnv) LnsInt{ return self.index }
-
-// declaration Class -- ExpMultiTo1Node
-type Nodes_ExpMultiTo1NodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpMultiTo1Node struct {
-    Nodes_Node
-    exp *Nodes_Node
-    FP Nodes_ExpMultiTo1NodeMtd
-}
-func Nodes_ExpMultiTo1Node2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpMultiTo1Node).FP
-}
-type Nodes_ExpMultiTo1NodeDownCast interface {
-    ToNodes_ExpMultiTo1Node() *Nodes_ExpMultiTo1Node
-}
-func Nodes_ExpMultiTo1NodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpMultiTo1NodeDownCast)
-    if ok { return work.ToNodes_ExpMultiTo1Node() }
-    return nil
-}
-func (obj *Nodes_ExpMultiTo1Node) ToNodes_ExpMultiTo1Node() *Nodes_ExpMultiTo1Node {
-    return obj
-}
-func NewNodes_ExpMultiTo1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMultiTo1Node {
-    obj := &Nodes_ExpMultiTo1Node{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpMultiTo1Node(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpMultiTo1Node) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- ExpParenNode
-type Nodes_ExpParenNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpParenNode struct {
-    Nodes_Node
-    exp *Nodes_Node
-    FP Nodes_ExpParenNodeMtd
-}
-func Nodes_ExpParenNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpParenNode).FP
-}
-type Nodes_ExpParenNodeDownCast interface {
-    ToNodes_ExpParenNode() *Nodes_ExpParenNode
-}
-func Nodes_ExpParenNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpParenNodeDownCast)
-    if ok { return work.ToNodes_ExpParenNode() }
-    return nil
-}
-func (obj *Nodes_ExpParenNode) ToNodes_ExpParenNode() *Nodes_ExpParenNode {
-    return obj
-}
-func NewNodes_ExpParenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpParenNode {
-    obj := &Nodes_ExpParenNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpParenNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpParenNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- ExpMacroExpNode
-type Nodes_ExpMacroExpNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_macroType(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_stmtList(_env *LnsEnv) *LnsList
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpMacroExpNode struct {
-    Nodes_Node
-    macroType *Ast_TypeInfo
-    stmtList *LnsList
-    FP Nodes_ExpMacroExpNodeMtd
-}
-func Nodes_ExpMacroExpNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpMacroExpNode).FP
-}
-type Nodes_ExpMacroExpNodeDownCast interface {
-    ToNodes_ExpMacroExpNode() *Nodes_ExpMacroExpNode
-}
-func Nodes_ExpMacroExpNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpMacroExpNodeDownCast)
-    if ok { return work.ToNodes_ExpMacroExpNode() }
-    return nil
-}
-func (obj *Nodes_ExpMacroExpNode) ToNodes_ExpMacroExpNode() *Nodes_ExpMacroExpNode {
-    return obj
-}
-func NewNodes_ExpMacroExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *LnsList) *Nodes_ExpMacroExpNode {
-    obj := &Nodes_ExpMacroExpNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpMacroExpNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_ExpMacroExpNode) Get_macroType(_env *LnsEnv) *Ast_TypeInfo{ return self.macroType }
-func (self *Nodes_ExpMacroExpNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
-
-// declaration Class -- ExpMacroStatNode
-type Nodes_ExpMacroStatNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expStrList(_env *LnsEnv) *LnsList
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpMacroStatNode struct {
-    Nodes_Node
-    expStrList *LnsList
-    FP Nodes_ExpMacroStatNodeMtd
-}
-func Nodes_ExpMacroStatNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpMacroStatNode).FP
-}
-type Nodes_ExpMacroStatNodeDownCast interface {
-    ToNodes_ExpMacroStatNode() *Nodes_ExpMacroStatNode
-}
-func Nodes_ExpMacroStatNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpMacroStatNodeDownCast)
-    if ok { return work.ToNodes_ExpMacroStatNode() }
-    return nil
-}
-func (obj *Nodes_ExpMacroStatNode) ToNodes_ExpMacroStatNode() *Nodes_ExpMacroStatNode {
-    return obj
-}
-func NewNodes_ExpMacroStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_ExpMacroStatNode {
-    obj := &Nodes_ExpMacroStatNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpMacroStatNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpMacroStatNode) Get_expStrList(_env *LnsEnv) *LnsList{ return self.expStrList }
-
-// declaration Class -- ExpMacroArgExpNode
-type Nodes_ExpMacroArgExpNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_codeTxt(_env *LnsEnv) string
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpMacroArgExpNode struct {
-    Nodes_Node
-    codeTxt string
-    FP Nodes_ExpMacroArgExpNodeMtd
-}
-func Nodes_ExpMacroArgExpNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpMacroArgExpNode).FP
-}
-type Nodes_ExpMacroArgExpNodeDownCast interface {
-    ToNodes_ExpMacroArgExpNode() *Nodes_ExpMacroArgExpNode
-}
-func Nodes_ExpMacroArgExpNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpMacroArgExpNodeDownCast)
-    if ok { return work.ToNodes_ExpMacroArgExpNode() }
-    return nil
-}
-func (obj *Nodes_ExpMacroArgExpNode) ToNodes_ExpMacroArgExpNode() *Nodes_ExpMacroArgExpNode {
-    return obj
-}
-func NewNodes_ExpMacroArgExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ExpMacroArgExpNode {
-    obj := &Nodes_ExpMacroArgExpNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpMacroArgExpNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpMacroArgExpNode) Get_codeTxt(_env *LnsEnv) string{ return self.codeTxt }
-
-// declaration Class -- StmtExpNode
-type Nodes_StmtExpNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_StmtExpNode struct {
-    Nodes_Node
-    exp *Nodes_Node
-    FP Nodes_StmtExpNodeMtd
-}
-func Nodes_StmtExpNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_StmtExpNode).FP
-}
-type Nodes_StmtExpNodeDownCast interface {
-    ToNodes_StmtExpNode() *Nodes_StmtExpNode
-}
-func Nodes_StmtExpNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_StmtExpNodeDownCast)
-    if ok { return work.ToNodes_StmtExpNode() }
-    return nil
-}
-func (obj *Nodes_StmtExpNode) ToNodes_StmtExpNode() *Nodes_StmtExpNode {
-    return obj
-}
-func NewNodes_StmtExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_StmtExpNode {
-    obj := &Nodes_StmtExpNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_StmtExpNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_StmtExpNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- ExpMacroStatListNode
-type Nodes_ExpMacroStatListNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpMacroStatListNode struct {
-    Nodes_Node
-    exp *Nodes_Node
-    FP Nodes_ExpMacroStatListNodeMtd
-}
-func Nodes_ExpMacroStatListNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpMacroStatListNode).FP
-}
-type Nodes_ExpMacroStatListNodeDownCast interface {
-    ToNodes_ExpMacroStatListNode() *Nodes_ExpMacroStatListNode
-}
-func Nodes_ExpMacroStatListNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpMacroStatListNodeDownCast)
-    if ok { return work.ToNodes_ExpMacroStatListNode() }
-    return nil
-}
-func (obj *Nodes_ExpMacroStatListNode) ToNodes_ExpMacroStatListNode() *Nodes_ExpMacroStatListNode {
-    return obj
-}
-func NewNodes_ExpMacroStatListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMacroStatListNode {
-    obj := &Nodes_ExpMacroStatListNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpMacroStatListNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ExpMacroStatListNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- ExpOmitEnumNode
-type Nodes_ExpOmitEnumNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_aliasType(_env *LnsEnv) LnsAny
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_enumTypeInfo(_env *LnsEnv) *Ast_EnumTypeInfo
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_valInfo(_env *LnsEnv) *Ast_EnumValInfo
-    Get_valToken(_env *LnsEnv) *Types_Token
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpOmitEnumNode struct {
-    Nodes_Node
-    valToken *Types_Token
-    valInfo *Ast_EnumValInfo
-    aliasType LnsAny
-    enumTypeInfo *Ast_EnumTypeInfo
-    FP Nodes_ExpOmitEnumNodeMtd
-}
-func Nodes_ExpOmitEnumNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpOmitEnumNode).FP
-}
-type Nodes_ExpOmitEnumNodeDownCast interface {
-    ToNodes_ExpOmitEnumNode() *Nodes_ExpOmitEnumNode
-}
-func Nodes_ExpOmitEnumNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpOmitEnumNodeDownCast)
-    if ok { return work.ToNodes_ExpOmitEnumNode() }
-    return nil
-}
-func (obj *Nodes_ExpOmitEnumNode) ToNodes_ExpOmitEnumNode() *Nodes_ExpOmitEnumNode {
-    return obj
-}
-func NewNodes_ExpOmitEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_EnumValInfo, arg9 LnsAny, arg10 *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
-    obj := &Nodes_ExpOmitEnumNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpOmitEnumNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_ExpOmitEnumNode) Get_valToken(_env *LnsEnv) *Types_Token{ return self.valToken }
-func (self *Nodes_ExpOmitEnumNode) Get_valInfo(_env *LnsEnv) *Ast_EnumValInfo{ return self.valInfo }
-func (self *Nodes_ExpOmitEnumNode) Get_aliasType(_env *LnsEnv) LnsAny{ return self.aliasType }
-func (self *Nodes_ExpOmitEnumNode) Get_enumTypeInfo(_env *LnsEnv) *Ast_EnumTypeInfo{ return self.enumTypeInfo }
-
-// declaration Class -- RefFieldNode
-type Nodes_RefFieldNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_field(_env *LnsEnv) *Types_Token
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_prefix(_env *LnsEnv) *Nodes_Node
-    Get_symbolInfo(_env *LnsEnv) LnsAny
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_RefFieldNode struct {
-    Nodes_Node
-    field *Types_Token
-    symbolInfo LnsAny
-    nilAccess bool
-    prefix *Nodes_Node
-    FP Nodes_RefFieldNodeMtd
-}
-func Nodes_RefFieldNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_RefFieldNode).FP
-}
-type Nodes_RefFieldNodeDownCast interface {
-    ToNodes_RefFieldNode() *Nodes_RefFieldNode
-}
-func Nodes_RefFieldNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_RefFieldNodeDownCast)
-    if ok { return work.ToNodes_RefFieldNode() }
-    return nil
-}
-func (obj *Nodes_RefFieldNode) ToNodes_RefFieldNode() *Nodes_RefFieldNode {
-    return obj
-}
-func NewNodes_RefFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node) *Nodes_RefFieldNode {
-    obj := &Nodes_RefFieldNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_RefFieldNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_RefFieldNode) Get_field(_env *LnsEnv) *Types_Token{ return self.field }
-func (self *Nodes_RefFieldNode) Get_symbolInfo(_env *LnsEnv) LnsAny{ return self.symbolInfo }
-func (self *Nodes_RefFieldNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
-func (self *Nodes_RefFieldNode) Get_prefix(_env *LnsEnv) *Nodes_Node{ return self.prefix }
-
-// declaration Class -- GetFieldNode
-type Nodes_GetFieldNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_field(_env *LnsEnv) *Types_Token
-    Get_getterTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_prefix(_env *LnsEnv) *Nodes_Node
-    Get_symbolInfo(_env *LnsEnv) LnsAny
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_GetFieldNode struct {
-    Nodes_Node
-    field *Types_Token
-    symbolInfo LnsAny
-    nilAccess bool
-    prefix *Nodes_Node
-    getterTypeInfo *Ast_TypeInfo
-    FP Nodes_GetFieldNodeMtd
-}
-func Nodes_GetFieldNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_GetFieldNode).FP
-}
-type Nodes_GetFieldNodeDownCast interface {
-    ToNodes_GetFieldNode() *Nodes_GetFieldNode
-}
-func Nodes_GetFieldNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_GetFieldNodeDownCast)
-    if ok { return work.ToNodes_GetFieldNode() }
-    return nil
-}
-func (obj *Nodes_GetFieldNode) ToNodes_GetFieldNode() *Nodes_GetFieldNode {
-    return obj
-}
-func NewNodes_GetFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node, arg11 *Ast_TypeInfo) *Nodes_GetFieldNode {
-    obj := &Nodes_GetFieldNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_GetFieldNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
-    return obj
-}
-func (self *Nodes_GetFieldNode) Get_field(_env *LnsEnv) *Types_Token{ return self.field }
-func (self *Nodes_GetFieldNode) Get_symbolInfo(_env *LnsEnv) LnsAny{ return self.symbolInfo }
-func (self *Nodes_GetFieldNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
-func (self *Nodes_GetFieldNode) Get_prefix(_env *LnsEnv) *Nodes_Node{ return self.prefix }
-func (self *Nodes_GetFieldNode) Get_getterTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.getterTypeInfo }
-
-// declaration Class -- AliasNode
-type Nodes_AliasNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_newSymbol(_env *LnsEnv) *Ast_SymbolInfo
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_srcNode(_env *LnsEnv) *Nodes_Node
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_AliasNode struct {
-    Nodes_Node
-    newSymbol *Ast_SymbolInfo
-    srcNode *Nodes_Node
-    typeInfo *Ast_TypeInfo
-    FP Nodes_AliasNodeMtd
-}
-func Nodes_AliasNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_AliasNode).FP
-}
-type Nodes_AliasNodeDownCast interface {
-    ToNodes_AliasNode() *Nodes_AliasNode
-}
-func Nodes_AliasNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_AliasNodeDownCast)
-    if ok { return work.ToNodes_AliasNode() }
-    return nil
-}
-func (obj *Nodes_AliasNode) ToNodes_AliasNode() *Nodes_AliasNode {
-    return obj
-}
-func NewNodes_AliasNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo, arg8 *Nodes_Node, arg9 *Ast_TypeInfo) *Nodes_AliasNode {
-    obj := &Nodes_AliasNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_AliasNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_AliasNode) Get_newSymbol(_env *LnsEnv) *Ast_SymbolInfo{ return self.newSymbol }
-func (self *Nodes_AliasNode) Get_srcNode(_env *LnsEnv) *Nodes_Node{ return self.srcNode }
-func (self *Nodes_AliasNode) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
-
-// declaration Class -- VarInfo
-type Nodes_VarInfoMtd interface {
-    Get_actualType(_env *LnsEnv) *Ast_TypeInfo
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_refType(_env *LnsEnv) LnsAny
-}
-type Nodes_VarInfo struct {
-    name *Types_Token
-    refType LnsAny
-    actualType *Ast_TypeInfo
-    FP Nodes_VarInfoMtd
-}
-func Nodes_VarInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_VarInfo).FP
-}
-type Nodes_VarInfoDownCast interface {
-    ToNodes_VarInfo() *Nodes_VarInfo
-}
-func Nodes_VarInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_VarInfoDownCast)
-    if ok { return work.ToNodes_VarInfo() }
-    return nil
-}
-func (obj *Nodes_VarInfo) ToNodes_VarInfo() *Nodes_VarInfo {
-    return obj
-}
-func NewNodes_VarInfo(_env *LnsEnv, arg1 *Types_Token, arg2 LnsAny, arg3 *Ast_TypeInfo) *Nodes_VarInfo {
-    obj := &Nodes_VarInfo{}
-    obj.FP = obj
-    obj.InitNodes_VarInfo(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *Nodes_VarInfo) InitNodes_VarInfo(_env *LnsEnv, arg1 *Types_Token, arg2 LnsAny, arg3 *Ast_TypeInfo) {
-    self.name = arg1
-    self.refType = arg2
-    self.actualType = arg3
-}
-func (self *Nodes_VarInfo) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_VarInfo) Get_refType(_env *LnsEnv) LnsAny{ return self.refType }
-func (self *Nodes_VarInfo) Get_actualType(_env *LnsEnv) *Ast_TypeInfo{ return self.actualType }
-
-// declaration Class -- DeclVarNode
-type Nodes_DeclVarNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_accessMode(_env *LnsEnv) LnsInt
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_mode(_env *LnsEnv) LnsInt
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_staticFlag(_env *LnsEnv) bool
-    Get_symbolInfoList(_env *LnsEnv) *LnsList
-    Get_syncBlock(_env *LnsEnv) LnsAny
-    Get_syncVarList(_env *LnsEnv) *LnsList
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_thenBlock(_env *LnsEnv) LnsAny
-    Get_typeInfoList(_env *LnsEnv) *LnsList
-    Get_unwrapBlock(_env *LnsEnv) LnsAny
-    Get_unwrapFlag(_env *LnsEnv) bool
-    Get_varList(_env *LnsEnv) *LnsList
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclVarNode struct {
-    Nodes_Node
-    mode LnsInt
-    accessMode LnsInt
-    staticFlag bool
-    varList *LnsList
-    expList LnsAny
-    symbolInfoList *LnsList
-    typeInfoList *LnsList
-    unwrapFlag bool
-    unwrapBlock LnsAny
-    thenBlock LnsAny
-    syncVarList *LnsList
-    syncBlock LnsAny
-    FP Nodes_DeclVarNodeMtd
-}
-func Nodes_DeclVarNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclVarNode).FP
-}
-type Nodes_DeclVarNodeDownCast interface {
-    ToNodes_DeclVarNode() *Nodes_DeclVarNode
-}
-func Nodes_DeclVarNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclVarNodeDownCast)
-    if ok { return work.ToNodes_DeclVarNode() }
-    return nil
-}
-func (obj *Nodes_DeclVarNode) ToNodes_DeclVarNode() *Nodes_DeclVarNode {
-    return obj
-}
-func NewNodes_DeclVarNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsList, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 LnsAny, arg16 LnsAny, arg17 *LnsList, arg18 LnsAny) *Nodes_DeclVarNode {
-    obj := &Nodes_DeclVarNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclVarNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18)
-    return obj
-}
-func (self *Nodes_DeclVarNode) Get_mode(_env *LnsEnv) LnsInt{ return self.mode }
-func (self *Nodes_DeclVarNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
-func (self *Nodes_DeclVarNode) Get_staticFlag(_env *LnsEnv) bool{ return self.staticFlag }
-func (self *Nodes_DeclVarNode) Get_varList(_env *LnsEnv) *LnsList{ return self.varList }
-func (self *Nodes_DeclVarNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
-func (self *Nodes_DeclVarNode) Get_symbolInfoList(_env *LnsEnv) *LnsList{ return self.symbolInfoList }
-func (self *Nodes_DeclVarNode) Get_typeInfoList(_env *LnsEnv) *LnsList{ return self.typeInfoList }
-func (self *Nodes_DeclVarNode) Get_unwrapFlag(_env *LnsEnv) bool{ return self.unwrapFlag }
-func (self *Nodes_DeclVarNode) Get_unwrapBlock(_env *LnsEnv) LnsAny{ return self.unwrapBlock }
-func (self *Nodes_DeclVarNode) Get_thenBlock(_env *LnsEnv) LnsAny{ return self.thenBlock }
-func (self *Nodes_DeclVarNode) Get_syncVarList(_env *LnsEnv) *LnsList{ return self.syncVarList }
-func (self *Nodes_DeclVarNode) Get_syncBlock(_env *LnsEnv) LnsAny{ return self.syncBlock }
-
-// declaration Class -- DeclFuncInfo
-type Nodes_DeclFuncInfoMtd interface {
-    Get_accessMode(_env *LnsEnv) LnsInt
-    Get_argList(_env *LnsEnv) *LnsList
-    Get_asyncMode(_env *LnsEnv) LnsAny
-    Get_body(_env *LnsEnv) LnsAny
-    Get_classTypeInfo(_env *LnsEnv) LnsAny
-    Get_declClassNode(_env *LnsEnv) LnsAny
-    Get_has__func__Symbol(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_name(_env *LnsEnv) LnsAny
-    Get_outsizeOfClass(_env *LnsEnv) bool
-    Get_overrideFlag(_env *LnsEnv) bool
-    Get_retTypeInfoList(_env *LnsEnv) *LnsList
-    Get_retTypeNodeList(_env *LnsEnv) *LnsList
-    Get_staticFlag(_env *LnsEnv) bool
-    Get_stmtNum(_env *LnsEnv) LnsInt
-    Get_symbol(_env *LnsEnv) LnsAny
-    Set_body(_env *LnsEnv, arg1 LnsAny)
-    Set_has__func__Symbol(_env *LnsEnv, arg1 bool)
-}
-type Nodes_DeclFuncInfo struct {
-    kind LnsInt
-    classTypeInfo LnsAny
-    declClassNode LnsAny
-    outsizeOfClass bool
-    name LnsAny
-    symbol LnsAny
-    argList *LnsList
-    staticFlag bool
-    accessMode LnsInt
-    asyncMode LnsAny
-    body LnsAny
-    retTypeInfoList *LnsList
-    retTypeNodeList *LnsList
-    has__func__Symbol bool
-    overrideFlag bool
-    stmtNum LnsInt
-    FP Nodes_DeclFuncInfoMtd
-}
-func Nodes_DeclFuncInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclFuncInfo).FP
-}
-type Nodes_DeclFuncInfoDownCast interface {
-    ToNodes_DeclFuncInfo() *Nodes_DeclFuncInfo
-}
-func Nodes_DeclFuncInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclFuncInfoDownCast)
-    if ok { return work.ToNodes_DeclFuncInfo() }
-    return nil
-}
-func (obj *Nodes_DeclFuncInfo) ToNodes_DeclFuncInfo() *Nodes_DeclFuncInfo {
-    return obj
-}
-func NewNodes_DeclFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 *LnsList, arg8 bool, arg9 LnsInt, arg10 LnsAny, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 bool, arg16 LnsInt) *Nodes_DeclFuncInfo {
-    obj := &Nodes_DeclFuncInfo{}
-    obj.FP = obj
-    obj.InitNodes_DeclFuncInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)
-    return obj
-}
-func (self *Nodes_DeclFuncInfo) InitNodes_DeclFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 *LnsList, arg8 bool, arg9 LnsInt, arg10 LnsAny, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 bool, arg16 LnsInt) {
-    self.kind = arg1
-    self.classTypeInfo = arg2
-    self.declClassNode = arg3
-    self.outsizeOfClass = arg4
-    self.name = arg5
-    self.symbol = arg6
-    self.argList = arg7
-    self.staticFlag = arg8
-    self.accessMode = arg9
-    self.asyncMode = arg10
-    self.body = arg11
-    self.retTypeInfoList = arg12
-    self.retTypeNodeList = arg13
-    self.has__func__Symbol = arg14
-    self.overrideFlag = arg15
-    self.stmtNum = arg16
-}
-func (self *Nodes_DeclFuncInfo) Get_kind(_env *LnsEnv) LnsInt{ return self.kind }
-func (self *Nodes_DeclFuncInfo) Get_classTypeInfo(_env *LnsEnv) LnsAny{ return self.classTypeInfo }
-func (self *Nodes_DeclFuncInfo) Get_declClassNode(_env *LnsEnv) LnsAny{ return self.declClassNode }
-func (self *Nodes_DeclFuncInfo) Get_outsizeOfClass(_env *LnsEnv) bool{ return self.outsizeOfClass }
-func (self *Nodes_DeclFuncInfo) Get_name(_env *LnsEnv) LnsAny{ return self.name }
-func (self *Nodes_DeclFuncInfo) Get_symbol(_env *LnsEnv) LnsAny{ return self.symbol }
-func (self *Nodes_DeclFuncInfo) Get_argList(_env *LnsEnv) *LnsList{ return self.argList }
-func (self *Nodes_DeclFuncInfo) Get_staticFlag(_env *LnsEnv) bool{ return self.staticFlag }
-func (self *Nodes_DeclFuncInfo) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
-func (self *Nodes_DeclFuncInfo) Get_asyncMode(_env *LnsEnv) LnsAny{ return self.asyncMode }
-func (self *Nodes_DeclFuncInfo) Get_body(_env *LnsEnv) LnsAny{ return self.body }
-func (self *Nodes_DeclFuncInfo) Set_body(_env *LnsEnv, arg1 LnsAny){ self.body = arg1 }
-func (self *Nodes_DeclFuncInfo) Get_retTypeInfoList(_env *LnsEnv) *LnsList{ return self.retTypeInfoList }
-func (self *Nodes_DeclFuncInfo) Get_retTypeNodeList(_env *LnsEnv) *LnsList{ return self.retTypeNodeList }
-func (self *Nodes_DeclFuncInfo) Get_has__func__Symbol(_env *LnsEnv) bool{ return self.has__func__Symbol }
-func (self *Nodes_DeclFuncInfo) Set_has__func__Symbol(_env *LnsEnv, arg1 bool){ self.has__func__Symbol = arg1 }
-func (self *Nodes_DeclFuncInfo) Get_overrideFlag(_env *LnsEnv) bool{ return self.overrideFlag }
-func (self *Nodes_DeclFuncInfo) Get_stmtNum(_env *LnsEnv) LnsInt{ return self.stmtNum }
-
-// declaration Class -- DeclFormNode
-type Nodes_DeclFormNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclFormNode struct {
-    Nodes_Node
-    declInfo *Nodes_DeclFuncInfo
-    FP Nodes_DeclFormNodeMtd
-}
-func Nodes_DeclFormNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclFormNode).FP
-}
-type Nodes_DeclFormNodeDownCast interface {
-    ToNodes_DeclFormNode() *Nodes_DeclFormNode
-}
-func Nodes_DeclFormNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclFormNodeDownCast)
-    if ok { return work.ToNodes_DeclFormNode() }
-    return nil
-}
-func (obj *Nodes_DeclFormNode) ToNodes_DeclFormNode() *Nodes_DeclFormNode {
-    return obj
-}
-func NewNodes_DeclFormNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFormNode {
-    obj := &Nodes_DeclFormNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclFormNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_DeclFormNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
-
-// declaration Class -- DeclFuncNode
-type Nodes_DeclFuncNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclFuncNode struct {
-    Nodes_Node
-    declInfo *Nodes_DeclFuncInfo
-    FP Nodes_DeclFuncNodeMtd
-}
-func Nodes_DeclFuncNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclFuncNode).FP
-}
-type Nodes_DeclFuncNodeDownCast interface {
-    ToNodes_DeclFuncNode() *Nodes_DeclFuncNode
-}
-func Nodes_DeclFuncNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclFuncNodeDownCast)
-    if ok { return work.ToNodes_DeclFuncNode() }
-    return nil
-}
-func (obj *Nodes_DeclFuncNode) ToNodes_DeclFuncNode() *Nodes_DeclFuncNode {
-    return obj
-}
-func NewNodes_DeclFuncNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
-    obj := &Nodes_DeclFuncNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclFuncNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_DeclFuncNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
-
-// declaration Class -- DeclMethodNode
-type Nodes_DeclMethodNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclMethodNode struct {
-    Nodes_Node
-    declInfo *Nodes_DeclFuncInfo
-    FP Nodes_DeclMethodNodeMtd
-}
-func Nodes_DeclMethodNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclMethodNode).FP
-}
-type Nodes_DeclMethodNodeDownCast interface {
-    ToNodes_DeclMethodNode() *Nodes_DeclMethodNode
-}
-func Nodes_DeclMethodNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclMethodNodeDownCast)
-    if ok { return work.ToNodes_DeclMethodNode() }
-    return nil
-}
-func (obj *Nodes_DeclMethodNode) ToNodes_DeclMethodNode() *Nodes_DeclMethodNode {
-    return obj
-}
-func NewNodes_DeclMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
-    obj := &Nodes_DeclMethodNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclMethodNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_DeclMethodNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
-
-// declaration Class -- ProtoMethodNode
-type Nodes_ProtoMethodNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ProtoMethodNode struct {
-    Nodes_Node
-    declInfo *Nodes_DeclFuncInfo
-    FP Nodes_ProtoMethodNodeMtd
-}
-func Nodes_ProtoMethodNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ProtoMethodNode).FP
-}
-type Nodes_ProtoMethodNodeDownCast interface {
-    ToNodes_ProtoMethodNode() *Nodes_ProtoMethodNode
-}
-func Nodes_ProtoMethodNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ProtoMethodNodeDownCast)
-    if ok { return work.ToNodes_ProtoMethodNode() }
-    return nil
-}
-func (obj *Nodes_ProtoMethodNode) ToNodes_ProtoMethodNode() *Nodes_ProtoMethodNode {
-    return obj
-}
-func NewNodes_ProtoMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
-    obj := &Nodes_ProtoMethodNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ProtoMethodNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_ProtoMethodNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
-
-// declaration Class -- DeclConstrNode
-type Nodes_DeclConstrNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclConstrNode struct {
-    Nodes_Node
-    declInfo *Nodes_DeclFuncInfo
-    FP Nodes_DeclConstrNodeMtd
-}
-func Nodes_DeclConstrNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclConstrNode).FP
-}
-type Nodes_DeclConstrNodeDownCast interface {
-    ToNodes_DeclConstrNode() *Nodes_DeclConstrNode
-}
-func Nodes_DeclConstrNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclConstrNodeDownCast)
-    if ok { return work.ToNodes_DeclConstrNode() }
-    return nil
-}
-func (obj *Nodes_DeclConstrNode) ToNodes_DeclConstrNode() *Nodes_DeclConstrNode {
-    return obj
-}
-func NewNodes_DeclConstrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
-    obj := &Nodes_DeclConstrNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclConstrNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_DeclConstrNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
-
-// declaration Class -- DeclDestrNode
-type Nodes_DeclDestrNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclDestrNode struct {
-    Nodes_Node
-    declInfo *Nodes_DeclFuncInfo
-    FP Nodes_DeclDestrNodeMtd
-}
-func Nodes_DeclDestrNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclDestrNode).FP
-}
-type Nodes_DeclDestrNodeDownCast interface {
-    ToNodes_DeclDestrNode() *Nodes_DeclDestrNode
-}
-func Nodes_DeclDestrNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclDestrNodeDownCast)
-    if ok { return work.ToNodes_DeclDestrNode() }
-    return nil
-}
-func (obj *Nodes_DeclDestrNode) ToNodes_DeclDestrNode() *Nodes_DeclDestrNode {
-    return obj
-}
-func NewNodes_DeclDestrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
-    obj := &Nodes_DeclDestrNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclDestrNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_DeclDestrNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
-
-// declaration Class -- ExpCallSuperCtorNode
-type Nodes_ExpCallSuperCtorNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_methodType(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_superType(_env *LnsEnv) *Ast_TypeInfo
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpCallSuperCtorNode struct {
-    Nodes_Node
-    superType *Ast_TypeInfo
-    methodType *Ast_TypeInfo
-    expList LnsAny
-    FP Nodes_ExpCallSuperCtorNodeMtd
-}
-func Nodes_ExpCallSuperCtorNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpCallSuperCtorNode).FP
-}
-type Nodes_ExpCallSuperCtorNodeDownCast interface {
-    ToNodes_ExpCallSuperCtorNode() *Nodes_ExpCallSuperCtorNode
-}
-func Nodes_ExpCallSuperCtorNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpCallSuperCtorNodeDownCast)
-    if ok { return work.ToNodes_ExpCallSuperCtorNode() }
-    return nil
-}
-func (obj *Nodes_ExpCallSuperCtorNode) ToNodes_ExpCallSuperCtorNode() *Nodes_ExpCallSuperCtorNode {
-    return obj
-}
-func NewNodes_ExpCallSuperCtorNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperCtorNode {
-    obj := &Nodes_ExpCallSuperCtorNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpCallSuperCtorNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_ExpCallSuperCtorNode) Get_superType(_env *LnsEnv) *Ast_TypeInfo{ return self.superType }
-func (self *Nodes_ExpCallSuperCtorNode) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ return self.methodType }
-func (self *Nodes_ExpCallSuperCtorNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
-
-// declaration Class -- ExpCallSuperNode
-type Nodes_ExpCallSuperNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_methodType(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_superType(_env *LnsEnv) *Ast_TypeInfo
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ExpCallSuperNode struct {
-    Nodes_Node
-    superType *Ast_TypeInfo
-    methodType *Ast_TypeInfo
-    expList LnsAny
-    FP Nodes_ExpCallSuperNodeMtd
-}
-func Nodes_ExpCallSuperNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExpCallSuperNode).FP
-}
-type Nodes_ExpCallSuperNodeDownCast interface {
-    ToNodes_ExpCallSuperNode() *Nodes_ExpCallSuperNode
-}
-func Nodes_ExpCallSuperNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExpCallSuperNodeDownCast)
-    if ok { return work.ToNodes_ExpCallSuperNode() }
-    return nil
-}
-func (obj *Nodes_ExpCallSuperNode) ToNodes_ExpCallSuperNode() *Nodes_ExpCallSuperNode {
-    return obj
-}
-func NewNodes_ExpCallSuperNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperNode {
-    obj := &Nodes_ExpCallSuperNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ExpCallSuperNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_ExpCallSuperNode) Get_superType(_env *LnsEnv) *Ast_TypeInfo{ return self.superType }
-func (self *Nodes_ExpCallSuperNode) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ return self.methodType }
-func (self *Nodes_ExpCallSuperNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
-
-// declaration Class -- AsyncLockNode
-type Nodes_AsyncLockNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_lockKind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_AsyncLockNode struct {
-    Nodes_Node
-    lockKind LnsInt
-    block *Nodes_BlockNode
-    FP Nodes_AsyncLockNodeMtd
-}
-func Nodes_AsyncLockNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_AsyncLockNode).FP
-}
-type Nodes_AsyncLockNodeDownCast interface {
-    ToNodes_AsyncLockNode() *Nodes_AsyncLockNode
-}
-func Nodes_AsyncLockNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_AsyncLockNodeDownCast)
-    if ok { return work.ToNodes_AsyncLockNode() }
-    return nil
-}
-func (obj *Nodes_AsyncLockNode) ToNodes_AsyncLockNode() *Nodes_AsyncLockNode {
-    return obj
-}
-func NewNodes_AsyncLockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode) *Nodes_AsyncLockNode {
-    obj := &Nodes_AsyncLockNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_AsyncLockNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_AsyncLockNode) Get_lockKind(_env *LnsEnv) LnsInt{ return self.lockKind }
-func (self *Nodes_AsyncLockNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- RequestNode
-type Nodes_RequestNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_processor(_env *LnsEnv) *Nodes_Node
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_RequestNode struct {
-    Nodes_Node
-    processor *Nodes_Node
-    exp *Nodes_Node
-    FP Nodes_RequestNodeMtd
-}
-func Nodes_RequestNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_RequestNode).FP
-}
-type Nodes_RequestNodeDownCast interface {
-    ToNodes_RequestNode() *Nodes_RequestNode
-}
-func Nodes_RequestNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_RequestNodeDownCast)
-    if ok { return work.ToNodes_RequestNode() }
-    return nil
-}
-func (obj *Nodes_RequestNode) ToNodes_RequestNode() *Nodes_RequestNode {
-    return obj
-}
-func NewNodes_RequestNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_Node) *Nodes_RequestNode {
-    obj := &Nodes_RequestNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_RequestNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_RequestNode) Get_processor(_env *LnsEnv) *Nodes_Node{ return self.processor }
-func (self *Nodes_RequestNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- DeclMemberNode
-type Nodes_DeclMemberNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetGetterSym(_env *LnsEnv) LnsAny
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSetterSym(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_accessMode(_env *LnsEnv) LnsInt
-    Get_classType(_env *LnsEnv) *Ast_TypeInfo
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_getterMode(_env *LnsEnv) LnsInt
-    Get_getterMutable(_env *LnsEnv) bool
-    Get_getterRetType(_env *LnsEnv) *Ast_TypeInfo
-    Get_getterToken(_env *LnsEnv) LnsAny
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_refType(_env *LnsEnv) *Nodes_RefTypeNode
-    Get_setterMode(_env *LnsEnv) LnsInt
-    Get_setterToken(_env *LnsEnv) LnsAny
-    Get_staticFlag(_env *LnsEnv) bool
-    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclMemberNode struct {
-    Nodes_Node
-    name *Types_Token
-    refType *Nodes_RefTypeNode
-    symbolInfo *Ast_SymbolInfo
-    classType *Ast_TypeInfo
-    staticFlag bool
-    accessMode LnsInt
-    getterMutable bool
-    getterMode LnsInt
-    getterToken LnsAny
-    getterRetType *Ast_TypeInfo
-    setterMode LnsInt
-    setterToken LnsAny
-    FP Nodes_DeclMemberNodeMtd
-}
-func Nodes_DeclMemberNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclMemberNode).FP
-}
-type Nodes_DeclMemberNodeDownCast interface {
-    ToNodes_DeclMemberNode() *Nodes_DeclMemberNode
-}
-func Nodes_DeclMemberNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclMemberNodeDownCast)
-    if ok { return work.ToNodes_DeclMemberNode() }
-    return nil
-}
-func (obj *Nodes_DeclMemberNode) ToNodes_DeclMemberNode() *Nodes_DeclMemberNode {
-    return obj
-}
-func NewNodes_DeclMemberNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_RefTypeNode, arg9 *Ast_SymbolInfo, arg10 *Ast_TypeInfo, arg11 bool, arg12 LnsInt, arg13 bool, arg14 LnsInt, arg15 LnsAny, arg16 *Ast_TypeInfo, arg17 LnsInt, arg18 LnsAny) *Nodes_DeclMemberNode {
-    obj := &Nodes_DeclMemberNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclMemberNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18)
-    return obj
-}
-func (self *Nodes_DeclMemberNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_DeclMemberNode) Get_refType(_env *LnsEnv) *Nodes_RefTypeNode{ return self.refType }
-func (self *Nodes_DeclMemberNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
-func (self *Nodes_DeclMemberNode) Get_classType(_env *LnsEnv) *Ast_TypeInfo{ return self.classType }
-func (self *Nodes_DeclMemberNode) Get_staticFlag(_env *LnsEnv) bool{ return self.staticFlag }
-func (self *Nodes_DeclMemberNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
-func (self *Nodes_DeclMemberNode) Get_getterMutable(_env *LnsEnv) bool{ return self.getterMutable }
-func (self *Nodes_DeclMemberNode) Get_getterMode(_env *LnsEnv) LnsInt{ return self.getterMode }
-func (self *Nodes_DeclMemberNode) Get_getterToken(_env *LnsEnv) LnsAny{ return self.getterToken }
-func (self *Nodes_DeclMemberNode) Get_getterRetType(_env *LnsEnv) *Ast_TypeInfo{ return self.getterRetType }
-func (self *Nodes_DeclMemberNode) Get_setterMode(_env *LnsEnv) LnsInt{ return self.setterMode }
-func (self *Nodes_DeclMemberNode) Get_setterToken(_env *LnsEnv) LnsAny{ return self.setterToken }
-
-// declaration Class -- DeclArgNode
-type Nodes_DeclArgNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_argType(_env *LnsEnv) LnsAny
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclArgNode struct {
-    Nodes_Node
-    name *Types_Token
-    symbolInfo *Ast_SymbolInfo
-    argType LnsAny
-    FP Nodes_DeclArgNodeMtd
-}
-func Nodes_DeclArgNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclArgNode).FP
-}
-type Nodes_DeclArgNodeDownCast interface {
-    ToNodes_DeclArgNode() *Nodes_DeclArgNode
-}
-func Nodes_DeclArgNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclArgNodeDownCast)
-    if ok { return work.ToNodes_DeclArgNode() }
-    return nil
-}
-func (obj *Nodes_DeclArgNode) ToNodes_DeclArgNode() *Nodes_DeclArgNode {
-    return obj
-}
-func NewNodes_DeclArgNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_SymbolInfo, arg9 LnsAny) *Nodes_DeclArgNode {
-    obj := &Nodes_DeclArgNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclArgNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_DeclArgNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_DeclArgNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
-func (self *Nodes_DeclArgNode) Get_argType(_env *LnsEnv) LnsAny{ return self.argType }
-
-// declaration Class -- DeclArgDDDNode
-type Nodes_DeclArgDDDNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclArgDDDNode struct {
-    Nodes_Node
-    FP Nodes_DeclArgDDDNodeMtd
-}
-func Nodes_DeclArgDDDNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclArgDDDNode).FP
-}
-type Nodes_DeclArgDDDNodeDownCast interface {
-    ToNodes_DeclArgDDDNode() *Nodes_DeclArgDDDNode
-}
-func Nodes_DeclArgDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclArgDDDNodeDownCast)
-    if ok { return work.ToNodes_DeclArgDDDNode() }
-    return nil
-}
-func (obj *Nodes_DeclArgDDDNode) ToNodes_DeclArgDDDNode() *Nodes_DeclArgDDDNode {
-    return obj
-}
-func NewNodes_DeclArgDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_DeclArgDDDNode {
-    obj := &Nodes_DeclArgDDDNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclArgDDDNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
-    return obj
-}
-
-// declaration Class -- AdvertiseInfo
-type Nodes_AdvertiseInfoMtd interface {
-    Get_member(_env *LnsEnv) *Nodes_DeclMemberNode
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_prefix(_env *LnsEnv) string
-}
-type Nodes_AdvertiseInfo struct {
-    member *Nodes_DeclMemberNode
-    prefix string
-    pos *Types_Position
-    FP Nodes_AdvertiseInfoMtd
-}
-func Nodes_AdvertiseInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_AdvertiseInfo).FP
-}
-type Nodes_AdvertiseInfoDownCast interface {
-    ToNodes_AdvertiseInfo() *Nodes_AdvertiseInfo
-}
-func Nodes_AdvertiseInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_AdvertiseInfoDownCast)
-    if ok { return work.ToNodes_AdvertiseInfo() }
-    return nil
-}
-func (obj *Nodes_AdvertiseInfo) ToNodes_AdvertiseInfo() *Nodes_AdvertiseInfo {
-    return obj
-}
-func NewNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 *Types_Position) *Nodes_AdvertiseInfo {
-    obj := &Nodes_AdvertiseInfo{}
-    obj.FP = obj
-    obj.InitNodes_AdvertiseInfo(_env, arg1, arg2, arg3)
-    return obj
-}
-func (self *Nodes_AdvertiseInfo) InitNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 *Types_Position) {
-    self.member = arg1
-    self.prefix = arg2
-    self.pos = arg3
-}
-func (self *Nodes_AdvertiseInfo) Get_member(_env *LnsEnv) *Nodes_DeclMemberNode{ return self.member }
-func (self *Nodes_AdvertiseInfo) Get_prefix(_env *LnsEnv) string{ return self.prefix }
-func (self *Nodes_AdvertiseInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
-
-// declaration Class -- DeclAdvertiseNode
-type Nodes_DeclAdvertiseNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_advInfo(_env *LnsEnv) *Nodes_AdvertiseInfo
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclAdvertiseNode struct {
-    Nodes_Node
-    advInfo *Nodes_AdvertiseInfo
-    FP Nodes_DeclAdvertiseNodeMtd
-}
-func Nodes_DeclAdvertiseNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclAdvertiseNode).FP
-}
-type Nodes_DeclAdvertiseNodeDownCast interface {
-    ToNodes_DeclAdvertiseNode() *Nodes_DeclAdvertiseNode
-}
-func Nodes_DeclAdvertiseNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclAdvertiseNodeDownCast)
-    if ok { return work.ToNodes_DeclAdvertiseNode() }
-    return nil
-}
-func (obj *Nodes_DeclAdvertiseNode) ToNodes_DeclAdvertiseNode() *Nodes_DeclAdvertiseNode {
-    return obj
-}
-func NewNodes_DeclAdvertiseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
-    obj := &Nodes_DeclAdvertiseNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclAdvertiseNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_DeclAdvertiseNode) Get_advInfo(_env *LnsEnv) *Nodes_AdvertiseInfo{ return self.advInfo }
-
-// declaration Class -- ClassInheritInfo
-type Nodes_ClassInheritInfoMtd interface {
-    Get_base(_env *LnsEnv) LnsAny
-    Get_impliments(_env *LnsEnv) *LnsList
-    Visit(_env *LnsEnv, arg1 *Nodes_Node, arg2 Nodes_NodeVisitor, arg3 LnsInt, arg4 *LnsSet) bool
-}
-type Nodes_ClassInheritInfo struct {
-    base LnsAny
-    impliments *LnsList
-    FP Nodes_ClassInheritInfoMtd
-}
-func Nodes_ClassInheritInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ClassInheritInfo).FP
-}
-type Nodes_ClassInheritInfoDownCast interface {
-    ToNodes_ClassInheritInfo() *Nodes_ClassInheritInfo
-}
-func Nodes_ClassInheritInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ClassInheritInfoDownCast)
-    if ok { return work.ToNodes_ClassInheritInfo() }
-    return nil
-}
-func (obj *Nodes_ClassInheritInfo) ToNodes_ClassInheritInfo() *Nodes_ClassInheritInfo {
-    return obj
-}
-func NewNodes_ClassInheritInfo(_env *LnsEnv, arg1 LnsAny, arg2 *LnsList) *Nodes_ClassInheritInfo {
-    obj := &Nodes_ClassInheritInfo{}
-    obj.FP = obj
-    obj.InitNodes_ClassInheritInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_ClassInheritInfo) InitNodes_ClassInheritInfo(_env *LnsEnv, arg1 LnsAny, arg2 *LnsList) {
-    self.base = arg1
-    self.impliments = arg2
-}
-func (self *Nodes_ClassInheritInfo) Get_base(_env *LnsEnv) LnsAny{ return self.base }
-func (self *Nodes_ClassInheritInfo) Get_impliments(_env *LnsEnv) *LnsList{ return self.impliments }
-
-// declaration Class -- ProtoClassNode
-type Nodes_ProtoClassNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_ProtoClassNode struct {
-    Nodes_Node
-    name *Types_Token
-    inheritInfo *Nodes_ClassInheritInfo
-    FP Nodes_ProtoClassNodeMtd
-}
-func Nodes_ProtoClassNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ProtoClassNode).FP
-}
-type Nodes_ProtoClassNodeDownCast interface {
-    ToNodes_ProtoClassNode() *Nodes_ProtoClassNode
-}
-func Nodes_ProtoClassNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ProtoClassNodeDownCast)
-    if ok { return work.ToNodes_ProtoClassNode() }
-    return nil
-}
-func (obj *Nodes_ProtoClassNode) ToNodes_ProtoClassNode() *Nodes_ProtoClassNode {
-    return obj
-}
-func NewNodes_ProtoClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_ClassInheritInfo) *Nodes_ProtoClassNode {
-    obj := &Nodes_ProtoClassNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_ProtoClassNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_ProtoClassNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_ProtoClassNode) Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo{ return self.inheritInfo }
-
-// declaration Class -- ClassInitBlockInfo
-type Nodes_ClassInitBlockInfoMtd interface {
-    Get_func(_env *LnsEnv) LnsAny
-    Set_func(_env *LnsEnv, arg1 LnsAny)
-}
-type Nodes_ClassInitBlockInfo struct {
-    _func LnsAny
-    FP Nodes_ClassInitBlockInfoMtd
-}
-func Nodes_ClassInitBlockInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ClassInitBlockInfo).FP
-}
-type Nodes_ClassInitBlockInfoDownCast interface {
-    ToNodes_ClassInitBlockInfo() *Nodes_ClassInitBlockInfo
-}
-func Nodes_ClassInitBlockInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ClassInitBlockInfoDownCast)
-    if ok { return work.ToNodes_ClassInitBlockInfo() }
-    return nil
-}
-func (obj *Nodes_ClassInitBlockInfo) ToNodes_ClassInitBlockInfo() *Nodes_ClassInitBlockInfo {
-    return obj
-}
-func NewNodes_ClassInitBlockInfo(_env *LnsEnv, arg1 LnsAny) *Nodes_ClassInitBlockInfo {
-    obj := &Nodes_ClassInitBlockInfo{}
-    obj.FP = obj
-    obj.InitNodes_ClassInitBlockInfo(_env, arg1)
-    return obj
-}
-func (self *Nodes_ClassInitBlockInfo) InitNodes_ClassInitBlockInfo(_env *LnsEnv, arg1 LnsAny) {
-    self._func = arg1
-}
-func (self *Nodes_ClassInitBlockInfo) Get_func(_env *LnsEnv) LnsAny{ return self._func }
-func (self *Nodes_ClassInitBlockInfo) Set_func(_env *LnsEnv, arg1 LnsAny){ self._func = arg1 }
-
-// declaration Class -- DeclClassNode
-type Nodes_DeclClassNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    CreateMethodNameSetWithoutAdv(_env *LnsEnv) *LnsSet
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_accessMode(_env *LnsEnv) LnsInt
-    Get_advertiseList(_env *LnsEnv) *LnsList
-    Get_allStmtList(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declStmtList(_env *LnsEnv) *LnsList
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_fieldList(_env *LnsEnv) *LnsList
-    Get_gluePrefix(_env *LnsEnv) LnsAny
-    Get_hasOldCtor(_env *LnsEnv) bool
-    Get_hasPrototype(_env *LnsEnv) bool
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo
-    Get_initBlock(_env *LnsEnv) *Nodes_ClassInitBlockInfo
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_lang(_env *LnsEnv) LnsAny
-    Get_lazyLoad(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_memberList(_env *LnsEnv) *LnsList
-    Get_moduleName(_env *LnsEnv) LnsAny
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_outerMethodSet(_env *LnsEnv) *LnsSet
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_scope(_env *LnsEnv) *Ast_Scope
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_trustList(_env *LnsEnv) *LnsList
-    Get_uninitMemberList(_env *LnsEnv) *LnsList
-    HasNilAccess(_env *LnsEnv) bool
-    HasUserInit(_env *LnsEnv) bool
-    IsModule(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetHasOldCtor(_env *LnsEnv)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclClassNode struct {
-    Nodes_Node
-    accessMode LnsInt
-    name *Types_Token
-    inheritInfo *Nodes_ClassInheritInfo
-    hasPrototype bool
-    gluePrefix LnsAny
-    moduleName LnsAny
-    lang LnsAny
-    lazyLoad LnsInt
-    hasOldCtor bool
-    allStmtList *LnsList
-    declStmtList *LnsList
-    fieldList *LnsList
-    memberList *LnsList
-    scope *Ast_Scope
-    initBlock *Nodes_ClassInitBlockInfo
-    advertiseList *LnsList
-    trustList *LnsList
-    uninitMemberList *LnsList
-    outerMethodSet *LnsSet
-    FP Nodes_DeclClassNodeMtd
-}
-func Nodes_DeclClassNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclClassNode).FP
-}
-type Nodes_DeclClassNodeDownCast interface {
-    ToNodes_DeclClassNode() *Nodes_DeclClassNode
-}
-func Nodes_DeclClassNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclClassNodeDownCast)
-    if ok { return work.ToNodes_DeclClassNode() }
-    return nil
-}
-func (obj *Nodes_DeclClassNode) ToNodes_DeclClassNode() *Nodes_DeclClassNode {
-    return obj
-}
-func NewNodes_DeclClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Types_Token, arg9 *Nodes_ClassInheritInfo, arg10 bool, arg11 LnsAny, arg12 LnsAny, arg13 LnsAny, arg14 LnsInt, arg15 bool, arg16 *LnsList, arg17 *LnsList, arg18 *LnsList, arg19 *LnsList, arg20 *Ast_Scope, arg21 *Nodes_ClassInitBlockInfo, arg22 *LnsList, arg23 *LnsList, arg24 *LnsList, arg25 *LnsSet) *Nodes_DeclClassNode {
-    obj := &Nodes_DeclClassNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclClassNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25)
-    return obj
-}
-func (self *Nodes_DeclClassNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
-func (self *Nodes_DeclClassNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_DeclClassNode) Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo{ return self.inheritInfo }
-func (self *Nodes_DeclClassNode) Get_hasPrototype(_env *LnsEnv) bool{ return self.hasPrototype }
-func (self *Nodes_DeclClassNode) Get_gluePrefix(_env *LnsEnv) LnsAny{ return self.gluePrefix }
-func (self *Nodes_DeclClassNode) Get_moduleName(_env *LnsEnv) LnsAny{ return self.moduleName }
-func (self *Nodes_DeclClassNode) Get_lang(_env *LnsEnv) LnsAny{ return self.lang }
-func (self *Nodes_DeclClassNode) Get_lazyLoad(_env *LnsEnv) LnsInt{ return self.lazyLoad }
-func (self *Nodes_DeclClassNode) Get_hasOldCtor(_env *LnsEnv) bool{ return self.hasOldCtor }
-func (self *Nodes_DeclClassNode) Get_allStmtList(_env *LnsEnv) *LnsList{ return self.allStmtList }
-func (self *Nodes_DeclClassNode) Get_declStmtList(_env *LnsEnv) *LnsList{ return self.declStmtList }
-func (self *Nodes_DeclClassNode) Get_fieldList(_env *LnsEnv) *LnsList{ return self.fieldList }
-func (self *Nodes_DeclClassNode) Get_memberList(_env *LnsEnv) *LnsList{ return self.memberList }
-func (self *Nodes_DeclClassNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
-func (self *Nodes_DeclClassNode) Get_initBlock(_env *LnsEnv) *Nodes_ClassInitBlockInfo{ return self.initBlock }
-func (self *Nodes_DeclClassNode) Get_advertiseList(_env *LnsEnv) *LnsList{ return self.advertiseList }
-func (self *Nodes_DeclClassNode) Get_trustList(_env *LnsEnv) *LnsList{ return self.trustList }
-func (self *Nodes_DeclClassNode) Get_uninitMemberList(_env *LnsEnv) *LnsList{ return self.uninitMemberList }
-func (self *Nodes_DeclClassNode) Get_outerMethodSet(_env *LnsEnv) *LnsSet{ return self.outerMethodSet }
-
-// declaration Class -- DeclEnumNode
-type Nodes_DeclEnumNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_accessMode(_env *LnsEnv) LnsInt
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_enumType(_env *LnsEnv) *Ast_EnumTypeInfo
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_scope(_env *LnsEnv) *Ast_Scope
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_valueNameList(_env *LnsEnv) *LnsList
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclEnumNode struct {
-    Nodes_Node
-    enumType *Ast_EnumTypeInfo
-    accessMode LnsInt
-    name *Types_Token
-    valueNameList *LnsList
-    scope *Ast_Scope
-    FP Nodes_DeclEnumNodeMtd
-}
-func Nodes_DeclEnumNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclEnumNode).FP
-}
-type Nodes_DeclEnumNodeDownCast interface {
-    ToNodes_DeclEnumNode() *Nodes_DeclEnumNode
-}
-func Nodes_DeclEnumNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclEnumNodeDownCast)
-    if ok { return work.ToNodes_DeclEnumNode() }
-    return nil
-}
-func (obj *Nodes_DeclEnumNode) ToNodes_DeclEnumNode() *Nodes_DeclEnumNode {
-    return obj
-}
-func NewNodes_DeclEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_EnumTypeInfo, arg8 LnsInt, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclEnumNode {
-    obj := &Nodes_DeclEnumNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclEnumNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
-    return obj
-}
-func (self *Nodes_DeclEnumNode) Get_enumType(_env *LnsEnv) *Ast_EnumTypeInfo{ return self.enumType }
-func (self *Nodes_DeclEnumNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
-func (self *Nodes_DeclEnumNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_DeclEnumNode) Get_valueNameList(_env *LnsEnv) *LnsList{ return self.valueNameList }
-func (self *Nodes_DeclEnumNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
-
-// declaration Class -- AlgeValParamInfo
-type Nodes_AlgeValParamInfoMtd interface {
-    Get_name(_env *LnsEnv) LnsAny
-    Get_typeRef(_env *LnsEnv) *Nodes_RefTypeNode
-}
-type Nodes_AlgeValParamInfo struct {
-    name LnsAny
-    typeRef *Nodes_RefTypeNode
-    FP Nodes_AlgeValParamInfoMtd
-}
-func Nodes_AlgeValParamInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_AlgeValParamInfo).FP
-}
-type Nodes_AlgeValParamInfoDownCast interface {
-    ToNodes_AlgeValParamInfo() *Nodes_AlgeValParamInfo
-}
-func Nodes_AlgeValParamInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_AlgeValParamInfoDownCast)
-    if ok { return work.ToNodes_AlgeValParamInfo() }
-    return nil
-}
-func (obj *Nodes_AlgeValParamInfo) ToNodes_AlgeValParamInfo() *Nodes_AlgeValParamInfo {
-    return obj
-}
-func NewNodes_AlgeValParamInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_RefTypeNode) *Nodes_AlgeValParamInfo {
-    obj := &Nodes_AlgeValParamInfo{}
-    obj.FP = obj
-    obj.InitNodes_AlgeValParamInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_AlgeValParamInfo) InitNodes_AlgeValParamInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_RefTypeNode) {
-    self.name = arg1
-    self.typeRef = arg2
-}
-func (self *Nodes_AlgeValParamInfo) Get_name(_env *LnsEnv) LnsAny{ return self.name }
-func (self *Nodes_AlgeValParamInfo) Get_typeRef(_env *LnsEnv) *Nodes_RefTypeNode{ return self.typeRef }
-
-// declaration Class -- DeclAlgeValInfo
-type Nodes_DeclAlgeValInfoMtd interface {
-    Get_paramList(_env *LnsEnv) *LnsList
-    Get_valSym(_env *LnsEnv) *Ast_SymbolInfo
-}
-type Nodes_DeclAlgeValInfo struct {
-    valSym *Ast_SymbolInfo
-    paramList *LnsList
-    FP Nodes_DeclAlgeValInfoMtd
-}
-func Nodes_DeclAlgeValInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclAlgeValInfo).FP
-}
-type Nodes_DeclAlgeValInfoDownCast interface {
-    ToNodes_DeclAlgeValInfo() *Nodes_DeclAlgeValInfo
-}
-func Nodes_DeclAlgeValInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclAlgeValInfoDownCast)
-    if ok { return work.ToNodes_DeclAlgeValInfo() }
-    return nil
-}
-func (obj *Nodes_DeclAlgeValInfo) ToNodes_DeclAlgeValInfo() *Nodes_DeclAlgeValInfo {
-    return obj
-}
-func NewNodes_DeclAlgeValInfo(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *LnsList) *Nodes_DeclAlgeValInfo {
-    obj := &Nodes_DeclAlgeValInfo{}
-    obj.FP = obj
-    obj.InitNodes_DeclAlgeValInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_DeclAlgeValInfo) InitNodes_DeclAlgeValInfo(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *LnsList) {
-    self.valSym = arg1
-    self.paramList = arg2
-}
-func (self *Nodes_DeclAlgeValInfo) Get_valSym(_env *LnsEnv) *Ast_SymbolInfo{ return self.valSym }
-func (self *Nodes_DeclAlgeValInfo) Get_paramList(_env *LnsEnv) *LnsList{ return self.paramList }
-
-// declaration Class -- DeclAlgeNode
-type Nodes_DeclAlgeNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_accessMode(_env *LnsEnv) LnsInt
-    Get_algeType(_env *LnsEnv) *Ast_AlgeTypeInfo
-    Get_algeValList(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_scope(_env *LnsEnv) *Ast_Scope
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclAlgeNode struct {
-    Nodes_Node
-    accessMode LnsInt
-    algeType *Ast_AlgeTypeInfo
-    name *Types_Token
-    algeValList *LnsList
-    scope *Ast_Scope
-    FP Nodes_DeclAlgeNodeMtd
-}
-func Nodes_DeclAlgeNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclAlgeNode).FP
-}
-type Nodes_DeclAlgeNodeDownCast interface {
-    ToNodes_DeclAlgeNode() *Nodes_DeclAlgeNode
-}
-func Nodes_DeclAlgeNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclAlgeNodeDownCast)
-    if ok { return work.ToNodes_DeclAlgeNode() }
-    return nil
-}
-func (obj *Nodes_DeclAlgeNode) ToNodes_DeclAlgeNode() *Nodes_DeclAlgeNode {
-    return obj
-}
-func NewNodes_DeclAlgeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_AlgeTypeInfo, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclAlgeNode {
-    obj := &Nodes_DeclAlgeNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclAlgeNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
-    return obj
-}
-func (self *Nodes_DeclAlgeNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
-func (self *Nodes_DeclAlgeNode) Get_algeType(_env *LnsEnv) *Ast_AlgeTypeInfo{ return self.algeType }
-func (self *Nodes_DeclAlgeNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_DeclAlgeNode) Get_algeValList(_env *LnsEnv) *LnsList{ return self.algeValList }
-func (self *Nodes_DeclAlgeNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
-
-// declaration Class -- NewAlgeValNode
-type Nodes_NewAlgeValNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_paramList(_env *LnsEnv) *LnsList
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_prefix(_env *LnsEnv) LnsAny
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_NewAlgeValNode struct {
-    Nodes_Node
-    name *Types_Token
-    prefix LnsAny
-    algeTypeInfo *Ast_AlgeTypeInfo
-    valInfo *Ast_AlgeValInfo
-    paramList *LnsList
-    FP Nodes_NewAlgeValNodeMtd
-}
-func Nodes_NewAlgeValNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_NewAlgeValNode).FP
-}
-type Nodes_NewAlgeValNodeDownCast interface {
-    ToNodes_NewAlgeValNode() *Nodes_NewAlgeValNode
-}
-func Nodes_NewAlgeValNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_NewAlgeValNodeDownCast)
-    if ok { return work.ToNodes_NewAlgeValNode() }
-    return nil
-}
-func (obj *Nodes_NewAlgeValNode) ToNodes_NewAlgeValNode() *Nodes_NewAlgeValNode {
-    return obj
-}
-func NewNodes_NewAlgeValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 *Ast_AlgeTypeInfo, arg10 *Ast_AlgeValInfo, arg11 *LnsList) *Nodes_NewAlgeValNode {
-    obj := &Nodes_NewAlgeValNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_NewAlgeValNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
-    return obj
-}
-func (self *Nodes_NewAlgeValNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_NewAlgeValNode) Get_prefix(_env *LnsEnv) LnsAny{ return self.prefix }
-func (self *Nodes_NewAlgeValNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo{ return self.algeTypeInfo }
-func (self *Nodes_NewAlgeValNode) Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo{ return self.valInfo }
-func (self *Nodes_NewAlgeValNode) Get_paramList(_env *LnsEnv) *LnsList{ return self.paramList }
-
-// declaration Class -- LuneControlNode
-type Nodes_LuneControlNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_pragma(_env *LnsEnv) LnsAny
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LuneControlNode struct {
-    Nodes_Node
-    pragma LnsAny
-    FP Nodes_LuneControlNodeMtd
-}
-func Nodes_LuneControlNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LuneControlNode).FP
-}
-type Nodes_LuneControlNodeDownCast interface {
-    ToNodes_LuneControlNode() *Nodes_LuneControlNode
-}
-func Nodes_LuneControlNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LuneControlNodeDownCast)
-    if ok { return work.ToNodes_LuneControlNode() }
-    return nil
-}
-func (obj *Nodes_LuneControlNode) ToNodes_LuneControlNode() *Nodes_LuneControlNode {
-    return obj
-}
-func NewNodes_LuneControlNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LuneControlNode {
-    obj := &Nodes_LuneControlNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LuneControlNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_LuneControlNode) Get_pragma(_env *LnsEnv) LnsAny{ return self.pragma }
-
-// declaration Class -- MatchCase
-type Nodes_MatchCaseMtd interface {
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_valExpRef(_env *LnsEnv) *Nodes_ExpRefNode
-    Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo
-    Get_valParamNameList(_env *LnsEnv) *LnsList
-}
-type Nodes_MatchCase struct {
-    valInfo *Ast_AlgeValInfo
-    valExpRef *Nodes_ExpRefNode
-    valParamNameList *LnsList
-    block *Nodes_BlockNode
-    FP Nodes_MatchCaseMtd
-}
-func Nodes_MatchCase2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_MatchCase).FP
-}
-type Nodes_MatchCaseDownCast interface {
-    ToNodes_MatchCase() *Nodes_MatchCase
-}
-func Nodes_MatchCaseDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_MatchCaseDownCast)
-    if ok { return work.ToNodes_MatchCase() }
-    return nil
-}
-func (obj *Nodes_MatchCase) ToNodes_MatchCase() *Nodes_MatchCase {
-    return obj
-}
-func NewNodes_MatchCase(_env *LnsEnv, arg1 *Ast_AlgeValInfo, arg2 *Nodes_ExpRefNode, arg3 *LnsList, arg4 *Nodes_BlockNode) *Nodes_MatchCase {
-    obj := &Nodes_MatchCase{}
-    obj.FP = obj
-    obj.InitNodes_MatchCase(_env, arg1, arg2, arg3, arg4)
-    return obj
-}
-func (self *Nodes_MatchCase) InitNodes_MatchCase(_env *LnsEnv, arg1 *Ast_AlgeValInfo, arg2 *Nodes_ExpRefNode, arg3 *LnsList, arg4 *Nodes_BlockNode) {
-    self.valInfo = arg1
-    self.valExpRef = arg2
-    self.valParamNameList = arg3
-    self.block = arg4
-}
-func (self *Nodes_MatchCase) Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo{ return self.valInfo }
-func (self *Nodes_MatchCase) Get_valExpRef(_env *LnsEnv) *Nodes_ExpRefNode{ return self.valExpRef }
-func (self *Nodes_MatchCase) Get_valParamNameList(_env *LnsEnv) *LnsList{ return self.valParamNameList }
-func (self *Nodes_MatchCase) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- MatchNode
-type Nodes_MatchNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo
-    Get_caseKind(_env *LnsEnv) LnsInt
-    Get_caseList(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_defaultBlock(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_failSafeDefault(_env *LnsEnv) bool
-    Get_idInNS(_env *LnsEnv) LnsInt
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_val(_env *LnsEnv) *Nodes_Node
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_MatchNode struct {
-    Nodes_Node
-    idInNS LnsInt
-    val *Nodes_Node
-    algeTypeInfo *Ast_AlgeTypeInfo
-    caseList *LnsList
-    defaultBlock LnsAny
-    caseKind LnsInt
-    failSafeDefault bool
-    FP Nodes_MatchNodeMtd
-}
-func Nodes_MatchNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_MatchNode).FP
-}
-type Nodes_MatchNodeDownCast interface {
-    ToNodes_MatchNode() *Nodes_MatchNode
-}
-func Nodes_MatchNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_MatchNodeDownCast)
-    if ok { return work.ToNodes_MatchNode() }
-    return nil
-}
-func (obj *Nodes_MatchNode) ToNodes_MatchNode() *Nodes_MatchNode {
-    return obj
-}
-func NewNodes_MatchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *Ast_AlgeTypeInfo, arg10 *LnsList, arg11 LnsAny, arg12 LnsInt, arg13 bool) *Nodes_MatchNode {
-    obj := &Nodes_MatchNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_MatchNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)
-    return obj
-}
-func (self *Nodes_MatchNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
-func (self *Nodes_MatchNode) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
-func (self *Nodes_MatchNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo{ return self.algeTypeInfo }
-func (self *Nodes_MatchNode) Get_caseList(_env *LnsEnv) *LnsList{ return self.caseList }
-func (self *Nodes_MatchNode) Get_defaultBlock(_env *LnsEnv) LnsAny{ return self.defaultBlock }
-func (self *Nodes_MatchNode) Get_caseKind(_env *LnsEnv) LnsInt{ return self.caseKind }
-func (self *Nodes_MatchNode) Get_failSafeDefault(_env *LnsEnv) bool{ return self.failSafeDefault }
-
-// declaration Class -- LuneKindNode
-type Nodes_LuneKindNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_exp(_env *LnsEnv) *Nodes_Node
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LuneKindNode struct {
-    Nodes_Node
-    exp *Nodes_Node
-    FP Nodes_LuneKindNodeMtd
-}
-func Nodes_LuneKindNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LuneKindNode).FP
-}
-type Nodes_LuneKindNodeDownCast interface {
-    ToNodes_LuneKindNode() *Nodes_LuneKindNode
-}
-func Nodes_LuneKindNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LuneKindNodeDownCast)
-    if ok { return work.ToNodes_LuneKindNode() }
-    return nil
-}
-func (obj *Nodes_LuneKindNode) ToNodes_LuneKindNode() *Nodes_LuneKindNode {
-    return obj
-}
-func NewNodes_LuneKindNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_LuneKindNode {
-    obj := &Nodes_LuneKindNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LuneKindNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_LuneKindNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
-
-// declaration Class -- DeclMacroNode
-type Nodes_DeclMacroNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_declInfo(_env *LnsEnv) *Nodes_DeclMacroInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_DeclMacroNode struct {
-    Nodes_Node
-    declInfo *Nodes_DeclMacroInfo
-    FP Nodes_DeclMacroNodeMtd
-}
-func Nodes_DeclMacroNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DeclMacroNode).FP
-}
-type Nodes_DeclMacroNodeDownCast interface {
-    ToNodes_DeclMacroNode() *Nodes_DeclMacroNode
-}
-func Nodes_DeclMacroNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DeclMacroNodeDownCast)
-    if ok { return work.ToNodes_DeclMacroNode() }
-    return nil
-}
-func (obj *Nodes_DeclMacroNode) ToNodes_DeclMacroNode() *Nodes_DeclMacroNode {
-    return obj
-}
-func NewNodes_DeclMacroNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
-    obj := &Nodes_DeclMacroNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_DeclMacroNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_DeclMacroNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclMacroInfo{ return self.declInfo }
-
-// declaration Class -- MacroEval
-type Nodes_MacroEvalMtd interface {
-    EvalFromCodeToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 *LnsList, arg4 LnsAny) string
-    EvalToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Nodes_DeclMacroNode) string
-}
-type Nodes_MacroEval struct {
-    FP Nodes_MacroEvalMtd
-}
-func Nodes_MacroEval2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_MacroEval).FP
-}
-type Nodes_MacroEvalDownCast interface {
-    ToNodes_MacroEval() *Nodes_MacroEval
-}
-func Nodes_MacroEvalDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_MacroEvalDownCast)
-    if ok { return work.ToNodes_MacroEval() }
-    return nil
-}
-func (obj *Nodes_MacroEval) ToNodes_MacroEval() *Nodes_MacroEval {
-    return obj
-}
-func (self *Nodes_MacroEval) InitNodes_MacroEval(_env *LnsEnv) {
-}
-
-// declaration Class -- TestCaseNode
-type Nodes_TestCaseNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_block(_env *LnsEnv) *Nodes_BlockNode
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_ctrlName(_env *LnsEnv) string
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_impNode(_env *LnsEnv) *Nodes_Node
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_TestCaseNode struct {
-    Nodes_Node
-    name *Types_Token
-    impNode *Nodes_Node
-    ctrlName string
-    block *Nodes_BlockNode
-    FP Nodes_TestCaseNodeMtd
-}
-func Nodes_TestCaseNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_TestCaseNode).FP
-}
-type Nodes_TestCaseNodeDownCast interface {
-    ToNodes_TestCaseNode() *Nodes_TestCaseNode
-}
-func Nodes_TestCaseNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_TestCaseNodeDownCast)
-    if ok { return work.ToNodes_TestCaseNode() }
-    return nil
-}
-func (obj *Nodes_TestCaseNode) ToNodes_TestCaseNode() *Nodes_TestCaseNode {
-    return obj
-}
-func NewNodes_TestCaseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 string, arg10 *Nodes_BlockNode) *Nodes_TestCaseNode {
-    obj := &Nodes_TestCaseNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_TestCaseNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-func (self *Nodes_TestCaseNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
-func (self *Nodes_TestCaseNode) Get_impNode(_env *LnsEnv) *Nodes_Node{ return self.impNode }
-func (self *Nodes_TestCaseNode) Get_ctrlName(_env *LnsEnv) string{ return self.ctrlName }
-func (self *Nodes_TestCaseNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
-
-// declaration Class -- TestBlockNode
-type Nodes_TestBlockNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_stmtList(_env *LnsEnv) *LnsList
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    IsInnerPos(_env *LnsEnv, arg1 *Types_Position) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_TestBlockNode struct {
-    Nodes_Node
-    stmtList *LnsList
-    FP Nodes_TestBlockNodeMtd
-}
-func Nodes_TestBlockNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_TestBlockNode).FP
-}
-type Nodes_TestBlockNodeDownCast interface {
-    ToNodes_TestBlockNode() *Nodes_TestBlockNode
-}
-func Nodes_TestBlockNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_TestBlockNodeDownCast)
-    if ok { return work.ToNodes_TestBlockNode() }
-    return nil
-}
-func (obj *Nodes_TestBlockNode) ToNodes_TestBlockNode() *Nodes_TestBlockNode {
-    return obj
-}
-func NewNodes_TestBlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_TestBlockNode {
-    obj := &Nodes_TestBlockNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_TestBlockNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_TestBlockNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
-
-// declaration Class -- AbbrNode
-type Nodes_AbbrNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_AbbrNode struct {
-    Nodes_Node
-    FP Nodes_AbbrNodeMtd
-}
-func Nodes_AbbrNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_AbbrNode).FP
-}
-type Nodes_AbbrNodeDownCast interface {
-    ToNodes_AbbrNode() *Nodes_AbbrNode
-}
-func Nodes_AbbrNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_AbbrNodeDownCast)
-    if ok { return work.ToNodes_AbbrNode() }
-    return nil
-}
-func (obj *Nodes_AbbrNode) ToNodes_AbbrNode() *Nodes_AbbrNode {
-    return obj
-}
-func NewNodes_AbbrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_AbbrNode {
-    obj := &Nodes_AbbrNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_AbbrNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
-    return obj
-}
-
-// declaration Class -- BoxingNode
-type Nodes_BoxingNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_src(_env *LnsEnv) *Nodes_Node
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_BoxingNode struct {
-    Nodes_Node
-    src *Nodes_Node
-    FP Nodes_BoxingNodeMtd
-}
-func Nodes_BoxingNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_BoxingNode).FP
-}
-type Nodes_BoxingNodeDownCast interface {
-    ToNodes_BoxingNode() *Nodes_BoxingNode
-}
-func Nodes_BoxingNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_BoxingNodeDownCast)
-    if ok { return work.ToNodes_BoxingNode() }
-    return nil
-}
-func (obj *Nodes_BoxingNode) ToNodes_BoxingNode() *Nodes_BoxingNode {
-    return obj
-}
-func NewNodes_BoxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_BoxingNode {
-    obj := &Nodes_BoxingNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_BoxingNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_BoxingNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
-
-// declaration Class -- UnboxingNode
-type Nodes_UnboxingNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_src(_env *LnsEnv) *Nodes_Node
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_UnboxingNode struct {
-    Nodes_Node
-    src *Nodes_Node
-    FP Nodes_UnboxingNodeMtd
-}
-func Nodes_UnboxingNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_UnboxingNode).FP
-}
-type Nodes_UnboxingNodeDownCast interface {
-    ToNodes_UnboxingNode() *Nodes_UnboxingNode
-}
-func Nodes_UnboxingNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_UnboxingNodeDownCast)
-    if ok { return work.ToNodes_UnboxingNode() }
-    return nil
-}
-func (obj *Nodes_UnboxingNode) ToNodes_UnboxingNode() *Nodes_UnboxingNode {
-    return obj
-}
-func NewNodes_UnboxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_UnboxingNode {
-    obj := &Nodes_UnboxingNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_UnboxingNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_UnboxingNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
-
-// declaration Class -- LiteralNilNode
-type Nodes_LiteralNilNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralNilNode struct {
-    Nodes_Node
-    FP Nodes_LiteralNilNodeMtd
-}
-func Nodes_LiteralNilNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralNilNode).FP
-}
-type Nodes_LiteralNilNodeDownCast interface {
-    ToNodes_LiteralNilNode() *Nodes_LiteralNilNode
-}
-func Nodes_LiteralNilNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralNilNodeDownCast)
-    if ok { return work.ToNodes_LiteralNilNode() }
-    return nil
-}
-func (obj *Nodes_LiteralNilNode) ToNodes_LiteralNilNode() *Nodes_LiteralNilNode {
-    return obj
-}
-func NewNodes_LiteralNilNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_LiteralNilNode {
-    obj := &Nodes_LiteralNilNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralNilNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
-    return obj
-}
-
-// declaration Class -- LiteralCharNode
-type Nodes_LiteralCharNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_num(_env *LnsEnv) LnsInt
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_token(_env *LnsEnv) *Types_Token
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralCharNode struct {
-    Nodes_Node
-    token *Types_Token
-    num LnsInt
-    FP Nodes_LiteralCharNodeMtd
-}
-func Nodes_LiteralCharNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralCharNode).FP
-}
-type Nodes_LiteralCharNodeDownCast interface {
-    ToNodes_LiteralCharNode() *Nodes_LiteralCharNode
-}
-func Nodes_LiteralCharNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralCharNodeDownCast)
-    if ok { return work.ToNodes_LiteralCharNode() }
-    return nil
-}
-func (obj *Nodes_LiteralCharNode) ToNodes_LiteralCharNode() *Nodes_LiteralCharNode {
-    return obj
-}
-func NewNodes_LiteralCharNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralCharNode {
-    obj := &Nodes_LiteralCharNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralCharNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_LiteralCharNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
-func (self *Nodes_LiteralCharNode) Get_num(_env *LnsEnv) LnsInt{ return self.num }
-
-// declaration Class -- LiteralIntNode
-type Nodes_LiteralIntNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_num(_env *LnsEnv) LnsInt
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_token(_env *LnsEnv) *Types_Token
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralIntNode struct {
-    Nodes_Node
-    token *Types_Token
-    num LnsInt
-    FP Nodes_LiteralIntNodeMtd
-}
-func Nodes_LiteralIntNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralIntNode).FP
-}
-type Nodes_LiteralIntNodeDownCast interface {
-    ToNodes_LiteralIntNode() *Nodes_LiteralIntNode
-}
-func Nodes_LiteralIntNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralIntNodeDownCast)
-    if ok { return work.ToNodes_LiteralIntNode() }
-    return nil
-}
-func (obj *Nodes_LiteralIntNode) ToNodes_LiteralIntNode() *Nodes_LiteralIntNode {
-    return obj
-}
-func NewNodes_LiteralIntNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralIntNode {
-    obj := &Nodes_LiteralIntNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralIntNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_LiteralIntNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
-func (self *Nodes_LiteralIntNode) Get_num(_env *LnsEnv) LnsInt{ return self.num }
-
-// declaration Class -- LiteralRealNode
-type Nodes_LiteralRealNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_num(_env *LnsEnv) LnsReal
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_token(_env *LnsEnv) *Types_Token
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralRealNode struct {
-    Nodes_Node
-    token *Types_Token
-    num LnsReal
-    FP Nodes_LiteralRealNodeMtd
-}
-func Nodes_LiteralRealNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralRealNode).FP
-}
-type Nodes_LiteralRealNodeDownCast interface {
-    ToNodes_LiteralRealNode() *Nodes_LiteralRealNode
-}
-func Nodes_LiteralRealNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralRealNodeDownCast)
-    if ok { return work.ToNodes_LiteralRealNode() }
-    return nil
-}
-func (obj *Nodes_LiteralRealNode) ToNodes_LiteralRealNode() *Nodes_LiteralRealNode {
-    return obj
-}
-func NewNodes_LiteralRealNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsReal) *Nodes_LiteralRealNode {
-    obj := &Nodes_LiteralRealNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralRealNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_LiteralRealNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
-func (self *Nodes_LiteralRealNode) Get_num(_env *LnsEnv) LnsReal{ return self.num }
-
-// declaration Class -- LiteralArrayNode
-type Nodes_LiteralArrayNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralArrayNode struct {
-    Nodes_Node
-    expList LnsAny
-    FP Nodes_LiteralArrayNodeMtd
-}
-func Nodes_LiteralArrayNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralArrayNode).FP
-}
-type Nodes_LiteralArrayNodeDownCast interface {
-    ToNodes_LiteralArrayNode() *Nodes_LiteralArrayNode
-}
-func Nodes_LiteralArrayNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralArrayNodeDownCast)
-    if ok { return work.ToNodes_LiteralArrayNode() }
-    return nil
-}
-func (obj *Nodes_LiteralArrayNode) ToNodes_LiteralArrayNode() *Nodes_LiteralArrayNode {
-    return obj
-}
-func NewNodes_LiteralArrayNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralArrayNode {
-    obj := &Nodes_LiteralArrayNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralArrayNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_LiteralArrayNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
-
-// declaration Class -- LiteralListNode
-type Nodes_LiteralListNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralListNode struct {
-    Nodes_Node
-    expList LnsAny
-    FP Nodes_LiteralListNodeMtd
-}
-func Nodes_LiteralListNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralListNode).FP
-}
-type Nodes_LiteralListNodeDownCast interface {
-    ToNodes_LiteralListNode() *Nodes_LiteralListNode
-}
-func Nodes_LiteralListNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralListNodeDownCast)
-    if ok { return work.ToNodes_LiteralListNode() }
-    return nil
-}
-func (obj *Nodes_LiteralListNode) ToNodes_LiteralListNode() *Nodes_LiteralListNode {
-    return obj
-}
-func NewNodes_LiteralListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralListNode {
-    obj := &Nodes_LiteralListNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralListNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_LiteralListNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
-
-// declaration Class -- LiteralSetNode
-type Nodes_LiteralSetNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expList(_env *LnsEnv) LnsAny
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralSetNode struct {
-    Nodes_Node
-    expList LnsAny
-    FP Nodes_LiteralSetNodeMtd
-}
-func Nodes_LiteralSetNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralSetNode).FP
-}
-type Nodes_LiteralSetNodeDownCast interface {
-    ToNodes_LiteralSetNode() *Nodes_LiteralSetNode
-}
-func Nodes_LiteralSetNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralSetNodeDownCast)
-    if ok { return work.ToNodes_LiteralSetNode() }
-    return nil
-}
-func (obj *Nodes_LiteralSetNode) ToNodes_LiteralSetNode() *Nodes_LiteralSetNode {
-    return obj
-}
-func NewNodes_LiteralSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralSetNode {
-    obj := &Nodes_LiteralSetNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralSetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_LiteralSetNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
-
-// declaration Class -- PairItem
-type Nodes_PairItemMtd interface {
-    Get_key(_env *LnsEnv) *Nodes_Node
-    Get_val(_env *LnsEnv) *Nodes_Node
-}
-type Nodes_PairItem struct {
-    key *Nodes_Node
-    val *Nodes_Node
-    FP Nodes_PairItemMtd
-}
-func Nodes_PairItem2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_PairItem).FP
-}
-type Nodes_PairItemDownCast interface {
-    ToNodes_PairItem() *Nodes_PairItem
-}
-func Nodes_PairItemDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_PairItemDownCast)
-    if ok { return work.ToNodes_PairItem() }
-    return nil
-}
-func (obj *Nodes_PairItem) ToNodes_PairItem() *Nodes_PairItem {
-    return obj
-}
-func NewNodes_PairItem(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node) *Nodes_PairItem {
-    obj := &Nodes_PairItem{}
-    obj.FP = obj
-    obj.InitNodes_PairItem(_env, arg1, arg2)
-    return obj
-}
-func (self *Nodes_PairItem) InitNodes_PairItem(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node) {
-    self.key = arg1
-    self.val = arg2
-}
-func (self *Nodes_PairItem) Get_key(_env *LnsEnv) *Nodes_Node{ return self.key }
-func (self *Nodes_PairItem) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
-
-// declaration Class -- LiteralMapNode
-type Nodes_LiteralMapNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_map(_env *LnsEnv) *LnsMap
-    Get_pairList(_env *LnsEnv) *LnsList
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralMapNode struct {
-    Nodes_Node
-    _map *LnsMap
-    pairList *LnsList
-    FP Nodes_LiteralMapNodeMtd
-}
-func Nodes_LiteralMapNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralMapNode).FP
-}
-type Nodes_LiteralMapNodeDownCast interface {
-    ToNodes_LiteralMapNode() *Nodes_LiteralMapNode
-}
-func Nodes_LiteralMapNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralMapNodeDownCast)
-    if ok { return work.ToNodes_LiteralMapNode() }
-    return nil
-}
-func (obj *Nodes_LiteralMapNode) ToNodes_LiteralMapNode() *Nodes_LiteralMapNode {
-    return obj
-}
-func NewNodes_LiteralMapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsMap, arg8 *LnsList) *Nodes_LiteralMapNode {
-    obj := &Nodes_LiteralMapNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralMapNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
-    return obj
-}
-func (self *Nodes_LiteralMapNode) Get_map(_env *LnsEnv) *LnsMap{ return self._map }
-func (self *Nodes_LiteralMapNode) Get_pairList(_env *LnsEnv) *LnsList{ return self.pairList }
-
-// declaration Class -- LiteralStringNode
-type Nodes_LiteralStringNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_dddParam(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_orgParam(_env *LnsEnv) LnsAny
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_token(_env *LnsEnv) *Types_Token
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralStringNode struct {
-    Nodes_Node
-    token *Types_Token
-    orgParam LnsAny
-    dddParam LnsAny
-    FP Nodes_LiteralStringNodeMtd
-}
-func Nodes_LiteralStringNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralStringNode).FP
-}
-type Nodes_LiteralStringNodeDownCast interface {
-    ToNodes_LiteralStringNode() *Nodes_LiteralStringNode
-}
-func Nodes_LiteralStringNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralStringNodeDownCast)
-    if ok { return work.ToNodes_LiteralStringNode() }
-    return nil
-}
-func (obj *Nodes_LiteralStringNode) ToNodes_LiteralStringNode() *Nodes_LiteralStringNode {
-    return obj
-}
-func NewNodes_LiteralStringNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 LnsAny) *Nodes_LiteralStringNode {
-    obj := &Nodes_LiteralStringNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralStringNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-func (self *Nodes_LiteralStringNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
-func (self *Nodes_LiteralStringNode) Get_orgParam(_env *LnsEnv) LnsAny{ return self.orgParam }
-func (self *Nodes_LiteralStringNode) Get_dddParam(_env *LnsEnv) LnsAny{ return self.dddParam }
-
-// declaration Class -- LiteralBoolNode
-type Nodes_LiteralBoolNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_token(_env *LnsEnv) *Types_Token
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralBoolNode struct {
-    Nodes_Node
-    token *Types_Token
-    FP Nodes_LiteralBoolNodeMtd
-}
-func Nodes_LiteralBoolNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralBoolNode).FP
-}
-type Nodes_LiteralBoolNodeDownCast interface {
-    ToNodes_LiteralBoolNode() *Nodes_LiteralBoolNode
-}
-func Nodes_LiteralBoolNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralBoolNodeDownCast)
-    if ok { return work.ToNodes_LiteralBoolNode() }
-    return nil
-}
-func (obj *Nodes_LiteralBoolNode) ToNodes_LiteralBoolNode() *Nodes_LiteralBoolNode {
-    return obj
-}
-func NewNodes_LiteralBoolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralBoolNode {
-    obj := &Nodes_LiteralBoolNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralBoolNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_LiteralBoolNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
-
-// declaration Class -- LiteralSymbolNode
-type Nodes_LiteralSymbolNodeMtd interface {
-    AddComment(_env *LnsEnv, arg1 *LnsList)
-    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
-    CanBeLeft(_env *LnsEnv) bool
-    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
-    CanBeStatement(_env *LnsEnv) bool
-    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
-    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
-    GetIdTxt(_env *LnsEnv) string
-    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
-    GetPrefix(_env *LnsEnv) LnsAny
-    GetSymbolInfo(_env *LnsEnv) *LnsList
-    Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
-    Get_expType(_env *LnsEnv) *Ast_TypeInfo
-    Get_expTypeList(_env *LnsEnv) *LnsList
-    Get_inTestBlock(_env *LnsEnv) bool
-    Get_isLValue(_env *LnsEnv) bool
-    Get_kind(_env *LnsEnv) LnsInt
-    Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
-    Get_tailComment(_env *LnsEnv) LnsAny
-    Get_token(_env *LnsEnv) *Types_Token
-    HasNilAccess(_env *LnsEnv) bool
-    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
-    SetLValue(_env *LnsEnv)
-    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
-    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
-    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
-}
-type Nodes_LiteralSymbolNode struct {
-    Nodes_Node
-    token *Types_Token
-    FP Nodes_LiteralSymbolNodeMtd
-}
-func Nodes_LiteralSymbolNode2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_LiteralSymbolNode).FP
-}
-type Nodes_LiteralSymbolNodeDownCast interface {
-    ToNodes_LiteralSymbolNode() *Nodes_LiteralSymbolNode
-}
-func Nodes_LiteralSymbolNodeDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_LiteralSymbolNodeDownCast)
-    if ok { return work.ToNodes_LiteralSymbolNode() }
-    return nil
-}
-func (obj *Nodes_LiteralSymbolNode) ToNodes_LiteralSymbolNode() *Nodes_LiteralSymbolNode {
-    return obj
-}
-func NewNodes_LiteralSymbolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralSymbolNode {
-    obj := &Nodes_LiteralSymbolNode{}
-    obj.FP = obj
-    obj.Nodes_Node.FP = obj
-    obj.InitNodes_LiteralSymbolNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
-    return obj
-}
-func (self *Nodes_LiteralSymbolNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
-
-// declaration Class -- DefMacroInfo
-type Nodes_DefMacroInfoMtd interface {
-    GetArgList(_env *LnsEnv) *LnsList
-    GetTokenList(_env *LnsEnv) *LnsList
-    Get_func(_env *LnsEnv) LnsAny
-    Get_name(_env *LnsEnv) string
-    Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
-}
-type Nodes_DefMacroInfo struct {
-    Nodes_MacroInfo
-    DeclInfo *Nodes_DeclMacroInfo
-    argList *LnsList
-    FP Nodes_DefMacroInfoMtd
-}
-func Nodes_DefMacroInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_DefMacroInfo).FP
-}
-type Nodes_DefMacroInfoDownCast interface {
-    ToNodes_DefMacroInfo() *Nodes_DefMacroInfo
-}
-func Nodes_DefMacroInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_DefMacroInfoDownCast)
-    if ok { return work.ToNodes_DefMacroInfo() }
-    return nil
-}
-func (obj *Nodes_DefMacroInfo) ToNodes_DefMacroInfo() *Nodes_DefMacroInfo {
-    return obj
-}
-func NewNodes_DefMacroInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_DeclMacroInfo, arg3 *LnsMap) *Nodes_DefMacroInfo {
-    obj := &Nodes_DefMacroInfo{}
-    obj.FP = obj
-    obj.Nodes_MacroInfo.FP = obj
-    obj.InitNodes_DefMacroInfo(_env, arg1, arg2, arg3)
-    return obj
-}
-
-// declaration Class -- ExportInfo
-type Nodes_ExportInfoMtd interface {
-    Assign(_env *LnsEnv, arg1 string) *FrontInterface_ExportInfo
-    GetTypeInfo(_env *LnsEnv, arg1 LnsInt) LnsAny
-    Get_assignName(_env *LnsEnv) string
-    Get_fullName(_env *LnsEnv) string
-    Get_globalSymbolList(_env *LnsEnv) *LnsList
-    Get_importId2localTypeInfoMap(_env *LnsEnv) *LnsMap
-    Get_importedAliasMap(_env *LnsEnv) *LnsMap
-    Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
-    Get_modulePath(_env *LnsEnv) string
-    Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo
-    Get_provideInfo(_env *LnsEnv) *FrontInterface_ModuleProvideInfo
-    Get_streamName(_env *LnsEnv) string
-    Get_typeId2DefMacroInfo(_env *LnsEnv) *LnsMap
-    Set_importId2localTypeInfoMap(_env *LnsEnv, arg1 *LnsMap)
-}
-type Nodes_ExportInfo struct {
-    FrontInterface_ExportInfo
-    typeId2DefMacroInfo *LnsMap
-    FP Nodes_ExportInfoMtd
-}
-func Nodes_ExportInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*Nodes_ExportInfo).FP
-}
-type Nodes_ExportInfoDownCast interface {
-    ToNodes_ExportInfo() *Nodes_ExportInfo
-}
-func Nodes_ExportInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Nodes_ExportInfoDownCast)
-    if ok { return work.ToNodes_ExportInfo() }
-    return nil
-}
-func (obj *Nodes_ExportInfo) ToNodes_ExportInfo() *Nodes_ExportInfo {
-    return obj
-}
-func NewNodes_ExportInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *FrontInterface_ModuleProvideInfo, arg3 *Ast_ProcessInfo, arg4 *LnsList, arg5 *LnsMap, arg6 *FrontInterface_ModuleId, arg7 string, arg8 string, arg9 string, arg10 *LnsMap, arg11 *LnsMap) *Nodes_ExportInfo {
-    obj := &Nodes_ExportInfo{}
-    obj.FP = obj
-    obj.FrontInterface_ExportInfo.FP = obj
-    obj.InitNodes_ExportInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
-    return obj
-}
-func (self *Nodes_ExportInfo) InitNodes_ExportInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *FrontInterface_ModuleProvideInfo, arg3 *Ast_ProcessInfo, arg4 *LnsList, arg5 *LnsMap, arg6 *FrontInterface_ModuleId, arg7 string, arg8 string, arg9 string, arg10 *LnsMap, arg11 *LnsMap) {
-    self.FrontInterface_ExportInfo.InitFrontInterface_ExportInfo( _env, arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10)
-    self.typeId2DefMacroInfo = arg11
-}
-func (self *Nodes_ExportInfo) Get_typeId2DefMacroInfo(_env *LnsEnv) *LnsMap{ return self.typeId2DefMacroInfo }
-
-func Lns_Nodes_init(_env *LnsEnv) {
-    if init_Nodes { return }
-    init_Nodes = true
-    Nodes__mod__ = "@lune.@base.@Nodes"
-    Lns_InitMod()
-    Lns_Parser_init(_env)
-    Lns_Util_init(_env)
-    Lns_frontInterface_init(_env)
-    Lns_Ast_init(_env)
-    Lns_LuneControl_init(_env)
-    Lns_Types_init(_env)
-    Nodes_nodeKind2NameMapWork = NewLnsMap( map[LnsAny]LnsAny{})
-    Nodes_nodeKind2NameMap = Nodes_nodeKind2NameMapWork
-    Nodes_nodeKindSeed = 0
-    Nodes_regKind_17_(_env, "None")
-    
-    Nodes_regKind_17_(_env, "Shebang")
-    
-    Nodes_regKind_17_(_env, "ConvStat")
-    
-    Nodes_regKind_17_(_env, "BlankLine")
-    
-    Nodes_regKind_17_(_env, "Subfile")
-    
-    Nodes_regKind_17_(_env, "Import")
-    
-    Nodes_regKind_17_(_env, "Root")
-    
-    Nodes_regKind_17_(_env, "RefType")
-    
-    Nodes_regKind_17_(_env, "Block")
-    
-    Nodes_regKind_17_(_env, "Scope")
-    
-    Nodes_regKind_17_(_env, "If")
-    
-    Nodes_regKind_17_(_env, "ExpList")
-    
-    Nodes_regKind_17_(_env, "Switch")
-    
-    Nodes_regKind_17_(_env, "While")
-    
-    Nodes_regKind_17_(_env, "Repeat")
-    
-    
-    Nodes_regKind_17_(_env, "For")
-    
-    
-    Nodes_regKind_17_(_env, "Apply")
-    
-    
-    Nodes_regKind_17_(_env, "Foreach")
-    
-    
-    Nodes_regKind_17_(_env, "Forsort")
-    
-    
-    Nodes_regKind_17_(_env, "Return")
-    
-    Nodes_regKind_17_(_env, "Break")
-    
-    Nodes_regKind_17_(_env, "Provide")
-    
-    Nodes_regKind_17_(_env, "ExpNew")
-    
-    Nodes_regKind_17_(_env, "ExpUnwrap")
-    
-    Nodes_regKind_17_(_env, "ExpRef")
-    
-    Nodes_regKind_17_(_env, "ExpSetVal")
-    
-    Nodes_regKind_17_(_env, "ExpSetItem")
-    
-    Nodes_regKind_17_(_env, "ExpOp2")
-    
-    Nodes_regKind_17_(_env, "UnwrapSet")
-    
-    Nodes_regKind_17_(_env, "IfUnwrap")
-    
-    Nodes_regKind_17_(_env, "When")
-    
-    Nodes_regKind_17_(_env, "ExpCast")
-    
-    Nodes_regKind_17_(_env, "ExpToDDD")
-    
-    Nodes_regKind_17_(_env, "ExpSubDDD")
-    
-    Nodes_regKind_17_(_env, "ExpOp1")
-    
-    Nodes_regKind_17_(_env, "ExpRefItem")
-    
-    Nodes_regKind_17_(_env, "ExpCall")
-    
-    Nodes_regKind_17_(_env, "ExpMRet")
-    
-    Nodes_regKind_17_(_env, "ExpAccessMRet")
-    
-    Nodes_regKind_17_(_env, "ExpMultiTo1")
-    
-    Nodes_regKind_17_(_env, "ExpParen")
-    
-    Nodes_regKind_17_(_env, "ExpMacroExp")
-    
-    Nodes_regKind_17_(_env, "ExpMacroStat")
-    
-    Nodes_regKind_17_(_env, "ExpMacroArgExp")
-    
-    Nodes_regKind_17_(_env, "StmtExp")
-    
-    Nodes_regKind_17_(_env, "ExpMacroStatList")
-    
-    Nodes_regKind_17_(_env, "ExpOmitEnum")
-    
-    Nodes_regKind_17_(_env, "RefField")
-    
-    Nodes_regKind_17_(_env, "GetField")
-    
-    Nodes_regKind_17_(_env, "Alias")
-    
-    Nodes_regKind_17_(_env, "DeclVar")
-    
-    Nodes_regKind_17_(_env, "DeclForm")
-    
-    Nodes_regKind_17_(_env, "DeclFunc")
-    
-    Nodes_regKind_17_(_env, "DeclMethod")
-    
-    Nodes_regKind_17_(_env, "ProtoMethod")
-    
-    Nodes_regKind_17_(_env, "DeclConstr")
-    
-    Nodes_regKind_17_(_env, "DeclDestr")
-    
-    Nodes_regKind_17_(_env, "ExpCallSuperCtor")
-    
-    Nodes_regKind_17_(_env, "ExpCallSuper")
-    
-    Nodes_regKind_17_(_env, "AsyncLock")
-    
-    Nodes_regKind_17_(_env, "Request")
-    
-    Nodes_regKind_17_(_env, "DeclMember")
-    
-    Nodes_regKind_17_(_env, "DeclArg")
-    
-    Nodes_regKind_17_(_env, "DeclArgDDD")
-    
-    Nodes_regKind_17_(_env, "DeclAdvertise")
-    
-    Nodes_regKind_17_(_env, "ProtoClass")
-    
-    Nodes_regKind_17_(_env, "DeclClass")
-    
-    Nodes_regKind_17_(_env, "DeclEnum")
-    
-    Nodes_regKind_17_(_env, "DeclAlge")
-    
-    Nodes_regKind_17_(_env, "NewAlgeVal")
-    
-    Nodes_regKind_17_(_env, "LuneControl")
-    
-    Nodes_regKind_17_(_env, "Match")
-    
-    Nodes_regKind_17_(_env, "LuneKind")
-    
-    Nodes_regKind_17_(_env, "DeclMacro")
-    
-    Nodes_regKind_17_(_env, "TestCase")
-    
-    Nodes_regKind_17_(_env, "TestBlock")
-    
-    Nodes_regKind_17_(_env, "Abbr")
-    
-    Nodes_regKind_17_(_env, "Boxing")
-    
-    Nodes_regKind_17_(_env, "Unboxing")
-    
-    Nodes_regKind_17_(_env, "LiteralNil")
-    
-    Nodes_regKind_17_(_env, "LiteralChar")
-    
-    Nodes_regKind_17_(_env, "LiteralInt")
-    
-    Nodes_regKind_17_(_env, "LiteralReal")
-    
-    Nodes_regKind_17_(_env, "LiteralArray")
-    
-    Nodes_regKind_17_(_env, "LiteralList")
-    
-    Nodes_regKind_17_(_env, "LiteralSet")
-    
-    Nodes_regKind_17_(_env, "LiteralMap")
-    
-    Nodes_regKind_17_(_env, "LiteralString")
-    
-    Nodes_regKind_17_(_env, "LiteralBool")
-    
-    Nodes_regKind_17_(_env, "LiteralSymbol")
-    
-    
-}
-func init() {
-    init_Nodes = false
-}
-// 40: DeclConstr
-func (self *Nodes_SimpleModuleInfoManager) InitNodes_SimpleModuleInfoManager(_env *LnsEnv, moduleInfoManager LnsAny) {
-    if moduleInfoManager != nil{
-        moduleInfoManager_21 := moduleInfoManager.(Ast_ModuleInfoManager)
-        self.ModuleInfoManager = moduleInfoManager_21
-    } else {
-        self.ModuleInfoManager = Ast_DummyModuleInfoManager_get_instance(_env).FP
-    }
-    self.moduleInfoManagerHist = NewLnsList([]LnsAny{})
-}
 // 50: decl @lune.@base.@Nodes.SimpleModuleInfoManager.push
 func (self *Nodes_SimpleModuleInfoManager) Push(_env *LnsEnv, moduleInfoManager Ast_ModuleInfoManager) {
     self.moduleInfoManagerHist.Insert(self.ModuleInfoManager)
@@ -9249,21 +1124,6 @@ func (self *Nodes_SimpleModuleInfoManager) Push(_env *LnsEnv, moduleInfoManager 
 func (self *Nodes_SimpleModuleInfoManager) Pop(_env *LnsEnv) {
     self.ModuleInfoManager = self.moduleInfoManagerHist.GetAt(self.moduleInfoManagerHist.Len()).(Ast_ModuleInfoManager)
     self.moduleInfoManagerHist.Remove(nil)
-}
-// 69: DeclConstr
-func (self *Nodes_Filter) InitNodes_Filter(_env *LnsEnv, errorOnDefault bool,moduleTypeInfo LnsAny,moduleInfoManager LnsAny) {
-    self.errorOnDefault = errorOnDefault
-    self.moduleInfoManager = NewNodes_SimpleModuleInfoManager(_env, moduleInfoManager)
-    var process func(_env *LnsEnv) *Ast_TypeNameCtrl
-    process = func(_env *LnsEnv) *Ast_TypeNameCtrl {
-        if moduleTypeInfo != nil{
-            moduleTypeInfo_51 := moduleTypeInfo.(*Ast_TypeInfo)
-            return NewAst_TypeNameCtrl(_env, moduleTypeInfo_51)
-        }
-        return Ast_defaultTypeNameCtrl
-    }
-    self.typeNameCtrl = process(_env)
-    self.optStack = NewLnsList([]LnsAny{})
 }
 // 85: decl @lune.@base.@Nodes.Filter.pushOpt
 func (self *Nodes_Filter) pushOpt(_env *LnsEnv, _opt LnsAny) {
@@ -9953,19 +1813,6 @@ func (self *Nodes_Node) SetLValue(_env *LnsEnv) {
 func (self *Nodes_Node) GetPrefix(_env *LnsEnv) LnsAny {
     return nil
 }
-// 271: DeclConstr
-func (self *Nodes_Node) InitNodes_Node(_env *LnsEnv, managerId LnsInt,id LnsInt,kind LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,expTypeList *LnsList) {
-    self.IsLValue = false
-    self.managerId = managerId
-    self.id = id
-    self.kind = kind
-    self.pos = pos
-    self.inTestBlock = inTestBlock
-    self.expTypeList = expTypeList
-    self.commentList = nil
-    self.tailComment = nil
-    self.macroArgFlag = macroArgFlag
-}
 // 287: decl @lune.@base.@Nodes.Node.addComment
 func (self *Nodes_Node) AddComment(_env *LnsEnv, commentList *LnsList) {
     if commentList.Len() != 0{
@@ -10035,18 +1882,6 @@ func (self *Nodes_Node) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth L
 // 2245: decl @lune.@base.@Nodes.Node.getSymbolInfo
 func (self *Nodes_Node) GetSymbolInfo(_env *LnsEnv) *LnsList {
     return Node_getSymbolInfo__processExpNode_0_(_env, self)
-}
-// 469: DeclConstr
-func (self *Nodes_NodeManager) InitNodes_NodeManager(_env *LnsEnv) {
-    self.managerId = 0
-    self.idSeed = 0
-    self.nodeKind2NodeList = NewLnsMap( map[LnsAny]LnsAny{})
-    for _kind, _ := range( Nodes_nodeKind2NameMap.Items ) {
-        kind := _kind.(LnsInt)
-        if Lns_op_not(self.nodeKind2NodeList.Get(kind)){
-            self.nodeKind2NodeList.Set(kind,NewLnsList([]LnsAny{}))
-        }
-    }
 }
 // 480: decl @lune.@base.@Nodes.NodeManager.nextId
 func (self *Nodes_NodeManager) NextId(_env *LnsEnv) LnsInt {
@@ -10878,10 +2713,6 @@ func (self *Nodes_NoneNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_NoneNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_NoneNode) InitNodes_NoneNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 0, pos, inTestBlock, macroArgFlag, typeList)
-}
 // 740: decl @lune.@base.@Nodes.NoneNode.create
 func Nodes_NoneNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_NoneNode {
     var node *Nodes_NoneNode
@@ -10909,11 +2740,6 @@ func (self *Nodes_ShebangNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ShebangNode.canBeStatement
 func (self *Nodes_ShebangNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ShebangNode) InitNodes_ShebangNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) {
-    self.InitNodes_Node(_env, managerId, id, 1, pos, inTestBlock, macroArgFlag, typeList)
-    self.cmd = cmd
 }
 // 740: decl @lune.@base.@Nodes.ShebangNode.create
 func Nodes_ShebangNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) *Nodes_ShebangNode {
@@ -10943,11 +2769,6 @@ func (self *Nodes_ConvStatNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ConvStatNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ConvStatNode) InitNodes_ConvStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) {
-    self.InitNodes_Node(_env, managerId, id, 2, pos, inTestBlock, macroArgFlag, typeList)
-    self.txt = txt
-}
 // 740: decl @lune.@base.@Nodes.ConvStatNode.create
 func Nodes_ConvStatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) *Nodes_ConvStatNode {
     var node *Nodes_ConvStatNode
@@ -10975,11 +2796,6 @@ func (self *Nodes_BlankLineNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.BlankLineNode.canBeStatement
 func (self *Nodes_BlankLineNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_BlankLineNode) InitNodes_BlankLineNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) {
-    self.InitNodes_Node(_env, managerId, id, 3, pos, inTestBlock, macroArgFlag, typeList)
-    self.lineNum = lineNum
 }
 // 740: decl @lune.@base.@Nodes.BlankLineNode.create
 func Nodes_BlankLineNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) *Nodes_BlankLineNode {
@@ -11009,11 +2825,6 @@ func (self *Nodes_SubfileNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_SubfileNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_SubfileNode) InitNodes_SubfileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 4, pos, inTestBlock, macroArgFlag, typeList)
-    self.usePath = usePath
-}
 // 740: decl @lune.@base.@Nodes.SubfileNode.create
 func Nodes_SubfileNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) *Nodes_SubfileNode {
     var node *Nodes_SubfileNode
@@ -11042,11 +2853,6 @@ func (self *Nodes_ImportNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ImportNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ImportNode) InitNodes_ImportNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) {
-    self.InitNodes_Node(_env, managerId, id, 5, pos, inTestBlock, macroArgFlag, typeList)
-    self.info = info
-}
 // 740: decl @lune.@base.@Nodes.ImportNode.create
 func Nodes_ImportNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) *Nodes_ImportNode {
     var node *Nodes_ImportNode
@@ -11074,23 +2880,6 @@ func (self *Nodes_RootNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.RootNode.canBeStatement
 func (self *Nodes_RootNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_RootNode) InitNodes_RootNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) {
-    self.InitNodes_Node(_env, managerId, id, 6, pos, inTestBlock, macroArgFlag, typeList)
-    self.children = children
-    self.moduleScope = moduleScope
-    self.globalScope = globalScope
-    self.useModuleMacroSet = useModuleMacroSet
-    self.moduleId = moduleId
-    self.processInfo = processInfo
-    self.moduleTypeInfo = moduleTypeInfo
-    self.provideNode = provideNode
-    self.luneHelperInfo = luneHelperInfo
-    self.nodeManager = nodeManager
-    self.importModule2moduleInfo = importModule2moduleInfo
-    self.typeId2MacroInfo = typeId2MacroInfo
-    self.typeId2ClassMap = typeId2ClassMap
 }
 // 740: decl @lune.@base.@Nodes.RootNode.create
 func Nodes_RootNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) *Nodes_RootNode {
@@ -11163,14 +2952,6 @@ func (self *Nodes_RefTypeNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_RefTypeNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) {
-    self.InitNodes_Node(_env, managerId, id, 7, pos, inTestBlock, macroArgFlag, typeList)
-    self.name = name
-    self.itemNodeList = itemNodeList
-    self.mutMode = mutMode
-    self.array = array
-}
 // 740: decl @lune.@base.@Nodes.RefTypeNode.create
 func Nodes_RefTypeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) *Nodes_RefTypeNode {
     var node *Nodes_RefTypeNode
@@ -11234,13 +3015,6 @@ func (self *Nodes_BlockNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_BlockNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_BlockNode) InitNodes_BlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 8, pos, inTestBlock, macroArgFlag, typeList)
-    self.blockKind = blockKind
-    self.scope = scope
-    self.stmtList = stmtList
-}
 // 740: decl @lune.@base.@Nodes.BlockNode.create
 func Nodes_BlockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) *Nodes_BlockNode {
     var node *Nodes_BlockNode
@@ -11292,14 +3066,6 @@ func (self *Nodes_ScopeNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ScopeNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ScopeNode) InitNodes_ScopeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) {
-    self.InitNodes_Node(_env, managerId, id, 9, pos, inTestBlock, macroArgFlag, typeList)
-    self.scopeKind = scopeKind
-    self.scope = scope
-    self.symbolList = symbolList
-    self.block = block
-}
 // 740: decl @lune.@base.@Nodes.ScopeNode.create
 func Nodes_ScopeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) *Nodes_ScopeNode {
     var node *Nodes_ScopeNode
@@ -11343,11 +3109,6 @@ func (self *Nodes_IfNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.IfNode.canBeStatement
 func (self *Nodes_IfNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_IfNode) InitNodes_IfNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 10, pos, inTestBlock, macroArgFlag, typeList)
-    self.stmtList = stmtList
 }
 // 740: decl @lune.@base.@Nodes.IfNode.create
 func Nodes_IfNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_IfNode {
@@ -11447,13 +3208,6 @@ func (self *Nodes_ExpListNode) ProcessFilter(_env *LnsEnv, filter *Nodes_Filter,
 // 1: decl @lune.@base.@Nodes.ExpListNode.canBeStatement
 func (self *Nodes_ExpListNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_ExpListNode) InitNodes_ExpListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) {
-    self.InitNodes_Node(_env, managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
-    self.expList = expList
-    self.mRetExp = mRetExp
-    self.followOn = followOn
 }
 // 740: decl @lune.@base.@Nodes.ExpListNode.create
 func Nodes_ExpListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) *Nodes_ExpListNode {
@@ -11563,16 +3317,6 @@ func (self *Nodes_SwitchNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.SwitchNode.canBeStatement
 func (self *Nodes_SwitchNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_SwitchNode) InitNodes_SwitchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) {
-    self.InitNodes_Node(_env, managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
-    self.idInNS = idInNS
-    self.exp = exp
-    self.caseList = caseList
-    self._default = _default
-    self.caseKind = caseKind
-    self.failSafeDefault = failSafeDefault
 }
 // 740: decl @lune.@base.@Nodes.SwitchNode.create
 func Nodes_SwitchNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_SwitchNode {
@@ -11748,13 +3492,6 @@ func (self *Nodes_WhileNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_WhileNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_WhileNode) InitNodes_WhileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) {
-    self.InitNodes_Node(_env, managerId, id, 13, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
-    self.infinit = infinit
-    self.block = block
-}
 // 740: decl @lune.@base.@Nodes.WhileNode.create
 func Nodes_WhileNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) *Nodes_WhileNode {
     var node *Nodes_WhileNode
@@ -11909,12 +3646,6 @@ func (self *Nodes_RepeatNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_RepeatNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_RepeatNode) InitNodes_RepeatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
-    self.block = block
-    self.exp = exp
-}
 // 740: decl @lune.@base.@Nodes.RepeatNode.create
 func Nodes_RepeatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) *Nodes_RepeatNode {
     var node *Nodes_RepeatNode
@@ -11983,16 +3714,6 @@ func (self *Nodes_ForNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ForNode.canBeStatement
 func (self *Nodes_ForNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ForNode) InitNodes_ForNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 15, pos, inTestBlock, macroArgFlag, typeList)
-    self.idInNS = idInNS
-    self.block = block
-    self.val = val
-    self.init = init
-    self.to = to
-    self.delta = delta
 }
 // 740: decl @lune.@base.@Nodes.ForNode.create
 func Nodes_ForNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) *Nodes_ForNode {
@@ -12099,14 +3820,6 @@ func (self *Nodes_ApplyNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ApplyNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ApplyNode) InitNodes_ApplyNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) {
-    self.InitNodes_Node(_env, managerId, id, 16, pos, inTestBlock, macroArgFlag, typeList)
-    self.idInNS = idInNS
-    self.varList = varList
-    self.expList = expList
-    self.block = block
-}
 // 740: decl @lune.@base.@Nodes.ApplyNode.create
 func Nodes_ApplyNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) *Nodes_ApplyNode {
     var node *Nodes_ApplyNode
@@ -12175,15 +3888,6 @@ func (self *Nodes_ForeachNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ForeachNode.canBeStatement
 func (self *Nodes_ForeachNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ForeachNode) InitNodes_ForeachNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) {
-    self.InitNodes_Node(_env, managerId, id, 17, pos, inTestBlock, macroArgFlag, typeList)
-    self.idInNS = idInNS
-    self.val = val
-    self.key = key
-    self.exp = exp
-    self.block = block
 }
 // 740: decl @lune.@base.@Nodes.ForeachNode.create
 func Nodes_ForeachNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) *Nodes_ForeachNode {
@@ -12254,16 +3958,6 @@ func (self *Nodes_ForsortNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ForsortNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ForsortNode) InitNodes_ForsortNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) {
-    self.InitNodes_Node(_env, managerId, id, 18, pos, inTestBlock, macroArgFlag, typeList)
-    self.idInNS = idInNS
-    self.val = val
-    self.key = key
-    self.exp = exp
-    self.block = block
-    self.sort = sort
-}
 // 740: decl @lune.@base.@Nodes.ForsortNode.create
 func Nodes_ForsortNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) *Nodes_ForsortNode {
     var node *Nodes_ForsortNode
@@ -12333,11 +4027,6 @@ func (self *Nodes_ReturnNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ReturnNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ReturnNode) InitNodes_ReturnNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 19, pos, inTestBlock, macroArgFlag, typeList)
-    self.expList = expList
-}
 // 740: decl @lune.@base.@Nodes.ReturnNode.create
 func Nodes_ReturnNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_ReturnNode {
     var node *Nodes_ReturnNode
@@ -12390,10 +4079,6 @@ func (self *Nodes_BreakNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_BreakNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_BreakNode) InitNodes_BreakNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 20, pos, inTestBlock, macroArgFlag, typeList)
-}
 // 740: decl @lune.@base.@Nodes.BreakNode.create
 func Nodes_BreakNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_BreakNode {
     var node *Nodes_BreakNode
@@ -12426,11 +4111,6 @@ func (self *Nodes_ProvideNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ProvideNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ProvideNode) InitNodes_ProvideNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) {
-    self.InitNodes_Node(_env, managerId, id, 21, pos, inTestBlock, macroArgFlag, typeList)
-    self.symbol = symbol
-}
 // 740: decl @lune.@base.@Nodes.ProvideNode.create
 func Nodes_ProvideNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) *Nodes_ProvideNode {
     var node *Nodes_ProvideNode
@@ -12458,13 +4138,6 @@ func (self *Nodes_ExpNewNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpNewNode.canBeStatement
 func (self *Nodes_ExpNewNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 22, pos, inTestBlock, macroArgFlag, typeList)
-    self.symbol = symbol
-    self.ctorTypeInfo = ctorTypeInfo
-    self.argList = argList
 }
 // 740: decl @lune.@base.@Nodes.ExpNewNode.create
 func Nodes_ExpNewNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) *Nodes_ExpNewNode {
@@ -12530,12 +4203,6 @@ func (self *Nodes_ExpUnwrapNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpUnwrapNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 23, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
-    self._default = _default
-}
 // 740: decl @lune.@base.@Nodes.ExpUnwrapNode.create
 func Nodes_ExpUnwrapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) *Nodes_ExpUnwrapNode {
     var node *Nodes_ExpUnwrapNode
@@ -12591,11 +4258,6 @@ func (self *Nodes_ExpRefNode) ProcessFilter(_env *LnsEnv, filter *Nodes_Filter,_
 // 1: decl @lune.@base.@Nodes.ExpRefNode.canBeStatement
 func (self *Nodes_ExpRefNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_ExpRefNode) InitNodes_ExpRefNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) {
-    self.InitNodes_Node(_env, managerId, id, 24, pos, inTestBlock, macroArgFlag, typeList)
-    self.symbolInfo = symbolInfo
 }
 // 740: decl @lune.@base.@Nodes.ExpRefNode.create
 func Nodes_ExpRefNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) *Nodes_ExpRefNode {
@@ -12653,14 +4315,6 @@ func (self *Nodes_ExpSetValNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpSetValNode.canBeStatement
 func (self *Nodes_ExpSetValNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) {
-    self.InitNodes_Node(_env, managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp1 = exp1
-    self.exp2 = exp2
-    self.LeftSymList = LeftSymList
-    self.initSymSet = initSymSet
 }
 // 740: decl @lune.@base.@Nodes.ExpSetValNode.create
 func Nodes_ExpSetValNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) *Nodes_ExpSetValNode {
@@ -12722,13 +4376,6 @@ func (self *Nodes_ExpSetItemNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpSetItemNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
-    self.val = val
-    self.index = index
-    self.exp2 = exp2
-}
 // 740: decl @lune.@base.@Nodes.ExpSetItemNode.create
 func Nodes_ExpSetItemNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) *Nodes_ExpSetItemNode {
     var node *Nodes_ExpSetItemNode
@@ -12788,13 +4435,6 @@ func (self *Nodes_ExpOp2Node) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpOp2Node.canBeStatement
 func (self *Nodes_ExpOp2Node) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
-    self.op = op
-    self.exp1 = exp1
-    self.exp2 = exp2
 }
 // 740: decl @lune.@base.@Nodes.ExpOp2Node.create
 func Nodes_ExpOp2Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) *Nodes_ExpOp2Node {
@@ -12986,13 +4626,6 @@ func (self *Nodes_UnwrapSetNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_UnwrapSetNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
-    self.dstExpList = dstExpList
-    self.srcExpList = srcExpList
-    self.unwrapBlock = unwrapBlock
-}
 // 740: decl @lune.@base.@Nodes.UnwrapSetNode.create
 func Nodes_UnwrapSetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) *Nodes_UnwrapSetNode {
     var node *Nodes_UnwrapSetNode
@@ -13072,14 +4705,6 @@ func (self *Nodes_IfUnwrapNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.IfUnwrapNode.canBeStatement
 func (self *Nodes_IfUnwrapNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
-    self.varSymList = varSymList
-    self.expList = expList
-    self.block = block
-    self.nilBlock = nilBlock
 }
 // 740: decl @lune.@base.@Nodes.IfUnwrapNode.create
 func Nodes_IfUnwrapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) *Nodes_IfUnwrapNode {
@@ -13227,13 +4852,6 @@ func (self *Nodes_WhenNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_WhenNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_WhenNode) InitNodes_WhenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
-    self.symPairList = symPairList
-    self.block = block
-    self.elseBlock = elseBlock
-}
 // 740: decl @lune.@base.@Nodes.WhenNode.create
 func Nodes_WhenNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) *Nodes_WhenNode {
     var node *Nodes_WhenNode
@@ -13364,15 +4982,6 @@ func (self *Nodes_ExpCastNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpCastNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) {
-    self.InitNodes_Node(_env, managerId, id, 31, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
-    self.castType = castType
-    self.castTypeNode = castTypeNode
-    self.castOpe = castOpe
-    self.castKind = castKind
-}
 // 740: decl @lune.@base.@Nodes.ExpCastNode.create
 func Nodes_ExpCastNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) *Nodes_ExpCastNode {
     var node *Nodes_ExpCastNode
@@ -13449,11 +5058,6 @@ func (self *Nodes_ExpToDDDNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpToDDDNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpToDDDNode) InitNodes_ExpToDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) {
-    self.InitNodes_Node(_env, managerId, id, 32, pos, inTestBlock, macroArgFlag, typeList)
-    self.expList = expList
-}
 // 740: decl @lune.@base.@Nodes.ExpToDDDNode.create
 func Nodes_ExpToDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
     var node *Nodes_ExpToDDDNode
@@ -13497,12 +5101,6 @@ func (self *Nodes_ExpSubDDDNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpSubDDDNode.canBeStatement
 func (self *Nodes_ExpSubDDDNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) {
-    self.InitNodes_Node(_env, managerId, id, 33, pos, inTestBlock, macroArgFlag, typeList)
-    self.src = src
-    self.remainIndex = remainIndex
 }
 // 740: decl @lune.@base.@Nodes.ExpSubDDDNode.create
 func Nodes_ExpSubDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) *Nodes_ExpSubDDDNode {
@@ -13548,13 +5146,6 @@ func (self *Nodes_ExpOp1Node) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpOp1Node) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
-    self.op = op
-    self.macroMode = macroMode
-    self.exp = exp
-}
 // 740: decl @lune.@base.@Nodes.ExpOp1Node.create
 func Nodes_ExpOp1Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) *Nodes_ExpOp1Node {
     var node *Nodes_ExpOp1Node
@@ -13598,14 +5189,6 @@ func (self *Nodes_ExpRefItemNode) CanBeRight(_env *LnsEnv, processInfo *Ast_Proc
 // 1: decl @lune.@base.@Nodes.ExpRefItemNode.canBeStatement
 func (self *Nodes_ExpRefItemNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
-    self.val = val
-    self.nilAccess = nilAccess
-    self.symbol = symbol
-    self.index = index
 }
 // 740: decl @lune.@base.@Nodes.ExpRefItemNode.create
 func Nodes_ExpRefItemNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) *Nodes_ExpRefItemNode {
@@ -13683,14 +5266,6 @@ func (self *Nodes_ExpCallNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpCallNode.canBeStatement
 func (self *Nodes_ExpCallNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
-    self._func = _func
-    self.errorFunc = errorFunc
-    self.nilAccess = nilAccess
-    self.argList = argList
 }
 // 740: decl @lune.@base.@Nodes.ExpCallNode.create
 func Nodes_ExpCallNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) *Nodes_ExpCallNode {
@@ -13782,11 +5357,6 @@ func (self *Nodes_ExpMRetNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpMRetNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpMRetNode) InitNodes_ExpMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
-    self.mRet = mRet
-}
 // 740: decl @lune.@base.@Nodes.ExpMRetNode.create
 func Nodes_ExpMRetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) *Nodes_ExpMRetNode {
     var node *Nodes_ExpMRetNode
@@ -13834,12 +5404,6 @@ func (self *Nodes_ExpAccessMRetNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpAccessMRetNode.canBeStatement
 func (self *Nodes_ExpAccessMRetNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) {
-    self.InitNodes_Node(_env, managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
-    self.mRet = mRet
-    self.index = index
 }
 // 740: decl @lune.@base.@Nodes.ExpAccessMRetNode.create
 func Nodes_ExpAccessMRetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) *Nodes_ExpAccessMRetNode {
@@ -13889,11 +5453,6 @@ func (self *Nodes_ExpMultiTo1Node) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpMultiTo1Node) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpMultiTo1Node) InitNodes_ExpMultiTo1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
-}
 // 740: decl @lune.@base.@Nodes.ExpMultiTo1Node.create
 func Nodes_ExpMultiTo1Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMultiTo1Node {
     var node *Nodes_ExpMultiTo1Node
@@ -13942,11 +5501,6 @@ func (self *Nodes_ExpParenNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpParenNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpParenNode) InitNodes_ExpParenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
-}
 // 740: decl @lune.@base.@Nodes.ExpParenNode.create
 func Nodes_ExpParenNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpParenNode {
     var node *Nodes_ExpParenNode
@@ -13994,12 +5548,6 @@ func (self *Nodes_ExpMacroExpNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpMacroExpNode.canBeStatement
 func (self *Nodes_ExpMacroExpNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ExpMacroExpNode) InitNodes_ExpMacroExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
-    self.macroType = macroType
-    self.stmtList = stmtList
 }
 // 740: decl @lune.@base.@Nodes.ExpMacroExpNode.create
 func Nodes_ExpMacroExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) *Nodes_ExpMacroExpNode {
@@ -14055,11 +5603,6 @@ func (self *Nodes_ExpMacroStatNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpMacroStatNode.canBeStatement
 func (self *Nodes_ExpMacroStatNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_ExpMacroStatNode) InitNodes_ExpMacroStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
-    self.expStrList = expStrList
 }
 // 740: decl @lune.@base.@Nodes.ExpMacroStatNode.create
 func Nodes_ExpMacroStatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) *Nodes_ExpMacroStatNode {
@@ -14129,11 +5672,6 @@ func (self *Nodes_ExpMacroArgExpNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpMacroArgExpNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpMacroArgExpNode) InitNodes_ExpMacroArgExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) {
-    self.InitNodes_Node(_env, managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
-    self.codeTxt = codeTxt
-}
 // 740: decl @lune.@base.@Nodes.ExpMacroArgExpNode.create
 func Nodes_ExpMacroArgExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) *Nodes_ExpMacroArgExpNode {
     var node *Nodes_ExpMacroArgExpNode
@@ -14161,11 +5699,6 @@ func (self *Nodes_StmtExpNode) CanBeRight(_env *LnsEnv, processInfo *Ast_Process
 // 1: decl @lune.@base.@Nodes.StmtExpNode.canBeLeft
 func (self *Nodes_StmtExpNode) CanBeLeft(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_StmtExpNode) InitNodes_StmtExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 44, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
 }
 // 740: decl @lune.@base.@Nodes.StmtExpNode.create
 func Nodes_StmtExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_StmtExpNode {
@@ -14219,11 +5752,6 @@ func (self *Nodes_ExpMacroStatListNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpMacroStatListNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpMacroStatListNode) InitNodes_ExpMacroStatListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 45, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
-}
 // 740: decl @lune.@base.@Nodes.ExpMacroStatListNode.create
 func Nodes_ExpMacroStatListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMacroStatListNode {
     var node *Nodes_ExpMacroStatListNode
@@ -14268,14 +5796,6 @@ func (self *Nodes_ExpOmitEnumNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpOmitEnumNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) {
-    self.InitNodes_Node(_env, managerId, id, 46, pos, inTestBlock, macroArgFlag, typeList)
-    self.valToken = valToken
-    self.valInfo = valInfo
-    self.aliasType = aliasType
-    self.enumTypeInfo = enumTypeInfo
-}
 // 740: decl @lune.@base.@Nodes.ExpOmitEnumNode.create
 func Nodes_ExpOmitEnumNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
     var node *Nodes_ExpOmitEnumNode
@@ -14313,14 +5833,6 @@ func (self *Nodes_RefFieldNode) ProcessFilter(_env *LnsEnv, filter *Nodes_Filter
 // 1: decl @lune.@base.@Nodes.RefFieldNode.canBeStatement
 func (self *Nodes_RefFieldNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
-    self.field = field
-    self.symbolInfo = symbolInfo
-    self.nilAccess = nilAccess
-    self.prefix = prefix
 }
 // 740: decl @lune.@base.@Nodes.RefFieldNode.create
 func Nodes_RefFieldNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) *Nodes_RefFieldNode {
@@ -14445,15 +5957,6 @@ func (self *Nodes_GetFieldNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_GetFieldNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) {
-    self.InitNodes_Node(_env, managerId, id, 48, pos, inTestBlock, macroArgFlag, typeList)
-    self.field = field
-    self.symbolInfo = symbolInfo
-    self.nilAccess = nilAccess
-    self.prefix = prefix
-    self.getterTypeInfo = getterTypeInfo
-}
 // 740: decl @lune.@base.@Nodes.GetFieldNode.create
 func Nodes_GetFieldNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) *Nodes_GetFieldNode {
     var node *Nodes_GetFieldNode
@@ -14506,13 +6009,6 @@ func (self *Nodes_AliasNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_AliasNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_AliasNode) InitNodes_AliasNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) {
-    self.InitNodes_Node(_env, managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
-    self.newSymbol = newSymbol
-    self.srcNode = srcNode
-    self.typeInfo = typeInfo
-}
 // 740: decl @lune.@base.@Nodes.AliasNode.create
 func Nodes_AliasNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) *Nodes_AliasNode {
     var node *Nodes_AliasNode
@@ -14556,22 +6052,6 @@ func (self *Nodes_DeclVarNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.DeclVarNode.canBeStatement
 func (self *Nodes_DeclVarNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
-    self.mode = mode
-    self.accessMode = accessMode
-    self.staticFlag = staticFlag
-    self.varList = varList
-    self.expList = expList
-    self.symbolInfoList = symbolInfoList
-    self.typeInfoList = typeInfoList
-    self.unwrapFlag = unwrapFlag
-    self.unwrapBlock = unwrapBlock
-    self.thenBlock = thenBlock
-    self.syncVarList = syncVarList
-    self.syncBlock = syncBlock
 }
 // 740: decl @lune.@base.@Nodes.DeclVarNode.create
 func Nodes_DeclVarNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) *Nodes_DeclVarNode {
@@ -14820,11 +6300,6 @@ func (self *Nodes_DeclFormNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclFormNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_DeclFormNode) InitNodes_DeclFormNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
-    self.InitNodes_Node(_env, managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
-    self.declInfo = declInfo
-}
 // 740: decl @lune.@base.@Nodes.DeclFormNode.create
 func Nodes_DeclFormNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFormNode {
     var node *Nodes_DeclFormNode
@@ -14894,11 +6369,6 @@ func (self *Nodes_DeclFuncNode) ProcessFilter(_env *LnsEnv, filter *Nodes_Filter
 // 1: decl @lune.@base.@Nodes.DeclFuncNode.canBeLeft
 func (self *Nodes_DeclFuncNode) CanBeLeft(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_DeclFuncNode) InitNodes_DeclFuncNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
-    self.InitNodes_Node(_env, managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
-    self.declInfo = declInfo
 }
 // 740: decl @lune.@base.@Nodes.DeclFuncNode.create
 func Nodes_DeclFuncNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
@@ -14986,11 +6456,6 @@ func (self *Nodes_DeclMethodNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclMethodNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_DeclMethodNode) InitNodes_DeclMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
-    self.InitNodes_Node(_env, managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
-    self.declInfo = declInfo
-}
 // 740: decl @lune.@base.@Nodes.DeclMethodNode.create
 func Nodes_DeclMethodNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
     var node *Nodes_DeclMethodNode
@@ -15068,11 +6533,6 @@ func (self *Nodes_ProtoMethodNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ProtoMethodNode.canBeStatement
 func (self *Nodes_ProtoMethodNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ProtoMethodNode) InitNodes_ProtoMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
-    self.InitNodes_Node(_env, managerId, id, 54, pos, inTestBlock, macroArgFlag, typeList)
-    self.declInfo = declInfo
 }
 // 740: decl @lune.@base.@Nodes.ProtoMethodNode.create
 func Nodes_ProtoMethodNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
@@ -15152,11 +6612,6 @@ func (self *Nodes_DeclConstrNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclConstrNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_DeclConstrNode) InitNodes_DeclConstrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
-    self.InitNodes_Node(_env, managerId, id, 55, pos, inTestBlock, macroArgFlag, typeList)
-    self.declInfo = declInfo
-}
 // 740: decl @lune.@base.@Nodes.DeclConstrNode.create
 func Nodes_DeclConstrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
     var node *Nodes_DeclConstrNode
@@ -15234,11 +6689,6 @@ func (self *Nodes_DeclDestrNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.DeclDestrNode.canBeStatement
 func (self *Nodes_DeclDestrNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_DeclDestrNode) InitNodes_DeclDestrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
-    self.InitNodes_Node(_env, managerId, id, 56, pos, inTestBlock, macroArgFlag, typeList)
-    self.declInfo = declInfo
 }
 // 740: decl @lune.@base.@Nodes.DeclDestrNode.create
 func Nodes_DeclDestrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
@@ -15318,13 +6768,6 @@ func (self *Nodes_ExpCallSuperCtorNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ExpCallSuperCtorNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 57, pos, inTestBlock, macroArgFlag, typeList)
-    self.superType = superType
-    self.methodType = methodType
-    self.expList = expList
-}
 // 740: decl @lune.@base.@Nodes.ExpCallSuperCtorNode.create
 func Nodes_ExpCallSuperCtorNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperCtorNode {
     var node *Nodes_ExpCallSuperCtorNode
@@ -15368,13 +6811,6 @@ func (self *Nodes_ExpCallSuperNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.ExpCallSuperNode.canBeStatement
 func (self *Nodes_ExpCallSuperNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 58, pos, inTestBlock, macroArgFlag, typeList)
-    self.superType = superType
-    self.methodType = methodType
-    self.expList = expList
 }
 // 740: decl @lune.@base.@Nodes.ExpCallSuperNode.create
 func Nodes_ExpCallSuperNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperNode {
@@ -15428,12 +6864,6 @@ func (self *Nodes_AsyncLockNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_AsyncLockNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_AsyncLockNode) InitNodes_AsyncLockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) {
-    self.InitNodes_Node(_env, managerId, id, 59, pos, inTestBlock, macroArgFlag, typeList)
-    self.lockKind = lockKind
-    self.block = block
-}
 // 740: decl @lune.@base.@Nodes.AsyncLockNode.create
 func Nodes_AsyncLockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) *Nodes_AsyncLockNode {
     var node *Nodes_AsyncLockNode
@@ -15477,12 +6907,6 @@ func (self *Nodes_RequestNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.RequestNode.canBeStatement
 func (self *Nodes_RequestNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_RequestNode) InitNodes_RequestNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,processor *Nodes_Node,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 60, pos, inTestBlock, macroArgFlag, typeList)
-    self.processor = processor
-    self.exp = exp
 }
 // 740: decl @lune.@base.@Nodes.RequestNode.create
 func Nodes_RequestNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,processor *Nodes_Node,exp *Nodes_Node) *Nodes_RequestNode {
@@ -15544,22 +6968,6 @@ func (self *Nodes_DeclMemberNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclMemberNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
-    self.name = name
-    self.refType = refType
-    self.symbolInfo = symbolInfo
-    self.classType = classType
-    self.staticFlag = staticFlag
-    self.accessMode = accessMode
-    self.getterMutable = getterMutable
-    self.getterMode = getterMode
-    self.getterToken = getterToken
-    self.getterRetType = getterRetType
-    self.setterMode = setterMode
-    self.setterToken = setterToken
-}
 // 740: decl @lune.@base.@Nodes.DeclMemberNode.create
 func Nodes_DeclMemberNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) *Nodes_DeclMemberNode {
     var node *Nodes_DeclMemberNode
@@ -15620,13 +7028,6 @@ func (self *Nodes_DeclArgNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclArgNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
-    self.name = name
-    self.symbolInfo = symbolInfo
-    self.argType = argType
-}
 // 740: decl @lune.@base.@Nodes.DeclArgNode.create
 func Nodes_DeclArgNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) *Nodes_DeclArgNode {
     var node *Nodes_DeclArgNode
@@ -15675,10 +7076,6 @@ func (self *Nodes_DeclArgDDDNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclArgDDDNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_DeclArgDDDNode) InitNodes_DeclArgDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 63, pos, inTestBlock, macroArgFlag, typeList)
-}
 // 740: decl @lune.@base.@Nodes.DeclArgDDDNode.create
 func Nodes_DeclArgDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_DeclArgDDDNode {
     var node *Nodes_DeclArgDDDNode
@@ -15706,11 +7103,6 @@ func (self *Nodes_DeclAdvertiseNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.DeclAdvertiseNode.canBeStatement
 func (self *Nodes_DeclAdvertiseNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_DeclAdvertiseNode) InitNodes_DeclAdvertiseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) {
-    self.InitNodes_Node(_env, managerId, id, 64, pos, inTestBlock, macroArgFlag, typeList)
-    self.advInfo = advInfo
 }
 // 740: decl @lune.@base.@Nodes.DeclAdvertiseNode.create
 func Nodes_DeclAdvertiseNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
@@ -15777,12 +7169,6 @@ func (self *Nodes_ProtoClassNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_ProtoClassNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_ProtoClassNode) InitNodes_ProtoClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) {
-    self.InitNodes_Node(_env, managerId, id, 65, pos, inTestBlock, macroArgFlag, typeList)
-    self.name = name
-    self.inheritInfo = inheritInfo
-}
 // 740: decl @lune.@base.@Nodes.ProtoClassNode.create
 func Nodes_ProtoClassNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) *Nodes_ProtoClassNode {
     var node *Nodes_ProtoClassNode
@@ -15814,29 +7200,6 @@ func (self *Nodes_DeclClassNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.DeclClassNode.canBeStatement
 func (self *Nodes_DeclClassNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) {
-    self.InitNodes_Node(_env, managerId, id, 66, pos, inTestBlock, macroArgFlag, typeList)
-    self.accessMode = accessMode
-    self.name = name
-    self.inheritInfo = inheritInfo
-    self.hasPrototype = hasPrototype
-    self.gluePrefix = gluePrefix
-    self.moduleName = moduleName
-    self.lang = lang
-    self.lazyLoad = lazyLoad
-    self.hasOldCtor = hasOldCtor
-    self.allStmtList = allStmtList
-    self.declStmtList = declStmtList
-    self.fieldList = fieldList
-    self.memberList = memberList
-    self.scope = scope
-    self.initBlock = initBlock
-    self.advertiseList = advertiseList
-    self.trustList = trustList
-    self.uninitMemberList = uninitMemberList
-    self.outerMethodSet = outerMethodSet
 }
 // 740: decl @lune.@base.@Nodes.DeclClassNode.create
 func Nodes_DeclClassNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) *Nodes_DeclClassNode {
@@ -15999,15 +7362,6 @@ func (self *Nodes_DeclEnumNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclEnumNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) {
-    self.InitNodes_Node(_env, managerId, id, 67, pos, inTestBlock, macroArgFlag, typeList)
-    self.enumType = enumType
-    self.accessMode = accessMode
-    self.name = name
-    self.valueNameList = valueNameList
-    self.scope = scope
-}
 // 740: decl @lune.@base.@Nodes.DeclEnumNode.create
 func Nodes_DeclEnumNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) *Nodes_DeclEnumNode {
     var node *Nodes_DeclEnumNode
@@ -16035,15 +7389,6 @@ func (self *Nodes_DeclAlgeNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.DeclAlgeNode.canBeStatement
 func (self *Nodes_DeclAlgeNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) {
-    self.InitNodes_Node(_env, managerId, id, 68, pos, inTestBlock, macroArgFlag, typeList)
-    self.accessMode = accessMode
-    self.algeType = algeType
-    self.name = name
-    self.algeValList = algeValList
-    self.scope = scope
 }
 // 740: decl @lune.@base.@Nodes.DeclAlgeNode.create
 func Nodes_DeclAlgeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) *Nodes_DeclAlgeNode {
@@ -16094,15 +7439,6 @@ func (self *Nodes_NewAlgeValNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.NewAlgeValNode.canBeStatement
 func (self *Nodes_NewAlgeValNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 69, pos, inTestBlock, macroArgFlag, typeList)
-    self.name = name
-    self.prefix = prefix
-    self.algeTypeInfo = algeTypeInfo
-    self.valInfo = valInfo
-    self.paramList = paramList
 }
 // 740: decl @lune.@base.@Nodes.NewAlgeValNode.create
 func Nodes_NewAlgeValNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) *Nodes_NewAlgeValNode {
@@ -16171,11 +7507,6 @@ func (self *Nodes_LuneControlNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LuneControlNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_LuneControlNode) InitNodes_LuneControlNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 70, pos, inTestBlock, macroArgFlag, typeList)
-    self.pragma = pragma
-}
 // 740: decl @lune.@base.@Nodes.LuneControlNode.create
 func Nodes_LuneControlNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) *Nodes_LuneControlNode {
     var node *Nodes_LuneControlNode
@@ -16203,17 +7534,6 @@ func (self *Nodes_MatchNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.MatchNode.canBeStatement
 func (self *Nodes_MatchNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_MatchNode) InitNodes_MatchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) {
-    self.InitNodes_Node(_env, managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
-    self.idInNS = idInNS
-    self.val = val
-    self.algeTypeInfo = algeTypeInfo
-    self.caseList = caseList
-    self.defaultBlock = defaultBlock
-    self.caseKind = caseKind
-    self.failSafeDefault = failSafeDefault
 }
 // 740: decl @lune.@base.@Nodes.MatchNode.create
 func Nodes_MatchNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_MatchNode {
@@ -16389,11 +7709,6 @@ func (self *Nodes_LuneKindNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LuneKindNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LuneKindNode) InitNodes_LuneKindNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 72, pos, inTestBlock, macroArgFlag, typeList)
-    self.exp = exp
-}
 // 740: decl @lune.@base.@Nodes.LuneKindNode.create
 func Nodes_LuneKindNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_LuneKindNode {
     var node *Nodes_LuneKindNode
@@ -16438,11 +7753,6 @@ func (self *Nodes_DeclMacroNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_DeclMacroNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_DeclMacroNode) InitNodes_DeclMacroNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) {
-    self.InitNodes_Node(_env, managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
-    self.declInfo = declInfo
-}
 // 740: decl @lune.@base.@Nodes.DeclMacroNode.create
 func Nodes_DeclMacroNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
     var node *Nodes_DeclMacroNode
@@ -16470,14 +7780,6 @@ func (self *Nodes_TestCaseNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.TestCaseNode.canBeStatement
 func (self *Nodes_TestCaseNode) CanBeStatement(_env *LnsEnv) bool {
     return true
-}
-// 734: DeclConstr
-func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) {
-    self.InitNodes_Node(_env, managerId, id, 74, pos, inTestBlock, macroArgFlag, typeList)
-    self.name = name
-    self.impNode = impNode
-    self.ctrlName = ctrlName
-    self.block = block
 }
 // 740: decl @lune.@base.@Nodes.TestCaseNode.create
 func Nodes_TestCaseNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) *Nodes_TestCaseNode {
@@ -16539,11 +7841,6 @@ func (self *Nodes_TestBlockNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_TestBlockNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
-// 734: DeclConstr
-func (self *Nodes_TestBlockNode) InitNodes_TestBlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 75, pos, inTestBlock, macroArgFlag, typeList)
-    self.stmtList = stmtList
-}
 // 740: decl @lune.@base.@Nodes.TestBlockNode.create
 func Nodes_TestBlockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_TestBlockNode {
     var node *Nodes_TestBlockNode
@@ -16602,10 +7899,6 @@ func (self *Nodes_AbbrNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_AbbrNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_AbbrNode) InitNodes_AbbrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
-}
 // 740: decl @lune.@base.@Nodes.AbbrNode.create
 func Nodes_AbbrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_AbbrNode {
     var node *Nodes_AbbrNode
@@ -16633,11 +7926,6 @@ func (self *Nodes_BoxingNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.BoxingNode.canBeStatement
 func (self *Nodes_BoxingNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_BoxingNode) InitNodes_BoxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 77, pos, inTestBlock, macroArgFlag, typeList)
-    self.src = src
 }
 // 740: decl @lune.@base.@Nodes.BoxingNode.create
 func Nodes_BoxingNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_BoxingNode {
@@ -16683,11 +7971,6 @@ func (self *Nodes_UnboxingNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_UnboxingNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_UnboxingNode) InitNodes_UnboxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
-    self.InitNodes_Node(_env, managerId, id, 78, pos, inTestBlock, macroArgFlag, typeList)
-    self.src = src
-}
 // 740: decl @lune.@base.@Nodes.UnboxingNode.create
 func Nodes_UnboxingNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_UnboxingNode {
     var node *Nodes_UnboxingNode
@@ -16732,10 +8015,6 @@ func (self *Nodes_LiteralNilNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralNilNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralNilNode) InitNodes_LiteralNilNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 79, pos, inTestBlock, macroArgFlag, typeList)
-}
 // 740: decl @lune.@base.@Nodes.LiteralNilNode.create
 func Nodes_LiteralNilNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_LiteralNilNode {
     var node *Nodes_LiteralNilNode
@@ -16772,12 +8051,6 @@ func (self *Nodes_LiteralCharNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.LiteralCharNode.canBeStatement
 func (self *Nodes_LiteralCharNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
-    self.InitNodes_Node(_env, managerId, id, 80, pos, inTestBlock, macroArgFlag, typeList)
-    self.token = token
-    self.num = num
 }
 // 740: decl @lune.@base.@Nodes.LiteralCharNode.create
 func Nodes_LiteralCharNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralCharNode {
@@ -16816,12 +8089,6 @@ func (self *Nodes_LiteralIntNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralIntNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
-    self.InitNodes_Node(_env, managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
-    self.token = token
-    self.num = num
-}
 // 740: decl @lune.@base.@Nodes.LiteralIntNode.create
 func Nodes_LiteralIntNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralIntNode {
     var node *Nodes_LiteralIntNode
@@ -16859,12 +8126,6 @@ func (self *Nodes_LiteralRealNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralRealNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) {
-    self.InitNodes_Node(_env, managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
-    self.token = token
-    self.num = num
-}
 // 740: decl @lune.@base.@Nodes.LiteralRealNode.create
 func Nodes_LiteralRealNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) *Nodes_LiteralRealNode {
     var node *Nodes_LiteralRealNode
@@ -16901,11 +8162,6 @@ func (self *Nodes_LiteralArrayNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.LiteralArrayNode.canBeStatement
 func (self *Nodes_LiteralArrayNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_LiteralArrayNode) InitNodes_LiteralArrayNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
-    self.expList = expList
 }
 // 740: decl @lune.@base.@Nodes.LiteralArrayNode.create
 func Nodes_LiteralArrayNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralArrayNode {
@@ -17001,11 +8257,6 @@ func (self *Nodes_LiteralListNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralListNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralListNode) InitNodes_LiteralListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
-    self.expList = expList
-}
 // 740: decl @lune.@base.@Nodes.LiteralListNode.create
 func Nodes_LiteralListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralListNode {
     var node *Nodes_LiteralListNode
@@ -17100,11 +8351,6 @@ func (self *Nodes_LiteralSetNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralSetNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralSetNode) InitNodes_LiteralSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
-    self.expList = expList
-}
 // 740: decl @lune.@base.@Nodes.LiteralSetNode.create
 func Nodes_LiteralSetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralSetNode {
     var node *Nodes_LiteralSetNode
@@ -17198,12 +8444,6 @@ func (self *Nodes_LiteralMapNode) CanBeLeft(_env *LnsEnv) bool {
 // 1: decl @lune.@base.@Nodes.LiteralMapNode.canBeStatement
 func (self *Nodes_LiteralMapNode) CanBeStatement(_env *LnsEnv) bool {
     return false
-}
-// 734: DeclConstr
-func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) {
-    self.InitNodes_Node(_env, managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
-    self._map = _map
-    self.pairList = pairList
 }
 // 740: decl @lune.@base.@Nodes.LiteralMapNode.create
 func Nodes_LiteralMapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) *Nodes_LiteralMapNode {
@@ -17347,13 +8587,6 @@ func (self *Nodes_LiteralStringNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralStringNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) {
-    self.InitNodes_Node(_env, managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
-    self.token = token
-    self.orgParam = orgParam
-    self.dddParam = dddParam
-}
 // 740: decl @lune.@base.@Nodes.LiteralStringNode.create
 func Nodes_LiteralStringNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) *Nodes_LiteralStringNode {
     var node *Nodes_LiteralStringNode
@@ -17479,11 +8712,6 @@ func (self *Nodes_LiteralBoolNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralBoolNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralBoolNode) InitNodes_LiteralBoolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
-    self.InitNodes_Node(_env, managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
-    self.token = token
-}
 // 740: decl @lune.@base.@Nodes.LiteralBoolNode.create
 func Nodes_LiteralBoolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralBoolNode {
     var node *Nodes_LiteralBoolNode
@@ -17521,11 +8749,6 @@ func (self *Nodes_LiteralSymbolNode) CanBeLeft(_env *LnsEnv) bool {
 func (self *Nodes_LiteralSymbolNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
-// 734: DeclConstr
-func (self *Nodes_LiteralSymbolNode) InitNodes_LiteralSymbolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
-    self.InitNodes_Node(_env, managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
-    self.token = token
-}
 // 740: decl @lune.@base.@Nodes.LiteralSymbolNode.create
 func Nodes_LiteralSymbolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralSymbolNode {
     var node *Nodes_LiteralSymbolNode
@@ -17558,6 +8781,8633 @@ func (self *Nodes_DefMacroInfo) GetArgList(_env *LnsEnv) *LnsList {
 func (self *Nodes_DefMacroInfo) GetTokenList(_env *LnsEnv) *LnsList {
     return self.DeclInfo.FP.Get_tokenList(_env)
 }
+// 2906: decl @lune.@base.@Nodes.ExportInfo.assign
+func (self *Nodes_ExportInfo) Assign(_env *LnsEnv, assignName string) *FrontInterface_ExportInfo {
+    var info *Nodes_ExportInfo
+    info = NewNodes_ExportInfo(_env, self.FP.Get_moduleTypeInfo(_env), self.FP.Get_provideInfo(_env), self.FP.Get_processInfo(_env), self.FP.Get_globalSymbolList(_env), self.FP.Get_importedAliasMap(_env), self.FP.Get_moduleId(_env), self.FP.Get_fullName(_env), assignName, self.FP.Get_streamName(_env), NewLnsMap( map[LnsAny]LnsAny{}), self.typeId2DefMacroInfo)
+    info.FP.Set_importId2localTypeInfoMap(_env, self.FP.Get_importId2localTypeInfoMap(_env))
+    return &info.FrontInterface_ExportInfo
+}
+// declaration Class -- SimpleModuleInfoManager
+type Nodes_SimpleModuleInfoManagerMtd interface {
+    GetModuleInfo(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny
+    Pop(_env *LnsEnv)
+    Push(_env *LnsEnv, arg1 Ast_ModuleInfoManager)
+}
+type Nodes_SimpleModuleInfoManager struct {
+    ModuleInfoManager Ast_ModuleInfoManager
+    moduleInfoManagerHist *LnsList
+    FP Nodes_SimpleModuleInfoManagerMtd
+}
+func Nodes_SimpleModuleInfoManager2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_SimpleModuleInfoManager).FP
+}
+type Nodes_SimpleModuleInfoManagerDownCast interface {
+    ToNodes_SimpleModuleInfoManager() *Nodes_SimpleModuleInfoManager
+}
+func Nodes_SimpleModuleInfoManagerDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_SimpleModuleInfoManagerDownCast)
+    if ok { return work.ToNodes_SimpleModuleInfoManager() }
+    return nil
+}
+func (obj *Nodes_SimpleModuleInfoManager) ToNodes_SimpleModuleInfoManager() *Nodes_SimpleModuleInfoManager {
+    return obj
+}
+func NewNodes_SimpleModuleInfoManager(_env *LnsEnv, arg1 LnsAny) *Nodes_SimpleModuleInfoManager {
+    obj := &Nodes_SimpleModuleInfoManager{}
+    obj.FP = obj
+    obj.InitNodes_SimpleModuleInfoManager(_env, arg1)
+    return obj
+}
+// advertise -- 35
+func (self *Nodes_SimpleModuleInfoManager) GetModuleInfo(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny {
+    return self.ModuleInfoManager. GetModuleInfo( _env, arg1)
+}
+// 40: DeclConstr
+func (self *Nodes_SimpleModuleInfoManager) InitNodes_SimpleModuleInfoManager(_env *LnsEnv, moduleInfoManager LnsAny) {
+    if moduleInfoManager != nil{
+        moduleInfoManager_21 := moduleInfoManager.(Ast_ModuleInfoManager)
+        self.ModuleInfoManager = moduleInfoManager_21
+    } else {
+        self.ModuleInfoManager = Ast_DummyModuleInfoManager_get_instance(_env).FP
+    }
+    self.moduleInfoManagerHist = NewLnsList([]LnsAny{})
+}
+
+
+// declaration Class -- Filter
+type Nodes_FilterMtd interface {
+    DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
+    GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
+    Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
+    Get_optStack(_env *LnsEnv) *LnsList
+    Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
+    popOpt(_env *LnsEnv, arg1 LnsAny)
+    ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
+    ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
+    ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
+    ProcessAsyncLock(_env *LnsEnv, arg1 *Nodes_AsyncLockNode, arg2 LnsAny)
+    ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
+    ProcessBlock(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
+    ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
+    ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
+    ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
+    ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
+    ProcessDeclArg(_env *LnsEnv, arg1 *Nodes_DeclArgNode, arg2 LnsAny)
+    ProcessDeclArgDDD(_env *LnsEnv, arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
+    ProcessDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 LnsAny)
+    ProcessDeclConstr(_env *LnsEnv, arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
+    ProcessDeclDestr(_env *LnsEnv, arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
+    ProcessDeclEnum(_env *LnsEnv, arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
+    ProcessDeclForm(_env *LnsEnv, arg1 *Nodes_DeclFormNode, arg2 LnsAny)
+    ProcessDeclFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
+    ProcessDeclMacro(_env *LnsEnv, arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
+    ProcessDeclMember(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
+    ProcessDeclMethod(_env *LnsEnv, arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
+    ProcessDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 LnsAny)
+    ProcessExpAccessMRet(_env *LnsEnv, arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
+    ProcessExpCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsAny)
+    ProcessExpCallSuper(_env *LnsEnv, arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
+    ProcessExpCallSuperCtor(_env *LnsEnv, arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
+    ProcessExpCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode, arg2 LnsAny)
+    ProcessExpList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 LnsAny)
+    ProcessExpMRet(_env *LnsEnv, arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
+    ProcessExpMacroArgExp(_env *LnsEnv, arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
+    ProcessExpMacroExp(_env *LnsEnv, arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
+    ProcessExpMacroStat(_env *LnsEnv, arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
+    ProcessExpMacroStatList(_env *LnsEnv, arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
+    ProcessExpMultiTo1(_env *LnsEnv, arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
+    ProcessExpNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode, arg2 LnsAny)
+    ProcessExpOmitEnum(_env *LnsEnv, arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
+    ProcessExpOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
+    ProcessExpOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
+    ProcessExpParen(_env *LnsEnv, arg1 *Nodes_ExpParenNode, arg2 LnsAny)
+    ProcessExpRef(_env *LnsEnv, arg1 *Nodes_ExpRefNode, arg2 LnsAny)
+    ProcessExpRefItem(_env *LnsEnv, arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
+    ProcessExpSetItem(_env *LnsEnv, arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
+    ProcessExpSetVal(_env *LnsEnv, arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
+    ProcessExpSubDDD(_env *LnsEnv, arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
+    ProcessExpToDDD(_env *LnsEnv, arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
+    ProcessExpUnwrap(_env *LnsEnv, arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
+    ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
+    ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
+    ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
+    ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
+    ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
+    ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
+    ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
+    ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
+    ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
+    ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
+    ProcessLiteralInt(_env *LnsEnv, arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
+    ProcessLiteralList(_env *LnsEnv, arg1 *Nodes_LiteralListNode, arg2 LnsAny)
+    ProcessLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
+    ProcessLiteralNil(_env *LnsEnv, arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
+    ProcessLiteralReal(_env *LnsEnv, arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
+    ProcessLiteralSet(_env *LnsEnv, arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
+    ProcessLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
+    ProcessLiteralSymbol(_env *LnsEnv, arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
+    ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
+    ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
+    ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
+    ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
+    ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
+    ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
+    ProcessProtoMethod(_env *LnsEnv, arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
+    ProcessProvide(_env *LnsEnv, arg1 *Nodes_ProvideNode, arg2 LnsAny)
+    ProcessRefField(_env *LnsEnv, arg1 *Nodes_RefFieldNode, arg2 LnsAny)
+    ProcessRefType(_env *LnsEnv, arg1 *Nodes_RefTypeNode, arg2 LnsAny)
+    ProcessRepeat(_env *LnsEnv, arg1 *Nodes_RepeatNode, arg2 LnsAny)
+    ProcessRequest(_env *LnsEnv, arg1 *Nodes_RequestNode, arg2 LnsAny)
+    ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
+    ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
+    ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
+    ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
+    ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
+    ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
+    ProcessSwitch(_env *LnsEnv, arg1 *Nodes_SwitchNode, arg2 LnsAny)
+    ProcessTestBlock(_env *LnsEnv, arg1 *Nodes_TestBlockNode, arg2 LnsAny)
+    ProcessTestCase(_env *LnsEnv, arg1 *Nodes_TestCaseNode, arg2 LnsAny)
+    ProcessUnboxing(_env *LnsEnv, arg1 *Nodes_UnboxingNode, arg2 LnsAny)
+    ProcessUnwrapSet(_env *LnsEnv, arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
+    ProcessWhen(_env *LnsEnv, arg1 *Nodes_WhenNode, arg2 LnsAny)
+    ProcessWhile(_env *LnsEnv, arg1 *Nodes_WhileNode, arg2 LnsAny)
+    pushOpt(_env *LnsEnv, arg1 LnsAny)
+}
+type Nodes_Filter struct {
+    moduleInfoManager *Nodes_SimpleModuleInfoManager
+    typeNameCtrl *Ast_TypeNameCtrl
+    errorOnDefault bool
+    optStack *LnsList
+    FP Nodes_FilterMtd
+}
+func Nodes_Filter2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_Filter).FP
+}
+type Nodes_FilterDownCast interface {
+    ToNodes_Filter() *Nodes_Filter
+}
+func Nodes_FilterDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_FilterDownCast)
+    if ok { return work.ToNodes_Filter() }
+    return nil
+}
+func (obj *Nodes_Filter) ToNodes_Filter() *Nodes_Filter {
+    return obj
+}
+func NewNodes_Filter(_env *LnsEnv, arg1 bool, arg2 LnsAny, arg3 LnsAny) *Nodes_Filter {
+    obj := &Nodes_Filter{}
+    obj.FP = obj
+    obj.InitNodes_Filter(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *Nodes_Filter) Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl{ return self.typeNameCtrl }
+func (self *Nodes_Filter) Get_optStack(_env *LnsEnv) *LnsList{ return self.optStack }
+// 69: DeclConstr
+func (self *Nodes_Filter) InitNodes_Filter(_env *LnsEnv, errorOnDefault bool,moduleTypeInfo LnsAny,moduleInfoManager LnsAny) {
+    self.errorOnDefault = errorOnDefault
+    self.moduleInfoManager = NewNodes_SimpleModuleInfoManager(_env, moduleInfoManager)
+    var process func(_env *LnsEnv) *Ast_TypeNameCtrl
+    process = func(_env *LnsEnv) *Ast_TypeNameCtrl {
+        if moduleTypeInfo != nil{
+            moduleTypeInfo_51 := moduleTypeInfo.(*Ast_TypeInfo)
+            return NewAst_TypeNameCtrl(_env, moduleTypeInfo_51)
+        }
+        return Ast_defaultTypeNameCtrl
+    }
+    self.typeNameCtrl = process(_env)
+    self.optStack = NewLnsList([]LnsAny{})
+}
+
+
+
+// declaration Class -- Node
+type Nodes_NodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_Node struct {
+    managerId LnsInt
+    id LnsInt
+    kind LnsInt
+    pos *Types_Position
+    expTypeList *LnsList
+    commentList LnsAny
+    tailComment LnsAny
+    IsLValue bool
+    macroArgFlag bool
+    inTestBlock bool
+    FP Nodes_NodeMtd
+}
+func Nodes_Node2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_Node).FP
+}
+type Nodes_NodeDownCast interface {
+    ToNodes_Node() *Nodes_Node
+}
+func Nodes_NodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_NodeDownCast)
+    if ok { return work.ToNodes_Node() }
+    return nil
+}
+func (obj *Nodes_Node) ToNodes_Node() *Nodes_Node {
+    return obj
+}
+func (self *Nodes_Node) Get_kind(_env *LnsEnv) LnsInt{ return self.kind }
+func (self *Nodes_Node) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+func (self *Nodes_Node) Get_expTypeList(_env *LnsEnv) *LnsList{ return self.expTypeList }
+func (self *Nodes_Node) Get_commentList(_env *LnsEnv) LnsAny{ return self.commentList }
+func (self *Nodes_Node) Get_tailComment(_env *LnsEnv) LnsAny{ return self.tailComment }
+func (self *Nodes_Node) Set_tailComment(_env *LnsEnv, arg1 LnsAny){ self.tailComment = arg1 }
+func (self *Nodes_Node) Get_isLValue(_env *LnsEnv) bool{ return self.IsLValue }
+func (self *Nodes_Node) Get_macroArgFlag(_env *LnsEnv) bool{ return self.macroArgFlag }
+func (self *Nodes_Node) Get_inTestBlock(_env *LnsEnv) bool{ return self.inTestBlock }
+// 271: DeclConstr
+func (self *Nodes_Node) InitNodes_Node(_env *LnsEnv, managerId LnsInt,id LnsInt,kind LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,expTypeList *LnsList) {
+    self.IsLValue = false
+    self.managerId = managerId
+    self.id = id
+    self.kind = kind
+    self.pos = pos
+    self.inTestBlock = inTestBlock
+    self.expTypeList = expTypeList
+    self.commentList = nil
+    self.tailComment = nil
+    self.macroArgFlag = macroArgFlag
+}
+
+
+
+
+// declaration Class -- NamespaceInfo
+type Nodes_NamespaceInfoMtd interface {
+}
+type Nodes_NamespaceInfo struct {
+    Name string
+    Scope *Ast_Scope
+    TypeInfo *Ast_TypeInfo
+    FP Nodes_NamespaceInfoMtd
+}
+func Nodes_NamespaceInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_NamespaceInfo).FP
+}
+type Nodes_NamespaceInfoDownCast interface {
+    ToNodes_NamespaceInfo() *Nodes_NamespaceInfo
+}
+func Nodes_NamespaceInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_NamespaceInfoDownCast)
+    if ok { return work.ToNodes_NamespaceInfo() }
+    return nil
+}
+func (obj *Nodes_NamespaceInfo) ToNodes_NamespaceInfo() *Nodes_NamespaceInfo {
+    return obj
+}
+func NewNodes_NamespaceInfo(_env *LnsEnv, arg1 string, arg2 *Ast_Scope, arg3 *Ast_TypeInfo) *Nodes_NamespaceInfo {
+    obj := &Nodes_NamespaceInfo{}
+    obj.FP = obj
+    obj.InitNodes_NamespaceInfo(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *Nodes_NamespaceInfo) InitNodes_NamespaceInfo(_env *LnsEnv, arg1 string, arg2 *Ast_Scope, arg3 *Ast_TypeInfo) {
+    self.Name = arg1
+    self.Scope = arg2
+    self.TypeInfo = arg3
+}
+
+// declaration Class -- DeclMacroInfo
+type Nodes_DeclMacroInfoMtd interface {
+    Get_argList(_env *LnsEnv) *LnsList
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_pubFlag(_env *LnsEnv) bool
+    Get_stmtBlock(_env *LnsEnv) LnsAny
+    Get_tokenList(_env *LnsEnv) *LnsList
+}
+type Nodes_DeclMacroInfo struct {
+    pubFlag bool
+    name *Types_Token
+    argList *LnsList
+    stmtBlock LnsAny
+    tokenList *LnsList
+    FP Nodes_DeclMacroInfoMtd
+}
+func Nodes_DeclMacroInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclMacroInfo).FP
+}
+type Nodes_DeclMacroInfoDownCast interface {
+    ToNodes_DeclMacroInfo() *Nodes_DeclMacroInfo
+}
+func Nodes_DeclMacroInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclMacroInfoDownCast)
+    if ok { return work.ToNodes_DeclMacroInfo() }
+    return nil
+}
+func (obj *Nodes_DeclMacroInfo) ToNodes_DeclMacroInfo() *Nodes_DeclMacroInfo {
+    return obj
+}
+func NewNodes_DeclMacroInfo(_env *LnsEnv, arg1 bool, arg2 *Types_Token, arg3 *LnsList, arg4 LnsAny, arg5 *LnsList) *Nodes_DeclMacroInfo {
+    obj := &Nodes_DeclMacroInfo{}
+    obj.FP = obj
+    obj.InitNodes_DeclMacroInfo(_env, arg1, arg2, arg3, arg4, arg5)
+    return obj
+}
+func (self *Nodes_DeclMacroInfo) InitNodes_DeclMacroInfo(_env *LnsEnv, arg1 bool, arg2 *Types_Token, arg3 *LnsList, arg4 LnsAny, arg5 *LnsList) {
+    self.pubFlag = arg1
+    self.name = arg2
+    self.argList = arg3
+    self.stmtBlock = arg4
+    self.tokenList = arg5
+}
+func (self *Nodes_DeclMacroInfo) Get_pubFlag(_env *LnsEnv) bool{ return self.pubFlag }
+func (self *Nodes_DeclMacroInfo) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_DeclMacroInfo) Get_argList(_env *LnsEnv) *LnsList{ return self.argList }
+func (self *Nodes_DeclMacroInfo) Get_stmtBlock(_env *LnsEnv) LnsAny{ return self.stmtBlock }
+func (self *Nodes_DeclMacroInfo) Get_tokenList(_env *LnsEnv) *LnsList{ return self.tokenList }
+
+// declaration Class -- NodeManager
+type Nodes_NodeManagerMtd interface {
+    MultiTo1(_env *LnsEnv, arg1 *Nodes_Node) *Nodes_Node
+    AddFrom(_env *LnsEnv, arg1 *Nodes_NodeManager)
+    AddNode(_env *LnsEnv, arg1 *Nodes_Node)
+    DelNode(_env *LnsEnv, arg1 *Nodes_Node)
+    GetAbbrNodeList(_env *LnsEnv) *LnsList
+    GetAliasNodeList(_env *LnsEnv) *LnsList
+    GetApplyNodeList(_env *LnsEnv) *LnsList
+    GetAsyncLockNodeList(_env *LnsEnv) *LnsList
+    GetBlankLineNodeList(_env *LnsEnv) *LnsList
+    GetBlockNodeList(_env *LnsEnv) *LnsList
+    GetBoxingNodeList(_env *LnsEnv) *LnsList
+    GetBreakNodeList(_env *LnsEnv) *LnsList
+    GetConvStatNodeList(_env *LnsEnv) *LnsList
+    GetDeclAdvertiseNodeList(_env *LnsEnv) *LnsList
+    GetDeclAlgeNodeList(_env *LnsEnv) *LnsList
+    GetDeclArgDDDNodeList(_env *LnsEnv) *LnsList
+    GetDeclArgNodeList(_env *LnsEnv) *LnsList
+    GetDeclClassNodeList(_env *LnsEnv) *LnsList
+    GetDeclConstrNodeList(_env *LnsEnv) *LnsList
+    GetDeclDestrNodeList(_env *LnsEnv) *LnsList
+    GetDeclEnumNodeList(_env *LnsEnv) *LnsList
+    GetDeclFormNodeList(_env *LnsEnv) *LnsList
+    GetDeclFuncNodeList(_env *LnsEnv) *LnsList
+    GetDeclMacroNodeList(_env *LnsEnv) *LnsList
+    GetDeclMemberNodeList(_env *LnsEnv) *LnsList
+    GetDeclMethodNodeList(_env *LnsEnv) *LnsList
+    GetDeclVarNodeList(_env *LnsEnv) *LnsList
+    GetExpAccessMRetNodeList(_env *LnsEnv) *LnsList
+    GetExpCallNodeList(_env *LnsEnv) *LnsList
+    GetExpCallSuperCtorNodeList(_env *LnsEnv) *LnsList
+    GetExpCallSuperNodeList(_env *LnsEnv) *LnsList
+    GetExpCastNodeList(_env *LnsEnv) *LnsList
+    GetExpListNodeList(_env *LnsEnv) *LnsList
+    GetExpMRetNodeList(_env *LnsEnv) *LnsList
+    GetExpMacroArgExpNodeList(_env *LnsEnv) *LnsList
+    GetExpMacroExpNodeList(_env *LnsEnv) *LnsList
+    GetExpMacroStatListNodeList(_env *LnsEnv) *LnsList
+    GetExpMacroStatNodeList(_env *LnsEnv) *LnsList
+    GetExpMultiTo1NodeList(_env *LnsEnv) *LnsList
+    GetExpNewNodeList(_env *LnsEnv) *LnsList
+    GetExpOmitEnumNodeList(_env *LnsEnv) *LnsList
+    GetExpOp1NodeList(_env *LnsEnv) *LnsList
+    GetExpOp2NodeList(_env *LnsEnv) *LnsList
+    GetExpParenNodeList(_env *LnsEnv) *LnsList
+    GetExpRefItemNodeList(_env *LnsEnv) *LnsList
+    GetExpRefNodeList(_env *LnsEnv) *LnsList
+    GetExpSetItemNodeList(_env *LnsEnv) *LnsList
+    GetExpSetValNodeList(_env *LnsEnv) *LnsList
+    GetExpSubDDDNodeList(_env *LnsEnv) *LnsList
+    GetExpToDDDNodeList(_env *LnsEnv) *LnsList
+    GetExpUnwrapNodeList(_env *LnsEnv) *LnsList
+    GetForNodeList(_env *LnsEnv) *LnsList
+    GetForeachNodeList(_env *LnsEnv) *LnsList
+    GetForsortNodeList(_env *LnsEnv) *LnsList
+    GetGetFieldNodeList(_env *LnsEnv) *LnsList
+    GetIfNodeList(_env *LnsEnv) *LnsList
+    GetIfUnwrapNodeList(_env *LnsEnv) *LnsList
+    GetImportNodeList(_env *LnsEnv) *LnsList
+    GetList(_env *LnsEnv, arg1 LnsInt) *LnsList
+    GetLiteralArrayNodeList(_env *LnsEnv) *LnsList
+    GetLiteralBoolNodeList(_env *LnsEnv) *LnsList
+    GetLiteralCharNodeList(_env *LnsEnv) *LnsList
+    GetLiteralIntNodeList(_env *LnsEnv) *LnsList
+    GetLiteralListNodeList(_env *LnsEnv) *LnsList
+    GetLiteralMapNodeList(_env *LnsEnv) *LnsList
+    GetLiteralNilNodeList(_env *LnsEnv) *LnsList
+    GetLiteralRealNodeList(_env *LnsEnv) *LnsList
+    GetLiteralSetNodeList(_env *LnsEnv) *LnsList
+    GetLiteralStringNodeList(_env *LnsEnv) *LnsList
+    GetLiteralSymbolNodeList(_env *LnsEnv) *LnsList
+    GetLuneControlNodeList(_env *LnsEnv) *LnsList
+    GetLuneKindNodeList(_env *LnsEnv) *LnsList
+    GetMatchNodeList(_env *LnsEnv) *LnsList
+    GetNewAlgeValNodeList(_env *LnsEnv) *LnsList
+    GetNoneNodeList(_env *LnsEnv) *LnsList
+    GetProtoClassNodeList(_env *LnsEnv) *LnsList
+    GetProtoMethodNodeList(_env *LnsEnv) *LnsList
+    GetProvideNodeList(_env *LnsEnv) *LnsList
+    GetRefFieldNodeList(_env *LnsEnv) *LnsList
+    GetRefTypeNodeList(_env *LnsEnv) *LnsList
+    GetRepeatNodeList(_env *LnsEnv) *LnsList
+    GetRequestNodeList(_env *LnsEnv) *LnsList
+    GetReturnNodeList(_env *LnsEnv) *LnsList
+    GetRootNodeList(_env *LnsEnv) *LnsList
+    GetScopeNodeList(_env *LnsEnv) *LnsList
+    GetShebangNodeList(_env *LnsEnv) *LnsList
+    GetStmtExpNodeList(_env *LnsEnv) *LnsList
+    GetSubfileNodeList(_env *LnsEnv) *LnsList
+    GetSwitchNodeList(_env *LnsEnv) *LnsList
+    GetTestBlockNodeList(_env *LnsEnv) *LnsList
+    GetTestCaseNodeList(_env *LnsEnv) *LnsList
+    GetUnboxingNodeList(_env *LnsEnv) *LnsList
+    GetUnwrapSetNodeList(_env *LnsEnv) *LnsList
+    GetWhenNodeList(_env *LnsEnv) *LnsList
+    GetWhileNodeList(_env *LnsEnv) *LnsList
+    Get_managerId(_env *LnsEnv) LnsInt
+    NextId(_env *LnsEnv) LnsInt
+    Set_managerId(_env *LnsEnv, arg1 LnsInt)
+}
+type Nodes_NodeManager struct {
+    nodeKind2NodeList *LnsMap
+    idSeed LnsInt
+    managerId LnsInt
+    FP Nodes_NodeManagerMtd
+}
+func Nodes_NodeManager2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_NodeManager).FP
+}
+type Nodes_NodeManagerDownCast interface {
+    ToNodes_NodeManager() *Nodes_NodeManager
+}
+func Nodes_NodeManagerDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_NodeManagerDownCast)
+    if ok { return work.ToNodes_NodeManager() }
+    return nil
+}
+func (obj *Nodes_NodeManager) ToNodes_NodeManager() *Nodes_NodeManager {
+    return obj
+}
+func NewNodes_NodeManager(_env *LnsEnv) *Nodes_NodeManager {
+    obj := &Nodes_NodeManager{}
+    obj.FP = obj
+    obj.InitNodes_NodeManager(_env)
+    return obj
+}
+func (self *Nodes_NodeManager) Get_managerId(_env *LnsEnv) LnsInt{ return self.managerId }
+func (self *Nodes_NodeManager) Set_managerId(_env *LnsEnv, arg1 LnsInt){ self.managerId = arg1 }
+// 469: DeclConstr
+func (self *Nodes_NodeManager) InitNodes_NodeManager(_env *LnsEnv) {
+    self.managerId = 0
+    self.idSeed = 0
+    self.nodeKind2NodeList = NewLnsMap( map[LnsAny]LnsAny{})
+    for _kind, _ := range( Nodes_nodeKind2NameMap.Items ) {
+        kind := _kind.(LnsInt)
+        if Lns_op_not(self.nodeKind2NodeList.Get(kind)){
+            self.nodeKind2NodeList.Set(kind,NewLnsList([]LnsAny{}))
+        }
+    }
+}
+
+
+// declaration Class -- NodeKind
+type Nodes_NodeKindMtd interface {
+}
+type Nodes_NodeKind struct {
+    FP Nodes_NodeKindMtd
+}
+func Nodes_NodeKind2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_NodeKind).FP
+}
+type Nodes_NodeKindDownCast interface {
+    ToNodes_NodeKind() *Nodes_NodeKind
+}
+func Nodes_NodeKindDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_NodeKindDownCast)
+    if ok { return work.ToNodes_NodeKind() }
+    return nil
+}
+func (obj *Nodes_NodeKind) ToNodes_NodeKind() *Nodes_NodeKind {
+    return obj
+}
+func NewNodes_NodeKind(_env *LnsEnv) *Nodes_NodeKind {
+    obj := &Nodes_NodeKind{}
+    obj.FP = obj
+    obj.InitNodes_NodeKind(_env)
+    return obj
+}
+func (self *Nodes_NodeKind) InitNodes_NodeKind(_env *LnsEnv) {
+}
+
+// declaration Class -- NoneNode
+type Nodes_NoneNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_NoneNode struct {
+    Nodes_Node
+    FP Nodes_NoneNodeMtd
+}
+func Nodes_NoneNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_NoneNode).FP
+}
+type Nodes_NoneNodeDownCast interface {
+    ToNodes_NoneNode() *Nodes_NoneNode
+}
+func Nodes_NoneNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_NoneNodeDownCast)
+    if ok { return work.ToNodes_NoneNode() }
+    return nil
+}
+func (obj *Nodes_NoneNode) ToNodes_NoneNode() *Nodes_NoneNode {
+    return obj
+}
+func NewNodes_NoneNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_NoneNode {
+    obj := &Nodes_NoneNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_NoneNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
+    return obj
+}
+// 734: DeclConstr
+func (self *Nodes_NoneNode) InitNodes_NoneNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 0, pos, inTestBlock, macroArgFlag, typeList)
+}
+
+
+// declaration Class -- ShebangNode
+type Nodes_ShebangNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_cmd(_env *LnsEnv) string
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ShebangNode struct {
+    Nodes_Node
+    cmd string
+    FP Nodes_ShebangNodeMtd
+}
+func Nodes_ShebangNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ShebangNode).FP
+}
+type Nodes_ShebangNodeDownCast interface {
+    ToNodes_ShebangNode() *Nodes_ShebangNode
+}
+func Nodes_ShebangNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ShebangNodeDownCast)
+    if ok { return work.ToNodes_ShebangNode() }
+    return nil
+}
+func (obj *Nodes_ShebangNode) ToNodes_ShebangNode() *Nodes_ShebangNode {
+    return obj
+}
+func NewNodes_ShebangNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ShebangNode {
+    obj := &Nodes_ShebangNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ShebangNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ShebangNode) Get_cmd(_env *LnsEnv) string{ return self.cmd }
+// 734: DeclConstr
+func (self *Nodes_ShebangNode) InitNodes_ShebangNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) {
+    self.InitNodes_Node(_env, managerId, id, 1, pos, inTestBlock, macroArgFlag, typeList)
+    self.cmd = cmd
+}
+
+
+// declaration Class -- ConvStatNode
+type Nodes_ConvStatNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_txt(_env *LnsEnv) string
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ConvStatNode struct {
+    Nodes_Node
+    txt string
+    FP Nodes_ConvStatNodeMtd
+}
+func Nodes_ConvStatNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ConvStatNode).FP
+}
+type Nodes_ConvStatNodeDownCast interface {
+    ToNodes_ConvStatNode() *Nodes_ConvStatNode
+}
+func Nodes_ConvStatNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ConvStatNodeDownCast)
+    if ok { return work.ToNodes_ConvStatNode() }
+    return nil
+}
+func (obj *Nodes_ConvStatNode) ToNodes_ConvStatNode() *Nodes_ConvStatNode {
+    return obj
+}
+func NewNodes_ConvStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ConvStatNode {
+    obj := &Nodes_ConvStatNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ConvStatNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ConvStatNode) Get_txt(_env *LnsEnv) string{ return self.txt }
+// 734: DeclConstr
+func (self *Nodes_ConvStatNode) InitNodes_ConvStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) {
+    self.InitNodes_Node(_env, managerId, id, 2, pos, inTestBlock, macroArgFlag, typeList)
+    self.txt = txt
+}
+
+
+// declaration Class -- BlankLineNode
+type Nodes_BlankLineNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_lineNum(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_BlankLineNode struct {
+    Nodes_Node
+    lineNum LnsInt
+    FP Nodes_BlankLineNodeMtd
+}
+func Nodes_BlankLineNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_BlankLineNode).FP
+}
+type Nodes_BlankLineNodeDownCast interface {
+    ToNodes_BlankLineNode() *Nodes_BlankLineNode
+}
+func Nodes_BlankLineNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_BlankLineNodeDownCast)
+    if ok { return work.ToNodes_BlankLineNode() }
+    return nil
+}
+func (obj *Nodes_BlankLineNode) ToNodes_BlankLineNode() *Nodes_BlankLineNode {
+    return obj
+}
+func NewNodes_BlankLineNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt) *Nodes_BlankLineNode {
+    obj := &Nodes_BlankLineNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_BlankLineNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_BlankLineNode) Get_lineNum(_env *LnsEnv) LnsInt{ return self.lineNum }
+// 734: DeclConstr
+func (self *Nodes_BlankLineNode) InitNodes_BlankLineNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) {
+    self.InitNodes_Node(_env, managerId, id, 3, pos, inTestBlock, macroArgFlag, typeList)
+    self.lineNum = lineNum
+}
+
+
+// declaration Class -- SubfileNode
+type Nodes_SubfileNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_usePath(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_SubfileNode struct {
+    Nodes_Node
+    usePath LnsAny
+    FP Nodes_SubfileNodeMtd
+}
+func Nodes_SubfileNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_SubfileNode).FP
+}
+type Nodes_SubfileNodeDownCast interface {
+    ToNodes_SubfileNode() *Nodes_SubfileNode
+}
+func Nodes_SubfileNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_SubfileNodeDownCast)
+    if ok { return work.ToNodes_SubfileNode() }
+    return nil
+}
+func (obj *Nodes_SubfileNode) ToNodes_SubfileNode() *Nodes_SubfileNode {
+    return obj
+}
+func NewNodes_SubfileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_SubfileNode {
+    obj := &Nodes_SubfileNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_SubfileNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_SubfileNode) Get_usePath(_env *LnsEnv) LnsAny{ return self.usePath }
+// 734: DeclConstr
+func (self *Nodes_SubfileNode) InitNodes_SubfileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 4, pos, inTestBlock, macroArgFlag, typeList)
+    self.usePath = usePath
+}
+
+
+// declaration Class -- ImportInfo
+type Nodes_ImportInfoMtd interface {
+    Get_assignName(_env *LnsEnv) string
+    Get_assigned(_env *LnsEnv) bool
+    Get_lazy(_env *LnsEnv) LnsInt
+    Get_modulePath(_env *LnsEnv) string
+    Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
+}
+type Nodes_ImportInfo struct {
+    pos *Types_Position
+    modulePath string
+    lazy LnsInt
+    assignName string
+    assigned bool
+    symbolInfo *Ast_SymbolInfo
+    moduleTypeInfo *Ast_TypeInfo
+    FP Nodes_ImportInfoMtd
+}
+func Nodes_ImportInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ImportInfo).FP
+}
+type Nodes_ImportInfoDownCast interface {
+    ToNodes_ImportInfo() *Nodes_ImportInfo
+}
+func Nodes_ImportInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ImportInfoDownCast)
+    if ok { return work.ToNodes_ImportInfo() }
+    return nil
+}
+func (obj *Nodes_ImportInfo) ToNodes_ImportInfo() *Nodes_ImportInfo {
+    return obj
+}
+func NewNodes_ImportInfo(_env *LnsEnv, arg1 *Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) *Nodes_ImportInfo {
+    obj := &Nodes_ImportInfo{}
+    obj.FP = obj
+    obj.InitNodes_ImportInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ImportInfo) InitNodes_ImportInfo(_env *LnsEnv, arg1 *Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) {
+    self.pos = arg1
+    self.modulePath = arg2
+    self.lazy = arg3
+    self.assignName = arg4
+    self.assigned = arg5
+    self.symbolInfo = arg6
+    self.moduleTypeInfo = arg7
+}
+func (self *Nodes_ImportInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+func (self *Nodes_ImportInfo) Get_modulePath(_env *LnsEnv) string{ return self.modulePath }
+func (self *Nodes_ImportInfo) Get_lazy(_env *LnsEnv) LnsInt{ return self.lazy }
+func (self *Nodes_ImportInfo) Get_assignName(_env *LnsEnv) string{ return self.assignName }
+func (self *Nodes_ImportInfo) Get_assigned(_env *LnsEnv) bool{ return self.assigned }
+func (self *Nodes_ImportInfo) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
+func (self *Nodes_ImportInfo) Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.moduleTypeInfo }
+
+// declaration Class -- ImportNode
+type Nodes_ImportNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_info(_env *LnsEnv) *Nodes_ImportInfo
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ImportNode struct {
+    Nodes_Node
+    info *Nodes_ImportInfo
+    FP Nodes_ImportNodeMtd
+}
+func Nodes_ImportNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ImportNode).FP
+}
+type Nodes_ImportNodeDownCast interface {
+    ToNodes_ImportNode() *Nodes_ImportNode
+}
+func Nodes_ImportNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ImportNodeDownCast)
+    if ok { return work.ToNodes_ImportNode() }
+    return nil
+}
+func (obj *Nodes_ImportNode) ToNodes_ImportNode() *Nodes_ImportNode {
+    return obj
+}
+func NewNodes_ImportNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ImportInfo) *Nodes_ImportNode {
+    obj := &Nodes_ImportNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ImportNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ImportNode) Get_info(_env *LnsEnv) *Nodes_ImportInfo{ return self.info }
+// 734: DeclConstr
+func (self *Nodes_ImportNode) InitNodes_ImportNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) {
+    self.InitNodes_Node(_env, managerId, id, 5, pos, inTestBlock, macroArgFlag, typeList)
+    self.info = info
+}
+
+
+// declaration Class -- MacroValInfo
+type Nodes_MacroValInfoMtd interface {
+}
+type Nodes_MacroValInfo struct {
+    Val LnsAny
+    TypeInfo *Ast_TypeInfo
+    ArgNode LnsAny
+    FP Nodes_MacroValInfoMtd
+}
+func Nodes_MacroValInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_MacroValInfo).FP
+}
+type Nodes_MacroValInfoDownCast interface {
+    ToNodes_MacroValInfo() *Nodes_MacroValInfo
+}
+func Nodes_MacroValInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_MacroValInfoDownCast)
+    if ok { return work.ToNodes_MacroValInfo() }
+    return nil
+}
+func (obj *Nodes_MacroValInfo) ToNodes_MacroValInfo() *Nodes_MacroValInfo {
+    return obj
+}
+func NewNodes_MacroValInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Ast_TypeInfo, arg3 LnsAny) *Nodes_MacroValInfo {
+    obj := &Nodes_MacroValInfo{}
+    obj.FP = obj
+    obj.InitNodes_MacroValInfo(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *Nodes_MacroValInfo) InitNodes_MacroValInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Ast_TypeInfo, arg3 LnsAny) {
+    self.Val = arg1
+    self.TypeInfo = arg2
+    self.ArgNode = arg3
+}
+
+// declaration Class -- MacroArgInfo
+type Nodes_MacroArgInfoMtd interface {
+    Get_name(_env *LnsEnv) string
+    Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
+}
+type Nodes_MacroArgInfo struct {
+    name string
+    typeInfo *Ast_TypeInfo
+    FP Nodes_MacroArgInfoMtd
+}
+func Nodes_MacroArgInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_MacroArgInfo).FP
+}
+type Nodes_MacroArgInfoDownCast interface {
+    ToNodes_MacroArgInfo() *Nodes_MacroArgInfo
+}
+func Nodes_MacroArgInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_MacroArgInfoDownCast)
+    if ok { return work.ToNodes_MacroArgInfo() }
+    return nil
+}
+func (obj *Nodes_MacroArgInfo) ToNodes_MacroArgInfo() *Nodes_MacroArgInfo {
+    return obj
+}
+func NewNodes_MacroArgInfo(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo) *Nodes_MacroArgInfo {
+    obj := &Nodes_MacroArgInfo{}
+    obj.FP = obj
+    obj.InitNodes_MacroArgInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_MacroArgInfo) InitNodes_MacroArgInfo(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo) {
+    self.name = arg1
+    self.typeInfo = arg2
+}
+func (self *Nodes_MacroArgInfo) Get_name(_env *LnsEnv) string{ return self.name }
+func (self *Nodes_MacroArgInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
+
+// declaration Class -- MacroInfo
+type Nodes_MacroInfoMtd interface {
+    GetArgList(_env *LnsEnv) *LnsList
+    GetTokenList(_env *LnsEnv) *LnsList
+    Get_func(_env *LnsEnv) LnsAny
+    Get_name(_env *LnsEnv) string
+    Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
+}
+type Nodes_MacroInfo struct {
+    _func LnsAny
+    symbol2MacroValInfoMap *LnsMap
+    FP Nodes_MacroInfoMtd
+}
+func Nodes_MacroInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_MacroInfo).FP
+}
+type Nodes_MacroInfoDownCast interface {
+    ToNodes_MacroInfo() *Nodes_MacroInfo
+}
+func Nodes_MacroInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_MacroInfoDownCast)
+    if ok { return work.ToNodes_MacroInfo() }
+    return nil
+}
+func (obj *Nodes_MacroInfo) ToNodes_MacroInfo() *Nodes_MacroInfo {
+    return obj
+}
+func (self *Nodes_MacroInfo) InitNodes_MacroInfo(_env *LnsEnv, arg1 LnsAny, arg2 *LnsMap) {
+    self._func = arg1
+    self.symbol2MacroValInfoMap = arg2
+}
+func (self *Nodes_MacroInfo) Get_func(_env *LnsEnv) LnsAny{ return self._func }
+func (self *Nodes_MacroInfo) Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap{ return self.symbol2MacroValInfoMap }
+
+
+
+
+// declaration Class -- RootNode
+type Nodes_RootNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_children(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_globalScope(_env *LnsEnv) *Ast_Scope
+    Get_importModule2moduleInfo(_env *LnsEnv) *LnsMap
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_luneHelperInfo(_env *LnsEnv) *FrontInterface_LuneHelperInfo
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
+    Get_moduleScope(_env *LnsEnv) *Ast_Scope
+    Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
+    Get_nodeManager(_env *LnsEnv) *Nodes_NodeManager
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo
+    Get_provideNode(_env *LnsEnv) LnsAny
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_typeId2ClassMap(_env *LnsEnv) *LnsMap
+    Get_typeId2MacroInfo(_env *LnsEnv) *LnsMap
+    Get_useModuleMacroSet(_env *LnsEnv) *LnsSet
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_provide(_env *LnsEnv, arg1 *Nodes_ProvideNode)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_RootNode struct {
+    Nodes_Node
+    children *LnsList
+    moduleScope *Ast_Scope
+    globalScope *Ast_Scope
+    useModuleMacroSet *LnsSet
+    moduleId *FrontInterface_ModuleId
+    processInfo *Ast_ProcessInfo
+    moduleTypeInfo *Ast_TypeInfo
+    provideNode LnsAny
+    luneHelperInfo *FrontInterface_LuneHelperInfo
+    nodeManager *Nodes_NodeManager
+    importModule2moduleInfo *LnsMap
+    typeId2MacroInfo *LnsMap
+    typeId2ClassMap *LnsMap
+    FP Nodes_RootNodeMtd
+}
+func Nodes_RootNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_RootNode).FP
+}
+type Nodes_RootNodeDownCast interface {
+    ToNodes_RootNode() *Nodes_RootNode
+}
+func Nodes_RootNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_RootNodeDownCast)
+    if ok { return work.ToNodes_RootNode() }
+    return nil
+}
+func (obj *Nodes_RootNode) ToNodes_RootNode() *Nodes_RootNode {
+    return obj
+}
+func NewNodes_RootNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Ast_Scope, arg9 *Ast_Scope, arg10 *LnsSet, arg11 *FrontInterface_ModuleId, arg12 *Ast_ProcessInfo, arg13 *Ast_TypeInfo, arg14 LnsAny, arg15 *FrontInterface_LuneHelperInfo, arg16 *Nodes_NodeManager, arg17 *LnsMap, arg18 *LnsMap, arg19 *LnsMap) *Nodes_RootNode {
+    obj := &Nodes_RootNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_RootNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19)
+    return obj
+}
+func (self *Nodes_RootNode) Get_children(_env *LnsEnv) *LnsList{ return self.children }
+func (self *Nodes_RootNode) Get_moduleScope(_env *LnsEnv) *Ast_Scope{ return self.moduleScope }
+func (self *Nodes_RootNode) Get_globalScope(_env *LnsEnv) *Ast_Scope{ return self.globalScope }
+func (self *Nodes_RootNode) Get_useModuleMacroSet(_env *LnsEnv) *LnsSet{ return self.useModuleMacroSet }
+func (self *Nodes_RootNode) Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId{ return self.moduleId }
+func (self *Nodes_RootNode) Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo{ return self.processInfo }
+func (self *Nodes_RootNode) Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.moduleTypeInfo }
+func (self *Nodes_RootNode) Get_provideNode(_env *LnsEnv) LnsAny{ return self.provideNode }
+func (self *Nodes_RootNode) Get_luneHelperInfo(_env *LnsEnv) *FrontInterface_LuneHelperInfo{ return self.luneHelperInfo }
+func (self *Nodes_RootNode) Get_nodeManager(_env *LnsEnv) *Nodes_NodeManager{ return self.nodeManager }
+func (self *Nodes_RootNode) Get_importModule2moduleInfo(_env *LnsEnv) *LnsMap{ return self.importModule2moduleInfo }
+func (self *Nodes_RootNode) Get_typeId2MacroInfo(_env *LnsEnv) *LnsMap{ return self.typeId2MacroInfo }
+func (self *Nodes_RootNode) Get_typeId2ClassMap(_env *LnsEnv) *LnsMap{ return self.typeId2ClassMap }
+// 734: DeclConstr
+func (self *Nodes_RootNode) InitNodes_RootNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) {
+    self.InitNodes_Node(_env, managerId, id, 6, pos, inTestBlock, macroArgFlag, typeList)
+    self.children = children
+    self.moduleScope = moduleScope
+    self.globalScope = globalScope
+    self.useModuleMacroSet = useModuleMacroSet
+    self.moduleId = moduleId
+    self.processInfo = processInfo
+    self.moduleTypeInfo = moduleTypeInfo
+    self.provideNode = provideNode
+    self.luneHelperInfo = luneHelperInfo
+    self.nodeManager = nodeManager
+    self.importModule2moduleInfo = importModule2moduleInfo
+    self.typeId2MacroInfo = typeId2MacroInfo
+    self.typeId2ClassMap = typeId2ClassMap
+}
+
+
+// declaration Class -- RefTypeNode
+type Nodes_RefTypeNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_array(_env *LnsEnv) string
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_itemNodeList(_env *LnsEnv) *LnsList
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_mutMode(_env *LnsEnv) LnsAny
+    Get_name(_env *LnsEnv) *Nodes_Node
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_RefTypeNode struct {
+    Nodes_Node
+    name *Nodes_Node
+    itemNodeList *LnsList
+    mutMode LnsAny
+    array string
+    FP Nodes_RefTypeNodeMtd
+}
+func Nodes_RefTypeNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_RefTypeNode).FP
+}
+type Nodes_RefTypeNodeDownCast interface {
+    ToNodes_RefTypeNode() *Nodes_RefTypeNode
+}
+func Nodes_RefTypeNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_RefTypeNodeDownCast)
+    if ok { return work.ToNodes_RefTypeNode() }
+    return nil
+}
+func (obj *Nodes_RefTypeNode) ToNodes_RefTypeNode() *Nodes_RefTypeNode {
+    return obj
+}
+func NewNodes_RefTypeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *LnsList, arg9 LnsAny, arg10 string) *Nodes_RefTypeNode {
+    obj := &Nodes_RefTypeNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_RefTypeNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_RefTypeNode) Get_name(_env *LnsEnv) *Nodes_Node{ return self.name }
+func (self *Nodes_RefTypeNode) Get_itemNodeList(_env *LnsEnv) *LnsList{ return self.itemNodeList }
+func (self *Nodes_RefTypeNode) Get_mutMode(_env *LnsEnv) LnsAny{ return self.mutMode }
+func (self *Nodes_RefTypeNode) Get_array(_env *LnsEnv) string{ return self.array }
+// 734: DeclConstr
+func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) {
+    self.InitNodes_Node(_env, managerId, id, 7, pos, inTestBlock, macroArgFlag, typeList)
+    self.name = name
+    self.itemNodeList = itemNodeList
+    self.mutMode = mutMode
+    self.array = array
+}
+
+
+// declaration Class -- BlockNode
+type Nodes_BlockNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_blockKind(_env *LnsEnv) LnsInt
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_stmtList(_env *LnsEnv) *LnsList
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_BlockNode struct {
+    Nodes_Node
+    blockKind LnsInt
+    scope *Ast_Scope
+    stmtList *LnsList
+    FP Nodes_BlockNodeMtd
+}
+func Nodes_BlockNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_BlockNode).FP
+}
+type Nodes_BlockNodeDownCast interface {
+    ToNodes_BlockNode() *Nodes_BlockNode
+}
+func Nodes_BlockNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_BlockNodeDownCast)
+    if ok { return work.ToNodes_BlockNode() }
+    return nil
+}
+func (obj *Nodes_BlockNode) ToNodes_BlockNode() *Nodes_BlockNode {
+    return obj
+}
+func NewNodes_BlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList) *Nodes_BlockNode {
+    obj := &Nodes_BlockNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_BlockNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_BlockNode) Get_blockKind(_env *LnsEnv) LnsInt{ return self.blockKind }
+func (self *Nodes_BlockNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
+func (self *Nodes_BlockNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
+// 734: DeclConstr
+func (self *Nodes_BlockNode) InitNodes_BlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 8, pos, inTestBlock, macroArgFlag, typeList)
+    self.blockKind = blockKind
+    self.scope = scope
+    self.stmtList = stmtList
+}
+
+
+// declaration Class -- ScopeNode
+type Nodes_ScopeNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_scopeKind(_env *LnsEnv) LnsInt
+    Get_symbolList(_env *LnsEnv) *LnsList
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ScopeNode struct {
+    Nodes_Node
+    scopeKind LnsInt
+    scope *Ast_Scope
+    symbolList *LnsList
+    block *Nodes_BlockNode
+    FP Nodes_ScopeNodeMtd
+}
+func Nodes_ScopeNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ScopeNode).FP
+}
+type Nodes_ScopeNodeDownCast interface {
+    ToNodes_ScopeNode() *Nodes_ScopeNode
+}
+func Nodes_ScopeNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ScopeNodeDownCast)
+    if ok { return work.ToNodes_ScopeNode() }
+    return nil
+}
+func (obj *Nodes_ScopeNode) ToNodes_ScopeNode() *Nodes_ScopeNode {
+    return obj
+}
+func NewNodes_ScopeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList, arg10 *Nodes_BlockNode) *Nodes_ScopeNode {
+    obj := &Nodes_ScopeNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ScopeNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_ScopeNode) Get_scopeKind(_env *LnsEnv) LnsInt{ return self.scopeKind }
+func (self *Nodes_ScopeNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
+func (self *Nodes_ScopeNode) Get_symbolList(_env *LnsEnv) *LnsList{ return self.symbolList }
+func (self *Nodes_ScopeNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+// 734: DeclConstr
+func (self *Nodes_ScopeNode) InitNodes_ScopeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) {
+    self.InitNodes_Node(_env, managerId, id, 9, pos, inTestBlock, macroArgFlag, typeList)
+    self.scopeKind = scopeKind
+    self.scope = scope
+    self.symbolList = symbolList
+    self.block = block
+}
+
+
+// declaration Class -- IfStmtInfo
+type Nodes_IfStmtInfoMtd interface {
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_kind(_env *LnsEnv) LnsInt
+}
+type Nodes_IfStmtInfo struct {
+    kind LnsInt
+    exp *Nodes_Node
+    block *Nodes_BlockNode
+    FP Nodes_IfStmtInfoMtd
+}
+func Nodes_IfStmtInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_IfStmtInfo).FP
+}
+type Nodes_IfStmtInfoDownCast interface {
+    ToNodes_IfStmtInfo() *Nodes_IfStmtInfo
+}
+func Nodes_IfStmtInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_IfStmtInfoDownCast)
+    if ok { return work.ToNodes_IfStmtInfo() }
+    return nil
+}
+func (obj *Nodes_IfStmtInfo) ToNodes_IfStmtInfo() *Nodes_IfStmtInfo {
+    return obj
+}
+func NewNodes_IfStmtInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Nodes_Node, arg3 *Nodes_BlockNode) *Nodes_IfStmtInfo {
+    obj := &Nodes_IfStmtInfo{}
+    obj.FP = obj
+    obj.InitNodes_IfStmtInfo(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *Nodes_IfStmtInfo) InitNodes_IfStmtInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Nodes_Node, arg3 *Nodes_BlockNode) {
+    self.kind = arg1
+    self.exp = arg2
+    self.block = arg3
+}
+func (self *Nodes_IfStmtInfo) Get_kind(_env *LnsEnv) LnsInt{ return self.kind }
+func (self *Nodes_IfStmtInfo) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_IfStmtInfo) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+
+// declaration Class -- IfNode
+type Nodes_IfNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_stmtList(_env *LnsEnv) *LnsList
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_IfNode struct {
+    Nodes_Node
+    stmtList *LnsList
+    FP Nodes_IfNodeMtd
+}
+func Nodes_IfNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_IfNode).FP
+}
+type Nodes_IfNodeDownCast interface {
+    ToNodes_IfNode() *Nodes_IfNode
+}
+func Nodes_IfNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_IfNodeDownCast)
+    if ok { return work.ToNodes_IfNode() }
+    return nil
+}
+func (obj *Nodes_IfNode) ToNodes_IfNode() *Nodes_IfNode {
+    return obj
+}
+func NewNodes_IfNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_IfNode {
+    obj := &Nodes_IfNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_IfNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_IfNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
+// 734: DeclConstr
+func (self *Nodes_IfNode) InitNodes_IfNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 10, pos, inTestBlock, macroArgFlag, typeList)
+    self.stmtList = stmtList
+}
+
+
+// declaration Class -- MRetExp
+type Nodes_MRetExpMtd interface {
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_index(_env *LnsEnv) LnsInt
+}
+type Nodes_MRetExp struct {
+    exp *Nodes_Node
+    index LnsInt
+    FP Nodes_MRetExpMtd
+}
+func Nodes_MRetExp2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_MRetExp).FP
+}
+type Nodes_MRetExpDownCast interface {
+    ToNodes_MRetExp() *Nodes_MRetExp
+}
+func Nodes_MRetExpDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_MRetExpDownCast)
+    if ok { return work.ToNodes_MRetExp() }
+    return nil
+}
+func (obj *Nodes_MRetExp) ToNodes_MRetExp() *Nodes_MRetExp {
+    return obj
+}
+func NewNodes_MRetExp(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsInt) *Nodes_MRetExp {
+    obj := &Nodes_MRetExp{}
+    obj.FP = obj
+    obj.InitNodes_MRetExp(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_MRetExp) InitNodes_MRetExp(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsInt) {
+    self.exp = arg1
+    self.index = arg2
+}
+func (self *Nodes_MRetExp) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_MRetExp) Get_index(_env *LnsEnv) LnsInt{ return self.index }
+
+// declaration Class -- ExpListNode
+type Nodes_ExpListNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetExpTypeAt(_env *LnsEnv, arg1 LnsInt) *Ast_TypeInfo
+    GetExpTypeNoDDDAt(_env *LnsEnv, arg1 LnsInt) *Ast_TypeInfo
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) *LnsList
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_followOn(_env *LnsEnv) bool
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_mRetExp(_env *LnsEnv) LnsAny
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpListNode struct {
+    Nodes_Node
+    expList *LnsList
+    mRetExp LnsAny
+    followOn bool
+    FP Nodes_ExpListNodeMtd
+}
+func Nodes_ExpListNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpListNode).FP
+}
+type Nodes_ExpListNodeDownCast interface {
+    ToNodes_ExpListNode() *Nodes_ExpListNode
+}
+func Nodes_ExpListNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpListNodeDownCast)
+    if ok { return work.ToNodes_ExpListNode() }
+    return nil
+}
+func (obj *Nodes_ExpListNode) ToNodes_ExpListNode() *Nodes_ExpListNode {
+    return obj
+}
+func NewNodes_ExpListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 LnsAny, arg9 bool) *Nodes_ExpListNode {
+    obj := &Nodes_ExpListNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpListNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_ExpListNode) Get_expList(_env *LnsEnv) *LnsList{ return self.expList }
+func (self *Nodes_ExpListNode) Get_mRetExp(_env *LnsEnv) LnsAny{ return self.mRetExp }
+func (self *Nodes_ExpListNode) Get_followOn(_env *LnsEnv) bool{ return self.followOn }
+// 734: DeclConstr
+func (self *Nodes_ExpListNode) InitNodes_ExpListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) {
+    self.InitNodes_Node(_env, managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
+    self.expList = expList
+    self.mRetExp = mRetExp
+    self.followOn = followOn
+}
+
+
+// declaration Class -- CaseInfo
+type Nodes_CaseInfoMtd interface {
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
+}
+type Nodes_CaseInfo struct {
+    expList *Nodes_ExpListNode
+    block *Nodes_BlockNode
+    FP Nodes_CaseInfoMtd
+}
+func Nodes_CaseInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_CaseInfo).FP
+}
+type Nodes_CaseInfoDownCast interface {
+    ToNodes_CaseInfo() *Nodes_CaseInfo
+}
+func Nodes_CaseInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_CaseInfoDownCast)
+    if ok { return work.ToNodes_CaseInfo() }
+    return nil
+}
+func (obj *Nodes_CaseInfo) ToNodes_CaseInfo() *Nodes_CaseInfo {
+    return obj
+}
+func NewNodes_CaseInfo(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 *Nodes_BlockNode) *Nodes_CaseInfo {
+    obj := &Nodes_CaseInfo{}
+    obj.FP = obj
+    obj.InitNodes_CaseInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_CaseInfo) InitNodes_CaseInfo(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 *Nodes_BlockNode) {
+    self.expList = arg1
+    self.block = arg2
+}
+func (self *Nodes_CaseInfo) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
+func (self *Nodes_CaseInfo) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+
+// declaration Class -- SwitchNode
+type Nodes_SwitchNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_caseKind(_env *LnsEnv) LnsInt
+    Get_caseList(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_default(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_failSafeDefault(_env *LnsEnv) bool
+    Get_idInNS(_env *LnsEnv) LnsInt
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_SwitchNode struct {
+    Nodes_Node
+    idInNS LnsInt
+    exp *Nodes_Node
+    caseList *LnsList
+    _default LnsAny
+    caseKind LnsInt
+    failSafeDefault bool
+    FP Nodes_SwitchNodeMtd
+}
+func Nodes_SwitchNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_SwitchNode).FP
+}
+type Nodes_SwitchNodeDownCast interface {
+    ToNodes_SwitchNode() *Nodes_SwitchNode
+}
+func Nodes_SwitchNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_SwitchNodeDownCast)
+    if ok { return work.ToNodes_SwitchNode() }
+    return nil
+}
+func (obj *Nodes_SwitchNode) ToNodes_SwitchNode() *Nodes_SwitchNode {
+    return obj
+}
+func NewNodes_SwitchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *LnsList, arg10 LnsAny, arg11 LnsInt, arg12 bool) *Nodes_SwitchNode {
+    obj := &Nodes_SwitchNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_SwitchNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
+    return obj
+}
+func (self *Nodes_SwitchNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
+func (self *Nodes_SwitchNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_SwitchNode) Get_caseList(_env *LnsEnv) *LnsList{ return self.caseList }
+func (self *Nodes_SwitchNode) Get_default(_env *LnsEnv) LnsAny{ return self._default }
+func (self *Nodes_SwitchNode) Get_caseKind(_env *LnsEnv) LnsInt{ return self.caseKind }
+func (self *Nodes_SwitchNode) Get_failSafeDefault(_env *LnsEnv) bool{ return self.failSafeDefault }
+// 734: DeclConstr
+func (self *Nodes_SwitchNode) InitNodes_SwitchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) {
+    self.InitNodes_Node(_env, managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
+    self.idInNS = idInNS
+    self.exp = exp
+    self.caseList = caseList
+    self._default = _default
+    self.caseKind = caseKind
+    self.failSafeDefault = failSafeDefault
+}
+
+
+// declaration Class -- WhileNode
+type Nodes_WhileNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_infinit(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_WhileNode struct {
+    Nodes_Node
+    exp *Nodes_Node
+    infinit bool
+    block *Nodes_BlockNode
+    FP Nodes_WhileNodeMtd
+}
+func Nodes_WhileNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_WhileNode).FP
+}
+type Nodes_WhileNodeDownCast interface {
+    ToNodes_WhileNode() *Nodes_WhileNode
+}
+func Nodes_WhileNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_WhileNodeDownCast)
+    if ok { return work.ToNodes_WhileNode() }
+    return nil
+}
+func (obj *Nodes_WhileNode) ToNodes_WhileNode() *Nodes_WhileNode {
+    return obj
+}
+func NewNodes_WhileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 *Nodes_BlockNode) *Nodes_WhileNode {
+    obj := &Nodes_WhileNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_WhileNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_WhileNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_WhileNode) Get_infinit(_env *LnsEnv) bool{ return self.infinit }
+func (self *Nodes_WhileNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+// 734: DeclConstr
+func (self *Nodes_WhileNode) InitNodes_WhileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) {
+    self.InitNodes_Node(_env, managerId, id, 13, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+    self.infinit = infinit
+    self.block = block
+}
+
+
+// declaration Class -- RepeatNode
+type Nodes_RepeatNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_RepeatNode struct {
+    Nodes_Node
+    block *Nodes_BlockNode
+    exp *Nodes_Node
+    FP Nodes_RepeatNodeMtd
+}
+func Nodes_RepeatNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_RepeatNode).FP
+}
+type Nodes_RepeatNodeDownCast interface {
+    ToNodes_RepeatNode() *Nodes_RepeatNode
+}
+func Nodes_RepeatNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_RepeatNodeDownCast)
+    if ok { return work.ToNodes_RepeatNode() }
+    return nil
+}
+func (obj *Nodes_RepeatNode) ToNodes_RepeatNode() *Nodes_RepeatNode {
+    return obj
+}
+func NewNodes_RepeatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_BlockNode, arg8 *Nodes_Node) *Nodes_RepeatNode {
+    obj := &Nodes_RepeatNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_RepeatNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_RepeatNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+func (self *Nodes_RepeatNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_RepeatNode) InitNodes_RepeatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
+    self.block = block
+    self.exp = exp
+}
+
+
+// declaration Class -- ForNode
+type Nodes_ForNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_delta(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_idInNS(_env *LnsEnv) LnsInt
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_init(_env *LnsEnv) *Nodes_Node
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_to(_env *LnsEnv) *Nodes_Node
+    Get_val(_env *LnsEnv) *Ast_SymbolInfo
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ForNode struct {
+    Nodes_Node
+    idInNS LnsInt
+    block *Nodes_BlockNode
+    val *Ast_SymbolInfo
+    init *Nodes_Node
+    to *Nodes_Node
+    delta LnsAny
+    FP Nodes_ForNodeMtd
+}
+func Nodes_ForNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ForNode).FP
+}
+type Nodes_ForNodeDownCast interface {
+    ToNodes_ForNode() *Nodes_ForNode
+}
+func Nodes_ForNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ForNodeDownCast)
+    if ok { return work.ToNodes_ForNode() }
+    return nil
+}
+func (obj *Nodes_ForNode) ToNodes_ForNode() *Nodes_ForNode {
+    return obj
+}
+func NewNodes_ForNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode, arg9 *Ast_SymbolInfo, arg10 *Nodes_Node, arg11 *Nodes_Node, arg12 LnsAny) *Nodes_ForNode {
+    obj := &Nodes_ForNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ForNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
+    return obj
+}
+func (self *Nodes_ForNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
+func (self *Nodes_ForNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+func (self *Nodes_ForNode) Get_val(_env *LnsEnv) *Ast_SymbolInfo{ return self.val }
+func (self *Nodes_ForNode) Get_init(_env *LnsEnv) *Nodes_Node{ return self.init }
+func (self *Nodes_ForNode) Get_to(_env *LnsEnv) *Nodes_Node{ return self.to }
+func (self *Nodes_ForNode) Get_delta(_env *LnsEnv) LnsAny{ return self.delta }
+// 734: DeclConstr
+func (self *Nodes_ForNode) InitNodes_ForNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 15, pos, inTestBlock, macroArgFlag, typeList)
+    self.idInNS = idInNS
+    self.block = block
+    self.val = val
+    self.init = init
+    self.to = to
+    self.delta = delta
+}
+
+
+// declaration Class -- ApplyNode
+type Nodes_ApplyNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_idInNS(_env *LnsEnv) LnsInt
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_varList(_env *LnsEnv) *LnsList
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ApplyNode struct {
+    Nodes_Node
+    idInNS LnsInt
+    varList *LnsList
+    expList *Nodes_ExpListNode
+    block *Nodes_BlockNode
+    FP Nodes_ApplyNodeMtd
+}
+func Nodes_ApplyNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ApplyNode).FP
+}
+type Nodes_ApplyNodeDownCast interface {
+    ToNodes_ApplyNode() *Nodes_ApplyNode
+}
+func Nodes_ApplyNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ApplyNodeDownCast)
+    if ok { return work.ToNodes_ApplyNode() }
+    return nil
+}
+func (obj *Nodes_ApplyNode) ToNodes_ApplyNode() *Nodes_ApplyNode {
+    return obj
+}
+func NewNodes_ApplyNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *LnsList, arg9 *Nodes_ExpListNode, arg10 *Nodes_BlockNode) *Nodes_ApplyNode {
+    obj := &Nodes_ApplyNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ApplyNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_ApplyNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
+func (self *Nodes_ApplyNode) Get_varList(_env *LnsEnv) *LnsList{ return self.varList }
+func (self *Nodes_ApplyNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
+func (self *Nodes_ApplyNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+// 734: DeclConstr
+func (self *Nodes_ApplyNode) InitNodes_ApplyNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) {
+    self.InitNodes_Node(_env, managerId, id, 16, pos, inTestBlock, macroArgFlag, typeList)
+    self.idInNS = idInNS
+    self.varList = varList
+    self.expList = expList
+    self.block = block
+}
+
+
+// declaration Class -- ForeachNode
+type Nodes_ForeachNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_idInNS(_env *LnsEnv) LnsInt
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_key(_env *LnsEnv) LnsAny
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_val(_env *LnsEnv) *Ast_SymbolInfo
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ForeachNode struct {
+    Nodes_Node
+    idInNS LnsInt
+    val *Ast_SymbolInfo
+    key LnsAny
+    exp *Nodes_Node
+    block *Nodes_BlockNode
+    FP Nodes_ForeachNodeMtd
+}
+func Nodes_ForeachNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ForeachNode).FP
+}
+type Nodes_ForeachNodeDownCast interface {
+    ToNodes_ForeachNode() *Nodes_ForeachNode
+}
+func Nodes_ForeachNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ForeachNodeDownCast)
+    if ok { return work.ToNodes_ForeachNode() }
+    return nil
+}
+func (obj *Nodes_ForeachNode) ToNodes_ForeachNode() *Nodes_ForeachNode {
+    return obj
+}
+func NewNodes_ForeachNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode) *Nodes_ForeachNode {
+    obj := &Nodes_ForeachNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ForeachNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    return obj
+}
+func (self *Nodes_ForeachNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
+func (self *Nodes_ForeachNode) Get_val(_env *LnsEnv) *Ast_SymbolInfo{ return self.val }
+func (self *Nodes_ForeachNode) Get_key(_env *LnsEnv) LnsAny{ return self.key }
+func (self *Nodes_ForeachNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_ForeachNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+// 734: DeclConstr
+func (self *Nodes_ForeachNode) InitNodes_ForeachNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) {
+    self.InitNodes_Node(_env, managerId, id, 17, pos, inTestBlock, macroArgFlag, typeList)
+    self.idInNS = idInNS
+    self.val = val
+    self.key = key
+    self.exp = exp
+    self.block = block
+}
+
+
+// declaration Class -- ForsortNode
+type Nodes_ForsortNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_idInNS(_env *LnsEnv) LnsInt
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_key(_env *LnsEnv) LnsAny
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_sort(_env *LnsEnv) bool
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_val(_env *LnsEnv) *Ast_SymbolInfo
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ForsortNode struct {
+    Nodes_Node
+    idInNS LnsInt
+    val *Ast_SymbolInfo
+    key LnsAny
+    exp *Nodes_Node
+    block *Nodes_BlockNode
+    sort bool
+    FP Nodes_ForsortNodeMtd
+}
+func Nodes_ForsortNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ForsortNode).FP
+}
+type Nodes_ForsortNodeDownCast interface {
+    ToNodes_ForsortNode() *Nodes_ForsortNode
+}
+func Nodes_ForsortNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ForsortNodeDownCast)
+    if ok { return work.ToNodes_ForsortNode() }
+    return nil
+}
+func (obj *Nodes_ForsortNode) ToNodes_ForsortNode() *Nodes_ForsortNode {
+    return obj
+}
+func NewNodes_ForsortNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode, arg12 bool) *Nodes_ForsortNode {
+    obj := &Nodes_ForsortNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ForsortNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12)
+    return obj
+}
+func (self *Nodes_ForsortNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
+func (self *Nodes_ForsortNode) Get_val(_env *LnsEnv) *Ast_SymbolInfo{ return self.val }
+func (self *Nodes_ForsortNode) Get_key(_env *LnsEnv) LnsAny{ return self.key }
+func (self *Nodes_ForsortNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_ForsortNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+func (self *Nodes_ForsortNode) Get_sort(_env *LnsEnv) bool{ return self.sort }
+// 734: DeclConstr
+func (self *Nodes_ForsortNode) InitNodes_ForsortNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) {
+    self.InitNodes_Node(_env, managerId, id, 18, pos, inTestBlock, macroArgFlag, typeList)
+    self.idInNS = idInNS
+    self.val = val
+    self.key = key
+    self.exp = exp
+    self.block = block
+    self.sort = sort
+}
+
+
+// declaration Class -- ReturnNode
+type Nodes_ReturnNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ReturnNode struct {
+    Nodes_Node
+    expList LnsAny
+    FP Nodes_ReturnNodeMtd
+}
+func Nodes_ReturnNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ReturnNode).FP
+}
+type Nodes_ReturnNodeDownCast interface {
+    ToNodes_ReturnNode() *Nodes_ReturnNode
+}
+func Nodes_ReturnNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ReturnNodeDownCast)
+    if ok { return work.ToNodes_ReturnNode() }
+    return nil
+}
+func (obj *Nodes_ReturnNode) ToNodes_ReturnNode() *Nodes_ReturnNode {
+    return obj
+}
+func NewNodes_ReturnNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_ReturnNode {
+    obj := &Nodes_ReturnNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ReturnNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ReturnNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
+// 734: DeclConstr
+func (self *Nodes_ReturnNode) InitNodes_ReturnNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 19, pos, inTestBlock, macroArgFlag, typeList)
+    self.expList = expList
+}
+
+
+// declaration Class -- BreakNode
+type Nodes_BreakNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_BreakNode struct {
+    Nodes_Node
+    FP Nodes_BreakNodeMtd
+}
+func Nodes_BreakNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_BreakNode).FP
+}
+type Nodes_BreakNodeDownCast interface {
+    ToNodes_BreakNode() *Nodes_BreakNode
+}
+func Nodes_BreakNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_BreakNodeDownCast)
+    if ok { return work.ToNodes_BreakNode() }
+    return nil
+}
+func (obj *Nodes_BreakNode) ToNodes_BreakNode() *Nodes_BreakNode {
+    return obj
+}
+func NewNodes_BreakNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_BreakNode {
+    obj := &Nodes_BreakNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_BreakNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
+    return obj
+}
+// 734: DeclConstr
+func (self *Nodes_BreakNode) InitNodes_BreakNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 20, pos, inTestBlock, macroArgFlag, typeList)
+}
+
+
+// declaration Class -- ProvideNode
+type Nodes_ProvideNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_symbol(_env *LnsEnv) *Ast_SymbolInfo
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ProvideNode struct {
+    Nodes_Node
+    symbol *Ast_SymbolInfo
+    FP Nodes_ProvideNodeMtd
+}
+func Nodes_ProvideNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ProvideNode).FP
+}
+type Nodes_ProvideNodeDownCast interface {
+    ToNodes_ProvideNode() *Nodes_ProvideNode
+}
+func Nodes_ProvideNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ProvideNodeDownCast)
+    if ok { return work.ToNodes_ProvideNode() }
+    return nil
+}
+func (obj *Nodes_ProvideNode) ToNodes_ProvideNode() *Nodes_ProvideNode {
+    return obj
+}
+func NewNodes_ProvideNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ProvideNode {
+    obj := &Nodes_ProvideNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ProvideNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ProvideNode) Get_symbol(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbol }
+// 734: DeclConstr
+func (self *Nodes_ProvideNode) InitNodes_ProvideNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) {
+    self.InitNodes_Node(_env, managerId, id, 21, pos, inTestBlock, macroArgFlag, typeList)
+    self.symbol = symbol
+}
+
+
+// declaration Class -- ExpNewNode
+type Nodes_ExpNewNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_argList(_env *LnsEnv) LnsAny
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_ctorTypeInfo(_env *LnsEnv) *Ast_TypeInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_symbol(_env *LnsEnv) *Nodes_Node
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpNewNode struct {
+    Nodes_Node
+    symbol *Nodes_Node
+    ctorTypeInfo *Ast_TypeInfo
+    argList LnsAny
+    FP Nodes_ExpNewNodeMtd
+}
+func Nodes_ExpNewNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpNewNode).FP
+}
+type Nodes_ExpNewNodeDownCast interface {
+    ToNodes_ExpNewNode() *Nodes_ExpNewNode
+}
+func Nodes_ExpNewNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpNewNodeDownCast)
+    if ok { return work.ToNodes_ExpNewNode() }
+    return nil
+}
+func (obj *Nodes_ExpNewNode) ToNodes_ExpNewNode() *Nodes_ExpNewNode {
+    return obj
+}
+func NewNodes_ExpNewNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpNewNode {
+    obj := &Nodes_ExpNewNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpNewNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_ExpNewNode) Get_symbol(_env *LnsEnv) *Nodes_Node{ return self.symbol }
+func (self *Nodes_ExpNewNode) Get_ctorTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.ctorTypeInfo }
+func (self *Nodes_ExpNewNode) Get_argList(_env *LnsEnv) LnsAny{ return self.argList }
+// 734: DeclConstr
+func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 22, pos, inTestBlock, macroArgFlag, typeList)
+    self.symbol = symbol
+    self.ctorTypeInfo = ctorTypeInfo
+    self.argList = argList
+}
+
+
+// declaration Class -- ExpUnwrapNode
+type Nodes_ExpUnwrapNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_default(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpUnwrapNode struct {
+    Nodes_Node
+    exp *Nodes_Node
+    _default LnsAny
+    FP Nodes_ExpUnwrapNodeMtd
+}
+func Nodes_ExpUnwrapNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpUnwrapNode).FP
+}
+type Nodes_ExpUnwrapNodeDownCast interface {
+    ToNodes_ExpUnwrapNode() *Nodes_ExpUnwrapNode
+}
+func Nodes_ExpUnwrapNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpUnwrapNodeDownCast)
+    if ok { return work.ToNodes_ExpUnwrapNode() }
+    return nil
+}
+func (obj *Nodes_ExpUnwrapNode) ToNodes_ExpUnwrapNode() *Nodes_ExpUnwrapNode {
+    return obj
+}
+func NewNodes_ExpUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny) *Nodes_ExpUnwrapNode {
+    obj := &Nodes_ExpUnwrapNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpUnwrapNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_ExpUnwrapNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_ExpUnwrapNode) Get_default(_env *LnsEnv) LnsAny{ return self._default }
+// 734: DeclConstr
+func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 23, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+    self._default = _default
+}
+
+
+// declaration Class -- ExpRefNode
+type Nodes_ExpRefNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpRefNode struct {
+    Nodes_Node
+    symbolInfo *Ast_SymbolInfo
+    FP Nodes_ExpRefNodeMtd
+}
+func Nodes_ExpRefNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpRefNode).FP
+}
+type Nodes_ExpRefNodeDownCast interface {
+    ToNodes_ExpRefNode() *Nodes_ExpRefNode
+}
+func Nodes_ExpRefNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpRefNodeDownCast)
+    if ok { return work.ToNodes_ExpRefNode() }
+    return nil
+}
+func (obj *Nodes_ExpRefNode) ToNodes_ExpRefNode() *Nodes_ExpRefNode {
+    return obj
+}
+func NewNodes_ExpRefNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ExpRefNode {
+    obj := &Nodes_ExpRefNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpRefNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpRefNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
+// 734: DeclConstr
+func (self *Nodes_ExpRefNode) InitNodes_ExpRefNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) {
+    self.InitNodes_Node(_env, managerId, id, 24, pos, inTestBlock, macroArgFlag, typeList)
+    self.symbolInfo = symbolInfo
+}
+
+
+// declaration Class -- ExpSetValNode
+type Nodes_ExpSetValNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_LeftSymList(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp1(_env *LnsEnv) *Nodes_Node
+    Get_exp2(_env *LnsEnv) *Nodes_ExpListNode
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_initSymSet(_env *LnsEnv) *LnsSet
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpSetValNode struct {
+    Nodes_Node
+    exp1 *Nodes_Node
+    exp2 *Nodes_ExpListNode
+    LeftSymList *LnsList
+    initSymSet *LnsSet
+    FP Nodes_ExpSetValNodeMtd
+}
+func Nodes_ExpSetValNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpSetValNode).FP
+}
+type Nodes_ExpSetValNodeDownCast interface {
+    ToNodes_ExpSetValNode() *Nodes_ExpSetValNode
+}
+func Nodes_ExpSetValNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpSetValNodeDownCast)
+    if ok { return work.ToNodes_ExpSetValNode() }
+    return nil
+}
+func (obj *Nodes_ExpSetValNode) ToNodes_ExpSetValNode() *Nodes_ExpSetValNode {
+    return obj
+}
+func NewNodes_ExpSetValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_ExpListNode, arg9 *LnsList, arg10 *LnsSet) *Nodes_ExpSetValNode {
+    obj := &Nodes_ExpSetValNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpSetValNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_ExpSetValNode) Get_exp1(_env *LnsEnv) *Nodes_Node{ return self.exp1 }
+func (self *Nodes_ExpSetValNode) Get_exp2(_env *LnsEnv) *Nodes_ExpListNode{ return self.exp2 }
+func (self *Nodes_ExpSetValNode) Get_LeftSymList(_env *LnsEnv) *LnsList{ return self.LeftSymList }
+func (self *Nodes_ExpSetValNode) Get_initSymSet(_env *LnsEnv) *LnsSet{ return self.initSymSet }
+// 734: DeclConstr
+func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) {
+    self.InitNodes_Node(_env, managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp1 = exp1
+    self.exp2 = exp2
+    self.LeftSymList = LeftSymList
+    self.initSymSet = initSymSet
+}
+
+
+// declaration Class -- ExpSetItemNode
+type Nodes_ExpSetItemNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp2(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_index(_env *LnsEnv) LnsAny
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_val(_env *LnsEnv) *Nodes_Node
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpSetItemNode struct {
+    Nodes_Node
+    val *Nodes_Node
+    index LnsAny
+    exp2 *Nodes_Node
+    FP Nodes_ExpSetItemNodeMtd
+}
+func Nodes_ExpSetItemNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpSetItemNode).FP
+}
+type Nodes_ExpSetItemNodeDownCast interface {
+    ToNodes_ExpSetItemNode() *Nodes_ExpSetItemNode
+}
+func Nodes_ExpSetItemNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpSetItemNodeDownCast)
+    if ok { return work.ToNodes_ExpSetItemNode() }
+    return nil
+}
+func (obj *Nodes_ExpSetItemNode) ToNodes_ExpSetItemNode() *Nodes_ExpSetItemNode {
+    return obj
+}
+func NewNodes_ExpSetItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny, arg9 *Nodes_Node) *Nodes_ExpSetItemNode {
+    obj := &Nodes_ExpSetItemNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpSetItemNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_ExpSetItemNode) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
+func (self *Nodes_ExpSetItemNode) Get_index(_env *LnsEnv) LnsAny{ return self.index }
+func (self *Nodes_ExpSetItemNode) Get_exp2(_env *LnsEnv) *Nodes_Node{ return self.exp2 }
+// 734: DeclConstr
+func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
+    self.val = val
+    self.index = index
+    self.exp2 = exp2
+}
+
+
+// declaration Class -- ExpOp2Node
+type Nodes_ExpOp2NodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    getValType(_env *LnsEnv, arg1 *Nodes_Node)(bool, LnsInt, LnsReal, string, *Ast_TypeInfo)
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp1(_env *LnsEnv) *Nodes_Node
+    Get_exp2(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_op(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpOp2Node struct {
+    Nodes_Node
+    op *Types_Token
+    exp1 *Nodes_Node
+    exp2 *Nodes_Node
+    FP Nodes_ExpOp2NodeMtd
+}
+func Nodes_ExpOp2Node2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpOp2Node).FP
+}
+type Nodes_ExpOp2NodeDownCast interface {
+    ToNodes_ExpOp2Node() *Nodes_ExpOp2Node
+}
+func Nodes_ExpOp2NodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpOp2NodeDownCast)
+    if ok { return work.ToNodes_ExpOp2Node() }
+    return nil
+}
+func (obj *Nodes_ExpOp2Node) ToNodes_ExpOp2Node() *Nodes_ExpOp2Node {
+    return obj
+}
+func NewNodes_ExpOp2Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 *Nodes_Node) *Nodes_ExpOp2Node {
+    obj := &Nodes_ExpOp2Node{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpOp2Node(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_ExpOp2Node) Get_op(_env *LnsEnv) *Types_Token{ return self.op }
+func (self *Nodes_ExpOp2Node) Get_exp1(_env *LnsEnv) *Nodes_Node{ return self.exp1 }
+func (self *Nodes_ExpOp2Node) Get_exp2(_env *LnsEnv) *Nodes_Node{ return self.exp2 }
+// 734: DeclConstr
+func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
+    self.op = op
+    self.exp1 = exp1
+    self.exp2 = exp2
+}
+
+
+// declaration Class -- UnwrapSetNode
+type Nodes_UnwrapSetNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_dstExpList(_env *LnsEnv) *Nodes_ExpListNode
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_srcExpList(_env *LnsEnv) *Nodes_ExpListNode
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_unwrapBlock(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_UnwrapSetNode struct {
+    Nodes_Node
+    dstExpList *Nodes_ExpListNode
+    srcExpList *Nodes_ExpListNode
+    unwrapBlock LnsAny
+    FP Nodes_UnwrapSetNodeMtd
+}
+func Nodes_UnwrapSetNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_UnwrapSetNode).FP
+}
+type Nodes_UnwrapSetNodeDownCast interface {
+    ToNodes_UnwrapSetNode() *Nodes_UnwrapSetNode
+}
+func Nodes_UnwrapSetNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_UnwrapSetNodeDownCast)
+    if ok { return work.ToNodes_UnwrapSetNode() }
+    return nil
+}
+func (obj *Nodes_UnwrapSetNode) ToNodes_UnwrapSetNode() *Nodes_UnwrapSetNode {
+    return obj
+}
+func NewNodes_UnwrapSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode, arg8 *Nodes_ExpListNode, arg9 LnsAny) *Nodes_UnwrapSetNode {
+    obj := &Nodes_UnwrapSetNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_UnwrapSetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_UnwrapSetNode) Get_dstExpList(_env *LnsEnv) *Nodes_ExpListNode{ return self.dstExpList }
+func (self *Nodes_UnwrapSetNode) Get_srcExpList(_env *LnsEnv) *Nodes_ExpListNode{ return self.srcExpList }
+func (self *Nodes_UnwrapSetNode) Get_unwrapBlock(_env *LnsEnv) LnsAny{ return self.unwrapBlock }
+// 734: DeclConstr
+func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
+    self.dstExpList = dstExpList
+    self.srcExpList = srcExpList
+    self.unwrapBlock = unwrapBlock
+}
+
+
+// declaration Class -- IfUnwrapNode
+type Nodes_IfUnwrapNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_nilBlock(_env *LnsEnv) LnsAny
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_varSymList(_env *LnsEnv) *LnsList
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_IfUnwrapNode struct {
+    Nodes_Node
+    varSymList *LnsList
+    expList *Nodes_ExpListNode
+    block *Nodes_BlockNode
+    nilBlock LnsAny
+    FP Nodes_IfUnwrapNodeMtd
+}
+func Nodes_IfUnwrapNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_IfUnwrapNode).FP
+}
+type Nodes_IfUnwrapNodeDownCast interface {
+    ToNodes_IfUnwrapNode() *Nodes_IfUnwrapNode
+}
+func Nodes_IfUnwrapNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_IfUnwrapNodeDownCast)
+    if ok { return work.ToNodes_IfUnwrapNode() }
+    return nil
+}
+func (obj *Nodes_IfUnwrapNode) ToNodes_IfUnwrapNode() *Nodes_IfUnwrapNode {
+    return obj
+}
+func NewNodes_IfUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_ExpListNode, arg9 *Nodes_BlockNode, arg10 LnsAny) *Nodes_IfUnwrapNode {
+    obj := &Nodes_IfUnwrapNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_IfUnwrapNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_IfUnwrapNode) Get_varSymList(_env *LnsEnv) *LnsList{ return self.varSymList }
+func (self *Nodes_IfUnwrapNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
+func (self *Nodes_IfUnwrapNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+func (self *Nodes_IfUnwrapNode) Get_nilBlock(_env *LnsEnv) LnsAny{ return self.nilBlock }
+// 734: DeclConstr
+func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
+    self.varSymList = varSymList
+    self.expList = expList
+    self.block = block
+    self.nilBlock = nilBlock
+}
+
+
+// declaration Class -- UnwrapSymbolPair
+type Nodes_UnwrapSymbolPairMtd interface {
+    Get_dst(_env *LnsEnv) *Ast_SymbolInfo
+    Get_src(_env *LnsEnv) *Ast_SymbolInfo
+}
+type Nodes_UnwrapSymbolPair struct {
+    src *Ast_SymbolInfo
+    dst *Ast_SymbolInfo
+    FP Nodes_UnwrapSymbolPairMtd
+}
+func Nodes_UnwrapSymbolPair2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_UnwrapSymbolPair).FP
+}
+type Nodes_UnwrapSymbolPairDownCast interface {
+    ToNodes_UnwrapSymbolPair() *Nodes_UnwrapSymbolPair
+}
+func Nodes_UnwrapSymbolPairDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_UnwrapSymbolPairDownCast)
+    if ok { return work.ToNodes_UnwrapSymbolPair() }
+    return nil
+}
+func (obj *Nodes_UnwrapSymbolPair) ToNodes_UnwrapSymbolPair() *Nodes_UnwrapSymbolPair {
+    return obj
+}
+func NewNodes_UnwrapSymbolPair(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *Ast_SymbolInfo) *Nodes_UnwrapSymbolPair {
+    obj := &Nodes_UnwrapSymbolPair{}
+    obj.FP = obj
+    obj.InitNodes_UnwrapSymbolPair(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_UnwrapSymbolPair) InitNodes_UnwrapSymbolPair(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *Ast_SymbolInfo) {
+    self.src = arg1
+    self.dst = arg2
+}
+func (self *Nodes_UnwrapSymbolPair) Get_src(_env *LnsEnv) *Ast_SymbolInfo{ return self.src }
+func (self *Nodes_UnwrapSymbolPair) Get_dst(_env *LnsEnv) *Ast_SymbolInfo{ return self.dst }
+
+// declaration Class -- WhenNode
+type Nodes_WhenNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_elseBlock(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_symPairList(_env *LnsEnv) *LnsList
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_WhenNode struct {
+    Nodes_Node
+    symPairList *LnsList
+    block *Nodes_BlockNode
+    elseBlock LnsAny
+    FP Nodes_WhenNodeMtd
+}
+func Nodes_WhenNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_WhenNode).FP
+}
+type Nodes_WhenNodeDownCast interface {
+    ToNodes_WhenNode() *Nodes_WhenNode
+}
+func Nodes_WhenNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_WhenNodeDownCast)
+    if ok { return work.ToNodes_WhenNode() }
+    return nil
+}
+func (obj *Nodes_WhenNode) ToNodes_WhenNode() *Nodes_WhenNode {
+    return obj
+}
+func NewNodes_WhenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_BlockNode, arg9 LnsAny) *Nodes_WhenNode {
+    obj := &Nodes_WhenNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_WhenNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_WhenNode) Get_symPairList(_env *LnsEnv) *LnsList{ return self.symPairList }
+func (self *Nodes_WhenNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+func (self *Nodes_WhenNode) Get_elseBlock(_env *LnsEnv) LnsAny{ return self.elseBlock }
+// 734: DeclConstr
+func (self *Nodes_WhenNode) InitNodes_WhenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
+    self.symPairList = symPairList
+    self.block = block
+    self.elseBlock = elseBlock
+}
+
+
+// declaration Class -- ExpCastNode
+type Nodes_ExpCastNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_castKind(_env *LnsEnv) LnsInt
+    Get_castOpe(_env *LnsEnv) string
+    Get_castType(_env *LnsEnv) *Ast_TypeInfo
+    Get_castTypeNode(_env *LnsEnv) LnsAny
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpCastNode struct {
+    Nodes_Node
+    exp *Nodes_Node
+    castType *Ast_TypeInfo
+    castTypeNode LnsAny
+    castOpe string
+    castKind LnsInt
+    FP Nodes_ExpCastNodeMtd
+}
+func Nodes_ExpCastNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpCastNode).FP
+}
+type Nodes_ExpCastNodeDownCast interface {
+    ToNodes_ExpCastNode() *Nodes_ExpCastNode
+}
+func Nodes_ExpCastNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpCastNodeDownCast)
+    if ok { return work.ToNodes_ExpCastNode() }
+    return nil
+}
+func (obj *Nodes_ExpCastNode) ToNodes_ExpCastNode() *Nodes_ExpCastNode {
+    return obj
+}
+func NewNodes_ExpCastNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny, arg10 string, arg11 LnsInt) *Nodes_ExpCastNode {
+    obj := &Nodes_ExpCastNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpCastNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    return obj
+}
+func (self *Nodes_ExpCastNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+func (self *Nodes_ExpCastNode) Get_castType(_env *LnsEnv) *Ast_TypeInfo{ return self.castType }
+func (self *Nodes_ExpCastNode) Get_castTypeNode(_env *LnsEnv) LnsAny{ return self.castTypeNode }
+func (self *Nodes_ExpCastNode) Get_castOpe(_env *LnsEnv) string{ return self.castOpe }
+func (self *Nodes_ExpCastNode) Get_castKind(_env *LnsEnv) LnsInt{ return self.castKind }
+// 734: DeclConstr
+func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) {
+    self.InitNodes_Node(_env, managerId, id, 31, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+    self.castType = castType
+    self.castTypeNode = castTypeNode
+    self.castOpe = castOpe
+    self.castKind = castKind
+}
+
+
+// declaration Class -- ExpToDDDNode
+type Nodes_ExpToDDDNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) *Nodes_ExpListNode
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpToDDDNode struct {
+    Nodes_Node
+    expList *Nodes_ExpListNode
+    FP Nodes_ExpToDDDNodeMtd
+}
+func Nodes_ExpToDDDNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpToDDDNode).FP
+}
+type Nodes_ExpToDDDNodeDownCast interface {
+    ToNodes_ExpToDDDNode() *Nodes_ExpToDDDNode
+}
+func Nodes_ExpToDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpToDDDNodeDownCast)
+    if ok { return work.ToNodes_ExpToDDDNode() }
+    return nil
+}
+func (obj *Nodes_ExpToDDDNode) ToNodes_ExpToDDDNode() *Nodes_ExpToDDDNode {
+    return obj
+}
+func NewNodes_ExpToDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
+    obj := &Nodes_ExpToDDDNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpToDDDNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpToDDDNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
+// 734: DeclConstr
+func (self *Nodes_ExpToDDDNode) InitNodes_ExpToDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) {
+    self.InitNodes_Node(_env, managerId, id, 32, pos, inTestBlock, macroArgFlag, typeList)
+    self.expList = expList
+}
+
+
+// declaration Class -- ExpSubDDDNode
+type Nodes_ExpSubDDDNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_remainIndex(_env *LnsEnv) LnsInt
+    Get_src(_env *LnsEnv) *Nodes_Node
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpSubDDDNode struct {
+    Nodes_Node
+    src *Nodes_Node
+    remainIndex LnsInt
+    FP Nodes_ExpSubDDDNodeMtd
+}
+func Nodes_ExpSubDDDNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpSubDDDNode).FP
+}
+type Nodes_ExpSubDDDNodeDownCast interface {
+    ToNodes_ExpSubDDDNode() *Nodes_ExpSubDDDNode
+}
+func Nodes_ExpSubDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpSubDDDNodeDownCast)
+    if ok { return work.ToNodes_ExpSubDDDNode() }
+    return nil
+}
+func (obj *Nodes_ExpSubDDDNode) ToNodes_ExpSubDDDNode() *Nodes_ExpSubDDDNode {
+    return obj
+}
+func NewNodes_ExpSubDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpSubDDDNode {
+    obj := &Nodes_ExpSubDDDNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpSubDDDNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_ExpSubDDDNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
+func (self *Nodes_ExpSubDDDNode) Get_remainIndex(_env *LnsEnv) LnsInt{ return self.remainIndex }
+// 734: DeclConstr
+func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) {
+    self.InitNodes_Node(_env, managerId, id, 33, pos, inTestBlock, macroArgFlag, typeList)
+    self.src = src
+    self.remainIndex = remainIndex
+}
+
+
+// declaration Class -- ExpOp1Node
+type Nodes_ExpOp1NodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_macroMode(_env *LnsEnv) LnsInt
+    Get_op(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpOp1Node struct {
+    Nodes_Node
+    op *Types_Token
+    macroMode LnsInt
+    exp *Nodes_Node
+    FP Nodes_ExpOp1NodeMtd
+}
+func Nodes_ExpOp1Node2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpOp1Node).FP
+}
+type Nodes_ExpOp1NodeDownCast interface {
+    ToNodes_ExpOp1Node() *Nodes_ExpOp1Node
+}
+func Nodes_ExpOp1NodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpOp1NodeDownCast)
+    if ok { return work.ToNodes_ExpOp1Node() }
+    return nil
+}
+func (obj *Nodes_ExpOp1Node) ToNodes_ExpOp1Node() *Nodes_ExpOp1Node {
+    return obj
+}
+func NewNodes_ExpOp1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt, arg9 *Nodes_Node) *Nodes_ExpOp1Node {
+    obj := &Nodes_ExpOp1Node{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpOp1Node(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_ExpOp1Node) Get_op(_env *LnsEnv) *Types_Token{ return self.op }
+func (self *Nodes_ExpOp1Node) Get_macroMode(_env *LnsEnv) LnsInt{ return self.macroMode }
+func (self *Nodes_ExpOp1Node) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
+    self.op = op
+    self.macroMode = macroMode
+    self.exp = exp
+}
+
+
+// declaration Class -- ExpRefItemNode
+type Nodes_ExpRefItemNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_index(_env *LnsEnv) LnsAny
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_nilAccess(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_symbol(_env *LnsEnv) LnsAny
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_val(_env *LnsEnv) *Nodes_Node
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpRefItemNode struct {
+    Nodes_Node
+    val *Nodes_Node
+    nilAccess bool
+    symbol LnsAny
+    index LnsAny
+    FP Nodes_ExpRefItemNodeMtd
+}
+func Nodes_ExpRefItemNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpRefItemNode).FP
+}
+type Nodes_ExpRefItemNodeDownCast interface {
+    ToNodes_ExpRefItemNode() *Nodes_ExpRefItemNode
+}
+func Nodes_ExpRefItemNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpRefItemNodeDownCast)
+    if ok { return work.ToNodes_ExpRefItemNode() }
+    return nil
+}
+func (obj *Nodes_ExpRefItemNode) ToNodes_ExpRefItemNode() *Nodes_ExpRefItemNode {
+    return obj
+}
+func NewNodes_ExpRefItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 LnsAny, arg10 LnsAny) *Nodes_ExpRefItemNode {
+    obj := &Nodes_ExpRefItemNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpRefItemNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_ExpRefItemNode) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
+func (self *Nodes_ExpRefItemNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
+func (self *Nodes_ExpRefItemNode) Get_symbol(_env *LnsEnv) LnsAny{ return self.symbol }
+func (self *Nodes_ExpRefItemNode) Get_index(_env *LnsEnv) LnsAny{ return self.index }
+// 734: DeclConstr
+func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
+    self.val = val
+    self.nilAccess = nilAccess
+    self.symbol = symbol
+    self.index = index
+}
+
+
+// declaration Class -- ExpCallNode
+type Nodes_ExpCallNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_argList(_env *LnsEnv) LnsAny
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_errorFunc(_env *LnsEnv) bool
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_func(_env *LnsEnv) *Nodes_Node
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_nilAccess(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpCallNode struct {
+    Nodes_Node
+    _func *Nodes_Node
+    errorFunc bool
+    nilAccess bool
+    argList LnsAny
+    FP Nodes_ExpCallNodeMtd
+}
+func Nodes_ExpCallNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpCallNode).FP
+}
+type Nodes_ExpCallNodeDownCast interface {
+    ToNodes_ExpCallNode() *Nodes_ExpCallNode
+}
+func Nodes_ExpCallNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpCallNodeDownCast)
+    if ok { return work.ToNodes_ExpCallNode() }
+    return nil
+}
+func (obj *Nodes_ExpCallNode) ToNodes_ExpCallNode() *Nodes_ExpCallNode {
+    return obj
+}
+func NewNodes_ExpCallNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 bool, arg10 LnsAny) *Nodes_ExpCallNode {
+    obj := &Nodes_ExpCallNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpCallNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_ExpCallNode) Get_func(_env *LnsEnv) *Nodes_Node{ return self._func }
+func (self *Nodes_ExpCallNode) Get_errorFunc(_env *LnsEnv) bool{ return self.errorFunc }
+func (self *Nodes_ExpCallNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
+func (self *Nodes_ExpCallNode) Get_argList(_env *LnsEnv) LnsAny{ return self.argList }
+// 734: DeclConstr
+func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
+    self._func = _func
+    self.errorFunc = errorFunc
+    self.nilAccess = nilAccess
+    self.argList = argList
+}
+
+
+// declaration Class -- ExpMRetNode
+type Nodes_ExpMRetNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_mRet(_env *LnsEnv) *Nodes_Node
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpMRetNode struct {
+    Nodes_Node
+    mRet *Nodes_Node
+    FP Nodes_ExpMRetNodeMtd
+}
+func Nodes_ExpMRetNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpMRetNode).FP
+}
+type Nodes_ExpMRetNodeDownCast interface {
+    ToNodes_ExpMRetNode() *Nodes_ExpMRetNode
+}
+func Nodes_ExpMRetNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpMRetNodeDownCast)
+    if ok { return work.ToNodes_ExpMRetNode() }
+    return nil
+}
+func (obj *Nodes_ExpMRetNode) ToNodes_ExpMRetNode() *Nodes_ExpMRetNode {
+    return obj
+}
+func NewNodes_ExpMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMRetNode {
+    obj := &Nodes_ExpMRetNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpMRetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpMRetNode) Get_mRet(_env *LnsEnv) *Nodes_Node{ return self.mRet }
+// 734: DeclConstr
+func (self *Nodes_ExpMRetNode) InitNodes_ExpMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
+    self.mRet = mRet
+}
+
+
+// declaration Class -- ExpAccessMRetNode
+type Nodes_ExpAccessMRetNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_index(_env *LnsEnv) LnsInt
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_mRet(_env *LnsEnv) *Nodes_Node
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpAccessMRetNode struct {
+    Nodes_Node
+    mRet *Nodes_Node
+    index LnsInt
+    FP Nodes_ExpAccessMRetNodeMtd
+}
+func Nodes_ExpAccessMRetNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpAccessMRetNode).FP
+}
+type Nodes_ExpAccessMRetNodeDownCast interface {
+    ToNodes_ExpAccessMRetNode() *Nodes_ExpAccessMRetNode
+}
+func Nodes_ExpAccessMRetNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpAccessMRetNodeDownCast)
+    if ok { return work.ToNodes_ExpAccessMRetNode() }
+    return nil
+}
+func (obj *Nodes_ExpAccessMRetNode) ToNodes_ExpAccessMRetNode() *Nodes_ExpAccessMRetNode {
+    return obj
+}
+func NewNodes_ExpAccessMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpAccessMRetNode {
+    obj := &Nodes_ExpAccessMRetNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpAccessMRetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_ExpAccessMRetNode) Get_mRet(_env *LnsEnv) *Nodes_Node{ return self.mRet }
+func (self *Nodes_ExpAccessMRetNode) Get_index(_env *LnsEnv) LnsInt{ return self.index }
+// 734: DeclConstr
+func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) {
+    self.InitNodes_Node(_env, managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
+    self.mRet = mRet
+    self.index = index
+}
+
+
+// declaration Class -- ExpMultiTo1Node
+type Nodes_ExpMultiTo1NodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpMultiTo1Node struct {
+    Nodes_Node
+    exp *Nodes_Node
+    FP Nodes_ExpMultiTo1NodeMtd
+}
+func Nodes_ExpMultiTo1Node2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpMultiTo1Node).FP
+}
+type Nodes_ExpMultiTo1NodeDownCast interface {
+    ToNodes_ExpMultiTo1Node() *Nodes_ExpMultiTo1Node
+}
+func Nodes_ExpMultiTo1NodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpMultiTo1NodeDownCast)
+    if ok { return work.ToNodes_ExpMultiTo1Node() }
+    return nil
+}
+func (obj *Nodes_ExpMultiTo1Node) ToNodes_ExpMultiTo1Node() *Nodes_ExpMultiTo1Node {
+    return obj
+}
+func NewNodes_ExpMultiTo1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMultiTo1Node {
+    obj := &Nodes_ExpMultiTo1Node{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpMultiTo1Node(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpMultiTo1Node) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_ExpMultiTo1Node) InitNodes_ExpMultiTo1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+}
+
+
+// declaration Class -- ExpParenNode
+type Nodes_ExpParenNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpParenNode struct {
+    Nodes_Node
+    exp *Nodes_Node
+    FP Nodes_ExpParenNodeMtd
+}
+func Nodes_ExpParenNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpParenNode).FP
+}
+type Nodes_ExpParenNodeDownCast interface {
+    ToNodes_ExpParenNode() *Nodes_ExpParenNode
+}
+func Nodes_ExpParenNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpParenNodeDownCast)
+    if ok { return work.ToNodes_ExpParenNode() }
+    return nil
+}
+func (obj *Nodes_ExpParenNode) ToNodes_ExpParenNode() *Nodes_ExpParenNode {
+    return obj
+}
+func NewNodes_ExpParenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpParenNode {
+    obj := &Nodes_ExpParenNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpParenNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpParenNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_ExpParenNode) InitNodes_ExpParenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+}
+
+
+// declaration Class -- ExpMacroExpNode
+type Nodes_ExpMacroExpNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_macroType(_env *LnsEnv) *Ast_TypeInfo
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_stmtList(_env *LnsEnv) *LnsList
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpMacroExpNode struct {
+    Nodes_Node
+    macroType *Ast_TypeInfo
+    stmtList *LnsList
+    FP Nodes_ExpMacroExpNodeMtd
+}
+func Nodes_ExpMacroExpNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpMacroExpNode).FP
+}
+type Nodes_ExpMacroExpNodeDownCast interface {
+    ToNodes_ExpMacroExpNode() *Nodes_ExpMacroExpNode
+}
+func Nodes_ExpMacroExpNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpMacroExpNodeDownCast)
+    if ok { return work.ToNodes_ExpMacroExpNode() }
+    return nil
+}
+func (obj *Nodes_ExpMacroExpNode) ToNodes_ExpMacroExpNode() *Nodes_ExpMacroExpNode {
+    return obj
+}
+func NewNodes_ExpMacroExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *LnsList) *Nodes_ExpMacroExpNode {
+    obj := &Nodes_ExpMacroExpNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpMacroExpNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_ExpMacroExpNode) Get_macroType(_env *LnsEnv) *Ast_TypeInfo{ return self.macroType }
+func (self *Nodes_ExpMacroExpNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
+// 734: DeclConstr
+func (self *Nodes_ExpMacroExpNode) InitNodes_ExpMacroExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
+    self.macroType = macroType
+    self.stmtList = stmtList
+}
+
+
+// declaration Class -- ExpMacroStatNode
+type Nodes_ExpMacroStatNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expStrList(_env *LnsEnv) *LnsList
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpMacroStatNode struct {
+    Nodes_Node
+    expStrList *LnsList
+    FP Nodes_ExpMacroStatNodeMtd
+}
+func Nodes_ExpMacroStatNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpMacroStatNode).FP
+}
+type Nodes_ExpMacroStatNodeDownCast interface {
+    ToNodes_ExpMacroStatNode() *Nodes_ExpMacroStatNode
+}
+func Nodes_ExpMacroStatNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpMacroStatNodeDownCast)
+    if ok { return work.ToNodes_ExpMacroStatNode() }
+    return nil
+}
+func (obj *Nodes_ExpMacroStatNode) ToNodes_ExpMacroStatNode() *Nodes_ExpMacroStatNode {
+    return obj
+}
+func NewNodes_ExpMacroStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_ExpMacroStatNode {
+    obj := &Nodes_ExpMacroStatNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpMacroStatNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpMacroStatNode) Get_expStrList(_env *LnsEnv) *LnsList{ return self.expStrList }
+// 734: DeclConstr
+func (self *Nodes_ExpMacroStatNode) InitNodes_ExpMacroStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
+    self.expStrList = expStrList
+}
+
+
+// declaration Class -- ExpMacroArgExpNode
+type Nodes_ExpMacroArgExpNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_codeTxt(_env *LnsEnv) string
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpMacroArgExpNode struct {
+    Nodes_Node
+    codeTxt string
+    FP Nodes_ExpMacroArgExpNodeMtd
+}
+func Nodes_ExpMacroArgExpNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpMacroArgExpNode).FP
+}
+type Nodes_ExpMacroArgExpNodeDownCast interface {
+    ToNodes_ExpMacroArgExpNode() *Nodes_ExpMacroArgExpNode
+}
+func Nodes_ExpMacroArgExpNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpMacroArgExpNodeDownCast)
+    if ok { return work.ToNodes_ExpMacroArgExpNode() }
+    return nil
+}
+func (obj *Nodes_ExpMacroArgExpNode) ToNodes_ExpMacroArgExpNode() *Nodes_ExpMacroArgExpNode {
+    return obj
+}
+func NewNodes_ExpMacroArgExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ExpMacroArgExpNode {
+    obj := &Nodes_ExpMacroArgExpNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpMacroArgExpNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpMacroArgExpNode) Get_codeTxt(_env *LnsEnv) string{ return self.codeTxt }
+// 734: DeclConstr
+func (self *Nodes_ExpMacroArgExpNode) InitNodes_ExpMacroArgExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) {
+    self.InitNodes_Node(_env, managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
+    self.codeTxt = codeTxt
+}
+
+
+// declaration Class -- StmtExpNode
+type Nodes_StmtExpNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_StmtExpNode struct {
+    Nodes_Node
+    exp *Nodes_Node
+    FP Nodes_StmtExpNodeMtd
+}
+func Nodes_StmtExpNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_StmtExpNode).FP
+}
+type Nodes_StmtExpNodeDownCast interface {
+    ToNodes_StmtExpNode() *Nodes_StmtExpNode
+}
+func Nodes_StmtExpNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_StmtExpNodeDownCast)
+    if ok { return work.ToNodes_StmtExpNode() }
+    return nil
+}
+func (obj *Nodes_StmtExpNode) ToNodes_StmtExpNode() *Nodes_StmtExpNode {
+    return obj
+}
+func NewNodes_StmtExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_StmtExpNode {
+    obj := &Nodes_StmtExpNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_StmtExpNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_StmtExpNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_StmtExpNode) InitNodes_StmtExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 44, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+}
+
+
+// declaration Class -- ExpMacroStatListNode
+type Nodes_ExpMacroStatListNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpMacroStatListNode struct {
+    Nodes_Node
+    exp *Nodes_Node
+    FP Nodes_ExpMacroStatListNodeMtd
+}
+func Nodes_ExpMacroStatListNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpMacroStatListNode).FP
+}
+type Nodes_ExpMacroStatListNodeDownCast interface {
+    ToNodes_ExpMacroStatListNode() *Nodes_ExpMacroStatListNode
+}
+func Nodes_ExpMacroStatListNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpMacroStatListNodeDownCast)
+    if ok { return work.ToNodes_ExpMacroStatListNode() }
+    return nil
+}
+func (obj *Nodes_ExpMacroStatListNode) ToNodes_ExpMacroStatListNode() *Nodes_ExpMacroStatListNode {
+    return obj
+}
+func NewNodes_ExpMacroStatListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMacroStatListNode {
+    obj := &Nodes_ExpMacroStatListNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpMacroStatListNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ExpMacroStatListNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_ExpMacroStatListNode) InitNodes_ExpMacroStatListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 45, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+}
+
+
+// declaration Class -- ExpOmitEnumNode
+type Nodes_ExpOmitEnumNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_aliasType(_env *LnsEnv) LnsAny
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_enumTypeInfo(_env *LnsEnv) *Ast_EnumTypeInfo
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_valInfo(_env *LnsEnv) *Ast_EnumValInfo
+    Get_valToken(_env *LnsEnv) *Types_Token
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpOmitEnumNode struct {
+    Nodes_Node
+    valToken *Types_Token
+    valInfo *Ast_EnumValInfo
+    aliasType LnsAny
+    enumTypeInfo *Ast_EnumTypeInfo
+    FP Nodes_ExpOmitEnumNodeMtd
+}
+func Nodes_ExpOmitEnumNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpOmitEnumNode).FP
+}
+type Nodes_ExpOmitEnumNodeDownCast interface {
+    ToNodes_ExpOmitEnumNode() *Nodes_ExpOmitEnumNode
+}
+func Nodes_ExpOmitEnumNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpOmitEnumNodeDownCast)
+    if ok { return work.ToNodes_ExpOmitEnumNode() }
+    return nil
+}
+func (obj *Nodes_ExpOmitEnumNode) ToNodes_ExpOmitEnumNode() *Nodes_ExpOmitEnumNode {
+    return obj
+}
+func NewNodes_ExpOmitEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_EnumValInfo, arg9 LnsAny, arg10 *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
+    obj := &Nodes_ExpOmitEnumNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpOmitEnumNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_ExpOmitEnumNode) Get_valToken(_env *LnsEnv) *Types_Token{ return self.valToken }
+func (self *Nodes_ExpOmitEnumNode) Get_valInfo(_env *LnsEnv) *Ast_EnumValInfo{ return self.valInfo }
+func (self *Nodes_ExpOmitEnumNode) Get_aliasType(_env *LnsEnv) LnsAny{ return self.aliasType }
+func (self *Nodes_ExpOmitEnumNode) Get_enumTypeInfo(_env *LnsEnv) *Ast_EnumTypeInfo{ return self.enumTypeInfo }
+// 734: DeclConstr
+func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) {
+    self.InitNodes_Node(_env, managerId, id, 46, pos, inTestBlock, macroArgFlag, typeList)
+    self.valToken = valToken
+    self.valInfo = valInfo
+    self.aliasType = aliasType
+    self.enumTypeInfo = enumTypeInfo
+}
+
+
+// declaration Class -- RefFieldNode
+type Nodes_RefFieldNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_field(_env *LnsEnv) *Types_Token
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_nilAccess(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_prefix(_env *LnsEnv) *Nodes_Node
+    Get_symbolInfo(_env *LnsEnv) LnsAny
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_RefFieldNode struct {
+    Nodes_Node
+    field *Types_Token
+    symbolInfo LnsAny
+    nilAccess bool
+    prefix *Nodes_Node
+    FP Nodes_RefFieldNodeMtd
+}
+func Nodes_RefFieldNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_RefFieldNode).FP
+}
+type Nodes_RefFieldNodeDownCast interface {
+    ToNodes_RefFieldNode() *Nodes_RefFieldNode
+}
+func Nodes_RefFieldNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_RefFieldNodeDownCast)
+    if ok { return work.ToNodes_RefFieldNode() }
+    return nil
+}
+func (obj *Nodes_RefFieldNode) ToNodes_RefFieldNode() *Nodes_RefFieldNode {
+    return obj
+}
+func NewNodes_RefFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node) *Nodes_RefFieldNode {
+    obj := &Nodes_RefFieldNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_RefFieldNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_RefFieldNode) Get_field(_env *LnsEnv) *Types_Token{ return self.field }
+func (self *Nodes_RefFieldNode) Get_symbolInfo(_env *LnsEnv) LnsAny{ return self.symbolInfo }
+func (self *Nodes_RefFieldNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
+func (self *Nodes_RefFieldNode) Get_prefix(_env *LnsEnv) *Nodes_Node{ return self.prefix }
+// 734: DeclConstr
+func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
+    self.field = field
+    self.symbolInfo = symbolInfo
+    self.nilAccess = nilAccess
+    self.prefix = prefix
+}
+
+
+// declaration Class -- GetFieldNode
+type Nodes_GetFieldNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_field(_env *LnsEnv) *Types_Token
+    Get_getterTypeInfo(_env *LnsEnv) *Ast_TypeInfo
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_nilAccess(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_prefix(_env *LnsEnv) *Nodes_Node
+    Get_symbolInfo(_env *LnsEnv) LnsAny
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_GetFieldNode struct {
+    Nodes_Node
+    field *Types_Token
+    symbolInfo LnsAny
+    nilAccess bool
+    prefix *Nodes_Node
+    getterTypeInfo *Ast_TypeInfo
+    FP Nodes_GetFieldNodeMtd
+}
+func Nodes_GetFieldNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_GetFieldNode).FP
+}
+type Nodes_GetFieldNodeDownCast interface {
+    ToNodes_GetFieldNode() *Nodes_GetFieldNode
+}
+func Nodes_GetFieldNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_GetFieldNodeDownCast)
+    if ok { return work.ToNodes_GetFieldNode() }
+    return nil
+}
+func (obj *Nodes_GetFieldNode) ToNodes_GetFieldNode() *Nodes_GetFieldNode {
+    return obj
+}
+func NewNodes_GetFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node, arg11 *Ast_TypeInfo) *Nodes_GetFieldNode {
+    obj := &Nodes_GetFieldNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_GetFieldNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    return obj
+}
+func (self *Nodes_GetFieldNode) Get_field(_env *LnsEnv) *Types_Token{ return self.field }
+func (self *Nodes_GetFieldNode) Get_symbolInfo(_env *LnsEnv) LnsAny{ return self.symbolInfo }
+func (self *Nodes_GetFieldNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
+func (self *Nodes_GetFieldNode) Get_prefix(_env *LnsEnv) *Nodes_Node{ return self.prefix }
+func (self *Nodes_GetFieldNode) Get_getterTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.getterTypeInfo }
+// 734: DeclConstr
+func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) {
+    self.InitNodes_Node(_env, managerId, id, 48, pos, inTestBlock, macroArgFlag, typeList)
+    self.field = field
+    self.symbolInfo = symbolInfo
+    self.nilAccess = nilAccess
+    self.prefix = prefix
+    self.getterTypeInfo = getterTypeInfo
+}
+
+
+// declaration Class -- AliasNode
+type Nodes_AliasNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_newSymbol(_env *LnsEnv) *Ast_SymbolInfo
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_srcNode(_env *LnsEnv) *Nodes_Node
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_AliasNode struct {
+    Nodes_Node
+    newSymbol *Ast_SymbolInfo
+    srcNode *Nodes_Node
+    typeInfo *Ast_TypeInfo
+    FP Nodes_AliasNodeMtd
+}
+func Nodes_AliasNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_AliasNode).FP
+}
+type Nodes_AliasNodeDownCast interface {
+    ToNodes_AliasNode() *Nodes_AliasNode
+}
+func Nodes_AliasNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_AliasNodeDownCast)
+    if ok { return work.ToNodes_AliasNode() }
+    return nil
+}
+func (obj *Nodes_AliasNode) ToNodes_AliasNode() *Nodes_AliasNode {
+    return obj
+}
+func NewNodes_AliasNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo, arg8 *Nodes_Node, arg9 *Ast_TypeInfo) *Nodes_AliasNode {
+    obj := &Nodes_AliasNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_AliasNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_AliasNode) Get_newSymbol(_env *LnsEnv) *Ast_SymbolInfo{ return self.newSymbol }
+func (self *Nodes_AliasNode) Get_srcNode(_env *LnsEnv) *Nodes_Node{ return self.srcNode }
+func (self *Nodes_AliasNode) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
+// 734: DeclConstr
+func (self *Nodes_AliasNode) InitNodes_AliasNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) {
+    self.InitNodes_Node(_env, managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
+    self.newSymbol = newSymbol
+    self.srcNode = srcNode
+    self.typeInfo = typeInfo
+}
+
+
+// declaration Class -- VarInfo
+type Nodes_VarInfoMtd interface {
+    Get_actualType(_env *LnsEnv) *Ast_TypeInfo
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_refType(_env *LnsEnv) LnsAny
+}
+type Nodes_VarInfo struct {
+    name *Types_Token
+    refType LnsAny
+    actualType *Ast_TypeInfo
+    FP Nodes_VarInfoMtd
+}
+func Nodes_VarInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_VarInfo).FP
+}
+type Nodes_VarInfoDownCast interface {
+    ToNodes_VarInfo() *Nodes_VarInfo
+}
+func Nodes_VarInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_VarInfoDownCast)
+    if ok { return work.ToNodes_VarInfo() }
+    return nil
+}
+func (obj *Nodes_VarInfo) ToNodes_VarInfo() *Nodes_VarInfo {
+    return obj
+}
+func NewNodes_VarInfo(_env *LnsEnv, arg1 *Types_Token, arg2 LnsAny, arg3 *Ast_TypeInfo) *Nodes_VarInfo {
+    obj := &Nodes_VarInfo{}
+    obj.FP = obj
+    obj.InitNodes_VarInfo(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *Nodes_VarInfo) InitNodes_VarInfo(_env *LnsEnv, arg1 *Types_Token, arg2 LnsAny, arg3 *Ast_TypeInfo) {
+    self.name = arg1
+    self.refType = arg2
+    self.actualType = arg3
+}
+func (self *Nodes_VarInfo) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_VarInfo) Get_refType(_env *LnsEnv) LnsAny{ return self.refType }
+func (self *Nodes_VarInfo) Get_actualType(_env *LnsEnv) *Ast_TypeInfo{ return self.actualType }
+
+// declaration Class -- DeclVarNode
+type Nodes_DeclVarNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_accessMode(_env *LnsEnv) LnsInt
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_mode(_env *LnsEnv) LnsInt
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_staticFlag(_env *LnsEnv) bool
+    Get_symbolInfoList(_env *LnsEnv) *LnsList
+    Get_syncBlock(_env *LnsEnv) LnsAny
+    Get_syncVarList(_env *LnsEnv) *LnsList
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_thenBlock(_env *LnsEnv) LnsAny
+    Get_typeInfoList(_env *LnsEnv) *LnsList
+    Get_unwrapBlock(_env *LnsEnv) LnsAny
+    Get_unwrapFlag(_env *LnsEnv) bool
+    Get_varList(_env *LnsEnv) *LnsList
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclVarNode struct {
+    Nodes_Node
+    mode LnsInt
+    accessMode LnsInt
+    staticFlag bool
+    varList *LnsList
+    expList LnsAny
+    symbolInfoList *LnsList
+    typeInfoList *LnsList
+    unwrapFlag bool
+    unwrapBlock LnsAny
+    thenBlock LnsAny
+    syncVarList *LnsList
+    syncBlock LnsAny
+    FP Nodes_DeclVarNodeMtd
+}
+func Nodes_DeclVarNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclVarNode).FP
+}
+type Nodes_DeclVarNodeDownCast interface {
+    ToNodes_DeclVarNode() *Nodes_DeclVarNode
+}
+func Nodes_DeclVarNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclVarNodeDownCast)
+    if ok { return work.ToNodes_DeclVarNode() }
+    return nil
+}
+func (obj *Nodes_DeclVarNode) ToNodes_DeclVarNode() *Nodes_DeclVarNode {
+    return obj
+}
+func NewNodes_DeclVarNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsList, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 LnsAny, arg16 LnsAny, arg17 *LnsList, arg18 LnsAny) *Nodes_DeclVarNode {
+    obj := &Nodes_DeclVarNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclVarNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18)
+    return obj
+}
+func (self *Nodes_DeclVarNode) Get_mode(_env *LnsEnv) LnsInt{ return self.mode }
+func (self *Nodes_DeclVarNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
+func (self *Nodes_DeclVarNode) Get_staticFlag(_env *LnsEnv) bool{ return self.staticFlag }
+func (self *Nodes_DeclVarNode) Get_varList(_env *LnsEnv) *LnsList{ return self.varList }
+func (self *Nodes_DeclVarNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
+func (self *Nodes_DeclVarNode) Get_symbolInfoList(_env *LnsEnv) *LnsList{ return self.symbolInfoList }
+func (self *Nodes_DeclVarNode) Get_typeInfoList(_env *LnsEnv) *LnsList{ return self.typeInfoList }
+func (self *Nodes_DeclVarNode) Get_unwrapFlag(_env *LnsEnv) bool{ return self.unwrapFlag }
+func (self *Nodes_DeclVarNode) Get_unwrapBlock(_env *LnsEnv) LnsAny{ return self.unwrapBlock }
+func (self *Nodes_DeclVarNode) Get_thenBlock(_env *LnsEnv) LnsAny{ return self.thenBlock }
+func (self *Nodes_DeclVarNode) Get_syncVarList(_env *LnsEnv) *LnsList{ return self.syncVarList }
+func (self *Nodes_DeclVarNode) Get_syncBlock(_env *LnsEnv) LnsAny{ return self.syncBlock }
+// 734: DeclConstr
+func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
+    self.mode = mode
+    self.accessMode = accessMode
+    self.staticFlag = staticFlag
+    self.varList = varList
+    self.expList = expList
+    self.symbolInfoList = symbolInfoList
+    self.typeInfoList = typeInfoList
+    self.unwrapFlag = unwrapFlag
+    self.unwrapBlock = unwrapBlock
+    self.thenBlock = thenBlock
+    self.syncVarList = syncVarList
+    self.syncBlock = syncBlock
+}
+
+
+// declaration Class -- DeclFuncInfo
+type Nodes_DeclFuncInfoMtd interface {
+    Get_accessMode(_env *LnsEnv) LnsInt
+    Get_argList(_env *LnsEnv) *LnsList
+    Get_asyncMode(_env *LnsEnv) LnsAny
+    Get_body(_env *LnsEnv) LnsAny
+    Get_classTypeInfo(_env *LnsEnv) LnsAny
+    Get_declClassNode(_env *LnsEnv) LnsAny
+    Get_has__func__Symbol(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_name(_env *LnsEnv) LnsAny
+    Get_outsizeOfClass(_env *LnsEnv) bool
+    Get_overrideFlag(_env *LnsEnv) bool
+    Get_retTypeInfoList(_env *LnsEnv) *LnsList
+    Get_retTypeNodeList(_env *LnsEnv) *LnsList
+    Get_staticFlag(_env *LnsEnv) bool
+    Get_stmtNum(_env *LnsEnv) LnsInt
+    Get_symbol(_env *LnsEnv) LnsAny
+    Set_body(_env *LnsEnv, arg1 LnsAny)
+    Set_has__func__Symbol(_env *LnsEnv, arg1 bool)
+    Set_stmtNum(_env *LnsEnv, arg1 LnsInt)
+}
+type Nodes_DeclFuncInfo struct {
+    kind LnsInt
+    classTypeInfo LnsAny
+    declClassNode LnsAny
+    outsizeOfClass bool
+    name LnsAny
+    symbol LnsAny
+    argList *LnsList
+    staticFlag bool
+    accessMode LnsInt
+    asyncMode LnsAny
+    body LnsAny
+    retTypeInfoList *LnsList
+    retTypeNodeList *LnsList
+    has__func__Symbol bool
+    overrideFlag bool
+    stmtNum LnsInt
+    FP Nodes_DeclFuncInfoMtd
+}
+func Nodes_DeclFuncInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclFuncInfo).FP
+}
+type Nodes_DeclFuncInfoDownCast interface {
+    ToNodes_DeclFuncInfo() *Nodes_DeclFuncInfo
+}
+func Nodes_DeclFuncInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclFuncInfoDownCast)
+    if ok { return work.ToNodes_DeclFuncInfo() }
+    return nil
+}
+func (obj *Nodes_DeclFuncInfo) ToNodes_DeclFuncInfo() *Nodes_DeclFuncInfo {
+    return obj
+}
+func NewNodes_DeclFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 *LnsList, arg8 bool, arg9 LnsInt, arg10 LnsAny, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 bool, arg16 LnsInt) *Nodes_DeclFuncInfo {
+    obj := &Nodes_DeclFuncInfo{}
+    obj.FP = obj
+    obj.InitNodes_DeclFuncInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)
+    return obj
+}
+func (self *Nodes_DeclFuncInfo) InitNodes_DeclFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny, arg3 LnsAny, arg4 bool, arg5 LnsAny, arg6 LnsAny, arg7 *LnsList, arg8 bool, arg9 LnsInt, arg10 LnsAny, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 bool, arg16 LnsInt) {
+    self.kind = arg1
+    self.classTypeInfo = arg2
+    self.declClassNode = arg3
+    self.outsizeOfClass = arg4
+    self.name = arg5
+    self.symbol = arg6
+    self.argList = arg7
+    self.staticFlag = arg8
+    self.accessMode = arg9
+    self.asyncMode = arg10
+    self.body = arg11
+    self.retTypeInfoList = arg12
+    self.retTypeNodeList = arg13
+    self.has__func__Symbol = arg14
+    self.overrideFlag = arg15
+    self.stmtNum = arg16
+}
+func (self *Nodes_DeclFuncInfo) Get_kind(_env *LnsEnv) LnsInt{ return self.kind }
+func (self *Nodes_DeclFuncInfo) Get_classTypeInfo(_env *LnsEnv) LnsAny{ return self.classTypeInfo }
+func (self *Nodes_DeclFuncInfo) Get_declClassNode(_env *LnsEnv) LnsAny{ return self.declClassNode }
+func (self *Nodes_DeclFuncInfo) Get_outsizeOfClass(_env *LnsEnv) bool{ return self.outsizeOfClass }
+func (self *Nodes_DeclFuncInfo) Get_name(_env *LnsEnv) LnsAny{ return self.name }
+func (self *Nodes_DeclFuncInfo) Get_symbol(_env *LnsEnv) LnsAny{ return self.symbol }
+func (self *Nodes_DeclFuncInfo) Get_argList(_env *LnsEnv) *LnsList{ return self.argList }
+func (self *Nodes_DeclFuncInfo) Get_staticFlag(_env *LnsEnv) bool{ return self.staticFlag }
+func (self *Nodes_DeclFuncInfo) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
+func (self *Nodes_DeclFuncInfo) Get_asyncMode(_env *LnsEnv) LnsAny{ return self.asyncMode }
+func (self *Nodes_DeclFuncInfo) Get_body(_env *LnsEnv) LnsAny{ return self.body }
+func (self *Nodes_DeclFuncInfo) Set_body(_env *LnsEnv, arg1 LnsAny){ self.body = arg1 }
+func (self *Nodes_DeclFuncInfo) Get_retTypeInfoList(_env *LnsEnv) *LnsList{ return self.retTypeInfoList }
+func (self *Nodes_DeclFuncInfo) Get_retTypeNodeList(_env *LnsEnv) *LnsList{ return self.retTypeNodeList }
+func (self *Nodes_DeclFuncInfo) Get_has__func__Symbol(_env *LnsEnv) bool{ return self.has__func__Symbol }
+func (self *Nodes_DeclFuncInfo) Set_has__func__Symbol(_env *LnsEnv, arg1 bool){ self.has__func__Symbol = arg1 }
+func (self *Nodes_DeclFuncInfo) Get_overrideFlag(_env *LnsEnv) bool{ return self.overrideFlag }
+func (self *Nodes_DeclFuncInfo) Get_stmtNum(_env *LnsEnv) LnsInt{ return self.stmtNum }
+func (self *Nodes_DeclFuncInfo) Set_stmtNum(_env *LnsEnv, arg1 LnsInt){ self.stmtNum = arg1 }
+
+// declaration Class -- DeclFormNode
+type Nodes_DeclFormNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclFormNode struct {
+    Nodes_Node
+    declInfo *Nodes_DeclFuncInfo
+    FP Nodes_DeclFormNodeMtd
+}
+func Nodes_DeclFormNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclFormNode).FP
+}
+type Nodes_DeclFormNodeDownCast interface {
+    ToNodes_DeclFormNode() *Nodes_DeclFormNode
+}
+func Nodes_DeclFormNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclFormNodeDownCast)
+    if ok { return work.ToNodes_DeclFormNode() }
+    return nil
+}
+func (obj *Nodes_DeclFormNode) ToNodes_DeclFormNode() *Nodes_DeclFormNode {
+    return obj
+}
+func NewNodes_DeclFormNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFormNode {
+    obj := &Nodes_DeclFormNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclFormNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_DeclFormNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
+// 734: DeclConstr
+func (self *Nodes_DeclFormNode) InitNodes_DeclFormNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+    self.InitNodes_Node(_env, managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
+    self.declInfo = declInfo
+}
+
+
+// declaration Class -- DeclFuncNode
+type Nodes_DeclFuncNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclFuncNode struct {
+    Nodes_Node
+    declInfo *Nodes_DeclFuncInfo
+    FP Nodes_DeclFuncNodeMtd
+}
+func Nodes_DeclFuncNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclFuncNode).FP
+}
+type Nodes_DeclFuncNodeDownCast interface {
+    ToNodes_DeclFuncNode() *Nodes_DeclFuncNode
+}
+func Nodes_DeclFuncNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclFuncNodeDownCast)
+    if ok { return work.ToNodes_DeclFuncNode() }
+    return nil
+}
+func (obj *Nodes_DeclFuncNode) ToNodes_DeclFuncNode() *Nodes_DeclFuncNode {
+    return obj
+}
+func NewNodes_DeclFuncNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
+    obj := &Nodes_DeclFuncNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclFuncNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_DeclFuncNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
+// 734: DeclConstr
+func (self *Nodes_DeclFuncNode) InitNodes_DeclFuncNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+    self.InitNodes_Node(_env, managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
+    self.declInfo = declInfo
+}
+
+
+// declaration Class -- DeclMethodNode
+type Nodes_DeclMethodNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclMethodNode struct {
+    Nodes_Node
+    declInfo *Nodes_DeclFuncInfo
+    FP Nodes_DeclMethodNodeMtd
+}
+func Nodes_DeclMethodNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclMethodNode).FP
+}
+type Nodes_DeclMethodNodeDownCast interface {
+    ToNodes_DeclMethodNode() *Nodes_DeclMethodNode
+}
+func Nodes_DeclMethodNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclMethodNodeDownCast)
+    if ok { return work.ToNodes_DeclMethodNode() }
+    return nil
+}
+func (obj *Nodes_DeclMethodNode) ToNodes_DeclMethodNode() *Nodes_DeclMethodNode {
+    return obj
+}
+func NewNodes_DeclMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
+    obj := &Nodes_DeclMethodNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclMethodNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_DeclMethodNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
+// 734: DeclConstr
+func (self *Nodes_DeclMethodNode) InitNodes_DeclMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+    self.InitNodes_Node(_env, managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
+    self.declInfo = declInfo
+}
+
+
+// declaration Class -- ProtoMethodNode
+type Nodes_ProtoMethodNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ProtoMethodNode struct {
+    Nodes_Node
+    declInfo *Nodes_DeclFuncInfo
+    FP Nodes_ProtoMethodNodeMtd
+}
+func Nodes_ProtoMethodNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ProtoMethodNode).FP
+}
+type Nodes_ProtoMethodNodeDownCast interface {
+    ToNodes_ProtoMethodNode() *Nodes_ProtoMethodNode
+}
+func Nodes_ProtoMethodNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ProtoMethodNodeDownCast)
+    if ok { return work.ToNodes_ProtoMethodNode() }
+    return nil
+}
+func (obj *Nodes_ProtoMethodNode) ToNodes_ProtoMethodNode() *Nodes_ProtoMethodNode {
+    return obj
+}
+func NewNodes_ProtoMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
+    obj := &Nodes_ProtoMethodNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ProtoMethodNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_ProtoMethodNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
+// 734: DeclConstr
+func (self *Nodes_ProtoMethodNode) InitNodes_ProtoMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+    self.InitNodes_Node(_env, managerId, id, 54, pos, inTestBlock, macroArgFlag, typeList)
+    self.declInfo = declInfo
+}
+
+
+// declaration Class -- DeclConstrNode
+type Nodes_DeclConstrNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclConstrNode struct {
+    Nodes_Node
+    declInfo *Nodes_DeclFuncInfo
+    FP Nodes_DeclConstrNodeMtd
+}
+func Nodes_DeclConstrNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclConstrNode).FP
+}
+type Nodes_DeclConstrNodeDownCast interface {
+    ToNodes_DeclConstrNode() *Nodes_DeclConstrNode
+}
+func Nodes_DeclConstrNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclConstrNodeDownCast)
+    if ok { return work.ToNodes_DeclConstrNode() }
+    return nil
+}
+func (obj *Nodes_DeclConstrNode) ToNodes_DeclConstrNode() *Nodes_DeclConstrNode {
+    return obj
+}
+func NewNodes_DeclConstrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
+    obj := &Nodes_DeclConstrNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclConstrNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_DeclConstrNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
+// 734: DeclConstr
+func (self *Nodes_DeclConstrNode) InitNodes_DeclConstrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+    self.InitNodes_Node(_env, managerId, id, 55, pos, inTestBlock, macroArgFlag, typeList)
+    self.declInfo = declInfo
+}
+
+
+// declaration Class -- DeclDestrNode
+type Nodes_DeclDestrNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclDestrNode struct {
+    Nodes_Node
+    declInfo *Nodes_DeclFuncInfo
+    FP Nodes_DeclDestrNodeMtd
+}
+func Nodes_DeclDestrNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclDestrNode).FP
+}
+type Nodes_DeclDestrNodeDownCast interface {
+    ToNodes_DeclDestrNode() *Nodes_DeclDestrNode
+}
+func Nodes_DeclDestrNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclDestrNodeDownCast)
+    if ok { return work.ToNodes_DeclDestrNode() }
+    return nil
+}
+func (obj *Nodes_DeclDestrNode) ToNodes_DeclDestrNode() *Nodes_DeclDestrNode {
+    return obj
+}
+func NewNodes_DeclDestrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
+    obj := &Nodes_DeclDestrNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclDestrNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_DeclDestrNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
+// 734: DeclConstr
+func (self *Nodes_DeclDestrNode) InitNodes_DeclDestrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+    self.InitNodes_Node(_env, managerId, id, 56, pos, inTestBlock, macroArgFlag, typeList)
+    self.declInfo = declInfo
+}
+
+
+// declaration Class -- ExpCallSuperCtorNode
+type Nodes_ExpCallSuperCtorNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_methodType(_env *LnsEnv) *Ast_TypeInfo
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_superType(_env *LnsEnv) *Ast_TypeInfo
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpCallSuperCtorNode struct {
+    Nodes_Node
+    superType *Ast_TypeInfo
+    methodType *Ast_TypeInfo
+    expList LnsAny
+    FP Nodes_ExpCallSuperCtorNodeMtd
+}
+func Nodes_ExpCallSuperCtorNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpCallSuperCtorNode).FP
+}
+type Nodes_ExpCallSuperCtorNodeDownCast interface {
+    ToNodes_ExpCallSuperCtorNode() *Nodes_ExpCallSuperCtorNode
+}
+func Nodes_ExpCallSuperCtorNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpCallSuperCtorNodeDownCast)
+    if ok { return work.ToNodes_ExpCallSuperCtorNode() }
+    return nil
+}
+func (obj *Nodes_ExpCallSuperCtorNode) ToNodes_ExpCallSuperCtorNode() *Nodes_ExpCallSuperCtorNode {
+    return obj
+}
+func NewNodes_ExpCallSuperCtorNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperCtorNode {
+    obj := &Nodes_ExpCallSuperCtorNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpCallSuperCtorNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_ExpCallSuperCtorNode) Get_superType(_env *LnsEnv) *Ast_TypeInfo{ return self.superType }
+func (self *Nodes_ExpCallSuperCtorNode) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ return self.methodType }
+func (self *Nodes_ExpCallSuperCtorNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
+// 734: DeclConstr
+func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 57, pos, inTestBlock, macroArgFlag, typeList)
+    self.superType = superType
+    self.methodType = methodType
+    self.expList = expList
+}
+
+
+// declaration Class -- ExpCallSuperNode
+type Nodes_ExpCallSuperNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_methodType(_env *LnsEnv) *Ast_TypeInfo
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_superType(_env *LnsEnv) *Ast_TypeInfo
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ExpCallSuperNode struct {
+    Nodes_Node
+    superType *Ast_TypeInfo
+    methodType *Ast_TypeInfo
+    expList LnsAny
+    FP Nodes_ExpCallSuperNodeMtd
+}
+func Nodes_ExpCallSuperNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExpCallSuperNode).FP
+}
+type Nodes_ExpCallSuperNodeDownCast interface {
+    ToNodes_ExpCallSuperNode() *Nodes_ExpCallSuperNode
+}
+func Nodes_ExpCallSuperNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExpCallSuperNodeDownCast)
+    if ok { return work.ToNodes_ExpCallSuperNode() }
+    return nil
+}
+func (obj *Nodes_ExpCallSuperNode) ToNodes_ExpCallSuperNode() *Nodes_ExpCallSuperNode {
+    return obj
+}
+func NewNodes_ExpCallSuperNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperNode {
+    obj := &Nodes_ExpCallSuperNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ExpCallSuperNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_ExpCallSuperNode) Get_superType(_env *LnsEnv) *Ast_TypeInfo{ return self.superType }
+func (self *Nodes_ExpCallSuperNode) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ return self.methodType }
+func (self *Nodes_ExpCallSuperNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
+// 734: DeclConstr
+func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 58, pos, inTestBlock, macroArgFlag, typeList)
+    self.superType = superType
+    self.methodType = methodType
+    self.expList = expList
+}
+
+
+// declaration Class -- AsyncLockNode
+type Nodes_AsyncLockNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_lockKind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_AsyncLockNode struct {
+    Nodes_Node
+    lockKind LnsInt
+    block *Nodes_BlockNode
+    FP Nodes_AsyncLockNodeMtd
+}
+func Nodes_AsyncLockNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_AsyncLockNode).FP
+}
+type Nodes_AsyncLockNodeDownCast interface {
+    ToNodes_AsyncLockNode() *Nodes_AsyncLockNode
+}
+func Nodes_AsyncLockNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_AsyncLockNodeDownCast)
+    if ok { return work.ToNodes_AsyncLockNode() }
+    return nil
+}
+func (obj *Nodes_AsyncLockNode) ToNodes_AsyncLockNode() *Nodes_AsyncLockNode {
+    return obj
+}
+func NewNodes_AsyncLockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode) *Nodes_AsyncLockNode {
+    obj := &Nodes_AsyncLockNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_AsyncLockNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_AsyncLockNode) Get_lockKind(_env *LnsEnv) LnsInt{ return self.lockKind }
+func (self *Nodes_AsyncLockNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+// 734: DeclConstr
+func (self *Nodes_AsyncLockNode) InitNodes_AsyncLockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) {
+    self.InitNodes_Node(_env, managerId, id, 59, pos, inTestBlock, macroArgFlag, typeList)
+    self.lockKind = lockKind
+    self.block = block
+}
+
+
+// declaration Class -- RequestNode
+type Nodes_RequestNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_processor(_env *LnsEnv) *Nodes_Node
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_RequestNode struct {
+    Nodes_Node
+    processor *Nodes_Node
+    exp *Nodes_Node
+    FP Nodes_RequestNodeMtd
+}
+func Nodes_RequestNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_RequestNode).FP
+}
+type Nodes_RequestNodeDownCast interface {
+    ToNodes_RequestNode() *Nodes_RequestNode
+}
+func Nodes_RequestNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_RequestNodeDownCast)
+    if ok { return work.ToNodes_RequestNode() }
+    return nil
+}
+func (obj *Nodes_RequestNode) ToNodes_RequestNode() *Nodes_RequestNode {
+    return obj
+}
+func NewNodes_RequestNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_Node) *Nodes_RequestNode {
+    obj := &Nodes_RequestNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_RequestNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_RequestNode) Get_processor(_env *LnsEnv) *Nodes_Node{ return self.processor }
+func (self *Nodes_RequestNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_RequestNode) InitNodes_RequestNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,processor *Nodes_Node,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 60, pos, inTestBlock, macroArgFlag, typeList)
+    self.processor = processor
+    self.exp = exp
+}
+
+
+// declaration Class -- DeclMemberNode
+type Nodes_DeclMemberNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetGetterSym(_env *LnsEnv) LnsAny
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSetterSym(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_accessMode(_env *LnsEnv) LnsInt
+    Get_classType(_env *LnsEnv) *Ast_TypeInfo
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_getterMode(_env *LnsEnv) LnsInt
+    Get_getterMutable(_env *LnsEnv) bool
+    Get_getterRetType(_env *LnsEnv) *Ast_TypeInfo
+    Get_getterToken(_env *LnsEnv) LnsAny
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_refType(_env *LnsEnv) *Nodes_RefTypeNode
+    Get_setterMode(_env *LnsEnv) LnsInt
+    Get_setterToken(_env *LnsEnv) LnsAny
+    Get_staticFlag(_env *LnsEnv) bool
+    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclMemberNode struct {
+    Nodes_Node
+    name *Types_Token
+    refType *Nodes_RefTypeNode
+    symbolInfo *Ast_SymbolInfo
+    classType *Ast_TypeInfo
+    staticFlag bool
+    accessMode LnsInt
+    getterMutable bool
+    getterMode LnsInt
+    getterToken LnsAny
+    getterRetType *Ast_TypeInfo
+    setterMode LnsInt
+    setterToken LnsAny
+    FP Nodes_DeclMemberNodeMtd
+}
+func Nodes_DeclMemberNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclMemberNode).FP
+}
+type Nodes_DeclMemberNodeDownCast interface {
+    ToNodes_DeclMemberNode() *Nodes_DeclMemberNode
+}
+func Nodes_DeclMemberNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclMemberNodeDownCast)
+    if ok { return work.ToNodes_DeclMemberNode() }
+    return nil
+}
+func (obj *Nodes_DeclMemberNode) ToNodes_DeclMemberNode() *Nodes_DeclMemberNode {
+    return obj
+}
+func NewNodes_DeclMemberNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_RefTypeNode, arg9 *Ast_SymbolInfo, arg10 *Ast_TypeInfo, arg11 bool, arg12 LnsInt, arg13 bool, arg14 LnsInt, arg15 LnsAny, arg16 *Ast_TypeInfo, arg17 LnsInt, arg18 LnsAny) *Nodes_DeclMemberNode {
+    obj := &Nodes_DeclMemberNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclMemberNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18)
+    return obj
+}
+func (self *Nodes_DeclMemberNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_DeclMemberNode) Get_refType(_env *LnsEnv) *Nodes_RefTypeNode{ return self.refType }
+func (self *Nodes_DeclMemberNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
+func (self *Nodes_DeclMemberNode) Get_classType(_env *LnsEnv) *Ast_TypeInfo{ return self.classType }
+func (self *Nodes_DeclMemberNode) Get_staticFlag(_env *LnsEnv) bool{ return self.staticFlag }
+func (self *Nodes_DeclMemberNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
+func (self *Nodes_DeclMemberNode) Get_getterMutable(_env *LnsEnv) bool{ return self.getterMutable }
+func (self *Nodes_DeclMemberNode) Get_getterMode(_env *LnsEnv) LnsInt{ return self.getterMode }
+func (self *Nodes_DeclMemberNode) Get_getterToken(_env *LnsEnv) LnsAny{ return self.getterToken }
+func (self *Nodes_DeclMemberNode) Get_getterRetType(_env *LnsEnv) *Ast_TypeInfo{ return self.getterRetType }
+func (self *Nodes_DeclMemberNode) Get_setterMode(_env *LnsEnv) LnsInt{ return self.setterMode }
+func (self *Nodes_DeclMemberNode) Get_setterToken(_env *LnsEnv) LnsAny{ return self.setterToken }
+// 734: DeclConstr
+func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
+    self.name = name
+    self.refType = refType
+    self.symbolInfo = symbolInfo
+    self.classType = classType
+    self.staticFlag = staticFlag
+    self.accessMode = accessMode
+    self.getterMutable = getterMutable
+    self.getterMode = getterMode
+    self.getterToken = getterToken
+    self.getterRetType = getterRetType
+    self.setterMode = setterMode
+    self.setterToken = setterToken
+}
+
+
+// declaration Class -- DeclArgNode
+type Nodes_DeclArgNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_argType(_env *LnsEnv) LnsAny
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclArgNode struct {
+    Nodes_Node
+    name *Types_Token
+    symbolInfo *Ast_SymbolInfo
+    argType LnsAny
+    FP Nodes_DeclArgNodeMtd
+}
+func Nodes_DeclArgNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclArgNode).FP
+}
+type Nodes_DeclArgNodeDownCast interface {
+    ToNodes_DeclArgNode() *Nodes_DeclArgNode
+}
+func Nodes_DeclArgNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclArgNodeDownCast)
+    if ok { return work.ToNodes_DeclArgNode() }
+    return nil
+}
+func (obj *Nodes_DeclArgNode) ToNodes_DeclArgNode() *Nodes_DeclArgNode {
+    return obj
+}
+func NewNodes_DeclArgNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_SymbolInfo, arg9 LnsAny) *Nodes_DeclArgNode {
+    obj := &Nodes_DeclArgNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclArgNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_DeclArgNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_DeclArgNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
+func (self *Nodes_DeclArgNode) Get_argType(_env *LnsEnv) LnsAny{ return self.argType }
+// 734: DeclConstr
+func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
+    self.name = name
+    self.symbolInfo = symbolInfo
+    self.argType = argType
+}
+
+
+// declaration Class -- DeclArgDDDNode
+type Nodes_DeclArgDDDNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclArgDDDNode struct {
+    Nodes_Node
+    FP Nodes_DeclArgDDDNodeMtd
+}
+func Nodes_DeclArgDDDNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclArgDDDNode).FP
+}
+type Nodes_DeclArgDDDNodeDownCast interface {
+    ToNodes_DeclArgDDDNode() *Nodes_DeclArgDDDNode
+}
+func Nodes_DeclArgDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclArgDDDNodeDownCast)
+    if ok { return work.ToNodes_DeclArgDDDNode() }
+    return nil
+}
+func (obj *Nodes_DeclArgDDDNode) ToNodes_DeclArgDDDNode() *Nodes_DeclArgDDDNode {
+    return obj
+}
+func NewNodes_DeclArgDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_DeclArgDDDNode {
+    obj := &Nodes_DeclArgDDDNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclArgDDDNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
+    return obj
+}
+// 734: DeclConstr
+func (self *Nodes_DeclArgDDDNode) InitNodes_DeclArgDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 63, pos, inTestBlock, macroArgFlag, typeList)
+}
+
+
+// declaration Class -- AdvertiseInfo
+type Nodes_AdvertiseInfoMtd interface {
+    Get_member(_env *LnsEnv) *Nodes_DeclMemberNode
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_prefix(_env *LnsEnv) string
+}
+type Nodes_AdvertiseInfo struct {
+    member *Nodes_DeclMemberNode
+    prefix string
+    pos *Types_Position
+    FP Nodes_AdvertiseInfoMtd
+}
+func Nodes_AdvertiseInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_AdvertiseInfo).FP
+}
+type Nodes_AdvertiseInfoDownCast interface {
+    ToNodes_AdvertiseInfo() *Nodes_AdvertiseInfo
+}
+func Nodes_AdvertiseInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_AdvertiseInfoDownCast)
+    if ok { return work.ToNodes_AdvertiseInfo() }
+    return nil
+}
+func (obj *Nodes_AdvertiseInfo) ToNodes_AdvertiseInfo() *Nodes_AdvertiseInfo {
+    return obj
+}
+func NewNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 *Types_Position) *Nodes_AdvertiseInfo {
+    obj := &Nodes_AdvertiseInfo{}
+    obj.FP = obj
+    obj.InitNodes_AdvertiseInfo(_env, arg1, arg2, arg3)
+    return obj
+}
+func (self *Nodes_AdvertiseInfo) InitNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 *Types_Position) {
+    self.member = arg1
+    self.prefix = arg2
+    self.pos = arg3
+}
+func (self *Nodes_AdvertiseInfo) Get_member(_env *LnsEnv) *Nodes_DeclMemberNode{ return self.member }
+func (self *Nodes_AdvertiseInfo) Get_prefix(_env *LnsEnv) string{ return self.prefix }
+func (self *Nodes_AdvertiseInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+
+// declaration Class -- DeclAdvertiseNode
+type Nodes_DeclAdvertiseNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_advInfo(_env *LnsEnv) *Nodes_AdvertiseInfo
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclAdvertiseNode struct {
+    Nodes_Node
+    advInfo *Nodes_AdvertiseInfo
+    FP Nodes_DeclAdvertiseNodeMtd
+}
+func Nodes_DeclAdvertiseNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclAdvertiseNode).FP
+}
+type Nodes_DeclAdvertiseNodeDownCast interface {
+    ToNodes_DeclAdvertiseNode() *Nodes_DeclAdvertiseNode
+}
+func Nodes_DeclAdvertiseNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclAdvertiseNodeDownCast)
+    if ok { return work.ToNodes_DeclAdvertiseNode() }
+    return nil
+}
+func (obj *Nodes_DeclAdvertiseNode) ToNodes_DeclAdvertiseNode() *Nodes_DeclAdvertiseNode {
+    return obj
+}
+func NewNodes_DeclAdvertiseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
+    obj := &Nodes_DeclAdvertiseNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclAdvertiseNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_DeclAdvertiseNode) Get_advInfo(_env *LnsEnv) *Nodes_AdvertiseInfo{ return self.advInfo }
+// 734: DeclConstr
+func (self *Nodes_DeclAdvertiseNode) InitNodes_DeclAdvertiseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) {
+    self.InitNodes_Node(_env, managerId, id, 64, pos, inTestBlock, macroArgFlag, typeList)
+    self.advInfo = advInfo
+}
+
+
+// declaration Class -- ClassInheritInfo
+type Nodes_ClassInheritInfoMtd interface {
+    Get_base(_env *LnsEnv) LnsAny
+    Get_impliments(_env *LnsEnv) *LnsList
+    Visit(_env *LnsEnv, arg1 *Nodes_Node, arg2 Nodes_NodeVisitor, arg3 LnsInt, arg4 *LnsSet) bool
+}
+type Nodes_ClassInheritInfo struct {
+    base LnsAny
+    impliments *LnsList
+    FP Nodes_ClassInheritInfoMtd
+}
+func Nodes_ClassInheritInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ClassInheritInfo).FP
+}
+type Nodes_ClassInheritInfoDownCast interface {
+    ToNodes_ClassInheritInfo() *Nodes_ClassInheritInfo
+}
+func Nodes_ClassInheritInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ClassInheritInfoDownCast)
+    if ok { return work.ToNodes_ClassInheritInfo() }
+    return nil
+}
+func (obj *Nodes_ClassInheritInfo) ToNodes_ClassInheritInfo() *Nodes_ClassInheritInfo {
+    return obj
+}
+func NewNodes_ClassInheritInfo(_env *LnsEnv, arg1 LnsAny, arg2 *LnsList) *Nodes_ClassInheritInfo {
+    obj := &Nodes_ClassInheritInfo{}
+    obj.FP = obj
+    obj.InitNodes_ClassInheritInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_ClassInheritInfo) InitNodes_ClassInheritInfo(_env *LnsEnv, arg1 LnsAny, arg2 *LnsList) {
+    self.base = arg1
+    self.impliments = arg2
+}
+func (self *Nodes_ClassInheritInfo) Get_base(_env *LnsEnv) LnsAny{ return self.base }
+func (self *Nodes_ClassInheritInfo) Get_impliments(_env *LnsEnv) *LnsList{ return self.impliments }
+
+// declaration Class -- ProtoClassNode
+type Nodes_ProtoClassNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_ProtoClassNode struct {
+    Nodes_Node
+    name *Types_Token
+    inheritInfo *Nodes_ClassInheritInfo
+    FP Nodes_ProtoClassNodeMtd
+}
+func Nodes_ProtoClassNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ProtoClassNode).FP
+}
+type Nodes_ProtoClassNodeDownCast interface {
+    ToNodes_ProtoClassNode() *Nodes_ProtoClassNode
+}
+func Nodes_ProtoClassNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ProtoClassNodeDownCast)
+    if ok { return work.ToNodes_ProtoClassNode() }
+    return nil
+}
+func (obj *Nodes_ProtoClassNode) ToNodes_ProtoClassNode() *Nodes_ProtoClassNode {
+    return obj
+}
+func NewNodes_ProtoClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_ClassInheritInfo) *Nodes_ProtoClassNode {
+    obj := &Nodes_ProtoClassNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_ProtoClassNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_ProtoClassNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_ProtoClassNode) Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo{ return self.inheritInfo }
+// 734: DeclConstr
+func (self *Nodes_ProtoClassNode) InitNodes_ProtoClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) {
+    self.InitNodes_Node(_env, managerId, id, 65, pos, inTestBlock, macroArgFlag, typeList)
+    self.name = name
+    self.inheritInfo = inheritInfo
+}
+
+
+// declaration Class -- ClassInitBlockInfo
+type Nodes_ClassInitBlockInfoMtd interface {
+    Get_func(_env *LnsEnv) LnsAny
+    Set_func(_env *LnsEnv, arg1 LnsAny)
+}
+type Nodes_ClassInitBlockInfo struct {
+    _func LnsAny
+    FP Nodes_ClassInitBlockInfoMtd
+}
+func Nodes_ClassInitBlockInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ClassInitBlockInfo).FP
+}
+type Nodes_ClassInitBlockInfoDownCast interface {
+    ToNodes_ClassInitBlockInfo() *Nodes_ClassInitBlockInfo
+}
+func Nodes_ClassInitBlockInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ClassInitBlockInfoDownCast)
+    if ok { return work.ToNodes_ClassInitBlockInfo() }
+    return nil
+}
+func (obj *Nodes_ClassInitBlockInfo) ToNodes_ClassInitBlockInfo() *Nodes_ClassInitBlockInfo {
+    return obj
+}
+func NewNodes_ClassInitBlockInfo(_env *LnsEnv, arg1 LnsAny) *Nodes_ClassInitBlockInfo {
+    obj := &Nodes_ClassInitBlockInfo{}
+    obj.FP = obj
+    obj.InitNodes_ClassInitBlockInfo(_env, arg1)
+    return obj
+}
+func (self *Nodes_ClassInitBlockInfo) InitNodes_ClassInitBlockInfo(_env *LnsEnv, arg1 LnsAny) {
+    self._func = arg1
+}
+func (self *Nodes_ClassInitBlockInfo) Get_func(_env *LnsEnv) LnsAny{ return self._func }
+func (self *Nodes_ClassInitBlockInfo) Set_func(_env *LnsEnv, arg1 LnsAny){ self._func = arg1 }
+
+// declaration Class -- DeclClassNode
+type Nodes_DeclClassNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    CreateMethodNameSetWithoutAdv(_env *LnsEnv) *LnsSet
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_accessMode(_env *LnsEnv) LnsInt
+    Get_advertiseList(_env *LnsEnv) *LnsList
+    Get_allStmtList(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declStmtList(_env *LnsEnv) *LnsList
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_fieldList(_env *LnsEnv) *LnsList
+    Get_gluePrefix(_env *LnsEnv) LnsAny
+    Get_hasOldCtor(_env *LnsEnv) bool
+    Get_hasPrototype(_env *LnsEnv) bool
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo
+    Get_initBlock(_env *LnsEnv) *Nodes_ClassInitBlockInfo
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_lang(_env *LnsEnv) LnsAny
+    Get_lazyLoad(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_memberList(_env *LnsEnv) *LnsList
+    Get_moduleName(_env *LnsEnv) LnsAny
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_outerMethodSet(_env *LnsEnv) *LnsSet
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_trustList(_env *LnsEnv) *LnsList
+    Get_uninitMemberList(_env *LnsEnv) *LnsList
+    HasNilAccess(_env *LnsEnv) bool
+    HasUserInit(_env *LnsEnv) bool
+    IsModule(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetHasOldCtor(_env *LnsEnv)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclClassNode struct {
+    Nodes_Node
+    accessMode LnsInt
+    name *Types_Token
+    inheritInfo *Nodes_ClassInheritInfo
+    hasPrototype bool
+    gluePrefix LnsAny
+    moduleName LnsAny
+    lang LnsAny
+    lazyLoad LnsInt
+    hasOldCtor bool
+    allStmtList *LnsList
+    declStmtList *LnsList
+    fieldList *LnsList
+    memberList *LnsList
+    scope *Ast_Scope
+    initBlock *Nodes_ClassInitBlockInfo
+    advertiseList *LnsList
+    trustList *LnsList
+    uninitMemberList *LnsList
+    outerMethodSet *LnsSet
+    FP Nodes_DeclClassNodeMtd
+}
+func Nodes_DeclClassNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclClassNode).FP
+}
+type Nodes_DeclClassNodeDownCast interface {
+    ToNodes_DeclClassNode() *Nodes_DeclClassNode
+}
+func Nodes_DeclClassNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclClassNodeDownCast)
+    if ok { return work.ToNodes_DeclClassNode() }
+    return nil
+}
+func (obj *Nodes_DeclClassNode) ToNodes_DeclClassNode() *Nodes_DeclClassNode {
+    return obj
+}
+func NewNodes_DeclClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Types_Token, arg9 *Nodes_ClassInheritInfo, arg10 bool, arg11 LnsAny, arg12 LnsAny, arg13 LnsAny, arg14 LnsInt, arg15 bool, arg16 *LnsList, arg17 *LnsList, arg18 *LnsList, arg19 *LnsList, arg20 *Ast_Scope, arg21 *Nodes_ClassInitBlockInfo, arg22 *LnsList, arg23 *LnsList, arg24 *LnsList, arg25 *LnsSet) *Nodes_DeclClassNode {
+    obj := &Nodes_DeclClassNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclClassNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20, arg21, arg22, arg23, arg24, arg25)
+    return obj
+}
+func (self *Nodes_DeclClassNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
+func (self *Nodes_DeclClassNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_DeclClassNode) Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo{ return self.inheritInfo }
+func (self *Nodes_DeclClassNode) Get_hasPrototype(_env *LnsEnv) bool{ return self.hasPrototype }
+func (self *Nodes_DeclClassNode) Get_gluePrefix(_env *LnsEnv) LnsAny{ return self.gluePrefix }
+func (self *Nodes_DeclClassNode) Get_moduleName(_env *LnsEnv) LnsAny{ return self.moduleName }
+func (self *Nodes_DeclClassNode) Get_lang(_env *LnsEnv) LnsAny{ return self.lang }
+func (self *Nodes_DeclClassNode) Get_lazyLoad(_env *LnsEnv) LnsInt{ return self.lazyLoad }
+func (self *Nodes_DeclClassNode) Get_hasOldCtor(_env *LnsEnv) bool{ return self.hasOldCtor }
+func (self *Nodes_DeclClassNode) Get_allStmtList(_env *LnsEnv) *LnsList{ return self.allStmtList }
+func (self *Nodes_DeclClassNode) Get_declStmtList(_env *LnsEnv) *LnsList{ return self.declStmtList }
+func (self *Nodes_DeclClassNode) Get_fieldList(_env *LnsEnv) *LnsList{ return self.fieldList }
+func (self *Nodes_DeclClassNode) Get_memberList(_env *LnsEnv) *LnsList{ return self.memberList }
+func (self *Nodes_DeclClassNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
+func (self *Nodes_DeclClassNode) Get_initBlock(_env *LnsEnv) *Nodes_ClassInitBlockInfo{ return self.initBlock }
+func (self *Nodes_DeclClassNode) Get_advertiseList(_env *LnsEnv) *LnsList{ return self.advertiseList }
+func (self *Nodes_DeclClassNode) Get_trustList(_env *LnsEnv) *LnsList{ return self.trustList }
+func (self *Nodes_DeclClassNode) Get_uninitMemberList(_env *LnsEnv) *LnsList{ return self.uninitMemberList }
+func (self *Nodes_DeclClassNode) Get_outerMethodSet(_env *LnsEnv) *LnsSet{ return self.outerMethodSet }
+// 734: DeclConstr
+func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) {
+    self.InitNodes_Node(_env, managerId, id, 66, pos, inTestBlock, macroArgFlag, typeList)
+    self.accessMode = accessMode
+    self.name = name
+    self.inheritInfo = inheritInfo
+    self.hasPrototype = hasPrototype
+    self.gluePrefix = gluePrefix
+    self.moduleName = moduleName
+    self.lang = lang
+    self.lazyLoad = lazyLoad
+    self.hasOldCtor = hasOldCtor
+    self.allStmtList = allStmtList
+    self.declStmtList = declStmtList
+    self.fieldList = fieldList
+    self.memberList = memberList
+    self.scope = scope
+    self.initBlock = initBlock
+    self.advertiseList = advertiseList
+    self.trustList = trustList
+    self.uninitMemberList = uninitMemberList
+    self.outerMethodSet = outerMethodSet
+}
+
+
+// declaration Class -- DeclEnumNode
+type Nodes_DeclEnumNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_accessMode(_env *LnsEnv) LnsInt
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_enumType(_env *LnsEnv) *Ast_EnumTypeInfo
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_valueNameList(_env *LnsEnv) *LnsList
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclEnumNode struct {
+    Nodes_Node
+    enumType *Ast_EnumTypeInfo
+    accessMode LnsInt
+    name *Types_Token
+    valueNameList *LnsList
+    scope *Ast_Scope
+    FP Nodes_DeclEnumNodeMtd
+}
+func Nodes_DeclEnumNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclEnumNode).FP
+}
+type Nodes_DeclEnumNodeDownCast interface {
+    ToNodes_DeclEnumNode() *Nodes_DeclEnumNode
+}
+func Nodes_DeclEnumNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclEnumNodeDownCast)
+    if ok { return work.ToNodes_DeclEnumNode() }
+    return nil
+}
+func (obj *Nodes_DeclEnumNode) ToNodes_DeclEnumNode() *Nodes_DeclEnumNode {
+    return obj
+}
+func NewNodes_DeclEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_EnumTypeInfo, arg8 LnsInt, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclEnumNode {
+    obj := &Nodes_DeclEnumNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclEnumNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    return obj
+}
+func (self *Nodes_DeclEnumNode) Get_enumType(_env *LnsEnv) *Ast_EnumTypeInfo{ return self.enumType }
+func (self *Nodes_DeclEnumNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
+func (self *Nodes_DeclEnumNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_DeclEnumNode) Get_valueNameList(_env *LnsEnv) *LnsList{ return self.valueNameList }
+func (self *Nodes_DeclEnumNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
+// 734: DeclConstr
+func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) {
+    self.InitNodes_Node(_env, managerId, id, 67, pos, inTestBlock, macroArgFlag, typeList)
+    self.enumType = enumType
+    self.accessMode = accessMode
+    self.name = name
+    self.valueNameList = valueNameList
+    self.scope = scope
+}
+
+
+// declaration Class -- AlgeValParamInfo
+type Nodes_AlgeValParamInfoMtd interface {
+    Get_name(_env *LnsEnv) LnsAny
+    Get_typeRef(_env *LnsEnv) *Nodes_RefTypeNode
+}
+type Nodes_AlgeValParamInfo struct {
+    name LnsAny
+    typeRef *Nodes_RefTypeNode
+    FP Nodes_AlgeValParamInfoMtd
+}
+func Nodes_AlgeValParamInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_AlgeValParamInfo).FP
+}
+type Nodes_AlgeValParamInfoDownCast interface {
+    ToNodes_AlgeValParamInfo() *Nodes_AlgeValParamInfo
+}
+func Nodes_AlgeValParamInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_AlgeValParamInfoDownCast)
+    if ok { return work.ToNodes_AlgeValParamInfo() }
+    return nil
+}
+func (obj *Nodes_AlgeValParamInfo) ToNodes_AlgeValParamInfo() *Nodes_AlgeValParamInfo {
+    return obj
+}
+func NewNodes_AlgeValParamInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_RefTypeNode) *Nodes_AlgeValParamInfo {
+    obj := &Nodes_AlgeValParamInfo{}
+    obj.FP = obj
+    obj.InitNodes_AlgeValParamInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_AlgeValParamInfo) InitNodes_AlgeValParamInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_RefTypeNode) {
+    self.name = arg1
+    self.typeRef = arg2
+}
+func (self *Nodes_AlgeValParamInfo) Get_name(_env *LnsEnv) LnsAny{ return self.name }
+func (self *Nodes_AlgeValParamInfo) Get_typeRef(_env *LnsEnv) *Nodes_RefTypeNode{ return self.typeRef }
+
+// declaration Class -- DeclAlgeValInfo
+type Nodes_DeclAlgeValInfoMtd interface {
+    Get_paramList(_env *LnsEnv) *LnsList
+    Get_valSym(_env *LnsEnv) *Ast_SymbolInfo
+}
+type Nodes_DeclAlgeValInfo struct {
+    valSym *Ast_SymbolInfo
+    paramList *LnsList
+    FP Nodes_DeclAlgeValInfoMtd
+}
+func Nodes_DeclAlgeValInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclAlgeValInfo).FP
+}
+type Nodes_DeclAlgeValInfoDownCast interface {
+    ToNodes_DeclAlgeValInfo() *Nodes_DeclAlgeValInfo
+}
+func Nodes_DeclAlgeValInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclAlgeValInfoDownCast)
+    if ok { return work.ToNodes_DeclAlgeValInfo() }
+    return nil
+}
+func (obj *Nodes_DeclAlgeValInfo) ToNodes_DeclAlgeValInfo() *Nodes_DeclAlgeValInfo {
+    return obj
+}
+func NewNodes_DeclAlgeValInfo(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *LnsList) *Nodes_DeclAlgeValInfo {
+    obj := &Nodes_DeclAlgeValInfo{}
+    obj.FP = obj
+    obj.InitNodes_DeclAlgeValInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_DeclAlgeValInfo) InitNodes_DeclAlgeValInfo(_env *LnsEnv, arg1 *Ast_SymbolInfo, arg2 *LnsList) {
+    self.valSym = arg1
+    self.paramList = arg2
+}
+func (self *Nodes_DeclAlgeValInfo) Get_valSym(_env *LnsEnv) *Ast_SymbolInfo{ return self.valSym }
+func (self *Nodes_DeclAlgeValInfo) Get_paramList(_env *LnsEnv) *LnsList{ return self.paramList }
+
+// declaration Class -- DeclAlgeNode
+type Nodes_DeclAlgeNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_accessMode(_env *LnsEnv) LnsInt
+    Get_algeType(_env *LnsEnv) *Ast_AlgeTypeInfo
+    Get_algeValList(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_scope(_env *LnsEnv) *Ast_Scope
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclAlgeNode struct {
+    Nodes_Node
+    accessMode LnsInt
+    algeType *Ast_AlgeTypeInfo
+    name *Types_Token
+    algeValList *LnsList
+    scope *Ast_Scope
+    FP Nodes_DeclAlgeNodeMtd
+}
+func Nodes_DeclAlgeNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclAlgeNode).FP
+}
+type Nodes_DeclAlgeNodeDownCast interface {
+    ToNodes_DeclAlgeNode() *Nodes_DeclAlgeNode
+}
+func Nodes_DeclAlgeNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclAlgeNodeDownCast)
+    if ok { return work.ToNodes_DeclAlgeNode() }
+    return nil
+}
+func (obj *Nodes_DeclAlgeNode) ToNodes_DeclAlgeNode() *Nodes_DeclAlgeNode {
+    return obj
+}
+func NewNodes_DeclAlgeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_AlgeTypeInfo, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclAlgeNode {
+    obj := &Nodes_DeclAlgeNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclAlgeNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    return obj
+}
+func (self *Nodes_DeclAlgeNode) Get_accessMode(_env *LnsEnv) LnsInt{ return self.accessMode }
+func (self *Nodes_DeclAlgeNode) Get_algeType(_env *LnsEnv) *Ast_AlgeTypeInfo{ return self.algeType }
+func (self *Nodes_DeclAlgeNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_DeclAlgeNode) Get_algeValList(_env *LnsEnv) *LnsList{ return self.algeValList }
+func (self *Nodes_DeclAlgeNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
+// 734: DeclConstr
+func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) {
+    self.InitNodes_Node(_env, managerId, id, 68, pos, inTestBlock, macroArgFlag, typeList)
+    self.accessMode = accessMode
+    self.algeType = algeType
+    self.name = name
+    self.algeValList = algeValList
+    self.scope = scope
+}
+
+
+// declaration Class -- NewAlgeValNode
+type Nodes_NewAlgeValNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_paramList(_env *LnsEnv) *LnsList
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_prefix(_env *LnsEnv) LnsAny
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_NewAlgeValNode struct {
+    Nodes_Node
+    name *Types_Token
+    prefix LnsAny
+    algeTypeInfo *Ast_AlgeTypeInfo
+    valInfo *Ast_AlgeValInfo
+    paramList *LnsList
+    FP Nodes_NewAlgeValNodeMtd
+}
+func Nodes_NewAlgeValNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_NewAlgeValNode).FP
+}
+type Nodes_NewAlgeValNodeDownCast interface {
+    ToNodes_NewAlgeValNode() *Nodes_NewAlgeValNode
+}
+func Nodes_NewAlgeValNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_NewAlgeValNodeDownCast)
+    if ok { return work.ToNodes_NewAlgeValNode() }
+    return nil
+}
+func (obj *Nodes_NewAlgeValNode) ToNodes_NewAlgeValNode() *Nodes_NewAlgeValNode {
+    return obj
+}
+func NewNodes_NewAlgeValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 *Ast_AlgeTypeInfo, arg10 *Ast_AlgeValInfo, arg11 *LnsList) *Nodes_NewAlgeValNode {
+    obj := &Nodes_NewAlgeValNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_NewAlgeValNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    return obj
+}
+func (self *Nodes_NewAlgeValNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_NewAlgeValNode) Get_prefix(_env *LnsEnv) LnsAny{ return self.prefix }
+func (self *Nodes_NewAlgeValNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo{ return self.algeTypeInfo }
+func (self *Nodes_NewAlgeValNode) Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo{ return self.valInfo }
+func (self *Nodes_NewAlgeValNode) Get_paramList(_env *LnsEnv) *LnsList{ return self.paramList }
+// 734: DeclConstr
+func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 69, pos, inTestBlock, macroArgFlag, typeList)
+    self.name = name
+    self.prefix = prefix
+    self.algeTypeInfo = algeTypeInfo
+    self.valInfo = valInfo
+    self.paramList = paramList
+}
+
+
+// declaration Class -- LuneControlNode
+type Nodes_LuneControlNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pragma(_env *LnsEnv) LnsAny
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LuneControlNode struct {
+    Nodes_Node
+    pragma LnsAny
+    FP Nodes_LuneControlNodeMtd
+}
+func Nodes_LuneControlNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LuneControlNode).FP
+}
+type Nodes_LuneControlNodeDownCast interface {
+    ToNodes_LuneControlNode() *Nodes_LuneControlNode
+}
+func Nodes_LuneControlNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LuneControlNodeDownCast)
+    if ok { return work.ToNodes_LuneControlNode() }
+    return nil
+}
+func (obj *Nodes_LuneControlNode) ToNodes_LuneControlNode() *Nodes_LuneControlNode {
+    return obj
+}
+func NewNodes_LuneControlNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LuneControlNode {
+    obj := &Nodes_LuneControlNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LuneControlNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_LuneControlNode) Get_pragma(_env *LnsEnv) LnsAny{ return self.pragma }
+// 734: DeclConstr
+func (self *Nodes_LuneControlNode) InitNodes_LuneControlNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 70, pos, inTestBlock, macroArgFlag, typeList)
+    self.pragma = pragma
+}
+
+
+// declaration Class -- MatchCase
+type Nodes_MatchCaseMtd interface {
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_valExpRef(_env *LnsEnv) *Nodes_ExpRefNode
+    Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo
+    Get_valParamNameList(_env *LnsEnv) *LnsList
+}
+type Nodes_MatchCase struct {
+    valInfo *Ast_AlgeValInfo
+    valExpRef *Nodes_ExpRefNode
+    valParamNameList *LnsList
+    block *Nodes_BlockNode
+    FP Nodes_MatchCaseMtd
+}
+func Nodes_MatchCase2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_MatchCase).FP
+}
+type Nodes_MatchCaseDownCast interface {
+    ToNodes_MatchCase() *Nodes_MatchCase
+}
+func Nodes_MatchCaseDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_MatchCaseDownCast)
+    if ok { return work.ToNodes_MatchCase() }
+    return nil
+}
+func (obj *Nodes_MatchCase) ToNodes_MatchCase() *Nodes_MatchCase {
+    return obj
+}
+func NewNodes_MatchCase(_env *LnsEnv, arg1 *Ast_AlgeValInfo, arg2 *Nodes_ExpRefNode, arg3 *LnsList, arg4 *Nodes_BlockNode) *Nodes_MatchCase {
+    obj := &Nodes_MatchCase{}
+    obj.FP = obj
+    obj.InitNodes_MatchCase(_env, arg1, arg2, arg3, arg4)
+    return obj
+}
+func (self *Nodes_MatchCase) InitNodes_MatchCase(_env *LnsEnv, arg1 *Ast_AlgeValInfo, arg2 *Nodes_ExpRefNode, arg3 *LnsList, arg4 *Nodes_BlockNode) {
+    self.valInfo = arg1
+    self.valExpRef = arg2
+    self.valParamNameList = arg3
+    self.block = arg4
+}
+func (self *Nodes_MatchCase) Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo{ return self.valInfo }
+func (self *Nodes_MatchCase) Get_valExpRef(_env *LnsEnv) *Nodes_ExpRefNode{ return self.valExpRef }
+func (self *Nodes_MatchCase) Get_valParamNameList(_env *LnsEnv) *LnsList{ return self.valParamNameList }
+func (self *Nodes_MatchCase) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+
+// declaration Class -- MatchNode
+type Nodes_MatchNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo
+    Get_caseKind(_env *LnsEnv) LnsInt
+    Get_caseList(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_defaultBlock(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_failSafeDefault(_env *LnsEnv) bool
+    Get_idInNS(_env *LnsEnv) LnsInt
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_val(_env *LnsEnv) *Nodes_Node
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_MatchNode struct {
+    Nodes_Node
+    idInNS LnsInt
+    val *Nodes_Node
+    algeTypeInfo *Ast_AlgeTypeInfo
+    caseList *LnsList
+    defaultBlock LnsAny
+    caseKind LnsInt
+    failSafeDefault bool
+    FP Nodes_MatchNodeMtd
+}
+func Nodes_MatchNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_MatchNode).FP
+}
+type Nodes_MatchNodeDownCast interface {
+    ToNodes_MatchNode() *Nodes_MatchNode
+}
+func Nodes_MatchNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_MatchNodeDownCast)
+    if ok { return work.ToNodes_MatchNode() }
+    return nil
+}
+func (obj *Nodes_MatchNode) ToNodes_MatchNode() *Nodes_MatchNode {
+    return obj
+}
+func NewNodes_MatchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *Ast_AlgeTypeInfo, arg10 *LnsList, arg11 LnsAny, arg12 LnsInt, arg13 bool) *Nodes_MatchNode {
+    obj := &Nodes_MatchNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_MatchNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)
+    return obj
+}
+func (self *Nodes_MatchNode) Get_idInNS(_env *LnsEnv) LnsInt{ return self.idInNS }
+func (self *Nodes_MatchNode) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
+func (self *Nodes_MatchNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo{ return self.algeTypeInfo }
+func (self *Nodes_MatchNode) Get_caseList(_env *LnsEnv) *LnsList{ return self.caseList }
+func (self *Nodes_MatchNode) Get_defaultBlock(_env *LnsEnv) LnsAny{ return self.defaultBlock }
+func (self *Nodes_MatchNode) Get_caseKind(_env *LnsEnv) LnsInt{ return self.caseKind }
+func (self *Nodes_MatchNode) Get_failSafeDefault(_env *LnsEnv) bool{ return self.failSafeDefault }
+// 734: DeclConstr
+func (self *Nodes_MatchNode) InitNodes_MatchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) {
+    self.InitNodes_Node(_env, managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
+    self.idInNS = idInNS
+    self.val = val
+    self.algeTypeInfo = algeTypeInfo
+    self.caseList = caseList
+    self.defaultBlock = defaultBlock
+    self.caseKind = caseKind
+    self.failSafeDefault = failSafeDefault
+}
+
+
+// declaration Class -- LuneKindNode
+type Nodes_LuneKindNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_exp(_env *LnsEnv) *Nodes_Node
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LuneKindNode struct {
+    Nodes_Node
+    exp *Nodes_Node
+    FP Nodes_LuneKindNodeMtd
+}
+func Nodes_LuneKindNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LuneKindNode).FP
+}
+type Nodes_LuneKindNodeDownCast interface {
+    ToNodes_LuneKindNode() *Nodes_LuneKindNode
+}
+func Nodes_LuneKindNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LuneKindNodeDownCast)
+    if ok { return work.ToNodes_LuneKindNode() }
+    return nil
+}
+func (obj *Nodes_LuneKindNode) ToNodes_LuneKindNode() *Nodes_LuneKindNode {
+    return obj
+}
+func NewNodes_LuneKindNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_LuneKindNode {
+    obj := &Nodes_LuneKindNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LuneKindNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_LuneKindNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
+// 734: DeclConstr
+func (self *Nodes_LuneKindNode) InitNodes_LuneKindNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 72, pos, inTestBlock, macroArgFlag, typeList)
+    self.exp = exp
+}
+
+
+// declaration Class -- DeclMacroNode
+type Nodes_DeclMacroNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_declInfo(_env *LnsEnv) *Nodes_DeclMacroInfo
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_DeclMacroNode struct {
+    Nodes_Node
+    declInfo *Nodes_DeclMacroInfo
+    FP Nodes_DeclMacroNodeMtd
+}
+func Nodes_DeclMacroNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DeclMacroNode).FP
+}
+type Nodes_DeclMacroNodeDownCast interface {
+    ToNodes_DeclMacroNode() *Nodes_DeclMacroNode
+}
+func Nodes_DeclMacroNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DeclMacroNodeDownCast)
+    if ok { return work.ToNodes_DeclMacroNode() }
+    return nil
+}
+func (obj *Nodes_DeclMacroNode) ToNodes_DeclMacroNode() *Nodes_DeclMacroNode {
+    return obj
+}
+func NewNodes_DeclMacroNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
+    obj := &Nodes_DeclMacroNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_DeclMacroNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_DeclMacroNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclMacroInfo{ return self.declInfo }
+// 734: DeclConstr
+func (self *Nodes_DeclMacroNode) InitNodes_DeclMacroNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) {
+    self.InitNodes_Node(_env, managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
+    self.declInfo = declInfo
+}
+
+
+// declaration Class -- MacroEval
+type Nodes_MacroEvalMtd interface {
+    EvalFromCodeToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 *LnsList, arg4 LnsAny) string
+    EvalToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Nodes_DeclMacroNode) string
+}
+type Nodes_MacroEval struct {
+    FP Nodes_MacroEvalMtd
+}
+func Nodes_MacroEval2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_MacroEval).FP
+}
+type Nodes_MacroEvalDownCast interface {
+    ToNodes_MacroEval() *Nodes_MacroEval
+}
+func Nodes_MacroEvalDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_MacroEvalDownCast)
+    if ok { return work.ToNodes_MacroEval() }
+    return nil
+}
+func (obj *Nodes_MacroEval) ToNodes_MacroEval() *Nodes_MacroEval {
+    return obj
+}
+func (self *Nodes_MacroEval) InitNodes_MacroEval(_env *LnsEnv) {
+}
+
+
+
+// declaration Class -- TestCaseNode
+type Nodes_TestCaseNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_block(_env *LnsEnv) *Nodes_BlockNode
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_ctrlName(_env *LnsEnv) string
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_impNode(_env *LnsEnv) *Nodes_Node
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_name(_env *LnsEnv) *Types_Token
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_TestCaseNode struct {
+    Nodes_Node
+    name *Types_Token
+    impNode *Nodes_Node
+    ctrlName string
+    block *Nodes_BlockNode
+    FP Nodes_TestCaseNodeMtd
+}
+func Nodes_TestCaseNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_TestCaseNode).FP
+}
+type Nodes_TestCaseNodeDownCast interface {
+    ToNodes_TestCaseNode() *Nodes_TestCaseNode
+}
+func Nodes_TestCaseNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_TestCaseNodeDownCast)
+    if ok { return work.ToNodes_TestCaseNode() }
+    return nil
+}
+func (obj *Nodes_TestCaseNode) ToNodes_TestCaseNode() *Nodes_TestCaseNode {
+    return obj
+}
+func NewNodes_TestCaseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 string, arg10 *Nodes_BlockNode) *Nodes_TestCaseNode {
+    obj := &Nodes_TestCaseNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_TestCaseNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+func (self *Nodes_TestCaseNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
+func (self *Nodes_TestCaseNode) Get_impNode(_env *LnsEnv) *Nodes_Node{ return self.impNode }
+func (self *Nodes_TestCaseNode) Get_ctrlName(_env *LnsEnv) string{ return self.ctrlName }
+func (self *Nodes_TestCaseNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
+// 734: DeclConstr
+func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) {
+    self.InitNodes_Node(_env, managerId, id, 74, pos, inTestBlock, macroArgFlag, typeList)
+    self.name = name
+    self.impNode = impNode
+    self.ctrlName = ctrlName
+    self.block = block
+}
+
+
+// declaration Class -- TestBlockNode
+type Nodes_TestBlockNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_stmtList(_env *LnsEnv) *LnsList
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    IsInnerPos(_env *LnsEnv, arg1 *Types_Position) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_TestBlockNode struct {
+    Nodes_Node
+    stmtList *LnsList
+    FP Nodes_TestBlockNodeMtd
+}
+func Nodes_TestBlockNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_TestBlockNode).FP
+}
+type Nodes_TestBlockNodeDownCast interface {
+    ToNodes_TestBlockNode() *Nodes_TestBlockNode
+}
+func Nodes_TestBlockNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_TestBlockNodeDownCast)
+    if ok { return work.ToNodes_TestBlockNode() }
+    return nil
+}
+func (obj *Nodes_TestBlockNode) ToNodes_TestBlockNode() *Nodes_TestBlockNode {
+    return obj
+}
+func NewNodes_TestBlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_TestBlockNode {
+    obj := &Nodes_TestBlockNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_TestBlockNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_TestBlockNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
+// 734: DeclConstr
+func (self *Nodes_TestBlockNode) InitNodes_TestBlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 75, pos, inTestBlock, macroArgFlag, typeList)
+    self.stmtList = stmtList
+}
+
+
+// declaration Class -- AbbrNode
+type Nodes_AbbrNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_AbbrNode struct {
+    Nodes_Node
+    FP Nodes_AbbrNodeMtd
+}
+func Nodes_AbbrNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_AbbrNode).FP
+}
+type Nodes_AbbrNodeDownCast interface {
+    ToNodes_AbbrNode() *Nodes_AbbrNode
+}
+func Nodes_AbbrNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_AbbrNodeDownCast)
+    if ok { return work.ToNodes_AbbrNode() }
+    return nil
+}
+func (obj *Nodes_AbbrNode) ToNodes_AbbrNode() *Nodes_AbbrNode {
+    return obj
+}
+func NewNodes_AbbrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_AbbrNode {
+    obj := &Nodes_AbbrNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_AbbrNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
+    return obj
+}
+// 734: DeclConstr
+func (self *Nodes_AbbrNode) InitNodes_AbbrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
+}
+
+
+// declaration Class -- BoxingNode
+type Nodes_BoxingNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_src(_env *LnsEnv) *Nodes_Node
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_BoxingNode struct {
+    Nodes_Node
+    src *Nodes_Node
+    FP Nodes_BoxingNodeMtd
+}
+func Nodes_BoxingNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_BoxingNode).FP
+}
+type Nodes_BoxingNodeDownCast interface {
+    ToNodes_BoxingNode() *Nodes_BoxingNode
+}
+func Nodes_BoxingNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_BoxingNodeDownCast)
+    if ok { return work.ToNodes_BoxingNode() }
+    return nil
+}
+func (obj *Nodes_BoxingNode) ToNodes_BoxingNode() *Nodes_BoxingNode {
+    return obj
+}
+func NewNodes_BoxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_BoxingNode {
+    obj := &Nodes_BoxingNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_BoxingNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_BoxingNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
+// 734: DeclConstr
+func (self *Nodes_BoxingNode) InitNodes_BoxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 77, pos, inTestBlock, macroArgFlag, typeList)
+    self.src = src
+}
+
+
+// declaration Class -- UnboxingNode
+type Nodes_UnboxingNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_src(_env *LnsEnv) *Nodes_Node
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_UnboxingNode struct {
+    Nodes_Node
+    src *Nodes_Node
+    FP Nodes_UnboxingNodeMtd
+}
+func Nodes_UnboxingNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_UnboxingNode).FP
+}
+type Nodes_UnboxingNodeDownCast interface {
+    ToNodes_UnboxingNode() *Nodes_UnboxingNode
+}
+func Nodes_UnboxingNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_UnboxingNodeDownCast)
+    if ok { return work.ToNodes_UnboxingNode() }
+    return nil
+}
+func (obj *Nodes_UnboxingNode) ToNodes_UnboxingNode() *Nodes_UnboxingNode {
+    return obj
+}
+func NewNodes_UnboxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_UnboxingNode {
+    obj := &Nodes_UnboxingNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_UnboxingNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_UnboxingNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
+// 734: DeclConstr
+func (self *Nodes_UnboxingNode) InitNodes_UnboxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
+    self.InitNodes_Node(_env, managerId, id, 78, pos, inTestBlock, macroArgFlag, typeList)
+    self.src = src
+}
+
+
+// declaration Class -- LiteralNilNode
+type Nodes_LiteralNilNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralNilNode struct {
+    Nodes_Node
+    FP Nodes_LiteralNilNodeMtd
+}
+func Nodes_LiteralNilNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralNilNode).FP
+}
+type Nodes_LiteralNilNodeDownCast interface {
+    ToNodes_LiteralNilNode() *Nodes_LiteralNilNode
+}
+func Nodes_LiteralNilNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralNilNodeDownCast)
+    if ok { return work.ToNodes_LiteralNilNode() }
+    return nil
+}
+func (obj *Nodes_LiteralNilNode) ToNodes_LiteralNilNode() *Nodes_LiteralNilNode {
+    return obj
+}
+func NewNodes_LiteralNilNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_LiteralNilNode {
+    obj := &Nodes_LiteralNilNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralNilNode(_env, arg1, arg2, arg3, arg4, arg5, arg6)
+    return obj
+}
+// 734: DeclConstr
+func (self *Nodes_LiteralNilNode) InitNodes_LiteralNilNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 79, pos, inTestBlock, macroArgFlag, typeList)
+}
+
+
+// declaration Class -- LiteralCharNode
+type Nodes_LiteralCharNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_num(_env *LnsEnv) LnsInt
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_token(_env *LnsEnv) *Types_Token
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralCharNode struct {
+    Nodes_Node
+    token *Types_Token
+    num LnsInt
+    FP Nodes_LiteralCharNodeMtd
+}
+func Nodes_LiteralCharNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralCharNode).FP
+}
+type Nodes_LiteralCharNodeDownCast interface {
+    ToNodes_LiteralCharNode() *Nodes_LiteralCharNode
+}
+func Nodes_LiteralCharNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralCharNodeDownCast)
+    if ok { return work.ToNodes_LiteralCharNode() }
+    return nil
+}
+func (obj *Nodes_LiteralCharNode) ToNodes_LiteralCharNode() *Nodes_LiteralCharNode {
+    return obj
+}
+func NewNodes_LiteralCharNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralCharNode {
+    obj := &Nodes_LiteralCharNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralCharNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_LiteralCharNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
+func (self *Nodes_LiteralCharNode) Get_num(_env *LnsEnv) LnsInt{ return self.num }
+// 734: DeclConstr
+func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
+    self.InitNodes_Node(_env, managerId, id, 80, pos, inTestBlock, macroArgFlag, typeList)
+    self.token = token
+    self.num = num
+}
+
+
+// declaration Class -- LiteralIntNode
+type Nodes_LiteralIntNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_num(_env *LnsEnv) LnsInt
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_token(_env *LnsEnv) *Types_Token
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralIntNode struct {
+    Nodes_Node
+    token *Types_Token
+    num LnsInt
+    FP Nodes_LiteralIntNodeMtd
+}
+func Nodes_LiteralIntNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralIntNode).FP
+}
+type Nodes_LiteralIntNodeDownCast interface {
+    ToNodes_LiteralIntNode() *Nodes_LiteralIntNode
+}
+func Nodes_LiteralIntNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralIntNodeDownCast)
+    if ok { return work.ToNodes_LiteralIntNode() }
+    return nil
+}
+func (obj *Nodes_LiteralIntNode) ToNodes_LiteralIntNode() *Nodes_LiteralIntNode {
+    return obj
+}
+func NewNodes_LiteralIntNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralIntNode {
+    obj := &Nodes_LiteralIntNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralIntNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_LiteralIntNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
+func (self *Nodes_LiteralIntNode) Get_num(_env *LnsEnv) LnsInt{ return self.num }
+// 734: DeclConstr
+func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
+    self.InitNodes_Node(_env, managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
+    self.token = token
+    self.num = num
+}
+
+
+// declaration Class -- LiteralRealNode
+type Nodes_LiteralRealNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_num(_env *LnsEnv) LnsReal
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_token(_env *LnsEnv) *Types_Token
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralRealNode struct {
+    Nodes_Node
+    token *Types_Token
+    num LnsReal
+    FP Nodes_LiteralRealNodeMtd
+}
+func Nodes_LiteralRealNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralRealNode).FP
+}
+type Nodes_LiteralRealNodeDownCast interface {
+    ToNodes_LiteralRealNode() *Nodes_LiteralRealNode
+}
+func Nodes_LiteralRealNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralRealNodeDownCast)
+    if ok { return work.ToNodes_LiteralRealNode() }
+    return nil
+}
+func (obj *Nodes_LiteralRealNode) ToNodes_LiteralRealNode() *Nodes_LiteralRealNode {
+    return obj
+}
+func NewNodes_LiteralRealNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsReal) *Nodes_LiteralRealNode {
+    obj := &Nodes_LiteralRealNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralRealNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_LiteralRealNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
+func (self *Nodes_LiteralRealNode) Get_num(_env *LnsEnv) LnsReal{ return self.num }
+// 734: DeclConstr
+func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) {
+    self.InitNodes_Node(_env, managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
+    self.token = token
+    self.num = num
+}
+
+
+// declaration Class -- LiteralArrayNode
+type Nodes_LiteralArrayNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralArrayNode struct {
+    Nodes_Node
+    expList LnsAny
+    FP Nodes_LiteralArrayNodeMtd
+}
+func Nodes_LiteralArrayNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralArrayNode).FP
+}
+type Nodes_LiteralArrayNodeDownCast interface {
+    ToNodes_LiteralArrayNode() *Nodes_LiteralArrayNode
+}
+func Nodes_LiteralArrayNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralArrayNodeDownCast)
+    if ok { return work.ToNodes_LiteralArrayNode() }
+    return nil
+}
+func (obj *Nodes_LiteralArrayNode) ToNodes_LiteralArrayNode() *Nodes_LiteralArrayNode {
+    return obj
+}
+func NewNodes_LiteralArrayNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralArrayNode {
+    obj := &Nodes_LiteralArrayNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralArrayNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_LiteralArrayNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
+// 734: DeclConstr
+func (self *Nodes_LiteralArrayNode) InitNodes_LiteralArrayNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
+    self.expList = expList
+}
+
+
+// declaration Class -- LiteralListNode
+type Nodes_LiteralListNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralListNode struct {
+    Nodes_Node
+    expList LnsAny
+    FP Nodes_LiteralListNodeMtd
+}
+func Nodes_LiteralListNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralListNode).FP
+}
+type Nodes_LiteralListNodeDownCast interface {
+    ToNodes_LiteralListNode() *Nodes_LiteralListNode
+}
+func Nodes_LiteralListNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralListNodeDownCast)
+    if ok { return work.ToNodes_LiteralListNode() }
+    return nil
+}
+func (obj *Nodes_LiteralListNode) ToNodes_LiteralListNode() *Nodes_LiteralListNode {
+    return obj
+}
+func NewNodes_LiteralListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralListNode {
+    obj := &Nodes_LiteralListNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralListNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_LiteralListNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
+// 734: DeclConstr
+func (self *Nodes_LiteralListNode) InitNodes_LiteralListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
+    self.expList = expList
+}
+
+
+// declaration Class -- LiteralSetNode
+type Nodes_LiteralSetNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expList(_env *LnsEnv) LnsAny
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralSetNode struct {
+    Nodes_Node
+    expList LnsAny
+    FP Nodes_LiteralSetNodeMtd
+}
+func Nodes_LiteralSetNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralSetNode).FP
+}
+type Nodes_LiteralSetNodeDownCast interface {
+    ToNodes_LiteralSetNode() *Nodes_LiteralSetNode
+}
+func Nodes_LiteralSetNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralSetNodeDownCast)
+    if ok { return work.ToNodes_LiteralSetNode() }
+    return nil
+}
+func (obj *Nodes_LiteralSetNode) ToNodes_LiteralSetNode() *Nodes_LiteralSetNode {
+    return obj
+}
+func NewNodes_LiteralSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralSetNode {
+    obj := &Nodes_LiteralSetNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralSetNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_LiteralSetNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
+// 734: DeclConstr
+func (self *Nodes_LiteralSetNode) InitNodes_LiteralSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
+    self.expList = expList
+}
+
+
+// declaration Class -- PairItem
+type Nodes_PairItemMtd interface {
+    Get_key(_env *LnsEnv) *Nodes_Node
+    Get_val(_env *LnsEnv) *Nodes_Node
+}
+type Nodes_PairItem struct {
+    key *Nodes_Node
+    val *Nodes_Node
+    FP Nodes_PairItemMtd
+}
+func Nodes_PairItem2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_PairItem).FP
+}
+type Nodes_PairItemDownCast interface {
+    ToNodes_PairItem() *Nodes_PairItem
+}
+func Nodes_PairItemDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_PairItemDownCast)
+    if ok { return work.ToNodes_PairItem() }
+    return nil
+}
+func (obj *Nodes_PairItem) ToNodes_PairItem() *Nodes_PairItem {
+    return obj
+}
+func NewNodes_PairItem(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node) *Nodes_PairItem {
+    obj := &Nodes_PairItem{}
+    obj.FP = obj
+    obj.InitNodes_PairItem(_env, arg1, arg2)
+    return obj
+}
+func (self *Nodes_PairItem) InitNodes_PairItem(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node) {
+    self.key = arg1
+    self.val = arg2
+}
+func (self *Nodes_PairItem) Get_key(_env *LnsEnv) *Nodes_Node{ return self.key }
+func (self *Nodes_PairItem) Get_val(_env *LnsEnv) *Nodes_Node{ return self.val }
+
+// declaration Class -- LiteralMapNode
+type Nodes_LiteralMapNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_map(_env *LnsEnv) *LnsMap
+    Get_pairList(_env *LnsEnv) *LnsList
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralMapNode struct {
+    Nodes_Node
+    _map *LnsMap
+    pairList *LnsList
+    FP Nodes_LiteralMapNodeMtd
+}
+func Nodes_LiteralMapNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralMapNode).FP
+}
+type Nodes_LiteralMapNodeDownCast interface {
+    ToNodes_LiteralMapNode() *Nodes_LiteralMapNode
+}
+func Nodes_LiteralMapNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralMapNodeDownCast)
+    if ok { return work.ToNodes_LiteralMapNode() }
+    return nil
+}
+func (obj *Nodes_LiteralMapNode) ToNodes_LiteralMapNode() *Nodes_LiteralMapNode {
+    return obj
+}
+func NewNodes_LiteralMapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsMap, arg8 *LnsList) *Nodes_LiteralMapNode {
+    obj := &Nodes_LiteralMapNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralMapNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
+    return obj
+}
+func (self *Nodes_LiteralMapNode) Get_map(_env *LnsEnv) *LnsMap{ return self._map }
+func (self *Nodes_LiteralMapNode) Get_pairList(_env *LnsEnv) *LnsList{ return self.pairList }
+// 734: DeclConstr
+func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) {
+    self.InitNodes_Node(_env, managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
+    self._map = _map
+    self.pairList = pairList
+}
+
+
+// declaration Class -- LiteralStringNode
+type Nodes_LiteralStringNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_dddParam(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_orgParam(_env *LnsEnv) LnsAny
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_token(_env *LnsEnv) *Types_Token
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralStringNode struct {
+    Nodes_Node
+    token *Types_Token
+    orgParam LnsAny
+    dddParam LnsAny
+    FP Nodes_LiteralStringNodeMtd
+}
+func Nodes_LiteralStringNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralStringNode).FP
+}
+type Nodes_LiteralStringNodeDownCast interface {
+    ToNodes_LiteralStringNode() *Nodes_LiteralStringNode
+}
+func Nodes_LiteralStringNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralStringNodeDownCast)
+    if ok { return work.ToNodes_LiteralStringNode() }
+    return nil
+}
+func (obj *Nodes_LiteralStringNode) ToNodes_LiteralStringNode() *Nodes_LiteralStringNode {
+    return obj
+}
+func NewNodes_LiteralStringNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 LnsAny) *Nodes_LiteralStringNode {
+    obj := &Nodes_LiteralStringNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralStringNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+func (self *Nodes_LiteralStringNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
+func (self *Nodes_LiteralStringNode) Get_orgParam(_env *LnsEnv) LnsAny{ return self.orgParam }
+func (self *Nodes_LiteralStringNode) Get_dddParam(_env *LnsEnv) LnsAny{ return self.dddParam }
+// 734: DeclConstr
+func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) {
+    self.InitNodes_Node(_env, managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
+    self.token = token
+    self.orgParam = orgParam
+    self.dddParam = dddParam
+}
+
+
+// declaration Class -- LiteralBoolNode
+type Nodes_LiteralBoolNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_token(_env *LnsEnv) *Types_Token
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralBoolNode struct {
+    Nodes_Node
+    token *Types_Token
+    FP Nodes_LiteralBoolNodeMtd
+}
+func Nodes_LiteralBoolNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralBoolNode).FP
+}
+type Nodes_LiteralBoolNodeDownCast interface {
+    ToNodes_LiteralBoolNode() *Nodes_LiteralBoolNode
+}
+func Nodes_LiteralBoolNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralBoolNodeDownCast)
+    if ok { return work.ToNodes_LiteralBoolNode() }
+    return nil
+}
+func (obj *Nodes_LiteralBoolNode) ToNodes_LiteralBoolNode() *Nodes_LiteralBoolNode {
+    return obj
+}
+func NewNodes_LiteralBoolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralBoolNode {
+    obj := &Nodes_LiteralBoolNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralBoolNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_LiteralBoolNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
+// 734: DeclConstr
+func (self *Nodes_LiteralBoolNode) InitNodes_LiteralBoolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
+    self.InitNodes_Node(_env, managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
+    self.token = token
+}
+
+
+// declaration Class -- LiteralSymbolNode
+type Nodes_LiteralSymbolNodeMtd interface {
+    AddComment(_env *LnsEnv, arg1 *LnsList)
+    AddTokenList(_env *LnsEnv, arg1 *LnsList, arg2 LnsInt, arg3 string)
+    CanBeLeft(_env *LnsEnv) bool
+    CanBeRight(_env *LnsEnv, arg1 *Ast_ProcessInfo) bool
+    CanBeStatement(_env *LnsEnv) bool
+    Comp(_env *LnsEnv, arg1 *Nodes_Node) LnsInt
+    GetBreakKind(_env *LnsEnv, arg1 LnsInt) LnsInt
+    GetIdTxt(_env *LnsEnv) string
+    GetLiteral(_env *LnsEnv)(LnsAny, LnsAny)
+    GetPrefix(_env *LnsEnv) LnsAny
+    GetSymbolInfo(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) LnsAny
+    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_expType(_env *LnsEnv) *Ast_TypeInfo
+    Get_expTypeList(_env *LnsEnv) *LnsList
+    Get_inTestBlock(_env *LnsEnv) bool
+    Get_isLValue(_env *LnsEnv) bool
+    Get_kind(_env *LnsEnv) LnsInt
+    Get_macroArgFlag(_env *LnsEnv) bool
+    Get_pos(_env *LnsEnv) *Types_Position
+    Get_tailComment(_env *LnsEnv) LnsAny
+    Get_token(_env *LnsEnv) *Types_Token
+    HasNilAccess(_env *LnsEnv) bool
+    ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
+    SetLValue(_env *LnsEnv)
+    Set_tailComment(_env *LnsEnv, arg1 LnsAny)
+    SetupLiteralTokenList(_env *LnsEnv, arg1 *LnsList) bool
+    Visit(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+    VisitSub(_env *LnsEnv, arg1 Nodes_NodeVisitor, arg2 LnsInt, arg3 *LnsSet) bool
+}
+type Nodes_LiteralSymbolNode struct {
+    Nodes_Node
+    token *Types_Token
+    FP Nodes_LiteralSymbolNodeMtd
+}
+func Nodes_LiteralSymbolNode2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_LiteralSymbolNode).FP
+}
+type Nodes_LiteralSymbolNodeDownCast interface {
+    ToNodes_LiteralSymbolNode() *Nodes_LiteralSymbolNode
+}
+func Nodes_LiteralSymbolNodeDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_LiteralSymbolNodeDownCast)
+    if ok { return work.ToNodes_LiteralSymbolNode() }
+    return nil
+}
+func (obj *Nodes_LiteralSymbolNode) ToNodes_LiteralSymbolNode() *Nodes_LiteralSymbolNode {
+    return obj
+}
+func NewNodes_LiteralSymbolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralSymbolNode {
+    obj := &Nodes_LiteralSymbolNode{}
+    obj.FP = obj
+    obj.Nodes_Node.FP = obj
+    obj.InitNodes_LiteralSymbolNode(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    return obj
+}
+func (self *Nodes_LiteralSymbolNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
+// 734: DeclConstr
+func (self *Nodes_LiteralSymbolNode) InitNodes_LiteralSymbolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
+    self.InitNodes_Node(_env, managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
+    self.token = token
+}
+
+
+// declaration Class -- DefMacroInfo
+type Nodes_DefMacroInfoMtd interface {
+    GetArgList(_env *LnsEnv) *LnsList
+    GetTokenList(_env *LnsEnv) *LnsList
+    Get_func(_env *LnsEnv) LnsAny
+    Get_name(_env *LnsEnv) string
+    Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
+}
+type Nodes_DefMacroInfo struct {
+    Nodes_MacroInfo
+    DeclInfo *Nodes_DeclMacroInfo
+    argList *LnsList
+    FP Nodes_DefMacroInfoMtd
+}
+func Nodes_DefMacroInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_DefMacroInfo).FP
+}
+type Nodes_DefMacroInfoDownCast interface {
+    ToNodes_DefMacroInfo() *Nodes_DefMacroInfo
+}
+func Nodes_DefMacroInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_DefMacroInfoDownCast)
+    if ok { return work.ToNodes_DefMacroInfo() }
+    return nil
+}
+func (obj *Nodes_DefMacroInfo) ToNodes_DefMacroInfo() *Nodes_DefMacroInfo {
+    return obj
+}
+func NewNodes_DefMacroInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_DeclMacroInfo, arg3 *LnsMap) *Nodes_DefMacroInfo {
+    obj := &Nodes_DefMacroInfo{}
+    obj.FP = obj
+    obj.Nodes_MacroInfo.FP = obj
+    obj.InitNodes_DefMacroInfo(_env, arg1, arg2, arg3)
+    return obj
+}
 // 2886: DeclConstr
 func (self *Nodes_DefMacroInfo) InitNodes_DefMacroInfo(_env *LnsEnv, _func LnsAny,declInfo *Nodes_DeclMacroInfo,symbol2MacroValInfoMap *LnsMap) {
     self.InitNodes_MacroInfo(_env, _func, symbol2MacroValInfoMap)
@@ -17574,10 +17424,265 @@ func (self *Nodes_DefMacroInfo) InitNodes_DefMacroInfo(_env *LnsEnv, _func LnsAn
         }
     }
 }
-// 2906: decl @lune.@base.@Nodes.ExportInfo.assign
-func (self *Nodes_ExportInfo) Assign(_env *LnsEnv, assignName string) *FrontInterface_ExportInfo {
-    var info *Nodes_ExportInfo
-    info = NewNodes_ExportInfo(_env, self.FP.Get_moduleTypeInfo(_env), self.FP.Get_provideInfo(_env), self.FP.Get_processInfo(_env), self.FP.Get_globalSymbolList(_env), self.FP.Get_importedAliasMap(_env), self.FP.Get_moduleId(_env), self.FP.Get_fullName(_env), assignName, self.FP.Get_streamName(_env), NewLnsMap( map[LnsAny]LnsAny{}), self.typeId2DefMacroInfo)
-    info.FP.Set_importId2localTypeInfoMap(_env, self.FP.Get_importId2localTypeInfoMap(_env))
-    return &info.FrontInterface_ExportInfo
+
+
+// declaration Class -- ExportInfo
+type Nodes_ExportInfoMtd interface {
+    Assign(_env *LnsEnv, arg1 string) *FrontInterface_ExportInfo
+    GetTypeInfo(_env *LnsEnv, arg1 LnsInt) LnsAny
+    Get_assignName(_env *LnsEnv) string
+    Get_fullName(_env *LnsEnv) string
+    Get_globalSymbolList(_env *LnsEnv) *LnsList
+    Get_importId2localTypeInfoMap(_env *LnsEnv) *LnsMap
+    Get_importedAliasMap(_env *LnsEnv) *LnsMap
+    Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
+    Get_modulePath(_env *LnsEnv) string
+    Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
+    Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo
+    Get_provideInfo(_env *LnsEnv) *FrontInterface_ModuleProvideInfo
+    Get_streamName(_env *LnsEnv) string
+    Get_typeId2DefMacroInfo(_env *LnsEnv) *LnsMap
+    Set_importId2localTypeInfoMap(_env *LnsEnv, arg1 *LnsMap)
+}
+type Nodes_ExportInfo struct {
+    FrontInterface_ExportInfo
+    typeId2DefMacroInfo *LnsMap
+    FP Nodes_ExportInfoMtd
+}
+func Nodes_ExportInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Nodes_ExportInfo).FP
+}
+type Nodes_ExportInfoDownCast interface {
+    ToNodes_ExportInfo() *Nodes_ExportInfo
+}
+func Nodes_ExportInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Nodes_ExportInfoDownCast)
+    if ok { return work.ToNodes_ExportInfo() }
+    return nil
+}
+func (obj *Nodes_ExportInfo) ToNodes_ExportInfo() *Nodes_ExportInfo {
+    return obj
+}
+func NewNodes_ExportInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *FrontInterface_ModuleProvideInfo, arg3 *Ast_ProcessInfo, arg4 *LnsList, arg5 *LnsMap, arg6 *FrontInterface_ModuleId, arg7 string, arg8 string, arg9 string, arg10 *LnsMap, arg11 *LnsMap) *Nodes_ExportInfo {
+    obj := &Nodes_ExportInfo{}
+    obj.FP = obj
+    obj.FrontInterface_ExportInfo.FP = obj
+    obj.InitNodes_ExportInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11)
+    return obj
+}
+func (self *Nodes_ExportInfo) InitNodes_ExportInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *FrontInterface_ModuleProvideInfo, arg3 *Ast_ProcessInfo, arg4 *LnsList, arg5 *LnsMap, arg6 *FrontInterface_ModuleId, arg7 string, arg8 string, arg9 string, arg10 *LnsMap, arg11 *LnsMap) {
+    self.FrontInterface_ExportInfo.InitFrontInterface_ExportInfo( _env, arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10)
+    self.typeId2DefMacroInfo = arg11
+}
+func (self *Nodes_ExportInfo) Get_typeId2DefMacroInfo(_env *LnsEnv) *LnsMap{ return self.typeId2DefMacroInfo }
+
+func Lns_Nodes_init(_env *LnsEnv) {
+    if init_Nodes { return }
+    init_Nodes = true
+    Nodes__mod__ = "@lune.@base.@Nodes"
+    Lns_InitMod()
+    Lns_Parser_init(_env)
+    Lns_Util_init(_env)
+    Lns_frontInterface_init(_env)
+    Lns_Ast_init(_env)
+    Lns_LuneControl_init(_env)
+    Lns_Types_init(_env)
+    Nodes_nodeKind2NameMapWork = NewLnsMap( map[LnsAny]LnsAny{})
+    Nodes_nodeKind2NameMap = Nodes_nodeKind2NameMapWork
+    Nodes_nodeKindSeed = 0
+    Nodes_regKind_17_(_env, "None")
+    
+    Nodes_regKind_17_(_env, "Shebang")
+    
+    Nodes_regKind_17_(_env, "ConvStat")
+    
+    Nodes_regKind_17_(_env, "BlankLine")
+    
+    Nodes_regKind_17_(_env, "Subfile")
+    
+    Nodes_regKind_17_(_env, "Import")
+    
+    Nodes_regKind_17_(_env, "Root")
+    
+    Nodes_regKind_17_(_env, "RefType")
+    
+    Nodes_regKind_17_(_env, "Block")
+    
+    Nodes_regKind_17_(_env, "Scope")
+    
+    Nodes_regKind_17_(_env, "If")
+    
+    Nodes_regKind_17_(_env, "ExpList")
+    
+    Nodes_regKind_17_(_env, "Switch")
+    
+    Nodes_regKind_17_(_env, "While")
+    
+    Nodes_regKind_17_(_env, "Repeat")
+    
+    
+    Nodes_regKind_17_(_env, "For")
+    
+    
+    Nodes_regKind_17_(_env, "Apply")
+    
+    
+    Nodes_regKind_17_(_env, "Foreach")
+    
+    
+    Nodes_regKind_17_(_env, "Forsort")
+    
+    
+    Nodes_regKind_17_(_env, "Return")
+    
+    Nodes_regKind_17_(_env, "Break")
+    
+    Nodes_regKind_17_(_env, "Provide")
+    
+    Nodes_regKind_17_(_env, "ExpNew")
+    
+    Nodes_regKind_17_(_env, "ExpUnwrap")
+    
+    Nodes_regKind_17_(_env, "ExpRef")
+    
+    Nodes_regKind_17_(_env, "ExpSetVal")
+    
+    Nodes_regKind_17_(_env, "ExpSetItem")
+    
+    Nodes_regKind_17_(_env, "ExpOp2")
+    
+    Nodes_regKind_17_(_env, "UnwrapSet")
+    
+    Nodes_regKind_17_(_env, "IfUnwrap")
+    
+    Nodes_regKind_17_(_env, "When")
+    
+    Nodes_regKind_17_(_env, "ExpCast")
+    
+    Nodes_regKind_17_(_env, "ExpToDDD")
+    
+    Nodes_regKind_17_(_env, "ExpSubDDD")
+    
+    Nodes_regKind_17_(_env, "ExpOp1")
+    
+    Nodes_regKind_17_(_env, "ExpRefItem")
+    
+    Nodes_regKind_17_(_env, "ExpCall")
+    
+    Nodes_regKind_17_(_env, "ExpMRet")
+    
+    Nodes_regKind_17_(_env, "ExpAccessMRet")
+    
+    Nodes_regKind_17_(_env, "ExpMultiTo1")
+    
+    Nodes_regKind_17_(_env, "ExpParen")
+    
+    Nodes_regKind_17_(_env, "ExpMacroExp")
+    
+    Nodes_regKind_17_(_env, "ExpMacroStat")
+    
+    Nodes_regKind_17_(_env, "ExpMacroArgExp")
+    
+    Nodes_regKind_17_(_env, "StmtExp")
+    
+    Nodes_regKind_17_(_env, "ExpMacroStatList")
+    
+    Nodes_regKind_17_(_env, "ExpOmitEnum")
+    
+    Nodes_regKind_17_(_env, "RefField")
+    
+    Nodes_regKind_17_(_env, "GetField")
+    
+    Nodes_regKind_17_(_env, "Alias")
+    
+    Nodes_regKind_17_(_env, "DeclVar")
+    
+    Nodes_regKind_17_(_env, "DeclForm")
+    
+    Nodes_regKind_17_(_env, "DeclFunc")
+    
+    Nodes_regKind_17_(_env, "DeclMethod")
+    
+    Nodes_regKind_17_(_env, "ProtoMethod")
+    
+    Nodes_regKind_17_(_env, "DeclConstr")
+    
+    Nodes_regKind_17_(_env, "DeclDestr")
+    
+    Nodes_regKind_17_(_env, "ExpCallSuperCtor")
+    
+    Nodes_regKind_17_(_env, "ExpCallSuper")
+    
+    Nodes_regKind_17_(_env, "AsyncLock")
+    
+    Nodes_regKind_17_(_env, "Request")
+    
+    Nodes_regKind_17_(_env, "DeclMember")
+    
+    Nodes_regKind_17_(_env, "DeclArg")
+    
+    Nodes_regKind_17_(_env, "DeclArgDDD")
+    
+    Nodes_regKind_17_(_env, "DeclAdvertise")
+    
+    Nodes_regKind_17_(_env, "ProtoClass")
+    
+    Nodes_regKind_17_(_env, "DeclClass")
+    
+    Nodes_regKind_17_(_env, "DeclEnum")
+    
+    Nodes_regKind_17_(_env, "DeclAlge")
+    
+    Nodes_regKind_17_(_env, "NewAlgeVal")
+    
+    Nodes_regKind_17_(_env, "LuneControl")
+    
+    Nodes_regKind_17_(_env, "Match")
+    
+    Nodes_regKind_17_(_env, "LuneKind")
+    
+    Nodes_regKind_17_(_env, "DeclMacro")
+    
+    Nodes_regKind_17_(_env, "TestCase")
+    
+    Nodes_regKind_17_(_env, "TestBlock")
+    
+    Nodes_regKind_17_(_env, "Abbr")
+    
+    Nodes_regKind_17_(_env, "Boxing")
+    
+    Nodes_regKind_17_(_env, "Unboxing")
+    
+    Nodes_regKind_17_(_env, "LiteralNil")
+    
+    Nodes_regKind_17_(_env, "LiteralChar")
+    
+    Nodes_regKind_17_(_env, "LiteralInt")
+    
+    Nodes_regKind_17_(_env, "LiteralReal")
+    
+    Nodes_regKind_17_(_env, "LiteralArray")
+    
+    Nodes_regKind_17_(_env, "LiteralList")
+    
+    Nodes_regKind_17_(_env, "LiteralSet")
+    
+    Nodes_regKind_17_(_env, "LiteralMap")
+    
+    Nodes_regKind_17_(_env, "LiteralString")
+    
+    Nodes_regKind_17_(_env, "LiteralBool")
+    
+    Nodes_regKind_17_(_env, "LiteralSymbol")
+    
+    
+}
+func init() {
+    init_Nodes = false
 }

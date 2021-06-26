@@ -65,6 +65,117 @@ func Testing_outputAllResult(_env *LnsEnv, stream Lns_oStream) {
     }
 }
 
+// 34: decl @lune.@base.@Testing.Result.outputResult
+func (self *Testing_Result) OutputResult(_env *LnsEnv, stream Lns_oStream) {
+    stream.Write(_env, _env.GetVM().String_format("test total: %s %d (OK:%d, NG:%d)\n", []LnsAny{self.name, self.okNum + self.ngNum, self.okNum, self.ngNum}))
+}
+// 40: decl @lune.@base.@Testing.Result.err
+func (self *Testing_Result) Err(_env *LnsEnv, mess string,mod string,lineNo LnsInt) {
+    self.ngNum = self.ngNum + 1
+    Lns_io_stderr.Write(_env, _env.GetVM().String_format("error: %s:%d: %s\n", []LnsAny{mod, lineNo, mess}))
+}
+// 45: decl @lune.@base.@Testing.Result.isTrue
+func (self *Testing_Result) IsTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
+    if val1 == true{
+        self.okNum = self.okNum + 1
+        return true
+    }
+    self.FP.Err(_env, _env.GetVM().String_format("not true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( msg) ||
+        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+    return false
+}
+// 55: decl @lune.@base.@Testing.Result.isNotTrue
+func (self *Testing_Result) IsNotTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
+    if Lns_op_not(val1){
+        self.okNum = self.okNum + 1
+        return true
+    }
+    self.FP.Err(_env, _env.GetVM().String_format("is true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( msg) ||
+        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+    return false
+}
+// 65: decl @lune.@base.@Testing.Result.isNil
+func (self *Testing_Result) IsNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
+    if val1 == nil{
+        self.okNum = self.okNum + 1
+        return true
+    }
+    self.FP.Err(_env, _env.GetVM().String_format("is not nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( msg) ||
+        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+    return false
+}
+// 75: decl @lune.@base.@Testing.Result.isNotNil
+func (self *Testing_Result) IsNotNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
+    if val1 != nil{
+        self.okNum = self.okNum + 1
+        return true
+    }
+    self.FP.Err(_env, _env.GetVM().String_format("is nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( msg) ||
+        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+    return false
+}
+// 85: decl @lune.@base.@Testing.Result.checkEq
+func (self *Testing_Result) CheckEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
+    if val1 == val2{
+        self.okNum = self.okNum + 1
+        return true
+    }
+    self.FP.Err(_env, _env.GetVM().String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( msg) ||
+        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
+    return false
+}
+// 98: decl @lune.@base.@Testing.Result.checkNotEq
+func (self *Testing_Result) CheckNotEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
+    if val1 != val2{
+        self.okNum = self.okNum + 1
+        return true
+    }
+    self.FP.Err(_env, _env.GetVM().String_format("equal -- %s:%s:[%s] == %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( msg) ||
+        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
+    return false
+}
+// 143: decl @lune.@base.@Testing.TestModuleInfo.addCase
+func (self *Testing_TestModuleInfo) AddCase(_env *LnsEnv, name string,testCase *Testing_TestCase) {
+    self.testcaseMap.Set(name,testCase)
+}
+// 147: decl @lune.@base.@Testing.TestModuleInfo.run
+func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
+    self.runned = true
+    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
+    {
+        __forsortCollection0 := self.testcaseMap
+        __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
+        __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
+        for _, _name := range( __forsortSorted0.Items ) {
+            testcase := __forsortCollection0.Items[ _name ].(Testing_TestCaseDownCast).ToTesting_TestCase()
+            name := _name.(string)
+            Lns_print([]LnsAny{_env.GetVM().String_format("%s: %s", []LnsAny{name, _env.GetVM().String_rep("-", 15)})})
+            testcase.FP.Get_func(_env)(_env, NewTesting_Ctrl(_env, testcase.FP.Get_result(_env)))
+        }
+    }
+}
+// 156: decl @lune.@base.@Testing.TestModuleInfo.outputResult
+func (self *Testing_TestModuleInfo) OutputResult(_env *LnsEnv, stream Lns_oStream) {
+    if Lns_op_not(self.runned){
+        return 
+    }
+    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
+    {
+        __forsortCollection0 := self.testcaseMap
+        __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
+        __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
+        for _, ___forsortKey0 := range( __forsortSorted0.Items ) {
+            testcase := __forsortCollection0.Items[ ___forsortKey0 ].(Testing_TestCaseDownCast).ToTesting_TestCase()
+            testcase.FP.Get_result(_env).FP.OutputResult(_env, stream)
+        }
+    }
+}
 // declaration Class -- Result
 type Testing_ResultMtd interface {
     CheckEq(_env *LnsEnv, arg1 LnsAny, arg2 LnsAny, arg3 string, arg4 string, arg5 LnsAny, arg6 string, arg7 LnsInt) bool
@@ -280,6 +391,13 @@ func NewTesting_TestModuleInfo(_env *LnsEnv, arg1 string) *Testing_TestModuleInf
 func (self *Testing_TestModuleInfo) Get_runned(_env *LnsEnv) bool{ return self.runned }
 func (self *Testing_TestModuleInfo) Get_name(_env *LnsEnv) string{ return self.name }
 func (self *Testing_TestModuleInfo) Get_testcaseMap(_env *LnsEnv) *LnsMap{ return self.testcaseMap }
+// 137: DeclConstr
+func (self *Testing_TestModuleInfo) InitTesting_TestModuleInfo(_env *LnsEnv, name string) {
+    self.runned = false
+    self.name = name
+    self.testcaseMap = NewLnsMap( map[LnsAny]LnsAny{})
+}
+
 
 func Lns_Testing_init(_env *LnsEnv) {
     if init_Testing { return }
@@ -290,121 +408,4 @@ func Lns_Testing_init(_env *LnsEnv) {
 }
 func init() {
     init_Testing = false
-}
-// 34: decl @lune.@base.@Testing.Result.outputResult
-func (self *Testing_Result) OutputResult(_env *LnsEnv, stream Lns_oStream) {
-    stream.Write(_env, _env.GetVM().String_format("test total: %s %d (OK:%d, NG:%d)\n", []LnsAny{self.name, self.okNum + self.ngNum, self.okNum, self.ngNum}))
-}
-// 40: decl @lune.@base.@Testing.Result.err
-func (self *Testing_Result) Err(_env *LnsEnv, mess string,mod string,lineNo LnsInt) {
-    self.ngNum = self.ngNum + 1
-    Lns_io_stderr.Write(_env, _env.GetVM().String_format("error: %s:%d: %s\n", []LnsAny{mod, lineNo, mess}))
-}
-// 45: decl @lune.@base.@Testing.Result.isTrue
-func (self *Testing_Result) IsTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
-    if val1 == true{
-        self.okNum = self.okNum + 1
-        return true
-    }
-    self.FP.Err(_env, _env.GetVM().String_format("not true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
-    return false
-}
-// 55: decl @lune.@base.@Testing.Result.isNotTrue
-func (self *Testing_Result) IsNotTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
-    if Lns_op_not(val1){
-        self.okNum = self.okNum + 1
-        return true
-    }
-    self.FP.Err(_env, _env.GetVM().String_format("is true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
-    return false
-}
-// 65: decl @lune.@base.@Testing.Result.isNil
-func (self *Testing_Result) IsNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
-    if val1 == nil{
-        self.okNum = self.okNum + 1
-        return true
-    }
-    self.FP.Err(_env, _env.GetVM().String_format("is not nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
-    return false
-}
-// 75: decl @lune.@base.@Testing.Result.isNotNil
-func (self *Testing_Result) IsNotNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
-    if val1 != nil{
-        self.okNum = self.okNum + 1
-        return true
-    }
-    self.FP.Err(_env, _env.GetVM().String_format("is nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
-    return false
-}
-// 85: decl @lune.@base.@Testing.Result.checkEq
-func (self *Testing_Result) CheckEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
-    if val1 == val2{
-        self.okNum = self.okNum + 1
-        return true
-    }
-    self.FP.Err(_env, _env.GetVM().String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
-    return false
-}
-// 98: decl @lune.@base.@Testing.Result.checkNotEq
-func (self *Testing_Result) CheckNotEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1txt string,val2txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
-    if val1 != val2{
-        self.okNum = self.okNum + 1
-        return true
-    }
-    self.FP.Err(_env, _env.GetVM().String_format("equal -- %s:%s:[%s] == %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
-    return false
-}
-// 137: DeclConstr
-func (self *Testing_TestModuleInfo) InitTesting_TestModuleInfo(_env *LnsEnv, name string) {
-    self.runned = false
-    self.name = name
-    self.testcaseMap = NewLnsMap( map[LnsAny]LnsAny{})
-}
-// 143: decl @lune.@base.@Testing.TestModuleInfo.addCase
-func (self *Testing_TestModuleInfo) AddCase(_env *LnsEnv, name string,testCase *Testing_TestCase) {
-    self.testcaseMap.Set(name,testCase)
-}
-// 147: decl @lune.@base.@Testing.TestModuleInfo.run
-func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
-    self.runned = true
-    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
-    {
-        __forsortCollection0 := self.testcaseMap
-        __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
-        __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
-        for _, _name := range( __forsortSorted0.Items ) {
-            testcase := __forsortCollection0.Items[ _name ].(Testing_TestCaseDownCast).ToTesting_TestCase()
-            name := _name.(string)
-            Lns_print([]LnsAny{_env.GetVM().String_format("%s: %s", []LnsAny{name, _env.GetVM().String_rep("-", 15)})})
-            testcase.FP.Get_func(_env)(_env, NewTesting_Ctrl(_env, testcase.FP.Get_result(_env)))
-        }
-    }
-}
-// 156: decl @lune.@base.@Testing.TestModuleInfo.outputResult
-func (self *Testing_TestModuleInfo) OutputResult(_env *LnsEnv, stream Lns_oStream) {
-    if Lns_op_not(self.runned){
-        return 
-    }
-    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
-    {
-        __forsortCollection0 := self.testcaseMap
-        __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
-        __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
-        for _, ___forsortKey0 := range( __forsortSorted0.Items ) {
-            testcase := __forsortCollection0.Items[ ___forsortKey0 ].(Testing_TestCaseDownCast).ToTesting_TestCase()
-            testcase.FP.Get_result(_env).FP.OutputResult(_env, stream)
-        }
-    }
 }

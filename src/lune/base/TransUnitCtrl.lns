@@ -629,6 +629,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
       declFuncInfo.set_body( result.$body );
       declFuncInfo.set_has__func__Symbol( result.$has_func_sym );
+      declFuncInfo.set_stmtNum( result.$stmtNum );
    }
 }
 

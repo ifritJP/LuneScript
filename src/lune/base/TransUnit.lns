@@ -578,6 +578,7 @@ class FuncBlockResult {
    let funcBlockInfo:&FuncBlockInfo {pub};
    let body:Nodes.BlockNode {pub};
    let has_func_sym:bool {pub};
+   let stmtNum:int {pub};
 }
 
 enum AnalyzePhase {
@@ -1835,6 +1836,7 @@ fn TransUnit.analyzeBlock(
    let token = self.checkNextToken( "{" );
 
    self.analyzeStatementList( stmtList, false, "}" );
+   nsInfo.addStmtNum( #stmtList );
 
    self.checkNextToken( "}" );
 

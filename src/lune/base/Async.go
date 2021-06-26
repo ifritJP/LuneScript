@@ -3,6 +3,69 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Async bool
 var Async__mod__ string
+// 51: decl @lune.@base.@Async.Pipe.getNext
+func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
+    if self.started{
+        {
+            _pipe := self.pipe
+            if !Lns_IsNil( _pipe ) {
+                pipe := _pipe.(*Lns__pipe)
+                var val LnsAny
+                
+                {
+                    _val := pipe.FP.Get(_env)
+                    if _val == nil{
+                        return nil
+                    } else {
+                        val = _val
+                    }
+                }
+                return NewAsync_PipeItem(_env, val)
+            }
+        }
+    }
+    return self.FP.Access(_env)
+}
+// 64: decl @lune.@base.@Async.Pipe.run
+func (self *Async_Pipe) Run(_env *LnsEnv) {
+    self.FP.Setup(_env)
+    self.setuped = true
+    var pipe *Lns__pipe
+    
+    {
+        _pipe := self.pipe
+        if _pipe == nil{
+            return 
+        } else {
+            pipe = _pipe.(*Lns__pipe)
+        }
+    }
+    for  {
+        var val *Async_PipeItem
+        
+        {
+            _val := self.FP.Access(_env)
+            if _val == nil{
+                pipe.FP.Put(_env, nil)
+                break
+            } else {
+                val = _val.(*Async_PipeItem)
+            }
+        }
+        pipe.FP.Put(_env, val.FP.Get_item(_env))
+    }
+}
+// 79: decl @lune.@base.@Async.Pipe.start
+func (self *Async_Pipe) Start(_env *LnsEnv) {
+    self.started = true
+}
+// 82: decl @lune.@base.@Async.Pipe.stop
+func (self *Async_Pipe) Stop(_env *LnsEnv) {
+    self.started = false
+    if Lns_op_not(self.setuped){
+        self.FP.Setup(_env)
+    }
+}
 // declaration Class -- PipeItem
 type Async_PipeItemMtd interface {
     Get_item(_env *LnsEnv) LnsAny
@@ -77,6 +140,15 @@ func Async_PipeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Async_Pipe) ToAsync_Pipe() *Async_Pipe {
     return obj
 }
+// 41: DeclConstr
+func (self *Async_Pipe) InitAsync_Pipe(_env *LnsEnv, pipe LnsAny) {
+    self.pipe = pipe
+    self.started = false
+    self.setuped = false
+}
+
+
+
 
 func Lns_Async_init(_env *LnsEnv) {
     if init_Async { return }
@@ -86,73 +158,4 @@ func Lns_Async_init(_env *LnsEnv) {
 }
 func init() {
     init_Async = false
-}
-// 41: DeclConstr
-func (self *Async_Pipe) InitAsync_Pipe(_env *LnsEnv, pipe LnsAny) {
-    self.pipe = pipe
-    self.started = false
-    self.setuped = false
-}
-// 51: decl @lune.@base.@Async.Pipe.getNext
-func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
-    if self.started{
-        {
-            _pipe := self.pipe
-            if !Lns_IsNil( _pipe ) {
-                pipe := _pipe.(*Lns__pipe)
-                var val LnsAny
-                
-                {
-                    _val := pipe.FP.Get(_env)
-                    if _val == nil{
-                        return nil
-                    } else {
-                        val = _val
-                    }
-                }
-                return NewAsync_PipeItem(_env, val)
-            }
-        }
-    }
-    return self.FP.Access(_env)
-}
-// 64: decl @lune.@base.@Async.Pipe.run
-func (self *Async_Pipe) Run(_env *LnsEnv) {
-    self.FP.Setup(_env)
-    self.setuped = true
-    var pipe *Lns__pipe
-    
-    {
-        _pipe := self.pipe
-        if _pipe == nil{
-            return 
-        } else {
-            pipe = _pipe.(*Lns__pipe)
-        }
-    }
-    for  {
-        var val *Async_PipeItem
-        
-        {
-            _val := self.FP.Access(_env)
-            if _val == nil{
-                pipe.FP.Put(_env, nil)
-                break
-            } else {
-                val = _val.(*Async_PipeItem)
-            }
-        }
-        pipe.FP.Put(_env, val.FP.Get_item(_env))
-    }
-}
-// 79: decl @lune.@base.@Async.Pipe.start
-func (self *Async_Pipe) Start(_env *LnsEnv) {
-    self.started = true
-}
-// 82: decl @lune.@base.@Async.Pipe.stop
-func (self *Async_Pipe) Stop(_env *LnsEnv) {
-    self.started = false
-    if Lns_op_not(self.setuped){
-        self.FP.Setup(_env)
-    }
 }

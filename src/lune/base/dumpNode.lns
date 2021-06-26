@@ -397,7 +397,7 @@ fn dumpFilter.processDeclFuncInfo(
    if node.$expType.$scope$.$hasClosureAccess {
       name = name .. " closure";
    }
-   self.dump( opt, node, name );
+   self.dump( opt, node, "%s -- stmt:%d" (name, declInfo.$stmtNum ) );
    let argList = declInfo.get_argList();
    foreach arg in argList {
       filter( arg, self, opt.nextOpt() );

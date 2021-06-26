@@ -240,6 +240,7 @@ local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local LnsOpt = _lune.loadModule( 'lune.base.Option' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
+
 local MaxNilAccNum = 3
 
 local Opt = {}
@@ -2365,45 +2366,47 @@ function convFilter:outputImport( node )
 end
 
 
-local DeclFieldInfo = {}
-function DeclFieldInfo.setmeta( obj )
-  setmetatable( obj, { __index = DeclFieldInfo  } )
+local ProcessDeclMethodItem = {}
+function ProcessDeclMethodItem.setmeta( obj )
+  setmetatable( obj, { __index = ProcessDeclMethodItem  } )
 end
-function DeclFieldInfo.new( classNode, fieldNode )
+function ProcessDeclMethodItem.new( classNode, fieldNode )
    local obj = {}
-   DeclFieldInfo.setmeta( obj )
+   ProcessDeclMethodItem.setmeta( obj )
    if obj.__init then
       obj:__init( classNode, fieldNode )
    end
    return obj
 end
-function DeclFieldInfo:__init( classNode, fieldNode )
+function ProcessDeclMethodItem:__init( classNode, fieldNode )
 
    self.classNode = classNode
    self.fieldNode = fieldNode
 end
-function DeclFieldInfo:get_classNode()
+function ProcessDeclMethodItem:get_classNode()
    return self.classNode
 end
-function DeclFieldInfo:get_fieldNode()
+function ProcessDeclMethodItem:get_fieldNode()
    return self.fieldNode
 end
 
 
 function convFilter:processMethodAsync( nodeList )
 
-   
-   local declFuncNodeList = {}
+   local totalStmtNum = 0
+   local declMethodNodeList = {}
    for __index, workNode in ipairs( nodeList ) do
       if self.enableTest or not workNode:get_inTestBlock() and not workNode:isModule(  ) then
          do
             local _switchExp = workNode:get_expType():get_kind()
             if _switchExp == Ast.TypeInfoKind.Class then
                for __index, fieldNode in ipairs( workNode:get_fieldList() ) do
-                  if _lune.__Cast( fieldNode, 3, Nodes.DeclMemberNode ) then
-                  else
-                   
-                     table.insert( declFuncNodeList, DeclFieldInfo.new(workNode, fieldNode) )
+                  do
+                     local declMethodNode = _lune.__Cast( fieldNode, 3, Nodes.DeclMethodNode )
+                     if declMethodNode ~= nil then
+                        table.insert( declMethodNodeList, ProcessDeclMethodItem.new(workNode, declMethodNode) )
+                        totalStmtNum = totalStmtNum + declMethodNode:get_declInfo():get_stmtNum()
+                     end
                   end
                   
                end
@@ -2418,9 +2421,43 @@ function convFilter:processMethodAsync( nodeList )
    
    
    
+   local divList = {}
+   
+   local divCount = 3
+   if divCount > 0 then
+      local maxStmtCount = math.floor((totalStmtNum + divCount - 1 ) / divCount)
+      local offset = 1
+      local len = #declMethodNodeList
+      
+      for _1 = 1, divCount do
+         local list = {}
+         local stmtCount = 0
+         while offset <= len do
+            local declFieldInfo = declMethodNodeList[offset]
+            offset = offset + 1
+            table.insert( list, declFieldInfo )
+            local declMethodNode = declFieldInfo:get_fieldNode()
+            stmtCount = stmtCount + declMethodNode:get_declInfo():get_stmtNum()
+            if stmtCount >= maxStmtCount then
+               break
+            end
+            
+         end
+         
+         table.insert( divList, list )
+      end
+      
+   end
+   
+   
    self:pushProcessMode( ProcessMode.DeclClass )
-   for __index, info in ipairs( declFuncNodeList ) do
-      filter( info:get_fieldNode(), self, info:get_classNode() )
+   
+   for __index, list in ipairs( divList ) do
+      
+      for __index, info in ipairs( list ) do
+         filter( info:get_fieldNode(), self, info:get_classNode() )
+      end
+      
    end
    
    self:popProcessMode(  )
@@ -2429,7 +2466,6 @@ end
 
 function convFilter:processRoot( node, opt )
 
-   
    for __index, importNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       local info = importNode:get_info()
       self.moduleType2SymbolMap[info:get_moduleTypeInfo()] = info:get_symbolInfo()
@@ -2804,7 +2840,7 @@ function convFilter:processRoot( node, opt )
    
    self:popProcessMode(  )
    
-   
+   self:processMethodAsync( node:get_nodeManager():getDeclClassNodeList(  ) )
    
    self:pushProcessMode( ProcessMode.DeclClass )
    do
@@ -2897,8 +2933,6 @@ function convFilter:processRoot( node, opt )
    self:writeln( string.format( "%s = false", initModVar) )
    self:popIndent(  )
    self:writeln( "}" )
-   
-   self:processMethodAsync( node:get_nodeManager():getDeclClassNodeList(  ) )
 end
 
 
@@ -5690,6 +5724,20 @@ function convFilter:processDeclClass( node, opt )
             
             if node:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
                self:outputAsyncItem( node )
+            end
+            
+            
+            for __index, fieldNode in ipairs( node:get_fieldList() ) do
+               do
+                  local _switchExp = fieldNode:get_kind()
+                  if _switchExp == Nodes.NodeKind.get_DeclMember() or _switchExp == Nodes.NodeKind.get_DeclMethod() then
+                  else 
+                     
+                        filter( fieldNode, self, node )
+                        self:writeln( "" )
+                  end
+               end
+               
             end
             
          elseif _switchExp == Ast.TypeInfoKind.IF then

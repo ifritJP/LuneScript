@@ -797,599 +797,6 @@ func Front_exec___anonymous_2_(_env *LnsEnv, ast *AstInfo_ASTInfo) {
     indexer.FP.Start(_env, ast.FP.Get_node(_env), NewLnsSet([]LnsAny{Nodes_NodeKind_get_Switch(_env), Nodes_NodeKind_get_Match(_env), Nodes_NodeKind_get_For(_env), Nodes_NodeKind_get_Apply(_env)}))
     indexer.FP.Dump(_env)
 }
-// declaration Class -- LoadInfo
-type front_LoadInfoMtd interface {
-}
-type front_LoadInfo struct {
-    Mod LnsAny
-    Meta *FrontInterface_ModuleMeta
-    FP front_LoadInfoMtd
-}
-func front_LoadInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_LoadInfo).FP
-}
-type front_LoadInfoDownCast interface {
-    Tofront_LoadInfo() *front_LoadInfo
-}
-func front_LoadInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_LoadInfoDownCast)
-    if ok { return work.Tofront_LoadInfo() }
-    return nil
-}
-func (obj *front_LoadInfo) Tofront_LoadInfo() *front_LoadInfo {
-    return obj
-}
-func Newfront_LoadInfo(_env *LnsEnv, arg1 LnsAny, arg2 *FrontInterface_ModuleMeta) *front_LoadInfo {
-    obj := &front_LoadInfo{}
-    obj.FP = obj
-    obj.Initfront_LoadInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *front_LoadInfo) Initfront_LoadInfo(_env *LnsEnv, arg1 LnsAny, arg2 *FrontInterface_ModuleMeta) {
-    self.Mod = arg1
-    self.Meta = arg2
-}
-
-// declaration Class -- ModuleMgr
-type front_ModuleMgrMtd interface {
-    Add(_env *LnsEnv, arg1 *AstInfo_ASTInfo, arg2 *FrontInterface_ModuleInfo)
-    AddMeta(_env *LnsEnv, arg1 string, arg2 *FrontInterface_ModuleMeta)
-    Get(_env *LnsEnv, arg1 string) LnsAny
-    GetAst(_env *LnsEnv, arg1 string) LnsAny
-    GetMeta(_env *LnsEnv, arg1 string) LnsAny
-    GetModList(_env *LnsEnv) *LnsList
-}
-type front_ModuleMgr struct {
-    mod2info *Util_OrderdMap
-    loadedMetaMap *LnsMap
-    FP front_ModuleMgrMtd
-}
-func front_ModuleMgr2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_ModuleMgr).FP
-}
-type front_ModuleMgrDownCast interface {
-    Tofront_ModuleMgr() *front_ModuleMgr
-}
-func front_ModuleMgrDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_ModuleMgrDownCast)
-    if ok { return work.Tofront_ModuleMgr() }
-    return nil
-}
-func (obj *front_ModuleMgr) Tofront_ModuleMgr() *front_ModuleMgr {
-    return obj
-}
-func Newfront_ModuleMgr(_env *LnsEnv) *front_ModuleMgr {
-    obj := &front_ModuleMgr{}
-    obj.FP = obj
-    obj.Initfront_ModuleMgr(_env)
-    return obj
-}
-
-// declaration Class -- AstCreater
-type front_AstCreaterMtd interface {
-    GetLnsSyncFlag() *Lns_syncFlag
-    createAst(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 LnsAny, arg5 LnsAny, arg6 LnsInt, arg7 LnsAny) *AstInfo_ASTInfo
-    getAst(_env *LnsEnv)(*AstInfo_ASTInfo, *FrontInterface_ModuleInfo, *FrontInterface_ModuleMeta)
-    getExportInfo(_env *LnsEnv) LnsAny
-    Run(_env *LnsEnv)
-    RunMain(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
-}
-type front_AstCreater struct {
-    Runner_Runner
-    option *Option_Option
-    builtinFunc *Builtin_BuiltinFuncType
-    mod string
-    moduleId *FrontInterface_ModuleId
-    ast LnsAny
-    moduleInfo LnsAny
-    converter front_ConverterFunc_6_
-    exportInfo LnsAny
-    exportInfoReadyFlag LnsAny
-    FP front_AstCreaterMtd
-}
-func front_AstCreater2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_AstCreater).FP
-}
-type front_AstCreaterDownCast interface {
-    Tofront_AstCreater() *front_AstCreater
-}
-func front_AstCreaterDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_AstCreaterDownCast)
-    if ok { return work.Tofront_AstCreater() }
-    return nil
-}
-func (obj *front_AstCreater) Tofront_AstCreater() *front_AstCreater {
-    return obj
-}
-func Newfront_AstCreater(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 LnsAny, arg5 *FrontInterface_ModuleId, arg6 LnsAny, arg7 LnsInt, arg8 LnsAny, arg9 *Builtin_BuiltinFuncType, arg10 *Option_Option) *front_AstCreater {
-    obj := &front_AstCreater{}
-    obj.FP = obj
-    obj.Runner_Runner.FP = obj
-    obj.Initfront_AstCreater(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
-    return obj
-}
-
-// declaration Class -- Front
-type front_FrontMtd interface {
-    applyAstResult(_env *LnsEnv, arg1 LnsAny) *AstInfo_ASTInfo
-    Build(_env *LnsEnv, arg1 LnsAny, arg2 LnsAny)
-    CheckDiag(_env *LnsEnv, arg1 string)
-    checkUptodateMeta(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny, arg4 LnsAny) LnsAny
-    Complete(_env *LnsEnv, arg1 string)
-    convertFromAst(_env *LnsEnv, arg1 *AstInfo_ASTInfo, arg2 string, arg3 LnsInt)(string, string)
-    ConvertLns2LuaCode(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 Lns_iStream, arg5 string) string
-    convertToLua(_env *LnsEnv, arg1 string, arg2 LnsInt, arg3 Lns_oStream, arg4 Lns_oStream) LnsAny
-    createAst(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 string, arg5 *FrontInterface_ModuleId, arg6 LnsAny, arg7 LnsInt, arg8 LnsAny) *AstInfo_ASTInfo
-    createAstSub(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 string, arg5 *FrontInterface_ModuleId, arg6 LnsAny, arg7 LnsInt, arg8 LnsAny) LnsAny
-    CreateGlue(_env *LnsEnv, arg1 string)
-    createGoOption(_env *LnsEnv, arg1 string) *ConvGo_Option
-    createPaser(_env *LnsEnv, arg1 string) *Parser_Parser
-    DumpAst(_env *LnsEnv, arg1 string)
-    DumpTokenize(_env *LnsEnv, arg1 string)
-    Error(_env *LnsEnv, arg1 string)
-    Exec(_env *LnsEnv)
-    Format(_env *LnsEnv, arg1 string)
-    getGoAppName(_env *LnsEnv) string
-    getLoadInfo(_env *LnsEnv, arg1 string) LnsAny
-    GetLuaModulePath(_env *LnsEnv, arg1 string, arg2 LnsAny)(string, LnsAny, string)
-    getModuleIdAndCheckUptodate(_env *LnsEnv, arg1 string, arg2 string)(*FrontInterface_ModuleId, LnsAny)
-    Inquire(_env *LnsEnv, arg1 string)
-    loadFile(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string)(*FrontInterface_ModuleMeta, LnsAny)
-    LoadFromLnsTxt(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string) LnsAny
-    loadLua(_env *LnsEnv, arg1 string) LnsAny
-    LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string, arg4 LnsAny, arg5 FrontInterface_ModuleLoader) LnsAny
-    LoadModule(_env *LnsEnv, arg1 string)(LnsAny, *FrontInterface_ModuleMeta)
-    loadParserToLuaCode(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string, arg5 LnsAny)(*FrontInterface_ModuleMeta, string)
-    outputBootC(_env *LnsEnv, arg1 string)
-    OutputBuiltin(_env *LnsEnv, arg1 string)
-    SaveToC(_env *LnsEnv, arg1 string, arg2 *AstInfo_ASTInfo)
-    saveToGo(_env *LnsEnv, arg1 string, arg2 LnsAny) LnsAny
-    saveToLua(_env *LnsEnv, arg1 *front_UpdateInfo) LnsAny
-    scriptPath2Module(_env *LnsEnv, arg1 string)(string, LnsAny)
-    searchLuaFile(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 LnsAny) LnsAny
-    SearchModule(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 LnsAny) LnsAny
-    searchModuleFile(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny, arg4 LnsAny) LnsAny
-    setLoadInfo(_env *LnsEnv, arg1 string, arg2 *front_LoadInfo)
-}
-type front_Front struct {
-    option *Option_Option
-    loadedMap *LnsMap
-    loadedMapTest *LnsMap
-    convertedMap *LnsMap
-    gomodMap *GoMod_ModInfo
-    bindModuleSet *LnsSet
-    moduleMgr *front_ModuleMgr
-    targetSet *LnsSet
-    mod2astCreate *LnsMap
-    mod2loader *LnsMap
-    preloadedModMap *LnsMap
-    loadCount LnsInt
-    builtinFunc *Builtin_BuiltinFuncType
-    FP front_FrontMtd
-}
-func front_Front2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_Front).FP
-}
-type front_FrontDownCast interface {
-    Tofront_Front() *front_Front
-}
-func front_FrontDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_FrontDownCast)
-    if ok { return work.Tofront_Front() }
-    return nil
-}
-func (obj *front_Front) Tofront_Front() *front_Front {
-    return obj
-}
-func Newfront_Front(_env *LnsEnv, arg1 *Option_Option, arg2 LnsAny) *front_Front {
-    obj := &front_Front{}
-    obj.FP = obj
-    obj.Initfront_Front(_env, arg1, arg2)
-    return obj
-}
-
-// declaration Class -- DependMetaInfo
-type front_DependMetaInfoMtd interface {
-    ToMap() *LnsMap
-}
-type front_DependMetaInfo struct {
-    Use bool
-    BuildId string
-    FP front_DependMetaInfoMtd
-}
-func front_DependMetaInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_DependMetaInfo).FP
-}
-type front_DependMetaInfoDownCast interface {
-    Tofront_DependMetaInfo() *front_DependMetaInfo
-}
-func front_DependMetaInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_DependMetaInfoDownCast)
-    if ok { return work.Tofront_DependMetaInfo() }
-    return nil
-}
-func (obj *front_DependMetaInfo) Tofront_DependMetaInfo() *front_DependMetaInfo {
-    return obj
-}
-func Newfront_DependMetaInfo(_env *LnsEnv, arg1 bool, arg2 string) *front_DependMetaInfo {
-    obj := &front_DependMetaInfo{}
-    obj.FP = obj
-    obj.Initfront_DependMetaInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *front_DependMetaInfo) Initfront_DependMetaInfo(_env *LnsEnv, arg1 bool, arg2 string) {
-    self.Use = arg1
-    self.BuildId = arg2
-}
-func (self *front_DependMetaInfo) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["use"] = Lns_ToCollection( self.Use )
-    obj.Items["buildId"] = Lns_ToCollection( self.BuildId )
-    return obj
-}
-func (self *front_DependMetaInfo) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func front_DependMetaInfo__fromMap_2_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return front_DependMetaInfo_FromMap( arg1, paramList )
-}
-func front_DependMetaInfo__fromStem_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return front_DependMetaInfo_FromMap( arg1, paramList )
-}
-func front_DependMetaInfo_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := front_DependMetaInfo_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func front_DependMetaInfo_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &front_DependMetaInfo{}
-    newObj.FP = newObj
-    return front_DependMetaInfo_FromMapMain( newObj, objMap, paramList )
-}
-func front_DependMetaInfo_FromMapMain( newObj *front_DependMetaInfo, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,conv,mess := Lns_ToBoolSub( objMap.Items["use"], false, nil); !ok {
-       return false,nil,"use:" + mess.(string)
-    } else {
-       newObj.Use = conv.(bool)
-    }
-    if ok,conv,mess := Lns_ToStrSub( objMap.Items["buildId"], false, nil); !ok {
-       return false,nil,"buildId:" + mess.(string)
-    } else {
-       newObj.BuildId = conv.(string)
-    }
-    return true, newObj, nil
-}
-
-// declaration Class -- MetaForBuildId
-type front_MetaForBuildIdMtd interface {
-    ToMap() *LnsMap
-    CreateModuleId(_env *LnsEnv) *FrontInterface_ModuleId
-}
-type front_MetaForBuildId struct {
-    G__buildId string
-    G__dependModuleMap *LnsMap
-    G__subModuleMap *LnsList
-    G__enableTest bool
-    FP front_MetaForBuildIdMtd
-}
-func front_MetaForBuildId2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_MetaForBuildId).FP
-}
-type front_MetaForBuildIdDownCast interface {
-    Tofront_MetaForBuildId() *front_MetaForBuildId
-}
-func front_MetaForBuildIdDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_MetaForBuildIdDownCast)
-    if ok { return work.Tofront_MetaForBuildId() }
-    return nil
-}
-func (obj *front_MetaForBuildId) Tofront_MetaForBuildId() *front_MetaForBuildId {
-    return obj
-}
-func Newfront_MetaForBuildId(_env *LnsEnv, arg1 string, arg2 *LnsMap, arg3 *LnsList, arg4 bool) *front_MetaForBuildId {
-    obj := &front_MetaForBuildId{}
-    obj.FP = obj
-    obj.Initfront_MetaForBuildId(_env, arg1, arg2, arg3, arg4)
-    return obj
-}
-func (self *front_MetaForBuildId) Initfront_MetaForBuildId(_env *LnsEnv, arg1 string, arg2 *LnsMap, arg3 *LnsList, arg4 bool) {
-    self.G__buildId = arg1
-    self.G__dependModuleMap = arg2
-    self.G__subModuleMap = arg3
-    self.G__enableTest = arg4
-}
-func (self *front_MetaForBuildId) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["__buildId"] = Lns_ToCollection( self.G__buildId )
-    obj.Items["__dependModuleMap"] = Lns_ToCollection( self.G__dependModuleMap )
-    obj.Items["__subModuleMap"] = Lns_ToCollection( self.G__subModuleMap )
-    obj.Items["__enableTest"] = Lns_ToCollection( self.G__enableTest )
-    return obj
-}
-func (self *front_MetaForBuildId) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func front_MetaForBuildId__fromMap_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return front_MetaForBuildId_FromMap( arg1, paramList )
-}
-func front_MetaForBuildId__fromStem_4_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return front_MetaForBuildId_FromMap( arg1, paramList )
-}
-func front_MetaForBuildId_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := front_MetaForBuildId_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func front_MetaForBuildId_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &front_MetaForBuildId{}
-    newObj.FP = newObj
-    return front_MetaForBuildId_FromMapMain( newObj, objMap, paramList )
-}
-func front_MetaForBuildId_FromMapMain( newObj *front_MetaForBuildId, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,conv,mess := Lns_ToStrSub( objMap.Items["__buildId"], false, nil); !ok {
-       return false,nil,"__buildId:" + mess.(string)
-    } else {
-       newObj.G__buildId = conv.(string)
-    }
-    if ok,conv,mess := Lns_ToLnsMapSub( objMap.Items["__dependModuleMap"], false, []Lns_ToObjParam{Lns_ToObjParam{
-            Lns_ToStrSub, false,nil},Lns_ToObjParam{
-            front_DependMetaInfo_FromMapSub, false,nil}}); !ok {
-       return false,nil,"__dependModuleMap:" + mess.(string)
-    } else {
-       newObj.G__dependModuleMap = conv.(*LnsMap)
-    }
-    if ok,conv,mess := Lns_ToListSub( objMap.Items["__subModuleMap"], false, []Lns_ToObjParam{Lns_ToObjParam{
-            Lns_ToStrSub, false,nil}}); !ok {
-       return false,nil,"__subModuleMap:" + mess.(string)
-    } else {
-       newObj.G__subModuleMap = conv.(*LnsList)
-    }
-    if ok,conv,mess := Lns_ToBoolSub( objMap.Items["__enableTest"], false, nil); !ok {
-       return false,nil,"__enableTest:" + mess.(string)
-    } else {
-       newObj.G__enableTest = conv.(bool)
-    }
-    return true, newObj, nil
-}
-
-// declaration Class -- LuaConverter
-type front_LuaConverterMtd interface {
-    GetLnsSyncFlag() *Lns_syncFlag
-    Run(_env *LnsEnv)
-    RunMain(_env *LnsEnv)
-    SaveLua(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
-}
-type front_LuaConverter struct {
-    Runner_Runner
-    luaPath string
-    dependsPath LnsAny
-    metaPath string
-    option *Option_Option
-    byteCompile bool
-    stripDebugInfo bool
-    byteStream *Util_memStream
-    byteMetaStream *Util_memStream
-    streamMem *Util_memStream
-    metaStreamMem *Util_memStream
-    dependsStreamMem *Util_memStream
-    astResult LnsAny
-    converterFunc front_ConverterFunc_6_
-    filterInfo LnsAny
-    FP front_LuaConverterMtd
-}
-func front_LuaConverter2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_LuaConverter).FP
-}
-type front_LuaConverterDownCast interface {
-    Tofront_LuaConverter() *front_LuaConverter
-}
-func front_LuaConverterDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_LuaConverterDownCast)
-    if ok { return work.Tofront_LuaConverter() }
-    return nil
-}
-func (obj *front_LuaConverter) Tofront_LuaConverter() *front_LuaConverter {
-    return obj
-}
-func Newfront_LuaConverter(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny, arg4 LnsAny, arg5 LnsInt, arg6 string, arg7 bool, arg8 bool, arg9 *Option_Option) *front_LuaConverter {
-    obj := &front_LuaConverter{}
-    obj.FP = obj
-    obj.Runner_Runner.FP = obj
-    obj.Initfront_LuaConverter(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
-    return obj
-}
-
-// declaration Class -- GoConverter
-type front_GoConverterMtd interface {
-    GetLnsSyncFlag() *Lns_syncFlag
-    Run(_env *LnsEnv)
-    RunMain(_env *LnsEnv)
-    saveGo(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
-}
-type front_GoConverter struct {
-    Runner_Runner
-    memStream *Util_memStream
-    path string
-    converter front_ConverterFunc_6_
-    validFlag bool
-    FP front_GoConverterMtd
-}
-func front_GoConverter2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_GoConverter).FP
-}
-type front_GoConverterDownCast interface {
-    Tofront_GoConverter() *front_GoConverter
-}
-func front_GoConverterDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_GoConverterDownCast)
-    if ok { return work.Tofront_GoConverter() }
-    return nil
-}
-func (obj *front_GoConverter) Tofront_GoConverter() *front_GoConverter {
-    return obj
-}
-func Newfront_GoConverter(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 *Option_Option, arg4 *ConvGo_Option) *front_GoConverter {
-    obj := &front_GoConverter{}
-    obj.FP = obj
-    obj.Runner_Runner.FP = obj
-    obj.Initfront_GoConverter(_env, arg1, arg2, arg3, arg4)
-    return obj
-}
-
-// declaration Class -- UpdateInfo
-type front_UpdateInfoMtd interface {
-    Get_dependsPath(_env *LnsEnv) LnsAny
-    Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
-    Get_scriptPath(_env *LnsEnv) string
-    Get_uptodate(_env *LnsEnv) LnsAny
-}
-type front_UpdateInfo struct {
-    scriptPath string
-    dependsPath LnsAny
-    moduleId *FrontInterface_ModuleId
-    uptodate LnsAny
-    FP front_UpdateInfoMtd
-}
-func front_UpdateInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*front_UpdateInfo).FP
-}
-type front_UpdateInfoDownCast interface {
-    Tofront_UpdateInfo() *front_UpdateInfo
-}
-func front_UpdateInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(front_UpdateInfoDownCast)
-    if ok { return work.Tofront_UpdateInfo() }
-    return nil
-}
-func (obj *front_UpdateInfo) Tofront_UpdateInfo() *front_UpdateInfo {
-    return obj
-}
-func Newfront_UpdateInfo(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 *FrontInterface_ModuleId, arg4 LnsAny) *front_UpdateInfo {
-    obj := &front_UpdateInfo{}
-    obj.FP = obj
-    obj.Initfront_UpdateInfo(_env, arg1, arg2, arg3, arg4)
-    return obj
-}
-func (self *front_UpdateInfo) Initfront_UpdateInfo(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 *FrontInterface_ModuleId, arg4 LnsAny) {
-    self.scriptPath = arg1
-    self.dependsPath = arg2
-    self.moduleId = arg3
-    self.uptodate = arg4
-}
-func (self *front_UpdateInfo) Get_scriptPath(_env *LnsEnv) string{ return self.scriptPath }
-func (self *front_UpdateInfo) Get_dependsPath(_env *LnsEnv) LnsAny{ return self.dependsPath }
-func (self *front_UpdateInfo) Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId{ return self.moduleId }
-func (self *front_UpdateInfo) Get_uptodate(_env *LnsEnv) LnsAny{ return self.uptodate }
-
-func Lns_front_init(_env *LnsEnv) {
-    if init_front { return }
-    init_front = true
-    front__mod__ = "@lune.@base.@front"
-    Lns_InitMod()
-    Lns_Types_init(_env)
-    Lns_frontInterface_init(_env)
-    Lns_Parser_init(_env)
-    Lns_convLua_init(_env)
-    Lns_convGo_init(_env)
-    Lns_AstInfo_init(_env)
-    Lns_TransUnit_init(_env)
-    Lns_Util_init(_env)
-    Lns_Option_init(_env)
-    Lns_dumpNode_init(_env)
-    Lns_glueFilter_init(_env)
-    Lns_LuaVer_init( _env )
-    Lns_Depend_init(_env)
-    Lns_DependLuaOnLns_init(_env)
-    Lns_OutputDepend_init(_env)
-    Lns_Ver_init(_env)
-    Lns_LuaVer_init(_env)
-    Lns_Log_init(_env)
-    Lns_Formatter_init(_env)
-    Lns_Testing_init(_env)
-    Lns_GoMod_init(_env)
-    Lns_Meta_init(_env)
-    Lns_LuneControl_init(_env)
-    Lns_Nodes_init(_env)
-    Lns_Ast_init(_env)
-    Lns_Runner_init(_env)
-    Lns_Builtin_init(_env)
-    Lns_NodeIndexer_init(_env)
-    Depend_setup(_env, Depend_UpdateVer(front__anonymous_0_))
-    front_forceUpdateMeta = true
-}
-func init() {
-    init_front = false
-}
-// 102: DeclConstr
-func (self *front_ModuleMgr) Initfront_ModuleMgr(_env *LnsEnv) {
-    self.mod2info = NewUtil_OrderdMap(_env)
-    self.loadedMetaMap = NewLnsMap( map[LnsAny]LnsAny{})
-}
 // 107: decl @lune.@base.@front.ModuleMgr.get
 func (self *front_ModuleMgr) Get(_env *LnsEnv, mod string) LnsAny {
     return self.mod2info.FP.Get_map(_env).Get(mod)
@@ -1452,42 +859,6 @@ func (self *front_AstCreater) createAst(_env *LnsEnv, importModuleInfo *FrontInt
         }
     }))
 }
-// 201: DeclConstr
-func (self *front_AstCreater) Initfront_AstCreater(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,parserSrc LnsAny,mod string,baseDir LnsAny,moduleId *FrontInterface_ModuleId,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny,builtinFunc *Builtin_BuiltinFuncType,option *Option_Option) {
-    self.InitRunner_Runner(_env)
-    self.option = option
-    self.builtinFunc = builtinFunc
-    self.mod = mod
-    self.moduleId = moduleId
-    self.moduleInfo = nil
-    self.exportInfo = nil
-    self.ast = nil
-    self.exportInfoReadyFlag = LnsCreateSyncFlag(_env)
-    self.converter = front_ConverterFunc_6_(func(_env *LnsEnv) {
-        __func__ := "@lune.@base.@front.AstCreater.__init.<anonymous>"
-        var ast *AstInfo_ASTInfo
-        ast = self.FP.createAst(_env, importModuleInfo, parserSrc, baseDir, option.FP.Get_stdinFile(_env), analyzeModule, analyzeMode, pos)
-        self.ast = ast
-        self.moduleInfo = front_createModuleInfo_4_(_env, ast, self.mod, self.moduleId)
-        Log_log(_env, Log_Level__Log, __func__, 224, Log_CreateMessage(func(_env *LnsEnv) string {
-            return _env.GetVM().String_format("generated AST -- %s", []LnsAny{mod})
-        }))
-        
-    })
-    var lnsPath string
-    switch _matchExp0 := parserSrc.(type) {
-    case *Types_ParserSrc__LnsCode:
-    path := _matchExp0.Val2
-        lnsPath = path
-    case *Types_ParserSrc__LnsPath:
-    path := _matchExp0.Val1
-        lnsPath = path
-    case *Types_ParserSrc__Parser:
-    path := _matchExp0.Val1
-        lnsPath = path
-    }
-    self.FP.Start(_env, 0, _env.GetVM().String_format("createAst - %s", []LnsAny{lnsPath}))
-}
 // 244: decl @lune.@base.@front.AstCreater.runMain
 func (self *front_AstCreater) RunMain(_env *LnsEnv) {
     self.converter(_env)
@@ -1526,55 +897,6 @@ func (self *front_AstCreater) getExportInfo(_env *LnsEnv) LnsAny {
         
     }
     return self.exportInfo
-}
-// 305: DeclConstr
-func (self *front_Front) Initfront_Front(_env *LnsEnv, option *Option_Option,bindModuleList LnsAny) {
-    self.mod2loader = NewLnsMap( map[LnsAny]LnsAny{})
-    self.mod2astCreate = NewLnsMap( map[LnsAny]LnsAny{})
-    self.loadCount = 0
-    self.targetSet = NewLnsSet([]LnsAny{})
-    self.bindModuleSet = NewLnsSet([]LnsAny{})
-    if bindModuleList != nil{
-        bindModuleList_171 := bindModuleList.(*LnsList)
-        for _, _mod := range( bindModuleList_171.Items ) {
-            mod := _mod.(string)
-            self.bindModuleSet.Add(mod)
-        }
-    }
-    self.moduleMgr = Newfront_ModuleMgr(_env)
-    self.gomodMap = GoMod_getGoMap(_env)
-    self.option = option
-    self.loadedMap = NewLnsMap( map[LnsAny]LnsAny{})
-    self.loadedMapTest = NewLnsMap( map[LnsAny]LnsAny{})
-    self.convertedMap = NewLnsMap( map[LnsAny]LnsAny{})
-    {
-        var builtin *Builtin_Builtin
-        builtin = NewBuiltin_Builtin(_env, self.option.TargetLuaVer, option.TransCtrlInfo)
-        self.builtinFunc = builtin.FP.RegistBuiltInScope(_env)
-    }
-    FrontInterface_setFront(_env, self.FP)
-    var loadedMap *LnsMap
-    loadedMap = NewLnsMap( map[LnsAny]LnsAny{})
-        {
-            _foreachExp1 := Depend_getLoadedMod(_env)
-            _foreachKey1, _foreachVal1 := _foreachExp1.Get1stFromMap()
-            for _foreachKey1 != nil {
-                mod := _foreachKey1.(string)
-                modval := _foreachVal1
-                if mod == "lune.base.Testing"{
-                    loadedMap.Set(mod,modval)
-                }
-                if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                    _env.SetStackVal( option.Testing) &&
-                    _env.SetStackVal( modval.(*Lns_luaValue).GetAt("__enableTest")) ||
-                    _env.SetStackVal( Lns_op_not(option.Testing)) &&
-                    _env.SetStackVal( modval.(*Lns_luaValue).GetAt("__enableTest")) )){
-                    loadedMap.Set(mod,modval)
-                }
-                _foreachKey1, _foreachVal1 = _foreachExp1.NextFromMap( _foreachKey1 )
-            }
-        }
-    self.preloadedModMap = loadedMap
 }
 // 349: decl @lune.@base.@front.Front.getLoadInfo
 func (self *front_Front) getLoadInfo(_env *LnsEnv, mod string) LnsAny {
@@ -2821,48 +2143,6 @@ func front_MetaForBuildId_LoadFromMeta_5_(_env *LnsEnv, metaPath string)(LnsAny,
     }
     return nil, nil
 }
-// 1538: DeclConstr
-func (self *front_LuaConverter) Initfront_LuaConverter(_env *LnsEnv, luaPath string,metaPath string,dependsPath LnsAny,astResult LnsAny,convMode LnsInt,path string,byteCompile bool,stripDebugInfo bool,option *Option_Option) {
-    self.InitRunner_Runner(_env)
-    self.luaPath = luaPath
-    self.metaPath = metaPath
-    self.dependsPath = dependsPath
-    self.option = option
-    self.stripDebugInfo = stripDebugInfo
-    self.byteCompile = byteCompile
-    self.byteStream = NewUtil_memStream(_env)
-    self.byteMetaStream = NewUtil_memStream(_env)
-    self.streamMem = NewUtil_memStream(_env)
-    self.metaStreamMem = NewUtil_memStream(_env)
-    self.dependsStreamMem = NewUtil_memStream(_env)
-    self.astResult = astResult
-    self.filterInfo = nil
-    self.converterFunc = front_ConverterFunc_6_(func(_env *LnsEnv) {
-        var stream *Util_memStream
-        stream = self.streamMem
-        var metaStream *Util_memStream
-        metaStream = self.metaStreamMem
-        var outStream *Util_memStream
-        var oMetaStream *Util_memStream
-        outStream,oMetaStream = stream, metaStream
-        var ast *AstInfo_ASTInfo
-        ast = front_getAstFromResult_11_(_env, self.astResult)
-        var needDepends bool
-        needDepends = option.DependsPath != nil
-        if needDepends{
-            ast.FP.Get_node(_env).FP.ProcessFilter(_env, OutputDepend_createFilter(_env, self.dependsStreamMem.FP), 1)
-        }
-        if byteCompile{
-            outStream = self.byteStream
-            oMetaStream = self.byteMetaStream
-        }
-        var filterInfo *ConvLua_FilterInfo
-        filterInfo = front_ast2LuaMain_12_(_env, ast, path, outStream.FP, oMetaStream.FP, convMode, false, option)
-        self.filterInfo = filterInfo
-        filterInfo.FP.OutputLua(_env, Lns_unwrap( Nodes_RootNodeDownCastF(ast.FP.Get_node(_env).FP)).(*Nodes_RootNode))
-    })
-    self.FP.Start(_env, 1, _env.GetVM().String_format("convlua -- %s", []LnsAny{path}))
-}
 // 1589: decl @lune.@base.@front.LuaConverter.runMain
 func (self *front_LuaConverter) RunMain(_env *LnsEnv) {
     self.converterFunc(_env)
@@ -2912,6 +2192,668 @@ func (self *front_LuaConverter) SaveLua(_env *LnsEnv) {
     }
     front_closeStreams_22_(_env, streamDst, metaMemStream, dependsStreamDst, self.metaPath, self.option.Mode == Option_ModeKind__SaveMeta)
 }
+// 1724: decl @lune.@base.@front.GoConverter.runMain
+func (self *front_GoConverter) RunMain(_env *LnsEnv) {
+    self.converter(_env)
+}
+// 1728: decl @lune.@base.@front.GoConverter.saveGo
+func (self *front_GoConverter) saveGo(_env *LnsEnv) {
+    LnsJoin(_env, self.FP)
+    if Lns_op_not(self.validFlag){
+        return 
+    }
+    var file Lns_luaStream
+    
+    {
+        _file := front_convExp4_1154(Lns_2DDD(Lns_io_open(self.path, "w")))
+        if _file == nil{
+            return 
+        } else {
+            file = _file.(Lns_luaStream)
+        }
+    }
+    file.Write(_env, self.memStream.FP.Get_txt(_env))
+    file.Close(_env)
+}
+// declaration Class -- LoadInfo
+type front_LoadInfoMtd interface {
+}
+type front_LoadInfo struct {
+    Mod LnsAny
+    Meta *FrontInterface_ModuleMeta
+    FP front_LoadInfoMtd
+}
+func front_LoadInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_LoadInfo).FP
+}
+type front_LoadInfoDownCast interface {
+    Tofront_LoadInfo() *front_LoadInfo
+}
+func front_LoadInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_LoadInfoDownCast)
+    if ok { return work.Tofront_LoadInfo() }
+    return nil
+}
+func (obj *front_LoadInfo) Tofront_LoadInfo() *front_LoadInfo {
+    return obj
+}
+func Newfront_LoadInfo(_env *LnsEnv, arg1 LnsAny, arg2 *FrontInterface_ModuleMeta) *front_LoadInfo {
+    obj := &front_LoadInfo{}
+    obj.FP = obj
+    obj.Initfront_LoadInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *front_LoadInfo) Initfront_LoadInfo(_env *LnsEnv, arg1 LnsAny, arg2 *FrontInterface_ModuleMeta) {
+    self.Mod = arg1
+    self.Meta = arg2
+}
+
+// declaration Class -- ModuleMgr
+type front_ModuleMgrMtd interface {
+    Add(_env *LnsEnv, arg1 *AstInfo_ASTInfo, arg2 *FrontInterface_ModuleInfo)
+    AddMeta(_env *LnsEnv, arg1 string, arg2 *FrontInterface_ModuleMeta)
+    Get(_env *LnsEnv, arg1 string) LnsAny
+    GetAst(_env *LnsEnv, arg1 string) LnsAny
+    GetMeta(_env *LnsEnv, arg1 string) LnsAny
+    GetModList(_env *LnsEnv) *LnsList
+}
+type front_ModuleMgr struct {
+    mod2info *Util_OrderdMap
+    loadedMetaMap *LnsMap
+    FP front_ModuleMgrMtd
+}
+func front_ModuleMgr2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_ModuleMgr).FP
+}
+type front_ModuleMgrDownCast interface {
+    Tofront_ModuleMgr() *front_ModuleMgr
+}
+func front_ModuleMgrDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_ModuleMgrDownCast)
+    if ok { return work.Tofront_ModuleMgr() }
+    return nil
+}
+func (obj *front_ModuleMgr) Tofront_ModuleMgr() *front_ModuleMgr {
+    return obj
+}
+func Newfront_ModuleMgr(_env *LnsEnv) *front_ModuleMgr {
+    obj := &front_ModuleMgr{}
+    obj.FP = obj
+    obj.Initfront_ModuleMgr(_env)
+    return obj
+}
+// 102: DeclConstr
+func (self *front_ModuleMgr) Initfront_ModuleMgr(_env *LnsEnv) {
+    self.mod2info = NewUtil_OrderdMap(_env)
+    self.loadedMetaMap = NewLnsMap( map[LnsAny]LnsAny{})
+}
+
+
+// declaration Class -- AstCreater
+type front_AstCreaterMtd interface {
+    GetLnsSyncFlag() *Lns_syncFlag
+    createAst(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 LnsAny, arg5 LnsAny, arg6 LnsInt, arg7 LnsAny) *AstInfo_ASTInfo
+    getAst(_env *LnsEnv)(*AstInfo_ASTInfo, *FrontInterface_ModuleInfo, *FrontInterface_ModuleMeta)
+    getExportInfo(_env *LnsEnv) LnsAny
+    Run(_env *LnsEnv)
+    RunMain(_env *LnsEnv)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+}
+type front_AstCreater struct {
+    Runner_Runner
+    option *Option_Option
+    builtinFunc *Builtin_BuiltinFuncType
+    mod string
+    moduleId *FrontInterface_ModuleId
+    ast LnsAny
+    moduleInfo LnsAny
+    converter front_ConverterFunc_6_
+    exportInfo LnsAny
+    exportInfoReadyFlag LnsAny
+    FP front_AstCreaterMtd
+}
+func front_AstCreater2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_AstCreater).FP
+}
+type front_AstCreaterDownCast interface {
+    Tofront_AstCreater() *front_AstCreater
+}
+func front_AstCreaterDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_AstCreaterDownCast)
+    if ok { return work.Tofront_AstCreater() }
+    return nil
+}
+func (obj *front_AstCreater) Tofront_AstCreater() *front_AstCreater {
+    return obj
+}
+func Newfront_AstCreater(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 LnsAny, arg5 *FrontInterface_ModuleId, arg6 LnsAny, arg7 LnsInt, arg8 LnsAny, arg9 *Builtin_BuiltinFuncType, arg10 *Option_Option) *front_AstCreater {
+    obj := &front_AstCreater{}
+    obj.FP = obj
+    obj.Runner_Runner.FP = obj
+    obj.Initfront_AstCreater(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
+    return obj
+}
+// 201: DeclConstr
+func (self *front_AstCreater) Initfront_AstCreater(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,parserSrc LnsAny,mod string,baseDir LnsAny,moduleId *FrontInterface_ModuleId,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny,builtinFunc *Builtin_BuiltinFuncType,option *Option_Option) {
+    self.InitRunner_Runner(_env)
+    self.option = option
+    self.builtinFunc = builtinFunc
+    self.mod = mod
+    self.moduleId = moduleId
+    self.moduleInfo = nil
+    self.exportInfo = nil
+    self.ast = nil
+    self.exportInfoReadyFlag = LnsCreateSyncFlag(_env)
+    self.converter = front_ConverterFunc_6_(func(_env *LnsEnv) {
+        __func__ := "@lune.@base.@front.AstCreater.__init.<anonymous>"
+        var ast *AstInfo_ASTInfo
+        ast = self.FP.createAst(_env, importModuleInfo, parserSrc, baseDir, option.FP.Get_stdinFile(_env), analyzeModule, analyzeMode, pos)
+        self.ast = ast
+        self.moduleInfo = front_createModuleInfo_4_(_env, ast, self.mod, self.moduleId)
+        Log_log(_env, Log_Level__Log, __func__, 224, Log_CreateMessage(func(_env *LnsEnv) string {
+            return _env.GetVM().String_format("generated AST -- %s", []LnsAny{mod})
+        }))
+        
+    })
+    var lnsPath string
+    switch _matchExp0 := parserSrc.(type) {
+    case *Types_ParserSrc__LnsCode:
+    path := _matchExp0.Val2
+        lnsPath = path
+    case *Types_ParserSrc__LnsPath:
+    path := _matchExp0.Val1
+        lnsPath = path
+    case *Types_ParserSrc__Parser:
+    path := _matchExp0.Val1
+        lnsPath = path
+    }
+    self.FP.Start(_env, 0, _env.GetVM().String_format("createAst - %s", []LnsAny{lnsPath}))
+}
+
+
+// declaration Class -- Front
+type front_FrontMtd interface {
+    applyAstResult(_env *LnsEnv, arg1 LnsAny) *AstInfo_ASTInfo
+    Build(_env *LnsEnv, arg1 LnsAny, arg2 LnsAny)
+    CheckDiag(_env *LnsEnv, arg1 string)
+    checkUptodateMeta(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny, arg4 LnsAny) LnsAny
+    Complete(_env *LnsEnv, arg1 string)
+    convertFromAst(_env *LnsEnv, arg1 *AstInfo_ASTInfo, arg2 string, arg3 LnsInt)(string, string)
+    ConvertLns2LuaCode(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 Lns_iStream, arg5 string) string
+    convertToLua(_env *LnsEnv, arg1 string, arg2 LnsInt, arg3 Lns_oStream, arg4 Lns_oStream) LnsAny
+    createAst(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 string, arg5 *FrontInterface_ModuleId, arg6 LnsAny, arg7 LnsInt, arg8 LnsAny) *AstInfo_ASTInfo
+    createAstSub(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 string, arg5 *FrontInterface_ModuleId, arg6 LnsAny, arg7 LnsInt, arg8 LnsAny) LnsAny
+    CreateGlue(_env *LnsEnv, arg1 string)
+    createGoOption(_env *LnsEnv, arg1 string) *ConvGo_Option
+    createPaser(_env *LnsEnv, arg1 string) *Parser_Parser
+    DumpAst(_env *LnsEnv, arg1 string)
+    DumpTokenize(_env *LnsEnv, arg1 string)
+    Error(_env *LnsEnv, arg1 string)
+    Exec(_env *LnsEnv)
+    Format(_env *LnsEnv, arg1 string)
+    getGoAppName(_env *LnsEnv) string
+    getLoadInfo(_env *LnsEnv, arg1 string) LnsAny
+    GetLuaModulePath(_env *LnsEnv, arg1 string, arg2 LnsAny)(string, LnsAny, string)
+    getModuleIdAndCheckUptodate(_env *LnsEnv, arg1 string, arg2 string)(*FrontInterface_ModuleId, LnsAny)
+    Inquire(_env *LnsEnv, arg1 string)
+    loadFile(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string)(*FrontInterface_ModuleMeta, LnsAny)
+    LoadFromLnsTxt(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string) LnsAny
+    loadLua(_env *LnsEnv, arg1 string) LnsAny
+    LoadMeta(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 string, arg3 string, arg4 LnsAny, arg5 FrontInterface_ModuleLoader) LnsAny
+    LoadModule(_env *LnsEnv, arg1 string)(LnsAny, *FrontInterface_ModuleMeta)
+    loadParserToLuaCode(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 string, arg4 string, arg5 LnsAny)(*FrontInterface_ModuleMeta, string)
+    outputBootC(_env *LnsEnv, arg1 string)
+    OutputBuiltin(_env *LnsEnv, arg1 string)
+    SaveToC(_env *LnsEnv, arg1 string, arg2 *AstInfo_ASTInfo)
+    saveToGo(_env *LnsEnv, arg1 string, arg2 LnsAny) LnsAny
+    saveToLua(_env *LnsEnv, arg1 *front_UpdateInfo) LnsAny
+    scriptPath2Module(_env *LnsEnv, arg1 string)(string, LnsAny)
+    searchLuaFile(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 LnsAny) LnsAny
+    SearchModule(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 LnsAny) LnsAny
+    searchModuleFile(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny, arg4 LnsAny) LnsAny
+    setLoadInfo(_env *LnsEnv, arg1 string, arg2 *front_LoadInfo)
+}
+type front_Front struct {
+    option *Option_Option
+    loadedMap *LnsMap
+    loadedMapTest *LnsMap
+    convertedMap *LnsMap
+    gomodMap *GoMod_ModInfo
+    bindModuleSet *LnsSet
+    moduleMgr *front_ModuleMgr
+    targetSet *LnsSet
+    mod2astCreate *LnsMap
+    mod2loader *LnsMap
+    preloadedModMap *LnsMap
+    loadCount LnsInt
+    builtinFunc *Builtin_BuiltinFuncType
+    FP front_FrontMtd
+}
+func front_Front2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_Front).FP
+}
+type front_FrontDownCast interface {
+    Tofront_Front() *front_Front
+}
+func front_FrontDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_FrontDownCast)
+    if ok { return work.Tofront_Front() }
+    return nil
+}
+func (obj *front_Front) Tofront_Front() *front_Front {
+    return obj
+}
+func Newfront_Front(_env *LnsEnv, arg1 *Option_Option, arg2 LnsAny) *front_Front {
+    obj := &front_Front{}
+    obj.FP = obj
+    obj.Initfront_Front(_env, arg1, arg2)
+    return obj
+}
+// 305: DeclConstr
+func (self *front_Front) Initfront_Front(_env *LnsEnv, option *Option_Option,bindModuleList LnsAny) {
+    self.mod2loader = NewLnsMap( map[LnsAny]LnsAny{})
+    self.mod2astCreate = NewLnsMap( map[LnsAny]LnsAny{})
+    self.loadCount = 0
+    self.targetSet = NewLnsSet([]LnsAny{})
+    self.bindModuleSet = NewLnsSet([]LnsAny{})
+    if bindModuleList != nil{
+        bindModuleList_171 := bindModuleList.(*LnsList)
+        for _, _mod := range( bindModuleList_171.Items ) {
+            mod := _mod.(string)
+            self.bindModuleSet.Add(mod)
+        }
+    }
+    self.moduleMgr = Newfront_ModuleMgr(_env)
+    self.gomodMap = GoMod_getGoMap(_env)
+    self.option = option
+    self.loadedMap = NewLnsMap( map[LnsAny]LnsAny{})
+    self.loadedMapTest = NewLnsMap( map[LnsAny]LnsAny{})
+    self.convertedMap = NewLnsMap( map[LnsAny]LnsAny{})
+    {
+        var builtin *Builtin_Builtin
+        builtin = NewBuiltin_Builtin(_env, self.option.TargetLuaVer, option.TransCtrlInfo)
+        self.builtinFunc = builtin.FP.RegistBuiltInScope(_env)
+    }
+    FrontInterface_setFront(_env, self.FP)
+    var loadedMap *LnsMap
+    loadedMap = NewLnsMap( map[LnsAny]LnsAny{})
+        {
+            _foreachExp1 := Depend_getLoadedMod(_env)
+            _foreachKey1, _foreachVal1 := _foreachExp1.Get1stFromMap()
+            for _foreachKey1 != nil {
+                mod := _foreachKey1.(string)
+                modval := _foreachVal1
+                if mod == "lune.base.Testing"{
+                    loadedMap.Set(mod,modval)
+                }
+                if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+                    _env.SetStackVal( option.Testing) &&
+                    _env.SetStackVal( modval.(*Lns_luaValue).GetAt("__enableTest")) ||
+                    _env.SetStackVal( Lns_op_not(option.Testing)) &&
+                    _env.SetStackVal( modval.(*Lns_luaValue).GetAt("__enableTest")) )){
+                    loadedMap.Set(mod,modval)
+                }
+                _foreachKey1, _foreachVal1 = _foreachExp1.NextFromMap( _foreachKey1 )
+            }
+        }
+    self.preloadedModMap = loadedMap
+}
+
+
+
+
+
+
+
+
+// declaration Class -- DependMetaInfo
+type front_DependMetaInfoMtd interface {
+    ToMap() *LnsMap
+}
+type front_DependMetaInfo struct {
+    Use bool
+    BuildId string
+    FP front_DependMetaInfoMtd
+}
+func front_DependMetaInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_DependMetaInfo).FP
+}
+type front_DependMetaInfoDownCast interface {
+    Tofront_DependMetaInfo() *front_DependMetaInfo
+}
+func front_DependMetaInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_DependMetaInfoDownCast)
+    if ok { return work.Tofront_DependMetaInfo() }
+    return nil
+}
+func (obj *front_DependMetaInfo) Tofront_DependMetaInfo() *front_DependMetaInfo {
+    return obj
+}
+func Newfront_DependMetaInfo(_env *LnsEnv, arg1 bool, arg2 string) *front_DependMetaInfo {
+    obj := &front_DependMetaInfo{}
+    obj.FP = obj
+    obj.Initfront_DependMetaInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *front_DependMetaInfo) Initfront_DependMetaInfo(_env *LnsEnv, arg1 bool, arg2 string) {
+    self.Use = arg1
+    self.BuildId = arg2
+}
+func (self *front_DependMetaInfo) ToMapSetup( obj *LnsMap ) *LnsMap {
+    obj.Items["use"] = Lns_ToCollection( self.Use )
+    obj.Items["buildId"] = Lns_ToCollection( self.BuildId )
+    return obj
+}
+func (self *front_DependMetaInfo) ToMap() *LnsMap {
+    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
+}
+func front_DependMetaInfo__fromMap_2_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return front_DependMetaInfo_FromMap( arg1, paramList )
+}
+func front_DependMetaInfo__fromStem_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return front_DependMetaInfo_FromMap( arg1, paramList )
+}
+func front_DependMetaInfo_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
+    _,conv,mess := front_DependMetaInfo_FromMapSub(obj,false, paramList);
+    return conv,mess
+}
+func front_DependMetaInfo_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    var objMap *LnsMap
+    if work, ok := obj.(*LnsMap); !ok {
+       return false, nil, "no map -- " + Lns_ToString(obj)
+    } else {
+       objMap = work
+    }
+    newObj := &front_DependMetaInfo{}
+    newObj.FP = newObj
+    return front_DependMetaInfo_FromMapMain( newObj, objMap, paramList )
+}
+func front_DependMetaInfo_FromMapMain( newObj *front_DependMetaInfo, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if ok,conv,mess := Lns_ToBoolSub( objMap.Items["use"], false, nil); !ok {
+       return false,nil,"use:" + mess.(string)
+    } else {
+       newObj.Use = conv.(bool)
+    }
+    if ok,conv,mess := Lns_ToStrSub( objMap.Items["buildId"], false, nil); !ok {
+       return false,nil,"buildId:" + mess.(string)
+    } else {
+       newObj.BuildId = conv.(string)
+    }
+    return true, newObj, nil
+}
+
+// declaration Class -- MetaForBuildId
+type front_MetaForBuildIdMtd interface {
+    ToMap() *LnsMap
+    CreateModuleId(_env *LnsEnv) *FrontInterface_ModuleId
+}
+type front_MetaForBuildId struct {
+    G__buildId string
+    G__dependModuleMap *LnsMap
+    G__subModuleMap *LnsList
+    G__enableTest bool
+    FP front_MetaForBuildIdMtd
+}
+func front_MetaForBuildId2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_MetaForBuildId).FP
+}
+type front_MetaForBuildIdDownCast interface {
+    Tofront_MetaForBuildId() *front_MetaForBuildId
+}
+func front_MetaForBuildIdDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_MetaForBuildIdDownCast)
+    if ok { return work.Tofront_MetaForBuildId() }
+    return nil
+}
+func (obj *front_MetaForBuildId) Tofront_MetaForBuildId() *front_MetaForBuildId {
+    return obj
+}
+func Newfront_MetaForBuildId(_env *LnsEnv, arg1 string, arg2 *LnsMap, arg3 *LnsList, arg4 bool) *front_MetaForBuildId {
+    obj := &front_MetaForBuildId{}
+    obj.FP = obj
+    obj.Initfront_MetaForBuildId(_env, arg1, arg2, arg3, arg4)
+    return obj
+}
+func (self *front_MetaForBuildId) Initfront_MetaForBuildId(_env *LnsEnv, arg1 string, arg2 *LnsMap, arg3 *LnsList, arg4 bool) {
+    self.G__buildId = arg1
+    self.G__dependModuleMap = arg2
+    self.G__subModuleMap = arg3
+    self.G__enableTest = arg4
+}
+func (self *front_MetaForBuildId) ToMapSetup( obj *LnsMap ) *LnsMap {
+    obj.Items["__buildId"] = Lns_ToCollection( self.G__buildId )
+    obj.Items["__dependModuleMap"] = Lns_ToCollection( self.G__dependModuleMap )
+    obj.Items["__subModuleMap"] = Lns_ToCollection( self.G__subModuleMap )
+    obj.Items["__enableTest"] = Lns_ToCollection( self.G__enableTest )
+    return obj
+}
+func (self *front_MetaForBuildId) ToMap() *LnsMap {
+    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
+}
+func front_MetaForBuildId__fromMap_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return front_MetaForBuildId_FromMap( arg1, paramList )
+}
+func front_MetaForBuildId__fromStem_4_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return front_MetaForBuildId_FromMap( arg1, paramList )
+}
+func front_MetaForBuildId_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
+    _,conv,mess := front_MetaForBuildId_FromMapSub(obj,false, paramList);
+    return conv,mess
+}
+func front_MetaForBuildId_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    var objMap *LnsMap
+    if work, ok := obj.(*LnsMap); !ok {
+       return false, nil, "no map -- " + Lns_ToString(obj)
+    } else {
+       objMap = work
+    }
+    newObj := &front_MetaForBuildId{}
+    newObj.FP = newObj
+    return front_MetaForBuildId_FromMapMain( newObj, objMap, paramList )
+}
+func front_MetaForBuildId_FromMapMain( newObj *front_MetaForBuildId, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+    if ok,conv,mess := Lns_ToStrSub( objMap.Items["__buildId"], false, nil); !ok {
+       return false,nil,"__buildId:" + mess.(string)
+    } else {
+       newObj.G__buildId = conv.(string)
+    }
+    if ok,conv,mess := Lns_ToLnsMapSub( objMap.Items["__dependModuleMap"], false, []Lns_ToObjParam{Lns_ToObjParam{
+            Lns_ToStrSub, false,nil},Lns_ToObjParam{
+            front_DependMetaInfo_FromMapSub, false,nil}}); !ok {
+       return false,nil,"__dependModuleMap:" + mess.(string)
+    } else {
+       newObj.G__dependModuleMap = conv.(*LnsMap)
+    }
+    if ok,conv,mess := Lns_ToListSub( objMap.Items["__subModuleMap"], false, []Lns_ToObjParam{Lns_ToObjParam{
+            Lns_ToStrSub, false,nil}}); !ok {
+       return false,nil,"__subModuleMap:" + mess.(string)
+    } else {
+       newObj.G__subModuleMap = conv.(*LnsList)
+    }
+    if ok,conv,mess := Lns_ToBoolSub( objMap.Items["__enableTest"], false, nil); !ok {
+       return false,nil,"__enableTest:" + mess.(string)
+    } else {
+       newObj.G__enableTest = conv.(bool)
+    }
+    return true, newObj, nil
+}
+
+// declaration Class -- LuaConverter
+type front_LuaConverterMtd interface {
+    GetLnsSyncFlag() *Lns_syncFlag
+    Run(_env *LnsEnv)
+    RunMain(_env *LnsEnv)
+    SaveLua(_env *LnsEnv)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+}
+type front_LuaConverter struct {
+    Runner_Runner
+    luaPath string
+    dependsPath LnsAny
+    metaPath string
+    option *Option_Option
+    byteCompile bool
+    stripDebugInfo bool
+    byteStream *Util_memStream
+    byteMetaStream *Util_memStream
+    streamMem *Util_memStream
+    metaStreamMem *Util_memStream
+    dependsStreamMem *Util_memStream
+    astResult LnsAny
+    converterFunc front_ConverterFunc_6_
+    filterInfo LnsAny
+    FP front_LuaConverterMtd
+}
+func front_LuaConverter2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_LuaConverter).FP
+}
+type front_LuaConverterDownCast interface {
+    Tofront_LuaConverter() *front_LuaConverter
+}
+func front_LuaConverterDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_LuaConverterDownCast)
+    if ok { return work.Tofront_LuaConverter() }
+    return nil
+}
+func (obj *front_LuaConverter) Tofront_LuaConverter() *front_LuaConverter {
+    return obj
+}
+func Newfront_LuaConverter(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsAny, arg4 LnsAny, arg5 LnsInt, arg6 string, arg7 bool, arg8 bool, arg9 *Option_Option) *front_LuaConverter {
+    obj := &front_LuaConverter{}
+    obj.FP = obj
+    obj.Runner_Runner.FP = obj
+    obj.Initfront_LuaConverter(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+    return obj
+}
+// 1538: DeclConstr
+func (self *front_LuaConverter) Initfront_LuaConverter(_env *LnsEnv, luaPath string,metaPath string,dependsPath LnsAny,astResult LnsAny,convMode LnsInt,path string,byteCompile bool,stripDebugInfo bool,option *Option_Option) {
+    self.InitRunner_Runner(_env)
+    self.luaPath = luaPath
+    self.metaPath = metaPath
+    self.dependsPath = dependsPath
+    self.option = option
+    self.stripDebugInfo = stripDebugInfo
+    self.byteCompile = byteCompile
+    self.byteStream = NewUtil_memStream(_env)
+    self.byteMetaStream = NewUtil_memStream(_env)
+    self.streamMem = NewUtil_memStream(_env)
+    self.metaStreamMem = NewUtil_memStream(_env)
+    self.dependsStreamMem = NewUtil_memStream(_env)
+    self.astResult = astResult
+    self.filterInfo = nil
+    self.converterFunc = front_ConverterFunc_6_(func(_env *LnsEnv) {
+        var stream *Util_memStream
+        stream = self.streamMem
+        var metaStream *Util_memStream
+        metaStream = self.metaStreamMem
+        var outStream *Util_memStream
+        var oMetaStream *Util_memStream
+        outStream,oMetaStream = stream, metaStream
+        var ast *AstInfo_ASTInfo
+        ast = front_getAstFromResult_11_(_env, self.astResult)
+        var needDepends bool
+        needDepends = option.DependsPath != nil
+        if needDepends{
+            ast.FP.Get_node(_env).FP.ProcessFilter(_env, OutputDepend_createFilter(_env, self.dependsStreamMem.FP), 1)
+        }
+        if byteCompile{
+            outStream = self.byteStream
+            oMetaStream = self.byteMetaStream
+        }
+        var filterInfo *ConvLua_FilterInfo
+        filterInfo = front_ast2LuaMain_12_(_env, ast, path, outStream.FP, oMetaStream.FP, convMode, false, option)
+        self.filterInfo = filterInfo
+        filterInfo.FP.OutputLua(_env, Lns_unwrap( Nodes_RootNodeDownCastF(ast.FP.Get_node(_env).FP)).(*Nodes_RootNode))
+    })
+    self.FP.Start(_env, 1, _env.GetVM().String_format("convlua -- %s", []LnsAny{path}))
+}
+
+
+// declaration Class -- GoConverter
+type front_GoConverterMtd interface {
+    GetLnsSyncFlag() *Lns_syncFlag
+    Run(_env *LnsEnv)
+    RunMain(_env *LnsEnv)
+    saveGo(_env *LnsEnv)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+}
+type front_GoConverter struct {
+    Runner_Runner
+    memStream *Util_memStream
+    path string
+    converter front_ConverterFunc_6_
+    validFlag bool
+    FP front_GoConverterMtd
+}
+func front_GoConverter2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*front_GoConverter).FP
+}
+type front_GoConverterDownCast interface {
+    Tofront_GoConverter() *front_GoConverter
+}
+func front_GoConverterDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_GoConverterDownCast)
+    if ok { return work.Tofront_GoConverter() }
+    return nil
+}
+func (obj *front_GoConverter) Tofront_GoConverter() *front_GoConverter {
+    return obj
+}
+func Newfront_GoConverter(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 *Option_Option, arg4 *ConvGo_Option) *front_GoConverter {
+    obj := &front_GoConverter{}
+    obj.FP = obj
+    obj.Runner_Runner.FP = obj
+    obj.Initfront_GoConverter(_env, arg1, arg2, arg3, arg4)
+    return obj
+}
 // 1684: DeclConstr
 func (self *front_GoConverter) Initfront_GoConverter(_env *LnsEnv, scriptPath string,astResult LnsAny,option *Option_Option,goOpt *ConvGo_Option) {
     self.InitRunner_Runner(_env)
@@ -2957,26 +2899,95 @@ func (self *front_GoConverter) Initfront_GoConverter(_env *LnsEnv, scriptPath st
     })
     self.FP.Start(_env, 1, _env.GetVM().String_format("convgo -- %s", []LnsAny{scriptPath}))
 }
-// 1724: decl @lune.@base.@front.GoConverter.runMain
-func (self *front_GoConverter) RunMain(_env *LnsEnv) {
-    self.converter(_env)
+
+
+// declaration Class -- UpdateInfo
+type front_UpdateInfoMtd interface {
+    Get_dependsPath(_env *LnsEnv) LnsAny
+    Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
+    Get_scriptPath(_env *LnsEnv) string
+    Get_uptodate(_env *LnsEnv) LnsAny
 }
-// 1728: decl @lune.@base.@front.GoConverter.saveGo
-func (self *front_GoConverter) saveGo(_env *LnsEnv) {
-    LnsJoin(_env, self.FP)
-    if Lns_op_not(self.validFlag){
-        return 
+type front_UpdateInfo struct {
+    scriptPath string
+    dependsPath LnsAny
+    moduleId *FrontInterface_ModuleId
+    uptodate LnsAny
+    FP front_UpdateInfoMtd
+}
+func front_UpdateInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
     }
-    var file Lns_luaStream
-    
-    {
-        _file := front_convExp4_1154(Lns_2DDD(Lns_io_open(self.path, "w")))
-        if _file == nil{
-            return 
-        } else {
-            file = _file.(Lns_luaStream)
-        }
-    }
-    file.Write(_env, self.memStream.FP.Get_txt(_env))
-    file.Close(_env)
+    return obj.(*front_UpdateInfo).FP
+}
+type front_UpdateInfoDownCast interface {
+    Tofront_UpdateInfo() *front_UpdateInfo
+}
+func front_UpdateInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(front_UpdateInfoDownCast)
+    if ok { return work.Tofront_UpdateInfo() }
+    return nil
+}
+func (obj *front_UpdateInfo) Tofront_UpdateInfo() *front_UpdateInfo {
+    return obj
+}
+func Newfront_UpdateInfo(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 *FrontInterface_ModuleId, arg4 LnsAny) *front_UpdateInfo {
+    obj := &front_UpdateInfo{}
+    obj.FP = obj
+    obj.Initfront_UpdateInfo(_env, arg1, arg2, arg3, arg4)
+    return obj
+}
+func (self *front_UpdateInfo) Initfront_UpdateInfo(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 *FrontInterface_ModuleId, arg4 LnsAny) {
+    self.scriptPath = arg1
+    self.dependsPath = arg2
+    self.moduleId = arg3
+    self.uptodate = arg4
+}
+func (self *front_UpdateInfo) Get_scriptPath(_env *LnsEnv) string{ return self.scriptPath }
+func (self *front_UpdateInfo) Get_dependsPath(_env *LnsEnv) LnsAny{ return self.dependsPath }
+func (self *front_UpdateInfo) Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId{ return self.moduleId }
+func (self *front_UpdateInfo) Get_uptodate(_env *LnsEnv) LnsAny{ return self.uptodate }
+
+func Lns_front_init(_env *LnsEnv) {
+    if init_front { return }
+    init_front = true
+    front__mod__ = "@lune.@base.@front"
+    Lns_InitMod()
+    Lns_Types_init(_env)
+    Lns_frontInterface_init(_env)
+    Lns_Parser_init(_env)
+    Lns_convLua_init(_env)
+    Lns_convGo_init(_env)
+    Lns_AstInfo_init(_env)
+    Lns_TransUnit_init(_env)
+    Lns_Util_init(_env)
+    Lns_Option_init(_env)
+    Lns_dumpNode_init(_env)
+    Lns_glueFilter_init(_env)
+    Lns_LuaVer_init( _env )
+    Lns_Depend_init(_env)
+    Lns_DependLuaOnLns_init(_env)
+    Lns_OutputDepend_init(_env)
+    Lns_Ver_init(_env)
+    Lns_LuaVer_init(_env)
+    Lns_Log_init(_env)
+    Lns_Formatter_init(_env)
+    Lns_Testing_init(_env)
+    Lns_GoMod_init(_env)
+    Lns_Meta_init(_env)
+    Lns_LuneControl_init(_env)
+    Lns_Nodes_init(_env)
+    Lns_Ast_init(_env)
+    Lns_Runner_init(_env)
+    Lns_Builtin_init(_env)
+    Lns_NodeIndexer_init(_env)
+    Depend_setup(_env, Depend_UpdateVer(front__anonymous_0_))
+    front_forceUpdateMeta = true
+}
+func init() {
+    init_front = false
 }

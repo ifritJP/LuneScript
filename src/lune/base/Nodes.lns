@@ -1776,7 +1776,7 @@ pub class DeclFuncInfo {
    let mut has__func__Symbol:bool { pub, pub };
    let overrideFlag: bool { pub };
    // この関数を構成する stmt 数。
-   let stmtNum:int {pub};
+   let mut stmtNum:int {pub,pub};
 }
 
 pub static fn DeclFuncInfo.createFrom(
