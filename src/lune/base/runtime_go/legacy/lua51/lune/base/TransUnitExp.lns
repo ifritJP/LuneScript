@@ -383,7 +383,7 @@ fn TransUnit.analyzeExpRefItem(
       typeInfo = self.createExtType( exp.$pos, typeInfo );
 
       if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
-         not self.getCurrentNSInfo().canAccessLuaval()
+         not self.$curNsInfo.canAccessLuaval()
       {
          self.addErrMess(
             token.$pos,
@@ -1950,7 +1950,7 @@ fn TransUnit.analyzeAccessClassField(
    let mut getterFlag = false;
    if mode == .Get or mode == .GetNil {
       let fieldSymbolInfo = classScope.getSymbolInfo(
-         "get_%s" (token.txt), self.scope, false, self.scopeAccess );
+         "get_%s" (token.txt), self.$scope, false, self.scopeAccess );
       when! fieldSymbolInfo {
          if ( fieldSymbolInfo.get_kind() == .Mtd or fieldSymbolInfo.get_kind() == .Fun )
          {
@@ -1983,10 +1983,10 @@ fn TransUnit.analyzeAccessClassField(
       // fieldTypeInfo = classScope.getTypeInfoField(
       //    token.txt, true, self.scope );
       symbolInfo = classScope.getSymbolInfoField(
-         token.txt, true, self.scope, self.scopeAccess );
+         token.txt, true, self.$scope, self.scopeAccess );
       if not symbolInfo {
          symbolInfo = classScope.getSymbolInfoIfField(
-            token.txt, self.scope, self.scopeAccess );
+            token.txt, self.$scope, self.scopeAccess );
       }
       when! symbolInfo {
          fieldTypeInfo = symbolInfo.$typeInfo;
@@ -1998,7 +1998,7 @@ fn TransUnit.analyzeAccessClassField(
       }
       Util.errorLog( "class, scope: -- %s, %s" (classTypeInfo, classScope));
       self.error( "not found field typeInfo: %s.%s -- %s"
-                  ( classTypeInfo.getFullName( self.typeNameCtrl, self.scope, false ),
+                  ( classTypeInfo.getFullName( self.typeNameCtrl, self.$scope, false ),
                     token.txt, classTypeInfo.$kind.$_txt ) );
    }
    let typeInfo = unwrap fieldTypeInfo default Ast.builtinTypeNone;
@@ -2132,7 +2132,7 @@ fn TransUnit.dumpFieldComp(
    };
 
    scope.filterTypeInfoField(
-      true, self.scope, self.scopeAccess,
+      true, self.$scopeRO, self.scopeAccess,
       fn ( symbolInfo: &Ast.SymbolInfo ) __trans : bool {
          if ( isPrefixType ) {
             if not symbolInfo.$staticFlag and
@@ -2245,7 +2245,7 @@ fn TransUnit.checkEnumComp(
 
          let pattern = prefix == "" and "" or "^" .. prefix;
          scope.filterTypeInfoField(
-            true, self.scope, self.scopeAccess,
+            true, self.$scopeRO, self.scopeAccess,
             fn ( symbolInfo: &Ast.SymbolInfo ) __trans : bool {
                if symbolInfo.$kind == .Mbr {
                   return self.dumpComp( jsonWriter, pattern, symbolInfo, false );
@@ -2370,7 +2370,7 @@ fn TransUnit.checkSymbolComp( token:&Parser.Token )
    self.checkComp(
       token,
       fn ( jsonWriter: Writer.JSON, prefix:str ) {
-         self.dumpSymbolComp( jsonWriter, self.scope,
+         self.dumpSymbolComp( jsonWriter, self.$scopeRO,
                               prefix == "" and "" or "^" .. prefix );
       }
    );
@@ -2434,7 +2434,7 @@ fn TransUnit.analyzeExpField(
    let extFlag;
    if Ast.isExtType( prefixExpType ) {
       if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
-         not self.getCurrentNSInfo().canAccessLuaval()
+         not self.$curNsInfo.canAccessLuaval()
       {
          self.addErrMess(
             firstToken.$pos,
@@ -2493,7 +2493,7 @@ fn TransUnit.analyzeExpField(
          if mode == .Get {
             let moduleType = prefixExpType.getModule();
             if not moduleType.equals( self.processInfo, self.moduleType ##) and
-               not self.scope.getModuleInfo( moduleType )
+               not self.$scope.getModuleInfo( moduleType )
             {
                if not self.importedAliasMap[ prefixExpType ] {
                   // enum の名前を取得するには、そのモジュールのインポートが必要
@@ -2588,7 +2588,7 @@ fn TransUnit.analyzeExpField(
       let prefixScope = prefixExpType.$scope;
       if! prefixScope {
          symbolInfo = _exp.getSymbolInfoField(
-            fieldToken.txt, true, self.scope, self.scopeAccess );
+            fieldToken.txt, true, self.$scope, self.scopeAccess );
       }
    }
    
@@ -2691,7 +2691,7 @@ fn TransUnit.analyzeExpField(
       if prefixSym.$kind == .Typ and prefixType.$kind == .Class and
          #prefixType.$itemTypeInfoList > 0 and
          not Ast.isGenericType( prefixType ) and
-         not self.scope.isInnerOf( unwrap prefixType.$scope )
+         not self.$scope.isInnerOf( unwrap prefixType.$scope )
       {
          let mut accessErr = false;
          if typeInfo.$kind == .Func {
@@ -2779,9 +2779,9 @@ fn TransUnit.analyzeNewAlge(
       }
 
       if algeTypeInfo.$externalFlag and
-         not self.scope.getModuleInfo( algeTypeInfo.getModule().$srcTypeInfo )
+         not self.$scope.getModuleInfo( algeTypeInfo.getModule().$srcTypeInfo )
       {  
-         let fullname = algeTypeInfo.getFullName( self.typeNameCtrl, self.scope, true );
+         let fullname = algeTypeInfo.getFullName( self.typeNameCtrl, self.$scope, true );
          self.addErrMess( firstToken.pos, "This module not import -- %s"
                           ( fullname ) );
       }
@@ -2839,8 +2839,8 @@ fn TransUnit.analyzeExpSymbol(
       else {
          self.checkSymbolComp( symbolToken );
 
-         let! symbolInfo = self.scope.getSymbolTypeInfo(
-            symbolToken.txt, self.scope, self.moduleScope, self.scopeAccess )
+         let! symbolInfo = self.$scope.getSymbolTypeInfo(
+            symbolToken.txt, self.$scope, self.moduleScope, self.scopeAccess )
          {
             if self.macroCtrl.$isDeclaringMacro and
                symbolToken.txt == "__var" and self.analyzePhase == .Runner
@@ -2848,7 +2848,7 @@ fn TransUnit.analyzeExpSymbol(
                self.error( "declare '_lune_control use_macro_special_var'." );
             } else {
                if self.analyzeMode ~= .Diag {
-                  let mut work:&Ast.Scope = self.scope;
+                  let mut work:&Ast.Scope = self.$scope;
                   while true {
                      print( work, self.moduleScope );
                      if work == work.$parent {
@@ -2857,8 +2857,8 @@ fn TransUnit.analyzeExpSymbol(
                      work = work.$parent;
                   }
 
-                  self.scope.filterSymbolTypeInfo(
-                     self.scope, self.moduleScope, self.scopeAccess,
+                  self.$scope.filterSymbolTypeInfo(
+                     self.$scope, self.moduleScope, self.scopeAccess,
                      fn ( workSymbolInfo:&Ast.SymbolInfo ): bool {
                         print( "sym", workSymbolInfo.$name );
                         return true;
@@ -3100,7 +3100,7 @@ fn TransUnit.analyzeExpOpSet(
       }
       //symbolInfo.set_hasValueFlag( true );
       if symbolInfo.$kind ~= .Var or
-         self.scope.getNamespaceTypeInfo() == symbolInfo.$scope.getNamespaceTypeInfo()
+         self.$scope.getNamespaceTypeInfo() == symbolInfo.$scope.getNamespaceTypeInfo()
       {
          symbolInfo.updateValue( exp.$pos );
       }
@@ -3678,7 +3678,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
          }
          else {
             if! let superFunc = (unwrap superType.$scope).getTypeInfoField(
-               currentFunc.$rawTxt, true, self.scope, self.scopeAccess )
+               currentFunc.$rawTxt, true, self.$scope, self.scopeAccess )
             {
                if superFunc.$abstractFlag {
                   self.addErrMess( firstToken.pos, "super is abstract." );
@@ -3892,7 +3892,7 @@ fn TransUnit.analyzeExp(
                   // enum を宣言しているモジュールを import していない場合
                   if not aliasType {
                      let fullname = orgExpectType.getFullName(
-                        self.typeNameCtrl, self.scope, true );
+                        self.typeNameCtrl, self.$scope, true );
                      self.addErrMess(
                         token.pos,              
                         "need to import module -- %s (%s)"
@@ -3964,9 +3964,9 @@ fn TransUnit.analyzeExp(
 
       if initTypeInfo.$accessMode == .Pub or
           ( initTypeInfo.$accessMode == .Pro and
-            self.scope.getClassTypeInfo().isInheritFrom(
+            self.$scope.getClassTypeInfo().isInheritFrom(
                self.processInfo, classTypeInfo, nil ) ) or
-          ( self.scope.getClassTypeInfo() == classTypeInfo ) or
+          ( self.$scope.getClassTypeInfo() == classTypeInfo ) or
           ( initTypeInfo.$accessMode == .Local and
             initTypeInfo.getModule() == self.moduleType )
       {
@@ -4057,7 +4057,7 @@ fn TransUnit.analyzeExp(
             }
             if expType.$kind == .Ext {
                if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and
-                  not self.getCurrentNSInfo().canAccessLuaval()
+                  not self.$curNsInfo.canAccessLuaval()
                {
                   self.addErrMess(
                      token.pos,

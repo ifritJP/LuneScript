@@ -29,14 +29,12 @@ import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.AstInfo;
-//import lune.base.LuaMod;
 import lune.base.LuaVer;
 import lune.base.Parser;
 import lune.base.LuneControl;
 import lune.base.Types;
 import lune.base.Option as LnsOpt;
 import lune.base.Builtin;
-import lune.base.NodeIndexer;
 
 let MaxNilAccNum = 3;
 
@@ -113,6 +111,7 @@ class convFilter extend Nodes.Filter<Opt> {
    let modDir:str;
    let env:&Env;
    let builtinFuncs:&Builtin.BuiltinFuncType;
+   local let ast:&AstInfo.ASTInfo;
 
    let mut processMode:&ProcessMode;
    let mut builtin2runtime:&Map<&Ast.TypeInfo,str>;
@@ -120,10 +119,12 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut type2gotypeMap:&Map<&Ast.TypeInfo,str>;
 
    let stream:Util.SimpleSourceOStream;
+   local let orgStream: oStream;
+   local let streamName:str;
 
    
    // processRoot 先頭で設定
-   let indexer: NodeIndexer.Indexer;
+   // let indexer: NodeIndexer.Indexer;
    // processRoot 先頭で設定
    let moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
 
@@ -148,6 +149,10 @@ class convFilter extend Nodes.Filter<Opt> {
    {
       super(true, ast.$exportInfo.$moduleTypeInfo,
              ast.$exportInfo.$moduleTypeInfo.$scope);
+
+      self.streamName = streamName;
+      self.orgStream = stream;
+      self.ast = ast;
 
       self.builtinFuncs = ast.$builtinFunc;
       self.moduleType2SymbolMap = {};
@@ -181,7 +186,7 @@ class convFilter extend Nodes.Filter<Opt> {
          self.builtinFuncs.__lns_capability_async_sym: "true",
       };
 
-      self.indexer = new NodeIndexer.Indexer( self.processInfo );
+      //self.indexer = new NodeIndexer.Indexer( self.processInfo );
    }
 
    fn getVM( typeInfo:&Ast.TypeInfo ) : str! {
@@ -197,11 +202,11 @@ class convFilter extend Nodes.Filter<Opt> {
       return (txt.gsub( "GETVM", vmTxt ));
    }
    
-   fn pushProcessMode( mode:ProcessMode ) mut {
+   local fn pushProcessMode( mode:ProcessMode ) mut {
       self.processModeStack.insert( self.processMode );
       self.processMode = mode;
    }
-   fn popProcessMode() mut {
+   local fn popProcessMode() mut {
       self.processMode = self.processModeStack[ #self.processModeStack ];
       self.processModeStack.remove(##);
    }
@@ -1793,94 +1798,7 @@ fn convFilter.outputImport( node:&Nodes.ImportNode ) mut {
    self.module2PackSym[ info.$moduleTypeInfo ] = packSym;
 }
 
-class DeclFieldInfo {
-   let classNode:&Nodes.DeclClassNode {pub};
-   let fieldNode:&Nodes.Node {pub};
-}
-
-fn convFilter.processMethodAsync( nodeList:&List<&Nodes.DeclClassNode> ) mut {
-
-   let declFuncNodeList:List<&DeclFieldInfo> = [];
-   foreach workNode in nodeList {
-      if self.enableTest or not workNode.$inTestBlock and not workNode.isModule() {
-         switch workNode.$expType.$kind {
-            case .Class {
-               foreach fieldNode in workNode.$fieldList {
-                  if fieldNode@@@Nodes.DeclMemberNode {
-                     // ここではメンバーを処理しない
-                  } else {
-                     declFuncNodeList.insert( new DeclFieldInfo( workNode, fieldNode ) );
-                  }
-               }
-            }
-         }
-      }
-   }
-
-   __lns.runtime.log( "class fields (%d)" (#declFuncNodeList) );
-   
-   self.pushProcessMode( .DeclClass );
-   foreach info in declFuncNodeList {
-      filter( info.$fieldNode, self, info.$classNode );
-   }
-   self.popProcessMode();
-}
-
-pub override fn convFilter.processRoot(
-   node: &Nodes.RootNode, opt: Opt ) mut
-{
-   __lns.runtime.log( "NodeIndexer.start" );
-   self.indexer.start( node, (@
-                               Nodes.NodeKind.$Switch,
-                               Nodes.NodeKind.$Match,
-                               Nodes.NodeKind.$For,
-                               Nodes.NodeKind.$Foreach,
-                               Nodes.NodeKind.$Forsort,
-                               Nodes.NodeKind.$Apply
-   ));
-   __lns.runtime.log( "NodeIndexer.stop" );
-
-   
-   foreach importNode in node.$nodeManager.getImportNodeList() {
-      let info = importNode.$info;
-      self.moduleType2SymbolMap[ info.$moduleTypeInfo ] = info.$symbolInfo;
-   }
-   
-   foreach pragma in node.$luneHelperInfo.pragmaSet {
-      match pragma {
-         case .limit_conv_code( codeSet ) {
-            if not codeSet.has( LuneControl.Code.Go ) {
-               self.writeln( "// This code is transcompiled by LuneScript." );
-               self.writeln( "package %s" (self.option.packageName) );
-               return;
-            }
-         }
-      }
-   }
-   
-   fn isUsingInTest( aNode:&Nodes.Node ) : bool {
-      foreach testBlock in node.$nodeManager.getTestBlockNodeList() {
-         if testBlock.isInnerPos( aNode.$pos ) {
-            return true;
-         }
-      }
-      return false;
-   }
-
-   form ProcNode( workNode:&Nodes.Node );
-   
-   macro _filter( list:__exp, proc:__exp ) {
-      {}
-      {
-         let procNode = ,,proc;
-         foreach tmpNode in ,,list {
-            if self.enableTest or not isUsingInTest( tmpNode ) {
-               procNode( tmpNode );
-            }
-         }
-      }
-   }
-   
+pro fn convFilter.setup() mut {
    macro _makemap( nameMap:Map<str,List<str>> ) {
       {
          let mut itemStatList:List<stat> = [];
@@ -1958,6 +1876,163 @@ pub override fn convFilter.processRoot(
       self.builtinFuncs.istream_: "Lns_iStream",
       self.builtinFuncs.luastream_ : "Lns_luaStream",
    };
+   
+}
+
+
+
+class ProcessDeclMethodItem {
+   let classNode:&Nodes.DeclClassNode {pub};
+   let fieldNode:&Nodes.DeclMethodNode {pub};
+}
+
+class ConvRunner extend convFilter (__Runner) {
+   let declMethodItemList:&List<&ProcessDeclMethodItem>;
+   
+   local fn __init( enableTest:bool, ast:&AstInfo.ASTInfo, option:&Option,
+                    declMethodItemList:&List<&ProcessDeclMethodItem> )
+   {
+      super( enableTest, "", new Util.memStream(), ast, option );
+      self.declMethodItemList = declMethodItemList;
+      // self.run();
+  }
+   
+  pub fn run() mut {
+     self.setup();
+     
+     self.pushProcessMode( .DeclClass );
+     // 分割した divList を処理
+     __lns.runtime.log( "class fields div (%d)" (#self.declMethodItemList) );
+     foreach info in self.declMethodItemList {
+        filter( info.$fieldNode, self, info.$classNode );
+     }
+     self.popProcessMode();
+  }
+
+  pub fn getResult() mut : str {
+     __join( self );
+     let! mut memStream = self.orgStream@@@Util.memStream {
+        Util.err( "convert err " );
+     };
+     return memStream.$txt;
+  }
+}
+
+fn convFilter.processMethodAsync(
+   nodeList:&List<&Nodes.DeclClassNode> ) mut : &List<ConvRunner>
+{
+   let mut totalStmtNum = 0;
+   let declMethodNodeList:List<&ProcessDeclMethodItem> = [];
+   foreach workNode in nodeList {
+      if self.enableTest or not workNode.$inTestBlock and not workNode.isModule() {
+         switch workNode.$expType.$kind {
+            case .Class {
+               foreach fieldNode in workNode.$fieldList {
+                  if! let declMethodNode = fieldNode@@@Nodes.DeclMethodNode {
+                     declMethodNodeList.insert(
+                        new ProcessDeclMethodItem( workNode, declMethodNode ) );
+                     totalStmtNum = totalStmtNum + declMethodNode.$declInfo.$stmtNum;
+                  }
+               }
+            }
+         }
+      }
+   }
+
+   __lns.runtime.log( "class fields (%d, %d)" (#declMethodNodeList, totalStmtNum) );
+
+   let runnerList:List<ConvRunner> = [];
+
+   if totalStmtNum > 1000 {
+      // declMethodNodeList を divList に分割
+      let divCount = 4;
+      if divCount > 0 {
+         let maxStmtCount = ( totalStmtNum + divCount - 1 ) / divCount;
+         let mut offset = 1;
+         let len = #declMethodNodeList;
+
+         for _ = 1, divCount {
+            let list:List<&ProcessDeclMethodItem> = [];
+            let mut stmtCount = 0;
+            while offset <= len {
+               let declFieldInfo = declMethodNodeList[ offset ];
+               offset = offset + 1;
+               list.insert( declFieldInfo );
+               let declMethodNode = declFieldInfo.$fieldNode;
+               stmtCount = stmtCount + declMethodNode.$declInfo.$stmtNum;
+               if stmtCount >= maxStmtCount {
+                  break;
+               }
+            }
+            let mut runner = new ConvRunner(
+               self.enableTest, self.ast, self.option, list );
+            runnerList.insert( runner );
+            
+            if not __run( runner, __lns.runMode.Skip,
+                          "convGo Field - %s" (self.streamName) )
+            {
+               runner.run();
+            }
+         }
+      }
+   } else {
+      self.pushProcessMode( .DeclClass );
+      // 分割した divList を処理
+      __lns.runtime.log( "class fields div (%d)" (#declMethodNodeList) );
+      foreach info in declMethodNodeList {
+         filter( info.$fieldNode, self, info.$classNode );
+      }
+      self.popProcessMode();
+   }
+
+   return runnerList;
+}
+
+pub override fn convFilter.processRoot(
+   node: &Nodes.RootNode, opt: Opt ) mut
+{
+   foreach importNode in node.$nodeManager.getImportNodeList() {
+      let info = importNode.$info;
+      self.moduleType2SymbolMap[ info.$moduleTypeInfo ] = info.$symbolInfo;
+   }
+   
+   foreach pragma in node.$luneHelperInfo.pragmaSet {
+      match pragma {
+         case .limit_conv_code( codeSet ) {
+            if not codeSet.has( LuneControl.Code.Go ) {
+               self.writeln( "// This code is transcompiled by LuneScript." );
+               self.writeln( "package %s" (self.option.packageName) );
+               return;
+            }
+         }
+      }
+   }
+   
+   fn isUsingInTest( aNode:&Nodes.Node ) : bool {
+      foreach testBlock in node.$nodeManager.getTestBlockNodeList() {
+         if testBlock.isInnerPos( aNode.$pos ) {
+            return true;
+         }
+      }
+      return false;
+   }
+
+   form ProcNode( workNode:&Nodes.Node );
+   
+   macro _filter( list:__exp, proc:__exp ) {
+      {}
+      {
+         let procNode = ,,proc;
+         foreach tmpNode in ,,list {
+            if self.enableTest or not isUsingInTest( tmpNode ) {
+               procNode( tmpNode );
+            }
+         }
+      }
+   }
+
+
+   self.setup();
 
    
    self.writeln( "// This code is transcompiled by LuneScript." );
@@ -2074,7 +2149,7 @@ pub override fn convFilter.processRoot(
                                self.getTypeSymbol( workNode.$typeInfo.$aliasSrc ) ) );
             } );
 
-   __lns.runtime.log( "NodeIndexer.need" );
+   // __lns.runtime.log( "NodeIndexer.need" );
    
    self.pushProcessMode( .NonClosureFuncDecl );
    _filter( node.$nodeManager.getDeclFuncNodeList(),
@@ -2084,9 +2159,10 @@ pub override fn convFilter.processRoot(
             } );
    self.popProcessMode();
 
-   __lns.runtime.log( "start class" );
-
-   self.pushProcessMode( .DeclClass );
+   let mut runnerList = self.processMethodAsync(
+      node.$nodeManager.getDeclClassNodeList() );
+   
+    self.pushProcessMode( .DeclClass );
    _filter( node.$nodeManager.getDeclClassNodeList(),
             fn ( workNode:&Nodes.Node ) {
                filter( workNode, self, node );
@@ -2167,8 +2243,9 @@ pub override fn convFilter.processRoot(
    self.popIndent();
    self.writeln( "}" );
 
-
-   self.processMethodAsync( node.$nodeManager.getDeclClassNodeList() );
+   foreach runner in runnerList {
+      self.write( runner.getResult() );
+   }
 }
 
 pub override fn convFilter.processSubfile(
@@ -2230,8 +2307,8 @@ pub override fn convFilter.processAsyncLock(
 {
    _switch node.$lockKind {
       case .AsyncLock, .LuaLock {
-         self.writeln( "Lns_LockEnvSync( %s, func () {"
-            (self.env.getEnv()) );
+         self.writeln( "Lns_LockEnvSync( %s, %d, func () {"
+            ( self.env.getEnv(), node.$pos.lineNo ) );
 
          filter( node.$block, self, node );
 
@@ -3280,7 +3357,8 @@ pub override fn convFilter.processIf(
 pub override fn convFilter.processSwitch(
    node: &Nodes.SwitchNode, opt: Opt ) mut
 {
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
    let valName = "_switch%d" (nodeIndex);
    self.write( "if %s := " (valName) );
    filter( node.$exp, self, node );
@@ -3325,7 +3403,8 @@ pub override fn convFilter.processMatch(
       return false;
    }
    let val;
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
    if hasAccessing() {
       val = "_matchExp%d" (nodeIndex);
       self.write( "switch %s := " (val) );
@@ -3390,7 +3469,8 @@ pub override fn convFilter.processFor(
    self.writeln( "{" );
    self.pushIndent( ## );
 
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
    
    let fromSym = "_forFrom%d" (nodeIndex);
    let toSym = "_forTo%d" (nodeIndex);
@@ -3455,7 +3535,9 @@ pub override fn convFilter.processApply(
    self.writeln( "{" );
    self.pushIndent( ## );
 
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
+
    
    let formSym = "_applyForm%d" (nodeIndex);
    let paramSym = "_applyParam%d" (nodeIndex);
@@ -3527,7 +3609,18 @@ fn convFilter.outputForeachLua(
    node: &Nodes.Node, sortFlag:bool, exp:&Nodes.Node,
    val:&Ast.SymbolInfo, key:&Ast.SymbolInfo!, block:&Nodes.BlockNode ) mut
 {
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex;
+   if! node@@@Nodes.ForeachNode {
+      nodeIndex = _exp.$idInNS;
+   } else {
+      if! node@@@Nodes.ForsortNode {
+         nodeIndex = _exp.$idInNS;
+      } else {
+         Util.err( "illegal node -- %s" (Nodes.getNodeKindName( node.$kind )) );
+      }
+   }
+
    
    switch exp.$expType.$extedType.$kind {
       case .List, .Map {
@@ -3743,7 +3836,9 @@ pub override fn convFilter.processForsort(
       valSym = node.$val;
    }
 
-   let nodeIndex = self.indexer.getIndex( node ).$index;
+   //let nodeIndex = self.indexer.getIndex( node ).$index;
+   let nodeIndex = node.$idInNS;
+
 
    
    self.writeln( "{" );
@@ -4593,14 +4688,18 @@ pub override fn convFilter.processDeclClass(
                self.outputAsyncItem( node );
             }
 
-            // foreach fieldNode in node.$fieldList {
-            //    if fieldNode@@@Nodes.DeclMemberNode {
-            //       // ここではメンバーを処理しない
-            //    } else {
-            //       filter( fieldNode, self, node );
-            //       self.writeln( "" );
-            //    }
-            // }
+            foreach fieldNode in node.$fieldList {
+               switch fieldNode.$kind {
+                  case Nodes.NodeKind.$DeclMember, Nodes.NodeKind.$DeclMethod
+                  {
+                     // ここでは処理しない
+                  }
+                  default {
+                     filter( fieldNode, self, node );
+                     self.writeln( "" );
+                  }
+               }
+            }
          }
          case .IF {
             self.outputInterfaceType( node );

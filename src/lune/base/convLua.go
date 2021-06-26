@@ -169,6 +169,495 @@ func ConvLua_createFilter(_env *LnsEnv, streamName string,stream Lns_oStream,met
 
 
 
+// declaration Class -- PubVerInfo
+type convLua_PubVerInfoMtd interface {
+}
+type convLua_PubVerInfo struct {
+    StaticFlag bool
+    AccessMode LnsInt
+    Mutable bool
+    TypeInfo *Ast_TypeInfo
+    FP convLua_PubVerInfoMtd
+}
+func convLua_PubVerInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*convLua_PubVerInfo).FP
+}
+type convLua_PubVerInfoDownCast interface {
+    ToconvLua_PubVerInfo() *convLua_PubVerInfo
+}
+func convLua_PubVerInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(convLua_PubVerInfoDownCast)
+    if ok { return work.ToconvLua_PubVerInfo() }
+    return nil
+}
+func (obj *convLua_PubVerInfo) ToconvLua_PubVerInfo() *convLua_PubVerInfo {
+    return obj
+}
+func NewconvLua_PubVerInfo(_env *LnsEnv, arg1 bool, arg2 LnsInt, arg3 bool, arg4 *Ast_TypeInfo) *convLua_PubVerInfo {
+    obj := &convLua_PubVerInfo{}
+    obj.FP = obj
+    obj.InitconvLua_PubVerInfo(_env, arg1, arg2, arg3, arg4)
+    return obj
+}
+func (self *convLua_PubVerInfo) InitconvLua_PubVerInfo(_env *LnsEnv, arg1 bool, arg2 LnsInt, arg3 bool, arg4 *Ast_TypeInfo) {
+    self.StaticFlag = arg1
+    self.AccessMode = arg2
+    self.Mutable = arg3
+    self.TypeInfo = arg4
+}
+
+// declaration Class -- PubFuncInfo
+type convLua_PubFuncInfoMtd interface {
+}
+type convLua_PubFuncInfo struct {
+    AccessMode LnsInt
+    TypeInfo *Ast_TypeInfo
+    FP convLua_PubFuncInfoMtd
+}
+func convLua_PubFuncInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*convLua_PubFuncInfo).FP
+}
+type convLua_PubFuncInfoDownCast interface {
+    ToconvLua_PubFuncInfo() *convLua_PubFuncInfo
+}
+func convLua_PubFuncInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(convLua_PubFuncInfoDownCast)
+    if ok { return work.ToconvLua_PubFuncInfo() }
+    return nil
+}
+func (obj *convLua_PubFuncInfo) ToconvLua_PubFuncInfo() *convLua_PubFuncInfo {
+    return obj
+}
+func NewconvLua_PubFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Ast_TypeInfo) *convLua_PubFuncInfo {
+    obj := &convLua_PubFuncInfo{}
+    obj.FP = obj
+    obj.InitconvLua_PubFuncInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *convLua_PubFuncInfo) InitconvLua_PubFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Ast_TypeInfo) {
+    self.AccessMode = arg1
+    self.TypeInfo = arg2
+}
+
+// declaration Class -- ModuleInfo
+type convLua_ModuleInfoMtd interface {
+    Get_assignName(_env *LnsEnv) string
+    Get_modulePath(_env *LnsEnv) string
+}
+type convLua_ModuleInfo struct {
+    assignName string
+    modulePath string
+    FP convLua_ModuleInfoMtd
+}
+func convLua_ModuleInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*convLua_ModuleInfo).FP
+}
+type convLua_ModuleInfoDownCast interface {
+    ToconvLua_ModuleInfo() *convLua_ModuleInfo
+}
+func convLua_ModuleInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(convLua_ModuleInfoDownCast)
+    if ok { return work.ToconvLua_ModuleInfo() }
+    return nil
+}
+func (obj *convLua_ModuleInfo) ToconvLua_ModuleInfo() *convLua_ModuleInfo {
+    return obj
+}
+func NewconvLua_ModuleInfo(_env *LnsEnv, arg1 string, arg2 string) *convLua_ModuleInfo {
+    obj := &convLua_ModuleInfo{}
+    obj.FP = obj
+    obj.InitconvLua_ModuleInfo(_env, arg1, arg2)
+    return obj
+}
+func (self *convLua_ModuleInfo) InitconvLua_ModuleInfo(_env *LnsEnv, arg1 string, arg2 string) {
+    self.assignName = arg1
+    self.modulePath = arg2
+}
+func (self *convLua_ModuleInfo) Get_assignName(_env *LnsEnv) string{ return self.assignName }
+func (self *convLua_ModuleInfo) Get_modulePath(_env *LnsEnv) string{ return self.modulePath }
+
+// declaration Class -- Opt
+type ConvLua_OptMtd interface {
+}
+type ConvLua_Opt struct {
+    Node *Nodes_Node
+    FP ConvLua_OptMtd
+}
+func ConvLua_Opt2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*ConvLua_Opt).FP
+}
+type ConvLua_OptDownCast interface {
+    ToConvLua_Opt() *ConvLua_Opt
+}
+func ConvLua_OptDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(ConvLua_OptDownCast)
+    if ok { return work.ToConvLua_Opt() }
+    return nil
+}
+func (obj *ConvLua_Opt) ToConvLua_Opt() *ConvLua_Opt {
+    return obj
+}
+func NewConvLua_Opt(_env *LnsEnv, arg1 *Nodes_Node) *ConvLua_Opt {
+    obj := &ConvLua_Opt{}
+    obj.FP = obj
+    obj.InitConvLua_Opt(_env, arg1)
+    return obj
+}
+func (self *ConvLua_Opt) InitConvLua_Opt(_env *LnsEnv, arg1 *Nodes_Node) {
+    self.Node = arg1
+}
+
+// declaration Class -- ConvFilter
+type convLua_ConvFilterMtd interface {
+    Close(_env *LnsEnv)
+    DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
+    Flush(_env *LnsEnv)
+    getCanonicalName(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
+    getDestrClass(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny
+    GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
+    getFullName(_env *LnsEnv, arg1 *Ast_TypeInfo) string
+    getMapInfo(_env *LnsEnv, arg1 *Ast_TypeInfo)(string, bool, string)
+    get_indent(_env *LnsEnv) LnsInt
+    Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
+    Get_optStack(_env *LnsEnv) *LnsList
+    Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
+    outputAlter2MapFunc(_env *LnsEnv, arg1 Lns_oStream, arg2 *LnsMap)
+    OutputDeclMacro(_env *LnsEnv, arg1 string, arg2 *LnsList, arg3 convLua_outputMacroStmtBlock_11_)
+    outputMeta(_env *LnsEnv, arg1 *Nodes_RootNode)
+    popIndent(_env *LnsEnv)
+    ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
+    ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
+    ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
+    ProcessAsyncLock(_env *LnsEnv, arg1 *Nodes_AsyncLockNode, arg2 LnsAny)
+    ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
+    ProcessBlock(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
+    ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
+    ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
+    ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
+    ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
+    ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
+    ProcessDeclArg(_env *LnsEnv, arg1 *Nodes_DeclArgNode, arg2 LnsAny)
+    ProcessDeclArgDDD(_env *LnsEnv, arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
+    ProcessDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 LnsAny)
+    ProcessDeclConstr(_env *LnsEnv, arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
+    ProcessDeclDestr(_env *LnsEnv, arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
+    ProcessDeclEnum(_env *LnsEnv, arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
+    ProcessDeclForm(_env *LnsEnv, arg1 *Nodes_DeclFormNode, arg2 LnsAny)
+    ProcessDeclFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
+    ProcessDeclMacro(_env *LnsEnv, arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
+    ProcessDeclMember(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
+    ProcessDeclMethod(_env *LnsEnv, arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
+    ProcessDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 LnsAny)
+    ProcessExpAccessMRet(_env *LnsEnv, arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
+    ProcessExpCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsAny)
+    ProcessExpCallSuper(_env *LnsEnv, arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
+    ProcessExpCallSuperCtor(_env *LnsEnv, arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
+    ProcessExpCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode, arg2 LnsAny)
+    ProcessExpList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 LnsAny)
+    processExpListSub(_env *LnsEnv, arg1 *Nodes_Node, arg2 *LnsList, arg3 LnsAny)
+    ProcessExpMRet(_env *LnsEnv, arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
+    ProcessExpMacroArgExp(_env *LnsEnv, arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
+    ProcessExpMacroExp(_env *LnsEnv, arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
+    ProcessExpMacroStat(_env *LnsEnv, arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
+    ProcessExpMacroStatList(_env *LnsEnv, arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
+    ProcessExpMultiTo1(_env *LnsEnv, arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
+    ProcessExpNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode, arg2 LnsAny)
+    ProcessExpOmitEnum(_env *LnsEnv, arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
+    ProcessExpOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
+    ProcessExpOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
+    ProcessExpParen(_env *LnsEnv, arg1 *Nodes_ExpParenNode, arg2 LnsAny)
+    ProcessExpRef(_env *LnsEnv, arg1 *Nodes_ExpRefNode, arg2 LnsAny)
+    ProcessExpRefItem(_env *LnsEnv, arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
+    ProcessExpSetItem(_env *LnsEnv, arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
+    ProcessExpSetVal(_env *LnsEnv, arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
+    ProcessExpSubDDD(_env *LnsEnv, arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
+    ProcessExpToDDD(_env *LnsEnv, arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
+    ProcessExpUnwrap(_env *LnsEnv, arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
+    ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
+    ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
+    ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
+    ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
+    ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
+    ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
+    ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
+    ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
+    ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
+    ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
+    ProcessLiteralInt(_env *LnsEnv, arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
+    ProcessLiteralList(_env *LnsEnv, arg1 *Nodes_LiteralListNode, arg2 LnsAny)
+    ProcessLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
+    ProcessLiteralNil(_env *LnsEnv, arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
+    ProcessLiteralReal(_env *LnsEnv, arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
+    ProcessLiteralSet(_env *LnsEnv, arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
+    ProcessLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
+    ProcessLiteralSymbol(_env *LnsEnv, arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
+    processLoadRuntime(_env *LnsEnv)
+    ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
+    ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
+    ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
+    ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
+    ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
+    ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
+    ProcessProtoMethod(_env *LnsEnv, arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
+    ProcessProvide(_env *LnsEnv, arg1 *Nodes_ProvideNode, arg2 LnsAny)
+    ProcessRefField(_env *LnsEnv, arg1 *Nodes_RefFieldNode, arg2 LnsAny)
+    ProcessRefType(_env *LnsEnv, arg1 *Nodes_RefTypeNode, arg2 LnsAny)
+    ProcessRepeat(_env *LnsEnv, arg1 *Nodes_RepeatNode, arg2 LnsAny)
+    ProcessRequest(_env *LnsEnv, arg1 *Nodes_RequestNode, arg2 LnsAny)
+    ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
+    ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
+    ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
+    ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
+    ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
+    ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
+    ProcessSwitch(_env *LnsEnv, arg1 *Nodes_SwitchNode, arg2 LnsAny)
+    ProcessTestBlock(_env *LnsEnv, arg1 *Nodes_TestBlockNode, arg2 LnsAny)
+    ProcessTestCase(_env *LnsEnv, arg1 *Nodes_TestCaseNode, arg2 LnsAny)
+    ProcessUnboxing(_env *LnsEnv, arg1 *Nodes_UnboxingNode, arg2 LnsAny)
+    ProcessUnwrapSet(_env *LnsEnv, arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
+    ProcessWhen(_env *LnsEnv, arg1 *Nodes_WhenNode, arg2 LnsAny)
+    ProcessWhile(_env *LnsEnv, arg1 *Nodes_WhileNode, arg2 LnsAny)
+    process__func__symbol(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 string)
+    pushIndent(_env *LnsEnv, arg1 LnsAny)
+    Write(_env *LnsEnv, arg1 string)(LnsAny, LnsAny)
+    writeln(_env *LnsEnv, arg1 string)
+}
+type convLua_ConvFilter struct {
+    Nodes_Filter
+    streamName string
+    stream Lns_oStream
+    metaStream Lns_oStream
+    outMetaFlag bool
+    convMode LnsInt
+    inMacro bool
+    indentQueue *LnsList
+    curLineNo LnsInt
+    classId2TypeInfo *LnsMap
+    classId2MemberList *LnsMap
+    pubEnumId2EnumTypeInfo *LnsMap
+    pubAlgeId2AlgeTypeInfo *LnsMap
+    pubVarName2InfoMap *LnsMap
+    pubFuncName2InfoMap *LnsMap
+    needIndent bool
+    macroDepth LnsInt
+    macroVarSymSet *LnsSet
+    moduleTypeInfo *Ast_TypeInfo
+    moduleSymbolKind LnsInt
+    needModuleObj bool
+    useLuneRuntime LnsAny
+    targetLuaVer *LuaVer_LuaVerInfo
+    enableTest bool
+    useIpairs bool
+    processInfo *Ast_ProcessInfo
+    moduleType2SymbolMap *LnsMap
+    builtinFunc *Builtin_BuiltinFuncType
+    builtinSym2code *LnsMap
+    FP convLua_ConvFilterMtd
+}
+func convLua_ConvFilter2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*convLua_ConvFilter).FP
+}
+type convLua_ConvFilterDownCast interface {
+    ToconvLua_ConvFilter() *convLua_ConvFilter
+}
+func convLua_ConvFilterDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(convLua_ConvFilterDownCast)
+    if ok { return work.ToconvLua_ConvFilter() }
+    return nil
+}
+func (obj *convLua_ConvFilter) ToconvLua_ConvFilter() *convLua_ConvFilter {
+    return obj
+}
+func NewconvLua_ConvFilter(_env *LnsEnv, arg1 string, arg2 Lns_oStream, arg3 Lns_oStream, arg4 LnsInt, arg5 bool, arg6 *Ast_TypeInfo, arg7 *Ast_ProcessInfo, arg8 LnsInt, arg9 *Builtin_BuiltinFuncType, arg10 LnsAny, arg11 *LuaVer_LuaVerInfo, arg12 bool, arg13 bool) *convLua_ConvFilter {
+    obj := &convLua_ConvFilter{}
+    obj.FP = obj
+    obj.Nodes_Filter.FP = obj
+    obj.InitconvLua_ConvFilter(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)
+    return obj
+}
+// 129: DeclConstr
+func (self *convLua_ConvFilter) InitconvLua_ConvFilter(_env *LnsEnv, streamName string,stream Lns_oStream,metaStream Lns_oStream,convMode LnsInt,inMacro bool,moduleTypeInfo *Ast_TypeInfo,processInfo *Ast_ProcessInfo,moduleSymbolKind LnsInt,builtinFunc *Builtin_BuiltinFuncType,useLuneRuntime LnsAny,targetLuaVer *LuaVer_LuaVerInfo,enableTest bool,useIpairs bool) {
+    self.InitNodes_Filter(_env, true, moduleTypeInfo, moduleTypeInfo.FP.Get_scope(_env))
+    if stream == metaStream{
+        Util_err(_env, "streamName == stream")
+    }
+    self.builtinFunc = builtinFunc
+    self.moduleType2SymbolMap = NewLnsMap( map[LnsAny]LnsAny{})
+    self.processInfo = processInfo
+    self.enableTest = enableTest
+    self.macroVarSymSet = NewLnsSet([]LnsAny{})
+    self.needModuleObj = true
+    self.indentQueue = NewLnsList([]LnsAny{0})
+    self.moduleSymbolKind = moduleSymbolKind
+    self.macroDepth = 0
+    self.streamName = streamName
+    self.stream = stream
+    self.metaStream = metaStream
+    self.outMetaFlag = false
+    self.convMode = convMode
+    self.inMacro = inMacro
+    self.curLineNo = 1
+    self.classId2TypeInfo = NewLnsMap( map[LnsAny]LnsAny{})
+    self.classId2MemberList = NewLnsMap( map[LnsAny]LnsAny{})
+    self.pubVarName2InfoMap = NewLnsMap( map[LnsAny]LnsAny{})
+    self.pubFuncName2InfoMap = NewLnsMap( map[LnsAny]LnsAny{})
+    self.pubEnumId2EnumTypeInfo = NewLnsMap( map[LnsAny]LnsAny{})
+    self.pubAlgeId2AlgeTypeInfo = NewLnsMap( map[LnsAny]LnsAny{})
+    self.needIndent = false
+    self.moduleTypeInfo = moduleTypeInfo
+    self.useLuneRuntime = useLuneRuntime
+    self.targetLuaVer = targetLuaVer
+    self.useIpairs = useIpairs
+    self.builtinSym2code = NewLnsMap( map[LnsAny]LnsAny{builtinFunc.G__lns_runmode_Sync_sym:_env.GetVM().String_format("%d", []LnsAny{0}),builtinFunc.G__lns_runmode_Queue_sym:_env.GetVM().String_format("%d", []LnsAny{1}),builtinFunc.G__lns_runmode_Skip_sym:_env.GetVM().String_format("%d", []LnsAny{2}),builtinFunc.G__lns_capability_async_sym:"false",})
+}
+
+
+
+// declaration Class -- FilterInfo
+type ConvLua_FilterInfoMtd interface {
+    Get_filter(_env *LnsEnv) *Nodes_Filter
+    OutputLua(_env *LnsEnv, arg1 *Nodes_RootNode)
+    OutputLuaAndMeta(_env *LnsEnv, arg1 *Nodes_RootNode)
+    OutputMeta(_env *LnsEnv, arg1 *Nodes_RootNode)
+}
+type ConvLua_FilterInfo struct {
+    filter *Nodes_Filter
+    FP ConvLua_FilterInfoMtd
+}
+func ConvLua_FilterInfo2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*ConvLua_FilterInfo).FP
+}
+type ConvLua_FilterInfoDownCast interface {
+    ToConvLua_FilterInfo() *ConvLua_FilterInfo
+}
+func ConvLua_FilterInfoDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(ConvLua_FilterInfoDownCast)
+    if ok { return work.ToConvLua_FilterInfo() }
+    return nil
+}
+func (obj *ConvLua_FilterInfo) ToConvLua_FilterInfo() *ConvLua_FilterInfo {
+    return obj
+}
+func NewConvLua_FilterInfo(_env *LnsEnv, arg1 *Nodes_Filter) *ConvLua_FilterInfo {
+    obj := &ConvLua_FilterInfo{}
+    obj.FP = obj
+    obj.InitConvLua_FilterInfo(_env, arg1)
+    return obj
+}
+func (self *ConvLua_FilterInfo) InitConvLua_FilterInfo(_env *LnsEnv, arg1 *Nodes_Filter) {
+    self.filter = arg1
+}
+func (self *ConvLua_FilterInfo) Get_filter(_env *LnsEnv) *Nodes_Filter{ return self.filter }
+
+// declaration Class -- MacroEvalImp
+type ConvLua_MacroEvalImpMtd interface {
+    EvalFromCodeToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 *LnsList, arg4 LnsAny) string
+    EvalToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Nodes_DeclMacroNode) string
+}
+type ConvLua_MacroEvalImp struct {
+    Nodes_MacroEval
+    builtinFunc *Builtin_BuiltinFuncType
+    FP ConvLua_MacroEvalImpMtd
+}
+func ConvLua_MacroEvalImp2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*ConvLua_MacroEvalImp).FP
+}
+type ConvLua_MacroEvalImpDownCast interface {
+    ToConvLua_MacroEvalImp() *ConvLua_MacroEvalImp
+}
+func ConvLua_MacroEvalImpDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(ConvLua_MacroEvalImpDownCast)
+    if ok { return work.ToConvLua_MacroEvalImp() }
+    return nil
+}
+func (obj *ConvLua_MacroEvalImp) ToConvLua_MacroEvalImp() *ConvLua_MacroEvalImp {
+    return obj
+}
+func NewConvLua_MacroEvalImp(_env *LnsEnv, arg1 *Builtin_BuiltinFuncType) *ConvLua_MacroEvalImp {
+    obj := &ConvLua_MacroEvalImp{}
+    obj.FP = obj
+    obj.Nodes_MacroEval.FP = obj
+    obj.InitConvLua_MacroEvalImp(_env, arg1)
+    return obj
+}
+func (self *ConvLua_MacroEvalImp) InitConvLua_MacroEvalImp(_env *LnsEnv, arg1 *Builtin_BuiltinFuncType) {
+    self.Nodes_MacroEval.InitNodes_MacroEval( _env)
+    self.builtinFunc = arg1
+}
+
+func Lns_convLua_init(_env *LnsEnv) {
+    if init_convLua { return }
+    init_convLua = true
+    convLua__mod__ = "@lune.@base.@convLua"
+    Lns_InitMod()
+    Lns_Ver_init(_env)
+    Lns_Str_init(_env)
+    Lns_Ast_init(_env)
+    Lns_Nodes_init(_env)
+    Lns_Util_init(_env)
+    Lns_AstInfo_init(_env)
+    Lns_TransUnit_init(_env)
+    Lns_LuaMod_init(_env)
+    Lns_LuaVer_init(_env)
+    Lns_Parser_init(_env)
+    Lns_Types_init(_env)
+    Lns_Log_init(_env)
+    Lns_LuneControl_init(_env)
+    Lns_Option_init(_env)
+    Lns_frontInterface_init(_env)
+    Lns_Builtin_init(_env)
+    convLua_stepIndent = 3
+    
+    
+    
+    Lns_Testing_init(_env)
+}
+func init() {
+    init_convLua = false
+}
 // 179: decl @lune.@base.@convLua.ConvFilter.get_indent
 func (self *convLua_ConvFilter) get_indent(_env *LnsEnv) LnsInt {
     if self.indentQueue.Len() > 0{
@@ -3351,493 +3840,4 @@ func (self *ConvLua_MacroEvalImp) EvalToLuaCode(_env *LnsEnv, processInfo *Ast_P
     conv = NewconvLua_ConvFilter(_env, "macro", stream.FP, NewUtil_NullOStream(_env).FP, ConvLua_ConvMode__ConvMeta, true, Ast_headTypeInfo, processInfo, Ast_SymbolKind__Typ, self.builtinFunc, nil, LuaVer_getCurVer(_env), false, true)
     conv.FP.ProcessDeclMacro(_env, node, NewConvLua_Opt(_env, &node.Nodes_Node))
     return stream.FP.Get_txt(_env)
-}
-// declaration Class -- PubVerInfo
-type convLua_PubVerInfoMtd interface {
-}
-type convLua_PubVerInfo struct {
-    StaticFlag bool
-    AccessMode LnsInt
-    Mutable bool
-    TypeInfo *Ast_TypeInfo
-    FP convLua_PubVerInfoMtd
-}
-func convLua_PubVerInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*convLua_PubVerInfo).FP
-}
-type convLua_PubVerInfoDownCast interface {
-    ToconvLua_PubVerInfo() *convLua_PubVerInfo
-}
-func convLua_PubVerInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(convLua_PubVerInfoDownCast)
-    if ok { return work.ToconvLua_PubVerInfo() }
-    return nil
-}
-func (obj *convLua_PubVerInfo) ToconvLua_PubVerInfo() *convLua_PubVerInfo {
-    return obj
-}
-func NewconvLua_PubVerInfo(_env *LnsEnv, arg1 bool, arg2 LnsInt, arg3 bool, arg4 *Ast_TypeInfo) *convLua_PubVerInfo {
-    obj := &convLua_PubVerInfo{}
-    obj.FP = obj
-    obj.InitconvLua_PubVerInfo(_env, arg1, arg2, arg3, arg4)
-    return obj
-}
-func (self *convLua_PubVerInfo) InitconvLua_PubVerInfo(_env *LnsEnv, arg1 bool, arg2 LnsInt, arg3 bool, arg4 *Ast_TypeInfo) {
-    self.StaticFlag = arg1
-    self.AccessMode = arg2
-    self.Mutable = arg3
-    self.TypeInfo = arg4
-}
-
-// declaration Class -- PubFuncInfo
-type convLua_PubFuncInfoMtd interface {
-}
-type convLua_PubFuncInfo struct {
-    AccessMode LnsInt
-    TypeInfo *Ast_TypeInfo
-    FP convLua_PubFuncInfoMtd
-}
-func convLua_PubFuncInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*convLua_PubFuncInfo).FP
-}
-type convLua_PubFuncInfoDownCast interface {
-    ToconvLua_PubFuncInfo() *convLua_PubFuncInfo
-}
-func convLua_PubFuncInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(convLua_PubFuncInfoDownCast)
-    if ok { return work.ToconvLua_PubFuncInfo() }
-    return nil
-}
-func (obj *convLua_PubFuncInfo) ToconvLua_PubFuncInfo() *convLua_PubFuncInfo {
-    return obj
-}
-func NewconvLua_PubFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Ast_TypeInfo) *convLua_PubFuncInfo {
-    obj := &convLua_PubFuncInfo{}
-    obj.FP = obj
-    obj.InitconvLua_PubFuncInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *convLua_PubFuncInfo) InitconvLua_PubFuncInfo(_env *LnsEnv, arg1 LnsInt, arg2 *Ast_TypeInfo) {
-    self.AccessMode = arg1
-    self.TypeInfo = arg2
-}
-
-// declaration Class -- ModuleInfo
-type convLua_ModuleInfoMtd interface {
-    Get_assignName(_env *LnsEnv) string
-    Get_modulePath(_env *LnsEnv) string
-}
-type convLua_ModuleInfo struct {
-    assignName string
-    modulePath string
-    FP convLua_ModuleInfoMtd
-}
-func convLua_ModuleInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*convLua_ModuleInfo).FP
-}
-type convLua_ModuleInfoDownCast interface {
-    ToconvLua_ModuleInfo() *convLua_ModuleInfo
-}
-func convLua_ModuleInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(convLua_ModuleInfoDownCast)
-    if ok { return work.ToconvLua_ModuleInfo() }
-    return nil
-}
-func (obj *convLua_ModuleInfo) ToconvLua_ModuleInfo() *convLua_ModuleInfo {
-    return obj
-}
-func NewconvLua_ModuleInfo(_env *LnsEnv, arg1 string, arg2 string) *convLua_ModuleInfo {
-    obj := &convLua_ModuleInfo{}
-    obj.FP = obj
-    obj.InitconvLua_ModuleInfo(_env, arg1, arg2)
-    return obj
-}
-func (self *convLua_ModuleInfo) InitconvLua_ModuleInfo(_env *LnsEnv, arg1 string, arg2 string) {
-    self.assignName = arg1
-    self.modulePath = arg2
-}
-func (self *convLua_ModuleInfo) Get_assignName(_env *LnsEnv) string{ return self.assignName }
-func (self *convLua_ModuleInfo) Get_modulePath(_env *LnsEnv) string{ return self.modulePath }
-
-// declaration Class -- Opt
-type ConvLua_OptMtd interface {
-}
-type ConvLua_Opt struct {
-    Node *Nodes_Node
-    FP ConvLua_OptMtd
-}
-func ConvLua_Opt2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*ConvLua_Opt).FP
-}
-type ConvLua_OptDownCast interface {
-    ToConvLua_Opt() *ConvLua_Opt
-}
-func ConvLua_OptDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(ConvLua_OptDownCast)
-    if ok { return work.ToConvLua_Opt() }
-    return nil
-}
-func (obj *ConvLua_Opt) ToConvLua_Opt() *ConvLua_Opt {
-    return obj
-}
-func NewConvLua_Opt(_env *LnsEnv, arg1 *Nodes_Node) *ConvLua_Opt {
-    obj := &ConvLua_Opt{}
-    obj.FP = obj
-    obj.InitConvLua_Opt(_env, arg1)
-    return obj
-}
-func (self *ConvLua_Opt) InitConvLua_Opt(_env *LnsEnv, arg1 *Nodes_Node) {
-    self.Node = arg1
-}
-
-// declaration Class -- ConvFilter
-type convLua_ConvFilterMtd interface {
-    Close(_env *LnsEnv)
-    DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
-    Flush(_env *LnsEnv)
-    getCanonicalName(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
-    getDestrClass(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny
-    GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
-    getFullName(_env *LnsEnv, arg1 *Ast_TypeInfo) string
-    getMapInfo(_env *LnsEnv, arg1 *Ast_TypeInfo)(string, bool, string)
-    get_indent(_env *LnsEnv) LnsInt
-    Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
-    Get_optStack(_env *LnsEnv) *LnsList
-    Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
-    outputAlter2MapFunc(_env *LnsEnv, arg1 Lns_oStream, arg2 *LnsMap)
-    OutputDeclMacro(_env *LnsEnv, arg1 string, arg2 *LnsList, arg3 convLua_outputMacroStmtBlock_11_)
-    outputMeta(_env *LnsEnv, arg1 *Nodes_RootNode)
-    popIndent(_env *LnsEnv)
-    ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
-    ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
-    ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
-    ProcessAsyncLock(_env *LnsEnv, arg1 *Nodes_AsyncLockNode, arg2 LnsAny)
-    ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
-    ProcessBlock(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
-    ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
-    ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
-    ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
-    ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
-    ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
-    ProcessDeclArg(_env *LnsEnv, arg1 *Nodes_DeclArgNode, arg2 LnsAny)
-    ProcessDeclArgDDD(_env *LnsEnv, arg1 *Nodes_DeclArgDDDNode, arg2 LnsAny)
-    ProcessDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 LnsAny)
-    ProcessDeclConstr(_env *LnsEnv, arg1 *Nodes_DeclConstrNode, arg2 LnsAny)
-    ProcessDeclDestr(_env *LnsEnv, arg1 *Nodes_DeclDestrNode, arg2 LnsAny)
-    ProcessDeclEnum(_env *LnsEnv, arg1 *Nodes_DeclEnumNode, arg2 LnsAny)
-    ProcessDeclForm(_env *LnsEnv, arg1 *Nodes_DeclFormNode, arg2 LnsAny)
-    ProcessDeclFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode, arg2 LnsAny)
-    ProcessDeclMacro(_env *LnsEnv, arg1 *Nodes_DeclMacroNode, arg2 LnsAny)
-    ProcessDeclMember(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 LnsAny)
-    ProcessDeclMethod(_env *LnsEnv, arg1 *Nodes_DeclMethodNode, arg2 LnsAny)
-    ProcessDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 LnsAny)
-    ProcessExpAccessMRet(_env *LnsEnv, arg1 *Nodes_ExpAccessMRetNode, arg2 LnsAny)
-    ProcessExpCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsAny)
-    ProcessExpCallSuper(_env *LnsEnv, arg1 *Nodes_ExpCallSuperNode, arg2 LnsAny)
-    ProcessExpCallSuperCtor(_env *LnsEnv, arg1 *Nodes_ExpCallSuperCtorNode, arg2 LnsAny)
-    ProcessExpCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode, arg2 LnsAny)
-    ProcessExpList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 LnsAny)
-    processExpListSub(_env *LnsEnv, arg1 *Nodes_Node, arg2 *LnsList, arg3 LnsAny)
-    ProcessExpMRet(_env *LnsEnv, arg1 *Nodes_ExpMRetNode, arg2 LnsAny)
-    ProcessExpMacroArgExp(_env *LnsEnv, arg1 *Nodes_ExpMacroArgExpNode, arg2 LnsAny)
-    ProcessExpMacroExp(_env *LnsEnv, arg1 *Nodes_ExpMacroExpNode, arg2 LnsAny)
-    ProcessExpMacroStat(_env *LnsEnv, arg1 *Nodes_ExpMacroStatNode, arg2 LnsAny)
-    ProcessExpMacroStatList(_env *LnsEnv, arg1 *Nodes_ExpMacroStatListNode, arg2 LnsAny)
-    ProcessExpMultiTo1(_env *LnsEnv, arg1 *Nodes_ExpMultiTo1Node, arg2 LnsAny)
-    ProcessExpNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode, arg2 LnsAny)
-    ProcessExpOmitEnum(_env *LnsEnv, arg1 *Nodes_ExpOmitEnumNode, arg2 LnsAny)
-    ProcessExpOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node, arg2 LnsAny)
-    ProcessExpOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 LnsAny)
-    ProcessExpParen(_env *LnsEnv, arg1 *Nodes_ExpParenNode, arg2 LnsAny)
-    ProcessExpRef(_env *LnsEnv, arg1 *Nodes_ExpRefNode, arg2 LnsAny)
-    ProcessExpRefItem(_env *LnsEnv, arg1 *Nodes_ExpRefItemNode, arg2 LnsAny)
-    ProcessExpSetItem(_env *LnsEnv, arg1 *Nodes_ExpSetItemNode, arg2 LnsAny)
-    ProcessExpSetVal(_env *LnsEnv, arg1 *Nodes_ExpSetValNode, arg2 LnsAny)
-    ProcessExpSubDDD(_env *LnsEnv, arg1 *Nodes_ExpSubDDDNode, arg2 LnsAny)
-    ProcessExpToDDD(_env *LnsEnv, arg1 *Nodes_ExpToDDDNode, arg2 LnsAny)
-    ProcessExpUnwrap(_env *LnsEnv, arg1 *Nodes_ExpUnwrapNode, arg2 LnsAny)
-    ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
-    ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
-    ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
-    ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
-    ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
-    ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
-    ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
-    ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
-    ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
-    ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
-    ProcessLiteralInt(_env *LnsEnv, arg1 *Nodes_LiteralIntNode, arg2 LnsAny)
-    ProcessLiteralList(_env *LnsEnv, arg1 *Nodes_LiteralListNode, arg2 LnsAny)
-    ProcessLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode, arg2 LnsAny)
-    ProcessLiteralNil(_env *LnsEnv, arg1 *Nodes_LiteralNilNode, arg2 LnsAny)
-    ProcessLiteralReal(_env *LnsEnv, arg1 *Nodes_LiteralRealNode, arg2 LnsAny)
-    ProcessLiteralSet(_env *LnsEnv, arg1 *Nodes_LiteralSetNode, arg2 LnsAny)
-    ProcessLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode, arg2 LnsAny)
-    ProcessLiteralSymbol(_env *LnsEnv, arg1 *Nodes_LiteralSymbolNode, arg2 LnsAny)
-    processLoadRuntime(_env *LnsEnv)
-    ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
-    ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
-    ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
-    ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
-    ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
-    ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
-    ProcessProtoMethod(_env *LnsEnv, arg1 *Nodes_ProtoMethodNode, arg2 LnsAny)
-    ProcessProvide(_env *LnsEnv, arg1 *Nodes_ProvideNode, arg2 LnsAny)
-    ProcessRefField(_env *LnsEnv, arg1 *Nodes_RefFieldNode, arg2 LnsAny)
-    ProcessRefType(_env *LnsEnv, arg1 *Nodes_RefTypeNode, arg2 LnsAny)
-    ProcessRepeat(_env *LnsEnv, arg1 *Nodes_RepeatNode, arg2 LnsAny)
-    ProcessRequest(_env *LnsEnv, arg1 *Nodes_RequestNode, arg2 LnsAny)
-    ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
-    ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
-    ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
-    ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
-    ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
-    ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
-    ProcessSwitch(_env *LnsEnv, arg1 *Nodes_SwitchNode, arg2 LnsAny)
-    ProcessTestBlock(_env *LnsEnv, arg1 *Nodes_TestBlockNode, arg2 LnsAny)
-    ProcessTestCase(_env *LnsEnv, arg1 *Nodes_TestCaseNode, arg2 LnsAny)
-    ProcessUnboxing(_env *LnsEnv, arg1 *Nodes_UnboxingNode, arg2 LnsAny)
-    ProcessUnwrapSet(_env *LnsEnv, arg1 *Nodes_UnwrapSetNode, arg2 LnsAny)
-    ProcessWhen(_env *LnsEnv, arg1 *Nodes_WhenNode, arg2 LnsAny)
-    ProcessWhile(_env *LnsEnv, arg1 *Nodes_WhileNode, arg2 LnsAny)
-    process__func__symbol(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 string)
-    pushIndent(_env *LnsEnv, arg1 LnsAny)
-    Write(_env *LnsEnv, arg1 string)(LnsAny, LnsAny)
-    writeln(_env *LnsEnv, arg1 string)
-}
-type convLua_ConvFilter struct {
-    Nodes_Filter
-    streamName string
-    stream Lns_oStream
-    metaStream Lns_oStream
-    outMetaFlag bool
-    convMode LnsInt
-    inMacro bool
-    indentQueue *LnsList
-    curLineNo LnsInt
-    classId2TypeInfo *LnsMap
-    classId2MemberList *LnsMap
-    pubEnumId2EnumTypeInfo *LnsMap
-    pubAlgeId2AlgeTypeInfo *LnsMap
-    pubVarName2InfoMap *LnsMap
-    pubFuncName2InfoMap *LnsMap
-    needIndent bool
-    macroDepth LnsInt
-    macroVarSymSet *LnsSet
-    moduleTypeInfo *Ast_TypeInfo
-    moduleSymbolKind LnsInt
-    needModuleObj bool
-    useLuneRuntime LnsAny
-    targetLuaVer *LuaVer_LuaVerInfo
-    enableTest bool
-    useIpairs bool
-    processInfo *Ast_ProcessInfo
-    moduleType2SymbolMap *LnsMap
-    builtinFunc *Builtin_BuiltinFuncType
-    builtinSym2code *LnsMap
-    FP convLua_ConvFilterMtd
-}
-func convLua_ConvFilter2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*convLua_ConvFilter).FP
-}
-type convLua_ConvFilterDownCast interface {
-    ToconvLua_ConvFilter() *convLua_ConvFilter
-}
-func convLua_ConvFilterDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(convLua_ConvFilterDownCast)
-    if ok { return work.ToconvLua_ConvFilter() }
-    return nil
-}
-func (obj *convLua_ConvFilter) ToconvLua_ConvFilter() *convLua_ConvFilter {
-    return obj
-}
-func NewconvLua_ConvFilter(_env *LnsEnv, arg1 string, arg2 Lns_oStream, arg3 Lns_oStream, arg4 LnsInt, arg5 bool, arg6 *Ast_TypeInfo, arg7 *Ast_ProcessInfo, arg8 LnsInt, arg9 *Builtin_BuiltinFuncType, arg10 LnsAny, arg11 *LuaVer_LuaVerInfo, arg12 bool, arg13 bool) *convLua_ConvFilter {
-    obj := &convLua_ConvFilter{}
-    obj.FP = obj
-    obj.Nodes_Filter.FP = obj
-    obj.InitconvLua_ConvFilter(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13)
-    return obj
-}
-// 129: DeclConstr
-func (self *convLua_ConvFilter) InitconvLua_ConvFilter(_env *LnsEnv, streamName string,stream Lns_oStream,metaStream Lns_oStream,convMode LnsInt,inMacro bool,moduleTypeInfo *Ast_TypeInfo,processInfo *Ast_ProcessInfo,moduleSymbolKind LnsInt,builtinFunc *Builtin_BuiltinFuncType,useLuneRuntime LnsAny,targetLuaVer *LuaVer_LuaVerInfo,enableTest bool,useIpairs bool) {
-    self.InitNodes_Filter(_env, true, moduleTypeInfo, moduleTypeInfo.FP.Get_scope(_env))
-    if stream == metaStream{
-        Util_err(_env, "streamName == stream")
-    }
-    self.builtinFunc = builtinFunc
-    self.moduleType2SymbolMap = NewLnsMap( map[LnsAny]LnsAny{})
-    self.processInfo = processInfo
-    self.enableTest = enableTest
-    self.macroVarSymSet = NewLnsSet([]LnsAny{})
-    self.needModuleObj = true
-    self.indentQueue = NewLnsList([]LnsAny{0})
-    self.moduleSymbolKind = moduleSymbolKind
-    self.macroDepth = 0
-    self.streamName = streamName
-    self.stream = stream
-    self.metaStream = metaStream
-    self.outMetaFlag = false
-    self.convMode = convMode
-    self.inMacro = inMacro
-    self.curLineNo = 1
-    self.classId2TypeInfo = NewLnsMap( map[LnsAny]LnsAny{})
-    self.classId2MemberList = NewLnsMap( map[LnsAny]LnsAny{})
-    self.pubVarName2InfoMap = NewLnsMap( map[LnsAny]LnsAny{})
-    self.pubFuncName2InfoMap = NewLnsMap( map[LnsAny]LnsAny{})
-    self.pubEnumId2EnumTypeInfo = NewLnsMap( map[LnsAny]LnsAny{})
-    self.pubAlgeId2AlgeTypeInfo = NewLnsMap( map[LnsAny]LnsAny{})
-    self.needIndent = false
-    self.moduleTypeInfo = moduleTypeInfo
-    self.useLuneRuntime = useLuneRuntime
-    self.targetLuaVer = targetLuaVer
-    self.useIpairs = useIpairs
-    self.builtinSym2code = NewLnsMap( map[LnsAny]LnsAny{builtinFunc.G__lns_runmode_Sync_sym:_env.GetVM().String_format("%d", []LnsAny{0}),builtinFunc.G__lns_runmode_Queue_sym:_env.GetVM().String_format("%d", []LnsAny{1}),builtinFunc.G__lns_runmode_Skip_sym:_env.GetVM().String_format("%d", []LnsAny{2}),builtinFunc.G__lns_capability_async_sym:"false",})
-}
-
-
-
-// declaration Class -- FilterInfo
-type ConvLua_FilterInfoMtd interface {
-    Get_filter(_env *LnsEnv) *Nodes_Filter
-    OutputLua(_env *LnsEnv, arg1 *Nodes_RootNode)
-    OutputLuaAndMeta(_env *LnsEnv, arg1 *Nodes_RootNode)
-    OutputMeta(_env *LnsEnv, arg1 *Nodes_RootNode)
-}
-type ConvLua_FilterInfo struct {
-    filter *Nodes_Filter
-    FP ConvLua_FilterInfoMtd
-}
-func ConvLua_FilterInfo2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*ConvLua_FilterInfo).FP
-}
-type ConvLua_FilterInfoDownCast interface {
-    ToConvLua_FilterInfo() *ConvLua_FilterInfo
-}
-func ConvLua_FilterInfoDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(ConvLua_FilterInfoDownCast)
-    if ok { return work.ToConvLua_FilterInfo() }
-    return nil
-}
-func (obj *ConvLua_FilterInfo) ToConvLua_FilterInfo() *ConvLua_FilterInfo {
-    return obj
-}
-func NewConvLua_FilterInfo(_env *LnsEnv, arg1 *Nodes_Filter) *ConvLua_FilterInfo {
-    obj := &ConvLua_FilterInfo{}
-    obj.FP = obj
-    obj.InitConvLua_FilterInfo(_env, arg1)
-    return obj
-}
-func (self *ConvLua_FilterInfo) InitConvLua_FilterInfo(_env *LnsEnv, arg1 *Nodes_Filter) {
-    self.filter = arg1
-}
-func (self *ConvLua_FilterInfo) Get_filter(_env *LnsEnv) *Nodes_Filter{ return self.filter }
-
-// declaration Class -- MacroEvalImp
-type ConvLua_MacroEvalImpMtd interface {
-    EvalFromCodeToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 *LnsList, arg4 LnsAny) string
-    EvalToLuaCode(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 *Nodes_DeclMacroNode) string
-}
-type ConvLua_MacroEvalImp struct {
-    Nodes_MacroEval
-    builtinFunc *Builtin_BuiltinFuncType
-    FP ConvLua_MacroEvalImpMtd
-}
-func ConvLua_MacroEvalImp2Stem( obj LnsAny ) LnsAny {
-    if obj == nil {
-        return nil
-    }
-    return obj.(*ConvLua_MacroEvalImp).FP
-}
-type ConvLua_MacroEvalImpDownCast interface {
-    ToConvLua_MacroEvalImp() *ConvLua_MacroEvalImp
-}
-func ConvLua_MacroEvalImpDownCastF( multi ...LnsAny ) LnsAny {
-    if len( multi ) == 0 { return nil }
-    obj := multi[ 0 ]
-    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(ConvLua_MacroEvalImpDownCast)
-    if ok { return work.ToConvLua_MacroEvalImp() }
-    return nil
-}
-func (obj *ConvLua_MacroEvalImp) ToConvLua_MacroEvalImp() *ConvLua_MacroEvalImp {
-    return obj
-}
-func NewConvLua_MacroEvalImp(_env *LnsEnv, arg1 *Builtin_BuiltinFuncType) *ConvLua_MacroEvalImp {
-    obj := &ConvLua_MacroEvalImp{}
-    obj.FP = obj
-    obj.Nodes_MacroEval.FP = obj
-    obj.InitConvLua_MacroEvalImp(_env, arg1)
-    return obj
-}
-func (self *ConvLua_MacroEvalImp) InitConvLua_MacroEvalImp(_env *LnsEnv, arg1 *Builtin_BuiltinFuncType) {
-    self.Nodes_MacroEval.InitNodes_MacroEval( _env)
-    self.builtinFunc = arg1
-}
-
-func Lns_convLua_init(_env *LnsEnv) {
-    if init_convLua { return }
-    init_convLua = true
-    convLua__mod__ = "@lune.@base.@convLua"
-    Lns_InitMod()
-    Lns_Ver_init(_env)
-    Lns_Str_init(_env)
-    Lns_Ast_init(_env)
-    Lns_Nodes_init(_env)
-    Lns_Util_init(_env)
-    Lns_AstInfo_init(_env)
-    Lns_TransUnit_init(_env)
-    Lns_LuaMod_init(_env)
-    Lns_LuaVer_init(_env)
-    Lns_Parser_init(_env)
-    Lns_Types_init(_env)
-    Lns_Log_init(_env)
-    Lns_LuneControl_init(_env)
-    Lns_Option_init(_env)
-    Lns_frontInterface_init(_env)
-    Lns_Builtin_init(_env)
-    convLua_stepIndent = 3
-    
-    
-    
-    Lns_Testing_init(_env)
-}
-func init() {
-    init_convLua = false
 }

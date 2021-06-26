@@ -32,7 +32,7 @@ import (
 	"time"
 )
 
-var lns_thread_event_on = false
+var lns_thread_event_log_on = false
 
 const (
 	_THREAD_EVENT_REQ   = 0
@@ -126,7 +126,7 @@ const (
 )
 
 func (self *Lns_ThreadMgrInfo) log(_env *LnsEnv, eventId int, mess string) {
-	if lns_thread_event_on {
+	if lns_thread_event_log_on {
 		self.lock()
 		defer self.unlock()
 		self.eventList.PushBack(self.newThreadEvent(
@@ -178,7 +178,7 @@ func (self *Lns_ThreadMgrInfo) run(
 			self.runNum++
 		}
 
-		if lns_thread_event_on {
+		if lns_thread_event_log_on {
 			self.eventList.PushBack(
 				self.newEvent(runnerInfo, _THREAD_EVENT_REQ, kind, _env.runnerId))
 			if kind == _RUN_KIND_SYNC {
@@ -204,7 +204,7 @@ func (self *Lns_ThreadMgrInfo) run(
 
 		LnsExecRunner(_env, runner)
 
-		if lns_thread_event_on {
+		if lns_thread_event_log_on {
 			self.lock()
 			self.eventList.PushBack(
 				self.newEvent(runnerInfo, _THREAD_EVENT_END, 0, 0))
@@ -231,7 +231,7 @@ func (self *Lns_ThreadMgrInfo) endToRun(info *lnsRunnerInfo) {
 		self.lock()
 		defer self.unlock()
 
-		if lns_thread_event_on {
+		if lns_thread_event_log_on {
 			self.eventList.PushBack(
 				self.newEvent(info, _THREAD_EVENT_END, 0, 0))
 		}
@@ -335,7 +335,7 @@ func (self *Lns__pipe) get() LnsAny {
 }
 
 func (self *Lns_ThreadMgrInfo) changeRunNum(delta int) {
-	if lns_thread_event_on {
+	if lns_thread_event_log_on {
 		self.lock()
 		defer self.unlock()
 
@@ -343,11 +343,24 @@ func (self *Lns_ThreadMgrInfo) changeRunNum(delta int) {
 	}
 }
 
-func Lns_LockEnvSync(_env *LnsEnv, callback func()) {
+func Lns_LockEnvSync(_env *LnsEnv, lineNo int, callback func()) {
 	if _env.async {
 		// __noasync が待ちになるまで待つために lock する
+		var prev time.Time
+		if lns_thread_event_log_on {
+			prev = time.Now()
+		}
 		sync_LnsEnvMutex.Lock()
 		_env.async = false
+
+		if lns_thread_event_log_on {
+			delta := time.Now().Sub(prev).Milliseconds()
+
+			if delta > 1 {
+				lns_threadMgrInfo.log(_env, _THREAD_EVENT_LOG,
+					fmt.Sprintf("wait -- %d from %d", delta, lineNo))
+			}
+		}
 
 		// 処理終了後に lock を開放するために defer する。
 		defer func() {

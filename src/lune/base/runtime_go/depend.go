@@ -251,7 +251,7 @@ return DependLuaOnLns.runLuaOnLns( txt )
 			ret = luaVM.RunLoadedfunc(loaded.(*Lns_luaValue), []LnsAny{})
 		}
 	} else {
-		Lns_LockEnvSync(_env, func() {
+		Lns_LockEnvSync(_env, -254, func() {
 			luaVM := _env.GetVM()
 			loaded, err = luaVM.Load(txt, nil)
 			if loaded != nil {

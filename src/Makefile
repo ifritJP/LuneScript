@@ -1818,7 +1818,11 @@ else
 	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profi
 endif
 gotraceview:
-	go tool trace -http=0.0.0.0:8888 -no_browser @-.profitrace 
+ifdef BROWSER
+	go tool trace -http=0.0.0.0:8888 @-.profitrace
+else
+	go tool trace -http=0.0.0.0:8888 -no_browser @-.profitrace
+endif
 
 luaprof:
 	$(call test-buildlns-setup,work/go)

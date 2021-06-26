@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Log'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune.loadModule( mod )
    if __luneScript then
@@ -62,8 +62,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune4 then
-   _lune4 = _lune
+if not _lune5 then
+   _lune5 = _lune
 end
 
 

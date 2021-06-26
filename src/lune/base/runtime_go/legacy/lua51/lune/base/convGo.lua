@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convGo'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -224,8 +224,16 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune4 then
-   _lune4 = _lune
+function _lune._run( runner, mod )
+    if mod == 2 then
+      return false
+    end
+    runner:run()
+    return true
+end
+
+if not _lune5 then
+   _lune5 = _lune
 end
 
 
@@ -240,7 +248,6 @@ local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local LnsOpt = _lune.loadModule( 'lune.base.Option' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
-local NodeIndexer = _lune.loadModule( 'lune.base.NodeIndexer' )
 
 local MaxNilAccNum = 3
 
@@ -394,6 +401,10 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    Nodes.Filter.__init( self,true, ast:get_exportInfo():get_moduleTypeInfo(), ast:get_exportInfo():get_moduleTypeInfo():get_scope())
    
    
+   self.streamName = streamName
+   self.orgStream = stream
+   self.ast = ast
+   
    self.builtinFuncs = ast:get_builtinFunc()
    self.moduleType2SymbolMap = {}
    self.env = Env.new(option:get_addEnvArg())
@@ -418,7 +429,6 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    
    self.builtin2code = {[self.builtinFuncs.__lns_runmode_Sync_sym] = string.format( "%d", 0), [self.builtinFuncs.__lns_runmode_Queue_sym] = string.format( "%d", 1), [self.builtinFuncs.__lns_runmode_Skip_sym] = string.format( "%d", 2), [self.builtinFuncs.__lns_capability_async_sym] = "true"}
    
-   self.indexer = NodeIndexer.Indexer.new(self.processInfo)
 end
 function convFilter:getVM( typeInfo )
 
@@ -2368,45 +2378,129 @@ function convFilter:outputImport( node )
 end
 
 
-local DeclFieldInfo = {}
-function DeclFieldInfo.setmeta( obj )
-  setmetatable( obj, { __index = DeclFieldInfo  } )
+function convFilter:setup(  )
+
+   
+   local builtin2runtime = {[self.builtinFuncs.str_gsub] = 'GETVM.String_gsub', [self.builtinFuncs.string_gsub] = 'GETVM.String_gsub', [self.builtinFuncs.str_find] = 'GETVM.String_find', [self.builtinFuncs.string_find] = 'GETVM.String_find', [self.builtinFuncs.str_byte] = 'GETVM.String_byte', [self.builtinFuncs.string_byte] = 'GETVM.String_byte', [self.builtinFuncs.str_format] = 'GETVM.String_format', [self.builtinFuncs.string_format] = 'GETVM.String_format', [self.builtinFuncs.str_rep] = 'GETVM.String_rep', [self.builtinFuncs.string_rep] = 'GETVM.String_rep', [self.builtinFuncs.str_gmatch] = 'GETVM.String_gmatch', [self.builtinFuncs.string_gmatch] = 'GETVM.String_gmatch', [self.builtinFuncs.str_sub] = 'GETVM.String_sub', [self.builtinFuncs.string_sub] = 'GETVM.String_sub', [self.builtinFuncs.str_lower] = 'GETVM.String_lower', [self.builtinFuncs.string_lower] = 'GETVM.String_lower', [self.builtinFuncs.str_upper] = 'GETVM.String_upper', [self.builtinFuncs.string_upper] = 'GETVM.String_upper', [self.builtinFuncs.str_reverse] = 'GETVM.String_reverse', [self.builtinFuncs.string_reverse] = 'GETVM.String_reverse', [Ast.builtinTypeNone] = ""}
+   
+   
+   builtin2runtime[self.builtinFuncs.lns_error] = "panic"
+   builtin2runtime[self.builtinFuncs.lns_print] = "Lns_print"
+   builtin2runtime[self.builtinFuncs.lns_type] = "Lns_type"
+   builtin2runtime[self.builtinFuncs.lns_require] = "Lns_require"
+   builtin2runtime[self.builtinFuncs.lns_tonumber] = "Lns_tonumber"
+   builtin2runtime[self.builtinFuncs.lns__load] = "GETVM.Load"
+   builtin2runtime[self.builtinFuncs.lns_loadfile] = "GETVM.Loadfile"
+   builtin2runtime[self.builtinFuncs.lns_expandLuavalMap] = "GETVM.ExpandLuavalMap"
+   
+   builtin2runtime[self.builtinFuncs.string_dump] = "GETVM.String_dump"
+   
+   builtin2runtime[self.builtinFuncs.io_open] = "Lns_io_open"
+   builtin2runtime[self.builtinFuncs.io_popen] = "GETVM.IO_popen"
+   builtin2runtime[self.builtinFuncs.package_searchpath] = "GETVM.Package_searchpath"
+   builtin2runtime[self.builtinFuncs.os_clock] = "GETVM.OS_clock"
+   builtin2runtime[self.builtinFuncs.os_exit] = "GETVM.OS_exit"
+   builtin2runtime[self.builtinFuncs.os_remove] = "GETVM.OS_remove"
+   builtin2runtime[self.builtinFuncs.os_date] = "GETVM.OS_date"
+   builtin2runtime[self.builtinFuncs.os_time] = "GETVM.OS_time"
+   builtin2runtime[self.builtinFuncs.os_difftime] = "GETVM.OS_difftime"
+   builtin2runtime[self.builtinFuncs.os_rename] = "GETVM.OS_rename"
+   builtin2runtime[self.builtinFuncs.math_random] = "GETVM.Math_random"
+   builtin2runtime[self.builtinFuncs.math_randomseed] = "GETVM.Math_randomseed"
+   
+   self.builtin2runtime = builtin2runtime
+   
+   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor"}
+   
+   self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [Ast.builtinTypeProcessor] = "*LnsProcessor", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream"}
 end
-function DeclFieldInfo.new( classNode, fieldNode )
+
+
+local ProcessDeclMethodItem = {}
+function ProcessDeclMethodItem.setmeta( obj )
+  setmetatable( obj, { __index = ProcessDeclMethodItem  } )
+end
+function ProcessDeclMethodItem.new( classNode, fieldNode )
    local obj = {}
-   DeclFieldInfo.setmeta( obj )
+   ProcessDeclMethodItem.setmeta( obj )
    if obj.__init then
       obj:__init( classNode, fieldNode )
    end
    return obj
 end
-function DeclFieldInfo:__init( classNode, fieldNode )
+function ProcessDeclMethodItem:__init( classNode, fieldNode )
 
    self.classNode = classNode
    self.fieldNode = fieldNode
 end
-function DeclFieldInfo:get_classNode()
+function ProcessDeclMethodItem:get_classNode()
    return self.classNode
 end
-function DeclFieldInfo:get_fieldNode()
+function ProcessDeclMethodItem:get_fieldNode()
    return self.fieldNode
+end
+
+
+local ConvRunner = {}
+setmetatable( ConvRunner, { __index = convFilter,ifList = {__Runner,} } )
+function ConvRunner.new( enableTest, ast, option, declMethodItemList )
+   local obj = {}
+   ConvRunner.setmeta( obj )
+   if obj.__init then obj:__init( enableTest, ast, option, declMethodItemList ); end
+   return obj
+end
+function ConvRunner:__init(enableTest, ast, option, declMethodItemList) 
+   convFilter.__init( self,enableTest, "", Util.memStream.new(), ast, option)
+   
+   self.declMethodItemList = declMethodItemList
+   
+end
+function ConvRunner:run(  )
+
+   self:setup(  )
+   
+   self:pushProcessMode( ProcessMode.DeclClass )
+   
+   
+   for __index, info in ipairs( self.declMethodItemList ) do
+      filter( info:get_fieldNode(), self, info:get_classNode() )
+   end
+   
+   self:popProcessMode(  )
+end
+function ConvRunner:getResult(  )
+
+   
+   local memStream = _lune.__Cast( self.orgStream, 3, Util.memStream )
+   if  nil == memStream then
+      local _memStream = memStream
+   
+      Util.err( "convert err " )
+   end
+   
+   return memStream:get_txt()
+end
+function ConvRunner.setmeta( obj )
+  setmetatable( obj, { __index = ConvRunner  } )
 end
 
 
 function convFilter:processMethodAsync( nodeList )
 
-   
-   local declFuncNodeList = {}
+   local totalStmtNum = 0
+   local declMethodNodeList = {}
    for __index, workNode in ipairs( nodeList ) do
       if self.enableTest or not workNode:get_inTestBlock() and not workNode:isModule(  ) then
          do
             local _switchExp = workNode:get_expType():get_kind()
             if _switchExp == Ast.TypeInfoKind.Class then
                for __index, fieldNode in ipairs( workNode:get_fieldList() ) do
-                  if _lune.__Cast( fieldNode, 3, Nodes.DeclMemberNode ) then
-                  else
-                   
-                     table.insert( declFuncNodeList, DeclFieldInfo.new(workNode, fieldNode) )
+                  do
+                     local declMethodNode = _lune.__Cast( fieldNode, 3, Nodes.DeclMethodNode )
+                     if declMethodNode ~= nil then
+                        table.insert( declMethodNodeList, ProcessDeclMethodItem.new(workNode, declMethodNode) )
+                        totalStmtNum = totalStmtNum + declMethodNode:get_declInfo():get_stmtNum()
+                     end
                   end
                   
                end
@@ -2421,21 +2515,61 @@ function convFilter:processMethodAsync( nodeList )
    
    
    
-   self:pushProcessMode( ProcessMode.DeclClass )
-   for __index, info in ipairs( declFuncNodeList ) do
-      filter( info:get_fieldNode(), self, info:get_classNode() )
+   local runnerList = {}
+   
+   if totalStmtNum > 1000 then
+      
+      local divCount = 4
+      if divCount > 0 then
+         local maxStmtCount = math.floor((totalStmtNum + divCount - 1 ) / divCount)
+         local offset = 1
+         local len = #declMethodNodeList
+         
+         for _1 = 1, divCount do
+            local list = {}
+            local stmtCount = 0
+            while offset <= len do
+               local declFieldInfo = declMethodNodeList[offset]
+               offset = offset + 1
+               table.insert( list, declFieldInfo )
+               local declMethodNode = declFieldInfo:get_fieldNode()
+               stmtCount = stmtCount + declMethodNode:get_declInfo():get_stmtNum()
+               if stmtCount >= maxStmtCount then
+                  break
+               end
+               
+            end
+            
+            local runner = ConvRunner.new(self.enableTest, self.ast, self.option, list)
+            table.insert( runnerList, runner )
+            
+            if not _lune._run(runner, 2, string.format( "convGo Field - %s", self.streamName) ) then
+               runner:run(  )
+            end
+            
+         end
+         
+      end
+      
+   else
+    
+      self:pushProcessMode( ProcessMode.DeclClass )
+      
+      
+      for __index, info in ipairs( declMethodNodeList ) do
+         filter( info:get_fieldNode(), self, info:get_classNode() )
+      end
+      
+      self:popProcessMode(  )
    end
    
-   self:popProcessMode(  )
+   
+   return runnerList
 end
 
 
 function convFilter:processRoot( node, opt )
 
-   
-   self.indexer:start( node, {[Nodes.NodeKind.get_Switch()] = true, [Nodes.NodeKind.get_Match()] = true, [Nodes.NodeKind.get_For()] = true, [Nodes.NodeKind.get_Foreach()] = true, [Nodes.NodeKind.get_Forsort()] = true, [Nodes.NodeKind.get_Apply()] = true} )
-   
-   
    for __index, importNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       local info = importNode:get_info()
       self.moduleType2SymbolMap[info:get_moduleTypeInfo()] = info:get_symbolInfo()
@@ -2476,39 +2610,7 @@ function convFilter:processRoot( node, opt )
    
    
    
-   
-   local builtin2runtime = {[self.builtinFuncs.str_gsub] = 'GETVM.String_gsub', [self.builtinFuncs.string_gsub] = 'GETVM.String_gsub', [self.builtinFuncs.str_find] = 'GETVM.String_find', [self.builtinFuncs.string_find] = 'GETVM.String_find', [self.builtinFuncs.str_byte] = 'GETVM.String_byte', [self.builtinFuncs.string_byte] = 'GETVM.String_byte', [self.builtinFuncs.str_format] = 'GETVM.String_format', [self.builtinFuncs.string_format] = 'GETVM.String_format', [self.builtinFuncs.str_rep] = 'GETVM.String_rep', [self.builtinFuncs.string_rep] = 'GETVM.String_rep', [self.builtinFuncs.str_gmatch] = 'GETVM.String_gmatch', [self.builtinFuncs.string_gmatch] = 'GETVM.String_gmatch', [self.builtinFuncs.str_sub] = 'GETVM.String_sub', [self.builtinFuncs.string_sub] = 'GETVM.String_sub', [self.builtinFuncs.str_lower] = 'GETVM.String_lower', [self.builtinFuncs.string_lower] = 'GETVM.String_lower', [self.builtinFuncs.str_upper] = 'GETVM.String_upper', [self.builtinFuncs.string_upper] = 'GETVM.String_upper', [self.builtinFuncs.str_reverse] = 'GETVM.String_reverse', [self.builtinFuncs.string_reverse] = 'GETVM.String_reverse', [Ast.builtinTypeNone] = ""}
-   
-   
-   builtin2runtime[self.builtinFuncs.lns_error] = "panic"
-   builtin2runtime[self.builtinFuncs.lns_print] = "Lns_print"
-   builtin2runtime[self.builtinFuncs.lns_type] = "Lns_type"
-   builtin2runtime[self.builtinFuncs.lns_require] = "Lns_require"
-   builtin2runtime[self.builtinFuncs.lns_tonumber] = "Lns_tonumber"
-   builtin2runtime[self.builtinFuncs.lns__load] = "GETVM.Load"
-   builtin2runtime[self.builtinFuncs.lns_loadfile] = "GETVM.Loadfile"
-   builtin2runtime[self.builtinFuncs.lns_expandLuavalMap] = "GETVM.ExpandLuavalMap"
-   
-   builtin2runtime[self.builtinFuncs.string_dump] = "GETVM.String_dump"
-   
-   builtin2runtime[self.builtinFuncs.io_open] = "Lns_io_open"
-   builtin2runtime[self.builtinFuncs.io_popen] = "GETVM.IO_popen"
-   builtin2runtime[self.builtinFuncs.package_searchpath] = "GETVM.Package_searchpath"
-   builtin2runtime[self.builtinFuncs.os_clock] = "GETVM.OS_clock"
-   builtin2runtime[self.builtinFuncs.os_exit] = "GETVM.OS_exit"
-   builtin2runtime[self.builtinFuncs.os_remove] = "GETVM.OS_remove"
-   builtin2runtime[self.builtinFuncs.os_date] = "GETVM.OS_date"
-   builtin2runtime[self.builtinFuncs.os_time] = "GETVM.OS_time"
-   builtin2runtime[self.builtinFuncs.os_difftime] = "GETVM.OS_difftime"
-   builtin2runtime[self.builtinFuncs.os_rename] = "GETVM.OS_rename"
-   builtin2runtime[self.builtinFuncs.math_random] = "GETVM.Math_random"
-   builtin2runtime[self.builtinFuncs.math_randomseed] = "GETVM.Math_randomseed"
-   
-   self.builtin2runtime = builtin2runtime
-   
-   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor"}
-   
-   self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [Ast.builtinTypeProcessor] = "*LnsProcessor", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream"}
+   self:setup(  )
    
    self:writeln( "// This code is transcompiled by LuneScript." )
    self:writeln( string.format( "package %s", self.option.packageName) )
@@ -2789,8 +2891,6 @@ function convFilter:processRoot( node, opt )
    
    
    
-   
-   
    self:pushProcessMode( ProcessMode.NonClosureFuncDecl )
    do
       local function procNode( workNode )
@@ -2812,7 +2912,7 @@ function convFilter:processRoot( node, opt )
    
    self:popProcessMode(  )
    
-   
+   local runnerList = self:processMethodAsync( node:get_nodeManager():getDeclClassNodeList(  ) )
    
    self:pushProcessMode( ProcessMode.DeclClass )
    do
@@ -2906,7 +3006,10 @@ function convFilter:processRoot( node, opt )
    self:popIndent(  )
    self:writeln( "}" )
    
-   self:processMethodAsync( node:get_nodeManager():getDeclClassNodeList(  ) )
+   for __index, runner in ipairs( runnerList ) do
+      self:write( runner:getResult(  ) )
+   end
+   
 end
 
 
@@ -2976,7 +3079,7 @@ function convFilter:processAsyncLock( node, opt )
    do
       local _switchExp = node:get_lockKind()
       if _switchExp == Nodes.LockKind.AsyncLock or _switchExp == Nodes.LockKind.LuaLock then
-         self:writeln( string.format( "Lns_LockEnvSync( %s, func () {", self.env:getEnv(  )) )
+         self:writeln( string.format( "Lns_LockEnvSync( %s, %d, func () {", self.env:getEnv(  ), node:get_pos().lineNo) )
          
          filter( node:get_block(), self, node )
          
@@ -4179,7 +4282,8 @@ end
 
 function convFilter:processSwitch( node, opt )
 
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   
+   local nodeIndex = node:get_idInNS()
    local valName = string.format( "_switch%d", nodeIndex)
    self:write( string.format( "if %s := ", valName) )
    filter( node:get_exp(), self, node )
@@ -4236,7 +4340,8 @@ function convFilter:processMatch( node, opt )
    end
    local val
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   
+   local nodeIndex = node:get_idInNS()
    if hasAccessing(  ) then
       val = string.format( "_matchExp%d", nodeIndex)
       self:write( string.format( "switch %s := ", val) )
@@ -4310,7 +4415,7 @@ function convFilter:processFor( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   local nodeIndex = node:get_idInNS()
    
    local fromSym = string.format( "_forFrom%d", nodeIndex)
    local toSym = string.format( "_forTo%d", nodeIndex)
@@ -4377,7 +4482,7 @@ function convFilter:processApply( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   local nodeIndex = node:get_idInNS()
    
    local formSym = string.format( "_applyForm%d", nodeIndex)
    local paramSym = string.format( "_applyParam%d", nodeIndex)
@@ -4447,7 +4552,26 @@ end
 function convFilter:outputForeachLua( node, sortFlag, exp, val, key, block )
    local __func__ = '@lune.@base.@convGo.convFilter.outputForeachLua'
 
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   
+   local nodeIndex
+   
+   do
+      local _exp = _lune.__Cast( node, 3, Nodes.ForeachNode )
+      if _exp ~= nil then
+         nodeIndex = _exp:get_idInNS()
+      else
+         do
+            local _exp = _lune.__Cast( node, 3, Nodes.ForsortNode )
+            if _exp ~= nil then
+               nodeIndex = _exp:get_idInNS()
+            else
+               Util.err( string.format( "illegal node -- %s", Nodes.getNodeKindName( node:get_kind() )) )
+            end
+         end
+         
+      end
+   end
+   
    
    do
       local _switchExp = exp:get_expType():get_extedType():get_kind()
@@ -4745,7 +4869,7 @@ function convFilter:processForsort( node, opt )
    end
    
    
-   local nodeIndex = self.indexer:getIndex( node ):get_index()
+   local nodeIndex = node:get_idInNS()
    
    self:writeln( "{" )
    self:pushIndent(  )
@@ -5677,6 +5801,20 @@ function convFilter:processDeclClass( node, opt )
             
             if node:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
                self:outputAsyncItem( node )
+            end
+            
+            
+            for __index, fieldNode in ipairs( node:get_fieldList() ) do
+               do
+                  local _switchExp = fieldNode:get_kind()
+                  if _switchExp == Nodes.NodeKind.get_DeclMember() or _switchExp == Nodes.NodeKind.get_DeclMethod() then
+                  else 
+                     
+                        filter( fieldNode, self, node )
+                        self:writeln( "" )
+                  end
+               end
+               
             end
             
          elseif _switchExp == Ast.TypeInfoKind.IF then

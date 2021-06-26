@@ -439,8 +439,11 @@ end
 
    work[ .Run ] = ```
 function _lune._run( runner, mod )
+    if mod == 2 then
+      return false
+    end
     runner:run()
-    return false
+    return true
 end
 ```;
    

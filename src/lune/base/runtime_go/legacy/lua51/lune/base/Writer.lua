@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Writer'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -187,8 +187,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune4 then
-   _lune4 = _lune
+if not _lune5 then
+   _lune5 = _lune
 end
 
 

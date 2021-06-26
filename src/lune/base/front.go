@@ -428,7 +428,7 @@ func front_loadFromChunk_14_(_env *LnsEnv, chunk LnsAny,err LnsAny) LnsAny {
         Util_errorLog(_env, err_90)
     }
     var ret LnsAny
-    Lns_LockEnvSync( _env, func () {
+    Lns_LockEnvSync( _env, 529, func () {
         if chunk != nil{
             chunk_94 := chunk.(*Lns_luaValue)
             {
@@ -451,7 +451,7 @@ func front_loadFromChunk_14_(_env *LnsEnv, chunk LnsAny,err LnsAny) LnsAny {
 func Front_loadFromLuaTxt(_env *LnsEnv, txt string) LnsAny {
     var chunk LnsAny
     var err LnsAny
-    Lns_LockEnvSync( _env, func () {
+    Lns_LockEnvSync( _env, 546, func () {
         chunk, err = _env.GetVM().Load(txt, nil)
     })
     return front_loadFromChunk_14_(_env, chunk, err)
@@ -694,7 +694,7 @@ func Front_convertLnsCode2LuaCode(_env *LnsEnv, lnsCode string,path string,baseD
 // 2008: decl @lune.@base.@front.build
 func Front_build(_env *LnsEnv, option *Option_Option,astCallback Front_AstCallback) {
     var front *front_Front
-    Lns_LockEnvSync( _env, func () {
+    Lns_LockEnvSync( _env, 2010, func () {
         front = Newfront_Front(_env, option, nil)
     })
     front.FP.Build(_env, front_BuildMode__CreateAst_Obj, astCallback)
@@ -921,7 +921,7 @@ func (self *front_Front) Error(_env *LnsEnv, message string) {
 // 382: decl @lune.@base.@front.Front.loadLua
 func (self *front_Front) loadLua(_env *LnsEnv, path string) LnsAny {
     var ret LnsAny
-    Lns_LockEnvSync( _env, func () {
+    Lns_LockEnvSync( _env, 384, func () {
         var chunk LnsAny
         var err LnsAny
         chunk,err = _env.GetVM().Loadfile(path)
@@ -1377,7 +1377,7 @@ func (self *front_Front) checkUptodateMeta(_env *LnsEnv, lnsPath string,metaPath
     var meta *Lns_luaValue
     var valid bool
     valid = true
-    Lns_LockEnvSync( _env, func () {
+    Lns_LockEnvSync( _env, 1023, func () {
         meta = metaObj.(*Lns_luaValue)
         if meta.GetAt( "__formatVersion" ).(string) != Ver_metaVersion{
             Log_log(_env, Log_Level__Warn, __func__, 1026, Log_CreateMessage(func(_env *LnsEnv) string {
@@ -1543,7 +1543,7 @@ func (self *front_Front) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInte
                             }))
                             
                             var workMod LnsAny
-                            Lns_LockEnvSync( _env, func () {
+                            Lns_LockEnvSync( _env, 1146, func () {
                                 workMod = Lns_require(mod)
                             })
                             var meta *FrontInterface_ModuleMeta
@@ -2065,7 +2065,7 @@ func (self *front_Front) Exec(_env *LnsEnv) {
     } else if _switch0 == Option_ModeKind__BuildAst {
         self.FP.Build(_env, front_BuildMode__CreateAst_Obj, Front_AstCallback(Front_exec___anonymous_1_))
     } else if _switch0 == Option_ModeKind__Shebang {
-        Lns_LockEnvSync( _env, func () {
+        Lns_LockEnvSync( _env, 2063, func () {
             {
                 _modObj := front_convExp5_866(Lns_2DDD(self.FP.LoadModule(_env, Lns_car(self.FP.scriptPath2Module(_env, self.option.ScriptPath)).(string))))
                 if !Lns_IsNil( _modObj ) {
@@ -2082,7 +2082,7 @@ func (self *front_Front) Exec(_env *LnsEnv) {
         if self.option.Testing{
             var code string
             code = "local Testing = require( \"lune.base.Testing\" )\nreturn function( path )\n  Testing.run( path );\n  Testing.outputAllResult( io.stdout );\nend\n"
-            Lns_LockEnvSync( _env, func () {
+            Lns_LockEnvSync( _env, 2086, func () {
                 var loaded LnsAny
                 var mess LnsAny
                 loaded,mess = _env.GetVM().Load(code, nil)
@@ -2894,7 +2894,7 @@ func (self *front_GoConverter) Initfront_GoConverter(_env *LnsEnv, scriptPath st
             }
         }
         var conv *Nodes_Filter
-        conv = ConvGo_createFilter(_env, option.Testing, path, self.memStream.FP, ast, goOpt)
+        conv = ConvGo_createFilter(_env, option.Testing, scriptPath, self.memStream.FP, ast, goOpt)
         ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, ConvGo_Opt2Stem(NewConvGo_Opt(_env, ast.FP.Get_node(_env))))
     })
     self.FP.Start(_env, 1, _env.GetVM().String_format("convgo -- %s", []LnsAny{scriptPath}))

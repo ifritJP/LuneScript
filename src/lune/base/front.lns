@@ -1715,7 +1715,7 @@ class GoConverter extend Runner.Runner {
 
          
          let mut conv = convGo.createFilter(
-            option.testing, path, self.memStream, ast, goOpt );
+            option.testing, scriptPath, self.memStream, ast, goOpt );
          ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
       };
       self.start( __lns.runMode.Queue, "convgo -- %s" (scriptPath) );

@@ -553,6 +553,8 @@ local override fn TransUnitCtrl.addFuncBlockInfoList( funcBlockInfo:FuncBlockInf
 fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
    let runnerList:List<TransUnitRunner> = [];
    let mut resultMap:Map<&FuncBlockInfo,FuncBlockResult> = {};
+   let noRunnerList:List<List<&FuncBlockInfo>> = [];
+   let noRunnerTypeSet:Set<&Ast.TypeInfo> = (@);
 
    if #self.funcBlockInfoList < 20 or self.totalFuncBlockTokenNum < 2000 {
       __lns.runtime.log(
@@ -594,7 +596,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
             if __run( runner, __lns.runMode.Skip, "astMain -- %s" (streamName) ) {
                runnerList.insert( runner );
             } else {
-               break;
+               noRunnerList.insert( list );
             }
          }
       }
@@ -622,14 +624,28 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
          }
       }
       __lns.runtime.log( "merged AST." );
+      // runner 起動できなかった処理を行なう
+      foreach noRunner in noRunnerList {
+         let workMap = self.processFuncBlockInfo(
+            new ListFuncBlockCtl( noRunner ),
+            self.parser.getStreamName() );
+         foreach _, funcBlockInfo in workMap {
+            noRunnerTypeSet.add( funcBlockInfo.$funcType );
+         }
+      }
    }
    
    foreach funcBlockInfo in self.funcBlockInfoList {
-      let mut result = unwrap resultMap[ funcBlockInfo ];
-      let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
-      declFuncInfo.set_body( result.$body );
-      declFuncInfo.set_has__func__Symbol( result.$has_func_sym );
-      declFuncInfo.set_stmtNum( result.$stmtNum );
+      if! let mut result = resultMap[ funcBlockInfo ] {
+         let mut declFuncInfo = funcBlockInfo.$declFuncInfo;
+         declFuncInfo.set_body( result.$body );
+         declFuncInfo.set_has__func__Symbol( result.$has_func_sym );
+         declFuncInfo.set_stmtNum( result.$stmtNum );
+      } else {
+         if not noRunnerTypeSet.has( funcBlockInfo.$funcType ) {
+            Util.err(  "not found result -- %s" (funcBlockInfo.$funcType.getTxt(##)) );
+         }
+      }
    }
 }
 

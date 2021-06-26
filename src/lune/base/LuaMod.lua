@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuaMod'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -75,8 +75,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune4 then
-   _lune4 = _lune
+if not _lune5 then
+   _lune5 = _lune
 end
 
 
@@ -576,8 +576,11 @@ end
    
    work[CodeKind.Run] = [==[
 function _lune._run( runner, mod )
+    if mod == 2 then
+      return false
+    end
     runner:run()
-    return false
+    return true
 end
 ]==]
    

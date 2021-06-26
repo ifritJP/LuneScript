@@ -13,7 +13,7 @@ func Lns_Ver_init(_env *LnsEnv) {
     Lns_InitMod()
     Ver_version = "1.3.0"
     Ver_metaVersion = "1.0.149"
-    Ver_luaModVersion = 4
+    Ver_luaModVersion = 5
 }
 func init() {
     init_Ver = false

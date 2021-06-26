@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@TransUnit'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -188,12 +188,15 @@ function _lune.__Cast( obj, kind, class )
 end
 
 function _lune._run( runner, mod )
+    if mod == 2 then
+      return false
+    end
     runner:run()
-    return false
+    return true
 end
 
-if not _lune4 then
-   _lune4 = _lune
+if not _lune5 then
+   _lune5 = _lune
 end
 
 
@@ -11937,6 +11940,8 @@ function TransUnitCtrl:processFuncBlock( streamName )
 
    local runnerList = {}
    local resultMap = {}
+   local noRunnerList = {}
+   local noRunnerTypeSet = {}
    
    if #self.funcBlockInfoList < 20 or self.totalFuncBlockTokenNum < 2000 then
       
@@ -11971,7 +11976,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
                table.insert( runnerList, runner )
             else
              
-               break
+               table.insert( noRunnerList, list )
             end
             
          end
@@ -12002,15 +12007,34 @@ function TransUnitCtrl:processFuncBlock( streamName )
       end
       
       
+      
+      for __index, noRunner in ipairs( noRunnerList ) do
+         local workMap = self:processFuncBlockInfo( ListFuncBlockCtl.new(noRunner), self.parser:getStreamName(  ) )
+         for funcBlockInfo, _1 in pairs( workMap ) do
+            noRunnerTypeSet[funcBlockInfo:get_funcType()]= true
+         end
+         
+      end
+      
    end
    
    
    for __index, funcBlockInfo in ipairs( self.funcBlockInfoList ) do
-      local result = _lune.unwrap( resultMap[funcBlockInfo])
-      local declFuncInfo = funcBlockInfo:get_declFuncInfo()
-      declFuncInfo:set_body( result:get_body() )
-      declFuncInfo:set_has__func__Symbol( result:get_has_func_sym() )
-      declFuncInfo:set_stmtNum( result:get_stmtNum() )
+      do
+         local result = resultMap[funcBlockInfo]
+         if result ~= nil then
+            local declFuncInfo = funcBlockInfo:get_declFuncInfo()
+            declFuncInfo:set_body( result:get_body() )
+            declFuncInfo:set_has__func__Symbol( result:get_has_func_sym() )
+            declFuncInfo:set_stmtNum( result:get_stmtNum() )
+         else
+            if not _lune._Set_has(noRunnerTypeSet, funcBlockInfo:get_funcType() ) then
+               Util.err( string.format( "not found result -- %s", funcBlockInfo:get_funcType():getTxt(  )) )
+            end
+            
+         end
+      end
+      
    end
    
 end
@@ -12026,7 +12050,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 648, function (  )
+   Log.log( Log.Level.Log, __func__, 664, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12096,7 +12120,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
       
       
-      Log.log( Log.Level.Log, __func__, 720, function (  )
+      Log.log( Log.Level.Log, __func__, 736, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )

@@ -28,9 +28,9 @@ _lune_control default_async_all;
 /** lns バージョン */
 pub let version = "1.3.0";
 /** meta フォーマットバージョン */
-pub let metaVersion = "1.0.148";
+pub let metaVersion = "1.0.149";
 /** _lune モジュールバージョン */
-pub let luaModVersion = 4;
+pub let luaModVersion = 5;
 
 __test case1(ctrl) {
    print( version, metaVersion, luaModVersion );

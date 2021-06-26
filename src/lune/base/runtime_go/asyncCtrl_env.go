@@ -105,7 +105,7 @@ func LnsLog(_env *LnsEnv, mess string) {
 }
 
 func LnsStartRunnerLog(_env *LnsEnv, valid bool) {
-	lns_thread_event_on = valid
+	lns_thread_event_log_on = valid
 }
 
 func LnsDumpRunnerLog(_env *LnsEnv, stream Lns_oStream) {

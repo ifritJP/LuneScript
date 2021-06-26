@@ -22,3 +22,5 @@ hoge.*
 *.so
 src/lune/base/runtime_go/*.lua
 *.profi
+@-.*
+lnstags.sqlite3

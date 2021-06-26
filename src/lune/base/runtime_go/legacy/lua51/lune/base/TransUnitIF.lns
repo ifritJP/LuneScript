@@ -81,6 +81,17 @@ class LockedAsyncInfo {
    let lockKind:Nodes.LockKind {pub};
 }
 
+pub enum StmtKind {
+   // list のインデックスに使うので 1 をセットする
+   Switch = 1,
+   Match,
+   For,
+   Foreach,
+   Forsort,
+   Apply
+}
+
+
 pub class NSInfo {
    /** 関数の本体宣言がないか。 true の場合宣言なし。 */
    let mut nobody:bool {pub,pub};
@@ -101,7 +112,21 @@ pub class NSInfo {
    /** 非同期処理が有効な場合 true */
    let validAsyncCtrl:bool;
 
+   /** 名前空間内の StmtKind 毎の id 管理。 */
+   let stmtIdList:List<int>;
 
+   /**
+この名前空間内の stmt 数。
+後でトランスコンパイルする際に負荷分散する際の目安。
+正確な数ではない。
+*/ 
+   let mut stmtNum:int {pub};
+
+   pub fn addStmtNum( num:int ) mut {
+      self.stmtNum = self.stmtNum + num;
+   }
+
+   
    advertise idSetInfo;
    
    pub fn isLockedAsync() : bool {
@@ -125,6 +150,11 @@ pub class NSInfo {
    pub fn __init( typeInfo:&Ast.TypeInfo, typeDataAccessor:Ast.TypeDataAccessor,
                   pos:&Parser.Position, validAsyncCtrl:bool )
    {
+      self.stmtIdList = [];
+      foreach _ in StmtKind.$_allList {
+         self.stmtIdList.insert( 0 );
+      }
+      
       self.idSetInfo = new IdSetInfo();
       self.nobody = false;
       self.lockedAsyncStack = [];
@@ -134,6 +164,7 @@ pub class NSInfo {
       self.typeInfo = typeInfo;
       self.pos = pos;
       self.validAsyncCtrl = validAsyncCtrl;
+      self.stmtNum = 0;
    }
 
    pub fn duplicate() : NSInfo {
@@ -145,6 +176,12 @@ pub class NSInfo {
       typeData.addFrom( self.typeDataAccessor.$typeData );
       
       return nsInfo;
+   }
+
+   pub fn getNextStmtId( stmtKind:StmtKind ) mut : int {
+      let id = self.stmtIdList[ stmtKind ];
+      self.stmtIdList[ stmtKind ] = id + 1;
+      return id;
    }
    
    
@@ -252,11 +289,15 @@ pub fn sortMess( list:List<&ErrMess> ) : &List<&ErrMess>
 }
    
 
+pub enum SetNSInfo {
+   None,
+   FromScope,
+}
 
 pub abstract class TransUnitBase extend (TransUnitIF) {
 
    pro let processInfo:Ast.ProcessInfo;
-   pro let mut scope:Ast.Scope;
+   let mut scope:Ast.Scope;
    pro let mut globalScope: Ast.Scope {pub};
    pro let namespace2Scope: Map<&Ast.TypeInfo,Ast.Scope>;
 
@@ -267,6 +308,14 @@ pub abstract class TransUnitBase extend (TransUnitIF) {
 TypeInfo → NSInfo.
    */
    pro let nsInfoMap:Map<&Ast.TypeInfo,NSInfo>;
+
+   /**
+現在の NSInfo。
+
+multi phase 解析時の top scope に宣言されているクラスなどは、
+curNsInfo が nil になる。
+   */
+   pri let mut curNsInfo:NSInfo!;
 
    // /** 解析済みトークンリスト */
    // pri let mut usedTokenList: List<&Parser.Token>;
@@ -279,9 +328,52 @@ TypeInfo → NSInfo.
    pro let typeId2ClassMap: Map<&Ast.IdInfo,&Nodes.NamespaceInfo>;
 
    pro let ctrl_info: &Types.TransCtrlInfo;
+
+
+   pro fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
+      return self.scope.getNamespaceTypeInfo();
+   }
+   pub abstract fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
+
+   pub abstract fn getLatestPos() : &Parser.Position;
+
+   pub fn error( mess: str ) __async mut : __ {
+      self.errorAt( self.getLatestPos(), mess );
+   }
+   
+   pub fn get_curNsInfo() mut : NSInfo {
+      if! self.curNsInfo {
+         return _exp;
+      }
+      self.error( "not found NSInfo for %s" (self.getCurrentNamespaceTypeInfo()) );
+   }
+   pro fn set_curNsInfo( nsInfo:NSInfo ) mut {
+      self.curNsInfo = nsInfo;
+   }
    
    pub fn get_scope() mut : Ast.Scope {
       return self.scope;
+   }
+   pub fn get_scopeRO() : &Ast.Scope {
+      return self.scope;
+   }
+
+   pro fn getNSInfo( typeInfo:&Ast.TypeInfo ) mut : NSInfo {
+      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
+         self.error( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
+      };
+      return nsInfo;
+   }
+
+   pub fn setScope( scope:Ast.Scope, setNSInfo:SetNSInfo ) mut {
+      self.scope = scope;
+      _switch setNSInfo {
+         case .None {
+         }
+         case .FromScope {
+            self.curNsInfo = self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
+         }
+      }
    }
    
    pub fn __init(
@@ -298,10 +390,10 @@ TypeInfo → NSInfo.
       self.scope = new Ast.Scope( processInfo, self.globalScope, .Module, nil ## );
       self.nsInfoMap = {};
       let mut subRootTypeInfo = self.processInfo.$dummyParentType;
-      self.nsInfoMap[ subRootTypeInfo ] = new NSInfo(
+      self.curNsInfo = new NSInfo(
          subRootTypeInfo, subRootTypeInfo,
-         new Types.Position( 0,0, "@builtin@" ),
-         ctrl_info.validAsyncCtrl );
+         new Types.Position( 0,0, "@builtin@" ), ctrl_info.validAsyncCtrl );
+      self.nsInfoMap[ subRootTypeInfo ] = self.curNsInfo;
    }
 
    pro fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {
@@ -313,14 +405,6 @@ TypeInfo → NSInfo.
    }
 
    
-   pub abstract fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
-
-   pub abstract fn getLatestPos() : &Parser.Position;
-
-   pub fn error( mess: str ) __async mut : __ {
-      self.errorAt( self.getLatestPos(), mess );
-   }
-
    pub fn pushScope( scopeKind:Ast.ScopeKind, baseInfo: &Ast.TypeInfo!,
                      interfaceList: &List<&Ast.TypeInfo>! ) mut: Ast.Scope
    {
@@ -331,6 +415,7 @@ TypeInfo → NSInfo.
 
    pub fn popScope() mut {
       self.scope = self.scope.$outerScope;
+      self.curNsInfo = self.nsInfoMap[ self.getCurrentNamespaceTypeInfo() ];
    }
 
 
@@ -357,20 +442,6 @@ TypeInfo → NSInfo.
       return nsInfo;
    }
    
-   pro fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
-      return self.scope.getNamespaceTypeInfo();
-   }
-
-   pro fn getNSInfo( typeInfo:&Ast.TypeInfo ) mut : NSInfo {
-      let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
-         self.error( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
-      };
-      return nsInfo;
-   }
-   
-   pro fn getCurrentNSInfo() mut : NSInfo {
-      return self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
-   }
 
    pub fn pushModule(
       processInfo:Ast.ProcessInfo,
@@ -397,7 +468,8 @@ TypeInfo → NSInfo.
          nsInfo = unwrap self.nsInfoMap[ typeInfo ];
       }
       else {
-         let mut parentNsInfo = self.getCurrentNSInfo();
+         //let mut parentNsInfo = self.getCurrentNSInfoFromScope();
+         let mut parentNsInfo = self.$curNsInfo;
          let parentInfo = parentNsInfo.$typeInfo;
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( .Module ## );
@@ -424,6 +496,8 @@ TypeInfo → NSInfo.
          let namespace = new Nodes.NamespaceInfo( modName, self.scope, typeInfo );
          self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
       }
+
+      self.curNsInfo = nsInfo;      
       return nsInfo;
    }
    
@@ -465,6 +539,7 @@ TypeInfo → NSInfo.
               classParentName, classParentTypeId.id ) );
       }
       self.scope = scope;
+      self.curNsInfo = self.nsInfoMap[ classTypeInfo ];
    }
 
 
@@ -584,7 +659,8 @@ TypeInfo → NSInfo.
          }
       }
       else {
-         let mut parentNsInfo = self.getCurrentNSInfo();
+         //let mut parentNsInfo = self.getCurrentNSInfoFromScope();
+         let mut parentNsInfo = self.$curNsInfo;
 
          let mut parentScope = self.scope;
          let mut scope = self.pushScope( .Class, baseInfo, interfaceList );
@@ -618,6 +694,8 @@ TypeInfo → NSInfo.
          namespace = new Nodes.NamespaceInfo( name, self.scope, typeInfo );
       };
       self.typeId2ClassMap[ typeInfo.get_typeId() ] = namespace;
+
+      self.curNsInfo = nsInfo;
       
       return nsInfo;
    }

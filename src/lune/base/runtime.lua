@@ -350,7 +350,10 @@ function _lune._lazyRequire( modName )
   end
 end
 function _lune._run( runner, mod )
+    if mod == 2 then
+      return false
+    end
     runner:run()
-    return false
+    return true
 end
 return _lune

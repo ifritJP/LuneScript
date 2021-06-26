@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@dumpNode'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -117,8 +117,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune4 then
-   _lune4 = _lune
+if not _lune5 then
+   _lune5 = _lune
 end
 
 
@@ -605,7 +605,7 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
       name = name .. " closure"
    end
    
-   self:dump( opt, node, name )
+   self:dump( opt, node, string.format( "%s -- stmt:%d", name, declInfo:get_stmtNum()) )
    local argList = declInfo:get_argList(  )
    for __index, arg in ipairs( argList ) do
       filter( arg, self, opt:nextOpt(  ) )

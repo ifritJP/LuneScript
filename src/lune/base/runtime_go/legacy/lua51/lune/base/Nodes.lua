@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Nodes'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -228,8 +228,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune4 then
-   _lune4 = _lune
+if not _lune5 then
+   _lune5 = _lune
 end
 
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -2776,17 +2776,18 @@ function SwitchNode:canBeStatement(  )
 
    return true
 end
-function SwitchNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
+function SwitchNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault )
    local obj = {}
    SwitchNode.setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault ); end
    return obj
 end
-function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault) 
+function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault) 
    Node.__init( self,managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.idInNS = idInNS
    self.exp = exp
    self.caseList = caseList
    self.default = default
@@ -2795,9 +2796,9 @@ function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    
    
 end
-function SwitchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault )
+function SwitchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault )
 
-   local node = SwitchNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, caseList, default, caseKind, failSafeDefault)
+   local node = SwitchNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -2860,6 +2861,9 @@ function SwitchNode:visit( visitor, depth, alreadySet )
 end
 function SwitchNode.setmeta( obj )
   setmetatable( obj, { __index = SwitchNode  } )
+end
+function SwitchNode:get_idInNS()
+   return self.idInNS
 end
 function SwitchNode:get_exp()
    return self.exp
@@ -3329,17 +3333,18 @@ function ForNode:canBeStatement(  )
 
    return true
 end
-function ForNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta )
+function ForNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta )
    local obj = {}
    ForNode.setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta ); end
    return obj
 end
-function ForNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta) 
+function ForNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta) 
    Node.__init( self,managerId, id, 15, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.idInNS = idInNS
    self.block = block
    self.val = val
    self.init = init
@@ -3348,9 +3353,9 @@ function ForNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList,
    
    
 end
-function ForNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta )
+function ForNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta )
 
-   local node = ForNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, block, val, init, to, delta)
+   local node = ForNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta)
    nodeMan:addNode( node )
    return node
 end
@@ -3460,6 +3465,9 @@ end
 function ForNode.setmeta( obj )
   setmetatable( obj, { __index = ForNode  } )
 end
+function ForNode:get_idInNS()
+   return self.idInNS
+end
 function ForNode:get_block()
    return self.block
 end
@@ -3531,26 +3539,27 @@ function ApplyNode:canBeStatement(  )
 
    return true
 end
-function ApplyNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block )
+function ApplyNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block )
    local obj = {}
    ApplyNode.setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block ); end
    return obj
 end
-function ApplyNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block) 
+function ApplyNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block) 
    Node.__init( self,managerId, id, 16, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.idInNS = idInNS
    self.varList = varList
    self.expList = expList
    self.block = block
    
    
 end
-function ApplyNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, varList, expList, block )
+function ApplyNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block )
 
-   local node = ApplyNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, varList, expList, block)
+   local node = ApplyNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block)
    nodeMan:addNode( node )
    return node
 end
@@ -3608,6 +3617,9 @@ function ApplyNode:visit( visitor, depth, alreadySet )
 end
 function ApplyNode.setmeta( obj )
   setmetatable( obj, { __index = ApplyNode  } )
+end
+function ApplyNode:get_idInNS()
+   return self.idInNS
 end
 function ApplyNode:get_varList()
    return self.varList
@@ -3674,17 +3686,18 @@ function ForeachNode:canBeStatement(  )
 
    return true
 end
-function ForeachNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block )
+function ForeachNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block )
    local obj = {}
    ForeachNode.setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block ); end
    return obj
 end
-function ForeachNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block) 
+function ForeachNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block) 
    Node.__init( self,managerId, id, 17, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.idInNS = idInNS
    self.val = val
    self.key = key
    self.exp = exp
@@ -3692,9 +3705,9 @@ function ForeachNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeL
    
    
 end
-function ForeachNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block )
+function ForeachNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block )
 
-   local node = ForeachNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block)
+   local node = ForeachNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block)
    nodeMan:addNode( node )
    return node
 end
@@ -3752,6 +3765,9 @@ function ForeachNode:visit( visitor, depth, alreadySet )
 end
 function ForeachNode.setmeta( obj )
   setmetatable( obj, { __index = ForeachNode  } )
+end
+function ForeachNode:get_idInNS()
+   return self.idInNS
 end
 function ForeachNode:get_val()
    return self.val
@@ -3821,17 +3837,18 @@ function ForsortNode:canBeStatement(  )
 
    return true
 end
-function ForsortNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort )
+function ForsortNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort )
    local obj = {}
    ForsortNode.setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort ); end
    return obj
 end
-function ForsortNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort) 
+function ForsortNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort) 
    Node.__init( self,managerId, id, 18, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.idInNS = idInNS
    self.val = val
    self.key = key
    self.exp = exp
@@ -3840,9 +3857,9 @@ function ForsortNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeL
    
    
 end
-function ForsortNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort )
+function ForsortNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort )
 
-   local node = ForsortNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, key, exp, block, sort)
+   local node = ForsortNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort)
    nodeMan:addNode( node )
    return node
 end
@@ -3900,6 +3917,9 @@ function ForsortNode:visit( visitor, depth, alreadySet )
 end
 function ForsortNode.setmeta( obj )
   setmetatable( obj, { __index = ForsortNode  } )
+end
+function ForsortNode:get_idInNS()
+   return self.idInNS
 end
 function ForsortNode:get_val()
    return self.val
@@ -8418,15 +8438,15 @@ _moduleObj.DeclFuncInfo = DeclFuncInfo
 function DeclFuncInfo.setmeta( obj )
   setmetatable( obj, { __index = DeclFuncInfo  } )
 end
-function DeclFuncInfo.new( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
+function DeclFuncInfo.new( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag, stmtNum )
    local obj = {}
    DeclFuncInfo.setmeta( obj )
    if obj.__init then
-      obj:__init( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
+      obj:__init( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag, stmtNum )
    end
    return obj
 end
-function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag )
+function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, outsizeOfClass, name, symbol, argList, staticFlag, accessMode, asyncMode, body, retTypeInfoList, retTypeNodeList, has__func__Symbol, overrideFlag, stmtNum )
 
    self.kind = kind
    self.classTypeInfo = classTypeInfo
@@ -8443,6 +8463,7 @@ function DeclFuncInfo:__init( kind, classTypeInfo, declClassNode, outsizeOfClass
    self.retTypeNodeList = retTypeNodeList
    self.has__func__Symbol = has__func__Symbol
    self.overrideFlag = overrideFlag
+   self.stmtNum = stmtNum
 end
 function DeclFuncInfo:get_kind()
    return self.kind
@@ -8495,11 +8516,17 @@ end
 function DeclFuncInfo:get_overrideFlag()
    return self.overrideFlag
 end
+function DeclFuncInfo:get_stmtNum()
+   return self.stmtNum
+end
+function DeclFuncInfo:set_stmtNum( stmtNum )
+   self.stmtNum = stmtNum
+end
 
 
 function DeclFuncInfo.createFrom( info, name, symbol )
 
-   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, info.declClassNode, info.outsizeOfClass, name, symbol, info.argList, info.staticFlag, info.accessMode, info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList, info.has__func__Symbol, info.overrideFlag)
+   return DeclFuncInfo.new(info:get_kind(), info.classTypeInfo, info.declClassNode, info.outsizeOfClass, name, symbol, info.argList, info.staticFlag, info.accessMode, info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList, info.has__func__Symbol, info.overrideFlag, info.stmtNum)
 end
 
 
@@ -11401,17 +11428,18 @@ function MatchNode:canBeStatement(  )
 
    return true
 end
-function MatchNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode.new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
    local obj = {}
    MatchNode.setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault ); end
    return obj
 end
-function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault) 
+function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault) 
    Node.__init( self,managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.idInNS = idInNS
    self.val = val
    self.algeTypeInfo = algeTypeInfo
    self.caseList = caseList
@@ -11421,9 +11449,9 @@ function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    
    
 end
-function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
 
-   local node = MatchNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
+   local node = MatchNode.new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -11486,6 +11514,9 @@ function MatchNode:visit( visitor, depth, alreadySet )
 end
 function MatchNode.setmeta( obj )
   setmetatable( obj, { __index = MatchNode  } )
+end
+function MatchNode:get_idInNS()
+   return self.idInNS
 end
 function MatchNode:get_val()
    return self.val

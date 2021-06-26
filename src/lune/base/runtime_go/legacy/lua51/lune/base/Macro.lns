@@ -349,7 +349,9 @@ pub class MacroCtrl
    pub fn clone() : MacroCtrl {
       let mut obj = new MacroCtrl( self.macroEval );
 
-      obj.toLuavalLuaAsync = self.toLuavalLuaAsync;
+      if not validAsyncMacro {
+         obj.toLuavalLuaAsync = self.toLuavalLuaAsync;
+      }
       obj.useLnsLoad = self.useLnsLoad;
 
       macro _cloneMap( dst:__exp, src:__exp ) {

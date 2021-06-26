@@ -193,7 +193,7 @@ func (self *FrontInterface_ImportModuleInfo) List(_env *LnsEnv) *LnsList {
 func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInterface_ModuleMeta) {
     var modVal LnsAny
     var moduleMeta *FrontInterface_ModuleMeta
-    Lns_LockEnvSync( _env, func () {
+    Lns_LockEnvSync( _env, 333, func () {
         var emptyTable LnsAny
         var loaded LnsAny
         loaded = frontInterface_convExp0_1367(Lns_2DDD(_env.GetVM().Load("return {}", nil)))

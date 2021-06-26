@@ -104,7 +104,7 @@ func LuaMod_CastKind_getTxt(arg1 LnsInt) string {
     return LuaMod_CastKindMap_[arg1];
 }
 var LuaMod_codeMap *LnsMap
-// 454: decl @lune.@base.@LuaMod.getCode
+// 457: decl @lune.@base.@LuaMod.getCode
 func LuaMod_getCode(_env *LnsEnv, kind LnsInt) string {
     return Lns_unwrap( LuaMod_codeMap.Get(kind)).(string)
 }
@@ -133,7 +133,7 @@ func Lns_LuaMod_init(_env *LnsEnv) {
         work.Set(LuaMod_CodeKind__Cast,_env.GetVM().String_format("function _lune.__Cast( obj, kind, class )\n   if kind == %d then -- int\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      if math.floor( obj ) ~= obj then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- real\n      if type( obj ) ~= \"number\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- str\n      if type( obj ) ~= \"string\" then\n         return nil\n      end\n      return obj\n   elseif kind == %d then -- class\n      return _lune.__isInstanceOf( obj, class ) and obj or nil\n   end\n   return nil\nend\n", []LnsAny{LuaMod_CastKind__Int, LuaMod_CastKind__Real, LuaMod_CastKind__Str, LuaMod_CastKind__Class}))
         work.Set(LuaMod_CodeKind__LazyLoad,"function _lune._lazyImport( modName )\n  local mod\n  return function()\n    if mod then\n       return mod\n    end\n    mod = _lune.loadModule( modName )\n    return mod\n  end\nend\n")
         work.Set(LuaMod_CodeKind__LazyRequire,"function _lune._lazyRequire( modName )\n  local mod\n  return function()\n    if mod then\n       return mod\n    end\n    mod = require( modName )\n    return mod\n  end\nend\n")
-        work.Set(LuaMod_CodeKind__Run,"function _lune._run( runner, mod )\n    runner:run()\n    return false\nend\n")
+        work.Set(LuaMod_CodeKind__Run,"function _lune._run( runner, mod )\n    if mod == 2 then\n      return false\n    end\n    runner:run()\n    return true\nend\n")
         work.Set(LuaMod_CodeKind__Finalize,"return _lune\n")
         LuaMod_codeMap = work
     }

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@front'
 local _lune = {}
-if _lune4 then
-   _lune = _lune4
+if _lune5 then
+   _lune = _lune5
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -314,8 +314,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune4 then
-   _lune4 = _lune
+if not _lune5 then
+   _lune5 = _lune
 end
 
 
@@ -2310,7 +2310,7 @@ function GoConverter:__init(scriptPath, astResult, option, goOpt)
       end
       
       
-      local conv = convGo.createFilter( option.testing, path, self.memStream, ast, goOpt )
+      local conv = convGo.createFilter( option.testing, scriptPath, self.memStream, ast, goOpt )
       ast:get_node():processFilter( conv, convGo.Opt.new(ast:get_node()) )
    end
    self:start( 1, string.format( "convgo -- %s", scriptPath) )

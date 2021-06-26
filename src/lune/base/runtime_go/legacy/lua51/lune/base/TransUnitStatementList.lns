@@ -189,8 +189,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
             self.nodeManager, token.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
          
-         let nsInfo = self.getCurrentNSInfo();
-         if not nsInfo.canBreak() {
+         if not self.$curNsInfo.canBreak() {
             self.addErrMess( token.pos, "no loop syntax." );
          } 
       }
