@@ -2274,6 +2274,7 @@ type Nodes_MacroInfoMtd interface {
     Get_func(_env *LnsEnv) LnsAny
     Get_name(_env *LnsEnv) string
     Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
+    Set_func(_env *LnsEnv, arg1 LnsAny)
 }
 type Nodes_MacroInfo struct {
     _func LnsAny
@@ -2305,6 +2306,7 @@ func (self *Nodes_MacroInfo) InitNodes_MacroInfo(_env *LnsEnv, arg1 LnsAny, arg2
     self.symbol2MacroValInfoMap = arg2
 }
 func (self *Nodes_MacroInfo) Get_func(_env *LnsEnv) LnsAny{ return self._func }
+func (self *Nodes_MacroInfo) Set_func(_env *LnsEnv, arg1 LnsAny){ self._func = arg1 }
 func (self *Nodes_MacroInfo) Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap{ return self.symbol2MacroValInfoMap }
 
 
@@ -9701,6 +9703,7 @@ type Nodes_DefMacroInfoMtd interface {
     Get_func(_env *LnsEnv) LnsAny
     Get_name(_env *LnsEnv) string
     Get_symbol2MacroValInfoMap(_env *LnsEnv) *LnsMap
+    Set_func(_env *LnsEnv, arg1 LnsAny)
 }
 type Nodes_DefMacroInfo struct {
     Nodes_MacroInfo

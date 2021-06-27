@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 11524
+   return 11566
 end
 
 
@@ -358,6 +358,7 @@ function Option:__init()
    self.outputDir = nil
    self.analyzePos = nil
    self.dependsPath = nil
+   self.convGoRunnerNum = 4
 end
 function Option:openDepend( relPath )
 
@@ -667,6 +668,20 @@ end
                      printUsage( 1 )
                   end
                   
+               elseif _switchExp == "--convGoRunnerNum" then
+                  option.convGoRunnerNum = getNextOpInt(  )
+                  if option.convGoRunnerNum < 0 then
+                     printUsage( 1 )
+                  end
+                  
+               elseif _switchExp == "--macroAsyncParseStmtLen" then
+                  option.transCtrlInfo.macroAsyncParseStmtLen = getNextOpInt(  )
+                  if option.transCtrlInfo.macroAsyncParseStmtLen < 0 then
+                     printUsage( 1 )
+                  end
+                  
+               elseif _switchExp == "--enableMacroAsync" then
+                  option.transCtrlInfo.validMacroAsync = true
                elseif _switchExp == "--disableRunner" then
                   option.enableRunner = false
                elseif _switchExp == "--disablePostBuild" then
@@ -995,7 +1010,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 704, function (  )
+   Log.log( Log.Level.Log, __func__, 723, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

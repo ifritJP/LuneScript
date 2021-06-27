@@ -140,11 +140,11 @@ Val4 LnsAny
 func (self *Types_ParserSrc__Parser) GetTxt() string {
 return "ParserSrc.Parser"
 }
-// 98: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 108: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
     return NewTypes_TransCtrlInfo(_env)
 }
-// 124: decl @lune.@base.@Types.Position.get_orgPos
+// 134: decl @lune.@base.@Types.Position.get_orgPos
 func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
     {
         __exp := self.OrgPos
@@ -155,18 +155,18 @@ func (self *Types_Position) Get_orgPos(_env *LnsEnv) *Types_Position {
     }
     return self
 }
-// 131: decl @lune.@base.@Types.Position.get_RawOrgPos
+// 141: decl @lune.@base.@Types.Position.get_RawOrgPos
 func (self *Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
     return self.OrgPos
 }
-// 135: decl @lune.@base.@Types.Position.create
+// 145: decl @lune.@base.@Types.Position.create
 func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
     var pos *Types_Position
     pos = NewTypes_Position(_env, lineNo, column, streamName)
     pos.OrgPos = orgPos
     return pos
 }
-// 143: decl @lune.@base.@Types.Position.getDisplayTxt
+// 153: decl @lune.@base.@Types.Position.getDisplayTxt
 func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     var txt string
     txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
@@ -179,7 +179,7 @@ func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     }
     return txt
 }
-// 187: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 197: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -193,11 +193,11 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 202: decl @lune.@base.@Types.Token.set_commentList
+// 212: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
     self.commentList = commentList
 }
-// 206: decl @lune.@base.@Types.Token.getLineCount
+// 216: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
@@ -231,6 +231,8 @@ type Types_TransCtrlInfo struct {
     Testing bool
     ValidMultiPhaseTransUnit bool
     ThreadPerUnitThread LnsInt
+    MacroAsyncParseStmtLen LnsInt
+    ValidMacroAsync bool
     FP Types_TransCtrlInfoMtd
 }
 func Types_TransCtrlInfo2Stem( obj LnsAny ) LnsAny {
@@ -259,8 +261,9 @@ func NewTypes_TransCtrlInfo(_env *LnsEnv) *Types_TransCtrlInfo {
     obj.InitTypes_TransCtrlInfo(_env)
     return obj
 }
-// 79: DeclConstr
+// 87: DeclConstr
 func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
+    self.MacroAsyncParseStmtLen = 500
     self.WarningShadowing = false
     self.CompatComment = false
     self.CheckingDefineAbbr = true
@@ -279,6 +282,7 @@ func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
         _env.SetStackVal( true) &&
         _env.SetStackVal( 5) ||
         _env.SetStackVal( 0) ).(LnsInt)
+    self.ValidMacroAsync = false
 }
 
 
@@ -376,7 +380,7 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
     }
     return true, newObj, nil
 }
-// 117: DeclConstr
+// 127: DeclConstr
 func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string) {
     self.LineNo = lineNo
     self.Column = column
@@ -489,7 +493,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 177: DeclConstr
+// 187: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     self.Txt = txt

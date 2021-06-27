@@ -880,7 +880,8 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       self.moduleMeta = nil;
       self.validMutControl = moduleLoaderParam.$validMutControl;
       self.curPos = moduleLoaderParam.$latestPos;
-      self.macroCtrl = new Macro.MacroCtrl( moduleLoaderParam.$macroEval );
+      self.macroCtrl = new Macro.MacroCtrl(
+         moduleLoaderParam.$macroEval, moduleLoaderParam.$ctrl_info.validMacroAsync );
       self.importModuleInfo = workImportModuleInfo.clone();
       self.fullModulePath = fullModulePath;
 

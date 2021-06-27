@@ -98,7 +98,7 @@ pub class Option {
    local let appName:str {pub};
    local let mainModule:str {pub};
    local let addEnvArg:bool {pub};
-   local let enableRunner:bool {pub};
+   local let runnerNum:int {pub};
 }
 
 class convFilter extend Nodes.Filter<Opt> {
@@ -1943,36 +1943,34 @@ fn convFilter.processMethodAsync(
 
    let runnerList:List<ConvRunner> = [];
 
-   if totalStmtNum > 1000 {
-      // declMethodNodeList を divList に分割
-      let divCount = 4;
-      if divCount > 0 {
-         let maxStmtCount = ( totalStmtNum + divCount - 1 ) / divCount;
-         let mut offset = 1;
-         let len = #declMethodNodeList;
+   // declMethodNodeList を divList に分割
+   let divCount = self.option.runnerNum;
+   if totalStmtNum > 1000 and divCount > 0 {
+      let maxStmtCount = ( totalStmtNum + divCount - 1 ) / divCount;
+      let mut offset = 1;
+      let len = #declMethodNodeList;
 
-         for _ = 1, divCount {
-            let list:List<&ProcessDeclMethodItem> = [];
-            let mut stmtCount = 0;
-            while offset <= len {
-               let declFieldInfo = declMethodNodeList[ offset ];
-               offset = offset + 1;
-               list.insert( declFieldInfo );
-               let declMethodNode = declFieldInfo.$fieldNode;
-               stmtCount = stmtCount + declMethodNode.$declInfo.$stmtNum;
-               if stmtCount >= maxStmtCount {
-                  break;
-               }
+      for _ = 1, divCount {
+         let list:List<&ProcessDeclMethodItem> = [];
+         let mut stmtCount = 0;
+         while offset <= len {
+            let declFieldInfo = declMethodNodeList[ offset ];
+            offset = offset + 1;
+            list.insert( declFieldInfo );
+            let declMethodNode = declFieldInfo.$fieldNode;
+            stmtCount = stmtCount + declMethodNode.$declInfo.$stmtNum;
+            if stmtCount >= maxStmtCount {
+               break;
             }
-            let mut runner = new ConvRunner(
-               self.enableTest, self.ast, self.option, list );
-            runnerList.insert( runner );
-            
-            if not __run( runner, __lns.runMode.Skip,
-                          "convGo Field - %s" (self.streamName) )
-            {
-               runner.run();
-            }
+         }
+         let mut runner = new ConvRunner(
+            self.enableTest, self.ast, self.option, list );
+         runnerList.insert( runner );
+         
+         if not __run( runner, __lns.runMode.Skip,
+                       "convGo Field - %s" (self.streamName) )
+         {
+            runner.run();
          }
       }
    } else {
@@ -6059,7 +6057,7 @@ __test {
       let mut stream = new Util.memStream();
 
       let mut conv = createFilter( false, streamName, stream, ast,
-                                   new Option( "lns", "lnsgo", "", false, true ) );
+                                   new Option( "lns", "lnsgo", "", false, 0 ) );
 
       ast.$node.processFilter( conv, new Opt( ast.$node ));
 

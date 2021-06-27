@@ -1510,6 +1510,9 @@ end
 function MacroInfo:get_func()
    return self.func
 end
+function MacroInfo:set_func( func )
+   self.func = func
+end
 function MacroInfo:get_symbol2MacroValInfoMap()
    return self.symbol2MacroValInfoMap
 end

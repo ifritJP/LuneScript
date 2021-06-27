@@ -730,7 +730,7 @@ pub fn TransUnitCtrl.createAST(
          moduleTypeInfo, provideInfo, processInfo, globalSymbolList,
          importedAliasMap, self.moduleId, self.moduleName,
          moduleTypeInfo.$rawTxt, streamName, {},
-         self.macroCtrl.$declMacroInfoMap );;
+         self.macroCtrl.$declPubMacroInfoMap );
       __lns.runtime.log( "ready meta -- %d, %d"
                          (#self.funcBlockInfoList, self.totalFuncBlockTokenNum ) );
       Log._log2( .Log, "ready meta -- %s, %d, %s, %s"
@@ -845,7 +845,7 @@ pub fn TransUnitCtrl.createAST(
          self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode,
          self.helperInfo, self.nodeManager,
          unwrap self.importCtrl$.$importModule2ExportInfo default {},
-         self.macroCtrl.$typeId2MacroInfo, self.typeId2ClassMap );
+         self.macroCtrl.$declPubMacroInfoMap, self.typeId2ClassMap );
       ast = rootNode;
 
       ClosureFun.checkList( self.closureFunList );

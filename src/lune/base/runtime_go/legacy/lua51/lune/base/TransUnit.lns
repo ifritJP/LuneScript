@@ -866,7 +866,7 @@ alias で置き換えている元の Type → alias の型
       self.closureFunList = [];
       self.scopeAccess = .Normal;
       self.macroEval = macroEval;
-      self.macroCtrl = new Macro.MacroCtrl( macroEval );
+      self.macroCtrl = new Macro.MacroCtrl( macroEval, ctrl_info.validMacroAsync );
       self.analyzingStateQueue = [];
       //self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
@@ -1053,7 +1053,7 @@ alias で置き換えている元の Type → alias の型
    }
 
 
-   pub fn pushbackStr( name: str, statement: str, pos:&Types.Position ) __async mut;
+   pub fn pushbackStr( asyncParse:bool!, name: str, statement: str, pos:&Types.Position ) __async mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
                        bool, firstToken: &Parser.Token,
                        token: &Parser.Token ) mut: Nodes.Node!;
@@ -1391,8 +1391,18 @@ pub fn TransUnit.pushback() __async mut {
    self.parser.pushback();
 }
 
-fn TransUnit.pushbackStr( name: str, statement: str, pos:&Types.Position ) __async mut {
-   self.parser.pushbackStr( name, statement, pos );
+fn TransUnit.pushbackStr(
+   asyncParse:bool!, name: str, statement: str, pos:&Types.Position ) __async mut
+{
+   let! async = asyncParse {
+      if self.ctrl_info.macroAsyncParseStmtLen == 0 {
+         async = false;
+      } else {
+         async = #statement >= self.ctrl_info.macroAsyncParseStmtLen;
+      }
+   };
+   
+   self.parser.pushbackStr( async, name, statement, pos );
 }
 
 enum SymbolMode {

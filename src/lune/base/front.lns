@@ -894,7 +894,7 @@ fn Front.createGoOption( scriptPath:str ) : &convGo.Option {
    }
    return new convGo.Option(
       packageName, self.getGoAppName(), self.option.mainModule,
-      self.option.$addEnvArg, self.option.$enableRunner );
+      self.option.$addEnvArg, self.option.convGoRunnerNum );
 }
 
 

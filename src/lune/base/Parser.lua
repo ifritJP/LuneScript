@@ -473,11 +473,9 @@ function DefaultPushbackParser:pushback(  )
 
    self:pushbackToken( self.currentToken )
 end
-function DefaultPushbackParser:pushbackStr( name, statement, pos )
+function DefaultPushbackParser:pushbackStr( asyncParse, name, statement, pos )
 
-   
-   local async = false
-   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name,nil}), async, nil, pos)
+   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name,nil}), asyncParse == true, nil, pos)
    
    local list = {}
    while true do

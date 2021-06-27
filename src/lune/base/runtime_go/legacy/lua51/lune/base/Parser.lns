@@ -52,7 +52,7 @@ pub interface PushbackParser {
    pub fn getTokenNoErr(skipFlag:bool!) mut : &Token;
    pub fn pushback() mut;
    pub fn pushbackToken( token: &Token ) mut;
-   pub fn pushbackStr( name:str, statement: str, pos:&Types.Position ) mut;
+   pub fn pushbackStr( asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut;
    pub fn newPushback( tokenList: List<&Token> ) mut;
    pub fn getStreamName(): str;
    pub fn error( message:str ) mut :__;
@@ -295,11 +295,12 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    pub fn pushback() mut {
       self.pushbackToken( self.currentToken );
    }
-   pub fn pushbackStr( name:str, statement: str, pos:&Types.Position ) mut {
-      //let async = #statement > 2000;
-      let async = false;
+   pub fn pushbackStr(
+      asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut
+   {
       let mut parser = new StreamParser(
-         Types.ParserSrc.LnsCode( statement, name, nil ), async, nil, pos );
+         Types.ParserSrc.LnsCode( statement, name, nil ),
+         asyncParse == true, nil, pos );
 
       let mut list:List<&Token> = [];
       while true {

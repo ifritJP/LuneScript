@@ -261,6 +261,7 @@ function TransCtrlInfo.new(  )
    return obj
 end
 function TransCtrlInfo:__init() 
+   self.macroAsyncParseStmtLen = 500
    self.warningShadowing = false
    self.compatComment = false
    self.checkingDefineAbbr = true
@@ -276,6 +277,7 @@ function TransCtrlInfo:__init()
    self.testing = false
    self.validMultiPhaseTransUnit = true
    self.threadPerUnitThread = false and 5 or 0
+   self.validMacroAsync = false
 end
 function TransCtrlInfo.setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )

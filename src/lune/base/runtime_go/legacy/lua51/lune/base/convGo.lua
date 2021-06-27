@@ -356,21 +356,21 @@ _moduleObj.Option = Option
 function Option.setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
-function Option.new( packageName, appName, mainModule, addEnvArg, enableRunner )
+function Option.new( packageName, appName, mainModule, addEnvArg, runnerNum )
    local obj = {}
    Option.setmeta( obj )
    if obj.__init then
-      obj:__init( packageName, appName, mainModule, addEnvArg, enableRunner )
+      obj:__init( packageName, appName, mainModule, addEnvArg, runnerNum )
    end
    return obj
 end
-function Option:__init( packageName, appName, mainModule, addEnvArg, enableRunner )
+function Option:__init( packageName, appName, mainModule, addEnvArg, runnerNum )
 
    self.packageName = packageName
    self.appName = appName
    self.mainModule = mainModule
    self.addEnvArg = addEnvArg
-   self.enableRunner = enableRunner
+   self.runnerNum = runnerNum
 end
 function Option:get_packageName()
    return self.packageName
@@ -384,8 +384,8 @@ end
 function Option:get_addEnvArg()
    return self.addEnvArg
 end
-function Option:get_enableRunner()
-   return self.enableRunner
+function Option:get_runnerNum()
+   return self.runnerNum
 end
 
 
@@ -2517,36 +2517,32 @@ function convFilter:processMethodAsync( nodeList )
    
    local runnerList = {}
    
-   if totalStmtNum > 1000 then
+   local divCount = self.option.runnerNum
+   if totalStmtNum > 1000 and divCount > 0 then
+      local maxStmtCount = math.floor((totalStmtNum + divCount - 1 ) / divCount)
+      local offset = 1
+      local len = #declMethodNodeList
       
-      local divCount = 4
-      if divCount > 0 then
-         local maxStmtCount = math.floor((totalStmtNum + divCount - 1 ) / divCount)
-         local offset = 1
-         local len = #declMethodNodeList
+      for _1 = 1, divCount do
+         local list = {}
+         local stmtCount = 0
+         while offset <= len do
+            local declFieldInfo = declMethodNodeList[offset]
+            offset = offset + 1
+            table.insert( list, declFieldInfo )
+            local declMethodNode = declFieldInfo:get_fieldNode()
+            stmtCount = stmtCount + declMethodNode:get_declInfo():get_stmtNum()
+            if stmtCount >= maxStmtCount then
+               break
+            end
+            
+         end
          
-         for _1 = 1, divCount do
-            local list = {}
-            local stmtCount = 0
-            while offset <= len do
-               local declFieldInfo = declMethodNodeList[offset]
-               offset = offset + 1
-               table.insert( list, declFieldInfo )
-               local declMethodNode = declFieldInfo:get_fieldNode()
-               stmtCount = stmtCount + declMethodNode:get_declInfo():get_stmtNum()
-               if stmtCount >= maxStmtCount then
-                  break
-               end
-               
-            end
-            
-            local runner = ConvRunner.new(self.enableTest, self.ast, self.option, list)
-            table.insert( runnerList, runner )
-            
-            if not _lune._run(runner, 2, string.format( "convGo Field - %s", self.streamName) ) then
-               runner:run(  )
-            end
-            
+         local runner = ConvRunner.new(self.enableTest, self.ast, self.option, list)
+         table.insert( runnerList, runner )
+         
+         if not _lune._run(runner, 2, string.format( "convGo Field - %s", self.streamName) ) then
+            runner:run(  )
          end
          
       end

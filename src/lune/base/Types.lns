@@ -75,8 +75,17 @@ pub class TransCtrlInfo {
    pub let mut validMultiPhaseTransUnit:bool;
    /** 1 つの AST 解析の thread 個数 0 以上。 0 は、同期処理。 */
    pub let mut threadPerUnitThread:int;
+   /**
+マクロ展開の parse を非同期処理に切り替える stmt の長さ。
+非同期処理にはオーバーヘッドがかかるので、常に非同期で処理すれば良いわけではない。
+0 は非同期にしない。
+*/
+   pub let mut macroAsyncParseStmtLen:int;
+   /** マクロの実行を非同期で行なうかどうか。 */
+   pub let mut validMacroAsync:bool;
 
    pub fn __init() {
+      self.macroAsyncParseStmtLen = 500;
       self.warningShadowing = false;
       self.compatComment = false;
       self.checkingDefineAbbr = true;
@@ -92,6 +101,7 @@ pub class TransCtrlInfo {
       self.testing = false;
       self.validMultiPhaseTransUnit = true;
       self.threadPerUnitThread = __lns.capability.async and 5 or 0;
+      self.validMacroAsync = false;
    }
 }
 

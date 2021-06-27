@@ -1249,7 +1249,7 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.closureFunList = {}
    self.scopeAccess = Ast.ScopeAccess.Normal
    self.macroEval = macroEval
-   self.macroCtrl = Macro.MacroCtrl.new(macroEval)
+   self.macroCtrl = Macro.MacroCtrl.new(macroEval, ctrl_info.validMacroAsync)
    self.analyzingStateQueue = {}
    self.ignoreToCheckSymbol_ = false
    self.moduleId = moduleId
@@ -1764,9 +1764,23 @@ function TransUnit:pushback(  )
 end
 
 
-function TransUnit:pushbackStr( name, statement, pos )
+function TransUnit:pushbackStr( asyncParse, name, statement, pos )
 
-   self.parser:pushbackStr( name, statement, pos )
+   local async = asyncParse
+   if  nil == async then
+      local _async = async
+   
+      if self.ctrl_info.macroAsyncParseStmtLen == 0 then
+         async = false
+      else
+       
+         async = #statement >= self.ctrl_info.macroAsyncParseStmtLen
+      end
+      
+   end
+   
+   
+   self.parser:pushbackStr( async, name, statement, pos )
 end
 
 
@@ -12117,8 +12131,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       end
       
       
-      local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declMacroInfoMap())
-      
+      local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
       Log.log( Log.Level.Log, __func__, 736, function (  )
       
@@ -12247,7 +12260,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       self:checkOverriededMethodOfAllClass(  )
       
-      local rootNode = Nodes.RootNode.create( self.nodeManager, self:createPosition( 0, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, children, self.moduleScope, self.globalScope, self.macroCtrl:get_useModuleMacroSet(), self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode, self.helperInfo, self.nodeManager, _lune.unwrapDefault( _lune.nilacc( self.importCtrl, 'get_importModule2ExportInfo', 'callmtd' ), {}), self.macroCtrl:get_typeId2MacroInfo(), self.typeId2ClassMap )
+      local rootNode = Nodes.RootNode.create( self.nodeManager, self:createPosition( 0, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, children, self.moduleScope, self.globalScope, self.macroCtrl:get_useModuleMacroSet(), self.moduleId, self.processInfo, moduleTypeInfo, self.provideNode, self.helperInfo, self.nodeManager, _lune.unwrapDefault( _lune.nilacc( self.importCtrl, 'get_importModule2ExportInfo', 'callmtd' ), {}), self.macroCtrl:get_declPubMacroInfoMap(), self.typeId2ClassMap )
       ast = rootNode
       
       ClosureFun.checkList( self.closureFunList )

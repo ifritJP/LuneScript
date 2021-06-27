@@ -849,8 +849,8 @@ pub alge MacroStatement {
    Local(Luaval<macroStatmentProc>),
 }
 pub abstract class MacroInfo {
-   let func: Luaval<macroStatmentProc>! {pub};
-   let symbol2MacroValInfoMap: Map<str,MacroValInfo> {pub};
+   let mut func: Luaval<macroStatmentProc>! {pub, pub};
+   let symbol2MacroValInfoMap: &Map<str,MacroValInfo> {pub};
    pub abstract fn getArgList():&List<&MacroArgInfo>;
    pub abstract fn getTokenList():&List<&Parser.Token>;
    pub abstract fn get_name():str;
@@ -2869,7 +2869,7 @@ pub override fn ExpOp2Node.getLiteral(): Literal!, str! {
 }
 
 pub class DefMacroInfo extend MacroInfo {
-   pub let declInfo: DeclMacroInfo;
+   pub let declInfo: &DeclMacroInfo;
    pri let mut argList:List<&MacroArgInfo>;
 
    pub override fn get_name():str {
@@ -2883,8 +2883,8 @@ pub class DefMacroInfo extend MacroInfo {
       return self.declInfo.$tokenList;
    }
    
-   pub fn __init( func: Luaval<macroStatmentProc>!, declInfo: DeclMacroInfo, 
-                  symbol2MacroValInfoMap: Map<str,MacroValInfo> )
+   pub fn __init( func: Luaval<macroStatmentProc>!, declInfo: &DeclMacroInfo,
+                  symbol2MacroValInfoMap: &Map<str,MacroValInfo> )
    {
       super( func, symbol2MacroValInfoMap );
       self.declInfo = declInfo;

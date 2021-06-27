@@ -1362,7 +1362,7 @@ function Front:createGoOption( scriptPath )
       end
    end
    
-   return convGo.Option.new(packageName, self:getGoAppName(  ), self.option.mainModule, self.option:get_addEnvArg(), self.option:get_enableRunner())
+   return convGo.Option.new(packageName, self:getGoAppName(  ), self.option.mainModule, self.option:get_addEnvArg(), self.option.convGoRunnerNum)
 end
 
 

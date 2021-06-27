@@ -288,7 +288,6 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
-local validAsyncMacro = false
 
 local function loadCode( code )
 
@@ -679,7 +678,6 @@ function MacroAnalyzeInfo:get_argIndex()
    return self.argIndex
 end
 
-
 local DefMacroSrc = {}
 function DefMacroSrc.setmeta( obj )
   setmetatable( obj, { __index = DefMacroSrc  } )
@@ -717,23 +715,46 @@ function DefMacroSrc:get_asyncFlag()
 end
 
 
-local MacroCtrl = {}
-_moduleObj.MacroCtrl = MacroCtrl
-function MacroCtrl.new( macroEval )
+local DefMacroInfoWithSrc = {}
+setmetatable( DefMacroInfoWithSrc, { __index = Nodes.DefMacroInfo } )
+function DefMacroInfoWithSrc.new( func, srcInfo, symbol2MacroValInfoMap )
    local obj = {}
-   MacroCtrl.setmeta( obj )
-   if obj.__init then obj:__init( macroEval ); end
+   DefMacroInfoWithSrc.setmeta( obj )
+   if obj.__init then obj:__init( func, srcInfo, symbol2MacroValInfoMap ); end
    return obj
 end
-function MacroCtrl:__init(macroEval) 
+function DefMacroInfoWithSrc:__init(func, srcInfo, symbol2MacroValInfoMap) 
+   Nodes.DefMacroInfo.__init( self,func, srcInfo:get_declInfo(), symbol2MacroValInfoMap)
+   
+   
+   self.srcInfo = srcInfo
+end
+function DefMacroInfoWithSrc.setmeta( obj )
+  setmetatable( obj, { __index = DefMacroInfoWithSrc  } )
+end
+function DefMacroInfoWithSrc:get_srcInfo()
+   return self.srcInfo
+end
+
+
+local MacroCtrl = {}
+_moduleObj.MacroCtrl = MacroCtrl
+function MacroCtrl.new( macroEval, validAsyncMacro )
+   local obj = {}
+   MacroCtrl.setmeta( obj )
+   if obj.__init then obj:__init( macroEval, validAsyncMacro ); end
+   return obj
+end
+function MacroCtrl:__init(macroEval, validAsyncMacro) 
+   self.validAsyncMacro = validAsyncMacro
    self.toLuavalLuaAsync = nil
    self.useLnsLoad = false
    self.declMacroInfoMap = {}
-   self.declMacroInfoSrcMap = {}
+   self.declPubMacroInfoMap = {}
    self.isDeclaringMacro = false
    self.tokenExpanding = false
    self.useModuleMacroSet = {}
-   self.typeId2MacroInfo = {}
+   self.typeId2ImportedMacroInfo = {}
    self.symbol2ValueMapForMacro = {}
    self.macroEval = macroEval
    self.analyzeInfo = MacroAnalyzeInfo.new(Ast.builtinTypeNone, Nodes.MacroMode.None)
@@ -744,9 +765,9 @@ function MacroCtrl:__init(macroEval)
 end
 function MacroCtrl:clone(  )
 
-   local obj = MacroCtrl.new(self.macroEval)
+   local obj = MacroCtrl.new(self.macroEval, self.validAsyncMacro)
    
-   if not validAsyncMacro then
+   if not self.validAsyncMacro then
       obj.toLuavalLuaAsync = self.toLuavalLuaAsync
    end
    
@@ -754,38 +775,49 @@ function MacroCtrl:clone(  )
    
    
    
-   do
-      for key, val in pairs( self.declMacroInfoMap ) do
-         obj.declMacroInfoMap[key] = val
-      end
-      
-   end
-   
-   
    obj.isDeclaringMacro = self.isDeclaringMacro
    obj.tokenExpanding = self.tokenExpanding
    _lune._Set_or(obj.useModuleMacroSet, self.useModuleMacroSet )
    do
-      for key, val in pairs( self.typeId2MacroInfo ) do
-         obj.typeId2MacroInfo[key] = val
+      for key, val in pairs( self.typeId2ImportedMacroInfo ) do
+         obj.typeId2ImportedMacroInfo[key] = val
       end
       
    end
    
    
-   for key, srcInfo in pairs( self.declMacroInfoSrcMap ) do
-      local macroObj
-      
-      do
-         local luaCode = srcInfo:get_luaCode()
-         if luaCode ~= nil then
-            macroObj = _lune.unwrap( runLuaOnLnsToMacroProc( luaCode, srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
-         else
-            macroObj = nil
-         end
+   
+   do
+      for key, val in pairs( self.declPubMacroInfoMap ) do
+         obj.declPubMacroInfoMap[key] = val
       end
       
-      obj.typeId2MacroInfo[key] = Nodes.DefMacroInfo.new(macroObj, srcInfo:get_declInfo(), srcInfo:get_symbol2MacroValInfoMap())
+   end
+   
+   
+   
+   if self.validAsyncMacro then
+      
+      for key, defInfo in pairs( self.declMacroInfoMap ) do
+         local srcInfo = defInfo:get_srcInfo()
+         local stmtFunc
+         
+         
+         stmtFunc = nil
+         obj.declMacroInfoMap[key] = DefMacroInfoWithSrc.new(stmtFunc, srcInfo, srcInfo:get_symbol2MacroValInfoMap())
+      end
+      
+   else
+    
+      
+      do
+         for key, val in pairs( self.declMacroInfoMap ) do
+            obj.declMacroInfoMap[key] = val
+         end
+         
+      end
+      
+      
    end
    
    
@@ -823,11 +855,8 @@ end
 function MacroCtrl:get_useModuleMacroSet()
    return self.useModuleMacroSet
 end
-function MacroCtrl:get_typeId2MacroInfo()
-   return self.typeId2MacroInfo
-end
-function MacroCtrl:get_declMacroInfoMap()
-   return self.declMacroInfoMap
+function MacroCtrl:get_declPubMacroInfoMap()
+   return self.declPubMacroInfoMap
 end
 function MacroCtrl:get_analyzeInfo()
    return self.analyzeInfo
@@ -869,7 +898,39 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
    end
    
    
-   local macroInfo = _lune.unwrap( self.typeId2MacroInfo[macroTypeInfo:get_typeId()])
+   local macroInfo
+   
+   do
+      local _exp = self.typeId2ImportedMacroInfo[macroTypeInfo:get_typeId()] or self.declPubMacroInfoMap[macroTypeInfo:get_typeId()]
+      if _exp ~= nil then
+         macroInfo = _exp
+      else
+         do
+            local _exp = self.declMacroInfoMap[macroTypeInfo:get_typeId()]
+            if _exp ~= nil then
+               local defInfo = _exp
+               local srcInfo = defInfo:get_srcInfo()
+               if not defInfo:get_func() then
+                  do
+                     local luaCode = srcInfo:get_luaCode()
+                     if luaCode ~= nil then
+                        
+                        local stmtFunc = _lune.unwrap( runLuaOnLnsToMacroProc( luaCode, srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
+                        defInfo:set_func( stmtFunc )
+                     end
+                  end
+                  
+               end
+               
+               macroInfo = defInfo
+            else
+               Util.err( string.format( "not found macroInfo -- %d", macroTypeInfo:get_typeId().id) )
+            end
+         end
+         
+      end
+   end
+   
    
    local function process(  )
    
@@ -883,7 +944,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
       
       local innerMacro = macroTypeInfo:getModule(  ) == moduleTypeInfo
       
-      local asyncMacro = validAsyncMacro and innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
+      local asyncMacro = self.validAsyncMacro and innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
       
       local toLuaval
       
@@ -913,6 +974,9 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
          
          do
             do
+               if innerMacro then
+               end
+               
                do
                   local func = macroInfo:get_func()
                   if func ~= nil then
@@ -1038,6 +1102,9 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
        
          do
             do
+               if innerMacro then
+               end
+               
                do
                   local func = macroInfo:get_func()
                   if func ~= nil then
@@ -1243,13 +1310,13 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       
       
       local luaCode = self.macroEval:evalFromCodeToLuaCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock )
-      local macroObj
+      local stmtFunc
       
-      macroObj, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false )
-      if macroObj ~= nil then
-         local extMacroInfo = ExtMacroInfo.new(macroInfo.name, macroObj, symbol2MacroValInfoMap, argList, tokenList, baseDir)
+      stmtFunc, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false )
+      if stmtFunc ~= nil then
+         local extMacroInfo = ExtMacroInfo.new(macroInfo.name, stmtFunc, symbol2MacroValInfoMap, argList, tokenList, baseDir)
          
-         self.typeId2MacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
+         self.typeId2ImportedMacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
          importedMacroInfoMap[macroTypeInfo:get_typeId()] = extMacroInfo
          return 
       end
@@ -1263,7 +1330,7 @@ end
 function MacroCtrl:importMacroInfo( importedMacroInfoMap )
 
    for typeId, macroInfo in pairs( importedMacroInfoMap ) do
-      self.typeId2MacroInfo[typeId] = macroInfo
+      self.typeId2ImportedMacroInfo[typeId] = macroInfo
    end
    
 end
@@ -1273,16 +1340,16 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
 
    local luaCode
    
-   local macroObj, err
+   local stmtFunc, err
    
-   local asyncFlag = validAsyncMacro and not Ast.isPubToExternal( node:get_expType():get_accessMode() )
+   local asyncFlag = self.validAsyncMacro and not Ast.isPubToExternal( node:get_expType():get_accessMode() )
    local ok
    
    if node:get_declInfo():get_stmtBlock() then
       local workCode = self.macroEval:evalToLuaCode( processInfo, node )
       luaCode = workCode
-      macroObj, err = runLuaOnLnsToMacroProc( workCode, baseDir, asyncFlag )
-      if macroObj then
+      stmtFunc, err = runLuaOnLnsToMacroProc( workCode, baseDir, asyncFlag )
+      if stmtFunc then
          ok = true
          err = nil
       else
@@ -1293,7 +1360,7 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
    else
     
       ok = true
-      macroObj, err = nil, nil
+      stmtFunc, err = nil, nil
       luaCode = nil
    end
    
@@ -1320,10 +1387,15 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
       end
       
       
-      local macroInfo = Nodes.DefMacroInfo.new(macroObj, node:get_declInfo(), remap)
-      self.typeId2MacroInfo[node:get_expType():get_typeId()] = macroInfo
-      self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
-      self.declMacroInfoSrcMap[node:get_expType():get_typeId()] = DefMacroSrc.new(luaCode, node:get_declInfo(), remap, baseDir, asyncFlag)
+      local srcInfo = DefMacroSrc.new(luaCode, node:get_declInfo(), remap, baseDir, asyncFlag)
+      local macroInfo = DefMacroInfoWithSrc.new(stmtFunc, srcInfo, remap)
+      if Ast.isPubToExternal( node:get_expType():get_accessMode() ) then
+         self.declPubMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
+      else
+       
+         self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
+      end
+      
    end
    
    
@@ -1459,13 +1531,13 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
             local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
-            parser:pushbackStr( string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ), pos )
+            parser:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ), pos )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
             if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
                local strList = macroVal2strList( nextToken.txt, macroVal, parser )
                for index = #strList, 1, -1 do
-                  parser:pushbackStr( string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
+                  parser:pushbackStr( nil, string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
                end
                
             else

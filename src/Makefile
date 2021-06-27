@@ -110,7 +110,7 @@ help:
 	@echo "  make setup-pkg-lua"
 	@echo "  make test-govslua [NO_BATCH=y] [ONLY_CONV=y]"
 	@echo "  make goprof [LNSC_OP=]"
-	@echo "  make goprofview"
+	@echo "  make view-goprof [BROWSER=y]"
 
 
 exec:
@@ -1811,13 +1811,13 @@ goprof:
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
-goprofview:
+view-goprof:
 ifdef BROWSER
 	go tool pprof -http=0.0.0.0:8888 lnsc @-.profi
 else
 	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profi
 endif
-gotraceview:
+view-gotrace:
 ifdef BROWSER
 	go tool trace -http=0.0.0.0:8888 @-.profitrace
 else

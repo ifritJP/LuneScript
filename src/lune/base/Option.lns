@@ -161,6 +161,9 @@ pub class Option {
 
    local let mut stdinFile:&Types.StdinFile! {pub,pub};
 
+   /** convGo 内の runner 数 */
+   pub let mut convGoRunnerNum:int;
+
    pub fn __init() {
       self.stdinFile = nil;
       self.validPostBuild = true;
@@ -191,6 +194,7 @@ pub class Option {
       self.outputDir = nil;
       self.analyzePos = nil;
       self.dependsPath = nil;
+      self.convGoRunnerNum = 4;
    }
 
    pub fn openDepend( relPath:str! ) : oStream! {
@@ -401,6 +405,21 @@ usage:
                   if option.transCtrlInfo.threadPerUnitThread < 0 {
                      printUsage( 1 );
                   }
+               }
+               case "--convGoRunnerNum" {
+                  option.convGoRunnerNum = getNextOpInt();
+                  if option.convGoRunnerNum < 0 {
+                     printUsage( 1 );
+                  }
+               }
+               case "--macroAsyncParseStmtLen" {
+                  option.transCtrlInfo.macroAsyncParseStmtLen = getNextOpInt();
+                  if option.transCtrlInfo.macroAsyncParseStmtLen < 0 {
+                     printUsage( 1 );
+                  }
+               }
+               case "--enableMacroAsync" {
+                  option.transCtrlInfo.validMacroAsync = true;
                }
                case "--disableRunner" {
                   option.enableRunner = false;
