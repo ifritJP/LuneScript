@@ -1817,6 +1817,12 @@ ifdef BROWSER
 else
 	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profi
 endif
+view-goprofmem:
+ifdef BROWSER
+	go tool pprof -http=0.0.0.0:8888 lnsc @-.profimem
+else
+	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profimem
+endif
 view-gotrace:
 ifdef BROWSER
 	go tool trace -http=0.0.0.0:8888 @-.profitrace

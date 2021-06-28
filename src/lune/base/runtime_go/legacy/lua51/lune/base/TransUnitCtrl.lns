@@ -555,6 +555,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
    let mut resultMap:Map<&FuncBlockInfo,FuncBlockResult> = {};
    let noRunnerList:List<List<&FuncBlockInfo>> = [];
    let noRunnerTypeSet:Set<&Ast.TypeInfo> = (@);
+   let mut lastPartList:List<&FuncBlockInfo>! = nil;
 
    if #self.funcBlockInfoList < 20 or self.totalFuncBlockTokenNum < 2000 {
       __lns.runtime.log(
@@ -565,38 +566,53 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       if divCount > 0 {
          self.analyzePhase = .Runner;
          
-         let maxTokenCount = ( self.totalFuncBlockTokenNum + divCount - 1 ) / divCount;
+         // 分割するトークン数を決める。
+         // 基本は self.totalFuncBlockTokenNum を divCount で均等に分割するが、
+         // runner はマージ処理が必要なので、
+         // runner で処理させる量を少し調整する。
+         let maxTokenCount = ((self.totalFuncBlockTokenNum / divCount)*0.9)@@int;
+
+         
          let mut offset = 1;
          let len = #self.funcBlockInfoList;
 
          for managerId = 1, divCount {
             let list:List<&FuncBlockInfo> = [];
-            let mut tokenCount = 0;
-            while offset <= len {
-               let funcBlockInfo = self.funcBlockInfoList[ offset ];
-               offset = offset + 1;
-               list.insert( funcBlockInfo );
-               tokenCount = tokenCount + #funcBlockInfo.$tokenList;
-               if tokenCount >= maxTokenCount {
-                  break;
+            if managerId == divCount {
+               for index = offset, len {
+                  let funcBlockInfo = self.funcBlockInfoList[ index ];
+                  list.insert( funcBlockInfo );
                }
-            }
-
-            let mut runner = new TransUnitRunner(
-               self,
-               self.moduleId,
-               self.importModuleInfo,
-               self.macroEval, false,
-               self.moduleName, .Compile, nil,
-               self.targetLuaVer,
-               self.ctrl_info,
-               self.builtinFunc,
-               list, managerId );
-
-            if __run( runner, __lns.runMode.Skip, "astMain -- %s" (streamName) ) {
-               runnerList.insert( runner );
+               // runner の数を減らすため、最後の list を lastPartList として保持して、
+               // 後でこのスレッドで処理する。
+               lastPartList = list;
             } else {
-               noRunnerList.insert( list );
+               let mut tokenCount = 0;
+               while offset <= len {
+                  let funcBlockInfo = self.funcBlockInfoList[ offset ];
+                  offset = offset + 1;
+                  list.insert( funcBlockInfo );
+                  tokenCount = tokenCount + #funcBlockInfo.$tokenList;
+                  if tokenCount >= maxTokenCount {
+                     break;
+                  }
+               }
+               let mut runner = new TransUnitRunner(
+                  self,
+                  self.moduleId,
+                  self.importModuleInfo,
+                  self.macroEval, false,
+                  self.moduleName, .Compile, nil,
+                  self.targetLuaVer,
+                  self.ctrl_info,
+                  self.builtinFunc,
+                  list, managerId );
+
+               if __run( runner, __lns.runMode.Skip, "astMain -- %s" (streamName) ) {
+                  runnerList.insert( runner );
+               } else {
+                  noRunnerList.insert( list );
+               }
             }
          }
       }
@@ -616,6 +632,13 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       }
       // runner の setup が終るのを待ってからマージしないと、
       // runner の setup とマージが競合する。
+      
+      when! lastPartList {
+         resultMap = self.processFuncBlockInfo(
+            new ListFuncBlockCtl( lastPartList ), self.parser.getStreamName() );
+         __lns.runtime.log( "process lastpart" );
+      }
+      
       foreach runner in runnerList {
          let workMap = runner.get();
          self.mergeFrom( runner, resultMap );

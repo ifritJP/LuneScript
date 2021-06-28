@@ -71,15 +71,13 @@ type LnsRunner interface {
 func lnsRunMain(runnerInfo *lnsRunnerInfo, threadMgrInfo *Lns_ThreadMgrInfo) {
 	env := createEnv(true, runnerInfo.name, runnerInfo.id)
 
-	lns_threadMgrInfo.log(env, _THREAD_EVENT_START, "")
+	threadMgrInfo.log(env, _THREAD_EVENT_START, "")
 
 	LnsExecRunner(env, runnerInfo.runner)
 
 	runnerInfo.runner.GetLnsSyncFlag().wg.Done()
 
 	env.LuaVM.closeVM()
-
-	threadMgrInfo.endToRun(runnerInfo)
 }
 
 func LnsRun(_env *LnsEnv, runner LnsRunner, mode int, nameOp LnsAny) bool {

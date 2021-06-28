@@ -11956,6 +11956,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
    local resultMap = {}
    local noRunnerList = {}
    local noRunnerTypeSet = {}
+   local lastPartList = nil
    
    if #self.funcBlockInfoList < 20 or self.totalFuncBlockTokenNum < 2000 then
       
@@ -11965,32 +11966,44 @@ function TransUnitCtrl:processFuncBlock( streamName )
       if divCount > 0 then
          self.analyzePhase = AnalyzePhase.Runner
          
-         local maxTokenCount = math.floor((self.totalFuncBlockTokenNum + divCount - 1 ) / divCount)
+         local maxTokenCount = math.floor(((math.floor(self.totalFuncBlockTokenNum / divCount) ) * 0.9 ))
+         
          local offset = 1
          local len = #self.funcBlockInfoList
          
          for managerId = 1, divCount do
             local list = {}
-            local tokenCount = 0
-            while offset <= len do
-               local funcBlockInfo = self.funcBlockInfoList[offset]
-               offset = offset + 1
-               table.insert( list, funcBlockInfo )
-               tokenCount = tokenCount + #funcBlockInfo:get_tokenList()
-               if tokenCount >= maxTokenCount then
-                  break
+            if managerId == divCount then
+               for index = offset, len do
+                  local funcBlockInfo = self.funcBlockInfoList[index]
+                  table.insert( list, funcBlockInfo )
                end
                
-            end
-            
-            
-            local runner = TransUnitRunner.new(self, self.moduleId, self.importModuleInfo, self.macroEval, false, self.moduleName, AnalyzeMode.Compile, nil, self.targetLuaVer, self.ctrl_info, self.builtinFunc, list, managerId)
-            
-            if _lune._run(runner, 2, string.format( "astMain -- %s", streamName) ) then
-               table.insert( runnerList, runner )
+               
+               lastPartList = list
             else
              
-               table.insert( noRunnerList, list )
+               local tokenCount = 0
+               while offset <= len do
+                  local funcBlockInfo = self.funcBlockInfoList[offset]
+                  offset = offset + 1
+                  table.insert( list, funcBlockInfo )
+                  tokenCount = tokenCount + #funcBlockInfo:get_tokenList()
+                  if tokenCount >= maxTokenCount then
+                     break
+                  end
+                  
+               end
+               
+               local runner = TransUnitRunner.new(self, self.moduleId, self.importModuleInfo, self.macroEval, false, self.moduleName, AnalyzeMode.Compile, nil, self.targetLuaVer, self.ctrl_info, self.builtinFunc, list, managerId)
+               
+               if _lune._run(runner, 2, string.format( "astMain -- %s", streamName) ) then
+                  table.insert( runnerList, runner )
+               else
+                
+                  table.insert( noRunnerList, list )
+               end
+               
             end
             
          end
@@ -12008,6 +12021,12 @@ function TransUnitCtrl:processFuncBlock( streamName )
     
       for __index, runner in ipairs( runnerList ) do
          runner:waitToSetup(  )
+      end
+      
+      
+      if lastPartList ~= nil then
+         resultMap = self:processFuncBlockInfo( ListFuncBlockCtl.new(lastPartList), self.parser:getStreamName(  ) )
+         
       end
       
       
@@ -12064,7 +12083,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 664, function (  )
+   Log.log( Log.Level.Log, __func__, 687, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), tostring( baseDir), tostring( macroFlag), AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12133,7 +12152,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       local workExportInfo = Nodes.ExportInfo.new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 736, function (  )
+      Log.log( Log.Level.Log, __func__, 759, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), tostring( moduleTypeInfo), tostring( moduleTypeInfo:get_scope()))
       end )
