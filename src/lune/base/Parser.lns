@@ -373,7 +373,7 @@ pub static fn isOp1( ope: str ) : bool {
 //    pub let list:List<Token>;
 // }
 
-let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0, "eof" ), false, [] );
+let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0, "eof" ## ), false, [] );
 pub fn getEofToken(): &Token {
    return eofToken;
 }

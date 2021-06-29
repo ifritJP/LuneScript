@@ -161,12 +161,9 @@ func (self *Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
 }
 // 145: decl @lune.@base.@Types.Position.create
 func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) *Types_Position {
-    var pos *Types_Position
-    pos = NewTypes_Position(_env, lineNo, column, streamName)
-    pos.OrgPos = orgPos
-    return pos
+    return NewTypes_Position(_env, lineNo, column, streamName, orgPos)
 }
-// 153: decl @lune.@base.@Types.Position.getDisplayTxt
+// 151: decl @lune.@base.@Types.Position.getDisplayTxt
 func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     var txt string
     txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
@@ -179,7 +176,7 @@ func (self *Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     }
     return txt
 }
-// 197: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 195: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -193,11 +190,11 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 212: decl @lune.@base.@Types.Token.set_commentList
+// 210: decl @lune.@base.@Types.Token.set_commentList
 func (self *Types_Token) Set_commentList(_env *LnsEnv, commentList *LnsList) {
     self.commentList = commentList
 }
-// 216: decl @lune.@base.@Types.Token.getLineCount
+// 214: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
@@ -320,10 +317,10 @@ func Types_PositionDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Types_Position) ToTypes_Position() *Types_Position {
     return obj
 }
-func NewTypes_Position(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 string) *Types_Position {
+func NewTypes_Position(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 string, arg4 LnsAny) *Types_Position {
     obj := &Types_Position{}
     obj.FP = obj
-    obj.InitTypes_Position(_env, arg1, arg2, arg3)
+    obj.InitTypes_Position(_env, arg1, arg2, arg3, arg4)
     return obj
 }
 func (self *Types_Position) ToMapSetup( obj *LnsMap ) *LnsMap {
@@ -381,11 +378,11 @@ func Types_Position_FromMapMain( newObj *Types_Position, objMap *LnsMap, paramLi
     return true, newObj, nil
 }
 // 127: DeclConstr
-func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string) {
+func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) {
     self.LineNo = lineNo
     self.Column = column
     self.StreamName = streamName
-    self.OrgPos = nil
+    self.OrgPos = orgPos
 }
 
 
@@ -493,7 +490,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 187: DeclConstr
+// 185: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos *Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     self.Txt = txt
@@ -551,7 +548,7 @@ func Lns_Types_init(_env *LnsEnv) {
     init_Types = true
     Types__mod__ = "@lune.@base.@Types"
     Lns_InitMod()
-    Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", NewTypes_Position(_env, 0, -1, "eof"), false, NewLnsList([]LnsAny{}))
+    Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", NewTypes_Position(_env, 0, -1, "eof", nil), false, NewLnsList([]LnsAny{}))
     Types_defaultParserPipeSize = 100
 }
 func init() {

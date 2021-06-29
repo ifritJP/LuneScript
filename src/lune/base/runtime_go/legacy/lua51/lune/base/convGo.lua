@@ -741,6 +741,12 @@ local function isInnerDeclType( typeInfo )
    return false
 end
 
+function convFilter:isInheritAbsImmut( typeInfo )
+
+   return typeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut )
+end
+
+
 function convFilter:getCanonicalName( typeInfo, localFlag )
 
    local enumName = typeInfo:getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), localFlag )
@@ -1114,7 +1120,39 @@ local function getOrgTypeInfo( typeInfo )
    return typeInfo:get_srcTypeInfo():get_nonnilableType()
 end
 
-function convFilter:type2gotypeOrg( typeInfo, addClassAster )
+local ClassAsterMode = {}
+ClassAsterMode._val2NameMap = {}
+function ClassAsterMode:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "ClassAsterMode.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function ClassAsterMode._from( val )
+   if ClassAsterMode._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+ClassAsterMode.__allList = {}
+function ClassAsterMode.get__allList()
+   return ClassAsterMode.__allList
+end
+
+ClassAsterMode.None = 0
+ClassAsterMode._val2NameMap[0] = 'None'
+ClassAsterMode.__allList[1] = ClassAsterMode.None
+ClassAsterMode.Normal = 1
+ClassAsterMode._val2NameMap[1] = 'Normal'
+ClassAsterMode.__allList[2] = ClassAsterMode.Normal
+ClassAsterMode.Force = 2
+ClassAsterMode._val2NameMap[2] = 'Force'
+ClassAsterMode.__allList[3] = ClassAsterMode.Force
+
+
+function convFilter:type2gotypeOrg( typeInfo, mode )
 
    if typeInfo:get_kind() == Ast.TypeInfoKind.DDD then
       return "[]LnsAny"
@@ -1159,15 +1197,24 @@ function convFilter:type2gotypeOrg( typeInfo, addClassAster )
          
          local symbol = self:getTypeSymbolWithPrefix( typeInfo )
          
-         if addClassAster then
-            return "*" .. symbol
+         if mode ~= ClassAsterMode.None then
+            if self:isInheritAbsImmut( typeInfo ) then
+               if mode == ClassAsterMode.Force then
+                  return "*" .. symbol
+               end
+               
+            else
+             
+               return "*" .. symbol
+            end
+            
          end
          
          return symbol
       elseif _switchExp == Ast.TypeInfoKind.IF then
          return self:getTypeSymbolWithPrefix( typeInfo )
       elseif _switchExp == Ast.TypeInfoKind.Alternate then
-         return self:type2gotypeOrg( typeInfo:get_baseTypeInfo(), addClassAster )
+         return self:type2gotypeOrg( typeInfo:get_baseTypeInfo(), mode )
       end
    end
    
@@ -1177,7 +1224,7 @@ end
 
 function convFilter:type2gotype( typeInfo )
 
-   return self:type2gotypeOrg( typeInfo, true )
+   return self:type2gotypeOrg( typeInfo, ClassAsterMode.Normal )
 end
 
 
@@ -2049,8 +2096,9 @@ function convFilter:outputDeclFunc( addEnvArg, funcInfo )
     
       if typeInfo:get_kind() == Ast.TypeInfoKind.Method then
          self:write( "func " )
-         self:write( "(self *" )
-         self:write( self:getTypeSymbol( prefixType ) )
+         self:write( "(self " )
+         self:write( self:type2gotype( prefixType ) )
+         
          self:write( ") " )
       else
        
@@ -5091,7 +5139,7 @@ function convFilter:outputInterfaceType( node )
 end
 
 
-function convFilter:outputClassType( node )
+function convFilter:outputClassType( node, absImmutFlag )
 
    self:write( "type " )
    self:write( self:getTypeSymbol( node:get_expType() ) )
@@ -5115,9 +5163,13 @@ function convFilter:outputClassType( node )
       filter( memberNode, self, node )
    end
    
-   self:write( "FP " )
-   self:write( self:getTypeSymbol( node:get_expType() ) )
-   self:writeln( "Mtd" )
+   
+   if not absImmutFlag then
+      self:write( "FP " )
+      self:write( self:getTypeSymbol( node:get_expType() ) )
+      self:writeln( "Mtd" )
+   end
+   
    
    self:popIndent(  )
    
@@ -5130,14 +5182,21 @@ function convFilter:outputClassType( node )
 end
 
 
-function convFilter:outputToStem( node )
+function convFilter:outputToStem( node, absImmutFlag )
 
    self:writeln( string.format( "func %s2Stem( obj LnsAny ) LnsAny {", self:getTypeSymbolWithPrefix( node:get_expType() )) )
    self:pushIndent(  )
    self:writeln( "if obj == nil {" )
    self:writeln( "    return nil" )
    self:writeln( "}" )
-   self:writeln( string.format( "return obj.(%s).FP", self:type2gotype( node:get_expType() )) )
+   self:write( string.format( "return obj.(%s)", self:type2gotype( node:get_expType() )) )
+   if not absImmutFlag then
+      self:writeln( ".FP" )
+   else
+    
+      self:writeln( "" )
+   end
+   
    self:popIndent(  )
    self:writeln( "}" )
 end
@@ -5151,8 +5210,8 @@ function convFilter:outputDownCast( node )
    self:pushIndent(  )
    self:write( "To" )
    self:write( symbol )
-   self:write( "() *" )
-   self:write( symbol )
+   self:write( "() " )
+   self:write( self:type2gotype( node:get_expType() ) )
    self:writeln( "" )
    self:popIndent(  )
    self:writeln( "}" )
@@ -5172,12 +5231,13 @@ end
 
 function convFilter:outputCastReceiver( node )
 
-   self:write( "func (obj *" )
-   self:write( self:getTypeSymbol( node:get_expType() ) )
+   local gotype = self:type2gotype( node:get_expType() )
+   self:write( "func (obj " )
+   self:write( gotype )
    self:write( ") To" )
    self:write( self:getTypeSymbol( node:get_expType() ) )
-   self:write( "() *" )
-   self:write( self:getTypeSymbol( node:get_expType() ) )
+   self:write( "() " )
+   self:write( gotype )
    self:writeln( " {" )
    self:pushIndent(  )
    self:writeln( "return obj" )
@@ -5186,11 +5246,20 @@ function convFilter:outputCastReceiver( node )
 end
 
 
-function convFilter:outputNewSetup( objName, classType )
+function convFilter:outputNewSetup( objName, classType, absImmutFlag )
 
    local className = self:getTypeSymbol( classType )
-   self:writeln( string.format( "%s := &%s{}", objName, className) )
-   self:writeln( string.format( "%s.FP = %s", objName, objName) )
+   self:write( string.format( "%s := ", objName) )
+   if not absImmutFlag then
+      self:write( "&" )
+   end
+   
+   self:writeln( string.format( "%s{}", className) )
+   if not absImmutFlag then
+      self:write( string.format( "%s.FP = ", objName) )
+      self:writeln( string.format( "%s", objName) )
+   end
+   
    
    do
       local workType = classType
@@ -5206,20 +5275,21 @@ function convFilter:outputNewSetup( objName, classType )
 end
 
 
-function convFilter:outputConstructor( node )
+function convFilter:outputConstructor( node, absImmutFlag )
 
    local scope = _lune.unwrap( node:get_expType():get_scope())
    local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, Ast.ScopeAccess.Normal ))
    
    local className = self:getTypeSymbol( node:get_expType() )
    local ctorName = self:getConstrSymbol( node:get_expType() )
+   local goType = self:type2gotype( node:get_expType() )
    
    if not node:get_expType():get_abstractFlag() then
       self:write( string.format( "func New%s(", className) )
       self:outputDeclFuncArg( initFuncType )
-      self:writeln( string.format( ") *%s {", className) )
+      self:writeln( string.format( ") %s {", goType) )
       self:pushIndent(  )
-      self:outputNewSetup( "obj", node:get_expType() )
+      self:outputNewSetup( "obj", node:get_expType(), absImmutFlag )
       self:write( string.format( "obj.%s(", ctorName) )
       self:write( getAddEnvArg( #initFuncType:get_argTypeInfoList(), self.option:get_addEnvArg() ) )
       for index, _1 in ipairs( initFuncType:get_argTypeInfoList() ) do
@@ -5538,7 +5608,7 @@ function convFilter:outputAsyncItem( node )
 end
 
 
-function convFilter:outputMapping( node )
+function convFilter:outputMapping( node, absImmutFlag )
 
    local classType = node:get_expType()
    local className = self:getTypeSymbol( classType )
@@ -5599,7 +5669,7 @@ function convFilter:outputMapping( node )
       self:writeln( "} else {" )
       self:writeln( '   objMap = work' )
       self:writeln( "}" )
-      self:outputNewSetup( "newObj", classType )
+      self:outputNewSetup( "newObj", classType, absImmutFlag )
       self:writeln( string.format( "return %sMain( newObj, objMap, paramList )", fromStemName) )
       self:popIndent(  )
       self:writeln( "}" )
@@ -5779,19 +5849,21 @@ function convFilter:processDeclClass( node, opt )
          local _switchExp = node:get_expType():get_kind()
          if _switchExp == Ast.TypeInfoKind.Class then
             self:writeln( string.format( "// declaration Class -- %s", node:get_expType():get_rawTxt()) )
+            local absImmutFlag = self:isInheritAbsImmut( node:get_expType() )
+            
             self:outputStaticMember( node )
             self:outputMethodIF( node )
-            self:outputClassType( node )
-            self:outputToStem( node )
+            self:outputClassType( node, absImmutFlag )
+            self:outputToStem( node, absImmutFlag )
             self:outputDownCast( node )
             self:outputCastReceiver( node )
-            self:outputConstructor( node )
+            self:outputConstructor( node, absImmutFlag )
             self:outputAccessor( node )
             self:outputDummyAbstractMethodOfClass( node:get_expType() )
             self:outputAdvertise( node )
             
             if node:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeMapping, nil ) then
-               self:outputMapping( node )
+               self:outputMapping( node, absImmutFlag )
             end
             
             
@@ -6019,8 +6091,12 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                      do
                         local _switchExp = prefixKind
                         if _switchExp == Ast.TypeInfoKind.Class then
+                           if self:isInheritAbsImmut( prefixType ) then
+                              
+                              self:write( ".FP" )
+                           end
                            
-                           self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
+                           self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
                         else 
                            
                               do
@@ -6055,7 +6131,11 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                         local _switchExp = prefixKind
                         if _switchExp == Ast.TypeInfoKind.Class then
                            
-                           self:write( string.format( ".FP.%s", self:getSymbolSym( funcSymbol )) )
+                           if not self:isInheritAbsImmut( prefixType ) then
+                              self:write( ".FP" )
+                           end
+                           
+                           self:write( string.format( ".%s", self:getSymbolSym( funcSymbol )) )
                            if funcSymbol:get_name() == "_toMap" then
                               callKind = _lune.newAlge( CallKind.BuiltinCall)
                            end

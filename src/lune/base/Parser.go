@@ -10,7 +10,7 @@ func Parser_convExp0_320(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 87
-func Parser_convExp0_852(arg1 []LnsAny) LnsAny {
+func Parser_convExp0_853(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 type Parser_TxtStream = Util_TxtStream
@@ -47,7 +47,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
         var endIndex LnsInt
         
         {
-            _endIndex := Parser_convExp0_852(Lns_2DDD(_env.GetVM().String_find(workTxt, workPattern, workIndex, nil)))
+            _endIndex := Parser_convExp0_853(Lns_2DDD(_env.GetVM().String_find(workTxt, workPattern, workIndex, nil)))
             if _endIndex == nil{
                 Util_err(_env, _env.GetVM().String_format("error: illegal string -- %s", []LnsAny{workTxt}))
             } else {
@@ -801,7 +801,7 @@ func Lns_Parser_init(_env *LnsEnv) {
     Lns_AsyncParser_init(_env)
     Parser_noneToken = Types_noneToken
     Parser_StreamParser____init_0_(_env)
-    Parser_eofToken = NewTypes_Token(_env, Types_TokenKind__Eof, "<EOF>", NewTypes_Position(_env, 0, 0, "eof"), false, NewLnsList([]LnsAny{}))
+    Parser_eofToken = NewTypes_Token(_env, Types_TokenKind__Eof, "<EOF>", NewTypes_Position(_env, 0, 0, "eof", nil), false, NewLnsList([]LnsAny{}))
 }
 func init() {
     init_Parser = false

@@ -486,6 +486,21 @@ class Test9 extend Super7 {
    }
 }
 {
+   class Super {
+   }
+   class Hoge extend Super (__absimmut) {
+      let val1:List<&List<int>>; // error
+      let mut val2:List<int>; // error
+      let allmut val3:&List<int>; // error
+   }
+
+   class Sub extend Hoge { // error
+      let val1:List<&List<int>>; // error
+      let mut val2:List<int>; // error
+      let allmut val3:&List<int>; // error
+   }
+}
+{
    interface IF2 extend (Mapping) {
    }
    abstract class Hoge extend (Mapping) {
@@ -494,5 +509,4 @@ class Test9 extend Super7 {
       let val:IF2; // error
       let val2:Hoge; // error
    }
-   
 }

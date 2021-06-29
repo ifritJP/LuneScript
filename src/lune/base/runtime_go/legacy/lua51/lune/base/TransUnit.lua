@@ -3949,6 +3949,14 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
    
    local symbol2TypeInfo = {}
    for __index, ifType in ipairs( interfaceList ) do
+      if ifType == Ast.builtinTypeAbsImmut then
+         if baseRef ~= nil then
+            self:addErrMess( baseRef:get_pos(), string.format( "__absimmut can't extend the class -- %s", baseRef:get_expType():getTxt(  )) )
+         end
+         
+      end
+      
+      
       _lune.nilacc( ifType:get_scope(), 'filterTypeInfoField', 'callmtd' , true, self:get_scope(), self.scopeAccess, function ( symbolInfo )
       
          if symbolInfo:get_kind() == Ast.SymbolKind.Mtd then
@@ -3975,6 +3983,10 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
    local baseTypeInfo = nil
    if baseRef ~= nil then
       baseTypeInfo = baseRef:get_expType()
+      if baseRef:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut, nil ) then
+         self:addErrMess( baseRef:get_pos(), string.format( "can't extend the __absimmut. (%s)", baseRef:get_expType():getTxt(  )) )
+      end
+      
    end
    
    return nextToken, baseTypeInfo, interfaceList, ifAlt2typeMap, Nodes.ClassInheritInfo.new(baseRef, ifRefList)
@@ -4669,6 +4681,18 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
    local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( classTypeInfo:get_accessMode() ) )
    token = self:getToken(  )
    
+   if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ) then
+      if mutMode ~= Ast.MutMode.IMut then
+         self:addErrMess( varName.pos, string.format( "__absimmut can't have mutable member. -- %s", varName.txt) )
+      end
+      
+      if not Ast.TypeInfo.canBeAbsImmutMember( refType:get_expType() ) then
+         self:addErrMess( refType:get_pos(), string.format( "__absimmut can't have member of mutable type. -- %s", refType:get_expType():getTxt(  )) )
+      end
+      
+   end
+   
+   
    if refType:get_expType():get_asyncMode() == Ast.Async.Transient then
       self:addErrMess( refType:get_pos(), string.format( "can't hold with the type of __trans. -- %s", varName.txt) )
    end
@@ -4739,7 +4763,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1721, function (  )
+         Log.log( Log.Level.Debug, __func__, 1751, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )

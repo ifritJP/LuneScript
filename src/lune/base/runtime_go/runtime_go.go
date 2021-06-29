@@ -169,6 +169,9 @@ func Lns_IsNil(val LnsAny) bool {
 		return false
 	default:
 		value := reflect.ValueOf(val)
+		if value.Kind() == reflect.Struct {
+			return false
+		}
 		// if value.Kind() == reflect.Func {
 		// 	return false
 		// }

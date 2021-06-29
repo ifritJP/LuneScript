@@ -563,7 +563,7 @@ pub fn Parser.parse() mut : Types.Token[]! {
       if rawLine.find( "^#!" ## ) {
          let mut token = new Types.Token(
             .Sheb, rawLine,
-            new Types.Position( self.lineNo, 1, self.streamName ),
+            new Types.Position( self.lineNo, 1, self.streamName ## ),
             false, [] );
          return [ token ];
       }

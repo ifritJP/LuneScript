@@ -108,20 +108,20 @@ func Option_convExp0_68(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 338
-func Option_convExp0_913(arg1 []LnsAny) LnsAny {
+func Option_convExp0_921(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 333
-func Option_convExp0_920(arg1 []LnsAny) LnsAny {
+func Option_convExp0_928(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 228
-func Option_convExp0_722(arg1 []LnsAny) LnsAny {
+func Option_convExp0_730(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 52: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 11595
+    return 11633
 }
 
 // 81: decl @lune.@base.@Option.getRuntimeModule
@@ -142,7 +142,7 @@ func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Option_convExp0_722(Lns_2DDD(Lns_io_open(lune_path, "w")))
+        _fileObj := Option_convExp0_730(Lns_2DDD(Lns_io_open(lune_path, "w")))
         if _fileObj == nil{
             return _env.GetVM().String_format("failed to open -- %s", []LnsAny{lune_path})
         } else {
@@ -172,11 +172,11 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
     var index LnsInt
     index = 1
     {
-        _file := Option_convExp0_920(Lns_2DDD(Lns_io_open("lune.js", "r")))
+        _file := Option_convExp0_928(Lns_2DDD(Lns_io_open("lune.js", "r")))
         if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             {
-                _projInfo := Option_convExp0_913(Lns_2DDD(Option_ProjInfo1204__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
+                _projInfo := Option_convExp0_921(Lns_2DDD(Option_ProjInfo1204__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( file.Read(_env, "*a")) ||
                     _env.SetStackVal( "") ).(string))),nil)))
                 if !Lns_IsNil( _projInfo ) {
@@ -488,7 +488,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
                         lineNo = Lns_forceCastInt((Lns_unwrapDefault( Lns_tonumber(arg, nil), 0)))
                     } else if Lns_op_not(column){
                         column = Lns_forceCastInt((Lns_unwrapDefault( Lns_tonumber(arg, nil), 0)))
-                        option.AnalyzePos = NewTypes_Position(_env, Lns_unwrap( lineNo).(LnsInt), Lns_unwrap( column).(LnsInt), Util_scriptPath2Module(_env, option.ScriptPath))
+                        option.AnalyzePos = NewTypes_Position(_env, Lns_unwrap( lineNo).(LnsInt), Lns_unwrap( column).(LnsInt), Util_scriptPath2Module(_env, option.ScriptPath), nil)
                     }
                 } else if _switch3 == Option_ModeKind__Save || _switch3 == Option_ModeKind__SaveMeta || _switch3 == Option_ModeKind__Glue {
                     option.OutputDir = arg
@@ -789,7 +789,10 @@ func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
     self.OutputDir = nil
     self.AnalyzePos = nil
     self.DependsPath = nil
-    self.ConvGoRunnerNum = 4
+    self.ConvGoRunnerNum = _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( true) &&
+        _env.SetStackVal( 4) ||
+        _env.SetStackVal( 0) ).(LnsInt)
 }
 
 

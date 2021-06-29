@@ -894,7 +894,7 @@ func (self *TransUnitIF_TransUnitBase) InitTransUnitIF_TransUnitBase(_env *LnsEn
     self.NsInfoMap = NewLnsMap( map[LnsAny]LnsAny{})
     var subRootTypeInfo *Ast_TypeInfo
     subRootTypeInfo = self.ProcessInfo.FP.Get_dummyParentType(_env)
-    self.curNsInfo = NewTransUnitIF_NSInfo(_env, subRootTypeInfo, subRootTypeInfo.FP, NewTypes_Position(_env, 0, 0, "@builtin@"), ctrl_info.ValidAsyncCtrl)
+    self.curNsInfo = NewTransUnitIF_NSInfo(_env, subRootTypeInfo, subRootTypeInfo.FP, NewTypes_Position(_env, 0, 0, "@builtin@", nil), ctrl_info.ValidAsyncCtrl)
     self.NsInfoMap.Set(subRootTypeInfo,self.curNsInfo)
 }
 

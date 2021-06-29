@@ -2303,3 +2303,41 @@ _section();
 
    __lns.runtime.enableLog( false );
 }
+_section();
+{
+   class Val extend (__absimmut) {
+      let val:int;
+      pub fn func() : int {
+         return self.val;
+      }
+   }
+
+   class Hoge {
+      let val:Val;
+      pub fn func2(): &Val {
+         return self.val;
+      }
+   }
+
+   let mut test = new Hoge( new Val(1) );
+   for index = 1, 10000 * 1000 {
+      test = new Hoge( new Val(index) );
+   }
+   print( test.func2().func() );
+   let list = [ new Val( 1 ) ];
+   foreach val in list {
+      print( val.func() );
+   }
+   {
+      let hoge:Val! = new Val( 1 );
+      when! hoge {
+         print( hoge.func() );
+      }
+   }
+   {
+      let map:Map<Val,Val> = { new Val(1): new Val(2) };
+      foreach val, key in map {
+         print( key.func(), val.func() );
+      }
+   }
+}

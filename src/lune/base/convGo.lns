@@ -443,6 +443,10 @@ fn isInnerDeclType( typeInfo:&Ast.TypeInfo ) : bool {
    return false;
 }
 
+fn convFilter.isInheritAbsImmut( typeInfo:&Ast.TypeInfo ) : bool {
+   return typeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ## );
+}
+
 fn convFilter.getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
    let mut enumName = typeInfo.getFullName(
       self.$typeNameCtrl, self.$moduleInfoManager, localFlag );
@@ -757,7 +761,13 @@ fn getOrgTypeInfo( typeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
    return typeInfo.$srcTypeInfo.$nonnilableType;
 }
 
-fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) mut : str {
+enum ClassAsterMode {
+   None,
+   Normal,
+   Force,
+}
+
+fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut : str {
    if typeInfo.$kind == .DDD {
       return "[]LnsAny";
    }
@@ -800,8 +810,14 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) mut :
          }
          let mut symbol = self.getTypeSymbolWithPrefix( typeInfo );
          //symbol = self.getModuleSym( typeInfo.getModule(), true ) .. symbol;
-         if addClassAster {
-            return "*" .. symbol;
+         if mode ~= .None {
+            if self.isInheritAbsImmut( typeInfo ) {
+               if mode == .Force {
+                  return "*" .. symbol;
+               }
+            } else {
+               return "*" .. symbol;
+            }
          }
          return symbol;
       }
@@ -809,14 +825,14 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, addClassAster:bool ) mut :
          return self.getTypeSymbolWithPrefix( typeInfo );
       }
       case .Alternate {
-         return self.type2gotypeOrg( typeInfo.$baseTypeInfo, addClassAster );
+         return self.type2gotypeOrg( typeInfo.$baseTypeInfo, mode );
       }
    }
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) );
 }
 
 fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
-   return self.type2gotypeOrg( typeInfo, true );
+   return self.type2gotypeOrg( typeInfo, .Normal );
 }
 
 
@@ -1532,8 +1548,10 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
    else {
       if typeInfo.$kind == .Method {
          self.write( "func " );
-         self.write( "(self *" );
-         self.write( self.getTypeSymbol( prefixType ) );
+         self.write( "(self " );
+         self.write ( self.type2gotype( prefixType ) );
+         //self.write( "(self *" );
+         //self.write( self.getTypeSymbol( prefixType ) );
          self.write( ") " );
       }
       else {
@@ -4030,7 +4048,7 @@ fn convFilter.outputInterfaceType( node: &Nodes.DeclClassNode ) mut {
    
 }
 
-fn convFilter.outputClassType( node: &Nodes.DeclClassNode ) mut {
+fn convFilter.outputClassType( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut {
    self.write( "type " );
    self.write( self.getTypeSymbol( node.$expType ) );
    self.writeln( " struct {" );
@@ -4050,9 +4068,12 @@ fn convFilter.outputClassType( node: &Nodes.DeclClassNode ) mut {
    foreach memberNode in node.$memberList {
       filter( memberNode, self, node );
    }
-   self.write( "FP " );
-   self.write( self.getTypeSymbol( node.$expType ) );
-   self.writeln( "Mtd" );
+
+   if not absImmutFlag {
+      self.write( "FP " );
+      self.write( self.getTypeSymbol( node.$expType ) );
+      self.writeln( "Mtd" );
+   }
 
    self.popIndent();
 
@@ -4065,14 +4086,19 @@ fn convFilter.outputClassType( node: &Nodes.DeclClassNode ) mut {
    }
 }
 
-fn convFilter.outputToStem( node: &Nodes.DeclClassNode ) mut {
+fn convFilter.outputToStem( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut {
    self.writeln(
       "func %s2Stem( obj LnsAny ) LnsAny {" ( self.getTypeSymbolWithPrefix( node.$expType) ) );
    self.pushIndent( ## );
    self.writeln( "if obj == nil {" );
    self.writeln( "    return nil" );
    self.writeln( "}" );
-   self.writeln( "return obj.(%s).FP" (self.type2gotype( node.$expType) ) );
+   self.write( "return obj.(%s)" (self.type2gotype( node.$expType) ) );
+   if not absImmutFlag {
+      self.writeln( ".FP" );
+   } else {
+      self.writeln( "" );
+   }
    self.popIndent();
    self.writeln( "}" );
 }
@@ -4085,8 +4111,8 @@ fn convFilter.outputDownCast( node: &Nodes.DeclClassNode ) mut {
    self.pushIndent( ## );
    self.write( "To" );
    self.write( symbol );
-   self.write( "() *" );
-   self.write( symbol );
+   self.write( "() " );
+   self.write( self.type2gotype( node.$expType ) );
    self.writeln( "" );
    self.popIndent();
    self.writeln( "}" );
@@ -4105,12 +4131,13 @@ fn convFilter.outputDownCast( node: &Nodes.DeclClassNode ) mut {
 }
 
 fn convFilter.outputCastReceiver( node: &Nodes.DeclClassNode ) mut {
-   self.write( "func (obj *" );
-   self.write( self.getTypeSymbol( node.$expType ) );
+   let gotype = self.type2gotype( node.$expType );
+   self.write( "func (obj " );
+   self.write( gotype );
    self.write( ") To" );
    self.write( self.getTypeSymbol( node.$expType ) );
-   self.write( "() *" );
-   self.write( self.getTypeSymbol( node.$expType ) );
+   self.write( "() " );
+   self.write( gotype );
    self.writeln( " {" );
    self.pushIndent(##);
    self.writeln( "return obj" );
@@ -4118,11 +4145,19 @@ fn convFilter.outputCastReceiver( node: &Nodes.DeclClassNode ) mut {
    self.writeln( "}" );
 }
 
-fn convFilter.outputNewSetup( objName:str, classType:&Ast.TypeInfo ) mut
+fn convFilter.outputNewSetup(
+   objName:str, classType:&Ast.TypeInfo, absImmutFlag:bool ) mut
 {
    let className = self.getTypeSymbol( classType );
-   self.writeln( "%s := &%s{}" (objName, className) );
-   self.writeln( "%s.FP = %s" (objName,objName) );
+   self.write( "%s := " (objName) );
+   if not absImmutFlag {
+      self.write( "&" );
+   }
+   self.writeln( "%s{}" (className) );
+   if not absImmutFlag {
+      self.write( "%s.FP = " (objName) );
+      self.writeln( "%s" (objName) );
+   }
 
    {
       let mut workType = classType;
@@ -4135,20 +4170,21 @@ fn convFilter.outputNewSetup( objName:str, classType:&Ast.TypeInfo ) mut
    }
 }
 
-fn convFilter.outputConstructor( node: &Nodes.DeclClassNode ) mut
+fn convFilter.outputConstructor( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut
 {
    let scope = unwrap node.$expType.$scope;
    let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, .Normal );
 
    let className = self.getTypeSymbol( node.$expType );
    let ctorName = self.getConstrSymbol( node.$expType );
+   let goType = self.type2gotype( node.$expType );
 
    if not node.$expType.$abstractFlag {
       self.write( "func New%s(" ( className ) );
       self.outputDeclFuncArg( initFuncType );
-      self.writeln( ") *%s {" (className) );
+      self.writeln( ") %s {" (goType) );
       self.pushIndent(##);
-      self.outputNewSetup( "obj", node.$expType );
+      self.outputNewSetup( "obj", node.$expType, absImmutFlag );
       self.write( "obj.%s(" (ctorName));
       self.write( getAddEnvArg( #initFuncType.$argTypeInfoList,
                                 self.option.$addEnvArg ) );
@@ -4428,7 +4464,7 @@ fn convFilter.outputAsyncItem( node: &Nodes.DeclClassNode ) mut {
    self.writeln( "}" );
 }
 
-fn convFilter.outputMapping( node: &Nodes.DeclClassNode ) mut {
+fn convFilter.outputMapping( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut {
    let classType = node.$expType;
    let className = self.getTypeSymbol( classType );
    self.writeln( "func (self *%s) ToMapSetup( obj *LnsMap ) *LnsMap {" (className) );
@@ -4498,7 +4534,7 @@ fn convFilter.outputMapping( node: &Nodes.DeclClassNode ) mut {
       self.writeln( "} else {" );
       self.writeln( '   objMap = work' );
       self.writeln( "}" );
-      self.outputNewSetup( "newObj", classType );
+      self.outputNewSetup( "newObj", classType, absImmutFlag );
       self.writeln( "return %sMain( newObj, objMap, paramList )" (fromStemName) );
       self.popIndent();
       self.writeln( "}" );
@@ -4665,20 +4701,22 @@ pub override fn convFilter.processDeclClass(
       switch node.$expType.$kind {
          case .Class {
             self.writeln( "// declaration Class -- %s" (node.$expType.$rawTxt) );
+            let absImmutFlag = self.isInheritAbsImmut( node.$expType );
+
             self.outputStaticMember( node );
             self.outputMethodIF( node );
-            self.outputClassType( node );
-            self.outputToStem( node );
+            self.outputClassType( node, absImmutFlag );
+            self.outputToStem( node, absImmutFlag );
             self.outputDownCast( node );
             self.outputCastReceiver( node );
-            self.outputConstructor( node );
+            self.outputConstructor( node, absImmutFlag );
             self.outputAccessor( node );
             self.outputDummyAbstractMethodOfClass( node.$expType );
             self.outputAdvertise( node );
 
             if node.$expType.isInheritFrom(
                self.processInfo, Ast.builtinTypeMapping, nil ) {
-               self.outputMapping( node );
+               self.outputMapping( node, absImmutFlag );
             }
 
             if node.$expType.isInheritFrom(
@@ -4882,8 +4920,11 @@ pub fn convFilter.outputCallPrefix(
                } else {
                   switch prefixKind {
                      case .Class {
-                        // class は継承があるので FP 経由で実行する
-                        self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                        if self.isInheritAbsImmut( prefixType ) {
+                           // class は継承があるので FP 経由で実行する
+                           self.write( ".FP" );
+                        }
+                        self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
                      }
                      default {
                         if! let runtime = self.getVM( funcType ) {
@@ -4909,7 +4950,10 @@ pub fn convFilter.outputCallPrefix(
                      switch prefixKind {
                         case .Class {
                            // class は継承があるので FP 経由で実行する
-                           self.write( ".FP.%s"( self.getSymbolSym( funcSymbol ) ) );
+                           if not self.isInheritAbsImmut( prefixType ) {
+                              self.write( ".FP" );
+                           }
+                           self.write( ".%s"( self.getSymbolSym( funcSymbol ) ) );
                            if funcSymbol.$name == "_toMap" {
                               callKind = .BuiltinCall;
                            }
@@ -5545,7 +5589,6 @@ pub override fn convFilter.processExpRef(
                   self.write( node.$symbolInfo.$name );
                } else {
                   self.write( self.getTypeSymbol( node.$expType ));
-                  //self.write( self.type2gotypeOrg( node.$expType, false ) );
                }
             }
             default {

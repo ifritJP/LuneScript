@@ -16,11 +16,11 @@ func Macro_convExp3_17(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 742
-func Macro_convExp3_358(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Macro_convExp3_359(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 778
-func Macro_convExp3_526(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Macro_convExp3_527(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 38
@@ -833,7 +833,7 @@ func (self *Macro_MacroCtrl) ImportMacro(_env *LnsEnv, processInfo *Ast_ProcessI
         macroInfo_4 := macroInfo.(*Macro_MacroMetaInfo)
         var orgPos *Types_Position
         if macroInfo_4.Pos.Len() == 2{
-            orgPos = NewTypes_Position(_env, macroInfo_4.Pos.GetAt(1).(LnsInt), macroInfo_4.Pos.GetAt(2).(LnsInt), lnsPath)
+            orgPos = NewTypes_Position(_env, macroInfo_4.Pos.GetAt(1).(LnsInt), macroInfo_4.Pos.GetAt(2).(LnsInt), lnsPath, nil)
         } else { 
             Util_err(_env, "macroInfo.pos is illegal")
         }

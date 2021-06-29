@@ -392,7 +392,7 @@ curNsInfo が nil になる。
       let mut subRootTypeInfo = self.processInfo.$dummyParentType;
       self.curNsInfo = new NSInfo(
          subRootTypeInfo, subRootTypeInfo,
-         new Types.Position( 0,0, "@builtin@" ), ctrl_info.validAsyncCtrl );
+         new Types.Position( 0,0, "@builtin@" ## ), ctrl_info.validAsyncCtrl );
       self.nsInfoMap[ subRootTypeInfo ] = self.curNsInfo;
    }
 

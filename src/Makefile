@@ -125,6 +125,10 @@ ifeq ($(WITH_GO),y)
 COM_OPT += -langGo
 endif
 
+# 標準動作だと diff が出てしまうので、 diff が出ないようにオプションを指定する
+TEST_OPT=--threadPerUnitThread 0 --convGoRunnerNum 4
+
+
 
 ifdef depend_on
 DEPENDS := $(shell find lune -iname '*.d')
@@ -876,14 +880,14 @@ endef
 
 test-new3-sub:
 # カレントから work/3_3_2 に batch ビルド
-	$(call test-new3-batch,.,work/3_3_2,--threadPerUnitThread 0)
+	$(call test-new3-batch,.,work/3_3_2,$(TEST_OPT))
 ifeq ($(WITH_GO),y)
 	$(call go-build-lns,work/3_3_2)
 	cp work/3_3_2/lnsc .
 endif
 
 # work/3_3_2 から work/3_3_3 に batch ビルド
-	$(call test-new3-batch,work/3_3_2,work/3_3_3,--threadPerUnitThread 0)
+	$(call test-new3-batch,work/3_3_2,work/3_3_3,$(TEST_OPT))
 # ifeq ($(WITH_GO),y)
 # 	$(call go-build-lns,work/3_3_3)
 # 	cp work/3_3_3/lnsc .
@@ -942,7 +946,7 @@ test-comp2-sub-2:
 #	$(MAKE) -C . build_from_d depend_on=y \
 #		FROM_DIR=../1 TO_DIR=../13 LNS_OPT="--package lnsc" \
 #		SKIP_GO_BUILD=y
-	$(call selfhost_buildOp_batch,../1,$(LNSC),../13,-langGo )
+	$(call selfhost_buildOp_batch,../1,$(LNSC),../13,-langGo $(TEST_OPT))
 
 test-comp2-main:
 #	$(MAKE) test-org
@@ -1719,7 +1723,7 @@ go-build:
 
 ifndef NO_TEST
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) $(GO_WORK_DIR)
-	$(MAKE) test-govslua LNSC_OP="--threadPerUnitThread 0"
+	$(MAKE) test-govslua LNSC_OP="$(TEST_OPT)"
 	$(MAKE) LNSC=$(shell pwd)/$(GO_WORK_DIR)/build/$(LNSC_GO) test-lnsc-go \
 		SKIP_SETUP=y SETUP_LUA=y
 

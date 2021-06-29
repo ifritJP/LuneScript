@@ -13,7 +13,7 @@ func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
                 var val LnsAny
                 
                 {
-                    _val := pipe.FP.Get(_env)
+                    _val := pipe.Get(_env)
                     if _val == nil{
                         return nil
                     } else {
@@ -46,13 +46,13 @@ func (self *Async_Pipe) Run(_env *LnsEnv) {
         {
             _val := self.FP.Access(_env)
             if _val == nil{
-                pipe.FP.Put(_env, nil)
+                pipe.Put(_env, nil)
                 break
             } else {
                 val = _val.(*Async_PipeItem)
             }
         }
-        pipe.FP.Put(_env, val.FP.Get_item(_env))
+        pipe.Put(_env, val.FP.Get_item(_env))
     }
 }
 // 79: decl @lune.@base.@Async.Pipe.start

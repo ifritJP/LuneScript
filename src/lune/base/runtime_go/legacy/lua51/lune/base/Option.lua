@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 11595
+   return 11633
 end
 
 
@@ -358,7 +358,7 @@ function Option:__init()
    self.outputDir = nil
    self.analyzePos = nil
    self.dependsPath = nil
-   self.convGoRunnerNum = 4
+   self.convGoRunnerNum = false and 4 or 0
 end
 function Option:openDepend( relPath )
 

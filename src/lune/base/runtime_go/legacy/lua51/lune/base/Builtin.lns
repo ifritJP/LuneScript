@@ -785,7 +785,7 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
       }
    }
 
-   let pos = new Parser.Position( 0, 0, "@builtin@");
+   let pos = new Parser.Position( 0, 0, "@builtin@" ## );
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, className in builtinClassInfo {

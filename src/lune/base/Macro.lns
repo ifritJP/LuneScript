@@ -698,7 +698,7 @@ pub fn MacroCtrl.importMacro(
       let orgPos;
       if #macroInfo.pos == 2 {
          orgPos = new Types.Position(
-            macroInfo.pos[ 1 ], macroInfo.pos[ 2 ], lnsPath );
+            macroInfo.pos[ 1 ], macroInfo.pos[ 2 ], lnsPath ## );
       } else {
          Util.err( "macroInfo.pos is illegal" );
       }

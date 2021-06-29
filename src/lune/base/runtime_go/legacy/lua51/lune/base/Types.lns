@@ -122,13 +122,13 @@ TransUnit においては 擬似的な値にする必要がある。
 そこで、擬似的な値に対応する、元のソースの位置情報を記録する。
 マクロ展開等ではない通常の token 位置の場合、orgPos が nil。
 */
-   pub let mut orgPos: &Position!;
+   pub let orgPos: &Position!;
 
-   pub fn __init( lineNo: int, column: int, streamName: str ) {
+   pub fn __init( lineNo: int, column: int, streamName: str, orgPos:&Position! ) {
       self.lineNo = lineNo;
       self.column = column;
       self.streamName = streamName;
-      self.orgPos = nil;
+      self.orgPos = orgPos;
    }
 
    pub fn get_orgPos() : &Position {
@@ -143,11 +143,9 @@ TransUnit においては 擬似的な値にする必要がある。
    }
 
    pub static fn create( lineNo: int, column: int,
-                         streamName: str, orgPos:&Position! ) : Position
+                         streamName: str, orgPos:&Position! ) : &Position
    {
-      let mut pos = new Position( lineNo, column, streamName );
-      pos.orgPos = orgPos;
-      return pos;
+      return new Position( lineNo, column, streamName, orgPos );
    }
 
    pub fn getDisplayTxt() : str {
@@ -224,7 +222,7 @@ pub class Token extend (Mapping) {
    }
 }
 
-pub let noneToken = new Token( .Eof, "", new Position( 0, -1, "eof" ), false, [] );
+pub let noneToken = new Token( .Eof, "", new Position( 0, -1, "eof" ## ), false, [] );
 
 pub class StdinFile {
    let mod:str {pub};

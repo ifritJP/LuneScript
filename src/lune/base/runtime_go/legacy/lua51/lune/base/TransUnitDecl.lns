@@ -885,6 +885,14 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
    // interface 間の、メソッドのミスマッチをチェックする
    let mut symbol2TypeInfo:Map<str,&Ast.TypeInfo> = {};
    foreach ifType in interfaceList {
+      if ifType == Ast.builtinTypeAbsImmut {
+         when! baseRef {
+            self.addErrMess( baseRef.$pos,
+                             "__absimmut can't extend the class -- %s"
+                             (baseRef.$expType.getTxt(##)));
+         }
+      }
+      
       ifType.$scope$.filterTypeInfoField$(
          true, self.$scope, self.scopeAccess,
          fn ( symbolInfo:&Ast.SymbolInfo ) __trans : bool {
@@ -913,6 +921,13 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
    let mut baseTypeInfo:&Ast.TypeInfo! = nil;
    when! baseRef {
       baseTypeInfo = baseRef.$expType;
+      if baseRef.$expType.isInheritFrom(
+         self.processInfo, Ast.builtinTypeAbsImmut, nil )
+      {
+         self.addErrMess(
+            baseRef.$pos,
+            "can't extend the __absimmut. (%s)" (baseRef.$expType.getTxt(##)));
+      }
    }
    return nextToken, baseTypeInfo, interfaceList,
       ifAlt2typeMap, new Nodes.ClassInheritInfo( baseRef, ifRefList );
@@ -1644,6 +1659,21 @@ fn TransUnit.analyzeDeclMember(
          accessMode, false, Ast.isPubToExternal( classTypeInfo.$accessMode ));
       token = self.getToken(##);
 
+      if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ## ) {
+         if mutMode ~= .IMut {
+            self.addErrMess(
+               varName.pos,
+               "__absimmut can't have mutable member. -- %s" (varName.txt));
+         }
+         if not Ast.TypeInfo.canBeAbsImmutMember( refType.$expType ) {
+            self.addErrMess(
+               refType.$pos,
+               "__absimmut can't have member of mutable type. -- %s"
+               (refType.$expType.getTxt(##)));
+         }
+         
+      }
+      
       if refType.$expType.$asyncMode == .Transient {
          self.addErrMess( refType.$pos,
                           "can't hold with the type of __trans. -- %s"

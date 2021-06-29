@@ -1724,6 +1724,18 @@ pub static fn TypeInfo.canBeAsyncParam(typeInfo:&TypeInfo): bool {
    return true;
 }
 
+pub static fn TypeInfo.canBeAbsImmutMember(typeInfo:&TypeInfo): bool {
+   if TypeInfo.isMutableType( typeInfo ) {
+      return false;
+   }
+   foreach itemType in typeInfo.$itemTypeInfoList {
+      if not TypeInfo.canBeAbsImmutMember( itemType ) {
+         return false;
+      }
+   }
+   return true;
+}
+
 
 pub fn ProcessInfo.createModifier(
    mut srcTypeInfo: &TypeInfo, mutMode:MutMode) mut : &TypeInfo
@@ -4997,6 +5009,8 @@ pub let builtinTypeProcessor:&TypeInfo = NormalTypeInfo.createBuiltin(
    "__Processor", "__Processor" , .IF, nil, [ builtinTypeRunner ] );
 pub let builtinTypeAsyncItem:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem" , .IF## );
+pub let builtinTypeAbsImmut:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "__absimmut", "__absimmut" , .IF## );
 pub let builtinTypeString:&TypeInfo =
    NormalTypeInfo.createBuiltin( "String", "str" , .Class, nil, [ builtinTypeMapping ] );
 pub let builtinTypeMap:&TypeInfo =

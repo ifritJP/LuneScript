@@ -960,7 +960,7 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
     self.transUnit.FP.Get_scope(_env).FP.AddVar(_env, self.processInfo, Ast_AccessMode__Global, "_G", nil, mapType, Ast_MutMode__IMutRe, true)
     self.transUnit.FP.Get_scope(_env).FP.AddVar(_env, self.processInfo, Ast_AccessMode__Global, "__line__", nil, Ast_builtinTypeInt, Ast_MutMode__IMut, true)
     var pos *Types_Position
-    pos = NewTypes_Position(_env, 0, 0, "@builtin@")
+    pos = NewTypes_Position(_env, 0, 0, "@builtin@", nil)
     for _, _builtinClassInfo := range( builtInInfo.Items ) {
         builtinClassInfo := _builtinClassInfo.(*LnsMap)
         for _className, _name2FieldInfo := range( builtinClassInfo.Items ) {

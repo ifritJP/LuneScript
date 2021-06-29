@@ -293,17 +293,17 @@ end
 local Position = {}
 setmetatable( Position, { ifList = {Mapping,} } )
 _moduleObj.Position = Position
-function Position.new( lineNo, column, streamName )
+function Position.new( lineNo, column, streamName, orgPos )
    local obj = {}
    Position.setmeta( obj )
-   if obj.__init then obj:__init( lineNo, column, streamName ); end
+   if obj.__init then obj:__init( lineNo, column, streamName, orgPos ); end
    return obj
 end
-function Position:__init(lineNo, column, streamName) 
+function Position:__init(lineNo, column, streamName, orgPos) 
    self.lineNo = lineNo
    self.column = column
    self.streamName = streamName
-   self.orgPos = nil
+   self.orgPos = orgPos
 end
 function Position:get_orgPos(  )
 
@@ -322,9 +322,7 @@ function Position:get_RawOrgPos(  )
 end
 function Position.create( lineNo, column, streamName, orgPos )
 
-   local pos = Position.new(lineNo, column, streamName)
-   pos.orgPos = orgPos
-   return pos
+   return Position.new(lineNo, column, streamName, orgPos)
 end
 function Position:getDisplayTxt(  )
 

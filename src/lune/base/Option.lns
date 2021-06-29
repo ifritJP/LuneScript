@@ -194,7 +194,7 @@ pub class Option {
       self.outputDir = nil;
       self.analyzePos = nil;
       self.dependsPath = nil;
-      self.convGoRunnerNum = 4;
+      self.convGoRunnerNum = __lns.capability.async and 4 or 0;
    }
 
    pub fn openDepend( relPath:str! ) : oStream! {
@@ -644,7 +644,7 @@ usage:
                      column = (unwrap tonumber( arg ## ) default 0)@@int;
                      option.analyzePos = new Parser.Position(
                         unwrap lineNo, unwrap column,
-                        Util.scriptPath2Module( option.scriptPath ) );
+                        Util.scriptPath2Module( option.scriptPath ) ## );
                   }
                }
                case .Save, .SaveMeta, .Glue {

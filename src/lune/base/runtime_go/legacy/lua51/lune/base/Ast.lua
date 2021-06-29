@@ -2694,6 +2694,23 @@ function TypeInfo.canBeAsyncParam( typeInfo )
 end
 
 
+function TypeInfo.canBeAbsImmutMember( typeInfo )
+
+   if TypeInfo.isMutableType( typeInfo ) then
+      return false
+   end
+   
+   for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+      if not TypeInfo.canBeAbsImmutMember( itemType ) then
+         return false
+      end
+      
+   end
+   
+   return true
+end
+
+
 function ProcessInfo:createModifier( srcTypeInfo, mutMode )
 
    srcTypeInfo = srcTypeInfo:get_srcTypeInfo()
@@ -6884,6 +6901,9 @@ _moduleObj.builtinTypeProcessor = builtinTypeProcessor
 
 local builtinTypeAsyncItem = NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem", TypeInfoKind.IF )
 _moduleObj.builtinTypeAsyncItem = builtinTypeAsyncItem
+
+local builtinTypeAbsImmut = NormalTypeInfo.createBuiltin( "__absimmut", "__absimmut", TypeInfoKind.IF )
+_moduleObj.builtinTypeAbsImmut = builtinTypeAbsImmut
 
 local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class, nil, {_moduleObj.builtinTypeMapping} )
 _moduleObj.builtinTypeString = builtinTypeString
