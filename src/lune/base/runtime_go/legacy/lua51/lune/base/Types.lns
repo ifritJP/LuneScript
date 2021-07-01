@@ -110,7 +110,7 @@ pub static fn TransCtrlInfo.create_normal(): TransCtrlInfo {
 }
 
 
-pub class Position extend (Mapping) {
+pub class Position extend (Mapping,__absimmut) {
    pub let lineNo: int;
    pub let column: int;
    pub let streamName: str;
@@ -207,9 +207,9 @@ pub class Token extend (Mapping) {
       error( "illegal delimit -- %s" (self.txt) );
    }
 
-   pub fn set_commentList( commentList: &List<&Token> ) {
-      self.commentList = commentList;
-   }
+   // pub fn set_commentList( commentList: &List<&Token> ) {
+   //    self.commentList = commentList;
+   // }
 
    pub fn getLineCount():int {
       let mut count = 1;

@@ -539,9 +539,7 @@ pub fn MacroCtrl.evalMacroOp(
          };
          toLuaval = work;
       } else {
-         __asyncLock {
-            toLuaval = toLuavalNoasync;
-         }
+         toLuaval = toLuavalNoasync;
       }
 
       let macroArgValMap:Map<str,Luaval<&stem>> = {};

@@ -1189,7 +1189,8 @@ fn TransUnit.evalMacro(
 format の書式から %? を検索して、リストを返す。
 */
 pub fn findForm( format:str ) __async : List<str> {
-   let mut remain = format.gsub( "%%%%", "" );
+   let mut remain = format.replace( "%%", "" );
+   //let mut remain = format.gsub( "%%%%", "" );
    let mut opList:List<str> = [];
 
    while true {
@@ -2683,6 +2684,9 @@ fn TransUnit.analyzeExpField(
       typeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
    {
       self.helperInfo.useUnpack = true;
+   }
+   if typeInfo.equals( self.processInfo, self.builtinFunc.str_replace ## ) {
+      self.helperInfo.useStrReplace = true;
    }
 
    if! let expRef = prefixExp@@@Nodes.ExpRefNode {

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Types'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -187,8 +187,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune5 then
-   _lune5 = _lune
+if not _lune6 then
+   _lune6 = _lune
 end
 
 
@@ -291,7 +291,7 @@ end
 
 
 local Position = {}
-setmetatable( Position, { ifList = {Mapping,} } )
+setmetatable( Position, { ifList = {Mapping,__absimmut,} } )
 _moduleObj.Position = Position
 function Position.new( lineNo, column, streamName, orgPos )
    local obj = {}
@@ -458,10 +458,6 @@ function Token:getExcludedDelimitTxt(  )
    end
    
    error( string.format( "illegal delimit -- %s", self.txt) )
-end
-function Token:set_commentList( commentList )
-
-   self.commentList = commentList
 end
 function Token:getLineCount(  )
 

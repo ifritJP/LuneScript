@@ -235,6 +235,20 @@ pub class SimpleSourceOStream extend (SourceStream) {
    let stepIndent:int;
    let mut curLineNo:int;
    pri let mut indentQueue: List<int>;
+   let mut indentSpace:str;
+
+
+   static let indentSpaceList:&List<str>;
+
+   __init {
+      let list:List<str> = [];
+      let mut txt = "";
+      for _ = 1, 100 {
+         list.insert( txt );
+         txt = txt .. " ";
+      }
+      SimpleSourceOStream.indentSpaceList = list;
+   }
 
    pub fn __init( stream:oStream, headStream:oStream!, stepIndent:int ) {
       self.srcStream = stream;
@@ -244,6 +258,7 @@ pub class SimpleSourceOStream extend (SourceStream) {
       self.curLineNo = 0;
       self.stepIndent = stepIndent;
       self.indentQueue = [ 0 ];
+      self.indentSpace = "";
    }
 
    fn get_indent(): int {
@@ -253,37 +268,25 @@ pub class SimpleSourceOStream extend (SourceStream) {
       return 0;
    }
    
-   // fn writeRaw( txt: str ) mut {
-   //    let mut stream = self.nowStream;
-
-   //    if self.needIndent {
-   //       stream.write( string.rep( " ", self.$indent ) );
-   //       self.needIndent = false;
-   //    }
-
-   //    apply _ of string.gmatch( txt, "\n" ) {
-   //       self.curLineNo = self.curLineNo + 1;
-   //    }
-   //    stream.write( txt );
-   // }
+   pub fn writeRaw( txt: str ) mut {
+      if self.needIndent {
+         //stream.write( string.rep( " ", self.$indent ) );
+         self.nowStream.write( self.indentSpace );
+         self.needIndent = false;
+      }
+      self.nowStream.write( txt );
+   }
 
    pub fn write( mut txt: str ) mut {
-      // while true {
-      //    if! let index = string.find( txt, "\n"## ) {
-      //       self.writeRaw( txt.sub( 1, index ) );
-      //       txt = txt.sub( index + 1 ##);
-      //    }
-      //    else {
-      //       break;
-      //    }
-      // }
-      // if #txt > 0 {
-      //    self.writeRaw( txt );
-      // }
+      if not txt.find( "\n", 1, true ) {
+         self.writeRaw( txt );
+         return;
+      }
       let mut stream = self.nowStream;
       foreach line in Str.getLineList( txt ) {
          if self.needIndent {
-            stream.write( string.rep( " ", self.$indent ) );
+            //stream.write( string.rep( " ", self.$indent ) );
+            stream.write( self.indentSpace );
             self.needIndent = false;
          }
 
@@ -303,6 +306,10 @@ pub class SimpleSourceOStream extend (SourceStream) {
    pub fn pushIndent( newIndent:int! ) mut {
       let indent = unwrap newIndent default self.$indent + self.stepIndent;
       self.indentQueue.insert( indent );
+      if indent > #SimpleSourceOStream.indentSpaceList {
+         err( "overflow indent -- %d" (indent) );
+      }
+      self.indentSpace = SimpleSourceOStream.indentSpaceList[ indent + 1 ];
    }
 
    pub fn popIndent() mut {
@@ -310,6 +317,7 @@ pub class SimpleSourceOStream extend (SourceStream) {
          err( "self.indentQueue == 0" );
       }
       self.indentQueue.remove(##);
+      self.indentSpace = SimpleSourceOStream.indentSpaceList[ self.$indent + 1 ];
    }
 
    pub fn switchToHeader() mut {

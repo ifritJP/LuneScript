@@ -26,10 +26,14 @@ SOFTWARE.
 
 package runtimelns
 
-//import "runtime"
+import "strings"
 
 func Lns_Str_init(_env *LnsEnv) {
 	lns_Str_init()
+}
+
+func Str_replace(_env *LnsEnv, txt, src, dst string) string {
+    return strings.ReplaceAll( txt, src, dst )
 }
 
 func Str_getLineList(_env *LnsEnv, txt string) *LnsList {

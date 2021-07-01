@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuaMod'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -75,8 +75,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune5 then
-   _lune5 = _lune
+if not _lune6 then
+   _lune6 = _lune
 end
 
 
@@ -153,9 +153,12 @@ CodeKind.__allList[16] = CodeKind.LazyRequire
 CodeKind.Run = 16
 CodeKind._val2NameMap[16] = 'Run'
 CodeKind.__allList[17] = CodeKind.Run
-CodeKind.Finalize = 17
-CodeKind._val2NameMap[17] = 'Finalize'
-CodeKind.__allList[18] = CodeKind.Finalize
+CodeKind.StrReplace = 17
+CodeKind._val2NameMap[17] = 'StrReplace'
+CodeKind.__allList[18] = CodeKind.StrReplace
+CodeKind.Finalize = 18
+CodeKind._val2NameMap[18] = 'Finalize'
+CodeKind.__allList[19] = CodeKind.Finalize
 
 
 local codeMap
@@ -581,6 +584,27 @@ function _lune._run( runner, mod )
     end
     runner:run()
     return true
+end
+]==]
+   
+   work[CodeKind.StrReplace] = [==[
+function _lune.replace( txt, src, dst )
+   local result = ""
+   local index = 1
+   while index <= #txt do
+      local findIndex = string.find( txt, src, index, true )
+      if not findIndex then
+         result = result .. string.sub( txt, index )
+         break
+      end
+      if findIndex ~= index then
+         result = result .. (string.sub( txt, index, findIndex - 1 ) .. dst)
+      else
+         result = result .. dst
+      end
+      index = findIndex + #src
+   end
+   return result
 end
 ]==]
    

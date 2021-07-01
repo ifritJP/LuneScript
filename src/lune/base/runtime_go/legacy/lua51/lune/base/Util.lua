@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Util'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -145,8 +145,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune5 then
-   _lune5 = _lune
+if not _lune6 then
+   _lune6 = _lune
 end
 
 
@@ -454,6 +454,7 @@ function SimpleSourceOStream:__init(stream, headStream, stepIndent)
    self.curLineNo = 0
    self.stepIndent = stepIndent
    self.indentQueue = {0}
+   self.indentSpace = ""
 end
 function SimpleSourceOStream:get_indent(  )
 
@@ -463,13 +464,28 @@ function SimpleSourceOStream:get_indent(  )
    
    return 0
 end
+function SimpleSourceOStream:writeRaw( txt )
+
+   if self.needIndent then
+      
+      self.nowStream:write( self.indentSpace )
+      self.needIndent = false
+   end
+   
+   self.nowStream:write( txt )
+end
 function SimpleSourceOStream:write( txt )
 
+   if not txt:find( "\n", 1, true ) then
+      self:writeRaw( txt )
+      return 
+   end
    
    local stream = self.nowStream
    for __index, line in ipairs( Str.getLineList( txt ) ) do
       if self.needIndent then
-         stream:write( string.rep( " ", self:get_indent() ) )
+         
+         stream:write( self.indentSpace )
          self.needIndent = false
       end
       
@@ -492,6 +508,11 @@ function SimpleSourceOStream:pushIndent( newIndent )
 
    local indent = _lune.unwrapDefault( newIndent, self:get_indent() + self.stepIndent)
    table.insert( self.indentQueue, indent )
+   if indent > #SimpleSourceOStream.indentSpaceList then
+      err( string.format( "overflow indent -- %d", indent) )
+   end
+   
+   self.indentSpace = SimpleSourceOStream.indentSpaceList[indent + 1]
 end
 function SimpleSourceOStream:popIndent(  )
 
@@ -500,6 +521,7 @@ function SimpleSourceOStream:popIndent(  )
    end
    
    table.remove( self.indentQueue )
+   self.indentSpace = SimpleSourceOStream.indentSpaceList[self:get_indent() + 1]
 end
 function SimpleSourceOStream:switchToHeader(  )
 
@@ -511,6 +533,16 @@ function SimpleSourceOStream:returnToSource(  )
 end
 function SimpleSourceOStream.setmeta( obj )
   setmetatable( obj, { __index = SimpleSourceOStream  } )
+end
+do
+   local list = {}
+   local txt = ""
+   for _1 = 1, 100 do
+      table.insert( list, txt )
+      txt = txt .. " "
+   end
+   
+   SimpleSourceOStream.indentSpaceList = list
 end
 
 
@@ -544,7 +576,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 349, function (  )
+   Log.log( Log.Level.Warn, __func__, 357, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

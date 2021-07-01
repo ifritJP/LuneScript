@@ -1283,6 +1283,7 @@ type Formatter_FormatterFilterMtd interface {
     ReturnToSource(_env *LnsEnv)
     SwitchToHeader(_env *LnsEnv)
     Write(_env *LnsEnv, arg1 string)
+    WriteRaw(_env *LnsEnv, arg1 string)
     Writeln(_env *LnsEnv, arg1 string)
 }
 type Formatter_FormatterFilter struct {
@@ -1336,6 +1337,10 @@ self.stream. FP.SwitchToHeader( _env)
 // advertise -- 45
 func (self *Formatter_FormatterFilter) Write(_env *LnsEnv, arg1 string) {
 self.stream. FP.Write( _env, arg1)
+}
+// advertise -- 45
+func (self *Formatter_FormatterFilter) WriteRaw(_env *LnsEnv, arg1 string) {
+self.stream. FP.WriteRaw( _env, arg1)
 }
 // advertise -- 45
 func (self *Formatter_FormatterFilter) Writeln(_env *LnsEnv, arg1 string) {

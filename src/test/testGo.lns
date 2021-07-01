@@ -2341,3 +2341,12 @@ _section();
       }
    }
 }
+_section();
+{
+   fn replace( txt:str, src:str, dst:str ) : str {
+      return txt.replace( src, dst );
+   }
+   print( replace( "abcdefgab", "ab", "AB" ) );
+   print( replace( "abcdbcdefgab", "bcd", "BCD" ) );
+   print( replace( "a[bcd]ebcdefgab", "[bcd]", "BCD" ) );
+}

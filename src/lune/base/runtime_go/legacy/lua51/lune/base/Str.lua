@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Str'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune.__isInstanceOf( obj, class )
    while obj do
@@ -55,8 +55,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune5 then
-   _lune5 = _lune
+if not _lune6 then
+   _lune6 = _lune
 end
 
 
@@ -90,6 +90,11 @@ local function getLineList( txt )
    return list
 end
 _moduleObj.getLineList = getLineList
+local function replace( txt, src, dst )
+
+   return (txt:gsub( src, dst ) )
+end
+_moduleObj.replace = replace
 
 local Builder = {}
 _moduleObj.Builder = Builder

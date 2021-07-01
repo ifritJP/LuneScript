@@ -38,11 +38,13 @@ func lns_Str_init() {
 }
 
 func str_getLineList(txt string) *LnsList {
-	list := NewLnsList([]LnsAny{})
-	for _, line := range strings.SplitAfter(txt, "\n") {
-		list.Insert(line)
+	splited := strings.SplitAfter(txt, "\n")
+	list := make([]LnsAny, len(splited))
+	for index, line := range splited {
+		list[index] = line
 	}
-	return list
+
+	return NewLnsList(list)
 }
 
 func str_startsWith(txt, ptn string) bool {
@@ -109,7 +111,7 @@ func (self *Str_Builder) get_txt() string {
 
 // 106: decl @lune.@base.@Util.memStream.write
 func (self *Str_Builder) add(val string) {
-	self.txt.Write(([]byte)(val))
+	self.txt.WriteString(val)
 }
 
 func (self *Str_Builder) len() LnsInt {
@@ -213,12 +215,12 @@ func String_formatGo(format string, ddd []LnsAny) (string, bool) {
 	}
 
 	// %書式を確認し、%書式と引数の組み合わせを infoList に格納する
-	infoList := []*formatInfo{}
+	infoList := []formatInfo{}
 	argIndex := 0
 	for {
 		offset := strings.Index(format, "%")
 		if offset < 0 || offset >= len(format) {
-			infoList = append(infoList, &formatInfo{format, "", nil})
+			infoList = append(infoList, formatInfo{format, "", nil})
 			break
 		}
 		var formType string
@@ -249,7 +251,7 @@ func String_formatGo(format string, ddd []LnsAny) (string, bool) {
 			argIndex++
 		}
 
-		infoList = append(infoList, &formatInfo{format[:offset+1], formType, arg})
+		infoList = append(infoList, formatInfo{format[:offset+1], formType, arg})
 		format = format[offset+2:]
 	}
 
@@ -258,15 +260,15 @@ func String_formatGo(format string, ddd []LnsAny) (string, bool) {
 	for _, info := range infoList {
 		switch info.formType {
 		case "":
-			goformat.Write([]byte(info.part))
+			goformat.WriteString(info.part)
 		case "%":
-			goformat.Write([]byte(info.part))
+			goformat.WriteString(info.part)
 		case "v":
 			txt := fmt.Sprintf(info.part+info.formType, Lns_ToString(info.arg))
-			goformat.Write([]byte(txt))
+			goformat.WriteString(txt)
 		default:
 			txt := fmt.Sprintf(info.part+info.formType, info.arg)
-			goformat.Write([]byte(txt))
+			goformat.WriteString(txt)
 		}
 	}
 	return goformat.String(), true
@@ -314,6 +316,10 @@ func (luaVM *Lns_luaVM) String_format(format string, ddd []LnsAny) string {
 	}
 
 	return callInfo.call(luaVM, 1+len(ddd), 1)[0].(string)
+}
+
+func (luaVM *Lns_luaVM) String_replace(txt, src, dst string) string {
+	return strings.ReplaceAll(txt, src, dst)
 }
 
 func (luaVM *Lns_luaVM) String_gsub(
@@ -457,9 +463,11 @@ func (self *RegexpCache) createRegexp(src string) *regexp.Regexp {
 	return re
 }
 
+var goFIndDummyRet = []LnsAny{}
+
 func (self *RegexpCache) goFind(txt string, src string, index LnsInt) (bool, []LnsAny) {
 
-	dummyRet := []LnsAny{nil}
+	dummyRet := goFIndDummyRet
 
 	re := self.createRegexp(src)
 	if re == nil {
@@ -490,7 +498,7 @@ func (luaVM *Lns_luaVM) String_find(
 		offset = string_index(work, len(txt))
 		if offset > 0 {
 			if offset > len(txt) {
-				return []LnsAny{}
+				return goFIndDummyRet
 			}
 			target = txt[offset-1:]
 		}
@@ -499,7 +507,7 @@ func (luaVM *Lns_luaVM) String_find(
 	if plain == true {
 		findIndex := strings.Index(target, src)
 		if findIndex < 0 {
-			return []LnsAny{}
+			return goFIndDummyRet
 		}
 		return []LnsAny{offset + findIndex, offset + findIndex + len(src) - 1}
 	}
@@ -553,12 +561,11 @@ func (luaVM *Lns_luaVM) String_byte(
 }
 
 func (luaVM *Lns_luaVM) String_rep(txt string, num LnsInt) string {
-
-	ret := ""
+	var builder strings.Builder
 	for count := 1; count <= num; count++ {
-		ret += txt
+		builder.WriteString(txt)
 	}
-	return ret
+	return builder.String()
 }
 
 func (luaVM *Lns_luaVM) String_sub(txt string, from LnsInt, to LnsAny) string {

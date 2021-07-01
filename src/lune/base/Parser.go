@@ -129,7 +129,7 @@ func Parser_createParserFrom(_env *LnsEnv, src LnsAny,async bool,stdinFile LnsAn
 }
 
 // 131: decl @lune.@base.@Parser.TokenListParser.createPosition
-func (self *Parser_TokenListParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
+func (self *Parser_TokenListParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) Types_Position {
     return Types_Position_create(_env, lineNo, column, self.FP.GetStreamName(_env), self.overridePos)
 }
 // 135: decl @lune.@base.@Parser.TokenListParser.getStreamName
@@ -152,7 +152,7 @@ func Parser_StreamParser_setStdinStream(_env *LnsEnv, moduleName string) {
     Parser_StreamParser__stdinTxt = Lns_unwrapDefault( Lns_io_stdin.Read(_env, "*a"), "").(string)
 }
 // 191: decl @lune.@base.@Parser.StreamParser.createPosition
-func (self *Parser_StreamParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
+func (self *Parser_StreamParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) Types_Position {
     return Types_Position_create(_env, lineNo, column, self.FP.GetStreamName(_env), self.overridePos)
 }
 // 196: decl @lune.@base.@Parser.StreamParser.getStreamName
@@ -196,7 +196,7 @@ func Parser_DefaultPushbackParser_createFromLnsCode(_env *LnsEnv, code string,na
     return NewParser_DefaultPushbackParser(_env, &NewParser_StreamParser(_env, &Types_ParserSrc__LnsCode{code, name, nil}, false, nil, nil).Parser_Parser)
 }
 // 250: decl @lune.@base.@Parser.DefaultPushbackParser.createPosition
-func (self *Parser_DefaultPushbackParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
+func (self *Parser_DefaultPushbackParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) Types_Position {
     return self.parser.FP.CreatePosition(_env, lineNo, column)
 }
 // 254: decl @lune.@base.@Parser.DefaultPushbackParser.getTokenNoErr
@@ -247,7 +247,7 @@ func (self *Parser_DefaultPushbackParser) Pushback(_env *LnsEnv) {
     self.FP.PushbackToken(_env, self.currentToken)
 }
 // 298: decl @lune.@base.@Parser.DefaultPushbackParser.pushbackStr
-func (self *Parser_DefaultPushbackParser) PushbackStr(_env *LnsEnv, asyncParse LnsAny,name string,statement string,pos *Types_Position) {
+func (self *Parser_DefaultPushbackParser) PushbackStr(_env *LnsEnv, asyncParse LnsAny,name string,statement string,pos Types_Position) {
     var parser *Parser_StreamParser
     parser = NewParser_StreamParser(_env, &Types_ParserSrc__LnsCode{statement, name, nil}, asyncParse == true, nil, pos)
     var list *LnsList
@@ -304,8 +304,8 @@ func (self *Parser_DefaultPushbackParser) Error(_env *LnsEnv, message string) {
     Util_err(_env, message)
 }
 // 328: decl @lune.@base.@Parser.DefaultPushbackParser.getLastPos
-func (self *Parser_DefaultPushbackParser) GetLastPos(_env *LnsEnv) *Types_Position {
-    var pos *Types_Position
+func (self *Parser_DefaultPushbackParser) GetLastPos(_env *LnsEnv) Types_Position {
+    var pos Types_Position
     pos = self.parser.FP.CreatePosition(_env, 0, 0)
     if self.FP.Get_currentToken(_env).Kind != Types_TokenKind__Eof{
         pos = self.FP.Get_currentToken(_env).Pos
@@ -353,7 +353,7 @@ func (self *Parser_DummyParser) GetStreamName(_env *LnsEnv) string {
     return "dummy"
 }
 // 387: decl @lune.@base.@Parser.DummyParser.createPosition
-func (self *Parser_DummyParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) *Types_Position {
+func (self *Parser_DummyParser) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) Types_Position {
     return Types_Position_create(_env, lineNo, column, self.FP.GetStreamName(_env), nil)
 }
 // 406: decl @lune.@base.@Parser.CommentLayer.addDirect
@@ -398,7 +398,7 @@ func (self *Parser_CommentCtrl) Pop(_env *LnsEnv) {
 }
 // declaration Class -- Parser
 type Parser_ParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) Types_Position
     GetStreamName(_env *LnsEnv) string
     GetToken(_env *LnsEnv) LnsAny
 }
@@ -432,13 +432,13 @@ func (self *Parser_Parser) InitParser_Parser(_env *LnsEnv) {
 
 
 type Parser_PushbackParser interface {
-        CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+        CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) Types_Position
         Error(_env *LnsEnv, arg1 string)
         GetStreamName(_env *LnsEnv) string
         GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
         NewPushback(_env *LnsEnv, arg1 *LnsList)
         Pushback(_env *LnsEnv)
-        PushbackStr(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 string, arg4 *Types_Position)
+        PushbackStr(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 string, arg4 Types_Position)
         PushbackToken(_env *LnsEnv, arg1 *Types_Token)
 }
 func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
@@ -450,7 +450,7 @@ func Lns_cast2Parser_PushbackParser( obj LnsAny ) LnsAny {
 
 // declaration Class -- TokenListParser
 type Parser_TokenListParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) Types_Position
     GetStreamName(_env *LnsEnv) string
     GetToken(_env *LnsEnv) LnsAny
 }
@@ -509,7 +509,7 @@ func Parser_StreamParser____init_0_(_env *LnsEnv) {
 }
 
 type Parser_StreamParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) Types_Position
     GetStreamName(_env *LnsEnv) string
     GetToken(_env *LnsEnv) LnsAny
 }
@@ -575,9 +575,9 @@ func (self *Parser_StreamParser) InitParser_StreamParser(_env *LnsEnv, parserSrc
 
 // declaration Class -- DefaultPushbackParser
 type Parser_DefaultPushbackParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) Types_Position
     Error(_env *LnsEnv, arg1 string)
-    GetLastPos(_env *LnsEnv) *Types_Position
+    GetLastPos(_env *LnsEnv) Types_Position
     GetNearCode(_env *LnsEnv) string
     GetStreamName(_env *LnsEnv) string
     GetTokenNoErr(_env *LnsEnv, arg1 LnsAny) *Types_Token
@@ -585,7 +585,7 @@ type Parser_DefaultPushbackParserMtd interface {
     Get_currentToken(_env *LnsEnv) *Types_Token
     NewPushback(_env *LnsEnv, arg1 *LnsList)
     Pushback(_env *LnsEnv)
-    PushbackStr(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 string, arg4 *Types_Position)
+    PushbackStr(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 string, arg4 Types_Position)
     PushbackToken(_env *LnsEnv, arg1 *Types_Token)
 }
 type Parser_DefaultPushbackParser struct {
@@ -633,7 +633,7 @@ func (self *Parser_DefaultPushbackParser) InitParser_DefaultPushbackParser(_env 
 
 // declaration Class -- DummyParser
 type Parser_DummyParserMtd interface {
-    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) *Types_Position
+    CreatePosition(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt) Types_Position
     GetStreamName(_env *LnsEnv) string
     GetToken(_env *LnsEnv) LnsAny
 }

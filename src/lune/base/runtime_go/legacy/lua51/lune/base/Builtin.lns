@@ -350,6 +350,7 @@ _DefBuiltinFuncType( [
          "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
          "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
          "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str", "int"] },
+         "replace": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str" ] },
          "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
          "lower": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
          "upper": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },

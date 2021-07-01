@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@TransUnit'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -195,8 +195,27 @@ function _lune._run( runner, mod )
     return true
 end
 
-if not _lune5 then
-   _lune5 = _lune
+function _lune.replace( txt, src, dst )
+   local result = ""
+   local index = 1
+   while index <= #txt do
+      local findIndex = string.find( txt, src, index, true )
+      if not findIndex then
+         result = result .. string.sub( txt, index )
+         break
+      end
+      if findIndex ~= index then
+         result = result .. (string.sub( txt, index, findIndex - 1 ) .. dst)
+      else
+         result = result .. dst
+      end
+      index = findIndex + #src
+   end
+   return result
+end
+
+if not _lune6 then
+   _lune6 = _lune
 end
 
 
@@ -8205,7 +8224,8 @@ end
 
 local function findForm( format )
 
-   local remain = format:gsub( "%%%%", "" )
+   local remain = _lune.replace( format, "%%", "" )
+   
    local opList = {}
    
    while true do
@@ -9712,6 +9732,10 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    
    if typeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or typeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
       self.helperInfo.useUnpack = true
+   end
+   
+   if typeInfo:equals( self.processInfo, self.builtinFunc.str_replace ) then
+      self.helperInfo.useStrReplace = true
    end
    
    

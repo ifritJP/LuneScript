@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Ast'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -224,8 +224,27 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune5 then
-   _lune5 = _lune
+function _lune.replace( txt, src, dst )
+   local result = ""
+   local index = 1
+   while index <= #txt do
+      local findIndex = string.find( txt, src, index, true )
+      if not findIndex then
+         result = result .. string.sub( txt, index )
+         break
+      end
+      if findIndex ~= index then
+         result = result .. (string.sub( txt, index, findIndex - 1 ) .. dst)
+      else
+         result = result .. dst
+      end
+      index = findIndex + #src
+   end
+   return result
+end
+
+if not _lune6 then
+   _lune6 = _lune
 end
 
 
@@ -1598,7 +1617,7 @@ function TypeInfo:get_extedType(  )
 end
 function TypeInfo.getModulePath( fullname )
 
-   return (fullname:gsub( "@", "" ) )
+   return (_lune.replace( fullname, "@", "" ) )
 end
 function TypeInfo:isModule(  )
 

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Code'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune.loadModule( mod )
    if __luneScript then
@@ -12,8 +12,8 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
-if not _lune5 then
-   _lune5 = _lune
+if not _lune6 then
+   _lune6 = _lune
 end
 
 

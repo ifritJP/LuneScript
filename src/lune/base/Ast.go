@@ -2070,7 +2070,7 @@ type Ast_ScopeMtd interface {
     Add(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 LnsInt, arg3 bool, arg4 bool, arg5 string, arg6 LnsAny, arg7 *Ast_TypeInfo, arg8 LnsInt, arg9 bool, arg10 LnsInt, arg11 bool, arg12 bool)(LnsAny, LnsAny)
     AddAlge(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 LnsInt, arg3 string, arg4 LnsAny, arg5 *Ast_TypeInfo)(LnsAny, LnsAny)
     AddAlgeVal(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo)(LnsAny, LnsAny)
-    AddAlias(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 *Types_Position, arg4 bool, arg5 LnsInt, arg6 *Ast_TypeInfo, arg7 *Ast_SymbolInfo)(LnsAny, LnsAny)
+    AddAlias(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 Types_Position, arg4 bool, arg5 LnsInt, arg6 *Ast_TypeInfo, arg7 *Ast_SymbolInfo)(LnsAny, LnsAny)
     AddAliasForType(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo)(LnsAny, LnsAny)
     AddAlternate(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 LnsInt, arg3 string, arg4 LnsAny, arg5 *Ast_TypeInfo)
     AddClass(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo)(LnsAny, LnsAny)
@@ -2209,7 +2209,7 @@ type Ast_ScopeWithRefMtd interface {
     Add(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 LnsInt, arg3 bool, arg4 bool, arg5 string, arg6 LnsAny, arg7 *Ast_TypeInfo, arg8 LnsInt, arg9 bool, arg10 LnsInt, arg11 bool, arg12 bool)(LnsAny, LnsAny)
     AddAlge(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 LnsInt, arg3 string, arg4 LnsAny, arg5 *Ast_TypeInfo)(LnsAny, LnsAny)
     AddAlgeVal(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo)(LnsAny, LnsAny)
-    AddAlias(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 *Types_Position, arg4 bool, arg5 LnsInt, arg6 *Ast_TypeInfo, arg7 *Ast_SymbolInfo)(LnsAny, LnsAny)
+    AddAlias(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 Types_Position, arg4 bool, arg5 LnsInt, arg6 *Ast_TypeInfo, arg7 *Ast_SymbolInfo)(LnsAny, LnsAny)
     AddAliasForType(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo)(LnsAny, LnsAny)
     AddAlternate(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 LnsInt, arg3 string, arg4 LnsAny, arg5 *Ast_TypeInfo)
     AddClass(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 string, arg3 LnsAny, arg4 *Ast_TypeInfo)(LnsAny, LnsAny)
@@ -6412,11 +6412,11 @@ func (self *Ast_AndExpTypeInfo) InitAst_AndExpTypeInfo(_env *LnsEnv, processInfo
 // declaration Class -- RefTypeInfo
 type Ast_RefTypeInfoMtd interface {
     Get_itemRefTypeList(_env *LnsEnv) *LnsList
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
 }
 type Ast_RefTypeInfo struct {
-    pos *Types_Position
+    pos Types_Position
     itemRefTypeList *LnsList
     typeInfo *Ast_TypeInfo
     FP Ast_RefTypeInfoMtd
@@ -6441,18 +6441,18 @@ func Ast_RefTypeInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Ast_RefTypeInfo) ToAst_RefTypeInfo() *Ast_RefTypeInfo {
     return obj
 }
-func NewAst_RefTypeInfo(_env *LnsEnv, arg1 *Types_Position, arg2 *LnsList, arg3 *Ast_TypeInfo) *Ast_RefTypeInfo {
+func NewAst_RefTypeInfo(_env *LnsEnv, arg1 Types_Position, arg2 *LnsList, arg3 *Ast_TypeInfo) *Ast_RefTypeInfo {
     obj := &Ast_RefTypeInfo{}
     obj.FP = obj
     obj.InitAst_RefTypeInfo(_env, arg1, arg2, arg3)
     return obj
 }
-func (self *Ast_RefTypeInfo) InitAst_RefTypeInfo(_env *LnsEnv, arg1 *Types_Position, arg2 *LnsList, arg3 *Ast_TypeInfo) {
+func (self *Ast_RefTypeInfo) InitAst_RefTypeInfo(_env *LnsEnv, arg1 Types_Position, arg2 *LnsList, arg3 *Ast_TypeInfo) {
     self.pos = arg1
     self.itemRefTypeList = arg2
     self.typeInfo = arg3
 }
-func (self *Ast_RefTypeInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+func (self *Ast_RefTypeInfo) Get_pos(_env *LnsEnv) Types_Position{ return self.pos }
 func (self *Ast_RefTypeInfo) Get_itemRefTypeList(_env *LnsEnv) *LnsList{ return self.itemRefTypeList }
 func (self *Ast_RefTypeInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
 
@@ -6460,7 +6460,7 @@ func (self *Ast_RefTypeInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return se
 type Ast_TypeAnalyzerMtd interface {
     AnalyzeType(_env *LnsEnv, arg1 *Ast_Scope, arg2 Parser_PushbackParser, arg3 LnsInt, arg4 bool, arg5 bool)(LnsAny, LnsAny, LnsAny)
     AnalyzeTypeFromTxt(_env *LnsEnv, arg1 string, arg2 *Ast_Scope, arg3 LnsInt, arg4 bool)(LnsAny, LnsAny, LnsAny)
-    AnalyzeTypeItemList(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 *Ast_TypeInfo, arg5 *Types_Position)(LnsAny, LnsAny, LnsAny)
+    AnalyzeTypeItemList(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 *Ast_TypeInfo, arg5 Types_Position)(LnsAny, LnsAny, LnsAny)
     analyzeTypeSub(_env *LnsEnv, arg1 bool)(LnsAny, LnsAny, LnsAny)
 }
 type Ast_TypeAnalyzer struct {
@@ -7994,7 +7994,7 @@ func (self *Ast_Scope) AddIgnoredVar(_env *LnsEnv, processInfo *Ast_ProcessInfo)
     self.FP.AddLocalVar(_env, processInfo, false, true, "_", nil, Ast_builtinTypeEmpty, Ast_MutMode__Mut)
 }
 // 5529: decl @lune.@base.@Ast.Scope.addAlias
-func (self *Ast_Scope) AddAlias(_env *LnsEnv, processInfo *Ast_ProcessInfo,name string,pos *Types_Position,externalFlag bool,accessMode LnsInt,parentInfo *Ast_TypeInfo,symbolInfo *Ast_SymbolInfo)(LnsAny, LnsAny) {
+func (self *Ast_Scope) AddAlias(_env *LnsEnv, processInfo *Ast_ProcessInfo,name string,pos Types_Position,externalFlag bool,accessMode LnsInt,parentInfo *Ast_TypeInfo,symbolInfo *Ast_SymbolInfo)(LnsAny, LnsAny) {
     var aliasType *Ast_AliasTypeInfo
     aliasType = processInfo.FP.CreateAlias(_env, processInfo, name, externalFlag, accessMode, parentInfo, symbolInfo.FP.Get_typeInfo(_env).FP.Get_srcTypeInfo(_env))
     return self.FP.Add(_env, processInfo, symbolInfo.FP.Get_kind(_env), false, symbolInfo.FP.Get_canBeRight(_env), name, pos, &aliasType.Ast_TypeInfo, accessMode, true, Ast_MutMode__IMut, true, false)
@@ -8053,7 +8053,7 @@ func (self *Ast_TypeInfo) Get_extedType(_env *LnsEnv) *Ast_TypeInfo {
 }
 // 886: decl @lune.@base.@Ast.TypeInfo.getModulePath
 func Ast_TypeInfo_getModulePath(_env *LnsEnv, fullname string) string {
-    return Lns_car(_env.GetVM().String_gsub(fullname,"@", "")).(string)
+    return (_env.GetVM().String_replace(fullname,"@", ""))
 }
 // 891: decl @lune.@base.@Ast.TypeInfo.isModule
 func (self *Ast_TypeInfo) IsModule(_env *LnsEnv) bool {
@@ -11478,7 +11478,7 @@ func (self *Ast_TypeAnalyzer) analyzeTypeSub(_env *LnsEnv, allowDDD bool)(LnsAny
     return self.FP.AnalyzeTypeItemList(_env, allowDDD, refFlag, mutFlag, typeInfo, token.Pos)
 }
 // 7847: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeItemList
-func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,refFlag bool,mutFlag bool,typeInfo *Ast_TypeInfo,pos *Types_Position)(LnsAny, LnsAny, LnsAny) {
+func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,refFlag bool,mutFlag bool,typeInfo *Ast_TypeInfo,pos Types_Position)(LnsAny, LnsAny, LnsAny) {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( self.parentPub) &&
         _env.SetStackVal( Ast_isPubToExternal(_env, self.accessMode)) &&

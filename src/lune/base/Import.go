@@ -1419,7 +1419,7 @@ type Import_ImportParamMtd interface {
     GetTypeInfoFrom(_env *LnsEnv, arg1 *Import__IdInfo)(LnsAny, LnsAny)
 }
 type Import_ImportParam struct {
-    Pos *Types_Position
+    Pos Types_Position
     Modifier *TransUnitIF_Modifier
     ProcessInfo *Ast_ProcessInfo
     TypeId2Scope *LnsMap
@@ -1455,13 +1455,13 @@ func Import_ImportParamDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Import_ImportParam) ToImport_ImportParam() *Import_ImportParam {
     return obj
 }
-func NewImport_ImportParam(_env *LnsEnv, arg1 *Types_Position, arg2 *TransUnitIF_Modifier, arg3 *Ast_ProcessInfo, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 *LnsSet, arg9 *Lns_luaValue, arg10 *Ast_Scope, arg11 *Ast_TypeInfo, arg12 LnsInt, arg13 *LnsMap, arg14 *LnsMap) *Import_ImportParam {
+func NewImport_ImportParam(_env *LnsEnv, arg1 Types_Position, arg2 *TransUnitIF_Modifier, arg3 *Ast_ProcessInfo, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 *LnsSet, arg9 *Lns_luaValue, arg10 *Ast_Scope, arg11 *Ast_TypeInfo, arg12 LnsInt, arg13 *LnsMap, arg14 *LnsMap) *Import_ImportParam {
     obj := &Import_ImportParam{}
     obj.FP = obj
     obj.InitImport_ImportParam(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14)
     return obj
 }
-func (self *Import_ImportParam) InitImport_ImportParam(_env *LnsEnv, arg1 *Types_Position, arg2 *TransUnitIF_Modifier, arg3 *Ast_ProcessInfo, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 *LnsSet, arg9 *Lns_luaValue, arg10 *Ast_Scope, arg11 *Ast_TypeInfo, arg12 LnsInt, arg13 *LnsMap, arg14 *LnsMap) {
+func (self *Import_ImportParam) InitImport_ImportParam(_env *LnsEnv, arg1 Types_Position, arg2 *TransUnitIF_Modifier, arg3 *Ast_ProcessInfo, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 *LnsSet, arg9 *Lns_luaValue, arg10 *Ast_Scope, arg11 *Ast_TypeInfo, arg12 LnsInt, arg13 *LnsMap, arg14 *LnsMap) {
     self.Pos = arg1
     self.Modifier = arg2
     self.ProcessInfo = arg3
@@ -3040,7 +3040,7 @@ func (self *Import_DependModuleInfo) InitImport_DependModuleInfo(_env *LnsEnv, a
 // declaration Class -- ModuleLoaderParam
 type Import_ModuleLoaderParamMtd interface {
     Get_ctrl_info(_env *LnsEnv) *Types_TransCtrlInfo
-    Get_latestPos(_env *LnsEnv) *Types_Position
+    Get_latestPos(_env *LnsEnv) Types_Position
     Get_macroEval(_env *LnsEnv) *Nodes_MacroEval
     Get_macroMode(_env *LnsEnv) string
     Get_nearCode(_env *LnsEnv) LnsAny
@@ -3050,7 +3050,7 @@ type Import_ModuleLoaderParamMtd interface {
 type Import_ModuleLoaderParam struct {
     ctrl_info *Types_TransCtrlInfo
     processInfo *Ast_ProcessInfo
-    latestPos *Types_Position
+    latestPos Types_Position
     macroMode string
     nearCode LnsAny
     validMutControl bool
@@ -3077,13 +3077,13 @@ func Import_ModuleLoaderParamDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Import_ModuleLoaderParam) ToImport_ModuleLoaderParam() *Import_ModuleLoaderParam {
     return obj
 }
-func NewImport_ModuleLoaderParam(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2 *Ast_ProcessInfo, arg3 *Types_Position, arg4 string, arg5 LnsAny, arg6 bool, arg7 *Nodes_MacroEval) *Import_ModuleLoaderParam {
+func NewImport_ModuleLoaderParam(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2 *Ast_ProcessInfo, arg3 Types_Position, arg4 string, arg5 LnsAny, arg6 bool, arg7 *Nodes_MacroEval) *Import_ModuleLoaderParam {
     obj := &Import_ModuleLoaderParam{}
     obj.FP = obj
     obj.InitImport_ModuleLoaderParam(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
     return obj
 }
-func (self *Import_ModuleLoaderParam) InitImport_ModuleLoaderParam(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2 *Ast_ProcessInfo, arg3 *Types_Position, arg4 string, arg5 LnsAny, arg6 bool, arg7 *Nodes_MacroEval) {
+func (self *Import_ModuleLoaderParam) InitImport_ModuleLoaderParam(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2 *Ast_ProcessInfo, arg3 Types_Position, arg4 string, arg5 LnsAny, arg6 bool, arg7 *Nodes_MacroEval) {
     self.ctrl_info = arg1
     self.processInfo = arg2
     self.latestPos = arg3
@@ -3094,7 +3094,7 @@ func (self *Import_ModuleLoaderParam) InitImport_ModuleLoaderParam(_env *LnsEnv,
 }
 func (self *Import_ModuleLoaderParam) Get_ctrl_info(_env *LnsEnv) *Types_TransCtrlInfo{ return self.ctrl_info }
 func (self *Import_ModuleLoaderParam) Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo{ return self.processInfo }
-func (self *Import_ModuleLoaderParam) Get_latestPos(_env *LnsEnv) *Types_Position{ return self.latestPos }
+func (self *Import_ModuleLoaderParam) Get_latestPos(_env *LnsEnv) Types_Position{ return self.latestPos }
 func (self *Import_ModuleLoaderParam) Get_macroMode(_env *LnsEnv) string{ return self.macroMode }
 func (self *Import_ModuleLoaderParam) Get_nearCode(_env *LnsEnv) LnsAny{ return self.nearCode }
 func (self *Import_ModuleLoaderParam) Get_validMutControl(_env *LnsEnv) bool{ return self.validMutControl }
@@ -3169,7 +3169,7 @@ type Import_ModuleLoader struct {
     moduleMeta LnsAny
     result *Import_ModuleLoaderResult
     validMutControl bool
-    curPos *Types_Position
+    curPos Types_Position
     moduleLoaderParam *Import_ModuleLoaderParam
     importModuleInfo *FrontInterface_ImportModuleInfo
     fullModulePath string
@@ -3300,7 +3300,7 @@ func Import_ImportDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Import_Import) ToImport_Import() *Import_Import {
     return obj
 }
-func NewImport_Import(_env *LnsEnv, arg1 *Types_Position, arg2 *FrontInterface_ImportModuleInfo, arg3 *Ast_TypeInfo, arg4 *Macro_MacroCtrl, arg5 *Ast_TypeNameCtrl, arg6 *LnsMap, arg7 LnsAny, arg8 bool) *Import_Import {
+func NewImport_Import(_env *LnsEnv, arg1 Types_Position, arg2 *FrontInterface_ImportModuleInfo, arg3 *Ast_TypeInfo, arg4 *Macro_MacroCtrl, arg5 *Ast_TypeNameCtrl, arg6 *LnsMap, arg7 LnsAny, arg8 bool) *Import_Import {
     obj := &Import_Import{}
     obj.FP = obj
     obj.InitImport_Import(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8)
@@ -3308,7 +3308,7 @@ func NewImport_Import(_env *LnsEnv, arg1 *Types_Position, arg2 *FrontInterface_I
 }
 func (self *Import_Import) Get_importModule2ExportInfo(_env *LnsEnv) *LnsMap{ return self.importModule2ExportInfo }
 // 1442: DeclConstr
-func (self *Import_Import) InitImport_Import(_env *LnsEnv, curPos *Types_Position,importModuleInfo *FrontInterface_ImportModuleInfo,moduleType *Ast_TypeInfo,macroCtrl *Macro_MacroCtrl,typeNameCtrl *Ast_TypeNameCtrl,importedAliasMap *LnsMap,baseDir LnsAny,validMutControl bool) {
+func (self *Import_Import) InitImport_Import(_env *LnsEnv, curPos Types_Position,importModuleInfo *FrontInterface_ImportModuleInfo,moduleType *Ast_TypeInfo,macroCtrl *Macro_MacroCtrl,typeNameCtrl *Ast_TypeNameCtrl,importedAliasMap *LnsMap,baseDir LnsAny,validMutControl bool) {
     self.baseDir = baseDir
     self.importModuleInfo = importModuleInfo
     self.moduleType = moduleType

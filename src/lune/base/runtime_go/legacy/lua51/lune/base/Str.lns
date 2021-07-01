@@ -62,6 +62,15 @@ pub fn getLineList( txt:str ) : List<str> {
    return list;
 }
 
+/**
+txt 内の src 文字列を dst に変換する。
+
+src を dst に単純に置換する。
+*/
+pub fn replace( txt:str, src:str, dst:str ) : str {
+   return (txt.gsub( src, dst ));
+}
+
 pub class Builder {
    let mut txt: str;
    let mut progress: str;

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Formatter'
 local _lune = {}
-if _lune5 then
-   _lune = _lune5
+if _lune6 then
+   _lune = _lune6
 end
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -117,8 +117,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune5 then
-   _lune5 = _lune
+if not _lune6 then
+   _lune6 = _lune
 end
 
 
@@ -186,6 +186,10 @@ end
 
 function FormatterFilter:write( ... )
    return self.stream:write( ... )
+end
+
+function FormatterFilter:writeRaw( ... )
+   return self.stream:writeRaw( ... )
 end
 
 function FormatterFilter:writeln( ... )

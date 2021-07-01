@@ -884,7 +884,7 @@ pub abstract class TypeInfo extend (TypeDataAccessor) {
    }
    
    pub static fn getModulePath( fullname:str ) : str {
-      return ( fullname.gsub( "@", "" ) );
+      return ( fullname.replace( "@", "" ) );
    }
 
    /** この型がモジュールを示す型の場合 true  */

@@ -1336,14 +1336,14 @@ type Nodes_NodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -1357,7 +1357,7 @@ type Nodes_Node struct {
     managerId LnsInt
     id LnsInt
     kind LnsInt
-    pos *Types_Position
+    pos Types_Position
     expTypeList *LnsList
     commentList LnsAny
     tailComment LnsAny
@@ -1387,7 +1387,7 @@ func (obj *Nodes_Node) ToNodes_Node() *Nodes_Node {
     return obj
 }
 func (self *Nodes_Node) Get_kind(_env *LnsEnv) LnsInt{ return self.kind }
-func (self *Nodes_Node) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+func (self *Nodes_Node) Get_pos(_env *LnsEnv) Types_Position{ return self.pos }
 func (self *Nodes_Node) Get_expTypeList(_env *LnsEnv) *LnsList{ return self.expTypeList }
 func (self *Nodes_Node) Get_commentList(_env *LnsEnv) LnsAny{ return self.commentList }
 func (self *Nodes_Node) Get_tailComment(_env *LnsEnv) LnsAny{ return self.tailComment }
@@ -1396,7 +1396,7 @@ func (self *Nodes_Node) Get_isLValue(_env *LnsEnv) bool{ return self.IsLValue }
 func (self *Nodes_Node) Get_macroArgFlag(_env *LnsEnv) bool{ return self.macroArgFlag }
 func (self *Nodes_Node) Get_inTestBlock(_env *LnsEnv) bool{ return self.inTestBlock }
 // 271: DeclConstr
-func (self *Nodes_Node) InitNodes_Node(_env *LnsEnv, managerId LnsInt,id LnsInt,kind LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,expTypeList *LnsList) {
+func (self *Nodes_Node) InitNodes_Node(_env *LnsEnv, managerId LnsInt,id LnsInt,kind LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,expTypeList *LnsList) {
     self.IsLValue = false
     self.managerId = managerId
     self.id = id
@@ -1706,14 +1706,14 @@ type Nodes_NoneNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -1747,7 +1747,7 @@ func Nodes_NoneNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_NoneNode) ToNodes_NoneNode() *Nodes_NoneNode {
     return obj
 }
-func NewNodes_NoneNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_NoneNode {
+func NewNodes_NoneNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_NoneNode {
     obj := &Nodes_NoneNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -1755,7 +1755,7 @@ func NewNodes_NoneNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Posit
     return obj
 }
 // 734: DeclConstr
-func (self *Nodes_NoneNode) InitNodes_NoneNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_NoneNode) InitNodes_NoneNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 0, pos, inTestBlock, macroArgFlag, typeList)
 }
 
@@ -1775,14 +1775,14 @@ type Nodes_ShebangNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_cmd(_env *LnsEnv) string
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -1817,7 +1817,7 @@ func Nodes_ShebangNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ShebangNode) ToNodes_ShebangNode() *Nodes_ShebangNode {
     return obj
 }
-func NewNodes_ShebangNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ShebangNode {
+func NewNodes_ShebangNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ShebangNode {
     obj := &Nodes_ShebangNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -1826,7 +1826,7 @@ func NewNodes_ShebangNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Po
 }
 func (self *Nodes_ShebangNode) Get_cmd(_env *LnsEnv) string{ return self.cmd }
 // 734: DeclConstr
-func (self *Nodes_ShebangNode) InitNodes_ShebangNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) {
+func (self *Nodes_ShebangNode) InitNodes_ShebangNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) {
     self.InitNodes_Node(_env, managerId, id, 1, pos, inTestBlock, macroArgFlag, typeList)
     self.cmd = cmd
 }
@@ -1846,14 +1846,14 @@ type Nodes_ConvStatNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_txt(_env *LnsEnv) string
     HasNilAccess(_env *LnsEnv) bool
@@ -1889,7 +1889,7 @@ func Nodes_ConvStatNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ConvStatNode) ToNodes_ConvStatNode() *Nodes_ConvStatNode {
     return obj
 }
-func NewNodes_ConvStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ConvStatNode {
+func NewNodes_ConvStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ConvStatNode {
     obj := &Nodes_ConvStatNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -1898,7 +1898,7 @@ func NewNodes_ConvStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_P
 }
 func (self *Nodes_ConvStatNode) Get_txt(_env *LnsEnv) string{ return self.txt }
 // 734: DeclConstr
-func (self *Nodes_ConvStatNode) InitNodes_ConvStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) {
+func (self *Nodes_ConvStatNode) InitNodes_ConvStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) {
     self.InitNodes_Node(_env, managerId, id, 2, pos, inTestBlock, macroArgFlag, typeList)
     self.txt = txt
 }
@@ -1918,7 +1918,7 @@ type Nodes_BlankLineNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -1926,7 +1926,7 @@ type Nodes_BlankLineNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_lineNum(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -1961,7 +1961,7 @@ func Nodes_BlankLineNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_BlankLineNode) ToNodes_BlankLineNode() *Nodes_BlankLineNode {
     return obj
 }
-func NewNodes_BlankLineNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt) *Nodes_BlankLineNode {
+func NewNodes_BlankLineNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt) *Nodes_BlankLineNode {
     obj := &Nodes_BlankLineNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -1970,7 +1970,7 @@ func NewNodes_BlankLineNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_
 }
 func (self *Nodes_BlankLineNode) Get_lineNum(_env *LnsEnv) LnsInt{ return self.lineNum }
 // 734: DeclConstr
-func (self *Nodes_BlankLineNode) InitNodes_BlankLineNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) {
+func (self *Nodes_BlankLineNode) InitNodes_BlankLineNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) {
     self.InitNodes_Node(_env, managerId, id, 3, pos, inTestBlock, macroArgFlag, typeList)
     self.lineNum = lineNum
 }
@@ -1990,14 +1990,14 @@ type Nodes_SubfileNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_usePath(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -2033,7 +2033,7 @@ func Nodes_SubfileNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_SubfileNode) ToNodes_SubfileNode() *Nodes_SubfileNode {
     return obj
 }
-func NewNodes_SubfileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_SubfileNode {
+func NewNodes_SubfileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_SubfileNode {
     obj := &Nodes_SubfileNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2042,7 +2042,7 @@ func NewNodes_SubfileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Po
 }
 func (self *Nodes_SubfileNode) Get_usePath(_env *LnsEnv) LnsAny{ return self.usePath }
 // 734: DeclConstr
-func (self *Nodes_SubfileNode) InitNodes_SubfileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) {
+func (self *Nodes_SubfileNode) InitNodes_SubfileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 4, pos, inTestBlock, macroArgFlag, typeList)
     self.usePath = usePath
 }
@@ -2055,11 +2055,11 @@ type Nodes_ImportInfoMtd interface {
     Get_lazy(_env *LnsEnv) LnsInt
     Get_modulePath(_env *LnsEnv) string
     Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
 }
 type Nodes_ImportInfo struct {
-    pos *Types_Position
+    pos Types_Position
     modulePath string
     lazy LnsInt
     assignName string
@@ -2088,13 +2088,13 @@ func Nodes_ImportInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ImportInfo) ToNodes_ImportInfo() *Nodes_ImportInfo {
     return obj
 }
-func NewNodes_ImportInfo(_env *LnsEnv, arg1 *Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) *Nodes_ImportInfo {
+func NewNodes_ImportInfo(_env *LnsEnv, arg1 Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) *Nodes_ImportInfo {
     obj := &Nodes_ImportInfo{}
     obj.FP = obj
     obj.InitNodes_ImportInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
     return obj
 }
-func (self *Nodes_ImportInfo) InitNodes_ImportInfo(_env *LnsEnv, arg1 *Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) {
+func (self *Nodes_ImportInfo) InitNodes_ImportInfo(_env *LnsEnv, arg1 Types_Position, arg2 string, arg3 LnsInt, arg4 string, arg5 bool, arg6 *Ast_SymbolInfo, arg7 *Ast_TypeInfo) {
     self.pos = arg1
     self.modulePath = arg2
     self.lazy = arg3
@@ -2103,7 +2103,7 @@ func (self *Nodes_ImportInfo) InitNodes_ImportInfo(_env *LnsEnv, arg1 *Types_Pos
     self.symbolInfo = arg6
     self.moduleTypeInfo = arg7
 }
-func (self *Nodes_ImportInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+func (self *Nodes_ImportInfo) Get_pos(_env *LnsEnv) Types_Position{ return self.pos }
 func (self *Nodes_ImportInfo) Get_modulePath(_env *LnsEnv) string{ return self.modulePath }
 func (self *Nodes_ImportInfo) Get_lazy(_env *LnsEnv) LnsInt{ return self.lazy }
 func (self *Nodes_ImportInfo) Get_assignName(_env *LnsEnv) string{ return self.assignName }
@@ -2125,7 +2125,7 @@ type Nodes_ImportNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -2133,7 +2133,7 @@ type Nodes_ImportNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -2168,7 +2168,7 @@ func Nodes_ImportNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ImportNode) ToNodes_ImportNode() *Nodes_ImportNode {
     return obj
 }
-func NewNodes_ImportNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ImportInfo) *Nodes_ImportNode {
+func NewNodes_ImportNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ImportInfo) *Nodes_ImportNode {
     obj := &Nodes_ImportNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2177,7 +2177,7 @@ func NewNodes_ImportNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Pos
 }
 func (self *Nodes_ImportNode) Get_info(_env *LnsEnv) *Nodes_ImportInfo{ return self.info }
 // 734: DeclConstr
-func (self *Nodes_ImportNode) InitNodes_ImportNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) {
+func (self *Nodes_ImportNode) InitNodes_ImportNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) {
     self.InitNodes_Node(_env, managerId, id, 5, pos, inTestBlock, macroArgFlag, typeList)
     self.info = info
 }
@@ -2327,7 +2327,7 @@ type Nodes_RootNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_children(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_globalScope(_env *LnsEnv) *Ast_Scope
@@ -2341,7 +2341,7 @@ type Nodes_RootNodeMtd interface {
     Get_moduleScope(_env *LnsEnv) *Ast_Scope
     Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo
     Get_nodeManager(_env *LnsEnv) *Nodes_NodeManager
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo
     Get_provideNode(_env *LnsEnv) LnsAny
     Get_tailComment(_env *LnsEnv) LnsAny
@@ -2394,7 +2394,7 @@ func Nodes_RootNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_RootNode) ToNodes_RootNode() *Nodes_RootNode {
     return obj
 }
-func NewNodes_RootNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Ast_Scope, arg9 *Ast_Scope, arg10 *LnsSet, arg11 *FrontInterface_ModuleId, arg12 *Ast_ProcessInfo, arg13 *Ast_TypeInfo, arg14 LnsAny, arg15 *FrontInterface_LuneHelperInfo, arg16 *Nodes_NodeManager, arg17 *LnsMap, arg18 *LnsMap, arg19 *LnsMap) *Nodes_RootNode {
+func NewNodes_RootNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Ast_Scope, arg9 *Ast_Scope, arg10 *LnsSet, arg11 *FrontInterface_ModuleId, arg12 *Ast_ProcessInfo, arg13 *Ast_TypeInfo, arg14 LnsAny, arg15 *FrontInterface_LuneHelperInfo, arg16 *Nodes_NodeManager, arg17 *LnsMap, arg18 *LnsMap, arg19 *LnsMap) *Nodes_RootNode {
     obj := &Nodes_RootNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2415,7 +2415,7 @@ func (self *Nodes_RootNode) Get_importModule2moduleInfo(_env *LnsEnv) *LnsMap{ r
 func (self *Nodes_RootNode) Get_typeId2MacroInfo(_env *LnsEnv) *LnsMap{ return self.typeId2MacroInfo }
 func (self *Nodes_RootNode) Get_typeId2ClassMap(_env *LnsEnv) *LnsMap{ return self.typeId2ClassMap }
 // 734: DeclConstr
-func (self *Nodes_RootNode) InitNodes_RootNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) {
+func (self *Nodes_RootNode) InitNodes_RootNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) {
     self.InitNodes_Node(_env, managerId, id, 6, pos, inTestBlock, macroArgFlag, typeList)
     self.children = children
     self.moduleScope = moduleScope
@@ -2448,7 +2448,7 @@ type Nodes_RefTypeNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_array(_env *LnsEnv) string
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -2458,7 +2458,7 @@ type Nodes_RefTypeNodeMtd interface {
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_mutMode(_env *LnsEnv) LnsAny
     Get_name(_env *LnsEnv) *Nodes_Node
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -2496,7 +2496,7 @@ func Nodes_RefTypeNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_RefTypeNode) ToNodes_RefTypeNode() *Nodes_RefTypeNode {
     return obj
 }
-func NewNodes_RefTypeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *LnsList, arg9 LnsAny, arg10 string) *Nodes_RefTypeNode {
+func NewNodes_RefTypeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *LnsList, arg9 LnsAny, arg10 string) *Nodes_RefTypeNode {
     obj := &Nodes_RefTypeNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2508,7 +2508,7 @@ func (self *Nodes_RefTypeNode) Get_itemNodeList(_env *LnsEnv) *LnsList{ return s
 func (self *Nodes_RefTypeNode) Get_mutMode(_env *LnsEnv) LnsAny{ return self.mutMode }
 func (self *Nodes_RefTypeNode) Get_array(_env *LnsEnv) string{ return self.array }
 // 734: DeclConstr
-func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) {
+func (self *Nodes_RefTypeNode) InitNodes_RefTypeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) {
     self.InitNodes_Node(_env, managerId, id, 7, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
     self.itemNodeList = itemNodeList
@@ -2532,14 +2532,14 @@ type Nodes_BlockNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_blockKind(_env *LnsEnv) LnsInt
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_scope(_env *LnsEnv) *Ast_Scope
     Get_stmtList(_env *LnsEnv) *LnsList
     Get_tailComment(_env *LnsEnv) LnsAny
@@ -2578,7 +2578,7 @@ func Nodes_BlockNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_BlockNode) ToNodes_BlockNode() *Nodes_BlockNode {
     return obj
 }
-func NewNodes_BlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList) *Nodes_BlockNode {
+func NewNodes_BlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList) *Nodes_BlockNode {
     obj := &Nodes_BlockNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2589,7 +2589,7 @@ func (self *Nodes_BlockNode) Get_blockKind(_env *LnsEnv) LnsInt{ return self.blo
 func (self *Nodes_BlockNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
 func (self *Nodes_BlockNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
 // 734: DeclConstr
-func (self *Nodes_BlockNode) InitNodes_BlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) {
+func (self *Nodes_BlockNode) InitNodes_BlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 8, pos, inTestBlock, macroArgFlag, typeList)
     self.blockKind = blockKind
     self.scope = scope
@@ -2612,14 +2612,14 @@ type Nodes_ScopeNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_scope(_env *LnsEnv) *Ast_Scope
     Get_scopeKind(_env *LnsEnv) LnsInt
     Get_symbolList(_env *LnsEnv) *LnsList
@@ -2660,7 +2660,7 @@ func Nodes_ScopeNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ScopeNode) ToNodes_ScopeNode() *Nodes_ScopeNode {
     return obj
 }
-func NewNodes_ScopeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList, arg10 *Nodes_BlockNode) *Nodes_ScopeNode {
+func NewNodes_ScopeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_Scope, arg9 *LnsList, arg10 *Nodes_BlockNode) *Nodes_ScopeNode {
     obj := &Nodes_ScopeNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2672,7 +2672,7 @@ func (self *Nodes_ScopeNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.sco
 func (self *Nodes_ScopeNode) Get_symbolList(_env *LnsEnv) *LnsList{ return self.symbolList }
 func (self *Nodes_ScopeNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 // 734: DeclConstr
-func (self *Nodes_ScopeNode) InitNodes_ScopeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) {
+func (self *Nodes_ScopeNode) InitNodes_ScopeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, managerId, id, 9, pos, inTestBlock, macroArgFlag, typeList)
     self.scopeKind = scopeKind
     self.scope = scope
@@ -2742,14 +2742,14 @@ type Nodes_IfNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_stmtList(_env *LnsEnv) *LnsList
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -2785,7 +2785,7 @@ func Nodes_IfNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_IfNode) ToNodes_IfNode() *Nodes_IfNode {
     return obj
 }
-func NewNodes_IfNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_IfNode {
+func NewNodes_IfNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_IfNode {
     obj := &Nodes_IfNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2794,7 +2794,7 @@ func NewNodes_IfNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Positio
 }
 func (self *Nodes_IfNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
 // 734: DeclConstr
-func (self *Nodes_IfNode) InitNodes_IfNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
+func (self *Nodes_IfNode) InitNodes_IfNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 10, pos, inTestBlock, macroArgFlag, typeList)
     self.stmtList = stmtList
 }
@@ -2859,7 +2859,7 @@ type Nodes_ExpListNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) *LnsList
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -2869,7 +2869,7 @@ type Nodes_ExpListNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_mRetExp(_env *LnsEnv) LnsAny
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -2906,7 +2906,7 @@ func Nodes_ExpListNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpListNode) ToNodes_ExpListNode() *Nodes_ExpListNode {
     return obj
 }
-func NewNodes_ExpListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 LnsAny, arg9 bool) *Nodes_ExpListNode {
+func NewNodes_ExpListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 LnsAny, arg9 bool) *Nodes_ExpListNode {
     obj := &Nodes_ExpListNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -2917,7 +2917,7 @@ func (self *Nodes_ExpListNode) Get_expList(_env *LnsEnv) *LnsList{ return self.e
 func (self *Nodes_ExpListNode) Get_mRetExp(_env *LnsEnv) LnsAny{ return self.mRetExp }
 func (self *Nodes_ExpListNode) Get_followOn(_env *LnsEnv) bool{ return self.followOn }
 // 734: DeclConstr
-func (self *Nodes_ExpListNode) InitNodes_ExpListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) {
+func (self *Nodes_ExpListNode) InitNodes_ExpListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) {
     self.InitNodes_Node(_env, managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
     self.mRetExp = mRetExp
@@ -2985,7 +2985,7 @@ type Nodes_SwitchNodeMtd interface {
     Get_caseList(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_default(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -2995,7 +2995,7 @@ type Nodes_SwitchNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -3035,7 +3035,7 @@ func Nodes_SwitchNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_SwitchNode) ToNodes_SwitchNode() *Nodes_SwitchNode {
     return obj
 }
-func NewNodes_SwitchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *LnsList, arg10 LnsAny, arg11 LnsInt, arg12 bool) *Nodes_SwitchNode {
+func NewNodes_SwitchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *LnsList, arg10 LnsAny, arg11 LnsInt, arg12 bool) *Nodes_SwitchNode {
     obj := &Nodes_SwitchNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3049,7 +3049,7 @@ func (self *Nodes_SwitchNode) Get_default(_env *LnsEnv) LnsAny{ return self._def
 func (self *Nodes_SwitchNode) Get_caseKind(_env *LnsEnv) LnsInt{ return self.caseKind }
 func (self *Nodes_SwitchNode) Get_failSafeDefault(_env *LnsEnv) bool{ return self.failSafeDefault }
 // 734: DeclConstr
-func (self *Nodes_SwitchNode) InitNodes_SwitchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) {
+func (self *Nodes_SwitchNode) InitNodes_SwitchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) {
     self.InitNodes_Node(_env, managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
     self.idInNS = idInNS
     self.exp = exp
@@ -3075,7 +3075,7 @@ type Nodes_WhileNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -3084,7 +3084,7 @@ type Nodes_WhileNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -3121,7 +3121,7 @@ func Nodes_WhileNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_WhileNode) ToNodes_WhileNode() *Nodes_WhileNode {
     return obj
 }
-func NewNodes_WhileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 *Nodes_BlockNode) *Nodes_WhileNode {
+func NewNodes_WhileNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 *Nodes_BlockNode) *Nodes_WhileNode {
     obj := &Nodes_WhileNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3132,7 +3132,7 @@ func (self *Nodes_WhileNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp 
 func (self *Nodes_WhileNode) Get_infinit(_env *LnsEnv) bool{ return self.infinit }
 func (self *Nodes_WhileNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 // 734: DeclConstr
-func (self *Nodes_WhileNode) InitNodes_WhileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) {
+func (self *Nodes_WhileNode) InitNodes_WhileNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, managerId, id, 13, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
     self.infinit = infinit
@@ -3155,7 +3155,7 @@ type Nodes_RepeatNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -3163,7 +3163,7 @@ type Nodes_RepeatNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -3199,7 +3199,7 @@ func Nodes_RepeatNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_RepeatNode) ToNodes_RepeatNode() *Nodes_RepeatNode {
     return obj
 }
-func NewNodes_RepeatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_BlockNode, arg8 *Nodes_Node) *Nodes_RepeatNode {
+func NewNodes_RepeatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_BlockNode, arg8 *Nodes_Node) *Nodes_RepeatNode {
     obj := &Nodes_RepeatNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3209,7 +3209,7 @@ func NewNodes_RepeatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Pos
 func (self *Nodes_RepeatNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 func (self *Nodes_RepeatNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_RepeatNode) InitNodes_RepeatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) {
+func (self *Nodes_RepeatNode) InitNodes_RepeatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
     self.block = block
     self.exp = exp
@@ -3232,7 +3232,7 @@ type Nodes_ForNodeMtd interface {
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
     Get_delta(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_idInNS(_env *LnsEnv) LnsInt
@@ -3241,7 +3241,7 @@ type Nodes_ForNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_to(_env *LnsEnv) *Nodes_Node
     Get_val(_env *LnsEnv) *Ast_SymbolInfo
@@ -3283,7 +3283,7 @@ func Nodes_ForNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ForNode) ToNodes_ForNode() *Nodes_ForNode {
     return obj
 }
-func NewNodes_ForNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode, arg9 *Ast_SymbolInfo, arg10 *Nodes_Node, arg11 *Nodes_Node, arg12 LnsAny) *Nodes_ForNode {
+func NewNodes_ForNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode, arg9 *Ast_SymbolInfo, arg10 *Nodes_Node, arg11 *Nodes_Node, arg12 LnsAny) *Nodes_ForNode {
     obj := &Nodes_ForNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3297,7 +3297,7 @@ func (self *Nodes_ForNode) Get_init(_env *LnsEnv) *Nodes_Node{ return self.init 
 func (self *Nodes_ForNode) Get_to(_env *LnsEnv) *Nodes_Node{ return self.to }
 func (self *Nodes_ForNode) Get_delta(_env *LnsEnv) LnsAny{ return self.delta }
 // 734: DeclConstr
-func (self *Nodes_ForNode) InitNodes_ForNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) {
+func (self *Nodes_ForNode) InitNodes_ForNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 15, pos, inTestBlock, macroArgFlag, typeList)
     self.idInNS = idInNS
     self.block = block
@@ -3323,7 +3323,7 @@ type Nodes_ApplyNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) *Nodes_ExpListNode
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -3332,7 +3332,7 @@ type Nodes_ApplyNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_varList(_env *LnsEnv) *LnsList
     HasNilAccess(_env *LnsEnv) bool
@@ -3371,7 +3371,7 @@ func Nodes_ApplyNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ApplyNode) ToNodes_ApplyNode() *Nodes_ApplyNode {
     return obj
 }
-func NewNodes_ApplyNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *LnsList, arg9 *Nodes_ExpListNode, arg10 *Nodes_BlockNode) *Nodes_ApplyNode {
+func NewNodes_ApplyNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *LnsList, arg9 *Nodes_ExpListNode, arg10 *Nodes_BlockNode) *Nodes_ApplyNode {
     obj := &Nodes_ApplyNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3383,7 +3383,7 @@ func (self *Nodes_ApplyNode) Get_varList(_env *LnsEnv) *LnsList{ return self.var
 func (self *Nodes_ApplyNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
 func (self *Nodes_ApplyNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 // 734: DeclConstr
-func (self *Nodes_ApplyNode) InitNodes_ApplyNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) {
+func (self *Nodes_ApplyNode) InitNodes_ApplyNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, managerId, id, 16, pos, inTestBlock, macroArgFlag, typeList)
     self.idInNS = idInNS
     self.varList = varList
@@ -3407,7 +3407,7 @@ type Nodes_ForeachNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -3417,7 +3417,7 @@ type Nodes_ForeachNodeMtd interface {
     Get_key(_env *LnsEnv) LnsAny
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_val(_env *LnsEnv) *Ast_SymbolInfo
     HasNilAccess(_env *LnsEnv) bool
@@ -3457,7 +3457,7 @@ func Nodes_ForeachNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ForeachNode) ToNodes_ForeachNode() *Nodes_ForeachNode {
     return obj
 }
-func NewNodes_ForeachNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode) *Nodes_ForeachNode {
+func NewNodes_ForeachNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode) *Nodes_ForeachNode {
     obj := &Nodes_ForeachNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3470,7 +3470,7 @@ func (self *Nodes_ForeachNode) Get_key(_env *LnsEnv) LnsAny{ return self.key }
 func (self *Nodes_ForeachNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 func (self *Nodes_ForeachNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 // 734: DeclConstr
-func (self *Nodes_ForeachNode) InitNodes_ForeachNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) {
+func (self *Nodes_ForeachNode) InitNodes_ForeachNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, managerId, id, 17, pos, inTestBlock, macroArgFlag, typeList)
     self.idInNS = idInNS
     self.val = val
@@ -3495,7 +3495,7 @@ type Nodes_ForsortNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -3505,7 +3505,7 @@ type Nodes_ForsortNodeMtd interface {
     Get_key(_env *LnsEnv) LnsAny
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_sort(_env *LnsEnv) bool
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_val(_env *LnsEnv) *Ast_SymbolInfo
@@ -3547,7 +3547,7 @@ func Nodes_ForsortNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ForsortNode) ToNodes_ForsortNode() *Nodes_ForsortNode {
     return obj
 }
-func NewNodes_ForsortNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode, arg12 bool) *Nodes_ForsortNode {
+func NewNodes_ForsortNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_SymbolInfo, arg9 LnsAny, arg10 *Nodes_Node, arg11 *Nodes_BlockNode, arg12 bool) *Nodes_ForsortNode {
     obj := &Nodes_ForsortNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3561,7 +3561,7 @@ func (self *Nodes_ForsortNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.ex
 func (self *Nodes_ForsortNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 func (self *Nodes_ForsortNode) Get_sort(_env *LnsEnv) bool{ return self.sort }
 // 734: DeclConstr
-func (self *Nodes_ForsortNode) InitNodes_ForsortNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) {
+func (self *Nodes_ForsortNode) InitNodes_ForsortNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) {
     self.InitNodes_Node(_env, managerId, id, 18, pos, inTestBlock, macroArgFlag, typeList)
     self.idInNS = idInNS
     self.val = val
@@ -3586,7 +3586,7 @@ type Nodes_ReturnNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -3594,7 +3594,7 @@ type Nodes_ReturnNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -3629,7 +3629,7 @@ func Nodes_ReturnNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ReturnNode) ToNodes_ReturnNode() *Nodes_ReturnNode {
     return obj
 }
-func NewNodes_ReturnNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_ReturnNode {
+func NewNodes_ReturnNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_ReturnNode {
     obj := &Nodes_ReturnNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3638,7 +3638,7 @@ func NewNodes_ReturnNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Pos
 }
 func (self *Nodes_ReturnNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
 // 734: DeclConstr
-func (self *Nodes_ReturnNode) InitNodes_ReturnNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_ReturnNode) InitNodes_ReturnNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 19, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
 }
@@ -3658,14 +3658,14 @@ type Nodes_BreakNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -3699,7 +3699,7 @@ func Nodes_BreakNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_BreakNode) ToNodes_BreakNode() *Nodes_BreakNode {
     return obj
 }
-func NewNodes_BreakNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_BreakNode {
+func NewNodes_BreakNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_BreakNode {
     obj := &Nodes_BreakNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3707,7 +3707,7 @@ func NewNodes_BreakNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Posi
     return obj
 }
 // 734: DeclConstr
-func (self *Nodes_BreakNode) InitNodes_BreakNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_BreakNode) InitNodes_BreakNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 20, pos, inTestBlock, macroArgFlag, typeList)
 }
 
@@ -3726,14 +3726,14 @@ type Nodes_ProvideNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_symbol(_env *LnsEnv) *Ast_SymbolInfo
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -3769,7 +3769,7 @@ func Nodes_ProvideNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ProvideNode) ToNodes_ProvideNode() *Nodes_ProvideNode {
     return obj
 }
-func NewNodes_ProvideNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ProvideNode {
+func NewNodes_ProvideNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ProvideNode {
     obj := &Nodes_ProvideNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3778,7 +3778,7 @@ func NewNodes_ProvideNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Po
 }
 func (self *Nodes_ProvideNode) Get_symbol(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbol }
 // 734: DeclConstr
-func (self *Nodes_ProvideNode) InitNodes_ProvideNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) {
+func (self *Nodes_ProvideNode) InitNodes_ProvideNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) {
     self.InitNodes_Node(_env, managerId, id, 21, pos, inTestBlock, macroArgFlag, typeList)
     self.symbol = symbol
 }
@@ -3800,14 +3800,14 @@ type Nodes_ExpNewNodeMtd interface {
     Get_argList(_env *LnsEnv) LnsAny
     Get_commentList(_env *LnsEnv) LnsAny
     Get_ctorTypeInfo(_env *LnsEnv) *Ast_TypeInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_symbol(_env *LnsEnv) *Nodes_Node
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -3845,7 +3845,7 @@ func Nodes_ExpNewNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpNewNode) ToNodes_ExpNewNode() *Nodes_ExpNewNode {
     return obj
 }
-func NewNodes_ExpNewNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpNewNode {
+func NewNodes_ExpNewNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpNewNode {
     obj := &Nodes_ExpNewNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3856,7 +3856,7 @@ func (self *Nodes_ExpNewNode) Get_symbol(_env *LnsEnv) *Nodes_Node{ return self.
 func (self *Nodes_ExpNewNode) Get_ctorTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.ctorTypeInfo }
 func (self *Nodes_ExpNewNode) Get_argList(_env *LnsEnv) LnsAny{ return self.argList }
 // 734: DeclConstr
-func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) {
+func (self *Nodes_ExpNewNode) InitNodes_ExpNewNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 22, pos, inTestBlock, macroArgFlag, typeList)
     self.symbol = symbol
     self.ctorTypeInfo = ctorTypeInfo
@@ -3879,7 +3879,7 @@ type Nodes_ExpUnwrapNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_default(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -3887,7 +3887,7 @@ type Nodes_ExpUnwrapNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -3923,7 +3923,7 @@ func Nodes_ExpUnwrapNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpUnwrapNode) ToNodes_ExpUnwrapNode() *Nodes_ExpUnwrapNode {
     return obj
 }
-func NewNodes_ExpUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny) *Nodes_ExpUnwrapNode {
+func NewNodes_ExpUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny) *Nodes_ExpUnwrapNode {
     obj := &Nodes_ExpUnwrapNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -3933,7 +3933,7 @@ func NewNodes_ExpUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_
 func (self *Nodes_ExpUnwrapNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 func (self *Nodes_ExpUnwrapNode) Get_default(_env *LnsEnv) LnsAny{ return self._default }
 // 734: DeclConstr
-func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) {
+func (self *Nodes_ExpUnwrapNode) InitNodes_ExpUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 23, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
     self._default = _default
@@ -3954,14 +3954,14 @@ type Nodes_ExpRefNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -3997,7 +3997,7 @@ func Nodes_ExpRefNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpRefNode) ToNodes_ExpRefNode() *Nodes_ExpRefNode {
     return obj
 }
-func NewNodes_ExpRefNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ExpRefNode {
+func NewNodes_ExpRefNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo) *Nodes_ExpRefNode {
     obj := &Nodes_ExpRefNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4006,7 +4006,7 @@ func NewNodes_ExpRefNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Pos
 }
 func (self *Nodes_ExpRefNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
 // 734: DeclConstr
-func (self *Nodes_ExpRefNode) InitNodes_ExpRefNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) {
+func (self *Nodes_ExpRefNode) InitNodes_ExpRefNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) {
     self.InitNodes_Node(_env, managerId, id, 24, pos, inTestBlock, macroArgFlag, typeList)
     self.symbolInfo = symbolInfo
 }
@@ -4027,7 +4027,7 @@ type Nodes_ExpSetValNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_LeftSymList(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp1(_env *LnsEnv) *Nodes_Node
     Get_exp2(_env *LnsEnv) *Nodes_ExpListNode
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
@@ -4037,7 +4037,7 @@ type Nodes_ExpSetValNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -4075,7 +4075,7 @@ func Nodes_ExpSetValNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpSetValNode) ToNodes_ExpSetValNode() *Nodes_ExpSetValNode {
     return obj
 }
-func NewNodes_ExpSetValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_ExpListNode, arg9 *LnsList, arg10 *LnsSet) *Nodes_ExpSetValNode {
+func NewNodes_ExpSetValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_ExpListNode, arg9 *LnsList, arg10 *LnsSet) *Nodes_ExpSetValNode {
     obj := &Nodes_ExpSetValNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4087,7 +4087,7 @@ func (self *Nodes_ExpSetValNode) Get_exp2(_env *LnsEnv) *Nodes_ExpListNode{ retu
 func (self *Nodes_ExpSetValNode) Get_LeftSymList(_env *LnsEnv) *LnsList{ return self.LeftSymList }
 func (self *Nodes_ExpSetValNode) Get_initSymSet(_env *LnsEnv) *LnsSet{ return self.initSymSet }
 // 734: DeclConstr
-func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) {
+func (self *Nodes_ExpSetValNode) InitNodes_ExpSetValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) {
     self.InitNodes_Node(_env, managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
     self.exp1 = exp1
     self.exp2 = exp2
@@ -4110,7 +4110,7 @@ type Nodes_ExpSetItemNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp2(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -4119,7 +4119,7 @@ type Nodes_ExpSetItemNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_val(_env *LnsEnv) *Nodes_Node
     HasNilAccess(_env *LnsEnv) bool
@@ -4157,7 +4157,7 @@ func Nodes_ExpSetItemNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpSetItemNode) ToNodes_ExpSetItemNode() *Nodes_ExpSetItemNode {
     return obj
 }
-func NewNodes_ExpSetItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny, arg9 *Nodes_Node) *Nodes_ExpSetItemNode {
+func NewNodes_ExpSetItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsAny, arg9 *Nodes_Node) *Nodes_ExpSetItemNode {
     obj := &Nodes_ExpSetItemNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4168,7 +4168,7 @@ func (self *Nodes_ExpSetItemNode) Get_val(_env *LnsEnv) *Nodes_Node{ return self
 func (self *Nodes_ExpSetItemNode) Get_index(_env *LnsEnv) LnsAny{ return self.index }
 func (self *Nodes_ExpSetItemNode) Get_exp2(_env *LnsEnv) *Nodes_Node{ return self.exp2 }
 // 734: DeclConstr
-func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) {
+func (self *Nodes_ExpSetItemNode) InitNodes_ExpSetItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
     self.val = val
     self.index = index
@@ -4191,7 +4191,7 @@ type Nodes_ExpOp2NodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     getValType(_env *LnsEnv, arg1 *Nodes_Node)(bool, LnsInt, LnsReal, string, *Ast_TypeInfo)
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp1(_env *LnsEnv) *Nodes_Node
     Get_exp2(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
@@ -4201,7 +4201,7 @@ type Nodes_ExpOp2NodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_op(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -4238,7 +4238,7 @@ func Nodes_ExpOp2NodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpOp2Node) ToNodes_ExpOp2Node() *Nodes_ExpOp2Node {
     return obj
 }
-func NewNodes_ExpOp2Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 *Nodes_Node) *Nodes_ExpOp2Node {
+func NewNodes_ExpOp2Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 *Nodes_Node) *Nodes_ExpOp2Node {
     obj := &Nodes_ExpOp2Node{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4249,7 +4249,7 @@ func (self *Nodes_ExpOp2Node) Get_op(_env *LnsEnv) *Types_Token{ return self.op 
 func (self *Nodes_ExpOp2Node) Get_exp1(_env *LnsEnv) *Nodes_Node{ return self.exp1 }
 func (self *Nodes_ExpOp2Node) Get_exp2(_env *LnsEnv) *Nodes_Node{ return self.exp2 }
 // 734: DeclConstr
-func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) {
+func (self *Nodes_ExpOp2Node) InitNodes_ExpOp2Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
     self.op = op
     self.exp1 = exp1
@@ -4272,14 +4272,14 @@ type Nodes_UnwrapSetNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_dstExpList(_env *LnsEnv) *Nodes_ExpListNode
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_srcExpList(_env *LnsEnv) *Nodes_ExpListNode
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_unwrapBlock(_env *LnsEnv) LnsAny
@@ -4318,7 +4318,7 @@ func Nodes_UnwrapSetNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_UnwrapSetNode) ToNodes_UnwrapSetNode() *Nodes_UnwrapSetNode {
     return obj
 }
-func NewNodes_UnwrapSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode, arg8 *Nodes_ExpListNode, arg9 LnsAny) *Nodes_UnwrapSetNode {
+func NewNodes_UnwrapSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode, arg8 *Nodes_ExpListNode, arg9 LnsAny) *Nodes_UnwrapSetNode {
     obj := &Nodes_UnwrapSetNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4329,7 +4329,7 @@ func (self *Nodes_UnwrapSetNode) Get_dstExpList(_env *LnsEnv) *Nodes_ExpListNode
 func (self *Nodes_UnwrapSetNode) Get_srcExpList(_env *LnsEnv) *Nodes_ExpListNode{ return self.srcExpList }
 func (self *Nodes_UnwrapSetNode) Get_unwrapBlock(_env *LnsEnv) LnsAny{ return self.unwrapBlock }
 // 734: DeclConstr
-func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) {
+func (self *Nodes_UnwrapSetNode) InitNodes_UnwrapSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
     self.dstExpList = dstExpList
     self.srcExpList = srcExpList
@@ -4352,7 +4352,7 @@ type Nodes_IfUnwrapNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) *Nodes_ExpListNode
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -4361,7 +4361,7 @@ type Nodes_IfUnwrapNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_nilBlock(_env *LnsEnv) LnsAny
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_varSymList(_env *LnsEnv) *LnsList
     HasNilAccess(_env *LnsEnv) bool
@@ -4400,7 +4400,7 @@ func Nodes_IfUnwrapNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_IfUnwrapNode) ToNodes_IfUnwrapNode() *Nodes_IfUnwrapNode {
     return obj
 }
-func NewNodes_IfUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_ExpListNode, arg9 *Nodes_BlockNode, arg10 LnsAny) *Nodes_IfUnwrapNode {
+func NewNodes_IfUnwrapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_ExpListNode, arg9 *Nodes_BlockNode, arg10 LnsAny) *Nodes_IfUnwrapNode {
     obj := &Nodes_IfUnwrapNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4412,7 +4412,7 @@ func (self *Nodes_IfUnwrapNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ re
 func (self *Nodes_IfUnwrapNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 func (self *Nodes_IfUnwrapNode) Get_nilBlock(_env *LnsEnv) LnsAny{ return self.nilBlock }
 // 734: DeclConstr
-func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) {
+func (self *Nodes_IfUnwrapNode) InitNodes_IfUnwrapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
     self.varSymList = varSymList
     self.expList = expList
@@ -4479,7 +4479,7 @@ type Nodes_WhenNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_elseBlock(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -4487,7 +4487,7 @@ type Nodes_WhenNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_symPairList(_env *LnsEnv) *LnsList
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -4525,7 +4525,7 @@ func Nodes_WhenNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_WhenNode) ToNodes_WhenNode() *Nodes_WhenNode {
     return obj
 }
-func NewNodes_WhenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_BlockNode, arg9 LnsAny) *Nodes_WhenNode {
+func NewNodes_WhenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList, arg8 *Nodes_BlockNode, arg9 LnsAny) *Nodes_WhenNode {
     obj := &Nodes_WhenNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4536,7 +4536,7 @@ func (self *Nodes_WhenNode) Get_symPairList(_env *LnsEnv) *LnsList{ return self.
 func (self *Nodes_WhenNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 func (self *Nodes_WhenNode) Get_elseBlock(_env *LnsEnv) LnsAny{ return self.elseBlock }
 // 734: DeclConstr
-func (self *Nodes_WhenNode) InitNodes_WhenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) {
+func (self *Nodes_WhenNode) InitNodes_WhenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
     self.symPairList = symPairList
     self.block = block
@@ -4562,7 +4562,7 @@ type Nodes_ExpCastNodeMtd interface {
     Get_castType(_env *LnsEnv) *Ast_TypeInfo
     Get_castTypeNode(_env *LnsEnv) LnsAny
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -4570,7 +4570,7 @@ type Nodes_ExpCastNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -4609,7 +4609,7 @@ func Nodes_ExpCastNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpCastNode) ToNodes_ExpCastNode() *Nodes_ExpCastNode {
     return obj
 }
-func NewNodes_ExpCastNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny, arg10 string, arg11 LnsInt) *Nodes_ExpCastNode {
+func NewNodes_ExpCastNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Ast_TypeInfo, arg9 LnsAny, arg10 string, arg11 LnsInt) *Nodes_ExpCastNode {
     obj := &Nodes_ExpCastNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4622,7 +4622,7 @@ func (self *Nodes_ExpCastNode) Get_castTypeNode(_env *LnsEnv) LnsAny{ return sel
 func (self *Nodes_ExpCastNode) Get_castOpe(_env *LnsEnv) string{ return self.castOpe }
 func (self *Nodes_ExpCastNode) Get_castKind(_env *LnsEnv) LnsInt{ return self.castKind }
 // 734: DeclConstr
-func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) {
+func (self *Nodes_ExpCastNode) InitNodes_ExpCastNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) {
     self.InitNodes_Node(_env, managerId, id, 31, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
     self.castType = castType
@@ -4646,7 +4646,7 @@ type Nodes_ExpToDDDNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) *Nodes_ExpListNode
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -4654,7 +4654,7 @@ type Nodes_ExpToDDDNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -4689,7 +4689,7 @@ func Nodes_ExpToDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpToDDDNode) ToNodes_ExpToDDDNode() *Nodes_ExpToDDDNode {
     return obj
 }
-func NewNodes_ExpToDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
+func NewNodes_ExpToDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
     obj := &Nodes_ExpToDDDNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4698,7 +4698,7 @@ func NewNodes_ExpToDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_P
 }
 func (self *Nodes_ExpToDDDNode) Get_expList(_env *LnsEnv) *Nodes_ExpListNode{ return self.expList }
 // 734: DeclConstr
-func (self *Nodes_ExpToDDDNode) InitNodes_ExpToDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) {
+func (self *Nodes_ExpToDDDNode) InitNodes_ExpToDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) {
     self.InitNodes_Node(_env, managerId, id, 32, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
 }
@@ -4718,14 +4718,14 @@ type Nodes_ExpSubDDDNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_remainIndex(_env *LnsEnv) LnsInt
     Get_src(_env *LnsEnv) *Nodes_Node
     Get_tailComment(_env *LnsEnv) LnsAny
@@ -4763,7 +4763,7 @@ func Nodes_ExpSubDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpSubDDDNode) ToNodes_ExpSubDDDNode() *Nodes_ExpSubDDDNode {
     return obj
 }
-func NewNodes_ExpSubDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpSubDDDNode {
+func NewNodes_ExpSubDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpSubDDDNode {
     obj := &Nodes_ExpSubDDDNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4773,7 +4773,7 @@ func NewNodes_ExpSubDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_
 func (self *Nodes_ExpSubDDDNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
 func (self *Nodes_ExpSubDDDNode) Get_remainIndex(_env *LnsEnv) LnsInt{ return self.remainIndex }
 // 734: DeclConstr
-func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) {
+func (self *Nodes_ExpSubDDDNode) InitNodes_ExpSubDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) {
     self.InitNodes_Node(_env, managerId, id, 33, pos, inTestBlock, macroArgFlag, typeList)
     self.src = src
     self.remainIndex = remainIndex
@@ -4794,7 +4794,7 @@ type Nodes_ExpOp1NodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -4804,7 +4804,7 @@ type Nodes_ExpOp1NodeMtd interface {
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_macroMode(_env *LnsEnv) LnsInt
     Get_op(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -4841,7 +4841,7 @@ func Nodes_ExpOp1NodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpOp1Node) ToNodes_ExpOp1Node() *Nodes_ExpOp1Node {
     return obj
 }
-func NewNodes_ExpOp1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt, arg9 *Nodes_Node) *Nodes_ExpOp1Node {
+func NewNodes_ExpOp1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt, arg9 *Nodes_Node) *Nodes_ExpOp1Node {
     obj := &Nodes_ExpOp1Node{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4852,7 +4852,7 @@ func (self *Nodes_ExpOp1Node) Get_op(_env *LnsEnv) *Types_Token{ return self.op 
 func (self *Nodes_ExpOp1Node) Get_macroMode(_env *LnsEnv) LnsInt{ return self.macroMode }
 func (self *Nodes_ExpOp1Node) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) {
+func (self *Nodes_ExpOp1Node) InitNodes_ExpOp1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
     self.op = op
     self.macroMode = macroMode
@@ -4874,7 +4874,7 @@ type Nodes_ExpRefItemNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -4883,7 +4883,7 @@ type Nodes_ExpRefItemNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_symbol(_env *LnsEnv) LnsAny
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_val(_env *LnsEnv) *Nodes_Node
@@ -4923,7 +4923,7 @@ func Nodes_ExpRefItemNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpRefItemNode) ToNodes_ExpRefItemNode() *Nodes_ExpRefItemNode {
     return obj
 }
-func NewNodes_ExpRefItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 LnsAny, arg10 LnsAny) *Nodes_ExpRefItemNode {
+func NewNodes_ExpRefItemNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 LnsAny, arg10 LnsAny) *Nodes_ExpRefItemNode {
     obj := &Nodes_ExpRefItemNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -4935,7 +4935,7 @@ func (self *Nodes_ExpRefItemNode) Get_nilAccess(_env *LnsEnv) bool{ return self.
 func (self *Nodes_ExpRefItemNode) Get_symbol(_env *LnsEnv) LnsAny{ return self.symbol }
 func (self *Nodes_ExpRefItemNode) Get_index(_env *LnsEnv) LnsAny{ return self.index }
 // 734: DeclConstr
-func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) {
+func (self *Nodes_ExpRefItemNode) InitNodes_ExpRefItemNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
     self.val = val
     self.nilAccess = nilAccess
@@ -4959,7 +4959,7 @@ type Nodes_ExpCallNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_argList(_env *LnsEnv) LnsAny
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_errorFunc(_env *LnsEnv) bool
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -4969,7 +4969,7 @@ type Nodes_ExpCallNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5007,7 +5007,7 @@ func Nodes_ExpCallNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpCallNode) ToNodes_ExpCallNode() *Nodes_ExpCallNode {
     return obj
 }
-func NewNodes_ExpCallNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 bool, arg10 LnsAny) *Nodes_ExpCallNode {
+func NewNodes_ExpCallNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 bool, arg9 bool, arg10 LnsAny) *Nodes_ExpCallNode {
     obj := &Nodes_ExpCallNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5019,7 +5019,7 @@ func (self *Nodes_ExpCallNode) Get_errorFunc(_env *LnsEnv) bool{ return self.err
 func (self *Nodes_ExpCallNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
 func (self *Nodes_ExpCallNode) Get_argList(_env *LnsEnv) LnsAny{ return self.argList }
 // 734: DeclConstr
-func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) {
+func (self *Nodes_ExpCallNode) InitNodes_ExpCallNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
     self._func = _func
     self.errorFunc = errorFunc
@@ -5042,7 +5042,7 @@ type Nodes_ExpMRetNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -5050,7 +5050,7 @@ type Nodes_ExpMRetNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_mRet(_env *LnsEnv) *Nodes_Node
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5085,7 +5085,7 @@ func Nodes_ExpMRetNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpMRetNode) ToNodes_ExpMRetNode() *Nodes_ExpMRetNode {
     return obj
 }
-func NewNodes_ExpMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMRetNode {
+func NewNodes_ExpMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMRetNode {
     obj := &Nodes_ExpMRetNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5094,7 +5094,7 @@ func NewNodes_ExpMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Po
 }
 func (self *Nodes_ExpMRetNode) Get_mRet(_env *LnsEnv) *Nodes_Node{ return self.mRet }
 // 734: DeclConstr
-func (self *Nodes_ExpMRetNode) InitNodes_ExpMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) {
+func (self *Nodes_ExpMRetNode) InitNodes_ExpMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
     self.mRet = mRet
 }
@@ -5114,7 +5114,7 @@ type Nodes_ExpAccessMRetNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -5123,7 +5123,7 @@ type Nodes_ExpAccessMRetNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_mRet(_env *LnsEnv) *Nodes_Node
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5159,7 +5159,7 @@ func Nodes_ExpAccessMRetNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpAccessMRetNode) ToNodes_ExpAccessMRetNode() *Nodes_ExpAccessMRetNode {
     return obj
 }
-func NewNodes_ExpAccessMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpAccessMRetNode {
+func NewNodes_ExpAccessMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 LnsInt) *Nodes_ExpAccessMRetNode {
     obj := &Nodes_ExpAccessMRetNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5169,7 +5169,7 @@ func NewNodes_ExpAccessMRetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Ty
 func (self *Nodes_ExpAccessMRetNode) Get_mRet(_env *LnsEnv) *Nodes_Node{ return self.mRet }
 func (self *Nodes_ExpAccessMRetNode) Get_index(_env *LnsEnv) LnsInt{ return self.index }
 // 734: DeclConstr
-func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) {
+func (self *Nodes_ExpAccessMRetNode) InitNodes_ExpAccessMRetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) {
     self.InitNodes_Node(_env, managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
     self.mRet = mRet
     self.index = index
@@ -5190,7 +5190,7 @@ type Nodes_ExpMultiTo1NodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -5198,7 +5198,7 @@ type Nodes_ExpMultiTo1NodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5233,7 +5233,7 @@ func Nodes_ExpMultiTo1NodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpMultiTo1Node) ToNodes_ExpMultiTo1Node() *Nodes_ExpMultiTo1Node {
     return obj
 }
-func NewNodes_ExpMultiTo1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMultiTo1Node {
+func NewNodes_ExpMultiTo1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMultiTo1Node {
     obj := &Nodes_ExpMultiTo1Node{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5242,7 +5242,7 @@ func NewNodes_ExpMultiTo1Node(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 }
 func (self *Nodes_ExpMultiTo1Node) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_ExpMultiTo1Node) InitNodes_ExpMultiTo1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_ExpMultiTo1Node) InitNodes_ExpMultiTo1Node(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
 }
@@ -5262,7 +5262,7 @@ type Nodes_ExpParenNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -5270,7 +5270,7 @@ type Nodes_ExpParenNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5305,7 +5305,7 @@ func Nodes_ExpParenNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpParenNode) ToNodes_ExpParenNode() *Nodes_ExpParenNode {
     return obj
 }
-func NewNodes_ExpParenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpParenNode {
+func NewNodes_ExpParenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpParenNode {
     obj := &Nodes_ExpParenNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5314,7 +5314,7 @@ func NewNodes_ExpParenNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_P
 }
 func (self *Nodes_ExpParenNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_ExpParenNode) InitNodes_ExpParenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_ExpParenNode) InitNodes_ExpParenNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
 }
@@ -5334,7 +5334,7 @@ type Nodes_ExpMacroExpNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -5342,7 +5342,7 @@ type Nodes_ExpMacroExpNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_macroType(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_stmtList(_env *LnsEnv) *LnsList
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -5379,7 +5379,7 @@ func Nodes_ExpMacroExpNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpMacroExpNode) ToNodes_ExpMacroExpNode() *Nodes_ExpMacroExpNode {
     return obj
 }
-func NewNodes_ExpMacroExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *LnsList) *Nodes_ExpMacroExpNode {
+func NewNodes_ExpMacroExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *LnsList) *Nodes_ExpMacroExpNode {
     obj := &Nodes_ExpMacroExpNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5389,7 +5389,7 @@ func NewNodes_ExpMacroExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 func (self *Nodes_ExpMacroExpNode) Get_macroType(_env *LnsEnv) *Ast_TypeInfo{ return self.macroType }
 func (self *Nodes_ExpMacroExpNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
 // 734: DeclConstr
-func (self *Nodes_ExpMacroExpNode) InitNodes_ExpMacroExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) {
+func (self *Nodes_ExpMacroExpNode) InitNodes_ExpMacroExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
     self.macroType = macroType
     self.stmtList = stmtList
@@ -5410,7 +5410,7 @@ type Nodes_ExpMacroStatNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expStrList(_env *LnsEnv) *LnsList
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -5418,7 +5418,7 @@ type Nodes_ExpMacroStatNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5453,7 +5453,7 @@ func Nodes_ExpMacroStatNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpMacroStatNode) ToNodes_ExpMacroStatNode() *Nodes_ExpMacroStatNode {
     return obj
 }
-func NewNodes_ExpMacroStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_ExpMacroStatNode {
+func NewNodes_ExpMacroStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_ExpMacroStatNode {
     obj := &Nodes_ExpMacroStatNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5462,7 +5462,7 @@ func NewNodes_ExpMacroStatNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Typ
 }
 func (self *Nodes_ExpMacroStatNode) Get_expStrList(_env *LnsEnv) *LnsList{ return self.expStrList }
 // 734: DeclConstr
-func (self *Nodes_ExpMacroStatNode) InitNodes_ExpMacroStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) {
+func (self *Nodes_ExpMacroStatNode) InitNodes_ExpMacroStatNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
     self.expStrList = expStrList
 }
@@ -5483,14 +5483,14 @@ type Nodes_ExpMacroArgExpNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_codeTxt(_env *LnsEnv) string
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5525,7 +5525,7 @@ func Nodes_ExpMacroArgExpNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpMacroArgExpNode) ToNodes_ExpMacroArgExpNode() *Nodes_ExpMacroArgExpNode {
     return obj
 }
-func NewNodes_ExpMacroArgExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ExpMacroArgExpNode {
+func NewNodes_ExpMacroArgExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 string) *Nodes_ExpMacroArgExpNode {
     obj := &Nodes_ExpMacroArgExpNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5534,7 +5534,7 @@ func NewNodes_ExpMacroArgExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *T
 }
 func (self *Nodes_ExpMacroArgExpNode) Get_codeTxt(_env *LnsEnv) string{ return self.codeTxt }
 // 734: DeclConstr
-func (self *Nodes_ExpMacroArgExpNode) InitNodes_ExpMacroArgExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) {
+func (self *Nodes_ExpMacroArgExpNode) InitNodes_ExpMacroArgExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) {
     self.InitNodes_Node(_env, managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
     self.codeTxt = codeTxt
 }
@@ -5554,7 +5554,7 @@ type Nodes_StmtExpNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -5562,7 +5562,7 @@ type Nodes_StmtExpNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5597,7 +5597,7 @@ func Nodes_StmtExpNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_StmtExpNode) ToNodes_StmtExpNode() *Nodes_StmtExpNode {
     return obj
 }
-func NewNodes_StmtExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_StmtExpNode {
+func NewNodes_StmtExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_StmtExpNode {
     obj := &Nodes_StmtExpNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5606,7 +5606,7 @@ func NewNodes_StmtExpNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Po
 }
 func (self *Nodes_StmtExpNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_StmtExpNode) InitNodes_StmtExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_StmtExpNode) InitNodes_StmtExpNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 44, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
 }
@@ -5626,7 +5626,7 @@ type Nodes_ExpMacroStatListNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -5634,7 +5634,7 @@ type Nodes_ExpMacroStatListNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -5669,7 +5669,7 @@ func Nodes_ExpMacroStatListNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpMacroStatListNode) ToNodes_ExpMacroStatListNode() *Nodes_ExpMacroStatListNode {
     return obj
 }
-func NewNodes_ExpMacroStatListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMacroStatListNode {
+func NewNodes_ExpMacroStatListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_ExpMacroStatListNode {
     obj := &Nodes_ExpMacroStatListNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5678,7 +5678,7 @@ func NewNodes_ExpMacroStatListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 
 }
 func (self *Nodes_ExpMacroStatListNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_ExpMacroStatListNode) InitNodes_ExpMacroStatListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_ExpMacroStatListNode) InitNodes_ExpMacroStatListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 45, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
 }
@@ -5699,7 +5699,7 @@ type Nodes_ExpOmitEnumNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_aliasType(_env *LnsEnv) LnsAny
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_enumTypeInfo(_env *LnsEnv) *Ast_EnumTypeInfo
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -5707,7 +5707,7 @@ type Nodes_ExpOmitEnumNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_valInfo(_env *LnsEnv) *Ast_EnumValInfo
     Get_valToken(_env *LnsEnv) *Types_Token
@@ -5747,7 +5747,7 @@ func Nodes_ExpOmitEnumNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpOmitEnumNode) ToNodes_ExpOmitEnumNode() *Nodes_ExpOmitEnumNode {
     return obj
 }
-func NewNodes_ExpOmitEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_EnumValInfo, arg9 LnsAny, arg10 *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
+func NewNodes_ExpOmitEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_EnumValInfo, arg9 LnsAny, arg10 *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
     obj := &Nodes_ExpOmitEnumNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5759,7 +5759,7 @@ func (self *Nodes_ExpOmitEnumNode) Get_valInfo(_env *LnsEnv) *Ast_EnumValInfo{ r
 func (self *Nodes_ExpOmitEnumNode) Get_aliasType(_env *LnsEnv) LnsAny{ return self.aliasType }
 func (self *Nodes_ExpOmitEnumNode) Get_enumTypeInfo(_env *LnsEnv) *Ast_EnumTypeInfo{ return self.enumTypeInfo }
 // 734: DeclConstr
-func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) {
+func (self *Nodes_ExpOmitEnumNode) InitNodes_ExpOmitEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) {
     self.InitNodes_Node(_env, managerId, id, 46, pos, inTestBlock, macroArgFlag, typeList)
     self.valToken = valToken
     self.valInfo = valInfo
@@ -5782,7 +5782,7 @@ type Nodes_RefFieldNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_field(_env *LnsEnv) *Types_Token
@@ -5791,7 +5791,7 @@ type Nodes_RefFieldNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_prefix(_env *LnsEnv) *Nodes_Node
     Get_symbolInfo(_env *LnsEnv) LnsAny
     Get_tailComment(_env *LnsEnv) LnsAny
@@ -5831,7 +5831,7 @@ func Nodes_RefFieldNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_RefFieldNode) ToNodes_RefFieldNode() *Nodes_RefFieldNode {
     return obj
 }
-func NewNodes_RefFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node) *Nodes_RefFieldNode {
+func NewNodes_RefFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node) *Nodes_RefFieldNode {
     obj := &Nodes_RefFieldNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5843,7 +5843,7 @@ func (self *Nodes_RefFieldNode) Get_symbolInfo(_env *LnsEnv) LnsAny{ return self
 func (self *Nodes_RefFieldNode) Get_nilAccess(_env *LnsEnv) bool{ return self.nilAccess }
 func (self *Nodes_RefFieldNode) Get_prefix(_env *LnsEnv) *Nodes_Node{ return self.prefix }
 // 734: DeclConstr
-func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) {
+func (self *Nodes_RefFieldNode) InitNodes_RefFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
     self.field = field
     self.symbolInfo = symbolInfo
@@ -5866,7 +5866,7 @@ type Nodes_GetFieldNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_field(_env *LnsEnv) *Types_Token
@@ -5876,7 +5876,7 @@ type Nodes_GetFieldNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_nilAccess(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_prefix(_env *LnsEnv) *Nodes_Node
     Get_symbolInfo(_env *LnsEnv) LnsAny
     Get_tailComment(_env *LnsEnv) LnsAny
@@ -5917,7 +5917,7 @@ func Nodes_GetFieldNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_GetFieldNode) ToNodes_GetFieldNode() *Nodes_GetFieldNode {
     return obj
 }
-func NewNodes_GetFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node, arg11 *Ast_TypeInfo) *Nodes_GetFieldNode {
+func NewNodes_GetFieldNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 bool, arg10 *Nodes_Node, arg11 *Ast_TypeInfo) *Nodes_GetFieldNode {
     obj := &Nodes_GetFieldNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -5930,7 +5930,7 @@ func (self *Nodes_GetFieldNode) Get_nilAccess(_env *LnsEnv) bool{ return self.ni
 func (self *Nodes_GetFieldNode) Get_prefix(_env *LnsEnv) *Nodes_Node{ return self.prefix }
 func (self *Nodes_GetFieldNode) Get_getterTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.getterTypeInfo }
 // 734: DeclConstr
-func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) {
+func (self *Nodes_GetFieldNode) InitNodes_GetFieldNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) {
     self.InitNodes_Node(_env, managerId, id, 48, pos, inTestBlock, macroArgFlag, typeList)
     self.field = field
     self.symbolInfo = symbolInfo
@@ -5954,7 +5954,7 @@ type Nodes_AliasNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -5962,7 +5962,7 @@ type Nodes_AliasNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_newSymbol(_env *LnsEnv) *Ast_SymbolInfo
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_srcNode(_env *LnsEnv) *Nodes_Node
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo
@@ -6001,7 +6001,7 @@ func Nodes_AliasNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_AliasNode) ToNodes_AliasNode() *Nodes_AliasNode {
     return obj
 }
-func NewNodes_AliasNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo, arg8 *Nodes_Node, arg9 *Ast_TypeInfo) *Nodes_AliasNode {
+func NewNodes_AliasNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_SymbolInfo, arg8 *Nodes_Node, arg9 *Ast_TypeInfo) *Nodes_AliasNode {
     obj := &Nodes_AliasNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6012,7 +6012,7 @@ func (self *Nodes_AliasNode) Get_newSymbol(_env *LnsEnv) *Ast_SymbolInfo{ return
 func (self *Nodes_AliasNode) Get_srcNode(_env *LnsEnv) *Nodes_Node{ return self.srcNode }
 func (self *Nodes_AliasNode) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.typeInfo }
 // 734: DeclConstr
-func (self *Nodes_AliasNode) InitNodes_AliasNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) {
+func (self *Nodes_AliasNode) InitNodes_AliasNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) {
     self.InitNodes_Node(_env, managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
     self.newSymbol = newSymbol
     self.srcNode = srcNode
@@ -6082,7 +6082,7 @@ type Nodes_DeclVarNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_accessMode(_env *LnsEnv) LnsInt
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -6091,7 +6091,7 @@ type Nodes_DeclVarNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_mode(_env *LnsEnv) LnsInt
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_staticFlag(_env *LnsEnv) bool
     Get_symbolInfoList(_env *LnsEnv) *LnsList
     Get_syncBlock(_env *LnsEnv) LnsAny
@@ -6146,7 +6146,7 @@ func Nodes_DeclVarNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclVarNode) ToNodes_DeclVarNode() *Nodes_DeclVarNode {
     return obj
 }
-func NewNodes_DeclVarNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsList, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 LnsAny, arg16 LnsAny, arg17 *LnsList, arg18 LnsAny) *Nodes_DeclVarNode {
+func NewNodes_DeclVarNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 LnsInt, arg9 bool, arg10 *LnsList, arg11 LnsAny, arg12 *LnsList, arg13 *LnsList, arg14 bool, arg15 LnsAny, arg16 LnsAny, arg17 *LnsList, arg18 LnsAny) *Nodes_DeclVarNode {
     obj := &Nodes_DeclVarNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6166,7 +6166,7 @@ func (self *Nodes_DeclVarNode) Get_thenBlock(_env *LnsEnv) LnsAny{ return self.t
 func (self *Nodes_DeclVarNode) Get_syncVarList(_env *LnsEnv) *LnsList{ return self.syncVarList }
 func (self *Nodes_DeclVarNode) Get_syncBlock(_env *LnsEnv) LnsAny{ return self.syncBlock }
 // 734: DeclConstr
-func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) {
+func (self *Nodes_DeclVarNode) InitNodes_DeclVarNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
     self.mode = mode
     self.accessMode = accessMode
@@ -6303,14 +6303,14 @@ type Nodes_DeclFormNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -6345,7 +6345,7 @@ func Nodes_DeclFormNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclFormNode) ToNodes_DeclFormNode() *Nodes_DeclFormNode {
     return obj
 }
-func NewNodes_DeclFormNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFormNode {
+func NewNodes_DeclFormNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFormNode {
     obj := &Nodes_DeclFormNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6354,7 +6354,7 @@ func NewNodes_DeclFormNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_P
 }
 func (self *Nodes_DeclFormNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
 // 734: DeclConstr
-func (self *Nodes_DeclFormNode) InitNodes_DeclFormNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclFormNode) InitNodes_DeclFormNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
 }
@@ -6375,14 +6375,14 @@ type Nodes_DeclFuncNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -6417,7 +6417,7 @@ func Nodes_DeclFuncNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclFuncNode) ToNodes_DeclFuncNode() *Nodes_DeclFuncNode {
     return obj
 }
-func NewNodes_DeclFuncNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
+func NewNodes_DeclFuncNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
     obj := &Nodes_DeclFuncNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6426,7 +6426,7 @@ func NewNodes_DeclFuncNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_P
 }
 func (self *Nodes_DeclFuncNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
 // 734: DeclConstr
-func (self *Nodes_DeclFuncNode) InitNodes_DeclFuncNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclFuncNode) InitNodes_DeclFuncNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
 }
@@ -6447,14 +6447,14 @@ type Nodes_DeclMethodNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -6489,7 +6489,7 @@ func Nodes_DeclMethodNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclMethodNode) ToNodes_DeclMethodNode() *Nodes_DeclMethodNode {
     return obj
 }
-func NewNodes_DeclMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
+func NewNodes_DeclMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
     obj := &Nodes_DeclMethodNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6498,7 +6498,7 @@ func NewNodes_DeclMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
 }
 func (self *Nodes_DeclMethodNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
 // 734: DeclConstr
-func (self *Nodes_DeclMethodNode) InitNodes_DeclMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclMethodNode) InitNodes_DeclMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
 }
@@ -6519,14 +6519,14 @@ type Nodes_ProtoMethodNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -6561,7 +6561,7 @@ func Nodes_ProtoMethodNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ProtoMethodNode) ToNodes_ProtoMethodNode() *Nodes_ProtoMethodNode {
     return obj
 }
-func NewNodes_ProtoMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
+func NewNodes_ProtoMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
     obj := &Nodes_ProtoMethodNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6570,7 +6570,7 @@ func NewNodes_ProtoMethodNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 }
 func (self *Nodes_ProtoMethodNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
 // 734: DeclConstr
-func (self *Nodes_ProtoMethodNode) InitNodes_ProtoMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_ProtoMethodNode) InitNodes_ProtoMethodNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, managerId, id, 54, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
 }
@@ -6591,14 +6591,14 @@ type Nodes_DeclConstrNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -6633,7 +6633,7 @@ func Nodes_DeclConstrNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclConstrNode) ToNodes_DeclConstrNode() *Nodes_DeclConstrNode {
     return obj
 }
-func NewNodes_DeclConstrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
+func NewNodes_DeclConstrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
     obj := &Nodes_DeclConstrNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6642,7 +6642,7 @@ func NewNodes_DeclConstrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
 }
 func (self *Nodes_DeclConstrNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
 // 734: DeclConstr
-func (self *Nodes_DeclConstrNode) InitNodes_DeclConstrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclConstrNode) InitNodes_DeclConstrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, managerId, id, 55, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
 }
@@ -6663,14 +6663,14 @@ type Nodes_DeclDestrNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -6705,7 +6705,7 @@ func Nodes_DeclDestrNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclDestrNode) ToNodes_DeclDestrNode() *Nodes_DeclDestrNode {
     return obj
 }
-func NewNodes_DeclDestrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
+func NewNodes_DeclDestrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
     obj := &Nodes_DeclDestrNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6714,7 +6714,7 @@ func NewNodes_DeclDestrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_
 }
 func (self *Nodes_DeclDestrNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclFuncInfo{ return self.declInfo }
 // 734: DeclConstr
-func (self *Nodes_DeclDestrNode) InitNodes_DeclDestrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
+func (self *Nodes_DeclDestrNode) InitNodes_DeclDestrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) {
     self.InitNodes_Node(_env, managerId, id, 56, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
 }
@@ -6734,7 +6734,7 @@ type Nodes_ExpCallSuperCtorNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -6743,7 +6743,7 @@ type Nodes_ExpCallSuperCtorNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_methodType(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_superType(_env *LnsEnv) *Ast_TypeInfo
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -6781,7 +6781,7 @@ func Nodes_ExpCallSuperCtorNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpCallSuperCtorNode) ToNodes_ExpCallSuperCtorNode() *Nodes_ExpCallSuperCtorNode {
     return obj
 }
-func NewNodes_ExpCallSuperCtorNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperCtorNode {
+func NewNodes_ExpCallSuperCtorNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperCtorNode {
     obj := &Nodes_ExpCallSuperCtorNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6792,7 +6792,7 @@ func (self *Nodes_ExpCallSuperCtorNode) Get_superType(_env *LnsEnv) *Ast_TypeInf
 func (self *Nodes_ExpCallSuperCtorNode) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ return self.methodType }
 func (self *Nodes_ExpCallSuperCtorNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
 // 734: DeclConstr
-func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
+func (self *Nodes_ExpCallSuperCtorNode) InitNodes_ExpCallSuperCtorNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 57, pos, inTestBlock, macroArgFlag, typeList)
     self.superType = superType
     self.methodType = methodType
@@ -6814,7 +6814,7 @@ type Nodes_ExpCallSuperNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -6823,7 +6823,7 @@ type Nodes_ExpCallSuperNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_methodType(_env *LnsEnv) *Ast_TypeInfo
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_superType(_env *LnsEnv) *Ast_TypeInfo
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -6861,7 +6861,7 @@ func Nodes_ExpCallSuperNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ExpCallSuperNode) ToNodes_ExpCallSuperNode() *Nodes_ExpCallSuperNode {
     return obj
 }
-func NewNodes_ExpCallSuperNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperNode {
+func NewNodes_ExpCallSuperNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_TypeInfo, arg8 *Ast_TypeInfo, arg9 LnsAny) *Nodes_ExpCallSuperNode {
     obj := &Nodes_ExpCallSuperNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6872,7 +6872,7 @@ func (self *Nodes_ExpCallSuperNode) Get_superType(_env *LnsEnv) *Ast_TypeInfo{ r
 func (self *Nodes_ExpCallSuperNode) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ return self.methodType }
 func (self *Nodes_ExpCallSuperNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
 // 734: DeclConstr
-func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
+func (self *Nodes_ExpCallSuperNode) InitNodes_ExpCallSuperNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 58, pos, inTestBlock, macroArgFlag, typeList)
     self.superType = superType
     self.methodType = methodType
@@ -6895,7 +6895,7 @@ type Nodes_AsyncLockNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -6903,7 +6903,7 @@ type Nodes_AsyncLockNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_lockKind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -6939,7 +6939,7 @@ func Nodes_AsyncLockNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_AsyncLockNode) ToNodes_AsyncLockNode() *Nodes_AsyncLockNode {
     return obj
 }
-func NewNodes_AsyncLockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode) *Nodes_AsyncLockNode {
+func NewNodes_AsyncLockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_BlockNode) *Nodes_AsyncLockNode {
     obj := &Nodes_AsyncLockNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -6949,7 +6949,7 @@ func NewNodes_AsyncLockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_
 func (self *Nodes_AsyncLockNode) Get_lockKind(_env *LnsEnv) LnsInt{ return self.lockKind }
 func (self *Nodes_AsyncLockNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 // 734: DeclConstr
-func (self *Nodes_AsyncLockNode) InitNodes_AsyncLockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) {
+func (self *Nodes_AsyncLockNode) InitNodes_AsyncLockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, managerId, id, 59, pos, inTestBlock, macroArgFlag, typeList)
     self.lockKind = lockKind
     self.block = block
@@ -6970,7 +6970,7 @@ type Nodes_RequestNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -6978,7 +6978,7 @@ type Nodes_RequestNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_processor(_env *LnsEnv) *Nodes_Node
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -7015,7 +7015,7 @@ func Nodes_RequestNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_RequestNode) ToNodes_RequestNode() *Nodes_RequestNode {
     return obj
 }
-func NewNodes_RequestNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_Node) *Nodes_RequestNode {
+func NewNodes_RequestNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node, arg8 *Nodes_Node) *Nodes_RequestNode {
     obj := &Nodes_RequestNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7025,7 +7025,7 @@ func NewNodes_RequestNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Po
 func (self *Nodes_RequestNode) Get_processor(_env *LnsEnv) *Nodes_Node{ return self.processor }
 func (self *Nodes_RequestNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_RequestNode) InitNodes_RequestNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,processor *Nodes_Node,exp *Nodes_Node) {
+func (self *Nodes_RequestNode) InitNodes_RequestNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,processor *Nodes_Node,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 60, pos, inTestBlock, macroArgFlag, typeList)
     self.processor = processor
     self.exp = exp
@@ -7050,7 +7050,7 @@ type Nodes_DeclMemberNodeMtd interface {
     Get_accessMode(_env *LnsEnv) LnsInt
     Get_classType(_env *LnsEnv) *Ast_TypeInfo
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_getterMode(_env *LnsEnv) LnsInt
@@ -7062,7 +7062,7 @@ type Nodes_DeclMemberNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_refType(_env *LnsEnv) *Nodes_RefTypeNode
     Get_setterMode(_env *LnsEnv) LnsInt
     Get_setterToken(_env *LnsEnv) LnsAny
@@ -7113,7 +7113,7 @@ func Nodes_DeclMemberNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclMemberNode) ToNodes_DeclMemberNode() *Nodes_DeclMemberNode {
     return obj
 }
-func NewNodes_DeclMemberNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_RefTypeNode, arg9 *Ast_SymbolInfo, arg10 *Ast_TypeInfo, arg11 bool, arg12 LnsInt, arg13 bool, arg14 LnsInt, arg15 LnsAny, arg16 *Ast_TypeInfo, arg17 LnsInt, arg18 LnsAny) *Nodes_DeclMemberNode {
+func NewNodes_DeclMemberNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_RefTypeNode, arg9 *Ast_SymbolInfo, arg10 *Ast_TypeInfo, arg11 bool, arg12 LnsInt, arg13 bool, arg14 LnsInt, arg15 LnsAny, arg16 *Ast_TypeInfo, arg17 LnsInt, arg18 LnsAny) *Nodes_DeclMemberNode {
     obj := &Nodes_DeclMemberNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7133,7 +7133,7 @@ func (self *Nodes_DeclMemberNode) Get_getterRetType(_env *LnsEnv) *Ast_TypeInfo{
 func (self *Nodes_DeclMemberNode) Get_setterMode(_env *LnsEnv) LnsInt{ return self.setterMode }
 func (self *Nodes_DeclMemberNode) Get_setterToken(_env *LnsEnv) LnsAny{ return self.setterToken }
 // 734: DeclConstr
-func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) {
+func (self *Nodes_DeclMemberNode) InitNodes_DeclMemberNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
     self.refType = refType
@@ -7165,7 +7165,7 @@ type Nodes_DeclArgNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_argType(_env *LnsEnv) LnsAny
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -7173,7 +7173,7 @@ type Nodes_DeclArgNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -7211,7 +7211,7 @@ func Nodes_DeclArgNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclArgNode) ToNodes_DeclArgNode() *Nodes_DeclArgNode {
     return obj
 }
-func NewNodes_DeclArgNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_SymbolInfo, arg9 LnsAny) *Nodes_DeclArgNode {
+func NewNodes_DeclArgNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Ast_SymbolInfo, arg9 LnsAny) *Nodes_DeclArgNode {
     obj := &Nodes_DeclArgNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7222,7 +7222,7 @@ func (self *Nodes_DeclArgNode) Get_name(_env *LnsEnv) *Types_Token{ return self.
 func (self *Nodes_DeclArgNode) Get_symbolInfo(_env *LnsEnv) *Ast_SymbolInfo{ return self.symbolInfo }
 func (self *Nodes_DeclArgNode) Get_argType(_env *LnsEnv) LnsAny{ return self.argType }
 // 734: DeclConstr
-func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) {
+func (self *Nodes_DeclArgNode) InitNodes_DeclArgNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
     self.symbolInfo = symbolInfo
@@ -7244,14 +7244,14 @@ type Nodes_DeclArgDDDNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -7285,7 +7285,7 @@ func Nodes_DeclArgDDDNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclArgDDDNode) ToNodes_DeclArgDDDNode() *Nodes_DeclArgDDDNode {
     return obj
 }
-func NewNodes_DeclArgDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_DeclArgDDDNode {
+func NewNodes_DeclArgDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_DeclArgDDDNode {
     obj := &Nodes_DeclArgDDDNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7293,7 +7293,7 @@ func NewNodes_DeclArgDDDNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
     return obj
 }
 // 734: DeclConstr
-func (self *Nodes_DeclArgDDDNode) InitNodes_DeclArgDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_DeclArgDDDNode) InitNodes_DeclArgDDDNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 63, pos, inTestBlock, macroArgFlag, typeList)
 }
 
@@ -7301,13 +7301,13 @@ func (self *Nodes_DeclArgDDDNode) InitNodes_DeclArgDDDNode(_env *LnsEnv, manager
 // declaration Class -- AdvertiseInfo
 type Nodes_AdvertiseInfoMtd interface {
     Get_member(_env *LnsEnv) *Nodes_DeclMemberNode
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_prefix(_env *LnsEnv) string
 }
 type Nodes_AdvertiseInfo struct {
     member *Nodes_DeclMemberNode
     prefix string
-    pos *Types_Position
+    pos Types_Position
     FP Nodes_AdvertiseInfoMtd
 }
 func Nodes_AdvertiseInfo2Stem( obj LnsAny ) LnsAny {
@@ -7330,20 +7330,20 @@ func Nodes_AdvertiseInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_AdvertiseInfo) ToNodes_AdvertiseInfo() *Nodes_AdvertiseInfo {
     return obj
 }
-func NewNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 *Types_Position) *Nodes_AdvertiseInfo {
+func NewNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 Types_Position) *Nodes_AdvertiseInfo {
     obj := &Nodes_AdvertiseInfo{}
     obj.FP = obj
     obj.InitNodes_AdvertiseInfo(_env, arg1, arg2, arg3)
     return obj
 }
-func (self *Nodes_AdvertiseInfo) InitNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 *Types_Position) {
+func (self *Nodes_AdvertiseInfo) InitNodes_AdvertiseInfo(_env *LnsEnv, arg1 *Nodes_DeclMemberNode, arg2 string, arg3 Types_Position) {
     self.member = arg1
     self.prefix = arg2
     self.pos = arg3
 }
 func (self *Nodes_AdvertiseInfo) Get_member(_env *LnsEnv) *Nodes_DeclMemberNode{ return self.member }
 func (self *Nodes_AdvertiseInfo) Get_prefix(_env *LnsEnv) string{ return self.prefix }
-func (self *Nodes_AdvertiseInfo) Get_pos(_env *LnsEnv) *Types_Position{ return self.pos }
+func (self *Nodes_AdvertiseInfo) Get_pos(_env *LnsEnv) Types_Position{ return self.pos }
 
 // declaration Class -- DeclAdvertiseNode
 type Nodes_DeclAdvertiseNodeMtd interface {
@@ -7360,14 +7360,14 @@ type Nodes_DeclAdvertiseNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_advInfo(_env *LnsEnv) *Nodes_AdvertiseInfo
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -7402,7 +7402,7 @@ func Nodes_DeclAdvertiseNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclAdvertiseNode) ToNodes_DeclAdvertiseNode() *Nodes_DeclAdvertiseNode {
     return obj
 }
-func NewNodes_DeclAdvertiseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
+func NewNodes_DeclAdvertiseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
     obj := &Nodes_DeclAdvertiseNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7411,7 +7411,7 @@ func NewNodes_DeclAdvertiseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Ty
 }
 func (self *Nodes_DeclAdvertiseNode) Get_advInfo(_env *LnsEnv) *Nodes_AdvertiseInfo{ return self.advInfo }
 // 734: DeclConstr
-func (self *Nodes_DeclAdvertiseNode) InitNodes_DeclAdvertiseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) {
+func (self *Nodes_DeclAdvertiseNode) InitNodes_DeclAdvertiseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) {
     self.InitNodes_Node(_env, managerId, id, 64, pos, inTestBlock, macroArgFlag, typeList)
     self.advInfo = advInfo
 }
@@ -7475,7 +7475,7 @@ type Nodes_ProtoClassNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -7484,7 +7484,7 @@ type Nodes_ProtoClassNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -7520,7 +7520,7 @@ func Nodes_ProtoClassNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_ProtoClassNode) ToNodes_ProtoClassNode() *Nodes_ProtoClassNode {
     return obj
 }
-func NewNodes_ProtoClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_ClassInheritInfo) *Nodes_ProtoClassNode {
+func NewNodes_ProtoClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_ClassInheritInfo) *Nodes_ProtoClassNode {
     obj := &Nodes_ProtoClassNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7530,7 +7530,7 @@ func NewNodes_ProtoClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
 func (self *Nodes_ProtoClassNode) Get_name(_env *LnsEnv) *Types_Token{ return self.name }
 func (self *Nodes_ProtoClassNode) Get_inheritInfo(_env *LnsEnv) *Nodes_ClassInheritInfo{ return self.inheritInfo }
 // 734: DeclConstr
-func (self *Nodes_ProtoClassNode) InitNodes_ProtoClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) {
+func (self *Nodes_ProtoClassNode) InitNodes_ProtoClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) {
     self.InitNodes_Node(_env, managerId, id, 65, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
     self.inheritInfo = inheritInfo
@@ -7597,7 +7597,7 @@ type Nodes_DeclClassNodeMtd interface {
     Get_allStmtList(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declStmtList(_env *LnsEnv) *LnsList
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_fieldList(_env *LnsEnv) *LnsList
@@ -7616,7 +7616,7 @@ type Nodes_DeclClassNodeMtd interface {
     Get_moduleName(_env *LnsEnv) LnsAny
     Get_name(_env *LnsEnv) *Types_Token
     Get_outerMethodSet(_env *LnsEnv) *LnsSet
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_scope(_env *LnsEnv) *Ast_Scope
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_trustList(_env *LnsEnv) *LnsList
@@ -7675,7 +7675,7 @@ func Nodes_DeclClassNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclClassNode) ToNodes_DeclClassNode() *Nodes_DeclClassNode {
     return obj
 }
-func NewNodes_DeclClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Types_Token, arg9 *Nodes_ClassInheritInfo, arg10 bool, arg11 LnsAny, arg12 LnsAny, arg13 LnsAny, arg14 LnsInt, arg15 bool, arg16 *LnsList, arg17 *LnsList, arg18 *LnsList, arg19 *LnsList, arg20 *Ast_Scope, arg21 *Nodes_ClassInitBlockInfo, arg22 *LnsList, arg23 *LnsList, arg24 *LnsList, arg25 *LnsSet) *Nodes_DeclClassNode {
+func NewNodes_DeclClassNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Types_Token, arg9 *Nodes_ClassInheritInfo, arg10 bool, arg11 LnsAny, arg12 LnsAny, arg13 LnsAny, arg14 LnsInt, arg15 bool, arg16 *LnsList, arg17 *LnsList, arg18 *LnsList, arg19 *LnsList, arg20 *Ast_Scope, arg21 *Nodes_ClassInitBlockInfo, arg22 *LnsList, arg23 *LnsList, arg24 *LnsList, arg25 *LnsSet) *Nodes_DeclClassNode {
     obj := &Nodes_DeclClassNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7702,7 +7702,7 @@ func (self *Nodes_DeclClassNode) Get_trustList(_env *LnsEnv) *LnsList{ return se
 func (self *Nodes_DeclClassNode) Get_uninitMemberList(_env *LnsEnv) *LnsList{ return self.uninitMemberList }
 func (self *Nodes_DeclClassNode) Get_outerMethodSet(_env *LnsEnv) *LnsSet{ return self.outerMethodSet }
 // 734: DeclConstr
-func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) {
+func (self *Nodes_DeclClassNode) InitNodes_DeclClassNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) {
     self.InitNodes_Node(_env, managerId, id, 66, pos, inTestBlock, macroArgFlag, typeList)
     self.accessMode = accessMode
     self.name = name
@@ -7741,7 +7741,7 @@ type Nodes_DeclEnumNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_accessMode(_env *LnsEnv) LnsInt
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_enumType(_env *LnsEnv) *Ast_EnumTypeInfo
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -7750,7 +7750,7 @@ type Nodes_DeclEnumNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_scope(_env *LnsEnv) *Ast_Scope
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_valueNameList(_env *LnsEnv) *LnsList
@@ -7791,7 +7791,7 @@ func Nodes_DeclEnumNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclEnumNode) ToNodes_DeclEnumNode() *Nodes_DeclEnumNode {
     return obj
 }
-func NewNodes_DeclEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_EnumTypeInfo, arg8 LnsInt, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclEnumNode {
+func NewNodes_DeclEnumNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Ast_EnumTypeInfo, arg8 LnsInt, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclEnumNode {
     obj := &Nodes_DeclEnumNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7804,7 +7804,7 @@ func (self *Nodes_DeclEnumNode) Get_name(_env *LnsEnv) *Types_Token{ return self
 func (self *Nodes_DeclEnumNode) Get_valueNameList(_env *LnsEnv) *LnsList{ return self.valueNameList }
 func (self *Nodes_DeclEnumNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
 // 734: DeclConstr
-func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) {
+func (self *Nodes_DeclEnumNode) InitNodes_DeclEnumNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) {
     self.InitNodes_Node(_env, managerId, id, 67, pos, inTestBlock, macroArgFlag, typeList)
     self.enumType = enumType
     self.accessMode = accessMode
@@ -7917,7 +7917,7 @@ type Nodes_DeclAlgeNodeMtd interface {
     Get_algeType(_env *LnsEnv) *Ast_AlgeTypeInfo
     Get_algeValList(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -7925,7 +7925,7 @@ type Nodes_DeclAlgeNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_scope(_env *LnsEnv) *Ast_Scope
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -7965,7 +7965,7 @@ func Nodes_DeclAlgeNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclAlgeNode) ToNodes_DeclAlgeNode() *Nodes_DeclAlgeNode {
     return obj
 }
-func NewNodes_DeclAlgeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_AlgeTypeInfo, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclAlgeNode {
+func NewNodes_DeclAlgeNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Ast_AlgeTypeInfo, arg9 *Types_Token, arg10 *LnsList, arg11 *Ast_Scope) *Nodes_DeclAlgeNode {
     obj := &Nodes_DeclAlgeNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -7978,7 +7978,7 @@ func (self *Nodes_DeclAlgeNode) Get_name(_env *LnsEnv) *Types_Token{ return self
 func (self *Nodes_DeclAlgeNode) Get_algeValList(_env *LnsEnv) *LnsList{ return self.algeValList }
 func (self *Nodes_DeclAlgeNode) Get_scope(_env *LnsEnv) *Ast_Scope{ return self.scope }
 // 734: DeclConstr
-func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) {
+func (self *Nodes_DeclAlgeNode) InitNodes_DeclAlgeNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) {
     self.InitNodes_Node(_env, managerId, id, 68, pos, inTestBlock, macroArgFlag, typeList)
     self.accessMode = accessMode
     self.algeType = algeType
@@ -8003,7 +8003,7 @@ type Nodes_NewAlgeValNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -8012,7 +8012,7 @@ type Nodes_NewAlgeValNodeMtd interface {
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_name(_env *LnsEnv) *Types_Token
     Get_paramList(_env *LnsEnv) *LnsList
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_prefix(_env *LnsEnv) LnsAny
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo
@@ -8053,7 +8053,7 @@ func Nodes_NewAlgeValNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_NewAlgeValNode) ToNodes_NewAlgeValNode() *Nodes_NewAlgeValNode {
     return obj
 }
-func NewNodes_NewAlgeValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 *Ast_AlgeTypeInfo, arg10 *Ast_AlgeValInfo, arg11 *LnsList) *Nodes_NewAlgeValNode {
+func NewNodes_NewAlgeValNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 *Ast_AlgeTypeInfo, arg10 *Ast_AlgeValInfo, arg11 *LnsList) *Nodes_NewAlgeValNode {
     obj := &Nodes_NewAlgeValNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8066,7 +8066,7 @@ func (self *Nodes_NewAlgeValNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeIn
 func (self *Nodes_NewAlgeValNode) Get_valInfo(_env *LnsEnv) *Ast_AlgeValInfo{ return self.valInfo }
 func (self *Nodes_NewAlgeValNode) Get_paramList(_env *LnsEnv) *LnsList{ return self.paramList }
 // 734: DeclConstr
-func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) {
+func (self *Nodes_NewAlgeValNode) InitNodes_NewAlgeValNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 69, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
     self.prefix = prefix
@@ -8090,14 +8090,14 @@ type Nodes_LuneControlNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_pragma(_env *LnsEnv) LnsAny
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -8133,7 +8133,7 @@ func Nodes_LuneControlNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LuneControlNode) ToNodes_LuneControlNode() *Nodes_LuneControlNode {
     return obj
 }
-func NewNodes_LuneControlNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LuneControlNode {
+func NewNodes_LuneControlNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LuneControlNode {
     obj := &Nodes_LuneControlNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8142,7 +8142,7 @@ func NewNodes_LuneControlNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 }
 func (self *Nodes_LuneControlNode) Get_pragma(_env *LnsEnv) LnsAny{ return self.pragma }
 // 734: DeclConstr
-func (self *Nodes_LuneControlNode) InitNodes_LuneControlNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) {
+func (self *Nodes_LuneControlNode) InitNodes_LuneControlNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 70, pos, inTestBlock, macroArgFlag, typeList)
     self.pragma = pragma
 }
@@ -8217,7 +8217,7 @@ type Nodes_MatchNodeMtd interface {
     Get_caseList(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_defaultBlock(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_failSafeDefault(_env *LnsEnv) bool
@@ -8226,7 +8226,7 @@ type Nodes_MatchNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_val(_env *LnsEnv) *Nodes_Node
     HasNilAccess(_env *LnsEnv) bool
@@ -8268,7 +8268,7 @@ func Nodes_MatchNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_MatchNode) ToNodes_MatchNode() *Nodes_MatchNode {
     return obj
 }
-func NewNodes_MatchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *Ast_AlgeTypeInfo, arg10 *LnsList, arg11 LnsAny, arg12 LnsInt, arg13 bool) *Nodes_MatchNode {
+func NewNodes_MatchNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsInt, arg8 *Nodes_Node, arg9 *Ast_AlgeTypeInfo, arg10 *LnsList, arg11 LnsAny, arg12 LnsInt, arg13 bool) *Nodes_MatchNode {
     obj := &Nodes_MatchNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8283,7 +8283,7 @@ func (self *Nodes_MatchNode) Get_defaultBlock(_env *LnsEnv) LnsAny{ return self.
 func (self *Nodes_MatchNode) Get_caseKind(_env *LnsEnv) LnsInt{ return self.caseKind }
 func (self *Nodes_MatchNode) Get_failSafeDefault(_env *LnsEnv) bool{ return self.failSafeDefault }
 // 734: DeclConstr
-func (self *Nodes_MatchNode) InitNodes_MatchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) {
+func (self *Nodes_MatchNode) InitNodes_MatchNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) {
     self.InitNodes_Node(_env, managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
     self.idInNS = idInNS
     self.val = val
@@ -8309,7 +8309,7 @@ type Nodes_LuneKindNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_exp(_env *LnsEnv) *Nodes_Node
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -8317,7 +8317,7 @@ type Nodes_LuneKindNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -8352,7 +8352,7 @@ func Nodes_LuneKindNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LuneKindNode) ToNodes_LuneKindNode() *Nodes_LuneKindNode {
     return obj
 }
-func NewNodes_LuneKindNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_LuneKindNode {
+func NewNodes_LuneKindNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_LuneKindNode {
     obj := &Nodes_LuneKindNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8361,7 +8361,7 @@ func NewNodes_LuneKindNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_P
 }
 func (self *Nodes_LuneKindNode) Get_exp(_env *LnsEnv) *Nodes_Node{ return self.exp }
 // 734: DeclConstr
-func (self *Nodes_LuneKindNode) InitNodes_LuneKindNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
+func (self *Nodes_LuneKindNode) InitNodes_LuneKindNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 72, pos, inTestBlock, macroArgFlag, typeList)
     self.exp = exp
 }
@@ -8382,14 +8382,14 @@ type Nodes_DeclMacroNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_declInfo(_env *LnsEnv) *Nodes_DeclMacroInfo
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -8424,7 +8424,7 @@ func Nodes_DeclMacroNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_DeclMacroNode) ToNodes_DeclMacroNode() *Nodes_DeclMacroNode {
     return obj
 }
-func NewNodes_DeclMacroNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
+func NewNodes_DeclMacroNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
     obj := &Nodes_DeclMacroNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8433,7 +8433,7 @@ func NewNodes_DeclMacroNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_
 }
 func (self *Nodes_DeclMacroNode) Get_declInfo(_env *LnsEnv) *Nodes_DeclMacroInfo{ return self.declInfo }
 // 734: DeclConstr
-func (self *Nodes_DeclMacroNode) InitNodes_DeclMacroNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) {
+func (self *Nodes_DeclMacroNode) InitNodes_DeclMacroNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) {
     self.InitNodes_Node(_env, managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
     self.declInfo = declInfo
 }
@@ -8488,7 +8488,7 @@ type Nodes_TestCaseNodeMtd interface {
     Get_block(_env *LnsEnv) *Nodes_BlockNode
     Get_commentList(_env *LnsEnv) LnsAny
     Get_ctrlName(_env *LnsEnv) string
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_impNode(_env *LnsEnv) *Nodes_Node
@@ -8497,7 +8497,7 @@ type Nodes_TestCaseNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_name(_env *LnsEnv) *Types_Token
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -8535,7 +8535,7 @@ func Nodes_TestCaseNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_TestCaseNode) ToNodes_TestCaseNode() *Nodes_TestCaseNode {
     return obj
 }
-func NewNodes_TestCaseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 string, arg10 *Nodes_BlockNode) *Nodes_TestCaseNode {
+func NewNodes_TestCaseNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 *Nodes_Node, arg9 string, arg10 *Nodes_BlockNode) *Nodes_TestCaseNode {
     obj := &Nodes_TestCaseNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8547,7 +8547,7 @@ func (self *Nodes_TestCaseNode) Get_impNode(_env *LnsEnv) *Nodes_Node{ return se
 func (self *Nodes_TestCaseNode) Get_ctrlName(_env *LnsEnv) string{ return self.ctrlName }
 func (self *Nodes_TestCaseNode) Get_block(_env *LnsEnv) *Nodes_BlockNode{ return self.block }
 // 734: DeclConstr
-func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) {
+func (self *Nodes_TestCaseNode) InitNodes_TestCaseNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) {
     self.InitNodes_Node(_env, managerId, id, 74, pos, inTestBlock, macroArgFlag, typeList)
     self.name = name
     self.impNode = impNode
@@ -8570,18 +8570,18 @@ type Nodes_TestBlockNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_stmtList(_env *LnsEnv) *LnsList
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
-    IsInnerPos(_env *LnsEnv, arg1 *Types_Position) bool
+    IsInnerPos(_env *LnsEnv, arg1 Types_Position) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
     SetLValue(_env *LnsEnv)
     Set_tailComment(_env *LnsEnv, arg1 LnsAny)
@@ -8614,7 +8614,7 @@ func Nodes_TestBlockNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_TestBlockNode) ToNodes_TestBlockNode() *Nodes_TestBlockNode {
     return obj
 }
-func NewNodes_TestBlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_TestBlockNode {
+func NewNodes_TestBlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsList) *Nodes_TestBlockNode {
     obj := &Nodes_TestBlockNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8623,7 +8623,7 @@ func NewNodes_TestBlockNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_
 }
 func (self *Nodes_TestBlockNode) Get_stmtList(_env *LnsEnv) *LnsList{ return self.stmtList }
 // 734: DeclConstr
-func (self *Nodes_TestBlockNode) InitNodes_TestBlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
+func (self *Nodes_TestBlockNode) InitNodes_TestBlockNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 75, pos, inTestBlock, macroArgFlag, typeList)
     self.stmtList = stmtList
 }
@@ -8643,14 +8643,14 @@ type Nodes_AbbrNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -8684,7 +8684,7 @@ func Nodes_AbbrNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_AbbrNode) ToNodes_AbbrNode() *Nodes_AbbrNode {
     return obj
 }
-func NewNodes_AbbrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_AbbrNode {
+func NewNodes_AbbrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_AbbrNode {
     obj := &Nodes_AbbrNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8692,7 +8692,7 @@ func NewNodes_AbbrNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Posit
     return obj
 }
 // 734: DeclConstr
-func (self *Nodes_AbbrNode) InitNodes_AbbrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_AbbrNode) InitNodes_AbbrNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
 }
 
@@ -8711,14 +8711,14 @@ type Nodes_BoxingNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_src(_env *LnsEnv) *Nodes_Node
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -8754,7 +8754,7 @@ func Nodes_BoxingNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_BoxingNode) ToNodes_BoxingNode() *Nodes_BoxingNode {
     return obj
 }
-func NewNodes_BoxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_BoxingNode {
+func NewNodes_BoxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_BoxingNode {
     obj := &Nodes_BoxingNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8763,7 +8763,7 @@ func NewNodes_BoxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Pos
 }
 func (self *Nodes_BoxingNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
 // 734: DeclConstr
-func (self *Nodes_BoxingNode) InitNodes_BoxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
+func (self *Nodes_BoxingNode) InitNodes_BoxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 77, pos, inTestBlock, macroArgFlag, typeList)
     self.src = src
 }
@@ -8783,14 +8783,14 @@ type Nodes_UnboxingNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_src(_env *LnsEnv) *Nodes_Node
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
@@ -8826,7 +8826,7 @@ func Nodes_UnboxingNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_UnboxingNode) ToNodes_UnboxingNode() *Nodes_UnboxingNode {
     return obj
 }
-func NewNodes_UnboxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_UnboxingNode {
+func NewNodes_UnboxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Nodes_Node) *Nodes_UnboxingNode {
     obj := &Nodes_UnboxingNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8835,7 +8835,7 @@ func NewNodes_UnboxingNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_P
 }
 func (self *Nodes_UnboxingNode) Get_src(_env *LnsEnv) *Nodes_Node{ return self.src }
 // 734: DeclConstr
-func (self *Nodes_UnboxingNode) InitNodes_UnboxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
+func (self *Nodes_UnboxingNode) InitNodes_UnboxingNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) {
     self.InitNodes_Node(_env, managerId, id, 78, pos, inTestBlock, macroArgFlag, typeList)
     self.src = src
 }
@@ -8855,14 +8855,14 @@ type Nodes_LiteralNilNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -8896,7 +8896,7 @@ func Nodes_LiteralNilNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralNilNode) ToNodes_LiteralNilNode() *Nodes_LiteralNilNode {
     return obj
 }
-func NewNodes_LiteralNilNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_LiteralNilNode {
+func NewNodes_LiteralNilNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList) *Nodes_LiteralNilNode {
     obj := &Nodes_LiteralNilNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8904,7 +8904,7 @@ func NewNodes_LiteralNilNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
     return obj
 }
 // 734: DeclConstr
-func (self *Nodes_LiteralNilNode) InitNodes_LiteralNilNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
+func (self *Nodes_LiteralNilNode) InitNodes_LiteralNilNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 79, pos, inTestBlock, macroArgFlag, typeList)
 }
 
@@ -8923,7 +8923,7 @@ type Nodes_LiteralCharNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -8931,7 +8931,7 @@ type Nodes_LiteralCharNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_num(_env *LnsEnv) LnsInt
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_token(_env *LnsEnv) *Types_Token
     HasNilAccess(_env *LnsEnv) bool
@@ -8968,7 +8968,7 @@ func Nodes_LiteralCharNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralCharNode) ToNodes_LiteralCharNode() *Nodes_LiteralCharNode {
     return obj
 }
-func NewNodes_LiteralCharNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralCharNode {
+func NewNodes_LiteralCharNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralCharNode {
     obj := &Nodes_LiteralCharNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -8978,7 +8978,7 @@ func NewNodes_LiteralCharNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 func (self *Nodes_LiteralCharNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
 func (self *Nodes_LiteralCharNode) Get_num(_env *LnsEnv) LnsInt{ return self.num }
 // 734: DeclConstr
-func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
+func (self *Nodes_LiteralCharNode) InitNodes_LiteralCharNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
     self.InitNodes_Node(_env, managerId, id, 80, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
     self.num = num
@@ -8999,7 +8999,7 @@ type Nodes_LiteralIntNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -9007,7 +9007,7 @@ type Nodes_LiteralIntNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_num(_env *LnsEnv) LnsInt
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_token(_env *LnsEnv) *Types_Token
     HasNilAccess(_env *LnsEnv) bool
@@ -9044,7 +9044,7 @@ func Nodes_LiteralIntNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralIntNode) ToNodes_LiteralIntNode() *Nodes_LiteralIntNode {
     return obj
 }
-func NewNodes_LiteralIntNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralIntNode {
+func NewNodes_LiteralIntNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsInt) *Nodes_LiteralIntNode {
     obj := &Nodes_LiteralIntNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9054,7 +9054,7 @@ func NewNodes_LiteralIntNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
 func (self *Nodes_LiteralIntNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
 func (self *Nodes_LiteralIntNode) Get_num(_env *LnsEnv) LnsInt{ return self.num }
 // 734: DeclConstr
-func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
+func (self *Nodes_LiteralIntNode) InitNodes_LiteralIntNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) {
     self.InitNodes_Node(_env, managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
     self.num = num
@@ -9075,7 +9075,7 @@ type Nodes_LiteralRealNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -9083,7 +9083,7 @@ type Nodes_LiteralRealNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_num(_env *LnsEnv) LnsReal
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_token(_env *LnsEnv) *Types_Token
     HasNilAccess(_env *LnsEnv) bool
@@ -9120,7 +9120,7 @@ func Nodes_LiteralRealNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralRealNode) ToNodes_LiteralRealNode() *Nodes_LiteralRealNode {
     return obj
 }
-func NewNodes_LiteralRealNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsReal) *Nodes_LiteralRealNode {
+func NewNodes_LiteralRealNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsReal) *Nodes_LiteralRealNode {
     obj := &Nodes_LiteralRealNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9130,7 +9130,7 @@ func NewNodes_LiteralRealNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 func (self *Nodes_LiteralRealNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
 func (self *Nodes_LiteralRealNode) Get_num(_env *LnsEnv) LnsReal{ return self.num }
 // 734: DeclConstr
-func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) {
+func (self *Nodes_LiteralRealNode) InitNodes_LiteralRealNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) {
     self.InitNodes_Node(_env, managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
     self.num = num
@@ -9151,7 +9151,7 @@ type Nodes_LiteralArrayNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -9159,7 +9159,7 @@ type Nodes_LiteralArrayNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -9194,7 +9194,7 @@ func Nodes_LiteralArrayNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralArrayNode) ToNodes_LiteralArrayNode() *Nodes_LiteralArrayNode {
     return obj
 }
-func NewNodes_LiteralArrayNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralArrayNode {
+func NewNodes_LiteralArrayNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralArrayNode {
     obj := &Nodes_LiteralArrayNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9203,7 +9203,7 @@ func NewNodes_LiteralArrayNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Typ
 }
 func (self *Nodes_LiteralArrayNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
 // 734: DeclConstr
-func (self *Nodes_LiteralArrayNode) InitNodes_LiteralArrayNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_LiteralArrayNode) InitNodes_LiteralArrayNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
 }
@@ -9223,7 +9223,7 @@ type Nodes_LiteralListNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -9231,7 +9231,7 @@ type Nodes_LiteralListNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -9266,7 +9266,7 @@ func Nodes_LiteralListNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralListNode) ToNodes_LiteralListNode() *Nodes_LiteralListNode {
     return obj
 }
-func NewNodes_LiteralListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralListNode {
+func NewNodes_LiteralListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralListNode {
     obj := &Nodes_LiteralListNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9275,7 +9275,7 @@ func NewNodes_LiteralListNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 }
 func (self *Nodes_LiteralListNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
 // 734: DeclConstr
-func (self *Nodes_LiteralListNode) InitNodes_LiteralListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_LiteralListNode) InitNodes_LiteralListNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
 }
@@ -9295,7 +9295,7 @@ type Nodes_LiteralSetNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expList(_env *LnsEnv) LnsAny
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
@@ -9303,7 +9303,7 @@ type Nodes_LiteralSetNodeMtd interface {
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -9338,7 +9338,7 @@ func Nodes_LiteralSetNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralSetNode) ToNodes_LiteralSetNode() *Nodes_LiteralSetNode {
     return obj
 }
-func NewNodes_LiteralSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralSetNode {
+func NewNodes_LiteralSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 LnsAny) *Nodes_LiteralSetNode {
     obj := &Nodes_LiteralSetNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9347,7 +9347,7 @@ func NewNodes_LiteralSetNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
 }
 func (self *Nodes_LiteralSetNode) Get_expList(_env *LnsEnv) LnsAny{ return self.expList }
 // 734: DeclConstr
-func (self *Nodes_LiteralSetNode) InitNodes_LiteralSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
+func (self *Nodes_LiteralSetNode) InitNodes_LiteralSetNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
     self.expList = expList
 }
@@ -9410,7 +9410,7 @@ type Nodes_LiteralMapNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -9419,7 +9419,7 @@ type Nodes_LiteralMapNodeMtd interface {
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_map(_env *LnsEnv) *LnsMap
     Get_pairList(_env *LnsEnv) *LnsList
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     HasNilAccess(_env *LnsEnv) bool
     ProcessFilter(_env *LnsEnv, arg1 *Nodes_Filter, arg2 LnsAny)
@@ -9455,7 +9455,7 @@ func Nodes_LiteralMapNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralMapNode) ToNodes_LiteralMapNode() *Nodes_LiteralMapNode {
     return obj
 }
-func NewNodes_LiteralMapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsMap, arg8 *LnsList) *Nodes_LiteralMapNode {
+func NewNodes_LiteralMapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *LnsMap, arg8 *LnsList) *Nodes_LiteralMapNode {
     obj := &Nodes_LiteralMapNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9465,7 +9465,7 @@ func NewNodes_LiteralMapNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types
 func (self *Nodes_LiteralMapNode) Get_map(_env *LnsEnv) *LnsMap{ return self._map }
 func (self *Nodes_LiteralMapNode) Get_pairList(_env *LnsEnv) *LnsList{ return self.pairList }
 // 734: DeclConstr
-func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) {
+func (self *Nodes_LiteralMapNode) InitNodes_LiteralMapNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) {
     self.InitNodes_Node(_env, managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
     self._map = _map
     self.pairList = pairList
@@ -9487,7 +9487,7 @@ type Nodes_LiteralStringNodeMtd interface {
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
     Get_dddParam(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
@@ -9495,7 +9495,7 @@ type Nodes_LiteralStringNodeMtd interface {
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
     Get_orgParam(_env *LnsEnv) LnsAny
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_token(_env *LnsEnv) *Types_Token
     HasNilAccess(_env *LnsEnv) bool
@@ -9533,7 +9533,7 @@ func Nodes_LiteralStringNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralStringNode) ToNodes_LiteralStringNode() *Nodes_LiteralStringNode {
     return obj
 }
-func NewNodes_LiteralStringNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 LnsAny) *Nodes_LiteralStringNode {
+func NewNodes_LiteralStringNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token, arg8 LnsAny, arg9 LnsAny) *Nodes_LiteralStringNode {
     obj := &Nodes_LiteralStringNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9544,7 +9544,7 @@ func (self *Nodes_LiteralStringNode) Get_token(_env *LnsEnv) *Types_Token{ retur
 func (self *Nodes_LiteralStringNode) Get_orgParam(_env *LnsEnv) LnsAny{ return self.orgParam }
 func (self *Nodes_LiteralStringNode) Get_dddParam(_env *LnsEnv) LnsAny{ return self.dddParam }
 // 734: DeclConstr
-func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) {
+func (self *Nodes_LiteralStringNode) InitNodes_LiteralStringNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) {
     self.InitNodes_Node(_env, managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
     self.orgParam = orgParam
@@ -9566,14 +9566,14 @@ type Nodes_LiteralBoolNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_token(_env *LnsEnv) *Types_Token
     HasNilAccess(_env *LnsEnv) bool
@@ -9609,7 +9609,7 @@ func Nodes_LiteralBoolNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralBoolNode) ToNodes_LiteralBoolNode() *Nodes_LiteralBoolNode {
     return obj
 }
-func NewNodes_LiteralBoolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralBoolNode {
+func NewNodes_LiteralBoolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralBoolNode {
     obj := &Nodes_LiteralBoolNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9618,7 +9618,7 @@ func NewNodes_LiteralBoolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Type
 }
 func (self *Nodes_LiteralBoolNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
 // 734: DeclConstr
-func (self *Nodes_LiteralBoolNode) InitNodes_LiteralBoolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
+func (self *Nodes_LiteralBoolNode) InitNodes_LiteralBoolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
     self.InitNodes_Node(_env, managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
 }
@@ -9638,14 +9638,14 @@ type Nodes_LiteralSymbolNodeMtd interface {
     GetPrefix(_env *LnsEnv) LnsAny
     GetSymbolInfo(_env *LnsEnv) *LnsList
     Get_commentList(_env *LnsEnv) LnsAny
-    Get_effectivePos(_env *LnsEnv) *Types_Position
+    Get_effectivePos(_env *LnsEnv) Types_Position
     Get_expType(_env *LnsEnv) *Ast_TypeInfo
     Get_expTypeList(_env *LnsEnv) *LnsList
     Get_inTestBlock(_env *LnsEnv) bool
     Get_isLValue(_env *LnsEnv) bool
     Get_kind(_env *LnsEnv) LnsInt
     Get_macroArgFlag(_env *LnsEnv) bool
-    Get_pos(_env *LnsEnv) *Types_Position
+    Get_pos(_env *LnsEnv) Types_Position
     Get_tailComment(_env *LnsEnv) LnsAny
     Get_token(_env *LnsEnv) *Types_Token
     HasNilAccess(_env *LnsEnv) bool
@@ -9681,7 +9681,7 @@ func Nodes_LiteralSymbolNodeDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Nodes_LiteralSymbolNode) ToNodes_LiteralSymbolNode() *Nodes_LiteralSymbolNode {
     return obj
 }
-func NewNodes_LiteralSymbolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralSymbolNode {
+func NewNodes_LiteralSymbolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 Types_Position, arg4 bool, arg5 bool, arg6 *LnsList, arg7 *Types_Token) *Nodes_LiteralSymbolNode {
     obj := &Nodes_LiteralSymbolNode{}
     obj.FP = obj
     obj.Nodes_Node.FP = obj
@@ -9690,7 +9690,7 @@ func NewNodes_LiteralSymbolNode(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 *Ty
 }
 func (self *Nodes_LiteralSymbolNode) Get_token(_env *LnsEnv) *Types_Token{ return self.token }
 // 734: DeclConstr
-func (self *Nodes_LiteralSymbolNode) InitNodes_LiteralSymbolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
+func (self *Nodes_LiteralSymbolNode) InitNodes_LiteralSymbolNode(_env *LnsEnv, managerId LnsInt,id LnsInt,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) {
     self.InitNodes_Node(_env, managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
     self.token = token
 }
@@ -10703,7 +10703,7 @@ func (self *Nodes_Node) GetIdTxt(_env *LnsEnv) string {
     return _env.GetVM().String_format("%d_%d", []LnsAny{self.managerId, self.id})
 }
 // 259: decl @lune.@base.@Nodes.Node.get_effectivePos
-func (self *Nodes_Node) Get_effectivePos(_env *LnsEnv) *Types_Position {
+func (self *Nodes_Node) Get_effectivePos(_env *LnsEnv) Types_Position {
     return self.pos
 }
 // 263: decl @lune.@base.@Nodes.Node.setLValue
@@ -11615,7 +11615,7 @@ func (self *Nodes_NoneNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.NoneNode.create
-func Nodes_NoneNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_NoneNode {
+func Nodes_NoneNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_NoneNode {
     var node *Nodes_NoneNode
     node = NewNodes_NoneNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11643,7 +11643,7 @@ func (self *Nodes_ShebangNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ShebangNode.create
-func Nodes_ShebangNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) *Nodes_ShebangNode {
+func Nodes_ShebangNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,cmd string) *Nodes_ShebangNode {
     var node *Nodes_ShebangNode
     node = NewNodes_ShebangNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, cmd)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11671,7 +11671,7 @@ func (self *Nodes_ConvStatNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ConvStatNode.create
-func Nodes_ConvStatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) *Nodes_ConvStatNode {
+func Nodes_ConvStatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,txt string) *Nodes_ConvStatNode {
     var node *Nodes_ConvStatNode
     node = NewNodes_ConvStatNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, txt)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11699,7 +11699,7 @@ func (self *Nodes_BlankLineNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.BlankLineNode.create
-func Nodes_BlankLineNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) *Nodes_BlankLineNode {
+func Nodes_BlankLineNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lineNum LnsInt) *Nodes_BlankLineNode {
     var node *Nodes_BlankLineNode
     node = NewNodes_BlankLineNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, lineNum)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11727,7 +11727,7 @@ func (self *Nodes_SubfileNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.SubfileNode.create
-func Nodes_SubfileNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) *Nodes_SubfileNode {
+func Nodes_SubfileNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,usePath LnsAny) *Nodes_SubfileNode {
     var node *Nodes_SubfileNode
     node = NewNodes_SubfileNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, usePath)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11755,7 +11755,7 @@ func (self *Nodes_ImportNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ImportNode.create
-func Nodes_ImportNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) *Nodes_ImportNode {
+func Nodes_ImportNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,info *Nodes_ImportInfo) *Nodes_ImportNode {
     var node *Nodes_ImportNode
     node = NewNodes_ImportNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, info)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11783,7 +11783,7 @@ func (self *Nodes_RootNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.RootNode.create
-func Nodes_RootNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) *Nodes_RootNode {
+func Nodes_RootNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,children *LnsList,moduleScope *Ast_Scope,globalScope *Ast_Scope,useModuleMacroSet *LnsSet,moduleId *FrontInterface_ModuleId,processInfo *Ast_ProcessInfo,moduleTypeInfo *Ast_TypeInfo,provideNode LnsAny,luneHelperInfo *FrontInterface_LuneHelperInfo,nodeManager *Nodes_NodeManager,importModule2moduleInfo *LnsMap,typeId2MacroInfo *LnsMap,typeId2ClassMap *LnsMap) *Nodes_RootNode {
     var node *Nodes_RootNode
     node = NewNodes_RootNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11854,7 +11854,7 @@ func (self *Nodes_RefTypeNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.RefTypeNode.create
-func Nodes_RefTypeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) *Nodes_RefTypeNode {
+func Nodes_RefTypeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Nodes_Node,itemNodeList *LnsList,mutMode LnsAny,array string) *Nodes_RefTypeNode {
     var node *Nodes_RefTypeNode
     node = NewNodes_RefTypeNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11917,7 +11917,7 @@ func (self *Nodes_BlockNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.BlockNode.create
-func Nodes_BlockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) *Nodes_BlockNode {
+func Nodes_BlockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,blockKind LnsInt,scope *Ast_Scope,stmtList *LnsList) *Nodes_BlockNode {
     var node *Nodes_BlockNode
     node = NewNodes_BlockNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -11968,7 +11968,7 @@ func (self *Nodes_ScopeNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ScopeNode.create
-func Nodes_ScopeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) *Nodes_ScopeNode {
+func Nodes_ScopeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,scopeKind LnsInt,scope *Ast_Scope,symbolList *LnsList,block *Nodes_BlockNode) *Nodes_ScopeNode {
     var node *Nodes_ScopeNode
     node = NewNodes_ScopeNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12012,7 +12012,7 @@ func (self *Nodes_IfNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.IfNode.create
-func Nodes_IfNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_IfNode {
+func Nodes_IfNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_IfNode {
     var node *Nodes_IfNode
     node = NewNodes_IfNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, stmtList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12111,7 +12111,7 @@ func (self *Nodes_ExpListNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpListNode.create
-func Nodes_ExpListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) *Nodes_ExpListNode {
+func Nodes_ExpListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *LnsList,mRetExp LnsAny,followOn bool) *Nodes_ExpListNode {
     var node *Nodes_ExpListNode
     node = NewNodes_ExpListNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12220,7 +12220,7 @@ func (self *Nodes_SwitchNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.SwitchNode.create
-func Nodes_SwitchNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_SwitchNode {
+func Nodes_SwitchNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,exp *Nodes_Node,caseList *LnsList,_default LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_SwitchNode {
     var node *Nodes_SwitchNode
     node = NewNodes_SwitchNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, _default, caseKind, failSafeDefault)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12394,7 +12394,7 @@ func (self *Nodes_WhileNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.WhileNode.create
-func Nodes_WhileNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) *Nodes_WhileNode {
+func Nodes_WhileNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,infinit bool,block *Nodes_BlockNode) *Nodes_WhileNode {
     var node *Nodes_WhileNode
     node = NewNodes_WhileNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12548,7 +12548,7 @@ func (self *Nodes_RepeatNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.RepeatNode.create
-func Nodes_RepeatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) *Nodes_RepeatNode {
+func Nodes_RepeatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,block *Nodes_BlockNode,exp *Nodes_Node) *Nodes_RepeatNode {
     var node *Nodes_RepeatNode
     node = NewNodes_RepeatNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, block, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12617,7 +12617,7 @@ func (self *Nodes_ForNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ForNode.create
-func Nodes_ForNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) *Nodes_ForNode {
+func Nodes_ForNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,block *Nodes_BlockNode,val *Ast_SymbolInfo,init *Nodes_Node,to *Nodes_Node,delta LnsAny) *Nodes_ForNode {
     var node *Nodes_ForNode
     node = NewNodes_ForNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12722,7 +12722,7 @@ func (self *Nodes_ApplyNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ApplyNode.create
-func Nodes_ApplyNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) *Nodes_ApplyNode {
+func Nodes_ApplyNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,varList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode) *Nodes_ApplyNode {
     var node *Nodes_ApplyNode
     node = NewNodes_ApplyNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12791,7 +12791,7 @@ func (self *Nodes_ForeachNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ForeachNode.create
-func Nodes_ForeachNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) *Nodes_ForeachNode {
+func Nodes_ForeachNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode) *Nodes_ForeachNode {
     var node *Nodes_ForeachNode
     node = NewNodes_ForeachNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12860,7 +12860,7 @@ func (self *Nodes_ForsortNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ForsortNode.create
-func Nodes_ForsortNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) *Nodes_ForsortNode {
+func Nodes_ForsortNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Ast_SymbolInfo,key LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) *Nodes_ForsortNode {
     var node *Nodes_ForsortNode
     node = NewNodes_ForsortNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12929,7 +12929,7 @@ func (self *Nodes_ReturnNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ReturnNode.create
-func Nodes_ReturnNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_ReturnNode {
+func Nodes_ReturnNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_ReturnNode {
     var node *Nodes_ReturnNode
     node = NewNodes_ReturnNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -12981,7 +12981,7 @@ func (self *Nodes_BreakNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.BreakNode.create
-func Nodes_BreakNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_BreakNode {
+func Nodes_BreakNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_BreakNode {
     var node *Nodes_BreakNode
     node = NewNodes_BreakNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13013,7 +13013,7 @@ func (self *Nodes_ProvideNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ProvideNode.create
-func Nodes_ProvideNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) *Nodes_ProvideNode {
+func Nodes_ProvideNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Ast_SymbolInfo) *Nodes_ProvideNode {
     var node *Nodes_ProvideNode
     node = NewNodes_ProvideNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, symbol)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13041,7 +13041,7 @@ func (self *Nodes_ExpNewNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ExpNewNode.create
-func Nodes_ExpNewNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) *Nodes_ExpNewNode {
+func Nodes_ExpNewNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbol *Nodes_Node,ctorTypeInfo *Ast_TypeInfo,argList LnsAny) *Nodes_ExpNewNode {
     var node *Nodes_ExpNewNode
     node = NewNodes_ExpNewNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13105,7 +13105,7 @@ func (self *Nodes_ExpUnwrapNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpUnwrapNode.create
-func Nodes_ExpUnwrapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) *Nodes_ExpUnwrapNode {
+func Nodes_ExpUnwrapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,_default LnsAny) *Nodes_ExpUnwrapNode {
     var node *Nodes_ExpUnwrapNode
     node = NewNodes_ExpUnwrapNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp, _default)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13161,7 +13161,7 @@ func (self *Nodes_ExpRefNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpRefNode.create
-func Nodes_ExpRefNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) *Nodes_ExpRefNode {
+func Nodes_ExpRefNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symbolInfo *Ast_SymbolInfo) *Nodes_ExpRefNode {
     var node *Nodes_ExpRefNode
     node = NewNodes_ExpRefNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, symbolInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13218,7 +13218,7 @@ func (self *Nodes_ExpSetValNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ExpSetValNode.create
-func Nodes_ExpSetValNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) *Nodes_ExpSetValNode {
+func Nodes_ExpSetValNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp1 *Nodes_Node,exp2 *Nodes_ExpListNode,LeftSymList *LnsList,initSymSet *LnsSet) *Nodes_ExpSetValNode {
     var node *Nodes_ExpSetValNode
     node = NewNodes_ExpSetValNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13278,7 +13278,7 @@ func (self *Nodes_ExpSetItemNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ExpSetItemNode.create
-func Nodes_ExpSetItemNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) *Nodes_ExpSetItemNode {
+func Nodes_ExpSetItemNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,index LnsAny,exp2 *Nodes_Node) *Nodes_ExpSetItemNode {
     var node *Nodes_ExpSetItemNode
     node = NewNodes_ExpSetItemNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, val, index, exp2)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13338,7 +13338,7 @@ func (self *Nodes_ExpOp2Node) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpOp2Node.create
-func Nodes_ExpOp2Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) *Nodes_ExpOp2Node {
+func Nodes_ExpOp2Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,exp1 *Nodes_Node,exp2 *Nodes_Node) *Nodes_ExpOp2Node {
     var node *Nodes_ExpOp2Node
     node = NewNodes_ExpOp2Node(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13528,7 +13528,7 @@ func (self *Nodes_UnwrapSetNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.UnwrapSetNode.create
-func Nodes_UnwrapSetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) *Nodes_UnwrapSetNode {
+func Nodes_UnwrapSetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,dstExpList *Nodes_ExpListNode,srcExpList *Nodes_ExpListNode,unwrapBlock LnsAny) *Nodes_UnwrapSetNode {
     var node *Nodes_UnwrapSetNode
     node = NewNodes_UnwrapSetNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13608,7 +13608,7 @@ func (self *Nodes_IfUnwrapNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.IfUnwrapNode.create
-func Nodes_IfUnwrapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) *Nodes_IfUnwrapNode {
+func Nodes_IfUnwrapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,varSymList *LnsList,expList *Nodes_ExpListNode,block *Nodes_BlockNode,nilBlock LnsAny) *Nodes_IfUnwrapNode {
     var node *Nodes_IfUnwrapNode
     node = NewNodes_IfUnwrapNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13754,7 +13754,7 @@ func (self *Nodes_WhenNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.WhenNode.create
-func Nodes_WhenNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) *Nodes_WhenNode {
+func Nodes_WhenNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,symPairList *LnsList,block *Nodes_BlockNode,elseBlock LnsAny) *Nodes_WhenNode {
     var node *Nodes_WhenNode
     node = NewNodes_WhenNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13884,7 +13884,7 @@ func (self *Nodes_ExpCastNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpCastNode.create
-func Nodes_ExpCastNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) *Nodes_ExpCastNode {
+func Nodes_ExpCastNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node,castType *Ast_TypeInfo,castTypeNode LnsAny,castOpe string,castKind LnsInt) *Nodes_ExpCastNode {
     var node *Nodes_ExpCastNode
     node = NewNodes_ExpCastNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -13960,7 +13960,7 @@ func (self *Nodes_ExpToDDDNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpToDDDNode.create
-func Nodes_ExpToDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
+func Nodes_ExpToDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList *Nodes_ExpListNode) *Nodes_ExpToDDDNode {
     var node *Nodes_ExpToDDDNode
     node = NewNodes_ExpToDDDNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14004,7 +14004,7 @@ func (self *Nodes_ExpSubDDDNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpSubDDDNode.create
-func Nodes_ExpSubDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) *Nodes_ExpSubDDDNode {
+func Nodes_ExpSubDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node,remainIndex LnsInt) *Nodes_ExpSubDDDNode {
     var node *Nodes_ExpSubDDDNode
     node = NewNodes_ExpSubDDDNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, src, remainIndex)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14048,7 +14048,7 @@ func (self *Nodes_ExpOp1Node) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpOp1Node.create
-func Nodes_ExpOp1Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) *Nodes_ExpOp1Node {
+func Nodes_ExpOp1Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,op *Types_Token,macroMode LnsInt,exp *Nodes_Node) *Nodes_ExpOp1Node {
     var node *Nodes_ExpOp1Node
     node = NewNodes_ExpOp1Node(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14092,7 +14092,7 @@ func (self *Nodes_ExpRefItemNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpRefItemNode.create
-func Nodes_ExpRefItemNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) *Nodes_ExpRefItemNode {
+func Nodes_ExpRefItemNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,val *Nodes_Node,nilAccess bool,symbol LnsAny,index LnsAny) *Nodes_ExpRefItemNode {
     var node *Nodes_ExpRefItemNode
     node = NewNodes_ExpRefItemNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14169,7 +14169,7 @@ func (self *Nodes_ExpCallNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ExpCallNode.create
-func Nodes_ExpCallNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) *Nodes_ExpCallNode {
+func Nodes_ExpCallNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_func *Nodes_Node,errorFunc bool,nilAccess bool,argList LnsAny) *Nodes_ExpCallNode {
     var node *Nodes_ExpCallNode
     node = NewNodes_ExpCallNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, _func, errorFunc, nilAccess, argList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14216,7 +14216,7 @@ func (self *Nodes_ExpCallNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
 // 1460: decl @lune.@base.@Nodes.ExpCallNode.get_effectivePos
-func (self *Nodes_ExpCallNode) Get_effectivePos(_env *LnsEnv) *Types_Position {
+func (self *Nodes_ExpCallNode) Get_effectivePos(_env *LnsEnv) Types_Position {
     return self._func.FP.Get_effectivePos(_env)
 }
 // 1463: decl @lune.@base.@Nodes.ExpCallNode.getPrefix
@@ -14259,7 +14259,7 @@ func (self *Nodes_ExpMRetNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpMRetNode.create
-func Nodes_ExpMRetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) *Nodes_ExpMRetNode {
+func Nodes_ExpMRetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node) *Nodes_ExpMRetNode {
     var node *Nodes_ExpMRetNode
     node = NewNodes_ExpMRetNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, mRet)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14307,7 +14307,7 @@ func (self *Nodes_ExpAccessMRetNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpAccessMRetNode.create
-func Nodes_ExpAccessMRetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) *Nodes_ExpAccessMRetNode {
+func Nodes_ExpAccessMRetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mRet *Nodes_Node,index LnsInt) *Nodes_ExpAccessMRetNode {
     var node *Nodes_ExpAccessMRetNode
     node = NewNodes_ExpAccessMRetNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, mRet, index)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14355,7 +14355,7 @@ func (self *Nodes_ExpMultiTo1Node) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpMultiTo1Node.create
-func Nodes_ExpMultiTo1Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMultiTo1Node {
+func Nodes_ExpMultiTo1Node_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMultiTo1Node {
     var node *Nodes_ExpMultiTo1Node
     node = NewNodes_ExpMultiTo1Node(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14403,7 +14403,7 @@ func (self *Nodes_ExpParenNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpParenNode.create
-func Nodes_ExpParenNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpParenNode {
+func Nodes_ExpParenNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpParenNode {
     var node *Nodes_ExpParenNode
     node = NewNodes_ExpParenNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14451,7 +14451,7 @@ func (self *Nodes_ExpMacroExpNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ExpMacroExpNode.create
-func Nodes_ExpMacroExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) *Nodes_ExpMacroExpNode {
+func Nodes_ExpMacroExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,macroType *Ast_TypeInfo,stmtList *LnsList) *Nodes_ExpMacroExpNode {
     var node *Nodes_ExpMacroExpNode
     node = NewNodes_ExpMacroExpNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14506,7 +14506,7 @@ func (self *Nodes_ExpMacroStatNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpMacroStatNode.create
-func Nodes_ExpMacroStatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) *Nodes_ExpMacroStatNode {
+func Nodes_ExpMacroStatNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expStrList *LnsList) *Nodes_ExpMacroStatNode {
     var node *Nodes_ExpMacroStatNode
     node = NewNodes_ExpMacroStatNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, expStrList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14574,7 +14574,7 @@ func (self *Nodes_ExpMacroArgExpNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpMacroArgExpNode.create
-func Nodes_ExpMacroArgExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) *Nodes_ExpMacroArgExpNode {
+func Nodes_ExpMacroArgExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,codeTxt string) *Nodes_ExpMacroArgExpNode {
     var node *Nodes_ExpMacroArgExpNode
     node = NewNodes_ExpMacroArgExpNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, codeTxt)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14602,7 +14602,7 @@ func (self *Nodes_StmtExpNode) CanBeLeft(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.StmtExpNode.create
-func Nodes_StmtExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_StmtExpNode {
+func Nodes_StmtExpNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_StmtExpNode {
     var node *Nodes_StmtExpNode
     node = NewNodes_StmtExpNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14654,7 +14654,7 @@ func (self *Nodes_ExpMacroStatListNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpMacroStatListNode.create
-func Nodes_ExpMacroStatListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMacroStatListNode {
+func Nodes_ExpMacroStatListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_ExpMacroStatListNode {
     var node *Nodes_ExpMacroStatListNode
     node = NewNodes_ExpMacroStatListNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14698,7 +14698,7 @@ func (self *Nodes_ExpOmitEnumNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.ExpOmitEnumNode.create
-func Nodes_ExpOmitEnumNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
+func Nodes_ExpOmitEnumNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,valToken *Types_Token,valInfo *Ast_EnumValInfo,aliasType LnsAny,enumTypeInfo *Ast_EnumTypeInfo) *Nodes_ExpOmitEnumNode {
     var node *Nodes_ExpOmitEnumNode
     node = NewNodes_ExpOmitEnumNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14736,7 +14736,7 @@ func (self *Nodes_RefFieldNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.RefFieldNode.create
-func Nodes_RefFieldNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) *Nodes_RefFieldNode {
+func Nodes_RefFieldNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node) *Nodes_RefFieldNode {
     var node *Nodes_RefFieldNode
     node = NewNodes_RefFieldNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14763,7 +14763,7 @@ func (self *Nodes_RefFieldNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,de
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
 // 1579: decl @lune.@base.@Nodes.RefFieldNode.get_effectivePos
-func (self *Nodes_RefFieldNode) Get_effectivePos(_env *LnsEnv) *Types_Position {
+func (self *Nodes_RefFieldNode) Get_effectivePos(_env *LnsEnv) Types_Position {
     return self.field.Pos
 }
 // 1582: decl @lune.@base.@Nodes.RefFieldNode.getPrefix
@@ -14859,7 +14859,7 @@ func (self *Nodes_GetFieldNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.GetFieldNode.create
-func Nodes_GetFieldNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) *Nodes_GetFieldNode {
+func Nodes_GetFieldNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,field *Types_Token,symbolInfo LnsAny,nilAccess bool,prefix *Nodes_Node,getterTypeInfo *Ast_TypeInfo) *Nodes_GetFieldNode {
     var node *Nodes_GetFieldNode
     node = NewNodes_GetFieldNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14886,7 +14886,7 @@ func (self *Nodes_GetFieldNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,de
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
 // 1618: decl @lune.@base.@Nodes.GetFieldNode.get_effectivePos
-func (self *Nodes_GetFieldNode) Get_effectivePos(_env *LnsEnv) *Types_Position {
+func (self *Nodes_GetFieldNode) Get_effectivePos(_env *LnsEnv) Types_Position {
     return self.field.Pos
 }
 // 1621: decl @lune.@base.@Nodes.GetFieldNode.getPrefix
@@ -14911,7 +14911,7 @@ func (self *Nodes_AliasNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.AliasNode.create
-func Nodes_AliasNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) *Nodes_AliasNode {
+func Nodes_AliasNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,newSymbol *Ast_SymbolInfo,srcNode *Nodes_Node,typeInfo *Ast_TypeInfo) *Nodes_AliasNode {
     var node *Nodes_AliasNode
     node = NewNodes_AliasNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -14955,7 +14955,7 @@ func (self *Nodes_DeclVarNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclVarNode.create
-func Nodes_DeclVarNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) *Nodes_DeclVarNode {
+func Nodes_DeclVarNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,mode LnsInt,accessMode LnsInt,staticFlag bool,varList *LnsList,expList LnsAny,symbolInfoList *LnsList,typeInfoList *LnsList,unwrapFlag bool,unwrapBlock LnsAny,thenBlock LnsAny,syncVarList *LnsList,syncBlock LnsAny) *Nodes_DeclVarNode {
     var node *Nodes_DeclVarNode
     node = NewNodes_DeclVarNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15202,7 +15202,7 @@ func (self *Nodes_DeclFormNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclFormNode.create
-func Nodes_DeclFormNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFormNode {
+func Nodes_DeclFormNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFormNode {
     var node *Nodes_DeclFormNode
     node = NewNodes_DeclFormNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15272,7 +15272,7 @@ func (self *Nodes_DeclFuncNode) CanBeLeft(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.DeclFuncNode.create
-func Nodes_DeclFuncNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
+func Nodes_DeclFuncNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclFuncNode {
     var node *Nodes_DeclFuncNode
     node = NewNodes_DeclFuncNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15358,7 +15358,7 @@ func (self *Nodes_DeclMethodNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclMethodNode.create
-func Nodes_DeclMethodNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
+func Nodes_DeclMethodNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclMethodNode {
     var node *Nodes_DeclMethodNode
     node = NewNodes_DeclMethodNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15436,7 +15436,7 @@ func (self *Nodes_ProtoMethodNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ProtoMethodNode.create
-func Nodes_ProtoMethodNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
+func Nodes_ProtoMethodNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_ProtoMethodNode {
     var node *Nodes_ProtoMethodNode
     node = NewNodes_ProtoMethodNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15514,7 +15514,7 @@ func (self *Nodes_DeclConstrNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclConstrNode.create
-func Nodes_DeclConstrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
+func Nodes_DeclConstrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclConstrNode {
     var node *Nodes_DeclConstrNode
     node = NewNodes_DeclConstrNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15592,7 +15592,7 @@ func (self *Nodes_DeclDestrNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclDestrNode.create
-func Nodes_DeclDestrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
+func Nodes_DeclDestrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclFuncInfo) *Nodes_DeclDestrNode {
     var node *Nodes_DeclDestrNode
     node = NewNodes_DeclDestrNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15670,7 +15670,7 @@ func (self *Nodes_ExpCallSuperCtorNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ExpCallSuperCtorNode.create
-func Nodes_ExpCallSuperCtorNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperCtorNode {
+func Nodes_ExpCallSuperCtorNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperCtorNode {
     var node *Nodes_ExpCallSuperCtorNode
     node = NewNodes_ExpCallSuperCtorNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15714,7 +15714,7 @@ func (self *Nodes_ExpCallSuperNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ExpCallSuperNode.create
-func Nodes_ExpCallSuperNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperNode {
+func Nodes_ExpCallSuperNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,superType *Ast_TypeInfo,methodType *Ast_TypeInfo,expList LnsAny) *Nodes_ExpCallSuperNode {
     var node *Nodes_ExpCallSuperNode
     node = NewNodes_ExpCallSuperNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15766,7 +15766,7 @@ func (self *Nodes_AsyncLockNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.AsyncLockNode.create
-func Nodes_AsyncLockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) *Nodes_AsyncLockNode {
+func Nodes_AsyncLockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,lockKind LnsInt,block *Nodes_BlockNode) *Nodes_AsyncLockNode {
     var node *Nodes_AsyncLockNode
     node = NewNodes_AsyncLockNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, lockKind, block)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15810,7 +15810,7 @@ func (self *Nodes_RequestNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.RequestNode.create
-func Nodes_RequestNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,processor *Nodes_Node,exp *Nodes_Node) *Nodes_RequestNode {
+func Nodes_RequestNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,processor *Nodes_Node,exp *Nodes_Node) *Nodes_RequestNode {
     var node *Nodes_RequestNode
     node = NewNodes_RequestNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, processor, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15870,7 +15870,7 @@ func (self *Nodes_DeclMemberNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclMemberNode.create
-func Nodes_DeclMemberNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) *Nodes_DeclMemberNode {
+func Nodes_DeclMemberNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,refType *Nodes_RefTypeNode,symbolInfo *Ast_SymbolInfo,classType *Ast_TypeInfo,staticFlag bool,accessMode LnsInt,getterMutable bool,getterMode LnsInt,getterToken LnsAny,getterRetType *Ast_TypeInfo,setterMode LnsInt,setterToken LnsAny) *Nodes_DeclMemberNode {
     var node *Nodes_DeclMemberNode
     node = NewNodes_DeclMemberNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15930,7 +15930,7 @@ func (self *Nodes_DeclArgNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.DeclArgNode.create
-func Nodes_DeclArgNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) *Nodes_DeclArgNode {
+func Nodes_DeclArgNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,symbolInfo *Ast_SymbolInfo,argType LnsAny) *Nodes_DeclArgNode {
     var node *Nodes_DeclArgNode
     node = NewNodes_DeclArgNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -15978,7 +15978,7 @@ func (self *Nodes_DeclArgDDDNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.DeclArgDDDNode.create
-func Nodes_DeclArgDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_DeclArgDDDNode {
+func Nodes_DeclArgDDDNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_DeclArgDDDNode {
     var node *Nodes_DeclArgDDDNode
     node = NewNodes_DeclArgDDDNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16006,7 +16006,7 @@ func (self *Nodes_DeclAdvertiseNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.DeclAdvertiseNode.create
-func Nodes_DeclAdvertiseNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
+func Nodes_DeclAdvertiseNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,advInfo *Nodes_AdvertiseInfo) *Nodes_DeclAdvertiseNode {
     var node *Nodes_DeclAdvertiseNode
     node = NewNodes_DeclAdvertiseNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, advInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16071,7 +16071,7 @@ func (self *Nodes_ProtoClassNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.ProtoClassNode.create
-func Nodes_ProtoClassNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) *Nodes_ProtoClassNode {
+func Nodes_ProtoClassNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo) *Nodes_ProtoClassNode {
     var node *Nodes_ProtoClassNode
     node = NewNodes_ProtoClassNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16103,7 +16103,7 @@ func (self *Nodes_DeclClassNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclClassNode.create
-func Nodes_DeclClassNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) *Nodes_DeclClassNode {
+func Nodes_DeclClassNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,name *Types_Token,inheritInfo *Nodes_ClassInheritInfo,hasPrototype bool,gluePrefix LnsAny,moduleName LnsAny,lang LnsAny,lazyLoad LnsInt,hasOldCtor bool,allStmtList *LnsList,declStmtList *LnsList,fieldList *LnsList,memberList *LnsList,scope *Ast_Scope,initBlock *Nodes_ClassInitBlockInfo,advertiseList *LnsList,trustList *LnsList,uninitMemberList *LnsList,outerMethodSet *LnsSet) *Nodes_DeclClassNode {
     var node *Nodes_DeclClassNode
     node = NewNodes_DeclClassNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16264,7 +16264,7 @@ func (self *Nodes_DeclEnumNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclEnumNode.create
-func Nodes_DeclEnumNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) *Nodes_DeclEnumNode {
+func Nodes_DeclEnumNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,enumType *Ast_EnumTypeInfo,accessMode LnsInt,name *Types_Token,valueNameList *LnsList,scope *Ast_Scope) *Nodes_DeclEnumNode {
     var node *Nodes_DeclEnumNode
     node = NewNodes_DeclEnumNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16292,7 +16292,7 @@ func (self *Nodes_DeclAlgeNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclAlgeNode.create
-func Nodes_DeclAlgeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) *Nodes_DeclAlgeNode {
+func Nodes_DeclAlgeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,accessMode LnsInt,algeType *Ast_AlgeTypeInfo,name *Types_Token,algeValList *LnsList,scope *Ast_Scope) *Nodes_DeclAlgeNode {
     var node *Nodes_DeclAlgeNode
     node = NewNodes_DeclAlgeNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16342,7 +16342,7 @@ func (self *Nodes_NewAlgeValNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.NewAlgeValNode.create
-func Nodes_NewAlgeValNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) *Nodes_NewAlgeValNode {
+func Nodes_NewAlgeValNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,prefix LnsAny,algeTypeInfo *Ast_AlgeTypeInfo,valInfo *Ast_AlgeValInfo,paramList *LnsList) *Nodes_NewAlgeValNode {
     var node *Nodes_NewAlgeValNode
     node = NewNodes_NewAlgeValNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16409,7 +16409,7 @@ func (self *Nodes_LuneControlNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.LuneControlNode.create
-func Nodes_LuneControlNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) *Nodes_LuneControlNode {
+func Nodes_LuneControlNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,pragma LnsAny) *Nodes_LuneControlNode {
     var node *Nodes_LuneControlNode
     node = NewNodes_LuneControlNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, pragma)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16437,7 +16437,7 @@ func (self *Nodes_MatchNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.MatchNode.create
-func Nodes_MatchNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_MatchNode {
+func Nodes_MatchNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,idInNS LnsInt,val *Nodes_Node,algeTypeInfo *Ast_AlgeTypeInfo,caseList *LnsList,defaultBlock LnsAny,caseKind LnsInt,failSafeDefault bool) *Nodes_MatchNode {
     var node *Nodes_MatchNode
     node = NewNodes_MatchNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16611,7 +16611,7 @@ func (self *Nodes_LuneKindNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LuneKindNode.create
-func Nodes_LuneKindNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_LuneKindNode {
+func Nodes_LuneKindNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,exp *Nodes_Node) *Nodes_LuneKindNode {
     var node *Nodes_LuneKindNode
     node = NewNodes_LuneKindNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, exp)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16655,7 +16655,7 @@ func (self *Nodes_DeclMacroNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.DeclMacroNode.create
-func Nodes_DeclMacroNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
+func Nodes_DeclMacroNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,declInfo *Nodes_DeclMacroInfo) *Nodes_DeclMacroNode {
     var node *Nodes_DeclMacroNode
     node = NewNodes_DeclMacroNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, declInfo)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16683,7 +16683,7 @@ func (self *Nodes_TestCaseNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.TestCaseNode.create
-func Nodes_TestCaseNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) *Nodes_TestCaseNode {
+func Nodes_TestCaseNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,name *Types_Token,impNode *Nodes_Node,ctrlName string,block *Nodes_BlockNode) *Nodes_TestCaseNode {
     var node *Nodes_TestCaseNode
     node = NewNodes_TestCaseNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16743,7 +16743,7 @@ func (self *Nodes_TestBlockNode) CanBeStatement(_env *LnsEnv) bool {
     return true
 }
 // 740: decl @lune.@base.@Nodes.TestBlockNode.create
-func Nodes_TestBlockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_TestBlockNode {
+func Nodes_TestBlockNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,stmtList *LnsList) *Nodes_TestBlockNode {
     var node *Nodes_TestBlockNode
     node = NewNodes_TestBlockNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, stmtList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16773,7 +16773,7 @@ func (self *Nodes_TestBlockNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,d
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
 // 2169: decl @lune.@base.@Nodes.TestBlockNode.isInnerPos
-func (self *Nodes_TestBlockNode) IsInnerPos(_env *LnsEnv, pos *Types_Position) bool {
+func (self *Nodes_TestBlockNode) IsInnerPos(_env *LnsEnv, pos Types_Position) bool {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( self.FP.Get_pos(_env).StreamName == pos.StreamName) &&
         _env.SetStackVal( self.FP.Get_pos(_env).LineNo < pos.LineNo) &&
@@ -16801,7 +16801,7 @@ func (self *Nodes_AbbrNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.AbbrNode.create
-func Nodes_AbbrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_AbbrNode {
+func Nodes_AbbrNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_AbbrNode {
     var node *Nodes_AbbrNode
     node = NewNodes_AbbrNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16829,7 +16829,7 @@ func (self *Nodes_BoxingNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.BoxingNode.create
-func Nodes_BoxingNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_BoxingNode {
+func Nodes_BoxingNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_BoxingNode {
     var node *Nodes_BoxingNode
     node = NewNodes_BoxingNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, src)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16873,7 +16873,7 @@ func (self *Nodes_UnboxingNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.UnboxingNode.create
-func Nodes_UnboxingNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_UnboxingNode {
+func Nodes_UnboxingNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,src *Nodes_Node) *Nodes_UnboxingNode {
     var node *Nodes_UnboxingNode
     node = NewNodes_UnboxingNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, src)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16917,7 +16917,7 @@ func (self *Nodes_LiteralNilNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralNilNode.create
-func Nodes_LiteralNilNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_LiteralNilNode {
+func Nodes_LiteralNilNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList) *Nodes_LiteralNilNode {
     var node *Nodes_LiteralNilNode
     node = NewNodes_LiteralNilNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16954,7 +16954,7 @@ func (self *Nodes_LiteralCharNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralCharNode.create
-func Nodes_LiteralCharNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralCharNode {
+func Nodes_LiteralCharNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralCharNode {
     var node *Nodes_LiteralCharNode
     node = NewNodes_LiteralCharNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, token, num)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -16991,7 +16991,7 @@ func (self *Nodes_LiteralIntNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralIntNode.create
-func Nodes_LiteralIntNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralIntNode {
+func Nodes_LiteralIntNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsInt) *Nodes_LiteralIntNode {
     var node *Nodes_LiteralIntNode
     node = NewNodes_LiteralIntNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, token, num)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17028,7 +17028,7 @@ func (self *Nodes_LiteralRealNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralRealNode.create
-func Nodes_LiteralRealNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) *Nodes_LiteralRealNode {
+func Nodes_LiteralRealNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,num LnsReal) *Nodes_LiteralRealNode {
     var node *Nodes_LiteralRealNode
     node = NewNodes_LiteralRealNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, token, num)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17065,7 +17065,7 @@ func (self *Nodes_LiteralArrayNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralArrayNode.create
-func Nodes_LiteralArrayNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralArrayNode {
+func Nodes_LiteralArrayNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralArrayNode {
     var node *Nodes_LiteralArrayNode
     node = NewNodes_LiteralArrayNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17159,7 +17159,7 @@ func (self *Nodes_LiteralListNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralListNode.create
-func Nodes_LiteralListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralListNode {
+func Nodes_LiteralListNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralListNode {
     var node *Nodes_LiteralListNode
     node = NewNodes_LiteralListNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17253,7 +17253,7 @@ func (self *Nodes_LiteralSetNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralSetNode.create
-func Nodes_LiteralSetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralSetNode {
+func Nodes_LiteralSetNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,expList LnsAny) *Nodes_LiteralSetNode {
     var node *Nodes_LiteralSetNode
     node = NewNodes_LiteralSetNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, expList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17347,7 +17347,7 @@ func (self *Nodes_LiteralMapNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralMapNode.create
-func Nodes_LiteralMapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) *Nodes_LiteralMapNode {
+func Nodes_LiteralMapNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,_map *LnsMap,pairList *LnsList) *Nodes_LiteralMapNode {
     var node *Nodes_LiteralMapNode
     node = NewNodes_LiteralMapNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, _map, pairList)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17489,7 +17489,7 @@ func (self *Nodes_LiteralStringNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralStringNode.create
-func Nodes_LiteralStringNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) *Nodes_LiteralStringNode {
+func Nodes_LiteralStringNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token,orgParam LnsAny,dddParam LnsAny) *Nodes_LiteralStringNode {
     var node *Nodes_LiteralStringNode
     node = NewNodes_LiteralStringNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17614,7 +17614,7 @@ func (self *Nodes_LiteralBoolNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralBoolNode.create
-func Nodes_LiteralBoolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralBoolNode {
+func Nodes_LiteralBoolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralBoolNode {
     var node *Nodes_LiteralBoolNode
     node = NewNodes_LiteralBoolNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, token)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)
@@ -17651,7 +17651,7 @@ func (self *Nodes_LiteralSymbolNode) CanBeStatement(_env *LnsEnv) bool {
     return false
 }
 // 740: decl @lune.@base.@Nodes.LiteralSymbolNode.create
-func Nodes_LiteralSymbolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos *Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralSymbolNode {
+func Nodes_LiteralSymbolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Position,inTestBlock bool,macroArgFlag bool,typeList *LnsList,token *Types_Token) *Nodes_LiteralSymbolNode {
     var node *Nodes_LiteralSymbolNode
     node = NewNodes_LiteralSymbolNode(_env, nodeMan.FP.Get_managerId(_env), nodeMan.FP.NextId(_env), pos, inTestBlock, macroArgFlag, typeList, token)
     nodeMan.FP.AddNode(_env, &node.Nodes_Node)

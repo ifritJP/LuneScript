@@ -89,8 +89,10 @@ pub class LuneHelperInfo {
    pub let mut useLazyLoad:bool;
    pub let mut useLazyRequire:bool;
    pub let mut useRun:bool;
+   pub let mut useStrReplace:bool;
 
    pub fn __init() {
+      self.useStrReplace = false;
       self.useNilAccess = false;
       self.useUnwrapExp = false;
       self.hasMappingClassDef = false;
@@ -122,6 +124,7 @@ pub class LuneHelperInfo {
       _mergeBool( useLazyLoad );
       _mergeBool( useLazyRequire );
       _mergeBool( useRun );
+      _mergeBool( useStrReplace );
       foreach val in src.pragmaSet {
          self.pragmaSet.add( val );
       }

@@ -158,25 +158,37 @@ func Lns_IsNil(val LnsAny) bool {
 	if val == nil {
 		return true
 	}
-	switch val.(type) {
-	case LnsInt:
-		return false
-	case LnsReal:
-		return false
-	case bool:
-		return false
-	case string:
-		return false
-	default:
-		value := reflect.ValueOf(val)
-		if value.Kind() == reflect.Struct {
-			return false
-		}
-		// if value.Kind() == reflect.Func {
-		// 	return false
-		// }
-		return value.IsNil()
-	}
+	// switch val.(type) {
+	// case LnsInt:
+	// 	return false
+	// case LnsReal:
+	// 	return false
+	// case bool:
+	// 	return false
+	// case string:
+	// 	return false
+	// default:
+	// 	value := reflect.ValueOf(val)
+	// 	if value.Kind() == reflect.Struct {
+	// 		return false
+	// 	}
+	// 	return value.IsNil()
+	// }
+    value := reflect.ValueOf(val)
+    switch value.Kind() {
+    case reflect.Int:
+        return false
+    case reflect.Float64:
+        return false
+    case reflect.Bool:
+        return false
+    case reflect.String:
+        return false
+    case reflect.Struct:
+        return false
+    default:
+        return value.IsNil()
+    }
 }
 
 func Lns_type(val LnsAny) string {
