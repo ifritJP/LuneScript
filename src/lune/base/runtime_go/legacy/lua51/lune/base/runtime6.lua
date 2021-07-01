@@ -349,4 +349,29 @@ function _lune._lazyRequire( modName )
     return mod
   end
 end
+function _lune._run( runner, mod )
+    if mod == 2 then
+      return false
+    end
+    runner:run()
+    return true
+end
+function _lune.replace( txt, src, dst )
+   local result = ""
+   local index = 1
+   while index <= #txt do
+      local findIndex = string.find( txt, src, index, true )
+      if not findIndex then
+         result = result .. string.sub( txt, index )
+         break
+      end
+      if findIndex ~= index then
+         result = result .. (string.sub( txt, index, findIndex - 1 ) .. dst)
+      else
+         result = result .. dst
+      end
+      index = findIndex + #src
+   end
+   return result
+end
 return _lune
