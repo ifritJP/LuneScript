@@ -1523,12 +1523,12 @@ class Test_ccc {
 }
 {
    Macro._section();
-   macro _test0( name:str, val:int ) {
+   macro _test__var0( name:str, val:int ) {
       {
          __var[ name ] = val;
       }
    }
-   macro _test1() {
+   macro _test__var1() {
       {
          let val;
          if! let work = __var[ "hoge" ] {
@@ -1540,10 +1540,10 @@ class Test_ccc {
       }
       print( "%s" (,,val) );
    }
-   _test0( "hogea", 1 );
-   _test1();
-   _test0( "hoge", 1 );
-   _test1();
+   _test__var0( "hogea", 1 );
+   _test__var1();
+   _test__var0( "hoge", 1 );
+   _test__var1();
 }
 {
    Macro._section();
@@ -1998,7 +1998,7 @@ _ = 1;
       paramList.remove( index );
       list.insert( new Hoge( val ) );
    }
-   list.sort( fn ( val1:Hoge, val2:Hoge): bool {
+   list.sort( fn ( val1:&Hoge, val2:&Hoge): bool {
       return val1.$val < val2.$val;
    });
    foreach val in list {

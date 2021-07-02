@@ -1,0 +1,2596 @@
+test/Sub2.lns:78:7: warning: This 'match' has full case. This 'default' is no reach.
+test/start.lns:52:27: warning: this value never be 'false'
+test/start.lns:52:27: warning: this value never be 'false'
+test/start.lns:52:27: warning: this value never be 'false'
+test/start.lns:53:19: warning: this value never be 'false'
+test/start.lns:53:19: warning: this value never be 'false'
+test/start.lns:54:19: warning: this value never be 'false'
+test/start.lns:54:33: warning: this value never be 'false'
+test/start.lns:55:19: warning: this value never be 'false'
+test/start.lns:56:19: warning: this value never be 'false' -- int
+test/start.lns:56:25: warning: this value never be 'false'
+test/start.lns:56:25: warning: this value never be 'false'
+test/start.lns:57:19: warning: this value never be 'false' -- int
+test/start.lns:57:25: warning: this value never be 'false'
+test/start.lns:58:19: warning: this value never be 'false' -- int
+test/start.lns:58:33: warning: this value never be 'false'
+test/start.lns:59:19: warning: this value never be 'false' -- int
+test/start.lns:189:1: (test/start.lns:189:1: (macro _symboltest):186:23): warning: format: 00000:use '##', instate of '...'.
+test/start.lns:251:4: warning: has no nilable
+test/start.lns:263:4: warning: has no nilable
+test/start.lns:271:7: warning: 'hoge1' var isn't accessed
+test/start.lns:272:7: warning: 'hoge2' var isn't accessed
+test/start.lns:300:8: warning: 'test' var isn't accessed
+test/start.lns:305:12: warning: This symbol has no referer -- val1
+test/start.lns:305:18: warning: This symbol has no referer -- val2
+test/start.lns:330:4: warning: remove: 00000:use '##', instate of 'int!'.
+test/start.lns:339:11: warning: 'val2' var isn't accessed
+test/start.lns:356:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:358:8: warning: 'classAA' var isn't accessed
+test/start.lns:364:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:391:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:393:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:395:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:397:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:411:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:417:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:418:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:442:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:443:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:456:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:467:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:469:4: warning: 'val2' var isn't accessed
+test/start.lns:473:7: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:483:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:484:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:488:12: warning: 'val' var isn't accessed
+test/start.lns:561:10: warning: 'inner' var isn't accessed
+test/start.lns:585:4: warning: func2: 00000:use '##', instate of 'int!'.
+test/start.lns:590:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:591:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:592:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:593:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:594:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:595:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:597:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:598:1: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:624:32: warning: open: 00000:use '##', instate of 'str!'.
+test/start.lns:627:27: warning: Luaval<form>: 00000:use '##', instate of '...<Luaval<stem>!>'.
+test/start.lns:627:27: warning: _load: 00000:use '##', instate of 'stem!'.
+test/start.lns:655:7: warning: 'sub' var isn't accessed
+test/start.lns:659:11: warning: 'val3' var isn't accessed
+test/start.lns:665:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:666:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:667:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:686:7: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:715:53: warning: sub: 00000:use '##', instate of 'int!'.
+test/start.lns:732:4: warning: print: use '**' at arg(2). stem! <- int
+test/start.lns:821:4: warning: print: use '**' at arg(2). stem! <- int!
+test/start.lns:822:4: warning: print: use '**' at arg(2). stem! <- int!
+test/start.lns:823:4: warning: print: use '**' at arg(2). stem! <- int!
+test/start.lns:924:8: warning: 'test2' var isn't accessed
+test/start.lns:930:8: warning: 'test4' var isn't accessed
+test/start.lns:1006:8: warning: 'val2' var isn't accessed
+test/start.lns:1184:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:1185:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:1192:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:1193:4: warning: _print: 00000:use '##', instate of 'str!'.
+test/start.lns:1374:4: warning: print: 00000:use '##', instate of '&...'.
+test/start.lns:1510:8: warning: 'hogeAA' var isn't accessed
+test/start.lns:1522:8: warning: 'hogeAA' var isn't accessed
+test/start.lns:1574:4: (test/start.lns:1574:4: (macro _test5):1571:11): warning: 'test' var isn't accessed
+test/start.lns:1580:4: (test/start.lns:1580:4: (macro _hoge):1577:11): warning: 'foo' var isn't accessed
+test/start.lns:1657:14: (macroVal val:2:4): warning: has no nilable
+test/start.lns:1659:10: warning: has no nilable
+test/start.lns:1929:13: warning: 'valName' var isn't accessed
+test/Sub2.lns:78:7: warning: This 'match' has full case. This 'default' is no reach.
+2
+sub2globalfun	1
+enumTestSub.val3	2	12
+enumTestSub.val3	2	enumTestSub.val3
+enumTestSub.val3	2	enumTestSub.val3
+Sub3.func() 1
+Sub4() 2
+Sub3_2: 1
+abc20ab
+32
+A	1
+B	2
+C	3
+classB.sub	1
+1	1
+@test.@Sub5.SubSub.func	100
+@test.@Sub5.Super.func	100	1
+1001
+@test.@Sub6	@test.@Sub6.Test.func
+Super:__func__(): 100
+Test:__free(): 10
+Super:__func__(): 100
+Sub:__free(): 30
+Test:__free(): 10
+Super:__func__(): 100
+Sub:__free(): 30
+Super:__func__(): 100
+Sub10
+11
+12
+12
+classB.func()	123
+classB.sub()	123
+Hoge.func()	2
+Hoge.func()	10
+1
+2
+3
+1210
+1
+op	table	table
+op	3.0	3.0
+op	2	2
+op	2	2
+op	1	1
+op	1	1
+op	1	1
+op	1	1
+hoge	1
+hoge	2
+foo	3
+bar	4
+3	3
+0	0
+macro hoge
+hello 1 print
+--funcxx--
+macro test2
+--stat--
+macro stat
+--stat2--
+hoge 1
+hoge 2
+hoge 3
+hoge 4
+hoge 5
+hoge 6
+hoge 7
+hoge 8
+hoge 9
+hoge 10
+--stat3--
+foo 1
+foo 2
+foo 3
+foo 4
+--symbol1--
+mfunc1	10
+--stat4--
+mfunc1	100
+mfunc1	mfunc2
+mfunc1	mfunc1
+1	1000	2000
+2
+3
+1
+2
+189	test
+
+100
+200	1
+2 = 2, 3 = 3, 4 = 4
+123 = 123, -456 = -456
+567 = 567, 890 = 890
+3 = 3, 4 = 4
+3 = 3, 4 = 4
+3 = 3, 4 = 4
+3 = 3, 4 = 4
+30 = 30, 40 = 40
+nil
+1	not nil
+OK
+OK	1	2
+1	1
+3	3.3333333333333	3
+val = 1
+macro ClassAA.$val 1
+func1	100
+func2	10
+func2	30
+macro SUB2.External.val 30
+macro foo.bar$.baz 1
+macro foo.ba$.baz nil
+macro foo.bar$.hoge$[1] a
+macro foo.ba$.hoge$[1] nil
+macro foo.bar$.sage$[1] x
+macro foo.ba$.sage$[1] nil
+macro test$.func$() 1
+macro test2$.func$() nil
+nil
+macro funcnil$( nil ) 1
+macro funcnil$( 1 ) nil
+macro test.func() 1
+macro val1 3
+macro val2 4
+macro testEE.func1() 3
+macro testEE.func2() 102
+{"hoge": [{"foo": "bar"}]}
+macro val 4081
+macro enumTest.val4 12
+macro val.$_txt enumTest.val1
+macro val.$_txt enumTest.val2
+macro val.$_txt enumTest.val3
+macro val.$_txt enumTest.val4
+macro enumTest2.val4 13.0
+macro val3 enumTest.val1
+1
+2	3	4
+TEST2.sub()
+0
+1
+ok
+testenum	1	101
+@test.@start.TestDest.__init
+__free(): 1000 @test.@start.TestDest.__free
+func1: 10, abc, 3
+func2: 100, 2, nil, nil, nil(0) 
+func2: 100, 2, 3, 4, xyz(3) 
+macro "%X" (0x1 & 0x3 ) 1
+macro "%X" (0x1 | 0x2 ) 3
+macro "%X" (0x1 ~ 0x3 ) 2
+macro "%X" (0x10 |>> 2 ) 4
+macro "%X" (0x1 |<< 2 ) 4
+macro "%X" (~2 ) FFFFFFFFFFFFFFFD
+macro __mod__ @test.@start
+macro __line__ 598
+.val1	0
+.val2	1.0
+.val3	abc
+.val4.val1.test	hoge
+.val5	xyz
+.val6.XXX.1.val1.test	hoge
+0	1.0	abc
+test	hoge
+val1	number
+val2	number
+val3	string
+val4	table
+val5	string
+val6	table
+false	val.1.2.foo
+@test.@funcSym.Data.sub	100
+@test.@funcSym.Super.func	abc
+@test.@funcSym.Super.func	1
+11
+abcABC
+abcxyz	11
+abcxyz	ABCXYZ
+@test.@funcSym.SubSub.foo
+@test.@funcSym.Sub2.bar
+Sub3Sub3	@test.@funcSym.Sub3.func
+Sub32	@test.@funcSym.Sub32.func
+int	number
+str	string
+245	11	abcxyz
+@test.@funcSym.test
+@test.@funcSym.test.func
+@test.@funcSym.main.<anonymous>
+@test.@funcSym.Hoge.test
+0
+-----	620	-----
+abc	ABC
+100	number
+macro func__c( 1, 2 ) 3
+macro func__c( nil, 2 ) 0
+macro func__c( 1, nil ) 0
+test
+macro testfunc( val ) + 2 15
+-----	690	-----
+1 "1"
+2 "2"
+3 "3"
+4 "4"
+5 "5"
+6 "6"
+7 "7"
+8 "8"
+9 "9"
+10 "10"
+-----	718	-----
+10	1	2	3	4
+1	2	3
+1	2	3
+AlgeTest.Val1	1
+763	Val1
+AlgeTest.Val2	2
+AlgeTest.Val3	13
+AlgeTest.Val4	14	abcX
+AlgeTest.Val5
+AlgeTest.Val5
+AlgeTest.Val3	15
+-----	774	-----
+1
+xyzabc123	abc	123
+HOGE	123
+enumTestSub.val2
+10
+11
+12
+13
+abc0
+abc1
+abc3
+-----	804	-----
+1	2
+1
+
+5
+4
+3
+2
+1
+1
+2
+3
+4
+5
+1a
+2a
+3a
+4a
+10
+2
+3
+4
+5
+-----	855	-----
+===== set1.clone().or(set2)
+11
+12
+13
+14
+===== set1.clone().and(set2)
+12
+13
+===== set1.clone().sub(set2)
+11
+len:	3
+3
+exist 3
+not exist 1
+1
+2
+3
+-----	910	-----
+123abc
+1,10,
+1,0,
+1,100,
+10,1000,
+-----	941	-----
+10
+10
+abc
+-----	990	-----
+OK
+@test.@start.func3	2
+@test.@start.func3	1
+@test.@start.func3	nil
+0
+1
+10
+20
+0
+@test.@start:1042> 10
+-----	1048	-----
+@test.@start:1055> 1
+@test.@start:1055> 2
+@test.@start:1055> 3
+@test.@start:1067> 1
+@test.@start:1078> abc
+@test.@start:1089> abc
+-----	1096	-----
+int:1
+real:1
+real:2.5
+str:abc
+1121	@test.@start.TestGG.func1
+1122	@test.@start.TestGG.func2
+1139	nil	2
+-----	1148	-----
+a	b
+-----	1174	-----
+macro val$.$val nil
+macro func4()$.$val nil
+macro val.$val 1
+macro func4()$.$val 2
+1	nil
+6	2	2	3	5
+-----	1204	-----
+1	1
+@test.@start.func.func2.Test_1.func2	2
+-----	1228	-----
+Test_enum.Bar
+1
+2
+10
+10
+1	2	3
+hoge
+@test.@Sub2.Sub_class.func
+\'''"\.\
+\"""'\.\
+-----	1293	-----
+@test.@Sub2.testPrint
+@test.@Sub2.testPrint
+@test.@Sub2.testPrint
+@test.@Sub2.testPrint
+@test.@Sub2.testPrint
+@test.@Sub2.testPrint
+-----	1308	-----
+1
+2
+3
+abc
+-----	1320	-----
+@test.@Sub2.Test3.func	100
+-----	1325	-----
+1
+-----	1329	-----
+hoge:1,2.5,false,abc,nil
+-----	1336	-----
+int:1
+real:1
+int:1
+real:1
+str:abc
+class
+IF
+class
+IF
+-----	1368	-----
+11
+
+-----	1377	-----
+1
+100
+-----	1401	-----
+hoge	1407	1
+hoge	1413	1
+-----	1416	-----
+hoge	1422	1
+-----	1428	-----
+hoge:foo:abc
+hoge:foo:abc
+-----	1442	-----
+foo: hoge: abc
+-----	1453	-----
+0	abc
+100	xyz
+10	ABC
+1000	XYZ
+-----	1478	-----
+abc
+-----	1499	-----
+-----	1513	-----
+-----	1525	-----
+10
+1
+-----	1549	-----
+@test.@start.Super2.func
+@test.@start.Sub.func
+-----	1569	-----
+-----	1583	-----
+@test.@start.func
+-----	1596	-----
+1	10
+-----	1614	-----
+1
+1	2
+-----	1633	-----
+1
+-----	1649	-----
+nil	1
+-----	1667	-----
+1	2
+-----	1679	-----
+1	2
+-----	1689	-----
+@test.@start.functest
+@test.@start.functest2
+hoge
+-----	1703	-----
+-1
+-----	1707	-----
+2
+-----	1715	-----
+10
+-----	1726	-----
+hoge
+hoge2
+-----	1746	-----
+hoge2
+-----	1765	-----
+hoge
+-----	1784	-----
+abc
+abc
+val.val
+-----	1803	-----
+1
+2
+-----	1823	-----
+123abc123
+-----	1835	-----
+@test.@start.Hoge.func
+-----	1847	-----
+11
+-----	1860	-----
+abc
+-----	1879	-----
+1
+-----	1893	-----
+aaa
+-----	1898	-----
+@test.@Sub8
+@test.@Sub8.sub
+@test.@Sub9
+@test.@Sub9.func	10
+-----	1902	-----
+hoge
+-----	1909	-----
+1
+-----	1924	-----
+-----	1935	-----
+10a
+-----	1950	-----
+1	2
+-----	1960	-----
+1
+2
+-----	1984	-----
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+-----	2009	-----
+1	2	0
+-----	2013	-----
+hoge
+hoge
+11
+12
+12
+1	skip:
+aa	skip:
+/comp-2.lns
+               "displayTxt" : "func5(int): int",
+               "displayTxt" : "val3: int",
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mtd"
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+         {
+         {
+         }
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp-3.lns
+               "displayTxt" : "$val2",
+               "type" : "SymbolKind.Mtd"
+            "candidate" : {
+            }
+         {
+         }
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp-4.lns
+               "displayTxt" : "byte(int!, int!): ...<int!>",
+               "displayTxt" : "find(str, int!, bool!): ...<int>",
+               "displayTxt" : "format(...): str",
+               "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
+               "displayTxt" : "gsub(str, str): str, int",
+               "displayTxt" : "lower(): str",
+               "displayTxt" : "rep(int): str",
+               "displayTxt" : "replace(str, str): str",
+               "displayTxt" : "reverse(): str",
+               "displayTxt" : "sub(int, int!): str",
+               "displayTxt" : "upper(): str",
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         }
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp-5.lns
+               "displayTxt" : "byte(int!, int!): ...<int!>",
+               "displayTxt" : "find(str, int!, bool!): ...<int>",
+               "displayTxt" : "format(...): str",
+               "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
+               "displayTxt" : "gsub(str, str): str, int",
+               "displayTxt" : "lower(): str",
+               "displayTxt" : "rep(int): str",
+               "displayTxt" : "replace(str, str): str",
+               "displayTxt" : "reverse(): str",
+               "displayTxt" : "sub(int, int!): str",
+               "displayTxt" : "upper(): str",
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         }
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp-6.lns
+               "displayTxt" : "__new(int): List<T>",
+               "displayTxt" : "insert(T): ",
+               "displayTxt" : "remove(int!): T!",
+               "displayTxt" : "sort(__less!(T, T): bool)",
+               "displayTxt" : "unpack(): ...",
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+            }
+            }
+            }
+         {
+         {
+         {
+         {
+         {
+         }
+         },
+         },
+         },
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp.lns
+               "displayTxt" : "func1(int): int!",
+               "displayTxt" : "func2(int, int): int",
+               "displayTxt" : "func3(int): int",
+               "displayTxt" : "func4(int, int): int",
+               "displayTxt" : "get_val2(): int",
+               "displayTxt" : "val1: int",
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+            }
+            }
+            }
+            }
+         {
+         {
+         {
+         {
+         {
+         {
+         }
+         },
+         },
+         },
+         },
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp2.lns
+               "displayTxt" : "func1(int): int",
+               "displayTxt" : "func2(int, int): int",
+               "displayTxt" : "func3(int): int",
+               "displayTxt" : "func4(int, int): int",
+               "displayTxt" : "get_val2(): int",
+               "displayTxt" : "val1: int",
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+            }
+            }
+            }
+            }
+         {
+         {
+         {
+         {
+         {
+         {
+         }
+         },
+         },
+         },
+         },
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp4.lns
+               "displayTxt" : "val1: aaa",
+               "displayTxt" : "val2: aaa",
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mbr"
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+         {
+         {
+         }
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp5.lns
+               "displayTxt" : "val1: Hoge",
+               "displayTxt" : "val2: Hoge",
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mbr"
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+         {
+         {
+         }
+         },
+      "candidateList" : [
+      "prefix" : ""
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp6.lns
+               "displayTxt" : "Sub7",
+               "type" : "SymbolKind.Typ"
+            "candidate" : {
+            }
+         {
+         }
+      "candidateList" : [
+      "prefix" : "Su"
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp7.lns
+               "displayTxt" : "func1()",
+               "displayTxt" : "func2()",
+               "type" : "SymbolKind.Fun"
+               "type" : "SymbolKind.Fun"
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+         {
+         {
+         }
+         },
+      "candidateList" : [
+      "prefix" : "fun"
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp8.lns
+               "displayTxt" : "val3: int",
+               "displayTxt" : "val4: int",
+               "type" : "SymbolKind.Arg"
+               "type" : "SymbolKind.Var"
+            "candidate" : {
+            "candidate" : {
+            }
+            }
+         {
+         {
+         }
+         },
+      "candidateList" : [
+      "prefix" : "val"
+      ],
+   "lunescript" : {
+   }
+{
+}
+/comp9.lns
+               "displayTxt" : "_test(int)",
+               "type" : "SymbolKind.Mac"
+            "candidate" : {
+            }
+         {
+         }
+      "candidateList" : [
+      "prefix" : "_te"
+      ],
+   "lunescript" : {
+   }
+{
+}
+test/error/nilable1.lns:2:5: error: unmatch value type (index:1) int <- nil -- 
+test/error/nilable1.lns:6:9: error: = operator: exp(1) type mismatch int(26) <- nil(98): index 1 -- 
+test/error/nilable1.lns:10:15: error: no numeric type 'int!' or 'int'
+test/error/nilable1.lns:16:5: error: This condition never be false
+test/error/nilable1.lns:24:5: error: unmatch value type (index:1) int <- int! -- 
+test/error/nilable1.lns:29:5: error: get: exp(1) type mismatch int(26) <- nil(98): index 1 -- 
+test/error/nilable1.lns:34:5: error: unmatch value type (index:1) stem <- nil -- 
+test/error/nilable1.lns:36:11: error: can't cast from nilable to not nilable  -- int!->int
+test/error/nilable1.lns:38:11: error: can't cast from nilable to not nilable  -- stem!->int
+test/error/nilable1.lns:51:8: error: = operator: exp(1) type mismatch int(26) <- int!(27): index 1 -- 
+test/error/nilable1.lns:68:4: error: unmatch value type (index:1) int <- int! -- 
+test/error/nilable1.lns:70:4: error: unmatch value type (index = 1) stem <- stem!
+test/error/nilable1.lns:71:4: error: unmatch value type (index:1) int <- int! -- 
+test/error/nilable1.lns:72:4: error: unmatch value type (index:1) int <- int! -- 
+test/error/nilable1.lns:76:21: error: this exp is not nilable -- int
+test/error/nilable1.lns:80:4: error: unmatch value type (index:1) str <- stem -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Stem
+test/error/nilable1.lns:81:4: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
+test/error/nilable1.lns:84:4: error: unmatch value type (index:1) real <- real! -- 
+test/error/nilable1.lns:106:11: error: TestEnum does not support $.
+test/error/nilable1.lns:106:21: error: not found field -- _txt
+test/error/nilable1.lns:107:11: error: TestAlge does not support $.
+test/error/nilable1.lns:107:21: error: not found field -- _txt
+test/error/nilable1.lns:108:11: error: Set<int> does not support $.
+test/error/nilable1.lns:108:26: error: can't call the type -- has!, TypeInfoKind.Nilable
+test/error/nilable1.lns:2:9: warning: 'val' var isn't accessed
+test/error/nilable1.lns:6:5: warning: 'val' var isn't accessed
+test/error/nilable1.lns:10:5: warning: 'val' var isn't accessed
+test/error/nilable1.lns:16:5: warning: has no nilable
+test/error/nilable1.lns:24:9: warning: 'val' var isn't accessed
+test/error/nilable1.lns:38:5: warning: 'val' var isn't accessed
+test/error/nilable1.lns:51:4: warning: 'val' var isn't accessed
+test/error/nilable1.lns:52:4: warning: 'valnil' var isn't accessed
+test/error/nilable1.lns:68:8: warning: 'val' var isn't accessed
+test/error/nilable1.lns:70:8: warning: 'val2' var isn't accessed
+test/error/nilable1.lns:70:20: warning: form: 00000:use '##', instate of '...'.
+test/error/nilable1.lns:71:8: warning: 'val3' var isn't accessed
+test/error/nilable1.lns:72:8: warning: 'val4' var isn't accessed
+test/error/nilable1.lns:76:8: warning: 'val' var isn't accessed
+test/error/nilable1.lns:80:8: warning: 'val2' var isn't accessed
+test/error/nilable1.lns:81:8: warning: 'val3' var isn't accessed
+test/error/nilable1.lns:84:8: warning: 'val' var isn't accessed
+test/error/nilable1.lns:84:19: warning: tonumber: 00000:use '##', instate of 'int!'.
+test/error/nilable1.lns:88:14: warning: This is not nilable. -- &List<int>
+test/error/nilable1.lns:90:4: warning: This is not nilable. -- form
+test/error/nilable1.lns:90:4: warning: form: 00000:use '##', instate of '...'.
+test/error/nilable1.lns:92:11: warning: This is not nilable. -- Map<str,int>
+test/error/access1.lns:19:7: error: this node can not be l-value. -- GetField
+test/error/access1.lns:22:12: error: not found field typeInfo: @test.@error.@access1.Sub.func1 -- TypeInfoKind.Class
+test/error/access2.lns:19:19: error: this is not mutable variable. -- val3
+test/error/access2.lns:20:19: error: this is not mutable variable. -- val2
+test/error/access2.lns:21:14: error: not found field typeInfo: @test.@error.@access2.Sub.val1 -- TypeInfoKind.Class
+test/error/access3.lns:14:22: error: __init: exp(1) type mismatch int <- nil: short
+test/error/access3.lns:15:13: error: this is not mutable variable. -- val3
+test/error/access3.lns:17:8: error: not found field typeInfo: @test.@error.@access3.Super.func2 -- TypeInfoKind.Class
+test/error/access4.lns:14:22: error: __init: exp(1) type mismatch int <- nil: short
+test/error/access4.lns:15:13: error: this is not mutable variable. -- val3
+test/error/access4.lns:17:8: error: not found field typeInfo: @test.@error.@access4.Super.val2 -- TypeInfoKind.Class
+test/error/access5.lns:5:1: error: The access mode of '__init' is 'pri'.
+test/error/access5.lns:16:14: error: can't access to __init of Super
+test/error/access5.lns:17:15: error: can't access to __init of Super2
+test/error/access5.lns:23:9: error: not public this type -- Test
+test/error/access5.lns:23:17: error: This type must be public. -- Test
+test/error/access5.lns:24:9: error: not public this type -- Test
+test/error/access5.lns:24:14: error: This type must be public. -- Test
+test/error/access5.lns:26:1: error: The type must be 'pub' becaue using in __init(). -- Test:AccessMode.Pri
+test/error/access5.lns:26:1: error: The type must be 'pub' becaue using in __init(). -- Test:AccessMode.Pri
+test/error/access5.lns:26:1: error: The type must be 'pub' becaue using in __init(). -- Test:AccessMode.Pri
+test/error/access5.lns:27:16: error: This type must be public. -- Test
+test/error/access5.lns:27:16: error: not public this type -- Test
+test/error/access5.lns:29:16: error: not public this type -- Test
+test/error/access5.lns:30:17: error: not public this type -- Test
+test/error/access5.lns:30:21: error: This type must be public. -- Test
+test/error/access5.lns:31:17: error: not public this type -- Test
+test/error/access5.lns:31:25: error: This type must be public. -- Test
+test/error/access5.lns:32:17: error: not public this type -- Test
+test/error/access5.lns:32:29: error: This type must be public. -- Test
+test/error/access5.lns:46:19: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:47:20: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:49:20: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:50:10: error: return: exp(1) type mismatch @test.@error.@access5.Val(1107) <- &@test.@error.@access5.Val(1109): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/access5.lns:56:20: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:62:17: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:63:18: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:65:18: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:71:18: error: can't access mutable method. -- &Val.func
+test/error/access5.lns:73:18: error: can't access mutable method. -- &Val.func
+test/error/list.lns:8:9: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
+test/error/list.lns:18:9: error: unmatch value type (index:1) int <- int! -- 
+test/error/list.lns:29:4: error: insert: exp(1) type mismatch int!(27) <- nil(98): index 1 -- is doesn't support nilable.
+test/error/list.lns:29:16: error: list can't insert nilable
+test/error/list.lns:30:4: error: insert: exp(1) type mismatch int!(27) <- str(58): index 1(TypeInfoKind.Alternate)
+test/error/list.lns:35:10: error: can't access mutable method. -- &List<int>.sort
+test/error/list.lns:37:4: error: The callback's argument(1) type must be -- 'int'
+test/error/list.lns:37:4: error: sort: exp(1) type mismatch sort!(1073) <- @test.@error.@list.(1069): index 1 -- exp(1) type mismatch int(TypeInfoKind.Prim:26) <- real(TypeInfoKind.Prim:30) -- 
+test/error/list.lns:38:4: error: The callback's argument(2) type must be -- 'int'
+test/error/list.lns:38:4: error: sort: exp(1) type mismatch sort!(1079) <- @test.@error.@list.(1075): index 1 -- exp(2) type mismatch int(26) <- real(30): index 2 -- 
+test/error/list.lns:39:4: error: The callback's return type of sort() must be bool. -- 'int'
+test/error/list.lns:39:4: error: sort: exp(1) type mismatch sort!(1085) <- @test.@error.@list.(1081): index 1 -- exp(1) type mismatch bool(22) <- int(26): index 1 -- 
+test/error/list.lns:40:4: error: The callback's argument must have 2 arguments. -- '(int, int, int): bool'
+test/error/list.lns:40:4: error: sort: exp(1) type mismatch sort!(1091) <- @test.@error.@list.(1087): index 1 -- over exp. expect: 2: actual: 3
+test/error/list.lns:45:4: error: unmatch value type (index:1) List<int> <- List<int>! -- 
+test/error/list.lns:47:4: error: unmatch value type (index:1) List<int> <- List<int>! -- 
+test/error/list.lns:60:7: error: func: exp(1) type mismatch List<@test.@error.@list.Super>(1165) <- List<@test.@error.@list.Sub>(1156): index 1 -- 
+test/error/list.lns:66:7: error: func: exp(1) type mismatch List<&@test.@error.@list.Super>(1172) <- List<@test.@error.@list.Sub>(1156): index 1 -- 
+test/error/list.lns:81:18: error: illegal type -- val
+test/error/list.lns:98:12: error: can't access mutable method. -- &Imp.func
+test/error/list.lns:101:12: error: can't access mutable method. -- &Imp.func
+test/error/list.lns:104:12: error: can't access mutable method. -- &Imp.func
+test/error/list.lns:125:12: error: can't access mutable method. -- &Imp.func
+test/error/list.lns:128:12: error: can't access mutable method. -- &Imp.func
+test/error/list.lns:131:12: error: can't access mutable method. -- &Imp.func
+test/error/list.lns:174:8: error: When left-value includes 'list[i]', left-value must be single.
+test/error/list.lns:178:7: error: When left-value includes 'list[i]', left-value must be single.
+test/error/list.lns:185:4: error: sort: exp(1) type mismatch sort!(1488) <- @test.@error.@list.(1484): index 1 -- exp(1) type mismatch @test.@error.@list.Hoge(TypeInfoKind.Class:1463) <- &@test.@error.@list.Hoge(TypeInfoKind.Class:1465) -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/list.lns:191:8: error: illegal type -- List<int>!, TypeInfoKind.Nilable
+test/error/list.lns:3:13: warning: 'val2' var isn't accessed
+test/error/list.lns:8:13: warning: 'val2' var isn't accessed
+test/error/list.lns:13:13: warning: 'val2' var isn't accessed
+test/error/list.lns:18:13: warning: 'val2' var isn't accessed
+test/error/list.lns:23:13: warning: 'val2' var isn't accessed
+test/error/list.lns:31:4: warning: remove() is dangerous for nilable's list.
+test/error/list.lns:44:8: warning: 'list2' var isn't accessed
+test/error/list.lns:44:26: warning: this value never be 'false' -- List<>
+test/error/list.lns:45:8: warning: 'list3' var isn't accessed
+test/error/list.lns:45:26: warning: this value never be 'false' -- List<>
+test/error/list.lns:46:8: warning: 'list4' var isn't accessed
+test/error/list.lns:47:8: warning: 'list5' var isn't accessed
+test/error/list.lns:81:8: warning: 'list' var isn't accessed
+test/error/list.lns:164:17: warning: index <= -1 (-1)
+test/error/list.lns:164:29: warning: index <= -1 (0)
+test/error/list.lns:170:17: warning: index <= -1 (-1)
+test/error/list.lns:170:36: warning: index <= -1 (0)
+test/error/map.lns:9:9: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
+test/error/map.lns:35:9: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
+test/error/map.lns:47:27: error: map key can't set a nilable -- nil
+test/error/map.lns:54:27: error: map key can't set a nilable -- str!
+test/error/map.lns:62:10: error: unmatch index type -- int, real
+test/error/map.lns:63:10: error: unmatch index type -- int, str
+test/error/map.lns:64:14: error: = operator: exp(1) type mismatch int!(27) <- real(30): index 1 -- 
+test/error/map.lns:65:14: error: = operator: exp(1) type mismatch int!(27) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/map.lns:87:9: error: This node can't use index
+test/error/map.lns:87:9: error: unmatch index type -- str, 
+test/error/map.lns:92:22: error: this node can not be l-value. -- ExpRefItem
+test/error/map.lns:93:13: error: illegal type -- stem!, TypeInfoKind.Nilable
+test/error/map.lns:3:13: warning: 'val2' var isn't accessed
+test/error/map.lns:4:13: warning: 'key2' var isn't accessed
+test/error/map.lns:9:13: warning: 'val2' var isn't accessed
+test/error/map.lns:10:13: warning: 'key2' var isn't accessed
+test/error/map.lns:15:13: warning: 'val2' var isn't accessed
+test/error/map.lns:16:13: warning: 'key2' var isn't accessed
+test/error/map.lns:21:13: warning: 'val2' var isn't accessed
+test/error/map.lns:22:13: warning: 'key2' var isn't accessed
+test/error/map.lns:28:13: warning: 'val2' var isn't accessed
+test/error/map.lns:29:13: warning: 'key2' var isn't accessed
+test/error/map.lns:35:13: warning: 'val2' var isn't accessed
+test/error/map.lns:36:13: warning: 'key2' var isn't accessed
+test/error/map.lns:42:13: warning: 'val2' var isn't accessed
+test/error/map.lns:43:13: warning: 'key2' var isn't accessed
+test/error/map.lns:48:13: warning: 'val2' var isn't accessed
+test/error/map.lns:49:13: warning: 'key2' var isn't accessed
+test/error/map.lns:55:13: warning: 'val2' var isn't accessed
+test/error/map.lns:56:13: warning: 'key2' var isn't accessed
+test/error/map.lns:80:8: warning: 'map' var isn't accessed
+test/error/set.lns:2:26: error: 'Set' object can't store nilable. -- nil
+test/error/set.lns:7:7: error: unmatch value type (index:1) int <- str -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/set.lns:12:11: error: could not access with []. -- &Set<str>
+test/error/set.lns:12:16: error: unmatch index type -- int, str
+test/error/set.lns:17:18: error: no string type 'bool' or 'str'
+test/error/set.lns:19:4: error: add: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/set.lns:20:4: error: del: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/set.lns:26:4: error: func: exp(1) type mismatch Set<int>(1043) <- Set<stem>(1051): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
+test/error/set.lns:29:17: error: generic type count is unmatch. -- 2
+test/error/set.lns:30:14: error: has: exp(1) type mismatch T(74) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/set.lns:35:8: error: can't access mutable method. -- &Set<int>.or
+test/error/set.lns:36:8: error: can't access mutable method. -- &Set<int>.and
+test/error/set.lns:37:8: error: can't access mutable method. -- &Set<int>.sub
+test/error/set.lns:44:4: error: add: exp(1) type mismatch int(26) <- int!(27): index 1 -- is doesn't support nilable.
+test/error/set.lns:44:13: error: set can't add nilable
+test/error/set.lns:46:4: error: or: exp(1) type mismatch &Set<str>(80) <- Set<int>(1092): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/set.lns:47:4: error: and: exp(1) type mismatch &Set<str>(80) <- Set<int>(1092): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/set.lns:48:4: error: sub: exp(1) type mismatch &Set<str>(80) <- Set<int>(1092): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/set.lns:65:12: error: can't access mutable method. -- &Imp.func
+test/error/set.lns:68:12: error: can't access mutable method. -- &Imp.func
+test/error/set.lns:71:12: error: can't access mutable method. -- &Imp.func
+test/error/set.lns:92:12: error: can't access mutable method. -- &Imp.func
+test/error/set.lns:95:12: error: can't access mutable method. -- &Imp.func
+test/error/set.lns:98:12: error: can't access mutable method. -- &Imp.func
+test/error/set.lns:131:7: error: Set<int> does not support $.
+test/error/set.lns:131:19: error: can't call the type -- has!, TypeInfoKind.Nilable
+test/error/set.lns:2:8: warning: 'set' var isn't accessed
+test/error/set.lns:7:11: warning: 'val1' var isn't accessed
+test/error/set.lns:16:4: warning: has no nilable
+test/error/set.lns:29:7: warning: 'func' var isn't accessed
+test/error/scope1.lns:2:21: error: not found type -- unknownList
+test/error/scope2.lns:5:25: error: not found type -- list
+test/error/scope3.lns:6:7: error: not found type -- functest
+test/error/func.lns:3:7: error: return: over exp. expect:0, actual:1
+test/error/func.lns:8:7: error: return: exp(1) type mismatch int(26) <- real(30): index 1 -- 
+test/error/func.lns:23:7: error: return: over exp. expect: 1: actual: 2
+test/error/func.lns:33:7: error: no return value -- need values(1)
+test/error/func.lns:36:7: error: return: exp(2) type mismatch stem <- [##]: dst 2 -- 
+test/error/func.lns:44:7: error: return: exp(2) type mismatch stem <- [##]: dst 2 -- 
+test/error/func.lns:60:7: error: return: over exp. expect: 2: actual: 3
+test/error/func.lns:64:4: error: 'global' or 'pub' function must exist top scope.
+test/error/func.lns:66:4: error: 'global' or 'pub' function must exist top scope.
+test/error/func.lns:66:14: error: This symbol is shadowed from 112:7 -- func2
+test/error/func.lns:66:14: error: This symbol is shadowed from 129:8 -- func2
+test/error/func.lns:78:4: error: unmatch value type (index:2) :: <- nil
+test/error/func.lns:96:4: error: func: exp(1) type mismatch @test.@error.@func.form1(TypeInfoKind.FormFunc:1063) <- @test.@error.@func.sub2(TypeInfoKind.Func:1068) -- over exp. expect: 1: actual: 2
+test/error/func.lns:97:4: error: func: exp(1) type mismatch @test.@error.@func.form1(TypeInfoKind.FormFunc:1063) <- @test.@error.@func.sub3(TypeInfoKind.Func:1071) -- exp(1) type mismatch int(26) <- real(30): index 1 -- 
+test/error/func.lns:100:4: error: unmatch value type (index:1) @test.@error.@func.form2 <- @test.@error.@func. -- exp(1) type mismatch int <- nil: short
+test/error/func.lns:105:4: error: unmatch value type (index:1) @test.@error.@func.form3 <- @test.@error.@func. -- over exp. expect:0, actual:1
+test/error/func.lns:109:18: error: Argument exists after '...'.
+test/error/func.lns:112:7: error: shadowing symbol of 66:14 -- func2
+test/error/func.lns:112:26: error: Type exists after '...'.
+test/error/func.lns:123:4: error: func: exp(1) type mismatch @test.@error.@func.TestFunc(1103) <- @test.@error.@func.(1111): index 1 -- exp(1) type mismatch List<int>(1099) <- &List<int>(1109): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/func.lns:128:9: error: = operator: exp(1) type mismatch ::(10) <- @test.@error.@func.(1114): index 1 -- 
+test/error/func.lns:129:8: error: shadowing symbol of 66:14 -- func2
+test/error/func.lns:130:4: error: must set the type of variable for function. -- func3
+test/error/func.lns:130:16: error: This arg can't be r-value. -- DeclFunc
+test/error/func.lns:130:16: error: this node(1) can not be r-value. -- DeclFunc
+test/error/func.lns:131:4: error: must set the type of variable for function. -- func5
+test/error/func.lns:132:4: error: must set the type of variable for function. -- func6
+test/error/func.lns:132:17: error: can't be r-value in paren. -- DeclFunc
+test/error/func.lns:135:1: error: The anonymous function must be local.
+test/error/func.lns:135:1: error: This node can't be statement. -- DeclFunc
+test/error/func.lns:137:4: error: can't directly call the declared function.
+test/error/func.lns:143:4: error: This can't evaluate for 'and' -- ExpCall
+test/error/func.lns:143:4: error: This exp have no value -- ExpCall
+test/error/func.lns:143:4: error: This node can't be statement. -- StmtExp
+test/error/func.lns:143:15: error: This can't evaluate for 'and' -- ExpCall
+test/error/func.lns:143:15: error: this node can not be r-value. -- ExpCall
+test/error/func.lns:144:7: error: This exp never be false -- 
+test/error/func.lns:146:11: error: This can't evaluate for '+' -- ExpCall
+test/error/func.lns:146:11: error: This exp have no value -- ExpCall
+test/error/func.lns:146:18: error: no numeric type '' or 'int'
+test/error/func.lns:153:10: error: can't set the __trans type -- index:1, func
+test/error/func.lns:164:7: error: super is abstract.
+test/error/func.lns:167:14: error: not found type -- super
+test/error/func.lns:2:7: warning: 'func' var isn't accessed
+test/error/func.lns:7:7: warning: 'func' var isn't accessed
+test/error/func.lns:12:7: warning: 'func' var isn't accessed
+test/error/func.lns:17:7: warning: 'func' var isn't accessed
+test/error/func.lns:22:7: warning: 'func' var isn't accessed
+test/error/func.lns:27:7: warning: 'func' var isn't accessed
+test/error/func.lns:32:7: warning: 'func' var isn't accessed
+test/error/func.lns:35:7: warning: 'func2' var isn't accessed
+test/error/func.lns:43:7: warning: 'func2' var isn't accessed
+test/error/func.lns:51:7: warning: 'func2' var isn't accessed
+test/error/func.lns:52:7: warning: return: use '**' at arg(2). stem <- stem
+test/error/func.lns:59:7: warning: 'func2' var isn't accessed
+test/error/func.lns:71:7: warning: 'func' var isn't accessed
+test/error/func.lns:78:8: warning: 'val1' var isn't accessed
+test/error/func.lns:78:14: warning: 'val2' var isn't accessed
+test/error/func.lns:105:8: warning: 'test3' var isn't accessed
+test/error/func.lns:109:7: warning: 'func' var isn't accessed
+test/error/func.lns:113:7: warning: return: 00000:use '##', instate of '...'.
+test/error/func.lns:128:4: warning: 'func' var isn't accessed
+test/error/func.lns:130:8: warning: 'func3' var isn't accessed
+test/error/func.lns:130:19: warning: 'func4' var isn't accessed
+test/error/func.lns:131:8: warning: 'func5' var isn't accessed
+test/error/func.lns:131:15: warning: 'val' var isn't accessed
+test/error/func.lns:132:8: warning: 'func6' var isn't accessed
+test/error/func.lns:132:20: warning: 'func7' var isn't accessed
+test/error/func.lns:143:4: warning: this value never be 'false'
+test/error/class.lns:29:8: warning: 'test2' var isn't accessed
+test/error/class.lns:32:8: warning: 'val' var isn't accessed
+test/error/class.lns:35:4: warning: 'val2' var isn't accessed
+test/error/class.lns:56:4: warning: 'val' var isn't accessed
+test/error/class.lns:137:8: warning: 'val' var isn't accessed
+test/error/class.lns:285:10: warning: 'func' var isn't accessed
+test/error/class.lns:421:10: warning: __init: exp(1) luaval mismatch Hoge <- Luaval<Hoge>
+test/error/class.lns:8:7: error: This class doesn't have super-class.
+test/error/class.lns:8:7: error: super can't call here.
+test/error/class.lns:10:7: error: __init method can't return
+test/error/class.lns:12:8: error: member can't declare after '__init' method.
+test/error/class.lns:24:9: error: Type can't access this symbol. -- func
+test/error/class.lns:27:19: error: __init: over exp. expect: 1: actual: 2
+test/error/class.lns:28:4: error: &func: over exp. expect: 1: actual: 3
+test/error/class.lns:28:9: error: can't access mutable method. -- &Test__a.func
+test/error/class.lns:29:16: error: This arg can't be r-value. -- RefType
+test/error/class.lns:29:16: error: this node(1) can not be r-value. -- RefType
+test/error/class.lns:30:4: error: this node can not be l-value. -- RefType
+test/error/class.lns:30:12: error: = operator: exp(1) type mismatch @test.@error.@class.Test__a(1008) <- &@test.@error.@class.Test__a(1041): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/class.lns:31:4: error: this node can not be l-value. -- RefType
+test/error/class.lns:31:12: error: = operator: exp(1) type mismatch @test.@error.@class.Test__a(1008) <- (6): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
+test/error/class.lns:31:14: error: The type of exp(1) is None!!
+test/error/class.lns:31:14: error: This arg can't be r-value. -- ExpRef
+test/error/class.lns:31:14: error: this node can not be r-value. -- ExpList
+test/error/class.lns:32:14: error: This can't evaluate for '+' -- ExpRef
+test/error/class.lns:32:18: error: no numeric type '' or 'int'
+test/error/class.lns:34:13: error: no numeric type 'int' or ''
+test/error/class.lns:34:15: error: This can't evaluate for '+' -- ExpRef
+test/error/class.lns:34:15: error: this node can not be r-value. -- ExpRef
+test/error/class.lns:35:11: error: This can't evaluate for '+' -- ExpRef
+test/error/class.lns:35:15: error: no numeric type '' or 'int'
+test/error/class.lns:52:10: error: Type can't access this symbol. -- val2
+test/error/class.lns:54:10: error: can't access this symbol. -- val3
+test/error/class.lns:54:15: error: this is not mutable variable. -- val3
+test/error/class.lns:56:8: error: = operator: exp(1) type mismatch int(26) <- @test.@error.@class.Test3(1050): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/class.lns:60:1: error: define interface already -- Test4
+test/error/class.lns:60:1: error: mismatch class(@test.@error.@class.Test4) abstract for prototpye
+test/error/class.lns:64:1: error: define class already -- Test5
+test/error/class.lns:64:1: error: mismatch class(@test.@error.@class.Test5) abstract for prototpye
+test/error/class.lns:65:8: error: this symbol is lua keyword -- function
+test/error/class.lns:69:8: error: interface can not have member
+test/error/class.lns:70:4: error: interface's fields must be 'pub'.
+test/error/class.lns:71:18: error: abstract method can't have body.
+test/error/class.lns:75:1: error: mismatch class(@test.@error.@class.Test__a) base class(Test6) for prototpye base class(<head>)
+test/error/class.lns:75:7: error: already declare symbol -- Test__a
+test/error/class.lns:75:22: error: Test6 is not class.
+test/error/class.lns:78:1: error: This class (Test7) need __init block for initialize static members.
+test/error/class.lns:84:11: error: Set member -- val2
+test/error/class.lns:96:23: error: multiple define -- func
+test/error/class.lns:96:23: error: not found override -- func
+test/error/class.lns:111:31: error: abstract method can't have body.
+test/error/class.lns:116:4: error: Sub2__a.func1: mismatch method type -- unmatch mutable mode -- MutMode.IMut, MutMode.Mut: func1() -- func1()
+test/error/class.lns:116:4: error: Sub2__a.func1: mismatch method type -- unmatch mutable mode -- MutMode.IMut, MutMode.Mut: func1() -- func1()
+test/error/class.lns:116:4: error: Sub2__a.func1: mismatch mutable -- func1: func1() -- func1()
+test/error/class.lns:116:4: error: Sub2__a.func1: mismatch mutable -- func1: func1() -- func1()
+test/error/class.lns:116:4: error: Sub2__a.func2: mismatch method type -- : func2(int) -- func2(int)
+test/error/class.lns:116:4: error: Sub2__a.func2: mismatch method type -- : func2(int) -- func2(int)
+test/error/class.lns:116:4: error: Sub2__a.func2: mismatch mutable -- func2: func2(int) -- func2(int)
+test/error/class.lns:116:4: error: Sub2__a.func2: mismatch mutable -- func2: func2(int) -- func2(int)
+test/error/class.lns:116:4: error: Sub2__a.func3: mismatch method type -- : func3(): int -- func3(): int
+test/error/class.lns:116:4: error: Sub2__a.func3: mismatch method type -- : func3(): int -- func3(): int
+test/error/class.lns:116:4: error: Sub2__a.func3: mismatch mutable -- func3: func3(): int -- func3(): int
+test/error/class.lns:116:4: error: Sub2__a.func3: mismatch mutable -- func3: func3(): int -- func3(): int
+test/error/class.lns:116:4: error: not implements method -- Super2.func4 at Sub2__a
+test/error/class.lns:117:23: error: Sub2__a.func1: mismatch method type -- unmatch mutable mode -- MutMode.IMut, MutMode.Mut: func1() -- func1()
+test/error/class.lns:117:23: error: Sub2__a.func1: mismatch mutable -- func1: func1() -- func1()
+test/error/class.lns:119:23: error: Sub2__a.func2: mismatch method type -- : func2(int) -- func2(int)
+test/error/class.lns:119:23: error: Sub2__a.func2: mismatch mutable -- func2: func2(int) -- func2(int)
+test/error/class.lns:122:23: error: Sub2__a.func3: mismatch method type -- : func3(): int -- func3(): int
+test/error/class.lns:122:23: error: Sub2__a.func3: mismatch mutable -- func3: func3(): int -- func3(): int
+test/error/class.lns:129:20: error: no abstract class does not have abstract method
+test/error/class.lns:137:14: error: abstract class can't new
+test/error/class.lns:147:4: error: member type is not Mapping -- Map<TestMap0,int>
+test/error/class.lns:148:4: error: member type is not Mapping -- Map<Super3,int>
+test/error/class.lns:149:4: error: member type is not Mapping -- Map<int,Super3>
+test/error/class.lns:155:8: error: this node can not be l-value. -- ExpRefItem
+test/error/class.lns:162:1: error: must extend Mapping at SuperMap
+test/error/class.lns:169:19: error: This type must be public. -- PriClass
+test/error/class.lns:169:19: error: this is not public type -- PriClass
+test/error/class.lns:178:1: error: IFTest2.func: mismatch method type -- unmatch arg(1) type -- int, str: func(str) -- func(str)
+test/error/class.lns:179:11: error: This function doesn't have body. -- func
+test/error/class.lns:179:11: error: mismatch method type -- func
+test/error/class.lns:184:1: error: mismatch class(@test.@error.@class.TestAbs) abstract for prototpye
+test/error/class.lns:184:1: error: mismatch class(@test.@error.@class.TestAbs) accessmode(AccessMode.Pri) for prototpye accessmode(AccessMode.Pub)
+test/error/class.lns:188:1: error: mismatch class(@test.@error.@class.TestProto) accessmode(AccessMode.Pri) for prototpye accessmode(AccessMode.Pub)
+test/error/class.lns:194:1: error: not implements method -- IF.func at extIF
+test/error/class.lns:196:1: error: not implements method -- IF.func at extIF2
+test/error/class.lns:198:1: error: not implements method -- IF.func at subIF
+test/error/class.lns:212:7: error: __init: exp(1) type mismatch int(26) <- real(30): index 1 -- 
+test/error/class.lns:225:1: error: mismatch method type -- TestIF2.func, TestIF.func
+test/error/class.lns:225:1: error: not implements method -- TestIF.func at SuperTest
+test/error/class.lns:225:1: error: not implements method -- TestIF2.func at SuperTest
+test/error/class.lns:228:1: error: SubTest.func: mismatch method type -- unmatch arg(1) type -- str, int: func(int): int -- func(int): int
+test/error/class.lns:228:1: error: SubTest.func: mismatch override accessMode -- AccessMode.Pub,AccessMode.Pri: func(int): int -- func(int): int
+test/error/class.lns:228:1: error: SubTest.func: mismatch override accessMode -- AccessMode.Pub,AccessMode.Pri: func(int): int -- func(int): int
+test/error/class.lns:257:25: error: Super6 can't be external symbol.
+test/error/class.lns:257:25: error: This type must be public. -- Super6
+test/error/class.lns:259:8: error: This function doesn't have body. -- TestSuper6
+test/error/class.lns:259:30: error: This type must be public. -- Super6
+test/error/class.lns:262:26: error: IFSuper can't be external symbol.
+test/error/class.lns:262:26: error: This type must be public. -- IFSuper
+test/error/class.lns:266:4: error: The public class must declare at top scope.
+test/error/class.lns:290:12: error: Set member(val) before to access the method-- func
+test/error/class.lns:296:4: error: mismatch class(@test.@error.@class.Sub) interface(1) for prototpye interface(0)
+test/error/class.lns:301:14: error: Set member -- s_val
+test/error/class.lns:311:7: error: The '__init' block only support at the top level classes.
+test/error/class.lns:315:14: error: Set member -- Test.val
+test/error/class.lns:324:7: error: mismatch class(@test.@error.@class.Sub) interface(1) for prototpye interface(0)
+test/error/class.lns:327:7: error: mismatch class(@test.@error.@class.Sub2) base class(Super) for prototpye base class(<head>)
+test/error/class.lns:330:7: error: mismatch class(@test.@error.@class.Sub3<T>) generics(0) for prototpye generics(1)
+test/error/class.lns:335:7: error: mismatch class(@test.@error.@class.Sub) interface(0) for prototpye interface(1)
+test/error/class.lns:338:7: error: mismatch class(@test.@error.@class.Sub2) base class(None) for prototpye base class(Super)
+test/error/class.lns:341:7: error: mismatch class(@test.@error.@class.Sub3) generics(1) for prototpye generics(0)
+test/error/class.lns:351:14: error: mismatch async -- Async.Async / Async.Noasync
+test/error/class.lns:351:14: error: multiple define -- get_val
+test/error/class.lns:370:12: error: mismatch async -- Async.Async / Async.Noasync
+test/error/class.lns:370:12: error: multiple define -- get_val
+test/error/class.lns:382:10: error: mismatch override --func1
+test/error/class.lns:384:19: error: not found override -- func2
+test/error/class.lns:396:4: error: Sub.func2: mismatch method type -- unmatch arg(1) type -- int, Luaval<Hoge>: func2(Luaval<Hoge>) -- func2(Luaval<Hoge>)
+test/error/class.lns:396:4: error: Sub.func2: mismatch method type -- unmatch arg(1) type -- int, Luaval<Hoge>: func2(Luaval<Hoge>) -- func2(Luaval<Hoge>)
+test/error/class.lns:396:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- Luaval<Hoge>, int: func(int) -- func(int)
+test/error/class.lns:396:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- Luaval<Hoge>, int: func(int) -- func(int)
+test/error/class.lns:397:23: error: Sub.func: mismatch method type -- unmatch arg(1) type -- Luaval<Hoge>, int: func(int) -- func(int)
+test/error/class.lns:399:23: error: Sub.func2: mismatch method type -- unmatch arg(1) type -- int, Luaval<Hoge>: func2(Luaval<Hoge>) -- func2(Luaval<Hoge>)
+test/error/class.lns:410:10: error: __init: exp(1) type mismatch Luaval<@test.@error.@class.Hoge>(1899) <- @test.@error.@class.Hoge(1889): index 1 -- not support to use the type as Luaval -- Hoge
+test/error/class.lns:433:16: error: This class(Hoge) is used by advertise. You must declare the prototype of this method.
+test/error/class.lns:440:4: error: not implements method -- Hoge.func at Test
+test/error/class.lns:449:4: error: not implements method -- Hoge.func at Sub
+test/error/class.lns:449:4: error: not implements method -- Test.func at Sub
+test/error/class.lns:470:4: error: func: exp(1) type mismatch List<@test.@error.@class.Super>(2057) <- List<@test.@error.@class.Sub1>(2065): index 1 -- 
+test/error/class.lns:483:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
+test/error/class.lns:483:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
+test/error/class.lns:484:23: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
+test/error/class.lns:491:22: error: __absimmut can't extend the class -- Super
+test/error/class.lns:492:16: error: __absimmut can't have member of mutable type. -- List<&List<int>>
+test/error/class.lns:493:15: error: __absimmut can't have mutable member. -- val2
+test/error/class.lns:493:20: error: __absimmut can't have member of mutable type. -- List<int>
+test/error/class.lns:494:18: error: __absimmut can't have mutable member. -- val3
+test/error/class.lns:497:21: error: can't extend the __absimmut. (Hoge)
+test/error/class.lns:498:16: error: __absimmut can't have member of mutable type. -- List<&List<int>>
+test/error/class.lns:499:15: error: __absimmut can't have mutable member. -- val2
+test/error/class.lns:499:20: error: __absimmut can't have member of mutable type. -- List<int>
+test/error/class.lns:500:18: error: __absimmut can't have mutable member. -- val3
+test/error/class.lns:507:22: error: This arg can't be r-value. -- RefField
+test/error/class.lns:507:22: error: this node can't be r-value. -- RefField
+test/error/class.lns:518:7: error: Mapping class has not the interface type member. -- val
+test/error/class.lns:519:7: error: Mapping class has not the abstract class member. -- val2
+test/error/class2.lns:2:8: error: This member can't have setter, this member is immutable. -- val
+test/error/class2.lns:9:19: error: __init: exp(2) type mismatch int <- [##]: dst 2 -- 
+test/error/class2.lns:10:9: error: can't access mutable method. -- &TestAcc.set_val
+test/error/class2.lns:12:17: error: can't use '$' with -- get_val3
+test/error/class2.lns:13:17: error: not found field typeInfo: @test.@error.@class2.TestAcc.val -- TypeInfoKind.Class
+test/error/class3.lns:4:7: error: not found type -- self
+test/error/class4.lns:2:11: error: This function doesn't have body. -- func
+test/error/class4.lns:8:12: error: It can't call prototype function from static -- func
+test/error/class5.lns:13:4: error: getter type mismatch -- int <- Sub
+test/error/class5.lns:14:4: error: getter type mismatch -- Super <- &Sub. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/class5.lns:18:20: error: 'new' can't use this type -- str
+test/error/class6.lns:5:1: error: The type must be 'pub' becaue using in __init(). -- Sub:AccessMode.Pri
+test/error/class6.lns:9:1: error: unmatch value type (index:1) &@test.@error.@class6.Sub <- &@test.@error.@class6.Test -- not inherit Sub(1018) <- Test(1008)
+test/error/class6.lns:12:20: error: 'new' can't use this type -- int
+test/error/class7.lns:5:14: error: Set member -- Test2.val
+test/error/class7.lns:9:17: error: mismatch functype -- unmatch ret(1) type -- int, str, func
+test/error/class7.lns:9:17: error: mismatch functype ret: exp(1) type mismatch str(58) <- int(26): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
+test/error/class7.lns:9:24: error: not found TypeInfo -- func
+test/error/class7.lns:5:14: warning: Set member -- Test2.val2
+test/error/provide1.lns:8:1: error: provide variable must be 'pub'.  -- 4
+test/error/provide2.lns:11:1: error: provide variable must be 'pub'.  -- 3
+test/error/provide3.lns:6:1: error: multiple provide
+test/error/shadowing.lns:3:11: warning: 'val' var isn't accessed
+test/error/shadowing.lns:18:9: warning: 'val2' var isn't accessed
+test/error/shadowing.lns:18:9: warning: This symbol has no referer -- val2
+test/error/shadowing.lns:24:10: warning: 'func' var isn't accessed
+test/error/shadowing.lns:25:14: warning: 'val2' var isn't accessed
+test/error/shadowing.lns:26:14: warning: 'print' var isn't accessed
+test/error/shadowing.lns:27:14: warning: 'int' var isn't accessed
+test/error/shadowing.lns:1:10: error: This symbol is shadowed from 2:9 -- val
+test/error/shadowing.lns:2:4: error: This node can't be statement. -- StmtExp
+test/error/shadowing.lns:2:9: error: This symbol is shadowed from 3:11 -- val
+test/error/shadowing.lns:2:9: error: shadowing symbol of 1:10 -- val
+test/error/shadowing.lns:3:11: error: shadowing symbol of 2:9 -- val
+test/error/shadowing.lns:7:5: error: This symbol is shadowed from 8:5 -- val2
+test/error/shadowing.lns:8:5: error: This symbol is shadowed from 18:9 -- val2
+test/error/shadowing.lns:8:5: error: This symbol is shadowed from 25:14 -- val2
+test/error/shadowing.lns:8:5: error: shadowing symbol of 7:5 -- val2
+test/error/shadowing.lns:12:1: error: This symbol is shadowed from 13:4 -- _exp
+test/error/shadowing.lns:12:1: error: This symbol is shadowed from 15:8 -- _exp
+test/error/shadowing.lns:13:4: error: shadowing symbol of 12:1 -- _exp
+test/error/shadowing.lns:15:8: error: shadowing symbol of 12:1 -- _exp
+test/error/shadowing.lns:18:9: error: shadowing symbol of 8:5 -- val2
+test/error/shadowing.lns:25:14: error: shadowing symbol of 8:5 -- val2
+test/error/shadowing.lns:26:14: error: shadowing symbol of external -- print
+test/error/shadowing.lns:27:14: error: shadowing symbol of external -- int
+test/error/enum.lns:4:27: error: need to import module -- @Sub5
+test/error/enum.lns:6:13: error: need to import module -- @Sub5.Sub5enum (Sub5enum)
+test/error/enum.lns:9:18: error: __init: exp(1) type mismatch int <- nil: short
+test/error/enum.lns:10:4: error: func3: exp(1) type mismatch @test.@error.@Sub6.Test(1012) <- int(26): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
+test/error/enum.lns:16:4: error: multiple enum val type. real, int
+test/error/enum.lns:22:4: error: multiple enum val type. int, real
+test/error/enum.lns:27:4: error: illegal enum val type -- str
+test/error/enum.lns:28:4: error: multiple enum val type. int, str
+test/error/enum.lns:38:5: error: = operator: exp(1) type mismatch testEnum4(1051) <- int(26): index 1 -- 1051 != 26
+test/error/enum.lns:40:1: error: this node can not be l-value. -- RefType
+test/error/enum.lns:40:11: error: = operator: exp(1) type mismatch testEnum4(1051) <- int(26): index 1 -- 1051 != 26
+test/error/enum.lns:41:1: error: this node can not be l-value. -- RefField
+test/error/enum.lns:41:16: error: = operator: exp(1) type mismatch testEnum4(1051) <- int(26): index 1 -- 1051 != 26
+test/error/enum.lns:42:1: error: this node can not be l-value. -- RefField
+test/error/enum.lns:44:4: error: This can't evaluate for '==' -- RefType
+test/error/enum.lns:70:9: error: can't access mutable method. -- &List<testEnum4>.insert
+test/error/enum.lns:77:28: error: not found field -- val4
+test/error/enum.lns:83:20: error: can't access field -- val2
+test/error/enum.lns:84:12: error: = operator: exp(1) type mismatch testEnum4!(1052) <- int(26): index 1 -- 1051 != 26
+test/error/enum.lns:85:15: error: not compatible type 'testEnum4!' or 'int'
+test/error/enum.lns:106:8: error: unmatch access mode, class('AccessMode.Pri') and enum('AccessMode.Pub')
+test/error/enum.lns:112:4: error: unmatch value type (index:1) testEnum <- int -- 1015 != 26
+test/error/enum.lns:113:4: error: _from: exp(1) type mismatch int(26) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/enum.lns:117:4: error: can't external at inner scope.
+test/error/enum.lns:123:4: error: illegal symbol -- '"hoge"'
+test/error/enum.lns:124:4: error: illegal symbol -- '1'
+test/error/enum.lns:125:4: error: illegal symbol -- '1.0'
+test/error/enum.lns:130:12: error: illegal enum val -- testEnum.val4
+test/error/enum.lns:4:8: warning: 'val' var isn't accessed
+test/error/enum.lns:9:8: warning: 'val' var isn't accessed
+test/error/enum.lns:55:4: warning: 'valtest' var isn't accessed
+test/error/enum.lns:60:4: warning: 'valtest' var isn't accessed
+test/error/enum.lns:65:4: warning: 'valtest' var isn't accessed
+test/error/enum.lns:77:8: warning: 'valtest' var isn't accessed
+test/error/enum.lns:112:8: warning: 'val1' var isn't accessed
+test/error/eof.lns:56:1: error: EOF
+test/error/eof.lns:33:3: (test/error/eof.lns:33:3: (macro _test_switch):30:4): warning: 'switch' should have 'case' blocks.
+test/error/eof.lns:46:3: (test/error/eof.lns:46:3: (macro _test_letunwrap):43:4): warning: has no nilable
+test/error/eof.lns:46:3: (test/error/eof.lns:46:3: (macro _test_letunwrap):43:9): warning: 'val' var isn't accessed
+test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):49:8): warning: 'val' var isn't accessed
+test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):50:10): warning: 'val' var isn't accessed
+test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):50:4): warning: has no nilable
+test/error/mutable.lns:5:4: warning: 'val1' var isn't accessed
+test/error/mutable.lns:6:4: warning: 'val2' var isn't accessed
+test/error/mutable.lns:10:4: warning: has no nilable
+test/error/mutable.lns:15:7: warning: 'val1' var isn't accessed
+test/error/mutable.lns:16:7: warning: 'val2' var isn't accessed
+test/error/mutable.lns:21:4: warning: has no nilable
+test/error/mutable.lns:26:7: warning: 'val1' var isn't accessed
+test/error/mutable.lns:27:7: warning: 'val2' var isn't accessed
+test/error/mutable.lns:32:8: warning: 'val1' var isn't accessed
+test/error/mutable.lns:32:14: warning: 'val2' var isn't accessed
+test/error/mutable.lns:33:4: warning: has no nilable
+test/error/mutable.lns:38:7: warning: 'val1' var isn't accessed
+test/error/mutable.lns:39:7: warning: 'val2' var isn't accessed
+test/error/mutable.lns:98:4: warning: 'val' var isn't accessed
+test/error/mutable.lns:219:7: warning: 'func' var isn't accessed
+test/error/mutable.lns:223:7: warning: 'func2' var isn't accessed
+test/error/mutable.lns:227:7: warning: 'func3' var isn't accessed
+test/error/mutable.lns:253:15: warning: 'work' var isn't accessed
+test/error/mutable.lns:5:9: error: this is not mutable variable. -- val1
+test/error/mutable.lns:6:9: error: this is not mutable variable. -- val2
+test/error/mutable.lns:11:12: error: this is not mutable variable. -- val1
+test/error/mutable.lns:12:12: error: this is not mutable variable. -- val2
+test/error/mutable.lns:15:12: error: this is not mutable variable. -- val1
+test/error/mutable.lns:16:12: error: this is not mutable variable. -- val2
+test/error/mutable.lns:34:12: error: this is not mutable variable. -- val1
+test/error/mutable.lns:35:12: error: this is not mutable variable. -- val2
+test/error/mutable.lns:38:12: error: this is not mutable variable. -- val1
+test/error/mutable.lns:39:12: error: this is not mutable variable. -- val2
+test/error/mutable.lns:63:18: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:66:17: error: this is not mutable variable. -- val2
+test/error/mutable.lns:67:16: error: this node can not be l-value. -- ExpRefItem
+test/error/mutable.lns:68:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:69:15: error: this node can not be l-value. -- ExpRefItem
+test/error/mutable.lns:81:11: error: this is not mutable variable. -- val4
+test/error/mutable.lns:85:6: error: this is not mutable variable. -- test
+test/error/mutable.lns:86:10: error: this is not mutable variable. -- val
+test/error/mutable.lns:87:11: error: this is not mutable variable. -- val2
+test/error/mutable.lns:88:6: error: can't access mutable method. -- &Test.set_val3
+test/error/mutable.lns:89:6: error: can't access mutable method. -- &Test.func1
+test/error/mutable.lns:90:6: error: can't access mutable method. -- &Test.func2
+test/error/mutable.lns:93:12: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:94:10: error: this node can not be l-value. -- ExpRefItem
+test/error/mutable.lns:100:9: error: = operator: exp(1) type mismatch List<int>(1136) <- &List<int>(1052): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:104:9: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:118:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:124:11: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:128:4: error: unmatch value type (index:1) List<int> <- &List<int> -- 
+test/error/mutable.lns:130:11: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:136:4: error: return: exp(1) type mismatch @test.@error.@mutable.Test2!(1214) <- &@test.@error.@mutable.Test2!(1216): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:168:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:169:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:170:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:171:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:177:12: error: can't access allmut type's field(val9) in async function.
+test/error/mutable.lns:178:12: error: can't access allmut type's field(val11) in async function.
+test/error/mutable.lns:185:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:186:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:187:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:188:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:189:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:190:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:191:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:192:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:194:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:196:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:202:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:204:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:205:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:206:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:207:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:208:16: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:210:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:212:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:216:8: error: can't access mutable method. -- &List<List<int>>.insert
+test/error/mutable.lns:217:11: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:225:15: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:228:12: error: can't access mutable method. -- &List<&List<int>>.insert
+test/error/mutable.lns:229:15: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@mutable.Super>(1529) <- List<@test.@error.@mutable.Sub1>(1568): index 1 -- 
+test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &List<List<@test.@error.@mutable.Super>>(1549) <- List<List<@test.@error.@mutable.Sub1>>(1583): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/var.lns:2:8: warning: 'val' var isn't accessed
+test/error/var.lns:4:8: warning: 'val2' var isn't accessed
+test/error/var.lns:8:8: warning: 'val1' var isn't accessed
+test/error/var.lns:9:8: warning: 'val2' var isn't accessed
+test/error/var.lns:10:8: warning: 'val3' var isn't accessed
+test/error/var.lns:11:8: warning: 'val4' var isn't accessed
+test/error/var.lns:15:4: warning: 'val1' var isn't accessed
+test/error/var.lns:17:4: warning: 'val2' var isn't accessed
+test/error/var.lns:19:4: warning: 'val3' var isn't accessed
+test/error/var.lns:21:4: warning: 'val4' var isn't accessed
+test/error/var.lns:30:12: warning: 'val' var isn't accessed
+test/error/var.lns:42:7: warning: 'val' var isn't accessed
+test/error/var.lns:2:12: error: Key or value type is unknown
+test/error/var.lns:3:8: error: This symbol is shadowed from 4:8 -- val2
+test/error/var.lns:3:13: error: generic type count is unmatch. -- 2
+test/error/var.lns:4:8: error: shadowing symbol of 3:8 -- val2
+test/error/var.lns:4:13: error: generic type count is unmatch. -- 2
+test/error/var.lns:8:8: error: must set the item type of Collection. -- val1:List<>
+test/error/var.lns:9:8: error: must set the item type of Collection. -- val2:Set<>
+test/error/var.lns:10:8: error: must set the item type of Collection. -- val3:Array<>
+test/error/var.lns:11:8: error: must set the item type of Collection. -- val4:Map<,>
+test/error/var.lns:15:11: error: must set the item type of Collection. -- val1:List<>
+test/error/var.lns:17:11: error: must set the item type of Collection. -- val2:Set<>
+test/error/var.lns:19:11: error: must set the item type of Collection. -- val3:Array<>
+test/error/var.lns:21:11: error: must set the item type of Collection. -- val4:Map<,>
+test/error/var.lns:25:11: error: It can't access the symbol '_'.
+test/error/var.lns:26:15: error: It can't access the symbol '_'.
+test/error/var.lns:59:4: error: 'pub' variable must exist top scope.
+test/error/arg.lns:7:4: warning: 'val1' var isn't accessed
+test/error/arg.lns:7:4: warning: 'val2' var isn't accessed
+test/error/arg.lns:9:4: warning: 'val10' var isn't accessed
+test/error/arg.lns:9:4: warning: 'val20' var isn't accessed
+test/error/arg.lns:9:4: warning: 'val30' var isn't accessed
+test/error/arg.lns:13:4: warning: 'val100' var isn't accessed
+test/error/arg.lns:13:4: warning: 'val200' var isn't accessed
+test/error/arg.lns:13:4: warning: 'val300' var isn't accessed
+test/error/arg.lns:15:7: warning: 'val1000' var isn't accessed
+test/error/arg.lns:15:7: warning: 'val2000' var isn't accessed
+test/error/arg.lns:15:7: warning: 'val3000' var isn't accessed
+test/error/arg.lns:17:8: warning: 'val' var isn't accessed
+test/error/arg.lns:22:4: warning: 'val1' var isn't accessed
+test/error/arg.lns:22:4: warning: 'val2' var isn't accessed
+test/error/arg.lns:22:4: warning: 'val3' var isn't accessed
+test/error/arg.lns:24:4: warning: 'val10' var isn't accessed
+test/error/arg.lns:24:4: warning: 'val20' var isn't accessed
+test/error/arg.lns:24:4: warning: 'val30' var isn't accessed
+test/error/arg.lns:24:4: warning: 'val40' var isn't accessed
+test/error/arg.lns:29:4: warning: 'val1' var isn't accessed
+test/error/arg.lns:29:4: warning: 'val2' var isn't accessed
+test/error/arg.lns:31:4: warning: 'val10' var isn't accessed
+test/error/arg.lns:31:4: warning: 'val20' var isn't accessed
+test/error/arg.lns:31:4: warning: 'val30' var isn't accessed
+test/error/arg.lns:41:4: warning: 'val1' var isn't accessed
+test/error/arg.lns:41:4: warning: 'val2' var isn't accessed
+test/error/arg.lns:43:4: warning: 'val10' var isn't accessed
+test/error/arg.lns:43:4: warning: 'val20' var isn't accessed
+test/error/arg.lns:43:4: warning: 'val30' var isn't accessed
+test/error/arg.lns:48:4: warning: 'val1' var isn't accessed
+test/error/arg.lns:48:4: warning: 'val2' var isn't accessed
+test/error/arg.lns:48:4: warning: 'val3' var isn't accessed
+test/error/arg.lns:50:4: warning: 'val10' var isn't accessed
+test/error/arg.lns:50:4: warning: 'val20' var isn't accessed
+test/error/arg.lns:50:4: warning: 'val30' var isn't accessed
+test/error/arg.lns:50:4: warning: 'val40' var isn't accessed
+test/error/arg.lns:55:4: warning: 'val1' var isn't accessed
+test/error/arg.lns:55:4: warning: 'val2' var isn't accessed
+test/error/arg.lns:57:4: warning: 'val10' var isn't accessed
+test/error/arg.lns:57:4: warning: 'val20' var isn't accessed
+test/error/arg.lns:57:4: warning: 'val30' var isn't accessed
+test/error/arg.lns:66:1: warning: func3: use '**' at arg(3). int <- int
+test/error/arg.lns:84:1: warning: func4: 00000:use '##', instate of '...'.
+test/error/arg.lns:85:1: warning: func4: 00000:use '##', instate of '...'.
+test/error/arg.lns:88:1: warning: func4: 00000:use '##', instate of '...'.
+test/error/arg.lns:90:1: warning: func4: use '**' at arg(4). stem! <- ...
+test/error/arg.lns:91:1: warning: func6: use '**' at arg(2). stem! <- ...
+test/error/arg.lns:92:1: warning: func7: use '**' at arg(2). stem! <- ...
+test/error/arg.lns:99:7: warning: 'func2l' var isn't accessed
+test/error/arg.lns:117:4: warning: func1: 00000:use '##', instate of 'int!'.
+test/error/arg.lns:130:13: warning: return: 00000:use '##', instate of 'int!'.
+test/error/arg.lns:1:4: error: This symbol is shadowed from 124:7 -- func
+test/error/arg.lns:10:12: error: This symbol is shadowed from 12:12 -- val100
+test/error/arg.lns:10:28: error: This symbol is shadowed from 12:28 -- val200
+test/error/arg.lns:10:40: error: This symbol is shadowed from 12:40 -- val300
+test/error/arg.lns:12:4: error: unmatch value type (index = 3) stem <- stem!
+test/error/arg.lns:12:12: error: shadowing symbol of 10:12 -- val100
+test/error/arg.lns:12:28: error: shadowing symbol of 10:28 -- val200
+test/error/arg.lns:12:40: error: shadowing symbol of 10:40 -- val300
+test/error/arg.lns:13:27: error: = operator: exp(3) type mismatch stem <- stem!: dst 3 -- 
+test/error/arg.lns:17:12: error: invalid type. -- '...'
+test/error/arg.lns:30:4: error: unmatch value type (index:3) :: <- nil
+test/error/arg.lns:31:24: error: = operator: exp(3) type mismatch :: <- [##]: dst 3 -- 
+test/error/arg.lns:42:4: error: unmatch value type (index:3) :: <- nil
+test/error/arg.lns:43:24: error: = operator: exp(3) type mismatch :: <- [##]: dst 3 -- 
+test/error/arg.lns:49:4: error: unmatch value type (index:4) :: <- nil
+test/error/arg.lns:50:31: error: = operator: exp(4) type mismatch :: <- [##]: dst 4 -- 
+test/error/arg.lns:56:4: error: unmatch value type (index:3) :: <- nil
+test/error/arg.lns:57:24: error: = operator: exp(3) type mismatch :: <- [##]: dst 3 -- 
+test/error/arg.lns:61:4: error: This symbol is shadowed from 115:7 -- func3
+test/error/arg.lns:64:1: error: func3: exp(3) type mismatch int <- [##]: dst 3 -- 
+test/error/arg.lns:68:1: error: func3: exp(3) type mismatch int <- [##]: dst 3 -- 
+test/error/arg.lns:69:1: error: func3: exp(3) type mismatch int <- [##]: dst 3 -- 
+test/error/arg.lns:71:1: error: func3: over exp. expect: 3: actual: 4
+test/error/arg.lns:83:1: error: func4: exp(3) type mismatch int <- [##]: dst 3 -- 
+test/error/arg.lns:86:1: error: func4: exp(3) type mismatch int <- [##]: dst 3 -- 
+test/error/arg.lns:87:1: error: func4: exp(2) type mismatch int <- stem!: dst 2 -- 
+test/error/arg.lns:89:1: error: func4: exp(3) type mismatch int <- stem!: dst 3 -- 
+test/error/arg.lns:96:7: error: return: exp(3) type mismatch int <- str: src: 3 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/arg.lns:100:7: error: return: exp(2) type mismatch int <- nil: src: 2 -- 
+test/error/arg.lns:103:21: error: func1: exp(3) type mismatch int <- str: src: 3 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/arg.lns:113:7: error: func: over exp. expect:0, actual:2
+test/error/arg.lns:113:16: error: '##' can't use with '...'
+test/error/arg.lns:115:7: error: shadowing symbol of 61:4 -- func3
+test/error/arg.lns:118:4: error: func2l: must not use '##'
+test/error/arg.lns:119:4: error: func3: exp(2) type mismatch int <- ##: dst 2 -- 
+test/error/arg.lns:120:4: error: func3: exp(1) type mismatch int <- ##: dst 1 -- 
+test/error/arg.lns:124:7: error: shadowing symbol of 1:4 -- func
+test/error/arg.lns:133:13: error: no return value -- need values(2)
+test/error/arg2.lns:42:1: warning: func2: 00000:use '##', instate of 'int!'.
+test/error/arg2.lns:43:1: warning: func2: use '**' at arg(2). int! <- int
+test/error/arg2.lns:47:1: warning: func20: use '**' at arg(2). int <- int
+test/error/arg2.lns:50:1: warning: func3: 00000:use '##', instate of 'int!'.
+test/error/arg2.lns:51:1: warning: func3: 00000:use '##', instate of 'int!'.
+test/error/arg2.lns:52:1: warning: func3: use '**' at arg(2). int! <- int
+test/error/arg2.lns:56:1: warning: func30: use '**' at arg(2). int <- int
+test/error/arg2.lns:71:10: warning: return: use '**' at arg(2). int <- int
+test/error/arg2.lns:81:10: warning: return: 00000:use '##', instate of 'int!'.
+test/error/arg2.lns:84:10: warning: return: use '**' at arg(2). int! <- int
+test/error/arg2.lns:91:8: warning: 'val1' var isn't accessed
+test/error/arg2.lns:92:8: warning: 'val10' var isn't accessed
+test/error/arg2.lns:95:8: warning: 'val1' var isn't accessed
+test/error/arg2.lns:95:14: warning: 'val2' var isn't accessed
+test/error/arg2.lns:96:8: warning: 'val10' var isn't accessed
+test/error/arg2.lns:96:15: warning: 'val20' var isn't accessed
+test/error/arg2.lns:97:8: warning: 'val100' var isn't accessed
+test/error/arg2.lns:97:16: warning: 'val200' var isn't accessed
+test/error/arg2.lns:100:8: warning: 'val1' var isn't accessed
+test/error/arg2.lns:100:14: warning: 'val2' var isn't accessed
+test/error/arg2.lns:100:20: warning: 'val3' var isn't accessed
+test/error/arg2.lns:101:8: warning: 'val10' var isn't accessed
+test/error/arg2.lns:101:15: warning: 'val20' var isn't accessed
+test/error/arg2.lns:101:22: warning: 'val30' var isn't accessed
+test/error/arg2.lns:102:8: warning: 'val100' var isn't accessed
+test/error/arg2.lns:102:16: warning: 'val200' var isn't accessed
+test/error/arg2.lns:102:24: warning: 'val300' var isn't accessed
+test/error/arg2.lns:103:8: warning: 'val1000' var isn't accessed
+test/error/arg2.lns:103:17: warning: 'val2000' var isn't accessed
+test/error/arg2.lns:103:26: warning: 'val3000' var isn't accessed
+test/error/arg2.lns:108:14: warning: byte: 00000:use '##', instate of 'int!'.
+test/error/arg2.lns:109:14: warning: byte: use '**' at arg(2). int! <- int
+test/error/arg2.lns:123:4: warning: func2: 00000:use '##', instate of 'int!'.
+test/error/arg2.lns:123:11: warning: func1: 00000:use '##', instate of 'int!'.
+test/error/arg2.lns:125:4: warning: print: 00000:use '##', instate of '&...'.
+test/error/arg2.lns:22:4: error: This symbol is shadowed from 115:7 -- func1
+test/error/arg2.lns:24:4: error: This symbol is shadowed from 118:7 -- func2
+test/error/arg2.lns:38:1: error: func1: over exp. expect: 1: actual: 2
+test/error/arg2.lns:44:1: error: func2: over exp. expect: 2: actual: 3
+test/error/arg2.lns:46:1: error: func20: exp(2) type mismatch int <- [##]: dst 2 -- 
+test/error/arg2.lns:54:1: error: func30: exp(2) type mismatch int <- [##]: dst 2 -- 
+test/error/arg2.lns:55:1: error: func30: exp(3) type mismatch int <- [##]: dst 3 -- 
+test/error/arg2.lns:68:10: error: return: exp(2) type mismatch int <- [##]: dst 2 -- 
+test/error/arg2.lns:95:4: error: unmatch value type (index:2) :: <- nil
+test/error/arg2.lns:100:4: error: unmatch value type (index:2) :: <- nil
+test/error/arg2.lns:100:4: error: unmatch value type (index:3) :: <- nil
+test/error/arg2.lns:101:4: error: unmatch value type (index:3) :: <- nil
+test/error/arg2.lns:115:7: error: shadowing symbol of 22:4 -- func1
+test/error/arg2.lns:118:7: error: shadowing symbol of 24:4 -- func2
+test/error/arg2.lns:123:11: error: The type of exp(1) is None!!
+test/error/arg2.lns:123:11: error: This arg can't be r-value. -- ExpCall
+test/error/arg2.lns:123:11: error: This arg(1) doesn't have multiple value. It must not use '**'
+test/error/arg2.lns:123:11: error: this node can't be r-value. -- ExpCall
+test/error/arg2.lns:125:11: error: The type of exp(1) is None!!
+test/error/arg2.lns:125:11: error: This arg can't be r-value. -- ExpCall
+test/error/arg2.lns:125:11: error: This arg(1) doesn't have multiple value. It must not use '**'
+test/error/arg2.lns:125:11: error: this node can't be r-value. -- ExpCall
+test/error/unwrap.lns:2:9: error: This symbol is shadowed from 9:8 -- val1
+test/error/unwrap.lns:2:15: error: This symbol is shadowed from 10:8 -- val2
+test/error/unwrap.lns:9:8: error: This symbol is shadowed from 12:12 -- val1
+test/error/unwrap.lns:9:8: error: shadowing symbol of 2:9 -- val1
+test/error/unwrap.lns:10:8: error: shadowing symbol of 2:15 -- val2
+test/error/unwrap.lns:12:4: error: This condition never be false
+test/error/unwrap.lns:12:12: error: shadowing symbol of 9:8 -- val1
+test/error/unwrap.lns:26:4: error: unmatch value type (index:1) @test.@error.@unwrap.Sub1 <- @test.@error.@unwrap.Sub2 -- not inherit Sub1(1025) <- Sub2(1035)
+test/error/unwrap.lns:42:17: error: this is not mutable variable. -- val
+test/error/unwrap.lns:43:18: error: this is not mutable variable. -- val2
+test/error/unwrap.lns:47:24: error: no numeric type 'int!' or 'int'
+test/error/unwrap.lns:49:10: error: This statement is not reached -- BreakKind.Return
+test/error/unwrap.lns:49:16: error: 'when' support only local variables or arguments.
+test/error/unwrap.lns:52:16: error: 'when' support only local variables or arguments.
+test/error/unwrap.lns:55:16: error: 'when' support only local variables or arguments.
+test/error/unwrap.lns:58:16: error: This type isn't nilable. -- int
+test/error/unwrap.lns:66:11: error: this is not mutable variable. -- val
+test/error/unwrap.lns:71:16: error: not found type -- val2
+test/error/unwrap.lns:9:8: warning: 'val1' var isn't accessed
+test/error/unwrap.lns:12:4: warning: has no nilable
+test/error/unwrap.lns:12:12: warning: 'val1' var isn't accessed
+test/error/unwrap.lns:12:12: warning: This symbol has no referer -- val1
+test/error/unwrap.lns:26:4: warning: 'sub' var isn't accessed
+test/error/unwrap.lns:66:7: warning: 'val' var isn't accessed
+test/error/operand.lns:2:8: warning: 'val' var isn't accessed
+test/error/operand.lns:11:10: warning: this value never be 'false' -- int
+test/error/operand.lns:12:10: warning: this value never be 'false'
+test/error/operand.lns:22:8: warning: 'size' var isn't accessed
+test/error/operand.lns:35:7: warning: this operation is deprecated.
+test/error/operand.lns:37:7: warning: this operation is deprecated.
+test/error/operand.lns:39:7: warning: this operation is deprecated.
+test/error/operand.lns:41:7: warning: this operation is deprecated.
+test/error/operand.lns:69:11: warning: 'val' var isn't accessed
+test/error/operand.lns:70:11: warning: 'val2' var isn't accessed
+test/error/operand.lns:71:11: warning: 'val3' var isn't accessed
+test/error/operand.lns:2:14: error: this 'not' operand never be false
+test/error/operand.lns:5:4: error: This symbol is shadowed from 68:7 -- func
+test/error/operand.lns:17:19: error: this value never be 'true'
+test/error/operand.lns:22:15: error: unmatch type for "#" -- Map<int,int>
+test/error/operand.lns:29:12: error: no numeric type 'str' or 'real'
+test/error/operand.lns:30:10: error: no numeric type 'int' or 'str'
+test/error/operand.lns:68:7: error: shadowing symbol of 5:4 -- func
+test/error/operand.lns:69:21: error: no numeric type 'stem!' or 'int'
+test/error/operand.lns:71:18: error: unmatch type for "#" -- stem!
+test/error/loop.lns:2:7: warning: 'func' var isn't accessed
+test/error/loop.lns:4:10: warning: 'switch' should have 'case' blocks.
+test/error/loop.lns:15:7: warning: 'func' var isn't accessed
+test/error/loop.lns:17:10: warning: 'switch' should have 'case' blocks.
+test/error/loop.lns:28:7: warning: 'func' var isn't accessed
+test/error/loop.lns:30:10: warning: 'switch' should have 'case' blocks.
+test/error/loop.lns:41:7: warning: 'func' var isn't accessed
+test/error/loop.lns:57:7: warning: 'func' var isn't accessed
+test/error/loop.lns:74:7: warning: 'func' var isn't accessed
+test/error/loop.lns:86:15: warning: 'val' var isn't accessed
+test/error/loop.lns:95:7: warning: 'func' var isn't accessed
+test/error/loop.lns:109:7: warning: 'func' var isn't accessed
+test/error/loop.lns:122:7: warning: 'func' var isn't accessed
+test/error/loop.lns:135:7: warning: 'func' var isn't accessed
+test/error/loop.lns:137:14: warning: 'index' var isn't accessed
+test/error/loop.lns:148:7: warning: 'func' var isn't accessed
+test/error/loop.lns:150:16: warning: 'item' var isn't accessed
+test/error/loop.lns:212:8: warning: 'val' var isn't accessed
+test/error/loop.lns:213:12: warning: 'val' var isn't accessed
+test/error/loop.lns:215:12: warning: 'val1' var isn't accessed
+test/error/loop.lns:215:18: warning: 'val' var isn't accessed
+test/error/loop.lns:217:8: warning: 'val' var isn't accessed
+test/error/loop.lns:219:10: warning: 'val' var isn't accessed
+test/error/loop.lns:4:10: error: 'switch' must have 'case' blocks when have 'default' block.
+test/error/loop.lns:10:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:17:10: error: 'switch' must have 'case' blocks when have 'default' block.
+test/error/loop.lns:23:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:30:10: error: 'switch' must have 'case' blocks when have 'default' block.
+test/error/loop.lns:52:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:82:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:87:15: error: can't access mutable method. -- &List<int>.insert
+test/error/loop.lns:88:10: error: this node can not be l-value. -- ExpRef
+test/error/loop.lns:88:15: error: this is not mutable variable. -- list
+test/error/loop.lns:95:4: error: This funcion doesn't have return.
+test/error/loop.lns:117:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:130:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:143:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:150:31: error: can't access Luaval function without __luago. -- gmatch on func
+test/error/loop.lns:156:7: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:184:13: error: This type isn't nilable. -- int
+test/error/loop.lns:186:13: error: This type isn't nilable. -- str
+test/error/loop.lns:194:4: error: no loop syntax.
+test/error/loop.lns:197:1: error: 'return' could not use here
+test/error/loop.lns:197:1: error: This statement is not reached -- BreakKind.Break
+test/error/loop.lns:197:1: error: return: over exp. expect:0, actual:1
+test/error/loop.lns:200:1: error: This statement is not reached -- BreakKind.Return
+test/error/loop.lns:201:4: error: This funcion must be never return. -- BreakKind.None
+test/error/loop.lns:209:4: error: This statement is not reached -- BreakKind.NeverRet
+test/error/loop.lns:212:8: error: This symbol is shadowed from 213:12 -- val
+test/error/loop.lns:212:8: error: This symbol is shadowed from 215:18 -- val
+test/error/loop.lns:212:8: error: This symbol is shadowed from 217:8 -- val
+test/error/loop.lns:212:8: error: This symbol is shadowed from 219:10 -- val
+test/error/loop.lns:213:12: error: shadowing symbol of 212:8 -- val
+test/error/loop.lns:215:18: error: shadowing symbol of 212:8 -- val
+test/error/loop.lns:217:8: error: shadowing symbol of 212:8 -- val
+test/error/loop.lns:219:10: error: shadowing symbol of 212:8 -- val
+test/error/loop.lns:219:24: error: can't access Luaval function without __luago. -- gmatch on @loop
+test/error/loop.lns:225:17: error: This type can't use forsort -- Hoge
+test/error/loop.lns:227:17: error: This type can't use forsort -- Hoge
+test/error/loop.lns:234:10: error: no loop syntax.
+test/error/loop.lns:243:4: error: This funcion doesn't have return.
+test/error/cast.lns:14:8: warning: 'val' var isn't accessed
+test/error/cast.lns:16:8: warning: 'val3' var isn't accessed
+test/error/cast.lns:16:26: warning: not support cast from stem to form for transcompiling to c-lang.
+test/error/cast.lns:17:8: warning: 'val4' var isn't accessed
+test/error/cast.lns:19:8: warning: 'test2' var isn't accessed
+test/error/cast.lns:19:22: warning: This cast isn't need. (&@test.@error.@cast.Test <- &@test.@error.@cast.Sub)
+test/error/cast.lns:19:22: warning: use '@@@' cast for class or interface. -- Test
+test/error/cast.lns:22:8: warning: 'test3' var isn't accessed
+test/error/cast.lns:23:8: warning: 'test4' var isn't accessed
+test/error/cast.lns:27:8: warning: 'val' var isn't accessed
+test/error/cast.lns:31:7: warning: 'func' var isn't accessed
+test/error/cast.lns:37:8: warning: 'val' var isn't accessed
+test/error/cast.lns:38:8: warning: 'val2' var isn't accessed
+test/error/cast.lns:14:30: error: This type can't cast. (form <- @test.@error.@cast.Test.func)
+test/error/cast.lns:15:25: error: This arg can't be r-value. -- RefField
+test/error/cast.lns:15:25: error: this node(1) can not be r-value. -- RefField
+test/error/cast.lns:22:22: error: '@@=' cast type can't use class has method -- Test
+test/error/cast.lns:23:22: error: '@@=' cast type can't use class has method -- Sub
+test/error/cast.lns:33:20: error: not support cast -- T
+test/error/cast.lns:37:21: error: This type can't cast. (int <- str)
+test/error/cast.lns:38:18: error: This type can't cast. (str <- int)
+test/error/prototype.lns:2:7: error: This function doesn't have body. -- func
+test/error/statement.lns:1:1: error: This node can't be statement. -- StmtExp
+test/error/flow.lns:2:7: warning: 'func1' var isn't accessed
+test/error/flow.lns:7:7: warning: 'func' var isn't accessed
+test/error/flow.lns:15:7: warning: 'func' var isn't accessed
+test/error/flow.lns:21:7: warning: 'func' var isn't accessed
+test/error/flow.lns:29:7: warning: 'func' var isn't accessed
+test/error/flow.lns:40:7: warning: 'func' var isn't accessed
+test/error/flow.lns:49:7: warning: 'func' var isn't accessed
+test/error/flow.lns:58:7: warning: 'func' var isn't accessed
+test/error/flow.lns:68:7: warning: 'func' var isn't accessed
+test/error/flow.lns:98:7: warning: 'func' var isn't accessed
+test/error/flow.lns:100:15: warning: 'val' var isn't accessed
+test/error/flow.lns:107:7: warning: 'func2' var isn't accessed
+test/error/flow.lns:109:15: warning: 'val' var isn't accessed
+test/error/flow.lns:119:7: warning: 'func3' var isn't accessed
+test/error/flow.lns:128:7: warning: 'func4' var isn't accessed
+test/error/flow.lns:137:7: warning: 'func5' var isn't accessed
+test/error/flow.lns:149:7: warning: 'func6' var isn't accessed
+test/error/flow.lns:163:7: warning: 'func1' var isn't accessed
+test/error/flow.lns:175:7: warning: 'func2' var isn't accessed
+test/error/flow.lns:190:7: warning: 'func3' var isn't accessed
+test/error/flow.lns:191:11: warning: 'val' var isn't accessed
+test/error/flow.lns:204:7: warning: 'func' var isn't accessed
+test/error/flow.lns:207:10: warning: 'val' var isn't accessed
+test/error/flow.lns:217:7: warning: 'func1' var isn't accessed
+test/error/flow.lns:226:7: warning: 'func2' var isn't accessed
+test/error/flow.lns:238:7: warning: 'func3' var isn't accessed
+test/error/flow.lns:247:10: warning: This 'match' has full case. This 'default' is no reach.
+test/error/flow.lns:255:7: warning: 'func' var isn't accessed
+test/error/flow.lns:2:4: error: This funcion must be never return. -- BreakKind.None
+test/error/flow.lns:7:4: error: This funcion must be never return. -- BreakKind.None
+test/error/flow.lns:9:10: error: no return value -- need values(1)
+test/error/flow.lns:21:4: error: This funcion must be never return. -- BreakKind.None
+test/error/flow.lns:51:10: error: no return value -- need values(1)
+test/error/flow.lns:58:4: error: This funcion must be never return. -- BreakKind.None
+test/error/flow.lns:81:7: error: This exp never be false -- int
+test/error/flow.lns:83:7: error: This exp never be false -- real
+test/error/flow.lns:85:7: error: This exp never be false -- str
+test/error/flow.lns:87:7: error: This exp never be false -- List<>
+test/error/flow.lns:89:7: error: This exp never be false -- Map<,>
+test/error/flow.lns:115:10: error: This statement is not reached -- BreakKind.Break
+test/error/flow.lns:126:7: error: This statement is not reached -- BreakKind.Return
+test/error/flow.lns:145:10: error: This statement is not reached -- BreakKind.Break
+test/error/flow.lns:157:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow.lns:159:7: error: This statement is not reached -- BreakKind.Return
+test/error/flow.lns:172:7: error: There is the case no initialized value for 'val'
+test/error/flow.lns:173:14: error: This can't evaluate for '+' -- ExpRef
+test/error/flow.lns:200:7: error: This statement is not reached -- BreakKind.Return
+test/error/flow.lns:200:14: error: This can't evaluate for '+' -- ExpRef
+test/error/flow.lns:200:18: error: no numeric type '::' or 'int'
+test/error/flow.lns:223:7: error: There is the case no initialized value for 'val'
+test/error/flow.lns:224:14: error: This can't evaluate for '+' -- ExpRef
+test/error/flow.lns:260:7: error: There is the case no initialized value for 'test'
+test/error/flow_switch.lns:8:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:9:14: warning: 'count' var isn't accessed
+test/error/flow_switch.lns:26:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:42:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:53:13: warning: This 'switch' has full case. This 'default' is no reach.
+test/error/flow_switch.lns:62:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:82:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:98:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:113:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:127:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:140:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:152:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:163:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:171:10: warning: 'func' var isn't accessed
+test/error/flow_switch.lns:175:13: warning: This 'switch' has full case. This 'default' is no reach.
+test/error/flow_switch.lns:21:13: error: This statement is not reached -- BreakKind.Break
+test/error/flow_switch.lns:38:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_switch.lns:58:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_switch.lns:78:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_switch.lns:94:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_switch.lns:121:13: error: There is the case no initialized value for 'work'
+test/error/flow_switch.lns:123:17: error: This arg can't be r-value. -- ExpRef
+test/error/flow_switch.lns:123:17: error: this node can't be r-value. -- ExpRef
+test/error/flow_switch.lns:135:10: error: There is the case no initialized value for 'work'
+test/error/flow_switch.lns:136:17: error: This arg can't be r-value. -- ExpRef
+test/error/flow_switch.lns:136:17: error: this node can't be r-value. -- ExpRef
+test/error/flow_switch.lns:153:10: error: This 'switch' hasn't enough 'case' condition.
+test/error/flow_switch.lns:157:13: error: '_switch' can't have default.
+test/error/flow_match.lns:8:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:9:14: warning: 'count' var isn't accessed
+test/error/flow_match.lns:26:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:42:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:53:13: warning: This 'match' has full case. This 'default' is no reach.
+test/error/flow_match.lns:62:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:82:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:98:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:113:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:127:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:140:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:152:10: warning: 'func' var isn't accessed
+test/error/flow_match.lns:21:13: error: This statement is not reached -- BreakKind.Break
+test/error/flow_match.lns:38:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_match.lns:58:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_match.lns:78:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_match.lns:94:10: error: This statement is not reached -- BreakKind.Return
+test/error/flow_match.lns:121:13: error: There is the case no initialized value for 'work'
+test/error/flow_match.lns:123:17: error: This arg can't be r-value. -- ExpRef
+test/error/flow_match.lns:123:17: error: this node can't be r-value. -- ExpRef
+test/error/flow_match.lns:135:10: error: There is the case no initialized value for 'work'
+test/error/flow_match.lns:136:17: error: This arg can't be r-value. -- ExpRef
+test/error/flow_match.lns:136:17: error: this node can't be r-value. -- ExpRef
+test/error/flow_match.lns:153:10: error: This 'match' hasn't enough 'case' condition.
+test/error/flow_match.lns:157:13: error: '_match' can't have default.
+test/error/imp2.lns:1:25: error: recursive import:  -> test.error.import -> test.error.imp1 -> test.error.imp2 -> test.error.import
+test/error/import2.lns:1:15: error: failed to load meta -- noexist on ./
+test/error/import3.lns:8:8: warning: 'test' var isn't accessed
+test/error/import4.lns:4:12: error: can't access to __init of Test
+test/error/import4.lns:4:16: error: __init: exp(1) type mismatch @test.@error.@Sub5.Hoge <- nil: short
+test/error/import5.lns:3:13: error: module can't use as Type. -- @Sub5
+test/error/import5.lns:7:11: error: not found field typeInfo: @test.@error.@Sub5.Test.func2 -- TypeInfoKind.Class
+test/error/import6.lns:4:13: error: not found field typeInfo: @test.@error.@Sub6.Test.val -- TypeInfoKind.Class
+test/error/import7.lns:10:16: error: not found type -- Sub5
+test/error/strformat.lns:16:1: warning: format: 00000:use '##', instate of '...'.
+test/error/strformat.lns:1:1: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:2:1: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:3:1: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:4:1: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:5:1: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:6:1: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:7:1: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:8:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:9:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:10:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:11:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:12:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:13:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:14:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:16:1: error: argument number is mismatch -- 1 != 0 (%s)
+test/error/strformat.lns:35:1: error: argument(1) type must be str -- Map<,>
+test/error/strformat.lns:38:8: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:39:8: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:40:8: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:41:8: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:42:8: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:43:8: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:44:8: error: argument(2) type must be real -- Map<,>
+test/error/strformat.lns:45:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:46:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:47:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:48:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:49:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:50:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:51:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:57:8: error: argument number is mismatch -- 1 != 2 ("%d")
+test/error/strformat.lns:61:17: error: no string type 'str' or 'str!'
+test/error/strformat.lns:61:29: error: no string type 'str!' or 'str'
+test/error/Alge.lns:22:17: error: can't access mutable method. -- &List<int>.insert
+test/error/Alge.lns:30:12: error: can't use the prototype class -- Hoge
+test/error/Alge.lns:36:4: error: need to import module -- @Sub5.Sub5alge (Sub5alge)
+test/error/Alge.lns:48:29: error: not found -- ;. expects (
+test/error/Alge2.lns:13:8: warning: 'test1' var isn't accessed
+test/error/Alge2.lns:14:8: warning: 'test2' var isn't accessed
+test/error/Alge2.lns:15:8: warning: 'test3' var isn't accessed
+test/error/Alge2.lns:8:16: error: can't compare alge.
+test/error/Alge2.lns:15:25: error: call: over exp. expect: 1: actual: 2
+test/error/Alge3.lns:15:8: warning: 'test1' var isn't accessed
+test/error/Alge3.lns:16:8: warning: 'test2' var isn't accessed
+test/error/Alge3.lns:17:8: warning: 'test3' var isn't accessed
+test/error/Alge3.lns:19:8: warning: 'test5' var isn't accessed
+test/error/Alge3.lns:20:8: warning: 'x' var isn't accessed
+test/error/Alge3.lns:22:19: warning: 'x' var isn't accessed
+test/error/Alge3.lns:22:22: warning: 'y' var isn't accessed
+test/error/Alge3.lns:29:19: warning: 'x' var isn't accessed
+test/error/Alge3.lns:29:22: warning: 'y' var isn't accessed
+test/error/Alge3.lns:7:4: error: multiple symbole -- Val1
+test/error/Alge3.lns:17:25: error: call: exp(1) type mismatch int(26) <- real(30): index 1 -- 
+test/error/Alge3.lns:18:25: error: call: exp(3) type mismatch @test.@error.@Alge3.Hoge(1008) <- int(26): index 3 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
+test/error/Alge3.lns:19:25: error: call: exp(1) type mismatch AlgeTest(1024) <- int(26): index 1(TypeInfoKind.Alge)
+test/error/Alge3.lns:20:8: error: This symbol is shadowed from 22:19 -- x
+test/error/Alge3.lns:20:8: error: This symbol is shadowed from 22:19 -- x
+test/error/Alge3.lns:20:8: error: This symbol is shadowed from 29:19 -- x
+test/error/Alge3.lns:20:8: error: This symbol is shadowed from 29:19 -- x
+test/error/Alge3.lns:22:19: error: shadowing symbol of 20:8 -- x
+test/error/Alge3.lns:22:19: error: shadowing symbol of 20:8 -- x
+test/error/Alge3.lns:24:12: error: can't access mutable method. -- &Hoge.set_val
+test/error/Alge3.lns:29:19: error: shadowing symbol of 20:8 -- x
+test/error/Alge3.lns:29:19: error: shadowing symbol of 20:8 -- x
+test/error/Alge4.lns:14:8: error: member type is not Mapping -- AlgeTest
+test/error/exp.lns:2:11: error: This arg can't be r-value. -- RefType
+test/error/exp.lns:2:11: error: this node can't be r-value. -- RefType
+test/error/exp.lns:3:14: error: This arg can't be r-value. -- RefType
+test/error/exp.lns:3:14: error: this node(1) can not be r-value. -- RefType
+test/error/exp.lns:10:11: error: The type of exp(1) is None!!
+test/error/exp.lns:10:11: error: This arg can't be r-value. -- ExpCall
+test/error/exp.lns:10:11: error: this node can't be r-value. -- ExpCall
+test/error/exp.lns:11:14: error: The type of exp(1) is None!!
+test/error/exp.lns:11:14: error: This arg can't be r-value. -- ExpCall
+test/error/exp.lns:11:14: error: this node(1) can not be r-value. -- ExpCall
+test/error/exp.lns:13:7: error: This exp never be false -- 
+test/error/exp.lns:16:7: error: this 'not' operand never be false
+test/error/exp.lns:25:11: error: This arg can't be r-value. -- ExpCall
+test/error/exp.lns:25:11: error: this node can't be r-value. -- ExpCall
+test/error/exp.lns:26:15: error: This arg can't be r-value. -- ExpCall
+test/error/exp.lns:26:15: error: this node(1) can not be r-value. -- ExpCall
+test/error/exp.lns:28:7: error: This exp never be false -- __
+test/error/exp.lns:30:7: error: this 'not' operand never be false
+test/error/exp.lns:36:21: error: could not access with []. Use '$[]'-- stem!
+test/error/exp.lns:40:7: error: unmatch value type (index:1) bool <- bool! -- 
+test/error/exp.lns:43:13: error: not found -- ). expects ,
+test/error/exp.lns:3:8: warning: 'val' var isn't accessed
+test/error/exp.lns:10:4: warning: print: 00000:use '##', instate of '&...'.
+test/error/exp.lns:11:8: warning: 'val' var isn't accessed
+test/error/exp.lns:26:8: warning: 'val2' var isn't accessed
+test/error/exp.lns:36:8: warning: 'val2' var isn't accessed
+test/error/exp.lns:39:7: warning: 'func' var isn't accessed
+test/error/exp.lns:40:11: warning: 'val' var isn't accessed
+test/error/symbol.lns:1:5: error: This symbol is shadowed from 4:11 -- _val
+test/error/symbol.lns:1:5: error: symbol must not begin with '_' -- '_val'
+test/error/symbol.lns:2:4: error: symbol must not begin with '_' -- '_func1'
+test/error/symbol.lns:4:11: error: shadowing symbol of 1:5 -- _val
+test/error/symbol.lns:4:11: error: symbol must not begin with '_' -- '_val'
+test/error/symbol.lns:6:7: error: symbol must not begin with '_' -- '_Test'
+test/error/symbol.lns:7:7: error: symbol must not begin with '_' -- '_func'
+test/error/symbol.lns:7:7: error: symbol must not begin with '_' -- '_func'
+test/error/symbol.lns:10:7: error: macro name must begin with '_' -- 'Hoge'
+test/error/symbol.lns:12:5: error: this symbol is special keyword -- self
+test/error/symbol.lns:16:18: error: not found type -- val
+test/error/symbolEmpty.lns:2:8: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:3:8: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:4:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:15:8: warning: 'test2' var isn't accessed
+test/error/symbolEmpty.lns:19:8: warning: 'test2' var isn't accessed
+test/error/symbolEmpty.lns:20:4: warning: 'test2' var isn't accessed
+test/error/symbolEmpty.lns:24:8: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:28:8: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:32:8: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:37:8: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:41:8: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:42:8: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:45:8: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:53:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:54:17: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:59:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:71:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:80:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:81:11: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:87:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:98:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:112:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:113:15: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:114:7: warning: 'switch' should have 'case' blocks.
+test/error/symbolEmpty.lns:120:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:122:11: warning: 'count' var isn't accessed
+test/error/symbolEmpty.lns:129:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:138:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:147:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:151:11: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:155:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:162:11: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:167:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:168:12: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:171:11: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:175:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:184:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:196:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:208:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:219:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:221:7: warning: 'op' var isn't accessed
+test/error/symbolEmpty.lns:228:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:237:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:251:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:265:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:279:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:296:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:310:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:325:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:337:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:351:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:366:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:378:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:387:7: warning: 'func' var isn't accessed
+test/error/symbolEmpty.lns:403:10: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:422:16: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:426:11: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:426:16: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:435:4: warning: 'val' var isn't accessed
+test/error/symbolEmpty.lns:435:4: warning: 'val2' var isn't accessed
+test/error/symbolEmpty.lns:3:15: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:3:15: error: this node(1) can not be r-value. -- ExpRef
+test/error/symbolEmpty.lns:5:14: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:5:14: error: This can't access variable have no value -- val
+test/error/symbolEmpty.lns:5:14: error: this node can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:5:19: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:5:19: error: this node can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:6:14: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:6:14: error: This can't access variable have no value -- val
+test/error/symbolEmpty.lns:6:14: error: this node can not be r-value. -- ExpList
+test/error/symbolEmpty.lns:7:14: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:7:14: error: This can't access variable have no value -- val
+test/error/symbolEmpty.lns:7:14: error: this node can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:8:4: error: There is the case no initialized value for 'val2'
+test/error/symbolEmpty.lns:9:11: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:9:11: error: this node can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:16:11: error: this variable have no value. -- test2
+test/error/symbolEmpty.lns:20:10: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:25:11: error: this variable have no value. -- val
+test/error/symbolEmpty.lns:29:11: error: this variable have no value. -- val
+test/error/symbolEmpty.lns:33:11: error: this variable have no value. -- val
+test/error/symbolEmpty.lns:34:11: error: this variable have no value. -- val
+test/error/symbolEmpty.lns:38:4: error: this variable have no value. -- val
+test/error/symbolEmpty.lns:42:15: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:42:15: error: this node(1) can not be r-value. -- ExpRef
+test/error/symbolEmpty.lns:48:4: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:50:11: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:54:7: error: unmatch value type (index:2) :: <- nil
+test/error/symbolEmpty.lns:55:24: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:55:29: error: no numeric type '::' or 'int'
+test/error/symbolEmpty.lns:76:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:76:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:82:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:93:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:94:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:116:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:116:18: error: no numeric type '::' or 'int'
+test/error/symbolEmpty.lns:124:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:125:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:133:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:134:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:142:9: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:143:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:158:13: error: return: exp(1) type mismatch int(26) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/symbolEmpty.lns:168:21: error: This variable isn't set -- val
+test/error/symbolEmpty.lns:171:23: error: This arg can't be r-value. -- ExpRef
+test/error/symbolEmpty.lns:171:23: error: this node(1) can not be r-value. -- ExpRef
+test/error/symbolEmpty.lns:180:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:180:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:214:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:215:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:224:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:224:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:258:17: error: = operator: exp(1) type mismatch int(26) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/symbolEmpty.lns:275:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:275:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:305:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:306:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:346:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:347:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:374:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:374:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:383:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:383:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:405:17: error: can't access in this scope. -- val
+test/error/symbolEmpty.lns:412:7: error: There is the case no initialized value for 'val'
+test/error/symbolEmpty.lns:412:7: error: There is the case no initialized value for 'val2'
+test/error/symbolEmpty.lns:413:14: error: This can't evaluate for '+' -- ExpRef
+test/error/symbolEmpty.lns:426:7: error: unmatch value type (index:2) :: <- nil
+test/error/static.lns:0:0: error: not found TypeInfo -- func
+test/error/static.lns:4:12: error: It can't call prototype function from static -- func
+test/error/static.lns:8:9: error: mismatch functype -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func
+test/error/generics.lns:3:7: error: return: exp(1) type mismatch T!(1009) <- int(26): index 1(TypeInfoKind.Nilable)
+test/error/generics.lns:8:7: error: return: exp(1) type mismatch T(1019) <- Map<int,T>(1023): index 1(TypeInfoKind.Alternate)
+test/error/generics.lns:13:7: error: return: exp(1) type mismatch T(1030) <- T!(1031): index 1 -- is doesn't support nilable.
+test/error/generics.lns:27:7: error: return: exp(1) type mismatch T1(1063) <- &T1(1077): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics.lns:30:4: error: func<T1,T2>: exp(2) type mismatch T2 <- [##]: dst 2 -- is doesn't support nilable.
+test/error/generics.lns:32:4: error: func<T1,T2>: over exp. expect: 2: actual: 3
+test/error/generics.lns:36:7: error: return: exp(1) type mismatch T2(TypeInfoKind.Alternate:1088) <- T1(TypeInfoKind.Alternate:1084)
+test/error/generics.lns:45:16: error: can't access this class(Test<T>) without '<>'.
+test/error/generics.lns:53:21: error: 'T' of Test<T> doesn't inherit 'Super'
+test/error/generics.lns:63:23: error: Sub.func: not support to override the method has generics at return type. -- func: func(str): str -- func(str): str
+test/error/generics.lns:77:10: error: func: exp(1) type mismatch &T(1208) <- str(58): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics.lns:83:30: error: The static method can't use the type parameter. -- T
+test/error/generics.lns:83:35: error: The static method can't use the type parameter. -- T
+test/error/generics.lns:87:11: error: func: exp(1) type mismatch T(1251) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/generics.lns:90:17: error: multiple Type -- T
+test/error/generics.lns:91:19: error: shadowing Type -- T
+test/error/generics.lns:94:23: error: multiple Type -- T1
+test/error/generics.lns:103:23: error: can't use nilable type -- int!
+test/error/generics.lns:106:26: error: not found type -- TT
+test/error/generics.lns:2:7: warning: 'func' var isn't accessed
+test/error/generics.lns:7:7: warning: 'func' var isn't accessed
+test/error/generics.lns:12:7: warning: 'func' var isn't accessed
+test/error/generics.lns:17:7: warning: 'func' var isn't accessed
+test/error/generics.lns:26:11: warning: 'val3' var isn't accessed
+test/error/generics.lns:35:7: warning: 'sub' var isn't accessed
+test/error/generics.lns:102:11: warning: 'test' var isn't accessed
+test/error/generics.lns:103:11: warning: 'test2' var isn't accessed
+test/error/generics2.lns:10:7: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:14:4: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:14:27: error: this exp is not nilable -- T
+test/error/generics2.lns:36:4: error: func: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1034) <- &@test.@error.@generics2.Test<T>(1084): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:42:4: error: func: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1034) <- &@test.@error.@generics2.Test<T>(1100): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:52:4: error: func2: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1104) <- &@test.@error.@generics2.Test<T>(1092): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:60:4: error: func3: exp(1) type mismatch @test.@error.@generics2.Test<T>(1109) <- @test.@error.@generics2.Test<T>(1126): index 1 -- 
+test/error/generics2.lns:76:4: error: func: exp(1) type mismatch int(26) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/generics2.lns:88:4: error: func: exp(1) type mismatch int(26) <- str(58): index 1(TypeInfoKind.Alternate)
+test/error/generics2.lns:92:4: error: func: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/generics2.lns:125:1: error: process<T>: exp(2) type mismatch @test.@error.@generics2.Data(1262) <- &@test.@error.@generics2.Data(1282): index 2(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:127:1: error: process<T>: exp(1) type mismatch @test.@error.@generics2.Super2<T>(TypeInfoKind.Class:1266) <- &@test.@error.@generics2.Test2(TypeInfoKind.Class:1287). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:129:1: error: process<T>: exp(2) type mismatch str(58) <- int(26): index 2(TypeInfoKind.Alternate)
+test/error/generics3.lns:50:8: warning: 'test3' var isn't accessed
+test/error/generics3.lns:13:21: error: can't access mutable method. -- &Set<int>.add
+test/error/generics3.lns:17:12: error: Only class can use the generics. -- IF 
+test/error/generics3.lns:21:11: error: Only class can use the generics. -- IF2 
+test/error/generics3.lns:42:4: error: sub2: exp(1) type mismatch &@test.@error.@generics3.IF2<T2>(1113) <- @test.@error.@generics3.Test2<T>(1134): index 1(TypeInfoKind.IF). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics3.lns:50:16: error: Can't new generic class. -- Test3<T1,T2>
+test/error/generics4.lns:28:19: error: can't use this type without <T>. please use Test<T>.
+test/error/generics4.lns:32:10: error: Can't new generic class. -- Test<T>
+test/error/generics4.lns:32:14: error: __init: exp(1) type mismatch T(1074) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:34:10: error: Can't new generic class. -- Test<T>
+test/error/generics4.lns:34:14: error: __init: exp(1) type mismatch T(1074) <- @test.@error.@generics4.Sub2(1062): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:35:10: error: Can't new generic class. -- Test<T>
+test/error/generics4.lns:35:14: error: __init: exp(1) type mismatch T(1074) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:46:20: error: can't use this type without <T>. please use Test2<T>.
+test/error/generics4.lns:50:11: error: Can't new generic class. -- Test2<T>
+test/error/generics4.lns:50:15: error: __init: exp(1) type mismatch T(1108) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:51:11: error: Can't new generic class. -- Test2<T>
+test/error/generics4.lns:51:15: error: __init: exp(1) type mismatch T(1108) <- @test.@error.@generics4.SubSub(1040): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:53:11: error: Can't new generic class. -- Test2<T>
+test/error/generics4.lns:53:15: error: __init: exp(1) type mismatch T(1108) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:69:13: error: = operator: exp(1) type mismatch &@test.@error.@generics4.Test3<T>!(1167) <- @test.@error.@generics4.Test3<T>(1198): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics4.lns:92:4: error: func: exp(1) type mismatch List<@test.@error.@generics4.Super>(1241) <- List<@test.@error.@generics4.Sub1>(1255): index 1 -- 
+test/error/box.lns:6:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- real(30): index 1(TypeInfoKind.Box)
+test/error/box.lns:7:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- str(58): index 1(TypeInfoKind.Box)
+test/error/box.lns:12:4: error: not support auto boxing
+test/error/box.lns:19:4: error: not support auto boxing
+test/error/form.lns:32:4: warning: 'func' var isn't accessed
+test/error/form.lns:2:4: error: You must declare this form at the outside scope. -- func
+test/error/form.lns:9:4: error: func: exp(1) type mismatch form(107) <- @test.@error.@form.(1013): index 1 -- 
+test/error/form.lns:12:4: error: func: exp(1) type mismatch form(107) <- @test.@error.@form.(1017): index 1 -- 
+test/error/form.lns:15:4: error: func: exp(1) type mismatch form(107) <- @test.@error.@form.(1021): index 1 -- 
+test/error/form.lns:24:9: error: = operator: exp(1) type mismatch form(107) <- @test.@error.@form.(1029): index 1 -- 
+test/error/form.lns:32:9: error: = operator: exp(1) type mismatch form(107) <- @test.@error.@form.(1041): index 1 -- 
+test/error/form.lns:38:4: error: can't call any Type. -- Test
+test/error/form.lns:39:4: error: can't call any Type. -- Test
+test/error/form.lns:39:5: error: can't be r-value in paren. -- RefType
+test/error/form.lns:42:4: error: You must declare this form at the outside scope. -- Test
+test/error/ddd.lns:6:7: warning: 'func' var isn't accessed
+test/error/ddd.lns:10:10: error: func3: exp(1) type mismatch int(26) <- int!(27): index 1 -- 
+test/error/ddd.lns:13:10: error: func3: exp(1) type mismatch int(26) <- int!(27): index 1 -- 
+test/error/ddd.lns:21:4: error: func: exp(1) type mismatch ...<int> <- nil: short
+test/error/ddd.lns:29:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1031) <- @test.@error.@ddd.(1035): index 1 -- exp(1) type mismatch int(26) <- ...<int>(1016): index 1 -- 
+test/error/ddd.lns:32:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1031) <- @test.@error.@ddd.(1039): index 1 -- exp(1) type mismatch int <- int!: src: 1 -- 
+test/error/ddd.lns:35:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1031) <- @test.@error.@ddd.(1043): index 1 -- exp(1) type mismatch int <- int!: src: 1 -- 
+test/error/ddd.lns:51:4: error: func: exp(1) type mismatch int <- int!: dst 1 -- 
+test/error/ddd.lns:52:4: error: func: exp(1) type mismatch int <- int!: dst 1 -- 
+test/error/immediate.lns:3:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:4:8: warning: 'key2' var isn't accessed
+test/error/immediate.lns:8:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:9:8: warning: 'key2' var isn't accessed
+test/error/immediate.lns:13:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:14:8: warning: 'key2' var isn't accessed
+test/error/immediate.lns:18:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:19:8: warning: 'key2' var isn't accessed
+test/error/immediate.lns:23:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:24:8: warning: 'key2' var isn't accessed
+test/error/immediate.lns:28:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:29:8: warning: 'key2' var isn't accessed
+test/error/immediate.lns:34:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:37:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:40:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:43:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:46:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:49:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:54:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:57:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:60:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:63:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:66:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:69:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:94:11: warning: 'val1' var isn't accessed
+test/error/immediate.lns:95:11: warning: 'val2' var isn't accessed
+test/error/immediate.lns:105:11: warning: 'val1' var isn't accessed
+test/error/immediate.lns:106:11: warning: 'val2' var isn't accessed
+test/error/immediate.lns:122:8: warning: 'val1' var isn't accessed
+test/error/immediate.lns:123:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:138:8: warning: 'val1' var isn't accessed
+test/error/immediate.lns:139:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:143:8: warning: 'val1' var isn't accessed
+test/error/immediate.lns:144:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:148:8: warning: 'val1' var isn't accessed
+test/error/immediate.lns:149:8: warning: 'val2' var isn't accessed
+test/error/immediate.lns:154:11: warning: 'val1' var isn't accessed
+test/error/immediate.lns:155:11: warning: 'val2' var isn't accessed
+test/error/immediate.lns:94:7: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
+test/error/immediate.lns:95:7: error: unmatch value type (index:1) str <- stem -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Stem
+test/error/immediate.lns:106:7: error: unmatch value type (index:1) str <- int -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
+test/error/immediate.lns:117:7: error: List constructor: exp(2) type mismatch Map<str,@test.@error.@immediate.Test>(TypeInfoKind.Map:1477) <- Map<str,@test.@error.@immediate.Sub>(TypeInfoKind.Map:1468) -- 
+test/error/immediate.lns:122:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/immediate.lns:134:7: error: List constructor: exp(1) type mismatch Map<str,@test.@error.@immediate.Test>(TypeInfoKind.Map:1534) <- Map<str,@test.@error.@immediate.SubSub>(TypeInfoKind.Map:1525) -- 
+test/error/immediate.lns:138:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/immediate.lns:143:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/immediate.lns:148:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/immediate.lns:154:7: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
+test/error/macro.lns:3:7: error: multiple define symbol -- _test
+test/error/macro.lns:17:11: error: __exp can't return multiple values. use __exps.
+test/error/macro.lns:19:1: error: _Test: over exp. expect: 1: actual: 2
+test/error/macro.lns:19:13: error: unmatch macro arguments. -- _Test
+test/error/macro2.lns:5:8: (test/error/macro2.lns:5:8: (macro _hoge):2:5): error: remain macro expand-statement token -- ','
+test/error/macro2.lns:5:8: error: remain macro expand-statement token -- ','(2:5)
+test/error/macro3.lns:5:11: error: mismatch type -- int != real
+test/error/macro3.lns:14:11: error: macro can't return multiple values.
+test/error/macro3.lns:19:11: (test/error/macro3.lns:19:11: (macro _test):0:0): error: EOF
+test/error/macro4.lns:8:4: error: _hoge: over exp. expect: 1: actual: 2
+test/error/macro4.lns:8:17: error: unmatch macro arguments. -- _hoge
+test/error/macro5.lns:3:18: error: can't declare the macro in the macro.
+test/error/macro7.lns:9:7: error: The macro (_Test) only use at the same scope declared it, because it's access __ver.
+test/error/macro7.lns:14:7: error: not found type -- __var
+test/error/macro7.lns:8:7: warning: 'func' var isn't accessed
+test/error/apply.lns:14:24: error: iterator function must return value.
+test/error/apply.lns:33:24: error: iterator function must return nilable type at 1st.
+test/error/apply.lns:52:24: error: iterator function must has two arguments. -- ApplyForm
+test/error/apply.lns:70:24: error: the 2nd argument of iterator function must be nilable. -- ApplyForm
+test/error/multiple-class.lns:4:4: error: multiple class(@test.@error.@multiple-class.Same)
+test/error/multiple-class.lns:4:15: error: stop by error
+test/error/multiple-if.lns:4:4: error: multiple class(@test.@error.@multiple-if.Same)
+test/error/multiple-if.lns:4:19: error: stop by error
+test/error/multiple.lns:18:8: warning: 'Same' var isn't accessed
+test/error/multiple.lns:20:11: warning: 'Same' var isn't accessed
+test/error/multiple.lns:24:7: warning: 'func' var isn't accessed
+test/error/multiple.lns:2:9: error: This symbol is shadowed from 5:12 -- Same
+test/error/multiple.lns:5:12: error: shadowing symbol of 2:9 -- Same
+test/error/multiple.lns:10:9: error: This symbol is shadowed from 13:12 -- Same
+test/error/multiple.lns:13:12: error: shadowing symbol of 10:9 -- Same
+test/error/multiple.lns:18:8: error: This symbol is shadowed from 20:11 -- Same
+test/error/multiple.lns:20:11: error: shadowing symbol of 18:8 -- Same
+test/error/multiple.lns:24:7: error: This symbol is shadowed from 25:10 -- func
+test/error/multiple.lns:24:7: error: This symbol is shadowed from 28:7 -- func
+test/error/multiple.lns:24:13: error: This symbol is shadowed from 25:16 -- val2
+test/error/multiple.lns:25:10: error: shadowing symbol of 24:7 -- func
+test/error/multiple.lns:25:16: error: shadowing symbol of 24:13 -- val2
+test/error/multiple.lns:28:7: error: multiple define -- func
+test/error/multiple.lns:28:7: error: shadowing symbol of 24:7 -- func
+test/error/switch.lns:2:7: warning: 'func' var isn't accessed
+test/error/switch.lns:3:7: warning: 'switch' should have 'case' blocks.
+test/error/switch.lns:5:7: warning: 'switch' should have 'case' blocks.
+test/error/switch.lns:15:7: warning: 'func' var isn't accessed
+test/error/switch.lns:16:7: warning: 'match' should have 'case' blocks.
+test/error/switch.lns:18:7: warning: 'match' should have 'case' blocks.
+test/error/switch.lns:29:7: warning: 'func' var isn't accessed
+test/error/switch.lns:40:7: warning: 'func2' var isn't accessed
+test/error/switch.lns:52:7: warning: 'func3' var isn't accessed
+test/error/switch.lns:65:7: warning: 'func' var isn't accessed
+test/error/switch.lns:78:7: warning: 'func2' var isn't accessed
+test/error/switch.lns:83:15: warning: multiple case with nil or nilable
+test/error/switch.lns:87:15: warning: multiple case with nil or nilable
+test/error/switch.lns:5:7: error: 'switch' must have 'case' blocks when have 'default' block.
+test/error/switch.lns:18:7: error: 'match' must have 'case' blocks when have 'default' block.
+test/error/switch.lns:31:15: error: case exp unmatch type -- int <- real
+test/error/switch.lns:33:15: error: case exp unmatch type -- int <- str
+test/error/switch.lns:42:15: error: case exp unmatch type -- int! <- real
+test/error/switch.lns:44:15: error: case exp unmatch type -- int! <- str
+test/error/switch.lns:54:15: error: case exp unmatch type -- Hoge <- int
+test/error/switch.lns:69:15: error: multiple case exp -- 1
+test/error/switch.lns:71:18: error: multiple case exp -- 2
+test/error/switch.lns:73:15: error: multiple case exp -- 1
+test/error/lua.lns:9:4: warning: func: exp(1) luaval mismatch &List<str> <- Luaval<&List<str>>
+test/error/lua.lns:1:1: error: unmatch value type (index:1) Luaval<&stem> <- nil
+test/error/async3.lns:115:7: warning: 'func' var isn't accessed
+test/error/async3.lns:129:7: warning: 'func' var isn't accessed
+test/error/async3.lns:134:7: warning: 'func' var isn't accessed
+test/error/async3.lns:197:7: warning: 'func' var isn't accessed
+test/error/async3.lns:9:14: error: can't access the mutable type's symbol(globalVal1) from async (foo2).
+test/error/async3.lns:20:19: error: can't access mutable method. -- &Val.func1
+test/error/async3.lns:23:19: error: can't access mutable method. -- &Val.func1
+test/error/async3.lns:23:19: error: can't access noasync function in async. -- &func1 on func2
+test/error/async3.lns:31:15: error: can't access noasync function in async. -- sub1 on sub2
+test/error/async3.lns:32:15: error: can't access allmut type's field(val2) in async function.
+test/error/async3.lns:32:20: error: can't access noasync function in async. -- func1 on sub2
+test/error/async3.lns:33:10: error: can't access the mutable type's symbol(globalVal1) from async (sub2).
+test/error/async3.lns:38:4: error: not implements method -- __Runner.run at Hoge
+test/error/async3.lns:41:25: error: __init: exp(2) type mismatch allmut @test.@error.@async3.Val <- [##]: dst 2 -- 
+test/error/async3.lns:43:20: error: can't access noasync function in async. -- func1 on func
+test/error/async3.lns:45:10: error: can't access noasync function in async. -- foo1 on func
+test/error/async3.lns:58:7: error: unmatch value type (index:1) @test.@error.@async3.Test2 <- @test.@error.@async3.Test -- mismatch __trans
+test/error/async3.lns:60:7: error: sub: exp(1) type mismatch @test.@error.@async3.Test2(1095) <- @test.@error.@async3.Test(1093): index 1 -- mismatch __trans
+test/error/async3.lns:78:12: error: can't set the __trans type -- index:1, Test2
+test/error/async3.lns:81:14: error: can't set the __trans type -- index:1, Test2
+test/error/async3.lns:86:16: error: can't hold with the type of __trans. -- test
+test/error/async3.lns:98:22: error: can't access allmut type's field(val) in async function.
+test/error/async3.lns:110:23: error: can't access noasync function in async. -- get_val1 on func
+test/error/async3.lns:111:23: error: can't access noasync function in async. -- get_val2 on func
+test/error/async3.lns:112:22: error: can't access noasync function in async. -- get_val2 on func
+test/error/async3.lns:116:20: error: can't access noasync function in async. -- get_val1 on func
+test/error/async3.lns:117:20: error: can't access noasync function in async. -- get_val2 on func
+test/error/async3.lns:118:19: error: can't access noasync function in async. -- get_val2 on func
+test/error/async3.lns:130:17: error: can't access mutable method. -- &Val.func
+test/error/async3.lns:137:10: error: can't use __asyncLock on __noasync. -- func
+test/error/async3.lns:140:19: error: can't use 'return' in the __asyncLock.
+test/error/async3.lns:144:13: error: no loop syntax.
+test/error/async3.lns:157:22: error: can't access noasync function in async. -- get_val on __init
+test/error/async3.lns:161:20: error: __Runner can't have the mutable argument with public method. -- 1: Foo
+test/error/async3.lns:163:21: error: __Runner can't have the mutable argument with public method. -- 1: List<Foo>
+test/error/async3.lns:165:21: error: __Runner can't have the mutable argument with public method. -- 1: &List<Foo>
+test/error/async3.lns:169:21: error: __Runner can't have the mutable argument with public method. -- 1: List<List<Foo>>
+test/error/async3.lns:171:21: error: __Runner can't have the mutable argument with public method. -- 1: &List<List<Foo>>
+test/error/async3.lns:173:21: error: __Runner can't have the mutable argument with public method. -- 1: &List<&List<Foo>>
+test/error/async3.lns:188:17: error: can't access the mutable type's symbol(val1) from async (func).
+test/error/async3.lns:190:17: error: can't access the mutable type's symbol(val3) from async (func).
+test/error/async3.lns:191:17: error: can't access the mutable type's symbol(val4) from async (func).
+test/error/async3.lns:202:20: error: can't access the Luaval with '#' without __luago. -- Luaval<&List<int>>
+test/error/async3.lns:203:33: error: can't access the luaval without __luago. -- Luaval<&List<int>> in func
+test/error/async3.lns:206:33: error: 'TypeInfoKind.List' doesn't support forsort.
+test/error/async3.lns:206:33: error: can't access the luaval without __luago. -- Luaval<&List<int>> in func
+test/error/async3.lns:209:24: error: can't access Luaval without __luago. -- Luaval<&List<int>>
+test/error/async3.lns:213:20: error: can't access Luaval without __luago. -- Luaval<&Map<str,int>>
+test/error/async3.lns:214:23: error: can't access Luaval without __luago. -- Luaval<&Map<str,int>>
+test/error/async3.lns:218:13: error: can't access Luaval function without __luago. -- Luaval<form> on func
+test/error/async3.lns:232:15: error: can't access noasync function in async. -- func on sub
+test/error/async3.lns:242:15: error: can't access the mutable symbol(list) from async (func).
+test/error/async3.lns:253:10: error: can't access Luaval function without __luago. -- _load on run
+test/error/async3.lns:255:13: error: can't access Luaval function without __luago. -- _load on run
+test/error/async3.lns:264:13: error: can't access the mutable type's symbol(list) from async (run).
+test/error/async3.lns:265:18: error: can't access noasync function in async. -- func on run
+test/error/async3.lns:267:10: error: can't access the mutable type's symbol(list) from async (run).
+test/error/async3.lns:268:15: error: can't access noasync function in async. -- func on run
+test/error/async4.lns:10:11: error: can't access the mutable type's symbol(globalVal1) from async (foo2).
+test/error/async5.lns:10:11: error: can't access the mutable type's symbol(globalVal1) from async (foo2).
+test/error/async5.lns:21:16: error: can't access mutable method. -- &Val.func1
+test/error/async5.lns:24:16: error: can't access mutable method. -- &Val.func1
+test/error/async5.lns:24:16: error: can't access noasync function in async. -- &func1 on func2
+test/error/async5.lns:32:12: error: can't access noasync function in async. -- sub1 on sub2
+test/error/async5.lns:33:12: error: can't access allmut type's field(val2) in async function.
+test/error/async5.lns:33:17: error: can't access noasync function in async. -- func1 on sub2
+test/error/async5.lns:34:7: error: can't access the mutable type's symbol(globalVal1) from async (sub2).
+test/error/async5.lns:39:1: error: not implements method -- __Runner.run at Hoge
+test/error/async5.lns:42:22: error: __init: exp(2) type mismatch allmut @test.@error.@async5.Val <- [##]: dst 2 -- 
+test/error/async5.lns:44:17: error: can't access noasync function in async. -- func1 on func
+test/error/async5.lns:46:7: error: can't access noasync function in async. -- foo1 on func
+test/error/abbr.lns:3:1: warning: func: 00000:use '##', instate of '...'.
+test/error/dis_mutable.lns:5:4: warning: 'val1' var isn't accessed
+test/error/dis_mutable.lns:6:4: warning: 'val2' var isn't accessed
+test/error/dis_mutable.lns:10:4: warning: has no nilable
+test/error/dis_mutable.lns:15:7: warning: 'val1' var isn't accessed
+test/error/dis_mutable.lns:16:7: warning: 'val2' var isn't accessed
+test/error/dis_mutable.lns:21:4: warning: has no nilable
+test/error/dis_mutable.lns:26:7: warning: 'val1' var isn't accessed
+test/error/dis_mutable.lns:27:7: warning: 'val2' var isn't accessed
+test/error/dis_mutable.lns:32:8: warning: 'val1' var isn't accessed
+test/error/dis_mutable.lns:32:14: warning: 'val2' var isn't accessed
+test/error/dis_mutable.lns:33:4: warning: has no nilable
+test/error/dis_mutable.lns:38:7: warning: 'val1' var isn't accessed
+test/error/dis_mutable.lns:39:7: warning: 'val2' var isn't accessed
+test/error/dis_mutable.lns:98:4: warning: 'val' var isn't accessed
+test/error/dis_mutable.lns:219:7: warning: 'func' var isn't accessed
+test/error/dis_mutable.lns:223:7: warning: 'func2' var isn't accessed
+test/error/dis_mutable.lns:227:7: warning: 'func3' var isn't accessed
+test/error/dis_mutable.lns:253:15: warning: 'work' var isn't accessed
+test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1520) <- List<@test.@error.@dis_mutable.Sub1>(1559): index 1 -- 
+test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1528) <- List<@test.@error.@dis_mutable.Sub1>(1559): index 1 -- 
+test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1538) <- List<List<@test.@error.@dis_mutable.Sub1>>(1574): index 1 -- 
+test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1553) <- List<List<@test.@error.@dis_mutable.Sub1>>(1574): index 1 -- 
+make[5]: Entering directory '/home/hoge/work/LuneScript/src'
+-- not exist file access --
+make[5]: Leaving directory '/home/hoge/work/LuneScript/src'
+--lua
+local _moduleObj = {}
+local __mod__ = '@lua'
+local _lune = require( "lune.base.runtime6" )
+if not _lune6 then
+   _lune6 = _lune
+end
+print( 1 + 10 )
+
+return _moduleObj
+
+hoge:
+./test/Shebang2.lns
+a
+b
+c
+OK
+hoge:
+./test/Shebang2.lns
+__ok
+hoge
+module: test.testing ==============================
+case1: ---------------
+case1
+case2: ---------------
+case2
+module: test.testing ==============================
+hoge
+module: test.testing ==============================
+case1: ---------------
+case1
+case2: ---------------
+case2
+module: test.testing ==============================
+make: Entering an unknown directory
+make: the '-j' option requires a positive integer argument
+Usage: make [options] [target] ...
+Options:
+  -b, -m                      Ignored for compatibility.
+  -B, --always-make           Unconditionally make all targets.
+  -C DIRECTORY, --directory=DIRECTORY
+                              Change to DIRECTORY before doing anything.
+  -d                          Print lots of debugging information.
+  --debug[=FLAGS]             Print various types of debugging information.
+  -e, --environment-overrides
+                              Environment variables override makefiles.
+  --eval=STRING               Evaluate STRING as a makefile statement.
+  -f FILE, --file=FILE, --makefile=FILE
+                              Read FILE as a makefile.
+  -h, --help                  Print this message and exit.
+  -i, --ignore-errors         Ignore errors from recipes.
+  -I DIRECTORY, --include-dir=DIRECTORY
+                              Search DIRECTORY for included makefiles.
+  -j [N], --jobs[=N]          Allow N jobs at once; infinite jobs with no arg.
+  -k, --keep-going            Keep going when some targets can't be made.
+  -l [N], --load-average[=N], --max-load[=N]
+                              Don't start multiple jobs unless load is below N.
+  -L, --check-symlink-times   Use the latest mtime between symlinks and target.
+  -n, --just-print, --dry-run, --recon
+                              Don't actually run any recipe; just print them.
+  -o FILE, --old-file=FILE, --assume-old=FILE
+                              Consider FILE to be very old and don't remake it.
+  -O[TYPE], --output-sync[=TYPE]
+                              Synchronize output of parallel jobs by TYPE.
+  -p, --print-data-base       Print make's internal database.
+  -q, --question              Run no recipe; exit status says if up to date.
+  -r, --no-builtin-rules      Disable the built-in implicit rules.
+  -R, --no-builtin-variables  Disable the built-in variable settings.
+  -s, --silent, --quiet       Don't echo recipes.
+  -S, --no-keep-going, --stop
+                              Turns off -k.
+  -t, --touch                 Touch targets instead of remaking them.
+  --trace                     Print tracing information.
+  -v, --version               Print the version number of make and exit.
+  -w, --print-directory       Print the current directory.
+  --no-print-directory        Turn off -w, even if it was turned on implicitly.
+  -W FILE, --what-if=FILE, --new-file=FILE, --assume-new=FILE
+                              Consider FILE to be infinitely new.
+  --warn-undefined-variables  Warn when an undefined variable is referenced.
+
+This program built for x86_64-pc-linux-gnu
+Report bugs to <bug-make@gnu.org>
+make: Leaving an unknown directory

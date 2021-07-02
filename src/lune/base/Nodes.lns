@@ -1156,6 +1156,14 @@ pub override fn SwitchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
    if fullCase {
       return kind;
    }
+   if kind == .Break {
+      // いずれかの条件がマッチして break するなら、
+      // switch 文の結果を break として扱わないと、
+      // while true {} 内の switch が while ループを抜けないことになってしまう。
+      // よって fullCase でない場合も break は返す。
+      return kind;
+   }
+   
    return .None;
 }
 
@@ -1599,6 +1607,12 @@ pub override fn RefFieldNode.canBeLeft():bool {
 }
 pub override fn RefFieldNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    if! self.$symbolInfo {
+      if! let prefix = self.$prefix@@@ExpRefNode {
+         if prefix.$symbolInfo.$name == "self" {
+            // コンストラクタでメンバ初期化前にアクセスできないように
+            return _exp.$canBeRight and _exp.$hasValueFlag;
+         }
+      }
       return _exp.$canBeRight;
    }
    // if! self.overrideCanBeLeft {
@@ -1841,11 +1855,11 @@ pub override fn ExpCallSuperNode.canBeRight( processInfo:Ast.ProcessInfo ):bool 
 pub enum LockKind {
    /** __asyncLock */
    AsyncLock,
-   /** __luago */
+   /** __luago。 __noasync から lua を実行する場合。 */
    LuaGo,
-   /** __luaLock */
+   /** __luaLock。  __async から __noasync に切り替えて lua を実行する場合。 */
    LuaLock,
-   /** __unsafe */
+   /** __unsafe。 __async のまま lua を実行する場合  */
    Unsafe,
 }
 _declNodeClass( "AsyncLock", Node, false, false, true,

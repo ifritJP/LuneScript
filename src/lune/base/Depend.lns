@@ -43,7 +43,7 @@ pub fn getFileLastModifiedTime( path: str ): real! {
    }
 
    let val;   
-   __asyncLock {
+   __unsafe {
       if! let mut stream = io.popen( "stat -c '%%Y' %s" (path) ) {
          val = stream.read('*a');
          stream.close();
@@ -60,7 +60,7 @@ pub fn getFileLastModifiedTime( path: str ): real! {
 
 fn searchpath51( mod:str, pathPattern:str ) : str! {
    let mut target = "";
-   __asyncLock {
+   __unsafe {
       apply path of string.gmatch( pathPattern, "[^;]+" ) {
          if! let index = path.find( "%?.l[un][as]$"## ) {
             let dir = path.sub( 1, index - 1 );
@@ -129,7 +129,7 @@ pub fn getLuaVersion():str {
       return lua_version;
    }
    let version;
-   __asyncLock {
+   __unsafe {
       let loaded = _load( "return _VERSION"## )$(##);
       version = (unwrap loaded)@@str;
    }

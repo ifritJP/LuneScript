@@ -31,12 +31,6 @@
    val.remove(##);    // warn
 }
 {
-   let val:&List<int>! = [];
-   val.insert( 1 ); // error
-   val.remove( 1 ); // error
-}
-
-{
    let list1 = [ 1, 4, 5, 3, 2 ];
    list1.sort( fn ( val1:int, val2:int ) : bool { return val1 > val2; } ); // error
    let mut list2 = [ 1, 4, 5, 3, 2 ];
@@ -182,4 +176,17 @@
 {
    let mut map = { 1:"a", 2:"ab", 3:"c" };
    map[ 1 ], map[ 2 ] = "10", "20"; // error
+}
+{
+   class Hoge {
+      let val:int {pub};
+   }
+   let mut list:List<&Hoge> = [];
+   list.sort( fn ( hoge1:Hoge, hoge2:Hoge ) : bool { // error
+      return hoge1.$val < hoge2.$val;
+   } );
+}
+{
+   let val:List<int>! = [];
+   val.insert( 1 ); // error
 }

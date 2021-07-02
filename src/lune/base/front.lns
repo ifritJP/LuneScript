@@ -141,14 +141,15 @@ class ModuleMgr {
       //       Util.err( "the meta is already loaded -- %s" (mod) );
       //    }
       // }
-      self.mod2info.add( mod, UptodateInfo.Update( moduleInfo, ast ) );
+      self.mod2info.add( mod, UptodateInfo.Update( moduleInfo, ast ), true );
       // self.loadedMetaMap[ mod ] = new frontInterface.ModuleMeta(
       //    ast.$streamName, .Module( moduleInfo ));
    }
 
    pub fn addMeta( mod:str, meta:frontInterface.ModuleMeta ) mut {
       if not self.get( mod ) {
-         self.mod2info.add( mod, UptodateInfo.Uptodate( meta ) );
+         Log._log2( .Log, mod );
+         self.mod2info.add( mod, UptodateInfo.Uptodate( meta ), false );
       }
       self.loadedMetaMap[ mod ] = meta;
    }
@@ -1999,6 +2000,8 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
             foreach mod in self.moduleMgr.getModList() {
                if! self.moduleMgr.getAst( mod ) {
                   astCallback( _exp );
+               } else {
+                  Log._log2( .Err, "not found AST -- %s" (mod) );
                }
             }
          }

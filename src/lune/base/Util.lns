@@ -120,8 +120,11 @@ pub class OrderdMap<KEY,VAL> {
       self.keyList = [];
    }
 
-   pub fn add( key:KEY, val:VAL ) mut {
+   pub fn add( key:KEY, val:VAL, overwrite:bool ) mut {
       if self.map[ key ] {
+         if overwrite {
+            self.map[ key ] = val;
+         }
          return;
       }
       self.map[ key ] = val;

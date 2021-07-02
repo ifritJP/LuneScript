@@ -236,4 +236,23 @@ return 1;  // error
       func();
    }
 }
+{
+   fn func() : int {
+      return 1;
+   }
+   fn sub() : int {  // error
+      while true {
+         let val = func();
+         switch val {
+            case 1 {
+               break;
+            }
+            case 2 {
+               return 1;
+            }
+         }
+      }
+   }
+   sub();
+}
 

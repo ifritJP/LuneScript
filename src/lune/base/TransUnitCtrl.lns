@@ -701,12 +701,14 @@ pub fn TransUnitCtrl.createAST(
    let mut moduleTypeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
 
    __asyncLock {
-      when! moduleName {
-         apply txt of string.gmatch(
-            frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' )
-         {
-            moduleTypeInfo = self.pushModule(
-               self.processInfo, false, txt, true ).$typeInfo;
+      __luago {
+         when! moduleName {
+            apply txt of string.gmatch(
+               frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' )
+            {
+               moduleTypeInfo = self.pushModule(
+                  self.processInfo, false, txt, true ).$typeInfo;
+            }
          }
       }
    }

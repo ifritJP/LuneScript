@@ -1,0 +1,16 @@
+{
+   macro _Test() {
+      {
+         __var.val = 1;
+      }
+   }
+   _Test();
+   fn func() {
+      _Test(); // error
+   }
+}
+pub macro _Test() {
+   {
+      __var.val = 1; // error
+   }
+}

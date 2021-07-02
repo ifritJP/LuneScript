@@ -501,6 +501,15 @@ class Test9 extend Super7 {
    }
 }
 {
+   class Test {
+      let val:int;
+      pub fn __init() {
+         print( self.val ); // error
+         self.val = 0;
+      }
+   }
+}
+{
    interface IF2 extend (Mapping) {
    }
    abstract class Hoge extend (Mapping) {

@@ -224,7 +224,7 @@ fn TransUnit.analyzeExpList(
          not exp.canBeRight( self.processInfo )
       {
          self.addErrMess(
-            exp.$pos,
+            exp.$effectivePos,
             "This arg can't be r-value. -- %s" ( Nodes.getNodeKindName( exp.$kind) ) );
       }
       if not pos {
@@ -598,13 +598,14 @@ fn TransUnit.checkImplicitCast(
 @param warnForFollow true の場合、値を省略している時に警告を出力する
 @param genericsClassType dstTypeList のメソッドが属するクラス
 @param altDetectFlag genericsClassType の createAlt2typeMap() をコールする際の引数。
+@param validImplicitCast 暗黙キャストを有効にする場合 true
 @return Map<&Ast.TypeInfo,&Ast.TypeInfo>  AlternateTypeInfo → 実型パラメータのマップ
 @return 
 */
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expListNode: &Nodes.ExpListNode!, allowDstShort:bool, warnForFollow:bool,
-   workAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>! ) mut :
+   workAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>!, validImplicitCast:bool ) mut :
    //genericsClassType:&Ast.TypeInfo!, altDetectFlag:bool ) mut :
 Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.TypeInfo>
 {
@@ -700,24 +701,34 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.
       let mut newExpListNode:Nodes.ExpListNode!;
 
       if result ~= .Error {
-         if! let mut workList = self.checkImplicitCast(
-            alt2typeMap, false, dstTypeList, expListNode,
-            fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
-               if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode.$expType ) {
-                  autoBoxingCount = autoBoxingCount + 1;
+         if validImplicitCast {
+            if! let mut workList = self.checkImplicitCast(
+               alt2typeMap, false, dstTypeList, expListNode,
+               fn ( dstType:&Ast.TypeInfo, expNode:&Nodes.Node ): &Nodes.Node! {
+                  if Ast.CanEvalCtrlTypeInfo.canAutoBoxing( dstType, expNode.$expType ) {
+                     autoBoxingCount = autoBoxingCount + 1;
 
-                  return Nodes.BoxingNode.create(
-                     self.nodeManager, expNode.$pos, self.inTestBlock,
-                     self.macroCtrl.isInAnalyzeArgMode(), [ dstType ], expNode );
-               }
-               return nil;
-            } )
-         {
-            newExpListNode = workList;
-            hasImplictCast = true;
-         }
-         else {
-            newExpListNode = nil;
+                     return Nodes.BoxingNode.create(
+                        self.nodeManager, expNode.$pos, self.inTestBlock,
+                        self.macroCtrl.isInAnalyzeArgMode(), [ dstType ], expNode );
+                  }
+                  return nil;
+               } )
+            {
+               newExpListNode = workList;
+               hasImplictCast = true;
+            }
+            else {
+               newExpListNode = nil;
+            }
+         } else {
+            //newExpListNode = expListNode;
+            newExpListNode = Nodes.ExpListNode.create(
+               self.nodeManager, expListNode.$pos, expListNode.$inTestBlock,
+               expListNode.$macroArgFlag,
+               expListNode.$expTypeList,
+               expListNode.$expList, expListNode.$mRetExp, expListNode.$followOn );
+            hasImplictCast = false;
          }
       } else {
          newExpListNode = nil;
@@ -779,7 +790,8 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
          self.addErrMess( pos, "not support argType on Luaval -- %s" (mess));
       }
    }
-   
+
+   let mut validImplicitCast = true;
    switch funcTypeInfo {
       case self.builtinFunc.list_insert,
            self.builtinFunc.set_add, self.builtinFunc.set_del {
@@ -788,14 +800,17 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
       case self.builtinFunc.list_sort {
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
          let callback = self.processInfo.createFuncAsync(
-            false, false, nil, Ast.TypeInfoKind.Func,
+            // false, false, nil, Ast.TypeInfoKind.Func,
+            false, false, nil, .FormFunc,
             self.processInfo.$dummyParentType,
             self.processInfo.$dummyParentType,
-            //Ast.getBuiltinMut( Ast.headTypeInfo ),
             false, false, true, .Pri, "sort", .Async, nil,
             [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
             [ Ast.builtinTypeBool ], false );
          argTypeList = [ callback.$nilableTypeInfo ];
+
+         // implicitCast すると、 go の変換が出来ないので implicitCast を抑制
+         validImplicitCast = false;
       }
       case self.builtinFunc.list_remove {
       }
@@ -840,7 +855,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    }
    let matchResult, _, newExpNodeList = self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
-      argTypeList, expList, false, warnForFollow, alt2typeMap );
+      argTypeList, expList, false, warnForFollow, alt2typeMap, validImplicitCast );
    
    if expList and newExpNodeList {
       return matchResult, alt2typeMap, newExpNodeList;
@@ -908,7 +923,7 @@ fn TransUnit.analyzeListItems(
          }
       }
       let _, _, mut workExpList = self.checkMatchType(
-         "List constructor", firstPos, expTypeList, expList, false, false, nil );
+         "List constructor", firstPos, expTypeList, expList, false, false, nil, true );
       when! workExpList {
          expList = workExpList;
       }
@@ -1305,6 +1320,14 @@ fn TransUnit.prepareExpCall(
 {
 
    if funcTypeInfo.$kind == .Macro {
+      if self.macroCtrl.isUsing__var( funcTypeInfo ) and
+         funcTypeInfo.$parentInfo ~= self.$curNsInfo.$typeInfo
+      {
+         self.addErrMess(
+            position,
+            "The macro (%s) only use at the same scope declared it, because it's access __ver."
+            (funcTypeInfo.getTxt( ## ) ) );
+      }
       self.macroCtrl.startAnalyzeArgMode( funcTypeInfo );
    }
 
@@ -1321,7 +1344,7 @@ fn TransUnit.prepareExpCall(
             if not argNode.canBeRight( self.processInfo) and
                argNode.$kind ~= Nodes.NodeKind.$Abbr
             {
-               self.addErrMess( argNode.$pos, "this node can't be r-value. -- %s"
+               self.addErrMess( argNode.$effectivePos, "this node can't be r-value. -- %s"
                                 (Nodes.getNodeKindName( argNode.$kind )));
             }
          }
@@ -2315,7 +2338,7 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
                   self.addErrMess(
                      pos,               
                      "can't access the mutable type's symbol(%s) from async (%s)."
-                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+                     (symbolInfo.$name, nsInfo.$typeInfo.getTxt(##) ) );
                }
             }
          }
@@ -2327,7 +2350,7 @@ fn TransUnit.checkAsyncSymbol( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position )
                   self.addErrMess(
                      pos,               
                      "can't access the mutable type's symbol(%s) from async (%s)."
-                     (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+                     (symbolInfo.$name, nsInfo.$typeInfo.getTxt(##) ) );
                }
             }
          }
@@ -2360,7 +2383,7 @@ fn TransUnit.checkAsyncField( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position ) 
          self.addErrMess(
             pos,               
             "can't access the mutable symbol(%s) from async (%s)."
-            (symbolInfo.$name, symbolInfo.$typeInfo.getTxt(##) ) );
+            (symbolInfo.$name, curNs.getTxt(##) ) );
       }
    }
 }
@@ -2777,7 +2800,7 @@ fn TransUnit.analyzeNewAlge(
 
       if! let _, _, newExpNodeList = self.checkMatchType(
          "call", symbolToken.pos, valInfo.$typeList,
-         argListNode, false, true, nil )
+         argListNode, false, true, nil, true )
       {
          argList = newExpNodeList.$expList;
       }
@@ -2871,6 +2894,11 @@ fn TransUnit.analyzeExpSymbol(
                self.error( "not found type -- " .. symbolToken.txt );
             }
          };
+
+         if self.macroCtrl.$isDeclaringMacro and symbolToken.txt == "__var" {
+            self.macroCtrl.setUsing__var();
+         }
+         
 
          self.accessSymbol( symbolInfo, canLeftExp );
 
@@ -3036,14 +3064,14 @@ fn TransUnit.analyzeExpOpSet(
    }
 
    if not expList.canBeRight( self.processInfo ) {
-      self.addErrMess( expList.$pos,
+      self.addErrMess( expList.$effectivePos,
                        "this node can not be r-value. -- %s"
                        (Nodes.getNodeKindName( expList.$kind ) ) );
    }
 
    let _, _, mut workList, expTypeList =
       self.checkMatchType( "= operator", opeToken.pos, exp.$expTypeList,
-                           expList, true, false, nil );
+                           expList, true, false, nil, true );
    when! workList {
       expList = workList;
    }
@@ -3292,7 +3320,7 @@ fn TransUnit.analyzeExpOp2(
             let mut retType = Ast.builtinTypeNone;
 
             if not exp2.canBeRight( self.processInfo ) {
-               self.addErrMess( exp2.$pos,
+               self.addErrMess( exp2.$effectivePos,
                                 "this node can not be r-value. -- %s"
                                 (Nodes.getNodeKindName( exp2.$kind ) ) );
             }
@@ -3826,7 +3854,7 @@ fn TransUnit.analyzeStrConst(
 
          let _, _, mut workExpList = self.checkMatchType(
             "str constructor", firstToken.pos, [ Ast.builtinTypeDDD ],
-            argNodeList, false, false, nil );
+            argNodeList, false, false, nil, true );
          when! workExpList {
             dddParam = workExpList;
          }
@@ -4170,7 +4198,7 @@ fn TransUnit.analyzeExp(
          exp = self.analyzeExp( false, false, false ## );
          self.checkNextToken( ")" );
          if not exp.canBeRight( self.processInfo ) {
-            self.addErrMess( exp.$pos,
+            self.addErrMess( exp.$effectivePos,
                              "can't be r-value in paren. -- %s"
                              (Nodes.getNodeKindName( exp.$kind) ) );
          }

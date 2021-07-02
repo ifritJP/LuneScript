@@ -56,7 +56,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
    if! let workList = expList {
       if! let _, _, newExpNodeList = self.checkMatchType(
          "return", token.pos, retTypeList, workList, false,
-         not workList.$followOn, nil )
+         not workList.$followOn, nil, true )
       {
          expList = newExpNodeList;
       }

@@ -625,6 +625,7 @@ TEST_CASE += macro3.lns
 TEST_CASE += macro4.lns
 TEST_CASE += macro5.lns
 TEST_CASE += macro6.lns
+TEST_CASE += macro7.lns
 TEST_CASE += apply.lns
 TEST_CASE += multiple-class.lns
 TEST_CASE += multiple-if.lns
@@ -1045,6 +1046,7 @@ ifneq ($(LANG_KIND),lua)
 			-x 'log' -x 'test' -x binding.go		\
 			work/13/lune work/3_3/work/3_3_3/lune
 endif
+	diff test/result/test1.result work/test1.result 
 	diff work/test1.result work/test2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
@@ -1131,6 +1133,7 @@ ifndef ACCEPT
 	if [ $${ANS}x != yx ]; then exit 1; fi;
 endif
 #	rm lune/base/*.lua
+	cp work/test1.result test/result/test1.result 
 	cp work/3/lune/base/*.lua $(ORG_DIR)lune/base/
 	cp work/3/lune/base/*.meta $(ORG_DIR)lune/base/
 #	cp work/3/lune/*.* $(ORG_DIR)lune/

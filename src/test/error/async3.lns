@@ -233,6 +233,15 @@ let globalVal2:&List<int> = [];
       }
    }
 }
+class TopHoge {
+   static let list:List<int>;
+   __init {
+      TopHoge.list = [];
+   }
+   fn func() __async {
+      TopHoge.list.insert( 1 ); // error
+   }
+}
 {
    let list:List<int> = [];
 
@@ -241,7 +250,9 @@ let globalVal2:&List<int> = [];
          list.insert( 1 );
       }
       pub fn run() __async mut {
+         _load( "" ## ); // error
          __asyncLock {
+            _load( "" ## ); // error
             list.insert( 1 );
             self.func();
          }

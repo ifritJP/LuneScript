@@ -231,8 +231,10 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
       if not self.validAsyncCtrl {
          return true;
       }
-      if #self.lockedAsyncStack > 0 {
-         return true;
+      foreach stack in self.lockedAsyncStack {
+         if stack.$lockKind ~= .AsyncLock {
+            return true;
+         }
       }
       return false;
    }

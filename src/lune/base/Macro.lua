@@ -739,6 +739,36 @@ end
 
 local MacroCtrl = {}
 _moduleObj.MacroCtrl = MacroCtrl
+function MacroCtrl:get_isDeclaringMacro(  )
+
+   return self.declaringType ~= nil
+end
+function MacroCtrl:isUsing__var( macroType )
+
+   local typeId = macroType:get_typeId()
+   if self.typeId2ImportedMacroInfo[typeId] then
+      return false
+   end
+   
+   do
+      local _exp = self.id2use___var[typeId]
+      if _exp ~= nil then
+         return _exp
+      end
+   end
+   
+   Util.err( string.format( "unknown macro -- %s", macroType:getTxt(  )) )
+end
+function MacroCtrl:setUsing__var(  )
+
+   do
+      local _exp = self.declaringType
+      if _exp ~= nil then
+         self.id2use___var[_exp:get_typeId()] = true
+      end
+   end
+   
+end
 function MacroCtrl.new( macroEval, validAsyncMacro )
    local obj = {}
    MacroCtrl.setmeta( obj )
@@ -746,12 +776,13 @@ function MacroCtrl.new( macroEval, validAsyncMacro )
    return obj
 end
 function MacroCtrl:__init(macroEval, validAsyncMacro) 
+   self.id2use___var = {}
    self.validAsyncMacro = validAsyncMacro
    self.toLuavalLuaAsync = nil
    self.useLnsLoad = false
    self.declMacroInfoMap = {}
    self.declPubMacroInfoMap = {}
-   self.isDeclaringMacro = false
+   self.declaringType = nil
    self.tokenExpanding = false
    self.useModuleMacroSet = {}
    self.typeId2ImportedMacroInfo = {}
@@ -775,7 +806,6 @@ function MacroCtrl:clone(  )
    
    
    
-   obj.isDeclaringMacro = self.isDeclaringMacro
    obj.tokenExpanding = self.tokenExpanding
    _lune._Set_or(obj.useModuleMacroSet, self.useModuleMacroSet )
    do
@@ -790,6 +820,14 @@ function MacroCtrl:clone(  )
    do
       for key, val in pairs( self.declPubMacroInfoMap ) do
          obj.declPubMacroInfoMap[key] = val
+      end
+      
+   end
+   
+   
+   do
+      for key, val in pairs( self.id2use___var ) do
+         obj.id2use___var[key] = val
       end
       
    end
@@ -844,7 +882,7 @@ function MacroCtrl:mergeFrom( macroCtrl )
 end
 function MacroCtrl:setToUseLnsLoad(  )
 
-   if self.isDeclaringMacro then
+   if self.declaringType then
       self.useLnsLoad = true
    end
    
@@ -867,8 +905,8 @@ end
 function MacroCtrl:get_macroCallLineNo()
    return self.macroCallLineNo
 end
-function MacroCtrl:get_isDeclaringMacro()
-   return self.isDeclaringMacro
+function MacroCtrl:get_declaringType()
+   return self.declaringType
 end
 
 
@@ -946,6 +984,8 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
       
       local asyncMacro = self.validAsyncMacro and innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
       
+      local valid__var = innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
+      
       local toLuaval
       
       if asyncMacro then
@@ -971,9 +1011,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
          
          do
             do
-               if innerMacro then
-               end
-               
                do
                   local func = macroInfo:get_func()
                   if func ~= nil then
@@ -1019,14 +1056,14 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                            varMap = toListEmpty(  )
                         end
                         
-                        if innerMacro then
+                        if valid__var then
                            macroArgValMap["__var"] = varMap
                         end
                         
                         
                         local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
                         
-                        if innerMacro then
+                        if valid__var then
                            self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
                         end
                         
@@ -1099,9 +1136,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
        
          do
             do
-               if innerMacro then
-               end
-               
                do
                   local func = macroInfo:get_func()
                   if func ~= nil then
@@ -1147,14 +1181,14 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                            varMap = toListEmpty(  )
                         end
                         
-                        if innerMacro then
+                        if valid__var then
                            macroArgValMap["__var"] = varMap
                         end
                         
                         
                         local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
                         
-                        if innerMacro then
+                        if valid__var then
                            self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
                         end
                         
@@ -1396,8 +1430,13 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
    end
    
    
+   if not self.id2use___var[node:get_expType():get_typeId()] then
+      self.id2use___var[node:get_expType():get_typeId()] = false
+   end
+   
+   
    self.symbol2ValueMapForMacro = {}
-   self.isDeclaringMacro = false
+   self.declaringType = nil
    
    return err
 end
@@ -1728,10 +1767,10 @@ function MacroCtrl:registVar( symbolList )
 end
 
 
-function MacroCtrl:startDecl(  )
+function MacroCtrl:startDecl( declaringType )
 
    self.symbol2ValueMapForMacro = {}
-   self.isDeclaringMacro = true
+   self.declaringType = declaringType
    self.useLnsLoad = false
 end
 

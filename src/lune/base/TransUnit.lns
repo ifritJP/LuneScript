@@ -1049,7 +1049,9 @@ alias で置き換えている元の Type → alias の型
          self.typeId2ClassMap[ typeInfo.$typeId ] = namespace;
       }
 
-      return self.newNSInfo( typeInfo, pos );
+      let mut nsInfo = self.newNSInfo( typeInfo, pos );
+      self.set_curNsInfo( nsInfo );
+      return nsInfo;
    }
 
 

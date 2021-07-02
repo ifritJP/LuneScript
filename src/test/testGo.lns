@@ -2051,7 +2051,7 @@ _section();
          }
          
          pub override fn runMain() mut {
-            __asyncLock {
+            __luaLock {
                {
                   print( #self.listObj );
                   foreach val, key in self.listObj {

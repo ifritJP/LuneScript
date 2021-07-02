@@ -68,41 +68,13 @@ pub alge MetaOrModule {
 
 * バグ
 
-- [ ] コンストラクタ内で、初期化していないメンバにアクセスしてもエラー検知しない。
-  
+- [ ] Sub クラスが Super クラスのメンバを shadowing したときエラー検知できていない。
+
 - [ ] 直接 import しあっているとデッドロックする？
   
 - [ ] anonymous の __noasync チェックが出来ていない。
       __noasync の anonymous を __async から呼べてしまう。
-  
-- [ ] 公開マクロ内では __var のアクセスを禁止にする。
-  
-- [ ] __noasyncLock 内から __luago せずに、 luaval 系にアクセスできてしまう。
-  
-- [ ] 以下のフロー解析が失敗する。
-  
-fn func() : int {
-   return 1;
-}
-while true {
-   let val = func();
-   switch val {
-      case 1 {
-         break;
-      }
-   }
-}
-print( "hoge:" ); // 到達不能エラー
-  
-  
-- [ ] go で list.sort のコールバックがビルドエラーする。
-      ※ _env が付かない。
-      list.sort( fn ( node1:&Nodes.Node, node2:&Nodes.Node ) : bool {
-         return node1.$id < node2.$id;
-      } );
-  
-- [ ] builtin 型の補完が効かない。
-  
+
 - [ ] builtinFunc の情報が変ったら、 metaver を変更する必要がある。
       make にチェックを入れる。
       
@@ -118,10 +90,6 @@ fn sub(): int, int, int {
 }
   
   
-- [ ] go 版 lnsc で lnsc test/imp.lns exe が出来ない。
-      動的な import が処理できていない。  
-- [ ] __async のメソッドから __noasync メソッドをコールした場合、エラーにならない。
-- [ ] __async から mutable な static メンバ にアクセスした場合、エラーにする。
 - [ ] allmut 型のインスタンスで実行するメソッドについて
       - [ ] メソッドコールは __async ではできない。
       - [ ] 戻り値が  の場合は allmut に変更。
@@ -129,8 +97,6 @@ fn sub(): int, int, int {
       
 - [ ] メンバーを変更する処理を form で書いて、
       その form を imut のメソッドで実行できてしまう。
-- [ ] __async は、luaval<> の引数、戻り値を持ってはならない。
-      メンバに luaval<> を持つものもダメ。
 - [ ] allmut 変数の getter が async 設定になってしまう。
       allmut 型を mutable で返すメソッドは __noasync にすべき。
 - [ ] allmut 変数を上書きする場合、 unsafe などの警告があった方が良い。
@@ -310,13 +276,6 @@ lua の場合 val に nil が入らないが、 go では入る。
 - [ ] 内部関数から、クロージャで ... にアクセスできる。
   
  
-- [ ] foreach などで、 繰り返しの要因になっているオブジェクトは imut にする。
-  
-  
-- [ ] トップスコープにないクラスの static メンバのライフタイムが Lua と C で異なる。
-  
-- [ ] alge 型のパラメータの名前が無いと、分かりにくい。
-  
 - [ ] 多値返却の時、コンパイラの引数の評価順序によって、処理を変更する必要がある。
 
  
@@ -330,13 +289,7 @@ lua の場合 val に nil が入らないが、 go では入る。
       bool などは true/false では意味が分からない。
   
 - [ ] set, enum, alge の nil 条件演算子対応。
-- [ ] for 内で let の初期化するとエラー。
-      let 宣言時の初期化ではなく、宣言後の初期化。
-      mut 宣言している変数だとエラーにならない。
   
-- [ ] forsort で、 map をソートした場合、キーが int/real/str 以外だと実行時エラーする。
-      コンパイルエラーにする。
- 
 - [ ] forsort の compare をカスタマイズ可能にする。
 - [ ] builtinクラスを LuneScript のクラスで定義できるようにする。
 - [ ] class の trust サポート
@@ -344,7 +297,6 @@ lua の場合 val に nil が入らないが、 go では入る。
 - [ ] Nodes.MacroValInfo の値の alge 化。
 - [ ] accessor の override 指定
   
-- [ ] Sub クラスが Super クラスのメンバを shadowing したときエラー検知できていない。
 - [ ] インスタンスから、クラス名などのメタ情報を取得できるようにする。
 - [ ] Generics の @@@ 対応。
   
@@ -576,15 +528,8 @@ func2(##);
      
 ** 高速化
 
-- [ ] 依存関係が入り組んでいて、ビルドの並列化が出来ない
-      meta ファイルの生成には、モジュールの公開関数の情報だけあれば良い。
-      しかし、現状はモジュールの全てを解析してから meta ファイルを生成している。
-      これだと、ほとんど並列化できないので効率が悪い。
-      解析を meta ファイル用の解析と、全体解析の 2 つのパスに分けて、
-      他のモジュールのビルドを並列化して行なう。
-      これは make ではなく、専用ビルダを作成して制御する。
-
-
+- [ ] コンストラクタ等の一部の関数が分割処理対応していないので、これを対応する。
+   
 - [ ] 単純な ExRef からのメソッド呼び出しでも call ラッパを使用しているが、
       ダイレクトでコールする方が効率が良い。
       
@@ -675,6 +620,11 @@ func2(##);
 - 宣言した変数を代入だけして使用していない場合、警告する。引数は除外。
   これは対応しない。
   なぜなら多値の戻り値を格納した場合、全ての変数を利用するとは限らないため。
+
+- [ ] for 内で let の初期化するとエラー。
+      let 宣言時の初期化ではなく、宣言後の初期化。
+      mut 宣言している変数だとエラーにならない。
+
 
 * テストコード
 
@@ -1088,12 +1038,35 @@ hoge.$val = 2; // error しない
      実際には break 出来ないのでエラーにするべき。
 - [X] accessor/method のアクセス制限に local を指定できない。
 - [X] __asyncLock 内から、 大域変数の mutable にアクセスできない。
+- [X] コンストラクタ内で、初期化していないメンバにアクセスしてもエラー検知しない。
   
-  
-  
+- [X] __var を使用するマクロを使えるのは、それを定義した名前空間と同じ名前空間。
+      異なる名前空間だと、AST 解析の順番が保証されないため。
 
+- [X] 公開マクロ内では __var のアクセスを禁止にする。
+- [X] __noasyncLock 内から __luago せずに、 luaval 系にアクセスできてしまう。
+- [X] List<&Hoge> の sort のコールバックが mutable の Hoge でエラーにならない。
+
+let mut list:List<&Hoge> = [];
+foreach val in [ 10, 3, 5, 1 ] {
+   list.insert( new Sub( val ) );
+}
+list.sort( fn ( hoge1:Hoge, hoge2:Hoge ) : bool {
+   return hoge1.$val < hoge2.$val;
+} );
+  
+- [X] go 版 lnsc で lnsc test/imp.lns exe が出来ない。
+      動的な import が処理できていない。  
   
   
+- [ ] 依存関係が入り組んでいて、ビルドの並列化が出来ない
+      meta ファイルの生成には、モジュールの公開関数の情報だけあれば良い。
+      しかし、現状はモジュールの全てを解析してから meta ファイルを生成している。
+      これだと、ほとんど並列化できないので効率が悪い。
+      解析を meta ファイル用の解析と、全体解析の 2 つのパスに分けて、
+      他のモジュールのビルドを並列化して行なう。
+      これは make ではなく、専用ビルダを作成して制御する。
+
 - [ ] macro に与えられたリテラルな List/Array/Map/Set を、そのまま展開して変数に格納する。
 - [ ] import すると、モジュールのシンボルがスコープに追加される。
       このシンボルが変数などと被ると使いづらい。
@@ -1172,6 +1145,43 @@ hoge.$val = 2; // error しない
   インポートしていない場合のエラーがない。
 - [X] luaval<> の処理している箇所は __async では使えなくする。
       __async では unsafe で括って使えるようにする。
+  
+- [X] 以下のフロー解析が失敗する。
+  
+fn func() : int {
+   return 1;
+}
+fn sub() : int {
+   while true {
+      let val = func();
+      switch val {
+         case 1 {
+            break;
+         }
+         case 2 {
+            return 1;
+         }
+      }
+   }
+   // func() が 1 を返して while ループが抜けるが、
+   // while ループの後に return がないのに、エラーにならない。
+}
+
+- [X] go で list.sort のコールバックがビルドエラーする。
+      ※ _env が付かない。
+      list.sort( fn ( node1:&Nodes.Node, node2:&Nodes.Node ) : bool {
+         return node1.$id < node2.$id;
+      } );
+- [X] __async のメソッドから __noasync メソッドをコールした場合、エラーにならない。
+- [X] __async から mutable な static メンバ にアクセスした場合、エラーにする。
+- [X] foreach などで、 繰り返しの要因になっているオブジェクトは imut にする。
+- [X] トップスコープにないクラスの static メンバのライフタイムが Lua と C で異なる。
+      トップスコープのクラスだけ static メンバを許可する。
+- [X] alge 型のパラメータの名前が無いと、分かりにくい。
+- [X] forsort で、 map をソートした場合、キーが int/real/str 以外だと実行時エラーする。
+      コンパイルエラーにする。
+ 
+  
   
       
 
