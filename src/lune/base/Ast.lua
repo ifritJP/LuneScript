@@ -1074,6 +1074,9 @@ MutMode.__allList[3] = MutMode.Mut
 MutMode.AllMut = 3
 MutMode._val2NameMap[3] = 'AllMut'
 MutMode.__allList[4] = MutMode.AllMut
+MutMode.Depend = 4
+MutMode._val2NameMap[4] = 'Depend'
+MutMode.__allList[5] = MutMode.Depend
 
 local function isMutable( mode )
 
@@ -2330,6 +2333,8 @@ function ModifierTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFla
          txt = "&" .. txt
       elseif _switchExp == MutMode.AllMut then
          txt = "allmut " .. txt
+      elseif _switchExp == MutMode.Depend then
+         txt = "#" .. txt
       end
    end
    
@@ -2354,6 +2359,22 @@ function ModifierTypeInfo:serialize( stream, serializeInfo )
 end
 function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
+   
+   if self.mutMode == MutMode.Depend then
+      do
+         local _switchExp = other:get_mutMode()
+         if _switchExp == MutMode.Mut or _switchExp == MutMode.Depend then
+         else 
+            
+               local mess = string.format( "mismatch %s, %s", MutMode:_getTxt( self.mutMode)
+               , MutMode:_getTxt( other:get_mutMode())
+               )
+               return false, mess
+         end
+      end
+      
+   end
+   
    
    local evalType
    
@@ -3993,9 +4014,9 @@ function Scope:addMember( processInfo, name, pos, typeInfo, accessMode, staticFl
 end
 
 
-function Scope:addMethod( processInfo, pos, typeInfo, accessMode, staticFlag, mutable )
+function Scope:addMethod( processInfo, pos, typeInfo, accessMode, staticFlag )
 
-   return self:add( processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, mutable and MutMode.Mut or MutMode.IMut, true, false )
+   return self:add( processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo:get_rawTxt(), pos, typeInfo, accessMode, staticFlag, typeInfo:get_mutMode(), true, false )
 end
 
 
@@ -4480,14 +4501,16 @@ function AccessSymbolInfo:get_mutMode(  )
       
          do
             local _switchExp = self.symbolInfo:get_mutMode()
-            if _switchExp == MutMode.AllMut or _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
+            if _switchExp == MutMode.Depend then
+               return prefixTypeInfo:get_mutMode()
+            elseif _switchExp == MutMode.AllMut or _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
                return self.symbolInfo:get_mutMode()
             elseif _switchExp == MutMode.Mut then
                do
                   local _switchExp = prefixTypeInfo:get_mutMode()
                   if _switchExp == MutMode.AllMut then
                      return MutMode.Mut
-                  elseif _switchExp == MutMode.Mut or _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
+                  elseif _switchExp == MutMode.Mut or _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe or _switchExp == MutMode.Depend then
                      return prefixTypeInfo:get_mutMode()
                   end
                end
@@ -7437,14 +7460,14 @@ function ProcessInfo:createExtModule( scope, parentInfo, typeDataAccessor, exter
 end
 
 
-function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, parentInfo, typeDataAccessor, autoFlag, externalFlag, staticFlag, accessMode, funcName, asyncMode, altTypeList, argTypeList, retTypeInfoList, mutable )
+function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, parentInfo, typeDataAccessor, autoFlag, externalFlag, staticFlag, accessMode, funcName, asyncMode, altTypeList, argTypeList, retTypeInfoList, mutMode )
 
    if not builtinFlag and Parser.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutable and MutMode.Mut or MutMode.IMut, nil, asyncMode)
+   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutMode, nil, asyncMode)
    self:setupImut( info )
    
    if altTypeList ~= nil then
@@ -7465,7 +7488,7 @@ function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, pa
 end
 
 
-local builtinTypeLnsLoad = rootProcessInfo:createFuncAsync( false, true, nil, TypeInfoKind.Func, headTypeInfoMut, headTypeInfoMut, false, true, true, AccessMode.Pub, "_lnsLoad", Async.Async, nil, {_moduleObj.builtinTypeString, _moduleObj.builtinTypeString}, {_moduleObj.builtinTypeStem}, false )
+local builtinTypeLnsLoad = rootProcessInfo:createFuncAsync( false, true, nil, TypeInfoKind.Func, headTypeInfoMut, headTypeInfoMut, false, true, true, AccessMode.Pub, "_lnsLoad", Async.Async, nil, {_moduleObj.builtinTypeString, _moduleObj.builtinTypeString}, {_moduleObj.builtinTypeStem}, MutMode.IMut )
 _moduleObj.builtinTypeLnsLoad = builtinTypeLnsLoad
 
 
@@ -7479,7 +7502,7 @@ end
 
 function ProcessInfo:createAdvertiseMethodFrom( classTypeInfo, typeDataAccessor, typeInfo )
 
-   return self:createFuncAsync( false, false, nil, typeInfo:get_kind(), classTypeInfo, typeDataAccessor, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_asyncMode(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), TypeInfo.isMut( typeInfo ) )
+   return self:createFuncAsync( false, false, nil, typeInfo:get_kind(), classTypeInfo, typeDataAccessor, true, false, false, typeInfo:get_accessMode(), typeInfo:get_rawTxt(), typeInfo:get_asyncMode(), typeInfo:get_itemTypeInfoList(), typeInfo:get_argTypeInfoList(), typeInfo:get_retTypeInfoList(), typeInfo:get_mutMode() )
 end
 
 
@@ -8970,15 +8993,15 @@ function ProcessInfo:createEnum( scope, parentInfo, typeDataAccessor, externalFl
    local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, typeDataAccessor, valTypeInfo)
    self:setupImut( info )
    
-   local getEnumName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( self, nil, getEnumName, AccessMode.Pub, false, false )
+   local getEnumName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, MutMode.IMut )
+   scope:addMethod( self, nil, getEnumName, AccessMode.Pub, false )
    
-   local fromVal = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "_from", Async.Async, nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, false )
-   scope:addMethod( self, nil, fromVal, AccessMode.Pub, true, false )
+   local fromVal = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "_from", Async.Async, nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, MutMode.IMut )
+   scope:addMethod( self, nil, fromVal, AccessMode.Pub, true )
    
    local allListType = self:createList( AccessMode.Pub, info, {info}, MutMode.IMut )
-   local allList = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "get__allList", Async.Async, nil, nil, {self:createModifier( allListType, MutMode.IMut )}, false )
-   scope:addMethod( self, nil, allList, AccessMode.Pub, true, false )
+   local allList = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "get__allList", Async.Async, nil, nil, {self:createModifier( allListType, MutMode.IMut )}, MutMode.IMut )
+   scope:addMethod( self, nil, allList, AccessMode.Pub, true )
    
    return info
 end
@@ -9037,8 +9060,8 @@ function ProcessInfo:createAlge( scope, parentInfo, typeDataAccessor, externalFl
    local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo, typeDataAccessor)
    self:setupImut( info )
    
-   local getAlgeName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, false )
-   scope:addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false )
+   local getAlgeName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, MutMode.IMut )
+   scope:addMethod( self, nil, getAlgeName, AccessMode.Pub, false )
    
    return info
 end

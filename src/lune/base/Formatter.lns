@@ -268,7 +268,7 @@ pub override fn FormatterFilter.processNewAlgeVal(
 
 fn FormatterFilter.outputDeclClass(
    protoFlag:bool, classType:&Ast.TypeInfo,
-   gluePrefix: str!, moduleName: &Parser.Token! )
+   gluePrefix: str!, moduleName: &Parser.Token! ) mut
 {
    if classType.$accessMode == .Pub {
       self.write( "pub " );

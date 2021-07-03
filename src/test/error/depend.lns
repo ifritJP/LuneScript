@@ -1,0 +1,58 @@
+class Hoge {
+   let val:int;
+   pub fn get() {}
+   pub fn set() mut {}
+   pub fn dep() dep {}
+}
+
+class Test {
+   let mut hoge:Hoge;
+   pub fn __init() {
+      self.hoge = new Hoge(1);
+   }
+   pub fn subRo( hoge:&Hoge ) {}
+   pub fn subRW( hoge:Hoge ) {}
+   pub fn subDep( hoge:#Hoge ) {}
+                               
+   pub fn getHoge() dep : #Hoge {
+      return self.hoge;
+   }
+   pub fn getHoge2() dep : Hoge {
+      let hoge = new Hoge(1);
+      let hoge2:#Hoge = hoge; // error
+      return self.hoge; // error
+   }
+   pub fn getHoge3() : &Hoge {
+      return self.hoge;
+   }
+   pub fn getHoge4() mut : Hoge {
+      return self.hoge;
+   }
+   pub fn func1() {
+      self.getHoge().get();
+      self.getHoge().set(); // error
+      self.getHoge().dep();
+   }
+   pub fn func2() dep {
+      self.getHoge().get();
+      self.getHoge().set(); // error
+      self.getHoge().dep();
+   }
+   pub fn func3() mut {
+      self.getHoge().get();
+      self.getHoge().set();
+      self.getHoge().dep();
+   }
+}
+
+let test1 = new Test();
+let mut test2 = new Test();
+
+{
+   let mut hoge = test1.getHoge();
+   hoge.set(); // error
+}
+{
+   let mut hoge = test2.getHoge();
+   hoge.set();
+}

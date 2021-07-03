@@ -1372,12 +1372,12 @@ test/error/class.lns:396:4: error: Sub.func: mismatch method type -- unmatch arg
 test/error/class.lns:396:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- Luaval<Hoge>, int: func(int) -- func(int)
 test/error/class.lns:397:23: error: Sub.func: mismatch method type -- unmatch arg(1) type -- Luaval<Hoge>, int: func(int) -- func(int)
 test/error/class.lns:399:23: error: Sub.func2: mismatch method type -- unmatch arg(1) type -- int, Luaval<Hoge>: func2(Luaval<Hoge>) -- func2(Luaval<Hoge>)
-test/error/class.lns:410:10: error: __init: exp(1) type mismatch Luaval<@test.@error.@class.Hoge>(1899) <- @test.@error.@class.Hoge(1889): index 1 -- not support to use the type as Luaval -- Hoge
+test/error/class.lns:410:10: error: __init: exp(1) type mismatch Luaval<@test.@error.@class.Hoge>(1883) <- @test.@error.@class.Hoge(1873): index 1 -- not support to use the type as Luaval -- Hoge
 test/error/class.lns:433:16: error: This class(Hoge) is used by advertise. You must declare the prototype of this method.
 test/error/class.lns:440:4: error: not implements method -- Hoge.func at Test
 test/error/class.lns:449:4: error: not implements method -- Hoge.func at Sub
 test/error/class.lns:449:4: error: not implements method -- Test.func at Sub
-test/error/class.lns:470:4: error: func: exp(1) type mismatch List<@test.@error.@class.Super>(2057) <- List<@test.@error.@class.Sub1>(2065): index 1 -- 
+test/error/class.lns:470:4: error: func: exp(1) type mismatch List<@test.@error.@class.Super>(2041) <- List<@test.@error.@class.Sub1>(2049): index 1 -- 
 test/error/class.lns:483:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
 test/error/class.lns:483:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
 test/error/class.lns:484:23: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
@@ -1414,6 +1414,13 @@ test/error/class7.lns:9:17: error: mismatch functype -- unmatch ret(1) type -- i
 test/error/class7.lns:9:17: error: mismatch functype ret: exp(1) type mismatch str(58) <- int(26): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
 test/error/class7.lns:9:24: error: not found TypeInfo -- func
 test/error/class7.lns:5:14: warning: Set member -- Test2.val2
+test/error/depend.lns:22:11: warning: 'hoge2' var isn't accessed
+test/error/depend.lns:18:7: error: return: exp(1) type mismatch @test.@error.@depend.Hoge(1049) <- &@test.@error.@depend.Hoge(1010): index 1 -- mismatch MutMode.Depend, MutMode.IMut. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/depend.lns:22:7: error: unmatch value type (index:1) @test.@error.@depend.Hoge <- &@test.@error.@depend.Hoge -- mismatch MutMode.Depend, MutMode.IMutRe
+test/error/depend.lns:23:7: error: return: exp(1) type mismatch @test.@error.@depend.Hoge(1008) <- &@test.@error.@depend.Hoge(1010): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/depend.lns:33:22: error: can't access mutable method. -- &Hoge.set
+test/error/depend.lns:38:22: error: can't access mutable method. -- &Hoge.set
+test/error/depend.lns:53:9: error: can't access mutable method. -- &Hoge.set
 test/error/provide1.lns:8:1: error: provide variable must be 'pub'.  -- 4
 test/error/provide2.lns:11:1: error: provide variable must be 'pub'.  -- 3
 test/error/provide3.lns:6:1: error: multiple provide
@@ -2226,10 +2233,10 @@ test/error/generics.lns:36:7: error: return: exp(1) type mismatch T2(TypeInfoKin
 test/error/generics.lns:45:16: error: can't access this class(Test<T>) without '<>'.
 test/error/generics.lns:53:21: error: 'T' of Test<T> doesn't inherit 'Super'
 test/error/generics.lns:63:23: error: Sub.func: not support to override the method has generics at return type. -- func: func(str): str -- func(str): str
-test/error/generics.lns:77:10: error: func: exp(1) type mismatch &T(1208) <- str(58): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics.lns:77:10: error: func: exp(1) type mismatch &T(1204) <- str(58): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics.lns:83:30: error: The static method can't use the type parameter. -- T
 test/error/generics.lns:83:35: error: The static method can't use the type parameter. -- T
-test/error/generics.lns:87:11: error: func: exp(1) type mismatch T(1251) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/generics.lns:87:11: error: func: exp(1) type mismatch T(1247) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics.lns:90:17: error: multiple Type -- T
 test/error/generics.lns:91:19: error: shadowing Type -- T
 test/error/generics.lns:94:23: error: multiple Type -- T1
@@ -2264,20 +2271,20 @@ test/error/generics3.lns:42:4: error: sub2: exp(1) type mismatch &@test.@error.@
 test/error/generics3.lns:50:16: error: Can't new generic class. -- Test3<T1,T2>
 test/error/generics4.lns:28:19: error: can't use this type without <T>. please use Test<T>.
 test/error/generics4.lns:32:10: error: Can't new generic class. -- Test<T>
-test/error/generics4.lns:32:14: error: __init: exp(1) type mismatch T(1074) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:32:14: error: __init: exp(1) type mismatch T(1066) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:34:10: error: Can't new generic class. -- Test<T>
-test/error/generics4.lns:34:14: error: __init: exp(1) type mismatch T(1074) <- @test.@error.@generics4.Sub2(1062): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:34:14: error: __init: exp(1) type mismatch T(1066) <- @test.@error.@generics4.Sub2(1054): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:35:10: error: Can't new generic class. -- Test<T>
-test/error/generics4.lns:35:14: error: __init: exp(1) type mismatch T(1074) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:35:14: error: __init: exp(1) type mismatch T(1066) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:46:20: error: can't use this type without <T>. please use Test2<T>.
 test/error/generics4.lns:50:11: error: Can't new generic class. -- Test2<T>
-test/error/generics4.lns:50:15: error: __init: exp(1) type mismatch T(1108) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:50:15: error: __init: exp(1) type mismatch T(1100) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:51:11: error: Can't new generic class. -- Test2<T>
-test/error/generics4.lns:51:15: error: __init: exp(1) type mismatch T(1108) <- @test.@error.@generics4.SubSub(1040): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:51:15: error: __init: exp(1) type mismatch T(1100) <- @test.@error.@generics4.SubSub(1036): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:53:11: error: Can't new generic class. -- Test2<T>
-test/error/generics4.lns:53:15: error: __init: exp(1) type mismatch T(1108) <- int(26): index 1(TypeInfoKind.Alternate)
-test/error/generics4.lns:69:13: error: = operator: exp(1) type mismatch &@test.@error.@generics4.Test3<T>!(1167) <- @test.@error.@generics4.Test3<T>(1198): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics4.lns:92:4: error: func: exp(1) type mismatch List<@test.@error.@generics4.Super>(1241) <- List<@test.@error.@generics4.Sub1>(1255): index 1 -- 
+test/error/generics4.lns:53:15: error: __init: exp(1) type mismatch T(1100) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/generics4.lns:69:13: error: = operator: exp(1) type mismatch &@test.@error.@generics4.Test3<T>!(1159) <- @test.@error.@generics4.Test3<T>(1190): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics4.lns:92:4: error: func: exp(1) type mismatch List<@test.@error.@generics4.Super>(1233) <- List<@test.@error.@generics4.Sub1>(1247): index 1 -- 
 test/error/box.lns:6:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- real(30): index 1(TypeInfoKind.Box)
 test/error/box.lns:7:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- str(58): index 1(TypeInfoKind.Box)
 test/error/box.lns:12:4: error: not support auto boxing

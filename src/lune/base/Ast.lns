@@ -445,6 +445,7 @@ pub enum MutMode {
    IMutRe,
    Mut,
    AllMut,
+   Depend,
 }
 pub fn isMutable( mode:MutMode ): bool {
    switch mode {
@@ -1541,6 +1542,9 @@ pub class ModifierTypeInfo extend TypeInfo {
          case .AllMut {
             txt = "allmut " .. txt;
          }
+         case .Depend {
+            txt = "#" .. txt;
+         }
       }
       return txt;
    }
@@ -1572,6 +1576,17 @@ pub class ModifierTypeInfo extend TypeInfo {
       // if isGenericType( self.srcTypeInfo ) {
       //    return self.srcTypeInfo.canEvalWith( other, canEvalType, alt2type );
       // }
+
+      if self.mutMode == .Depend {
+         switch other.$mutMode {
+            case .Mut, .Depend {
+            }
+            default {
+               let mess = "mismatch %s, %s" (self.mutMode.$_txt, other.$mutMode.$_txt );
+               return false, mess;
+            }
+         }
+      }
 
       let evalType;
       if #self.srcTypeInfo.$itemTypeInfoList >= 1 {
@@ -2701,11 +2716,11 @@ pub fn Scope.addMember(
 pub fn Scope.addMethod(
    processInfo:ProcessInfo,
    pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
-   staticFlag:bool, mutable:bool ) mut : &SymbolInfo!, &SymbolInfo!
+   staticFlag:bool ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
       processInfo, SymbolKind.Mtd, true, staticFlag, typeInfo.$rawTxt, pos, typeInfo,
-      accessMode,staticFlag, mutable and MutMode.Mut or MutMode.IMut, true, false )**;
+      accessMode,staticFlag, typeInfo.$mutMode, true, false )**;
 }
 
 pub fn Scope.addFunc(
@@ -3188,6 +3203,9 @@ pub class AccessSymbolInfo extend SymbolInfo {
          }
          case .Prefix( prefixTypeInfo ) {
             _switch self.symbolInfo.$mutMode {
+               case .Depend {
+                  return prefixTypeInfo.$mutMode;
+               }
                case .AllMut, .IMut, .IMutRe {
                   return self.symbolInfo.$mutMode;
                }
@@ -3196,7 +3214,7 @@ pub class AccessSymbolInfo extend SymbolInfo {
                      case .AllMut {
                         return .Mut;
                      }
-                     case .Mut, .IMut, .IMutRe {
+                     case .Mut, .IMut, .IMutRe, .Depend {
                         return prefixTypeInfo.$mutMode;
                      }
                   }
@@ -5438,7 +5456,7 @@ pub fn ProcessInfo.createFuncAsync(
    autoFlag: bool, externalFlag: bool, staticFlag: bool,
    accessMode: AccessMode, funcName: str, asyncMode:Async, altTypeList: &List<&TypeInfo>!,
    argTypeList: &List<&TypeInfo>!, retTypeInfoList: &List<&TypeInfo>!,
-   mutable: bool! ) mut : NormalTypeInfo
+   mutMode: MutMode ) mut : NormalTypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) );
@@ -5448,8 +5466,7 @@ pub fn ProcessInfo.createFuncAsync(
       self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, typeDataAccessor,
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
-      unwrap retTypeInfoList default [],
-      mutable and MutMode.Mut or MutMode.IMut, nil, asyncMode );
+      unwrap retTypeInfoList default [], mutMode, nil, asyncMode );
    self.setupImut( info );
 
    when! altTypeList {
@@ -5466,7 +5483,7 @@ pub fn ProcessInfo.createFuncAsync(
 pub let builtinTypeLnsLoad:&TypeInfo = rootProcessInfo.createFuncAsync(
    false, true, nil, .Func, headTypeInfoMut, headTypeInfoMut, false, true,
    true, .Pub, "_lnsLoad", .Async, nil, [ builtinTypeString, builtinTypeString ],
-   [ builtinTypeStem ], false );
+   [ builtinTypeStem ], .IMut );
 
 
 
@@ -5493,7 +5510,7 @@ pub fn ProcessInfo.createAdvertiseMethodFrom(
       classTypeInfo, typeDataAccessor,
       true, false, false, typeInfo.$accessMode, typeInfo.$rawTxt,
       typeInfo.$asyncMode, typeInfo.$itemTypeInfoList, typeInfo.$argTypeInfoList,
-      typeInfo.$retTypeInfoList, TypeInfo.isMut( typeInfo ) );
+      typeInfo.$retTypeInfoList, typeInfo.$mutMode );
 }
 
 
@@ -6544,23 +6561,23 @@ pub fn ProcessInfo.createEnum(
    let mut getEnumName = self.createFuncAsync(
       false, true, nil, .Method, info, info,
       true, externalFlag, false, AccessMode.Pub,
-      "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
-   scope.addMethod( self, nil, getEnumName, AccessMode.Pub, false, false );
+      "get__txt", .Async, nil, nil, [ builtinTypeString ], .IMut );
+   scope.addMethod( self, nil, getEnumName, AccessMode.Pub, false );
 
    let mut fromVal = self.createFuncAsync(
       false, true, nil, .Func, info, info,
       true, externalFlag, true, AccessMode.Pub,
       "_from", .Async, nil, [ self.createModifier( valTypeInfo, .IMut ) ],
-      [ info.$nilableTypeInfo ], false );
-   scope.addMethod( self, nil, fromVal, AccessMode.Pub, true, false );
+      [ info.$nilableTypeInfo ], .IMut );
+   scope.addMethod( self, nil, fromVal, AccessMode.Pub, true );
 
    let allListType = self.createList( .Pub, info, [ info ], .IMut );
    let mut allList = self.createFuncAsync(
       false, true, nil, .Func, info, info,
       true, externalFlag, true, AccessMode.Pub,
       "get__allList", .Async, nil, nil,
-      [ self.createModifier( allListType, .IMut ) ], false );
-   scope.addMethod( self, nil, allList, AccessMode.Pub, true, false );
+      [ self.createModifier( allListType, .IMut ) ], .IMut );
+   scope.addMethod( self, nil, allList, AccessMode.Pub, true );
 
    return info;
 }
@@ -6613,8 +6630,8 @@ pub fn ProcessInfo.createAlge(
    let mut getAlgeName = self.createFuncAsync(
       false, true, nil, .Method, info, info,
       true, externalFlag, false, AccessMode.Pub,
-      "get__txt", .Async, nil, nil, [ builtinTypeString ], false );
-   scope.addMethod( self, nil, getAlgeName, AccessMode.Pub, false, false );
+      "get__txt", .Async, nil, nil, [ builtinTypeString ], .IMut );
+   scope.addMethod( self, nil, getAlgeName, AccessMode.Pub, false );
 
    return info;
 }

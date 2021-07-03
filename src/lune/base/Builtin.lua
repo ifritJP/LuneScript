@@ -1505,7 +1505,7 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                
                asyncMode = Ast.Async.Async
                
-               local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, parentInfo, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable )
+               local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, parentInfo, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut )
                if self.hasLuaval then
                   builtinFunc:addLuavalFunc( typeInfo )
                end

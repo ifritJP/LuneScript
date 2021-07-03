@@ -1751,7 +1751,7 @@ fn convFilter.outputConvExt( funcNode:&Nodes.Node ) mut {
    self.writeln( "}" );
 }
 
-fn convFilter.outputModule( moduleTypeInfo:&Ast.TypeInfo, addDot:bool ) {
+fn convFilter.outputModule( moduleTypeInfo:&Ast.TypeInfo, addDot:bool ) mut {
    self.writeRaw( self.getModuleSym( moduleTypeInfo, addDot ) );
 }
 

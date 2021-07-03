@@ -605,7 +605,7 @@ func Builtin_getBuiltInInfo_5_(_env *LnsEnv) *LnsList {
 
 
 
-// 781: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
+// 782: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
 func Builtin_registBuiltInScope__processCopyAlterList_0_(_env *LnsEnv, alterList *LnsList,typeList *LnsList) {
     for _, _typeInfo := range( typeList.Items ) {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -859,7 +859,10 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
             var asyncMode LnsInt
             asyncMode = Ast_Async__Async
             var typeInfo *Ast_NormalTypeInfo
-            typeInfo = self.processInfo.FP.CreateFuncAsync(_env, abstractFlag, true, scope, kind, parentInfo, Ast_getBuiltinMut(_env, parentInfo).FP, false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable)
+            typeInfo = self.processInfo.FP.CreateFuncAsync(_env, abstractFlag, true, scope, kind, parentInfo, Ast_getBuiltinMut(_env, parentInfo).FP, false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, _env.PopVal( _env.IncStack() ||
+                _env.SetStackVal( mutable) &&
+                _env.SetStackVal( Ast_MutMode__Mut) ||
+                _env.SetStackVal( Ast_MutMode__IMut) ).(LnsInt))
             if self.hasLuaval{
                 Builtin_builtinFunc.FP.addLuavalFunc(_env, &typeInfo.Ast_TypeInfo)
             }
@@ -875,7 +878,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
         }
     }
 }
-// 686: decl @lune.@base.@Builtin.Builtin.registClass
+// 687: decl @lune.@base.@Builtin.Builtin.registClass
 func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2FieldInfo *LnsMap,pos Types_Position,genTypeList *LnsList) *Ast_TypeInfo {
     var classKind LnsInt
     classKind = TransUnitIF_DeclClassMode__Class
@@ -948,7 +951,7 @@ func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2Fi
     }
     return parentInfo
 }
-// 757: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
+// 758: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
 func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFuncType {
     if Builtin_readyBuiltin{
         return Builtin_builtinFunc
