@@ -2974,6 +2974,12 @@ function SwitchNode:getBreakKind( checkMode )
       return kind
    end
    
+   if kind == BreakKind.Break then
+      
+      return kind
+   end
+   
+   
    return BreakKind.None
 end
 
@@ -7684,6 +7690,17 @@ function RefFieldNode:canBeRight( processInfo )
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
+         do
+            local prefix = _lune.__Cast( self:get_prefix(), 3, ExpRefNode )
+            if prefix ~= nil then
+               if prefix:get_symbolInfo():get_name() == "self" then
+                  
+                  return _exp:get_canBeRight() and _exp:get_hasValueFlag()
+               end
+               
+            end
+         end
+         
          return _exp:get_canBeRight()
       end
    end

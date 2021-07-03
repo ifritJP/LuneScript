@@ -392,8 +392,11 @@ function NSInfo:canAccessLuaval(  )
       return true
    end
    
-   if #self.lockedAsyncStack > 0 then
-      return true
+   for __index, stack in ipairs( self.lockedAsyncStack ) do
+      if stack:get_lockKind() ~= Nodes.LockKind.AsyncLock then
+         return true
+      end
+      
    end
    
    return false

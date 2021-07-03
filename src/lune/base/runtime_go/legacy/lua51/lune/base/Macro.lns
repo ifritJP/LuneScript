@@ -331,8 +331,31 @@ pub class MacroCtrl
    */
    pri let mut macroLocalVarMap:Luaval<&stem>!;
    /** マクロ定義中の場合 true */
-   pri let mut isDeclaringMacro:bool {pub};
+   pri let mut declaringType:&Ast.TypeInfo! {pub};
 
+   pub fn get_isDeclaringMacro():bool {
+      return self.declaringType ~= nil;
+   }
+
+   /** マクロの型→ __var へのアクセス有無 */
+   pri let mut id2use___var:Map<&Ast.IdInfo,bool>;
+   /** macroType で指定したマクロが __var を使用するかどうか */
+   pub fn isUsing__var( macroType:&Ast.TypeInfo ) : bool {
+      let typeId = macroType.$typeId;
+      if self.typeId2ImportedMacroInfo[ typeId ] {
+         return false;
+      }
+      if! self.id2use___var[ typeId ] {
+         return _exp;
+      }
+      Util.err( "unknown macro -- %s" (macroType.getTxt(##)) );
+   }
+
+   pub fn setUsing__var() mut {
+      if! self.declaringType {
+         self.id2use___var[ _exp.$typeId ] = true;
+      }
+   }
 
    /** _lnsLoad を使用している場合 true */
    let mut useLnsLoad:bool;
@@ -345,13 +368,14 @@ pub class MacroCtrl
 
    pub fn __init( macroEval: &Nodes.MacroEval, validAsyncMacro:bool )
    {
+      self.id2use___var = {};
       self.validAsyncMacro = validAsyncMacro;
       self.toLuavalLuaAsync = nil;
       self.useLnsLoad = false;
       self.declMacroInfoMap = {};
       self.declPubMacroInfoMap = {};
       // self.declMacroInfoSrcMap = {};
-      self.isDeclaringMacro = false;
+      self.declaringType = nil;
       self.tokenExpanding = false;
       self.useModuleMacroSet = (@);
       self.typeId2ImportedMacroInfo = {};
@@ -381,12 +405,13 @@ pub class MacroCtrl
          }
       }
 
-      obj.isDeclaringMacro = self.isDeclaringMacro;
       obj.tokenExpanding = self.tokenExpanding;
       obj.useModuleMacroSet.or( self.useModuleMacroSet );
       _cloneMap( obj.typeId2ImportedMacroInfo, self.typeId2ImportedMacroInfo );
       // _cloneMap( obj.declMacroInfoSrcMap, self.declMacroInfoSrcMap );
       _cloneMap( obj.declPubMacroInfoMap, self.declPubMacroInfoMap );
+      _cloneMap( obj.id2use___var, self.id2use___var );
+
 
       if self.validAsyncMacro {
          // マクロを同期実行する場合、
@@ -424,7 +449,7 @@ pub class MacroCtrl
    }
 
    pub fn setToUseLnsLoad() mut {
-      if self.isDeclaringMacro {
+      if self.declaringType {
          self.useLnsLoad = true;
       }
    }
@@ -527,6 +552,11 @@ pub fn MacroCtrl.evalMacroOp(
          self.validAsyncMacro and innerMacro and
          not Ast.isPubToExternal( macroTypeInfo.$accessMode );
 
+      // __var は、公開マクロにすると意味不明な動作になるので、
+      // 非公開マクロに限定する。
+      let valid__var =
+         innerMacro and not Ast.isPubToExternal( macroTypeInfo.$accessMode );
+
       let toLuaval;
       if asyncMacro {
          // コンストラクタで生成すると、
@@ -556,8 +586,6 @@ pub fn MacroCtrl.evalMacroOp(
          }
       }
       _callMacroState( {
-         if innerMacro {
-         }
          if! let func = macroInfo.$func {
             when! expList {
                // マクロに渡す引数をセットする
@@ -593,7 +621,7 @@ pub fn MacroCtrl.evalMacroOp(
                      loadCode( "return function() return {} end" )@@toListEmptyLua;
                   varMap = toListEmpty();
                };
-               if innerMacro {
+               if valid__var {
                   macroArgValMap[ "__var" ] = varMap;
                }
 
@@ -602,7 +630,7 @@ pub fn MacroCtrl.evalMacroOp(
 
                // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
                // self.macroLocalVarMap に入れなおす。
-               if innerMacro {
+               if valid__var {
                   self.macroLocalVarMap = unwrap macroVars.__var;
                }
 
@@ -816,8 +844,13 @@ pub fn MacroCtrl.regist(
 
 
 
+   if not self.id2use___var[ node.$expType.$typeId ] {
+      self.id2use___var[ node.$expType.$typeId ] = false;
+   }
+   
    self.symbol2ValueMapForMacro = {};
-   self.isDeclaringMacro = false;
+   self.declaringType = nil;
+
    
    return err;
 }
@@ -1191,9 +1224,9 @@ pub fn MacroCtrl.registVar( symbolList:&List<&Ast.SymbolInfo> ) mut
    }
 }
 
-pub fn MacroCtrl.startDecl() mut {
+pub fn MacroCtrl.startDecl( declaringType:&Ast.TypeInfo ) mut {
    self.symbol2ValueMapForMacro = {};
-   self.isDeclaringMacro = true;   
+   self.declaringType = declaringType;   
    self.useLnsLoad = false;
 }
 

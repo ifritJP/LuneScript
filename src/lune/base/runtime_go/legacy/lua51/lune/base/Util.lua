@@ -273,9 +273,13 @@ function OrderdMap:clear(  )
    self.map = {}
    self.keyList = {}
 end
-function OrderdMap:add( key, val )
+function OrderdMap:add( key, val, overwrite )
 
    if self.map[key] then
+      if overwrite then
+         self.map[key] = val
+      end
+      
       return 
    end
    
@@ -576,7 +580,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 357, function (  )
+   Log.log( Log.Level.Warn, __func__, 360, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

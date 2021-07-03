@@ -613,8 +613,7 @@ fn TransUnit.analyzeDeclMacroSub(
       self.error( "can't declare the macro in the macro." );
    }
    
-   self.macroCtrl.startDecl();
-   
+ 
    
    let mut pubFlag = false;
    switch accessMode {
@@ -656,6 +655,17 @@ fn TransUnit.analyzeDeclMacroSub(
       retTypeList = [];
       self.checkToken( nextToken, "{");
    }
+
+   let typeInfo = self.processInfo.createFuncAsync(
+      false, false, macroScope, .Macro, parentType, typeDataAccessor,
+      false, false, true,
+      accessMode, nameToken.txt, .Async, nil, argTypeList, retTypeList## );
+   //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
+   // self.scope.addMacro( typeInfo, accessMode );
+
+
+   self.macroCtrl.startDecl( typeInfo );
+   
    
    nextToken = self.getToken(##);
 
@@ -684,8 +694,10 @@ fn TransUnit.analyzeDeclMacroSub(
       let macroLocalVarType = self.processInfo.createMap(
          .Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
 
-      macroScope.addLocalVar(
-         self.processInfo, false, true, "__var", nil, macroLocalVarType, .IMut );
+      if not pubFlag {
+         macroScope.addLocalVar(
+            self.processInfo, false, true, "__var", nil, macroLocalVarType, .IMut );
+      }
 
       let mut stmtList:List<&Nodes.Node> = [];
       self.prepareTentativeSymbol( self.$scope, false, nil );
@@ -738,12 +750,6 @@ fn TransUnit.analyzeDeclMacroSub(
       tokenList.insert( nextToken );
    }
 
-   let typeInfo = self.processInfo.createFuncAsync(
-      false, false, macroScope, .Macro, parentType, typeDataAccessor,
-      false, false, true,
-      accessMode, nameToken.txt, .Async, nil, argTypeList, retTypeList## );
-   //self.scope.addLocalVar( false, false, nameToken.txt, typeInfo, false );
-   // self.scope.addMacro( typeInfo, accessMode );
 
 
    let mut declMacroInfo = new Nodes.DeclMacroInfo(
@@ -3516,7 +3522,7 @@ fn TransUnit.analyzeInitExp(
       foreach exp, index in workList.$expList {
          newExpList.insert( exp ) ;
          if not exp.canBeRight( self.processInfo ) {
-            self.addErrMess( exp.$pos,
+            self.addErrMess( exp.$effectivePos,
                              "this node(%d) can not be r-value. -- %s"
                              (index, Nodes.getNodeKindName( exp.$kind ) ) );
          }
