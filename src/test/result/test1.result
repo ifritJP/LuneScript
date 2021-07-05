@@ -1415,8 +1415,8 @@ test/error/class7.lns:9:17: error: mismatch functype ret: exp(1) type mismatch s
 test/error/class7.lns:9:24: error: not found TypeInfo -- func
 test/error/class7.lns:5:14: warning: Set member -- Test2.val2
 test/error/depend.lns:22:11: warning: 'hoge2' var isn't accessed
-test/error/depend.lns:18:7: error: return: exp(1) type mismatch @test.@error.@depend.Hoge(1049) <- &@test.@error.@depend.Hoge(1010): index 1 -- mismatch MutMode.Depend, MutMode.IMut. if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/depend.lns:22:7: error: unmatch value type (index:1) @test.@error.@depend.Hoge <- &@test.@error.@depend.Hoge -- mismatch MutMode.Depend, MutMode.IMutRe
+test/error/depend.lns:18:7: error: return: exp(1) type mismatch #@test.@error.@depend.Hoge(1049) <- &@test.@error.@depend.Hoge(1010): index 1 -- mismatch MutMode.Depend, MutMode.IMut. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/depend.lns:22:7: error: unmatch value type (index:1) #@test.@error.@depend.Hoge <- &@test.@error.@depend.Hoge -- mismatch MutMode.Depend, MutMode.IMutRe
 test/error/depend.lns:23:7: error: return: exp(1) type mismatch @test.@error.@depend.Hoge(1008) <- &@test.@error.@depend.Hoge(1010): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/depend.lns:33:22: error: can't access mutable method. -- &Hoge.set
 test/error/depend.lns:38:22: error: can't access mutable method. -- &Hoge.set

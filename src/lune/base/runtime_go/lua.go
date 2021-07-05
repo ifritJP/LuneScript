@@ -219,7 +219,7 @@ func createVM() *Lns_luaVM {
 
 	if luaVM == nil {
 		luaVM = &Lns_luaVM{}
-		luaVM.vm = LuaL_newstate(300)
+		luaVM.vm = LuaL_newstate(600)
 		LuaL_openlibs(luaVM.vm)
 		luaVM.lns_luvValueCoreMap = map[*Lns_luaValueCore]bool{}
 		luaVM.freeCoreWorkList = make([]*Lns_luaValueCore, lns_luaValueCoreNum)

@@ -565,8 +565,7 @@ class _TypeInfoNormal extend _TypeInfo {
                      self.abstractFlag, false, scope, typeInfoKind,
                      parentInfo, parentTypeDataAccessor, false, true, self.staticFlag,
                      accessMode, self.txt, self.asyncMode,
-                     itemTypeInfo, argTypeInfo, retTypeInfo, 
-                     Ast.isMutable( self.mutMode ) );
+                     itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode );
                   param.typeId2TypeDataAccessor[ self.typeId ] = workTypeInfoMut;
 
                   postProcess( workTypeInfoMut, scope );

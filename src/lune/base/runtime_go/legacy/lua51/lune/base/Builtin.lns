@@ -661,7 +661,8 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
                abstractFlag, true, scope, kind,
                parentInfo, Ast.getBuiltinMut( parentInfo),
                false, true, staticFlag, accessMode,
-               fieldName, asyncMode, nil, argTypeList, retTypeList, mutable );
+               fieldName, asyncMode, nil, argTypeList, retTypeList,
+               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );     
             if self.hasLuaval {
                builtinFunc.addLuavalFunc( typeInfo );
             }

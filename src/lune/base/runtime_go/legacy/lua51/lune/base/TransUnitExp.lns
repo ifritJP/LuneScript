@@ -806,7 +806,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
             self.processInfo.$dummyParentType,
             false, false, true, .Pri, "sort", .Async, nil,
             [ genericTypeList[ 1 ], genericTypeList[ 1 ] ],
-            [ Ast.builtinTypeBool ], false );
+            [ Ast.builtinTypeBool ], .IMut );
          argTypeList = [ callback.$nilableTypeInfo ];
 
          // implicitCast すると、 go の変換が出来ないので implicitCast を抑制
@@ -1518,17 +1518,26 @@ fn TransUnit.processFunc(
          }
       }
    }
+
+   let prefixMutMode:Ast.MutMode;
+   when! refFieldNode {
+      prefixMutMode = refFieldNode.$prefix.$expType.$mutMode;
+   } else {
+      prefixMutMode = .Mut;
+   }
+   
    let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
-   foreach retType, index in funcTypeInfo.$retTypeInfoList {
-      retTypeInfoList.insert( retType );
+   foreach retType in funcTypeInfo.$retTypeInfoList {
+      let mut workType = retType;
+
       if! let applyType = retType.applyGeneric(
          self.processInfo, alt2typeMap, self.moduleType ) {
-         retTypeInfoList[ index ] = applyType;
+            workType = applyType;
       }
       else {
          if funcTypeInfo == self.builtinFunc.list_remove {
             // pending: List.remove の戻り値設定を暫定対応
-            retTypeInfoList[ index ] = genericTypeList[ 1 ].$nilableTypeInfo;
+            workType = genericTypeList[ 1 ].$nilableTypeInfo;
          }
          elseif funcTypeInfo.$kind == .Func and
              ( funcTypeInfo.$rawTxt == "_fromMap" or
@@ -1536,13 +1545,25 @@ fn TransUnit.processFunc(
             genericsClass.isInheritFrom( self.processInfo,
                                          Ast.builtinTypeMapping, alt2typeMap )    
          {
-            retTypeInfoList[ index ] = genericsClass.$nilableTypeInfo;
+            workType = genericsClass.$nilableTypeInfo;
          }
          else {
             self.addErrMess(
                firstToken.pos,
                "not support generics yet. -- %s" (retType.getTxt(##)) );
          }
+      }
+
+      if retType.$mutMode == .Depend {
+         // depend の場合、 prefix の MutMode に依存する。
+         if prefixMutMode == .Mut {
+            retTypeInfoList.insert( workType.$srcTypeInfo );
+         } else {
+            retTypeInfoList.insert(
+               self.createModifier( workType.$srcTypeInfo, .IMut ) );
+         }
+      } else {
+         retTypeInfoList.insert( workType );
       }
    }
    
@@ -2637,7 +2658,7 @@ fn TransUnit.analyzeExpField(
       };
 
       if not Ast.TypeInfo.isMut( prefixExpType ) and not symbolInfo.$staticFlag and
-         symbolInfo.$kind == .Mtd and symbolInfo.$mutable
+         symbolInfo.$kind == .Mtd and symbolInfo.$mutMode == .Mut
       {  
          // オブジェクトが immutable で、
          // mutable な method へのアクセスはエラー

@@ -133,7 +133,7 @@ func LuaL_loadstring(vm lua_state, txt string) error {
 }
 func LuaL_newstate(stackSize int) lua_state {
 	return lua.NewState(lua.Options{
-		CallStackSize: stackSize, RegistrySize: stackSize})
+		CallStackSize: stackSize, RegistrySize: stackSize, RegistryMaxSize: stackSize})
 }
 func LuaL_openlibs(vm lua_state) {
 	vm.OpenLibs()
