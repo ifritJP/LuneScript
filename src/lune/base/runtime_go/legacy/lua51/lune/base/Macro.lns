@@ -34,7 +34,7 @@ import lune.base.DependLuaOnLns;
 
 fn loadCode( code:str ) : Luaval<&stem> {
    let ret;
-   __unsafe {
+   __luaDepend {
       let loaded, mess = _load( code ## );
       when! loaded {
          if! let obj = loaded(##) {
@@ -54,7 +54,7 @@ fn runLuaOnLns( code:str, baseDir:str!, async:bool ) : Luaval<&stem>!, str {
    when! loadFunc {
       let mut mod:Luaval<&stem>! = nil;
       if async {
-         __unsafe {
+         __luaDepend {
             mod = loadFunc(##);
          }
       } else {
@@ -576,7 +576,7 @@ pub fn MacroCtrl.evalMacroOp(
       macro _callMacroState(block:__block) {
          if asyncMacro {
             //__luago {
-            __unsafe {
+            __luaDepend {
                ,,block;
             }
          } else {

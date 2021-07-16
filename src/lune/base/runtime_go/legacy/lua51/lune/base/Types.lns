@@ -213,7 +213,7 @@ pub class Token extend (Mapping) {
 
    pub fn getLineCount():int {
       let mut count = 1;
-      __unsafe {
+      __luaDepend {
          apply _ of self.txt.gmatch( "\n" ) {
             count = count + 1;
          }

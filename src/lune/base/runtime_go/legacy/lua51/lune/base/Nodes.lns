@@ -1859,8 +1859,8 @@ pub enum LockKind {
    LuaGo,
    /** __luaLock。  __async から __noasync に切り替えて lua を実行する場合。 */
    LuaLock,
-   /** __unsafe。 __async のまま lua を実行する場合  */
-   Unsafe,
+   /** __luaDepend。 __async のまま lua を実行する場合  */
+   LuaDepend,
 }
 _declNodeClass( "AsyncLock", Node, false, false, true,
                 [ { "lockKind": "LockKind" },

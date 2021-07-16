@@ -217,7 +217,7 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
    pub fn canAccessNoasync() : bool {
       let len = #self.lockedAsyncStack;
       if self.typeInfo.$asyncMode == .Noasync or
-          (len > 0 and self.lockedAsyncStack[len].$lockKind ~= .Unsafe )
+          (len > 0 and self.lockedAsyncStack[len].$lockKind ~= .LuaDepend )
       {
          return true;
       }

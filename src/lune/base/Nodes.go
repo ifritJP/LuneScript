@@ -402,23 +402,23 @@ func Nodes_FuncKind_getTxt(arg1 LnsInt) string {
 // decl enum -- LockKind 
 type Nodes_LockKind = LnsInt
 const Nodes_LockKind__AsyncLock = 0
+const Nodes_LockKind__LuaDepend = 3
 const Nodes_LockKind__LuaGo = 1
 const Nodes_LockKind__LuaLock = 2
-const Nodes_LockKind__Unsafe = 3
 var Nodes_LockKindList_ = NewLnsList( []LnsAny {
   Nodes_LockKind__AsyncLock,
   Nodes_LockKind__LuaGo,
   Nodes_LockKind__LuaLock,
-  Nodes_LockKind__Unsafe,
+  Nodes_LockKind__LuaDepend,
 })
 func Nodes_LockKind_get__allList(_env *LnsEnv) *LnsList{
     return Nodes_LockKindList_
 }
 var Nodes_LockKindMap_ = map[LnsInt]string {
   Nodes_LockKind__AsyncLock: "LockKind.AsyncLock",
+  Nodes_LockKind__LuaDepend: "LockKind.LuaDepend",
   Nodes_LockKind__LuaGo: "LockKind.LuaGo",
   Nodes_LockKind__LuaLock: "LockKind.LuaLock",
-  Nodes_LockKind__Unsafe: "LockKind.Unsafe",
 }
 func Nodes_LockKind__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
     if _, ok := Nodes_LockKindMap_[arg1]; ok { return arg1 }

@@ -9688,9 +9688,9 @@ LockKind.__allList[2] = LockKind.LuaGo
 LockKind.LuaLock = 2
 LockKind._val2NameMap[2] = 'LuaLock'
 LockKind.__allList[3] = LockKind.LuaLock
-LockKind.Unsafe = 3
-LockKind._val2NameMap[3] = 'Unsafe'
-LockKind.__allList[4] = LockKind.Unsafe
+LockKind.LuaDepend = 3
+LockKind._val2NameMap[3] = 'LuaDepend'
+LockKind.__allList[4] = LockKind.LuaDepend
 
 function NodeKind.get_AsyncLock(  )
 

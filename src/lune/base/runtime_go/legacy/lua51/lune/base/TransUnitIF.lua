@@ -380,7 +380,7 @@ end
 function NSInfo:canAccessNoasync(  )
 
    local len = #self.lockedAsyncStack
-   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync or (len > 0 and self.lockedAsyncStack[len]:get_lockKind() ~= Nodes.LockKind.Unsafe ) then
+   if self.typeInfo:get_asyncMode() == Ast.Async.Noasync or (len > 0 and self.lockedAsyncStack[len]:get_lockKind() ~= Nodes.LockKind.LuaDepend ) then
       return true
    end
    

@@ -3499,9 +3499,9 @@ func (self *TransUnit_TransUnit) analyzeAsyncLock(_env *LnsEnv, asyncToken *Type
         if nsInfo.FP.IsNoasync(_env){
             self.FP.AddErrMess(_env, asyncToken.Pos, _env.GetVM().String_format("can't use __asyncLock on __noasync. -- %s", []LnsAny{nsInfo.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
         }
-    } else if _switch0 == Nodes_LockKind__Unsafe || _switch0 == Nodes_LockKind__LuaLock {
+    } else if _switch0 == Nodes_LockKind__LuaLock || _switch0 == Nodes_LockKind__LuaDepend {
         if nsInfo.FP.IsNoasync(_env){
-            self.FP.AddErrMess(_env, asyncToken.Pos, _env.GetVM().String_format("can't use __unsafe or __luaLock on __noasync. -- %s", []LnsAny{nsInfo.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
+            self.FP.AddErrMess(_env, asyncToken.Pos, _env.GetVM().String_format("can't use __luaDepend or __luaLock on __noasync. -- %s", []LnsAny{nsInfo.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
         }
     } else if _switch0 == Nodes_LockKind__LuaGo {
         if Lns_op_not(nsInfo.FP.IsNoasync(_env)){
@@ -11277,8 +11277,8 @@ func (self *TransUnit_TransUnit) analyzeStatement(_env *LnsEnv, termTxt LnsAny) 
             statement = self.FP.analyzeAsyncLock(_env, token, Nodes_LockKind__LuaGo)
         } else if token.Txt == "__luaLock"{
             statement = self.FP.analyzeAsyncLock(_env, token, Nodes_LockKind__LuaLock)
-        } else if token.Txt == "__unsafe"{
-            statement = self.FP.analyzeAsyncLock(_env, token, Nodes_LockKind__Unsafe)
+        } else if token.Txt == "__luaDepend"{
+            statement = self.FP.analyzeAsyncLock(_env, token, Nodes_LockKind__LuaDepend)
         } else if token.Txt == "if"{
             statement = self.FP.analyzeIf(_env, token)
         } else if token.Txt == "when"{

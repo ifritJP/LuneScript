@@ -3135,7 +3135,7 @@ function convFilter:processAsyncLock( node, opt )
          filter( node:get_block(), self, node )
          
          self:writeln( "})" )
-      elseif _switchExp == Nodes.LockKind.Unsafe or _switchExp == Nodes.LockKind.LuaGo then
+      elseif _switchExp == Nodes.LockKind.LuaDepend or _switchExp == Nodes.LockKind.LuaGo then
          filter( node:get_block(), self, node )
       end
    end

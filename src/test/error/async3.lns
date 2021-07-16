@@ -260,7 +260,7 @@ class TopHoge {
             list.insert( 1 );
             self.func();
          }
-         __unsafe {
+         __luaDepend {
             list.insert( 1 ); // error
             self.func(); // error
          }

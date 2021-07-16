@@ -552,7 +552,7 @@ pub fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
 
 fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
    let ret;
-   __unsafe {
+   __luaDepend {
       let chunk, err = _load( txt ## );
       when! chunk {
          ret = string.dump( chunk, stripDebugInfo );
@@ -619,7 +619,7 @@ pub static fn MetaForBuildId.LoadFromMeta( metaPath:str ): &MetaForBuildId!, str
       fileObj.close();
       when! luaCode {
          let meta;
-         __unsafe {
+         __luaDepend {
             meta = MetaForBuildId._fromStem(
                expandLuavalMap( loadFromLuaTxt( luaCode )) );
          }

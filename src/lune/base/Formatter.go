@@ -122,8 +122,8 @@ func (self *Formatter_FormatterFilter) ProcessAsyncLock(_env *LnsEnv, node *Node
         self.FP.Writeln(_env, "__luago {")
     } else if _switch0 == Nodes_LockKind__LuaLock {
         self.FP.Writeln(_env, "__luaLock {")
-    } else if _switch0 == Nodes_LockKind__Unsafe {
-        self.FP.Writeln(_env, "__unsafe {")
+    } else if _switch0 == Nodes_LockKind__LuaDepend {
+        self.FP.Writeln(_env, "__luaDepend {")
     }
     Formatter_filter_3_(_env, &node.FP.Get_block(_env).Nodes_Node, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     self.FP.Writeln(_env, "}")

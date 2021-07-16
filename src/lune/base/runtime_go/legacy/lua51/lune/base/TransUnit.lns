@@ -1967,12 +1967,12 @@ fn TransUnit.analyzeAsyncLock(
                "can't use __asyncLock on __noasync. -- %s" (nsInfo.$typeInfo.getTxt(##)));
          }
       }
-      case .Unsafe, .LuaLock {
+      case .LuaLock, .LuaDepend {
          if nsInfo.isNoasync() {
-            // noasync 中は __unsafe, __luaLock できない。
+            // noasync 中は __luaDepend, __luaLock できない。
             self.addErrMess(
                asyncToken.pos,
-               "can't use __unsafe or __luaLock on __noasync. -- %s"
+               "can't use __luaDepend or __luaLock on __noasync. -- %s"
                (nsInfo.$typeInfo.getTxt(##)) );
          }
       }

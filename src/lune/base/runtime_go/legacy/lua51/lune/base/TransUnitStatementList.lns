@@ -145,8 +145,8 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       elseif token.txt == "__luaLock" {
          statement = self.analyzeAsyncLock( token, .LuaLock );
       }
-      elseif token.txt == "__unsafe" {
-         statement = self.analyzeAsyncLock( token, .Unsafe );
+      elseif token.txt == "__luaDepend" {
+         statement = self.analyzeAsyncLock( token, .LuaDepend );
       }
       elseif token.txt == "if" {
          statement = self.analyzeIf( token );

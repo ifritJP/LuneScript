@@ -2335,7 +2335,7 @@ pub override fn convFilter.processAsyncLock(
 
          self.writeln( "})" );
       }
-      case .Unsafe, .LuaGo {
+      case .LuaDepend, .LuaGo {
          filter( node.$block, self, node );
       }
    }

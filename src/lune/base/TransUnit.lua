@@ -2372,10 +2372,10 @@ function TransUnit:analyzeAsyncLock( asyncToken, lockKind )
             self:addErrMess( asyncToken.pos, string.format( "can't use __asyncLock on __noasync. -- %s", nsInfo:get_typeInfo():getTxt(  )) )
          end
          
-      elseif _switchExp == Nodes.LockKind.Unsafe or _switchExp == Nodes.LockKind.LuaLock then
+      elseif _switchExp == Nodes.LockKind.LuaLock or _switchExp == Nodes.LockKind.LuaDepend then
          if nsInfo:isNoasync(  ) then
             
-            self:addErrMess( asyncToken.pos, string.format( "can't use __unsafe or __luaLock on __noasync. -- %s", nsInfo:get_typeInfo():getTxt(  )) )
+            self:addErrMess( asyncToken.pos, string.format( "can't use __luaDepend or __luaLock on __noasync. -- %s", nsInfo:get_typeInfo():getTxt(  )) )
          end
          
       elseif _switchExp == Nodes.LockKind.LuaGo then
@@ -11453,8 +11453,8 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:analyzeAsyncLock( token, Nodes.LockKind.LuaGo )
       elseif token.txt == "__luaLock" then
          statement = self:analyzeAsyncLock( token, Nodes.LockKind.LuaLock )
-      elseif token.txt == "__unsafe" then
-         statement = self:analyzeAsyncLock( token, Nodes.LockKind.Unsafe )
+      elseif token.txt == "__luaDepend" then
+         statement = self:analyzeAsyncLock( token, Nodes.LockKind.LuaDepend )
       elseif token.txt == "if" then
          statement = self:analyzeIf( token )
       elseif token.txt == "when" then

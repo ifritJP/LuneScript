@@ -352,8 +352,8 @@ function FormatterFilter:processAsyncLock( node, opt )
          self:writeln( "__luago {" )
       elseif _switchExp == Nodes.LockKind.LuaLock then
          self:writeln( "__luaLock {" )
-      elseif _switchExp == Nodes.LockKind.Unsafe then
-         self:writeln( "__unsafe {" )
+      elseif _switchExp == Nodes.LockKind.LuaDepend then
+         self:writeln( "__luaDepend {" )
       end
    end
    

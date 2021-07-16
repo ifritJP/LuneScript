@@ -56,7 +56,7 @@ pub fn runLuaOnLns(
 
    let loaded, err;
    if async {
-      __unsafe {
+      __luaDepend {
          loaded, err = _load( luaCode, newEnv );
       }
    } else {

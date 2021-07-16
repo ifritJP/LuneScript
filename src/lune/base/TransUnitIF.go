@@ -208,7 +208,7 @@ func (self *TransUnitIF_NSInfo) CanAccessNoasync(_env *LnsEnv) bool {
         _env.SetStackVal( self.typeInfo.FP.Get_asyncMode(_env) == Ast_Async__Noasync) ||
         _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
             _env.SetStackVal( len > 0) &&
-            _env.SetStackVal( self.lockedAsyncStack.GetAt(len).(TransUnitIF_LockedAsyncInfoDownCast).ToTransUnitIF_LockedAsyncInfo().FP.Get_lockKind(_env) != Nodes_LockKind__Unsafe) ).(bool))) ).(bool){
+            _env.SetStackVal( self.lockedAsyncStack.GetAt(len).(TransUnitIF_LockedAsyncInfoDownCast).ToTransUnitIF_LockedAsyncInfo().FP.Get_lockKind(_env) != Nodes_LockKind__LuaDepend) ).(bool))) ).(bool){
         return true
     }
     return false

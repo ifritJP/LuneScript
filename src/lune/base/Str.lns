@@ -50,7 +50,7 @@ txt を行ごとに分割したリストを返す
 pub fn getLineList( txt:str ) : List<str> {
    let mut list:List<str> = [];
 
-   __unsafe {
+   __luaDepend {
       // 改行までの文字列
       apply line of string.gmatch( txt, "[^\n]*\n" ) {
          list.insert( line );

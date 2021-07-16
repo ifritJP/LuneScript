@@ -192,8 +192,8 @@ pub override fn FormatterFilter.processAsyncLock(
       case .LuaLock {
          self.writeln( "__luaLock {" );
       }
-      case .Unsafe {
-         self.writeln( "__unsafe {" );
+      case .LuaDepend {
+         self.writeln( "__luaDepend {" );
       }
    }
    filter( node.$block, self, opt.nextOpt( node ) );
