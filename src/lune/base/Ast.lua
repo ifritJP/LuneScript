@@ -2062,6 +2062,14 @@ function RootTypeInfo:__init(processInfo, rootId)
    
    processInfo:set_dummyParentType( self )
 end
+function RootTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
+
+   if _lune.__Cast( typeInfo, 3, RootTypeInfo ) then
+      return true
+   end
+   
+   return false
+end
 function RootTypeInfo:get_baseTypeInfo(  )
 
    return self

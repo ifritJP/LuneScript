@@ -1304,6 +1304,17 @@ pub class RootTypeInfo extend TypeInfo {
 
       processInfo.set_dummyParentType( self );
    }
+   pub override fn equals( processInfo:&ProcessInfo,
+                           typeInfo: &TypeInfo, alt2type:Map<&TypeInfo,&TypeInfo>!,
+                           checkModifer:bool! ): bool
+   {
+      if typeInfo@@@RootTypeInfo {
+         return true;
+      }
+      return false;
+   }
+
+   
    /** super クラス。 継承していない場合は headTypeInfo。 */
    pub override fn get_baseTypeInfo(): &TypeInfo {
       return self;
