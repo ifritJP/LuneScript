@@ -46,34 +46,28 @@ LuneScript has the following features.
 
 ** Setup LuneScript
 
-LuneScript provides 2 version.
+We have prepared a Dockerfile for building LuneScript from the source registered in git.
 
-- go version
-- lua script version
+https://github.com/ifritJP/LuneScript/tree/master/src/test/docker/compose
+- linux/build/Dockerfile
+- alpine/build/Dockerfile
+The following will generate lnsc for Linux in LuneScript / src:
+: $ git clone --depth 1 https://github.com/ifritJP/LuneScript
+: $ cd LuneScript/src
+: $ sudo docker build -t linux_lns test/docker/compose/linux/build
+: $ sudo docker run --rm -v $PWD:/local linux_lns cp /usr/bin/lnsc /local/lnsc
 
-*** go version
 
-- download lnsc file.
-  - [[https://drive.google.com/drive/folders/1S5NgeM6qIOIUC0rkBHqnWZcuhmsTqB2w][google drive]]  (latest release)
-- execute the following commands.
+Put lnsc in your PATH.
 
-: $ chmod +x lnsc
-: $ sudo install lnsc /usr/local/bin
-   
-*** lua script version    
+In the proxy environment, specify proxy as shown below when docker build.
+: $ sudo docker build -t linux_lns test/docker/compose/linux/build --build-arg PROXY=http://proxy.hoge/
 
- - In case of lua5.1
-  
- #+BEGIN_SRC sh
- $ luarocks install lunescript51
- #+END_SRC  
 
- - In case of lua5.2, lua5.3
-  
- #+BEGIN_SRC sh
- $ luarocks install lunescript
- #+END_SRC  
-  
+This concludes the introduction of the go version of LuneScript.
+
+-----
+
 * LuneScript Getting Started Reference
 
 -----
