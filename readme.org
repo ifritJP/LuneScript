@@ -36,11 +36,11 @@ LuneScript has the following features.
 - Lua modules converted from LuneScript can be used from other Lua modules.
 - Supports Lua5.1 ~ 5.4.
   - See below for Lua5.1.
-  - [[#crosscompile]]
+  - [[#crosscompiling-between-lua-versions]]
 - LuneScript is self-hosted.
 - Supports code completion in emacs
 - Supports tag jump by lnstags
-  - [[#lnstags]]
+  - [[#tag-jump-by-lnstags-source-code-tag-system]]
 - Supports automatic generation of glue code
 - The learning cost is low because it is based on the syntax of Lua and C.
 
@@ -97,7 +97,7 @@ LuneScript is developed on github.
 
 Please refer to the following for the installation method.
 - Introduction
-  - [[#tutorial2_setup]]
+  - [[#introduction]]
 
 
 *** command
@@ -106,14 +106,14 @@ Installing LuneScript installs the lnsc command.
 
 For information on how to use the lnsc command, refer to the following article.
 - Hello world
-  - [[#tutorial3_hello]]
+  - [[#hello-world]]
 
 
 *** Cross-compiling between Lua versions
 
 LuneScript supports cross-compilation between versions of Lua. Please refer to the following article.
 - Cross-compiling between Lua versions
-  - [[#crosscompile]]
+  - [[#crosscompiling-between-lua-versions]]
 
 
 ** LuneScript specification
@@ -125,9 +125,9 @@ This section describes the specifications of LuneScript.
 
 Please refer to the following article for the values and types handled by LuneScript.
 - Value edition
-  - [[#value]]
+  - [[#value-edition]]
 - enum edition
-  - [[#enum]]
+  - [[#enum-edition]]
 
 
 *** comment
@@ -155,23 +155,23 @@ In LuneScript, / between ints is automatically truncated and divided.
 
 Please refer to the following article for LuneScript variables.
 - Variable edition
-  - [[#variable]]
+  - [[#variable-edition]]
 
 
 *** General control statement
 
 Please refer to the following for the control statement of LuneScript.
 - General branch
-  - [[#branch]]
+  - [[#general-branch-syntax]]
 - Repeated syntax
-  - [[#loop]]
+  - [[#repeated-syntax]]
 
 
 *** Function declaration
 
 For LuneScript functions, refer to the following.
 - Function
-  - [[#func]]
+  - [[#function]]
 
 
 *** nilable
@@ -180,7 +180,7 @@ LuneScript is a nil-safe (null-safe) language.
 
 For nilables that provide LuneScript nil safety, see:
 - nilable edition
-  - [[#nilable]]
+  - [[#nilable-edition]]
 
 
 *** class
@@ -197,15 +197,15 @@ LuneScript classes have the following restrictions:
 
 Please refer to the following article.
 - Class basics
-  - [[#class1]]
+  - [[#class-basics]]
 - accessor edition
-  - [[#class2accessor]]
+  - [[#accessor-edition]]
 - Class inheritance
-  - [[#classinherit]]
+  - [[#class-inheritance]]
 - Class advertise edition
-  - [[#classadvertise]]
+  - [[#class-advertise-edition]]
 - Class override
-  - [[#classoverride]]
+  - [[#class-override]]
 - Interface
   - [[#interface]]
 
@@ -246,7 +246,7 @@ This is called Mapping.
 
 Please refer to the following for Mapping.
 - mapping edition
-  - [[#classmapping]]
+  - [[#mapping-edition]]
 
 
 *** Generics
@@ -255,30 +255,30 @@ LuneScript supports Generics.
 
 See below for details.
 - generics edition
-  - [[#generics]]
+  - [[#generics-edition]]
 
 
 *** nil conditional operator
 
 It supports the nil conditional operator as an easy way to work with nilable values.
 - nil conditional operator edition
-  - [[#nilcond]]   
+  - [[#nil-conditional-operator-edition]]   
 
 
 *** module
 
 For information on LuneScript module management, refer to the following.
 - import / provide
-  - [[#import]]
+  - [[#import--provide]]
 - require / module edition
-  - [[#require]]
+  - [[#require--module-edition]]
 
 
 ** Build
 
 For information on how to build a project using LuneScript, please refer to the following.
 - Build edition
-  - [[#make]]  
+  - [[#build-edition]]  
 
 
 *** _lune.lua module
@@ -384,7 +384,7 @@ It is necessary to use dynamic processing and macros properly.
 
 Please refer to the following article for macro definition.
 - Macro edition
-  - [[#macro]]
+  - [[#macro-edition]]
 
 
 *** supplement
@@ -395,7 +395,7 @@ For supplementary articles, we will add links here.
   - [[#introduce2]]
 - Let's have more fun with Lua's transcompiler LuneScript's crazy development environment
   - Completion, syntax checking, subfile search
-  - [[#completion]]
+  - [[#a-lets-have-more-fun-in-an-exciting-development-environment]]
 
 For articles that are not linked from this page, please follow them from the sidebar.
 
@@ -419,7 +419,7 @@ This time, I will introduce how to install LuneScript.
 
 To check the operation of LuneScript, we have prepared a LuneScript environment that runs on a web browser.
 
-[[#onweb]]
+[[#lunescript-running-on-a-web-browser]]
 
 In addition, the following sample sources may have a Run button. You can run the sample source by pressing that button. And you can modify the source and run it.
 
@@ -768,7 +768,7 @@ You can handle command line options by defining the main function.
 
 Please refer to the following.
 
-[[#shebang_main]]
+[[#shebang-and-command-line-arguments]]
 
 
 ** Error message
@@ -1397,7 +1397,7 @@ This is because when you access an element of the map, the result is nilable.
 
 See below for nilable.
 
-[[#nilable]]
+[[#nilable-edition]]
 
 
 *** Set
@@ -1406,7 +1406,7 @@ Handles a set of values.
 
 See the following article for more information.
 
-[[#set/]]
+[[#set-edition]]
 
 
 *** generics
@@ -1484,7 +1484,7 @@ LuneScript supports enums.
 
 See tomorrow's article for more details.
 
-[[#enum/]]
+[[#enum-edition]]
 
 
 *** Luaval
@@ -1495,7 +1495,7 @@ It is Luaval that holds the value of that Lua.
 
 See below for details.
 
-[[#lua/]]
+[[#collaboration-with-lua]]
 
 
 *** stem
@@ -1908,7 +1908,7 @@ For enum types, you can group one type of int, real, or str to limit the range, 
 
 Details are explained in the next article.
 
-[[#match]]
+[[#match-edition]]
 
 
 ** summary
@@ -2763,7 +2763,7 @@ let val2:int = val1; // error
 
 If you need explicit type conversion, see the following articles:
 
-[[#cast]]
+[[#cast-edition]]
 
 
 ** reference
@@ -3422,7 +3422,7 @@ The function can return multiple values.
 
 See below for multi-valued return values.
 
-[[#multipleretval]]
+[[#multivalued-return-value]]
 
 
 ** Function that does not return
@@ -3469,7 +3469,7 @@ Variadic arguments and return values can be used.
 
 See the following article for details.
 
-[[#arg]]
+[[#variadic-argument-return-value]]
 
 
 ** Definition location
@@ -3649,7 +3649,7 @@ The types of the formal and actual arguments of the function must match. The omi
 
 Check the following article for omission of arguments.
 
-[[#defaultarg]]
+[[#omission-of-arguments]]
 
 
 ** Function restrictions
@@ -5931,7 +5931,7 @@ LuneScript has a Mapping feature that transforms an instance of a class into a M
 
 For mapping, refer to the following article.
 
-[[#classmapping]]
+[[#mapping-edition]]
 
 To map a class, that class must extend the Mapping interface.
 
@@ -8338,7 +8338,7 @@ When transcompiling to the go language, you need to use a special type when work
 
 See below for details.
 
-[[#lua]]
+[[#collaboration-with-lua]]
 
 
 ** Post-transcompile configuration to Go language
@@ -8657,7 +8657,7 @@ This will build the transcompiled module with go.
 
 *Lua ライブラリのリンクを回避する方法を用意しました。*
 
-[[#lua_runtime]]
+[[#lua-runtime-when-transcompiled-to-go]]
 #+END_QUOTE
 
 
@@ -9528,7 +9528,7 @@ Be especially careful with the combination of asynchronous processing and lua co
 
 *As already explained in the link, the result executed by lua is managed by Luaval type.*
 
-[[#lua]]
+[[#collaboration-with-lua]]
 
 This Luaval type data has the following restrictions.
 
@@ -9647,7 +9647,7 @@ At this time, the Luaval data handled by string.gmatch () is closed in the apply
 
 For transcompiling support for Go language, refer to the following article.
 
-[[#go]]
+[[#transcompile-to-go-language]]
 
 *The information here is out of date, but I'll leave it for reference only.*
 
@@ -10896,7 +10896,7 @@ Of course, LuneScript also provides completion.
 
 See the next article for details.
 
-[[#completion]]
+[[#a-lets-have-more-fun-in-an-exciting-development-environment]]
 
 
 **** Field access control in the table is not possible
@@ -11029,7 +11029,7 @@ Through this development, I feel that I have had a good experience as an enginee
 
 The reason for developing LuneScript is described in the next article.
 
-[[#reason]]
+[[#why-luas-transcompiler-lunescript-was-developed]]
 
 I decided to write this article because I wanted many people to experience transcompiler development for the following reasons.
 - Can constructively resolve dissatisfaction with the current situation
