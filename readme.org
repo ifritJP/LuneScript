@@ -36,7 +36,7 @@ LuneScript has the following features.
 - Lua modules converted from LuneScript can be used from other Lua modules.
 - Supports Lua5.1 ~ 5.4.
   - See below for Lua5.1.
-  - [[#crosscompiling-between-lua-versions]]
+  - [[#cross-compiling-between-lua-versions]]
 - LuneScript is self-hosted.
 - Supports code completion in emacs
 - Supports tag jump by lnstags
@@ -109,11 +109,11 @@ For information on how to use the lnsc command, refer to the following article.
   - [[#hello-world]]
 
 
-*** Cross-compiling between Lua versions
+*** Cross-compiling between Lua
 
 LuneScript supports cross-compilation between versions of Lua. Please refer to the following article.
 - Cross-compiling between Lua versions
-  - [[#crosscompiling-between-lua-versions]]
+  - [[#cross-compiling-between-lua-versions]]
 
 
 ** LuneScript specification
@@ -8787,7 +8787,7 @@ The following types are paired with LuneScript and go.
 -----
 
 
-* * Lua runtime when transcompiled to Go *
+* Lua runtime when transcompiled to Go
 :PROPERTIES:
 :CUSTOM_ID: lua_runtime
 :END:
@@ -10438,7 +10438,7 @@ func main() {
 -----
 
 
-* * Tag jump by lnstags (source code tag system) *
+* Tag jump by lnstags (source code tag system)
 :PROPERTIES:
 :CUSTOM_ID: lnstags
 :END:
