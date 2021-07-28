@@ -1,6 +1,8 @@
 import lune.base.Parser;
 import lune.base.front;
 import lune.base.Depend;
+import lune.base.Util;
+import lune.base.Option;
 
 module Wrap require 'test.checkReferenceSub' {
    pub static fn pcall( func:form ): bool, str!;
@@ -64,9 +66,13 @@ enum Expect {
 }
 
 fn Test.exeBlock( block:str, expect:Expect ): TestResult {
-   let mut luaCode = "";
    let! ret, mess = Wrap.pcall( fn() {
-      luaCode = front.convertLnsCode2LuaCode( block, "sample.lns" );
+      let mut option = new Option.Option();
+      option.scriptPath = "sample.lns";
+      option.useLuneModule = Option.getRuntimeModule();
+      option.transCtrlInfo.validMultiPhaseTransUnit = false;
+      option.useIpairs = true;
+      front.convertLnsCode2LuaCodeWithOpt( option, block, "sample.lns"## );
    })
    {
       mess = "";
@@ -76,19 +82,19 @@ fn Test.exeBlock( block:str, expect:Expect ): TestResult {
       if mess.find( "has error" ## ) {
          switch expect {
             case .OK {
-               return .NG( self.lineNo, mess );
+               return .NG( self.lineNo, "%s\n----\n%s" ( mess, block ) );
             }
          }
       }
       else {
-         return .NG( self.lineNo, mess );
+         return .NG( self.lineNo, "%s\n----\n%s" ( mess, block ) );
       }
    }
    else {
       // 成功した場合
       switch expect {
          case .NG {
-            return .NG( self.lineNo, mess );
+            return .NG( self.lineNo, "except ng but success.\n----\n%s" ( block ) );
          }
       }
    }

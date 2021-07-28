@@ -849,14 +849,14 @@ metaTime
 /**
 指定 stream 内の LuneScript をコンパイルし、 Lua コードを取得する。
 */
-pub fn Front.convertLns2LuaCode(
-   importModuleInfo:frontInterface.ImportModuleInfo,
+local fn Front.convertLns2LuaCode(
+   importModuleInfo:frontInterface.ImportModuleInfo, analyzeMode:TransUnit.AnalyzeMode,
    parserSrc:&Types.ParserSrc, baseDir:str!, stream:iStream, streamName:str ) mut : str
 {
    let mod = self.scriptPath2Module( streamName );
    let mut ast = self.createAst(
       importModuleInfo, parserSrc, baseDir, mod,
-      frontInterface.ModuleId.createId( 0.0, 0 ), nil, .Compile ## );
+      frontInterface.ModuleId.createId( 0.0, 0 ), nil, analyzeMode ## );
 
    let _, luaTxt = self.convertFromAst( ast, streamName, .ConvMeta );
 
@@ -1906,19 +1906,27 @@ fn Front.outputBootC( scriptPath:str )
    // convCC.outputBootcode( stream, initModule );
 }
 
+pub fn convertLnsCode2LuaCodeWithOpt(
+   option:Option.Option, lnsCode:str, path:str, baseDir:str! ) __noasync : str
+{
+   let mut front = new Front( option ## );
+   
+   return front.convertLns2LuaCode(
+      new frontInterface.ImportModuleInfo(), .Compile,
+      Types.ParserSrc.LnsCode( lnsCode, path, nil ), baseDir,
+      new Parser.TxtStream( lnsCode ), path );
+}
+
 pub fn convertLnsCode2LuaCode( lnsCode:str, path:str, baseDir:str! ) __noasync : str
 {
    let mut option = new Option.Option();
    option.scriptPath = path;
    option.useLuneModule = Option.getRuntimeModule();
    option.useIpairs = true;
-   let mut front = new Front( option ## );
-   
-   return front.convertLns2LuaCode(
-      new frontInterface.ImportModuleInfo(),
-      Types.ParserSrc.LnsCode( lnsCode, path, nil ), baseDir,
-      new Parser.TxtStream( lnsCode ), path );
+
+   return convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir );
 }
+
 
 alge BuildMode {
    Save,

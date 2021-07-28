@@ -1312,11 +1312,11 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    return moduleId, uptodate
 end
 
-function Front:convertLns2LuaCode( importModuleInfo, parserSrc, baseDir, stream, streamName )
+function Front:convertLns2LuaCode( importModuleInfo, analyzeMode, parserSrc, baseDir, stream, streamName )
 
    local _
    local mod = self:scriptPath2Module( streamName )
-   local ast = self:createAst( importModuleInfo, parserSrc, baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( importModuleInfo, parserSrc, baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, analyzeMode )
    
    local _1, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.ConvMeta )
    
@@ -2509,15 +2509,22 @@ function Front:outputBootC( scriptPath )
 end
 
 
+local function convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
+
+   local front = Front.new(option)
+   
+   return front:convertLns2LuaCode( frontInterface.ImportModuleInfo.new(), TransUnit.AnalyzeMode.Compile, _lune.newAlge( Types.ParserSrc.LnsCode, {lnsCode,path,nil}), baseDir, Parser.TxtStream.new(lnsCode), path )
+end
+_moduleObj.convertLnsCode2LuaCodeWithOpt = convertLnsCode2LuaCodeWithOpt
+
 local function convertLnsCode2LuaCode( lnsCode, path, baseDir )
 
    local option = Option.Option.new()
    option.scriptPath = path
    option.useLuneModule = Option.getRuntimeModule(  )
    option.useIpairs = true
-   local front = Front.new(option)
    
-   return front:convertLns2LuaCode( frontInterface.ImportModuleInfo.new(), _lune.newAlge( Types.ParserSrc.LnsCode, {lnsCode,path,nil}), baseDir, Parser.TxtStream.new(lnsCode), path )
+   return convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
 end
 _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 
@@ -2649,7 +2656,7 @@ function Front:build( buildMode, astCallback )
                if _exp ~= nil then
                   astCallback( _exp )
                else
-                  Log.log( Log.Level.Err, __func__, 2004, function (  )
+                  Log.log( Log.Level.Err, __func__, 2012, function (  )
                   
                      return string.format( "not found AST -- %s", mod)
                   end )
@@ -2680,7 +2687,7 @@ _moduleObj.build = build
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 2021, function (  )
+   Log.log( Log.Level.Trace, __func__, 2029, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
