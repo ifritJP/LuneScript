@@ -193,6 +193,24 @@ pub fn runMain( mainFunc: &Luaval<stem>!, argList:&List<str> ) __noasync : int {
    return ret;
 }
 
+pub fn setupShebang() {
+   __luaLock {
+      let loaded, mess = _load( ```
+if not _lune then
+  _lune = {}
+end
+ _lune._shebang = true
+```## );
+      when! loaded {
+         if! let mod = loaded(##) {
+            (mod@@form)(##);
+         }
+      } else {
+         print( mess );
+      }
+   }
+}
+
 pub fn getGOPATH() : str! {
    module OS require "os" {
       pub static fn getenv(name:str):str!;

@@ -8,6 +8,8 @@
 
 * 機能進化
 
+- [ ] and or で stem になる場合は warning にする
+  
 - [ ] front.loadmeta を複数モジュール指定可能にする。  
  
 - [ ] lua 実行を __asyncLock すると、 Lua 実行が重なった箇所で待ちが起る。

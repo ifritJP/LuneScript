@@ -37,7 +37,7 @@ import lune.base.Parser;
 import lune.base.Types;
 import lune.base.Log;
 import lune.base.LuneControl;
-import lune.base.Option;
+import lune.base.Option as LnsOpt;
 import lune.base.frontInterface;
 import lune.base.Builtin;
 
@@ -87,6 +87,10 @@ fn getSymbolTxt( symbolInfo:&Ast.SymbolInfo ) : str {
    return symbolInfo.$name;
 }
 
+pub class Option {
+   let mainModule:str {pub};
+}
+
 class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    _lune_control default_async_this_class;
    
@@ -124,6 +128,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    let mut moduleType2SymbolMap:Map<&Ast.TypeInfo,&Ast.SymbolInfo>;
    let builtinFunc:&Builtin.BuiltinFuncType;
    let builtinSym2code:&Map<&Ast.SymbolInfo,str>;
+   let option:&Option;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
@@ -131,7 +136,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
                   processInfo:&Ast.ProcessInfo, moduleSymbolKind: Ast.SymbolKind,
                   builtinFunc:&Builtin.BuiltinFuncType,
                   useLuneRuntime: str!, targetLuaVer:&LuaVer.LuaVerInfo,
-                  enableTest:bool, useIpairs:bool )
+                  enableTest:bool, useIpairs:bool, option:&Option )
    {
       super(true, moduleTypeInfo, moduleTypeInfo.$scope);
 
@@ -140,6 +145,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
       }
 
 
+      self.option = option;
       self.builtinFunc = builtinFunc;
       self.moduleType2SymbolMap = {};
       self.processInfo = processInfo;
@@ -745,7 +751,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
                declInfo.$name.txt, memStream, new Util.NullOStream(), .Convert, false,
                Ast.headTypeInfo, self.processInfo, .Typ,
                self.builtinFunc, self.useLuneRuntime,
-               self.targetLuaVer, self.enableTest, self.useIpairs );
+               self.targetLuaVer, self.enableTest, self.useIpairs, self.option );
 
             workFilter.macroDepth = workFilter.macroDepth + 1;
             workFilter.processBlock( stmtBlock, new Opt( node ) );
@@ -991,6 +997,47 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
    self.outMetaFlag = false;
 }
 
+fn ConvFilter.outputMainDirect() mut {
+   let code = ```
+do
+   local loaded, mess = _lune.%s( [=[
+if _lune and _lune._shebang then
+  return nil
+else
+  return arg
+end
+]=] )
+   if loaded ~= nil then
+      local args = loaded(  )
+      do
+         local obj = (args )
+         if obj ~= nil then
+            local work = obj
+            local argList = {""}
+            do
+               local _exp = work[0]
+               if _exp ~= nil then
+                  argList[1] = _exp
+               end
+            end
+            for key, val in pairs( work ) do
+               if key > 0 then
+                  table.insert( argList, val )
+               end
+            end
+            __main( argList )
+         else
+            -- print( "via lnsc" )
+         end
+      end
+   else
+      error( mess )
+   end
+end
+``` (self.targetLuaVer.$loadStrFuncName );
+   self.writeln( code );
+}
+
 pub override fn ConvFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
@@ -1036,7 +1083,10 @@ end``` (luneSymbol, luneSymbol) );
       if node.$luneHelperInfo.$useUnpack and not self.targetLuaVer.$hasTableUnpack {
          self.writeln( LuaMod.getCode( .Unpack ) );
       }
-      if node.$luneHelperInfo.$useLoad {
+      if node.$luneHelperInfo.$useLoad or
+         self.option.$mainModule ==
+         self.getCanonicalName( self.moduleTypeInfo, false ).gsub( "@", "" )
+      {
          self.writeln( self.targetLuaVer.getLoadCode() );
       }
       if node.$luneHelperInfo.$useNilAccess {
@@ -1091,6 +1141,12 @@ end``` (luneSymbol, luneSymbol) );
       self.writeln( "" );
    }
 
+   if self.option.$mainModule == 
+      self.getCanonicalName( self.moduleTypeInfo, false ).gsub( "@", "" )
+   {
+      self.outputMainDirect();
+   }
+   
    if! node.$provideNode {
       self.writeRaw( "return " );
       self.writeRaw( _exp.$symbol.$name );
@@ -1198,7 +1254,7 @@ fn ConvFilter.processLoadRuntime() mut
       self.writeln( 'local _lune = require( "%s" )' (_exp) );
    }
    else {
-      self.writeln( 'local _lune = require( "%s" )' (Option.getRuntimeModule()) );
+      self.writeln( 'local _lune = require( "%s" )' (LnsOpt.getRuntimeModule()) );
    }
 }
 
@@ -1880,7 +1936,7 @@ pub fn ConvFilter.outputDeclMacro(
    self.pushIndent(##);
 
    // マクロのランタイムは、動作中の LuneScript のものを使う必要がある
-   self.writeln( 'local _lune = require( "%s" )' (Option.getRuntimeModule()) );
+   self.writeln( 'local _lune = require( "%s" )' (LnsOpt.getRuntimeModule()) );
    
    self.writeln( "local __var = __macroArgs.__var" );
    foreach argName in argNameList {
@@ -3664,12 +3720,13 @@ pub fn createFilter(
    convMode: ConvMode, inMacro: bool, moduleTypeInfo: &Ast.TypeInfo,
    processInfo:&Ast.ProcessInfo, moduleSymbolKind: &Ast.SymbolKind,
    builtinFunc:&Builtin.BuiltinFuncType, useLuneRuntime:str!,
-   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool ) : FilterInfo
+   targetLuaVer:&LuaVer.LuaVerInfo, enableTest:bool, useIpairs:bool,
+   option:&Option ) : FilterInfo
 {
    let mut convFilter = new ConvFilter(
       streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo,
       processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime,
-      targetLuaVer, enableTest, useIpairs );
+      targetLuaVer, enableTest, useIpairs, option );
    return new FilterInfo( convFilter );
 }
 
@@ -3688,7 +3745,8 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut stream = new Util.memStream();
       let mut conv = new ConvFilter(
          "macro", stream, new Util.NullOStream(), .ConvMeta, true, Ast.headTypeInfo,
-         processInfo, .Typ, self.builtinFunc, nil, LuaVer.getCurVer(), false, true );
+         processInfo, .Typ, self.builtinFunc, nil, LuaVer.getCurVer(), false, true,
+         new Option( "" ) );
 
       conv.outputDeclMacro(
          name, argNameList,
@@ -3708,7 +3766,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut conv = new ConvFilter(
          "macro", stream, new Util.NullOStream(), .ConvMeta, true, Ast.headTypeInfo,
          processInfo, .Typ, self.builtinFunc,
-         nil, LuaVer.getCurVer(), false, true );
+         nil, LuaVer.getCurVer(), false, true, new Option( "" ) );
 
       conv.processDeclMacro( node, new Opt( node ) );
 
@@ -3723,7 +3781,7 @@ __test {
 
    pub fn createAstFromStream(
       parserSrc:&Types.ParserSrc, scriptPath:str,
-      stream:iStream, option:&Option.Option ) __noasync: AstInfo.ASTInfo
+      stream:iStream, option:&LnsOpt.Option ) __noasync: AstInfo.ASTInfo
    {
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
       let mut moduleInfo = new frontInterface.ImportModuleInfo();
@@ -3742,7 +3800,7 @@ __test {
    }
    
    
-   pub fn createAstFromFile( scriptPath:str, option:&Option.Option ) __noasync: AstInfo.ASTInfo {
+   pub fn createAstFromFile( scriptPath:str, option:&LnsOpt.Option ) __noasync: AstInfo.ASTInfo {
       let! mut stream = io.open( scriptPath## ) {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
@@ -3754,7 +3812,7 @@ __test {
    }
    
    pub fn createAst(
-      scriptPath:str, lnsCode:str, option:&Option.Option ) __noasync: AstInfo.ASTInfo
+      scriptPath:str, lnsCode:str, option:&LnsOpt.Option ) __noasync: AstInfo.ASTInfo
    {
       return createAstFromStream(
          Types.ParserSrc.LnsPath(
@@ -3794,7 +3852,7 @@ _ = 1;
      return lnsCode;
   }
 
-   fn Ast2Code( option:&Option.Option,
+   fn Ast2Code( option:&LnsOpt.Option,
                 ast:AstInfo.ASTInfo, streamName:str ) __noasync : str, str
    {
       let mut stream = new Util.memStream();
@@ -3806,7 +3864,7 @@ _ = 1;
          exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
          exportInfo.$provideInfo.$symbolKind, ast.$builtinFunc,
          option.useLuneModule, option.targetLuaVer,
-         option.testing, option.useIpairs );
+         option.testing, option.useIpairs, new Option( "" ) );
       filterInfo.outputLuaAndMeta( unwrap ast.$node@@@Nodes.RootNode );
 
       return metaStream.$txt, stream.$txt;
@@ -3839,7 +3897,7 @@ __test case1(ctrl) {
    LuaVer.setCurVer( 53 );
 
    let scriptPath = "test.lns";
-   let option = Option.createDefaultOption( [scriptPath], nil );
+   let option = LnsOpt.createDefaultOption( [scriptPath], nil );
    let mut ast = createAst( scriptPath, getTestLnsCode(), option );
    let meta, luaCode = Ast2Code( option, ast, scriptPath );
    print( meta, luaCode );

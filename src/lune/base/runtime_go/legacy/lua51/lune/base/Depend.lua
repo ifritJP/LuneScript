@@ -350,6 +350,32 @@ local function runMain( mainFunc, argList )
 end
 _moduleObj.runMain = runMain
 
+local function setupShebang(  )
+
+   do
+      local loaded, mess = _lune.loadstring51( [==[
+if not _lune then
+  _lune = {}
+end
+ _lune._shebang = true
+]==] )
+      if loaded ~= nil then
+         do
+            local mod = loaded(  )
+            if mod ~= nil then
+               (mod )(  )
+            end
+         end
+         
+      else
+         print( mess )
+      end
+      
+   end
+   
+end
+_moduleObj.setupShebang = setupShebang
+
 local function getGOPATH(  )
 
    local OS = require( "os" )

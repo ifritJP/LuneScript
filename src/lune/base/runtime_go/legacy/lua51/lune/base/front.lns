@@ -509,7 +509,8 @@ fn ast2LuaMain(
       exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
       exportInfo.$provideInfo.$symbolKind, ast.$builtinFunc,
       option.useLuneModule, option.targetLuaVer,
-      option.testing, option.useIpairs );
+      option.testing, option.useIpairs,
+      new convLua.Option( option.mainModule ) );
    return conv;
 }
 
@@ -2071,6 +2072,7 @@ pub fn Front.exec() mut
             });
       }
       case .Shebang {
+         Depend.setupShebang();
          __luaLock {
             if! let modObj =
                self.loadModule( (self.scriptPath2Module( self.option.scriptPath )) )

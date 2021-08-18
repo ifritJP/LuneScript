@@ -212,7 +212,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
-local Option = _lune.loadModule( 'lune.base.Option' )
+local LnsOpt = _lune.loadModule( 'lune.base.Option' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
@@ -348,15 +348,37 @@ local function getSymbolTxt( symbolInfo )
    return symbolInfo:get_name()
 end
 
-local ConvFilter = {}
-setmetatable( ConvFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
-function ConvFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
+local Option = {}
+_moduleObj.Option = Option
+function Option.setmeta( obj )
+  setmetatable( obj, { __index = Option  } )
+end
+function Option.new( mainModule )
    local obj = {}
-   ConvFilter.setmeta( obj )
-   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs ); end
+   Option.setmeta( obj )
+   if obj.__init then
+      obj:__init( mainModule )
+   end
    return obj
 end
-function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs) 
+function Option:__init( mainModule )
+
+   self.mainModule = mainModule
+end
+function Option:get_mainModule()
+   return self.mainModule
+end
+
+
+local ConvFilter = {}
+setmetatable( ConvFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
+function ConvFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option )
+   local obj = {}
+   ConvFilter.setmeta( obj )
+   if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option ); end
+   return obj
+end
+function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option) 
    Nodes.Filter.__init( self,true, moduleTypeInfo, moduleTypeInfo:get_scope())
    
    
@@ -365,6 +387,7 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    end
    
    
+   self.option = option
    self.builtinFunc = builtinFunc
    self.moduleType2SymbolMap = {}
    self.processInfo = processInfo
@@ -1043,7 +1066,7 @@ function ConvFilter:outputMeta( node )
             if stmtBlock ~= nil then
                local memStream = Util.memStream.new()
                
-               local workFilter = ConvFilter.new(declInfo:get_name().txt, memStream, Util.NullOStream.new(), ConvMode.Convert, false, Ast.headTypeInfo, self.processInfo, Ast.SymbolKind.Typ, self.builtinFunc, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs)
+               local workFilter = ConvFilter.new(declInfo:get_name().txt, memStream, Util.NullOStream.new(), ConvMode.Convert, false, Ast.headTypeInfo, self.processInfo, Ast.SymbolKind.Typ, self.builtinFunc, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs, self.option)
                
                workFilter.macroDepth = workFilter.macroDepth + 1
                workFilter:processBlock( stmtBlock, Opt.new(node) )
@@ -1370,6 +1393,49 @@ function ConvFilter:outputMeta( node )
 end
 
 
+function ConvFilter:outputMainDirect(  )
+
+   local code = string.format( [==[
+do
+   local loaded, mess = _lune.%s( [=[
+if _lune and _lune._shebang then
+  return nil
+else
+  return arg
+end
+]=] )
+   if loaded ~= nil then
+      local args = loaded(  )
+      do
+         local obj = (args )
+         if obj ~= nil then
+            local work = obj
+            local argList = {""}
+            do
+               local _exp = work[0]
+               if _exp ~= nil then
+                  argList[1] = _exp
+               end
+            end
+            for key, val in pairs( work ) do
+               if key > 0 then
+                  table.insert( argList, val )
+               end
+            end
+            __main( argList )
+         else
+            -- print( "via lnsc" )
+         end
+      end
+   else
+      error( mess )
+   end
+end
+]==], self.targetLuaVer:get_loadStrFuncName())
+   self:writeln( code )
+end
+
+
 function ConvFilter:processRoot( node, opt )
 
    self:writeln( string.format( "--%s", self.streamName) )
@@ -1414,7 +1480,7 @@ end]==], luneSymbol, luneSymbol) )
             self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
          end
          
-         if node:get_luneHelperInfo().useLoad then
+         if node:get_luneHelperInfo().useLoad or self.option:get_mainModule() == self:getCanonicalName( self.moduleTypeInfo, false ):gsub( "@", "" ) then
             self:writeln( self.targetLuaVer:getLoadCode(  ) )
          end
          
@@ -1482,6 +1548,11 @@ end]==], luneSymbol, luneSymbol) )
    for __index, child in ipairs( children ) do
       filter( child, self, node )
       self:writeln( "" )
+   end
+   
+   
+   if self.option:get_mainModule() == self:getCanonicalName( self.moduleTypeInfo, false ):gsub( "@", "" ) then
+      self:outputMainDirect(  )
    end
    
    
@@ -1591,7 +1662,7 @@ function ConvFilter:processLoadRuntime(  )
       if _exp ~= nil then
          self:writeln( string.format( 'local _lune = require( "%s" )', _exp) )
       else
-         self:writeln( string.format( 'local _lune = require( "%s" )', Option.getRuntimeModule(  )) )
+         self:writeln( string.format( 'local _lune = require( "%s" )', LnsOpt.getRuntimeModule(  )) )
       end
    end
    
@@ -2335,7 +2406,7 @@ function ConvFilter:outputDeclMacro( name, argNameList, callback )
    self:writeln( "__macroArgs )" )
    self:pushIndent(  )
    
-   self:writeln( string.format( 'local _lune = require( "%s" )', Option.getRuntimeModule(  )) )
+   self:writeln( string.format( 'local _lune = require( "%s" )', LnsOpt.getRuntimeModule(  )) )
    
    self:writeln( "local __var = __macroArgs.__var" )
    for __index, argName in ipairs( argNameList ) do
@@ -4404,9 +4475,9 @@ function FilterInfo:get_filter()
 end
 
 
-local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs )
+local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option )
 
-   local convFilter = ConvFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs)
+   local convFilter = ConvFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option)
    return FilterInfo.new(convFilter)
 end
 _moduleObj.createFilter = createFilter
@@ -4417,7 +4488,7 @@ _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromCodeToLuaCode( processInfo, name, argNameList, code )
 
    local stream = Util.memStream.new()
-   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true, Option.new(""))
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -4432,7 +4503,7 @@ end
 function MacroEvalImp:evalToLuaCode( processInfo, node )
 
    local stream = Util.memStream.new()
-   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true)
+   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true, Option.new(""))
    
    conv:processDeclMacro( node, Opt.new(node) )
    

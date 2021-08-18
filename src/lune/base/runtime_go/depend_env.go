@@ -68,6 +68,10 @@ func Depend_runMain(_env *LnsEnv, mainFunc LnsAny, argList *LnsList) LnsInt {
 	return depend_runMain(mainFunc, argList)
 }
 
+func Depend_setupShebang(_env *LnsEnv) {
+	_env.GetVM().RunCode(" _lune = _lune or {}; _lune._shebang = true")
+}
+
 func Depend_setRuntimeLog(_env *LnsEnv, valid bool) {
 	depend_setRuntimeLog(valid)
 }

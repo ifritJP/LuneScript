@@ -753,7 +753,9 @@ test-org:
 
 	$(MAKE) -s TEST_DIR=. LOG_DIR=work/0/log test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test1.result
-	$(MAKE) TEST_DIR=. test-etc >> work/test1.result
+	LANG= $(MAKE) TEST_DIR=. test-etc |		\
+		grep -v 'Entering directory' |		\
+		grep -v 'Leaving directory' >> work/test1.result
 	$(call exeFront,.) >> work/test1.result
 ifeq ($(WITH_GO),y)
 	$(call test-shebang,.,a b c) >> work/test1.result
@@ -767,7 +769,7 @@ endif
 
 test-org-proj:
 ifndef SKIP_PROJ_TEST
-	$(MAKE) -j0 -C test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
+	$(MAKE) -j1 -C test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/0/log/proj
 else
 	@echo skip
@@ -799,7 +801,9 @@ test-new:
 
 	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test2.result
-	$(MAKE) TEST_DIR=work/3 test-etc >> work/test2.result
+	LANG= $(MAKE) TEST_DIR=work/3 test-etc |	\
+		grep -v 'Entering directory' |		\
+		grep -v 'Leaving directory' >> work/test2.result
 	$(call exeFront,work/3) >> work/test2.result
 ifeq ($(WITH_GO),y)
 	$(call test-shebang,work/3,a b c) >> work/test2.result
@@ -816,7 +820,7 @@ endif
 
 test-new-proj:
 ifndef SKIP_PROJ_TEST
-	$(MAKE) -j0 -C work/3/test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
+	$(MAKE) -j1 -C work/3/test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/3/log/proj
 else
 	@echo skip
@@ -1741,7 +1745,7 @@ ifndef NO_TEST
 	$(MAKE) -s TEST_DIR=$(GO_WORK_DIR) LOG_DIR=work/1/log \
 		LNSC=./$(LNSC_GO) test-error | \
 			grep -e 'error:' -e 'warning:' > work/test2.result
-	diff work/test1.result work/test2.result
+	diff work/test1.result work/test2.result -I 'Entering directory' -I 'Leaving directory'
 endif
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) .
 
