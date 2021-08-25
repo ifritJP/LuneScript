@@ -35,12 +35,9 @@ LuneScript has the following features.
   - With the go version of LuneScript, transcompile time can be reduced to 1/20.
 - Lua modules converted from LuneScript can be used from other Lua modules.
 - Supports Lua5.1 ~ 5.4.
-  - See below for Lua5.1.
-  - [[#cross-compiling-between-lua-versions]]
 - LuneScript is self-hosted.
 - Supports code completion in emacs
 - Supports tag jump by lnstags
-  - [[#tag-jump-by-lnstags-source-code-tag-system]]
 - Supports automatic generation of glue code
 - The learning cost is low because it is based on the syntax of Lua and C.
 
