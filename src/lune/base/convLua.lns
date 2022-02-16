@@ -3339,6 +3339,7 @@ pub override fn ConvFilter.processExpRefItem(
             filter( _exp, self, node );
          }
          else {
+            // index がないのはバグ
             error( "index is nil" );
          }
          self.writeRaw( " )" );

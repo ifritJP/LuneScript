@@ -288,7 +288,6 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
-
 local function loadCode( code )
 
    local ret
@@ -301,11 +300,13 @@ local function loadCode( code )
             if obj ~= nil then
                ret = obj
             else
+               
                error( "failed to load" )
             end
          end
          
       else
+         
          error( string.format( "%s -- %s", mess, code) )
       end
       

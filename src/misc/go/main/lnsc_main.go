@@ -34,6 +34,7 @@ import (
 //import bind "github.com/ifritJP/LuneScript/src/lune"
 
 func main() {
+
 	args := []LnsAny{}
 	for _, arg := range os.Args {
 		args = append(args, arg)

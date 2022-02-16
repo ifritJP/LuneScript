@@ -4008,6 +4008,7 @@ function ConvFilter:processExpRefItem( node, opt )
             if _exp ~= nil then
                filter( _exp, self, node )
             else
+               
                error( "index is nil" )
             end
          end

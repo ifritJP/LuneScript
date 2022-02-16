@@ -278,8 +278,12 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMap:Map<str,LoadInfo>;
    /** import 済みの Test ビルド用モジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMapTest:Map<str,LoadInfo>;
-   /** import 済みのモジュール → Lua コードのマップ */
-   let mut convertedMap:Map<str,str>;
+/**
+import 済みのモジュール → Lua コードのマップ。
+
+regConvertedMap() メソッドを使用して登録する。
+*/
+   let convertedMap:Map<str,str>;
    let mut gomodMap:GoMod.ModInfo;
 
    let mut bindModuleSet:Set<str>;
@@ -302,6 +306,10 @@ loadedMap で管理する前にシステムにロードされているため、
 
    let mut builtinFunc:&Builtin.BuiltinFuncType;
 
+   fn regConvertedMap( mod:str, luaTxt:str, meta:frontInterface.ModuleMeta ) mut {
+      self.moduleMgr.addMeta( mod, meta );
+      self.convertedMap[ mod ] = luaTxt;
+   }
    
    pub fn __init( option:&Option.Option, bindModuleList:&List<str>! ) __noasync {
       self.mod2loader = {};
@@ -536,13 +544,14 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
             ret = nil;
          }
       } else {
+         // chunk が nil はバグ
          error( "failed to error" );
       }
    }
    return ret;
 }
 
-pub fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
+fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    //--print( txt )
    let chunk, err;
    __luaLock {
@@ -558,6 +567,7 @@ fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
       when! chunk {
          ret = string.dump( chunk, stripDebugInfo );
       } else {
+         // load 出来ないのはバグ
          error( unwrap err default "load error" );
       }
    }
@@ -1098,6 +1108,7 @@ fn Front.loadModule( mut mod:str ) __async mut : Luaval<&stem>!, frontInterface.
                mod, new LoadInfo( unwrap loadFromLuaTxt( luaTxt ), meta ) );
          }
          else {
+            // convertedMap に登録されていて getMeta() が失敗するのはバグ
             error( "nothing meta -- %s" ( mod ) );
          }
       }
@@ -1162,6 +1173,7 @@ fn Front.loadModule( mut mod:str ) __async mut : Luaval<&stem>!, frontInterface.
       //TestCtrl.add( mod, _exp.mod );
       return _exp.mod, _exp.meta;
    }
+   // ここにくるのはバグ
    error( "load error, %s" ( mod ) );
 }
 
@@ -1267,8 +1279,9 @@ fn Front.loadMeta(
                   importModuleInfo,
                   Types.ParserSrc.LnsPath( lnsPath, orgMod, nil ),
                   lnsPath, orgMod, baseDir );
-	       self.moduleMgr.addMeta( orgMod, metawork );
-               self.convertedMap[ orgMod ] = luaTxt;
+               self.regConvertedMap( orgMod, luaTxt, metawork );
+	       // self.moduleMgr.addMeta( orgMod, metawork );
+               // self.convertedMap[ orgMod ] = luaTxt;
             }
          } else {
             if! let lnsCode = Depend.getBindLns( orgMod ) {
@@ -1277,8 +1290,9 @@ fn Front.loadMeta(
                   importModuleInfo, 
                   Types.ParserSrc.LnsCode( lnsCode, orgMod, nil ),
                   path, orgMod, baseDir );
-	       self.moduleMgr.addMeta( orgMod, meta );
-               self.convertedMap[ orgMod ] = luaTxt;
+               self.regConvertedMap( orgMod, luaTxt, meta );
+	       // self.moduleMgr.addMeta( orgMod, meta );
+               // self.convertedMap[ orgMod ] = luaTxt;
             }
          }
       }

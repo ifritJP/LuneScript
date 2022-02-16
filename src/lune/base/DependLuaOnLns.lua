@@ -119,7 +119,6 @@ local function runLuaOnLns( luaCode, baseDir, async )
    return nil, ""
 end
 _moduleObj.runLuaOnLns = runLuaOnLns
-
 function __luneGetLocal( varName )
 
    local index = 1
@@ -136,6 +135,7 @@ function __luneGetLocal( varName )
       
       index = index + 1
    end
+   
    
    error( "not found -- " .. varName )
 end

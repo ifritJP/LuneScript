@@ -191,8 +191,14 @@ go/github:com.ifritJP. 等の go 用のモジュールパスを、
          self.latestModProjInfo = _exp;
          return .Found( _exp );
       }
-      
+
+
       let mut pathList = self.getLocalModulePathList( workMod );
+      if not mod.find( "^go/" ## ) {
+         when! baseDir {
+            pathList.insert( Util.pathJoin( baseDir, workMod ) );
+         }
+      }
       pathList.insert( Util.pathJoin( "vendor", workMod ) );
 
       foreach path in pathList {

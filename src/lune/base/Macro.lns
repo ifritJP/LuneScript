@@ -32,6 +32,12 @@ import lune.base.Types;
 import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
 
+/**
+code に格納されている lua code をロード・実行する。
+このとき、実行しているスレッドに依存した環境上で実行する。
+
+code の実行エラーした場合は、 error() させる。
+*/
 fn loadCode( code:str ) : Luaval<&stem> {
    let ret;
    __luaDepend {
@@ -40,9 +46,11 @@ fn loadCode( code:str ) : Luaval<&stem> {
          if! let obj = loaded(##) {
             ret = obj;
          } else {
+            // ここでは、lua code の実行ができない場合はエラーとする
             error( "failed to load" );
          }
       } else {
+         // ここでは、lua code の実行ができない場合はエラーとする
          error( "%s -- %s" (mess, code) );
       }
    }

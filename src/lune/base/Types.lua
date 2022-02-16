@@ -457,6 +457,7 @@ function Token:getExcludedDelimitTxt(  )
       end
    end
    
+   
    error( string.format( "illegal delimit -- %s", self.txt) )
 end
 function Token:getLineCount(  )

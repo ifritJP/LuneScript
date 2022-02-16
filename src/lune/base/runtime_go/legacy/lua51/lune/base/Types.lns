@@ -204,6 +204,7 @@ pub class Token extend (Mapping) {
             return self.txt.sub( 1 + 3, #self.txt - 3 );
          }
       }
+      // 文字列トークンが ' or " or ``` 以外で括られているのはバグなので error
       error( "illegal delimit -- %s" (self.txt) );
    }
 

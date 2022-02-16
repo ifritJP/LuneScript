@@ -74,6 +74,9 @@ pub fn runLuaOnLns(
    return nil, "";
 }
 
+/**
+指定のローカル変数の値を取得する。
+*/
 global fn __luneGetLocal( varName:str ):stem!
 {
    let mut index = 1;
@@ -88,6 +91,7 @@ global fn __luneGetLocal( varName:str ):stem!
       //print( name, val )
       index = index + 1;
    }
+   // 指定のローカル変数の値を取得できないのはバグ
    error( "not found -- " .. varName );
 }
 

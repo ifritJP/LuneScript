@@ -7871,6 +7871,7 @@ end
 function CombineType:get_typeInfo( processInfo )
 
    if _lune._Set_len(self.ifSet ) ~= 1 then
+      
       return self:createStem( processInfo )
    end
    
@@ -7886,6 +7887,7 @@ function CombineType:get_typeInfo( processInfo )
       
       return processInfo:createModifier( work, self.mutMode )
    end
+   
    
    error( "illegal" )
 end

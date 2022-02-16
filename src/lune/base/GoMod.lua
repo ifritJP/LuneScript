@@ -401,6 +401,13 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
    
    
    local pathList = self:getLocalModulePathList( workMod )
+   if not mod:find( "^go/" ) then
+      if baseDir ~= nil then
+         table.insert( pathList, Util.pathJoin( baseDir, workMod ) )
+      end
+      
+   end
+   
    table.insert( pathList, Util.pathJoin( "vendor", workMod ) )
    
    for __index, path in ipairs( pathList ) do
@@ -412,7 +419,7 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          return _lune.newAlge( GoModResult.Found, {projInfo})
       else
        
-         Log.log( Log.Level.Log, __func__, 206, function (  )
+         Log.log( Log.Level.Log, __func__, 212, function (  )
          
             return string.format( "not found %s", path)
          end )

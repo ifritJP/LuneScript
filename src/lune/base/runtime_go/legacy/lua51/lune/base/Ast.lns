@@ -5851,8 +5851,13 @@ pub class CombineType {
       return processInfo.createModifier( retType, self.mutMode );
    }
 
+/**
+型を合成した結果の型情報を返す。
+*/
    pub fn get_typeInfo( processInfo:ProcessInfo ) : &TypeInfo {
       if self.ifSet.len() ~= 1 {
+         // 処理を簡単にするため、現状は interface を複数もつ場合は stem 型とする。
+         // 本来は、 interface の継承関係を見るべき。
          return self.createStem( processInfo );
       }
       foreach ifType in self.ifSet {
@@ -5865,6 +5870,7 @@ pub class CombineType {
          }
          return processInfo.createModifier( work, self.mutMode );
       }
+      // 内部エラー
       error( "illegal" );
    }
 }

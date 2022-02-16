@@ -190,7 +190,7 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 214: decl @lune.@base.@Types.Token.getLineCount
+// 215: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1

@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 11856
+   return 11873
 end
 
 
@@ -1010,7 +1010,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 723, function (  )
+   Log.log( Log.Level.Log, __func__, 724, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
