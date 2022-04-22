@@ -589,6 +589,7 @@ TEST_CASE += arg.lns
 TEST_CASE += arg2.lns
 TEST_CASE += unwrap.lns
 TEST_CASE += operand.lns
+TEST_CASE += operand2.lns
 TEST_CASE += loop.lns
 TEST_CASE += cast.lns
 TEST_CASE += prototype.lns

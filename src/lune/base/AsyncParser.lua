@@ -334,7 +334,7 @@ local quotedCharSet = {['a'] = true, ['b'] = true, ['f'] = true, ['n'] = true, [
 
 local op2Set = {['+'] = true, ['-'] = true, ['*'] = true, ['/'] = true, ['^'] = true, ['%'] = true, ['&'] = true, ['~'] = true, ['|'] = true, ['|>>'] = true, ['|<<'] = true, ['..'] = true, ['<'] = true, ['<='] = true, ['>'] = true, ['>='] = true, ['=='] = true, ['~='] = true, ['and'] = true, ['or'] = true, ['@'] = true, ['@@'] = true, ['@@@'] = true, ['='] = true}
 
-local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['*'] = true, ['`'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
+local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['`'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
 
 local function isOp2( ope )
 

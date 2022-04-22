@@ -1788,6 +1788,7 @@ test/error/operand.lns:30:10: error: no numeric type 'int' or 'str'
 test/error/operand.lns:68:7: error: shadowing symbol of 5:4 -- func
 test/error/operand.lns:69:21: error: no numeric type 'stem!' or 'int'
 test/error/operand.lns:71:18: error: unmatch type for "#" -- stem!
+test/error/operand2.lns:1:1: error: illegal exp
 test/error/loop.lns:2:7: warning: 'func' var isn't accessed
 test/error/loop.lns:4:10: warning: 'switch' should have 'case' blocks.
 test/error/loop.lns:15:7: warning: 'func' var isn't accessed
