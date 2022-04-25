@@ -237,3 +237,4 @@ pub fn setRunnerLog( limit:bool ) {
 }
 pub fn dumpRunnerLog( stream:oStream ) {
 }
+

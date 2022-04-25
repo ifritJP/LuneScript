@@ -61,6 +61,23 @@ pub class ModInfo {
       }
       return pathList;
    }
+
+   pub fn getModPathList() : &List<str> {
+      let list:List<str> = [];
+      foreach ver, mod in self.moduleMap {
+         if! self.replaceMap[ mod ] {
+            list.insert( _exp );
+         } else {
+            foreach path in self.getGoModPath( ver, mod ) {
+               if Depend.existFile( path ) {
+                  list.insert( path );
+                  break;
+               }
+            }
+         }
+      }
+      return list;
+   }
    
    pub fn __init( name:str, moduleMap:&Map<str,str>, replaceMap:&Map<str,str> ) {
       self.name = name;

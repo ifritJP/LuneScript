@@ -26,6 +26,7 @@ _lune_control limit_conv_code lua;
 
 
 import lune.base.frontInterface;
+import lune.base.Util;
 //import lune.base.Nodes;
 
 _lune_control ignore_symbol_;
@@ -108,4 +109,34 @@ global fn __luneSym2Str( val:stem! ):str! {
       return txt;
    }
    return nil;
+}
+
+/**
+go/gihub:com.***.****.**** で import/module 宣言した lua モジュールのパスを
+package.path に追加する。
+これをしないと、lua 版 LuneScript で実行できない。
+*/
+pub fn addGoModPath( list:&List<str> ) __async {
+   __luaLock {
+      let loaded, mess = _load( ```
+return function( pathList )
+  for index, path in ipairs( pathList ) do
+     package.path = string.format( "%s;%s", package.path, path )
+  end
+end
+```## );
+      when! loaded {
+         if! let func = loaded(##) {
+            let luaPathList:List<str> = [];
+            foreach path in list {
+               luaPathList.insert( Util.pathJoin( path, "?.lua") );
+            }
+            (func@@form)( luaPathList );
+         } else {
+            error( "failed to load func" );
+         }
+      } else {
+         print( mess );
+      }
+   }
 }

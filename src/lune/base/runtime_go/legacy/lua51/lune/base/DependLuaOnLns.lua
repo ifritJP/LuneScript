@@ -76,6 +76,7 @@ end
 
 
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+local Util = _lune.loadModule( 'lune.base.Util' )
 
 
 
@@ -164,5 +165,39 @@ function __luneSym2Str( val )
    return nil
 end
 _moduleObj.__luneSym2Str = __luneSym2Str
+
+local function addGoModPath( list )
+
+   do
+      local loaded, mess = _lune.loadstring51( [==[
+return function( pathList )
+  for index, path in ipairs( pathList ) do
+     package.path = string.format( "%s;%s", package.path, path )
+  end
+end
+]==] )
+      if loaded ~= nil then
+         do
+            local func = loaded(  )
+            if func ~= nil then
+               local luaPathList = {}
+               for __index, path in ipairs( list ) do
+                  table.insert( luaPathList, Util.pathJoin( path, "?.lua" ) )
+               end
+               
+               (func )( luaPathList )
+            else
+               error( "failed to load func" )
+            end
+         end
+         
+      else
+         print( mess )
+      end
+      
+   end
+   
+end
+_moduleObj.addGoModPath = addGoModPath
 
 return _moduleObj

@@ -88,3 +88,7 @@ func Depend_dumpRunnerLog(_env *LnsEnv, stream Lns_oStream) {
 		stream.Write(_env, txt)
 	})
 }
+
+func DependLuaOnLns_addGoModPath(_env *LnsEnv, argList *LnsList) {
+
+}

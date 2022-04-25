@@ -241,6 +241,30 @@ function ModInfo:getGoModPath( ver, mod )
    
    return pathList
 end
+function ModInfo:getModPathList(  )
+
+   local list = {}
+   for mod, ver in pairs( self.moduleMap ) do
+      do
+         local _exp = self.replaceMap[mod]
+         if _exp ~= nil then
+            table.insert( list, _exp )
+         else
+            for __index, path in ipairs( self:getGoModPath( ver, mod ) ) do
+               if Depend.existFile( path ) then
+                  table.insert( list, path )
+                  break
+               end
+               
+            end
+            
+         end
+      end
+      
+   end
+   
+   return list
+end
 function ModInfo.new( name, moduleMap, replaceMap )
    local obj = {}
    ModInfo.setmeta( obj )
@@ -375,7 +399,7 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          end
          
          if not goModDir then
-            Log.log( Log.Level.Log, __func__, 178, function (  )
+            Log.log( Log.Level.Log, __func__, 195, function (  )
             
                return string.format( "not found baseDir -- %s", baseDir)
             end )
@@ -419,7 +443,7 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          return _lune.newAlge( GoModResult.Found, {projInfo})
       else
        
-         Log.log( Log.Level.Log, __func__, 212, function (  )
+         Log.log( Log.Level.Log, __func__, 229, function (  )
          
             return string.format( "not found %s", path)
          end )

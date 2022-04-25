@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 11877
+   return 11892
 end
 
 
@@ -261,6 +261,9 @@ ModeKind.__allList[18] = ModeKind.BuildAst
 ModeKind.Indexer = 'indexer'
 ModeKind._val2NameMap['indexer'] = 'Indexer'
 ModeKind.__allList[19] = ModeKind.Indexer
+ModeKind.GoMod = 'gomod'
+ModeKind._val2NameMap['gomod'] = 'GoMod'
+ModeKind.__allList[20] = ModeKind.GoMod
 
 
 local function getRuntimeModule(  )
@@ -1010,7 +1013,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 724, function (  )
+   Log.log( Log.Level.Log, __func__, 725, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
