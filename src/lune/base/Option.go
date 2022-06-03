@@ -110,21 +110,21 @@ func Option_Int2strMode_getTxt(arg1 LnsInt) string {
 func Option_convExp0_68(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 340
-func Option_convExp0_923(arg1 []LnsAny) LnsAny {
+// for 350
+func Option_convExp0_934(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 335
-func Option_convExp0_930(arg1 []LnsAny) LnsAny {
+// for 345
+func Option_convExp0_941(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 230
-func Option_convExp0_732(arg1 []LnsAny) LnsAny {
+// for 235
+func Option_convExp0_743(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 53: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 11892
+    return 11911
 }
 
 // 83: decl @lune.@base.@Option.getRuntimeModule
@@ -132,20 +132,20 @@ func Option_getRuntimeModule(_env *LnsEnv) string {
     return _env.GetVM().String_format("lune.base.runtime%d", []LnsAny{Ver_luaModVersion})
 }
 
-// 223: decl @lune.@base.@Option.outputLuneMod
+// 228: decl @lune.@base.@Option.outputLuneMod
 func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
     if path != nil{
-        path_142 := path.(string)
-        if path_142 != ""{
-            lune_path = path_142
+        path_144 := path.(string)
+        if path_144 != ""{
+            lune_path = path_144
         }
     }
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Option_convExp0_732(Lns_2DDD(Lns_io_open(lune_path, "w")))
+        _fileObj := Option_convExp0_743(Lns_2DDD(Lns_io_open(lune_path, "w")))
         if _fileObj == nil{
             return _env.GetVM().String_format("failed to open -- %s", []LnsAny{lune_path})
         } else {
@@ -161,7 +161,7 @@ func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     return nil
 }
 
-// 268: decl @lune.@base.@Option.analyze
+// 273: decl @lune.@base.@Option.analyze
 func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
     __func__ := "@lune.@base.@Option.analyze"
     var option *Option_Option
@@ -175,15 +175,15 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
     var index LnsInt
     index = 1
     {
-        _file := Option_convExp0_930(Lns_2DDD(Lns_io_open("lune.js", "r")))
+        _file := Option_convExp0_941(Lns_2DDD(Lns_io_open("lune.js", "r")))
         if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             {
-                _projInfo := Option_convExp0_923(Lns_2DDD(Option_ProjInfo1204__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
+                _projInfo := Option_convExp0_934(Lns_2DDD(Option_ProjInfo1207__fromStem_3_(_env, Lns_car(Json_fromStr(_env, _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( file.Read(_env, "*a")) ||
                     _env.SetStackVal( "") ).(string))),nil)))
                 if !Lns_IsNil( _projInfo ) {
-                    projInfo := _projInfo.(*Option_ProjInfo1204)
+                    projInfo := _projInfo.(*Option_ProjInfo1207)
                     var workArgList *LnsList
                     workArgList = NewLnsList([]LnsAny{})
                     for _, _arg := range( projInfo.Cmd_option.Items ) {
@@ -269,6 +269,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
                     if option.TransCtrlInfo.MacroAsyncParseStmtLen < 0{
                         analyze__printUsage_0_(_env, 1)
                     }
+                } else if _switch2 == "--legacyNewName" {
+                    option.legacyNewName = true
                 } else if _switch2 == "--enableMacroAsync" {
                     option.TransCtrlInfo.ValidMacroAsync = true
                 } else if _switch2 == "--disableRunner" {
@@ -508,8 +510,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         index = index + 1
     }
     if uptodateOpt != nil{
-        uptodateOpt_300 := uptodateOpt.(string)
-        if _switch4 := uptodateOpt_300; _switch4 == "force" {
+        uptodateOpt_303 := uptodateOpt.(string)
+        if _switch4 := uptodateOpt_303; _switch4 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
         } else if _switch4 == "forceAll" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__ForceAll_Obj
@@ -518,7 +520,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         } else if _switch4 == "touch" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_300)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_303)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -569,14 +571,14 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 725, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 738, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("mode is '%s'", []LnsAny{Option_ModeKind_getTxt( option.Mode)})
     }))
     
     return option
 }
 
-// 730: decl @lune.@base.@Option.createDefaultOption
+// 743: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -592,21 +594,21 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
     option.UseLuneModule = Option_getRuntimeModule(_env)
     option.UseIpairs = true
     if projDir != nil{
-        projDir_330 := projDir.(string)
-        if projDir_330 != "/"{
-            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_330,"/$", nil, nil))){
-                option.projDir = projDir_330 + "/"
+        projDir_333 := projDir.(string)
+        if projDir_333 != "/"{
+            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_333,"/$", nil, nil))){
+                option.projDir = projDir_333 + "/"
             } else { 
-                option.projDir = projDir_330
+                option.projDir = projDir_333
             }
         }
     }
     return option
 }
 
-// 270: decl @lune.@base.@Option.analyze.printUsage
+// 275: decl @lune.@base.@Option.analyze.printUsage
 func analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
-    Lns_print([]LnsAny{"usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> -shebang path\n  <type4> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n  --int2str mode: mode of int to str.\n     - depend: depends the lua version.\n     - need0: with '.0'.\n     - unneed0: without '.0'.\n\n  common_op:\n    --testing: enable test.\n    --projDir <dir>: set the project dir.\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            force: skip check for target lns file.\n            forceAll: skip check for all.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    --default-lazy: set lazy-loading at default.\n    --valid-luaval: enable luaval when transcompie to lua.\n    --package <name>: set the package name for the go-lang.\n    --app <name>: set the application name for the go-lang.\n\n* type2\n  path: output file path.\n"})
+    Lns_print([]LnsAny{"usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> -shebang path\n  <type4> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n  --int2str mode: mode of int to str.\n     - depend: depends the lua version.\n     - need0: with '.0'.\n     - unneed0: without '.0'.\n\n  common_op:\n    --testing: enable test.\n    --projDir <dir>: set the project dir.\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            force: skip check for target lns file.\n            forceAll: skip check for all.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    --default-lazy: set lazy-loading at default.\n    --valid-luaval: enable luaval when transcompie to lua.\n    --package <name>: set the package name for the go-lang.\n    --app <name>: set the application name for the go-lang.\n\n    compati_op:\n      --legacyNewName: use the legacy new method name for lua.\n\n\n\n* type2\n  path: output file path.\n"})
     _env.GetVM().OS_exit(code)
 }
 
@@ -614,7 +616,7 @@ func analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
 
 
 
-// 202: decl @lune.@base.@Option.Option.openDepend
+// 207: decl @lune.@base.@Option.Option.openDepend
 func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
     {
         _path := self.DependsPath
@@ -622,11 +624,11 @@ func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
             path := _path.(string)
             var filePath string
             if relPath != nil{
-                relPath_133 := relPath.(string)
+                relPath_135 := relPath.(string)
                 if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_133})
+                    filePath = _env.GetVM().String_format("%s%s", []LnsAny{path, relPath_135})
                 } else { 
-                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_133})
+                    filePath = _env.GetVM().String_format("%s/%s", []LnsAny{path, relPath_135})
                 }
             } else {
                 filePath = path
@@ -688,6 +690,7 @@ func (self *Option_RuntimeOpt) InitOption_RuntimeOpt(_env *LnsEnv) {
 type Option_OptionMtd interface {
     Get_addEnvArg(_env *LnsEnv) bool
     Get_enableRunner(_env *LnsEnv) bool
+    Get_legacyNewName(_env *LnsEnv) bool
     Get_projDir(_env *LnsEnv) LnsAny
     Get_runtimeOpt(_env *LnsEnv) *Option_RuntimeOpt
     Get_stdinFile(_env *LnsEnv) LnsAny
@@ -725,6 +728,7 @@ type Option_Option struct {
     enableRunner bool
     validPostBuild bool
     stdinFile LnsAny
+    legacyNewName bool
     ConvGoRunnerNum LnsInt
     FP Option_OptionMtd
 }
@@ -761,8 +765,10 @@ func (self *Option_Option) Get_enableRunner(_env *LnsEnv) bool{ return self.enab
 func (self *Option_Option) Get_validPostBuild(_env *LnsEnv) bool{ return self.validPostBuild }
 func (self *Option_Option) Get_stdinFile(_env *LnsEnv) LnsAny{ return self.stdinFile }
 func (self *Option_Option) Set_stdinFile(_env *LnsEnv, arg1 LnsAny){ self.stdinFile = arg1 }
-// 169: DeclConstr
+func (self *Option_Option) Get_legacyNewName(_env *LnsEnv) bool{ return self.legacyNewName }
+// 173: DeclConstr
 func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
+    self.legacyNewName = false
     self.stdinFile = nil
     self.validPostBuild = true
     self.enableRunner = true
@@ -800,71 +806,71 @@ func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
 
 
 // declaration Class -- ProjInfo
-type Option_ProjInfo1204Mtd interface {
+type Option_ProjInfo1207Mtd interface {
     ToMap() *LnsMap
 }
-type Option_ProjInfo1204 struct {
+type Option_ProjInfo1207 struct {
     Cmd_option *LnsList
-    FP Option_ProjInfo1204Mtd
+    FP Option_ProjInfo1207Mtd
 }
-func Option_ProjInfo12042Stem( obj LnsAny ) LnsAny {
+func Option_ProjInfo12072Stem( obj LnsAny ) LnsAny {
     if obj == nil {
         return nil
     }
-    return obj.(*Option_ProjInfo1204).FP
+    return obj.(*Option_ProjInfo1207).FP
 }
-type Option_ProjInfo1204DownCast interface {
-    ToOption_ProjInfo1204() *Option_ProjInfo1204
+type Option_ProjInfo1207DownCast interface {
+    ToOption_ProjInfo1207() *Option_ProjInfo1207
 }
-func Option_ProjInfo1204DownCastF( multi ...LnsAny ) LnsAny {
+func Option_ProjInfo1207DownCastF( multi ...LnsAny ) LnsAny {
     if len( multi ) == 0 { return nil }
     obj := multi[ 0 ]
     if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
-    work, ok := obj.(Option_ProjInfo1204DownCast)
-    if ok { return work.ToOption_ProjInfo1204() }
+    work, ok := obj.(Option_ProjInfo1207DownCast)
+    if ok { return work.ToOption_ProjInfo1207() }
     return nil
 }
-func (obj *Option_ProjInfo1204) ToOption_ProjInfo1204() *Option_ProjInfo1204 {
+func (obj *Option_ProjInfo1207) ToOption_ProjInfo1207() *Option_ProjInfo1207 {
     return obj
 }
-func NewOption_ProjInfo1204(_env *LnsEnv, arg1 *LnsList) *Option_ProjInfo1204 {
-    obj := &Option_ProjInfo1204{}
+func NewOption_ProjInfo1207(_env *LnsEnv, arg1 *LnsList) *Option_ProjInfo1207 {
+    obj := &Option_ProjInfo1207{}
     obj.FP = obj
-    obj.InitOption_ProjInfo1204(_env, arg1)
+    obj.InitOption_ProjInfo1207(_env, arg1)
     return obj
 }
-func (self *Option_ProjInfo1204) InitOption_ProjInfo1204(_env *LnsEnv, arg1 *LnsList) {
+func (self *Option_ProjInfo1207) InitOption_ProjInfo1207(_env *LnsEnv, arg1 *LnsList) {
     self.Cmd_option = arg1
 }
-func (self *Option_ProjInfo1204) ToMapSetup( obj *LnsMap ) *LnsMap {
+func (self *Option_ProjInfo1207) ToMapSetup( obj *LnsMap ) *LnsMap {
     obj.Items["cmd_option"] = Lns_ToCollection( self.Cmd_option )
     return obj
 }
-func (self *Option_ProjInfo1204) ToMap() *LnsMap {
+func (self *Option_ProjInfo1207) ToMap() *LnsMap {
     return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
 }
-func Option_ProjInfo1204__fromMap_2_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Option_ProjInfo1204_FromMap( arg1, paramList )
+func Option_ProjInfo1207__fromMap_2_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Option_ProjInfo1207_FromMap( arg1, paramList )
 }
-func Option_ProjInfo1204__fromStem_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Option_ProjInfo1204_FromMap( arg1, paramList )
+func Option_ProjInfo1207__fromStem_3_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
+   return Option_ProjInfo1207_FromMap( arg1, paramList )
 }
-func Option_ProjInfo1204_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := Option_ProjInfo1204_FromMapSub(obj,false, paramList);
+func Option_ProjInfo1207_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
+    _,conv,mess := Option_ProjInfo1207_FromMapSub(obj,false, paramList);
     return conv,mess
 }
-func Option_ProjInfo1204_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+func Option_ProjInfo1207_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
     var objMap *LnsMap
     if work, ok := obj.(*LnsMap); !ok {
        return false, nil, "no map -- " + Lns_ToString(obj)
     } else {
        objMap = work
     }
-    newObj := &Option_ProjInfo1204{}
+    newObj := &Option_ProjInfo1207{}
     newObj.FP = newObj
-    return Option_ProjInfo1204_FromMapMain( newObj, objMap, paramList )
+    return Option_ProjInfo1207_FromMapMain( newObj, objMap, paramList )
 }
-func Option_ProjInfo1204_FromMapMain( newObj *Option_ProjInfo1204, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
+func Option_ProjInfo1207_FromMapMain( newObj *Option_ProjInfo1207, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
     if ok,conv,mess := Lns_ToListSub( objMap.Items["cmd_option"], false, []Lns_ToObjParam{Lns_ToObjParam{
             Lns_ToStrSub, false,nil}}); !ok {
        return false,nil,"cmd_option:" + mess.(string)

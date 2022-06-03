@@ -131,9 +131,9 @@ local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 
 local Opt = {}
 _moduleObj.Opt = Opt
-function Opt.new( parent )
+function Opt._new( parent )
    local obj = {}
-   Opt.setmeta( obj )
+   Opt._setmeta( obj )
    if obj.__init then obj:__init( parent ); end
    return obj
 end
@@ -142,9 +142,9 @@ function Opt:__init(parent)
 end
 function Opt:nextOpt( parent )
 
-   return Opt.new(parent)
+   return Opt._new(parent)
 end
-function Opt.setmeta( obj )
+function Opt._setmeta( obj )
   setmetatable( obj, { __index = Opt  } )
 end
 function Opt:get_parent()
@@ -154,18 +154,18 @@ end
 
 local FormatterFilter = {}
 setmetatable( FormatterFilter, { __index = Nodes.Filter } )
-function FormatterFilter.new( moduleTypeInfo, moduleInfoManager, stream )
+function FormatterFilter._new( moduleTypeInfo, moduleInfoManager, stream )
    local obj = {}
-   FormatterFilter.setmeta( obj )
+   FormatterFilter._setmeta( obj )
    if obj.__init then obj:__init( moduleTypeInfo, moduleInfoManager, stream ); end
    return obj
 end
 function FormatterFilter:__init(moduleTypeInfo, moduleInfoManager, stream) 
    Nodes.Filter.__init( self,true, moduleTypeInfo, moduleInfoManager)
    
-   self.stream = Util.SimpleSourceOStream.new(stream, nil, 3)
+   self.stream = Util.SimpleSourceOStream._new(stream, nil, 3)
 end
-function FormatterFilter.setmeta( obj )
+function FormatterFilter._setmeta( obj )
   setmetatable( obj, { __index = FormatterFilter  } )
 end
 function FormatterFilter:popIndent( ... )
@@ -200,7 +200,7 @@ end
 
 local function createFilter( moduleTypeInfo, stream )
 
-   return FormatterFilter.new(moduleTypeInfo, moduleTypeInfo:get_scope(), stream)
+   return FormatterFilter._new(moduleTypeInfo, moduleTypeInfo:get_scope(), stream)
 end
 _moduleObj.createFilter = createFilter
 

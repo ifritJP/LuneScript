@@ -196,12 +196,12 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 
 local Writer = {}
 _moduleObj.Writer = Writer
-function Writer.setmeta( obj )
+function Writer._setmeta( obj )
   setmetatable( obj, { __index = Writer  } )
 end
-function Writer.new(  )
+function Writer._new(  )
    local obj = {}
-   Writer.setmeta( obj )
+   Writer._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -215,9 +215,9 @@ end
 local XML = {}
 setmetatable( XML, { ifList = {Writer,} } )
 _moduleObj.XML = XML
-function XML.new( stream )
+function XML._new( stream )
    local obj = {}
-   XML.setmeta( obj )
+   XML._setmeta( obj )
    if obj.__init then obj:__init( stream ); end
    return obj
 end
@@ -280,18 +280,18 @@ end
 function XML:fin(  )
 
 end
-function XML.setmeta( obj )
+function XML._setmeta( obj )
   setmetatable( obj, { __index = XML  } )
 end
 
 
 local JsonLayer = {}
-function JsonLayer.setmeta( obj )
+function JsonLayer._setmeta( obj )
   setmetatable( obj, { __index = JsonLayer  } )
 end
-function JsonLayer.new( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
+function JsonLayer._new( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
    local obj = {}
-   JsonLayer.setmeta( obj )
+   JsonLayer._setmeta( obj )
    if obj.__init then
       obj:__init( state, arrayFlag, name, madeByArrayFlag, elementNameSet, parentFlag, openElement )
    end
@@ -314,14 +314,14 @@ setmetatable( JSON, { ifList = {Writer,} } )
 _moduleObj.JSON = JSON
 function JSON:startLayer( arrayFlag, madeByArrayFlag )
 
-   local info = JsonLayer.new('none', arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
+   local info = JsonLayer._new('none', arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
    
    table.insert( self.layerQueue, info )
    self.stream:write( arrayFlag and "[" or "{" )
 end
-function JSON.new( stream )
+function JSON._new( stream )
    local obj = {}
-   JSON.setmeta( obj )
+   JSON._setmeta( obj )
    if obj.__init then obj:__init( stream ); end
    return obj
 end
@@ -509,7 +509,7 @@ function JSON:fin(  )
    end
    
 end
-function JSON.setmeta( obj )
+function JSON._setmeta( obj )
   setmetatable( obj, { __index = JSON  } )
 end
 

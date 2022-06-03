@@ -133,9 +133,9 @@ function TransUnit:get_scope(  )
 
    return self.scope
 end
-function TransUnit.new( ctrl_info, processInfo )
+function TransUnit._new( ctrl_info, processInfo )
    local obj = {}
-   TransUnit.setmeta( obj )
+   TransUnit._setmeta( obj )
    if obj.__init then obj:__init( ctrl_info, processInfo ); end
    return obj
 end
@@ -357,7 +357,7 @@ function TransUnit:popClass(  )
 
    self:popScope(  )
 end
-function TransUnit.setmeta( obj )
+function TransUnit._setmeta( obj )
   setmetatable( obj, { __index = TransUnit  } )
 end
 

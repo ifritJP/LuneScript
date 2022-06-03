@@ -204,21 +204,21 @@ local BuiltinTransUnit = _lune.loadModule( 'lune.base.BuiltinTransUnit' )
 
 local Builtin = {}
 _moduleObj.Builtin = Builtin
-function Builtin.new( targetLuaVer, ctrl_info )
+function Builtin._new( targetLuaVer, ctrl_info )
    local obj = {}
-   Builtin.setmeta( obj )
+   Builtin._setmeta( obj )
    if obj.__init then obj:__init( targetLuaVer, ctrl_info ); end
    return obj
 end
 function Builtin:__init(targetLuaVer, ctrl_info) 
    self.hasLuaval = false
    self.processInfo = Ast.getRootProcessInfo(  )
-   self.transUnit = BuiltinTransUnit.TransUnit.new(ctrl_info, self.processInfo)
+   self.transUnit = BuiltinTransUnit.TransUnit._new(ctrl_info, self.processInfo)
    self.targetLuaVer = targetLuaVer
    self.ctrl_info = ctrl_info
-   self.modifier = TransUnitIF.Modifier.new(true, self.processInfo)
+   self.modifier = TransUnitIF.Modifier._new(true, self.processInfo)
 end
-function Builtin.setmeta( obj )
+function Builtin._setmeta( obj )
   setmetatable( obj, { __index = Builtin  } )
 end
 
@@ -227,9 +227,9 @@ end
 
 local BuiltinFuncType = {}
 _moduleObj.BuiltinFuncType = BuiltinFuncType
-function BuiltinFuncType.new(  )
+function BuiltinFuncType._new(  )
    local obj = {}
-   BuiltinFuncType.setmeta( obj )
+   BuiltinFuncType._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -534,7 +534,7 @@ function BuiltinFuncType:registerClass( classInfo )
    end
    
 end
-function BuiltinFuncType.setmeta( obj )
+function BuiltinFuncType._setmeta( obj )
   setmetatable( obj, { __index = BuiltinFuncType  } )
 end
 function BuiltinFuncType:get_allSymbol()
@@ -554,7 +554,7 @@ function BuiltinFuncType:get_needThreadingTypes()
 end
 
 
-local builtinFunc = BuiltinFuncType.new()
+local builtinFunc = BuiltinFuncType._new()
 
 local function getBuiltinFunc(  )
 
@@ -1639,7 +1639,7 @@ function Builtin:registBuiltInScope(  )
       
    end
    
-   local pos = Parser.Position.new(0, 0, "@builtin@")
+   local pos = Parser.Position._new(0, 0, "@builtin@")
    
    for __index, builtinClassInfo in ipairs( builtInInfo ) do
       for className, name2FieldInfo in pairs( builtinClassInfo ) do

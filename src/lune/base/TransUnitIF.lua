@@ -175,12 +175,12 @@ function Modifier:createModifier( typeInfo, mutMode )
    
    return self.processInfo:createModifier( typeInfo, mutMode )
 end
-function Modifier.setmeta( obj )
+function Modifier._setmeta( obj )
   setmetatable( obj, { __index = Modifier  } )
 end
-function Modifier.new( validMutControl, processInfo )
+function Modifier._new( validMutControl, processInfo )
    local obj = {}
-   Modifier.setmeta( obj )
+   Modifier._setmeta( obj )
    if obj.__init then
       obj:__init( validMutControl, processInfo )
    end
@@ -198,40 +198,40 @@ end
 
 local IdSetInfo = {}
 _moduleObj.IdSetInfo = IdSetInfo
-function IdSetInfo.new(  )
+function IdSetInfo._new(  )
    local obj = {}
-   IdSetInfo.setmeta( obj )
+   IdSetInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
 function IdSetInfo:__init() 
-   self.anonymousFuncId = Ast.IdProvider.new(0, 10000)
-   self.anonymousVarId = Ast.IdProvider.new(0, 10000)
+   self.anonymousFuncId = Ast.IdProvider._new(0, 10000)
+   self.anonymousVarId = Ast.IdProvider._new(0, 10000)
 end
 function IdSetInfo:registerSym( symbol )
 
    if symbol:get_kind() == Ast.SymbolKind.Var then
       if symbol:get_name() == "_" then
          local id = self.anonymousVarId:getNewId(  )
-         return Ast.AnonymousSymbolInfo.new(symbol, id)
+         return Ast.AnonymousSymbolInfo._new(symbol, id)
       end
       
    end
    
    return symbol
 end
-function IdSetInfo.setmeta( obj )
+function IdSetInfo._setmeta( obj )
   setmetatable( obj, { __index = IdSetInfo  } )
 end
 
 
 local LockedAsyncInfo = {}
-function LockedAsyncInfo.setmeta( obj )
+function LockedAsyncInfo._setmeta( obj )
   setmetatable( obj, { __index = LockedAsyncInfo  } )
 end
-function LockedAsyncInfo.new( loopLen, lockKind )
+function LockedAsyncInfo._new( loopLen, lockKind )
    local obj = {}
-   LockedAsyncInfo.setmeta( obj )
+   LockedAsyncInfo._setmeta( obj )
    if obj.__init then
       obj:__init( loopLen, lockKind )
    end
@@ -320,9 +320,9 @@ function NSInfo:isNoasync(  )
    
    return false
 end
-function NSInfo.new( typeInfo, typeDataAccessor, pos, validAsyncCtrl )
+function NSInfo._new( typeInfo, typeDataAccessor, pos, validAsyncCtrl )
    local obj = {}
-   NSInfo.setmeta( obj )
+   NSInfo._setmeta( obj )
    if obj.__init then obj:__init( typeInfo, typeDataAccessor, pos, validAsyncCtrl ); end
    return obj
 end
@@ -333,7 +333,7 @@ function NSInfo:__init(typeInfo, typeDataAccessor, pos, validAsyncCtrl)
    end
    
    
-   self.idSetInfo = IdSetInfo.new()
+   self.idSetInfo = IdSetInfo._new()
    self.nobody = false
    self.lockedAsyncStack = {}
    self.loopScopeQueue = {}
@@ -346,8 +346,8 @@ function NSInfo:__init(typeInfo, typeDataAccessor, pos, validAsyncCtrl)
 end
 function NSInfo:duplicate(  )
 
-   local typeData = Ast.TypeData.new()
-   local nsInfo = NSInfo.new(self.typeInfo, Ast.SimpleTypeDataAccessor.new(typeData), self.pos, self.validAsyncCtrl)
+   local typeData = Ast.TypeData._new()
+   local nsInfo = NSInfo._new(self.typeInfo, Ast.SimpleTypeDataAccessor._new(typeData), self.pos, self.validAsyncCtrl)
    
    typeData:addFrom( self.typeDataAccessor:get_typeData() )
    
@@ -361,7 +361,7 @@ function NSInfo:getNextStmtId( stmtKind )
 end
 function NSInfo:incLock( lockKind )
 
-   table.insert( self.lockedAsyncStack, LockedAsyncInfo.new(#self.loopScopeQueue, lockKind) )
+   table.insert( self.lockedAsyncStack, LockedAsyncInfo._new(#self.loopScopeQueue, lockKind) )
 end
 function NSInfo:decLock(  )
 
@@ -401,7 +401,7 @@ function NSInfo:canAccessLuaval(  )
    
    return false
 end
-function NSInfo.setmeta( obj )
+function NSInfo._setmeta( obj )
   setmetatable( obj, { __index = NSInfo  } )
 end
 function NSInfo:get_nobody()
@@ -433,12 +433,12 @@ end
 
 local TransUnitIF = {}
 _moduleObj.TransUnitIF = TransUnitIF
-function TransUnitIF.setmeta( obj )
+function TransUnitIF._setmeta( obj )
   setmetatable( obj, { __index = TransUnitIF  } )
 end
-function TransUnitIF.new(  )
+function TransUnitIF._new(  )
    local obj = {}
-   TransUnitIF.setmeta( obj )
+   TransUnitIF._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -451,12 +451,12 @@ end
 
 local ErrMess = {}
 _moduleObj.ErrMess = ErrMess
-function ErrMess.setmeta( obj )
+function ErrMess._setmeta( obj )
   setmetatable( obj, { __index = ErrMess  } )
 end
-function ErrMess.new( mess, pos )
+function ErrMess._new( mess, pos )
    local obj = {}
-   ErrMess.setmeta( obj )
+   ErrMess._setmeta( obj )
    if obj.__init then
       obj:__init( mess, pos )
    end
@@ -598,9 +598,9 @@ function TransUnitBase:setScope( scope, setNSInfo )
    end
    
 end
-function TransUnitBase.new( ctrl_info, processInfo )
+function TransUnitBase._new( ctrl_info, processInfo )
    local obj = {}
-   TransUnitBase.setmeta( obj )
+   TransUnitBase._setmeta( obj )
    if obj.__init then obj:__init( ctrl_info, processInfo ); end
    return obj
 end
@@ -611,11 +611,11 @@ function TransUnitBase:__init(ctrl_info, processInfo)
    self.errMessList = {}
    self.namespace2Scope = {}
    self.processInfo = processInfo
-   self.globalScope = Ast.Scope.new(processInfo, processInfo:get_topScope(), Ast.ScopeKind.Module, nil)
-   self.scope = Ast.Scope.new(processInfo, self.globalScope, Ast.ScopeKind.Module, nil)
+   self.globalScope = Ast.Scope._new(processInfo, processInfo:get_topScope(), Ast.ScopeKind.Module, nil)
+   self.scope = Ast.Scope._new(processInfo, self.globalScope, Ast.ScopeKind.Module, nil)
    self.nsInfoMap = {}
    local subRootTypeInfo = self.processInfo:get_dummyParentType()
-   self.curNsInfo = NSInfo.new(subRootTypeInfo, subRootTypeInfo, Types.Position.new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
+   self.curNsInfo = NSInfo._new(subRootTypeInfo, subRootTypeInfo, Types.Position._new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
    self.nsInfoMap[subRootTypeInfo] = self.curNsInfo
 end
 function TransUnitBase:addErrMess( pos, mess )
@@ -624,7 +624,7 @@ function TransUnitBase:addErrMess( pos, mess )
       mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'."
    end
    
-   table.insert( self.errMessList, ErrMess.new(string.format( "%s: error: %s", pos:getDisplayTxt(  ), mess), pos) )
+   table.insert( self.errMessList, ErrMess._new(string.format( "%s: error: %s", pos:getDisplayTxt(  ), mess), pos) )
 end
 function TransUnitBase:pushScope( scopeKind, baseInfo, interfaceList )
 
@@ -638,13 +638,13 @@ function TransUnitBase:popScope(  )
 end
 function TransUnitBase:newNSInfoWithTypeData( typeInfo, typeDataAccessor, pos )
 
-   local nsInfo = NSInfo.new(typeInfo, typeDataAccessor, pos, self.ctrl_info.validAsyncCtrl)
+   local nsInfo = NSInfo._new(typeInfo, typeDataAccessor, pos, self.ctrl_info.validAsyncCtrl)
    self.nsInfoMap[typeInfo] = nsInfo
    return nsInfo
 end
 function TransUnitBase:newNSInfo( typeInfo, pos )
 
-   local nsInfo = NSInfo.new(typeInfo, typeInfo, pos, self.ctrl_info.validAsyncCtrl)
+   local nsInfo = NSInfo._new(typeInfo, typeInfo, pos, self.ctrl_info.validAsyncCtrl)
    self.nsInfoMap[typeInfo] = nsInfo
    return nsInfo
 end
@@ -699,7 +699,7 @@ function TransUnitBase:pushModule( processInfo, externalFlag, name, mutable )
    end
    
    if not self.typeId2ClassMap[typeInfo:get_typeId()] then
-      local namespace = Nodes.NamespaceInfo.new(modName, self.scope, typeInfo)
+      local namespace = Nodes.NamespaceInfo._new(modName, self.scope, typeInfo)
       self.typeId2ClassMap[typeInfo:get_typeId()] = namespace
    end
    
@@ -866,7 +866,7 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
    if  nil == namespace then
       local _namespace = namespace
    
-      namespace = Nodes.NamespaceInfo.new(name, self.scope, typeInfo)
+      namespace = Nodes.NamespaceInfo._new(name, self.scope, typeInfo)
    end
    
    self.typeId2ClassMap[typeInfo:get_typeId(  )] = namespace
@@ -883,7 +883,7 @@ function TransUnitBase:popClass(  )
 
    self:popScope(  )
 end
-function TransUnitBase.setmeta( obj )
+function TransUnitBase._setmeta( obj )
   setmetatable( obj, { __index = TransUnitBase  } )
 end
 function TransUnitBase:get_globalScope()
@@ -920,12 +920,12 @@ function SimpeTransUnit:getLatestPos(  )
 
    return self.latestPos
 end
-function SimpeTransUnit.setmeta( obj )
+function SimpeTransUnit._setmeta( obj )
   setmetatable( obj, { __index = SimpeTransUnit  } )
 end
-function SimpeTransUnit.new( __superarg1, __superarg2,latestPos, macroMode, nearCode )
+function SimpeTransUnit._new( __superarg1, __superarg2,latestPos, macroMode, nearCode )
    local obj = {}
-   SimpeTransUnit.setmeta( obj )
+   SimpeTransUnit._setmeta( obj )
    if obj.__init then
       obj:__init( __superarg1, __superarg2,latestPos, macroMode, nearCode )
    end

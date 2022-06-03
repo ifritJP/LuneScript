@@ -1043,7 +1043,8 @@ endif
 
 
 diff-result:
-	(cd work/1; find test/ -iname '*.lua' -exec diff {} ../4/{} \; )
+	(cd work/1; find test/ -iname '*.lua' -exec diff -U 0 {} ../4/{} \; ) | tee work/diff.work1
+	@if test -s work/diff.work1; then echo "======diff work/diff.work1====== "; exit 1; fi
 	diff -u -r test/proj/  work/3/test/proj/ \
 		-I '_moduleObj.__buildId.*' -I '.*buildId = .*'
 ifneq ($(LANG_KIND),lua)

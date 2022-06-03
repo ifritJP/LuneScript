@@ -129,12 +129,12 @@ function Result:checkNotEq( val1, val2, val1txt, val2txt, msg, mod, lineNo )
    self:err( string.format( "equal -- %s:%s:[%s] == %s:[%s]\n", msg or "", val1txt, val1, val2txt, val2), mod, lineNo )
    return false
 end
-function Result.setmeta( obj )
+function Result._setmeta( obj )
   setmetatable( obj, { __index = Result  } )
 end
-function Result.new( name, okNum, ngNum )
+function Result._new( name, okNum, ngNum )
    local obj = {}
-   Result.setmeta( obj )
+   Result._setmeta( obj )
    if obj.__init then
       obj:__init( name, okNum, ngNum )
    end
@@ -150,12 +150,12 @@ end
 
 local Ctrl = {}
 _moduleObj.Ctrl = Ctrl
-function Ctrl.setmeta( obj )
+function Ctrl._setmeta( obj )
   setmetatable( obj, { __index = Ctrl  } )
 end
-function Ctrl.new( result )
+function Ctrl._new( result )
    local obj = {}
-   Ctrl.setmeta( obj )
+   Ctrl._setmeta( obj )
    if obj.__init then
       obj:__init( result )
    end
@@ -204,12 +204,12 @@ end
 
 
 local TestCase = {}
-function TestCase.setmeta( obj )
+function TestCase._setmeta( obj )
   setmetatable( obj, { __index = TestCase  } )
 end
-function TestCase.new( func, result )
+function TestCase._new( func, result )
    local obj = {}
-   TestCase.setmeta( obj )
+   TestCase._setmeta( obj )
    if obj.__init then
       obj:__init( func, result )
    end
@@ -229,9 +229,9 @@ end
 
 
 local TestModuleInfo = {}
-function TestModuleInfo.new( name )
+function TestModuleInfo._new( name )
    local obj = {}
-   TestModuleInfo.setmeta( obj )
+   TestModuleInfo._setmeta( obj )
    if obj.__init then obj:__init( name ); end
    return obj
 end
@@ -259,7 +259,7 @@ function TestModuleInfo:run(  )
          local testcase = __map[ name ]
          do
             print( string.format( "%s: %s", name, string.rep( "-", 15 )) )
-            testcase:get_func()( Ctrl.new(testcase:get_result()) )
+            testcase:get_func()( Ctrl._new(testcase:get_result()) )
          end
       end
    end
@@ -288,7 +288,7 @@ function TestModuleInfo:outputResult( stream )
    end
    
 end
-function TestModuleInfo.setmeta( obj )
+function TestModuleInfo._setmeta( obj )
   setmetatable( obj, { __index = TestModuleInfo  } )
 end
 function TestModuleInfo:get_runned()
@@ -309,12 +309,12 @@ local function registerTestcase( modName, caseName, testcase )
    if  nil == info then
       local _info = info
    
-      info = TestModuleInfo.new(modName)
+      info = TestModuleInfo._new(modName)
       testModuleMap[modName] = info
    end
    
-   local result = Result.new(caseName, 0, 0)
-   info:addCase( caseName, TestCase.new(testcase, result) )
+   local result = Result._new(caseName, 0, 0)
+   info:addCase( caseName, TestCase._new(testcase, result) )
 end
 _moduleObj.registerTestcase = registerTestcase
 

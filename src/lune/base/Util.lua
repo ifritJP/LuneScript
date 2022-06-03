@@ -205,9 +205,9 @@ _moduleObj.splitModule = splitModule
 
 local OrderedSet = {}
 _moduleObj.OrderedSet = OrderedSet
-function OrderedSet.new(  )
+function OrderedSet._new(  )
    local obj = {}
-   OrderedSet.setmeta( obj )
+   OrderedSet._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -227,7 +227,7 @@ function OrderedSet:add( val )
 end
 function OrderedSet:clone(  )
 
-   local obj = OrderedSet.new()
+   local obj = OrderedSet._new()
    for __index, val in ipairs( self.list ) do
       obj.set[val]= true
       table.insert( obj.list, val )
@@ -248,7 +248,7 @@ function OrderedSet:removeLast(  )
    self.set[self.list[#self.list]]= nil
    table.remove( self.list )
 end
-function OrderedSet.setmeta( obj )
+function OrderedSet._setmeta( obj )
   setmetatable( obj, { __index = OrderedSet  } )
 end
 function OrderedSet:get_list()
@@ -258,9 +258,9 @@ end
 
 local OrderdMap = {}
 _moduleObj.OrderdMap = OrderdMap
-function OrderdMap.new(  )
+function OrderdMap._new(  )
    local obj = {}
-   OrderdMap.setmeta( obj )
+   OrderdMap._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -286,7 +286,7 @@ function OrderdMap:add( key, val, overwrite )
    self.map[key] = val
    table.insert( self.keyList, key )
 end
-function OrderdMap.setmeta( obj )
+function OrderdMap._setmeta( obj )
   setmetatable( obj, { __index = OrderdMap  } )
 end
 function OrderdMap:get_map()
@@ -300,14 +300,14 @@ end
 local memStream = {}
 setmetatable( memStream, { ifList = {oStream,} } )
 _moduleObj.memStream = memStream
-function memStream.new(  )
+function memStream._new(  )
    local obj = {}
-   memStream.setmeta( obj )
+   memStream._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
 function memStream:__init() 
-   self.txt = Str.Builder.new()
+   self.txt = Str.Builder._new()
 end
 function memStream:get_txt(  )
 
@@ -327,7 +327,7 @@ function memStream:flush(  )
 
    self.txt:flush(  )
 end
-function memStream.setmeta( obj )
+function memStream._setmeta( obj )
   setmetatable( obj, { __index = memStream  } )
 end
 
@@ -335,9 +335,9 @@ end
 local TxtStream = {}
 setmetatable( TxtStream, { ifList = {iStream,} } )
 _moduleObj.TxtStream = TxtStream
-function TxtStream.new( txt )
+function TxtStream._new( txt )
    local obj = {}
-   TxtStream.setmeta( obj )
+   TxtStream._setmeta( obj )
    if obj.__init then obj:__init( txt ); end
    return obj
 end
@@ -383,7 +383,7 @@ end
 function TxtStream:close(  )
 
 end
-function TxtStream.setmeta( obj )
+function TxtStream._setmeta( obj )
   setmetatable( obj, { __index = TxtStream  } )
 end
 function TxtStream:get_txt()
@@ -407,12 +407,12 @@ end
 function NullOStream:flush(  )
 
 end
-function NullOStream.setmeta( obj )
+function NullOStream._setmeta( obj )
   setmetatable( obj, { __index = NullOStream  } )
 end
-function NullOStream.new(  )
+function NullOStream._new(  )
    local obj = {}
-   NullOStream.setmeta( obj )
+   NullOStream._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -425,12 +425,12 @@ end
 
 local SourceStream = {}
 _moduleObj.SourceStream = SourceStream
-function SourceStream.setmeta( obj )
+function SourceStream._setmeta( obj )
   setmetatable( obj, { __index = SourceStream  } )
 end
-function SourceStream.new(  )
+function SourceStream._new(  )
    local obj = {}
-   SourceStream.setmeta( obj )
+   SourceStream._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -444,9 +444,9 @@ end
 local SimpleSourceOStream = {}
 setmetatable( SimpleSourceOStream, { ifList = {SourceStream,} } )
 _moduleObj.SimpleSourceOStream = SimpleSourceOStream
-function SimpleSourceOStream.new( stream, headStream, stepIndent )
+function SimpleSourceOStream._new( stream, headStream, stepIndent )
    local obj = {}
-   SimpleSourceOStream.setmeta( obj )
+   SimpleSourceOStream._setmeta( obj )
    if obj.__init then obj:__init( stream, headStream, stepIndent ); end
    return obj
 end
@@ -535,7 +535,7 @@ function SimpleSourceOStream:returnToSource(  )
 
    self.nowStream = self.srcStream
 end
-function SimpleSourceOStream.setmeta( obj )
+function SimpleSourceOStream._setmeta( obj )
   setmetatable( obj, { __index = SimpleSourceOStream  } )
 end
 do

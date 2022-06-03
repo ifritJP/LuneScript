@@ -154,9 +154,9 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local NamespaceInfo = {}
-function NamespaceInfo.new( parent, nsType )
+function NamespaceInfo._new( parent, nsType )
    local obj = {}
-   NamespaceInfo.setmeta( obj )
+   NamespaceInfo._setmeta( obj )
    if obj.__init then obj:__init( parent, nsType ); end
    return obj
 end
@@ -188,7 +188,7 @@ function NamespaceInfo:getNewId( nodeKind )
    if  nil == idProv then
       local _idProv = idProv
    
-      local work = Ast.IdProvider.new(0, 100000)
+      local work = Ast.IdProvider._new(0, 100000)
       self.idProvMap[nodeKind] = work
       idProv = work
    end
@@ -213,7 +213,7 @@ function NamespaceInfo:getIdTxt(  )
    end
    
 end
-function NamespaceInfo.setmeta( obj )
+function NamespaceInfo._setmeta( obj )
   setmetatable( obj, { __index = NamespaceInfo  } )
 end
 function NamespaceInfo:get_subId()
@@ -230,9 +230,9 @@ local declNameSpaceNodeKindSet = {[Nodes.NodeKind.get_DeclClass()] = true, [Node
 
 local Index = {}
 _moduleObj.Index = Index
-function Index.new( nsInfo, index )
+function Index._new( nsInfo, index )
    local obj = {}
-   Index.setmeta( obj )
+   Index._setmeta( obj )
    if obj.__init then obj:__init( nsInfo, index ); end
    return obj
 end
@@ -244,7 +244,7 @@ function Index:getIdTxt(  )
 
    return string.format( "%s_%d", self.nsInfo:getIdTxt(  ), self.index)
 end
-function Index.setmeta( obj )
+function Index._setmeta( obj )
   setmetatable( obj, { __index = Index  } )
 end
 function Index:get_nsInfo()
@@ -256,16 +256,16 @@ end
 
 local Indexer = {}
 _moduleObj.Indexer = Indexer
-function Indexer.new( processInfo )
+function Indexer._new( processInfo )
    local obj = {}
-   Indexer.setmeta( obj )
+   Indexer._setmeta( obj )
    if obj.__init then obj:__init( processInfo ); end
    return obj
 end
 function Indexer:__init(processInfo) 
    self.nsType2nsInfo = {}
    self.processInfo = processInfo
-   self.nsInfo = NamespaceInfo.new(nil, Ast.headTypeInfo)
+   self.nsInfo = NamespaceInfo._new(nil, Ast.headTypeInfo)
    self.node2Index = {}
    self.targetNodeKindSet = {}
 end
@@ -278,7 +278,7 @@ function Indexer:visit( targetNode, dept )
    targetNode:visit( function ( node, parent, relation, depth )
    
       if _lune._Set_has(self.targetNodeKindSet, node:get_kind() ) then
-         self.node2Index[node] = Index.new(self.nsInfo, self.nsInfo:getNewId( node:get_kind() ))
+         self.node2Index[node] = Index._new(self.nsInfo, self.nsInfo:getNewId( node:get_kind() ))
       end
       
       
@@ -297,7 +297,7 @@ function Indexer:visit( targetNode, dept )
          end
          
          
-         self.nsInfo = NamespaceInfo.new(parentNsInfo, node:get_expType())
+         self.nsInfo = NamespaceInfo._new(parentNsInfo, node:get_expType())
          self.nsType2nsInfo[node:get_expType()] = self.nsInfo
          
          self:visit( node, depth + 1 )
@@ -334,7 +334,7 @@ function Indexer:dump(  )
    end
    
 end
-function Indexer.setmeta( obj )
+function Indexer._setmeta( obj )
   setmetatable( obj, { __index = Indexer  } )
 end
 function Indexer:get_node2Index()

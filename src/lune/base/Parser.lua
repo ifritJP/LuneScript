@@ -173,12 +173,12 @@ _moduleObj.Token = Token
 
 local Parser = {}
 _moduleObj.Parser = Parser
-function Parser.setmeta( obj )
+function Parser._setmeta( obj )
   setmetatable( obj, { __index = Parser  } )
 end
-function Parser.new(  )
+function Parser._new(  )
    local obj = {}
-   Parser.setmeta( obj )
+   Parser._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -191,12 +191,12 @@ end
 
 local PushbackParser = {}
 _moduleObj.PushbackParser = PushbackParser
-function PushbackParser.setmeta( obj )
+function PushbackParser._setmeta( obj )
   setmetatable( obj, { __index = PushbackParser  } )
 end
-function PushbackParser.new(  )
+function PushbackParser._new(  )
    local obj = {}
-   PushbackParser.setmeta( obj )
+   PushbackParser._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -271,9 +271,9 @@ _moduleObj.convFromRawToStr = convFromRawToStr
 local TokenListParser = {}
 setmetatable( TokenListParser, { __index = Parser } )
 _moduleObj.TokenListParser = TokenListParser
-function TokenListParser.new( tokenList, streamName, overridePos )
+function TokenListParser._new( tokenList, streamName, overridePos )
    local obj = {}
-   TokenListParser.setmeta( obj )
+   TokenListParser._setmeta( obj )
    if obj.__init then obj:__init( tokenList, streamName, overridePos ); end
    return obj
 end
@@ -305,7 +305,7 @@ function TokenListParser:getToken(  )
    
    return token
 end
-function TokenListParser.setmeta( obj )
+function TokenListParser._setmeta( obj )
   setmetatable( obj, { __index = TokenListParser  } )
 end
 
@@ -318,9 +318,9 @@ function StreamParser.setStdinStream( moduleName )
    StreamParser.stdinStreamModuleName = moduleName
    StreamParser.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
 end
-function StreamParser.new( parserSrc, async, stdinFile, pos )
+function StreamParser._new( parserSrc, async, stdinFile, pos )
    local obj = {}
-   StreamParser.setmeta( obj )
+   StreamParser._setmeta( obj )
    if obj.__init then obj:__init( parserSrc, async, stdinFile, pos ); end
    return obj
 end
@@ -354,7 +354,7 @@ function StreamParser:getStreamName(  )
 end
 function StreamParser.create( parserSrc, async, stdinFile, pos )
 
-   return StreamParser.new(parserSrc, async, stdinFile, pos)
+   return StreamParser._new(parserSrc, async, stdinFile, pos)
 end
 function StreamParser:getToken(  )
 
@@ -380,7 +380,7 @@ function StreamParser:getToken(  )
    
    return token
 end
-function StreamParser.setmeta( obj )
+function StreamParser._setmeta( obj )
   setmetatable( obj, { __index = StreamParser  } )
 end
 do
@@ -392,9 +392,9 @@ end
 local DefaultPushbackParser = {}
 setmetatable( DefaultPushbackParser, { ifList = {PushbackParser,} } )
 _moduleObj.DefaultPushbackParser = DefaultPushbackParser
-function DefaultPushbackParser.new( parser )
+function DefaultPushbackParser._new( parser )
    local obj = {}
-   DefaultPushbackParser.setmeta( obj )
+   DefaultPushbackParser._setmeta( obj )
    if obj.__init then obj:__init( parser ); end
    return obj
 end
@@ -410,7 +410,7 @@ function DefaultPushbackParser:getUsedTokenListLen(  )
 end
 function DefaultPushbackParser.createFromLnsCode( code, name )
 
-   return DefaultPushbackParser.new(StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name,nil}), false))
+   return DefaultPushbackParser._new(StreamParser._new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name,nil}), false))
 end
 function DefaultPushbackParser:createPosition( lineNo, column )
 
@@ -475,7 +475,7 @@ function DefaultPushbackParser:pushback(  )
 end
 function DefaultPushbackParser:pushbackStr( asyncParse, name, statement, pos )
 
-   local parser = StreamParser.new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name,nil}), asyncParse == true, nil, pos)
+   local parser = StreamParser._new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name,nil}), asyncParse == true, nil, pos)
    
    local list = {}
    while true do
@@ -545,7 +545,7 @@ function DefaultPushbackParser:getStreamName(  )
 
    return self.parser:getStreamName(  )
 end
-function DefaultPushbackParser.setmeta( obj )
+function DefaultPushbackParser._setmeta( obj )
   setmetatable( obj, { __index = DefaultPushbackParser  } )
 end
 function DefaultPushbackParser:get_currentToken()
@@ -564,7 +564,7 @@ local function isOp1( ope )
    return AsyncParser.isOp1( ope )
 end
 _moduleObj.isOp1 = isOp1
-local eofToken = Token.new(Types.TokenKind.Eof, "<EOF>", Position.new(0, 0, "eof"), false, {})
+local eofToken = Token._new(Types.TokenKind.Eof, "<EOF>", Position._new(0, 0, "eof"), false, {})
 local function getEofToken(  )
 
    return eofToken
@@ -585,12 +585,12 @@ function DummyParser:createPosition( lineNo, column )
 
    return Position.create( lineNo, column, self:getStreamName(  ), nil )
 end
-function DummyParser.setmeta( obj )
+function DummyParser._setmeta( obj )
   setmetatable( obj, { __index = DummyParser  } )
 end
-function DummyParser.new(  )
+function DummyParser._new(  )
    local obj = {}
-   DummyParser.setmeta( obj )
+   DummyParser._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -604,9 +604,9 @@ end
 
 local CommentLayer = {}
 _moduleObj.CommentLayer = CommentLayer
-function CommentLayer.new(  )
+function CommentLayer._new(  )
    local obj = {}
-   CommentLayer.setmeta( obj )
+   CommentLayer._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -645,7 +645,7 @@ function CommentLayer:hasInvalidComment(  )
 
    return #self.tokenList > 1 and self.tokenList[2]:get_commentList()[1] or nil
 end
-function CommentLayer.setmeta( obj )
+function CommentLayer._setmeta( obj )
   setmetatable( obj, { __index = CommentLayer  } )
 end
 function CommentLayer:get_commentList()
@@ -655,19 +655,19 @@ end
 
 local CommentCtrl = {}
 _moduleObj.CommentCtrl = CommentCtrl
-function CommentCtrl.new(  )
+function CommentCtrl._new(  )
    local obj = {}
-   CommentCtrl.setmeta( obj )
+   CommentCtrl._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
 function CommentCtrl:__init() 
-   self.layer = CommentLayer.new()
+   self.layer = CommentLayer._new()
    self.layerStack = {self.layer}
 end
 function CommentCtrl:push(  )
 
-   self.layer = CommentLayer.new()
+   self.layer = CommentLayer._new()
    table.insert( self.layerStack, self.layer )
 end
 function CommentCtrl:pop(  )
@@ -675,7 +675,7 @@ function CommentCtrl:pop(  )
    self.layer = self.layerStack[#self.layerStack]
    table.remove( self.layerStack )
 end
-function CommentCtrl.setmeta( obj )
+function CommentCtrl._setmeta( obj )
   setmetatable( obj, { __index = CommentCtrl  } )
 end
 function CommentCtrl:add( ... )
@@ -732,7 +732,7 @@ _moduleObj.quoteStr = quoteStr
 
 local function createParserFrom( src, async, stdinFile )
 
-   return StreamParser.new(src, async, stdinFile, nil)
+   return StreamParser._new(src, async, stdinFile, nil)
 end
 _moduleObj.createParserFrom = createParserFrom
 

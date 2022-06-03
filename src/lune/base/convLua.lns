@@ -89,6 +89,23 @@ fn getSymbolTxt( symbolInfo:&Ast.SymbolInfo ) : str {
 
 pub class Option {
    let mainModule:str {pub};
+   let legacyNewMode:bool {pub};
+}
+
+class NewMethod {
+   pub let newName:str;   
+   pub let setmetaName:str;
+   pri fn __init( newName:str, setmetaName:str ) {
+      self.newName = newName;
+      self.setmetaName = setmetaName;
+   }
+   pub static fn create( legacy:bool ) : NewMethod {
+      if legacy {
+         return new NewMethod( "new", "setmeta" );
+      } else {
+         return new NewMethod( "_new", "_setmeta" );
+      }
+   }
 }
 
 class ConvFilter extend Nodes.Filter<Opt> (oStream) {
@@ -129,6 +146,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    let builtinFunc:&Builtin.BuiltinFuncType;
    let builtinSym2code:&Map<&Ast.SymbolInfo,str>;
    let option:&Option;
+   let newMethod:&NewMethod;
 
 
    pub fn __init( streamName: str, stream: oStream, metaStream: oStream,
@@ -144,7 +162,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
          Util.err( "streamName == stream" );
       }
 
-
+      self.newMethod = NewMethod.create( option.$legacyNewMode );
       self.option = option;
       self.builtinFunc = builtinFunc;
       self.moduleType2SymbolMap = {};
@@ -1695,10 +1713,10 @@ pub override fn ConvFilter.processDeclClass(
    }
 
    self.writeln(```
-function %s.setmeta( obj )
+function %s.%s( obj )
   setmetatable( obj, { __index = %s %s } )
 end```
-      ( className, className, destTxt ) );
+      ( className, self.newMethod.setmetaName, className, destTxt ) );
 
    if not hasConstrFlag {
       // デフォルトコンストラクタ生成
@@ -1741,9 +1759,9 @@ end```
       }
 
       self.writeln( ```
-function %s.new( %s )
+function %s.%s( %s )
    local obj = {}
-   %s.setmeta( obj )
+   %s.%s( obj )
    if obj.__init then
       obj:__init( %s )
    end
@@ -1751,8 +1769,8 @@ function %s.new( %s )
 end
 function %s:__init( %s )
 ```
-            ( className, argTxt, className,
-              argTxt, className, argTxt ) );
+         ( className, self.newMethod.newName, argTxt, className,
+           self.newMethod.setmetaName, argTxt, className, argTxt ) );
       self.pushIndent(##);
 
       if baseInfo ~= Ast.headTypeInfo {
@@ -1867,7 +1885,7 @@ end
 function %s._fromMap( %s )
   local obj, mes = %s._fromMapSub( %s )
   if obj then
-     %s.setmeta( obj )
+     %s.%s( obj )
   end
   return obj, mes
 end
@@ -1875,7 +1893,7 @@ function %s._fromStem( %s )
   return %s._fromMap( %s )
 end
 ``` (className, className, declArgTxt,
-      className, argTxt, className,
+      className, argTxt, className, self.newMethod.setmetaName,
       className, declArgTxt, className, declArgTxt ));
 
       self.writeln( 'function %s._fromMapSub( obj, val )' (className ));
@@ -2020,7 +2038,7 @@ pub override fn ConvFilter.processExpNew(
    node: &Nodes.ExpNewNode, opt: Opt ) mut
 {
    filter( node.get_symbol(), self, node );
-   self.writeRaw( ".new(" );
+   self.writeRaw( ".%s(" (self.newMethod.newName) );
    if! node.get_argList() {
       filter( _exp,  self, node );
    }
@@ -2047,7 +2065,7 @@ pub override fn ConvFilter.processDeclConstr(
    let declInfo = node.get_declInfo();
    let classTypeInfo = unwrap declInfo.$classTypeInfo;
    let className = self.getFullName( classTypeInfo );
-   self.writeRaw( string.format( "function %s.new( ", className ) );
+   self.writeRaw( "function %s.%s( " ( className, self.newMethod.newName ) );
 
    //let isGenericClass = isGenericType( classTypeInfo );
 
@@ -2073,7 +2091,7 @@ pub override fn ConvFilter.processDeclConstr(
    self.writeln( " )" );
    self.pushIndent(##);
    self.writeln( "local obj = {}" );
-   self.writeln( "%s.setmeta( obj )" ( className ) );
+   self.writeln( "%s.%s( obj )" ( className, self.newMethod.setmetaName ) );
    self.writeln( string.format( "if obj.__init then obj:__init( %s ); end", argTxt ) );
    self.writeln( "return obj" );
    self.popIndent();
@@ -3747,7 +3765,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut conv = new ConvFilter(
          "macro", stream, new Util.NullOStream(), .ConvMeta, true, Ast.headTypeInfo,
          processInfo, .Typ, self.builtinFunc, nil, LuaVer.getCurVer(), false, true,
-         new Option( "" ) );
+         new Option( "", false ) );
 
       conv.outputDeclMacro(
          name, argNameList,
@@ -3767,7 +3785,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
       let mut conv = new ConvFilter(
          "macro", stream, new Util.NullOStream(), .ConvMeta, true, Ast.headTypeInfo,
          processInfo, .Typ, self.builtinFunc,
-         nil, LuaVer.getCurVer(), false, true, new Option( "" ) );
+         nil, LuaVer.getCurVer(), false, true, new Option( "", false ) );
 
       conv.processDeclMacro( node, new Opt( node ) );
 
@@ -3865,7 +3883,7 @@ _ = 1;
          exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
          exportInfo.$provideInfo.$symbolKind, ast.$builtinFunc,
          option.useLuneModule, option.targetLuaVer,
-         option.testing, option.useIpairs, new Option( "" ) );
+         option.testing, option.useIpairs, new Option( "", false ) );
       filterInfo.outputLuaAndMeta( unwrap ast.$node@@@Nodes.RootNode );
 
       return metaStream.$txt, stream.$txt;

@@ -153,12 +153,12 @@ local Log = _lune.loadModule( 'lune.base.Log' )
 
 local ModProjInfo = {}
 _moduleObj.ModProjInfo = ModProjInfo
-function ModProjInfo.setmeta( obj )
+function ModProjInfo._setmeta( obj )
   setmetatable( obj, { __index = ModProjInfo  } )
 end
-function ModProjInfo.new( path, projRoot, mod, fullMod )
+function ModProjInfo._new( path, projRoot, mod, fullMod )
    local obj = {}
-   ModProjInfo.setmeta( obj )
+   ModProjInfo._setmeta( obj )
    if obj.__init then
       obj:__init( path, projRoot, mod, fullMod )
    end
@@ -265,9 +265,9 @@ function ModInfo:getModPathList(  )
    
    return list
 end
-function ModInfo.new( name, moduleMap, replaceMap )
+function ModInfo._new( name, moduleMap, replaceMap )
    local obj = {}
-   ModInfo.setmeta( obj )
+   ModInfo._setmeta( obj )
    if obj.__init then obj:__init( name, moduleMap, replaceMap ); end
    return obj
 end
@@ -437,7 +437,7 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
    for __index, path in ipairs( pathList ) do
       if Depend.existFile( path ) then
          local projRoot, convMod = self:getProjRootPath( mod, path )
-         local projInfo = ModProjInfo.new(path, projRoot, convMod, mod)
+         local projInfo = ModProjInfo._new(path, projRoot, convMod, mod)
          self.path2modProjInfo[workMod] = projInfo
          self.latestModProjInfo = projInfo
          return _lune.newAlge( GoModResult.Found, {projInfo})
@@ -476,7 +476,7 @@ function ModInfo:getLuaModulePath( mod, baseDir )
    
    return info:get_mod(), info:get_projRoot(), info:get_fullMod()
 end
-function ModInfo.setmeta( obj )
+function ModInfo._setmeta( obj )
   setmetatable( obj, { __index = ModInfo  } )
 end
 function ModInfo:get_name()
@@ -599,7 +599,7 @@ local function getGoMap(  )
       end
    end
    
-   local modInfo = ModInfo.new(name, requireMap, replaceMap)
+   local modInfo = ModInfo._new(name, requireMap, replaceMap)
    return modInfo
 end
 _moduleObj.getGoMap = getGoMap

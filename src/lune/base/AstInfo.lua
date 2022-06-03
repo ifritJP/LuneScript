@@ -20,12 +20,12 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local ASTInfo = {}
 _moduleObj.ASTInfo = ASTInfo
-function ASTInfo.setmeta( obj )
+function ASTInfo._setmeta( obj )
   setmetatable( obj, { __index = ASTInfo  } )
 end
-function ASTInfo.new( node, exportInfo, streamName, builtinFunc )
+function ASTInfo._new( node, exportInfo, streamName, builtinFunc )
    local obj = {}
-   ASTInfo.setmeta( obj )
+   ASTInfo._setmeta( obj )
    if obj.__init then
       obj:__init( node, exportInfo, streamName, builtinFunc )
    end

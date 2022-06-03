@@ -361,12 +361,12 @@ _moduleObj.toLuavalNoasync = toLuavalNoasync
 
 local MacroMetaArgInfo = {}
 setmetatable( MacroMetaArgInfo, { ifList = {Mapping,} } )
-function MacroMetaArgInfo.setmeta( obj )
+function MacroMetaArgInfo._setmeta( obj )
   setmetatable( obj, { __index = MacroMetaArgInfo  } )
 end
-function MacroMetaArgInfo.new( name, typeId )
+function MacroMetaArgInfo._new( name, typeId )
    local obj = {}
-   MacroMetaArgInfo.setmeta( obj )
+   MacroMetaArgInfo._setmeta( obj )
    if obj.__init then
       obj:__init( name, typeId )
    end
@@ -383,7 +383,7 @@ end
 function MacroMetaArgInfo._fromMap( val )
   local obj, mes = MacroMetaArgInfo._fromMapSub( {}, val )
   if obj then
-     MacroMetaArgInfo.setmeta( obj )
+     MacroMetaArgInfo._setmeta( obj )
   end
   return obj, mes
 end
@@ -404,12 +404,12 @@ end
 
 local MacroMetaInfo = {}
 setmetatable( MacroMetaInfo, { ifList = {Mapping,} } )
-function MacroMetaInfo.setmeta( obj )
+function MacroMetaInfo._setmeta( obj )
   setmetatable( obj, { __index = MacroMetaInfo  } )
 end
-function MacroMetaInfo.new( name, pos, argList, symList, stmtBlock, tokenList )
+function MacroMetaInfo._new( name, pos, argList, symList, stmtBlock, tokenList )
    local obj = {}
-   MacroMetaInfo.setmeta( obj )
+   MacroMetaInfo._setmeta( obj )
    if obj.__init then
       obj:__init( name, pos, argList, symList, stmtBlock, tokenList )
    end
@@ -430,7 +430,7 @@ end
 function MacroMetaInfo._fromMap( val )
   local obj, mes = MacroMetaInfo._fromMapSub( {}, val )
   if obj then
-     MacroMetaInfo.setmeta( obj )
+     MacroMetaInfo._setmeta( obj )
   end
   return obj, mes
 end
@@ -456,9 +456,9 @@ end
 
 local MacroParser = {}
 setmetatable( MacroParser, { __index = Parser.Parser } )
-function MacroParser.new( tokenList, name, overridePos )
+function MacroParser._new( tokenList, name, overridePos )
    local obj = {}
-   MacroParser.setmeta( obj )
+   MacroParser._setmeta( obj )
    if obj.__init then obj:__init( tokenList, name, overridePos ); end
    return obj
 end
@@ -486,7 +486,7 @@ function MacroParser:getToken(  )
    do
       local _exp = self.overridePos
       if _exp ~= nil then
-         return Types.Token.new(token.kind, token.txt, self:createPosition( token.pos.lineNo, token.pos.column ), token.consecutive, token:get_commentList())
+         return Types.Token._new(token.kind, token.txt, self:createPosition( token.pos.lineNo, token.pos.column ), token.consecutive, token:get_commentList())
       end
    end
    
@@ -496,7 +496,7 @@ function MacroParser:getStreamName(  )
 
    return self.name
 end
-function MacroParser.setmeta( obj )
+function MacroParser._setmeta( obj )
   setmetatable( obj, { __index = MacroParser  } )
 end
 
@@ -594,9 +594,9 @@ function ExtMacroInfo:getTokenList(  )
 
    return self.tokenList
 end
-function ExtMacroInfo.new( name, func, symbol2MacroValInfoMap, argList, tokenList, baseDir )
+function ExtMacroInfo._new( name, func, symbol2MacroValInfoMap, argList, tokenList, baseDir )
    local obj = {}
-   ExtMacroInfo.setmeta( obj )
+   ExtMacroInfo._setmeta( obj )
    if obj.__init then obj:__init( name, func, symbol2MacroValInfoMap, argList, tokenList, baseDir ); end
    return obj
 end
@@ -608,7 +608,7 @@ function ExtMacroInfo:__init(name, func, symbol2MacroValInfoMap, argList, tokenL
    self.tokenList = tokenList
    self.baseDir = baseDir
 end
-function ExtMacroInfo.setmeta( obj )
+function ExtMacroInfo._setmeta( obj )
   setmetatable( obj, { __index = ExtMacroInfo  } )
 end
 function ExtMacroInfo:get_name()
@@ -621,9 +621,9 @@ end
 
 local MacroAnalyzeInfo = {}
 _moduleObj.MacroAnalyzeInfo = MacroAnalyzeInfo
-function MacroAnalyzeInfo.new( typeInfo, mode )
+function MacroAnalyzeInfo._new( typeInfo, mode )
    local obj = {}
-   MacroAnalyzeInfo.setmeta( obj )
+   MacroAnalyzeInfo._setmeta( obj )
    if obj.__init then obj:__init( typeInfo, mode ); end
    return obj
 end
@@ -634,7 +634,7 @@ function MacroAnalyzeInfo:__init(typeInfo, mode)
 end
 function MacroAnalyzeInfo:clone(  )
 
-   local obj = MacroAnalyzeInfo.new(self.typeInfo, self.mode)
+   local obj = MacroAnalyzeInfo._new(self.typeInfo, self.mode)
    obj.argIndex = self.argIndex
    return obj
 end
@@ -666,7 +666,7 @@ function MacroAnalyzeInfo:isAnalyzingBlockArg(  )
 
    return self.mode == Nodes.MacroMode.AnalyzeArg and self:getCurArgType(  ) == Ast.builtinTypeBlockArg
 end
-function MacroAnalyzeInfo.setmeta( obj )
+function MacroAnalyzeInfo._setmeta( obj )
   setmetatable( obj, { __index = MacroAnalyzeInfo  } )
 end
 function MacroAnalyzeInfo:get_typeInfo()
@@ -680,12 +680,12 @@ function MacroAnalyzeInfo:get_argIndex()
 end
 
 local DefMacroSrc = {}
-function DefMacroSrc.setmeta( obj )
+function DefMacroSrc._setmeta( obj )
   setmetatable( obj, { __index = DefMacroSrc  } )
 end
-function DefMacroSrc.new( luaCode, declInfo, symbol2MacroValInfoMap, baseDir, asyncFlag )
+function DefMacroSrc._new( luaCode, declInfo, symbol2MacroValInfoMap, baseDir, asyncFlag )
    local obj = {}
-   DefMacroSrc.setmeta( obj )
+   DefMacroSrc._setmeta( obj )
    if obj.__init then
       obj:__init( luaCode, declInfo, symbol2MacroValInfoMap, baseDir, asyncFlag )
    end
@@ -718,9 +718,9 @@ end
 
 local DefMacroInfoWithSrc = {}
 setmetatable( DefMacroInfoWithSrc, { __index = Nodes.DefMacroInfo } )
-function DefMacroInfoWithSrc.new( func, srcInfo, symbol2MacroValInfoMap )
+function DefMacroInfoWithSrc._new( func, srcInfo, symbol2MacroValInfoMap )
    local obj = {}
-   DefMacroInfoWithSrc.setmeta( obj )
+   DefMacroInfoWithSrc._setmeta( obj )
    if obj.__init then obj:__init( func, srcInfo, symbol2MacroValInfoMap ); end
    return obj
 end
@@ -730,7 +730,7 @@ function DefMacroInfoWithSrc:__init(func, srcInfo, symbol2MacroValInfoMap)
    
    self.srcInfo = srcInfo
 end
-function DefMacroInfoWithSrc.setmeta( obj )
+function DefMacroInfoWithSrc._setmeta( obj )
   setmetatable( obj, { __index = DefMacroInfoWithSrc  } )
 end
 function DefMacroInfoWithSrc:get_srcInfo()
@@ -770,9 +770,9 @@ function MacroCtrl:setUsing__var(  )
    end
    
 end
-function MacroCtrl.new( macroEval, validAsyncMacro )
+function MacroCtrl._new( macroEval, validAsyncMacro )
    local obj = {}
-   MacroCtrl.setmeta( obj )
+   MacroCtrl._setmeta( obj )
    if obj.__init then obj:__init( macroEval, validAsyncMacro ); end
    return obj
 end
@@ -789,7 +789,7 @@ function MacroCtrl:__init(macroEval, validAsyncMacro)
    self.typeId2ImportedMacroInfo = {}
    self.symbol2ValueMapForMacro = {}
    self.macroEval = macroEval
-   self.analyzeInfo = MacroAnalyzeInfo.new(Ast.builtinTypeNone, Nodes.MacroMode.None)
+   self.analyzeInfo = MacroAnalyzeInfo._new(Ast.builtinTypeNone, Nodes.MacroMode.None)
    self.macroCallLineNo = nil
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
    
@@ -797,7 +797,7 @@ function MacroCtrl:__init(macroEval, validAsyncMacro)
 end
 function MacroCtrl:clone(  )
 
-   local obj = MacroCtrl.new(self.macroEval, self.validAsyncMacro)
+   local obj = MacroCtrl._new(self.macroEval, self.validAsyncMacro)
    
    if not self.validAsyncMacro then
       obj.toLuavalLuaAsync = self.toLuavalLuaAsync
@@ -843,7 +843,7 @@ function MacroCtrl:clone(  )
          
          
          stmtFunc = nil
-         obj.declMacroInfoMap[key] = DefMacroInfoWithSrc.new(stmtFunc, srcInfo, srcInfo:get_symbol2MacroValInfoMap())
+         obj.declMacroInfoMap[key] = DefMacroInfoWithSrc._new(stmtFunc, srcInfo, srcInfo:get_symbol2MacroValInfoMap())
       end
       
    else
@@ -888,7 +888,7 @@ function MacroCtrl:setToUseLnsLoad(  )
    end
    
 end
-function MacroCtrl.setmeta( obj )
+function MacroCtrl._setmeta( obj )
   setmetatable( obj, { __index = MacroCtrl  } )
 end
 function MacroCtrl:get_useModuleMacroSet()
@@ -1096,7 +1096,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                               end
                            end
                            
-                           self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                           self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo._new(valMap, typeInfo, nil)
                         end
                         
                      end
@@ -1221,7 +1221,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                               end
                            end
                            
-                           self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo.new(valMap, typeInfo, nil)
+                           self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo._new(valMap, typeInfo, nil)
                         end
                         
                      end
@@ -1270,7 +1270,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
          if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
             local argType = arg:get_typeInfo()
             local argName = arg:get_name()
-            self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo.new(argValMap[index], argType, macroArgName2ArgNode[argName])
+            self.symbol2ValueMapForMacro[argName] = Nodes.MacroValInfo._new(argValMap[index], argType, macroArgName2ArgNode[argName])
          else
           
             return "not support ... in macro"
@@ -1289,7 +1289,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
    end
    
    
-   return MacroParser.new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
+   return MacroParser._new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
 
 
@@ -1302,7 +1302,7 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       local orgPos
       
       if #macroInfo.pos == 2 then
-         orgPos = Types.Position.new(macroInfo.pos[1], macroInfo.pos[2], lnsPath)
+         orgPos = Types.Position._new(macroInfo.pos[1], macroInfo.pos[2], lnsPath)
       else
        
          Util.err( "macroInfo.pos is illegal" )
@@ -1313,13 +1313,13 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       local symbol2MacroValInfoMap = {}
       for __index, argInfo in ipairs( macroInfo.argList ) do
          local argTypeInfo = _lune.unwrap( typeId2TypeInfo[argInfo.typeId])
-         table.insert( argList, Nodes.MacroArgInfo.new(argInfo.name, argTypeInfo) )
+         table.insert( argList, Nodes.MacroArgInfo._new(argInfo.name, argTypeInfo) )
          table.insert( argNameList, argInfo.name )
       end
       
       for __index, symInfo in ipairs( macroInfo.symList ) do
          local symTypeInfo = _lune.unwrap( typeId2TypeInfo[symInfo.typeId])
-         symbol2MacroValInfoMap[symInfo.name] = Nodes.MacroValInfo.new(nil, symTypeInfo, nil)
+         symbol2MacroValInfoMap[symInfo.name] = Nodes.MacroValInfo._new(nil, symTypeInfo, nil)
       end
       
       
@@ -1334,7 +1334,7 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
          else
           
             local pos = Types.Position.create( lineNo, column, string.format( "macro:%s", macroInfo.name), orgPos )
-            table.insert( tokenList, Parser.Token.new(_lune.unwrap( Parser.TokenKind._from( math.floor(tokenInfo[1]) )), txt, pos, false) )
+            table.insert( tokenList, Parser.Token._new(_lune.unwrap( Parser.TokenKind._from( math.floor(tokenInfo[1]) )), txt, pos, false) )
             column = column + #txt + 1
          end
          
@@ -1346,7 +1346,7 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       
       stmtFunc, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false )
       if stmtFunc ~= nil then
-         local extMacroInfo = ExtMacroInfo.new(macroInfo.name, stmtFunc, symbol2MacroValInfoMap, argList, tokenList, baseDir)
+         local extMacroInfo = ExtMacroInfo._new(macroInfo.name, stmtFunc, symbol2MacroValInfoMap, argList, tokenList, baseDir)
          
          self.typeId2ImportedMacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
          importedMacroInfoMap[macroTypeInfo:get_typeId()] = extMacroInfo
@@ -1405,7 +1405,7 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
             do
                local typeInfo = macroScope:getTypeInfoChild( name )
                if typeInfo ~= nil then
-                  remap[name] = Nodes.MacroValInfo.new(macroValInfo.val, typeInfo, macroValInfo.argNode)
+                  remap[name] = Nodes.MacroValInfo._new(macroValInfo.val, typeInfo, macroValInfo.argNode)
                else
                   remap[name] = macroValInfo
                end
@@ -1419,8 +1419,8 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
       end
       
       
-      local srcInfo = DefMacroSrc.new(luaCode, node:get_declInfo(), remap, baseDir, asyncFlag)
-      local macroInfo = DefMacroInfoWithSrc.new(stmtFunc, srcInfo, remap)
+      local srcInfo = DefMacroSrc._new(luaCode, node:get_declInfo(), remap, baseDir, asyncFlag)
+      local macroInfo = DefMacroInfoWithSrc._new(stmtFunc, srcInfo, remap)
       if Ast.isPubToExternal( node:get_expType():get_accessMode() ) then
          self.declPubMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
       else
@@ -1452,7 +1452,7 @@ local function expandVal( tokenList, workval, pos )
          if _switchExp == "boolean" then
             local token = string.format( "%s", val)
             local kind = Parser.TokenKind.Kywd
-            table.insert( tokenList, Parser.Token.new(kind, token, pos, false) )
+            table.insert( tokenList, Parser.Token._new(kind, token, pos, false) )
          elseif _switchExp == "number" then
             local num = string.format( "%g", val * 1.0)
             local kind = Parser.TokenKind.Int
@@ -1460,9 +1460,9 @@ local function expandVal( tokenList, workval, pos )
                kind = Parser.TokenKind.Real
             end
             
-            table.insert( tokenList, Parser.Token.new(kind, num, pos, false) )
+            table.insert( tokenList, Parser.Token._new(kind, num, pos, false) )
          elseif _switchExp == "string" then
-            table.insert( tokenList, Parser.Token.new(Parser.TokenKind.Str, Parser.quoteStr( val ), pos, false) )
+            table.insert( tokenList, Parser.Token._new(Parser.TokenKind.Str, Parser.quoteStr( val ), pos, false) )
          else 
             
                return string.format( "not support ,, List -- %s", type( val ))
@@ -1478,14 +1478,14 @@ local function pushbackTxt( pushbackParser, txtList, streamName, pos )
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
       local parser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
-      local workParser = Parser.DefaultPushbackParser.new(parser)
+      local workParser = Parser.DefaultPushbackParser._new(parser)
       while true do
          local worktoken = workParser:getTokenNoErr(  )
          if worktoken.kind == Parser.TokenKind.Eof then
             break
          end
          
-         table.insert( tokenList, Parser.Token.new(worktoken.kind, worktoken.txt, pos, false) )
+         table.insert( tokenList, Parser.Token._new(worktoken.kind, worktoken.txt, pos, false) )
       end
       
    end
@@ -1603,12 +1603,12 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             
             local nameList = Util.splitStr( fullname, "[^%.]+" )
             local enumValInfo = _lune.unwrap( enumTypeInfo:get_val2EnumValInfo()[_lune.unwrap( macroVal.val)])
-            nextToken = Parser.Token.new(Parser.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
+            nextToken = Parser.Token._new(Parser.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
             parser:pushbackToken( nextToken )
             for index = #nameList, 1, -1 do
-               nextToken = Parser.Token.new(Parser.TokenKind.Dlmt, ".", nextToken.pos, false)
+               nextToken = Parser.Token._new(Parser.TokenKind.Dlmt, ".", nextToken.pos, false)
                parser:pushbackToken( nextToken )
-               nextToken = Parser.Token.new(Parser.TokenKind.Symb, nameList[index], nextToken.pos, false)
+               nextToken = Parser.Token._new(Parser.TokenKind.Symb, nameList[index], nextToken.pos, false)
                parser:pushbackToken( nextToken )
             end
             
@@ -1648,7 +1648,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                newToken = string.format( "%s%s", newToken, txt)
             end
             
-            nextToken = Parser.Token.new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
+            nextToken = Parser.Token._new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
             parser:pushbackToken( nextToken )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
             local txt = (_lune.unwrap( macroVal.val) )
@@ -1663,7 +1663,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                rawTxt = Parser.quoteStr( txt )
             end
             
-            nextToken = Parser.Token.new(Parser.TokenKind.Str, rawTxt, nextToken.pos, false)
+            nextToken = Parser.Token._new(Parser.TokenKind.Str, rawTxt, nextToken.pos, false)
             parser:pushbackToken( nextToken )
          else
           
@@ -1686,12 +1686,12 @@ end
 
 local ErrorMess = {}
 _moduleObj.ErrorMess = ErrorMess
-function ErrorMess.setmeta( obj )
+function ErrorMess._setmeta( obj )
   setmetatable( obj, { __index = ErrorMess  } )
 end
-function ErrorMess.new( pos, mess )
+function ErrorMess._new( pos, mess )
    local obj = {}
-   ErrorMess.setmeta( obj )
+   ErrorMess._setmeta( obj )
    if obj.__init then
       obj:__init( pos, mess )
    end
@@ -1732,7 +1732,7 @@ function MacroCtrl:expandSymbol( parser, inTestBlock, prefixToken, exp, nodeMana
                   format = "' %s' "
                else
                 
-                  table.insert( errMessList, ErrorMess.new(_lune.unwrap( symbolInfo:get_pos()), string.format( "not support ,, -- %s", valType:getTxt(  ))) )
+                  table.insert( errMessList, ErrorMess._new(_lune.unwrap( symbolInfo:get_pos()), string.format( "not support ,, -- %s", valType:getTxt(  ))) )
                end
                
             else
@@ -1749,7 +1749,7 @@ function MacroCtrl:expandSymbol( parser, inTestBlock, prefixToken, exp, nodeMana
       
    end
    
-   local newToken = Parser.Token.new(Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
+   local newToken = Parser.Token._new(Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
    
    local expListNode = Nodes.ExpListNode.create( nodeManager, exp:get_pos(), inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false )
    local dddNode = Nodes.ExpToDDDNode.create( nodeManager, exp:get_pos(), inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), expListNode )
@@ -1761,7 +1761,7 @@ end
 function MacroCtrl:registVar( symbolList )
 
    for __index, symbolInfo in ipairs( symbolList ) do
-      local info = Nodes.MacroValInfo.new(nil, symbolInfo:get_typeInfo(), nil)
+      local info = Nodes.MacroValInfo._new(nil, symbolInfo:get_typeInfo(), nil)
       self.symbol2ValueMapForMacro[symbolInfo:get_name()] = info
    end
    
@@ -1787,7 +1787,7 @@ end
 
 function MacroCtrl:startExpandMode( pos, typeInfo, callback )
 
-   self.analyzeInfo = MacroAnalyzeInfo.new(typeInfo, Nodes.MacroMode.Expand)
+   self.analyzeInfo = MacroAnalyzeInfo._new(typeInfo, Nodes.MacroMode.Expand)
    self.macroCallLineNo = pos
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
    
@@ -1799,7 +1799,7 @@ end
 
 function MacroCtrl:startAnalyzeArgMode( macroFuncType )
 
-   self.analyzeInfo = MacroAnalyzeInfo.new(macroFuncType, Nodes.MacroMode.AnalyzeArg)
+   self.analyzeInfo = MacroAnalyzeInfo._new(macroFuncType, Nodes.MacroMode.AnalyzeArg)
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
 end
 
@@ -1849,10 +1849,10 @@ local function nodeToCodeTxt( node, moduleTypeInfo )
 
    local code
    
-   local memStream = Util.memStream.new()
+   local memStream = Util.memStream._new()
    local formatter = Formatter.createFilter( moduleTypeInfo, memStream )
    
-   node:processFilter( formatter, Formatter.Opt.new(node) )
+   node:processFilter( formatter, Formatter.Opt._new(node) )
    
    code = memStream:get_txt()
    return code

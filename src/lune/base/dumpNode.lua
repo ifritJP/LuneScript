@@ -129,9 +129,9 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 
 local Opt = {}
 _moduleObj.Opt = Opt
-function Opt.new( prefix, depth )
+function Opt._new( prefix, depth )
    local obj = {}
-   Opt.setmeta( obj )
+   Opt._setmeta( obj )
    if obj.__init then obj:__init( prefix, depth ); end
    return obj
 end
@@ -153,11 +153,11 @@ function Opt:nextOpt(  )
       end
    end
    
-   local opt = Opt.new(self.prefix .. "  ", self.depth + 1)
+   local opt = Opt._new(self.prefix .. "  ", self.depth + 1)
    self.next = opt
    return opt
 end
-function Opt.setmeta( obj )
+function Opt._setmeta( obj )
   setmetatable( obj, { __index = Opt  } )
 end
 
@@ -208,12 +208,12 @@ function dumpFilter:dump( opt, node, txt )
    
    self:writeln( opt, string.format( ": %s:%s(%d:%d) %s %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), node:getIdTxt(  ), node:get_effectivePos().lineNo, node:get_effectivePos().column, attrib, txt, typeStr, comment) )
 end
-function dumpFilter.setmeta( obj )
+function dumpFilter._setmeta( obj )
   setmetatable( obj, { __index = dumpFilter  } )
 end
-function dumpFilter.new( __superarg1, __superarg2, __superarg3,stream, processInfo )
+function dumpFilter._new( __superarg1, __superarg2, __superarg3,stream, processInfo )
    local obj = {}
-   dumpFilter.setmeta( obj )
+   dumpFilter._setmeta( obj )
    if obj.__init then
       obj:__init( __superarg1, __superarg2, __superarg3,stream, processInfo )
    end
@@ -229,7 +229,7 @@ end
 
 local function createFilter( moduleTypeInfo, processInfo, stream )
 
-   return dumpFilter.new(true, moduleTypeInfo, moduleTypeInfo:get_scope(), stream, processInfo)
+   return dumpFilter._new(true, moduleTypeInfo, moduleTypeInfo:get_scope(), stream, processInfo)
 end
 _moduleObj.createFilter = createFilter
 
@@ -716,7 +716,7 @@ function dumpFilter:processMatch( node, opt )
    local caseList = node:get_caseList()
    for __index, caseInfo in ipairs( caseList ) do
       filter( caseInfo:get_valExpRef(), self, opt:nextOpt(  ) )
-      filter( caseInfo:get_block(), self, Opt.new(prefix .. "  " .. caseInfo:get_valInfo():get_name(), depth + 1) )
+      filter( caseInfo:get_block(), self, Opt._new(prefix .. "  " .. caseInfo:get_valInfo():get_name(), depth + 1) )
    end
    
    do

@@ -520,7 +520,7 @@ fn ast2LuaMain(
       exportInfo.$provideInfo.$symbolKind, ast.$builtinFunc,
       option.useLuneModule, option.targetLuaVer,
       option.testing, option.useIpairs,
-      new convLua.Option( option.mainModule ) );
+      new convLua.Option( option.mainModule, option.$legacyNewName ) );
    return conv;
 }
 
