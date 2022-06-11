@@ -2022,3 +2022,23 @@ _ = 1;
    func();
    func();
 }
+{
+   Macro._section();
+   class Hoge extend (Mapping) {
+      let val1:int;
+      let val2:str;
+   }
+   class Hoge2 extend Hoge {
+      let val3:real;
+   }
+
+   fn func( obj:&Mapping ) : &Map<str,&stem> {
+      let map = obj._toMap();
+      return map;
+   }
+
+   let hoge2:&Hoge = new Hoge2( 1, "abc", 10.5 );
+   forsort val, key in func( hoge2 ) {
+      print( key, val );
+   }
+}

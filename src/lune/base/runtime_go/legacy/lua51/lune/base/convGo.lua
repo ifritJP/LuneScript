@@ -254,16 +254,16 @@ local MaxNilAccNum = 3
 
 local Opt = {}
 _moduleObj.Opt = Opt
-function Opt.new( parent )
+function Opt._new( parent )
    local obj = {}
-   Opt.setmeta( obj )
+   Opt._setmeta( obj )
    if obj.__init then obj:__init( parent ); end
    return obj
 end
 function Opt:__init(parent) 
    self.parent = parent
 end
-function Opt.setmeta( obj )
+function Opt._setmeta( obj )
   setmetatable( obj, { __index = Opt  } )
 end
 
@@ -303,9 +303,9 @@ ProcessMode.__allList[4] = ProcessMode.Main
 
 
 local Env = {}
-function Env.new( addEnvArg )
+function Env._new( addEnvArg )
    local obj = {}
-   Env.setmeta( obj )
+   Env._setmeta( obj )
    if obj.__init then obj:__init( addEnvArg ); end
    return obj
 end
@@ -338,7 +338,7 @@ function Env:getEnv(  )
    
    return "Lns_GetEnv()"
 end
-function Env.setmeta( obj )
+function Env._setmeta( obj )
   setmetatable( obj, { __index = Env  } )
 end
 
@@ -354,12 +354,12 @@ end
 
 local Option = {}
 _moduleObj.Option = Option
-function Option.setmeta( obj )
+function Option._setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
-function Option.new( packageName, appName, mainModule, addEnvArg, runnerNum )
+function Option._new( packageName, appName, mainModule, addEnvArg, runnerNum )
    local obj = {}
-   Option.setmeta( obj )
+   Option._setmeta( obj )
    if obj.__init then
       obj:__init( packageName, appName, mainModule, addEnvArg, runnerNum )
    end
@@ -392,9 +392,9 @@ end
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
-function convFilter.new( enableTest, streamName, stream, ast, option )
+function convFilter._new( enableTest, streamName, stream, ast, option )
    local obj = {}
-   convFilter.setmeta( obj )
+   convFilter._setmeta( obj )
    if obj.__init then obj:__init( enableTest, streamName, stream, ast, option ); end
    return obj
 end
@@ -408,10 +408,10 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    
    self.builtinFuncs = ast:get_builtinFunc()
    self.moduleType2SymbolMap = {}
-   self.env = Env.new(option:get_addEnvArg())
+   self.env = Env._new(option:get_addEnvArg())
    self.option = option
    self.processInfo = ast:get_exportInfo():get_processInfo():clone(  )
-   self.stream = Util.SimpleSourceOStream.new(stream, nil, 4)
+   self.stream = Util.SimpleSourceOStream._new(stream, nil, 4)
    self.processMode = ProcessMode.Main
    self.processModeStack = {}
    self.moduleTypeInfo = ast:get_exportInfo():get_moduleTypeInfo()
@@ -419,7 +419,7 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    self.builtin2runtime = {}
    self.builtin2runtimeEnv = {}
    self.type2gotypeMap = {}
-   self.nodeManager = Nodes.NodeManager.new()
+   self.nodeManager = Nodes.NodeManager._new()
    self.enableTest = enableTest
    self.module2PackSym = {}
    
@@ -495,7 +495,7 @@ function convFilter:isExtSymbol( symbol )
 
    return not symbol:getModule(  ):equals( self.processInfo, self.moduleTypeInfo )
 end
-function convFilter.setmeta( obj )
+function convFilter._setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )
 end
 function convFilter:popIndent( ... )
@@ -561,7 +561,7 @@ local ignoreNodeInInnerBlockSet = {[Nodes.NodeKind.get_DeclAlge()] = true, [Node
 
 local function filter( node, filter, parent )
 
-   node:processFilter( filter, Opt.new(parent) )
+   node:processFilter( filter, Opt._new(parent) )
 end
 
 local function isAnyType( typeInfo )
@@ -2023,9 +2023,9 @@ end
 
 
 local FuncConv = {}
-function FuncConv.new( retList )
+function FuncConv._new( retList )
    local obj = {}
-   FuncConv.setmeta( obj )
+   FuncConv._setmeta( obj )
    if obj.__init then obj:__init( retList ); end
    return obj
 end
@@ -2033,7 +2033,7 @@ function FuncConv:__init(retList)
    self.argList = {}
    self.retList = retList
 end
-function FuncConv.setmeta( obj )
+function FuncConv._setmeta( obj )
   setmetatable( obj, { __index = FuncConv  } )
 end
 function FuncConv:get_argList()
@@ -2141,7 +2141,7 @@ function convFilter:outputDeclFunc( addEnvArg, funcInfo )
    end
    
    
-   local funcConv = FuncConv.new(retTypeList)
+   local funcConv = FuncConv._new(retTypeList)
    
    if addEnvArg then
       self:writeRaw( self:getEnvArgDecl( #workType:get_argTypeInfoList() ) )
@@ -2472,12 +2472,12 @@ end
 
 
 local ProcessDeclMethodItem = {}
-function ProcessDeclMethodItem.setmeta( obj )
+function ProcessDeclMethodItem._setmeta( obj )
   setmetatable( obj, { __index = ProcessDeclMethodItem  } )
 end
-function ProcessDeclMethodItem.new( classNode, fieldNode )
+function ProcessDeclMethodItem._new( classNode, fieldNode )
    local obj = {}
-   ProcessDeclMethodItem.setmeta( obj )
+   ProcessDeclMethodItem._setmeta( obj )
    if obj.__init then
       obj:__init( classNode, fieldNode )
    end
@@ -2498,14 +2498,14 @@ end
 
 local ConvRunner = {}
 setmetatable( ConvRunner, { __index = convFilter,ifList = {__Runner,} } )
-function ConvRunner.new( enableTest, ast, option, declMethodItemList )
+function ConvRunner._new( enableTest, ast, option, declMethodItemList )
    local obj = {}
-   ConvRunner.setmeta( obj )
+   ConvRunner._setmeta( obj )
    if obj.__init then obj:__init( enableTest, ast, option, declMethodItemList ); end
    return obj
 end
 function ConvRunner:__init(enableTest, ast, option, declMethodItemList) 
-   convFilter.__init( self,enableTest, "", Util.memStream.new(), ast, option)
+   convFilter.__init( self,enableTest, "", Util.memStream._new(), ast, option)
    
    self.declMethodItemList = declMethodItemList
    
@@ -2535,7 +2535,7 @@ function ConvRunner:getResult(  )
    
    return memStream:get_txt()
 end
-function ConvRunner.setmeta( obj )
+function ConvRunner._setmeta( obj )
   setmetatable( obj, { __index = ConvRunner  } )
 end
 
@@ -2553,7 +2553,7 @@ function convFilter:processMethodAsync( nodeList )
                   do
                      local declMethodNode = _lune.__Cast( fieldNode, 3, Nodes.DeclMethodNode )
                      if declMethodNode ~= nil then
-                        table.insert( declMethodNodeList, ProcessDeclMethodItem.new(workNode, declMethodNode) )
+                        table.insert( declMethodNodeList, ProcessDeclMethodItem._new(workNode, declMethodNode) )
                         totalStmtNum = totalStmtNum + declMethodNode:get_declInfo():get_stmtNum()
                      end
                   end
@@ -2593,7 +2593,7 @@ function convFilter:processMethodAsync( nodeList )
             
          end
          
-         local runner = ConvRunner.new(self.enableTest, self.ast, self.option, list)
+         local runner = ConvRunner._new(self.enableTest, self.ast, self.option, list)
          table.insert( runnerList, runner )
          
          if not _lune._run(runner, 2, string.format( "convGo Field - %s", self.streamName) ) then
@@ -7432,7 +7432,7 @@ end
 
 local function createFilter( enableTest, streamName, stream, ast, option )
 
-   return convFilter.new(enableTest, streamName, stream, ast, option)
+   return convFilter._new(enableTest, streamName, stream, ast, option)
 end
 _moduleObj.createFilter = createFilter
 

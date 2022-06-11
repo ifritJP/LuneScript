@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 11892
+   return 11922
 end
 
 
@@ -306,16 +306,16 @@ Int2strMode.__allList[3] = Int2strMode.Int2strModeUnneed0
 
 local RuntimeOpt = {}
 _moduleObj.RuntimeOpt = RuntimeOpt
-function RuntimeOpt.new(  )
+function RuntimeOpt._new(  )
    local obj = {}
-   RuntimeOpt.setmeta( obj )
+   RuntimeOpt._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
 function RuntimeOpt:__init() 
    self.int2strMode = Int2strMode.Int2strModeDepend
 end
-function RuntimeOpt.setmeta( obj )
+function RuntimeOpt._setmeta( obj )
   setmetatable( obj, { __index = RuntimeOpt  } )
 end
 function RuntimeOpt:get_int2strMode()
@@ -325,19 +325,20 @@ end
 
 local Option = {}
 _moduleObj.Option = Option
-function Option.new(  )
+function Option._new(  )
    local obj = {}
-   Option.setmeta( obj )
+   Option._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
 function Option:__init() 
+   self.legacyNewName = false
    self.stdinFile = nil
    self.validPostBuild = true
    self.enableRunner = true
    self.addEnvArg = true
    self.projDir = nil
-   self.runtimeOpt = RuntimeOpt.new()
+   self.runtimeOpt = RuntimeOpt._new()
    self.shebangArgList = {}
    self.outputPath = nil
    self.mainModule = ""
@@ -395,7 +396,7 @@ function Option:openDepend( relPath )
    
    return nil
 end
-function Option.setmeta( obj )
+function Option._setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
 function Option:get_runtimeOpt()
@@ -418,6 +419,9 @@ function Option:get_stdinFile()
 end
 function Option:set_stdinFile( stdinFile )
    self.stdinFile = stdinFile
+end
+function Option:get_legacyNewName()
+   return self.legacyNewName
 end
 
 
@@ -531,13 +535,18 @@ usage:
     --package <name>: set the package name for the go-lang.
     --app <name>: set the application name for the go-lang.
 
+    compati_op:
+      --legacyNewName: use the legacy new method name for lua.
+
+
+
 * type2
   path: output file path.
 ]==] )
       os.exit( code )
    end
    
-   local option = Option.new()
+   local option = Option._new()
    local useStdInFlag = false
    local lineNo = nil
    local column = nil
@@ -550,12 +559,12 @@ usage:
          
          local ProjInfo = {}
          setmetatable( ProjInfo, { ifList = {Mapping,} } )
-         function ProjInfo.setmeta( obj )
+         function ProjInfo._setmeta( obj )
   setmetatable( obj, { __index = ProjInfo  } )
 end
-         function ProjInfo.new( cmd_option )
+         function ProjInfo._new( cmd_option )
    local obj = {}
-   ProjInfo.setmeta( obj )
+   ProjInfo._setmeta( obj )
    if obj.__init then
       obj:__init( cmd_option )
    end
@@ -571,7 +580,7 @@ end
 function ProjInfo._fromMap( val )
   local obj, mes = ProjInfo._fromMapSub( {}, val )
   if obj then
-     ProjInfo.setmeta( obj )
+     ProjInfo._setmeta( obj )
   end
   return obj, mes
 end
@@ -683,6 +692,8 @@ end
                      printUsage( 1 )
                   end
                   
+               elseif _switchExp == "--legacyNewName" then
+                  option.legacyNewName = true
                elseif _switchExp == "--enableMacroAsync" then
                   option.transCtrlInfo.validMacroAsync = true
                elseif _switchExp == "--disableRunner" then
@@ -920,7 +931,7 @@ end
                      lineNo = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
                   elseif not column then
                      column = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
-                     option.analyzePos = Parser.Position.new(_lune.unwrap( lineNo), _lune.unwrap( column), Util.scriptPath2Module( option.scriptPath ))
+                     option.analyzePos = Parser.Position._new(_lune.unwrap( lineNo), _lune.unwrap( column), Util.scriptPath2Module( option.scriptPath ))
                   end
                   
                elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta or _switchExp == ModeKind.Glue then
@@ -983,11 +994,11 @@ end
       end
       
       if option.analyzeModule then
-         option.stdinFile = Types.StdinFile.new(_lune.unwrap( option.analyzeModule), code)
+         option.stdinFile = Types.StdinFile._new(_lune.unwrap( option.analyzeModule), code)
       else
        
          if option.scriptPath ~= "" then
-            option.stdinFile = Types.StdinFile.new(Util.scriptPath2Module( option.scriptPath ), code)
+            option.stdinFile = Types.StdinFile._new(Util.scriptPath2Module( option.scriptPath ), code)
          end
          
       end
@@ -1013,7 +1024,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 725, function (  )
+   Log.log( Log.Level.Log, __func__, 738, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
@@ -1026,7 +1037,7 @@ _moduleObj.analyze = analyze
 
 local function createDefaultOption( pathList, projDir )
 
-   local option = Option.new()
+   local option = Option._new()
    if #pathList == 1 then
       option.scriptPath = pathList[1]
    else

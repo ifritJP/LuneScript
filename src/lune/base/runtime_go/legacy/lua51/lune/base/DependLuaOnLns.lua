@@ -89,7 +89,7 @@ local function runLuaOnLns( luaCode, baseDir, async )
    
    newEnv["_lnsLoad"] = function ( name, txt )
    
-      local importModuleInfo = frontInterface.ImportModuleInfo.new()
+      local importModuleInfo = frontInterface.ImportModuleInfo._new()
       local val = frontInterface.loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
       return val
    end
@@ -165,7 +165,6 @@ function __luneSym2Str( val )
    return nil
 end
 _moduleObj.__luneSym2Str = __luneSym2Str
-
 local function addGoModPath( list )
 
    do

@@ -63,12 +63,12 @@ end
 
 local PipeItem = {}
 _moduleObj.PipeItem = PipeItem
-function PipeItem.setmeta( obj )
+function PipeItem._setmeta( obj )
   setmetatable( obj, { __index = PipeItem  } )
 end
-function PipeItem.new( item )
+function PipeItem._new( item )
    local obj = {}
-   PipeItem.setmeta( obj )
+   PipeItem._setmeta( obj )
    if obj.__init then
       obj:__init( item )
    end
@@ -84,9 +84,9 @@ end
 
 local Pipe = {}
 _moduleObj.Pipe = Pipe
-function Pipe.new( pipe )
+function Pipe._new( pipe )
    local obj = {}
-   Pipe.setmeta( obj )
+   Pipe._setmeta( obj )
    if obj.__init then obj:__init( pipe ); end
    return obj
 end
@@ -108,7 +108,7 @@ function Pipe:getNext(  )
                return nil
             end
             
-            return PipeItem.new(val)
+            return PipeItem._new(val)
          end
       end
       
@@ -152,7 +152,7 @@ function Pipe:stop(  )
    end
    
 end
-function Pipe.setmeta( obj )
+function Pipe._setmeta( obj )
   setmetatable( obj, { __index = Pipe  } )
 end
 

@@ -158,12 +158,12 @@ function Control:direct( level, funcName, lineNo, mess )
       return mess
    end )
 end
-function Control.setmeta( obj )
+function Control._setmeta( obj )
   setmetatable( obj, { __index = Control  } )
 end
-function Control.new( level )
+function Control._new( level )
    local obj = {}
-   Control.setmeta( obj )
+   Control._setmeta( obj )
    if obj.__init then
       obj:__init( level )
    end
@@ -175,11 +175,11 @@ function Control:__init( level )
 end
 
 
-local control = Control.new(Level.Err)
+local control = Control._new(Level.Err)
 
 local function setLevel( level )
 
-   control = Control.new(level)
+   control = Control._new(level)
    if level >= Level.Log then
       Depend.setRuntimeLog( true )
    end

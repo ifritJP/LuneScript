@@ -274,7 +274,7 @@ _DefBuiltinFuncType( [
    {
       "Mapping": {
          "__attrib": { "type": [ "interface" ] },
-         "_toMap": { "type": [ "method" ], "arg": [], "ret": [ ] },
+         "_toMap": { "type": [ "method" ], "arg": [], "ret": [ "&Map<str,&stem>" ] },
       },
    },
    {

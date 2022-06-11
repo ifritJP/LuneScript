@@ -254,9 +254,9 @@ CheckingUptodateMode._name2Val["Touch"] = CheckingUptodateMode.Touch
 
 local TransCtrlInfo = {}
 _moduleObj.TransCtrlInfo = TransCtrlInfo
-function TransCtrlInfo.new(  )
+function TransCtrlInfo._new(  )
    local obj = {}
-   TransCtrlInfo.setmeta( obj )
+   TransCtrlInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -279,23 +279,23 @@ function TransCtrlInfo:__init()
    self.threadPerUnitThread = false and 5 or 0
    self.validMacroAsync = false
 end
-function TransCtrlInfo.setmeta( obj )
+function TransCtrlInfo._setmeta( obj )
   setmetatable( obj, { __index = TransCtrlInfo  } )
 end
 
 
 function TransCtrlInfo.create_normal(  )
 
-   return TransCtrlInfo.new()
+   return TransCtrlInfo._new()
 end
 
 
 local Position = {}
 setmetatable( Position, { ifList = {Mapping,__absimmut,} } )
 _moduleObj.Position = Position
-function Position.new( lineNo, column, streamName, orgPos )
+function Position._new( lineNo, column, streamName, orgPos )
    local obj = {}
-   Position.setmeta( obj )
+   Position._setmeta( obj )
    if obj.__init then obj:__init( lineNo, column, streamName, orgPos ); end
    return obj
 end
@@ -322,7 +322,7 @@ function Position:get_RawOrgPos(  )
 end
 function Position.create( lineNo, column, streamName, orgPos )
 
-   return Position.new(lineNo, column, streamName, orgPos)
+   return Position._new(lineNo, column, streamName, orgPos)
 end
 function Position:getDisplayTxt(  )
 
@@ -335,7 +335,7 @@ function Position:getDisplayTxt(  )
    
    return txt
 end
-function Position.setmeta( obj )
+function Position._setmeta( obj )
   setmetatable( obj, { __index = Position  } )
 end
 function Position:_toMap()
@@ -344,7 +344,7 @@ end
 function Position._fromMap( val )
   local obj, mes = Position._fromMapSub( {}, val )
   if obj then
-     Position.setmeta( obj )
+     Position._setmeta( obj )
   end
   return obj, mes
 end
@@ -429,9 +429,9 @@ TokenKind.__allList[12] = TokenKind.Eof
 local Token = {}
 setmetatable( Token, { ifList = {Mapping,} } )
 _moduleObj.Token = Token
-function Token.new( kind, txt, pos, consecutive, commentList )
+function Token._new( kind, txt, pos, consecutive, commentList )
    local obj = {}
-   Token.setmeta( obj )
+   Token._setmeta( obj )
    if obj.__init then obj:__init( kind, txt, pos, consecutive, commentList ); end
    return obj
 end
@@ -472,7 +472,7 @@ function Token:getLineCount(  )
    
    return count
 end
-function Token.setmeta( obj )
+function Token._setmeta( obj )
   setmetatable( obj, { __index = Token  } )
 end
 function Token:get_commentList()
@@ -484,7 +484,7 @@ end
 function Token._fromMap( val )
   local obj, mes = Token._fromMapSub( {}, val )
   if obj then
-     Token.setmeta( obj )
+     Token._setmeta( obj )
   end
   return obj, mes
 end
@@ -507,18 +507,18 @@ function Token._fromMapSub( obj, val )
 end
 
 
-local noneToken = Token.new(TokenKind.Eof, "", Position.new(0, -1, "eof"), false, {})
+local noneToken = Token._new(TokenKind.Eof, "", Position._new(0, -1, "eof"), false, {})
 _moduleObj.noneToken = noneToken
 
 
 local StdinFile = {}
 _moduleObj.StdinFile = StdinFile
-function StdinFile.setmeta( obj )
+function StdinFile._setmeta( obj )
   setmetatable( obj, { __index = StdinFile  } )
 end
-function StdinFile.new( mod, txt )
+function StdinFile._new( mod, txt )
    local obj = {}
-   StdinFile.setmeta( obj )
+   StdinFile._setmeta( obj )
    if obj.__init then
       obj:__init( mod, txt )
    end

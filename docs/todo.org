@@ -1090,7 +1090,12 @@ list.sort( fn ( hoge1:Hoge, hoge2:Hoge ) : bool {
      メソッド宣言をクラス宣言外部で行なった場合などのケアが出来ていない。
 - [ ] lune_set_block_var のタイミングで var の確保を行なう。
   
-      
+- [X] Mapping 型の変数に代入して _ToMap() を実行するとエラー
+let obj:Mapping = val;
+obj._toMap(); // error
+
+
+
 
 * ドキュメント
 

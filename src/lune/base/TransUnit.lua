@@ -6698,6 +6698,11 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
             local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ) )
             table.insert( letVarList, LetVarInfo._new(mutable, varName, refType) )
             typeInfo = refType:get_expType()
+            if unwrapFlag and typeInfo:get_nilable() then
+               
+               self:addWarnMess( refType:get_pos(), string.format( "it shouldn use non-nilable type -- %s", typeInfo:getTxt(  )) )
+            end
+            
             nextToken = self:getToken(  )
          else
           

@@ -292,12 +292,12 @@ local ModuleLoader = {}
 local _TypeInfo = {}
 
 local ImportParam = {}
-function ImportParam.setmeta( obj )
+function ImportParam._setmeta( obj )
   setmetatable( obj, { __index = ImportParam  } )
 end
-function ImportParam.new( pos, modifier, processInfo, typeId2Scope, typeId2TypeInfo, typeId2TypeDataAccessor, importedAliasMap, lazyModuleSet, metaInfo, scope, moduleTypeInfo, scopeAccess, typeId2AtomMap, dependLibId2DependInfo )
+function ImportParam._new( pos, modifier, processInfo, typeId2Scope, typeId2TypeInfo, typeId2TypeDataAccessor, importedAliasMap, lazyModuleSet, metaInfo, scope, moduleTypeInfo, scopeAccess, typeId2AtomMap, dependLibId2DependInfo )
    local obj = {}
-   ImportParam.setmeta( obj )
+   ImportParam._setmeta( obj )
    if obj.__init then
       obj:__init( pos, modifier, processInfo, typeId2Scope, typeId2TypeInfo, typeId2TypeDataAccessor, importedAliasMap, lazyModuleSet, metaInfo, scope, moduleTypeInfo, scopeAccess, typeId2AtomMap, dependLibId2DependInfo )
    end
@@ -323,9 +323,9 @@ end
 
 
 setmetatable( _TypeInfo, { ifList = {Mapping,} } )
-function _TypeInfo.new(  )
+function _TypeInfo._new(  )
    local obj = {}
-   _TypeInfo.setmeta( obj )
+   _TypeInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -350,7 +350,7 @@ function _TypeInfo:createTypeInfoCache( param )
    
    return typeInfo, mess
 end
-function _TypeInfo.setmeta( obj )
+function _TypeInfo._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfo  } )
 end
 function _TypeInfo:_toMap()
@@ -359,7 +359,7 @@ end
 function _TypeInfo._fromMap( val )
   local obj, mes = _TypeInfo._fromMapSub( {}, val )
   if obj then
-     _TypeInfo.setmeta( obj )
+     _TypeInfo._setmeta( obj )
   end
   return obj, mes
 end
@@ -424,12 +424,12 @@ end
 
 local _IdInfo = {}
 setmetatable( _IdInfo, { ifList = {Mapping,} } )
-function _IdInfo.setmeta( obj )
+function _IdInfo._setmeta( obj )
   setmetatable( obj, { __index = _IdInfo  } )
 end
-function _IdInfo.new( id, mod )
+function _IdInfo._new( id, mod )
    local obj = {}
-   _IdInfo.setmeta( obj )
+   _IdInfo._setmeta( obj )
    if obj.__init then
       obj:__init( id, mod )
    end
@@ -446,7 +446,7 @@ end
 function _IdInfo._fromMap( val )
   local obj, mes = _IdInfo._fromMapSub( {}, val )
   if obj then
-     _IdInfo.setmeta( obj )
+     _IdInfo._setmeta( obj )
   end
   return obj, mes
 end
@@ -517,12 +517,12 @@ function _TypeInfoNilable:createTypeInfo( param )
    newTypeInfo:get_typeId():set_orgId( self.typeId )
    return newTypeInfo, nil
 end
-function _TypeInfoNilable.setmeta( obj )
+function _TypeInfoNilable._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoNilable  } )
 end
-function _TypeInfoNilable.new( orgTypeId )
+function _TypeInfoNilable._new( orgTypeId )
    local obj = {}
-   _TypeInfoNilable.setmeta( obj )
+   _TypeInfoNilable._setmeta( obj )
    if obj.__init then
       obj:__init( orgTypeId )
    end
@@ -539,7 +539,7 @@ end
 function _TypeInfoNilable._fromMap( val )
   local obj, mes = _TypeInfoNilable._fromMapSub( {}, val )
   if obj then
-     _TypeInfoNilable.setmeta( obj )
+     _TypeInfoNilable._setmeta( obj )
   end
   return obj, mes
 end
@@ -596,12 +596,12 @@ function _TypeInfoAlias:createTypeInfo( param )
    
    return newTypeInfo, nil
 end
-function _TypeInfoAlias.setmeta( obj )
+function _TypeInfoAlias._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlias  } )
 end
-function _TypeInfoAlias.new( parentId, rawTxt, srcTypeId )
+function _TypeInfoAlias._new( parentId, rawTxt, srcTypeId )
    local obj = {}
-   _TypeInfoAlias.setmeta( obj )
+   _TypeInfoAlias._setmeta( obj )
    if obj.__init then
       obj:__init( parentId, rawTxt, srcTypeId )
    end
@@ -620,7 +620,7 @@ end
 function _TypeInfoAlias._fromMap( val )
   local obj, mes = _TypeInfoAlias._fromMapSub( {}, val )
   if obj then
-     _TypeInfoAlias.setmeta( obj )
+     _TypeInfoAlias._setmeta( obj )
   end
   return obj, mes
 end
@@ -658,12 +658,12 @@ function _TypeInfoDDD:createTypeInfo( param )
    newTypeInfo:get_typeId():set_orgId( self.typeId )
    return newTypeInfo, nil
 end
-function _TypeInfoDDD.setmeta( obj )
+function _TypeInfoDDD._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoDDD  } )
 end
-function _TypeInfoDDD.new( parentId, itemTypeId, extTypeFlag )
+function _TypeInfoDDD._new( parentId, itemTypeId, extTypeFlag )
    local obj = {}
-   _TypeInfoDDD.setmeta( obj )
+   _TypeInfoDDD._setmeta( obj )
    if obj.__init then
       obj:__init( parentId, itemTypeId, extTypeFlag )
    end
@@ -682,7 +682,7 @@ end
 function _TypeInfoDDD._fromMap( val )
   local obj, mes = _TypeInfoDDD._fromMapSub( {}, val )
   if obj then
-     _TypeInfoDDD.setmeta( obj )
+     _TypeInfoDDD._setmeta( obj )
   end
   return obj, mes
 end
@@ -725,12 +725,12 @@ function _TypeInfoAlternate:createTypeInfo( param )
    newTypeInfo:get_typeId():set_orgId( self.typeId )
    return newTypeInfo, nil
 end
-function _TypeInfoAlternate.setmeta( obj )
+function _TypeInfoAlternate._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlternate  } )
 end
-function _TypeInfoAlternate.new( parentId, txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
+function _TypeInfoAlternate._new( parentId, txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
    local obj = {}
-   _TypeInfoAlternate.setmeta( obj )
+   _TypeInfoAlternate._setmeta( obj )
    if obj.__init then
       obj:__init( parentId, txt, accessMode, baseId, ifList, belongClassFlag, altIndex )
    end
@@ -753,7 +753,7 @@ end
 function _TypeInfoAlternate._fromMap( val )
   local obj, mes = _TypeInfoAlternate._fromMapSub( {}, val )
   if obj then
-     _TypeInfoAlternate.setmeta( obj )
+     _TypeInfoAlternate._setmeta( obj )
   end
   return obj, mes
 end
@@ -801,12 +801,12 @@ function _TypeInfoGeneric:createTypeInfo( param )
    param.typeId2Scope[self.typeId] = scope
    return newTypeInfo, nil
 end
-function _TypeInfoGeneric.setmeta( obj )
+function _TypeInfoGeneric._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoGeneric  } )
 end
-function _TypeInfoGeneric.new( genSrcTypeId, genTypeList )
+function _TypeInfoGeneric._new( genSrcTypeId, genTypeList )
    local obj = {}
-   _TypeInfoGeneric.setmeta( obj )
+   _TypeInfoGeneric._setmeta( obj )
    if obj.__init then
       obj:__init( genSrcTypeId, genTypeList )
    end
@@ -824,7 +824,7 @@ end
 function _TypeInfoGeneric._fromMap( val )
   local obj, mes = _TypeInfoGeneric._fromMapSub( {}, val )
   if obj then
-     _TypeInfoGeneric.setmeta( obj )
+     _TypeInfoGeneric._setmeta( obj )
   end
   return obj, mes
 end
@@ -860,12 +860,12 @@ function _TypeInfoBox:createTypeInfo( param )
    newTypeInfo:get_typeId():set_orgId( self.typeId )
    return newTypeInfo, nil
 end
-function _TypeInfoBox.setmeta( obj )
+function _TypeInfoBox._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoBox  } )
 end
-function _TypeInfoBox.new( accessMode, boxingType )
+function _TypeInfoBox._new( accessMode, boxingType )
    local obj = {}
-   _TypeInfoBox.setmeta( obj )
+   _TypeInfoBox._setmeta( obj )
    if obj.__init then
       obj:__init( accessMode, boxingType )
    end
@@ -883,7 +883,7 @@ end
 function _TypeInfoBox._fromMap( val )
   local obj, mes = _TypeInfoBox._fromMapSub( {}, val )
   if obj then
-     _TypeInfoBox.setmeta( obj )
+     _TypeInfoBox._setmeta( obj )
   end
   return obj, mes
 end
@@ -933,12 +933,12 @@ function _TypeInfoExt:createTypeInfo( param )
    newTypeInfo:get_typeId():set_orgId( self.typeId )
    return newTypeInfo, nil
 end
-function _TypeInfoExt.setmeta( obj )
+function _TypeInfoExt._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoExt  } )
 end
-function _TypeInfoExt.new( extedTypeId )
+function _TypeInfoExt._new( extedTypeId )
    local obj = {}
-   _TypeInfoExt.setmeta( obj )
+   _TypeInfoExt._setmeta( obj )
    if obj.__init then
       obj:__init( extedTypeId )
    end
@@ -955,7 +955,7 @@ end
 function _TypeInfoExt._fromMap( val )
   local obj, mes = _TypeInfoExt._fromMapSub( {}, val )
   if obj then
-     _TypeInfoExt.setmeta( obj )
+     _TypeInfoExt._setmeta( obj )
   end
   return obj, mes
 end
@@ -996,12 +996,12 @@ function _TypeInfoModifier:createTypeInfo( param )
    newTypeInfo:get_typeId():set_orgId( self.typeId )
    return newTypeInfo, nil
 end
-function _TypeInfoModifier.setmeta( obj )
+function _TypeInfoModifier._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoModifier  } )
 end
-function _TypeInfoModifier.new( srcTypeId, mutMode )
+function _TypeInfoModifier._new( srcTypeId, mutMode )
    local obj = {}
-   _TypeInfoModifier.setmeta( obj )
+   _TypeInfoModifier._setmeta( obj )
    if obj.__init then
       obj:__init( srcTypeId, mutMode )
    end
@@ -1019,7 +1019,7 @@ end
 function _TypeInfoModifier._fromMap( val )
   local obj, mes = _TypeInfoModifier._fromMapSub( {}, val )
   if obj then
-     _TypeInfoModifier.setmeta( obj )
+     _TypeInfoModifier._setmeta( obj )
   end
   return obj, mes
 end
@@ -1077,7 +1077,7 @@ function _TypeInfoModule:createTypeInfo( param )
          
          error( "internal error" )
       else
-         local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Module, nil)
+         local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Module, nil)
          
          local mutable = false
          do
@@ -1107,12 +1107,12 @@ function _TypeInfoModule:createTypeInfo( param )
    
    return newTypeInfo, nil
 end
-function _TypeInfoModule.setmeta( obj )
+function _TypeInfoModule._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoModule  } )
 end
-function _TypeInfoModule.new( parentId, txt )
+function _TypeInfoModule._new( parentId, txt )
    local obj = {}
-   _TypeInfoModule.setmeta( obj )
+   _TypeInfoModule._setmeta( obj )
    if obj.__init then
       obj:__init( parentId, txt )
    end
@@ -1130,7 +1130,7 @@ end
 function _TypeInfoModule._fromMap( val )
   local obj, mes = _TypeInfoModule._fromMapSub( {}, val )
   if obj then
-     _TypeInfoModule.setmeta( obj )
+     _TypeInfoModule._setmeta( obj )
   end
   return obj, mes
 end
@@ -1255,7 +1255,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                end
                
                
-               local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Class, baseScope, ifScopeList)
+               local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Class, baseScope, ifScopeList)
                
                local altTypeList = {}
                for __index, itemType in ipairs( itemTypeInfo ) do
@@ -1277,7 +1277,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                end )
                
                
-               local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Module, nil, {})
+               local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Module, nil, {})
                
                local parentTypeDataAccessor = param:getTypeDataAccessor( self.parentId )
                local workTypeInfo = param.processInfo:createExtModule( scope, parentInfo, parentTypeDataAccessor, true, Ast.AccessMode.Pub, self.txt, _lune.unwrap( self.moduleLang), _lune.unwrap( self.requirePath) )
@@ -1294,7 +1294,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                
                local scope = nil
                if self.kind ~= Ast.TypeInfoKind.FormFunc then
-                  scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Other, nil)
+                  scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Other, nil)
                end
                
                
@@ -1362,12 +1362,12 @@ function _TypeInfoNormal:createTypeInfo( param )
    
    return newTypeInfo, nil
 end
-function _TypeInfoNormal.setmeta( obj )
+function _TypeInfoNormal._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoNormal  } )
 end
-function _TypeInfoNormal.new( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, asyncMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
+function _TypeInfoNormal._new( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, asyncMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
    local obj = {}
-   _TypeInfoNormal.setmeta( obj )
+   _TypeInfoNormal._setmeta( obj )
    if obj.__init then
       obj:__init( parentId, abstractFlag, baseId, txt, staticFlag, accessMode, kind, mutMode, asyncMode, ifList, itemTypeId, argTypeId, retTypeId, children, moduleLang, requirePath )
    end
@@ -1399,7 +1399,7 @@ end
 function _TypeInfoNormal._fromMap( val )
   local obj, mes = _TypeInfoNormal._fromMapSub( {}, val )
   if obj then
-     _TypeInfoNormal.setmeta( obj )
+     _TypeInfoNormal._setmeta( obj )
   end
   return obj, mes
 end
@@ -1446,7 +1446,7 @@ function _TypeInfoEnum:createTypeInfo( param )
    
    local parentTypeDataAccessor, parentInfo = param:getTypeDataAccessor( self.parentId )
    local parentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-   local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
+   local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
    
    param.typeId2Scope[self.typeId] = scope
    local valTypeInfo = _lune.unwrap( param:getTypeInfo( self.valTypeId ))
@@ -1480,18 +1480,18 @@ function _TypeInfoEnum:createTypeInfo( param )
       end
       
       local evalValSym = _lune.unwrap( scope:addEnumVal( param.processInfo, valName, nil, enumTypeInfo ))
-      enumTypeInfo:addEnumValInfo( Ast.EnumValInfo.new(valName, val, evalValSym) )
+      enumTypeInfo:addEnumValInfo( Ast.EnumValInfo._new(valName, val, evalValSym) )
    end
    
    parentScope:addEnum( param.processInfo, accessMode, self.txt, nil, enumTypeInfo )
    return newTypeInfo, nil
 end
-function _TypeInfoEnum.setmeta( obj )
+function _TypeInfoEnum._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoEnum  } )
 end
-function _TypeInfoEnum.new( parentId, txt, accessMode, valTypeId, enumValList )
+function _TypeInfoEnum._new( parentId, txt, accessMode, valTypeId, enumValList )
    local obj = {}
-   _TypeInfoEnum.setmeta( obj )
+   _TypeInfoEnum._setmeta( obj )
    if obj.__init then
       obj:__init( parentId, txt, accessMode, valTypeId, enumValList )
    end
@@ -1512,7 +1512,7 @@ end
 function _TypeInfoEnum._fromMap( val )
   local obj, mes = _TypeInfoEnum._fromMapSub( {}, val )
   if obj then
-     _TypeInfoEnum.setmeta( obj )
+     _TypeInfoEnum._setmeta( obj )
   end
   return obj, mes
 end
@@ -1543,12 +1543,12 @@ end
 
 local _TypeInfoAlgeVal = {}
 setmetatable( _TypeInfoAlgeVal, { ifList = {Mapping,} } )
-function _TypeInfoAlgeVal.setmeta( obj )
+function _TypeInfoAlgeVal._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlgeVal  } )
 end
-function _TypeInfoAlgeVal.new( name, typeList )
+function _TypeInfoAlgeVal._new( name, typeList )
    local obj = {}
-   _TypeInfoAlgeVal.setmeta( obj )
+   _TypeInfoAlgeVal._setmeta( obj )
    if obj.__init then
       obj:__init( name, typeList )
    end
@@ -1565,7 +1565,7 @@ end
 function _TypeInfoAlgeVal._fromMap( val )
   local obj, mes = _TypeInfoAlgeVal._fromMapSub( {}, val )
   if obj then
-     _TypeInfoAlgeVal.setmeta( obj )
+     _TypeInfoAlgeVal._setmeta( obj )
   end
   return obj, mes
 end
@@ -1594,7 +1594,7 @@ function _TypeInfoAlge:createTypeInfo( param )
    local parentTypeDataAccessor, parentInfo = param:getTypeDataAccessor( self.parentId )
    
    local parentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-   local scope = Ast.Scope.new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
+   local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
    
    param.typeId2Scope[self.typeId] = scope
    local algeTypeInfo = param.processInfo:createAlge( scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt )
@@ -1611,19 +1611,19 @@ function _TypeInfoAlge:createTypeInfo( param )
       end
       
       local algeValSym = scope:addAlgeVal( param.processInfo, valInfo.name, nil, algeTypeInfo )
-      local algeVal = Ast.AlgeValInfo.new(valInfo.name, typeInfoList, algeTypeInfo, _lune.unwrap( algeValSym))
+      local algeVal = Ast.AlgeValInfo._new(valInfo.name, typeInfoList, algeTypeInfo, _lune.unwrap( algeValSym))
       algeTypeInfo:addValInfo( algeVal )
    end
    
    parentScope:addAlge( param.processInfo, accessMode, self.txt, nil, algeTypeInfo )
    return newTypeInfo, nil
 end
-function _TypeInfoAlge.setmeta( obj )
+function _TypeInfoAlge._setmeta( obj )
   setmetatable( obj, { __index = _TypeInfoAlge  } )
 end
-function _TypeInfoAlge.new( parentId, txt, accessMode, algeValList )
+function _TypeInfoAlge._new( parentId, txt, accessMode, algeValList )
    local obj = {}
-   _TypeInfoAlge.setmeta( obj )
+   _TypeInfoAlge._setmeta( obj )
    if obj.__init then
       obj:__init( parentId, txt, accessMode, algeValList )
    end
@@ -1643,7 +1643,7 @@ end
 function _TypeInfoAlge._fromMap( val )
   local obj, mes = _TypeInfoAlge._fromMapSub( {}, val )
   if obj then
-     _TypeInfoAlge.setmeta( obj )
+     _TypeInfoAlge._setmeta( obj )
   end
   return obj, mes
 end
@@ -1674,12 +1674,12 @@ function DependModuleInfo:getTypeInfo( metaTypeId )
 
    return _lune.unwrap( self.metaTypeId2TypeInfoMap[metaTypeId])
 end
-function DependModuleInfo.setmeta( obj )
+function DependModuleInfo._setmeta( obj )
   setmetatable( obj, { __index = DependModuleInfo  } )
 end
-function DependModuleInfo.new( id, metaTypeId2TypeInfoMap )
+function DependModuleInfo._new( id, metaTypeId2TypeInfoMap )
    local obj = {}
-   DependModuleInfo.setmeta( obj )
+   DependModuleInfo._setmeta( obj )
    if obj.__init then
       obj:__init( id, metaTypeId2TypeInfoMap )
    end
@@ -1694,12 +1694,12 @@ end
 
 local ModuleLoaderParam = {}
 _moduleObj.ModuleLoaderParam = ModuleLoaderParam
-function ModuleLoaderParam.setmeta( obj )
+function ModuleLoaderParam._setmeta( obj )
   setmetatable( obj, { __index = ModuleLoaderParam  } )
 end
-function ModuleLoaderParam.new( ctrl_info, processInfo, latestPos, macroMode, nearCode, validMutControl, macroEval )
+function ModuleLoaderParam._new( ctrl_info, processInfo, latestPos, macroMode, nearCode, validMutControl, macroEval )
    local obj = {}
-   ModuleLoaderParam.setmeta( obj )
+   ModuleLoaderParam._setmeta( obj )
    if obj.__init then
       obj:__init( ctrl_info, processInfo, latestPos, macroMode, nearCode, validMutControl, macroEval )
    end
@@ -1740,12 +1740,12 @@ end
 
 
 local ModuleLoaderResult = {}
-function ModuleLoaderResult.setmeta( obj )
+function ModuleLoaderResult._setmeta( obj )
   setmetatable( obj, { __index = ModuleLoaderResult  } )
 end
-function ModuleLoaderResult.new( exportInfo, modulePath, fullModulePath, baseDir, err, depth, importedAliasMap )
+function ModuleLoaderResult._new( exportInfo, modulePath, fullModulePath, baseDir, err, depth, importedAliasMap )
    local obj = {}
-   ModuleLoaderResult.setmeta( obj )
+   ModuleLoaderResult._setmeta( obj )
    if obj.__init then
       obj:__init( exportInfo, modulePath, fullModulePath, baseDir, err, depth, importedAliasMap )
    end
@@ -1818,9 +1818,9 @@ function ModuleLoader:craeteModuleInfo( moduleMeta )
    end
    
 end
-function ModuleLoader.new( enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth )
+function ModuleLoader._new( enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth )
    local obj = {}
-   ModuleLoader.setmeta( obj )
+   ModuleLoader._setmeta( obj )
    if obj.__init then obj:__init( enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth ); end
    return obj
 end
@@ -1830,18 +1830,18 @@ function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modu
    
    self.syncFlag = nil
    self.moduleLoaderParam = moduleLoaderParam
-   self.result = ModuleLoaderResult.new(exportInfo, modulePath, fullModulePath, baseDir, "", depth, {})
+   self.result = ModuleLoaderResult._new(exportInfo, modulePath, fullModulePath, baseDir, "", depth, {})
    
    self.moduleMeta = nil
    self.validMutControl = moduleLoaderParam:get_validMutControl()
    self.curPos = moduleLoaderParam:get_latestPos()
-   self.macroCtrl = Macro.MacroCtrl.new(moduleLoaderParam:get_macroEval(), moduleLoaderParam:get_ctrl_info().validMacroAsync)
+   self.macroCtrl = Macro.MacroCtrl._new(moduleLoaderParam:get_macroEval(), moduleLoaderParam:get_ctrl_info().validMacroAsync)
    self.importModuleInfo = workImportModuleInfo:clone(  )
    self.fullModulePath = fullModulePath
    
    self.importProcessInfo = moduleLoaderParam:get_processInfo():newUser(  )
    
-   local simpleTransUnit = TransUnitIF.SimpeTransUnit.new(moduleLoaderParam:get_ctrl_info(), self.importProcessInfo, moduleLoaderParam:get_latestPos(), moduleLoaderParam:get_macroMode(), moduleLoaderParam:get_nearCode())
+   local simpleTransUnit = TransUnitIF.SimpeTransUnit._new(moduleLoaderParam:get_ctrl_info(), self.importProcessInfo, moduleLoaderParam:get_latestPos(), moduleLoaderParam:get_macroMode(), moduleLoaderParam:get_nearCode())
    
    self.transUnitIF = simpleTransUnit
    self.globalScope = simpleTransUnit:get_globalScope()
@@ -1910,7 +1910,7 @@ function ModuleLoader:getExportInfo(  )
    
    return self.result:get_exportInfo()
 end
-function ModuleLoader.setmeta( obj )
+function ModuleLoader._setmeta( obj )
   setmetatable( obj, { __index = ModuleLoader  } )
 end
 
@@ -2097,9 +2097,9 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
       end
       
       
-      local modifier = TransUnitIF.Modifier.new(self.validMutControl, processInfo)
+      local modifier = TransUnitIF.Modifier._new(self.validMutControl, processInfo)
       
-      local importParam = ImportParam.new(self.curPos, modifier, processInfo, typeId2Scope, typeId2TypeInfo, typeId2TypeDataAccessor, {}, lazyModuleSet, metaInfo, self.transUnitIF:get_scope(), moduleTypeInfo, Ast.ScopeAccess.Normal, id2atomMap, dependLibId2DependInfo)
+      local importParam = ImportParam._new(self.curPos, modifier, processInfo, typeId2Scope, typeId2TypeInfo, typeId2TypeDataAccessor, {}, lazyModuleSet, metaInfo, self.transUnitIF:get_scope(), moduleTypeInfo, Ast.ScopeAccess.Normal, id2atomMap, dependLibId2DependInfo)
       
       for __index, atomInfo in ipairs( _typeInfoList ) do
          local newTypeInfo, errMess = atomInfo:createTypeInfoCache( importParam )
@@ -2315,12 +2315,12 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
       
       local VarNameInfo = {}
       setmetatable( VarNameInfo, { ifList = {Mapping,} } )
-      function VarNameInfo.setmeta( obj )
+      function VarNameInfo._setmeta( obj )
   setmetatable( obj, { __index = VarNameInfo  } )
 end
-      function VarNameInfo.new( typeId, accessMode, mutable )
+      function VarNameInfo._new( typeId, accessMode, mutable )
    local obj = {}
-   VarNameInfo.setmeta( obj )
+   VarNameInfo._setmeta( obj )
    if obj.__init then
       obj:__init( typeId, accessMode, mutable )
    end
@@ -2338,7 +2338,7 @@ end
 function VarNameInfo._fromMap( val )
   local obj, mes = VarNameInfo._fromMapSub( {}, val )
   if obj then
-     VarNameInfo.setmeta( obj )
+     VarNameInfo._setmeta( obj )
   end
   return obj, mes
 end
@@ -2414,11 +2414,11 @@ end
       end
       
       
-      local moduleProvideInfo = frontInterface.ModuleProvideInfo.new(_lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId]), _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind )), metaInfo.__moduleMutable)
+      local moduleProvideInfo = frontInterface.ModuleProvideInfo._new(_lune.unwrap( typeId2TypeInfo[metaInfo.__moduleTypeId]), _lune.unwrap( Ast.SymbolKind._from( metaInfo.__moduleSymbolKind )), metaInfo.__moduleMutable)
       
-      local exportInfo = Nodes.ExportInfo.new(moduleTypeInfo, moduleProvideInfo, processInfo, globalSymbolList, importParam.importedAliasMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), fullModulePath, nameList[#nameList], lnsPath, newId2OldIdMap, importedMacroInfoMap)
+      local exportInfo = Nodes.ExportInfo._new(moduleTypeInfo, moduleProvideInfo, processInfo, globalSymbolList, importParam.importedAliasMap, frontInterface.ModuleId.createIdFromTxt( metaInfo.__buildId ), fullModulePath, nameList[#nameList], lnsPath, newId2OldIdMap, importedMacroInfoMap)
       
-      moduleInfo = frontInterface.ModuleInfo.new(exportInfo)
+      moduleInfo = frontInterface.ModuleInfo._new(exportInfo)
    end
    
    return moduleInfo
@@ -2427,9 +2427,9 @@ end
 
 local Import = {}
 _moduleObj.Import = Import
-function Import.new( curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl )
+function Import._new( curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl )
    local obj = {}
-   Import.setmeta( obj )
+   Import._setmeta( obj )
    if obj.__init then obj:__init( curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl ); end
    return obj
 end
@@ -2444,7 +2444,7 @@ function Import:__init(curPos, importModuleInfo, moduleType, macroCtrl, typeName
    self.importModule2ExportInfo = {}
    self.importModuleName2ModuleInfo = {}
 end
-function Import.setmeta( obj )
+function Import._setmeta( obj )
   setmetatable( obj, { __index = Import  } )
 end
 function Import:get_importModule2ExportInfo()
@@ -2490,7 +2490,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   return ModuleLoader.new(false, exportInfo, self.importModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth)
+   return ModuleLoader._new(false, exportInfo, self.importModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth)
 end
 
 
@@ -2555,7 +2555,7 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    end )
    
    
-   local moduleLoader = ModuleLoader.new(false, nil, self.importModuleInfo, modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth)
+   local moduleLoader = ModuleLoader._new(false, nil, self.importModuleInfo, modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth)
    return moduleLoader
 end
 

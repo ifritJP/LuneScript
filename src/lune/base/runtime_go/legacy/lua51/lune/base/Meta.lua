@@ -13,12 +13,12 @@ end
 
 local _MetaInfo = {}
 _moduleObj._MetaInfo = _MetaInfo
-function _MetaInfo.setmeta( obj )
+function _MetaInfo._setmeta( obj )
   setmetatable( obj, { __index = _MetaInfo  } )
 end
-function _MetaInfo.new( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap, __moduleHierarchy )
+function _MetaInfo._new( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap, __moduleHierarchy )
    local obj = {}
-   _MetaInfo.setmeta( obj )
+   _MetaInfo._setmeta( obj )
    if obj.__init then
       obj:__init( __formatVersion, __enableTest, __buildId, __lazyModuleList, __typeId2ClassInfoMap, __typeInfoList, __varName2InfoMap, __moduleTypeId, __moduleSymbolKind, __moduleMutable, __dependModuleMap, __dependIdMap, __macroName2InfoMap, __hasTest, __subModuleMap, __moduleHierarchy )
    end

@@ -85,12 +85,12 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 
 local glueGenerator = {}
-function glueGenerator.setmeta( obj )
+function glueGenerator._setmeta( obj )
   setmetatable( obj, { __index = glueGenerator  } )
 end
-function glueGenerator.new( srcStream, headerStream )
+function glueGenerator._new( srcStream, headerStream )
    local obj = {}
-   glueGenerator.setmeta( obj )
+   glueGenerator._setmeta( obj )
    if obj.__init then
       obj:__init( srcStream, headerStream )
    end
@@ -322,12 +322,12 @@ end
 
 
 local GlueArgInfo = {}
-function GlueArgInfo.setmeta( obj )
+function GlueArgInfo._setmeta( obj )
   setmetatable( obj, { __index = GlueArgInfo  } )
 end
-function GlueArgInfo.new( index, argName, callArgName, callTxt, setTxt, typeInfo )
+function GlueArgInfo._new( index, argName, callArgName, callTxt, setTxt, typeInfo )
    local obj = {}
-   GlueArgInfo.setmeta( obj )
+   GlueArgInfo._setmeta( obj )
    if obj.__init then
       obj:__init( index, argName, callArgName, callTxt, setTxt, typeInfo )
    end
@@ -431,7 +431,7 @@ function glueGenerator:outputMethod( node, gluePrefix )
          end
          
          
-         table.insert( glueArgInfoList, GlueArgInfo.new(index + addVal, argName, callArgName, callTxt, setTxt, argNode:get_expType()) )
+         table.insert( glueArgInfoList, GlueArgInfo._new(index + addVal, argName, callArgName, callTxt, setTxt, argNode:get_expType()) )
       end
       
    end
@@ -527,9 +527,9 @@ end
 
 local glueFilter = {}
 setmetatable( glueFilter, { __index = Nodes.Filter } )
-function glueFilter.new( outputDir )
+function glueFilter._new( outputDir )
    local obj = {}
-   glueFilter.setmeta( obj )
+   glueFilter._setmeta( obj )
    if obj.__init then obj:__init( outputDir ); end
    return obj
 end
@@ -538,14 +538,14 @@ function glueFilter:__init(outputDir)
    
    self.outputDir = outputDir
 end
-function glueFilter.setmeta( obj )
+function glueFilter._setmeta( obj )
   setmetatable( obj, { __index = glueFilter  } )
 end
 
 
 local function createFilter( outputDir )
 
-   return glueFilter.new(outputDir)
+   return glueFilter._new(outputDir)
 end
 _moduleObj.createFilter = createFilter
 
@@ -574,7 +574,7 @@ function glueFilter:processRoot( node, dummy )
                if _exp ~= nil then
                   local cFile = createFile( moduleSymbolName .. "_glue.c" )
                   local hFile = createFile( moduleSymbolName .. "_glue.h" )
-                  local glue = glueGenerator.new(cFile, hFile)
+                  local glue = glueGenerator._new(cFile, hFile)
                   glue:outputClass( moduleSymbolName, declClassNode, _exp )
                   cFile:close(  )
                   hFile:close(  )

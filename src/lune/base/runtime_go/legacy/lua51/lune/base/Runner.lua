@@ -71,9 +71,9 @@ end
 local Runner = {}
 setmetatable( Runner, { ifList = {__Runner,} } )
 _moduleObj.Runner = Runner
-function Runner.new(  )
+function Runner._new(  )
    local obj = {}
-   Runner.setmeta( obj )
+   Runner._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -87,7 +87,7 @@ function Runner:start( mode, name )
 
    _lune._run(self, mode, name )
 end
-function Runner.setmeta( obj )
+function Runner._setmeta( obj )
   setmetatable( obj, { __index = Runner  } )
 end
 

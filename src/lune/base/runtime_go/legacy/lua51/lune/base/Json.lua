@@ -195,7 +195,7 @@ end
 
 local function fromStr( txt )
 
-   local parser = Parser.DefaultPushbackParser.new(Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,"json",nil}), false ))
+   local parser = Parser.DefaultPushbackParser._new(Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,"json",nil}), false ))
    local val, ok = getVal( parser )
    if not ok then
       return nil, parser:getLastPos(  )

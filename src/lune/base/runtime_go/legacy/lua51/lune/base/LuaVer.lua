@@ -228,12 +228,12 @@ function LuaVerInfo:getLoadCode(  )
 
    return LuaMod.getCode( self.loadKind )
 end
-function LuaVerInfo.setmeta( obj )
+function LuaVerInfo._setmeta( obj )
   setmetatable( obj, { __index = LuaVerInfo  } )
 end
-function LuaVerInfo.new( verKind, hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
+function LuaVerInfo._new( verKind, hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
    local obj = {}
-   LuaVerInfo.setmeta( obj )
+   LuaVerInfo._setmeta( obj )
    if obj.__init then
       obj:__init( verKind, hasBitOp, hasTableUnpack, canFormStem2Str, hasSearchPath, loadStrFuncName, canUseMetaGc, loadKind, noSupportSymMap )
    end
@@ -274,13 +274,13 @@ function LuaVerInfo:get_canUseMetaGc()
 end
 
 
-local ver51 = LuaVerInfo.new(VerKind.v51, BitOp.Cant, false, false, false, "loadstring51", false, LuaMod.CodeKind.LoadStr51, {["package.searchpath"] = true})
+local ver51 = LuaVerInfo._new(VerKind.v51, BitOp.Cant, false, false, false, "loadstring51", false, LuaMod.CodeKind.LoadStr51, {["package.searchpath"] = true})
 _moduleObj.ver51 = ver51
 
-local ver52 = LuaVerInfo.new(VerKind.v52, BitOp.HasMod, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
+local ver52 = LuaVerInfo._new(VerKind.v52, BitOp.HasMod, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver52 = ver52
 
-local ver53 = LuaVerInfo.new(VerKind.v53, BitOp.HasOp, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
+local ver53 = LuaVerInfo._new(VerKind.v53, BitOp.HasOp, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver53 = ver53
 
 local kind2verMap = {[VerKind.v51] = _moduleObj.ver51, [VerKind.v52] = _moduleObj.ver52, [VerKind.v53] = _moduleObj.ver53}

@@ -274,12 +274,12 @@ function IdProvider:getNewId(  )
    
    return self.id
 end
-function IdProvider.setmeta( obj )
+function IdProvider._setmeta( obj )
   setmetatable( obj, { __index = IdProvider  } )
 end
-function IdProvider.new( id, maxId )
+function IdProvider._new( id, maxId )
    local obj = {}
-   IdProvider.setmeta( obj )
+   IdProvider._setmeta( obj )
    if obj.__init then
       obj:__init( id, maxId )
    end
@@ -293,7 +293,7 @@ end
 
 function IdProvider:clone(  )
 
-   local idProd = IdProvider.new(self.id, self.maxId)
+   local idProd = IdProvider._new(self.id, self.maxId)
    return idProd
 end
 
@@ -413,12 +413,12 @@ local TypeInfo = {}
 
 local ModuleInfoIF = {}
 _moduleObj.ModuleInfoIF = ModuleInfoIF
-function ModuleInfoIF.setmeta( obj )
+function ModuleInfoIF._setmeta( obj )
   setmetatable( obj, { __index = ModuleInfoIF  } )
 end
-function ModuleInfoIF.new(  )
+function ModuleInfoIF._new(  )
    local obj = {}
-   ModuleInfoIF.setmeta( obj )
+   ModuleInfoIF._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -432,12 +432,12 @@ end
 local SimpleModuleInfo = {}
 setmetatable( SimpleModuleInfo, { ifList = {ModuleInfoIF,} } )
 _moduleObj.SimpleModuleInfo = SimpleModuleInfo
-function SimpleModuleInfo.setmeta( obj )
+function SimpleModuleInfo._setmeta( obj )
   setmetatable( obj, { __index = SimpleModuleInfo  } )
 end
-function SimpleModuleInfo.new( assignName, modulePath )
+function SimpleModuleInfo._new( assignName, modulePath )
    local obj = {}
-   SimpleModuleInfo.setmeta( obj )
+   SimpleModuleInfo._setmeta( obj )
    if obj.__init then
       obj:__init( assignName, modulePath )
    end
@@ -458,12 +458,12 @@ end
 
 local ModuleInfoManager = {}
 _moduleObj.ModuleInfoManager = ModuleInfoManager
-function ModuleInfoManager.setmeta( obj )
+function ModuleInfoManager._setmeta( obj )
   setmetatable( obj, { __index = ModuleInfoManager  } )
 end
-function ModuleInfoManager.new(  )
+function ModuleInfoManager._new(  )
    local obj = {}
-   ModuleInfoManager.setmeta( obj )
+   ModuleInfoManager._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -476,9 +476,9 @@ end
 local Scope = {}
 local TypeData = {}
 _moduleObj.TypeData = TypeData
-function TypeData.new(  )
+function TypeData._new(  )
    local obj = {}
-   TypeData.setmeta( obj )
+   TypeData._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -492,7 +492,7 @@ function TypeData:addFrom( typeData )
    end
    
 end
-function TypeData.setmeta( obj )
+function TypeData._setmeta( obj )
   setmetatable( obj, { __index = TypeData  } )
 end
 function TypeData:get_children()
@@ -501,12 +501,12 @@ end
 
 
 _moduleObj.TypeDataAccessor = TypeDataAccessor
-function TypeDataAccessor.setmeta( obj )
+function TypeDataAccessor._setmeta( obj )
   setmetatable( obj, { __index = TypeDataAccessor  } )
 end
-function TypeDataAccessor.new(  )
+function TypeDataAccessor._new(  )
    local obj = {}
-   TypeDataAccessor.setmeta( obj )
+   TypeDataAccessor._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -520,12 +520,12 @@ end
 local SimpleTypeDataAccessor = {}
 setmetatable( SimpleTypeDataAccessor, { ifList = {TypeDataAccessor,} } )
 _moduleObj.SimpleTypeDataAccessor = SimpleTypeDataAccessor
-function SimpleTypeDataAccessor.setmeta( obj )
+function SimpleTypeDataAccessor._setmeta( obj )
   setmetatable( obj, { __index = SimpleTypeDataAccessor  } )
 end
-function SimpleTypeDataAccessor.new( typeData )
+function SimpleTypeDataAccessor._new( typeData )
    local obj = {}
-   SimpleTypeDataAccessor.setmeta( obj )
+   SimpleTypeDataAccessor._setmeta( obj )
    if obj.__init then
       obj:__init( typeData )
    end
@@ -592,9 +592,9 @@ function ProcessInfo:getTypeInfo( id )
 
    return self.id2TypeInfo[id]
 end
-function ProcessInfo.new( validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map )
+function ProcessInfo._new( validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map )
    local obj = {}
-   ProcessInfo.setmeta( obj )
+   ProcessInfo._setmeta( obj )
    if obj.__init then obj:__init( validCheckingMutable, idProvBase, validExtType, validDetailError, typeInfo2Map ); end
    return obj
 end
@@ -602,21 +602,21 @@ function ProcessInfo:__init(validCheckingMutable, idProvBase, validExtType, vali
    self.orgInfo = self
    self.dummyParentType = nil
    self.topScope = nil
-   self.miscTypeData = TypeData.new()
+   self.miscTypeData = TypeData._new()
    self.validDetailError = validDetailError
    self.id2TypeInfo = {}
    self.validCheckingMutable = validCheckingMutable
    self.validExtType = validExtType
    self.idProvBase = idProvBase
-   self.idProvExt = IdProvider.new(extStartId, extMaxId)
+   self.idProvExt = IdProvider._new(extStartId, extMaxId)
    self.idProv = self.idProvBase
-   self.idProvSym = IdProvider.new(0, extMaxId)
-   self.idProvScope = IdProvider.new(0, extMaxId)
+   self.idProvSym = IdProvider._new(0, extMaxId)
+   self.idProvScope = IdProvider._new(0, extMaxId)
    self.typeInfo2Map = typeInfo2Map
 end
 function ProcessInfo.createRoot(  )
 
-   return ProcessInfo.new(true, IdProvider.new(builtinStartId, userStartId), true, false, nil)
+   return ProcessInfo._new(true, IdProvider._new(builtinStartId, userStartId), true, false, nil)
 end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
@@ -634,7 +634,7 @@ function ProcessInfo:switchIdProvier( idType )
    end
    
 end
-function ProcessInfo.setmeta( obj )
+function ProcessInfo._setmeta( obj )
   setmetatable( obj, { __index = ProcessInfo  } )
 end
 function ProcessInfo:get_idProvSym()
@@ -693,9 +693,9 @@ function IdInfo:get_orgId(  )
 
    return self.orgId or self.id
 end
-function IdInfo.new( id, processInfo )
+function IdInfo._new( id, processInfo )
    local obj = {}
-   IdInfo.setmeta( obj )
+   IdInfo._setmeta( obj )
    if obj.__init then obj:__init( id, processInfo ); end
    return obj
 end
@@ -715,7 +715,7 @@ function IdInfo:equals( idInfo )
    
    return false
 end
-function IdInfo.setmeta( obj )
+function IdInfo._setmeta( obj )
   setmetatable( obj, { __index = IdInfo  } )
 end
 function IdInfo:set_id( id )
@@ -741,12 +741,12 @@ _moduleObj.getRootProcessInfoRo = getRootProcessInfoRo
 
 function ProcessInfo:newIdForRoot(  )
 
-   return IdInfo.new(_moduleObj.builtinRootId, self)
+   return IdInfo._new(_moduleObj.builtinRootId, self)
 end
 
 function ProcessInfo:newIdForSubRoot(  )
 
-   return IdInfo.new(_moduleObj.userRootId, self)
+   return IdInfo._new(_moduleObj.userRootId, self)
 end
 
 function ProcessInfo:setRootTypeInfo( id, typeInfo )
@@ -759,7 +759,7 @@ function ProcessInfo:newId( typeInfo )
 
    local id = self.idProv:getNewId(  )
    self.id2TypeInfo[id] = typeInfo
-   return IdInfo.new(id, self)
+   return IdInfo._new(id, self)
 end
 
 
@@ -770,9 +770,9 @@ _moduleObj.rootTypeIdInfo = rootTypeIdInfo
 local DummyModuleInfoManager = {}
 setmetatable( DummyModuleInfoManager, { ifList = {ModuleInfoManager,} } )
 _moduleObj.DummyModuleInfoManager = DummyModuleInfoManager
-function DummyModuleInfoManager.new(  )
+function DummyModuleInfoManager._new(  )
    local obj = {}
-   DummyModuleInfoManager.setmeta( obj )
+   DummyModuleInfoManager._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -782,14 +782,14 @@ function DummyModuleInfoManager:getModuleInfo( typeInfo )
 
    return nil
 end
-function DummyModuleInfoManager.setmeta( obj )
+function DummyModuleInfoManager._setmeta( obj )
   setmetatable( obj, { __index = DummyModuleInfoManager  } )
 end
 function DummyModuleInfoManager.get_instance()
    return DummyModuleInfoManager.instance
 end
 do
-   DummyModuleInfoManager.instance = DummyModuleInfoManager.new()
+   DummyModuleInfoManager.instance = DummyModuleInfoManager._new()
 end
 
 
@@ -882,12 +882,12 @@ SymbolKind.__allList[7] = SymbolKind.Mac
 
 local LowSymbol = {}
 _moduleObj.LowSymbol = LowSymbol
-function LowSymbol.setmeta( obj )
+function LowSymbol._setmeta( obj )
   setmetatable( obj, { __index = LowSymbol  } )
 end
-function LowSymbol.new(  )
+function LowSymbol._new(  )
    local obj = {}
-   LowSymbol.setmeta( obj )
+   LowSymbol._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -905,12 +905,12 @@ local sym2builtInTypeMap = sym2builtInTypeMapWork
 
 local BuiltinTypeInfo = {}
 _moduleObj.BuiltinTypeInfo = BuiltinTypeInfo
-function BuiltinTypeInfo.setmeta( obj )
+function BuiltinTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = BuiltinTypeInfo  } )
 end
-function BuiltinTypeInfo.new( typeInfo, typeInfoMut, scope )
+function BuiltinTypeInfo._new( typeInfo, typeInfoMut, scope )
    local obj = {}
-   BuiltinTypeInfo.setmeta( obj )
+   BuiltinTypeInfo._setmeta( obj )
    if obj.__init then
       obj:__init( typeInfo, typeInfoMut, scope )
    end
@@ -1092,12 +1092,12 @@ end
 _moduleObj.isMutable = isMutable
 local TypeNameCtrl = {}
 _moduleObj.TypeNameCtrl = TypeNameCtrl
-function TypeNameCtrl.setmeta( obj )
+function TypeNameCtrl._setmeta( obj )
   setmetatable( obj, { __index = TypeNameCtrl  } )
 end
-function TypeNameCtrl.new( moduleTypeInfo )
+function TypeNameCtrl._new( moduleTypeInfo )
    local obj = {}
-   TypeNameCtrl.setmeta( obj )
+   TypeNameCtrl._setmeta( obj )
    if obj.__init then
       obj:__init( moduleTypeInfo )
    end
@@ -1146,9 +1146,9 @@ ScopeAccess.__allList[2] = ScopeAccess.Full
 
 setmetatable( SymbolInfo, { ifList = {LowSymbol,} } )
 _moduleObj.SymbolInfo = SymbolInfo
-function SymbolInfo.new(  )
+function SymbolInfo._new(  )
    local obj = {}
-   SymbolInfo.setmeta( obj )
+   SymbolInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -1172,7 +1172,7 @@ function SymbolInfo:clearValue(  )
 
    self:set_hasValueFlag( false )
 end
-function SymbolInfo.setmeta( obj )
+function SymbolInfo._setmeta( obj )
   setmetatable( obj, { __index = SymbolInfo  } )
 end
 function SymbolInfo:set_namespaceTypeInfo( namespaceTypeInfo )
@@ -1182,12 +1182,12 @@ end
 
 local DataOwnerInfo = {}
 _moduleObj.DataOwnerInfo = DataOwnerInfo
-function DataOwnerInfo.setmeta( obj )
+function DataOwnerInfo._setmeta( obj )
   setmetatable( obj, { __index = DataOwnerInfo  } )
 end
-function DataOwnerInfo.new( hasData, symbolInfo )
+function DataOwnerInfo._new( hasData, symbolInfo )
    local obj = {}
-   DataOwnerInfo.setmeta( obj )
+   DataOwnerInfo._setmeta( obj )
    if obj.__init then
       obj:__init( hasData, symbolInfo )
    end
@@ -1201,9 +1201,9 @@ end
 
 
 local ClosureInfo = {}
-function ClosureInfo.new(  )
+function ClosureInfo._new(  )
    local obj = {}
-   ClosureInfo.setmeta( obj )
+   ClosureInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -1230,7 +1230,7 @@ function ClosureInfo:setRefPos(  )
    end
    
 end
-function ClosureInfo.setmeta( obj )
+function ClosureInfo._setmeta( obj )
   setmetatable( obj, { __index = ClosureInfo  } )
 end
 function ClosureInfo:get_closureSymList()
@@ -1281,9 +1281,9 @@ function Scope:updateClosureRefPos(  )
 
    self.closureInfo:setRefPos(  )
 end
-function Scope.new( processInfo, parent, scopeKind, inherit, ifScopeList )
+function Scope._new( processInfo, parent, scopeKind, inherit, ifScopeList )
    local obj = {}
-   Scope.setmeta( obj )
+   Scope._setmeta( obj )
    if obj.__init then obj:__init( processInfo, parent, scopeKind, inherit, ifScopeList ); end
    return obj
 end
@@ -1291,7 +1291,7 @@ function Scope:__init(processInfo, parent, scopeKind, inherit, ifScopeList)
    self.scopeId = processInfo:get_idProvScope():getNewId(  )
    self.hasClosureAccess = false
    
-   self.closureInfo = ClosureInfo.new()
+   self.closureInfo = ClosureInfo._new()
    
    self.typeInfo2ModuleInfoMap = {}
    self.outerScope = _lune.unwrapDefault( parent, self)
@@ -1336,7 +1336,7 @@ function Scope:getSymbolInfoChild( name )
 end
 function Scope:setData( symbolInfo )
 
-   self.symbolId2DataOwnerInfo[symbolInfo:get_symbolId()] = DataOwnerInfo.new(true, symbolInfo)
+   self.symbolId2DataOwnerInfo[symbolInfo:get_symbolId()] = DataOwnerInfo._new(true, symbolInfo)
 end
 function Scope:remove( name )
 
@@ -1365,7 +1365,7 @@ function Scope:getModuleInfo( typeInfo )
    
    return nil
 end
-function Scope.setmeta( obj )
+function Scope._setmeta( obj )
   setmetatable( obj, { __index = Scope  } )
 end
 function Scope:get_scopeId()
@@ -1402,7 +1402,7 @@ function Scope:set_validCheckingUnaccess( validCheckingUnaccess )
    self.validCheckingUnaccess = validCheckingUnaccess
 end
 
-local rootScope = Scope.new(rootProcessInfo, nil, ScopeKind.Other, nil)
+local rootScope = Scope._new(rootProcessInfo, nil, ScopeKind.Other, nil)
 local rootScopeRo = rootScope
 rootProcessInfo:set_topScope( rootScope )
 
@@ -1443,9 +1443,9 @@ end
 local ScopeWithRef = {}
 setmetatable( ScopeWithRef, { __index = Scope } )
 _moduleObj.ScopeWithRef = ScopeWithRef
-function ScopeWithRef.new( processInfo, outerScope, parent, scopeKind, inherit, ifScopeList )
+function ScopeWithRef._new( processInfo, outerScope, parent, scopeKind, inherit, ifScopeList )
    local obj = {}
-   ScopeWithRef.setmeta( obj )
+   ScopeWithRef._setmeta( obj )
    if obj.__init then obj:__init( processInfo, outerScope, parent, scopeKind, inherit, ifScopeList ); end
    return obj
 end
@@ -1454,7 +1454,7 @@ function ScopeWithRef:__init(processInfo, outerScope, parent, scopeKind, inherit
    
    self:set_parent( parent )
 end
-function ScopeWithRef.setmeta( obj )
+function ScopeWithRef._setmeta( obj )
   setmetatable( obj, { __index = ScopeWithRef  } )
 end
 
@@ -1521,12 +1521,12 @@ function SerializeInfo:serializeId( idInfo )
    local processId = _lune.unwrap( self.processInfo2Id[idInfo:get_processInfo()])
    return string.format( "{ id = %d, mod = %d }", idInfo:get_orgId(), processId)
 end
-function SerializeInfo.setmeta( obj )
+function SerializeInfo._setmeta( obj )
   setmetatable( obj, { __index = SerializeInfo  } )
 end
-function SerializeInfo.new( processInfo2Id, validChildrenMap )
+function SerializeInfo._new( processInfo2Id, validChildrenMap )
    local obj = {}
-   SerializeInfo.setmeta( obj )
+   SerializeInfo._setmeta( obj )
    if obj.__init then
       obj:__init( processInfo2Id, validChildrenMap )
    end
@@ -1590,9 +1590,9 @@ function TypeInfo:getOverridingType(  )
 
    return nil
 end
-function TypeInfo.new( scope, processInfo )
+function TypeInfo._new( scope, processInfo )
    local obj = {}
-   TypeInfo.setmeta( obj )
+   TypeInfo._setmeta( obj )
    if obj.__init then obj:__init( scope, processInfo ); end
    return obj
 end
@@ -1606,7 +1606,7 @@ function TypeInfo:__init(scope, processInfo)
       end
    end
    
-   self.typeData = TypeData.new()
+   self.typeData = TypeData._new()
    self.processInfo = processInfo
    
 end
@@ -1818,9 +1818,9 @@ function TypeInfo.createScope( processInfo, parent, scopeKind, baseInfo, interfa
       
    end
    
-   return Scope.new(processInfo, parent, scopeKind, inheritScope, ifScopeList)
+   return Scope._new(processInfo, parent, scopeKind, inheritScope, ifScopeList)
 end
-function TypeInfo.setmeta( obj )
+function TypeInfo._setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
 function TypeInfo:get_scope()
@@ -1922,7 +1922,7 @@ MethodKind.__allList[3] = MethodKind.Object
 
 local function getAllNameForKind( classInfo, kind, symbolKind )
 
-   local nameSet = Util.OrderedSet.new()
+   local nameSet = Util.OrderedSet._new()
    local function process( scope )
    
       do
@@ -2048,9 +2048,9 @@ _moduleObj.isExtId = isExtId
 local RootTypeInfo = {}
 setmetatable( RootTypeInfo, { __index = TypeInfo } )
 _moduleObj.RootTypeInfo = RootTypeInfo
-function RootTypeInfo.new( processInfo, rootId )
+function RootTypeInfo._new( processInfo, rootId )
    local obj = {}
-   RootTypeInfo.setmeta( obj )
+   RootTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, rootId ); end
    return obj
 end
@@ -2091,7 +2091,7 @@ function RootTypeInfo:get_parentInfo(  )
 end
 function RootTypeInfo.create( processInfo, rootId )
 
-   return RootTypeInfo.new(processInfo, rootId)
+   return RootTypeInfo._new(processInfo, rootId)
 end
 function RootTypeInfo:get_rawTxt(  )
 
@@ -2101,7 +2101,7 @@ function RootTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return "<head>"
 end
-function RootTypeInfo.setmeta( obj )
+function RootTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = RootTypeInfo  } )
 end
 function RootTypeInfo:get_typeId()
@@ -2116,8 +2116,8 @@ rootProcessInfo:setRootTypeInfo( _moduleObj.headTypeInfo:get_typeId().id, _modul
 
 function ProcessInfo.createUser( validCheckingMutable, validExtType, validDetailError, typeInfo2Map )
 
-   local processInfo = ProcessInfo.new(validCheckingMutable, IdProvider.new(userStartId, extStartId), validExtType, validDetailError, typeInfo2Map)
-   local scope = Scope.new(processInfo, nil, ScopeKind.Other, nil)
+   local processInfo = ProcessInfo._new(validCheckingMutable, IdProvider._new(userStartId, extStartId), validExtType, validDetailError, typeInfo2Map)
+   local scope = Scope._new(processInfo, nil, ScopeKind.Other, nil)
    processInfo:set_topScope( scope )
    local topType = RootTypeInfo.create( processInfo, processInfo:newIdForSubRoot(  ) )
    scope:set_ownerTypeInfo( topType )
@@ -2126,7 +2126,7 @@ function ProcessInfo.createUser( validCheckingMutable, validExtType, validDetail
 end
 
 
-local defaultTypeNameCtrl = TypeNameCtrl.new(_moduleObj.headTypeInfo)
+local defaultTypeNameCtrl = TypeNameCtrl._new(_moduleObj.headTypeInfo)
 _moduleObj.defaultTypeNameCtrl = defaultTypeNameCtrl
 
 
@@ -2176,9 +2176,9 @@ function NormalSymbolInfo:getOrg(  )
 
    return self
 end
-function NormalSymbolInfo.new( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad )
+function NormalSymbolInfo._new( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad )
    local obj = {}
-   NormalSymbolInfo.setmeta( obj )
+   NormalSymbolInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad ); end
    return obj
 end
@@ -2209,7 +2209,7 @@ function NormalSymbolInfo:__init(processInfo, kind, canBeLeft, canBeRight, scope
    self.hasValueFlag = hasValueFlag
    self.isLazyLoad = isLazyLoad
 end
-function NormalSymbolInfo.setmeta( obj )
+function NormalSymbolInfo._setmeta( obj )
   setmetatable( obj, { __index = NormalSymbolInfo  } )
 end
 function NormalSymbolInfo:get_canBeLeft()
@@ -2311,9 +2311,9 @@ end
 local ModifierTypeInfo = {}
 setmetatable( ModifierTypeInfo, { __index = TypeInfo } )
 _moduleObj.ModifierTypeInfo = ModifierTypeInfo
-function ModifierTypeInfo.new( processInfo, srcTypeInfo, mutMode )
+function ModifierTypeInfo._new( processInfo, srcTypeInfo, mutMode )
    local obj = {}
-   ModifierTypeInfo.setmeta( obj )
+   ModifierTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, srcTypeInfo, mutMode ); end
    return obj
 end
@@ -2418,7 +2418,7 @@ function ModifierTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer 
    
    return self.srcTypeInfo:equals( processInfo, typeInfo:get_srcTypeInfo(), alt2type, checkModifer )
 end
-function ModifierTypeInfo.setmeta( obj )
+function ModifierTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = ModifierTypeInfo  } )
 end
 function ModifierTypeInfo:get_srcTypeInfo()
@@ -2591,9 +2591,9 @@ end
 local DDDTypeInfo = {}
 
 _moduleObj.TypeInfo2Map = TypeInfo2Map
-function TypeInfo2Map.new(  )
+function TypeInfo2Map._new(  )
    local obj = {}
-   TypeInfo2Map.setmeta( obj )
+   TypeInfo2Map._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -2612,7 +2612,7 @@ function TypeInfo2Map:clone(  )
    
    
    
-   local obj = TypeInfo2Map.new()
+   local obj = TypeInfo2Map._new()
    for key, val in pairs( self.ImutModifierMap ) do
       obj.ImutModifierMap[key] = val
    end
@@ -2651,7 +2651,7 @@ function TypeInfo2Map:clone(  )
    
    return obj
 end
-function TypeInfo2Map.setmeta( obj )
+function TypeInfo2Map._setmeta( obj )
   setmetatable( obj, { __index = TypeInfo2Map  } )
 end
 function TypeInfo2Map:get_ImutModifierMap()
@@ -2679,7 +2679,7 @@ end
 
 function ProcessInfo:clone(  )
 
-   local processInfo = ProcessInfo.new(self.validCheckingMutable, self.idProvBase:clone(  ), self.validExtType, self.validDetailError, (_lune.unwrap( self.typeInfo2Map) ):clone(  ))
+   local processInfo = ProcessInfo._new(self.validCheckingMutable, self.idProvBase:clone(  ), self.validExtType, self.validDetailError, (_lune.unwrap( self.typeInfo2Map) ):clone(  ))
    
    processInfo.idProvExt = self.idProvExt:clone(  )
    processInfo.idProvSym = self.idProvSym:clone(  )
@@ -2693,7 +2693,7 @@ function ProcessInfo:clone(  )
 end
 
 
-rootProcessInfo:set_typeInfo2Map( TypeInfo2Map.new() )
+rootProcessInfo:set_typeInfo2Map( TypeInfo2Map._new() )
 
 local immutableTypeSetWork = {}
 local immutableTypeSet = immutableTypeSetWork
@@ -2823,7 +2823,7 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
       
    else
     
-      modifier = ModifierTypeInfo.new(self, srcTypeInfo, mutMode)
+      modifier = ModifierTypeInfo._new(self, srcTypeInfo, mutMode)
    end
    
    do
@@ -2844,9 +2844,9 @@ end
 local AutoBoxingInfo = {}
 setmetatable( AutoBoxingInfo, { __index = TypeInfo } )
 _moduleObj.AutoBoxingInfo = AutoBoxingInfo
-function AutoBoxingInfo.new( processInfo )
+function AutoBoxingInfo._new( processInfo )
    local obj = {}
-   AutoBoxingInfo.setmeta( obj )
+   AutoBoxingInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo ); end
    return obj
 end
@@ -2881,7 +2881,7 @@ end
 function AutoBoxingInfo:unregist(  )
 
 end
-function AutoBoxingInfo.setmeta( obj )
+function AutoBoxingInfo._setmeta( obj )
   setmetatable( obj, { __index = AutoBoxingInfo  } )
 end
 function AutoBoxingInfo:get_imutType()
@@ -2909,15 +2909,15 @@ function ProcessInfo:setupImut( typeInfo )
 end
 
 
-local dummyIdInfo = IdInfo.new(1, rootProcessInfo)
+local dummyIdInfo = IdInfo._new(1, rootProcessInfo)
 _moduleObj.dummyIdInfo = dummyIdInfo
 
 local CanEvalCtrlTypeInfo = {}
 setmetatable( CanEvalCtrlTypeInfo, { __index = TypeInfo } )
 _moduleObj.CanEvalCtrlTypeInfo = CanEvalCtrlTypeInfo
-function CanEvalCtrlTypeInfo.new(  )
+function CanEvalCtrlTypeInfo._new(  )
    local obj = {}
-   CanEvalCtrlTypeInfo.setmeta( obj )
+   CanEvalCtrlTypeInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -2968,7 +2968,7 @@ function CanEvalCtrlTypeInfo.isValidApply( alt2type )
 end
 function CanEvalCtrlTypeInfo.setupNeedAutoBoxing( alt2type, processInfo )
 
-   local autoBoxingInfo = AutoBoxingInfo.new(processInfo)
+   local autoBoxingInfo = AutoBoxingInfo._new(processInfo)
    processInfo:setupImut( autoBoxingInfo )
    alt2type[CanEvalCtrlTypeInfo.needAutoBoxing] = autoBoxingInfo
 end
@@ -3039,22 +3039,22 @@ function CanEvalCtrlTypeInfo.canAutoBoxing( dst, src )
    
    return true
 end
-function CanEvalCtrlTypeInfo.setmeta( obj )
+function CanEvalCtrlTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = CanEvalCtrlTypeInfo  } )
 end
 do
-   CanEvalCtrlTypeInfo.detectAlt = CanEvalCtrlTypeInfo.new()
-   CanEvalCtrlTypeInfo.needAutoBoxing = CanEvalCtrlTypeInfo.new()
-   CanEvalCtrlTypeInfo.checkTypeTarget = CanEvalCtrlTypeInfo.new()
+   CanEvalCtrlTypeInfo.detectAlt = CanEvalCtrlTypeInfo._new()
+   CanEvalCtrlTypeInfo.needAutoBoxing = CanEvalCtrlTypeInfo._new()
+   CanEvalCtrlTypeInfo.checkTypeTarget = CanEvalCtrlTypeInfo._new()
 end
 
 
 local NilableTypeInfo = {}
 setmetatable( NilableTypeInfo, { __index = TypeInfo } )
 _moduleObj.NilableTypeInfo = NilableTypeInfo
-function NilableTypeInfo.new( processInfo, nonnilableType )
+function NilableTypeInfo._new( processInfo, nonnilableType )
    local obj = {}
-   NilableTypeInfo.setmeta( obj )
+   NilableTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, nonnilableType ); end
    return obj
 end
@@ -3126,7 +3126,7 @@ function NilableTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo 
    
    return nil
 end
-function NilableTypeInfo.setmeta( obj )
+function NilableTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = NilableTypeInfo  } )
 end
 function NilableTypeInfo:get_nonnilableType()
@@ -3298,9 +3298,9 @@ function AliasTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
 end
-function AliasTypeInfo.new( processInfo, rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag )
+function AliasTypeInfo._new( processInfo, rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag )
    local obj = {}
-   AliasTypeInfo.setmeta( obj )
+   AliasTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag ); end
    return obj
 end
@@ -3314,7 +3314,7 @@ function AliasTypeInfo:__init(processInfo, rawTxt, accessMode, parentInfo, alias
    self.aliasSrcTypeInfo = aliasSrcTypeInfo
    self.externalFlag = externalFlag
    self.typeId = processInfo:newId( self )
-   self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
 end
 function AliasTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
 
@@ -3378,7 +3378,7 @@ function AliasTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
    return self.aliasSrcTypeInfo:equals( processInfo, typeInfo:get_aliasSrc(), alt2type, checkModifer )
 end
-function AliasTypeInfo.setmeta( obj )
+function AliasTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = AliasTypeInfo  } )
 end
 function AliasTypeInfo:get_rawTxt()
@@ -3945,7 +3945,7 @@ function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInf
    end
    
    
-   local symbolInfo = NormalSymbolInfo.new(processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad)
+   local symbolInfo = NormalSymbolInfo._new(processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad)
    symbolInfo:set_namespaceTypeInfo( ownerTypeInfo )
    self.symbol2SymbolInfoMap[name] = symbolInfo
    return symbolInfo, nil
@@ -4245,9 +4245,9 @@ end
 function NilTypeInfo:set_imutType( typeInfo )
 
 end
-function NilTypeInfo.new( processInfo )
+function NilTypeInfo._new( processInfo )
    local obj = {}
-   NilTypeInfo.setmeta( obj )
+   NilTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo ); end
    return obj
 end
@@ -4325,7 +4325,7 @@ function NilTypeInfo:getParentFullName( typeNameCtrl, importInfo, localFlag )
 
    return ""
 end
-function NilTypeInfo.setmeta( obj )
+function NilTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = NilTypeInfo  } )
 end
 function NilTypeInfo:get_typeId()
@@ -4436,9 +4436,9 @@ OverrideMut._name2Val["Prefix"] = OverrideMut.Prefix
 local AccessSymbolInfo = {}
 setmetatable( AccessSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.AccessSymbolInfo = AccessSymbolInfo
-function AccessSymbolInfo.new( processInfo, symbolInfo, overrideMut, overrideCanBeLeft )
+function AccessSymbolInfo._new( processInfo, symbolInfo, overrideMut, overrideCanBeLeft )
    local obj = {}
-   AccessSymbolInfo.setmeta( obj )
+   AccessSymbolInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, symbolInfo, overrideMut, overrideCanBeLeft ); end
    return obj
 end
@@ -4547,7 +4547,7 @@ function AccessSymbolInfo:get_canBeLeft(  )
    
    return self.symbolInfo:get_canBeLeft()
 end
-function AccessSymbolInfo.setmeta( obj )
+function AccessSymbolInfo._setmeta( obj )
   setmetatable( obj, { __index = AccessSymbolInfo  } )
 end
 function AccessSymbolInfo:get_symbolInfo()
@@ -4662,9 +4662,9 @@ end
 local AnonymousSymbolInfo = {}
 setmetatable( AnonymousSymbolInfo, { __index = SymbolInfo } )
 _moduleObj.AnonymousSymbolInfo = AnonymousSymbolInfo
-function AnonymousSymbolInfo.new( symbolInfo, id )
+function AnonymousSymbolInfo._new( symbolInfo, id )
    local obj = {}
-   AnonymousSymbolInfo.setmeta( obj )
+   AnonymousSymbolInfo._setmeta( obj )
    if obj.__init then obj:__init( symbolInfo, id ); end
    return obj
 end
@@ -4674,7 +4674,7 @@ function AnonymousSymbolInfo:__init(symbolInfo, id)
    self.symbolInfo = symbolInfo
    self.anonymousId = id
 end
-function AnonymousSymbolInfo.setmeta( obj )
+function AnonymousSymbolInfo._setmeta( obj )
   setmetatable( obj, { __index = AnonymousSymbolInfo  } )
 end
 function AnonymousSymbolInfo:get_anonymousId()
@@ -4817,9 +4817,9 @@ function AlternateTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
 end
-function AlternateTypeInfo.new( processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
+function AlternateTypeInfo._new( processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
    local obj = {}
-   AlternateTypeInfo.setmeta( obj )
+   AlternateTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList ); end
    return obj
 end
@@ -4835,13 +4835,13 @@ function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex,
    self.interfaceList = _lune.unwrapDefault( interfaceList, {})
    self.belongClassFlag = belongClassFlag
    self.altIndex = altIndex
-   self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
    self.imutType = _moduleObj.headTypeInfo
 end
 function AlternateTypeInfo.create( processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
 
    local scope = TypeInfo.createScope( processInfo, nil, ScopeKind.Class, baseTypeInfo, interfaceList )
-   local newType = AlternateTypeInfo.new(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList)
+   local newType = AlternateTypeInfo._new(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList)
    processInfo:setupImut( newType )
    
    return newType, scope
@@ -5042,7 +5042,7 @@ function AlternateTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInf
 
    return AlternateTypeInfo.getAssign( self, alt2typeMap )
 end
-function AlternateTypeInfo.setmeta( obj )
+function AlternateTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = AlternateTypeInfo  } )
 end
 function AlternateTypeInfo:get_typeId()
@@ -5081,9 +5081,9 @@ boxRootAltType = AlternateTypeInfo.create( rootProcessInfo, true, 1, "_T", Acces
 local BoxTypeInfo = {}
 setmetatable( BoxTypeInfo, { __index = TypeInfo } )
 _moduleObj.BoxTypeInfo = BoxTypeInfo
-function BoxTypeInfo.new( processInfo, scope, accessMode, boxingType )
+function BoxTypeInfo._new( processInfo, scope, accessMode, boxingType )
    local obj = {}
-   BoxTypeInfo.setmeta( obj )
+   BoxTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, scope, accessMode, boxingType ); end
    return obj
 end
@@ -5094,7 +5094,7 @@ function BoxTypeInfo:__init(processInfo, scope, accessMode, boxingType)
    self.typeId = processInfo:newId( self )
    self.itemTypeInfoList = {boxingType}
    self.accessMode = accessMode
-   self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
    self.imutType = _moduleObj.headTypeInfo
 end
 function BoxTypeInfo:get_nilableTypeInfoMut(  )
@@ -5169,7 +5169,7 @@ function BoxTypeInfo:createAlt2typeMap( detectFlag )
    
    return map
 end
-function BoxTypeInfo.setmeta( obj )
+function BoxTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = BoxTypeInfo  } )
 end
 function BoxTypeInfo:get_boxingType()
@@ -5326,9 +5326,9 @@ function GenericTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self.genSrcTypeInfo:get_display_stirng_with( raw, self.alt2typeMap )
 end
-function GenericTypeInfo.new( processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
+function GenericTypeInfo._new( processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
    local obj = {}
-   GenericTypeInfo.setmeta( obj )
+   GenericTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo ); end
    return obj
 end
@@ -5360,12 +5360,12 @@ function GenericTypeInfo:__init(processInfo, scope, genSrcTypeInfo, itemTypeInfo
    
    self.hasAlter = hasAlter
    self.alt2typeMap = alt2typeMap
-   self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
 end
 function GenericTypeInfo.create( processInfo, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
 
    local scope = TypeInfo.createScope( processInfo, nil, ScopeKind.Class, genSrcTypeInfo, nil )
-   local newType = GenericTypeInfo.new(processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo)
+   local newType = GenericTypeInfo._new(processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo)
    processInfo:setupImut( newType )
    
    return newType, scope
@@ -5554,7 +5554,7 @@ function GenericTypeInfo:createAlt2typeMap( detectFlag )
    
    return map
 end
-function GenericTypeInfo.setmeta( obj )
+function GenericTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = GenericTypeInfo  } )
 end
 function GenericTypeInfo:get_typeId()
@@ -5741,9 +5741,9 @@ end
 function ModuleTypeInfo:set_imutType( typeInfo )
 
 end
-function ModuleTypeInfo.new( processInfo, scope, externalFlag, txt, parentInfo, mutable, typeDataAccessor )
+function ModuleTypeInfo._new( processInfo, scope, externalFlag, txt, parentInfo, mutable, typeDataAccessor )
    local obj = {}
-   ModuleTypeInfo.setmeta( obj )
+   ModuleTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, scope, externalFlag, txt, parentInfo, mutable, typeDataAccessor ); end
    return obj
 end
@@ -5825,7 +5825,7 @@ function ModuleTypeInfo:serialize( stream, serializeInfo )
    stream:write( txt .. '\n' )
    stream:write( "}\n" )
 end
-function ModuleTypeInfo.setmeta( obj )
+function ModuleTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = ModuleTypeInfo  } )
 end
 function ModuleTypeInfo:get_externalFlag()
@@ -5891,12 +5891,12 @@ _moduleObj.getEnumLiteralVal = getEnumLiteralVal
 
 local EnumValInfo = {}
 _moduleObj.EnumValInfo = EnumValInfo
-function EnumValInfo.setmeta( obj )
+function EnumValInfo._setmeta( obj )
   setmetatable( obj, { __index = EnumValInfo  } )
 end
-function EnumValInfo.new( name, val, symbolInfo )
+function EnumValInfo._new( name, val, symbolInfo )
    local obj = {}
-   EnumValInfo.setmeta( obj )
+   EnumValInfo._setmeta( obj )
    if obj.__init then
       obj:__init( name, val, symbolInfo )
    end
@@ -5929,9 +5929,9 @@ end
 function EnumTypeInfo:set_imutType( typeInfo )
 
 end
-function EnumTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, valTypeInfo )
+function EnumTypeInfo._new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, valTypeInfo )
    local obj = {}
-   EnumTypeInfo.setmeta( obj )
+   EnumTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, valTypeInfo ); end
    return obj
 end
@@ -5954,7 +5954,7 @@ function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    end
    
    
-   self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
    
    scope:set_ownerTypeInfo( self )
 end
@@ -6015,7 +6015,7 @@ function EnumTypeInfo:get_mutMode(  )
 
    return MutMode.Mut
 end
-function EnumTypeInfo.setmeta( obj )
+function EnumTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = EnumTypeInfo  } )
 end
 function EnumTypeInfo:get_externalFlag()
@@ -6060,9 +6060,9 @@ function AlgeTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
 end
-function AlgeTypeInfo.new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor )
+function AlgeTypeInfo._new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor )
    local obj = {}
-   AlgeTypeInfo.setmeta( obj )
+   AlgeTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor ); end
    return obj
 end
@@ -6084,7 +6084,7 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    end
    
    
-   self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
    
    scope:set_ownerTypeInfo( self )
 end
@@ -6128,7 +6128,7 @@ function AlgeTypeInfo:get_mutMode(  )
 
    return MutMode.Mut
 end
-function AlgeTypeInfo.setmeta( obj )
+function AlgeTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = AlgeTypeInfo  } )
 end
 function AlgeTypeInfo:get_externalFlag()
@@ -6177,12 +6177,12 @@ function AlgeValInfo:serialize( stream, serializeInfo )
    
    stream:write( "} }" )
 end
-function AlgeValInfo.setmeta( obj )
+function AlgeValInfo._setmeta( obj )
   setmetatable( obj, { __index = AlgeValInfo  } )
 end
-function AlgeValInfo.new( name, typeList, algeTpye, symbolInfo )
+function AlgeValInfo._new( name, typeList, algeTpye, symbolInfo )
    local obj = {}
-   AlgeValInfo.setmeta( obj )
+   AlgeValInfo._setmeta( obj )
    if obj.__init then
       obj:__init( name, typeList, algeTpye, symbolInfo )
    end
@@ -6287,9 +6287,9 @@ function NormalTypeInfo:switchScopeTo( scope )
 
    self:switchScope( scope )
 end
-function NormalTypeInfo.new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode )
+function NormalTypeInfo._new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode )
    local obj = {}
-   NormalTypeInfo.setmeta( obj )
+   NormalTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode ); end
    return obj
 end
@@ -6393,7 +6393,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
       end
       
       if hasNilable then
-         self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+         self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
       else
        
          self.nilableTypeInfo = self
@@ -6404,7 +6404,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
 end
 function NormalTypeInfo:cloneForMeta( processInfo )
 
-   local newType = NormalTypeInfo.new(processInfo, self.abstractFlag, nil, self.baseTypeInfo, self.interfaceList, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, self.parentInfo, nil, self.kind, self.itemTypeInfoList, self.argTypeInfoList, self.retTypeInfoList, self.mutMode, self.moduleLang, self.asyncMode)
+   local newType = NormalTypeInfo._new(processInfo, self.abstractFlag, nil, self.baseTypeInfo, self.interfaceList, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, self.parentInfo, nil, self.kind, self.itemTypeInfoList, self.argTypeInfoList, self.retTypeInfoList, self.mutMode, self.moduleLang, self.asyncMode)
    newType.typeId = self.typeId
    return newType
 end
@@ -6634,7 +6634,7 @@ function NormalTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
 
    return self:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
 end
-function NormalTypeInfo.setmeta( obj )
+function NormalTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = NormalTypeInfo  } )
 end
 function NormalTypeInfo:get_externalFlag()
@@ -6707,7 +6707,7 @@ end
 
 function ProcessInfo:duplicate(  )
 
-   local processInfo = ProcessInfo.new(self.validCheckingMutable, self.idProvBase:clone(  ), self.validExtType, self.validDetailError, (_lune.unwrap( self.typeInfo2Map) ):clone(  ))
+   local processInfo = ProcessInfo._new(self.validCheckingMutable, self.idProvBase:clone(  ), self.validExtType, self.validDetailError, (_lune.unwrap( self.typeInfo2Map) ):clone(  ))
    
    processInfo.orgInfo = self
    processInfo.idProvExt = self.idProvExt:clone(  )
@@ -6766,18 +6766,18 @@ function Scope:addOverrideImut( processInfo, symbolInfo )
    end
    
    
-   self.symbol2SymbolInfoMap[symbolInfo:get_name()] = AccessSymbolInfo.new(processInfo, symbolInfo, _lune.newAlge( OverrideMut.IMut, {typeInfo}), false)
+   self.symbol2SymbolInfoMap[symbolInfo:get_name()] = AccessSymbolInfo._new(processInfo, symbolInfo, _lune.newAlge( OverrideMut.IMut, {typeInfo}), false)
 end
 
 
 local function addBuiltin( typeInfo, scope )
 
-   builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo.new(typeInfo, nil, scope)
+   builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo._new(typeInfo, nil, scope)
 end
 _moduleObj.addBuiltin = addBuiltin
 local function addBuiltinMut( typeInfo, scope )
 
-   builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo.new(typeInfo, typeInfo, scope)
+   builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo._new(typeInfo, typeInfo, scope)
 end
 _moduleObj.addBuiltinMut = addBuiltinMut
 addBuiltinMut( headTypeInfoMut, rootScope )
@@ -6824,9 +6824,9 @@ local function registBuiltin( idName, typeTxt, kind, worktypeInfo, typeInfoMut, 
    
    local registScope = scope ~= nil
    
-   sym2builtInTypeMapWork[typeTxt] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, false, rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true, false)
+   sym2builtInTypeMapWork[typeTxt] = NormalSymbolInfo._new(rootProcessInfo, SymbolKind.Typ, false, false, rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true, false)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
-      sym2builtInTypeMapWork[typeTxt .. "!"] = NormalSymbolInfo.new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true, false)
+      sym2builtInTypeMapWork[typeTxt .. "!"] = NormalSymbolInfo._new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true, false)
    end
    
    addBuiltin( typeInfo, scope )
@@ -6888,7 +6888,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
             end
          end
          
-         scope = Scope.new(rootProcessInfo, rootScope, scopeKind, nil)
+         scope = Scope._new(rootProcessInfo, rootScope, scopeKind, nil)
       end
    end
    
@@ -6904,7 +6904,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo.new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
+   local info = NormalTypeInfo._new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    rootProcessInfo:setupImut( info )
    
    registBuiltin( idName, typeTxt, kind, info, info, _moduleObj.headTypeInfo, scope )
@@ -7082,7 +7082,7 @@ LuavalConvKind._val2NameMap[1] = 'ToLua'
 LuavalConvKind.__allList[2] = LuavalConvKind.ToLua
 
 
-local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilTypeInfo.new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
+local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilTypeInfo._new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
 _moduleObj.builtinTypeNil = builtinTypeNil
 
 
@@ -7255,8 +7255,8 @@ local builtinTypeBox
 _moduleObj.builtinTypeBox = builtinTypeBox
 
 do
-   local boxRootScope = Scope.new(rootProcessInfo, rootScope, ScopeKind.Class, nil)
-   local work = BoxTypeInfo.new(rootProcessInfo, boxRootScope, AccessMode.Pub, boxRootAltType)
+   local boxRootScope = Scope._new(rootProcessInfo, rootScope, ScopeKind.Class, nil)
+   local work = BoxTypeInfo._new(rootProcessInfo, boxRootScope, AccessMode.Pub, boxRootAltType)
    rootProcessInfo:setupImut( work )
    registBuiltin( "Nilable", "Nilable", TypeInfoKind.Box, work, work, _moduleObj.headTypeInfo, boxRootScope )
    _moduleObj.builtinTypeBox = work
@@ -7283,7 +7283,7 @@ function ProcessInfo:createBox( accessMode, nonnilableType )
    end
    
    
-   local boxType = BoxTypeInfo.new(self, nil, accessMode, nonnilableType)
+   local boxType = BoxTypeInfo._new(self, nil, accessMode, nonnilableType)
    self:setupImut( boxType )
    
    self:get_typeInfo2Map().BoxMap[nonnilableType] = boxType
@@ -7318,7 +7318,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7346,7 +7346,7 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7374,7 +7374,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7402,7 +7402,7 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo.new(self, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7426,7 +7426,7 @@ function ProcessInfo:createModule( scope, parentInfo, typeDataAccessor, external
    end
    
    
-   local info = ModuleTypeInfo.new(self, scope, externalFlag, moduleName, parentInfo, mutable, typeDataAccessor)
+   local info = ModuleTypeInfo._new(self, scope, externalFlag, moduleName, parentInfo, mutable, typeDataAccessor)
    
    self:setupImut( info )
    
@@ -7441,7 +7441,7 @@ function ProcessInfo:createClassAsync( classFlag, abstractFlag, scope, baseInfo,
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
+   local info = NormalTypeInfo._new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
    self:setupImut( info )
    
    for __index, genType in ipairs( genTypeList ) do
@@ -7461,7 +7461,7 @@ function ProcessInfo:createExtModule( scope, parentInfo, typeDataAccessor, exter
    end
    
    
-   local info = NormalTypeInfo.new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
+   local info = NormalTypeInfo._new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
    self:setupImut( info )
    info:set_requirePath( requirePath )
    return info
@@ -7475,7 +7475,7 @@ function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, pa
    end
    
    
-   local info = NormalTypeInfo.new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutMode, nil, asyncMode)
+   local info = NormalTypeInfo._new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutMode, nil, asyncMode)
    self:setupImut( info )
    
    if altTypeList ~= nil then
@@ -7502,7 +7502,7 @@ _moduleObj.builtinTypeLnsLoad = builtinTypeLnsLoad
 
 function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
 
-   local info = NormalTypeInfo.new(self, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self:get_dummyParentType(), TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
+   local info = NormalTypeInfo._new(self, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self:get_dummyParentType(), TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
    self:setupImut( info )
    
    return info
@@ -7539,7 +7539,7 @@ end
 
 function ProcessInfo:createAlias( processInfo, name, externalFlag, accessMode, parentInfo, typeInfo )
 
-   local newType = AliasTypeInfo.new(processInfo, name, accessMode, parentInfo, typeInfo:get_srcTypeInfo(), externalFlag)
+   local newType = AliasTypeInfo._new(processInfo, name, accessMode, parentInfo, typeInfo:get_srcTypeInfo(), externalFlag)
    self:setupImut( newType )
    return newType
 end
@@ -7595,9 +7595,9 @@ function DDDTypeInfo:get_parentInfo(  )
 
    return _moduleObj.headTypeInfo
 end
-function DDDTypeInfo.new( processInfo, typeInfo, externalFlag, extOrgDDType )
+function DDDTypeInfo._new( processInfo, typeInfo, externalFlag, extOrgDDType )
    local obj = {}
-   DDDTypeInfo.setmeta( obj )
+   DDDTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, typeInfo, externalFlag, extOrgDDType ); end
    return obj
 end
@@ -7682,7 +7682,7 @@ function DDDTypeInfo:get_accessMode(  )
    
    return AccessMode.Pub
 end
-function DDDTypeInfo.setmeta( obj )
+function DDDTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = DDDTypeInfo  } )
 end
 function DDDTypeInfo:get_typeInfo()
@@ -7758,12 +7758,12 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
    end
    
    
-   local dddType = DDDTypeInfo.new(self, typeInfo, externalFlag, nil)
+   local dddType = DDDTypeInfo._new(self, typeInfo, externalFlag, nil)
    self:setupImut( dddType )
    
    if failCreateLuavalWith( typeInfo, LuavalConvKind.InLua, true ) then
       
-      local extDDDType = DDDTypeInfo.new(self, typeInfo, externalFlag, dddType)
+      local extDDDType = DDDTypeInfo._new(self, typeInfo, externalFlag, dddType)
       self:setupImut( extDDDType )
       
       if extTypeFlag then
@@ -7804,9 +7804,9 @@ _moduleObj.builtinTypeBlockArg = builtinTypeBlockArg
 
 local CombineType = {}
 _moduleObj.CombineType = CombineType
-function CombineType.new( typeInfo )
+function CombineType._new( typeInfo )
    local obj = {}
-   CombineType.setmeta( obj )
+   CombineType._setmeta( obj )
    if obj.__init then obj:__init( typeInfo ); end
    return obj
 end
@@ -7891,7 +7891,7 @@ function CombineType:get_typeInfo( processInfo )
    
    error( "illegal" )
 end
-function CombineType.setmeta( obj )
+function CombineType._setmeta( obj )
   setmetatable( obj, { __index = CombineType  } )
 end
 
@@ -8103,7 +8103,7 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
    end
    
    
-   local combine = CombineType.new(typeInfo)
+   local combine = CombineType._new(typeInfo)
    return combine:andType( processInfo, _lune.newAlge( CommonType.Normal, {other}), alt2type )
 end
 
@@ -8243,9 +8243,9 @@ function AbbrTypeInfo:get_parentInfo(  )
 
    return _moduleObj.headTypeInfo
 end
-function AbbrTypeInfo.new( processInfo, rawTxt )
+function AbbrTypeInfo._new( processInfo, rawTxt )
    local obj = {}
-   AbbrTypeInfo.setmeta( obj )
+   AbbrTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, rawTxt ); end
    return obj
 end
@@ -8308,7 +8308,7 @@ function AbbrTypeInfo:get_accessMode(  )
 
    return AccessMode.Local
 end
-function AbbrTypeInfo.setmeta( obj )
+function AbbrTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = AbbrTypeInfo  } )
 end
 function AbbrTypeInfo:get_typeId()
@@ -8319,10 +8319,10 @@ function AbbrTypeInfo:get_rawTxt()
 end
 
 
-local builtinTypeAbbr = AbbrTypeInfo.new(rootProcessInfo, "##")
+local builtinTypeAbbr = AbbrTypeInfo._new(rootProcessInfo, "##")
 _moduleObj.builtinTypeAbbr = builtinTypeAbbr
 
-local builtinTypeAbbrNone = AbbrTypeInfo.new(rootProcessInfo, "[##]")
+local builtinTypeAbbrNone = AbbrTypeInfo._new(rootProcessInfo, "[##]")
 _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
 
 
@@ -8333,9 +8333,9 @@ function ExtTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
 end
-function ExtTypeInfo.new( processInfo, extedType )
+function ExtTypeInfo._new( processInfo, extedType )
    local obj = {}
-   ExtTypeInfo.setmeta( obj )
+   ExtTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, extedType ); end
    return obj
 end
@@ -8347,7 +8347,7 @@ function ExtTypeInfo:__init(processInfo, extedType)
    self.extedType = extedType
    self.imutType = _moduleObj.headTypeInfo
    
-   self.nilableTypeInfo = NilableTypeInfo.new(processInfo, self)
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
 end
 function ExtTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
@@ -8449,7 +8449,7 @@ function ExtTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
    
    return self
 end
-function ExtTypeInfo.setmeta( obj )
+function ExtTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = ExtTypeInfo  } )
 end
 function ExtTypeInfo:get_typeId()
@@ -8671,7 +8671,7 @@ function ProcessInfo:createLuaval( luneType, validToCheck )
          return _lune.newAlge( LuavalResult.OK, {luneType,true})
       end
       
-      local extType = ExtTypeInfo.new(self, luneType:get_nonnilableType())
+      local extType = ExtTypeInfo._new(self, luneType:get_nonnilableType())
       
       updateCache( extType )
       self:setupImut( extType )
@@ -8746,9 +8746,9 @@ _moduleObj.convToExtTypeList = convToExtTypeList
 local AndExpTypeInfo = {}
 setmetatable( AndExpTypeInfo, { __index = TypeInfo } )
 _moduleObj.AndExpTypeInfo = AndExpTypeInfo
-function AndExpTypeInfo.new( processInfo, exp1, exp2, result )
+function AndExpTypeInfo._new( processInfo, exp1, exp2, result )
    local obj = {}
-   AndExpTypeInfo.setmeta( obj )
+   AndExpTypeInfo._setmeta( obj )
    if obj.__init then obj:__init( processInfo, exp1, exp2, result ); end
    return obj
 end
@@ -8759,7 +8759,7 @@ function AndExpTypeInfo:__init(processInfo, exp1, exp2, result)
    self.exp2 = exp2
    self.result = result
 end
-function AndExpTypeInfo.setmeta( obj )
+function AndExpTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = AndExpTypeInfo  } )
 end
 function AndExpTypeInfo:get_exp1()
@@ -9000,7 +9000,7 @@ function ProcessInfo:createEnum( scope, parentInfo, typeDataAccessor, externalFl
    end
    
    
-   local info = EnumTypeInfo.new(self, scope, externalFlag, accessMode, enumName, parentInfo, typeDataAccessor, valTypeInfo)
+   local info = EnumTypeInfo._new(self, scope, externalFlag, accessMode, enumName, parentInfo, typeDataAccessor, valTypeInfo)
    self:setupImut( info )
    
    local getEnumName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, MutMode.IMut )
@@ -9067,7 +9067,7 @@ function ProcessInfo:createAlge( scope, parentInfo, typeDataAccessor, externalFl
    end
    
    
-   local info = AlgeTypeInfo.new(self, scope, externalFlag, accessMode, algeName, parentInfo, typeDataAccessor)
+   local info = AlgeTypeInfo._new(self, scope, externalFlag, accessMode, algeName, parentInfo, typeDataAccessor)
    self:setupImut( info )
    
    local getAlgeName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, MutMode.IMut )
@@ -10231,12 +10231,12 @@ _moduleObj.mathCompOpSet = mathCompOpSet
 
 local RefTypeInfo = {}
 _moduleObj.RefTypeInfo = RefTypeInfo
-function RefTypeInfo.setmeta( obj )
+function RefTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = RefTypeInfo  } )
 end
-function RefTypeInfo.new( pos, itemRefTypeList, typeInfo )
+function RefTypeInfo._new( pos, itemRefTypeList, typeInfo )
    local obj = {}
-   RefTypeInfo.setmeta( obj )
+   RefTypeInfo._setmeta( obj )
    if obj.__init then
       obj:__init( pos, itemRefTypeList, typeInfo )
    end
@@ -10260,9 +10260,9 @@ end
 
 
 local TypeAnalyzer = {}
-function TypeAnalyzer.new( processInfo, parentInfo, moduleType, moduleScope, scopeAccess, validMutControl )
+function TypeAnalyzer._new( processInfo, parentInfo, moduleType, moduleScope, scopeAccess, validMutControl )
    local obj = {}
-   TypeAnalyzer.setmeta( obj )
+   TypeAnalyzer._setmeta( obj )
    if obj.__init then obj:__init( processInfo, parentInfo, moduleType, moduleScope, scopeAccess, validMutControl ); end
    return obj
 end
@@ -10277,7 +10277,7 @@ function TypeAnalyzer:__init(processInfo, parentInfo, moduleType, moduleScope, s
    self.scope = rootScope
    self.accessMode = AccessMode.Local
    self.parentPub = false
-   self.parser = Parser.DefaultPushbackParser.new(Parser.DummyParser.new())
+   self.parser = Parser.DefaultPushbackParser._new(Parser.DummyParser._new())
 end
 function TypeAnalyzer:analyzeType( scope, parser, accessMode, allowDDD, parentPub )
 
@@ -10292,7 +10292,7 @@ function TypeAnalyzer:analyzeTypeFromTxt( txt, scope, accessMode, parentPub )
    local parser = Parser.DefaultPushbackParser.createFromLnsCode( txt, "test" )
    return self:analyzeType( scope, parser, accessMode, true, parentPub )
 end
-function TypeAnalyzer.setmeta( obj )
+function TypeAnalyzer._setmeta( obj )
   setmetatable( obj, { __index = TypeAnalyzer  } )
 end
 
@@ -10511,7 +10511,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
    end
    
    
-   return RefTypeInfo.new(pos, genericRefList, typeInfo), nil, nil
+   return RefTypeInfo._new(pos, genericRefList, typeInfo), nil, nil
 end
 
 

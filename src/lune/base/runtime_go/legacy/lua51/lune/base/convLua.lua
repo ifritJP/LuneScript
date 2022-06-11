@@ -218,12 +218,12 @@ local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local PubVerInfo = {}
-function PubVerInfo.setmeta( obj )
+function PubVerInfo._setmeta( obj )
   setmetatable( obj, { __index = PubVerInfo  } )
 end
-function PubVerInfo.new( staticFlag, accessMode, mutable, typeInfo )
+function PubVerInfo._new( staticFlag, accessMode, mutable, typeInfo )
    local obj = {}
-   PubVerInfo.setmeta( obj )
+   PubVerInfo._setmeta( obj )
    if obj.__init then
       obj:__init( staticFlag, accessMode, mutable, typeInfo )
    end
@@ -240,12 +240,12 @@ end
 
 
 local PubFuncInfo = {}
-function PubFuncInfo.setmeta( obj )
+function PubFuncInfo._setmeta( obj )
   setmetatable( obj, { __index = PubFuncInfo  } )
 end
-function PubFuncInfo.new( accessMode, typeInfo )
+function PubFuncInfo._new( accessMode, typeInfo )
    local obj = {}
-   PubFuncInfo.setmeta( obj )
+   PubFuncInfo._setmeta( obj )
    if obj.__init then
       obj:__init( accessMode, typeInfo )
    end
@@ -290,12 +290,12 @@ ConvMode.__allList[2] = ConvMode.ConvMeta
 
 local ModuleInfo = {}
 setmetatable( ModuleInfo, { ifList = {Ast.ModuleInfoIF,} } )
-function ModuleInfo.setmeta( obj )
+function ModuleInfo._setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
 end
-function ModuleInfo.new( assignName, modulePath )
+function ModuleInfo._new( assignName, modulePath )
    local obj = {}
-   ModuleInfo.setmeta( obj )
+   ModuleInfo._setmeta( obj )
    if obj.__init then
       obj:__init( assignName, modulePath )
    end
@@ -316,12 +316,12 @@ end
 
 local Opt = {}
 _moduleObj.Opt = Opt
-function Opt.setmeta( obj )
+function Opt._setmeta( obj )
   setmetatable( obj, { __index = Opt  } )
 end
-function Opt.new( node )
+function Opt._new( node )
    local obj = {}
-   Opt.setmeta( obj )
+   Opt._setmeta( obj )
    if obj.__init then
       obj:__init( node )
    end
@@ -351,31 +351,61 @@ end
 
 local Option = {}
 _moduleObj.Option = Option
-function Option.setmeta( obj )
+function Option._setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
-function Option.new( mainModule )
+function Option._new( mainModule, legacyNewMode )
    local obj = {}
-   Option.setmeta( obj )
+   Option._setmeta( obj )
    if obj.__init then
-      obj:__init( mainModule )
+      obj:__init( mainModule, legacyNewMode )
    end
    return obj
 end
-function Option:__init( mainModule )
+function Option:__init( mainModule, legacyNewMode )
 
    self.mainModule = mainModule
+   self.legacyNewMode = legacyNewMode
 end
 function Option:get_mainModule()
    return self.mainModule
+end
+function Option:get_legacyNewMode()
+   return self.legacyNewMode
+end
+
+
+local NewMethod = {}
+function NewMethod._new( newName, setmetaName )
+   local obj = {}
+   NewMethod._setmeta( obj )
+   if obj.__init then obj:__init( newName, setmetaName ); end
+   return obj
+end
+function NewMethod:__init(newName, setmetaName) 
+   self.newName = newName
+   self.setmetaName = setmetaName
+end
+function NewMethod.create( legacy )
+
+   if legacy then
+      return NewMethod._new("new", "setmeta")
+   else
+    
+      return NewMethod._new("_new", "_setmeta")
+   end
+   
+end
+function NewMethod._setmeta( obj )
+  setmetatable( obj, { __index = NewMethod  } )
 end
 
 
 local ConvFilter = {}
 setmetatable( ConvFilter, { __index = Nodes.Filter,ifList = {oStream,} } )
-function ConvFilter.new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option )
+function ConvFilter._new( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option )
    local obj = {}
-   ConvFilter.setmeta( obj )
+   ConvFilter._setmeta( obj )
    if obj.__init then obj:__init( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option ); end
    return obj
 end
@@ -388,6 +418,7 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    end
    
    
+   self.newMethod = NewMethod.create( option:get_legacyNewMode() )
    self.option = option
    self.builtinFunc = builtinFunc
    self.moduleType2SymbolMap = {}
@@ -492,14 +523,14 @@ function ConvFilter:write( txt )
    
    return self, nil
 end
-function ConvFilter.setmeta( obj )
+function ConvFilter._setmeta( obj )
   setmetatable( obj, { __index = ConvFilter  } )
 end
 
 
 local function filter( node, filter, parent )
 
-   node:processFilter( filter, Opt.new(parent) )
+   node:processFilter( filter, Opt._new(parent) )
 end
 
 local stepIndent = 3
@@ -875,7 +906,7 @@ function ConvFilter:outputMeta( node )
    end
    
    
-   local serializeInfo = Ast.SerializeInfo.new(importProcessInfo2Index, {})
+   local serializeInfo = Ast.SerializeInfo._new(importProcessInfo2Index, {})
    
    self:writeln( "local __typeId2ClassInfoMap = {}" )
    self:writeln( "_moduleObj.__typeId2ClassInfoMap = __typeId2ClassInfoMap" )
@@ -1065,12 +1096,12 @@ function ConvFilter:outputMeta( node )
          do
             local stmtBlock = declInfo:get_stmtBlock()
             if stmtBlock ~= nil then
-               local memStream = Util.memStream.new()
+               local memStream = Util.memStream._new()
                
-               local workFilter = ConvFilter.new(declInfo:get_name().txt, memStream, Util.NullOStream.new(), ConvMode.Convert, false, Ast.headTypeInfo, self.processInfo, Ast.SymbolKind.Typ, self.builtinFunc, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs, self.option)
+               local workFilter = ConvFilter._new(declInfo:get_name().txt, memStream, Util.NullOStream._new(), ConvMode.Convert, false, Ast.headTypeInfo, self.processInfo, Ast.SymbolKind.Typ, self.builtinFunc, self.useLuneRuntime, self.targetLuaVer, self.enableTest, self.useIpairs, self.option)
                
                workFilter.macroDepth = workFilter.macroDepth + 1
-               workFilter:processBlock( stmtBlock, Opt.new(node) )
+               workFilter:processBlock( stmtBlock, Opt._new(node) )
                workFilter.macroDepth = workFilter.macroDepth - 1
                
                memStream:close(  )
@@ -1217,7 +1248,7 @@ function ConvFilter:outputMeta( node )
          validChildren = typeId2TypeInfo
       end
       
-      typeInfo:serialize( self, Ast.SerializeInfo.new(importProcessInfo2Index, validChildren) )
+      typeInfo:serialize( self, Ast.SerializeInfo._new(importProcessInfo2Index, validChildren) )
    end
    
    for typeId, typeInfo in pairs( self.pubEnumId2EnumTypeInfo ) do
@@ -1791,7 +1822,7 @@ function ConvFilter:getMapInfo( typeInfo )
             if Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, nonnilableType, {} ) then
                funcTxt = string.format( '%s._fromMap', self:getFullName( nonnilableType ))
                if isGenericType( nonnilableType ) then
-                  local memStream = Util.memStream.new()
+                  local memStream = Util.memStream._new()
                   self:outputAlter2MapFunc( memStream, nonnilableType:createAlt2typeMap( false ) )
                   child = memStream:get_txt()
                end
@@ -2151,9 +2182,9 @@ function ConvFilter:processDeclClass( node, opt )
    
    
    self:writeln( string.format( [==[
-function %s.setmeta( obj )
+function %s.%s( obj )
   setmetatable( obj, { __index = %s %s } )
-end]==], className, className, destTxt) )
+end]==], className, self.newMethod.setmetaName, className, destTxt) )
    
    if not hasConstrFlag then
       
@@ -2202,16 +2233,16 @@ end]==], className, className, destTxt) )
       
       
       self:writeln( string.format( [==[
-function %s.new( %s )
+function %s.%s( %s )
    local obj = {}
-   %s.setmeta( obj )
+   %s.%s( obj )
    if obj.__init then
       obj:__init( %s )
    end
    return obj
 end
 function %s:__init( %s )
-]==], className, argTxt, className, argTxt, className, argTxt) )
+]==], className, self.newMethod.newName, argTxt, className, self.newMethod.setmetaName, argTxt, className, argTxt) )
       self:pushIndent(  )
       
       if baseInfo ~= Ast.headTypeInfo then
@@ -2339,14 +2370,14 @@ end
 function %s._fromMap( %s )
   local obj, mes = %s._fromMapSub( %s )
   if obj then
-     %s.setmeta( obj )
+     %s.%s( obj )
   end
   return obj, mes
 end
 function %s._fromStem( %s )
   return %s._fromMap( %s )
 end
-]==], className, className, declArgTxt, className, argTxt, className, className, declArgTxt, className, declArgTxt) )
+]==], className, className, declArgTxt, className, argTxt, className, self.newMethod.setmetaName, className, declArgTxt, className, declArgTxt) )
       
       self:writeln( string.format( 'function %s._fromMapSub( obj, val )', className) )
       
@@ -2501,7 +2532,7 @@ end
 function ConvFilter:processExpNew( node, opt )
 
    filter( node:get_symbol(  ), self, node )
-   self:writeRaw( ".new(" )
+   self:writeRaw( string.format( ".%s(", self.newMethod.newName) )
    do
       local _exp = node:get_argList(  )
       if _exp ~= nil then
@@ -2535,7 +2566,7 @@ function ConvFilter:processDeclConstr( node, opt )
    local declInfo = node:get_declInfo(  )
    local classTypeInfo = _lune.unwrap( declInfo:get_classTypeInfo())
    local className = self:getFullName( classTypeInfo )
-   self:writeRaw( string.format( "function %s.new( ", className ) )
+   self:writeRaw( string.format( "function %s.%s( ", className, self.newMethod.newName) )
    
    local argTxt = ""
    
@@ -2564,7 +2595,7 @@ function ConvFilter:processDeclConstr( node, opt )
    self:writeln( " )" )
    self:pushIndent(  )
    self:writeln( "local obj = {}" )
-   self:writeln( string.format( "%s.setmeta( obj )", className) )
+   self:writeln( string.format( "%s.%s( obj )", className, self.newMethod.setmetaName) )
    self:writeln( string.format( "if obj.__init then obj:__init( %s ); end", argTxt ) )
    self:writeln( "return obj" )
    self:popIndent(  )
@@ -2958,7 +2989,7 @@ function ConvFilter:processDeclVar( node, opt )
                self:writeln( string.format( "_moduleObj.%s = %s", name, name) )
             end
             
-            self.pubVarName2InfoMap[name] = PubVerInfo.new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
+            self.pubVarName2InfoMap[name] = PubVerInfo._new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
          end
          
       end
@@ -3038,7 +3069,7 @@ function ConvFilter:processDeclFunc( node, opt )
          end
          
          
-         self.pubFuncName2InfoMap[name] = PubFuncInfo.new(declInfo:get_accessMode(  ), node:get_expType(  ))
+         self.pubFuncName2InfoMap[name] = PubFuncInfo._new(declInfo:get_accessMode(  ), node:get_expType(  ))
       end
    end
    
@@ -4448,21 +4479,21 @@ _moduleObj.FilterInfo = FilterInfo
 function FilterInfo:outputLuaAndMeta( node )
 
    
-   node:processFilter( self.filter, Opt.new(node) )
+   node:processFilter( self.filter, Opt._new(node) )
 end
 function FilterInfo:outputLua( node )
 
-   node:processFilter( self.filter, Opt.new(node) )
+   node:processFilter( self.filter, Opt._new(node) )
 end
 function FilterInfo:outputMeta( node )
 
 end
-function FilterInfo.setmeta( obj )
+function FilterInfo._setmeta( obj )
   setmetatable( obj, { __index = FilterInfo  } )
 end
-function FilterInfo.new( filter )
+function FilterInfo._new( filter )
    local obj = {}
-   FilterInfo.setmeta( obj )
+   FilterInfo._setmeta( obj )
    if obj.__init then
       obj:__init( filter )
    end
@@ -4479,8 +4510,8 @@ end
 
 local function createFilter( streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option )
 
-   local convFilter = ConvFilter.new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option)
-   return FilterInfo.new(convFilter)
+   local convFilter = ConvFilter._new(streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option)
+   return FilterInfo._new(convFilter)
 end
 _moduleObj.createFilter = createFilter
 
@@ -4489,8 +4520,8 @@ setmetatable( MacroEvalImp, { __index = Nodes.MacroEval } )
 _moduleObj.MacroEvalImp = MacroEvalImp
 function MacroEvalImp:evalFromCodeToLuaCode( processInfo, name, argNameList, code )
 
-   local stream = Util.memStream.new()
-   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true, Option.new(""))
+   local stream = Util.memStream._new()
+   local conv = ConvFilter._new("macro", stream, Util.NullOStream._new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true, Option._new("", false))
    
    conv:outputDeclMacro( name, argNameList, function (  )
    
@@ -4504,19 +4535,19 @@ function MacroEvalImp:evalFromCodeToLuaCode( processInfo, name, argNameList, cod
 end
 function MacroEvalImp:evalToLuaCode( processInfo, node )
 
-   local stream = Util.memStream.new()
-   local conv = ConvFilter.new("macro", stream, Util.NullOStream.new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true, Option.new(""))
+   local stream = Util.memStream._new()
+   local conv = ConvFilter._new("macro", stream, Util.NullOStream._new(), ConvMode.ConvMeta, true, Ast.headTypeInfo, processInfo, Ast.SymbolKind.Typ, self.builtinFunc, nil, LuaVer.getCurVer(  ), false, true, Option._new("", false))
    
-   conv:processDeclMacro( node, Opt.new(node) )
+   conv:processDeclMacro( node, Opt._new(node) )
    
    return stream:get_txt()
 end
-function MacroEvalImp.setmeta( obj )
+function MacroEvalImp._setmeta( obj )
   setmetatable( obj, { __index = MacroEvalImp  } )
 end
-function MacroEvalImp.new( builtinFunc )
+function MacroEvalImp._new( builtinFunc )
    local obj = {}
-   MacroEvalImp.setmeta( obj )
+   MacroEvalImp._setmeta( obj )
    if obj.__init then
       obj:__init( builtinFunc )
    end

@@ -561,6 +561,10 @@ hoge
 -----	2013	-----
 hoge
 hoge
+-----	2026	-----
+val1	1
+val2	abc
+val3	10.5
 11
 12
 12
@@ -1762,6 +1766,7 @@ test/error/unwrap.lns:55:16: error: 'when' support only local variables or argum
 test/error/unwrap.lns:58:16: error: This type isn't nilable. -- int
 test/error/unwrap.lns:66:11: error: this is not mutable variable. -- val
 test/error/unwrap.lns:71:16: error: not found type -- val2
+test/error/unwrap.lns:2:20: warning: it shouldn use non-nilable type -- int!
 test/error/unwrap.lns:9:8: warning: 'val1' var isn't accessed
 test/error/unwrap.lns:12:4: warning: has no nilable
 test/error/unwrap.lns:12:12: warning: 'val1' var isn't accessed

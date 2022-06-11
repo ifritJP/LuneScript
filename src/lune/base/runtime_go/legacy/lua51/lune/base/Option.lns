@@ -163,10 +163,15 @@ pub class Option {
 
    local let mut stdinFile:&Types.StdinFile! {pub,pub};
 
+
+   /** class の new メソッドの名前を旧形式にする */
+   local let mut legacyNewName:bool {pub};
+
    /** convGo 内の runner 数 */
    pub let mut convGoRunnerNum:int;
 
    pub fn __init() {
+      self.legacyNewName = false;
       self.stdinFile = nil;
       self.validPostBuild = true;
       self.enableRunner = true;
@@ -318,6 +323,11 @@ usage:
     --package <name>: set the package name for the go-lang.
     --app <name>: set the application name for the go-lang.
 
+    compati_op:
+      --legacyNewName: use the legacy new method name for lua.
+
+
+
 * type2
   path: output file path.
 ``` );
@@ -419,6 +429,9 @@ usage:
                   if option.transCtrlInfo.macroAsyncParseStmtLen < 0 {
                      printUsage( 1 );
                   }
+               }
+               case "--legacyNewName" {
+                  option.legacyNewName = true;
                }
                case "--enableMacroAsync" {
                   option.transCtrlInfo.validMacroAsync = true;

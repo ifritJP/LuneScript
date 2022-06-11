@@ -74,9 +74,9 @@ local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 
 local DependInfo = {}
 _moduleObj.DependInfo = DependInfo
-function DependInfo.new( targetModule )
+function DependInfo._new( targetModule )
    local obj = {}
-   DependInfo.setmeta( obj )
+   DependInfo._setmeta( obj )
    if obj.__init then obj:__init( targetModule ); end
    return obj
 end
@@ -106,16 +106,16 @@ function DependInfo:output( stream )
    end
    
 end
-function DependInfo.setmeta( obj )
+function DependInfo._setmeta( obj )
   setmetatable( obj, { __index = DependInfo  } )
 end
 
 
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
-function convFilter.new( stream )
+function convFilter._new( stream )
    local obj = {}
-   convFilter.setmeta( obj )
+   convFilter._setmeta( obj )
    if obj.__init then obj:__init( stream ); end
    return obj
 end
@@ -124,7 +124,7 @@ function convFilter:__init(stream)
    
    self.stream = stream
 end
-function convFilter.setmeta( obj )
+function convFilter._setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )
 end
 
@@ -132,7 +132,7 @@ end
 function convFilter:processRoot( node, dummy )
 
    local moduleFull = node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), Ast.DummyModuleInfoManager.get_instance() )
-   local dependInfo = DependInfo.new(moduleFull)
+   local dependInfo = DependInfo._new(moduleFull)
    
    for __index, impNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       dependInfo:addImpotModule( impNode:get_info():get_modulePath() )
@@ -156,7 +156,7 @@ end
 
 local function createFilter( stream )
 
-   return convFilter.new(stream)
+   return convFilter._new(stream)
 end
 _moduleObj.createFilter = createFilter
 

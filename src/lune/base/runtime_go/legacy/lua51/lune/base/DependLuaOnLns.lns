@@ -111,6 +111,11 @@ global fn __luneSym2Str( val:stem! ):str! {
    return nil;
 }
 
+/**
+go/gihub:com.***.****.**** で import/module 宣言した lua モジュールのパスを
+package.path に追加する。
+これをしないと、lua 版 LuneScript で実行できない。
+*/
 pub fn addGoModPath( list:&List<str> ) __async {
    __luaLock {
       let loaded, mess = _load( ```

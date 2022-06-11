@@ -26,7 +26,7 @@ SOFTWARE.
 _lune_control default_async_all;
 
 /** lns バージョン */
-pub let version = "1.4.0";
+pub let version = "1.4.1";
 /** meta フォーマットバージョン */
 pub let metaVersion = "1.0.156";
 /** _lune モジュールバージョン */

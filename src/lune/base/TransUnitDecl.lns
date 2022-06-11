@@ -3491,10 +3491,23 @@ class LetVarInfo {
 }
 
 
+/**
+代入文の右辺の式の解析。
+
+@param firstPos 左辺の位置
+@param accessMode 代入先の AccessMode
+@param unwrapFlag 右辺の式の結果を unwrap する場合 true
+@param letVarList 左辺の変数リスト
+@param typeInfoList 左辺の変数の型リスト
+@return List<&Ast.TypeInfo> unwrap 後の右辺の型リスト
+@return &List<&LetVarInfo> letVarList
+@return &List<&Ast.TypeInfo> unwrap 前の右辺の型
+@return Nodes.ExpListNode! 右辺の Node
+*/
 fn TransUnit.analyzeInitExp(
    firstPos:&Parser.Position, accessMode:Ast.AccessMode, unwrapFlag:bool,
    letVarList:List<&LetVarInfo>, typeInfoList : List<&Ast.TypeInfo> ) mut :
-   List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
+List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
 {
    // 初期値の式を取得
    let mut expList:Nodes.ExpListNode! = nil;
@@ -3784,6 +3797,13 @@ fn TransUnit.analyzeLetAndInitExp(
                accessMode, false, Ast.isPubToExternal( accessMode ));
             letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
             typeInfo = refType.$expType;
+            if unwrapFlag and typeInfo.$nilable {
+               // unwrap しているのに代入先が nilable なのは変なので
+               // warning する。
+               self.addWarnMess(
+                  refType.$pos,
+                  "it shouldn use non-nilable type -- %s" (typeInfo.getTxt(##)) );
+            }
             nextToken = self.getToken(##);
          }
          else {

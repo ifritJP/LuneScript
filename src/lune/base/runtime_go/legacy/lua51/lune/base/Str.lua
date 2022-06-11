@@ -106,9 +106,9 @@ function Builder:get_txt(  )
    
    return self.txt .. self.progress
 end
-function Builder.new(  )
+function Builder._new(  )
    local obj = {}
-   Builder.setmeta( obj )
+   Builder._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -141,7 +141,7 @@ function Builder:flush(  )
    self.txt = self.txt .. self.progress
    self.progress = ""
 end
-function Builder.setmeta( obj )
+function Builder._setmeta( obj )
   setmetatable( obj, { __index = Builder  } )
 end
 

@@ -351,12 +351,12 @@ _moduleObj.isOp1 = isOp1
 local AsyncItem = {}
 setmetatable( AsyncItem, { ifList = {__AsyncItem,Mapping,} } )
 _moduleObj.AsyncItem = AsyncItem
-function AsyncItem.setmeta( obj )
+function AsyncItem._setmeta( obj )
   setmetatable( obj, { __index = AsyncItem  } )
 end
-function AsyncItem.new( list )
+function AsyncItem._new( list )
    local obj = {}
-   AsyncItem.setmeta( obj )
+   AsyncItem._setmeta( obj )
    if obj.__init then
       obj:__init( list )
    end
@@ -372,7 +372,7 @@ end
 function AsyncItem._fromMap( val )
   local obj, mes = AsyncItem._fromMapSub( {}, val )
   if obj then
-     AsyncItem.setmeta( obj )
+     AsyncItem._setmeta( obj )
   end
   return obj, mes
 end
@@ -401,9 +401,9 @@ _moduleObj.setDefaultPipeSize = setDefaultPipeSize
 local Parser = {}
 setmetatable( Parser, { __index = Async.Pipe } )
 _moduleObj.Parser = Parser
-function Parser.new( streamName, stream, luaMode, overridePos, pipeSize )
+function Parser._new( streamName, stream, luaMode, overridePos, pipeSize )
    local obj = {}
-   Parser.setmeta( obj )
+   Parser._setmeta( obj )
    if obj.__init then obj:__init( streamName, stream, luaMode, overridePos, pipeSize ); end
    return obj
 end
@@ -450,7 +450,7 @@ function Parser.create( parserSrc, stdinFile, overridePos )
    
       if stdinFile ~= nil then
          if stdinFile:get_mod() == mod then
-            return Util.TxtStream.new(stdinFile:get_txt()), ""
+            return Util.TxtStream._new(stdinFile:get_txt()), ""
          end
          
       end
@@ -474,7 +474,7 @@ function Parser.create( parserSrc, stdinFile, overridePos )
             local path = _matchExp[2][2]
             local pipeSize = _matchExp[2][3]
          
-            return path, false, Util.TxtStream.new(txt), "", pipeSize
+            return path, false, Util.TxtStream._new(txt), "", pipeSize
          elseif _matchExp[1] == Types.ParserSrc.LnsPath[1] then
             local path = _matchExp[2][1]
             local mod = _matchExp[2][2]
@@ -497,7 +497,7 @@ function Parser.create( parserSrc, stdinFile, overridePos )
    
    local streamName, luaMode, stream, mess, pipeSize = createStreamFrom(  )
    if stream ~= nil then
-      return Parser.new(streamName, stream, luaMode, overridePos, pipeSize), ""
+      return Parser._new(streamName, stream, luaMode, overridePos, pipeSize), ""
    end
    
    return nil, mess
@@ -511,9 +511,9 @@ function Parser:access(  )
       return nil
    end
    
-   return Async.PipeItem.new(AsyncItem.new(tokenList))
+   return Async.PipeItem._new(AsyncItem._new(tokenList))
 end
-function Parser.setmeta( obj )
+function Parser._setmeta( obj )
   setmetatable( obj, { __index = Parser  } )
 end
 function Parser:get_streamName()
@@ -523,9 +523,9 @@ end
 
 local Runner = {}
 setmetatable( Runner, { ifList = {__Runner,} } )
-function Runner.new( parserSrc, stdinFile, overridePos )
+function Runner._new( parserSrc, stdinFile, overridePos )
    local obj = {}
-   Runner.setmeta( obj )
+   Runner._setmeta( obj )
    if obj.__init then obj:__init( parserSrc, stdinFile, overridePos ); end
    return obj
 end
@@ -555,7 +555,7 @@ function Runner:run(  )
    end
    
 end
-function Runner.setmeta( obj )
+function Runner._setmeta( obj )
   setmetatable( obj, { __index = Runner  } )
 end
 function Runner:get_parser()
@@ -569,7 +569,7 @@ end
 local function create( parserSrc, stdinFile, overridePos, async )
 
    if async then
-      local runner = Runner.new(parserSrc, stdinFile, overridePos)
+      local runner = Runner._new(parserSrc, stdinFile, overridePos)
       return runner:get_parser(), runner:get_errMess()
    end
    
@@ -601,7 +601,7 @@ function Parser:createInfo( tokenKind, token, tokenColumn )
       consecutive = true
    end
    
-   local newToken = Types.Token.new(tokenKind, token, Types.Position.create( self.lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {})
+   local newToken = Types.Token._new(tokenKind, token, Types.Position.create( self.lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {})
    self.prevToken = newToken
    return newToken
 end
@@ -802,7 +802,7 @@ function Parser:parse(  )
    if self.firstLine then
       self.firstLine = false
       if rawLine:find( "^#!" ) then
-         local token = Types.Token.new(Types.TokenKind.Sheb, rawLine, Types.Position.new(self.lineNo, 1, self.streamName), false, {})
+         local token = Types.Token._new(Types.TokenKind.Sheb, rawLine, Types.Position._new(self.lineNo, 1, self.streamName), false, {})
          return {token}
       end
       

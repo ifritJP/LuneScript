@@ -203,9 +203,9 @@ local Runner = _lune.loadModule( 'lune.base.Runner' )
 
 local ModuleId = {}
 _moduleObj.ModuleId = ModuleId
-function ModuleId.new( modTime, buildCount )
+function ModuleId._new( modTime, buildCount )
    local obj = {}
-   ModuleId.setmeta( obj )
+   ModuleId._setmeta( obj )
    if obj.__init then obj:__init( modTime, buildCount ); end
    return obj
 end
@@ -216,9 +216,9 @@ function ModuleId:__init(modTime, buildCount)
 end
 function ModuleId:getNextModuleId(  )
 
-   return ModuleId.new(self.modTime, self.buildCount + 1)
+   return ModuleId._new(self.modTime, self.buildCount + 1)
 end
-function ModuleId.setmeta( obj )
+function ModuleId._setmeta( obj )
   setmetatable( obj, { __index = ModuleId  } )
 end
 function ModuleId:get_modTime()
@@ -231,30 +231,30 @@ function ModuleId:get_idStr()
    return self.idStr
 end
 do
-   ModuleId.tempId = ModuleId.new(0.0, 0)
+   ModuleId.tempId = ModuleId._new(0.0, 0)
 end
 
 function ModuleId.createId( modTime, buildCount )
 
-   return ModuleId.new(modTime, buildCount)
+   return ModuleId._new(modTime, buildCount)
 end
 
 function ModuleId.createIdFromTxt( idStr )
 
    local modTime = _lune.unwrapDefault( tonumber( (idStr:gsub( ":.*", "" ) ) ), 0.0)
    local buildCount = _lune.unwrapDefault( tonumber( (idStr:gsub( ".*:", "" ) ) ), 0.0)
-   return ModuleId.new(modTime, math.floor(buildCount))
+   return ModuleId._new(modTime, math.floor(buildCount))
 end
 
 
 local ModuleProvideInfo = {}
 _moduleObj.ModuleProvideInfo = ModuleProvideInfo
-function ModuleProvideInfo.setmeta( obj )
+function ModuleProvideInfo._setmeta( obj )
   setmetatable( obj, { __index = ModuleProvideInfo  } )
 end
-function ModuleProvideInfo.new( typeInfo, symbolKind, mutable )
+function ModuleProvideInfo._new( typeInfo, symbolKind, mutable )
    local obj = {}
-   ModuleProvideInfo.setmeta( obj )
+   ModuleProvideInfo._setmeta( obj )
    if obj.__init then
       obj:__init( typeInfo, symbolKind, mutable )
    end
@@ -279,9 +279,9 @@ end
 
 local LuneHelperInfo = {}
 _moduleObj.LuneHelperInfo = LuneHelperInfo
-function LuneHelperInfo.new(  )
+function LuneHelperInfo._new(  )
    local obj = {}
-   LuneHelperInfo.setmeta( obj )
+   LuneHelperInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
@@ -333,7 +333,7 @@ function LuneHelperInfo:mergeFrom( src )
    end
    
 end
-function LuneHelperInfo.setmeta( obj )
+function LuneHelperInfo._setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
 end
 
@@ -347,9 +347,9 @@ _moduleObj.getRootDependModId = getRootDependModId
 local ExportInfo = {}
 setmetatable( ExportInfo, { ifList = {Ast.ModuleInfoIF,} } )
 _moduleObj.ExportInfo = ExportInfo
-function ExportInfo.new( moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, moduleId, fullName, assignName, streamName, idMap )
+function ExportInfo._new( moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, moduleId, fullName, assignName, streamName, idMap )
    local obj = {}
-   ExportInfo.setmeta( obj )
+   ExportInfo._setmeta( obj )
    if obj.__init then obj:__init( moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, moduleId, fullName, assignName, streamName, idMap ); end
    return obj
 end
@@ -386,7 +386,7 @@ function ExportInfo:getTypeInfo( localTypeId )
    
    return nil
 end
-function ExportInfo.setmeta( obj )
+function ExportInfo._setmeta( obj )
   setmetatable( obj, { __index = ExportInfo  } )
 end
 function ExportInfo:get_moduleTypeInfo()
@@ -426,23 +426,23 @@ end
 
 function ExportInfo:assign( assignName )
 
-   local info = ExportInfo.new(self.moduleTypeInfo, self.provideInfo, self.processInfo, self.globalSymbolList, self.importedAliasMap, self.moduleId, self.fullName, assignName, self.streamName, {})
+   local info = ExportInfo._new(self.moduleTypeInfo, self.provideInfo, self.processInfo, self.globalSymbolList, self.importedAliasMap, self.moduleId, self.fullName, assignName, self.streamName, {})
    info.importId2localTypeInfoMap = self.importId2localTypeInfoMap
    return info
 end
 
 local ModuleInfo = {}
 _moduleObj.ModuleInfo = ModuleInfo
-function ModuleInfo.new( exportInfo )
+function ModuleInfo._new( exportInfo )
    local obj = {}
-   ModuleInfo.setmeta( obj )
+   ModuleInfo._setmeta( obj )
    if obj.__init then obj:__init( exportInfo ); end
    return obj
 end
 function ModuleInfo:__init(exportInfo) 
    self.exportInfo = exportInfo
 end
-function ModuleInfo.setmeta( obj )
+function ModuleInfo._setmeta( obj )
   setmetatable( obj, { __index = ModuleInfo  } )
 end
 function ModuleInfo:get_exportInfo()
@@ -531,12 +531,12 @@ MetaOrModule._name2Val["Module"] = MetaOrModule.Module
 
 local ModuleMeta = {}
 _moduleObj.ModuleMeta = ModuleMeta
-function ModuleMeta.setmeta( obj )
+function ModuleMeta._setmeta( obj )
   setmetatable( obj, { __index = ModuleMeta  } )
 end
-function ModuleMeta.new( lnsPath, metaOrModule )
+function ModuleMeta._new( lnsPath, metaOrModule )
    local obj = {}
-   ModuleMeta.setmeta( obj )
+   ModuleMeta._setmeta( obj )
    if obj.__init then
       obj:__init( lnsPath, metaOrModule )
    end
@@ -559,14 +559,14 @@ end
 
 local ImportModuleInfo = {}
 _moduleObj.ImportModuleInfo = ImportModuleInfo
-function ImportModuleInfo.new(  )
+function ImportModuleInfo._new(  )
    local obj = {}
-   ImportModuleInfo.setmeta( obj )
+   ImportModuleInfo._setmeta( obj )
    if obj.__init then obj:__init(  ); end
    return obj
 end
 function ImportModuleInfo:__init() 
-   self.orderedSet = Util.OrderedSet.new()
+   self.orderedSet = Util.OrderedSet._new()
 end
 function ImportModuleInfo:add( modulePath )
 
@@ -587,7 +587,7 @@ function ImportModuleInfo:getFull(  )
 end
 function ImportModuleInfo:clone(  )
 
-   local info = ImportModuleInfo.new()
+   local info = ImportModuleInfo._new()
    for __index, mod in ipairs( self.orderedSet:get_list() ) do
       info:add( mod )
    end
@@ -602,19 +602,19 @@ function ImportModuleInfo:list(  )
 
    return self.orderedSet:get_list()
 end
-function ImportModuleInfo.setmeta( obj )
+function ImportModuleInfo._setmeta( obj )
   setmetatable( obj, { __index = ImportModuleInfo  } )
 end
 
 
 local ModuleLoader = {}
 _moduleObj.ModuleLoader = ModuleLoader
-function ModuleLoader.setmeta( obj )
+function ModuleLoader._setmeta( obj )
   setmetatable( obj, { __index = ModuleLoader  } )
 end
-function ModuleLoader.new(  )
+function ModuleLoader._new(  )
    local obj = {}
-   ModuleLoader.setmeta( obj )
+   ModuleLoader._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -627,12 +627,12 @@ end
 
 local frontInterface = {}
 _moduleObj.frontInterface = frontInterface
-function frontInterface.setmeta( obj )
+function frontInterface._setmeta( obj )
   setmetatable( obj, { __index = frontInterface  } )
 end
-function frontInterface.new(  )
+function frontInterface._new(  )
    local obj = {}
-   frontInterface.setmeta( obj )
+   frontInterface._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -660,7 +660,7 @@ function dummyFront:loadModule( mod )
          error( "load error" )
       end
       
-      moduleMeta = ModuleMeta.new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.MetaRaw, {emptyTable}))
+      moduleMeta = ModuleMeta._new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.MetaRaw, {emptyTable}))
       modVal = require( mod )
    end
    
@@ -686,12 +686,12 @@ function dummyFront:error( message )
 
    error( "not implements" )
 end
-function dummyFront.setmeta( obj )
+function dummyFront._setmeta( obj )
   setmetatable( obj, { __index = dummyFront  } )
 end
-function dummyFront.new(  )
+function dummyFront._new(  )
    local obj = {}
-   dummyFront.setmeta( obj )
+   dummyFront._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
@@ -702,7 +702,7 @@ function dummyFront:__init(  )
 end
 
 
-__luneScript = dummyFront.new()
+__luneScript = dummyFront._new()
 _moduleObj.__luneScript = __luneScript
 
 
