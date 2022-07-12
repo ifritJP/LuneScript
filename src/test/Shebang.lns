@@ -1,8 +1,10 @@
 #! lnsc -shebang
 
 pub fn __main( argList:List<str> ) : int {
-   foreach val in argList {
-      print( val );
+   foreach val, index in argList {
+      if index ~= 1 {
+         print( val );
+      }
    }
    if #argList == 1 {
       return 1;

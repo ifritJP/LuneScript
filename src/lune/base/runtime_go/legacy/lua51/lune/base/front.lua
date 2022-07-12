@@ -1600,13 +1600,12 @@ function Front:checkUptodateMeta( lnsPath, metaPath, baseDir, addSearchPath )
    return frontInterface.ModuleMeta._new(lnsPath, _lune.newAlge( frontInterface.MetaOrModule.MetaRaw, {meta}))
 end
 
-function Front:loadModule( mod )
-   local __func__ = '@lune.@base.@front.Front.loadModule'
+
+function Front:loadModuleWithBaseDir( orgMod, baseDir )
+   local __func__ = '@lune.@base.@front.Front.loadModuleWithBaseDir'
 
    local _
-   local orgMod = mod
-   local baseDir = nil
-   _, _, mod = self.gomodMap:getLuaModulePath( mod, baseDir )
+   local _1, _2, mod = self.gomodMap:getLuaModulePath( orgMod, baseDir )
    
    if not self:getLoadInfo( mod ) then
       do
@@ -1679,7 +1678,7 @@ function Front:loadModule( mod )
                else
                   
                   if _lune._Set_has(self.bindModuleSet, mod ) then
-                     Log.log( Log.Level.Warn, __func__, 1157, function (  )
+                     Log.log( Log.Level.Warn, __func__, 1159, function (  )
                      
                         return string.format( "load from the binding -- %s", mod)
                      end )
@@ -1715,6 +1714,11 @@ function Front:loadModule( mod )
    
    
    error( string.format( "load error, %s", mod) )
+end
+
+function Front:loadModule( mod )
+
+   return self:loadModuleWithBaseDir( mod, nil )
 end
 
 
@@ -1816,7 +1820,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                                  meta = self:checkUptodateMeta( lnsPath, metaPath, baseDir, self.option.outputDir )
                               else
                                
-                                 Log.log( Log.Level.Warn, __func__, 1259, function (  )
+                                 Log.log( Log.Level.Warn, __func__, 1273, function (  )
                                  
                                     return string.format( "%s not ready meta %s, %s", orgMod, lnsPath, metaPath)
                                  end )
@@ -1825,7 +1829,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                               
                            else
                             
-                              Log.log( Log.Level.Warn, __func__, 1263, function (  )
+                              Log.log( Log.Level.Warn, __func__, 1277, function (  )
                               
                                  return string.format( "%s not ready lua %s, %s", orgMod, lnsPath, luaPath)
                               end )
@@ -1834,7 +1838,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                            
                         else
                          
-                           Log.log( Log.Level.Warn, __func__, 1267, function (  )
+                           Log.log( Log.Level.Warn, __func__, 1281, function (  )
                            
                               return string.format( "force analyze -- %s", orgMod)
                            end )
@@ -1842,7 +1846,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                         end
                         
                      else
-                        Log.log( Log.Level.Warn, __func__, 1271, function (  )
+                        Log.log( Log.Level.Warn, __func__, 1285, function (  )
                         
                            return string.format( "%s not found lua in %s", orgMod, tostring( self.option.outputDir))
                         end )
@@ -2031,7 +2035,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1467, function (  )
+               Log.log( Log.Level.Debug, __func__, 1481, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
@@ -2664,7 +2668,7 @@ function Front:build( buildMode, astCallback )
                if _exp ~= nil then
                   astCallback( _exp )
                else
-                  Log.log( Log.Level.Err, __func__, 2029, function (  )
+                  Log.log( Log.Level.Err, __func__, 2043, function (  )
                   
                      return string.format( "not found AST -- %s", mod)
                   end )
@@ -2695,7 +2699,7 @@ _moduleObj.build = build
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 2046, function (  )
+   Log.log( Log.Level.Trace, __func__, 2060, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2739,8 +2743,21 @@ function Front:exec(  )
       elseif _switchExp == Option.ModeKind.Shebang then
          Depend.setupShebang(  )
          do
+            local scriptPath
+            
+            local baseDir
+            
+            if self.option.scriptPath:find( "^/" ) then
+               scriptPath = self.option.scriptPath:gsub( ".*/", "" )
+               baseDir = Util.parentPath( self.option.scriptPath )
+            else
+             
+               scriptPath = self.option.scriptPath
+               baseDir = nil
+            end
+            
             do
-               local modObj = self:loadModule( (self:scriptPath2Module( self.option.scriptPath ) ) )
+               local modObj = self:loadModuleWithBaseDir( self:scriptPath2Module( scriptPath ), baseDir )
                if modObj ~= nil then
                   local code = Depend.runMain( modObj['__main'], self.option.shebangArgList )
                   os.exit( code )

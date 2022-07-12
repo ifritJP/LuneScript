@@ -2533,14 +2533,21 @@ print( 1 + 10 )
 
 return _moduleObj
 
+test ./test/Shebang2
 hoge:
-./test/Shebang2.lns
 a
 b
 c
 OK
 hoge:
-./test/Shebang2.lns
+a
+b
+c
+OK
+test ./test/Shebang2
+hoge:
+__ok
+hoge:
 __ok
 hoge
 module: test.testing ==============================

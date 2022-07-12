@@ -89,7 +89,7 @@ help:
 	@echo "  make test-comp"
 	@echo "  make test-global"
 	@echo "  make release-check"
-	@echo "  make accept-package"
+	@echo "  make accept-package [WITH_GO=y]"
 	@echo "  make build-glue [LUA_INC_DIR=path]"
 	@echo "  make build-cc"
 	@echo "  make test-miniC"
@@ -679,7 +679,9 @@ define test-shebang
 	cat test/Shebang.lns | \
 		sed 's@^#!.*@#! ./lnsc -shebang@g' > $1/test/Shebang2.lns
 	chmod +x $1/test/Shebang2.lns
-	(cd $1; ./test/Shebang2.lns $2 && echo OK || echo __ok)
+	echo "test ./test/Shebang2" >> $3
+	(cd $1; ./test/Shebang2.lns $2 && echo OK || echo __ok) >> $3
+	(cd $1; `pwd`/test/Shebang2.lns $2 && echo OK || echo __ok) >> $3
 endef
 
 #>>>>>>>>>>>>>>>>>>>>
@@ -759,8 +761,8 @@ test-org:
 		grep -v 'Leaving directory' >> work/test1.result
 	$(call exeFront,.) >> work/test1.result
 ifeq ($(WITH_GO),y)
-	$(call test-shebang,.,a b c) >> work/test1.result
-	$(call test-shebang,.,) >> work/test1.result
+	$(call test-shebang,.,a b c,work/test1.result)
+	$(call test-shebang,.,,work/test1.result)
 endif
 ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
@@ -807,8 +809,8 @@ test-new:
 		grep -v 'Leaving directory' >> work/test2.result
 	$(call exeFront,work/3) >> work/test2.result
 ifeq ($(WITH_GO),y)
-	$(call test-shebang,work/3,a b c) >> work/test2.result
-	$(call test-shebang,work/3,) >> work/test2.result
+	$(call test-shebang,work/3,a b c,work/test2.result)
+	$(call test-shebang,work/3,,work/test2.result)
 endif
 
 ifndef SKIP_CHECKING_TESTING

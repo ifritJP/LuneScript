@@ -1092,16 +1092,18 @@ fn Front.checkUptodateMeta(
    return new frontInterface.ModuleMeta( lnsPath, .MetaRaw( meta ) );
 }
 
+
+
 /**
 mod のモジュールをロードする。
 
 @return Luaval<&stem>! モジュール情報
 @return Luaval<&stem> META 情報
 */
-fn Front.loadModule( mut mod:str ) __async mut : Luaval<&stem>!, frontInterface.ModuleMeta {
-   let orgMod = mod;
-   let baseDir:str! = nil;
-   _, _, mod = self.gomodMap.getLuaModulePath( mod, baseDir );
+fn Front.loadModuleWithBaseDir( orgMod:str, baseDir:str! ) __async mut :
+Luaval<&stem>!, frontInterface.ModuleMeta
+{
+   let _, _, mod = self.gomodMap.getLuaModulePath( orgMod, baseDir );
    
    if not self.getLoadInfo( mod ) {
       if! let luaTxt = self.convertedMap[ mod ] {
@@ -1177,6 +1179,18 @@ fn Front.loadModule( mut mod:str ) __async mut : Luaval<&stem>!, frontInterface.
    }
    // ここにくるのはバグ
    error( "load error, %s" ( mod ) );
+}
+
+/**
+mod のモジュールをロードする。
+
+@return Luaval<&stem>! モジュール情報
+@return Luaval<&stem> META 情報
+*/
+fn Front.loadModule( mut mod:str ) __async mut :
+Luaval<&stem>!, frontInterface.ModuleMeta
+{
+   return self.loadModuleWithBaseDir( mod, nil )**;
 }
 
 
@@ -2090,8 +2104,18 @@ pub fn Front.exec() mut
       case .Shebang {
          Depend.setupShebang();
          __luaLock {
+            let scriptPath;
+            let baseDir:str!;
+            if self.option.scriptPath.find( "^/" ## ) {
+               scriptPath = self.option.scriptPath.gsub( ".*/", "" );
+               baseDir = Util.parentPath( self.option.scriptPath );
+            } else {
+               scriptPath = self.option.scriptPath;
+               baseDir = nil;
+            }
             if! let modObj =
-               self.loadModule( (self.scriptPath2Module( self.option.scriptPath )) )
+               self.loadModuleWithBaseDir(
+                  self.scriptPath2Module( scriptPath ), baseDir )
             {
                let code = Depend.runMain( modObj.__main, self.option.shebangArgList );
                os.exit( code );
