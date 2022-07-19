@@ -208,23 +208,64 @@
       lns-proj-dir
     (lns-proj-search)))
 
-(defun lns-get-proj-info ()
-  (let ((proj-dir (lns-get-proj-dir)))
-    (with-temp-buffer
-      (insert-file-contents (expand-file-name lns-proj-file proj-dir))
-      (let ((json-object-type 'plist)
-	    (json-array-type 'list)
-	    obj)
-	(setq obj (json-read-from-string
-		   (buffer-substring-no-properties (point-min) (point-max))))
-	obj
-	)
+(defun lns-get-proj-info (&optional proj-dir)
+  (when (not proj-dir)
+    (setq proj-dir (lns-get-proj-dir)))
+  (with-temp-buffer
+    (insert-file-contents (expand-file-name lns-proj-file proj-dir))
+    (let ((json-object-type 'plist)
+	  (json-array-type 'list)
+	  obj)
+      (setq obj (json-read-from-string
+		 (buffer-substring-no-properties (point-min) (point-max))))
+      obj
       )
-    ))
+    )
+  )
+
+(defun lns-proj-info-get-conf (proj)
+  (plist-get proj :conf))
+
+(defun lns-proj-info-set-lnsc-path (proj lnsc-path)
+  (plist-put proj :lnsc-path lnsc-path)
+  )
+(defun lns-proj-info-get-lnsc-path (proj)
+  (plist-get proj :lnsc-path)
+  )
 
 (defun lns-proj-get-cmd-option (proj)
-  (plist-get proj :cmd_option)
+  (plist-get (lns-proj-info-get-conf proj) :cmd_option)
   )
+
+(defun lns-proj-get-lnsc-path (proj)
+  (plist-get (lns-proj-info-get-conf proj) :lnsc_path)
+  )
+
+(defvar lns-proj-info-list nil)
+
+(defun lns-proj-info-get (&optional proj-dir new)
+  (when (not proj-dir)
+    (setq proj-dir (lns-get-proj-dir)))
+  (let ((info (assoc proj-dir lns-proj-info-list)))
+    (cond
+     ((and (not info) new)
+      (setq info (list :conf (lns-get-proj-info proj-dir)))
+      (add-to-list 'lns-proj-info-list (list proj-dir info)))
+     (t
+      (setq info (nth 1 info))))
+    info
+    ))
+
+(defun lns-proj-reload (&optional proj-dir)
+  (interactive)
+  (let ((info (lns-proj-info-get proj-dir))
+	(conf (lns-get-proj-info proj-dir)))
+	
+    (plist-put info :conf conf)
+    (plist-put info :lnsc-path nil)
+  ))
+
+      
 
 ;;;###autoload
 (define-derived-mode lns-mode lns--prog-mode "Lns"
@@ -255,6 +296,8 @@
          ))
   (set (make-local-variable 'isearch-wrap-function) 'lns-isearch-wrap-function)
   (set (make-local-variable 'lns-proj-dir) (lns-proj-search))
+  (set (make-local-variable 'lns-proj-info) (lns-proj-info-get lns-proj-dir t))
+  (set (make-local-variable 'flycheck-executable-find) 'lns-flycheck-executable-find)
   (when (boundp 'company-backends)
     (set (make-local-variable 'company-backends)
 	 (delq 'company-dabbrev (copy-sequence company-backends))))

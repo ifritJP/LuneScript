@@ -37,7 +37,6 @@ function must return string."
 
 (defvar lns-max-size-search-subfile 10000)
 
-
 (defun lns-command-get-info ()
   (let ((owner-file (buffer-file-name))
 	analyze-module)
@@ -64,16 +63,63 @@ function must return string."
   (delq nil command-list))
 
 (defun lns-command-get-lnsc ()
-  (let (command)
-    (cond ((not lns-lnsc-command)
-	   )
-	  ((functionp lns-lnsc-command)
-	   (setq command (lns-lnsc-command)))
-	  ((stringp lns-lnsc-command)
-	   (setq command lns-lnsc-command))
-	  (t
-	   (error "lns-lnsc-command is illegal")))
-    command))
+  "lune.js 内の lnsc_path 指定を確認し、
+そこで指定されているコマンドを lnsc として返す。
+lune.js 内に lnsc_path 指定がなければ、
+lns-lnsc-command からパスを取得する。
+"
+  (let (proj lnsc-path)
+    (when (boundp 'lns-proj-dir)
+      ;; lune.js 内の lnsc-path 指定から確認
+      (let ((proj-dir lns-proj-dir))
+	(setq proj (lns-proj-info-get))
+	(when proj
+	  (setq lnsc-path (lns-proj-info-get-lnsc-path proj))
+	  (when (not lnsc-path)
+	    (dolist (work-path (lns-proj-get-lnsc-path proj))
+	      (when (not lnsc-path)
+		(setq work-path (expand-file-name work-path proj-dir))
+		(when (file-exists-p work-path)
+		  (setq lnsc-path work-path)
+		  (lns-proj-info-set-lnsc-path proj lnsc-path)
+		  ))))
+	  )))
+    (when (not lnsc-path)
+      ;; lnsc-path が見つからない場合、lns-lnsc-command から確認
+      (cond ((not lns-lnsc-command)
+	     )
+	    ((functionp lns-lnsc-command)
+	     (setq lnsc-path (lns-lnsc-command)))
+	    ((stringp lns-lnsc-command)
+	     (setq lnsc-path lns-lnsc-command))
+	    (t
+	     (error "lns-lnsc-command is illegal")))
+      )
+    (when proj
+      ;; lnsc-path をキャッシュ
+      (lns-proj-info-set-lnsc-path proj lnsc-path))
+    lnsc-path))
+
+
+(defun lns-command-get-path ()
+  "lune.js 内の lnsc_path 指定を確認し、
+そこで指定されているコマンドを lnsc として返す。
+lune.js 内に lnsc_path 指定がなければ、
+lns-command-get-lnsc からパスを取得する。
+"
+  (let* ((proj-dir lns-proj-dir)
+	 (proj (lns-proj-info-get))
+	 lnsc-path)
+    (when proj
+      (dolist (work-path (lns-proj-get-lnsc-path proj))
+	(when (not lnsc-path)
+	  (setq work-path (expand-file-name work-path proj-dir))
+	  (when (file-exists-p work-path)
+	    (setq lnsc-path work-path))))
+      lnsc-path)
+    (when (not lnsc-path)
+      (setq lnsc-path (car (lns-command-get-command nil))))))
+
 
 (defun lns-command-get-command (&rest args)
   (let ((lnsc t)

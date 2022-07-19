@@ -3,5 +3,8 @@
         "--valid-luaval",
         "--enableAsyncCtl",
         "--debug"
+    ],
+    "lnsc_path": [
+        "./lnsc"
     ]
 }
