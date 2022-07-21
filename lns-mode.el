@@ -211,17 +211,20 @@
 (defun lns-get-proj-info (&optional proj-dir)
   (when (not proj-dir)
     (setq proj-dir (lns-get-proj-dir)))
-  (with-temp-buffer
-    (insert-file-contents (expand-file-name lns-proj-file proj-dir))
-    (let ((json-object-type 'plist)
-	  (json-array-type 'list)
-	  obj)
-      (setq obj (json-read-from-string
-		 (buffer-substring-no-properties (point-min) (point-max))))
-      obj
-      )
-    )
-  )
+  (let ((conf-path (expand-file-name lns-proj-file proj-dir)))
+    (if (file-exists-p conf-path)
+	(with-temp-buffer
+	  (insert-file-contents conf-path)
+	  (let ((json-object-type 'plist)
+		(json-array-type 'list)
+		obj)
+	    (setq obj (json-read-from-string
+		       (buffer-substring-no-properties (point-min) (point-max))))
+	    obj
+	    )
+	  )
+      nil)
+    ))
 
 (defun lns-proj-info-get-conf (proj)
   (plist-get proj :conf))
