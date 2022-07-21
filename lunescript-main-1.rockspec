@@ -44,6 +44,7 @@ build = {
       [ "lune.base.LuneControl" ] = "src/lune/base/LuneControl.lua",
       [ "lune.base.LuaMod" ] = "src/lune/base/LuaMod.lua",
       [ "lune.base.Testing" ] = "src/lune/base/Testing.lua",
+      [ "lune.base.TestingMacro" ] = "src/lune/base/TestingMacro.lua",
       [ "lune.base.Code" ] = "src/lune/base/Code.lua",
       [ "lune.base.Log" ] = "src/lune/base/Log.lua",
       [ "lune.base.Depend" ] = "src/lune/base/Depend.lua",

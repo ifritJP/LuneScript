@@ -2042,3 +2042,14 @@ _ = 1;
       print( key, val );
    }
 }
+Macro._section();
+__test {
+   class Hoge {
+      let val:int;
+      pub fn __init() {
+         // __test ブロック内のクラスのコンストラクタの
+         // メンバ初期化検知が正常に動作していなかったのをチェックする。       
+         self.val = 1; 
+      }
+   }
+}

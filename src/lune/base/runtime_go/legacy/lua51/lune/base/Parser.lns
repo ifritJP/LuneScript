@@ -562,7 +562,7 @@ fn func():int {
       __t._eq( ctrl, parser.getTokenNoErr(##).txt, "2" );
       __t._eq( ctrl, parser.getTokenNoErr(##).txt, "3" );
       __t._eq( ctrl, parser.getTokenNoErr(##).txt, "4" );
-      parser.pushbackStr( "dummy", "a b", parser.createPosition( 0, -1 ) );
+      parser.pushbackStr( false, "dummy", "a b", parser.createPosition( 0, -1 ) );
       __t._eq( ctrl, parser.getTokenNoErr(##).txt, "a" );
       __t._eq( ctrl, parser.getTokenNoErr(##).txt, "b" );
       parser.pushback(); // b

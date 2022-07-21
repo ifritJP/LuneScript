@@ -1107,6 +1107,7 @@ Luaval<&stem>!, frontInterface.ModuleMeta
    
    if not self.getLoadInfo( mod ) {
       if! let luaTxt = self.convertedMap[ mod ] {
+         // 変換済みの lua のコードがある場合
          if! let mut meta = self.moduleMgr.getMeta( mod ) {
             self.setLoadInfo(
                mod, new LoadInfo( unwrap loadFromLuaTxt( luaTxt ), meta ) );
@@ -1117,6 +1118,7 @@ Luaval<&stem>!, frontInterface.ModuleMeta
          }
       }
       else {
+         // 変換済みの lua のコードがない場合
          if! let lnsPath = self.searchModule( orgMod, baseDir, nil ) {
             let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 

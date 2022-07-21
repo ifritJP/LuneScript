@@ -684,9 +684,9 @@ pub fn TransUnitCtrl.createAST(
    self.stdinFile = stdinFile;
    self.baseDir = baseDir;
    
-   Log._log2( .Log, "%s start -- %s on %s, %s, %s"
+   Log._log2( .Log, "%s start -- %s on %s, macroFlag:%s, %s, testing:%s"
               (__func__, parser.getStreamName(), baseDir,
-                macroFlag, self.analyzePhase.$_txt ) );
+                macroFlag, self.analyzePhase.$_txt, self.ctrl_info.testing ) );
 
    self.moduleName = unwrap moduleName default "";
 

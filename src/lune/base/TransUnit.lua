@@ -1722,6 +1722,11 @@ function TransUnit:createPosition( lineNo, column )
    return self.parser:createPosition( lineNo, column )
 end
 
+function TransUnit:isValidBlockWithoutTesting(  )
+
+   return not self.inTestBlock or self.ctrl_info.testing
+end
+
 
 function TransUnit:getTokenNoErr( skipFlag )
 
@@ -1737,7 +1742,7 @@ function TransUnit:getTokenNoErr( skipFlag )
    
    if workToken.kind ~= Parser.TokenKind.Eof then
       token = workToken
-      if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None and (not skipFlag or not self.inTestBlock or self.ctrl_info.testing ) then
+      if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None and (not skipFlag or self:isValidBlockWithoutTesting(  ) ) then
          
          token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self:get_scope(), self, token )
       end
@@ -4965,7 +4970,7 @@ function TransUnit:analyzeFuncBlock( analyzingState, firstToken, classTypeInfo, 
    
    local body
    
-   if not self.inTestBlock or self.ctrl_info.testing then
+   if self:isValidBlockWithoutTesting(  ) then
       
       self:pushAnalyzingState( analyzingState )
       
@@ -5126,27 +5131,31 @@ function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode
    
    local function checkInitializeMember( staticFlag, pos )
    
-      for memberName, memberNode in pairs( memberName2Node ) do
-         if memberNode:get_staticFlag() == staticFlag then
-            local symbolInfo = _lune.unwrap( self:get_scope():getSymbolInfoChild( memberName ))
-            local typeInfo = symbolInfo:get_typeInfo()
-            if not symbolInfo:get_hasValueFlag() then
-               local msg
-               
-               if staticFlag then
-                  msg = string.format( "Set member -- %s", memberName)
-               else
-                
-                  msg = string.format( "Set member -- %s.%s", name.txt, memberName)
-               end
-               
-               if not typeInfo:get_nilable() then
-                  self:addErrMess( _lune.unwrapDefault( pos, memberNode:get_pos()), msg )
-               else
-                
-                  table.insert( uninitMemberList, symbolInfo )
+      if self:isValidBlockWithoutTesting(  ) then
+         
+         for memberName, memberNode in pairs( memberName2Node ) do
+            if memberNode:get_staticFlag() == staticFlag then
+               local symbolInfo = _lune.unwrap( self:get_scope():getSymbolInfoChild( memberName ))
+               local typeInfo = symbolInfo:get_typeInfo()
+               if not symbolInfo:get_hasValueFlag() then
+                  local msg
                   
-                  self:addWarnMess( _lune.unwrapDefault( pos, memberNode:get_pos()), msg )
+                  if staticFlag then
+                     msg = string.format( "Set member -- %s", memberName)
+                  else
+                   
+                     msg = string.format( "Set member -- %s.%s", name.txt, memberName)
+                  end
+                  
+                  if not typeInfo:get_nilable() then
+                     self:addErrMess( _lune.unwrapDefault( pos, memberNode:get_pos()), msg )
+                  else
+                   
+                     table.insert( uninitMemberList, symbolInfo )
+                     
+                     self:addWarnMess( _lune.unwrapDefault( pos, memberNode:get_pos()), msg )
+                  end
+                  
                end
                
             end
@@ -12210,8 +12219,8 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    Log.log( Log.Level.Log, __func__, 687, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
-      return string.format( "%s start -- %s on %s, %s, %s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
-      )
+      return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
+      , self.ctrl_info.testing)
    end )
    
    

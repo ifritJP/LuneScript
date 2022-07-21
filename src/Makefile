@@ -207,6 +207,7 @@ LNS_SRCS += base/LuaMod
 LNS_SRCS += base/LuneControl
 LNS_SRCS += base/Meta
 LNS_SRCS += base/Testing
+LNS_SRCS += base/TestingMacro
 LNS_SRCS += base/Code
 LNS_SRCS += base/Log
 LNS_SRCS += base/LuaVer
@@ -260,6 +261,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/LuneControl)
 	$(call $5,$1,$2,$3,$4,base/Meta)
 	$(call $5,$1,$2,$3,$4,base/Testing)
+	$(call $5,$1,$2,$3,$4,base/TestingMacro)
 	$(call $5,$1,$2,$3,$4,base/Code)
 	$(call $5,$1,$2,$3,$4,base/Log)
 	$(call $5,$1,$2,$3,$4,base/LuaVer)

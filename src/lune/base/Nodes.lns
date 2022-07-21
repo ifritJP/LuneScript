@@ -2999,6 +2999,8 @@ pub fn getCastUnwraped( node:&Node ) : &Node {
 }
 
 __test {
+   // import lune.base.GoMod;
+
    pub fn createTestNodes() : RootNode {
       let mut parser = Parser.DefaultPushbackParser.createFromLnsCode(
          "print( 'hoge' );", "test" );
@@ -3040,6 +3042,43 @@ __test {
          processInfo, moduleInfo, nil,
          new frontInterface.LuneHelperInfo(), nodeManager, {}, {}, {});
    }
+
+   // class dummyFront extend (frontInterface.frontInterface) {
+   //    let gomodMap:GoMod.ModInfo;
+
+   //    pub fn __init() {
+   //       self.gomodMap = GoMod.getGoMap();
+   //    }
+      
+   //    pub fn loadModule( mod:str )  mut: Luaval<&stem>!, frontInterface.ModuleMeta {
+   //       error( "not implements: %s" (__func__) );
+   //       //return frontInterface.dummyLoadModule( mod )**;
+   //    }
+   //    pub fn loadMeta( importModuleInfo:frontInterface.ImportModuleInfo,
+   //                     mod:str, orgMod:str, baseDir:str!,
+   //                     loader:frontInterface.ModuleLoader ) mut :
+   //       frontInterface.ModuleMeta!
+   //    {
+   //       error( "not implements: %s" (__func__) );
+   //    }
+   //    pub fn loadFromLnsTxt(
+   //       importModuleInfo:frontInterface.ImportModuleInfo,
+   //       baseDir:str!, name:str, txt:str )  mut : Luaval<&stem>
+   //    {
+   //       error( "not implements: %s" (__func__) );
+   //    }
+   //    pub fn getLuaModulePath( mod:str, baseDir:str! )  mut : str, str!, str {
+   //       return self.gomodMap.getLuaModulePath( mod, baseDir )**;
+   //    }
+   //    pub fn searchModule( mod:str, baseDir:str! , addSearchPath:str!)  mut: str! {
+   //       error( "not implements: %s" (__func__) );
+   //    }
+   //    pub fn error( message:str )  {
+   //       error( message );
+   //    }
+   // }
+
+   // frontInterface.setFront( new dummyFront() );
 }
 
 __test case1(ctrl) {

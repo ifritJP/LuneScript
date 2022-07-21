@@ -1610,6 +1610,7 @@ function Front:loadModuleWithBaseDir( orgMod, baseDir )
       do
          local luaTxt = self.convertedMap[mod]
          if luaTxt ~= nil then
+            
             do
                local meta = self.moduleMgr:getMeta( mod )
                if meta ~= nil then
@@ -1621,6 +1622,7 @@ function Front:loadModuleWithBaseDir( orgMod, baseDir )
             end
             
          else
+            
             do
                local lnsPath = self:searchModule( orgMod, baseDir, nil )
                if lnsPath ~= nil then
@@ -1677,7 +1679,7 @@ function Front:loadModuleWithBaseDir( orgMod, baseDir )
                else
                   
                   if _lune._Set_has(self.bindModuleSet, mod ) then
-                     Log.log( Log.Level.Warn, __func__, 1159, function (  )
+                     Log.log( Log.Level.Warn, __func__, 1161, function (  )
                      
                         return string.format( "load from the binding -- %s", mod)
                      end )
@@ -1819,7 +1821,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                                  meta = self:checkUptodateMeta( lnsPath, metaPath, baseDir, self.option.outputDir )
                               else
                                
-                                 Log.log( Log.Level.Warn, __func__, 1273, function (  )
+                                 Log.log( Log.Level.Warn, __func__, 1275, function (  )
                                  
                                     return string.format( "%s not ready meta %s, %s", orgMod, lnsPath, metaPath)
                                  end )
@@ -1828,7 +1830,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                               
                            else
                             
-                              Log.log( Log.Level.Warn, __func__, 1277, function (  )
+                              Log.log( Log.Level.Warn, __func__, 1279, function (  )
                               
                                  return string.format( "%s not ready lua %s, %s", orgMod, lnsPath, luaPath)
                               end )
@@ -1837,7 +1839,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                            
                         else
                          
-                           Log.log( Log.Level.Warn, __func__, 1281, function (  )
+                           Log.log( Log.Level.Warn, __func__, 1283, function (  )
                            
                               return string.format( "force analyze -- %s", orgMod)
                            end )
@@ -1845,7 +1847,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                         end
                         
                      else
-                        Log.log( Log.Level.Warn, __func__, 1285, function (  )
+                        Log.log( Log.Level.Warn, __func__, 1287, function (  )
                         
                            return string.format( "%s not found lua in %s", orgMod, self.option.outputDir)
                         end )
@@ -2034,7 +2036,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 1481, function (  )
+               Log.log( Log.Level.Debug, __func__, 1483, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -2667,7 +2669,7 @@ function Front:build( buildMode, astCallback )
                if _exp ~= nil then
                   astCallback( _exp )
                else
-                  Log.log( Log.Level.Err, __func__, 2043, function (  )
+                  Log.log( Log.Level.Err, __func__, 2045, function (  )
                   
                      return string.format( "not found AST -- %s", mod)
                   end )
@@ -2698,7 +2700,7 @@ _moduleObj.build = build
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 2060, function (  )
+   Log.log( Log.Level.Trace, __func__, 2062, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

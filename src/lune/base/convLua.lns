@@ -3797,6 +3797,7 @@ pub class MacroEvalImp extend Nodes.MacroEval {
 __test {
    //import lune.base.frontInterface;
    import lune.base.Testing;
+   import lune.base.TestingMacro;
 
    pub fn createAstFromStream(
       parserSrc:&Types.ParserSrc, scriptPath:str,
@@ -3834,8 +3835,9 @@ __test {
       scriptPath:str, lnsCode:str, option:&LnsOpt.Option ) __noasync: AstInfo.ASTInfo
    {
       return createAstFromStream(
-         Types.ParserSrc.LnsPath(
-            scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
+         // Types.ParserSrc.LnsPath(
+         //    scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
+         Types.ParserSrc.LnsCode( lnsCode, scriptPath, nil ),
          scriptPath, new Parser.TxtStream( lnsCode ), option );
    }
    
@@ -3874,6 +3876,8 @@ _ = 1;
    fn Ast2Code( option:&LnsOpt.Option,
                 ast:AstInfo.ASTInfo, streamName:str ) __noasync : str, str
    {
+      print( "====hoge", Nodes.getNodeKindName(ast.$node.$kind),
+             ast.$node@@@Nodes.RootNode );
       let mut stream = new Util.memStream();
       let mut metaStream = new Util.memStream();
 
@@ -3896,11 +3900,11 @@ _ = 1;
             if! let mod = loaded(##) {
                if! let listobj = mod.outputList {
                   let strList = listobj@@List<str>;
-                  if Testing._eq( ctrl, #strList, 4 ) {
-                     Testing._eq( ctrl, strList[ 1 ], "hello world" );
-                     Testing._eq( ctrl, strList[ 2 ], "11" );
-                     Testing._eq( ctrl, strList[ 3 ], "12" );
-                     Testing._eq( ctrl, strList[ 4 ], "13" );
+                  if TestingMacro._eq( ctrl, #strList, 4 ) {
+                     TestingMacro._eq( ctrl, strList[ 1 ], "hello world" );
+                     TestingMacro._eq( ctrl, strList[ 2 ], "11" );
+                     TestingMacro._eq( ctrl, strList[ 3 ], "12" );
+                     TestingMacro._eq( ctrl, strList[ 4 ], "13" );
                   }
                }
             }
@@ -3916,7 +3920,7 @@ __test case1(ctrl) {
    LuaVer.setCurVer( 53 );
 
    let scriptPath = "test.lns";
-   let option = LnsOpt.createDefaultOption( [scriptPath], nil );
+   let option = LnsOpt.createDefaultOption( [scriptPath ], nil );
    let mut ast = createAst( scriptPath, getTestLnsCode(), option );
    let meta, luaCode = Ast2Code( option, ast, scriptPath );
    print( meta, luaCode );

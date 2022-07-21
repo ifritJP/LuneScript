@@ -25,6 +25,7 @@ SOFTWARE.
 import lune.base.Parser;
 import lune.base.Nodes;
 import lune.base.Util;
+import lune.base.Types;
 
 pub abstract class Filter<T> {
 }

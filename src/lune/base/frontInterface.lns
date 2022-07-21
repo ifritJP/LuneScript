@@ -329,43 +329,48 @@ go/github:com.ifritJP. 等の go 用のパスを、
    pub fn error( message:str ) ;
 }
 
+pub fn dummyLoadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
+   // error( "not implements" );
+   let modVal, mut moduleMeta;
+   __luaLock {
+      let emptyTable;
+      let loaded = _load( "return {}" ## );
+      when! loaded {
+         emptyTable = unwrap loaded(##);
+      } else {
+         error( "load error" );
+      }
+      moduleMeta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
+                                   MetaOrModule.MetaRaw( emptyTable ) );           
+      modVal = require( mod );
+   }
+   return modVal, moduleMeta;
+}
+
 class dummyFront extend (frontInterface) {
    pub fn loadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
-      // error( "not implements" );
-      let modVal, mut moduleMeta;
-      __luaLock {
-         let emptyTable;
-         let loaded = _load( "return {}" ## );
-         when! loaded {
-            emptyTable = unwrap loaded(##);
-         } else {
-            error( "load error" );
-         }
-         moduleMeta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
-                                      MetaOrModule.MetaRaw( emptyTable ) );           
-         modVal = require( mod );
-      }
-      return modVal, moduleMeta;
+      return dummyLoadModule( mod )**;
    }
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
                     baseDir:str!, loader:ModuleLoader )  mut : ModuleMeta!
    {
-      error( "not implements" );
+      error( "not implements: %s" (__func__) );
    }
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo,
       baseDir:str!, name:str, txt:str )  mut : Luaval<&stem>
    {
-      error( "not implements" );
+      error( "not implements: %s" (__func__) );
    }
    pub fn getLuaModulePath( mod:str, baseDir:str! )  mut : str, str!, str {
-      error( "not implements" );
+      return mod, nil, mod;
+      //error( "not implements: %s" (__func__) );
    }
    pub fn searchModule( mod:str, baseDir:str! , addSearchPath:str!)  mut: str! {
-      error( "not implements" );
+      error( "not implements: %s" (__func__) );
    }
    pub fn error( message:str )  {
-      error( "not implements" );
+      error( message );
    }
 }
 

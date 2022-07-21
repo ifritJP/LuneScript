@@ -22,6 +22,8 @@ var lune_base_Meta []byte
 var lune_base_Testing []byte
 //go:embed legacy/lua51/lune/base/Testing.lns
 var lns_lune_base_Testing string
+//go:embed legacy/lua51/lune/base/TestingMacro.lua
+var lune_base_TestingMacro []byte
 //go:embed legacy/lua51/lune/base/Code.lua
 var lune_base_Code []byte
 //go:embed legacy/lua51/lune/base/Log.lua
@@ -94,6 +96,7 @@ AddlnsSrcInfo( "lune.base.LuaMod", lune_base_LuaMod )
 AddlnsSrcInfo( "lune.base.LuneControl", lune_base_LuneControl )
 AddlnsSrcInfo( "lune.base.Meta", lune_base_Meta )
 AddlnsSrcInfo( "lune.base.Testing", lune_base_Testing )
+AddlnsSrcInfo( "lune.base.TestingMacro", lune_base_TestingMacro )
 AddlnsSrcInfo( "lune.base.Code", lune_base_Code )
 AddlnsSrcInfo( "lune.base.Log", lune_base_Log )
 AddlnsSrcInfo( "lune.base.LuaVer", lune_base_LuaVer )

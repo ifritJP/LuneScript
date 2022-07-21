@@ -254,10 +254,6 @@ func Lns_OutputDepend_init(_env *LnsEnv) {
     Lns_Util_init(_env)
     Lns_Ast_init(_env)
     Lns_AstInfo_init(_env)
-    Lns_convLua_init(_env)
-    Lns_frontInterface_init(_env)
-    Lns_LuaVer_init(_env)
-    Lns_Option_init(_env)
 }
 func init() {
     init_OutputDepend = false

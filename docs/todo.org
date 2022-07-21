@@ -192,6 +192,12 @@ lua の場合 val に nil が入らないが、 go では入る。
 - [ ] 型パラメータを持つクラスの proto 宣言が出来ない。
   
 - [ ] 文字列中の . を編集すると company-mode がエラーする
+
+- [ ] formatter の Test を動かすとエラーする。
+    formatter から import している Nodes の createTestNodes() をコールしているが、
+    それが nil で実行できない。
+    多分、 lua から loadModule した時の testing が反映されていなくて、
+    testing が無効なスクリプトがロードされている。
   
 * エラー  
 

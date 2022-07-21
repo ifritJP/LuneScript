@@ -1,0 +1,55 @@
+pub macro _eq( ctrl:sym, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, nil, __mod__, __line__ )
+}
+
+pub macro _neq( ctrl:sym, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkNotEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, nil, __mod__, __line__ )
+}
+
+pub macro _isT( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.isTrue( ,,val, ,,,,val, nil, __mod__, __line__ )
+}
+
+pub macro _isNotT( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.isNotTrue( ,,val, ,,,,val, nil, __mod__, __line__ )
+}
+
+pub macro _isF( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.checkEq( ,,val, false, ,,,,val, "false", nil, __mod__, __line__ )
+}
+
+pub macro _isNotF( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.checkNotEq( ,,val, false, ,,,,val, "false", nil, __mod__, __line__ )
+}
+
+pub macro _isNil( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.isNil( ,,val, ,,,,val, nil, __mod__, __line__ )
+}
+
+pub macro _isNotNil( ctrl:sym, val:__exp ): bool {
+   ,,ctrl.isNotNil( ,,val, ,,,,val, nil, __mod__, __line__ )
+}
+
+pub macro _err( ctrl:sym, mes:__exp ) {
+   ,,ctrl.err( ,,mes, __mod__, __line__ );
+}
+
+pub macro _eqM( ctrl:sym, msg:str, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, ,,msg, __mod__, __line__ )
+}
+
+pub macro _neqM( ctrl:sym, msg:str, val1:__exp, val2:__exp ): bool {
+   ,,ctrl.checkEq( ,,val1, ,,val2, ,,,,val1, ,,,,val2, ,,msg, __mod__, __line__ )
+}
+
+pub macro _isTM( ctrl:sym, msg:str, val:__exp ): bool {
+   ,,ctrl.isTrue( ,,val, ,,,,val, ,,msg, __mod__, __line__ )
+}
+
+pub macro _isNotTM( ctrl:sym, msg:str, val:__exp ): bool {
+   ,,ctrl.isNotTrue( ,,val, ,,,,val, ,,msg, __mod__, __line__ )
+}
+
+pub macro _isNilM( ctrl:sym, msg:str, val:__exp ): bool {
+   ,,ctrl.isNil( ,,val, ,,,,val, ,,msg, __mod__, __line__ )
+}

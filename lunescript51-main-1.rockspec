@@ -44,6 +44,7 @@ build = {
       [ "lune.base.LuneControl" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/LuneControl.lua",
       [ "lune.base.LuaMod" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/LuaMod.lua",
       [ "lune.base.Testing" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Testing.lua",
+      [ "lune.base.TestingMacro" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/TestingMacro.lua",
       [ "lune.base.Code" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Code.lua",
       [ "lune.base.Log" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Log.lua",
       [ "lune.base.Depend" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Depend.lua",

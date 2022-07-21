@@ -54,20 +54,20 @@ func convLua_ExportIdKind_getTxt(arg1 LnsInt) string {
 }
 var convLua_stepIndent LnsInt
 type convLua_outputMacroStmtBlock_13_ func (_env *LnsEnv)
-// for 3896
-func convLua_convExp0_4627(arg1 []LnsAny) LnsAny {
+// for 3900
+func convLua_convExp0_4649(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3659
-func convLua_convExp0_3626(arg1 []LnsAny) LnsInt {
+func convLua_convExp0_3627(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
-// for 3823
-func convLua_convExp0_4179(arg1 []LnsAny) LnsAny {
+// for 3824
+func convLua_convExp0_4180(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 3894
-func convLua_convExp0_4375(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 3898
+func convLua_convExp0_4397(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 335
@@ -743,7 +743,6 @@ func Lns_convLua_init(_env *LnsEnv) {
     
     
     
-    Lns_Testing_init(_env)
 }
 func init() {
     init_convLua = false
@@ -3902,7 +3901,7 @@ func (self *convLua_ConvFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_L
                 var matchFlag LnsInt
                 matchFlag = TransUnit_FormType__Match
                 if index <= opList.Len(){
-                    matchFlag = convLua_convExp0_3626(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index).(string), val.FP.Get_expType(_env), self.targetLuaVer)))
+                    matchFlag = convLua_convExp0_3627(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index).(string), val.FP.Get_expType(_env), self.targetLuaVer)))
                 }
                 if matchFlag == TransUnit_FormType__NeedConv{
                     self.FP.WriteRaw(_env, "tostring( ")
@@ -3963,8 +3962,8 @@ func (self *ConvLua_MacroEvalImp) EvalFromCodeToLuaCode(_env *LnsEnv, processInf
     conv = NewconvLua_ConvFilter(_env, "macro", stream.FP, NewUtil_NullOStream(_env).FP, ConvLua_ConvMode__ConvMeta, true, Ast_headTypeInfo, processInfo, Ast_SymbolKind__Typ, self.builtinFunc, nil, LuaVer_getCurVer(_env), false, true, NewConvLua_Option(_env, "", false))
     conv.FP.OutputDeclMacro(_env, name, argNameList, convLua_outputMacroStmtBlock_13_(func(_env *LnsEnv) {
         if code != nil{
-            code_880 := code.(string)
-            conv.FP.Write(_env, code_880)
+            code_881 := code.(string)
+            conv.FP.Write(_env, code_881)
         }
     }))
     return stream.FP.Get_txt(_env)

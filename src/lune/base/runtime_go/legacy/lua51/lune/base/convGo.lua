@@ -390,6 +390,10 @@ function Option:get_runnerNum()
 end
 
 
+local ignoreNodeInInnerBlockSetForNoTest = {[Nodes.NodeKind.get_DeclAlge()] = true, [Nodes.NodeKind.get_DeclEnum()] = true, [Nodes.NodeKind.get_DeclMethod()] = true, [Nodes.NodeKind.get_DeclForm()] = true, [Nodes.NodeKind.get_DeclMacro()] = true, [Nodes.NodeKind.get_TestBlock()] = true, [Nodes.NodeKind.get_TestCase()] = true}
+
+local ignoreNodeInInnerBlockSetForTest = {[Nodes.NodeKind.get_DeclAlge()] = true, [Nodes.NodeKind.get_DeclEnum()] = true, [Nodes.NodeKind.get_DeclMethod()] = true, [Nodes.NodeKind.get_DeclForm()] = true, [Nodes.NodeKind.get_DeclMacro()] = true, [Nodes.NodeKind.get_TestCase()] = true}
+
 local convFilter = {}
 setmetatable( convFilter, { __index = Nodes.Filter } )
 function convFilter._new( enableTest, streamName, stream, ast, option )
@@ -401,6 +405,17 @@ end
 function convFilter:__init(enableTest, streamName, stream, ast, option) 
    Nodes.Filter.__init( self,true, ast:get_exportInfo():get_moduleTypeInfo(), ast:get_exportInfo():get_moduleTypeInfo():get_scope())
    
+   
+   local ignoreNodeInInnerBlockSet
+   
+   if enableTest then
+      ignoreNodeInInnerBlockSet = ignoreNodeInInnerBlockSetForTest
+   else
+    
+      ignoreNodeInInnerBlockSet = ignoreNodeInInnerBlockSetForNoTest
+   end
+   
+   self.ignoreNodeInInnerBlockSet = ignoreNodeInInnerBlockSet
    
    self.streamName = streamName
    self.orgStream = stream
@@ -556,8 +571,6 @@ local function getAddEnvArg( argLen, addEnvArg )
    
    return ""
 end
-
-local ignoreNodeInInnerBlockSet = {[Nodes.NodeKind.get_DeclAlge()] = true, [Nodes.NodeKind.get_DeclEnum()] = true, [Nodes.NodeKind.get_DeclMethod()] = true, [Nodes.NodeKind.get_DeclForm()] = true, [Nodes.NodeKind.get_DeclMacro()] = true, [Nodes.NodeKind.get_TestCase()] = true}
 
 local function filter( node, filter, parent )
 
@@ -3008,7 +3021,7 @@ function convFilter:processRoot( node, opt )
    
    
    for __index, child in ipairs( node:get_children() ) do
-      if not _lune._Set_has(ignoreNodeInInnerBlockSet, child:get_kind() ) then
+      if not _lune._Set_has(self.ignoreNodeInInnerBlockSet, child:get_kind() ) then
          filter( child, self, node )
       end
       
@@ -3156,7 +3169,7 @@ function convFilter:processBlockSub( node, opt )
    self:pushProcessMode( ProcessMode.Main )
    self:pushIndent(  )
    for __index, child in ipairs( node:get_stmtList() ) do
-      if not _lune._Set_has(ignoreNodeInInnerBlockSet, child:get_kind() ) then
+      if not _lune._Set_has(self.ignoreNodeInInnerBlockSet, child:get_kind() ) then
          filter( child, self, node )
       end
       
@@ -3449,7 +3462,7 @@ end
 function convFilter:processExpMacroExp( node, opt )
 
    for __index, stmt in ipairs( node:get_stmtList() ) do
-      if not _lune._Set_has(ignoreNodeInInnerBlockSet, stmt:get_kind() ) then
+      if not _lune._Set_has(self.ignoreNodeInInnerBlockSet, stmt:get_kind() ) then
          filter( stmt, self, node )
       end
       
@@ -7208,7 +7221,7 @@ function convFilter:processTestBlock( node, opt )
 
    local stmtList = node:get_stmtList()
    for __index, statement in ipairs( stmtList ) do
-      if not _lune._Set_has(ignoreNodeInInnerBlockSet, statement:get_kind() ) then
+      if not _lune._Set_has(self.ignoreNodeInInnerBlockSet, statement:get_kind() ) then
          filter( statement, self, node )
       end
       

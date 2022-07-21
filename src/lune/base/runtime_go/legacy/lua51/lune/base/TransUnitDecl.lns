@@ -1941,7 +1941,7 @@ fn TransUnit.analyzeFuncBlock(
 
 
    let mut body;
-   if not self.inTestBlock or self.ctrl_info.testing {
+   if self.isValidBlockWithoutTesting() {
 
       self.pushAnalyzingState( analyzingState );
       
@@ -2151,25 +2151,28 @@ memberName2Node のメンバに値がセットされたかどうかを調べる�
 nil の場合、メンバの宣言位置。
    */
    fn checkInitializeMember( staticFlag:bool, pos:&Parser.Position! ) __trans {
-      foreach memberNode, memberName in memberName2Node {
-         if memberNode.$staticFlag == staticFlag {
-            let symbolInfo = unwrap self.$scope.getSymbolInfoChild( memberName );
-            let typeInfo = symbolInfo.$typeInfo;
-            if not symbolInfo.$hasValueFlag {
-               let msg;
-               if staticFlag {
-                  msg = "Set member -- %s" ( memberName );
-               }
-               else {
-                  msg = "Set member -- %s.%s" ( name.txt, memberName );
-               }
-               if not typeInfo.$nilable {
-                  self.addErrMess( unwrap pos default memberNode.$pos, msg );
-               }
-               else {
-                  uninitMemberList.insert( symbolInfo );
-                  // nilable は、ここで初期化済みとする。
-                  self.addWarnMess( unwrap pos default memberNode.$pos, msg );
+      if self.isValidBlockWithoutTesting() {
+         // テストブロック外が、テスト有効な場合処理する。
+         foreach memberNode, memberName in memberName2Node {
+            if memberNode.$staticFlag == staticFlag {
+               let symbolInfo = unwrap self.$scope.getSymbolInfoChild( memberName );
+               let typeInfo = symbolInfo.$typeInfo;
+               if not symbolInfo.$hasValueFlag {
+                  let msg;
+                  if staticFlag {
+                     msg = "Set member -- %s" ( memberName );
+                  }
+                  else {
+                     msg = "Set member -- %s.%s" ( name.txt, memberName );
+                  }
+                  if not typeInfo.$nilable {
+                     self.addErrMess( unwrap pos default memberNode.$pos, msg );
+                  }
+                  else {
+                     uninitMemberList.insert( symbolInfo );
+                     // nilable は、ここで初期化済みとする。
+                     self.addWarnMess( unwrap pos default memberNode.$pos, msg );
+                  }
                }
             }
          }

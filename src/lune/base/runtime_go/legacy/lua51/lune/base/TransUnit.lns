@@ -1340,6 +1340,11 @@ pub fn TransUnit.createPosition( lineNo: int, column: int ) __async : &Parser.Po
    return self.parser.createPosition( lineNo, column );
 }
 
+// Test 
+fn TransUnit.isValidBlockWithoutTesting(): bool {
+   return not self.inTestBlock or self.ctrl_info.testing;
+}
+
 fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
 {
    let mut token;
@@ -1353,7 +1358,7 @@ fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
    if workToken.$kind ~= .Eof {
       token = workToken;
       if self.macroCtrl.$analyzeInfo.$mode ~= .None and
-         ( not skipFlag or not self.inTestBlock or self.ctrl_info.testing )
+         ( not skipFlag or self.isValidBlockWithoutTesting() )
       {
          // テストブロック内のマクロ展開は、テストが有効な時に行なう。
          token = self.macroCtrl.expandMacroVal(

@@ -643,9 +643,7 @@ function frontInterface:__init(  )
 end
 
 
-local dummyFront = {}
-setmetatable( dummyFront, { ifList = {frontInterface,} } )
-function dummyFront:loadModule( mod )
+local function dummyLoadModule( mod )
 
    
    local modVal, moduleMeta
@@ -666,25 +664,36 @@ function dummyFront:loadModule( mod )
    
    return modVal, moduleMeta
 end
-function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
+_moduleObj.dummyLoadModule = dummyLoadModule
 
-   error( "not implements" )
+local dummyFront = {}
+setmetatable( dummyFront, { ifList = {frontInterface,} } )
+function dummyFront:loadModule( mod )
+
+   return dummyLoadModule( mod )
+end
+function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
+   local __func__ = '@lune.@base.@frontInterface.dummyFront.loadMeta'
+
+   error( string.format( "not implements: %s", __func__) )
 end
 function dummyFront:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
+   local __func__ = '@lune.@base.@frontInterface.dummyFront.loadFromLnsTxt'
 
-   error( "not implements" )
+   error( string.format( "not implements: %s", __func__) )
 end
 function dummyFront:getLuaModulePath( mod, baseDir )
 
-   error( "not implements" )
+   return mod, nil, mod
 end
 function dummyFront:searchModule( mod, baseDir, addSearchPath )
+   local __func__ = '@lune.@base.@frontInterface.dummyFront.searchModule'
 
-   error( "not implements" )
+   error( string.format( "not implements: %s", __func__) )
 end
 function dummyFront:error( message )
 
-   error( "not implements" )
+   error( message )
 end
 function dummyFront._setmeta( obj )
   setmetatable( obj, { __index = dummyFront  } )
