@@ -173,6 +173,9 @@ function Control:__init( level )
 
    self.level = level
 end
+function Control:get_level()
+   return self.level
+end
 
 
 local control = Control._new(Level.Err)
@@ -186,6 +189,12 @@ local function setLevel( level )
    
 end
 _moduleObj.setLevel = setLevel
+
+local function getLevel(  )
+
+   return control:get_level()
+end
+_moduleObj.getLevel = getLevel
 
 local function log( level, funcName, lineNo, callback )
 

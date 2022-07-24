@@ -2557,6 +2557,13 @@ case1
 case2: ---------------
 case2
 module: test.testing ==============================
+@test.@TestSub2
+@test.@TestSub1
+@test.@TestMini	test
+module: test.TestMini ==============================
+case1: ---------------
+@test.@TestSub1.func
+module: test.TestMini ==============================
 hoge
 module: test.testing ==============================
 case1: ---------------

@@ -1,0 +1,11 @@
+import test.TestSub2;
+
+print( __mod__ );
+
+__test {
+   print( __mod__, "test" );
+}
+
+pub fn func() {
+   print( __func__ );
+}

@@ -198,6 +198,14 @@ lua の場合 val に nil が入らないが、 go では入る。
     それが nil で実行できない。
     多分、 lua から loadModule した時の testing が反映されていなくて、
     testing が無効なスクリプトがロードされている。
+    Front の .Exec 処理から loadModule() してテストを動かすが、
+    loadModule() 内部でデフォルト Option の lua 版 LuneScript が動いて、
+    testing でないモジュールをビルドして実行してしまっている。
+    少なくとも Option ではないオプションを渡して実行してやる必要がある。
+    また、現状は lua 版 LuneScript で再度ビルドしてしまっているが、
+    これも無駄なので、 go でビルドした情報を渡して実行できるようにする。
+
+- [ ] alge 型の Mapping が go でサポートできていない
   
 * エラー  
 

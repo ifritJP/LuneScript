@@ -57,12 +57,17 @@ func Log_setLevel(_env *LnsEnv, level LnsInt) {
     }
 }
 
-// 91: decl @lune.@base.@Log.log
+// 90: decl @lune.@base.@Log.getLevel
+func Log_getLevel(_env *LnsEnv) LnsInt {
+    return Log_control.FP.get_level(_env)
+}
+
+// 94: decl @lune.@base.@Log.log
 func Log_log(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,callback Log_CreateMessage) {
     Log_control.FP.log(_env, level, funcName, lineNo, callback)
 }
 
-// 95: decl @lune.@base.@Log.direct
+// 98: decl @lune.@base.@Log.direct
 func Log_direct(_env *LnsEnv, level LnsInt,funcName string,lineNo LnsInt,mess string) {
     Log_control.FP.direct(_env, level, funcName, lineNo, mess)
 }
@@ -89,6 +94,7 @@ func (self *Log_Control) direct(_env *LnsEnv, level LnsInt,funcName string,lineN
 // declaration Class -- Control
 type Log_ControlMtd interface {
     direct(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 LnsInt, arg4 string)
+    get_level(_env *LnsEnv) LnsInt
     log(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 LnsInt, arg4 Log_CreateMessage)
 }
 type Log_Control struct {
@@ -124,6 +130,7 @@ func NewLog_Control(_env *LnsEnv, arg1 LnsInt) *Log_Control {
 func (self *Log_Control) InitLog_Control(_env *LnsEnv, arg1 LnsInt) {
     self.level = arg1
 }
+func (self *Log_Control) get_level(_env *LnsEnv) LnsInt{ return self.level }
 
 func Lns_Log_init(_env *LnsEnv) {
     if init_Log { return }

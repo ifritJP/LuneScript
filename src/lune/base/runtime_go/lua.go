@@ -233,6 +233,10 @@ func createVM() *Lns_luaVM {
 		lua_createtable(luaVM.vm)
 		lua_setglobal(luaVM.vm, lns_globalValSym)
 
+		// マクロ定義中の _lnsLoad() をサポートするために
+		// lua 版の LuneScript をロードしておく。
+		// _lnsLoad() は、マクロ内から LuneScript のコードを実行するための仕組み。
+		// また、 go 版 lnsc 単体で Lua 版 LuneScript を実行できるようにするため。
 		Lns_initPreload(luaVM.vm)
 
 		if lns_enableRevertingVM {

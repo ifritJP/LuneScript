@@ -57,7 +57,7 @@ pub fn str2level( txt:str ) : Level! {
 
 pub form CreateMessage() __trans : str;
 class Control {
-   let level:Level;
+   let level:Level {local};
    local fn log( level:Level, funcName:str, lineNo:int, callback: CreateMessage ) {
       let mut logStream:oStream = io.stderr;
       if level <= self.level {
@@ -87,6 +87,9 @@ pub fn setLevel( level:Level ) __noasync {
    }
 }
 
+pub fn getLevel() : Level {
+   return control.$level;
+}
 
 pub fn log( level:Level, funcName:str, lineNo:int, callback: CreateMessage ) {
    control.log( level, funcName, lineNo, callback );

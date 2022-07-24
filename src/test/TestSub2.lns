@@ -1,0 +1,5 @@
+print( __mod__ );
+
+__test {
+   print( __mod__, "test" );
+}

@@ -1,0 +1,14 @@
+import test.TestSub1;
+
+__test {
+   print( __mod__, "test" );
+}
+
+__test case1(ctrl) {
+   TestSub1.func();
+}
+
+pub fn __main( argList:&List<str> ) : int {
+
+   return 0;
+}

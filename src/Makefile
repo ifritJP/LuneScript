@@ -769,6 +769,7 @@ endif
 ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
 	$(call exeLune,$(LNSC),.,test/testing.lns,exe, --testing $(EXE_OPT) 2>&1) >> work/test1.result
+	$(call exeLune,$(LNSC),.,test/TestMini.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test1.result
 endif
 	$(call check_singleBin,lnsc,work/test1.result,testpack1) 
 
@@ -818,6 +819,7 @@ endif
 ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
 	$(call exeLune,$(LNSC),work/3,test/testing.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test2.result
+	$(call exeLune,$(LNSC),work/3,test/TestMini.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test2.result
 endif
 	$(call check_singleBin,work/3/lnsc,work/test2.result,testpack2)
 

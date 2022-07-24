@@ -1103,6 +1103,8 @@ mod のモジュールをロードする。
 fn Front.loadModuleWithBaseDir( orgMod:str, baseDir:str! ) __async mut :
 Luaval<&stem>!, frontInterface.ModuleMeta
 {
+   Log._log2( .Info, "loadModule  -- %s:%s" (orgMod, baseDir) );
+   
    let _, _, mod = self.gomodMap.getLuaModulePath( orgMod, baseDir );
    
    if not self.getLoadInfo( mod ) {
@@ -2057,6 +2059,69 @@ pub fn build( option:Option.Option, astCallback:AstCallback ) mut {
    front.build( .CreateAst, astCallback );
 }
 
+fn Front.executeLns( path:str, mod:str ) mut {
+   // // LuneScript の runtime をロードするために runLuaOnLns() を実行。
+   // DependLuaOnLns.runLuaOnLns( "", nil, false );
+
+   {
+      // 指定の path の Lns コードを Lua コードに変換する。
+      // この時に path が import している submod の lua への変換を行なう。
+      let parserSrc = Types.ParserSrc.LnsPath( path, mod, nil );
+      let _, luaCode = self.loadParserToLuaCode(
+         new frontInterface.ImportModuleInfo(), parserSrc, path, mod, nil )**;
+
+      __luaLock {
+         // import( submod ) の処理で、変換済みの submod の lua をロードするように
+         // package.preload を設定する。
+         let subModPreLoad = ```
+return function( submod2Code )
+   local preloadFunc = function( mod )
+      local loaded, mess = load( submod2Code[ mod ] )
+      if not loaded then
+         error( mess )
+      end
+      return loaded()
+   end
+   for mod, code in pairs( submod2Code ) do
+      package.preload[ mod ] = preloadFunc
+   end
+end
+```;
+         let! loaded = _load( subModPreLoad ## ) {
+            error( "failed to subModPreLoad" );
+         };
+         let! preloadFunc = loaded(##) {
+            error( "failed to preloadFunc" );
+         };
+         (preloadFunc@@form)( self.convertedMap );
+      }
+
+      // path の luacode を実行する。
+      // preload を設定しているので 変換済みの submod の lua がロードされる。
+      loadFromLuaTxt( luaCode );
+   }
+
+   if self.option.testing {
+      let code = ```
+local Testing = require( "lune.base.Testing" )
+return function( path )
+  Testing.run( path );
+  Testing.outputAllResult( io.stdout );
+end
+```;
+      __luaLock {
+         let loaded, mess = _load( code ## );
+         when! loaded {
+            if! let testFunc = loaded(##) {
+               (testFunc@@form)( mod );
+            }
+         } else {
+            print( mess );
+         }
+      }
+   }
+}
+
 pub fn Front.exec() mut
 {
    Log._log( .Trace, `{ return self.option.mode.$_txt; } );
@@ -2130,30 +2195,8 @@ pub fn Front.exec() mut
          }
       }
       case .Exec {
-         // LuneScript の runtime をロードするために runLuaOnLns() を実行
-         DependLuaOnLns.runLuaOnLns( "", nil, false );
-         let modObj = self.loadModule(
-            (self.scriptPath2Module( self.option.scriptPath )) );
-
-         if self.option.testing {
-            let code = ```
-local Testing = require( "lune.base.Testing" )
-return function( path )
-  Testing.run( path );
-  Testing.outputAllResult( io.stdout );
-end
-```;
-            __luaLock {
-               let loaded, mess = _load( code ## );
-               when! loaded {
-                  if! let mod = loaded(##) {
-                     (mod@@form)( (self.scriptPath2Module( self.option.scriptPath )) );
-                  }
-               } else {
-                  print( mess );
-               }
-            }
-         }
+         self.executeLns( self.option.scriptPath,
+                          (self.scriptPath2Module( self.option.scriptPath )) );
       }
       case .BootC {
          self.outputBootC( self.option.scriptPath );
