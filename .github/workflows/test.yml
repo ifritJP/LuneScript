@@ -38,7 +38,6 @@ jobs:
     - name: Test
       run: |
         source here/bin/activate
-#        make -C src -j6 test-comp LUA=lua5.3 LUA51= SKIP_CHECKING_TESTING=y
         make -C src -j6 test-comp LUA=lua5.3 LUA51=
         make -C src go-build LUA=lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
