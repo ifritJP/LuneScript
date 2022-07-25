@@ -2053,3 +2053,13 @@ __test {
       }
    }
 }
+{
+   Macro._section();
+   macro _hoge( val1:__exp, val2:__exp ) {
+      print( ,,val1, ,,val2 );
+   }
+
+   _hoge( 1, 2 );
+   _hoge( 1 );
+   _hoge();
+}

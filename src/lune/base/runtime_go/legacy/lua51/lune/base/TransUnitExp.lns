@@ -856,6 +856,9 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    let matchResult, _, newExpNodeList = self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
       argTypeList, expList, false, warnForFollow, alt2typeMap, validImplicitCast );
+   // if funcTypeInfo.$kind == .Macro and matchResult ~= .Match {
+   //    self.error( "unmatch macro arguments" );
+   // }
    
    if expList and newExpNodeList {
       return matchResult, alt2typeMap, newExpNodeList;
@@ -1323,9 +1326,8 @@ fn TransUnit.prepareExpCall(
       if self.macroCtrl.isUsing__var( funcTypeInfo ) and
          funcTypeInfo.$parentInfo ~= self.$curNsInfo.$typeInfo
       {
-         self.addErrMess(
-            position,
-            "The macro (%s) only use at the same scope declared it, because it's access __ver."
+         self.error(
+            "The macro (%s) only can use at the same scope declared it, because it's access __ver."
             (funcTypeInfo.getTxt( ## ) ) );
       }
       self.macroCtrl.startAnalyzeArgMode( funcTypeInfo );

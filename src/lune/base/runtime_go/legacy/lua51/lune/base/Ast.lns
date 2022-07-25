@@ -7081,15 +7081,15 @@ static fn TypeInfo.checkMatchTypeMain(
    }
    elseif not allowDstShort {
       foreach dstType, index in dstTypeList {
-         if not dstType.canEvalWith(
-            processInfo, builtinTypeNil, .SetOp, alt2type ) {
-               return .Error, "exp(%d) type mismatch %s <- nil: short"
-               ( index, dstType.getTxt( defaultTypeNameCtrl## ));
-            }
-            return .Warn, Code.format( .nothing_define_abbr,
-                                       "use '##', instate of '%s'."
-                                       (dstType.getTxt( defaultTypeNameCtrl##) ) );
+         if not dstType.canEvalWith( processInfo, builtinTypeNil, .SetOp, alt2type )
+         {
+            return .Error, "exp(%d) type mismatch %s <- nil: short"
+            ( index, dstType.getTxt( defaultTypeNameCtrl## ));
          }
+         return .Warn, Code.format( .nothing_define_abbr,
+                                    "use '##', instate of '%s'."
+                                    (dstType.getTxt( defaultTypeNameCtrl##) ) );
+      }
    }
 
    when! warnMess {

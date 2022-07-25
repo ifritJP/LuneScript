@@ -83,6 +83,8 @@ test/start.lns:1580:4: (test/start.lns:1580:4: (macro _hoge):1577:11): warning: 
 test/start.lns:1657:14: (macroVal val:2:4): warning: has no nilable
 test/start.lns:1659:10: warning: has no nilable
 test/start.lns:1929:13: warning: 'valName' var isn't accessed
+test/start.lns:2063:4: warning: _hoge: 00000:use '##', instate of '__exp'.
+test/start.lns:2064:4: warning: _hoge: 00000:use '##', instate of '__exp'.
 test/Sub2.lns:78:7: warning: This 'match' has full case. This 'default' is no reach.
 2
 sub2globalfun	1
@@ -566,6 +568,10 @@ val1	1
 val2	abc
 val3	10.5
 -----	2045	-----
+-----	2057	-----
+1	2
+1	nil
+nil	nil
 11
 12
 12
@@ -2376,9 +2382,10 @@ test/error/macro3.lns:19:11: (test/error/macro3.lns:19:11: (macro _test):0:0): e
 test/error/macro4.lns:8:4: error: _hoge: over exp. expect: 1: actual: 2
 test/error/macro4.lns:8:17: error: unmatch macro arguments. -- _hoge
 test/error/macro5.lns:3:18: error: can't declare the macro in the macro.
-test/error/macro7.lns:9:7: error: The macro (_Test) only use at the same scope declared it, because it's access __ver.
-test/error/macro7.lns:14:7: error: not found type -- __var
-test/error/macro7.lns:8:7: warning: 'func' var isn't accessed
+test/error/macro7.lns:18:12: error: The macro (_Test) only can use at the same scope declared it, because it's access __ver.
+test/error/macro7.lns:7:4: warning: _hoge: 00000:use '##', instate of '__exp'.
+test/error/macro7.lns:8:4: warning: _hoge: 00000:use '##', instate of '__exp'.
+test/error/macro8.lns:3:7: error: not found type -- __var
 test/error/apply.lns:14:24: error: iterator function must return value.
 test/error/apply.lns:33:24: error: iterator function must return nilable type at 1st.
 test/error/apply.lns:52:24: error: iterator function must has two arguments. -- ApplyForm

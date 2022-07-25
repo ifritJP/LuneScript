@@ -991,14 +991,20 @@ pub fn MacroCtrl.expandMacroVal(
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos ); 
          }
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
-            equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
-            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or
             equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg )
          {
             let pos = macroVal.argNode$.$pos$.$RawOrgPos or
                nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
-            parser.pushbackStr( nil, "macroVal %s" (nextToken.txt),
-                                (unwrap macroVal.val)@@str, pos );
+            let txt = unwrap macroVal.val default "";
+            parser.pushbackStr( nil, "macroVal %s" (nextToken.txt), txt@@str, pos );
+         }
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
+            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp )
+         {
+            let pos = macroVal.argNode$.$pos$.$RawOrgPos or
+               nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
+            let txt = unwrap macroVal.val default "nil";
+            parser.pushbackStr( nil, "macroVal %s" (nextToken.txt), txt@@str, pos );
          }
          elseif macroVal.typeInfo.$kind == .Array or
             macroVal.typeInfo.get_kind() == .List

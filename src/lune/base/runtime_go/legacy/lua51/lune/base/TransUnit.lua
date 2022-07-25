@@ -8413,7 +8413,7 @@ function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, gene
    
    if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Macro then
       if self.macroCtrl:isUsing__var( funcTypeInfo ) and funcTypeInfo:get_parentInfo() ~= self:get_curNsInfo():get_typeInfo() then
-         self:addErrMess( position, string.format( "The macro (%s) only use at the same scope declared it, because it's access __ver.", funcTypeInfo:getTxt(  )) )
+         self:error( string.format( "The macro (%s) only can use at the same scope declared it, because it's access __ver.", funcTypeInfo:getTxt(  )) )
       end
       
       self.macroCtrl:startAnalyzeArgMode( funcTypeInfo )

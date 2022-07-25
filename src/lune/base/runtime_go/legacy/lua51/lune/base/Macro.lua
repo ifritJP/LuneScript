@@ -1567,9 +1567,14 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             end
             
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
-         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
             local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
-            parser:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), (_lune.unwrap( macroVal.val) ), pos )
+            local txt = _lune.unwrapDefault( macroVal.val, "")
+            parser:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
+         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
+            local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
+            local txt = _lune.unwrapDefault( macroVal.val, "nil")
+            parser:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
             if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
