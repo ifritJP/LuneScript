@@ -1529,6 +1529,7 @@ pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.SymbolInfo> {
 /** マクロ展開後のノード */
 _declNodeClass( "ExpMacroExp", Node, false, nil, true,
                 [ { "macroType": "&Ast.TypeInfo" },
+                  { "expList": "&ExpListNode!" },
                   { "stmtList": "List<&Node>" } ]
 );
 
@@ -1550,7 +1551,8 @@ _declNodeClass( "ExpMacroStat", Node, false, true, false,
 );
 
 _declNodeClass( "ExpMacroArgExp", Node, false, true, false,
-                [ { "codeTxt": "str" } ]
+                [ { "codeTxt": "str" },
+                  { "exp": "&Node" } ]
 );
 
 

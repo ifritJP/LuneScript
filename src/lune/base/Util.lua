@@ -538,6 +538,9 @@ end
 function SimpleSourceOStream._setmeta( obj )
   setmetatable( obj, { __index = SimpleSourceOStream  } )
 end
+function SimpleSourceOStream:get_stepIndent()
+   return self.stepIndent
+end
 do
    local list = {}
    local txt = ""

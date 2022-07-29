@@ -6965,30 +6965,59 @@ function ExpMacroExpNode:canBeStatement(  )
 
    return true
 end
-function ExpMacroExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList )
+function ExpMacroExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList )
    local obj = {}
    ExpMacroExpNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList ); end
    return obj
 end
-function ExpMacroExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList) 
+function ExpMacroExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList) 
    Node.__init( self,managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.macroType = macroType
+   self.expList = expList
    self.stmtList = stmtList
    
    
 end
-function ExpMacroExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList )
+function ExpMacroExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList )
 
-   local node = ExpMacroExpNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, macroType, stmtList)
+   local node = ExpMacroExpNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList)
    nodeMan:addNode( node )
    return node
 end
 function ExpMacroExpNode:visit( visitor, depth, alreadySet )
 
+   do
+      do
+         local child = self.expList
+         if child ~= nil then
+            if not _lune._Set_has(alreadySet, child ) then
+               alreadySet[child]= true
+               do
+                  local _switchExp = visitor( child, self, 'expList', depth )
+                  if _switchExp == NodeVisitMode.Child then
+                     if not child:visit( visitor, depth + 1, alreadySet ) then
+                        return false
+                     end
+                     
+                  elseif _switchExp == NodeVisitMode.End then
+                     return false
+                  elseif _switchExp == NodeVisitMode.Next then
+                  end
+               end
+               
+            end
+            
+            
+            
+         end
+      end
+      
+   end
+   
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
@@ -7025,6 +7054,9 @@ function ExpMacroExpNode._setmeta( obj )
 end
 function ExpMacroExpNode:get_macroType()
    return self.macroType
+end
+function ExpMacroExpNode:get_expList()
+   return self.expList
 end
 function ExpMacroExpNode:get_stmtList()
    return self.stmtList
@@ -7219,29 +7251,54 @@ function ExpMacroArgExpNode:canBeStatement(  )
 
    return false
 end
-function ExpMacroArgExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt )
+function ExpMacroArgExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp )
    local obj = {}
    ExpMacroArgExpNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp ); end
    return obj
 end
-function ExpMacroArgExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt) 
+function ExpMacroArgExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp) 
    Node.__init( self,managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.codeTxt = codeTxt
+   self.exp = exp
    
    
 end
-function ExpMacroArgExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, codeTxt )
+function ExpMacroArgExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp )
 
-   local node = ExpMacroArgExpNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, codeTxt)
+   local node = ExpMacroArgExpNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp)
    nodeMan:addNode( node )
    return node
 end
 function ExpMacroArgExpNode:visit( visitor, depth, alreadySet )
 
+   do
+      local child = self.exp
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+      end
+      
+      
+      
+   end
+   
+   
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -7250,6 +7307,9 @@ function ExpMacroArgExpNode._setmeta( obj )
 end
 function ExpMacroArgExpNode:get_codeTxt()
    return self.codeTxt
+end
+function ExpMacroArgExpNode:get_exp()
+   return self.exp
 end
 
 

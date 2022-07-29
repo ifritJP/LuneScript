@@ -173,7 +173,7 @@ pub override fn dumpFilter.processAsyncLock(
 pub override fn dumpFilter.processBlockSub(
    node: &Nodes.BlockNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "" );
+   self.dump( opt, node, "kind = %s" ( node.$blockKind.$_txt ) );
    foreach statement in node.get_stmtList() {
       filter( statement, self, opt.nextOpt() );
    }	
@@ -257,10 +257,19 @@ pub override fn dumpFilter.processDeclMember(
    self.dump( opt, node, node.get_name().txt );
    filter( node.get_refType(), self, opt.nextOpt() );
 };
+pub override fn dumpFilter.processExpMacroArgExp(
+   node: &Nodes.ExpMacroArgExpNode, opt:Opt ) mut
+{
+   self.dump( opt, node, "%s" (node.$codeTxt) );
+   filter( node.$exp, self, opt.nextOpt() );
+}
 pub override fn dumpFilter.processExpMacroExp(
    node: &Nodes.ExpMacroExpNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "" );
+   self.dump( opt, node, "%s" (self.getFull( node.$macroType, false) ) );
+   if! let expList = node.$expList {
+      filter( expList, self, opt.nextOpt() );
+   }
    let stmtList = node.get_stmtList();
    foreach stmt in stmtList {
       filter( stmt, self,  opt.nextOpt() );
@@ -873,7 +882,7 @@ pub override fn dumpFilter.processBreak(
 pub override fn dumpFilter.processLiteralSymbol(
    node: &Nodes.LiteralSymbolNode, opt:Opt ) mut
 {
-   self.dump( opt, node, node.get_token().txt );
+   self.dump( opt, node, "%s: %s" (node.get_token().txt, node.$expType.getTxt(##)) );
 };
 
 pub override fn dumpFilter.processAbbr(

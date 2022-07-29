@@ -235,7 +235,7 @@ pub class SimpleSourceOStream extend (SourceStream) {
    let mut srcStream:oStream;
    let mut headStream:oStream;
    let mut needIndent:bool;
-   let stepIndent:int;
+   let stepIndent:int {pub};
    let mut curLineNo:int;
    pri let mut indentQueue: List<int>;
    let mut indentSpace:str;

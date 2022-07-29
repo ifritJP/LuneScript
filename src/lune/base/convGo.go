@@ -894,6 +894,7 @@ type convGo_convFilterMtd interface {
     getVM(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny
     Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
     Get_optStack(_env *LnsEnv) *LnsList
+    Get_stepIndent(_env *LnsEnv) LnsInt
     Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
     IsExtSymbol(_env *LnsEnv, arg1 *Ast_SymbolInfo) bool
     IsExtType(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
@@ -1109,6 +1110,10 @@ func NewconvGo_convFilter(_env *LnsEnv, arg1 bool, arg2 string, arg3 Lns_oStream
     return obj
 }
 // advertise -- 129
+func (self *convGo_convFilter) Get_stepIndent(_env *LnsEnv) LnsInt {
+    return self.stream. FP.Get_stepIndent( _env)
+}
+// advertise -- 129
 func (self *convGo_convFilter) PopIndent(_env *LnsEnv) {
 self.stream. FP.PopIndent( _env)
 }
@@ -1289,6 +1294,7 @@ type convGo_ConvRunnerMtd interface {
     getTypeSymbolWithPrefix(_env *LnsEnv, arg1 *Ast_TypeInfo) string
     Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
     Get_optStack(_env *LnsEnv) *LnsList
+    Get_stepIndent(_env *LnsEnv) LnsInt
     Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
     IsExtSymbol(_env *LnsEnv, arg1 *Ast_SymbolInfo) bool
     IsExtType(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
@@ -5640,8 +5646,8 @@ func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node
     callKind = convGo_CallKind__Normal_Obj
     var extCallFlag bool
     if prefixNode != nil{
-        prefixNode_1137 := prefixNode.(*Nodes_Node)
-        extCallFlag = prefixNode_1137.FP.Get_expType(_env).FP.Get_nonnilableType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Ext
+        prefixNode_1138 := prefixNode.(*Nodes_Node)
+        extCallFlag = prefixNode_1138.FP.Get_expType(_env).FP.Get_nonnilableType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Ext
     } else {
         extCallFlag = false
     }
@@ -5696,7 +5702,7 @@ func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node
     var closeParen bool
     closeParen = false
     if prefixNode != nil{
-        prefixNode_1162 := prefixNode.(*Nodes_Node)
+        prefixNode_1163 := prefixNode.(*Nodes_Node)
         if node.FP.HasNilAccess(_env){
             if funcType.FP.Get_retTypeInfoList(_env).Len() >= 2{
                 if funcType.FP.Get_retTypeInfoList(_env).Len() <= convGo_MaxNilAccNum{
@@ -5708,7 +5714,7 @@ func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node
             }
         }
         var prefixType *Ast_TypeInfo
-        prefixType = prefixNode_1162.FP.Get_expType(_env).FP.Get_nonnilableType(_env)
+        prefixType = prefixNode_1163.FP.Get_expType(_env).FP.Get_nonnilableType(_env)
         if prefixType == Ast_builtinTypeString{
             if node.FP.HasNilAccess(_env){
                 Util_err(_env, "not support nilAccName")
@@ -5717,7 +5723,7 @@ func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node
                 _runtime := self.FP.getVM(_env, funcType)
                 if !Lns_IsNil( _runtime ) {
                     runtime := _runtime.(string)
-                    callKind = &convGo_CallKind__RuntimeCall{prefixNode_1162}
+                    callKind = &convGo_CallKind__RuntimeCall{prefixNode_1163}
                     self.FP.WriteRaw(_env, runtime)
                 }
             }
@@ -5726,13 +5732,13 @@ func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node
                 _env.SetStackVal( Lns_op_not(funcType.FP.Get_staticFlag(_env))) ||
                 _env.SetStackVal( funcSymbol.FP.Get_kind(_env) == Ast_SymbolKind__Mbr) ).(bool){
                 if node.FP.HasNilAccess(_env){
-                    if Lns_op_not(prefixNode_1162.FP.HasNilAccess(_env)){
+                    if Lns_op_not(prefixNode_1163.FP.HasNilAccess(_env)){
                         self.FP.WriteRaw(_env, _env.GetVM().String_format("%s.NilAccFin(", []LnsAny{getEnvTxt}))
                         self.FP.WriteRaw(_env, _env.GetVM().String_format("%s.NilAccPush(", []LnsAny{getEnvTxt}))
-                        convGo_filter_7_(_env, prefixNode_1162, self, node)
+                        convGo_filter_7_(_env, prefixNode_1163, self, node)
                         self.FP.Writeln(_env, ") && ")
                     } else { 
-                        convGo_filter_7_(_env, prefixNode_1162, self, node)
+                        convGo_filter_7_(_env, prefixNode_1163, self, node)
                         self.FP.Writeln(_env, "&&")
                     }
                 } else { 
@@ -5741,11 +5747,11 @@ func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node
                             self.FP.WriteRaw(_env, _env.GetVM().String_format("Lns_callExt%s( ", []LnsAny{node.FP.GetIdTxt(_env)}))
                         }
                     }
-                    convGo_filter_7_(_env, prefixNode_1162, self, node)
+                    convGo_filter_7_(_env, prefixNode_1163, self, node)
                 }
             } else { 
             }
-            convGo_processNilAcc(_env, prefixNode_1162)
+            convGo_processNilAcc(_env, prefixNode_1163)
             if prefixType.FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
                 self.FP.WriteRaw(_env, _env.GetVM().String_format(".CallMethod( \"%s\", Lns_2DDD", []LnsAny{funcSymbol.FP.Get_name(_env)}))
             } else { 
@@ -5996,8 +6002,8 @@ func (self *convGo_convFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallN
         self.FP.outputConvItemTypeList(_env, funcType.FP.Get_parentInfo(_env).FP.Get_itemTypeInfoList(_env), fieldNode.FP.Get_prefix(_env).FP.Get_expType(_env).FP.CreateAlt2typeMap(_env, false))
     }
     if closeTxt != nil{
-        closeTxt_1264 := closeTxt.(string)
-        self.FP.WriteRaw(_env, closeTxt_1264)
+        closeTxt_1265 := closeTxt.(string)
+        self.FP.WriteRaw(_env, closeTxt_1265)
     }
     self.FP.WriteRaw(_env, ")")
     if _env.PopVal( _env.IncStack() ||

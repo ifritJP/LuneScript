@@ -1216,7 +1216,7 @@ function Front:createPythonOption( scriptPath )
       end
    end
    
-   return convPython.Option._new(packageName, self:getGoAppName(  ), self.option.mainModule, self.option:get_addEnvArg(), self.option.convGoRunnerNum)
+   return convPython.Option._new(packageName, self:getGoAppName(  ), self.option.mainModule, false, self.option.convGoRunnerNum)
 end
 
 

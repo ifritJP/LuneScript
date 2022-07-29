@@ -117,12 +117,12 @@ func Util_scriptPath2Module(_env *LnsEnv, path string) string {
 // 373: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
 func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny) string {
     if projDir != nil{
-        projDir_306 := projDir.(string)
+        projDir_307 := projDir.(string)
         var workpath string
-        if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_306,"/$", nil, nil))){
-            workpath = projDir_306 + "/"
+        if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_307,"/$", nil, nil))){
+            workpath = projDir_307 + "/"
         } else { 
-            workpath = projDir_306
+            workpath = projDir_307
         }
         path = Util_convExp0_1690(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
     }
@@ -598,7 +598,7 @@ func Lns_cast2Util_SourceStream( obj LnsAny ) LnsAny {
 // declaration Class -- SimpleSourceOStream
 var Util_SimpleSourceOStream__indentSpaceList *LnsList
 // 233: decl @lune.@base.@Util.SimpleSourceOStream.___init
-func Util_SimpleSourceOStream____init_0_(_env *LnsEnv) {
+func Util_SimpleSourceOStream____init_1_(_env *LnsEnv) {
     var list *LnsList
     list = NewLnsList([]LnsAny{})
     var txt string
@@ -616,6 +616,7 @@ func Util_SimpleSourceOStream____init_0_(_env *LnsEnv) {
 
 type Util_SimpleSourceOStreamMtd interface {
     get_indent(_env *LnsEnv) LnsInt
+    Get_stepIndent(_env *LnsEnv) LnsInt
     PopIndent(_env *LnsEnv)
     PushIndent(_env *LnsEnv, arg1 LnsAny)
     ReturnToSource(_env *LnsEnv)
@@ -662,6 +663,7 @@ func NewUtil_SimpleSourceOStream(_env *LnsEnv, arg1 Lns_oStream, arg2 LnsAny, ar
     obj.InitUtil_SimpleSourceOStream(_env, arg1, arg2, arg3)
     return obj
 }
+func (self *Util_SimpleSourceOStream) Get_stepIndent(_env *LnsEnv) LnsInt{ return self.stepIndent }
 // 256: DeclConstr
 func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv, stream Lns_oStream,headStream LnsAny,stepIndent LnsInt) {
     self.srcStream = stream
@@ -686,7 +688,7 @@ func Lns_Util_init(_env *LnsEnv) {
     Lns_Str_init(_env)
     Util_debugFlag = true
     Util_errorCode = 1
-    Util_SimpleSourceOStream____init_0_(_env)
+    Util_SimpleSourceOStream____init_1_(_env)
 }
 func init() {
     init_Util = false

@@ -338,7 +338,7 @@ fn isClosure( typeInfo:&Ast.TypeInfo ): bool {
    return scope.$hasClosureAccess;
 }
 
-let golanKeywordSet =
+let pythonLangKeywordSet =
     (@
       "func", "select",
       "defer", "go",
@@ -367,91 +367,8 @@ alge SymbolKind {
 }
 
 fn concatGLSym( name:str, external:bool ) : str {
-   if external {
-      let mut frontChar = name[ 1 ];
-      let front;
-      if frontChar >= ?a and frontChar <= ?z {
-         front = "%c" ( ?A + frontChar - ?a );
-      } elseif frontChar >= ?A and frontChar <= ?Z {
-         front = name.sub( 1, 1 );
-      } else {
-         front = "G%c" ( frontChar );
-      }
-      return front .. name.sub( 2## );
-   }
-   return name;  
-   //return (external and "G" or "l") .. name;
+   return name;
 }
-
-pub fn outputGoMain( appName:str, mod:str, testing:bool, path:str!,
-                     opt:&LnsOpt.RuntimeOpt ):str!
-{
-   
-   let mut lune_path = "main.go";
-   when! path {
-      if path ~= "" {
-         lune_path = path;
-      }
-   }
-   let! mut fileObj = io.open( lune_path, "w" ) {
-      return "failed to open -- %s" ( lune_path );
-   };
-
-   let base_mainCode = ```
-package main
-
-import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
-//IMPORT_MAIN:
-
-//IMPORT:
-////TEST:import . "lns/lune/base"
-
-func main() {
-    Lns_InitModOnce($opt)
-    //TEST:Lns_Testing_init()
-    Lns_init()
-    //TEST:Testing_run( "" )
-    //TEST:Testing_outputAllResult(Lns_io_stdout)
-}
-```;
-
-   let mainMod = mod.gsub( ".*%.", "" );
-   let mut code = base_mainCode;
-   if mod ~= mainMod {
-      // 実行するメインモジュールが別ディレクトリの場合、
-      // そのパッケージを import する。
-      let importPath = mod.gsub( "%.[^%.]+$", "" ).gsub( "%.", "/" );
-      code = code.gsub( "//IMPORT_MAIN:", 'import . "%s/%s"' (appName,importPath) );
-   }
-
-   if testing {
-      code = code.gsub( "Lns_init", "Lns_%s_init" (mainMod));
-      code = code.gsub( "//TEST:", "" );
-      code = code.gsub( 'run%( "" %)', 'run( "lune.base.%s" )' (mainMod) );
-      code = code.gsub(
-         '//IMPORT:', 'import . "github.com/ifritJP/LuneScript/src/lune/base"' );
-   } else {
-      code = code.gsub(
-         "Lns_init%(%)", "Lns_RunMain( %s___main )" (concatGLSym( mainMod, true )));
-   }
-   _switch opt.$int2strMode {
-      case .Int2strModeNeed0 {
-         code = code.gsub( "$opt", "LnsRuntimeOpt{ Int2strModeNeed0 }" );
-      }
-      case .Int2strModeUnneed0 {
-         code = code.gsub( "$opt", "LnsRuntimeOpt{ Int2strModeUnneed0 }" );
-      }
-      case .Int2strModeDepend {
-         code = code.gsub( "$opt", "LnsRuntimeOpt{ Int2strModeDepend }" );
-      }
-   }
-   
-   fileObj.write( code );
-   fileObj.close();
-
-   return nil;
-}
-
 
 /**
 モジュールのトップスコープ以外で定義されている型かどうかを確認する。
@@ -494,14 +411,7 @@ fn convFilter.getModuleName( typeInfo:&Ast.TypeInfo, assign:bool ) : str {
 }
 
 fn convFilter.concatSymWithType( name:str, typeInfo:&Ast.TypeInfo ) mut : str {
-   let modName = self.getModuleName( typeInfo.getModule(), false );
-   let typeName;
-   if modName == "" {
-      typeName = name;
-   } else {
-      typeName = "%s_%s" (modName, name );
-   }
-   return concatGLSym( typeName, self.isPubType( typeInfo ) );
+   return concatGLSym( name, self.isPubType( typeInfo ) );
 }
 
 fn convFilter.isSamePackageExtModule( typeInfo:&Ast.TypeInfo ) : bool {
@@ -540,7 +450,7 @@ fn convFilter.needPrefix( typeInfo:&Ast.TypeInfo ) mut : bool {
 }
 
 fn normalizeSym( name:str ) : str {
-   if golanKeywordSet.has( name ) {
+   if pythonLangKeywordSet.has( name ) {
       return "_%s" (name);
    }
    return name;
@@ -879,15 +789,15 @@ fn convFilter.outputAny2Type( dstType:&Ast.TypeInfo ) mut {
 
 // LnsAny から dstType への型変換用コードを出力する
 fn convFilter.outputStem2Type( dstType:&Ast.TypeInfo ) mut {
-   if dstType.$kind == .Alternate and dstType.hasBase() {
-      self.writeRaw( ".(%s)" (self.type2gotype( dstType )) );
-   } elseif dstType.$kind == .Class and dstType ~= Ast.builtinTypeString {
-      self.writeRaw( ".(%sDownCast).To%s()"
-                  (self.getTypeSymbolWithPrefix( dstType ),
-                    self.getTypeSymbol( dstType )) );
-   } else {
-      self.outputAny2Type( dstType );
-   }
+   // if dstType.$kind == .Alternate and dstType.hasBase() {
+   //    self.writeRaw( ".(%s)" (self.type2gotype( dstType )) );
+   // } elseif dstType.$kind == .Class and dstType ~= Ast.builtinTypeString {
+   //    self.writeRaw( ".(%sDownCast).To%s()"
+   //                (self.getTypeSymbolWithPrefix( dstType ),
+   //                  self.getTypeSymbol( dstType )) );
+   // } else {
+   //    self.outputAny2Type( dstType );
+   // }
 }
 
 // fn convFilter.outputAlt2Type( dstType:&Ast.TypeInfo ) {
@@ -916,28 +826,6 @@ _declIgnoreNode( None );
 pub override fn convFilter.processImport(
    node: &Nodes.ImportNode, opt: Opt ) mut
 {
-   let args;
-   if self.option.$addEnvArg {
-      args = "_env";
-   } else {
-      args = "";
-   }
-
-   let info = node.$info;
-   
-   if info.$modulePath == "lune.base.Depend" {
-      // Depend は builtin しているので、関連モジュールはここで処理する
-      self.writeln( "Lns_LuaVer_init( %s )" (args) );
-   }
-
-   if not self.isSameModDir( info.$moduleTypeInfo ) and
-      not Ast.isBuiltin( info.$moduleTypeInfo.$typeId.id )
-   {
-      self.writeRaw( "%s." (self.getModuleName( info.$moduleTypeInfo, true )) );
-   } 
-   self.writeln(
-      "Lns_%s_init(%s)"
-      (self.getModuleName( info.$moduleTypeInfo, false ), args ) );
 }
 
 fn convFilter.needConvFormFunc( node:&Nodes.ExpCastNode ) mut : bool {
@@ -1500,27 +1388,6 @@ alge FuncInfo {
 }
 
 fn convFilter.outputRetType(retTypeList:&List<&Ast.TypeInfo>) mut {
-   switch #retTypeList {
-      case 0 {
-         self.writeRaw( "" );
-      }
-      case 1 {
-         if retTypeList[ 1 ] ~= Ast.builtinTypeNeverRet {
-            self.writeRaw( " " .. self.type2gotype( retTypeList[1] ) );
-         }
-      }
-      default {
-         // 多値返却
-         self.writeRaw( "(" );
-         foreach retType, index in retTypeList {
-            if index ~= 1 {
-               self.writeRaw( ", " );
-            }
-            self.writeRaw( self.type2gotype( retType ) );
-         }
-         self.writeRaw( ")" );
-      }
-   }
 }
 
 class FuncConv {
@@ -1568,12 +1435,12 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
       }
    }
 
-   if isClosure( typeInfo ) {
-      self.writeRaw( "func" );
-   }
-   else {
+   // if isClosure( typeInfo ) {
+   //    self.writeRaw( "def" );
+   // }
+   // else {
       if typeInfo.$kind == .Method {
-         self.writeRaw( "func " );
+         self.writeRaw( "def " );
          self.writeRaw( "(self " );
          self.write ( self.type2gotype( prefixType ) );
          //self.writeRaw( "(self *" );
@@ -1581,7 +1448,7 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
          self.writeRaw( ") " );
       }
       else {
-         self.writeRaw( "func " );
+         self.writeRaw( "def " );
       }
 
       if typeInfo.$extedType.$kind ~= .FormFunc {
@@ -1589,7 +1456,7 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
             self.outputSymbol( .Func( typeInfo ), name );
          }
       }
-   }
+   // }
 
    self.writeRaw( "(" );
 
@@ -2081,9 +1948,7 @@ pub override fn convFilter.processRoot(
    self.setup();
 
    
-   self.writeln( "// This code is transcompiled by LuneScript." );
-   self.writeln( "package %s" (self.option.packageName) );
-   self.writeln( 'import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"');
+   self.writeln( "# This code is transcompiled by LuneScript." );
 
 
    foreach workNode in node.$nodeManager.getImportNodeList() {
@@ -2094,10 +1959,6 @@ pub override fn convFilter.processRoot(
    }
 
 
-   let initModVar = "init_%s" (self.getModuleName(node.$moduleTypeInfo, false));
-   self.writeln( "var %s bool" (initModVar) );
-
-   
    self.pushProcessMode( .DeclTopScopeVar );
    let modSym = unwrap self.moduleScope.getSymbolInfoChild( "__mod__" );
    self.writeln( "var %s string" (self.getSymbolSym( modSym )) );
@@ -2221,9 +2082,6 @@ pub override fn convFilter.processRoot(
       (self.getModuleName( node.$moduleTypeInfo, false), self.getEnvArgDecl(0) ) );
    self.pushIndent( ## );
 
-   self.writeln( "if %s { return }" (initModVar) );
-   self.writeln( "%s = true" (initModVar));
-
    self.writeln( '%s = "%s"' (self.getSymbolSym( modSym ),
                                node.$moduleTypeInfo.getFullName(
                                   self.$typeNameCtrl, self.$moduleInfoManager ##)));
@@ -2285,7 +2143,6 @@ pub override fn convFilter.processRoot(
 
       self.writeln( "func init() {" );
    self.pushIndent( ## );
-   self.writeln( "%s = false" (initModVar) );
    self.popIndent();
    self.writeln( "}" );
 
@@ -2373,21 +2230,25 @@ pub override fn convFilter.processBlockSub(
       case .Block {
          self.writeln( "{" );
       }
+      default {
+         self.pushIndent(##);
+      }
    }
 
    self.pushProcessMode( .Main );
-   self.pushIndent(##);
    foreach child in node.$stmtList {
       if not self.ignoreNodeInInnerBlockSet.has( child.$kind ) {
          filter( child, self, node );
       }
    }
-   self.popIndent();
    self.popProcessMode();
 
    switch node.$blockKind {
       case .Block {
          self.writeln( "}" );
+      }
+      default {
+         self.popIndent();
       }
    }
 }
@@ -2726,37 +2587,37 @@ pub override fn convFilter.processExpCallSuper(
 }
 
 fn convFilter.outputDummyReturn( retTypeInfoList:&List<&Ast.TypeInfo> ) mut {
-   self.writeln( "// insert a dummy" );
-   self.writeRaw( "    return " );
-   foreach retType, index in retTypeInfoList {
-      if index > 1 {
-         self.writeRaw( "," );
-      }
-      if isAnyType( retType ) {
-         self.writeRaw( "nil" );
-      } else {
-         switch getOrgTypeInfo( retType ) {
-            case Ast.builtinTypeInt {
-               self.writeRaw( "0" );
-            }
-            case Ast.builtinTypeReal {
-               self.writeRaw( "0.0" );
-            }
-            case Ast.builtinTypeBool {
-               self.writeRaw( "false" );
-            }
-            case Ast.builtinTypeString {
-               self.writeRaw( '""' );
-            }
-            case Ast.builtinTypeNeverRet {
-            }
-            default {
-               self.writeRaw( "nil" );
-            }
-         }
-      }
-   }
-   self.writeln( "" );
+   // self.writeln( "// insert a dummy" );
+   // self.writeRaw( "    return " );
+   // foreach retType, index in retTypeInfoList {
+   //    if index > 1 {
+   //       self.writeRaw( "," );
+   //    }
+   //    if isAnyType( retType ) {
+   //       self.writeRaw( "nil" );
+   //    } else {
+   //       switch getOrgTypeInfo( retType ) {
+   //          case Ast.builtinTypeInt {
+   //             self.writeRaw( "0" );
+   //          }
+   //          case Ast.builtinTypeReal {
+   //             self.writeRaw( "0.0" );
+   //          }
+   //          case Ast.builtinTypeBool {
+   //             self.writeRaw( "false" );
+   //          }
+   //          case Ast.builtinTypeString {
+   //             self.writeRaw( '""' );
+   //          }
+   //          case Ast.builtinTypeNeverRet {
+   //          }
+   //          default {
+   //             self.writeRaw( "nil" );
+   //          }
+   //       }
+   //    }
+   // }
+   // self.writeln( "" );
 }
 
 pub fn convFilter.outputDeclFuncInfo(
@@ -2777,9 +2638,9 @@ pub fn convFilter.outputDeclFuncInfo(
    let convFunc = self.outputDeclFunc(
       self.option.$addEnvArg, .DeclInfo( node, declInfo ) );
 
-   self.writeln( " {" );
+   self.writeln( ":" );
 
-   self.pushIndent(##);
+   //self.pushIndent(##);
 
    if isMain( funcType ) {
       self.writeln(
@@ -2810,7 +2671,7 @@ pub fn convFilter.outputDeclFuncInfo(
       }
    }
    
-   self.popIndent();
+   //self.popIndent();
    
    if! let body = declInfo.$body {
       filter( body, self, node );
@@ -2842,7 +2703,7 @@ pub fn convFilter.outputDeclFuncInfo(
          }
       }
    }
-   self.writeRaw( "}" );
+
    if declInfo.$name {
       self.writeln( "" );
    }
@@ -3040,8 +2901,7 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
       }
       foreach symbolInfo in node.$symbolInfoList {
          if symbolInfo.$posForModToRef {
-            self.writeln( "var %s %s" ( self.getSymbolSym( symbolInfo ),
-                                        self.type2gotype( symbolInfo.$typeInfo ) ) );
+            self.writeln( "%s = None" ( self.getSymbolSym( symbolInfo ) ) );
          }
       }
    }
@@ -3131,33 +2991,47 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
       }
    }
    else {
-      declVar();
-
       if! let expList = node.$expList {
-         let mut varTypeList:List<&Ast.TypeInfo> = [];
-         foreach symbolInfo, index in node.$symbolInfoList {
-            varTypeList.insert( symbolInfo.$typeInfo );
-            if index > 1 {
-               self.writeRaw( "," );
+         if #node.$symbolInfoList == 1 {
+            // 変数が 1 つの場合、直接代入する 
+            let symbolInfo = node.$symbolInfoList[1];
+            self.writeRaw( symbolInfo.$name );
+            self.writeRaw( " = " );
+            self.processSetFromExpList(
+               self.getConvExpName( node, expList ),
+               [symbolInfo.$typeInfo], expList, false );
+            self.writeln( "" );
+            
+         } else {
+            declVar();
+
+            let mut varTypeList:List<&Ast.TypeInfo> = [];
+            foreach symbolInfo, index in node.$symbolInfoList {
+               varTypeList.insert( symbolInfo.$typeInfo );
+               if index > 1 {
+                  self.writeRaw( "," );
+               }
+               if symbolInfo.$scope == self.moduleScope or symbolInfo.$posForModToRef or
+                  Ast.isPubToExternal( symbolInfo.$accessMode )
+               {
+                  self.writeRaw( "%s" ( self.getSymbolSym( symbolInfo ) ) );
+               } else {
+                  self.writeRaw( "_" );
+               }
             }
-            if symbolInfo.$scope == self.moduleScope or symbolInfo.$posForModToRef or
-               Ast.isPubToExternal( symbolInfo.$accessMode )
-            {
-               self.writeRaw( "%s" ( self.getSymbolSym( symbolInfo ) ) );
-            } else {
-               self.writeRaw( "_" );
+            
+            if getExpListKind( varTypeList, expList, self.option.$addEnvArg ) == .Direct {
+               for _ =  #varTypeList + 1, #expList.$expTypeList {
+                  self.writeRaw( ", _" );
+               }
             }
+            self.writeRaw( " = " );
+            self.processSetFromExpList(
+               self.getConvExpName( node, expList ), varTypeList, expList, false );
+            self.writeln( "" );   
          }
-         
-         if getExpListKind( varTypeList, expList, self.option.$addEnvArg ) == .Direct {
-            for _ =  #varTypeList + 1, #expList.$expTypeList {
-               self.writeRaw( ", _" );
-            }
-         }
-         self.writeRaw( " = " );
-         self.processSetFromExpList(
-            self.getConvExpName( node, expList ), varTypeList, expList, false );
-         self.writeln( "" );   
+      } else {
+         declVar();
       }
    }
 }
@@ -3311,14 +3185,14 @@ pub override fn convFilter.processDeclForm(
 pub override fn convFilter.processDeclFunc(
    node: &Nodes.DeclFuncNode, opt: Opt ) mut
 {
-   if! let funcSym = node.$declInfo.$symbol {
-      if not funcSym.$posForModToRef and
-         not Ast.isPubToExternal( funcSym.$accessMode )
-      {
-         // アクセスのない関数は定義しない
-         return;
-      }
-   }
+   // if! let funcSym = node.$declInfo.$symbol {
+   //    if not funcSym.$posForModToRef and
+   //       not Ast.isPubToExternal( funcSym.$accessMode )
+   //    {
+   //       // アクセスのない関数は定義しない
+   //       return;
+   //    }
+   // }
    let funcType = node.$expType;
    if ( self.processMode == .NonClosureFuncDecl ) == isClosure( node.$expType ) {
       if self.processMode ~= .NonClosureFuncDecl and not node.$declInfo.$symbol {
@@ -3326,18 +3200,18 @@ pub override fn convFilter.processDeclFunc(
       }
       return;
    }
-   if isClosure( funcType ) {
-      if! let funcSym = node.$declInfo.$symbol {
-         self.writeRaw( "var " );
-         self.outputSymbol( .Func( funcType ), funcSym.$name );
-         self.writeRaw( " ");
-         self.outputDeclFunc(
-            self.option.$addEnvArg, .DeclInfo( node, node.$declInfo ) );
-         self.writeln( "" );
-         self.outputSymbol( .Func( funcType ), funcSym.$name );
-         self.writeRaw( " = " );
-      }
-   }
+   // if isClosure( funcType ) {
+   //    if! let funcSym = node.$declInfo.$symbol {
+   //       self.writeRaw( "var " );
+   //       self.outputSymbol( .Func( funcType ), funcSym.$name );
+   //       self.writeRaw( " ");
+   //       self.outputDeclFunc(
+   //          self.option.$addEnvArg, .DeclInfo( node, node.$declInfo ) );
+   //       self.writeln( "" );
+   //       self.outputSymbol( .Func( funcType ), funcSym.$name );
+   //       self.writeRaw( " = " );
+   //    }
+   // }
    self.outputDeclFuncInfo( node, node.$declInfo );
 }
 
@@ -3364,7 +3238,7 @@ pub override fn convFilter.processRefType(
 }
 
 fn convFilter.processCond( node:&Nodes.Node, parent:&Nodes.Node ) mut {
-   if node.$expType ~= Ast.builtinTypeBool {
+   if node.$expType.$nonnilableType ~= Ast.builtinTypeBool {
       self.writeRaw( "Lns_isCondTrue( " );
       filter( node, self, parent );
       self.writeRaw( ")" );
@@ -3382,22 +3256,21 @@ pub override fn convFilter.processIf(
          case .If {
             self.writeRaw( "if " );
             self.processCond( stmt.$exp, node );
-            self.writeln( "{" );
+            self.writeln( ":" );
             filter( stmt.$block, self, node );
          }
          case .ElseIf {
-            self.writeRaw( "} else if " );
+            self.writeRaw( "else if " );
             self.processCond( stmt.$exp, node );
-            self.writeln( "{" );
+            self.writeln( ":" );
             filter( stmt.$block, self, node );
          }
          case .Else {
-            self.writeln( "} else { " );
+            self.writeln( "else:" );
             filter( stmt.$block, self, node );
          }
       }
    }
-   self.writeln( "}" );
 }
 
 pub override fn convFilter.processSwitch(
@@ -3512,67 +3385,48 @@ pub override fn convFilter.processRepeat(
 pub override fn convFilter.processFor(
    node: &Nodes.ForNode, opt: Opt ) mut
 {
-   self.writeln( "{" );
-   self.pushIndent( ## );
+   // self.writeln( "{" );
+   // self.pushIndent( ## );
 
    //let nodeIndex = self.indexer.getIndex( node ).$index;
-   let nodeIndex = node.$idInNS;
+   // let nodeIndex = node.$idInNS;
    
-   let fromSym = "_forFrom%d" (nodeIndex);
-   let toSym = "_forTo%d" (nodeIndex);
-   let deltaSym = "_forDelta%d" (nodeIndex);
-   let workSym = "_forWork%d" (nodeIndex);
+   // let fromSym = "_forFrom%d" (nodeIndex);
+   // let toSym = "_forTo%d" (nodeIndex);
+   // let deltaSym = "_forDelta%d" (nodeIndex);
+   // let workSym = "_forWork%d" (nodeIndex);
 
-   let valType = "%s" (self.type2gotype(node.$init.$expType) );
-   self.writeRaw( "var %s %s = " (fromSym,valType) );
+   // let valType = "%s" (self.type2gotype(node.$init.$expType) );
+   // self.writeRaw( "var %s %s = " (fromSym,valType) );
+
+   self.write( "for %s in range( " (node.$val.$name) );
    filter( node.$init, self, node );
-   self.writeln( "" );
-
-   self.writeRaw( "var %s %s = " (toSym,valType));
+   self.write( ", " );
    filter( node.$to, self, node );
-   self.writeln( "" );
-
+   self.write( " + 1" );
    if! let delta = node.$delta {
-      self.writeln( "%s := %s" (workSym, fromSym) );
-      self.writeRaw( "%s := " (deltaSym) );
+      self.write( ", " );
       filter( delta, self, node );
-      self.writeln( "" );
-
-      self.writeln( "for {" );
-
-      self.pushIndent( ## );
-      self.writeln( "if %s > 0 {" (deltaSym) );
-      self.writeln( "   if %s > %s { break }" (workSym, toSym) );
-      self.writeln( "} else {" );
-      self.writeln( "   if %s < %s { break }" (workSym, toSym));
-      self.writeln( "}" );
-      self.popIndent();
    }
-   else {
-      self.writeln(
-         "for %s := %s; %s <= %s; %s++ {"
-         (workSym, fromSym, workSym, toSym, workSym ) );
-   }
-
-   self.pushIndent(##);
-   if node.$val.$posForModToRef {
-      self.writeln( "%s := %s" (node.$val.$name, workSym ) );
-   }
-   self.popIndent();
+   self.writeln( "):" );
+   
+   // self.pushIndent(##);
+   // if node.$val.$posForModToRef {
+   //    self.writeln( "%s := %s" (node.$val.$name, workSym ) );
+   // }
+   // self.popIndent();
 
    filter( node.$block, self, node );
 
-   if node.$delta {
-      self.pushIndent( ## );
-      self.writeln( "%s += %s" (workSym, deltaSym) );
-      self.popIndent();
-   }
+   // if node.$delta {
+   //    self.pushIndent( ## );
+   //    self.writeln( "%s += %s" (workSym, deltaSym) );
+   //    self.popIndent();
+   // }
    
-   self.writeln( "}" );
 
-
-   self.popIndent();
-   self.writeln( "}" );
+   // self.popIndent();
+   // self.writeln( "}" );
 }
 
 pub override fn convFilter.processApply(
@@ -3785,15 +3639,14 @@ pub override fn convFilter.processForeach(
             }
             
             _keyItemDecl( valName );
-            self.writeRaw( " := " );
+            self.writeRaw( " in " );
          }
-         self.writeRaw( "range( " );
          filter( node.$exp, self, node );
-         self.writeln( ".Items ) {" );
+         self.writeln( ":" );
          self.pushIndent( ## );
          if! let key = node.$key {
             if key.$posForModToRef {
-               self.writeln( "%s := _%s + 1" (self.getSymbolSym( key ), key.$name) );
+               self.writeln( "%s = _%s + 1" (self.getSymbolSym( key ), key.$name) );
             }
          }
          _keyItemSet( itemType, valName );
@@ -3844,7 +3697,6 @@ pub override fn convFilter.processForeach(
       }
    }
    filter( node.$block, self, node );
-   self.writeRaw( "}" );
    self.writeln( "" );
 }
 
@@ -3969,9 +3821,9 @@ pub override fn convFilter.processExpToDDD( node: &Nodes.ExpToDDDNode, opt: Opt 
       filter( node.$expList, self, node );
    }
    else {
-      self.write ( "[]LnsAny{ " );
+      //self.write ( "[]LnsAny{ " );
       filter( node.$expList, self, node );
-      self.write ( "}" );
+      //self.write ( "}" );
    }
 }
 
@@ -5319,8 +5171,9 @@ pub override fn convFilter.processExpOp1(
       case "#" {
          switch node.$exp.$expType.$kind {
             case .List {
+               self.writeRaw( "len(" );
                filter( node.$exp, self, node );
-               self.writeRaw( ".Len()" );
+               self.writeRaw( ")" );
             }
             case .Ext {
                switch node.$exp.$expType.$extedType.$kind {
@@ -5526,11 +5379,24 @@ fn convFilter.processAndOr( node: &Nodes.ExpOp2Node,
    }
 }
 
+pub fn convFilter.checkExpOp3( node: &Nodes.ExpOp2Node, opt: Opt ) mut {
+   if! let andExp = node.$exp1@@@Nodes.ExpOp2Node {
+      if andExp.$op.txt == "and" {
+         filter( andExp.$exp2, self, node );
+         self.writeRaw( " if " );
+         self.processCond( andExp.$exp1, node );
+         self.writeRaw( " else " );
+         filter( node.$exp2, self, node );
+         return;
+      }
+   }
+   self.processAndOr( node, node.$op.txt, opt.parent );
+}
+
 let op2map = {
    "..": "+",
    "~=": "!=",
 };
-
 
 pub override fn convFilter.processExpOp2(
    node: &Nodes.ExpOp2Node, opt: Opt ) mut
@@ -5538,12 +5404,24 @@ pub override fn convFilter.processExpOp2(
    let mut opTxt = node.$op.txt;
 
    switch opTxt {
-      case "and", "or" {
+      case "or" {
+         self.checkExpOp3( node, opt );
+      }
+      case "and" {
          self.processAndOr( node, opTxt, opt.parent );
       }
       case ".." {
          filter( node.$exp1, self, node );
          self.writeRaw( " + " );
+         filter( node.$exp2, self, node );
+      }
+      case "/" {
+         filter( node.$exp1, self, node );
+         if node.$expType.equals( self.processInfo, Ast.builtinTypeInt ##) {
+            self.writeRaw( " // " );
+         } else {
+            self.writeRaw( " / " );
+         }
          filter( node.$exp2, self, node );
       }
       default {
@@ -5678,9 +5556,9 @@ pub override fn convFilter.processExpRefItem(
             self.writeRaw( "))" );
          } else {
             filter( node.$val, self, node );
-            self.writeRaw( ".GetAt(" );
+            self.writeRaw( "[" );
             filter( unwrap node.$index, self, node );
-            self.writeRaw( ")" );
+            self.writeRaw( "-1]" );
             self.outputStem2Type( node.$expType );
          }
       }
@@ -5701,7 +5579,7 @@ pub override fn convFilter.processExpRefItem(
                self.writeRaw( ".(*LnsMap)" );
             }
          }
-         self.writeRaw( ".Get(" );
+         self.writeRaw( ".get(" );
          if! let index = node.$index {
             filter( index, self, node );
          } else {
@@ -5900,13 +5778,24 @@ pub override fn convFilter.processTestCase( node: &Nodes.TestCaseNode, opt: Opt 
       return;
    }
    self.writeln(
-      "func lns_test_%s_%s( %s *Testing_Ctrl ) {"
-      ( self.getModuleName( self.$moduleTypeInfo, false),
-        node.$name.txt, node.$ctrlName ) );
+      ```
+import unittest
+from test import support
+
+class MyTestCase(unittest.TestCase):
+    def setUp(self):
+        pass
+    def tearDown(self):
+        pass
+    def test_case(self):
+        solution = Solution()
+``` );
+   self.pushIndent(##);
+
 
    filter( node.$block, self, node );
-   
-   self.writeln( "}" );
+
+   self.popIndent();
 }
 
 pub override fn convFilter.processTestBlock(
@@ -5947,25 +5836,20 @@ pub override fn convFilter.processUnboxing(
 pub override fn convFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt: Opt ) mut
 {
-   self.writeRaw( "NewLnsList(" );
+   self.writeRaw( "[" );
    if! let expList = node.$expList {
-      self.expList2Slice( expList, true );
+      filter( expList, self, node );
+         //self.expList2Slice( expList, true );
    }
-   else {
-      self.writeRaw( "[]LnsAny{}" );
-   }
-   self.writeRaw( ")" );
+   self.writeRaw( "]" );
 }
 
 pub override fn convFilter.processLiteralSet(
    node: &Nodes.LiteralSetNode, opt: Opt ) mut
 {
-   self.writeRaw( "NewLnsSet(" );
+   self.writeRaw( "set(" );
    if! let expList = node.$expList {
       self.expList2Slice( expList, true );
-   }
-   else {
-      self.writeRaw( "[]LnsAny{}" );
    }
    self.writeRaw( ")" );
 }
@@ -5974,29 +5858,20 @@ pub override fn convFilter.processLiteralSet(
 pub override fn convFilter.processLiteralMap(
    node: &Nodes.LiteralMapNode, opt: Opt ) mut
 {
-   let mut hasNilable = false;
-   self.writeRaw( "NewLnsMap( map[LnsAny]LnsAny{" );
+   self.writeRaw( "{" );
    foreach pair in node.$pairList {
       if pair.$key.$kind == Nodes.NodeKind.get_LiteralNil() or
          pair.$val.$kind == Nodes.NodeKind.get_LiteralNil()
       {
          // nil を除外
       } else {
-         if pair.$key.$expType.$kind == .Nilable or pair.$val.$expType.$kind == .Nilable
-         {
-            // nilable の値を含む map は、後で nil の値を除外するため記録しておく
-            hasNilable = true;
-         }
          filter( pair.$key, self, node );
          self.writeRaw( ":" );
          filter( pair.$val, self, node );
          self.writeRaw( "," );
       }
    }
-   self.writeRaw( "})" );
-   if hasNilable {
-      self.writeRaw( ".Correct()" );
-   }
+   self.writeRaw( "}" );
 }
 
 pub override fn convFilter.processLiteralArray(
@@ -6036,11 +5911,9 @@ pub override fn convFilter.processLiteralString(
 {
    let txt = node.$token.txt;
    if! let expList = node.$dddParam {
-      self.writeRaw( '%s.String_format(%s, '
-                     (self.env.getLuavm(), str2gostr(txt)));
-      self.processSetFromExpList(
-         self.getConvExpName( node, expList ),  [ Ast.builtinTypeDDD ],
-         expList, false );
+      self.writeRaw( str2gostr(txt) );
+      self.writeRaw( "%(" );
+      filter( expList, self, node );
       self.writeRaw( ")" );
    } else {
       self.writeRaw( '%s' (str2gostr(txt)) );

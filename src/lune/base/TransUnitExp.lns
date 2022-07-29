@@ -235,7 +235,7 @@ fn TransUnit.analyzeExpList(
             exp = Nodes.ExpMacroArgExpNode.create(
                self.nodeManager, exp.$pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
-               Macro.nodeToCodeTxt( exp, self.moduleType ) );
+               Macro.nodeToCodeTxt( exp, self.moduleType ), exp );
             expTypeList.insert( unwrap expectType );
          }
          default {
@@ -1200,7 +1200,8 @@ fn TransUnit.evalMacro(
    
    return Nodes.ExpMacroExpNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), expTypeList, macroTypeInfo, stmtList );
+      self.macroCtrl.isInAnalyzeArgMode(), expTypeList,
+      macroTypeInfo, expList, stmtList );
 }
 
 /**

@@ -763,7 +763,7 @@ fn Front.createPythonOption( scriptPath:str ) : &convPython.Option {
    }
    return new convPython.Option(
       packageName, self.getGoAppName(), self.option.mainModule,
-      self.option.$addEnvArg, self.option.convGoRunnerNum );
+      false, self.option.convGoRunnerNum );
 }
 
 

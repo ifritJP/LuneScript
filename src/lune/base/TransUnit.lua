@@ -7382,7 +7382,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, canLeftExp, expNo
       do
          local _switchExp = expectType
          if _switchExp == Ast.builtinTypeExp or _switchExp == Ast.builtinTypeMultiExp or _switchExp == Ast.builtinTypeBlockArg then
-            exp = Nodes.ExpMacroArgExpNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), exp:get_expTypeList(), Macro.nodeToCodeTxt( exp, self.moduleType ) )
+            exp = Nodes.ExpMacroArgExpNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), exp:get_expTypeList(), Macro.nodeToCodeTxt( exp, self.moduleType ), exp )
             table.insert( expTypeList, _lune.unwrap( expectType) )
          else 
             
@@ -8269,7 +8269,7 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
    end
    
    
-   return Nodes.ExpMacroExpNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, macroTypeInfo, stmtList )
+   return Nodes.ExpMacroExpNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, macroTypeInfo, expList, stmtList )
 end
 
 local function findForm( format )

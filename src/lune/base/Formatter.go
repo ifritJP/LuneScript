@@ -1183,6 +1183,7 @@ type Formatter_FormatterFilterMtd interface {
     GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
     Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
     Get_optStack(_env *LnsEnv) *LnsList
+    Get_stepIndent(_env *LnsEnv) LnsInt
     Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
     outputDeclClass(_env *LnsEnv, arg1 bool, arg2 *Ast_TypeInfo, arg3 LnsAny, arg4 LnsAny)
     OutputHeadComment(_env *LnsEnv, arg1 *Nodes_Node)
@@ -1317,6 +1318,10 @@ func NewFormatter_FormatterFilter(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 LnsAny,
     obj.Nodes_Filter.FP = obj
     obj.InitFormatter_FormatterFilter(_env, arg1, arg2, arg3)
     return obj
+}
+// advertise -- 45
+func (self *Formatter_FormatterFilter) Get_stepIndent(_env *LnsEnv) LnsInt {
+    return self.stream. FP.Get_stepIndent( _env)
 }
 // advertise -- 45
 func (self *Formatter_FormatterFilter) PopIndent(_env *LnsEnv) {

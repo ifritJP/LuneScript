@@ -513,6 +513,10 @@ end
 function convFilter._setmeta( obj )
   setmetatable( obj, { __index = convFilter  } )
 end
+function convFilter:get_stepIndent( ... )
+   return self.stream:get_stepIndent( ... )
+end
+
 function convFilter:popIndent( ... )
    return self.stream:popIndent( ... )
 end
