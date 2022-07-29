@@ -287,7 +287,7 @@ func Macro_nodeToCodeTxt(_env *LnsEnv, node *Nodes_Node,moduleTypeInfo *Ast_Type
 
 
 // 957: decl @lune.@base.@Macro.MacroCtrl.expandMacroVal.macroVal2strList
-func MacroCtrl_expandMacroVal__macroVal2strList_1_(_env *LnsEnv, name string,macroVal *Nodes_MacroValInfo,workParser Parser_PushbackParser) *LnsList {
+func Macro_MacroCtrl_expandMacroVal__macroVal2strList_1_(_env *LnsEnv, name string,macroVal *Nodes_MacroValInfo,workParser Parser_PushbackParser) *LnsList {
     var val LnsAny
     
     {
@@ -551,8 +551,8 @@ func (self *Macro_MacroCtrl) EvalMacroOp(_env *LnsEnv, moduleTypeInfo *Ast_TypeI
             }
         }
     }
-    var process func(_env *LnsEnv) LnsAny
-    process = func(_env *LnsEnv) LnsAny {
+    var Macro_process func(_env *LnsEnv) LnsAny
+    Macro_process = func(_env *LnsEnv) LnsAny {
         var argValMap *LnsMap
         argValMap = NewLnsMap( map[LnsAny]LnsAny{})
         var macroArgNodeList *LnsList
@@ -853,7 +853,7 @@ func (self *Macro_MacroCtrl) EvalMacroOp(_env *LnsEnv, moduleTypeInfo *Ast_TypeI
         return nil
     }
     {
-        _mess := process(_env)
+        _mess := Macro_process(_env)
         if !Lns_IsNil( _mess ) {
             mess := _mess.(string)
             return nil, mess
@@ -1004,8 +1004,8 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
     if self.tokenExpanding{
         return token
     }
-    var getToken func(_env *LnsEnv) *Types_Token
-    getToken = func(_env *LnsEnv) *Types_Token {
+    var Macro_getToken func(_env *LnsEnv) *Types_Token
+    Macro_getToken = func(_env *LnsEnv) *Types_Token {
         self.tokenExpanding = true
         var work *Types_Token
         work = parser.GetTokenNoErr(_env, nil)
@@ -1019,7 +1019,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
         _env.SetStackVal( tokenTxt == ",,,") ||
         _env.SetStackVal( tokenTxt == ",,,,") ).(bool){
         var nextToken *Types_Token
-        nextToken = getToken(_env)
+        nextToken = Macro_getToken(_env)
         var macroVal *Nodes_MacroValInfo
         
         {
@@ -1034,7 +1034,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
             if Macro_equalsType_14_(_env, macroVal.TypeInfo, Ast_builtinTypeSymbol){
                 var txtList *LnsList
                 txtList = NewLnsList([]LnsAny{})
-                for _, _txt := range( MacroCtrl_expandMacroVal__macroVal2strList_1_(_env, nextToken.Txt, macroVal, parser).Items ) {
+                for _, _txt := range( Macro_MacroCtrl_expandMacroVal__macroVal2strList_1_(_env, nextToken.Txt, macroVal, parser).Items ) {
                     txt := _txt.(string)
                     txtList.Insert(txt)
                 }
@@ -1077,7 +1077,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
                         _env.SetStackVal( nextToken.Pos.Get_RawOrgPos(_env)) ||
                         _env.SetStackVal( token.Pos.Get_orgPos(_env)) ).(Types_Position)
                     var strList *LnsList
-                    strList = MacroCtrl_expandMacroVal__macroVal2strList_1_(_env, nextToken.Txt, macroVal, parser)
+                    strList = Macro_MacroCtrl_expandMacroVal__macroVal2strList_1_(_env, nextToken.Txt, macroVal, parser)
                     {
                         var _forFrom0 LnsInt = strList.Len()
                         var _forTo0 LnsInt = 1
@@ -1193,7 +1193,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
                 parser.Error(_env, _env.GetVM().String_format("not support this symbol -- %s%s", []LnsAny{tokenTxt, nextToken.Txt}))
             }
         }
-        nextToken = getToken(_env)
+        nextToken = Macro_getToken(_env)
         token = nextToken
     }
     self.tokenExpanding = false

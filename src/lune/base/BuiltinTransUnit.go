@@ -131,8 +131,8 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                     self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) base class(None) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             }
-            var compareList func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string)
-            compareList = func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string) {
+            var BuiltinTransUnit_compareList func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string)
+            BuiltinTransUnit_compareList = func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string) {
                 if protoList.Len() == typeList.Len(){
                     for _index, _protoType := range( protoList.Items ) {
                         index := _index + 1
@@ -145,8 +145,8 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
                     self.FP.Error(_env, _env.GetVM().String_format("mismatch class(%s) %s(%d) for prototpye %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), message, typeList.Len(), message, protoList.Len()}))
                 }
             }
-            compareList(_env, typeInfo.FP.Get_interfaceList(_env), Lns_unwrapDefault( interfaceList, NewLnsList([]LnsAny{})).(*LnsList), "interface")
-            compareList(_env, typeInfo.FP.Get_itemTypeInfoList(_env), Lns_unwrapDefault( genTypeList, NewLnsList([]LnsAny{})).(*LnsList), "generics")
+            BuiltinTransUnit_compareList(_env, typeInfo.FP.Get_interfaceList(_env), Lns_unwrapDefault( interfaceList, NewLnsList([]LnsAny{})).(*LnsList), "interface")
+            BuiltinTransUnit_compareList(_env, typeInfo.FP.Get_itemTypeInfoList(_env), Lns_unwrapDefault( genTypeList, NewLnsList([]LnsAny{})).(*LnsList), "generics")
             {
                 _scope := self.namespace2Scope.Get(typeInfo)
                 if !Lns_IsNil( _scope ) {

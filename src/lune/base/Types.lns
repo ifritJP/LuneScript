@@ -29,6 +29,7 @@ pub enum Lang {
    Same,
    Lua,
    Go,
+   Python,
    C,
 }
 

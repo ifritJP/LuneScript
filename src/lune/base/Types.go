@@ -5,14 +5,16 @@ var init_Types bool
 var Types__mod__ string
 // decl enum -- Lang 
 type Types_Lang = LnsInt
-const Types_Lang__C = 3
+const Types_Lang__C = 4
 const Types_Lang__Go = 2
 const Types_Lang__Lua = 1
+const Types_Lang__Python = 3
 const Types_Lang__Same = 0
 var Types_LangList_ = NewLnsList( []LnsAny {
   Types_Lang__Same,
   Types_Lang__Lua,
   Types_Lang__Go,
+  Types_Lang__Python,
   Types_Lang__C,
 })
 func Types_Lang_get__allList(_env *LnsEnv) *LnsList{
@@ -22,6 +24,7 @@ var Types_LangMap_ = map[LnsInt]string {
   Types_Lang__C: "Lang.C",
   Types_Lang__Go: "Lang.Go",
   Types_Lang__Lua: "Lang.Lua",
+  Types_Lang__Python: "Lang.Python",
   Types_Lang__Same: "Lang.Same",
 }
 func Types_Lang__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
@@ -140,11 +143,11 @@ Val4 LnsAny
 func (self *Types_ParserSrc__Parser) GetTxt() string {
 return "ParserSrc.Parser"
 }
-// 108: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 109: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
     return NewTypes_TransCtrlInfo(_env)
 }
-// 134: decl @lune.@base.@Types.Position.get_orgPos
+// 135: decl @lune.@base.@Types.Position.get_orgPos
 func (self Types_Position) Get_orgPos(_env *LnsEnv) Types_Position {
     {
         __exp := self.OrgPos
@@ -155,15 +158,15 @@ func (self Types_Position) Get_orgPos(_env *LnsEnv) Types_Position {
     }
     return self
 }
-// 141: decl @lune.@base.@Types.Position.get_RawOrgPos
+// 142: decl @lune.@base.@Types.Position.get_RawOrgPos
 func (self Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
     return self.OrgPos
 }
-// 145: decl @lune.@base.@Types.Position.create
+// 146: decl @lune.@base.@Types.Position.create
 func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) Types_Position {
     return NewTypes_Position(_env, lineNo, column, streamName, orgPos)
 }
-// 151: decl @lune.@base.@Types.Position.getDisplayTxt
+// 152: decl @lune.@base.@Types.Position.getDisplayTxt
 func (self Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     var txt string
     txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
@@ -176,7 +179,7 @@ func (self Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     }
     return txt
 }
-// 195: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 196: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -190,7 +193,7 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 215: decl @lune.@base.@Types.Token.getLineCount
+// 216: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
@@ -254,7 +257,7 @@ func NewTypes_TransCtrlInfo(_env *LnsEnv) *Types_TransCtrlInfo {
     obj.InitTypes_TransCtrlInfo(_env)
     return obj
 }
-// 87: DeclConstr
+// 88: DeclConstr
 func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
     self.MacroAsyncParseStmtLen = 500
     self.WarningShadowing = false
@@ -370,7 +373,7 @@ func Types_Position_FromMapMain( newObj Types_Position, objMap *LnsMap, paramLis
     }
     return true, newObj, nil
 }
-// 127: DeclConstr
+// 128: DeclConstr
 func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) {
     self.LineNo = lineNo
     self.Column = column
@@ -482,7 +485,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 185: DeclConstr
+// 186: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     self.Txt = txt

@@ -1,6 +1,6 @@
---lune/base/convGo.lns
+--lune/base/convPython.lns
 local _moduleObj = {}
-local __mod__ = '@lune.@base.@convGo'
+local __mod__ = '@lune.@base.@convPython'
 local _lune = {}
 if _lune6 then
    _lune = _lune6
@@ -251,7 +251,6 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 
 local MaxNilAccNum = 3
-
 local Opt = {}
 _moduleObj.Opt = Opt
 function Opt._new( parent )
@@ -864,7 +863,7 @@ local function normalizeSym( name )
 end
 
 function convFilter:getSymbol( kind, name )
-   local __func__ = '@lune.@base.@convGo.convFilter.getSymbol'
+   local __func__ = '@lune.@base.@convPython.convFilter.getSymbol'
 
    local symbolName = normalizeSym( name )
    
@@ -921,12 +920,8 @@ function convFilter:getSymbol( kind, name )
                   if isInnerDeclType( typeInfo ) then
                      
                      if not isClosure( typeInfo ) then
-                        local modName = self:getModuleName( typeInfo:getModule(  ), false )
                         local parentName = typeInfo:getParentFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), true )
-                        symbolName = string.format( "%s_%s_%s_%d_", modName, parentName:gsub( "[%.@]", "_" ), symbolName, typeInfo:get_childId())
-                     else
-                      
-                        symbolName = self:concatSymWithType( symbolName, typeInfo )
+                        symbolName = string.format( "%s_%s_%d_", parentName:gsub( "[%.@]", "_" ), symbolName, typeInfo:get_childId())
                      end
                      
                   else
@@ -1251,7 +1246,7 @@ end
 
 
 local function getExpType( expListNode, index )
-   local __func__ = '@lune.@base.@convGo.getExpType'
+   local __func__ = '@lune.@base.@convPython.getExpType'
 
    local list = expListNode:get_expTypeList()
    if #list >= index then
@@ -3481,7 +3476,7 @@ end
 
 
 function convFilter:processExpMacroStat( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processExpMacroStat'
+   local __func__ = '@lune.@base.@convPython.convFilter.processExpMacroStat'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
@@ -3548,7 +3543,7 @@ end
 
 
 function convFilter:processDeclDestr( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processDeclDestr'
+   local __func__ = '@lune.@base.@convPython.convFilter.processDeclDestr'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
@@ -3840,7 +3835,7 @@ end
 
 
 function convFilter:processUnwrapSet( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processUnwrapSet'
+   local __func__ = '@lune.@base.@convPython.convFilter.processUnwrapSet'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
@@ -4092,7 +4087,7 @@ end
 
 
 function convFilter:processDeclVar( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processDeclVar'
+   local __func__ = '@lune.@base.@convPython.convFilter.processDeclVar'
 
    do
       local _switchExp = node:get_mode()
@@ -4245,7 +4240,7 @@ end
 
 
 function convFilter:processExpSubDDD( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processExpSubDDD'
+   local __func__ = '@lune.@base.@convPython.convFilter.processExpSubDDD'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
@@ -4618,7 +4613,7 @@ end
 
 
 function convFilter:outputForeachLua( node, sortFlag, exp, val, key, block )
-   local __func__ = '@lune.@base.@convGo.convFilter.outputForeachLua'
+   local __func__ = '@lune.@base.@convPython.convFilter.outputForeachLua'
 
    
    local nodeIndex
@@ -4730,7 +4725,7 @@ end
 
 
 function convFilter:processForeach( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processForeach'
+   local __func__ = '@lune.@base.@convPython.convFilter.processForeach'
 
    if node:get_exp():get_expType():get_srcTypeInfo():get_kind() == Ast.TypeInfoKind.Ext then
       self:outputForeachLua( node, false, node:get_exp(), node:get_val(), node:get_key(), node:get_block() )
@@ -5507,7 +5502,7 @@ end
 
 local type2FromStemNameMap = {[Ast.builtinTypeInt] = "Lns_ToInt", [Ast.builtinTypeReal] = "Lns_ToReal", [Ast.builtinTypeBool] = "Lns_ToBool", [Ast.builtinTypeString] = "Lns_ToStr", [Ast.builtinTypeStem] = "Lns_ToStem"}
 function convFilter:getFromStemName( typeInfo )
-   local __func__ = '@lune.@base.@convGo.convFilter.getFromStemName'
+   local __func__ = '@lune.@base.@convPython.convFilter.getFromStemName'
 
    local workTypeInfo = getOrgTypeInfo( typeInfo )
    do
@@ -5598,7 +5593,7 @@ end
 
 
 function convFilter:outputAlter2MapFunc( alt2Map )
-   local __func__ = '@lune.@base.@convGo.convFilter.outputAlter2MapFunc'
+   local __func__ = '@lune.@base.@convPython.convFilter.outputAlter2MapFunc'
 
    self:writeRaw( "{" )
    
@@ -5800,7 +5795,7 @@ end
 
 
 function convFilter:outputAdvertise( node )
-   local __func__ = '@lune.@base.@convGo.convFilter.outputAdvertise'
+   local __func__ = '@lune.@base.@convPython.convFilter.outputAdvertise'
 
    local methodNameSet = node:createMethodNameSetWithoutAdv(  )
    for __index, adv in ipairs( node:get_advertiseList() ) do
@@ -5857,7 +5852,7 @@ end
 
 
 function convFilter:processDeclClass( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processDeclClass'
+   local __func__ = '@lune.@base.@convPython.convFilter.processDeclClass'
 
    if not self.enableTest and node:get_inTestBlock() then
       return 
@@ -6194,7 +6189,7 @@ end
 
 
 function convFilter:processExpCall( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processExpCall'
+   local __func__ = '@lune.@base.@convPython.convFilter.processExpCall'
 
    local funcType = node:get_func():get_expType():get_nonnilableType()
    
@@ -6523,7 +6518,7 @@ end
 
 
 function convFilter:processExpOp1( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processExpOp1'
+   local __func__ = '@lune.@base.@convPython.convFilter.processExpOp1'
 
    do
       local _switchExp = node:get_op().txt
@@ -6824,7 +6819,7 @@ end
 
 
 function convFilter:processExpRef( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processExpRef'
+   local __func__ = '@lune.@base.@convPython.convFilter.processExpRef'
 
    if node:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
       self:writeRaw( "ddd" )
@@ -6882,7 +6877,7 @@ end
 
 
 function convFilter:processExpRefItem( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processExpRefItem'
+   local __func__ = '@lune.@base.@convPython.convFilter.processExpRefItem'
 
    local getEnvTxt = self.env:getEnv(  )
    local prefixType = node:get_val():get_expType():get_nonnilableType()
@@ -7016,7 +7011,7 @@ end
 
 
 function convFilter:processRefField( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processRefField'
+   local __func__ = '@lune.@base.@convPython.convFilter.processRefField'
 
    if node:get_prefix():get_expType():get_kind() == Ast.TypeInfoKind.Enum and node:get_expType():get_kind() == Ast.TypeInfoKind.Enum then
       self:writeRaw( self:getSymbol( _lune.newAlge( SymbolKind.Static, {node:get_expType()}), node:get_field().txt ) )
@@ -7131,7 +7126,7 @@ end
 
 
 function convFilter:processGetField( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processGetField'
+   local __func__ = '@lune.@base.@convPython.convFilter.processGetField'
 
    do
       local symbolInfo = node:get_symbolInfo()
@@ -7236,7 +7231,7 @@ end
 
 
 function convFilter:processProvide( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processProvide'
+   local __func__ = '@lune.@base.@convPython.convFilter.processProvide'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
@@ -7248,14 +7243,14 @@ end
 
 
 function convFilter:processBoxing( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processBoxing'
+   local __func__ = '@lune.@base.@convPython.convFilter.processBoxing'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
 
 
 function convFilter:processUnboxing( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processUnboxing'
+   local __func__ = '@lune.@base.@convPython.convFilter.processUnboxing'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
@@ -7394,7 +7389,7 @@ end
 
 
 function convFilter:processLiteralSymbol( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processLiteralSymbol'
+   local __func__ = '@lune.@base.@convPython.convFilter.processLiteralSymbol'
 
    Util.err( string.format( "not support -- %s", __func__) )
 end
@@ -7441,7 +7436,7 @@ end
 
 
 function convFilter:processAbbr( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processAbbr'
+   local __func__ = '@lune.@base.@convPython.convFilter.processAbbr'
 
    Util.err( string.format( "not support -- %s:%d", __func__, node:get_pos().lineNo) )
 end

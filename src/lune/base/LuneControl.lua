@@ -148,6 +148,9 @@ Code.__allList[2] = Code.C
 Code.Go = 'go'
 Code._val2NameMap['go'] = 'Go'
 Code.__allList[3] = Code.Go
+Code.Python = 'py'
+Code._val2NameMap['py'] = 'Python'
+Code.__allList[4] = Code.Python
 
 
 local Pragma = {}

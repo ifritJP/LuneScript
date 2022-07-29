@@ -239,7 +239,9 @@ LNS_SRCS += base/convLua
 LNS_SRCS += base/dumpNode
 #LNS_SRCS += base/convCC
 LNS_SRCS += base/convGo
+LNS_SRCS += base/convPython
 LNS_SRCS += base/OutputDepend
+LNS_SRCS += base/Converter
 LNS_SRCS += base/glueFilter
 LNS_SRCS += base/front
 LNS_SRCS := $(addprefix "lune/",$(LNS_SRCS))
@@ -289,7 +291,9 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/convLua)
 	$(call $5,$1,$2,$3,$4,base/dumpNode)
 	$(call $5,$1,$2,$3,$4,base/convGo)
+	$(call $5,$1,$2,$3,$4,base/convPython)
 	$(call $5,$1,$2,$3,$4,base/OutputDepend)
+	$(call $5,$1,$2,$3,$4,base/Converter)
 	$(call $5,$1,$2,$3,$4,base/glueFilter)
 	$(call $5,$1,$2,$3,$4,base/front)
 endef

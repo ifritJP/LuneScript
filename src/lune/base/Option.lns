@@ -598,6 +598,11 @@ usage:
                   option.transCtrlInfo.validLuaval = true;
                   option.transCtrlInfo.validAsyncCtrl = true;
                }
+               case "-langPython" {
+                  option.convTo = .Python;
+                  option.transCtrlInfo.validLuaval = false;
+                  option.transCtrlInfo.validAsyncCtrl = false;
+               }
                case "-ol" {
                   if! let txt = getNextOp() {
                      switch txt {

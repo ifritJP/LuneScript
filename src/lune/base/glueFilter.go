@@ -324,8 +324,8 @@ func (self *glueFilter_glueGenerator) OutputClass(_env *LnsEnv, moduleFullName s
 }
 // 397: decl @lune.@base.@glueFilter.glueFilter.processRoot
 func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_dummy LnsAny) {
-    var createFile func(_env *LnsEnv, filename string) Lns_oStream
-    createFile = func(_env *LnsEnv, filename string) Lns_oStream {
+    var glueFilter_createFile func(_env *LnsEnv, filename string) Lns_oStream
+    glueFilter_createFile = func(_env *LnsEnv, filename string) Lns_oStream {
         var filePath string
         filePath = _env.GetVM().String_format("%s/%s", []LnsAny{Lns_unwrapDefault( self.outputDir, ".").(string), filename})
         {
@@ -352,9 +352,9 @@ func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNod
                     if !Lns_IsNil( __exp ) {
                         _exp := __exp.(string)
                         var cFile Lns_oStream
-                        cFile = createFile(_env, moduleSymbolName + "_glue.c")
+                        cFile = glueFilter_createFile(_env, moduleSymbolName + "_glue.c")
                         var hFile Lns_oStream
-                        hFile = createFile(_env, moduleSymbolName + "_glue.h")
+                        hFile = glueFilter_createFile(_env, moduleSymbolName + "_glue.h")
                         var glue *glueFilter_glueGenerator
                         glue = NewglueFilter_glueGenerator(_env, cFile, hFile)
                         glue.FP.OutputClass(_env, moduleSymbolName, declClassNode, _exp)

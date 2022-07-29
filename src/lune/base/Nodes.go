@@ -1057,7 +1057,7 @@ func Nodes_getCastUnwraped(_env *LnsEnv, node *Nodes_Node) *Nodes_Node {
 }
 
 // 2260: decl @lune.@base.@Nodes.Node.getSymbolInfo.processExpNode
-func Node_getSymbolInfo__processExpNode_0_(_env *LnsEnv, node *Nodes_Node) *LnsList {
+func Nodes_Node_getSymbolInfo__processExpNode_0_(_env *LnsEnv, node *Nodes_Node) *LnsList {
     if _switch0 := (node.FP.Get_kind(_env)); _switch0 == Nodes_NodeKind_get_ExpRef(_env) {
         return NewLnsList([]LnsAny{Ast_SymbolInfo2Stem((Lns_unwrap( (Nodes_ExpRefNodeDownCastF(node.FP))).(*Nodes_ExpRefNode)).FP.Get_symbolInfo(_env))})
     } else if _switch0 == Nodes_NodeKind_get_RefField(_env) {
@@ -1088,12 +1088,12 @@ func Node_getSymbolInfo__processExpNode_0_(_env *LnsEnv, node *Nodes_Node) *LnsL
                     index := _index + 1
                     expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
                     if index == expListNode.FP.Get_expList(_env).Len(){
-                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_0_(_env, expNode).Items ) {
+                        for _, _symbolInfo := range( Nodes_Node_getSymbolInfo__processExpNode_0_(_env, expNode).Items ) {
                             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                             list.Insert(Ast_SymbolInfo2Stem(symbolInfo))
                         }
                     } else { 
-                        for _, _symbolInfo := range( Node_getSymbolInfo__processExpNode_0_(_env, expNode).Items ) {
+                        for _, _symbolInfo := range( Nodes_Node_getSymbolInfo__processExpNode_0_(_env, expNode).Items ) {
                             symbolInfo := _symbolInfo.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                             list.Insert(Ast_SymbolInfo2Stem(symbolInfo))
                             break
@@ -1308,15 +1308,15 @@ func (self *Nodes_Filter) Get_optStack(_env *LnsEnv) *LnsList{ return self.optSt
 func (self *Nodes_Filter) InitNodes_Filter(_env *LnsEnv, errorOnDefault bool,moduleTypeInfo LnsAny,moduleInfoManager LnsAny) {
     self.errorOnDefault = errorOnDefault
     self.moduleInfoManager = NewNodes_SimpleModuleInfoManager(_env, moduleInfoManager)
-    var process func(_env *LnsEnv) *Ast_TypeNameCtrl
-    process = func(_env *LnsEnv) *Ast_TypeNameCtrl {
+    var Nodes_process func(_env *LnsEnv) *Ast_TypeNameCtrl
+    Nodes_process = func(_env *LnsEnv) *Ast_TypeNameCtrl {
         if moduleTypeInfo != nil{
             moduleTypeInfo_51 := moduleTypeInfo.(*Ast_TypeInfo)
             return NewAst_TypeNameCtrl(_env, moduleTypeInfo_51)
         }
         return Ast_defaultTypeNameCtrl
     }
-    self.typeNameCtrl = process(_env)
+    self.typeNameCtrl = Nodes_process(_env)
     self.optStack = NewLnsList([]LnsAny{})
 }
 
@@ -10782,7 +10782,7 @@ func (self *Nodes_Node) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth L
 }
 // 2259: decl @lune.@base.@Nodes.Node.getSymbolInfo
 func (self *Nodes_Node) GetSymbolInfo(_env *LnsEnv) *LnsList {
-    return Node_getSymbolInfo__processExpNode_0_(_env, self)
+    return Nodes_Node_getSymbolInfo__processExpNode_0_(_env, self)
 }
 // 480: decl @lune.@base.@Nodes.NodeManager.nextId
 func (self *Nodes_NodeManager) NextId(_env *LnsEnv) LnsInt {

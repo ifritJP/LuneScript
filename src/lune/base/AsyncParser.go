@@ -223,8 +223,8 @@ func (self *AsyncParser_Parser) Setup(_env *LnsEnv) {
 }
 // 265: decl @lune.@base.@AsyncParser.Parser.create
 func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny)(LnsAny, string) {
-    var createStream func(_env *LnsEnv, mod string,path string)(LnsAny, string)
-    createStream = func(_env *LnsEnv, mod string,path string)(LnsAny, string) {
+    var AsyncParser_createStream func(_env *LnsEnv, mod string,path string)(LnsAny, string)
+    AsyncParser_createStream = func(_env *LnsEnv, mod string,path string)(LnsAny, string) {
         if stdinFile != nil{
             stdinFile_151 := stdinFile.(*Types_StdinFile)
             if stdinFile_151.FP.Get_mod(_env) == mod{
@@ -240,8 +240,8 @@ func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAn
         }
         return nil, _env.GetVM().String_format("failed to open -- %s", []LnsAny{path})
     }
-    var createStreamFrom func(_env *LnsEnv)(string, bool, LnsAny, string, LnsAny)
-    createStreamFrom = func(_env *LnsEnv)(string, bool, LnsAny, string, LnsAny) {
+    var AsyncParser_createStreamFrom func(_env *LnsEnv)(string, bool, LnsAny, string, LnsAny)
+    AsyncParser_createStreamFrom = func(_env *LnsEnv)(string, bool, LnsAny, string, LnsAny) {
         switch _matchExp0 := parserSrc.(type) {
         case *Types_ParserSrc__LnsCode:
         txt := _matchExp0.Val1
@@ -254,7 +254,7 @@ func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAn
         pipeSize := _matchExp0.Val3
             var stream LnsAny
             var mess string
-            stream,mess = createStream(_env, mod, path)
+            stream,mess = AsyncParser_createStream(_env, mod, path)
             return path, false, stream, mess, pipeSize
         case *Types_ParserSrc__Parser:
         path := _matchExp0.Val1
@@ -263,7 +263,7 @@ func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAn
         pipeSize := _matchExp0.Val4
             var stream LnsAny
             var mess string
-            stream,mess = createStream(_env, mod, path)
+            stream,mess = AsyncParser_createStream(_env, mod, path)
             return path, luaMode, stream, mess, pipeSize
         }
     // insert a dummy
@@ -274,7 +274,7 @@ func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAn
     var stream LnsAny
     var mess string
     var pipeSize LnsAny
-    streamName,luaMode,stream,mess,pipeSize = createStreamFrom(_env)
+    streamName,luaMode,stream,mess,pipeSize = AsyncParser_createStreamFrom(_env)
     if stream != nil{
         stream_181 := stream.(Lns_iStream)
         return NewAsyncParser_Parser(_env, streamName, stream_181, luaMode, overridePos, pipeSize), ""
@@ -529,8 +529,8 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
             return NewLnsList([]LnsAny{Types_Token2Stem(token)})
         }
     }
-    var multiComment func(_env *LnsEnv, comIndex LnsInt,termStr string)(string, LnsInt)
-    multiComment = func(_env *LnsEnv, comIndex LnsInt,termStr string)(string, LnsInt) {
+    var AsyncParser_multiComment func(_env *LnsEnv, comIndex LnsInt,termStr string)(string, LnsInt)
+    AsyncParser_multiComment = func(_env *LnsEnv, comIndex LnsInt,termStr string)(string, LnsInt) {
         var searchIndex LnsInt
         searchIndex = comIndex
         var comment string
@@ -555,8 +555,8 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
     startIndex = 1
     var searchIndex LnsInt
     searchIndex = startIndex
-    var getChar func(_env *LnsEnv, index LnsInt) LnsInt
-    getChar = func(_env *LnsEnv, index LnsInt) LnsInt {
+    var AsyncParser_getChar func(_env *LnsEnv, index LnsInt) LnsInt
+    AsyncParser_getChar = func(_env *LnsEnv, index LnsInt) LnsInt {
         if len(rawLine) >= index{
             return LnsInt(rawLine[index-1])
         }
@@ -581,9 +581,9 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
             }
         }
         var findChar LnsInt
-        findChar = getChar(_env, index)
+        findChar = AsyncParser_getChar(_env, index)
         var nextChar LnsInt
-        nextChar = getChar(_env, index + 1)
+        nextChar = AsyncParser_getChar(_env, index + 1)
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( findChar == 45) &&
             _env.SetStackVal( nextChar != 45) ).(bool)){
@@ -629,7 +629,7 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
                     _env.SetStackVal( LnsInt(rawLine[index + 2-1]) == 96) ).(bool))){
                     var txt string
                     var nextIndex LnsInt
-                    txt,nextIndex = multiComment(_env, index + 3, "```")
+                    txt,nextIndex = AsyncParser_multiComment(_env, index + 3, "```")
                     self.FP.addVal(_env, list, Types_TokenKind__Str, "```" + txt, index)
                     searchIndex = nextIndex
                 } else { 
@@ -663,7 +663,7 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
                     if nextChar == 42{
                         var comment string
                         var nextIndex LnsInt
-                        comment,nextIndex = multiComment(_env, index + 2, "*/")
+                        comment,nextIndex = AsyncParser_multiComment(_env, index + 2, "*/")
                         self.FP.addVal(_env, list, Types_TokenKind__Cmnt, "/*" + comment, index)
                         searchIndex = nextIndex
                     } else if nextChar == 47{

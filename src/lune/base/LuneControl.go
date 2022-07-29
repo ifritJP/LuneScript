@@ -8,10 +8,12 @@ type LuneControl_Code = string
 const LuneControl_Code__C = "c"
 const LuneControl_Code__Go = "go"
 const LuneControl_Code__Lua = "lua"
+const LuneControl_Code__Python = "py"
 var LuneControl_CodeList_ = NewLnsList( []LnsAny {
   LuneControl_Code__Lua,
   LuneControl_Code__C,
   LuneControl_Code__Go,
+  LuneControl_Code__Python,
 })
 func LuneControl_Code_get__allList(_env *LnsEnv) *LnsList{
     return LuneControl_CodeList_
@@ -20,6 +22,7 @@ var LuneControl_CodeMap_ = map[string]string {
   LuneControl_Code__C: "Code.C",
   LuneControl_Code__Go: "Code.Go",
   LuneControl_Code__Lua: "Code.Lua",
+  LuneControl_Code__Python: "Code.Python",
 }
 func LuneControl_Code__from(_env *LnsEnv, arg1 string) LnsAny{
     if _, ok := LuneControl_CodeMap_[arg1]; ok { return arg1 }

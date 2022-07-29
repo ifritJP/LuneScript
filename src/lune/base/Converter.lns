@@ -1,0 +1,613 @@
+/*
+MIT License
+
+Copyright (c) 2018 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+_lune_control default_async_all;
+
+import lune.base.Runner;
+import lune.base.Util;
+import lune.base.AstInfo;
+import lune.base.Option;
+import lune.base.Builtin;
+import lune.base.frontInterface;
+import lune.base.Types;
+import lune.base.TransUnit;
+import lune.base.Parser;
+import lune.base.convLua;
+import lune.base.convGo;
+import lune.base.convPython;
+import lune.base.Log;
+import lune.base.Nodes;
+import lune.base.LuneControl;
+import lune.base.OutputDepend;
+
+fn createModuleInfo(
+   ast:&AstInfo.ASTInfo, mod:str,
+   moduleId:&frontInterface.ModuleId ) __async : frontInterface.ModuleInfo
+{
+   // let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
+   // let rootNode = unwrap ast.$node@@@Nodes.RootNode;
+   // foreach node in rootNode.$nodeManager.getAliasNodeList() {
+   //    importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
+   // }
+   let mut exportInfo = ast.$exportInfo;
+   return new frontInterface.ModuleInfo( exportInfo );
+}
+
+pub fn ast2LuaMain(
+   ast:&AstInfo.ASTInfo, streamName:str, stream:oStream,
+   metaStream:oStream, convMode:convLua.ConvMode,
+   inMacro:bool, option:&Option.Option ) __async : convLua.FilterInfo
+{
+   let mut exportInfo = ast.$exportInfo;
+   let mut conv = convLua.createFilter(
+      streamName, stream, metaStream, convMode, inMacro,
+      exportInfo.$moduleTypeInfo, exportInfo.$processInfo,
+      exportInfo.$provideInfo.$symbolKind, ast.$builtinFunc,
+      option.useLuneModule, option.targetLuaVer,
+      option.testing, option.useIpairs,
+      new convLua.Option( option.mainModule, option.$legacyNewName ) );
+   return conv;
+}
+
+pub fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
+   let ret;
+   __luaDepend {
+      let chunk, err = _load( txt ## );
+      when! chunk {
+         ret = string.dump( chunk, stripDebugInfo );
+      } else {
+         // load 出来ないのはバグ
+         error( unwrap err default "load error" );
+      }
+   }
+   return ret;
+}
+
+
+pub form ConverterFunc() __async;
+
+pub class AstCreater extend Runner.Runner {
+   _lune_control default_async_this_class;
+   
+   let option:&Option.Option;
+   let builtinFunc:&Builtin.BuiltinFuncType;
+   let mod:str;
+   let moduleId:&frontInterface.ModuleId;
+   let mut ast:&AstInfo.ASTInfo!;
+   let mut moduleInfo:frontInterface.ModuleInfo!;
+
+   let converter:ConverterFunc;
+   let mut exportInfo:&frontInterface.ExportInfo!;
+   let exportInfoReadyFlag:__lns.Sync.Flag!;
+   
+   pri fn createAst(
+      importModuleInfo:&frontInterface.ImportModuleInfo,
+      mut parserSrc:&Types.ParserSrc, baseDir:str!, stdinFile:&Types.StdinFile!,
+      analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
+      pos:&Parser.Position! ) mut : &AstInfo.ASTInfo
+   {
+      let mut transUnit = new TransUnit.TransUnitCtrl(
+         self.moduleId, importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
+         true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer,
+         self.option.transCtrlInfo, self.builtinFunc );
+
+      return transUnit.createAST(
+         parserSrc, true, baseDir, stdinFile, false, self.mod,
+         fn ( exportInfo:&frontInterface.ExportInfo ) __trans {
+            self.exportInfo = exportInfo;
+            // exportInfo をセットしてから flag をセットする。
+            if! self.exportInfoReadyFlag {
+               _exp.set();
+            }
+         }
+      );
+   }
+   
+   pub fn __init(
+      importModuleInfo:&frontInterface.ImportModuleInfo, parserSrc:&Types.ParserSrc,
+      mod:str, baseDir:str!, moduleId:&frontInterface.ModuleId,
+      analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position!,
+      builtinFunc:&Builtin.BuiltinFuncType, option:&Option.Option )
+   {
+      super();
+      
+      self.option = option;
+      self.builtinFunc = builtinFunc;
+      self.mod = mod;
+      self.moduleId = moduleId;
+      self.moduleInfo = nil;
+      self.exportInfo = nil;
+      self.ast = nil;
+      self.exportInfoReadyFlag = __lns.Sync.createFlag();
+      
+      self.converter = fn () {
+         let ast = self.createAst(
+            importModuleInfo, parserSrc, baseDir, option.$stdinFile,
+            analyzeModule, analyzeMode, pos );
+         self.ast = ast;
+         self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId );
+         Log._log2( .Log, "generated AST -- %s" (mod) );
+      };
+
+      let lnsPath;
+      match parserSrc {
+         case .LnsCode( _, path, _ ) {
+            lnsPath = path;
+         }
+         case .LnsPath( path, _, _ ) {
+            lnsPath = path;
+         }
+         case .Parser( path, _, _, _ ) {
+            lnsPath = path;
+         }
+      }
+
+      self.start( __lns.runMode.Sync, "createAst - %s" (lnsPath) );
+      //self.converter();
+   }
+
+   pro override fn runMain() __async mut {
+      self.converter();
+   }
+   
+
+   pub fn getAst() :
+      &AstInfo.ASTInfo, &frontInterface.ModuleInfo, frontInterface.ModuleMeta
+   {
+      __join( self );
+      let! exportInfo = self.exportInfo {
+         Util.err( "exportInfo is nil -- %s" (self.mod) );
+      };
+      let mut moduleMeta = new frontInterface.ModuleMeta(
+         exportInfo.$streamName, .Export( exportInfo ));
+      return unwrap self.ast, unwrap self.moduleInfo, moduleMeta;
+   }
+
+   pub fn getExportInfo() : &frontInterface.ExportInfo! {
+      if! self.exportInfoReadyFlag {
+         _exp.wait();
+      }
+      if not self.exportInfo {
+         Log._log2( Log.Level.Err, "exportInfo is nil -- %s" (self.mod) );
+      }
+
+      return self.exportInfo;
+   }
+   
+}
+
+
+pub alge CreateAstResult {
+   Ast( &AstInfo.ASTInfo ),
+   Creater(AstCreater),
+}
+
+fn getAstFromResult( result:&CreateAstResult ) __async : &AstInfo.ASTInfo {
+   match result {
+      case .Ast( ast ) {
+         return ast;
+      }
+      case .Creater( creater ) {
+         return (creater.getAst());
+      }
+   }
+}
+
+pub fn closeStreams( stream:oStream!, metaStream:Util.memStream!,
+                 dependStream:oStream!, metaPath:str, saveMetaFlag:bool )
+{
+   fn txt2ModuleId( txt:str ) : frontInterface.ModuleId {
+      let mut buildIdTxt = txt.gsub( "^_moduleObj.__buildId = ", "" ).gsub( '"', "" );
+      return frontInterface.ModuleId.createIdFromTxt( buildIdTxt );
+   }
+
+   /**
+oldStream, newStream に格納されているモジュールのメタ情報が、
+モジュールのビルド ID 情報以外が一致しているかどうかを調べる。
+
+モジュールのビルド ID 情報以外が一致している場合、
+モジュールのビルド ID 情報の部分だけを更新したメタ情報を返す。
+
+@param oldStream 古いメタ情報
+@param newStream 新しいメタ情報
+@return bool 一致している場合 true。 true の場合、次の str の情報が有効。
+@return str 新しく書き込むメタ情報の文字列。
+   */
+   fn checkDiff( oldStream:Parser.TxtStream, newStream:Parser.TxtStream ) : bool, str
+   {
+      macro _getBuildId( line:__exp, buildIdLine:__exp ) {
+         when! ,,line {
+            if #,,buildIdLine == 0 {
+               if ,,line.find( "^_moduleObj.__buildId" ## ) {
+                  // ビルド ID 情報を取得する。
+                  ,,buildIdLine = ,,line;
+               }
+            }
+         }
+      }
+
+
+      // ビルド ID よりも前のファイル内部の位置
+      let mut headEndPos = 0;
+      // ビルド ID よりも後のファイル内部の位置
+      let mut tailBeginPos = 0;
+
+      // 古い build ID を記録した行
+      let mut oldBuildIdLine = "";
+      // 新しい build ID を記録した行
+      let mut newBuildIdLine = "";
+      while true {
+         let newLine = newStream.read( "*l" );
+         let oldLine = oldStream.read( "*l" );
+         _getBuildId( oldLine, oldBuildIdLine );
+         _getBuildId( newLine, newBuildIdLine );
+
+         if newLine ~= oldLine {
+            // 差分がある箇所を見つけて、それが ビルド ID の場合、
+            // 
+            let mut cont = false;
+            when! newLine, oldLine {
+               if oldLine.find( "^_moduleObj.__buildId" ## ) {
+                  if newLine.find( "^_moduleObj.__buildId" ## ) {
+                     tailBeginPos = newStream.$lineNo;
+                     cont = true;
+                  }
+               }
+               elseif oldLine.find( "^__dependModuleMap.*buildId =" ## ) and
+                  newLine.find( "^__dependModuleMap.*buildId =" ## )
+               {
+                  let oldSub = oldLine.gsub( "buildId =.*", "" );
+                  let newSub = newLine.gsub( "buildId =.*", "" );
+                  if oldSub == newSub {
+                     cont = true;
+                  }
+               }
+            }
+            if not cont {
+               Log._log( .Debug, `{ return "<%s>, <%s>" (oldLine, newLine ); } );
+               return false, "";
+            }
+         }
+         else {
+            if tailBeginPos == 0 {
+               headEndPos = newStream.$lineNo;
+            }
+            if not oldLine {
+               // ファイル一致
+               if tailBeginPos == 0 {
+                  return true, oldStream.$txt;
+               }
+
+               let oldBuildId = txt2ModuleId( oldBuildIdLine );
+               let newBuildId = txt2ModuleId( newBuildIdLine );
+               let worlBuildId = frontInterface.ModuleId.createId(
+                  newBuildId.$modTime, oldBuildId.$buildCount );
+               let buildIdLine = "_moduleObj.__buildId = %q" (worlBuildId.$idStr);
+
+               let txt = "%s%s\n%s" ( newStream.getSubstring( 1, headEndPos ),
+                                      buildIdLine,
+                                      newStream.getSubstring( tailBeginPos## ) );
+               return true, txt;
+            }
+         }
+      }
+   }
+
+   
+   when! stream {
+      stream.close();
+   }
+   when! dependStream {
+      dependStream.close();
+   }
+
+   when! metaStream {
+      if saveMetaFlag {
+         // メタファイルが変っているかどうかを確認し、
+         // 変更がない場合はビルド情報だけ更新する。
+         let newMetaTxt = metaStream.$txt;
+         let mut oldMetaTxt = "";
+         if! let mut oldFileObj = io.open( metaPath ## ) {
+            oldMetaTxt = unwrap oldFileObj.read( "*a" ) default "";
+            oldFileObj.close();
+         }
+
+         let sameFlag, txt = checkDiff( new Parser.TxtStream( oldMetaTxt ),
+                                        new Parser.TxtStream( newMetaTxt ) );
+
+         fn saveMeta( meta:str ) {
+            if! let mut fileObj = io.open( metaPath, "w" ) {
+               fileObj.write( meta );
+               fileObj.close();
+            } else {
+               Util.err( "failed to open -- %s" (metaPath) );
+            }
+         }
+         
+         if not sameFlag {
+            saveMeta( newMetaTxt );
+         }
+         else {        
+            if txt ~= "" {
+               saveMeta( txt );
+            }
+         }
+      }
+   }
+}
+
+pub class LuaConverter extend Runner.Runner {
+   let luaPath:str;
+   let dependsPath:str!;
+   let metaPath:str;
+   let option:&Option.Option;
+   let byteCompile:bool;
+   let stripDebugInfo:bool;
+   let byteStream:Util.memStream;
+   let byteMetaStream:Util.memStream;
+   let streamMem:Util.memStream;
+   let metaStreamMem:Util.memStream;
+   let dependsStreamMem:Util.memStream;
+   let astResult:&CreateAstResult;
+
+   let converterFunc:ConverterFunc;
+   let mut filterInfo:convLua.FilterInfo!;
+
+   pub fn __init(
+      luaPath:str, metaPath:str, dependsPath:str!, 
+      astResult:&CreateAstResult, convMode:convLua.ConvMode,
+      path:str, byteCompile:bool,
+      stripDebugInfo:bool, option:&Option.Option ) __async
+   {
+      super();
+      
+      self.luaPath = luaPath;
+      self.metaPath = metaPath;
+      self.dependsPath = dependsPath;
+      self.option = option;
+      self.stripDebugInfo = stripDebugInfo;
+      self.byteCompile = byteCompile;
+      self.byteStream = new Util.memStream();
+      self.byteMetaStream = new Util.memStream();
+      self.streamMem = new Util.memStream();
+      self.metaStreamMem = new Util.memStream();
+      self.dependsStreamMem = new Util.memStream();
+      self.astResult = astResult;
+      self.filterInfo = nil;
+
+      self.converterFunc = fn() __async {
+         // 一旦メモリに出力するためのストリーム作成
+         let mut stream = self.streamMem;
+         let mut metaStream = self.metaStreamMem;
+         
+         let mut outStream, mut oMetaStream = stream, metaStream;
+
+         let ast = getAstFromResult( self.astResult );
+         
+         let needDepends = option.dependsPath ~= nil;
+         if needDepends {
+            ast.$node.processFilter(
+               OutputDepend.createFilter( self.dependsStreamMem ), 1 );
+         }
+
+         if byteCompile {
+            // byteCompile 時は、出力先をメモリに切り替える
+            outStream = self.byteStream;
+            oMetaStream = self.byteMetaStream;
+         }
+
+         let mut filterInfo = ast2LuaMain(
+            ast, path, outStream, oMetaStream, convMode, false, option );
+         self.filterInfo = filterInfo;
+         filterInfo.outputLua( unwrap ast.$node@@@Nodes.RootNode );
+      };
+      self.start( __lns.runMode.Queue, "convlua -- %s" (path) );
+   }
+
+   pro override fn runMain() __async mut {
+      self.converterFunc();
+   }
+   
+   pub fn saveLua() mut {
+      __join( self );
+
+      let ast = getAstFromResult( self.astResult );
+      self.filterInfo$.outputMeta$( unwrap ast.$node@@@Nodes.RootNode );
+      
+      
+      if self.byteCompile {
+         // byteCompile 時は、
+         // メモリに出力したコードをバイトコンパイルしてセーブする
+         self.streamMem.write(
+            byteCompileFromLuaTxt( self.byteStream.$txt, self.stripDebugInfo ) );
+         self.metaStreamMem.write(
+            byteCompileFromLuaTxt( self.byteMetaStream.$txt, true ) );
+      }
+
+      // メモリに出力したものから本来出力先に
+      let luaCode = self.streamMem.$txt;
+      let metaTxt = self.metaStreamMem.$txt;
+      let dependTxt:str!;
+      let needDepends = self.option.dependsPath ~= nil;
+      if needDepends {
+         dependTxt = self.dependsStreamMem.$txt;
+      } else {
+         dependTxt = nil;
+      }
+      
+      let! mut streamDst = io.open( self.luaPath, "w" ) {
+         error( "write open error -- %s" (self.luaPath) );
+      };
+      let mut dependsStreamDst = self.option.openDepend( self.dependsPath );
+      
+
+      streamDst.write( luaCode );
+      let mut metaMemStream = new Util.memStream();
+      metaMemStream.write( metaTxt );
+      when! dependsStreamDst {
+         dependsStreamDst.write( unwrap dependTxt );
+      }
+      
+      closeStreams( streamDst, metaMemStream, dependsStreamDst,
+                    self.metaPath, self.option.mode == .SaveMeta );
+   }
+}
+
+
+pub class GoConverter extend Runner.Runner {
+   let mut memStream:Util.memStream;
+   let path:str;
+   let converter:ConverterFunc;
+   let mut validFlag:bool;
+   
+   pub fn __init( scriptPath:str, astResult:&CreateAstResult,
+                    option:&Option.Option, goOpt:&convGo.Option ) __async
+   {
+      super();
+      self.validFlag = true;
+      
+      let mut path = scriptPath.gsub( "%.lns$", ".go" );
+
+      if! let dir = option.outputDir {
+         path = "%s/%s" (dir,path);
+      }
+
+      self.path = path;
+      self.memStream = new Util.memStream();
+
+      self.converter = fn () {
+         let ast = getAstFromResult( astResult );
+
+         let! rootNode = ast.$node@@@Nodes.RootNode {
+            return;
+         };
+         foreach pragma in rootNode.$luneHelperInfo.pragmaSet {
+            match pragma {
+               case .limit_conv_code( codeSet ) {
+                  if not codeSet.has( LuneControl.Code.Go ) {
+                     self.validFlag = false;
+                     return;
+                  }
+               }
+            }
+         }
+
+         
+         let mut conv = convGo.createFilter(
+            option.testing, scriptPath, self.memStream, ast, goOpt );
+         ast.$node.processFilter( conv, new convGo.Opt( ast.$node ) );
+      };
+      self.start( __lns.runMode.Queue, "convgo -- %s" (scriptPath) );
+   }
+
+   pro override fn runMain() __async mut {
+      self.converter();
+   }
+
+   pub fn saveGo() mut {
+      __join( self );
+
+      if not self.validFlag {
+         return;
+      }
+      
+      
+      let! mut file = io.open( self.path, "w" ) {
+         return;
+      };
+      
+      file.write( self.memStream.$txt );
+
+      file.close();
+   }
+}
+
+
+pub class PythonConverter extend Runner.Runner {
+   let mut memStream:Util.memStream;
+   let path:str;
+   let converter:ConverterFunc;
+   let mut validFlag:bool;
+   
+   pub fn __init( scriptPath:str, astResult:&CreateAstResult,
+                    option:&Option.Option, pythonOpt:&convPython.Option ) __async
+   {
+      super();
+      self.validFlag = true;
+      
+      let mut path = scriptPath.gsub( "%.lns$", ".py" );
+
+      if! let dir = option.outputDir {
+         path = "%s/%s" (dir,path);
+      }
+
+      self.path = path;
+      self.memStream = new Util.memStream();
+
+      self.converter = fn () {
+         let ast = getAstFromResult( astResult );
+
+         let! rootNode = ast.$node@@@Nodes.RootNode {
+            return;
+         };
+         foreach pragma in rootNode.$luneHelperInfo.pragmaSet {
+            match pragma {
+               case .limit_conv_code( codeSet ) {
+                  if not codeSet.has( LuneControl.Code.Python ) {
+                     self.validFlag = false;
+                     return;
+                  }
+               }
+            }
+         }
+
+         
+         let mut conv = convPython.createFilter(
+            option.testing, scriptPath, self.memStream, ast, pythonOpt );
+         ast.$node.processFilter( conv, new convPython.Opt( ast.$node ) );
+      };
+      self.start( __lns.runMode.Queue, "convpython -- %s" (scriptPath) );
+   }
+
+   pro override fn runMain() __async mut {
+      self.converter();
+   }
+
+   pub fn savePython() mut {
+      __join( self );
+
+      if not self.validFlag {
+         return;
+      }
+      
+      
+      let! mut file = io.open( self.path, "w" ) {
+         return;
+      };
+      
+      file.write( self.memStream.$txt );
+
+      file.close();
+   }
+}

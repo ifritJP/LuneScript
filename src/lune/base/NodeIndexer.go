@@ -6,7 +6,7 @@ var NodeIndexer__mod__ string
 var NodeIndexer_declNameSpaceNodeKindSet *LnsSet
 
 // 164: decl @lune.@base.@NodeIndexer.Indexer.dump.comp
-func Indexer_dump__comp_0_(_env *LnsEnv, node1 *Nodes_Node,node2 *Nodes_Node) bool {
+func NodeIndexer_Indexer_dump__comp_0_(_env *LnsEnv, node1 *Nodes_Node,node2 *Nodes_Node) bool {
     return node1.FP.Comp(_env, node2) < 0
 }
 
@@ -95,7 +95,7 @@ func (self *NodeIndexer_Indexer) Dump(_env *LnsEnv) {
         node := _node.(Nodes_NodeDownCast).ToNodes_Node()
         list.Insert(Nodes_Node2Stem(node))
     }
-    list.Sort(_env, LnsItemKindStem, LnsComp(func ( _env *LnsEnv, val1, val2 LnsAny ) bool {return Indexer_dump__comp_0_( _env, val1.(Nodes_NodeDownCast).ToNodes_Node(), val2.(Nodes_NodeDownCast).ToNodes_Node())}))
+    list.Sort(_env, LnsItemKindStem, LnsComp(func ( _env *LnsEnv, val1, val2 LnsAny ) bool {return NodeIndexer_Indexer_dump__comp_0_( _env, val1.(Nodes_NodeDownCast).ToNodes_Node(), val2.(Nodes_NodeDownCast).ToNodes_Node())}))
     for _, _node := range( list.Items ) {
         node := _node.(Nodes_NodeDownCast).ToNodes_Node()
         var index *NodeIndexer_Index

@@ -28,6 +28,7 @@ pub enum Code {
    Lua = "lua",
    C = "c",
    Go = "go",
+   Python = "py",
 }
 
 pub alge Pragma {

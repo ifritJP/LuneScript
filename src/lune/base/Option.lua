@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 12066
+   return 12096
 end
 
 
@@ -862,6 +862,10 @@ end
                   option.convTo = Types.Lang.Go
                   option.transCtrlInfo.validLuaval = true
                   option.transCtrlInfo.validAsyncCtrl = true
+               elseif _switchExp == "-langPython" then
+                  option.convTo = Types.Lang.Python
+                  option.transCtrlInfo.validLuaval = false
+                  option.transCtrlInfo.validAsyncCtrl = false
                elseif _switchExp == "-ol" then
                   do
                      local txt = getNextOp(  )
@@ -1024,7 +1028,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 738, function (  )
+   Log.log( Log.Level.Log, __func__, 743, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

@@ -555,8 +555,8 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 _env.SetStackVal( self.Kind == Ast_TypeInfoKind__IF) ).(bool))) )){
             panic("internal error")
         } else { 
-            var postProcess func(_env *LnsEnv, workTypeInfo *Ast_TypeInfo,scope LnsAny)
-            postProcess = func(_env *LnsEnv, workTypeInfo *Ast_TypeInfo,scope LnsAny) {
+            var Import_postProcess func(_env *LnsEnv, workTypeInfo *Ast_TypeInfo,scope LnsAny)
+            Import_postProcess = func(_env *LnsEnv, workTypeInfo *Ast_TypeInfo,scope LnsAny) {
                 newTypeInfo = workTypeInfo
                 if scope != nil{
                     scope_40 := scope.(*Ast_Scope)
@@ -598,7 +598,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateClassAsync(_env, self.Kind == Ast_TypeInfoKind__Class, self.AbstractFlag, scope, baseInfo, interfaceList, altTypeList, parentInfo, parentTypeDataAccessor, true, Ast_AccessMode__Pub, self.Txt)
                 parentScope.FP.AddClassLazy(_env, param.ProcessInfo, self.Txt, nil, workTypeInfo, param.LazyModuleSet.Has(self.TypeId))
-                postProcess(_env, workTypeInfo, scope)
+                Import_postProcess(_env, workTypeInfo, scope)
                 param.TypeId2TypeDataAccessor.Set(self.TypeId,workTypeInfo.FP)
             } else if _switch2 == Ast_TypeInfoKind__ExtModule {
                 Log_log(_env, Log_Level__Debug, __func__, 525, Log_CreateMessage(func(_env *LnsEnv) string {
@@ -619,7 +619,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateExtModule(_env, scope, parentInfo, parentTypeDataAccessor, true, Ast_AccessMode__Pub, self.Txt, Lns_unwrap( self.ModuleLang).(LnsInt), Lns_unwrap( self.RequirePath).(string))
                 parentScope.FP.AddExtModule(_env, param.ProcessInfo, self.Txt, nil, workTypeInfo, param.LazyModuleSet.Has(self.TypeId), Lns_unwrap( self.ModuleLang).(LnsInt))
-                postProcess(_env, workTypeInfo, scope)
+                Import_postProcess(_env, workTypeInfo, scope)
                 param.TypeId2TypeDataAccessor.Set(self.TypeId,workTypeInfo.FP)
             } else if _switch2 == Ast_TypeInfoKind__Func || _switch2 == Ast_TypeInfoKind__Method || _switch2 == Ast_TypeInfoKind__FormFunc || _switch2 == Ast_TypeInfoKind__Macro {
                 var typeInfoKind LnsInt
@@ -636,7 +636,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 var workTypeInfoMut *Ast_NormalTypeInfo
                 workTypeInfoMut = param.ProcessInfo.FP.CreateFuncAsync(_env, self.AbstractFlag, false, scope, typeInfoKind, parentInfo, parentTypeDataAccessor, false, true, self.StaticFlag, accessMode, self.Txt, self.AsyncMode, itemTypeInfo, argTypeInfo, retTypeInfo, self.MutMode)
                 param.TypeId2TypeDataAccessor.Set(self.TypeId,workTypeInfoMut.FP)
-                postProcess(_env, &workTypeInfoMut.Ast_TypeInfo, scope)
+                Import_postProcess(_env, &workTypeInfoMut.Ast_TypeInfo, scope)
                 if _switch1 := self.Kind; _switch1 == Ast_TypeInfoKind__Func || _switch1 == Ast_TypeInfoKind__Method || _switch1 == Ast_TypeInfoKind__Macro || _switch1 == Ast_TypeInfoKind__FormFunc {
                     var symbolKind LnsInt
                     symbolKind = Ast_SymbolKind__Fun
@@ -654,19 +654,19 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
             } else if _switch2 == Ast_TypeInfoKind__Set {
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateSet(_env, self.AccessMode, parentInfo, itemTypeInfo, self.MutMode)
-                postProcess(_env, workTypeInfo, nil)
+                Import_postProcess(_env, workTypeInfo, nil)
             } else if _switch2 == Ast_TypeInfoKind__List {
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateList(_env, self.AccessMode, parentInfo, itemTypeInfo, self.MutMode)
-                postProcess(_env, workTypeInfo, nil)
+                Import_postProcess(_env, workTypeInfo, nil)
             } else if _switch2 == Ast_TypeInfoKind__Array {
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateArray(_env, self.AccessMode, parentInfo, itemTypeInfo, self.MutMode)
-                postProcess(_env, workTypeInfo, nil)
+                Import_postProcess(_env, workTypeInfo, nil)
             } else if _switch2 == Ast_TypeInfoKind__Map {
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateMap(_env, self.AccessMode, parentInfo, itemTypeInfo.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), itemTypeInfo.GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), self.MutMode)
-                postProcess(_env, workTypeInfo, nil)
+                Import_postProcess(_env, workTypeInfo, nil)
             } else {
                 Util_err(_env, _env.GetVM().String_format("illegal kind -- %s", []LnsAny{Ast_TypeInfoKind_getTxt( self.Kind)}))
             }
@@ -708,8 +708,8 @@ func (self *Import__TypeInfoEnum) CreateTypeInfo(_env *LnsEnv, param *Import_Imp
     param.TypeId2TypeInfo.Set(self.TypeId,&enumTypeInfo.Ast_TypeInfo)
     param.TypeId2TypeDataAccessor.Set(self.TypeId,enumTypeInfo.FP)
     enumTypeInfo.FP.Get_typeId(_env).FP.Set_orgId(_env, self.TypeId)
-    var getEnumLiteral func(_env *LnsEnv, val LnsAny) LnsAny
-    getEnumLiteral = func(_env *LnsEnv, val LnsAny) LnsAny {
+    var Import_getEnumLiteral func(_env *LnsEnv, val LnsAny) LnsAny
+    Import_getEnumLiteral = func(_env *LnsEnv, val LnsAny) LnsAny {
         if _switch0 := valTypeInfo; _switch0 == Ast_builtinTypeInt {
             return &Ast_EnumLiteral__Int{Lns_forceCastInt(val)}
         } else if _switch0 == Ast_builtinTypeReal {
@@ -725,7 +725,7 @@ func (self *Import__TypeInfoEnum) CreateTypeInfo(_env *LnsEnv, param *Import_Imp
         var val LnsAny
         
         {
-            _val := getEnumLiteral(_env, valData)
+            _val := Import_getEnumLiteral(_env, valData)
             if _val == nil{
                 return nil, _env.GetVM().String_format("unknown enum val type -- %s", []LnsAny{valTypeInfo.FP.GetTxt(_env, nil, nil, nil)})
             } else {
@@ -1132,8 +1132,8 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
             typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
             newId2OldIdMap.Set(typeInfo,typeId)
         }
-        var registMember func(_env *LnsEnv, classTypeId LnsInt)
-        registMember = func(_env *LnsEnv, classTypeId LnsInt) {
+        var Import_registMember func(_env *LnsEnv, classTypeId LnsInt)
+        Import_registMember = func(_env *LnsEnv, classTypeId LnsInt) {
             __func__ := "@lune.@base.@Import.ModuleLoader.processImportFromFile.registMember"
             var skip bool
             skip = false
@@ -1209,7 +1209,7 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                         var oldId LnsAny
                         oldId = newId2OldIdMap.Get(child)
                         if Lns_isCondTrue( oldId){
-                            registMember(_env, Lns_unwrap( oldId).(LnsInt))
+                            Import_registMember(_env, Lns_unwrap( oldId).(LnsInt))
                         }
                     }
                 }
@@ -1226,7 +1226,7 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                 if !Lns_IsNil( _workInfo ) {
                     workInfo := _workInfo.(*Import__TypeInfoNormal)
                     if workInfo.ParentId == Ast_userRootId{
-                        registMember(_env, atomInfo.TypeId)
+                        Import_registMember(_env, atomInfo.TypeId)
                     }
                 } else {
                     {
@@ -1234,7 +1234,7 @@ func (self *Import_ModuleLoader) processImportFromFile(_env *LnsEnv, processInfo
                         if !Lns_IsNil( _workInfo ) {
                             workInfo := _workInfo.(*Import__TypeInfoModule)
                             if workInfo.ParentId == Ast_userRootId{
-                                registMember(_env, atomInfo.TypeId)
+                                Import_registMember(_env, atomInfo.TypeId)
                             }
                         }
                     }
