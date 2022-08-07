@@ -604,12 +604,16 @@ pub fn MacroCtrl.evalMacroOp(
                   when! literal {
                      if! let val = getLiteralMacroVal( literal ) {
                         argValMap[ index ] = val;
-                        
+
+                        let argVal;
                         if argNode.$expType == Ast.builtinTypeSymbol {
-                           macroArgValMap[ declArgNode.$name ] = toLuaval( val[ 1 ] );
+                           argVal = toLuaval( val[ 1 ] );
                         }
                         else {
-                           macroArgValMap[ declArgNode.$name ] = toLuaval( val );
+                           argVal = toLuaval( val );
+                        }
+                        when! argVal {
+                           macroArgValMap[ declArgNode.$name ] = argVal;
                         }
                      }
                   }

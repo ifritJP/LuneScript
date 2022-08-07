@@ -750,15 +750,15 @@ func Ast_convExp2_3918(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 5140
-func Ast_convExp3_3387(arg1 []LnsAny) (LnsAny, bool) {
+func Ast_convExp3_3391(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 5140
-func Ast_convExp3_3505(arg1 []LnsAny) (LnsAny, bool) {
+func Ast_convExp3_3509(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 5140
-func Ast_convExp3_3559(arg1 []LnsAny) (LnsAny, bool) {
+func Ast_convExp3_3563(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 6165
@@ -10910,9 +10910,9 @@ func Ast_NormalTypeInfo_createBuiltin_39_(_env *LnsEnv, idName string,typeTxt st
     }
     var scope LnsAny
     scope = nil
-    if _switch1 := kind; _switch1 == Ast_TypeInfoKind__Array || _switch1 == Ast_TypeInfoKind__List || _switch1 == Ast_TypeInfoKind__Set || _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__Module || _switch1 == Ast_TypeInfoKind__IF || _switch1 == Ast_TypeInfoKind__Form || _switch1 == Ast_TypeInfoKind__FormFunc || _switch1 == Ast_TypeInfoKind__Func || _switch1 == Ast_TypeInfoKind__Method || _switch1 == Ast_TypeInfoKind__Macro {
+    if _switch1 := kind; _switch1 == Ast_TypeInfoKind__Array || _switch1 == Ast_TypeInfoKind__Map || _switch1 == Ast_TypeInfoKind__List || _switch1 == Ast_TypeInfoKind__Set || _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__Module || _switch1 == Ast_TypeInfoKind__IF || _switch1 == Ast_TypeInfoKind__Form || _switch1 == Ast_TypeInfoKind__FormFunc || _switch1 == Ast_TypeInfoKind__Func || _switch1 == Ast_TypeInfoKind__Method || _switch1 == Ast_TypeInfoKind__Macro {
         var scopeKind LnsInt
-        if _switch0 := kind; _switch0 == Ast_TypeInfoKind__Class || _switch0 == Ast_TypeInfoKind__IF || _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array || _switch0 == Ast_TypeInfoKind__Set {
+        if _switch0 := kind; _switch0 == Ast_TypeInfoKind__Class || _switch0 == Ast_TypeInfoKind__IF || _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array || _switch0 == Ast_TypeInfoKind__Set || _switch0 == Ast_TypeInfoKind__Map {
             scopeKind = Ast_ScopeKind__Class
         } else if _switch0 == Ast_TypeInfoKind__Module {
             scopeKind = Ast_ScopeKind__Module

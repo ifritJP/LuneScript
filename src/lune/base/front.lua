@@ -580,16 +580,16 @@ local function createPaser( path, mod, stdinFile )
    return Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {path,mod,nil}), false, stdinFile, nil )
 end
 
-function Front:scriptPath2Module( path )
+function Front:scriptPath2Module( path, baseDir )
 
-   local mod = Util.scriptPath2ModuleFromProjDir( path, self.option:get_projDir() )
-   return mod, self.option:get_projDir()
+   local mod = Util.scriptPath2ModuleFromProjDir( path, baseDir )
+   return mod, baseDir
 end
 
 
-function Front:createPaser( scriptPath )
+function Front:createPaser( scriptPath, baseDir )
 
-   local mod = self:scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath, baseDir )
    return createPaser( scriptPath, mod, self.option:get_stdinFile() )
 end
 
@@ -1126,7 +1126,7 @@ end
 function Front:convertLns2LuaCode( importModuleInfo, analyzeMode, parserSrc, baseDir, stream, streamName )
 
    local _
-   local mod = self:scriptPath2Module( streamName )
+   local mod = self:scriptPath2Module( streamName, baseDir )
    local ast = self:createAst( importModuleInfo, parserSrc, baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, analyzeMode )
    
    local _1, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.ConvMeta )
@@ -1775,10 +1775,10 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
 end
 
 
-function Front:dumpTokenize( scriptPath )
+function Front:dumpTokenize( scriptPath, baseDir )
 
    
-   local parser = self:createPaser( scriptPath )
+   local parser = self:createPaser( scriptPath, baseDir )
    while true do
       local token = parser:getToken(  )
       if  nil == token then
@@ -1793,57 +1793,45 @@ function Front:dumpTokenize( scriptPath )
    
 end
 
-
-function Front:dumpAst( scriptPath )
+function Front:dumpAst( parserSrc, mod, moduleId, baseDir )
 
    
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
    Depend.profile( self.option.validProf, function (  )
    
-      local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
+      local ast = self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
       ast:get_node():processFilter( dumpNode.createFilter( ast:get_exportInfo():get_moduleTypeInfo(), ast:get_exportInfo():get_processInfo(), io.stdout ), dumpNode.Opt._new("", 0) )
-   end, scriptPath .. ".profi" )
+   end, mod .. ".profi" )
 end
 
+function Front:format( parserSrc, mod, moduleId, baseDir )
 
-function Front:format( scriptPath )
-
-   
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
-   
-   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
    ast:get_node():processFilter( Formatter.createFilter( ast:get_exportInfo():get_moduleTypeInfo(), io.stdout ), Formatter.Opt._new(ast:get_node()) )
 end
 
 
-function Front:checkDiag( scriptPath )
+function Front:checkDiag( parserSrc, mod, moduleId, baseDir )
 
-   
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
    Util.setErrorCode( 0 )
-   self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Diag )
+   self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Diag )
 end
 
 
-function Front:complete( scriptPath )
+function Front:complete( parserSrc, mod, moduleId, baseDir )
 
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
-   self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, getModuleId( scriptPath, mod ), self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+   self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
 end
 
 
-function Front:inquire( scriptPath )
+function Front:inquire( parserSrc, mod, moduleId, baseDir )
 
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
-   self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, getModuleId( scriptPath, mod ), self.option.analyzeModule, TransUnit.AnalyzeMode.Inquire, self.option.analyzePos )
+   self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, self.option.analyzeModule, TransUnit.AnalyzeMode.Inquire, self.option.analyzePos )
 end
 
 
-function Front:createGlue( scriptPath )
+function Front:createGlue( parserSrc, mod, moduleId, baseDir )
 
-   
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
-   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, getModuleId( scriptPath, mod ), nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
    local filter = glueFilter.createFilter( self.option.outputDir )
    ast:get_node():processFilter( filter, 0 )
 end
@@ -1866,9 +1854,9 @@ local function outputDependInfo( stream, metaInfo, mod )
    
 end
 
-function Front:convertToLua( scriptPath, convMode, streamLua, streamMeta )
+function Front:convertToLua( scriptPath, baseDir, convMode, streamLua, streamMeta )
 
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath, baseDir )
    
    local moduleId = getModuleId( scriptPath, mod )
    local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile, nil )
@@ -1881,14 +1869,14 @@ function Front:convertToLua( scriptPath, convMode, streamLua, streamMeta )
    return ast
 end
 
-function Front:saveToGo( scriptPath, astResult )
+function Front:saveToGo( scriptPath, astResult, mod )
 
-   return Converter.GoConverter._new(scriptPath, astResult, self.option, self:createGoOption( scriptPath ))
+   return Converter.GoConverter._new(scriptPath, astResult, mod, self.option, self:createGoOption( scriptPath ))
 end
 
-function Front:saveToPython( scriptPath, astResult )
+function Front:saveToPython( scriptPath, astResult, mod )
 
-   return Converter.PythonConverter._new(scriptPath, astResult, self.option, self:createPythonOption( scriptPath ))
+   return Converter.PythonConverter._new(scriptPath, astResult, mod, self.option, self:createPythonOption( scriptPath ))
 end
 
 
@@ -1920,7 +1908,7 @@ end
 
 function Front:outputBuiltin( scriptPath )
 
-   local mod, baseDir = self:scriptPath2Module( "lns_builtin" )
+   local mod, baseDir = self:scriptPath2Module( "lns_builtin", nil )
    
    local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsCode, {"",mod,nil}), baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
@@ -1960,7 +1948,7 @@ function UpdateInfo:get_uptodate()
    return self.uptodate
 end
 
-function Front:saveToLua( updateInfo )
+function Front:saveToLua( updateInfo, baseDir )
 
    local scriptPath = updateInfo:get_scriptPath()
    local dependsPath = updateInfo:get_dependsPath()
@@ -1968,7 +1956,7 @@ function Front:saveToLua( updateInfo )
    local moduleId = updateInfo:get_moduleId()
    local uptodate = updateInfo:get_uptodate()
    
-   local mod, baseDir = self:scriptPath2Module( scriptPath )
+   local mod = self:scriptPath2Module( scriptPath, baseDir )
    local luaPath = scriptPath:gsub( "%.lns$", ".lua" )
    local metaPath = scriptPath:gsub( "%.lns$", ".meta" )
    if self.option.outputDir then
@@ -1992,22 +1980,30 @@ function Front:saveToLua( updateInfo )
       
          local result = self:createAstSub( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {scriptPath,mod,nil}), baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
          
-         local luaConv = Converter.LuaConverter._new(luaPath, metaPath, dependsPath, result, convMode, scriptPath, self.option.byteCompile, self.option.stripDebugInfo, self.option)
+         local luaConv
+         
+         if self.option.noLua then
+            luaConv = nil
+         else
+          
+            luaConv = Converter.LuaConverter._new(luaPath, metaPath, dependsPath, result, convMode, scriptPath, self.option.byteCompile, self.option.stripDebugInfo, self.option)
+         end
+         
          
          local goConv = nil
          local pyConv = nil
          do
             local _switchExp = self.option.convTo
             if _switchExp == Types.Lang.Python then
-               pyConv = self:saveToPython( scriptPath, result )
+               pyConv = self:saveToPython( scriptPath, result, mod )
             elseif _switchExp == Types.Lang.Go then
-               goConv = self:saveToGo( scriptPath, result )
+               goConv = self:saveToGo( scriptPath, result, mod )
             end
          end
          
          return function (  )
          
-            luaConv:saveLua(  )
+            _lune.nilacc( luaConv, 'saveLua', 'callmtd'  )
             _lune.nilacc( goConv, 'saveGo', 'callmtd'  )
             _lune.nilacc( pyConv, 'savePython', 'callmtd'  )
          end
@@ -2067,6 +2063,55 @@ local function convertLnsCode2LuaCode( lnsCode, path, baseDir )
 end
 _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 
+local function getBaseDir( path, userProjDir )
+
+   local projDir
+   
+   if userProjDir ~= nil then
+      projDir = userProjDir
+   else
+      if path:find( "^/" ) or path:find( "^%.%./" ) then
+         
+         local parentPath = Util.parentPath( path )
+         do
+            local workDir = Util.searchProjDir( parentPath )
+            if workDir ~= nil then
+               projDir = workDir
+            else
+               projDir = parentPath
+            end
+         end
+         
+      else
+       
+         
+         return path, nil
+      end
+      
+   end
+   
+   local scriptPath
+   
+   if #projDir == 1 then
+      
+      scriptPath = path:sub( 2 )
+   else
+    
+      
+      scriptPath = path:sub( #projDir + 2 )
+   end
+   
+   return scriptPath, projDir
+end
+
+local function getParseSrcAndBaseDir( path, userProjDir )
+
+   local workPath, projDir = getBaseDir( path, userProjDir )
+   local mod = Util.scriptPath2ModuleFromProjDir( workPath, projDir )
+   local moduleId = getModuleId( path, mod )
+   return _lune.newAlge( Types.ParserSrc.LnsPath, {path,mod,nil}), mod, moduleId, projDir
+end
+
 local BuildMode = {}
 BuildMode._name2Val = {}
 function BuildMode:_getTxt( val )
@@ -2091,27 +2136,28 @@ BuildMode._name2Val["Save"] = BuildMode.Save
 
 function Front:build( buildMode, astCallback )
 
-   local function createUpdateInfo( scriptPath, dependsPath )
    
-      local mod = self:scriptPath2Module( scriptPath )
+   local function createUpdateInfo( scriptPath, dependsPath, baseDir )
+   
+      local mod = self:scriptPath2Module( scriptPath, baseDir )
       local moduleId, uptodate = self:getModuleIdAndCheckUptodate( scriptPath, mod )
       return UpdateInfo._new(scriptPath, dependsPath, moduleId, uptodate)
    end
    
-   local function process( oneShot, updateInfo )
+   local function process( oneShot, updateInfo, baseDir )
    
-      local mod, baseDir = self:scriptPath2Module( updateInfo:get_scriptPath() )
+      local mod = self:scriptPath2Module( updateInfo:get_scriptPath(), baseDir )
       
       do
          local _matchExp = buildMode
          if _matchExp[1] == BuildMode.Save[1] then
          
-            return self:saveToLua( updateInfo )
+            return self:saveToLua( updateInfo, baseDir )
          elseif _matchExp[1] == BuildMode.Output[1] then
             local streamLua = _matchExp[2][1]
             local streamMeta = _matchExp[2][2]
          
-            self:convertToLua( updateInfo:get_scriptPath(), convLua.ConvMode.ConvMeta, streamLua, streamMeta )
+            self:convertToLua( updateInfo:get_scriptPath(), baseDir, convLua.ConvMode.ConvMeta, streamLua, streamMeta )
          elseif _matchExp[1] == BuildMode.CreateAst[1] then
          
             if not self.mod2astCreate[mod] and not self.moduleMgr:getAst( mod ) then
@@ -2132,18 +2178,19 @@ function Front:build( buildMode, astCallback )
       local __func__ = '@lune.@base.@front.Front.build.<anonymous>'
    
       if self.option.scriptPath == "@-" then
+         local baseDir = self.option:get_projDir()
          
          for __index, path in ipairs( self.option.batchList ) do
-            self.targetSet[(self:scriptPath2Module( path ) )]= true
+            self.targetSet[(self:scriptPath2Module( path, baseDir ) )]= true
          end
          
          
          local postProcessMap = {}
          for index, path in ipairs( self.option.batchList ) do
-            local updateInfo = createUpdateInfo( path, (path:gsub( ".lns$", ".d" ) ) )
+            local updateInfo = createUpdateInfo( path, (path:gsub( ".lns$", ".d" ) ), baseDir )
             print( string.format( "%s: start...", updateInfo:get_scriptPath()) )
             do
-               local _exp = process( false, updateInfo )
+               local _exp = process( false, updateInfo, nil )
                if _exp ~= nil then
                   if self.option:get_validPostBuild() then
                      postProcessMap[index] = _exp
@@ -2178,8 +2225,10 @@ function Front:build( buildMode, astCallback )
          
       else
        
+         local _
+         local _1, baseDir = getBaseDir( self.option.scriptPath, self.option:get_projDir() )
          do
-            local postProcess = process( true, createUpdateInfo( self.option.scriptPath, nil ) )
+            local postProcess = process( true, createUpdateInfo( self.option.scriptPath, nil, baseDir ), baseDir )
             if postProcess ~= nil then
                postProcess(  )
             end
@@ -2195,7 +2244,7 @@ function Front:build( buildMode, astCallback )
                if _exp ~= nil then
                   astCallback( _exp )
                else
-                  Log.log( Log.Level.Err, __func__, 1614, function (  )
+                  Log.log( Log.Level.Err, __func__, 1659, function (  )
                   
                      return string.format( "not found AST -- %s", mod)
                   end )
@@ -2223,14 +2272,15 @@ local function build( option, astCallback )
 end
 _moduleObj.build = build
 
-function Front:executeLns( path, mod )
+function Front:executeLns( path, baseDir )
 
    
+   local mod = Util.scriptPath2ModuleFromProjDir( path, baseDir )
    do
       local _
       
       local parserSrc = _lune.newAlge( Types.ParserSrc.LnsPath, {path,mod,nil})
-      local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, nil )
+      local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, baseDir )
       
       do
          
@@ -2302,7 +2352,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1694, function (  )
+   Log.log( Log.Level.Trace, __func__, 1740, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2312,19 +2362,19 @@ function Front:exec(  )
    do
       local _switchExp = self.option.mode
       if _switchExp == Option.ModeKind.Token then
-         self:dumpTokenize( self.option.scriptPath )
+         self:dumpTokenize( getBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.Ast then
-         self:dumpAst( self.option.scriptPath )
+         self:dumpAst( getParseSrcAndBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.Format then
-         self:format( self.option.scriptPath )
+         self:format( getParseSrcAndBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.Diag then
-         self:checkDiag( self.option.scriptPath )
+         self:checkDiag( getParseSrcAndBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.Complete then
-         self:complete( self.option.scriptPath )
+         self:complete( getParseSrcAndBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.Inquire then
-         self:inquire( self.option.scriptPath )
+         self:inquire( getParseSrcAndBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.Glue then
-         self:createGlue( self.option.scriptPath )
+         self:createGlue( getParseSrcAndBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.Lua or _switchExp == Option.ModeKind.LuaMeta then
          local convMode
          
@@ -2335,7 +2385,8 @@ function Front:exec(  )
             convMode = convLua.ConvMode.ConvMeta
          end
          
-         self:convertToLua( self.option.scriptPath, convMode, io.stdout, io.stdout )
+         local scriptPath, baseDir = getBaseDir( self.option.scriptPath, self.option:get_projDir() )
+         self:convertToLua( scriptPath, baseDir, convMode, io.stdout, io.stdout )
       elseif _switchExp == Option.ModeKind.Save or _switchExp == Option.ModeKind.SaveMeta then
          self:build( _lune.newAlge( BuildMode.Save), nil )
       elseif _switchExp == Option.ModeKind.BuildAst then
@@ -2346,21 +2397,9 @@ function Front:exec(  )
       elseif _switchExp == Option.ModeKind.Shebang then
          Depend.setupShebang(  )
          do
-            local scriptPath
-            
-            local baseDir
-            
-            if self.option.scriptPath:find( "^/" ) then
-               scriptPath = self.option.scriptPath:gsub( ".*/", "" )
-               baseDir = Util.parentPath( self.option.scriptPath )
-            else
-             
-               scriptPath = self.option.scriptPath
-               baseDir = nil
-            end
-            
+            local scriptPath, baseDir = getBaseDir( self.option.scriptPath, self.option:get_projDir() )
             do
-               local modObj = self:loadModuleWithBaseDir( self:scriptPath2Module( scriptPath ), baseDir )
+               local modObj = self:loadModuleWithBaseDir( self:scriptPath2Module( scriptPath, baseDir ), baseDir )
                if modObj ~= nil then
                   local code = Depend.runMain( modObj['__main'], self.option.shebangArgList )
                   os.exit( code )
@@ -2375,15 +2414,15 @@ function Front:exec(  )
          end
          
       elseif _switchExp == Option.ModeKind.Exec then
-         self:executeLns( self.option.scriptPath, (self:scriptPath2Module( self.option.scriptPath ) ) )
+         self:executeLns( getBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.BootC then
          self:outputBootC( self.option.scriptPath )
       elseif _switchExp == Option.ModeKind.Builtin then
          self:outputBuiltin( self.option.scriptPath )
       elseif _switchExp == Option.ModeKind.MkMain then
-         local mod = self:scriptPath2Module( self.option.scriptPath )
+         local mod = self:scriptPath2Module( self.option.scriptPath, self.option:get_projDir() )
          do
-            local mess = convGo.outputGoMain( self:getGoAppName(  ), mod, self.option.testing, self.option.outputPath, self.option:get_runtimeOpt() )
+            local mess = convGo.outputGoMain( self:getGoAppName(  ), mod, self.option.testing, self.option.outputDir, self.option:get_runtimeOpt() )
             if mess ~= nil then
                Util.errorLog( mess )
             end

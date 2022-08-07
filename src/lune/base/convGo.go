@@ -214,7 +214,7 @@ func convGo_convExp0_581(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 5073
-func convGo_convExp0_5674(arg1 []LnsAny) (bool, LnsAny) {
+func convGo_convExp0_5630(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 420
@@ -258,7 +258,7 @@ func convGo_convExp1_2510(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 5859
-func convGo_convExp0_9877(arg1 []LnsAny) bool {
+func convGo_convExp0_9833(arg1 []LnsAny) bool {
     return Lns_getFromMulti( arg1, 0 ).(bool)
 }
 // for 392
@@ -5843,12 +5843,6 @@ func (self *convGo_convFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallN
         self.FP.WriteRaw(_env, ")")
         return 
     }
-    if funcType == self.builtinFuncs.List___new{
-        self.FP.WriteRaw(_env, "NewLnsList(make([]LnsAny,")
-        convGo_filter_7_(_env, &Lns_unwrap( node.FP.Get_argList(_env)).(*Nodes_ExpListNode).Nodes_Node, self, &node.Nodes_Node)
-        self.FP.WriteRaw(_env, ")[0:0])")
-        return 
-    }
     var retGenerics bool
     if opt.Parent.FP.Get_kind(_env) == Nodes_NodeKind_get_StmtExp(_env){
         retGenerics = false
@@ -6002,8 +5996,8 @@ func (self *convGo_convFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallN
         self.FP.outputConvItemTypeList(_env, funcType.FP.Get_parentInfo(_env).FP.Get_itemTypeInfoList(_env), fieldNode.FP.Get_prefix(_env).FP.Get_expType(_env).FP.CreateAlt2typeMap(_env, false))
     }
     if closeTxt != nil{
-        closeTxt_1265 := closeTxt.(string)
-        self.FP.WriteRaw(_env, closeTxt_1265)
+        closeTxt_1264 := closeTxt.(string)
+        self.FP.WriteRaw(_env, closeTxt_1264)
     }
     self.FP.WriteRaw(_env, ")")
     if _env.PopVal( _env.IncStack() ||
@@ -6590,7 +6584,7 @@ func (self *convGo_convFilter) ProcessGetField(_env *LnsEnv, node *Nodes_GetFiel
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", []LnsAny{convGo_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env))}))
             } else { 
                 var closeParen bool
-                closeParen = convGo_convExp0_9877(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
+                closeParen = convGo_convExp0_9833(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", []LnsAny{convGo_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env))}))
                 var retType *Ast_TypeInfo
                 retType = symbolInfo.FP.Get_typeInfo(_env).FP.Get_retTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()

@@ -4969,12 +4969,12 @@ local static fn NormalTypeInfo.createBuiltin(
 
    let mut scope:Scope! = nil;
    switch kind {
-      case .Array, .List, .Set, .Class, .Module,
+      case .Array, .Map, .List, .Set, .Class, .Module,
            .IF, .Form, .FormFunc, .Func, .Method, .Macro
       {
          let scopeKind:ScopeKind;
          switch kind {
-            case .Class, .IF, .List, .Array, .Set {
+            case .Class, .IF, .List, .Array, .Set, .Map {
                scopeKind = .Class;
             }
             case .Module {

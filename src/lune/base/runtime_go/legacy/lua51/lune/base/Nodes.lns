@@ -1309,7 +1309,11 @@ pub alge IndexVal {
    SymIdx( str ),
 }
 
-// 要素の設定
+/**
+要素の設定
+
+val[ index ] = exp2 のような、 val の index に exp2 を設定するノード。
+*/
 _declNodeClass( "ExpSetItem", Node, false, false, true,
                 // 要素を保持する値
                 [ { "val": "&Node" },
@@ -1529,6 +1533,7 @@ pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.SymbolInfo> {
 /** マクロ展開後のノード */
 _declNodeClass( "ExpMacroExp", Node, false, nil, true,
                 [ { "macroType": "&Ast.TypeInfo" },
+                  { "expList": "&ExpListNode!" },
                   { "stmtList": "List<&Node>" } ]
 );
 
@@ -1550,7 +1555,8 @@ _declNodeClass( "ExpMacroStat", Node, false, true, false,
 );
 
 _declNodeClass( "ExpMacroArgExp", Node, false, true, false,
-                [ { "codeTxt": "str" } ]
+                [ { "codeTxt": "str" },
+                  { "exp": "&Node" } ]
 );
 
 

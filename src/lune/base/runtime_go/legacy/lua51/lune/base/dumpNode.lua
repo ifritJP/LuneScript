@@ -312,7 +312,8 @@ end
 
 function dumpFilter:processBlockSub( node, opt )
 
-   self:dump( opt, node, "" )
+   self:dump( opt, node, string.format( "kind = %s", Nodes.BlockKind:_getTxt( node:get_blockKind())
+   ) )
    for __index, statement in ipairs( node:get_stmtList(  ) ) do
       filter( statement, self, opt:nextOpt(  ) )
    end
@@ -425,9 +426,22 @@ function dumpFilter:processDeclMember( node, opt )
 end
 
 
+function dumpFilter:processExpMacroArgExp( node, opt )
+
+   self:dump( opt, node, string.format( "%s", node:get_codeTxt()) )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
+end
+
 function dumpFilter:processExpMacroExp( node, opt )
 
-   self:dump( opt, node, "" )
+   self:dump( opt, node, string.format( "%s", self:getFull( node:get_macroType(), false )) )
+   do
+      local expList = node:get_expList()
+      if expList ~= nil then
+         filter( expList, self, opt:nextOpt(  ) )
+      end
+   end
+   
    local stmtList = node:get_stmtList(  )
    for __index, stmt in ipairs( stmtList ) do
       filter( stmt, self, opt:nextOpt(  ) )
@@ -1189,7 +1203,7 @@ end
 
 function dumpFilter:processLiteralSymbol( node, opt )
 
-   self:dump( opt, node, node:get_token(  ).txt )
+   self:dump( opt, node, string.format( "%s: %s", node:get_token(  ).txt, node:get_expType():getTxt(  )) )
 end
 
 

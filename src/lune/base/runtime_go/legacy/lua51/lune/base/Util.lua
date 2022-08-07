@@ -538,6 +538,9 @@ end
 function SimpleSourceOStream._setmeta( obj )
   setmetatable( obj, { __index = SimpleSourceOStream  } )
 end
+function SimpleSourceOStream:get_stepIndent()
+   return self.stepIndent
+end
 do
    local list = {}
    local txt = ""
@@ -651,7 +654,12 @@ local function searchProjDir( dir )
          return work
       end
       
-      work = work:gsub( "/[^/]+$", "" )
+      local parent = work:gsub( "/[^/]+$", "" )
+      if parent == work then
+         return nil
+      end
+      
+      work = parent
    end
    
    return nil

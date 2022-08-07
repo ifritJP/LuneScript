@@ -1027,11 +1027,17 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                  if val ~= nil then
                                     argValMap[index] = val
                                     
+                                    local argVal
+                                    
                                     if argNode:get_expType() == Ast.builtinTypeSymbol then
-                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
+                                       argVal = toLuaval( val[1] )
                                     else
                                      
-                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+                                       argVal = toLuaval( val )
+                                    end
+                                    
+                                    if argVal ~= nil then
+                                       macroArgValMap[declArgNode:get_name()] = argVal
                                     end
                                     
                                  end
@@ -1152,11 +1158,17 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                  if val ~= nil then
                                     argValMap[index] = val
                                     
+                                    local argVal
+                                    
                                     if argNode:get_expType() == Ast.builtinTypeSymbol then
-                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val[1] )
+                                       argVal = toLuaval( val[1] )
                                     else
                                      
-                                       macroArgValMap[declArgNode:get_name()] = toLuaval( val )
+                                       argVal = toLuaval( val )
+                                    end
+                                    
+                                    if argVal ~= nil then
+                                       macroArgValMap[declArgNode:get_name()] = argVal
                                     end
                                     
                                  end

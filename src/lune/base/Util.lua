@@ -654,7 +654,12 @@ local function searchProjDir( dir )
          return work
       end
       
-      work = work:gsub( "/[^/]+$", "" )
+      local parent = work:gsub( "/[^/]+$", "" )
+      if parent == work then
+         return nil
+      end
+      
+      work = parent
    end
    
    return nil

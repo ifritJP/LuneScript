@@ -235,7 +235,7 @@ fn TransUnit.analyzeExpList(
             exp = Nodes.ExpMacroArgExpNode.create(
                self.nodeManager, exp.$pos, self.inTestBlock,
                self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
-               Macro.nodeToCodeTxt( exp, self.moduleType ) );
+               Macro.nodeToCodeTxt( exp, self.moduleType ), exp );
             expTypeList.insert( unwrap expectType );
          }
          default {
@@ -1200,7 +1200,8 @@ fn TransUnit.evalMacro(
    
    return Nodes.ExpMacroExpNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), expTypeList, macroTypeInfo, stmtList );
+      self.macroCtrl.isInAnalyzeArgMode(), expTypeList,
+      macroTypeInfo, expList, stmtList );
 }
 
 /**
@@ -1982,6 +1983,9 @@ fn TransUnit.analyzeAccessClassField(
       case .Set {
          classTypeInfo = Ast.builtinTypeSet;
       }
+      case .Map {
+         classTypeInfo = Ast.builtinTypeMap;
+      }
       case .Box {
          classTypeInfo = Ast.builtinTypeBox;
       }
@@ -2166,6 +2170,9 @@ fn TransUnit.dumpFieldComp(
       }
       case .Set {
          typeInfo = Ast.builtinTypeSet;
+      }
+      case .Map {
+         typeInfo = Ast.builtinTypeMap;
       }
       case .Box {
          typeInfo = Ast.builtinTypeBox;
@@ -3167,6 +3174,13 @@ fn TransUnit.analyzeExpOpSet(
          index = .NodeIdx( indexNode );
       } else {
          index = .SymIdx( unwrap listRefItemNode.$symbol );
+      }
+      if listRefItemNode.$val.$expType.$kind == .Map {
+         if expList.$expType ~= Ast.builtinTypeNil and expList.$expType.$nilable {
+            self.addWarnMess(
+               expList.$pos,
+               "you shouldn't use nilable value to set a map item(%s). use nil or no-nilable"(listRefItemNode.$val.$expType.getTxt(##)) );
+         }
       }
       return Nodes.ExpSetItemNode.create(
          self.nodeManager, exp.$pos, self.inTestBlock,

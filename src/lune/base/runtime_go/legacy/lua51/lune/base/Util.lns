@@ -235,7 +235,7 @@ pub class SimpleSourceOStream extend (SourceStream) {
    let mut srcStream:oStream;
    let mut headStream:oStream;
    let mut needIndent:bool;
-   let stepIndent:int;
+   let stepIndent:int {pub};
    let mut curLineNo:int;
    pri let mut indentQueue: List<int>;
    let mut indentSpace:str;
@@ -406,7 +406,11 @@ pub fn searchProjDir( dir:str ) : str! {
       if Depend.existFile( pathJoin( work, "lune.js" ) ) {
          return work;
       }
-      work = work.gsub( "/[^/]+$", "" );
+      let parent = work.gsub( "/[^/]+$", "" );
+      if parent == work {
+         return nil;
+      }
+      work = parent;
    }
    return nil;
 }

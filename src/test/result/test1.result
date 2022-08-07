@@ -1,91 +1,3 @@
-test/Sub2.lns:78:7: warning: This 'match' has full case. This 'default' is no reach.
-test/start.lns:52:27: warning: this value never be 'false'
-test/start.lns:52:27: warning: this value never be 'false'
-test/start.lns:52:27: warning: this value never be 'false'
-test/start.lns:53:19: warning: this value never be 'false'
-test/start.lns:53:19: warning: this value never be 'false'
-test/start.lns:54:19: warning: this value never be 'false'
-test/start.lns:54:33: warning: this value never be 'false'
-test/start.lns:55:19: warning: this value never be 'false'
-test/start.lns:56:19: warning: this value never be 'false' -- int
-test/start.lns:56:25: warning: this value never be 'false'
-test/start.lns:56:25: warning: this value never be 'false'
-test/start.lns:57:19: warning: this value never be 'false' -- int
-test/start.lns:57:25: warning: this value never be 'false'
-test/start.lns:58:19: warning: this value never be 'false' -- int
-test/start.lns:58:33: warning: this value never be 'false'
-test/start.lns:59:19: warning: this value never be 'false' -- int
-test/start.lns:189:1: (test/start.lns:189:1: (macro _symboltest):186:23): warning: format: 00000:use '##', instate of '...'.
-test/start.lns:251:4: warning: has no nilable
-test/start.lns:263:4: warning: has no nilable
-test/start.lns:271:7: warning: 'hoge1' var isn't accessed
-test/start.lns:272:7: warning: 'hoge2' var isn't accessed
-test/start.lns:300:8: warning: 'test' var isn't accessed
-test/start.lns:305:12: warning: This symbol has no referer -- val1
-test/start.lns:305:18: warning: This symbol has no referer -- val2
-test/start.lns:330:4: warning: remove: 00000:use '##', instate of 'int!'.
-test/start.lns:339:11: warning: 'val2' var isn't accessed
-test/start.lns:356:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:358:8: warning: 'classAA' var isn't accessed
-test/start.lns:364:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:391:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:393:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:395:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:397:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:411:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:417:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:418:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:442:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:443:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:456:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:467:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:469:4: warning: 'val2' var isn't accessed
-test/start.lns:473:7: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:483:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:484:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:488:12: warning: 'val' var isn't accessed
-test/start.lns:561:10: warning: 'inner' var isn't accessed
-test/start.lns:585:4: warning: func2: 00000:use '##', instate of 'int!'.
-test/start.lns:590:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:591:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:592:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:593:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:594:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:595:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:597:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:598:1: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:624:32: warning: open: 00000:use '##', instate of 'str!'.
-test/start.lns:627:27: warning: Luaval<form>: 00000:use '##', instate of '...<Luaval<stem>!>'.
-test/start.lns:627:27: warning: _load: 00000:use '##', instate of 'stem!'.
-test/start.lns:655:7: warning: 'sub' var isn't accessed
-test/start.lns:659:11: warning: 'val3' var isn't accessed
-test/start.lns:665:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:666:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:667:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:686:7: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:715:53: warning: sub: 00000:use '##', instate of 'int!'.
-test/start.lns:732:4: warning: print: use '**' at arg(2). stem! <- int
-test/start.lns:821:4: warning: print: use '**' at arg(2). stem! <- int!
-test/start.lns:822:4: warning: print: use '**' at arg(2). stem! <- int!
-test/start.lns:823:4: warning: print: use '**' at arg(2). stem! <- int!
-test/start.lns:924:8: warning: 'test2' var isn't accessed
-test/start.lns:930:8: warning: 'test4' var isn't accessed
-test/start.lns:1006:8: warning: 'val2' var isn't accessed
-test/start.lns:1184:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:1185:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:1192:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:1193:4: warning: _print: 00000:use '##', instate of 'str!'.
-test/start.lns:1374:4: warning: print: 00000:use '##', instate of '&...'.
-test/start.lns:1510:8: warning: 'hogeAA' var isn't accessed
-test/start.lns:1522:8: warning: 'hogeAA' var isn't accessed
-test/start.lns:1574:4: (test/start.lns:1574:4: (macro _test5):1571:11): warning: 'test' var isn't accessed
-test/start.lns:1580:4: (test/start.lns:1580:4: (macro _hoge):1577:11): warning: 'foo' var isn't accessed
-test/start.lns:1657:14: (macroVal val:2:4): warning: has no nilable
-test/start.lns:1659:10: warning: has no nilable
-test/start.lns:1929:13: warning: 'valName' var isn't accessed
-test/start.lns:2063:4: warning: _hoge: 00000:use '##', instate of '__exp'.
-test/start.lns:2064:4: warning: _hoge: 00000:use '##', instate of '__exp'.
-test/Sub2.lns:78:7: warning: This 'match' has full case. This 'default' is no reach.
 2
 sub2globalfun	1
 enumTestSub.val3	2	12
@@ -760,7 +672,6 @@ aa	skip:
 {
 }
 /comp-6.lns
-               "displayTxt" : "__new(int): List<T>",
                "displayTxt" : "insert(T): ",
                "displayTxt" : "remove(int!): T!",
                "displayTxt" : "sort(__less!(T, T): bool)",
@@ -769,8 +680,6 @@ aa	skip:
                "type" : "SymbolKind.Mtd"
                "type" : "SymbolKind.Mtd"
                "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-            "candidate" : {
             "candidate" : {
             "candidate" : {
             "candidate" : {
@@ -779,14 +688,11 @@ aa	skip:
             }
             }
             }
-            }
-         {
          {
          {
          {
          {
          }
-         },
          },
          },
          },

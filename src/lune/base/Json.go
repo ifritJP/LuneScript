@@ -7,12 +7,12 @@ var Json__mod__ string
 func Json_convExp0_198(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 67
-func Json_convExp0_292(arg1 []LnsAny) (LnsAny, bool) {
+// for 69
+func Json_convExp0_297(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 124
-func Json_convExp0_510(arg1 []LnsAny) (LnsAny, bool) {
+// for 126
+func Json_convExp0_515(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // 6: decl @lune.@base.@Json.getRawTxt
@@ -55,7 +55,10 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
                 if Lns_op_not(ok){
                     return nil, false
                 }
-                _map.Set(Json_getRawTxt_0_(_env, key),val)
+                if val != nil{
+                    val_38 := val
+                    _map.Set(Json_getRawTxt_0_(_env, key),val_38)
+                }
             }
         } else if _switch3 == "[" {
             var list *LnsList
@@ -121,7 +124,7 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
     return nil, false
 }
 
-// 119: decl @lune.@base.@Json.fromStr
+// 121: decl @lune.@base.@Json.fromStr
 func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
     var parser *Parser_DefaultPushbackParser
     parser = NewParser_DefaultPushbackParser(_env, &Parser_StreamParser_create(_env, &Types_ParserSrc__LnsCode{txt, "json", nil}, false, nil, nil).Parser_Parser)

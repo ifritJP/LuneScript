@@ -142,11 +142,11 @@ pub class Option {
 
    /** true の場合 C への変換を行なう */
    pub let mut convTo:Types.Lang!;
+   /** true の場合 lua への変換を行なわない */
+   pub let mut noLua:bool;
 
    /** テストする時 true */
    pub let mut testing:bool;
-
-   pub let mut outputPath:str!;
 
    // shebang で利用する引数リスト
    pub let mut shebangArgList:List<str>;
@@ -179,12 +179,12 @@ pub class Option {
       self.projDir = nil;
       self.runtimeOpt = new RuntimeOpt();
       self.shebangArgList = [];
-      self.outputPath = nil;
       self.mainModule = "";
       self.appName = nil;
       self.packageName = nil;
       self.testing = false;
       self.convTo = nil;
+      self.noLua = false;
       self.validProf = false;
       self.mode = .Unknown;
       self.scriptPath = "";
@@ -295,6 +295,8 @@ usage:
       -ob1 is with debug information.
   -langC: transcompile to c-lang.
   -langGo: transcompile to golang.
+  -langPython: transcompile to python.
+  -noLua: no transcompile to lua.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
   --int2str mode: mode of int to str.
@@ -589,6 +591,9 @@ usage:
                case "--uptodate" {
                   uptodateOpt = getNextOp();
                }
+               case "-noLua" {
+                  option.noLua = true;
+               }
                case "-langC" {
                   option.convTo = .C;
                   option.transCtrlInfo.validLuaval = true;
@@ -597,6 +602,11 @@ usage:
                   option.convTo = .Go;
                   option.transCtrlInfo.validLuaval = true;
                   option.transCtrlInfo.validAsyncCtrl = true;
+               }
+               case "-langPython" {
+                  option.convTo = .Python;
+                  option.transCtrlInfo.validLuaval = false;
+                  option.transCtrlInfo.validAsyncCtrl = false;
                }
                case "-ol" {
                   if! let txt = getNextOp() {
@@ -672,7 +682,7 @@ usage:
                   option.shebangArgList.insert( arg );
                }
                default {
-                  option.outputPath = arg;
+                  option.outputDir = arg;
                }
             }
          }

@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 12066
+   return 12218
 end
 
 
@@ -340,12 +340,12 @@ function Option:__init()
    self.projDir = nil
    self.runtimeOpt = RuntimeOpt._new()
    self.shebangArgList = {}
-   self.outputPath = nil
    self.mainModule = ""
    self.appName = nil
    self.packageName = nil
    self.testing = false
    self.convTo = nil
+   self.noLua = false
    self.validProf = false
    self.mode = ModeKind.Unknown
    self.scriptPath = ""
@@ -507,6 +507,8 @@ usage:
       -ob1 is with debug information.
   -langC: transcompile to c-lang.
   -langGo: transcompile to golang.
+  -langPython: transcompile to python.
+  -noLua: no transcompile to lua.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
   --int2str mode: mode of int to str.
@@ -855,6 +857,8 @@ end
                   option.useIpairs = true
                elseif _switchExp == "--uptodate" then
                   uptodateOpt = getNextOp(  )
+               elseif _switchExp == "-noLua" then
+                  option.noLua = true
                elseif _switchExp == "-langC" then
                   option.convTo = Types.Lang.C
                   option.transCtrlInfo.validLuaval = true
@@ -862,6 +866,10 @@ end
                   option.convTo = Types.Lang.Go
                   option.transCtrlInfo.validLuaval = true
                   option.transCtrlInfo.validAsyncCtrl = true
+               elseif _switchExp == "-langPython" then
+                  option.convTo = Types.Lang.Python
+                  option.transCtrlInfo.validLuaval = false
+                  option.transCtrlInfo.validAsyncCtrl = false
                elseif _switchExp == "-ol" then
                   do
                      local txt = getNextOp(  )
@@ -944,7 +952,7 @@ end
                   table.insert( option.shebangArgList, arg )
                else 
                   
-                     option.outputPath = arg
+                     option.outputDir = arg
                end
             end
             
@@ -1024,7 +1032,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 738, function (  )
+   Log.log( Log.Level.Log, __func__, 748, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

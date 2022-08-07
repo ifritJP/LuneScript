@@ -3431,7 +3431,7 @@ function ConvFilter:processExpCall( node, opt )
          local _switchExp = node:get_func():get_expType()
          if _switchExp == self.builtinFunc.__lns_runtime_log or _switchExp == self.builtinFunc.__lns_runtime_enableLog or _switchExp == self.builtinFunc.__lns_runtime_dumpLog or _switchExp == self.builtinFunc.__processor_end then
             return false
-         elseif _switchExp == self.builtinFunc.list___new or _switchExp == self.builtinFunc.__lns_sync_createProcesser then
+         elseif _switchExp == self.builtinFunc.__lns_sync_createProcesser then
             self:writeRaw( "{}" )
             return false
          elseif _switchExp == self.builtinFunc.__lns_sync_createFlag then

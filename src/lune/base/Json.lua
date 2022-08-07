@@ -122,7 +122,10 @@ local function getVal( parser )
                      return nil, false
                   end
                   
-                  map[getRawTxt( key )] = val
+                  if val ~= nil then
+                     map[getRawTxt( key )] = val
+                  end
+                  
                end
                
             elseif _switchExp == "[" then

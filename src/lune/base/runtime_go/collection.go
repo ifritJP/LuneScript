@@ -581,6 +581,10 @@ func (self *LnsMap) Set(key, val LnsAny) {
 	}
 }
 
+func (self *LnsMap) Del(key LnsAny) {
+	delete(self.Items, key)
+}
+
 func (self *LnsMap) Get(key LnsAny) LnsAny {
 	val, has := self.Items[key]
 	if !has {

@@ -6218,14 +6218,6 @@ function convFilter:processExpCall( node, opt )
    end
    
    
-   if funcType == self.builtinFuncs.list___new then
-      self:writeRaw( "NewLnsList(make([]LnsAny," )
-      filter( _lune.unwrap( node:get_argList()), self, node )
-      self:writeRaw( ")[0:0])" )
-      return 
-   end
-   
-   
    local retGenerics
    
    if opt.parent:get_kind() == Nodes.NodeKind.get_StmtExp() then

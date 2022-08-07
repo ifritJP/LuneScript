@@ -406,7 +406,11 @@ pub fn searchProjDir( dir:str ) : str! {
       if Depend.existFile( pathJoin( work, "lune.js" ) ) {
          return work;
       }
-      work = work.gsub( "/[^/]+$", "" );
+      let parent = work.gsub( "/[^/]+$", "" );
+      if parent == work {
+         return nil;
+      }
+      work = parent;
    }
    return nil;
 }

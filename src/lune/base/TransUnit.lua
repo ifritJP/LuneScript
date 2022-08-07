@@ -831,7 +831,15 @@ function AccessSymbolSet:__init()
 end
 function AccessSymbolSet:add( symbol )
 
-   self.accessSym2Pos[symbol] = symbol:get_posForLatestMod()
+   do
+      local _exp = symbol:get_posForLatestMod()
+      if _exp ~= nil then
+         self.accessSym2Pos[symbol] = _exp
+      else
+         self.accessSym2Pos[symbol] = nil
+      end
+   end
+   
 end
 function AccessSymbolSet:applyPos( excludeSymList )
 
@@ -9039,6 +9047,8 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
          classTypeInfo = Ast.builtinTypeArray
       elseif _switchExp == Ast.TypeInfoKind.Set then
          classTypeInfo = Ast.builtinTypeSet
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         classTypeInfo = Ast.builtinTypeMap
       elseif _switchExp == Ast.TypeInfoKind.Box then
          classTypeInfo = Ast.builtinTypeBox
       end
@@ -9240,6 +9250,8 @@ function TransUnit:dumpFieldComp( writer, isPrefixType, prefixTypeInfo, pattern,
          typeInfo = Ast.builtinTypeArray
       elseif _switchExp == Ast.TypeInfoKind.Set then
          typeInfo = Ast.builtinTypeSet
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         typeInfo = Ast.builtinTypeMap
       elseif _switchExp == Ast.TypeInfoKind.Box then
          typeInfo = Ast.builtinTypeBox
       else 
@@ -10264,6 +10276,13 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
          else
             index = _lune.newAlge( Nodes.IndexVal.SymIdx, {_lune.unwrap( listRefItemNode:get_symbol())})
          end
+      end
+      
+      if listRefItemNode:get_val():get_expType():get_kind() == Ast.TypeInfoKind.Map then
+         if expList:get_expType() ~= Ast.builtinTypeNil and expList:get_expType():get_nilable() then
+            self:addWarnMess( expList:get_pos(), string.format( "you shouldn't use nilable value to set a map item(%s). use nil or no-nilable", listRefItemNode:get_val():get_expType():getTxt(  )) )
+         end
+         
       end
       
       return Nodes.ExpSetItemNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, listRefItemNode:get_val(), index, expList )
@@ -12282,13 +12301,19 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       local importedAliasMap = {}
       for __index, node in ipairs( self.nodeManager:getAliasNodeList(  ) ) do
-         importedAliasMap[node:get_typeInfo()] = _lune.__Cast( node:get_expType(), 3, Ast.AliasTypeInfo )
+         do
+            local _exp = _lune.__Cast( node:get_expType(), 3, Ast.AliasTypeInfo )
+            if _exp ~= nil then
+               importedAliasMap[node:get_typeInfo()] = _exp
+            end
+         end
+         
       end
       
       
       local workExportInfo = Nodes.ExportInfo._new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 761, function (  )
+      Log.log( Log.Level.Log, __func__, 763, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )

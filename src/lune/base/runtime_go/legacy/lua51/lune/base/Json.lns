@@ -46,7 +46,9 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                   if not ok {
                      return nil, false;
                   }
-                  map[ getRawTxt( key ) ] = val;
+                  when! val {
+                     map[ getRawTxt( key ) ] = val;
+                  }
                }
             }
             case "[" {

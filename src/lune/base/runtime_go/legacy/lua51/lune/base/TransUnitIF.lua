@@ -615,8 +615,9 @@ function TransUnitBase:__init(ctrl_info, processInfo)
    self.scope = Ast.Scope._new(processInfo, self.globalScope, Ast.ScopeKind.Module, nil)
    self.nsInfoMap = {}
    local subRootTypeInfo = self.processInfo:get_dummyParentType()
-   self.curNsInfo = NSInfo._new(subRootTypeInfo, subRootTypeInfo, Types.Position._new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
-   self.nsInfoMap[subRootTypeInfo] = self.curNsInfo
+   local nsInfo = NSInfo._new(subRootTypeInfo, subRootTypeInfo, Types.Position._new(0, 0, "@builtin@"), ctrl_info.validAsyncCtrl)
+   self.curNsInfo = nsInfo
+   self.nsInfoMap[subRootTypeInfo] = nsInfo
 end
 function TransUnitBase:addErrMess( pos, mess )
 

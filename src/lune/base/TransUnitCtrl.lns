@@ -748,7 +748,9 @@ pub fn TransUnitCtrl.createAST(
       //let processInfo = self.processInfo.duplicate();
       let importedAliasMap:Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> = {};
       foreach node in self.nodeManager.getAliasNodeList() {
-         importedAliasMap[ node.$typeInfo ] = node.$expType@@@Ast.AliasTypeInfo;
+         if! node.$expType@@@Ast.AliasTypeInfo {
+            importedAliasMap[ node.$typeInfo ] = _exp;
+         }
       }
 
       let mut workExportInfo = new Nodes.ExportInfo(

@@ -1983,6 +1983,9 @@ fn TransUnit.analyzeAccessClassField(
       case .Set {
          classTypeInfo = Ast.builtinTypeSet;
       }
+      case .Map {
+         classTypeInfo = Ast.builtinTypeMap;
+      }
       case .Box {
          classTypeInfo = Ast.builtinTypeBox;
       }
@@ -2167,6 +2170,9 @@ fn TransUnit.dumpFieldComp(
       }
       case .Set {
          typeInfo = Ast.builtinTypeSet;
+      }
+      case .Map {
+         typeInfo = Ast.builtinTypeMap;
       }
       case .Box {
          typeInfo = Ast.builtinTypeBox;
@@ -3168,6 +3174,13 @@ fn TransUnit.analyzeExpOpSet(
          index = .NodeIdx( indexNode );
       } else {
          index = .SymIdx( unwrap listRefItemNode.$symbol );
+      }
+      if listRefItemNode.$val.$expType.$kind == .Map {
+         if expList.$expType ~= Ast.builtinTypeNil and expList.$expType.$nilable {
+            self.addWarnMess(
+               expList.$pos,
+               "you shouldn't use nilable value to set a map item(%s). use nil or no-nilable"(listRefItemNode.$val.$expType.getTxt(##)) );
+         }
       }
       return Nodes.ExpSetItemNode.create(
          self.nodeManager, exp.$pos, self.inTestBlock,

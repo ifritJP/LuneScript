@@ -110,11 +110,11 @@ func Option_Int2strMode_getTxt(arg1 LnsInt) string {
 func Option_convExp0_68(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 350
+// for 352
 func Option_convExp0_934(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 345
+// for 347
 func Option_convExp0_941(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
@@ -124,7 +124,7 @@ func Option_convExp0_743(arg1 []LnsAny) LnsAny {
 }
 // 53: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 12153
+    return 12218
 }
 
 // 83: decl @lune.@base.@Option.getRuntimeModule
@@ -433,6 +433,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
                     option.UseIpairs = true
                 } else if _switch2 == "--uptodate" {
                     uptodateOpt = Option_getNextOp(_env)
+                } else if _switch2 == "-noLua" {
+                    option.NoLua = true
                 } else if _switch2 == "-langC" {
                     option.ConvTo = Types_Lang__C
                     option.TransCtrlInfo.ValidLuaval = true
@@ -507,15 +509,15 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
                     }
                     option.ShebangArgList.Insert(arg)
                 } else {
-                    option.OutputPath = arg
+                    option.OutputDir = arg
                 }
             }
         }
         index = index + 1
     }
     if uptodateOpt != nil{
-        uptodateOpt_304 := uptodateOpt.(string)
-        if _switch4 := uptodateOpt_304; _switch4 == "force" {
+        uptodateOpt_305 := uptodateOpt.(string)
+        if _switch4 := uptodateOpt_305; _switch4 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
         } else if _switch4 == "forceAll" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__ForceAll_Obj
@@ -524,7 +526,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
         } else if _switch4 == "touch" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_304)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_305)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -575,14 +577,14 @@ func Option_analyze(_env *LnsEnv, argList *LnsList) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 743, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 748, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("mode is '%s'", []LnsAny{Option_ModeKind_getTxt( option.Mode)})
     }))
     
     return option
 }
 
-// 748: decl @lune.@base.@Option.createDefaultOption
+// 753: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -598,12 +600,12 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
     option.UseLuneModule = Option_getRuntimeModule(_env)
     option.UseIpairs = true
     if projDir != nil{
-        projDir_334 := projDir.(string)
-        if projDir_334 != "/"{
-            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_334,"/$", nil, nil))){
-                option.projDir = projDir_334 + "/"
+        projDir_335 := projDir.(string)
+        if projDir_335 != "/"{
+            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_335,"/$", nil, nil))){
+                option.projDir = projDir_335 + "/"
             } else { 
-                option.projDir = projDir_334
+                option.projDir = projDir_335
             }
         }
     }
@@ -612,7 +614,7 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
 
 // 275: decl @lune.@base.@Option.analyze.printUsage
 func Option_analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
-    Lns_print([]LnsAny{"usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> -shebang path\n  <type4> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n  --int2str mode: mode of int to str.\n     - depend: depends the lua version.\n     - need0: with '.0'.\n     - unneed0: without '.0'.\n\n  common_op:\n    --testing: enable test.\n    --projDir <dir>: set the project dir.\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            force: skip check for target lns file.\n            forceAll: skip check for all.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    --default-lazy: set lazy-loading at default.\n    --valid-luaval: enable luaval when transcompie to lua.\n    --package <name>: set the package name for the go-lang.\n    --app <name>: set the application name for the go-lang.\n\n    compati_op:\n      --legacyNewName: use the legacy new method name for lua.\n\n\n\n* type2\n  path: output file path.\n"})
+    Lns_print([]LnsAny{"usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> -shebang path\n  <type4> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -langPython: transcompile to python.\n  -noLua: no transcompile to lua.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n  --int2str mode: mode of int to str.\n     - depend: depends the lua version.\n     - need0: with '.0'.\n     - unneed0: without '.0'.\n\n  common_op:\n    --testing: enable test.\n    --projDir <dir>: set the project dir.\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            force: skip check for target lns file.\n            forceAll: skip check for all.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    --default-lazy: set lazy-loading at default.\n    --valid-luaval: enable luaval when transcompie to lua.\n    --package <name>: set the package name for the go-lang.\n    --app <name>: set the application name for the go-lang.\n\n    compati_op:\n      --legacyNewName: use the legacy new method name for lua.\n\n\n\n* type2\n  path: output file path.\n"})
     _env.GetVM().OS_exit(code)
 }
 
@@ -723,8 +725,8 @@ type Option_Option struct {
     MainModule string
     TransCtrlInfo *Types_TransCtrlInfo
     ConvTo LnsAny
+    NoLua bool
     Testing bool
-    OutputPath LnsAny
     ShebangArgList *LnsList
     runtimeOpt *Option_RuntimeOpt
     projDir LnsAny
@@ -780,12 +782,12 @@ func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
     self.projDir = nil
     self.runtimeOpt = NewOption_RuntimeOpt(_env)
     self.ShebangArgList = NewLnsList([]LnsAny{})
-    self.OutputPath = nil
     self.MainModule = ""
     self.AppName = nil
     self.PackageName = nil
     self.Testing = false
     self.ConvTo = nil
+    self.NoLua = false
     self.ValidProf = false
     self.Mode = Option_ModeKind__Unknown
     self.ScriptPath = ""

@@ -168,6 +168,10 @@ end
 function FormatterFilter._setmeta( obj )
   setmetatable( obj, { __index = FormatterFilter  } )
 end
+function FormatterFilter:get_stepIndent( ... )
+   return self.stream:get_stepIndent( ... )
+end
+
 function FormatterFilter:popIndent( ... )
    return self.stream:popIndent( ... )
 end

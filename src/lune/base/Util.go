@@ -13,12 +13,12 @@ func Util_convExp0_1690(arg1 []LnsAny) string {
 func Util_convExp0_1777(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 409
-func Util_convExp0_1837(arg1 []LnsAny) string {
-    return Lns_getFromMulti( arg1, 0 ).(string)
-}
 // for 369
 func Util_convExp0_1620(arg1 []LnsAny) string {
+    return Lns_getFromMulti( arg1, 0 ).(string)
+}
+// for 409
+func Util_convExp0_1835(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 32: decl @lune.@base.@Util.setDebugFlag
@@ -156,7 +156,12 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
         if Depend_existFile(_env, Util_pathJoin(_env, work, "lune.js")){
             return work
         }
-        work = Util_convExp0_1837(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
+        var parent string
+        parent = Util_convExp0_1835(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
+        if parent == work{
+            return nil
+        }
+        work = parent
     }
     return nil
 }

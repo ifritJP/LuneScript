@@ -749,7 +749,10 @@ test-cmpl: $(COMP_TARGETS)
 test-org:
 	$(call exeLune,$(LNSC),.,test/start.lns,glue,work/glue $(EXE_OPT) 2>&1)
 	$(MAKE) build-glue
-	$(call exeLune,$(LNSC),.,test/start.lns,exe,$(EXE_OPT) 2>&1) > work/test1.result
+	$(call exeLune,$(LNSC),.,test/start.lns,ast,$(EXE_OPT) 2>&1) > work/ast1.result
+	$(call exeLune,$(LNSC),.,test/start.lns,lua,$(EXE_OPT) ) > work/lua1.result
+# フルパス指定で動作することを確認
+	$(call exeLune,$(LNSC),.,$(PWD)/test/start.lns,exe,$(EXE_OPT) ) > work/test1.result
 	$(call exeLune,$(LNSC),.,test/start.lns,save,$(EXE_OPT) --depends work/1/start.dep)
 	$(call exeLune,$(LNSC_LUA),.,test/imp.lns,exe,$(EXE_OPT) 2>&1) >> work/test1.result
 
@@ -795,9 +798,10 @@ test-new:
 #	$(call exeLune,work/3,test/start.lns,glue, ../newglue 2>&1)
 #	$(MAKE) build-glue GLUE_DIR=work/newglue
 
-	$(call exeLune,$(LNSC),work/3,test/start.lns,ast,$(EXE_OPT)) > work/ast2.result
-	$(call exeLune,$(LNSC),work/3,test/start.lns,lua,$(EXE_OPT)) > work/lua.result
-	$(call exeLune,$(LNSC),work/3,test/start.lns,exe,$(EXE_OPT) 2>&1) > work/test2.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,ast,$(EXE_OPT) 2>&1 ) > work/ast2.result
+	$(call exeLune,$(LNSC),work/3,test/start.lns,lua,$(EXE_OPT) ) > work/lua2.result
+# フルパス指定で動作することを確認
+	$(call exeLune,$(LNSC),work/3,$(PWD)/work/3/test/start.lns,exe,$(EXE_OPT) ) > work/test2.result
 
 # meta ファイルを生成する
 	-rm work/3/test/imp.meta
@@ -1068,6 +1072,8 @@ ifeq ($(WITH_GO),y)
 	diff test/result/test1.result work/test1.result
 endif
 	diff work/test1.result work/test2.result
+	diff work/ast1.result work/ast2.result
+	diff work/lua1.result work/lua2.result
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
 	diff work/test4.result work/test4-2.result

@@ -594,11 +594,14 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) mut : str {
                      // inner 関数定義の場合、クロージャかどうか判定し、
                      // クロージャでない場合は、関数として定義する。
                      if not isClosure( typeInfo ) {
+                        let modName = self.getModuleName( typeInfo.getModule(), false );
                         let parentName = typeInfo.getParentFullName(
                            self.$typeNameCtrl, self.$moduleInfoManager, true );
-                        symbolName = "%s_%s_%d_"
-                            (parentName.gsub( "[%.@]", "_" ), symbolName,
+                        symbolName = "%s_%s_%s_%d_"
+                            ( modName, parentName.gsub( "[%.@]", "_" ), symbolName,
                               typeInfo.$childId );
+                     } else {
+                        symbolName = self.concatSymWithType( symbolName, typeInfo );
                      }
                   } else {
                      if not Ast.isBuiltin( typeInfo.$typeId.id ) and
@@ -5026,12 +5029,12 @@ pub override fn convFilter.processExpCall(
       return;
    }
 
-   if funcType == self.builtinFuncs.list___new {
-      self.writeRaw( "NewLnsList(make([]LnsAny," );
-      filter( unwrap node.$argList, self, node );
-      self.writeRaw( ")[0:0])" );
-      return;
-   }
+   // if funcType == self.builtinFuncs.list___new {
+   //    self.writeRaw( "NewLnsList(make([]LnsAny," );
+   //    filter( unwrap node.$argList, self, node );
+   //    self.writeRaw( ")[0:0])" );
+   //    return;
+   // }
 
 
    let retGenerics;

@@ -223,9 +223,12 @@ Lang.__allList[2] = Lang.Lua
 Lang.Go = 2
 Lang._val2NameMap[2] = 'Go'
 Lang.__allList[3] = Lang.Go
-Lang.C = 3
-Lang._val2NameMap[3] = 'C'
-Lang.__allList[4] = Lang.C
+Lang.Python = 3
+Lang._val2NameMap[3] = 'Python'
+Lang.__allList[4] = Lang.Python
+Lang.C = 4
+Lang._val2NameMap[4] = 'C'
+Lang.__allList[5] = Lang.C
 
 local CheckingUptodateMode = {}
 CheckingUptodateMode._name2Val = {}

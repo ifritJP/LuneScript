@@ -365,7 +365,7 @@ _DefBuiltinFuncType( [
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
-         "__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
+         //"__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
       },
    },
    {
@@ -809,6 +809,11 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                name = "Set";
                processCopyAlterList(
                   genTypeList, Ast.builtinTypeSet.$itemTypeInfoList );
+            }
+            case "Map<K,V>" {
+               name = "Map";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeMap.$itemTypeInfoList );
             }
             case "Nilable<_T>" {
                name = "Nilable";

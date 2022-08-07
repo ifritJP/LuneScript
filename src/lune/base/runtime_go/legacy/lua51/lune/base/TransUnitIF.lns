@@ -392,10 +392,11 @@ curNsInfo が nil になる。
       self.scope = new Ast.Scope( processInfo, self.globalScope, .Module, nil ## );
       self.nsInfoMap = {};
       let mut subRootTypeInfo = self.processInfo.$dummyParentType;
-      self.curNsInfo = new NSInfo(
+      let mut nsInfo = new NSInfo(
          subRootTypeInfo, subRootTypeInfo,
          new Types.Position( 0,0, "@builtin@" ## ), ctrl_info.validAsyncCtrl );
-      self.nsInfoMap[ subRootTypeInfo ] = self.curNsInfo;
+      self.curNsInfo = nsInfo;
+      self.nsInfoMap[ subRootTypeInfo ] = nsInfo;
    }
 
    pro fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {

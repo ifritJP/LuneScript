@@ -480,7 +480,11 @@ class AccessSymbolSet {
       self.accessSym2Pos = {};
    }
    pub fn add( symbol:&Ast.SymbolInfo ) mut {
-      self.accessSym2Pos[ symbol ] = symbol.$posForLatestMod;
+      if! symbol.$posForLatestMod {
+         self.accessSym2Pos[ symbol ] = _exp;
+      } else {
+         self.accessSym2Pos[ symbol ] = nil;
+      }
    }
    pub fn applyPos( excludeSymList:&Set<&Ast.SymbolInfo>! ) mut {
       let! set = excludeSymList {

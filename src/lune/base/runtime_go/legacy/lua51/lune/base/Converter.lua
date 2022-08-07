@@ -42,11 +42,12 @@ function _lune._AlgeFrom( Alge, val )
    return { work[ 1 ], paramList }
 end
 
-function _lune.loadstring52( txt, env )
-   if not env then
-      return load( txt )
+function _lune.loadstring51( txt, env )
+   local func = loadstring( txt )
+   if func and env then
+      setfenv( func, env )
    end
-   return load( txt, "", "bt", env )
+   return func
 end
 
 function _lune.nilacc( val, fieldName, access, ... )
@@ -203,7 +204,7 @@ local function byteCompileFromLuaTxt( txt, stripDebugInfo )
    local ret
    
    do
-      local chunk, err = _lune.loadstring52( txt )
+      local chunk, err = _lune.loadstring51( txt )
       if chunk ~= nil then
          ret = string.dump( chunk, stripDebugInfo )
       else
@@ -452,7 +453,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             if not cont then
                Log.log( Log.Level.Debug, __func__, 288, function (  )
                
-                  return string.format( "<%s>, <%s>", oldLine, newLine)
+                  return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )
                
                return false, ""

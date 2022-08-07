@@ -5029,12 +5029,12 @@ pub override fn convFilter.processExpCall(
       return;
    }
 
-   if funcType == self.builtinFuncs.list___new {
-      self.writeRaw( "NewLnsList(make([]LnsAny," );
-      filter( unwrap node.$argList, self, node );
-      self.writeRaw( ")[0:0])" );
-      return;
-   }
+   // if funcType == self.builtinFuncs.list___new {
+   //    self.writeRaw( "NewLnsList(make([]LnsAny," );
+   //    filter( unwrap node.$argList, self, node );
+   //    self.writeRaw( ")[0:0])" );
+   //    return;
+   // }
 
 
    let retGenerics;
