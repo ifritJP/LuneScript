@@ -649,7 +649,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                     }
                     var workParentScope *Ast_Scope
                     workParentScope = Lns_unwrap( param.TypeId2Scope.Get(self.ParentId)).(*Ast_Scope)
-                    workParentScope.FP.Add(_env, param.ProcessInfo, symbolKind, false, self.Kind == Ast_TypeInfoKind__Func, self.Txt, nil, &workTypeInfoMut.Ast_TypeInfo, accessMode, self.StaticFlag, Ast_MutMode__IMut, true, false)
+                    workParentScope.FP.Add(_env, param.ProcessInfo, symbolKind, false, self.Kind == Ast_TypeInfoKind__Func, self.Txt, nil, &workTypeInfoMut.Ast_TypeInfo, accessMode, self.StaticFlag, self.MutMode, true, false)
                 }
             } else if _switch2 == Ast_TypeInfoKind__Set {
                 var workTypeInfo *Ast_TypeInfo

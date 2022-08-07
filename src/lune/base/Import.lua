@@ -1320,7 +1320,7 @@ function _TypeInfoNormal:createTypeInfo( param )
                      end
                      
                      local workParentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
-                     workParentScope:add( param.processInfo, symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, nil, workTypeInfoMut, accessMode, self.staticFlag, Ast.MutMode.IMut, true, false )
+                     workParentScope:add( param.processInfo, symbolKind, false, self.kind == Ast.TypeInfoKind.Func, self.txt, nil, workTypeInfoMut, accessMode, self.staticFlag, self.mutMode, true, false )
                   end
                end
                

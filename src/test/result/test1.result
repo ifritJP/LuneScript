@@ -945,8 +945,11 @@ test/error/nilable1.lns:88:14: warning: This is not nilable. -- &List<int>
 test/error/nilable1.lns:90:4: warning: This is not nilable. -- form
 test/error/nilable1.lns:90:4: warning: form: 00000:use '##', instate of '...'.
 test/error/nilable1.lns:92:11: warning: This is not nilable. -- Map<str,int>
-test/error/access1.lns:19:7: error: this node can not be l-value. -- GetField
-test/error/access1.lns:22:12: error: not found field typeInfo: @test.@error.@access1.Sub.func1 -- TypeInfoKind.Class
+test/error/access1.lns:10:14: error: = operator: exp(1) type mismatch @test.@error.@access1.Hoge.func(1016) <- @test.@error.@access1.(1028): index 1 -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func
+test/error/access1.lns:11:16: error: this node can not be r-value. -- ExpList
+test/error/access1.lns:11:21: error: This arg can't be r-value. -- RefField
+test/error/access1.lns:32:7: error: this node can not be l-value. -- GetField
+test/error/access1.lns:35:12: error: not found field typeInfo: @test.@error.@access1.Sub.func1 -- TypeInfoKind.Class
 test/error/access2.lns:19:19: error: this is not mutable variable. -- val3
 test/error/access2.lns:20:19: error: this is not mutable variable. -- val2
 test/error/access2.lns:21:14: error: not found field typeInfo: @test.@error.@access2.Sub.val1 -- TypeInfoKind.Class

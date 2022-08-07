@@ -1,3 +1,16 @@
+{
+   class Hoge {
+      pub fn func() mut {
+      }
+      pub fn func2() mut {
+      }
+   }
+   let mut hoge = new Hoge();
+
+   hoge.func = fn () {}; // error
+   hoge.func = hoge.func2; // error
+}
+
 class Super {
    pri let val1: int {pub};
    pro let val2: int;
