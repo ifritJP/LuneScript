@@ -67,11 +67,13 @@ endif
 
 INSTALL=/usr/bin/install -c
 
-NDIR=$(shell pwd)
-
-
 
 LNSC_OP=
+
+# $(PWD) だと make -C dir で実行した時に、
+# $(PWD) した結果は dir ではなく、 make を実行したディレクトリになるので
+# $(shell pwd) で取得する。
+CUR_DIR:=$(shell pwd)
 
 .PHONY: help exec build build_from_d luarocks-check luarocks-check-sub
 .PHONY: release-check build test-save build-countup test-comp
@@ -752,7 +754,7 @@ test-org:
 	$(call exeLune,$(LNSC),.,test/start.lns,ast,$(EXE_OPT) 2>&1) > work/ast1.result
 	$(call exeLune,$(LNSC),.,test/start.lns,lua,$(EXE_OPT) ) > work/lua1.result
 # フルパス指定で動作することを確認
-	$(call exeLune,$(LNSC),.,$(PWD)/test/start.lns,exe,$(EXE_OPT) ) > work/test1.result
+	$(call exeLune,$(LNSC),.,$(CUR_DIR)/test/start.lns,exe,$(EXE_OPT) ) > work/test1.result
 	$(call exeLune,$(LNSC),.,test/start.lns,save,$(EXE_OPT) --depends work/1/start.dep)
 	$(call exeLune,$(LNSC_LUA),.,test/imp.lns,exe,$(EXE_OPT) 2>&1) >> work/test1.result
 
@@ -801,7 +803,7 @@ test-new:
 	$(call exeLune,$(LNSC),work/3,test/start.lns,ast,$(EXE_OPT) 2>&1 ) > work/ast2.result
 	$(call exeLune,$(LNSC),work/3,test/start.lns,lua,$(EXE_OPT) ) > work/lua2.result
 # フルパス指定で動作することを確認
-	$(call exeLune,$(LNSC),work/3,$(PWD)/work/3/test/start.lns,exe,$(EXE_OPT) ) > work/test2.result
+	$(call exeLune,$(LNSC),work/3,$(CUR_DIR)/work/3/test/start.lns,exe,$(EXE_OPT) ) > work/test2.result
 
 # meta ファイルを生成する
 	-rm work/3/test/imp.meta
@@ -928,13 +930,13 @@ test-parallel: test-org test-org-proj \
 # 元の lnsc で test-go を実行
 test-comp-go-org:
 ifeq ($(WITH_GO),y)
-	(cd .; $(MAKE) test-go LNSC=$(PWD)/lnsc)
+	(cd .; $(MAKE) test-go LNSC=$(CUR_DIR)/lnsc)
 endif
 
 # 新しい lnsc で test-go を実行
 test-comp-go-new:
 ifeq ($(WITH_GO),y)
-	(cd work/3; $(MAKE) test-go LNSC=$(PWD)/work/3/lnsc)
+	(cd work/3; $(MAKE) test-go LNSC=$(CUR_DIR)/work/3/lnsc)
 endif
 
 
