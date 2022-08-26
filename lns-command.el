@@ -27,8 +27,12 @@ function must return string.")
 
 (defvar lns-lnsc-command nil
   "lnsc command. This var can set string and function.
-function must return string."
-  )
+function must return string.")
+
+(defvar lns-lnsc-args '("--enableTestBlock")
+  "lnsc arguments list for lnsc command. This var can set list and function.
+function must return list.")
+  
 
 
 (defvar lns-target-lua-ver nil
@@ -89,7 +93,7 @@ lns-lnsc-command からパスを取得する。
       (cond ((not lns-lnsc-command)
 	     )
 	    ((functionp lns-lnsc-command)
-	     (setq lnsc-path (lns-lnsc-command)))
+	     (setq lnsc-path (funcall lns-lnsc-command)))
 	    ((stringp lns-lnsc-command)
 	     (setq lnsc-path lns-lnsc-command))
 	    (t
@@ -134,7 +138,11 @@ lns-command-get-lnsc からパスを取得する。
 	(setq command-list (list command))
       (setq command-list (list command "-e" "require( 'lune.base.base' )" " ")))
     (lns-command-add-command
-     command-list (append args '("--enableTestBlock")))))
+     command-list (append args
+			  (cond ((functionp lns-lnsc-args)
+				 (funcall lns-lnsc-args))
+				(t
+				 lns-lnsc-args))))))
 
 (defun lns-command-sync (&rest arg-list)
   (let ((dir default-directory)

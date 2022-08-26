@@ -1518,6 +1518,9 @@ test/error/var.lns:21:11: error: must set the item type of Collection. -- val4:M
 test/error/var.lns:25:11: error: It can't access the symbol '_'.
 test/error/var.lns:26:15: error: It can't access the symbol '_'.
 test/error/var.lns:59:4: error: 'pub' variable must exist top scope.
+test/error/var2.lns:2:4: error: 'let!' needs initial values. need 1 but 0.
+test/error/var3.lns:2:4: error: 'let!' needs initial values. need 2 but 1.
+test/error/var3.lns:2:4: error: unmatch value type (index:2) :: <- nil
 test/error/arg.lns:7:4: warning: 'val1' var isn't accessed
 test/error/arg.lns:7:4: warning: 'val2' var isn't accessed
 test/error/arg.lns:9:4: warning: 'val10' var isn't accessed

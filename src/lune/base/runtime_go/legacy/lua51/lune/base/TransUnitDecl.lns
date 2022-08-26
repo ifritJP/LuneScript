@@ -3765,7 +3765,7 @@ let で宣言している変数シンボル、型、初期値の型情報を解�
 @param unwrapFlag unwrap して変数に初期値を格納するかどうか。
 @return List<&Ast.TypeInfo> 型推論解決後の変数の型情報リスト
 @return LetVarInfo[] 変数のシンボル等の情報リスト
-@return List<&Ast.TypeInfo> unwrap 前の初期値のリスト
+@return List<&Ast.TypeInfo> unwrap 前の初期値の型リスト
 @return Nodes.ExpListNode! 初期値の ExpListNode。初期値が与えられていない場合は nil。
 */
 fn TransUnit.analyzeLetAndInitExp(
@@ -4015,6 +4015,19 @@ fn TransUnit.analyzeDeclVar(
    if unwrapFlag {
       let mut scope = self.pushScope( .Other ## );
 
+      if #orgExpTypeList < #letVarList {
+         if #orgExpTypeList > 0 and orgExpTypeList[ #orgExpTypeList ].$kind == .DDD {
+            // 最終が ... の場合は、初期値が足りない場合も OK
+         } else {
+            // let! の初期値が足りない場合はエラー
+            self.errorAt(
+               firstToken.pos,
+               "'let!' needs initial values. need %d but %d."
+               (#letVarList, #orgExpTypeList) );
+         }
+      }
+
+      
       // unwrap ブロックに変数を登録
       foreach letVarInfo, index in letVarList {
          if letVarInfo.varName.txt ~= "_" {

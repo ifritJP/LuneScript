@@ -1,0 +1,4 @@
+fn func() {
+   let! mut val1 { // error
+   };
+}

@@ -589,7 +589,7 @@ class _TypeInfoNormal extend _TypeInfo {
                         workParentScope.add(
                            param.processInfo, symbolKind, false, self.kind == .Func,
                            self.txt, nil, workTypeInfoMut, accessMode,
-                           self.staticFlag, .IMut, true, false );
+                           self.staticFlag, self.mutMode, true, false );
                      }
                   }
                }

@@ -6917,6 +6917,17 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    if unwrapFlag then
       local scope = self:pushScope( Ast.ScopeKind.Other )
       
+      if #orgExpTypeList < #letVarList then
+         if #orgExpTypeList > 0 and orgExpTypeList[#orgExpTypeList]:get_kind() == Ast.TypeInfoKind.DDD then
+         else
+          
+            
+            self:errorAt( firstToken.pos, string.format( "'let!' needs initial values. need %d but %d.", #letVarList, #orgExpTypeList) )
+         end
+         
+      end
+      
+      
       for index, letVarInfo in ipairs( letVarList ) do
          if letVarInfo.varName.txt ~= "_" then
             self:addLocalVar( letVarInfo.varName.pos, false, true, "_" .. letVarInfo.varName.txt, orgExpTypeList[index], Ast.MutMode.IMut )

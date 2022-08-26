@@ -227,12 +227,15 @@
     ))
 
 (defun lns-proj-info-get-conf (proj)
+  "proj 内に lune.js の静的情報を conf として持つ。"
   (plist-get proj :conf))
 
 (defun lns-proj-info-set-lnsc-path (proj lnsc-path)
+  "lnsc のパスをキャッシュする"
   (plist-put proj :lnsc-path lnsc-path)
   )
 (defun lns-proj-info-get-lnsc-path (proj)
+  "キャッシュしている lnsc のパス"
   (plist-get proj :lnsc-path)
   )
 
