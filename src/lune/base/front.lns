@@ -22,7 +22,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-      
+
 _lune_control default_async_all;
 
 import lune.base.Types;
@@ -153,7 +153,7 @@ class Front extend (frontInterface.frontInterface) {
    let mut loadedMap:Map<str,LoadInfo>;
    /** import 済みの Test ビルド用モジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMapTest:Map<str,LoadInfo>;
-/**
+   /**
 import 済みのモジュール → Lua コードのマップ。
 
 regConvertedMap() メソッドを使用して登録する。
@@ -360,9 +360,18 @@ fn Front.createAst(
    analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
    pos:&Parser.Position! ) mut : &AstInfo.ASTInfo
 {
-   return self.applyAstResult( self.createAstSub(
+   let ast = self.applyAstResult( self.createAstSub(
       importModuleInfo, parserSrc, baseDir, mod, 
       moduleId, analyzeModule, analyzeMode, pos ) );
+   if self.option.dumpDebugAst {
+      Util.println( "=== ast:%s ==========" (mod) );
+      ast.$node.processFilter(
+         dumpNode.createFilter(
+            ast.$exportInfo.$moduleTypeInfo,
+            ast.$exportInfo.$processInfo, io.stdout ),
+         new dumpNode.Opt( "", 0 ) );
+   }
+   return ast;
 }
 
 
@@ -540,7 +549,7 @@ lnsPath が存在しない場合、 frontInterface.ModuleId.tempId を返す。
 メタ情報が無効な場合、 buildCount 0 の ModuleId を返す。
 */
 fn getModuleId( lnsPath:str, mod:str, outdir:str!, mut metaInfo:&MetaForBuildId! ):
-   &frontInterface.ModuleId
+&frontInterface.ModuleId
 {
    let mut buildCount = 0;
    let! mut fileTime = Depend.getFileLastModifiedTime( lnsPath ) {
@@ -797,7 +806,6 @@ fn Front.loadParserToLuaCode(
    let moduleId = getModuleId( path, mod ## );
    let mut ast = self.createAst(
       importModuleInfo, parserSrc, baseDir, mod, moduleId, nil, .Compile, nil );
-   
 
    let mut metaTxt, luaTxt = self.convertFromAst( ast, path, .ConvMeta );
    Log._log2( .Trace, "Meta = %s" (metaTxt) );
@@ -806,34 +814,34 @@ fn Front.loadParserToLuaCode(
    if self.option.updateOnLoad {
       fn saveFile( suffix:str, txt:str, byteCompile:bool,
                    stripDebugInfo:bool, checkUpdate:bool ){
-         let mut newpath = "";
-         if! let dir = self.option.outputDir {
-            newpath = "%s/%s%s" ( dir, mod.gsub( "%.", "/" ), suffix );
-         }
-         else {
-            newpath = path.gsub( ".lns$", suffix );
-         }
-         let mut saveTxt = txt;
-         if byteCompile {
-            saveTxt = Converter.byteCompileFromLuaTxt( saveTxt, stripDebugInfo );
-         }
-         if not forceUpdateMeta and checkUpdate {
-            if! let mut fileObj = io.open( newpath ## ) {
-               let oldTxt = fileObj.read( "*a" );
-               fileObj.close();
-               if saveTxt == oldTxt {
-                  // 同じ場合はセーブしない
-                  return;
-               }
-            }
-         }
-         if! let mut fileObj = io.open( newpath, "w" ) {
-            fileObj.write( saveTxt );
-            fileObj.close();
-         }
-      }
-      saveFile( ".lua", luaTxt, self.option.byteCompile,
-                self.option.stripDebugInfo, false );
+                      let mut newpath = "";
+                      if! let dir = self.option.outputDir {
+                         newpath = "%s/%s%s" ( dir, mod.gsub( "%.", "/" ), suffix );
+                      }
+                      else {       
+                         newpath = path.gsub( ".lns$", suffix );
+                      }
+                      let mut saveTxt = txt;
+                      if byteCompile {
+                         saveTxt = Converter.byteCompileFromLuaTxt( saveTxt, stripDebugInfo );
+                      }
+                      if not forceUpdateMeta and checkUpdate {
+                         if! let mut fileObj = io.open( newpath ## ) {
+                            let oldTxt = fileObj.read( "*a" );
+                            fileObj.close();
+                            if saveTxt == oldTxt {
+                               // 同じ場合はセーブしない
+                               return;      
+                            }
+                         }
+                      }
+                      if! let mut fileObj = io.open( newpath, "w" ) {
+                         fileObj.write( saveTxt );
+                         fileObj.close();
+                      }
+                   }
+                   saveFile( ".lua", luaTxt, self.option.byteCompile,
+                             self.option.stripDebugInfo, false );
       saveFile( ".meta", metaTxt, self.option.byteCompile, true, true );
 
       {
@@ -1217,7 +1225,7 @@ pub fn Front.dumpTokenize( scriptPath:str, baseDir:str! ) mut {
       let! token = parser.getToken() {
          break;
       };
-      print( token.kind.$_txt, token.pos.lineNo, token.pos.column, token.txt );
+      Util.println( token.kind.$_txt, token.pos.lineNo, token.pos.column, token.txt );
    }
 }
 
@@ -1626,7 +1634,7 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
             foreach path, index in self.option.batchList {
                let mut updateInfo =
                   createUpdateInfo( path, (path.gsub( ".lns$", ".d" )), baseDir );
-               print( "%s: start..." ( updateInfo.$scriptPath));
+               Util.println( "%s: start..." ( updateInfo.$scriptPath));
                if! process( false, updateInfo, nil ) {
                   if self.option.$validPostBuild {
                      postProcessMap[ index ] = _exp;
@@ -1638,9 +1646,9 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
             forsort postProcess, index in postProcessMap {
                let prev = os.clock();
                let path = self.option.batchList[ index ];
-               print( "%s: waiting..." (path) );
+               Util.println( "%s: waiting..." (path) );
                postProcess();
-               print( "%s: done %g msec" ( path, (os.clock() - prev) * 1000));
+               Util.println( "%s: done %g msec" ( path, (os.clock() - prev) * 1000));
             }
          } else {
             let _, baseDir = getBaseDir( self.option.scriptPath, self.option.$projDir );
@@ -1682,20 +1690,25 @@ fn Front.executeLns( path:str, baseDir:str! ) mut {
       let parserSrc = Types.ParserSrc.LnsPath( path, mod, nil );
       let _, luaCode = self.loadParserToLuaCode(
          new frontInterface.ImportModuleInfo(), parserSrc, path, mod, baseDir )**;
+      Log._log2( .Debug, "luacode: " .. luaCode );
 
       __luaLock {
          // import( submod ) の処理で、変換済みの submod の lua をロードするように
          // package.preload を設定する。
          let subModPreLoad = ```
-return function( submod2Code )
+return function( submod2Code, dumpCode )
    local preloadFunc = function( mod )
-      local loaded, mess = load( submod2Code[ mod ] )
+      code = submod2Code[ mod ]
+      local loaded, mess = load( code )
       if not loaded then
          error( mess )
       end
       return loaded()
    end
    for mod, code in pairs( submod2Code ) do
+      if dumpCode then
+         print( string.format( "mod: %s %s", mod, code ) )
+      end
       package.preload[ mod ] = preloadFunc
    end
 end
@@ -1706,7 +1719,7 @@ end
          let! preloadFunc = loaded(##) {
             error( "failed to preloadFunc" );
          };
-         (preloadFunc@@form)( self.convertedMap );
+             (preloadFunc@@form)( self.convertedMap, Log.getLevel() >= Log.Level.Debug );
       }
 
       // path の luacode を実行する。
@@ -1729,7 +1742,7 @@ end
                (testFunc@@form)( mod );
             }
          } else {
-            print( mess );
+            Util.println( mess );
          }
       }
    }
@@ -1787,7 +1800,7 @@ pub fn Front.exec() mut
          self.build(
             .CreateAst,
             fn ( ast: &AstInfo.ASTInfo ) {
-               print( ast.$streamName );
+               Util.println( ast.$streamName );
             });
       }
       case .Shebang {
@@ -1806,7 +1819,7 @@ pub fn Front.exec() mut
       }
       case .GoMod {
          foreach path in self.gomodMap.getModPathList() {
-            print( path );
+            Util.println( path );
          }
       }
       case .Exec {
@@ -1845,7 +1858,7 @@ pub fn Front.exec() mut
             });
       }
       default {
-         print( "illegal mode" );
+         Util.println( "illegal mode" );
       }
    }
 }

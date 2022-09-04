@@ -2350,3 +2350,11 @@ _section();
    print( replace( "abcdbcdefgab", "bcd", "BCD" ) );
    print( replace( "a[bcd]ebcdefgab", "[bcd]", "BCD" ) );
 }
+_section();
+{
+   class Hoge {
+      pub fn __init() {
+         print( __func__ );
+      }
+   }
+}

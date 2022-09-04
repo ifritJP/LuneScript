@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convLua'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -138,7 +138,7 @@ function _lune.unwrapDefault( val, defval )
 end
 
 function _lune.loadModule( mod )
-   if __luneScript then
+   if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
@@ -194,8 +194,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 
@@ -1468,7 +1468,14 @@ end
 
 
 function ConvFilter:processRoot( node, opt )
+   local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
+   Log.log( Log.Level.Log, __func__, 1062, function (  )
+   
+      return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
+   end )
+   
+   
    self:writeln( string.format( "--%s", self.streamName) )
    
    self.needModuleObj = node:get_provideNode() == nil

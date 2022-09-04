@@ -735,7 +735,11 @@ pattern は  {, }, {{, }} のいずれか。
 			  (goto-char org-pos)
 			  (lns-indent-prev-eol)
 			  (when (eq (char-before) ?})
-			    (setq column (1- (current-column))))
+			    (if (and (> (point) 0)
+				     (eq (char-before (1- (point))) ?{))
+				;; {} の場合は { に合せる
+				(setq column (- (current-column) 2))
+			    (setq column (1- (current-column)))))
 			  (when (not column)
 			    (goto-char org-pos)
 			    (lns-indent-prev-eol)

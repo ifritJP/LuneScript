@@ -1073,7 +1073,7 @@ ifneq ($(LANG_KIND),lua)
 			work/13/lune work/3_3/work/3_3_3/lune
 endif
 ifeq ($(WITH_GO),y)
-	diff test/result/test1.result work/test1.result
+	diff test/result/test1.result work/test2.result
 endif
 	diff work/test1.result work/test2.result
 	diff work/ast1.result work/ast2.result
@@ -1737,6 +1737,9 @@ define go-build-lns
 	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build -o lnsc $(GOBUILD_TAG))
 endef
 
+build-wasm:
+	GOOS=js GOARCH=wasm $(MAKE) go-build NO_TEST=y GOTAG=gopherlua
+
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
 go-build:
 # ./lune のソースから $(GO_WORK_DIR)/lune 以下に変換結果を出力
@@ -1770,7 +1773,12 @@ ifndef NO_TEST
 			grep -e 'error:' -e 'warning:' > work/test2.result
 	diff work/test1.result work/test2.result -I 'Entering directory' -I 'Leaving directory'
 endif
+
+ifneq ($(GOARCH),wasm)
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) .
+else
+	cp $(GO_WORK_DIR)/build/$(LNSC_GO) lnsc.wasm
+endif
 
 test-lnsc-go:
 	-$(MAKE) test-go

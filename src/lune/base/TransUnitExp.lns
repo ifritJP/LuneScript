@@ -1214,11 +1214,11 @@ pub fn findForm( format:str ) __async : List<str> {
 
    while true {
       let mut pos:int!, mut endPos:int! = nil, nil;
-      if! let index, endIndex = remain.find( "^%%%-?[%d]*%a" ## ) {
+      if! let index, endIndex = remain.find( "^%%%-?[%d%.]*%a" ## ) {
          pos, endPos = index, endIndex;
       }  
       else {
-         if! let index, endIndex = remain.find( "[^%%]%%%-?[%d]*%a" ## ) {
+         if! let index, endIndex = remain.find( "[^%%]%%%-?[%d%.]*%a" ## ) {
             pos, endPos = index + 1, endIndex;
          }      
       }  
@@ -2907,7 +2907,7 @@ fn TransUnit.analyzeExpSymbol(
                if self.analyzeMode ~= .Diag {
                   let mut work:&Ast.Scope = self.$scope;
                   while true {
-                     print( work, self.moduleScope );
+                     Util.println( work, self.moduleScope );
                      if work == work.$parent {
                         break;
                      }
@@ -2917,7 +2917,7 @@ fn TransUnit.analyzeExpSymbol(
                   self.$scope.filterSymbolTypeInfo(
                      self.$scope, self.moduleScope, self.scopeAccess,
                      fn ( workSymbolInfo:&Ast.SymbolInfo ): bool {
-                        print( "sym", workSymbolInfo.$name );
+                        Util.println( "sym", workSymbolInfo.$name );
                         return true;
                      } );
                }

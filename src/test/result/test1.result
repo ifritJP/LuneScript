@@ -484,6 +484,11 @@ val3	10.5
 1	2
 1	nil
 nil	nil
+-----	2067	-----
+    1.23
+   12.35
+  123.46
+ 1234.57
 11
 12
 12
@@ -2445,9 +2450,9 @@ test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@
 --lua
 local _moduleObj = {}
 local __mod__ = '@lua'
-local _lune = require( "lune.base.runtime6" )
-if not _lune6 then
-   _lune6 = _lune
+local _lune = require( "lune.base.runtime7" )
+if not _lune7 then
+   _lune7 = _lune
 end
 print( 1 + 10 )
 
@@ -2477,7 +2482,9 @@ case2: ---------------
 case2
 module: test.testing ==============================
 @test.@TestSub2
+@test.@TestSub2	test
 @test.@TestSub1
+@test.@TestSub1	test
 @test.@TestMini	test
 module: test.TestMini ==============================
 case1: ---------------

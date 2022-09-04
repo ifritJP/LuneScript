@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convGo'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -168,7 +168,7 @@ function _lune.unwrapDefault( val, defval )
 end
 
 function _lune.loadModule( mod )
-   if __luneScript then
+   if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
@@ -232,8 +232,8 @@ function _lune._run( runner, mod )
     return true
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 
@@ -3518,6 +3518,27 @@ function convFilter:isImplementedRunner( typeInfo )
    return false
 end
 
+function convFilter:output_to_decl__func__sym( declInfo, funcType )
+
+   if declInfo:get_has__func__Symbol() then
+      local nameSpace = self:getCanonicalName( funcType:get_parentInfo(), false )
+      local funcName
+      
+      do
+         local name = declInfo:get_name()
+         if name ~= nil then
+            funcName = name.txt
+         else
+            funcName = "<anonymous>"
+         end
+      end
+      
+      local funcSym_ = _lune.unwrap( _lune.nilacc( funcType:get_scope(), 'getSymbolInfoChild', 'callmtd' , "__func__" ))
+      self:writeln( string.format( '%s := "%s.%s"', self:getSymbolSym( funcSym_ ), nameSpace, funcName) )
+   end
+   
+end
+
 
 function convFilter:processDeclConstr( node, opt )
 
@@ -3545,6 +3566,15 @@ function convFilter:processDeclConstr( node, opt )
    end
    
    
+   local scope = classType:get_scope()
+   if  nil == scope then
+      local _scope = scope
+   
+      error( "illegal scope" )
+   end
+   
+   local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, Ast.ScopeAccess.Normal ))
+   self:output_to_decl__func__sym( node:get_declInfo(), initFuncType )
    filter( _lune.unwrap( node:get_declInfo():get_body()), self, node )
    
    self:writeln( "}" )
@@ -3655,23 +3685,7 @@ function convFilter:outputDeclFuncInfo( node, declInfo )
    end
    
    
-   if declInfo:get_has__func__Symbol() then
-      local nameSpace = self:getCanonicalName( funcType:get_parentInfo(), false )
-      local funcName
-      
-      do
-         local name = declInfo:get_name()
-         if name ~= nil then
-            funcName = name.txt
-         else
-            funcName = "<anonymous>"
-         end
-      end
-      
-      local funcSym_ = _lune.unwrap( _lune.nilacc( funcType:get_scope(), 'getSymbolInfoChild', 'callmtd' , "__func__" ))
-      self:writeln( string.format( '%s := "%s.%s"', self:getSymbolSym( funcSym_ ), nameSpace, funcName) )
-   end
-   
+   self:output_to_decl__func__sym( declInfo, funcType )
    
    for __index, convArg in ipairs( convFunc:get_argList() ) do
       if convArg:get_posForModToRef() then

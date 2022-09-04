@@ -2660,6 +2660,25 @@ fn convFilter.isImplementedRunner( typeInfo:&Ast.TypeInfo ) : bool {
    return false;
 }
 
+/**
+__func__ シンボル宣言の出力。
+*/
+fn convFilter.output_to_decl__func__sym(
+   declInfo:&Nodes.DeclFuncInfo, funcType:&Ast.TypeInfo ) mut
+{
+   if declInfo.$has__func__Symbol {
+      let mut nameSpace = self.getCanonicalName( funcType.$parentInfo, false );
+      let funcName;
+      if! let name = declInfo.$name {
+         funcName = name.txt;
+      } else {
+         funcName = "<anonymous>";
+      }
+      let funcSym_ = unwrap funcType.$scope$.getSymbolInfoChild$( "__func__" );
+      self.writeln( '%s := "%s.%s"' (self.getSymbolSym(funcSym_), nameSpace, funcName) );
+   }
+}
+
 pub override fn convFilter.processDeclConstr(
    node: &Nodes.DeclConstrNode, opt: Opt ) mut
 {
@@ -2684,6 +2703,12 @@ pub override fn convFilter.processDeclConstr(
       self.popIndent();
    }
 
+
+   let! scope = classType.$scope {
+      error( "illegal scope" );
+   };
+   let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, .Normal );
+   self.output_to_decl__func__sym( node.$declInfo, initFuncType );
    filter( unwrap node.$declInfo.$body, self, node );
 
    self.writeln( "}" );
@@ -2786,19 +2811,8 @@ pub fn convFilter.outputDeclFuncInfo(
          ( self.getModuleName( self.$moduleTypeInfo, false ),
            getAddEnvArg( 0, self.option.$addEnvArg ) ) );
    }
-   
-   if declInfo.$has__func__Symbol {
-      let mut nameSpace = self.getCanonicalName( funcType.$parentInfo, false );
-      let funcName;
-      if! let name = declInfo.$name {
-         funcName = name.txt;
-      } else {
-         funcName = "<anonymous>";
-      }
-      let funcSym_ = unwrap funcType.$scope$.getSymbolInfoChild$( "__func__" );
-      self.writeln( '%s := "%s.%s"' (self.getSymbolSym(funcSym_), nameSpace, funcName) );
-   }
 
+   self.output_to_decl__func__sym( declInfo, funcType );
    
    foreach convArg in convFunc.$argList {
       if convArg.$posForModToRef {

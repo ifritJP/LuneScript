@@ -8300,12 +8300,12 @@ local function findForm( format )
    while true do
       local pos, endPos = nil, nil
       do
-         local index, endIndex = remain:find( "^%%%-?[%d]*%a" )
+         local index, endIndex = remain:find( "^%%%-?[%d%.]*%a" )
          if index ~= nil and  endIndex ~= nil then
             pos, endPos = index, endIndex
          else
             do
-               local index, endIndex = remain:find( "[^%%]%%%-?[%d]*%a" )
+               local index, endIndex = remain:find( "[^%%]%%%-?[%d%.]*%a" )
                if index ~= nil and  endIndex ~= nil then
                   pos, endPos = index + 1, endIndex
                end

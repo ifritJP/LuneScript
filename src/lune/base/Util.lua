@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Util'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -89,7 +89,7 @@ function _lune.unwrapDefault( val, defval )
 end
 
 function _lune.loadModule( mod )
-   if __luneScript then
+   if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
@@ -145,14 +145,36 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local Str = _lune.loadModule( 'lune.base.Str' )
+
+local consoleOStream = io.stdout
+
+local function println( ... )
+
+   local list = {...}
+   do
+      for index, arg in pairs( list ) do
+         consoleOStream:write( string.format( "%s", arg) )
+         if index ~= #list then
+            consoleOStream:write( "\t" )
+         else
+          
+            consoleOStream:write( "\n" )
+         end
+         
+      end
+      
+   end
+   
+end
+_moduleObj.println = println
 
 local debugFlag = true
 local function setDebugFlag( flag )
@@ -583,7 +605,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 360, function (  )
+   Log.log( Log.Level.Warn, __func__, 376, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

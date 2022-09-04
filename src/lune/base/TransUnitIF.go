@@ -534,9 +534,9 @@ func (self *TransUnitIF_SimpeTransUnit) ErrorAt(_env *LnsEnv, pos Types_Position
         _nearCode := self.nearCode
         if !Lns_IsNil( _nearCode ) {
             nearCode := _nearCode.(string)
-            Lns_print([]LnsAny{"------ near code -----", self.macroMode})
-            Lns_print([]LnsAny{nearCode})
-            Lns_print([]LnsAny{"------"})
+            Util_println(_env, []LnsAny{"------ near code -----", self.macroMode})
+            Util_println(_env, []LnsAny{nearCode})
+            Util_println(_env, []LnsAny{"------"})
         }
     }
     Util_err(_env, "has error")

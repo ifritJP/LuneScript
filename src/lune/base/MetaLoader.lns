@@ -407,24 +407,24 @@ __test case1(ctrl) {
    __t._isNil( ctrl, err );
 
    when! info {
-      print( info.__formatVersion );
-      print( info.__enableTest );
-      print( info.__buildId );
-      print( "========== __typeId2ClassInfoMap ======== ");
+      Util.println( info.__formatVersion );
+      Util.println( info.__enableTest );
+      Util.println( info.__buildId );
+      Util.println( "========== __typeId2ClassInfoMap ======== ");
       dumpStem( io.stdout, info.__typeId2ClassInfoMap );
-      print( "========== __typeInfoList ======== ");
+      Util.println( "========== __typeInfoList ======== ");
       dumpStem( io.stdout, info.__typeInfoList );
-      print( "========== __varName2InfoMap ======== ");
+      Util.println( "========== __varName2InfoMap ======== ");
       dumpStem( io.stdout, info.__varName2InfoMap );
-      print( info.__moduleTypeId );
-      print( info.__moduleSymbolKind );
-      print( "========== __moduleMutable ======== ");
+      Util.println( info.__moduleTypeId );
+      Util.println( info.__moduleSymbolKind );
+      Util.println( "========== __moduleMutable ======== ");
       dumpStem( io.stdout, info.__moduleMutable );
-      print( "========== __dependModuleMap ======== ");
+      Util.println( "========== __dependModuleMap ======== ");
       dumpStem( io.stdout, info.__dependModuleMap );
-      print( "========== __dependIdMap ======== ");
+      Util.println( "========== __dependIdMap ======== ");
       dumpStem( io.stdout, info.__dependIdMap );
-      print( info.__hasTest );
+      Util.println( info.__hasTest );
    } else {
       __t._err( ctrl, "info is nil" );
    }

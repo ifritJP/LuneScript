@@ -1,6 +1,7 @@
 _lune_control default_async_all;
 
 import lune.base.Nodes;
+import lune.base.Util;
 import lune.base.Ast;
 
 class NamespaceInfo {
@@ -168,8 +169,8 @@ pub class Indexer {
 
       foreach node in list {
          let index = unwrap self.node2Index[ node ];
-         print( "%d:%d:" (node.$pos.lineNo, node.$pos.column ),
-                index.getIdTxt(), Nodes.getNodeKindName( node.$kind ) );  
+         Util.println( "%d:%d:" (node.$pos.lineNo, node.$pos.column ),
+                       index.getIdTxt(), Nodes.getNodeKindName( node.$kind ) );  
       }
    }
 }

@@ -1214,11 +1214,11 @@ pub fn findForm( format:str ) __async : List<str> {
 
    while true {
       let mut pos:int!, mut endPos:int! = nil, nil;
-      if! let index, endIndex = remain.find( "^%%%-?[%d]*%a" ## ) {
+      if! let index, endIndex = remain.find( "^%%%-?[%d%.]*%a" ## ) {
          pos, endPos = index, endIndex;
       }  
       else {
-         if! let index, endIndex = remain.find( "[^%%]%%%-?[%d]*%a" ## ) {
+         if! let index, endIndex = remain.find( "[^%%]%%%-?[%d%.]*%a" ## ) {
             pos, endPos = index + 1, endIndex;
          }      
       }  

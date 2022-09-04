@@ -28,6 +28,22 @@ import lune.base.Depend;
 import lune.base.Log;
 import lune.base.Str;
 
+let mut consoleOStream = io.stdout;
+   
+pub fn println( ... ) {
+   let list = [...];
+   __asyncLock {
+      foreach arg, index in list {
+         consoleOStream.write( "%s" (arg) );
+         if index ~= #list {
+            consoleOStream.write( "\t" );
+         } else {
+            consoleOStream.write( "\n" );
+         }
+      }
+   }
+}
+
 pri let mut debugFlag = true;
 pub fn setDebugFlag( flag:bool ) {
    debugFlag = flag;
