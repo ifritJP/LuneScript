@@ -2,11 +2,11 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Log'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune.loadModule( mod )
-   if __luneScript then
+   if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
@@ -62,8 +62,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 

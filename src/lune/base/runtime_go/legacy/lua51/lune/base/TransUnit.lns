@@ -1313,9 +1313,9 @@ pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut
       Util.errorLog( warnmess.$mess );
    }
    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
-      print( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
-      print( self.parser.getNearCode() );
-      print( "------" );
+      Util.println( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
+      Util.println( self.parser.getNearCode() );
+      Util.println( "------" );
    }
    
    Util.err( "has error" );

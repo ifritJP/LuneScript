@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@AsyncParser'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -171,7 +171,7 @@ function _lune._fromMap( obj, map, memInfoList )
 end
 
 function _lune.loadModule( mod )
-   if __luneScript then
+   if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
@@ -235,8 +235,8 @@ function _lune._run( runner, mod )
     return true
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 

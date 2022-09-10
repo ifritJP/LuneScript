@@ -137,6 +137,7 @@ pub class Option {
    /** アプリ名 */
    pub let mut appName:str!;
    pub let mut mainModule:str;
+   pub let mut dumpDebugAst:bool;
 
    pub let mut transCtrlInfo:Types.TransCtrlInfo;
 
@@ -171,6 +172,7 @@ pub class Option {
    pub let mut convGoRunnerNum:int;
 
    pub fn __init() {
+      self.dumpDebugAst = false;
       self.legacyNewName = false;
       self.stdinFile = nil;
       self.validPostBuild = true;
@@ -273,7 +275,7 @@ SOFTWARE.
 pub fn analyze( mut argList: &List<str> ) __noasync : Option {
 
    fn printUsage(code:int) : __ {
-      print( ```
+      Util.println( ```
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
@@ -324,6 +326,7 @@ usage:
     --valid-luaval: enable luaval when transcompie to lua.
     --package <name>: set the package name for the go-lang.
     --app <name>: set the application name for the go-lang.
+    --debug-dump-ast: dump ast for debuging.
 
     compati_op:
       --legacyNewName: use the legacy new method name for lua.
@@ -408,6 +411,9 @@ usage:
                case "--noEnvArg" {
                   option.addEnvArg = false;
                }
+               case "--debug-dump-ast" {
+                  option.dumpDebugAst = true;
+               }
                case "--disableMultiPhaseAst" {
                   option.transCtrlInfo.validMultiPhaseTransUnit = false;
                }
@@ -469,7 +475,7 @@ usage:
                   option.mode = .Shebang;
                }
                case "--version" {
-                  print( "LuneScript: version %s (%d:Lua%s) [%s]"
+                  Util.println( "LuneScript: version %s (%d:Lua%s) [%s]"
                      ( Ver.version, getBuildCount(),
                        Depend.getLuaVersion(), Ver.metaVersion) );
                   os.exit( 0 );
@@ -479,7 +485,7 @@ usage:
                }
                case "--builtin" {
                   forsort builtinTypeInfo, typeId in Ast.getBuiltInTypeIdMap() {
-                     print( typeId, builtinTypeInfo.$typeInfo.getTxt( ## ) );
+                     Util.println( typeId, builtinTypeInfo.$typeInfo.getTxt( ## ) );
                   }
                   os.exit( 0 );
                }

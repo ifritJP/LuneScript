@@ -510,7 +510,7 @@ __test {
          fn ( node:&Nodes.Node, parent:&Nodes.Node,
               relation:str, depth:int ): Nodes.NodeVisitMode
          {
-            print( "%s: %s: %d:%d"
+            Util.println( "%s: %s: %d:%d"
                ( string.rep( " ", depth * 3 ) .. relation,
                  Nodes.getNodeKindName( node.$kind ),
                  node.$effectivePos.lineNo, node.$effectivePos.column ) );
@@ -520,7 +520,7 @@ __test {
                   appTxt = "%s %s %s" ( nilAccNode.$parent$.$kind,
                                         nilAccNode.$prefix.$kind,
                                         nilAccNode.$acc.$kind );                
-                  print( "%s: conved == %s: %d:%d %s"
+                  Util.println( "%s: conved == %s: %d:%d %s"
                          ( string.rep( " ", depth * 3 ) .. relation,
                            workNode.$kind, workNode.$pos.lineNo,
                            workNode.$pos.column, appTxt ) );
@@ -529,7 +529,7 @@ __test {
                   fn ( convNode:&Node, convParent:&Node,
                        convRelation:str, convDepth:int): Nodes.NodeVisitMode
                   {
-                     print( "%s: conved -- %s: %d:%d  %s"
+                     Util.println( "%s: conved -- %s: %d:%d  %s"
                             ( string.rep( " ", convDepth * 3 ) .. convRelation,
                               convNode.$kind, convNode.$pos.lineNo, convNode.$pos.column,
                               convNode.$hasNilAcc and "nilAcc" or "" ) );

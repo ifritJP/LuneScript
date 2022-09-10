@@ -53,6 +53,10 @@
       func();
    }
 }
+{
+   let map:Map<stem!,stem!> = {}; // error
+   let set:Set<stem!> = (@); // error
+}
 
 pub let var = 1;
 {

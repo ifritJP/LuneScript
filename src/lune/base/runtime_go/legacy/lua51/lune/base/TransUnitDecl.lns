@@ -200,6 +200,12 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                   typeInfo = self.processInfo.createMap(
                      accessMode, self.getCurrentClass(),
                      genericList[ 1 ], genericList[ 2 ], .Mut );
+                  if genericList[ 1 ].$nilable or genericList[ 2 ].$nilable {
+                     self.addErrMess(
+                        symbolNode.$pos,
+                        "The key or value type must not be nilable. -- %s"
+                        (typeInfo.getTxt(##)) );
+                  }
                }
             }
             case .List {
@@ -221,6 +227,12 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                   typeInfo = self.processInfo.createSet(
                      accessMode, self.getCurrentClass(),
                      genericList, .Mut );
+                  if genericList[ 1 ].$nilable {
+                     self.addErrMess(
+                        symbolNode.$pos,
+                        "The value type must not be nilable. -- %s"
+                        (typeInfo.getTxt(##)) );
+                  }
                }
             }
             case .DDD {

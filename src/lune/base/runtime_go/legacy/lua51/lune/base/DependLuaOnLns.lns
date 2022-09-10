@@ -136,7 +136,7 @@ end
             error( "failed to load func" );
          }
       } else {
-         print( mess );
+         Util.println( mess );
       }
    }
 }

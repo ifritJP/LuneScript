@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Option'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -101,7 +101,7 @@ function _lune._fromMap( obj, map, memInfoList )
 end
 
 function _lune.loadModule( mod )
-   if __luneScript then
+   if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
@@ -157,8 +157,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 
@@ -178,7 +178,7 @@ local Ast = _lune.loadModule( 'lune.base.Ast' )
 
 local function getBuildCount(  )
 
-   return 12233
+   return 12278
 end
 
 
@@ -332,6 +332,7 @@ function Option._new(  )
    return obj
 end
 function Option:__init() 
+   self.dumpDebugAst = false
    self.legacyNewName = false
    self.stdinFile = nil
    self.validPostBuild = true
@@ -485,7 +486,7 @@ local function analyze( argList )
    
    local function printUsage( code )
    
-      print( [==[
+      Util.println( [==[
 usage:
   <type1> [-prof] [-r] src.lns mode [mode-option]
   <type2> -mklunemod path
@@ -536,6 +537,7 @@ usage:
     --valid-luaval: enable luaval when transcompie to lua.
     --package <name>: set the package name for the go-lang.
     --app <name>: set the application name for the go-lang.
+    --debug-dump-ast: dump ast for debuging.
 
     compati_op:
       --legacyNewName: use the legacy new method name for lua.
@@ -672,6 +674,8 @@ end
                   option.validProf = true
                elseif _switchExp == "--noEnvArg" then
                   option.addEnvArg = false
+               elseif _switchExp == "--debug-dump-ast" then
+                  option.dumpDebugAst = true
                elseif _switchExp == "--disableMultiPhaseAst" then
                   option.transCtrlInfo.validMultiPhaseTransUnit = false
                elseif _switchExp == "--disableMultiThreadAst" then
@@ -729,7 +733,7 @@ end
                elseif _switchExp == "-shebang" then
                   option.mode = ModeKind.Shebang
                elseif _switchExp == "--version" then
-                  print( string.format( "LuneScript: version %s (%d:Lua%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
+                  Util.println( string.format( "LuneScript: version %s (%d:Lua%s) [%s]", Ver.version, getBuildCount(  ), Depend.getLuaVersion(  ), Ver.metaVersion) )
                   os.exit( 0 )
                elseif _switchExp == "--projDir" then
                   option.projDir = getNextOp(  )
@@ -744,7 +748,7 @@ end
                      for __index, typeId in ipairs( __sorted ) do
                         local builtinTypeInfo = __map[ typeId ]
                         do
-                           print( typeId, builtinTypeInfo:get_typeInfo():getTxt(  ) )
+                           Util.println( typeId, builtinTypeInfo:get_typeInfo():getTxt(  ) )
                         end
                      end
                   end
@@ -1032,7 +1036,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 748, function (  )
+   Log.log( Log.Level.Log, __func__, 754, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

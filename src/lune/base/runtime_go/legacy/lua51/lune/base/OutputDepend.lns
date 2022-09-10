@@ -135,7 +135,7 @@ __test {
          when! baseDir {
             metaPath = Util.pathJoin( baseDir, metaPath );
          }
-         print( metaPath );
+         Util.println( metaPath );
          let mess;
          let mut moduleMeta:&frontInterface.ModuleMeta! = nil;
          __luaLock {
@@ -151,7 +151,7 @@ __test {
          when! moduleMeta {
             return moduleMeta;
          }
-         print( mess );
+         Util.println( mess );
          return nil;
       }
    }

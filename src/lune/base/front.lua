@@ -2300,7 +2300,8 @@ function Front:executeLns( path, baseDir )
 return function( submod2Code, dumpCode )
    local preloadFunc = function( mod )
       code = submod2Code[ mod ]
-      local loaded, mess = load( code )
+      local loadFunc = loadstring or load
+      local loaded, mess = loadFunc( code )
       if not loaded then
          error( mess )
       end
@@ -2368,7 +2369,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1753, function (  )
+   Log.log( Log.Level.Trace, __func__, 1754, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

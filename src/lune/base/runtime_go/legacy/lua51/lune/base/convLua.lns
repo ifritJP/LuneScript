@@ -1059,6 +1059,9 @@ end
 pub override fn ConvFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
+   Log._log2( .Log, "streamName: %s, enableTest: %s" ( self.streamName,
+                                                       self.enableTest) );
+   
    self.writeln( "--%s" ( self.streamName ) );
 
    self.needModuleObj = node.$provideNode == nil;
@@ -3876,7 +3879,7 @@ _ = 1;
    fn Ast2Code( option:&LnsOpt.Option,
                 ast:AstInfo.ASTInfo, streamName:str ) __noasync : str, str
    {
-      print( "====hoge", Nodes.getNodeKindName(ast.$node.$kind),
+      Util.println( "====hoge", Nodes.getNodeKindName(ast.$node.$kind),
              ast.$node@@@Nodes.RootNode );
       let mut stream = new Util.memStream();
       let mut metaStream = new Util.memStream();
@@ -3909,7 +3912,7 @@ _ = 1;
                }
             }
          } else {
-            print( mess );
+            Util.println( mess );
          }
       }
    }

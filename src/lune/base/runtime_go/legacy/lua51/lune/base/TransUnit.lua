@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@TransUnit'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -131,7 +131,7 @@ function _lune.unwrapDefault( val, defval )
 end
 
 function _lune.loadModule( mod )
-   if __luneScript then
+   if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
    end
    return require( mod )
@@ -214,8 +214,8 @@ function _lune.replace( txt, src, dst )
    return result
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 
@@ -1690,10 +1690,10 @@ function TransUnit:errorAt( pos, mess )
    end
    
    if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
-      print( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
+      Util.println( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
        )
-      print( self.parser:getNearCode(  ) )
-      print( "------" )
+      Util.println( self.parser:getNearCode(  ) )
+      Util.println( "------" )
    end
    
    
@@ -3344,6 +3344,10 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                else
                 
                   typeInfo = self.processInfo:createMap( accessMode, self:getCurrentClass(  ), genericList[1], genericList[2], Ast.MutMode.Mut )
+                  if genericList[1]:get_nilable() or genericList[2]:get_nilable() then
+                     self:addErrMess( symbolNode:get_pos(), string.format( "The key or value type must not be nilable. -- %s", typeInfo:getTxt(  )) )
+                  end
+                  
                end
                
             elseif _switchExp == Ast.TypeInfoKind.List then
@@ -3359,6 +3363,10 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
             elseif _switchExp == Ast.TypeInfoKind.Set then
                if checkAlternateTypeCount( 1 ) then
                   typeInfo = self.processInfo:createSet( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
+                  if genericList[1]:get_nilable() then
+                     self:addErrMess( symbolNode:get_pos(), string.format( "The value type must not be nilable. -- %s", typeInfo:getTxt(  )) )
+                  end
+                  
                end
                
             elseif _switchExp == Ast.TypeInfoKind.DDD then
@@ -4817,7 +4825,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1771, function (  )
+         Log.log( Log.Level.Debug, __func__, 1783, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -10001,7 +10009,7 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
                if self.analyzeMode ~= AnalyzeMode.Diag then
                   local work = self:get_scope()
                   while true do
-                     print( work, self.moduleScope )
+                     Util.println( work, self.moduleScope )
                      if work == work:get_parent() then
                         break
                      end
@@ -10012,7 +10020,7 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
                   
                   self:get_scope():filterSymbolTypeInfo( self:get_scope(), self.moduleScope, self.scopeAccess, function ( workSymbolInfo )
                   
-                     print( "sym", workSymbolInfo:get_name() )
+                     Util.println( "sym", workSymbolInfo:get_name() )
                      return true
                   end )
                end

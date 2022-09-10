@@ -1507,6 +1507,8 @@ test/error/var.lns:19:4: warning: 'val3' var isn't accessed
 test/error/var.lns:21:4: warning: 'val4' var isn't accessed
 test/error/var.lns:30:12: warning: 'val' var isn't accessed
 test/error/var.lns:42:7: warning: 'val' var isn't accessed
+test/error/var.lns:57:8: warning: 'map' var isn't accessed
+test/error/var.lns:58:8: warning: 'set' var isn't accessed
 test/error/var.lns:2:12: error: Key or value type is unknown
 test/error/var.lns:3:8: error: This symbol is shadowed from 4:8 -- val2
 test/error/var.lns:3:13: error: generic type count is unmatch. -- 2
@@ -1522,7 +1524,9 @@ test/error/var.lns:19:11: error: must set the item type of Collection. -- val3:A
 test/error/var.lns:21:11: error: must set the item type of Collection. -- val4:Map<,>
 test/error/var.lns:25:11: error: It can't access the symbol '_'.
 test/error/var.lns:26:15: error: It can't access the symbol '_'.
-test/error/var.lns:59:4: error: 'pub' variable must exist top scope.
+test/error/var.lns:57:12: error: The key or value type must not be nilable. -- Map<stem!,stem!>
+test/error/var.lns:58:12: error: The value type must not be nilable. -- Set<stem!>
+test/error/var.lns:63:4: error: 'pub' variable must exist top scope.
 test/error/var2.lns:2:4: error: 'let!' needs initial values. need 1 but 0.
 test/error/var3.lns:2:4: error: 'let!' needs initial values. need 2 but 1.
 test/error/var3.lns:2:4: error: unmatch value type (index:2) :: <- nil

@@ -1699,7 +1699,8 @@ fn Front.executeLns( path:str, baseDir:str! ) mut {
 return function( submod2Code, dumpCode )
    local preloadFunc = function( mod )
       code = submod2Code[ mod ]
-      local loaded, mess = load( code )
+      local loadFunc = loadstring or load -- lua5.1 and lua5.2
+      local loaded, mess = loadFunc( code )
       if not loaded then
          error( mess )
       end

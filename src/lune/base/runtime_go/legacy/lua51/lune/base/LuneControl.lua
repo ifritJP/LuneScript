@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuneControl'
 local _lune = {}
-if _lune6 then
-   _lune = _lune6
+if _lune7 then
+   _lune = _lune7
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -112,8 +112,8 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 
-if not _lune6 then
-   _lune6 = _lune
+if not _lune7 then
+   _lune7 = _lune
 end
 
 

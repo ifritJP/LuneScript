@@ -738,9 +738,9 @@ pub class SimpeTransUnit extend TransUnitBase {
          Util.errorLog( errmess.$mess );
       }
       if! let nearCode = self.nearCode {
-         print( "------ near code -----", self.macroMode );
-         print( nearCode );
-         print( "------" );
+         Util.println( "------ near code -----", self.macroMode );
+         Util.println( nearCode );
+         Util.println( "------" );
       }
       
       Util.err( "has error" );

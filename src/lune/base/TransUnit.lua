@@ -3344,6 +3344,10 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                else
                 
                   typeInfo = self.processInfo:createMap( accessMode, self:getCurrentClass(  ), genericList[1], genericList[2], Ast.MutMode.Mut )
+                  if genericList[1]:get_nilable() or genericList[2]:get_nilable() then
+                     self:addErrMess( symbolNode:get_pos(), string.format( "The key or value type must not be nilable. -- %s", typeInfo:getTxt(  )) )
+                  end
+                  
                end
                
             elseif _switchExp == Ast.TypeInfoKind.List then
@@ -3359,6 +3363,10 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
             elseif _switchExp == Ast.TypeInfoKind.Set then
                if checkAlternateTypeCount( 1 ) then
                   typeInfo = self.processInfo:createSet( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
+                  if genericList[1]:get_nilable() then
+                     self:addErrMess( symbolNode:get_pos(), string.format( "The value type must not be nilable. -- %s", typeInfo:getTxt(  )) )
+                  end
+                  
                end
                
             elseif _switchExp == Ast.TypeInfoKind.DDD then
@@ -4817,7 +4825,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1771, function (  )
+         Log.log( Log.Level.Debug, __func__, 1783, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
