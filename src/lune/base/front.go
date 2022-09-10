@@ -558,7 +558,7 @@ func Front_exec(_env *LnsEnv, args *LnsList) {
     var version LnsReal
     version = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(Depend_getLuaVersion(_env),"^[^%d]+", "")).(string), nil), 0.0).(LnsReal)
     if version < 5.1{
-        Lns_io_stderr.Write(_env, _env.GetVM().String_format("LuneScript doesn't support this lua version(%s). %s\n", []LnsAny{version, "please use the version >= 5.1."}))
+        Util_errorLog(_env, _env.GetVM().String_format("LuneScript doesn't support this lua version(%s). %s\n", []LnsAny{version, "please use the version >= 5.1."}))
         _env.GetVM().OS_exit(1)
     }
     var option *Option_Option
@@ -1914,7 +1914,7 @@ func (self *front_Front) executeLns(_env *LnsEnv, path string,baseDir LnsAny) {
         
         Lns_LockEnvSync( _env, 1695, func () {
             var subModPreLoad string
-            subModPreLoad = "return function( submod2Code, dumpCode )\n   local preloadFunc = function( mod )\n      code = submod2Code[ mod ]\n      local loadFunc = loadstring or load\n      local loaded, mess = loadFunc( code )\n      if not loaded then\n         error( mess )\n      end\n      return loaded()\n   end\n   for mod, code in pairs( submod2Code ) do\n      if dumpCode then\n         print( string.format( \"mod: %s %s\", mod, code ) )\n      end\n      package.preload[ mod ] = preloadFunc\n   end\nend\n"
+            subModPreLoad = "return function( submod2Code, dumpCode )\n   local preloadFunc = function( mod )\n      code = submod2Code[ mod ]\n      local loadFunc = loadstring or load -- lua5.1 and lua5.2\n      local loaded, mess = loadFunc( code )\n      if not loaded then\n         error( mess )\n      end\n      return loaded()\n   end\n   for mod, code in pairs( submod2Code ) do\n      if dumpCode then\n         print( string.format( \"mod: %s %s\", mod, code ) )\n      end\n      package.preload[ mod ] = preloadFunc\n   end\nend\n"
             var loaded *Lns_luaValue
             
             {

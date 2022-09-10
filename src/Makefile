@@ -1731,8 +1731,14 @@ endef
 binding-lns-go-tgt:
 	$(call binding-lns-go,.)
 
+ifeq ($(GOARCH),wasm)
+MAIN_GO=misc/go/main/lnsc_main_wasm.go
+else
+MAIN_GO=misc/go/main/lnsc_main.go
+endif
+
 define go-build-lns
-	cp misc/go/main/lnsc_main.go $1
+	cp $(MAIN_GO) $1
 	$(call buildGoSetup,$1,$(GO_MOD))
 	(cd $1; PKG_CONFIG_PATH=$(shell pwd) time go build -o lnsc $(GOBUILD_TAG))
 endef

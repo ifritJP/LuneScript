@@ -2301,7 +2301,7 @@ function Front:executeLns( path, baseDir )
 return function( submod2Code, dumpCode )
    local preloadFunc = function( mod )
       code = submod2Code[ mod ]
-      local loadFunc = loadstring or load
+      local loadFunc = loadstring or load -- lua5.1 and lua5.2
       local loaded, mess = loadFunc( code )
       if not loaded then
          error( mess )
@@ -2467,7 +2467,7 @@ local function exec( args )
    local version = _lune.unwrapDefault( tonumber( Depend.getLuaVersion(  ):gsub( "^[^%d]+", "" ), nil ), 0.0)
    
    if version < 5.1 then
-      io.stderr:write( string.format( "LuneScript doesn't support this lua version(%s). %s\n", tostring( version), "please use the version >= 5.1." ) )
+      Util.errorLog( string.format( "LuneScript doesn't support this lua version(%s). %s\n", tostring( version), "please use the version >= 5.1." ) )
       os.exit( 1 )
    end
    

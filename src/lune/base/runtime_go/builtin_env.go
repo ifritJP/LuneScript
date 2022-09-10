@@ -17,10 +17,14 @@ func Depend_profile(_env *LnsEnv, validTest bool, work LnsForm, path string) Lns
 }
 
 func Lns_RunMain(mainFunc func(_env *LnsEnv, args *LnsList) LnsInt) {
+	exitRuntime(Lns_RunMainNoExit(mainFunc))
+}
+
+func Lns_RunMainNoExit(mainFunc func(_env *LnsEnv, args *LnsList) LnsInt) LnsInt {
 	args := []LnsAny{}
 	for _, arg := range os.Args {
 		args = append(args, arg)
 	}
 
-	exitRuntime(mainFunc(Lns_GetEnv(), NewLnsList(args)))
+	return mainFunc(Lns_GetEnv(), NewLnsList(args))
 }

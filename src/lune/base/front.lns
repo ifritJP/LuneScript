@@ -1869,7 +1869,7 @@ pub fn exec( args: &List<str> ) __noasync {
       unwrap tonumber( Depend.getLuaVersion().gsub( "^[^%d]+", "" ), nil ) default 0.0;
 
    if version < 5.1 {
-      io.stderr.write(
+      Util.errorLog(
          string.format( "LuneScript doesn't support this lua version(%s). %s\n",
         	        version, "please use the version >= 5.1.") );
       os.exit( 1 );

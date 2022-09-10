@@ -28,8 +28,32 @@ import lune.base.Depend;
 import lune.base.Log;
 import lune.base.Str;
 
-let mut consoleOStream = io.stdout;
-   
+let mut consoleOStream:oStream = io.stdout;
+let mut errStream:oStream = io.stderr;
+pub form ConsoleWriter( txt:str );
+class ConsoleAdapter extend (oStream) {
+   let writer:ConsoleWriter;
+   pub fn write( txt:str ) mut : stem!, str! {
+      self.writer( txt );
+      return self, nil;
+   }
+   pub fn flush() mut {
+   }
+   pub fn close() mut {
+   }
+}
+
+pub fn setConsoleOStream( stream:oStream ) {
+   __asyncLock {
+      consoleOStream = stream;
+   }
+}
+
+pub fn setConsoleOStreamWithWriter( writer:ConsoleWriter ) {
+   setConsoleOStream( new ConsoleAdapter( writer ) );
+}
+
+
 pub fn println( ... ) {
    let list = [...];
    __asyncLock {
@@ -54,7 +78,9 @@ pub fn setErrorCode( code:int ) {
 }
 
 pub fn errorLog( message: str ) {
-   io.stderr.write( message .. "\n" );
+   __asyncLock { 
+      errStream.write( message .. "\n" );
+   }
 }
 
 pub fn err( message:str ): __ {

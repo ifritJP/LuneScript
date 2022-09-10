@@ -155,6 +155,52 @@ local Log = _lune.loadModule( 'lune.base.Log' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 
 local consoleOStream = io.stdout
+local errStream = io.stderr
+
+local ConsoleAdapter = {}
+setmetatable( ConsoleAdapter, { ifList = {oStream,} } )
+function ConsoleAdapter:write( txt )
+
+   self.writer( txt )
+   return self, nil
+end
+function ConsoleAdapter:flush(  )
+
+end
+function ConsoleAdapter:close(  )
+
+end
+function ConsoleAdapter._setmeta( obj )
+  setmetatable( obj, { __index = ConsoleAdapter  } )
+end
+function ConsoleAdapter._new( writer )
+   local obj = {}
+   ConsoleAdapter._setmeta( obj )
+   if obj.__init then
+      obj:__init( writer )
+   end
+   return obj
+end
+function ConsoleAdapter:__init( writer )
+
+   self.writer = writer
+end
+
+
+local function setConsoleOStream( stream )
+
+   do
+      consoleOStream = stream
+   end
+   
+end
+_moduleObj.setConsoleOStream = setConsoleOStream
+
+local function setConsoleOStreamWithWriter( writer )
+
+   setConsoleOStream( ConsoleAdapter._new(writer) )
+end
+_moduleObj.setConsoleOStreamWithWriter = setConsoleOStreamWithWriter
 
 local function println( ... )
 
@@ -191,7 +237,10 @@ _moduleObj.setErrorCode = setErrorCode
 
 local function errorLog( message )
 
-   io.stderr:write( message .. "\n" )
+   do
+      errStream:write( message .. "\n" )
+   end
+   
 end
 _moduleObj.errorLog = errorLog
 
@@ -605,7 +654,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 376, function (  )
+   Log.log( Log.Level.Warn, __func__, 402, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )
