@@ -2904,7 +2904,7 @@ fn TransUnit.analyzeExpSymbol(
             {
                self.error( "declare '_lune_control use_macro_special_var'." );
             } else {
-               if self.analyzeMode ~= .Diag {
+               if self.analyzeMode ~= .Diag and Log.getLevel() >= .Debug {
                   let mut work:&Ast.Scope = self.$scope;
                   while true {
                      Util.println( work, self.moduleScope );

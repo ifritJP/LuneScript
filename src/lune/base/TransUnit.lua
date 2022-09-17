@@ -10006,7 +10006,7 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
                self:error( "declare '_lune_control use_macro_special_var'." )
             else
              
-               if self.analyzeMode ~= AnalyzeMode.Diag then
+               if self.analyzeMode ~= AnalyzeMode.Diag and Log.getLevel(  ) >= Log.Level.Debug then
                   local work = self:get_scope()
                   while true do
                      Util.println( work, self.moduleScope )
