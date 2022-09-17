@@ -187,18 +187,19 @@ function ConsoleAdapter:__init( writer )
 end
 
 
-local function setConsoleOStream( stream )
+local function setConsoleOStream( stream, streamErr )
 
    do
       consoleOStream = stream
+      errStream = streamErr
    end
    
 end
 _moduleObj.setConsoleOStream = setConsoleOStream
 
-local function setConsoleOStreamWithWriter( writer )
+local function setConsoleOStreamWithWriter( writer, errWriter )
 
-   setConsoleOStream( ConsoleAdapter._new(writer) )
+   setConsoleOStream( ConsoleAdapter._new(writer), ConsoleAdapter._new(errWriter) )
 end
 _moduleObj.setConsoleOStreamWithWriter = setConsoleOStreamWithWriter
 
@@ -654,7 +655,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 402, function (  )
+   Log.log( Log.Level.Warn, __func__, 405, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

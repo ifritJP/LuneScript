@@ -404,7 +404,7 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
    return ret;
 }
 
-fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
+pub fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    //--print( txt )
    let chunk, err;
    __luaLock {
@@ -1578,7 +1578,7 @@ Types.ParserSrc, str, &frontInterface.ModuleId, str!
    return Types.ParserSrc.LnsPath( path, mod, nil ), mod, moduleId, projDir;
 }
 
-alge BuildMode {
+pub alge BuildMode {
    Save,
    CreateAst,
    Output(streamLua:oStream, streamMeta:oStream),
@@ -1671,13 +1671,20 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
       }, self.option.scriptPath .. ".profi" );
 }
 
-pub fn build( option:Option.Option, astCallback:AstCallback ) mut {
+pub fn buildWithBuildMode(
+   option:Option.Option, buildMode:BuildMode, astCallback:AstCallback! ) mut
+{
    let mut front;
    __asyncLock {
       front = new Front( option ## );
    }
-   front.build( .CreateAst, astCallback );
+   front.build( buildMode, astCallback );
 }
+
+pub fn build( option:Option.Option, astCallback:AstCallback! ) mut {
+   buildWithBuildMode( option, .CreateAst, astCallback );
+}
+
 
 fn Front.executeLns( path:str, baseDir:str! ) mut {
    // // LuneScript の runtime をロードするために runLuaOnLns() を実行。

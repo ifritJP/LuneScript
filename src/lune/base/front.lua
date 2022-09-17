@@ -721,6 +721,7 @@ local function loadFromLuaTxt( txt )
    
    return loadFromChunk( chunk, err )
 end
+_moduleObj.loadFromLuaTxt = loadFromLuaTxt
 
 function Front:convertFromAst( ast, streamName, mode )
 
@@ -2120,6 +2121,7 @@ end
 
 local BuildMode = {}
 BuildMode._name2Val = {}
+_moduleObj.BuildMode = BuildMode
 function BuildMode:_getTxt( val )
    local name = val[ 1 ]
    if name then
@@ -2266,7 +2268,7 @@ function Front:build( buildMode, astCallback )
 end
 
 
-local function build( option, astCallback )
+local function buildWithBuildMode( option, buildMode, astCallback )
 
    local front
    
@@ -2274,7 +2276,13 @@ local function build( option, astCallback )
       front = Front._new(option)
    end
    
-   front:build( _lune.newAlge( BuildMode.CreateAst), astCallback )
+   front:build( buildMode, astCallback )
+end
+_moduleObj.buildWithBuildMode = buildWithBuildMode
+
+local function build( option, astCallback )
+
+   buildWithBuildMode( option, _lune.newAlge( BuildMode.CreateAst), astCallback )
 end
 _moduleObj.build = build
 
@@ -2288,7 +2296,7 @@ function Front:executeLns( path, baseDir )
       
       local parserSrc = _lune.newAlge( Types.ParserSrc.LnsPath, {path,mod,nil})
       local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, baseDir )
-      Log.log( Log.Level.Debug, __func__, 1693, function (  )
+      Log.log( Log.Level.Debug, __func__, 1700, function (  )
       
          return "luacode: " .. luaCode
       end )
@@ -2369,7 +2377,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1754, function (  )
+   Log.log( Log.Level.Trace, __func__, 1761, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

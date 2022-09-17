@@ -43,14 +43,17 @@ class ConsoleAdapter extend (oStream) {
    }
 }
 
-pub fn setConsoleOStream( stream:oStream ) {
+pub fn setConsoleOStream( stream:oStream, streamErr:oStream ) {
    __asyncLock {
       consoleOStream = stream;
+      errStream = streamErr;
    }
 }
 
-pub fn setConsoleOStreamWithWriter( writer:ConsoleWriter ) {
-   setConsoleOStream( new ConsoleAdapter( writer ) );
+pub fn setConsoleOStreamWithWriter(
+   writer:ConsoleWriter, errWriter:ConsoleWriter )
+{
+   setConsoleOStream( new ConsoleAdapter( writer ), new ConsoleAdapter( errWriter ) );
 }
 
 

@@ -1746,6 +1746,15 @@ endef
 build-wasm:
 	GOOS=js GOARCH=wasm $(MAKE) go-build NO_TEST=y GOTAG=gopherlua
 
+build-wasm-quick:
+	GOOS=js GOARCH=wasm $(MAKE) GOTAG=gopherlua build-wasm-quick-sub
+build-wasm-quick-sub:
+	-rm $(GO_WORK_DIR)/build/lnsc_main.go
+	$(call go-build-lns,$(GO_WORK_DIR)/build)
+	cp $(GO_WORK_DIR)/build/$(LNSC_GO) lnsc.wasm
+
+
+
 # セルフホストのソースを go に変換し、 go 版 lns をビルドする
 go-build:
 # ./lune のソースから $(GO_WORK_DIR)/lune 以下に変換結果を出力
