@@ -254,7 +254,7 @@ func convGo_convExp1_893(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 770
-func convGo_convExp1_2510(arg1 []LnsAny) string {
+func convGo_convExp1_2512(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 5873
@@ -478,7 +478,7 @@ func convGo_str2gostr_15_(_env *LnsEnv, txt string) string {
     var work string
     work = txt
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(work, "^```", nil, nil))){
-        work = convGo_convExp1_2510(Lns_2DDD(_env.GetVM().String_gsub(_env.GetVM().String_sub(work,4, -4),"^\n", "")))
+        work = convGo_convExp1_2512(Lns_2DDD(_env.GetVM().String_gsub(_env.GetVM().String_sub(work,4, -4),"^\n", "")))
         work = Parser_quoteStr(_env, work)
     } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(work, "^'", nil, nil))){
         work = Str_replace(_env, Parser_convFromRawToStr(_env, work), "\"", "\\\"")
@@ -1816,13 +1816,13 @@ func (self *convGo_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name string) 
 // 673: decl @lune.@base.@convGo.convFilter.getTypeSymbol
 func (self *convGo_convFilter) getTypeSymbol(_env *LnsEnv, typeInfo *Ast_TypeInfo) string {
     var orgType *Ast_TypeInfo
-    orgType = typeInfo.FP.Get_srcTypeInfo(_env).FP.Get_nonnilableType(_env).FP.Get_aliasSrc(_env)
+    orgType = typeInfo.FP.Get_srcTypeInfo(_env).FP.Get_nonnilableType(_env).FP.Get_genSrcTypeInfo(_env).FP.Get_aliasSrc(_env)
     return self.FP.getSymbol(_env, &convGo_SymbolKind__Type{orgType, false}, orgType.FP.Get_rawTxt(_env))
 }
 // 683: decl @lune.@base.@convGo.convFilter.getTypeSymbolWithPrefix
 func (self *convGo_convFilter) getTypeSymbolWithPrefix(_env *LnsEnv, typeInfo *Ast_TypeInfo) string {
     var orgType *Ast_TypeInfo
-    orgType = typeInfo.FP.Get_srcTypeInfo(_env).FP.Get_nonnilableType(_env).FP.Get_aliasSrc(_env)
+    orgType = typeInfo.FP.Get_srcTypeInfo(_env).FP.Get_nonnilableType(_env).FP.Get_genSrcTypeInfo(_env).FP.Get_aliasSrc(_env)
     return self.FP.getSymbol(_env, &convGo_SymbolKind__Type{orgType, true}, orgType.FP.Get_rawTxt(_env))
 }
 // 689: decl @lune.@base.@convGo.convFilter.getConstrSymbol

@@ -3255,6 +3255,26 @@ function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub )
 end
 
 
+function TransUnit:analyzeTypeParamArg( accessMode, parentPub, itemNodeList )
+
+   local genericList = {}
+   local nextToken = Parser.getEofToken(  )
+   repeat 
+      local typeExp = self:analyzeRefType( accessMode, false, parentPub )
+      table.insert( itemNodeList, typeExp )
+      table.insert( genericList, typeExp:get_expType() )
+      if typeExp:get_expType():get_mutMode() == Ast.MutMode.Depend then
+         self:addErrMess( typeExp:get_pos(), string.format( "type parameter can't have dep attribute. -- %s", typeExp:get_expType():getTxt(  )) )
+      end
+      
+      nextToken = self:getToken(  )
+   until nextToken.txt ~= ","
+   self:checkToken( nextToken, '>' )
+   
+   return genericList
+end
+
+
 function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symbolNode, parentPub )
 
    local typeInfo = symbolNode:get_expType()
@@ -3311,19 +3331,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
          
          table.insert( itemNodeList, symbolNode )
       elseif token.txt == "<" then
-         local genericList = {}
-         local nextToken = Parser.getEofToken(  )
-         repeat 
-            local typeExp = self:analyzeRefType( accessMode, false, parentPub )
-            table.insert( itemNodeList, typeExp )
-            table.insert( genericList, typeExp:get_expType() )
-            if typeExp:get_expType():get_mutMode() == Ast.MutMode.Depend then
-               self:addErrMess( typeExp:get_pos(), string.format( "type parameter can't have dep attribute. -- %s", typeExp:get_expType():getTxt(  )) )
-            end
-            
-            nextToken = self:getToken(  )
-         until nextToken.txt ~= ","
-         self:checkToken( nextToken, '>' )
+         local genericList = self:analyzeTypeParamArg( accessMode, parentPub, itemNodeList )
          
          local function checkAlternateTypeCount( count )
          
@@ -4825,7 +4833,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1783, function (  )
+         Log.log( Log.Level.Debug, __func__, 1803, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -7941,36 +7949,46 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    
    local alt2typeMap
    
-   if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Method then
-      if genericsClass ~= nil then
-         if funcTypeInfo:get_rawTxt() == "__init" then
-            alt2typeMap = genericsClass:createAlt2typeMap( true )
+   if genericsClass ~= nil then
+      if funcTypeInfo:get_rawTxt() == "__init" then
+         alt2typeMap = genericsClass:createAlt2typeMap( true )
+      else
+       
+         if #funcTypeInfo:get_itemTypeInfoList() == 0 then
+            alt2typeMap = genericsClass:createAlt2typeMap( false )
          else
           
-            if #funcTypeInfo:get_itemTypeInfoList() == 0 then
-               alt2typeMap = genericsClass:createAlt2typeMap( false )
-            else
-             
-               alt2typeMap = genericsClass:createAlt2typeMap( true )
-               for __index, itemType in ipairs( genericsClass:get_itemTypeInfoList() ) do
-                  
-                  if itemType:get_kind() == Ast.TypeInfoKind.Alternate and not alt2typeMap[itemType] then
-                     alt2typeMap[itemType] = Ast.builtinTypeNone
+            do
+               local genFuncType = _lune.__Cast( funcTypeInfo, 3, Ast.GenericTypeInfo )
+               if genFuncType ~= nil then
+                  alt2typeMap = genFuncType:createAlt2typeMap( false )
+               else
+                  alt2typeMap = genericsClass:createAlt2typeMap( true )
+                  for __index, itemType in ipairs( genericsClass:get_itemTypeInfoList() ) do
+                     
+                     if itemType:get_kind() == Ast.TypeInfoKind.Alternate and not alt2typeMap[itemType] then
+                        alt2typeMap[itemType] = Ast.builtinTypeNone
+                     end
+                     
                   end
                   
                end
-               
             end
             
          end
          
-      else
-         self:error( "none class" )
       end
       
    else
-    
-      alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
+      do
+         local genFuncType = _lune.__Cast( funcTypeInfo, 3, Ast.GenericTypeInfo )
+         if genFuncType ~= nil then
+            alt2typeMap = genFuncType:createAlt2typeMap( false )
+         else
+            alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( #funcTypeInfo:get_itemTypeInfoList() > 0 )
+         end
+      end
+      
    end
    
    local matchResult, _1, newExpNodeList = self:checkMatchType( funcTypeInfo:getTxt(  ), pos, argTypeList, expList, false, warnForFollow, alt2typeMap, validImplicitCast )
@@ -9860,13 +9878,16 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
             if typeInfo:get_kind() == Ast.TypeInfoKind.Func then
                
                local altSet = {}
+               local hasAlt = false
                for __index, argType in ipairs( typeInfo:get_argTypeInfoList() ) do
                   local orgType = argType:get_nonnilableType():get_srcTypeInfo()
                   if orgType:get_kind() == Ast.TypeInfoKind.Alternate then
                      altSet[orgType]= true
+                     hasAlt = true
                   end
                   
                end
+               
                
                for __index, itemType in ipairs( prefixType:get_itemTypeInfoList() ) do
                   if not _lune._Set_has(altSet, itemType:get_nonnilableType():get_srcTypeInfo() ) then
@@ -9904,6 +9925,27 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
       else
          if accessSymbolInfo ~= nil then
             self:checkAsyncField( accessSymbolInfo, fieldToken.pos )
+         end
+         
+         
+         if typeInfo:get_kind() == Ast.TypeInfoKind.Func then
+            local nextToken = self:getToken(  )
+            if nextToken.txt == "<" then
+               local itemNodeList = {}
+               local genericList = self:analyzeTypeParamArg( Ast.AccessMode.Pri, false, itemNodeList )
+               
+               if #typeInfo:get_itemTypeInfoList() == #genericList then
+                  typeInfo = self.processInfo:createGeneric( typeInfo, genericList, self.moduleType )
+               else
+                
+                  self:addErrMess( nextToken.pos, string.format( "generic type count is unmatch. -- %d, %s", #genericList, typeInfo:getTxt(  )) )
+               end
+               
+            else
+             
+               self:pushback(  )
+            end
+            
          end
          
          
@@ -10041,11 +10083,6 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
          self:checkAsyncSymbol( symbolInfo, firstToken.pos )
          
          local typeInfo = symbolInfo:get_typeInfo()
-         if symbolInfo:get_kind() == Ast.SymbolKind.Typ and typeInfo:get_kind() == Ast.TypeInfoKind.Alternate and self.analyzingStaticMethodArgsScope ~= nil and symbolInfo:get_scope() ~= self.analyzingStaticMethodArgsScope then
-            
-            self:addErrMess( firstToken.pos, string.format( "The static method can't use the type parameter. -- %s", typeInfo:getTxt(  )) )
-         end
-         
          
          do
             local _switchExp = symbolInfo:get_kind()
@@ -10122,6 +10159,29 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
          
          
          exp = Nodes.ExpRefNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, Ast.AccessSymbolInfo._new(self.processInfo, symbolInfo, _lune.newAlge( Ast.OverrideMut.None), true) )
+         
+         if typeInfo:get_kind() == Ast.TypeInfoKind.Func then
+            local nextToken = self:getToken(  )
+            if nextToken.txt == "<" then
+               local itemNodeList = {}
+               local genericList = self:analyzeTypeParamArg( Ast.AccessMode.Pri, false, itemNodeList )
+               
+               if #typeInfo:get_itemTypeInfoList() == #genericList then
+                  local newTypeInfo = self.processInfo:createGeneric( typeInfo, genericList, self.moduleType )
+                  
+                  exp = Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newTypeInfo}, exp, itemNodeList, typeInfo:get_mutMode(), "no" )
+               else
+                
+                  self:addErrMess( nextToken.pos, string.format( "generic type count is unmatch. -- %d, %s", #genericList, typeInfo:getTxt(  )) )
+               end
+               
+            else
+             
+               self:pushback(  )
+            end
+            
+         end
+         
       end
       
    elseif mode == ExpSymbolMode.Fn then
@@ -11112,7 +11172,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       
-      if initTypeInfo:get_accessMode() == Ast.AccessMode.Pub or (initTypeInfo:get_accessMode() == Ast.AccessMode.Pro and self:get_scope():getClassTypeInfo(  ):isInheritFrom( self.processInfo, classTypeInfo, nil ) ) or (self:get_scope():getClassTypeInfo(  ) == classTypeInfo ) or (initTypeInfo:get_accessMode() == Ast.AccessMode.Local and initTypeInfo:getModule(  ) == self.moduleType ) then
+      if initTypeInfo:get_accessMode() == Ast.AccessMode.Pub or (initTypeInfo:get_accessMode() == Ast.AccessMode.Pro and self:get_scope():getClassTypeInfo(  ):isInheritFrom( self.processInfo, classTypeInfo, nil ) ) or (self:get_scope():getClassTypeInfo(  ) == classTypeInfo:get_genSrcTypeInfo() ) or (initTypeInfo:get_accessMode() == Ast.AccessMode.Local and initTypeInfo:getModule(  ) == self.moduleType ) then
       else
        
          self:addErrMess( token.pos, string.format( "can't access to __init of %s", classTypeInfo:getTxt(  )) )

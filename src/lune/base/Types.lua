@@ -192,6 +192,26 @@ if not _lune7 then
 end
 
 
+
+local AltBase = {}
+_moduleObj.AltBase = AltBase
+function AltBase._setmeta( obj )
+  setmetatable( obj, { __index = AltBase  } )
+end
+function AltBase._new( val, mess )
+   local obj = {}
+   AltBase._setmeta( obj )
+   if obj.__init then
+      obj:__init( val, mess )
+   end
+   return obj
+end
+function AltBase:__init( val, mess )
+
+   self.val = val
+   self.mess = mess
+end
+
 local Lang = {}
 _moduleObj.Lang = Lang
 Lang._val2NameMap = {}

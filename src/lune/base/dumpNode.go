@@ -8,7 +8,7 @@ func dumpNode_convExp1_59(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 492
-func dumpNode_convExp3_516(arg1 []LnsAny) (string, LnsInt) {
+func dumpNode_convExp3_518(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // 102: decl @lune.@base.@dumpNode.createFilter
@@ -481,7 +481,7 @@ func (self *dumpNode_dumpFilter) ProcessExpCallSuper(_env *LnsEnv, node *Nodes_E
 // 457: decl @lune.@base.@dumpNode.dumpFilter.processRefType
 func (self *dumpNode_dumpFilter) ProcessRefType(_env *LnsEnv, node *Nodes_RefTypeNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(_env, opt, &node.Nodes_Node, "")
+    self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_expType(_env).FP.Get_display_stirng(_env))
     dumpNode_filter_3_(_env, node.FP.Get_name(_env), self, opt.FP.NextOpt(_env))
 }
 // 463: decl @lune.@base.@dumpNode.dumpFilter.processIf

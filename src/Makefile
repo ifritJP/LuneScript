@@ -762,7 +762,6 @@ test-org:
 
 	$(call exeLune,$(LNSC),.,test/Sub2.lns,SAVE,work/1 $(EXE_OPT))
 
-
 	grep -v -e 'warning:' -e 'skip:' work/test1.result > work/test.result
 
 	mkdir -p work/0/log/comp
@@ -783,7 +782,17 @@ ifndef SKIP_CHECKING_TESTING
 	$(call exeLune,$(LNSC),.,test/testing.lns,exe, --testing $(EXE_OPT) 2>&1) >> work/test1.result
 	$(call exeLune,$(LNSC),.,test/TestMini.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test1.result
 endif
-	$(call check_singleBin,lnsc,work/test1.result,testpack1) 
+	$(call check_singleBin,lnsc,work/test1.result,testpack1)
+
+# work/1-1 に start.lns を -u 指定で meta ファイルを生成する
+	cp -a work/1 work/0-1
+	cp -a lune work/0-1/lune
+ifeq ($(WITH_GO),y)
+	cp ./lnsc work/0-1
+endif
+	$(call exeLune,$(LNSC),work/0-1,test/start.lns,-u SAVE,$(EXE_OPT)) > /dev/null
+
+
 
 test-org-proj:
 ifndef SKIP_PROJ_TEST
@@ -1084,6 +1093,10 @@ endif
 	diff work/test4.result work/test5.result
 	diff work/1/start.dep work/3_2/start.dep
 	diff -u -r work/glue work/newglue
+ifeq ($(RUNTIME_ORG_VER),$(RUNTIME_NEW_VER))
+# meta が等しいか確認する
+	diff -x '*.meta2' -I 'buildId =' -r work/0-1/test/ work/4/test/
+endif
 ifeq ($(WITH_GO),y)
 	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
 		work/result-testGo.txt work/3/work/result-testGo.txt 
@@ -1205,7 +1218,7 @@ test-on-docker_luarocks:
 
 VER_PATH=lune/base/Ver.lua
 RUNTIME_VER_PICK=grep 'local luaModVersion' | sed 's/[^0-9]//g'
-ifneq ($(findstring $(MAKECMDGOALS),"check-runtime-format" ),)
+ifneq ($(findstring $(MAKECMDGOALS),"check-runtime-format" "diff-result"),)
 RUNTIME_ORG_VER=$(shell cat $(VER_PATH) | $(RUNTIME_VER_PICK))
 RUNTIME_NEW_VER=$(shell cat work/1/$(VER_PATH) | $(RUNTIME_VER_PICK))
 endif
@@ -1232,7 +1245,8 @@ check-meta-format:
 ifeq ($(ORG_VER),$(NEW_VER))
 	cat work/1/test/Sub2.meta | grep -v -e '^_moduleObj.__version' > work/1/test/Sub2.meta2
 	cat work/4/test/Sub2.meta | grep -v -e '^_moduleObj.__version' > work/4/test/Sub2.meta2
-	@diff -I '__formatVersion' work/1/test/Sub2.meta2 work/4/test/Sub2.meta2 > /dev/null || \
+	@diff -I '__formatVersion' -I 'buildId = ' \
+		work/1/test/Sub2.meta2 work/4/test/Sub2.meta2 > /dev/null || \
 	(echo need to change the meta format version.; exit 1;)
 else
 	@echo meta format version ok.

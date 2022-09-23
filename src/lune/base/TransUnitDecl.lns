@@ -89,6 +89,39 @@ fn TransUnit.analyzeRefType(
 }
 
 
+/**
+generic の型引数の実引数の解析。
+
+Map<int,str> の <int,str> を解析する。
+このを実行する前に '<' を読み込んでおく。
+
+@param accessMode この型のアクセス制御
+@param parentPub この型を使用している親の空間自体が public な場合 true
+@return 型引数の実引数の型のリスト。
+*/
+fn TransUnit.analyzeTypeParamArg(
+   accessMode: Ast.AccessMode, parentPub:bool, itemNodeList:List<&Nodes.Node> ) mut
+: &List<&Ast.TypeInfo>
+{
+   let mut genericList: List<&Ast.TypeInfo> = [];
+   let mut nextToken: &Parser.Token = Parser.getEofToken();
+   repeat {
+      let typeExp = self.analyzeRefType( accessMode, false, parentPub );
+      itemNodeList.insert( typeExp );
+      genericList.insert( typeExp.$expType );
+      if typeExp.$expType.$mutMode == .Depend {
+         self.addErrMess(
+            typeExp.$pos,
+            "type parameter can't have dep attribute. -- %s"
+            (typeExp.$expType.getTxt(##)) );
+      }
+      nextToken = self.getToken(##);
+   } nextToken.txt ~= ",";
+   self.checkToken( nextToken, '>' );
+
+   return genericList;
+}
+
 fn TransUnit.analyzeRefTypeWithSymbol(
    accessMode: Ast.AccessMode, allowDDD:bool,
    mutMode:Ast.MutMode!, symbolNode:&Nodes.Node, parentPub:bool ) mut:
@@ -162,21 +195,8 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          itemNodeList.insert( symbolNode );
       }
       elseif token.txt == "<" {
-         let mut genericList: List<&Ast.TypeInfo> = [];
-         let mut nextToken: &Parser.Token = Parser.getEofToken();
-         repeat {
-            let typeExp = self.analyzeRefType( accessMode, false, parentPub );
-            itemNodeList.insert( typeExp );
-            genericList.insert( typeExp.$expType );
-            if typeExp.$expType.$mutMode == .Depend {
-               self.addErrMess(
-                  typeExp.$pos,     
-                  "type parameter can't have dep attribute. -- %s"
-                  (typeExp.$expType.getTxt(##)) );
-            }
-            nextToken = self.getToken(##);
-         } nextToken.txt ~= ",";
-         self.checkToken( nextToken, '>' );
+         let genericList = self.analyzeTypeParamArg(
+            accessMode, parentPub, itemNodeList );
 
          fn checkAlternateTypeCount( count:int ) __trans : bool {
             if #genericList ~= count {

@@ -489,6 +489,8 @@ nil	nil
    12.35
   123.46
  1234.57
+-----	2074	-----
+abc
 11
 12
 12
@@ -531,7 +533,7 @@ aa	skip:
 /comp-4.lns
                "displayTxt" : "byte(int!, int!): ...<int!>",
                "displayTxt" : "find(str, int!, bool!): ...<int>",
-               "displayTxt" : "format(...): str",
+               "displayTxt" : "format(&...): str",
                "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
                "displayTxt" : "gsub(str, str): str, int",
                "displayTxt" : "lower(): str",
@@ -605,7 +607,7 @@ aa	skip:
 /comp-5.lns
                "displayTxt" : "byte(int!, int!): ...<int!>",
                "displayTxt" : "find(str, int!, bool!): ...<int>",
-               "displayTxt" : "format(...): str",
+               "displayTxt" : "format(&...): str",
                "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
                "displayTxt" : "gsub(str, str): str, int",
                "displayTxt" : "lower(): str",
@@ -1320,6 +1322,8 @@ test/error/class.lns:507:22: error: This arg can't be r-value. -- RefField
 test/error/class.lns:507:22: error: this node can't be r-value. -- RefField
 test/error/class.lns:518:7: error: Mapping class has not the interface type member. -- val
 test/error/class.lns:519:7: error: Mapping class has not the abstract class member. -- val2
+test/error/class.lns:542:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2262) <- &@test.@error.@class.Hoge(2264): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/class.lns:550:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2262) <- &@test.@error.@class.Hoge(2264): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/class2.lns:2:8: error: This member can't have setter, this member is immutable. -- val
 test/error/class2.lns:9:19: error: __init: exp(2) type mismatch int <- [##]: dst 2 -- 
 test/error/class2.lns:10:9: error: can't access mutable method. -- &TestAcc.set_val
@@ -1920,7 +1924,7 @@ test/error/import5.lns:3:13: error: module can't use as Type. -- @Sub5
 test/error/import5.lns:7:11: error: not found field typeInfo: @test.@error.@Sub5.Test.func2 -- TypeInfoKind.Class
 test/error/import6.lns:4:13: error: not found field typeInfo: @test.@error.@Sub6.Test.val -- TypeInfoKind.Class
 test/error/import7.lns:10:16: error: not found type -- Sub5
-test/error/strformat.lns:16:1: warning: format: 00000:use '##', instate of '...'.
+test/error/strformat.lns:16:1: warning: format: 00000:use '##', instate of '&...'.
 test/error/strformat.lns:1:1: error: argument(2) type must be real -- Map<,>
 test/error/strformat.lns:2:1: error: argument(2) type must be real -- Map<,>
 test/error/strformat.lns:3:1: error: argument(2) type must be real -- Map<,>
@@ -2168,8 +2172,6 @@ test/error/generics.lns:45:16: error: can't access this class(Test<T>) without '
 test/error/generics.lns:53:21: error: 'T' of Test<T> doesn't inherit 'Super'
 test/error/generics.lns:63:23: error: Sub.func: not support to override the method has generics at return type. -- func: func(str): str -- func(str): str
 test/error/generics.lns:77:10: error: func: exp(1) type mismatch &T(1204) <- str(58): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics.lns:83:30: error: The static method can't use the type parameter. -- T
-test/error/generics.lns:83:35: error: The static method can't use the type parameter. -- T
 test/error/generics.lns:87:11: error: func: exp(1) type mismatch T(1247) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics.lns:90:17: error: multiple Type -- T
 test/error/generics.lns:91:19: error: shadowing Type -- T
@@ -2197,6 +2199,10 @@ test/error/generics2.lns:92:4: error: func: exp(1) type mismatch str(58) <- int(
 test/error/generics2.lns:125:1: error: process<T>: exp(2) type mismatch @test.@error.@generics2.Data(1262) <- &@test.@error.@generics2.Data(1282): index 2(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics2.lns:127:1: error: process<T>: exp(1) type mismatch @test.@error.@generics2.Super2<T>(TypeInfoKind.Class:1266) <- &@test.@error.@generics2.Test2(TypeInfoKind.Class:1287). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics2.lns:129:1: error: process<T>: exp(2) type mismatch str(58) <- int(26): index 2(TypeInfoKind.Alternate)
+test/error/generics2.lns:142:15: error: can't access mutable method. -- &Hoge.func
+test/error/generics2.lns:153:15: error: can't access mutable method. -- &Hoge.func
+test/error/generics2.lns:162:13: error: generic type count is unmatch. -- 1, func
+test/error/generics2.lns:165:9: error: generic type count is unmatch. -- 1, func2
 test/error/generics3.lns:50:8: warning: 'test3' var isn't accessed
 test/error/generics3.lns:13:21: error: can't access mutable method. -- &Set<int>.add
 test/error/generics3.lns:17:12: error: Only class can use the generics. -- IF 

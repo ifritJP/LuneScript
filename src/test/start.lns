@@ -2070,3 +2070,17 @@ __test {
    print( "%8.2f" (123.45678) );
    print( "%8.2f" (1234.5678) );
 }
+{
+   Macro._section();
+   class AltBase<T> {
+      let val:T! {pub};
+      fn __init( val:T! ) {
+         self.val = val;
+      }
+      pub static fn valid( val:T ): AltBase<T> {
+         return new AltBase<T>( val );
+      }
+   }
+   let val = AltBase<str>.valid( "abc" );
+   print( val.$val );
+}

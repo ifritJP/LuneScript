@@ -127,3 +127,41 @@ let test = new Test2();
 ctrl.process( test, new Data(10) ); // error
 ctrl.process( new Super2<int>(), 1 );
 ctrl.process( new Super2<str>(), 1 ); // error
+{
+   class Hoge {
+      let val:str;
+      pub fn func() mut {
+      }
+   }
+   fn create<T>( hoge:T ) : List<T> {
+      return [hoge];
+   }
+   {
+      let list = create<&Hoge>( new Hoge("") );
+      foreach hoge in list {
+         hoge.func(); // error
+      }
+   }
+   class Test3 {
+      pub static fn create<T>( hoge:T ) : List<T> {
+         return [hoge];
+      }
+   }
+   {
+      let list = Test3.create<&Hoge>( new Hoge("abc") );
+      foreach hoge in list {
+         hoge.func(); // error
+      }
+   }
+}
+{
+   class Hoge {
+      pub static fn func() {
+      }
+   }
+   Hoge.func<int>(); // error
+   fn func2() {
+   }
+   func2<int>(); // error
+}
+

@@ -519,3 +519,35 @@ class Test9 extend Super7 {
       let val2:Hoge; // error
    }
 }
+{
+   class AltBase<T,E> {
+      let val:T! {pub};
+      let error:E! {pub};
+   }
+   class Alt<T> extend AltBase<T,str> {
+      pub fn __init( val:T! ) {
+         super( val, "" );
+      }
+   }
+   class Hoge {
+      let val:str;
+      pub fn func() mut {
+      }
+   }
+   {
+      let mut alt = new AltBase<&Hoge,str>( new Hoge( "abc" ), "" );
+      if! let mut hoge = alt.$val {
+         fn func( aaa:Hoge ) {
+         }
+         func( hoge ); // error
+      };
+   }
+   {
+      let mut alt = new Alt<&Hoge>( new Hoge( "abc" ) );
+      if! let mut hoge = alt.$val {
+         fn func( aaa:Hoge ) {
+         }
+         func( hoge ); // error
+      };
+   }
+}

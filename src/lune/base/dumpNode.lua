@@ -682,7 +682,7 @@ end
 
 function dumpFilter:processRefType( node, opt )
 
-   self:dump( opt, node, "" )
+   self:dump( opt, node, node:get_expType():get_display_stirng() )
    filter( node:get_name(  ), self, opt:nextOpt(  ) )
 end
 

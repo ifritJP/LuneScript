@@ -2328,13 +2328,8 @@ function ModifierTypeInfo:get_extedType(  )
 
    return self
 end
-function ModifierTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
+function ModifierTypeInfo:addModifierTxt( txt )
 
-   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
-end
-function ModifierTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
-
-   local txt = self.srcTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
    do
       local _switchExp = self.mutMode
       if _switchExp == MutMode.IMut or _switchExp == MutMode.IMutRe then
@@ -2348,6 +2343,15 @@ function ModifierTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFla
    
    return txt
 end
+function ModifierTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
+end
+function ModifierTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
+
+   local txt = self.srcTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
+   return self:addModifierTxt( txt )
+end
 function ModifierTypeInfo:get_display_stirng_with( raw, alt2type )
 
    local txt = self.srcTypeInfo:get_display_stirng_with( raw, alt2type )
@@ -2355,7 +2359,7 @@ function ModifierTypeInfo:get_display_stirng_with( raw, alt2type )
       txt = "mut " .. txt
    end
    
-   return txt
+   return self:addModifierTxt( txt )
 end
 function ModifierTypeInfo:get_display_stirng(  )
 
@@ -4971,7 +4975,10 @@ function AlternateTypeInfo:get_display_stirng_with( raw, alt2type )
       do
          local genType = alt2type[self]
          if genType ~= nil then
-            return genType:get_display_stirng_with( genType:get_rawTxt(), alt2type )
+            if genType ~= self then
+               return genType:get_display_stirng_with( genType:get_rawTxt(), alt2type )
+            end
+            
          end
       end
       
@@ -5318,6 +5325,10 @@ end
 local GenericTypeInfo = {}
 setmetatable( GenericTypeInfo, { __index = TypeInfo } )
 _moduleObj.GenericTypeInfo = GenericTypeInfo
+function GenericTypeInfo:get_nonnilableType(  )
+
+   return self
+end
 function GenericTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
@@ -5325,6 +5336,10 @@ end
 function GenericTypeInfo:get_display_stirng_with( raw, alt2type )
 
    return self.genSrcTypeInfo:get_display_stirng_with( raw, self.alt2typeMap )
+end
+function GenericTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
 end
 function GenericTypeInfo._new( processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo )
    local obj = {}
@@ -5343,7 +5358,7 @@ function GenericTypeInfo:__init(processInfo, scope, genSrcTypeInfo, itemTypeInfo
    self.genSrcTypeInfo = genSrcTypeInfo
    
    if #genSrcTypeInfo:get_itemTypeInfoList() ~= #itemTypeInfoList then
-      Util.err( string.format( "unmatch generic type number -- %d, %d", #genSrcTypeInfo:get_itemTypeInfoList(), #itemTypeInfoList) )
+      Util.err( string.format( "unmatch generic type number -- %d, %d, %s", #genSrcTypeInfo:get_itemTypeInfoList(), #itemTypeInfoList, genSrcTypeInfo:get_display_stirng(  )) )
    end
    
    local alt2typeMap = {}
@@ -5534,13 +5549,13 @@ end
 function GenericTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind = %d, typeId = %d, genSrcTypeId = %s, genTypeList = {', SerializeKind.Generic, self.typeId.id, serializeInfo:serializeId( self.genSrcTypeInfo:get_typeId() )) )
-   local count = 0
-   for __index, genType in pairs( self.alt2typeMap ) do
-      if count > 0 then
+   
+   for index, itemType in ipairs( self.itemTypeInfoList ) do
+      if index > 1 then
          stream:write( "," )
       end
       
-      stream:write( serializeInfo:serializeId( genType:get_typeId() ) )
+      stream:write( serializeInfo:serializeId( itemType:get_typeId() ) )
    end
    
    stream:write( '} }\n' )
@@ -5635,10 +5650,6 @@ function GenericTypeInfo:get_children( ... )
    return self.genSrcTypeInfo:get_children( ... )
 end
 
-function GenericTypeInfo:get_display_stirng( ... )
-   return self.genSrcTypeInfo:get_display_stirng( ... )
-end
-
 function GenericTypeInfo:get_externalFlag( ... )
    return self.genSrcTypeInfo:get_externalFlag( ... )
 end
@@ -5657,10 +5668,6 @@ end
 
 function GenericTypeInfo:get_nilable( ... )
    return self.genSrcTypeInfo:get_nilable( ... )
-end
-
-function GenericTypeInfo:get_nonnilableType( ... )
-   return self.genSrcTypeInfo:get_nonnilableType( ... )
 end
 
 function GenericTypeInfo:get_parentInfo( ... )
@@ -6468,35 +6475,6 @@ function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag 
 end
 function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
 
-   do
-      local _switchExp = self.kind
-      if _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
-         local txt = raw .. "("
-         for index, argType in ipairs( self.argTypeInfoList ) do
-            if index ~= 1 then
-               txt = txt .. ", "
-            end
-            
-            txt = txt .. argType:get_display_stirng(  )
-         end
-         
-         txt = txt .. ")"
-         for index, retType in ipairs( self.retTypeInfoList ) do
-            if index == 1 then
-               txt = txt .. ": "
-            else
-             
-               txt = txt .. ", "
-            end
-            
-            txt = txt .. retType:get_display_stirng(  )
-         end
-         
-         return txt
-      end
-   end
-   
-   
    local parentTxt = ""
    local name
    
@@ -6515,6 +6493,36 @@ function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
    else
     
       name = parentTxt .. raw
+   end
+   
+   
+   do
+      local _switchExp = self.kind
+      if _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
+         local txt = name .. "("
+         for index, argType in ipairs( self.argTypeInfoList ) do
+            if index ~= 1 then
+               txt = txt .. ", "
+            end
+            
+            txt = txt .. argType:get_display_stirng_with( argType:get_rawTxt(), alt2type )
+         end
+         
+         txt = txt .. ")"
+         for index, retType in ipairs( self.retTypeInfoList ) do
+            if index == 1 then
+               txt = txt .. ": "
+            else
+             
+               txt = txt .. ", "
+            end
+            
+            txt = txt .. retType:get_display_stirng_with( retType:get_rawTxt(), alt2type )
+         end
+         
+         
+         name = txt
+      end
    end
    
    
