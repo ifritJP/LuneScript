@@ -1095,7 +1095,7 @@ endif
 	diff -u -r work/glue work/newglue
 ifeq ($(RUNTIME_ORG_VER),$(RUNTIME_NEW_VER))
 # meta が等しいか確認する
-	diff -x '*.so' -x '*/test/proj' -x '*.meta2' -I 'buildId =' -r work/0-1/test/ work/4/test/
+	diff -x '*.so' -x '*/test/proj/*' -x '*.meta2' -I 'buildId =' -r work/0-1/test/ work/4/test/
 endif
 ifeq ($(WITH_GO),y)
 	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
