@@ -1533,19 +1533,8 @@ pub class ModifierTypeInfo extend TypeInfo {
    pub override fn get_extedType() : &TypeInfo {
       return self;
    }
-   
-   /** この型の名前を取得する。 */
-   pub override fn getTxt(
-      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
-   {
-      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
-   }
-   pro override fn getTxtWithRaw(
-      raw:str,  typeNameCtrl:&TypeNameCtrl!,
-      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
-   {
-      let mut txt = self.srcTypeInfo.getTxtWithRaw(
-         raw, typeNameCtrl, importInfo, localFlag );
+
+   fn addModifierTxt(mut txt:str) : str {
       switch self.mutMode {
          case .IMut, .IMutRe {
             txt = "&" .. txt;
@@ -1559,84 +1548,101 @@ pub class ModifierTypeInfo extend TypeInfo {
       }
       return txt;
    }
+   
+   /** この型の名前を取得する。 */
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!, importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      raw:str,  typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      let mut txt = self.srcTypeInfo.getTxtWithRaw(
+         raw, typeNameCtrl, importInfo, localFlag );
+      return self.addModifierTxt( txt );
+   }
 
    pub override fn get_display_stirng_with(
-      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str {
-         let mut txt = self.srcTypeInfo.get_display_stirng_with( raw, alt2type );
-         if isMutable( self.mutMode ) {
-            txt = "mut " .. txt;
-         }
-         return txt;
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str
+   {
+      let mut txt = self.srcTypeInfo.get_display_stirng_with( raw, alt2type );
+      if isMutable( self.mutMode ) {
+         txt = "mut " .. txt;
       }
-      pub override fn get_display_stirng(): str {
-         return self.get_display_stirng_with( self.$rawTxt, nil );
-      }
-
-      pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
-         stream.write(
-            '{ skind = %d, typeId = %d, srcTypeId = %s, mutMode = %d }\n' (
-               SerializeKind.Modifier, self.typeId.id,
-               serializeInfo.serializeId( self.srcTypeInfo.$typeId ),
-               self.mutMode ) );
-      }
-
-      pub override fn canEvalWith(
-         processInfo:&ProcessInfo, other:&TypeInfo,
-         canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
-      {
-         // if isGenericType( self.srcTypeInfo ) {
-         //    return self.srcTypeInfo.canEvalWith( other, canEvalType, alt2type );
-         // }
-
-         if self.mutMode == .Depend {
-            switch other.$mutMode {
-               case .Mut, .Depend {
-               }
-               default {
-                  let mess = "mismatch %s, %s" (self.mutMode.$_txt, other.$mutMode.$_txt );
-                  return false, mess;
-               }
-            }
-         }
-
-         let evalType;
-         if #self.srcTypeInfo.$itemTypeInfoList >= 1 {
-            switch canEvalType {
-               case .SetEq, .SetOp {
-                  // &List<Super> <-- List<Sub> などで、 型パラメータの継承を代入可能にする
-                  evalType = CanEvalType.SetOpIMut;
-               }
-               default {
-                  evalType = canEvalType;
-               }
-            }
-         }
-         else {
-            evalType = canEvalType;
-         }
-
-
-         let result, mess = TypeInfo.canEvalWithBase(
-            processInfo, self.srcTypeInfo, TypeInfo.isMut( self ),
-            other.$srcTypeInfo, evalType, alt2type );
-         return result, mess;
-      }
-
-      pub override fn equals(
-         processInfo:&ProcessInfo, typeInfo: &TypeInfo,
-         alt2type:Map<&TypeInfo,&TypeInfo>!, checkModifer:bool! ): bool
-      {
-         if checkModifer {
-            if TypeInfo.isMut( self ) ~= TypeInfo.isMut( typeInfo ) {
-               return false;
-            }
-         }
-         return self.srcTypeInfo.equals(
-            processInfo, typeInfo.$srcTypeInfo, alt2type, checkModifer );
-      }
-
-      advertise srcTypeInfo;
+      return self.addModifierTxt( txt );
+      // return txt;
    }
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt, nil );
+   }
+
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
+      stream.write(
+         '{ skind = %d, typeId = %d, srcTypeId = %s, mutMode = %d }\n' (
+            SerializeKind.Modifier, self.typeId.id,
+            serializeInfo.serializeId( self.srcTypeInfo.$typeId ),
+            self.mutMode ) );
+   }
+
+   pub override fn canEvalWith(
+      processInfo:&ProcessInfo, other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
+   {
+      // if isGenericType( self.srcTypeInfo ) {
+      //    return self.srcTypeInfo.canEvalWith( other, canEvalType, alt2type );
+      // }
+
+      if self.mutMode == .Depend {
+         switch other.$mutMode {
+            case .Mut, .Depend {
+            }
+            default {
+               let mess = "mismatch %s, %s" (self.mutMode.$_txt, other.$mutMode.$_txt );
+               return false, mess;
+            }
+         }
+      }
+
+      let evalType;
+      if #self.srcTypeInfo.$itemTypeInfoList >= 1 {
+         switch canEvalType {
+            case .SetEq, .SetOp {
+               // &List<Super> <-- List<Sub> などで、 型パラメータの継承を代入可能にする
+               evalType = CanEvalType.SetOpIMut;
+            }
+            default {
+               evalType = canEvalType;
+            }
+         }
+      }
+      else {
+         evalType = canEvalType;
+      }
+
+
+      let result, mess = TypeInfo.canEvalWithBase(
+         processInfo, self.srcTypeInfo, TypeInfo.isMut( self ),
+         other.$srcTypeInfo, evalType, alt2type );
+      return result, mess;
+   }
+
+   pub override fn equals(
+      processInfo:&ProcessInfo, typeInfo: &TypeInfo,
+      alt2type:Map<&TypeInfo,&TypeInfo>!, checkModifer:bool! ): bool
+   {
+      if checkModifer {
+         if TypeInfo.isMut( self ) ~= TypeInfo.isMut( typeInfo ) {
+            return false;
+         }
+      }
+      return self.srcTypeInfo.equals(
+         processInfo, typeInfo.$srcTypeInfo, alt2type, checkModifer );
+   }
+
+   advertise srcTypeInfo;
+}
 
 
 
@@ -3462,7 +3468,9 @@ pub class AlternateTypeInfo extend TypeInfo {
    {
       when! alt2type {
          if! let genType = alt2type[ self ] {
-            return genType.get_display_stirng_with( genType.$rawTxt, alt2type );
+            if genType ~= self {
+               return genType.get_display_stirng_with( genType.$rawTxt, alt2type );
+            }
          }
       }
       return self.getTxtWithRaw( raw ##);
@@ -3676,17 +3684,24 @@ pub class GenericTypeInfo extend TypeInfo {
    pri let hasAlter:bool;
    pri let mut imutType:&TypeInfo {pub,local};
 
+   pub override fn get_nonnilableType(): &TypeInfo {
+      return self;
+   }
 
    local override fn get_nilableTypeInfoMut() mut: TypeInfo {
       return self.nilableTypeInfo;
    }
 
-   
    pub override fn get_display_stirng_with(
       raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str
    {
       return self.genSrcTypeInfo.get_display_stirng_with( raw, self.alt2typeMap );
    }
+
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt, nil );
+   }
+   
 
    pri fn __init(
       processInfo:ProcessInfo, scope:Scope,
@@ -3704,8 +3719,9 @@ pub class GenericTypeInfo extend TypeInfo {
       self.genSrcTypeInfo = genSrcTypeInfo;
 
       if #genSrcTypeInfo.$itemTypeInfoList ~= #itemTypeInfoList {
-         Util.err( "unmatch generic type number -- %d, %d"
-                   (#genSrcTypeInfo.$itemTypeInfoList, #itemTypeInfoList) );
+         Util.err( "unmatch generic type number -- %d, %d, %s"
+                   (#genSrcTypeInfo.$itemTypeInfoList, #itemTypeInfoList,
+                     genSrcTypeInfo.get_display_stirng() ) );
       }
       let mut alt2typeMap:Map<&TypeInfo,&TypeInfo> = {};
       let mut workAlt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
@@ -3897,12 +3913,12 @@ pub class GenericTypeInfo extend TypeInfo {
          '{ skind = %d, typeId = %d, genSrcTypeId = %s, genTypeList = {' (
             SerializeKind.Generic, self.typeId.id,
             serializeInfo.serializeId( self.genSrcTypeInfo.$typeId ) ) );
-      let count = 0;
-      foreach genType in self.alt2typeMap {
-         if count > 0 {
+
+      foreach itemType, index in self.itemTypeInfoList {
+         if index > 1 {
             stream.write( "," );
          }
-         stream.write( serializeInfo.serializeId( genType.$typeId ) );
+         stream.write( serializeInfo.serializeId( itemType.$typeId ) );
       }
       stream.write( '} }\n' );
    }
@@ -4614,29 +4630,6 @@ pub class NormalTypeInfo extend TypeInfo {
    pub override fn get_display_stirng_with(
       raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str
    {
-      switch self.kind {
-         case .Func, .Form, .FormFunc, .Method, .Macro {
-            let mut txt = raw .. "(";
-            foreach argType, index in self.argTypeInfoList {
-               if index ~= 1 {   
-                  txt = txt .. ", ";
-               }
-               txt = txt .. argType.get_display_stirng();
-            }
-            txt = txt .. ")"; 
-            foreach retType, index in self.retTypeInfoList {
-               if index == 1 {   
-                  txt = txt .. ": ";
-               }
-               else {            
-                  txt = txt .. ", ";
-               }
-               txt = txt .. retType.get_display_stirng();
-            }
-            return txt;       
-         }
-      }
-
       let mut parentTxt = "";
       let mut name;     
       if #self.itemTypeInfoList > 0 {
@@ -4653,6 +4646,32 @@ pub class NormalTypeInfo extend TypeInfo {
       else {            
          name = parentTxt .. raw;
       }
+
+      switch self.kind {
+         case .Func, .Form, .FormFunc, .Method, .Macro {
+            let mut txt = name .. "(";
+            foreach argType, index in self.argTypeInfoList {
+               if index ~= 1 {   
+                  txt = txt .. ", ";
+               }
+               txt = txt .. argType.get_display_stirng_with( argType.$rawTxt, alt2type );
+            }
+            txt = txt .. ")"; 
+            foreach retType, index in self.retTypeInfoList {
+               if index == 1 {   
+                  txt = txt .. ": ";
+               }
+               else {            
+                  txt = txt .. ", ";
+               }
+               txt = txt .. retType.get_display_stirng_with( retType.$rawTxt, alt2type );
+            }
+            // return txt;
+            name = txt;        
+         }
+      }
+
+      
 
       return name;      
    }

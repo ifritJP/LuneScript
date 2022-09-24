@@ -24,6 +24,36 @@ SOFTWARE.
 
 _lune_control default_async_all;
 
+pub macro _matchAlt( alt:__exp, val:sym, err:sym, validBlock:__block, errBlock:__block ) {
+   {}
+   if! let ,,err = ,,alt.$err {
+      ,,errBlock;
+   } else {
+      if! let ,,val = ,,alt.$val {
+         ,,validBlock;
+      } else {
+         error( "illegal Alt" );
+      }
+   }
+}
+pub class AltBase<T,E> {
+   let val:T!;
+   let mess:E!;
+}
+// pub class Alt<T> extend AltBase<T,str> {
+//    fn __init( val:T!, err:str! ) {
+//       super( val, err );
+//    }
+//    pub static fn valid( val:T ): Alt<T> {
+//       return new Alt<T>( val## );
+//    }
+//    pub static fn err( err:str ): Alt<T> {
+//       let dummy:T! = nil;
+//       return new Alt<T>( dummy, err );
+//    }
+// }
+
+
 pub enum Lang {
    // 変換先言語と同じ。
    Same,

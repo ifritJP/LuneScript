@@ -330,7 +330,7 @@ _DefBuiltinFuncType( [
          "__attrib": { "type": [ "module" ] },
          "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["...<int>"] },
          "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["...<int>"] },
-         "format": { "arg": [ "str", "..." ], "ret": ["str"] },
+         "format": { "arg": [ "str", "&..." ], "ret": ["str"] },
          "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
          "gmatch": { "arg": [ "str", "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
          "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },

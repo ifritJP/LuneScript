@@ -1014,13 +1014,13 @@ end
 
 function convFilter:getTypeSymbol( typeInfo )
 
-   local orgType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_aliasSrc()
+   local orgType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_genSrcTypeInfo():get_aliasSrc()
    return self:getSymbol( _lune.newAlge( SymbolKind.Type, {orgType,false}), orgType:get_rawTxt() )
 end
 
 function convFilter:getTypeSymbolWithPrefix( typeInfo )
 
-   local orgType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_aliasSrc()
+   local orgType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_genSrcTypeInfo():get_aliasSrc()
    return self:getSymbol( _lune.newAlge( SymbolKind.Type, {orgType,true}), orgType:get_rawTxt() )
 end
 

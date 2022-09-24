@@ -828,15 +828,17 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    }
 
    let mut alt2typeMap;
-   if funcTypeInfo.$kind == .Method {
-      when! genericsClass {
-         if funcTypeInfo.$rawTxt == "__init" {
-            alt2typeMap = genericsClass.createAlt2typeMap( true );
-         } else {
-            if #funcTypeInfo.$itemTypeInfoList == 0 {
-               alt2typeMap = genericsClass.createAlt2typeMap( false );
-            }
-            else {
+   when! genericsClass {
+      if funcTypeInfo.$rawTxt == "__init" {
+         alt2typeMap = genericsClass.createAlt2typeMap( true );
+      } else {
+         if #funcTypeInfo.$itemTypeInfoList == 0 {
+            alt2typeMap = genericsClass.createAlt2typeMap( false );
+         }
+         else {
+            if! let genFuncType = funcTypeInfo@@@Ast.GenericTypeInfo {
+               alt2typeMap = genFuncType.createAlt2typeMap( false );
+            } else {
                alt2typeMap = genericsClass.createAlt2typeMap( true );
                foreach itemType in genericsClass.$itemTypeInfoList {
                   // 下手に型推論が働かないように、ダミーの型をセットする
@@ -846,12 +848,14 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
                }
             }
          }
-      } else {
-         self.error( "none class" );
       }
    } else {
-      alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(
-         #funcTypeInfo.$itemTypeInfoList > 0 ); 
+      if! let genFuncType = funcTypeInfo@@@Ast.GenericTypeInfo {
+         alt2typeMap = genFuncType.createAlt2typeMap( false );
+      } else {
+         alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(
+            #funcTypeInfo.$itemTypeInfoList > 0 );
+      }
    }
    let matchResult, _, newExpNodeList = self.checkMatchType(
       funcTypeInfo.getTxt(##), pos,
@@ -2756,18 +2760,30 @@ fn TransUnit.analyzeExpField(
             // 引数から全ての型パラメータを推論できるものに関しては、
             // エラーしないので、引数のチェックを行なう。
             let mut altSet:Set<&Ast.TypeInfo> = (@);
+            let mut hasAlt = false;
             foreach argType in typeInfo.$argTypeInfoList {
                let orgType = argType.$nonnilableType.$srcTypeInfo;
                if orgType.$kind == .Alternate {
                   altSet.add( orgType );
+                  hasAlt = true;
                }
             }
-            foreach itemType in prefixType.$itemTypeInfoList {
-               if not altSet.has( itemType.$nonnilableType.$srcTypeInfo ) {
-                  accessErr = true;
-                  break;
+            // if not hasAlt {
+            //    foreach retType in typeInfo.$retTypeInfoList {
+            //       let orgType = retType.$nonnilableType.$srcTypeInfo;
+            //       if orgType.$kind == .Alternate {
+            //          hasAlt = true;
+            //       }
+            //    }
+            // }
+            // if hasAlt {
+               foreach itemType in prefixType.$itemTypeInfoList {
+                  if not altSet.has( itemType.$nonnilableType.$srcTypeInfo ) {
+                     accessErr = true;
+                     break;
+                  }
                }
-            }
+            // }
          } else {
             accessErr = true;
          }
@@ -2797,6 +2813,26 @@ fn TransUnit.analyzeExpField(
    else {
       when! accessSymbolInfo {
          self.checkAsyncField( accessSymbolInfo, fieldToken.pos );
+      }
+
+      if typeInfo.$kind == .Func {
+         let nextToken = self.getToken(##);
+         if nextToken.txt == "<" {
+            let itemNodeList:List<&Nodes.Node> = [];
+            let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList );
+
+            if #typeInfo.$itemTypeInfoList == #genericList {
+               typeInfo = self.processInfo.createGeneric(
+                  typeInfo, genericList, self.moduleType );
+            } else {
+               self.addErrMess(
+                  nextToken.pos,
+                  "generic type count is unmatch. -- %d, %s"
+                  (#genericList, typeInfo.getTxt(##) ) );
+            }
+         } else {
+            self.pushback();
+         }
       }
       
       return Nodes.RefFieldNode.create(
@@ -2935,18 +2971,18 @@ fn TransUnit.analyzeExpSymbol(
          self.checkAsyncSymbol( symbolInfo, firstToken.pos );
          
          let typeInfo = symbolInfo.$typeInfo;
-         if symbolInfo.$kind == .Typ and
-            typeInfo.$kind == .Alternate and
-            self.analyzingStaticMethodArgsScope ~= nil and
-            symbolInfo.$scope ~= self.analyzingStaticMethodArgsScope
-         {
-            // static メソッド内では、
-            // そのメソッドで定義した型パラメータ以外を使用できない。
-            self.addErrMess(
-               firstToken.pos,    
-               "The static method can't use the type parameter. -- %s"
-               (typeInfo.getTxt(##)));
-         }
+         // if symbolInfo.$kind == .Typ and
+         //    typeInfo.$kind == .Alternate and
+         //    self.analyzingStaticMethodArgsScope ~= nil and
+         //    symbolInfo.$scope ~= self.analyzingStaticMethodArgsScope
+         // {
+         //    // static メソッド内では、
+         //    // そのメソッドで定義した型パラメータ以外を使用できない。
+         //    self.addErrMess(
+         //       firstToken.pos,    
+         //       "The static method can't use the type parameter. -- %s"
+         //       (typeInfo.getTxt(##)));
+         // }
 
          switch symbolInfo.$kind {
             case .Typ {  
@@ -3011,6 +3047,33 @@ fn TransUnit.analyzeExpSymbol(
             self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], 
             new Ast.AccessSymbolInfo( self.processInfo, symbolInfo, .None, true ) );
+
+         if typeInfo.$kind == .Func {
+            let nextToken = self.getToken(##);
+            if nextToken.txt == "<" {
+               let itemNodeList:List<&Nodes.Node> = [];
+               let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList );
+
+               if #typeInfo.$itemTypeInfoList == #genericList {
+                  let newTypeInfo = self.processInfo.createGeneric(
+                     typeInfo, genericList, self.moduleType );
+                  
+                  exp = Nodes.RefTypeNode.create(
+                     self.nodeManager, firstToken.pos, self.inTestBlock,
+                     self.macroCtrl.isInAnalyzeArgMode(), [ newTypeInfo ],
+                     exp, itemNodeList, typeInfo.$mutMode, "no" );
+               } else {
+                  self.addErrMess(
+                     nextToken.pos,
+                     "generic type count is unmatch. -- %d, %s"
+                     (#genericList, typeInfo.getTxt(##) ) );
+               }
+               
+            } else {
+               self.pushback();
+            }
+         }
+         
       }
    }
    elseif mode == .Fn {
@@ -4035,7 +4098,7 @@ fn TransUnit.analyzeExp(
           ( initTypeInfo.$accessMode == .Pro and
             self.$scope.getClassTypeInfo().isInheritFrom(
                self.processInfo, classTypeInfo, nil ) ) or
-          ( self.$scope.getClassTypeInfo() == classTypeInfo ) or
+          ( self.$scope.getClassTypeInfo() == classTypeInfo.$genSrcTypeInfo ) or
           ( initTypeInfo.$accessMode == .Local and
             initTypeInfo.getModule() == self.moduleType )
       {

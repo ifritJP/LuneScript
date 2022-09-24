@@ -671,7 +671,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) mut : str {
 }
 
 fn convFilter.getTypeSymbol( typeInfo:&Ast.TypeInfo ) mut : str {
-   let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc;
+   let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$genSrcTypeInfo.$aliasSrc;
    return self.getSymbol( .Type( orgType, false ), orgType.$rawTxt );
 }
 
@@ -681,7 +681,7 @@ typeInfo のシンボルを取得する。
 typeInfo が外部モジュールで定義されている場合、その外部モジュール名を付加する。
 */
 fn convFilter.getTypeSymbolWithPrefix( typeInfo:&Ast.TypeInfo ) mut : str {
-   let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc;
+   let orgType = typeInfo.$srcTypeInfo.$nonnilableType.$genSrcTypeInfo.$aliasSrc;
    return self.getSymbol( .Type( orgType, true ), orgType.$rawTxt );
 }
 

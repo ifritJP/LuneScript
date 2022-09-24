@@ -457,7 +457,7 @@ pub override fn dumpFilter.processExpCallSuper(
 pub override fn dumpFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "" );
+   self.dump( opt, node, node.$expType.$display_stirng );
    filter( node.get_name(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processIf(
