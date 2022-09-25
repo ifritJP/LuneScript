@@ -10011,7 +10011,15 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          end
          
          
-         local newAlgeTypeInfo = algeTypeInfo
+         local newAlgeTypeInfo
+         
+         if #genericList > 0 then
+            newAlgeTypeInfo = self.processInfo:createGeneric( algeTypeInfo, genericList, self.moduleType )
+         else
+          
+            newAlgeTypeInfo = algeTypeInfo
+         end
+         
          
          return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newAlgeTypeInfo}, symbolToken, prefix, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), valInfo, argList )
       else

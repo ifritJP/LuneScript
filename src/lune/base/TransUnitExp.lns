@@ -2891,13 +2891,13 @@ fn TransUnit.analyzeNewAlge(
                           ( fullname ) );
       }
 
-      let newAlgeTypeInfo:&Ast.AlgeTypeInfo = algeTypeInfo;
-      // if #genericList > 0 {
-      //    newAlgeTypeInfo = self.processInfo.createGeneric(
-      //       algeTypeInfo, genericList, self.moduleType );
-      // } else {
-      //    newAlgeTypeInfo = algeTypeInfo;
-      // }
+      let newAlgeTypeInfo:&Ast.TypeInfo;
+      if #genericList > 0 {
+         newAlgeTypeInfo = self.processInfo.createGeneric(
+            algeTypeInfo, genericList, self.moduleType );
+      } else {
+         newAlgeTypeInfo = algeTypeInfo;
+      }
 
       return Nodes.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
