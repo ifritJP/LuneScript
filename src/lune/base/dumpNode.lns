@@ -306,9 +306,10 @@ pub override fn dumpFilter.processIfUnwrap(
    node: &Nodes.IfUnwrapNode, opt:Opt ) mut
 {
    self.dump( opt, node, "" );
-   foreach expNode in node.$expList.$expList {
-      filter( expNode, self, opt.nextOpt() );
-   }
+   filter( node.$expList, self, opt.nextOpt() );
+   // foreach expNode in node.$expList.$expList {
+   //    filter( expNode, self, opt.nextOpt() );
+   // }
    filter( node.$block, self, opt.nextOpt() );
    if node.$nilBlock {
       filter( unwrap node.$nilBlock, self, opt.nextOpt() );

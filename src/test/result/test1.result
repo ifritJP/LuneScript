@@ -153,7 +153,7 @@ macro "%X" (0x10 |>> 2 ) 4
 macro "%X" (0x1 |<< 2 ) 4
 macro "%X" (~2 ) FFFFFFFFFFFFFFFD
 macro __mod__ @test.@start
-macro __line__ 598
+macro __line__ 602
 .val1	0
 .val2	1.0
 .val3	abc
@@ -188,7 +188,7 @@ str	string
 @test.@funcSym.main.<anonymous>
 @test.@funcSym.Hoge.test
 0
------	620	-----
+-----	624	-----
 abc	ABC
 100	number
 macro func__c( 1, 2 ) 3
@@ -196,7 +196,7 @@ macro func__c( nil, 2 ) 0
 macro func__c( 1, nil ) 0
 test
 macro testfunc( val ) + 2 15
------	690	-----
+-----	694	-----
 1 "1"
 2 "2"
 3 "3"
@@ -207,19 +207,19 @@ macro testfunc( val ) + 2 15
 8 "8"
 9 "9"
 10 "10"
------	718	-----
+-----	722	-----
 10	1	2	3	4
 1	2	3
 1	2	3
 AlgeTest.Val1	1
-763	Val1
+767	Val1
 AlgeTest.Val2	2
 AlgeTest.Val3	13
 AlgeTest.Val4	14	abcX
 AlgeTest.Val5
 AlgeTest.Val5
 AlgeTest.Val3	15
------	774	-----
+-----	778	-----
 1
 xyzabc123	abc	123
 HOGE	123
@@ -231,7 +231,7 @@ enumTestSub.val2
 abc0
 abc1
 abc3
------	804	-----
+-----	808	-----
 1	2
 1
 
@@ -254,7 +254,7 @@ abc3
 3
 4
 5
------	855	-----
+-----	859	-----
 ===== set1.clone().or(set2)
 11
 12
@@ -272,17 +272,17 @@ not exist 1
 1
 2
 3
------	910	-----
+-----	914	-----
 123abc
 1,10,
 1,0,
 1,100,
 10,1000,
------	941	-----
+-----	945	-----
 10
 10
 abc
------	990	-----
+-----	994	-----
 OK
 @test.@start.func3	2
 @test.@start.func3	1
@@ -292,35 +292,35 @@ OK
 10
 20
 0
-@test.@start:1042> 10
------	1048	-----
-@test.@start:1055> 1
-@test.@start:1055> 2
-@test.@start:1055> 3
-@test.@start:1067> 1
-@test.@start:1078> abc
-@test.@start:1089> abc
------	1096	-----
+@test.@start:1046> 10
+-----	1052	-----
+@test.@start:1059> 1
+@test.@start:1059> 2
+@test.@start:1059> 3
+@test.@start:1071> 1
+@test.@start:1082> abc
+@test.@start:1093> abc
+-----	1100	-----
 int:1
 real:1
 real:2.5
 str:abc
-1121	@test.@start.TestGG.func1
-1122	@test.@start.TestGG.func2
-1139	nil	2
------	1148	-----
+1125	@test.@start.TestGG.func1
+1126	@test.@start.TestGG.func2
+1143	nil	2
+-----	1152	-----
 a	b
------	1174	-----
+-----	1178	-----
 macro val$.$val nil
 macro func4()$.$val nil
 macro val.$val 1
 macro func4()$.$val 2
 1	nil
 6	2	2	3	5
------	1204	-----
+-----	1208	-----
 1	1
 @test.@start.func.func2.Test_1.func2	2
------	1228	-----
+-----	1232	-----
 Test_enum.Bar
 1
 2
@@ -331,25 +331,25 @@ hoge
 @test.@Sub2.Sub_class.func
 \'''"\.\
 \"""'\.\
------	1293	-----
+-----	1297	-----
 @test.@Sub2.testPrint
 @test.@Sub2.testPrint
 @test.@Sub2.testPrint
 @test.@Sub2.testPrint
 @test.@Sub2.testPrint
 @test.@Sub2.testPrint
------	1308	-----
+-----	1312	-----
 1
 2
 3
 abc
------	1320	-----
+-----	1324	-----
 @test.@Sub2.Test3.func	100
------	1325	-----
-1
 -----	1329	-----
+1
+-----	1333	-----
 hoge:1,2.5,false,abc,nil
------	1336	-----
+-----	1340	-----
 int:1
 real:1
 int:1
@@ -359,107 +359,107 @@ class
 IF
 class
 IF
------	1368	-----
+-----	1372	-----
 11
 
------	1377	-----
+-----	1381	-----
 1
 100
------	1401	-----
-hoge	1407	1
-hoge	1413	1
------	1416	-----
-hoge	1422	1
------	1428	-----
+-----	1405	-----
+hoge	1411	1
+hoge	1417	1
+-----	1420	-----
+hoge	1426	1
+-----	1432	-----
 hoge:foo:abc
 hoge:foo:abc
------	1442	-----
+-----	1446	-----
 foo: hoge: abc
------	1453	-----
+-----	1457	-----
 0	abc
 100	xyz
 10	ABC
 1000	XYZ
------	1478	-----
+-----	1482	-----
 abc
------	1499	-----
------	1513	-----
------	1525	-----
+-----	1503	-----
+-----	1517	-----
+-----	1529	-----
 10
 1
------	1549	-----
+-----	1553	-----
 @test.@start.Super2.func
 @test.@start.Sub.func
------	1569	-----
------	1583	-----
+-----	1573	-----
+-----	1587	-----
 @test.@start.func
------	1596	-----
+-----	1600	-----
 1	10
------	1614	-----
+-----	1618	-----
 1
 1	2
------	1633	-----
+-----	1637	-----
 1
------	1649	-----
-nil	1
------	1667	-----
+-----	1653	-----
+nil	101	102
+-----	1671	-----
 1	2
------	1679	-----
+-----	1683	-----
 1	2
------	1689	-----
+-----	1693	-----
 @test.@start.functest
 @test.@start.functest2
 hoge
------	1703	-----
--1
 -----	1707	-----
+-1
+-----	1711	-----
 2
------	1715	-----
+-----	1719	-----
 10
------	1726	-----
+-----	1730	-----
 hoge
 hoge2
------	1746	-----
+-----	1750	-----
 hoge2
------	1765	-----
+-----	1769	-----
 hoge
------	1784	-----
+-----	1788	-----
 abc
 abc
 val.val
------	1803	-----
+-----	1807	-----
 1
 2
------	1823	-----
+-----	1827	-----
 123abc123
------	1835	-----
+-----	1839	-----
 @test.@start.Hoge.func
------	1847	-----
+-----	1851	-----
 11
------	1860	-----
+-----	1864	-----
 abc
------	1879	-----
+-----	1883	-----
 1
------	1893	-----
+-----	1897	-----
 aaa
------	1898	-----
+-----	1902	-----
 @test.@Sub8
 @test.@Sub8.sub
 @test.@Sub9
 @test.@Sub9.func	10
------	1902	-----
+-----	1906	-----
 hoge
------	1909	-----
+-----	1913	-----
 1
------	1924	-----
------	1935	-----
+-----	1928	-----
+-----	1939	-----
 10a
------	1950	-----
+-----	1954	-----
 1	2
------	1960	-----
+-----	1964	-----
 1
 2
------	1984	-----
+-----	1988	-----
 1
 2
 3
@@ -470,26 +470,26 @@ hoge
 8
 9
 10
------	2009	-----
-1	2	0
 -----	2013	-----
+1	2	0
+-----	2017	-----
 hoge
 hoge
------	2026	-----
+-----	2030	-----
 val1	1
 val2	abc
 val3	10.5
------	2045	-----
------	2057	-----
+-----	2049	-----
+-----	2061	-----
 1	2
 1	nil
 nil	nil
------	2067	-----
+-----	2071	-----
     1.23
    12.35
   123.46
  1234.57
------	2074	-----
+-----	2078	-----
 abc
 11
 12
@@ -910,6 +910,7 @@ test/error/nilable1.lns:2:5: error: unmatch value type (index:1) int <- nil --
 test/error/nilable1.lns:6:9: error: = operator: exp(1) type mismatch int(26) <- nil(98): index 1 -- 
 test/error/nilable1.lns:10:15: error: no numeric type 'int!' or 'int'
 test/error/nilable1.lns:16:5: error: This condition never be false
+test/error/nilable1.lns:16:5: error: has no nilable
 test/error/nilable1.lns:24:5: error: unmatch value type (index:1) int <- int! -- 
 test/error/nilable1.lns:29:5: error: get: exp(1) type mismatch int(26) <- nil(98): index 1 -- 
 test/error/nilable1.lns:34:5: error: unmatch value type (index:1) stem <- nil -- 
@@ -933,7 +934,6 @@ test/error/nilable1.lns:108:26: error: can't call the type -- has!, TypeInfoKind
 test/error/nilable1.lns:2:9: warning: 'val' var isn't accessed
 test/error/nilable1.lns:6:5: warning: 'val' var isn't accessed
 test/error/nilable1.lns:10:5: warning: 'val' var isn't accessed
-test/error/nilable1.lns:16:5: warning: has no nilable
 test/error/nilable1.lns:24:9: warning: 'val' var isn't accessed
 test/error/nilable1.lns:38:5: warning: 'val' var isn't accessed
 test/error/nilable1.lns:51:4: warning: 'val' var isn't accessed
@@ -1076,6 +1076,7 @@ test/error/set.lns:2:26: error: 'Set' object can't store nilable. -- nil
 test/error/set.lns:7:7: error: unmatch value type (index:1) int <- str -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/set.lns:12:11: error: could not access with []. -- &Set<str>
 test/error/set.lns:12:16: error: unmatch index type -- int, str
+test/error/set.lns:16:4: error: has no nilable
 test/error/set.lns:17:18: error: no string type 'bool' or 'str'
 test/error/set.lns:19:4: error: add: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/set.lns:20:4: error: del: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
@@ -1100,7 +1101,6 @@ test/error/set.lns:131:7: error: Set<int> does not support $.
 test/error/set.lns:131:19: error: can't call the type -- has!, TypeInfoKind.Nilable
 test/error/set.lns:2:8: warning: 'set' var isn't accessed
 test/error/set.lns:7:11: warning: 'val1' var isn't accessed
-test/error/set.lns:16:4: warning: has no nilable
 test/error/set.lns:29:7: warning: 'func' var isn't accessed
 test/error/scope1.lns:2:21: error: not found type -- unknownList
 test/error/scope2.lns:5:25: error: not found type -- list
@@ -1412,24 +1412,21 @@ test/error/enum.lns:60:4: warning: 'valtest' var isn't accessed
 test/error/enum.lns:65:4: warning: 'valtest' var isn't accessed
 test/error/enum.lns:77:8: warning: 'valtest' var isn't accessed
 test/error/enum.lns:112:8: warning: 'val1' var isn't accessed
+test/error/eof.lns:46:3: (test/error/eof.lns:46:3: (macro _test_letunwrap):43:4): error: has no nilable
+test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):50:4): error: has no nilable
 test/error/eof.lns:56:1: error: EOF
 test/error/eof.lns:33:3: (test/error/eof.lns:33:3: (macro _test_switch):30:4): warning: 'switch' should have 'case' blocks.
-test/error/eof.lns:46:3: (test/error/eof.lns:46:3: (macro _test_letunwrap):43:4): warning: has no nilable
 test/error/eof.lns:46:3: (test/error/eof.lns:46:3: (macro _test_letunwrap):43:9): warning: 'val' var isn't accessed
 test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):49:8): warning: 'val' var isn't accessed
 test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):50:10): warning: 'val' var isn't accessed
-test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):50:4): warning: has no nilable
 test/error/mutable.lns:5:4: warning: 'val1' var isn't accessed
 test/error/mutable.lns:6:4: warning: 'val2' var isn't accessed
-test/error/mutable.lns:10:4: warning: has no nilable
 test/error/mutable.lns:15:7: warning: 'val1' var isn't accessed
 test/error/mutable.lns:16:7: warning: 'val2' var isn't accessed
-test/error/mutable.lns:21:4: warning: has no nilable
 test/error/mutable.lns:26:7: warning: 'val1' var isn't accessed
 test/error/mutable.lns:27:7: warning: 'val2' var isn't accessed
 test/error/mutable.lns:32:8: warning: 'val1' var isn't accessed
 test/error/mutable.lns:32:14: warning: 'val2' var isn't accessed
-test/error/mutable.lns:33:4: warning: has no nilable
 test/error/mutable.lns:38:7: warning: 'val1' var isn't accessed
 test/error/mutable.lns:39:7: warning: 'val2' var isn't accessed
 test/error/mutable.lns:98:4: warning: 'val' var isn't accessed
@@ -1439,10 +1436,13 @@ test/error/mutable.lns:227:7: warning: 'func3' var isn't accessed
 test/error/mutable.lns:253:15: warning: 'work' var isn't accessed
 test/error/mutable.lns:5:9: error: this is not mutable variable. -- val1
 test/error/mutable.lns:6:9: error: this is not mutable variable. -- val2
+test/error/mutable.lns:10:4: error: has no nilable
 test/error/mutable.lns:11:12: error: this is not mutable variable. -- val1
 test/error/mutable.lns:12:12: error: this is not mutable variable. -- val2
 test/error/mutable.lns:15:12: error: this is not mutable variable. -- val1
 test/error/mutable.lns:16:12: error: this is not mutable variable. -- val2
+test/error/mutable.lns:21:4: error: has no nilable
+test/error/mutable.lns:33:4: error: has no nilable
 test/error/mutable.lns:34:12: error: this is not mutable variable. -- val1
 test/error/mutable.lns:35:12: error: this is not mutable variable. -- val2
 test/error/mutable.lns:38:12: error: this is not mutable variable. -- val1
@@ -1686,6 +1686,7 @@ test/error/unwrap.lns:9:8: error: This symbol is shadowed from 12:12 -- val1
 test/error/unwrap.lns:9:8: error: shadowing symbol of 2:9 -- val1
 test/error/unwrap.lns:10:8: error: shadowing symbol of 2:15 -- val2
 test/error/unwrap.lns:12:4: error: This condition never be false
+test/error/unwrap.lns:12:4: error: has no nilable
 test/error/unwrap.lns:12:12: error: shadowing symbol of 9:8 -- val1
 test/error/unwrap.lns:26:4: error: unmatch value type (index:1) @test.@error.@unwrap.Sub1 <- @test.@error.@unwrap.Sub2 -- not inherit Sub1(1025) <- Sub2(1035)
 test/error/unwrap.lns:42:17: error: this is not mutable variable. -- val
@@ -1700,7 +1701,6 @@ test/error/unwrap.lns:66:11: error: this is not mutable variable. -- val
 test/error/unwrap.lns:71:16: error: not found type -- val2
 test/error/unwrap.lns:2:20: warning: it shouldn use non-nilable type -- int!
 test/error/unwrap.lns:9:8: warning: 'val1' var isn't accessed
-test/error/unwrap.lns:12:4: warning: has no nilable
 test/error/unwrap.lns:12:12: warning: 'val1' var isn't accessed
 test/error/unwrap.lns:12:12: warning: This symbol has no referer -- val1
 test/error/unwrap.lns:26:4: warning: 'sub' var isn't accessed
@@ -2029,7 +2029,9 @@ test/error/symbol.lns:7:7: error: symbol must not begin with '_' -- '_func'
 test/error/symbol.lns:10:7: error: macro name must begin with '_' -- 'Hoge'
 test/error/symbol.lns:12:5: error: this symbol is special keyword -- self
 test/error/symbol.lns:20:7: error: all '_' symbol is invalid.
+test/error/symbol.lns:20:7: error: has no nilable
 test/error/symbol.lns:23:7: error: all '_' symbol is invalid.
+test/error/symbol.lns:23:7: error: has no nilable
 test/error/symbol.lns:30:18: error: not found type -- val
 test/error/symbol.lns:19:7: warning: 'sub3' var isn't accessed
 test/error/symbol2.lns:1:8: error: not found type -- __func__
@@ -2440,15 +2442,12 @@ test/error/async5.lns:46:7: error: can't access noasync function in async. -- fo
 test/error/abbr.lns:3:1: warning: func: 00000:use '##', instate of '...'.
 test/error/dis_mutable.lns:5:4: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:6:4: warning: 'val2' var isn't accessed
-test/error/dis_mutable.lns:10:4: warning: has no nilable
 test/error/dis_mutable.lns:15:7: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:16:7: warning: 'val2' var isn't accessed
-test/error/dis_mutable.lns:21:4: warning: has no nilable
 test/error/dis_mutable.lns:26:7: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:27:7: warning: 'val2' var isn't accessed
 test/error/dis_mutable.lns:32:8: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:32:14: warning: 'val2' var isn't accessed
-test/error/dis_mutable.lns:33:4: warning: has no nilable
 test/error/dis_mutable.lns:38:7: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:39:7: warning: 'val2' var isn't accessed
 test/error/dis_mutable.lns:98:4: warning: 'val' var isn't accessed
@@ -2456,6 +2455,9 @@ test/error/dis_mutable.lns:219:7: warning: 'func' var isn't accessed
 test/error/dis_mutable.lns:223:7: warning: 'func2' var isn't accessed
 test/error/dis_mutable.lns:227:7: warning: 'func3' var isn't accessed
 test/error/dis_mutable.lns:253:15: warning: 'work' var isn't accessed
+test/error/dis_mutable.lns:10:4: error: has no nilable
+test/error/dis_mutable.lns:21:4: error: has no nilable
+test/error/dis_mutable.lns:33:4: error: has no nilable
 test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1520) <- List<@test.@error.@dis_mutable.Sub1>(1559): index 1 -- 
 test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1528) <- List<@test.@error.@dis_mutable.Sub1>(1559): index 1 -- 
 test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1538) <- List<List<@test.@error.@dis_mutable.Sub1>>(1574): index 1 -- 

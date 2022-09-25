@@ -6488,8 +6488,8 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       if unwrapFlag then
          
          local hasNilable = false
-         for index, _1 in ipairs( letVarList ) do
-            if expList:getExpTypeAt( index ):get_nilable() then
+         for index, varInfo in ipairs( letVarList ) do
+            if expList:getExpTypeAt( index ):get_nilable() and varInfo.varName.txt ~= "_" then
                hasNilable = true
                break
             end
@@ -6497,7 +6497,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
          end
          
          if not hasNilable then
-            self:addWarnMess( firstPos, "has no nilable" )
+            self:addErrMess( firstPos, "has no nilable" )
          end
          
       end

@@ -483,9 +483,7 @@ end
 function dumpFilter:processIfUnwrap( node, opt )
 
    self:dump( opt, node, "" )
-   for __index, expNode in ipairs( node:get_expList():get_expList() ) do
-      filter( expNode, self, opt:nextOpt(  ) )
-   end
+   filter( node:get_expList(), self, opt:nextOpt(  ) )
    
    filter( node:get_block(), self, opt:nextOpt(  ) )
    if node:get_nilBlock() then

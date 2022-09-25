@@ -2395,3 +2395,30 @@ _section();
    }
    sub();
 }
+_section();
+{
+   fn func(): int, int!, int {
+      return 1, 2, 3;
+   }
+   fn sub() {
+      if! let val, val2 = func() {
+         print( __line__, val + 1, val2 + 2 );
+      }
+      {
+         let! val, val2 = func() {
+            return;
+         };
+         print( __line__, val + 1, val2 + 2 );
+      }
+      if! let val, val2, _ = func() {
+         print( __line__, val + 1, val2 + 2 );
+      }
+      {
+         let! val, val2, _ = func() {
+            return;
+         };
+         print( __line__, val + 1, val2 + 2 );
+      }
+   }
+   sub();
+}
