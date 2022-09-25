@@ -11,11 +11,23 @@ macro Hoge() {  // error
 }
 let self = 1; // errorr
 let val = 1;
+
+{
+   fn func3() : int! {
+      return 1;
+   }
+   fn sub3() {
+      let! _ = func3() { // error
+         return;
+      };
+      if! let _ = func3() { // error
+      }
+   }
+}
+
 macro _Test() {
    {
       let val2 = val; // error
    }
    print( ,,val2 );
 }
-
-print( __func__ );  // error

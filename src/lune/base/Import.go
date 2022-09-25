@@ -84,28 +84,24 @@ func Import_convExp1_136(arg1 []LnsAny) (LnsAny, LnsAny) {
 func Import_convExp1_369(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 182
-func Import_convExp1_510(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
 // for 235
-func Import_convExp1_720(arg1 []LnsAny) *Ast_AlternateTypeInfo {
+func Import_convExp1_721(arg1 []LnsAny) *Ast_AlternateTypeInfo {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_AlternateTypeInfo)
 }
 // for 256
-func Import_convExp1_831(arg1 []LnsAny) (*Ast_GenericTypeInfo, *Ast_Scope) {
+func Import_convExp1_832(arg1 []LnsAny) (*Ast_GenericTypeInfo, *Ast_Scope) {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo), Lns_getFromMulti( arg1, 1 ).(*Ast_Scope)
 }
 // for 311
-func Import_convExp1_1047(arg1 []LnsAny) LnsAny {
+func Import_convExp1_1048(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 330
-func Import_convExp1_1136(arg1 []LnsAny) LnsAny {
+func Import_convExp1_1137(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 365
-func Import_convExp1_1254(arg1 []LnsAny) Ast_TypeDataAccessor {
+func Import_convExp1_1255(arg1 []LnsAny) Ast_TypeDataAccessor {
     return Lns_getFromMulti( arg1, 0 ).(Ast_TypeDataAccessor)
 }
 // for 418
@@ -297,14 +293,8 @@ func (self *Import__TypeInfoAlias) CreateTypeInfo(_env *LnsEnv, param *Import_Im
     param.TypeId2TypeInfo.Set(self.TypeId,&newTypeInfo.Ast_TypeInfo)
     param.TypeId2TypeDataAccessor.Set(self.TypeId,newTypeInfo.FP)
     newTypeInfo.FP.Get_typeId(_env).FP.Set_orgId(_env, self.TypeId)
-    
-    {
-        __ := Import_convExp1_510(Lns_2DDD(param.FP.GetTypeInfo(_env, self.ParentId)))
-        if __ == nil{
-            return nil, _env.GetVM().String_format("%s: not found parentInfo %d %s", []LnsAny{__func__, self.ParentId, self.rawTxt})
-        } else {
-            _ = __.(*Ast_TypeInfo)
-        }
+    if Lns_op_not(Lns_car(param.FP.GetTypeInfo(_env, self.ParentId))){
+        return nil, _env.GetVM().String_format("%s: not found parentInfo %d %s", []LnsAny{__func__, self.ParentId, self.rawTxt})
     }
     var parentScope *Ast_Scope
     
@@ -341,7 +331,7 @@ func (self *Import__TypeInfoAlternate) CreateTypeInfo(_env *LnsEnv, param *Impor
         interfaceList.Insert(Ast_TypeInfo2Stem(Lns_unwrap( Lns_car(param.FP.GetTypeInfoFrom(_env, ifTypeId))).(*Ast_TypeInfo)))
     }
     var newTypeInfo *Ast_AlternateTypeInfo
-    newTypeInfo = Import_convExp1_720(Lns_2DDD(param.ProcessInfo.FP.CreateAlternate(_env, self.BelongClassFlag, self.AltIndex, self.Txt, self.AccessMode, param.ModuleTypeInfo, baseInfo, interfaceList)))
+    newTypeInfo = Import_convExp1_721(Lns_2DDD(param.ProcessInfo.FP.CreateAlternate(_env, self.BelongClassFlag, self.AltIndex, self.Txt, self.AccessMode, param.ModuleTypeInfo, baseInfo, interfaceList)))
     param.TypeId2TypeInfo.Set(self.TypeId,&newTypeInfo.Ast_TypeInfo)
     param.TypeId2TypeDataAccessor.Set(self.TypeId,newTypeInfo.FP)
     newTypeInfo.FP.Get_typeId(_env).FP.Set_orgId(_env, self.TypeId)
@@ -398,7 +388,7 @@ func (self *Import__TypeInfoModifier) CreateTypeInfo(_env *LnsEnv, param *Import
     var srcTypeInfo *Ast_TypeInfo
     
     {
-        _srcTypeInfo := Import_convExp1_1047(Lns_2DDD(param.FP.GetTypeInfoFrom(_env, self.SrcTypeId)))
+        _srcTypeInfo := Import_convExp1_1048(Lns_2DDD(param.FP.GetTypeInfoFrom(_env, self.SrcTypeId)))
         if _srcTypeInfo == nil{
             return nil, _env.GetVM().String_format("not found srcType -- %d", []LnsAny{self.SrcTypeId.Id})
         } else {
@@ -420,7 +410,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
         var workTypeInfo *Ast_TypeInfo
         
         {
-            _workTypeInfo := Import_convExp1_1136(Lns_2DDD(param.FP.GetTypeInfo(_env, self.ParentId)))
+            _workTypeInfo := Import_convExp1_1137(Lns_2DDD(param.FP.GetTypeInfo(_env, self.ParentId)))
             if _workTypeInfo == nil{
                 Util_err(_env, _env.GetVM().String_format("not found parentInfo %d %s", []LnsAny{self.ParentId, self.Txt}))
             } else {
@@ -454,7 +444,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
                     mutable = param.MetaInfo.GetAt( "__moduleMutable" ).(bool)
                 }
             var parentTypeDataAccessor Ast_TypeDataAccessor
-            parentTypeDataAccessor = Import_convExp1_1254(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, parentInfo.FP.Get_typeId(_env).Id)))
+            parentTypeDataAccessor = Import_convExp1_1255(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, parentInfo.FP.Get_typeId(_env).Id)))
             var workTypeInfo *Ast_TypeInfo
             workTypeInfo = param.ProcessInfo.FP.CreateModule(_env, scope, parentInfo, parentTypeDataAccessor, true, self.Txt, mutable)
             newTypeInfo = workTypeInfo

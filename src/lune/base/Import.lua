@@ -568,7 +568,6 @@ setmetatable( _TypeInfoAlias, { __index = _TypeInfo } )
 function _TypeInfoAlias:createTypeInfo( param )
    local __func__ = '@lune.@base.@Import._TypeInfoAlias.createTypeInfo'
 
-   local _
    local srcTypeInfo = _lune.unwrap( param:getTypeInfoFrom( self.srcTypeId ))
    local newTypeInfo = param.processInfo:createAlias( param.processInfo, self.rawTxt, true, Ast.AccessMode.Pub, param.moduleTypeInfo, srcTypeInfo )
    param.typeId2TypeInfo[self.typeId] = newTypeInfo
@@ -576,12 +575,10 @@ function _TypeInfoAlias:createTypeInfo( param )
    
    newTypeInfo:get_typeId():set_orgId( self.typeId )
    
-   local _1 = param:getTypeInfo( self.parentId )
-   if  nil == _1 then
-      local __1 = _1
-   
+   if not param:getTypeInfo( self.parentId ) then
       return nil, string.format( "%s: not found parentInfo %d %s", __func__, self.parentId, self.rawTxt)
    end
+   
    
    
    local parentScope = param.typeId2Scope[self.parentId]

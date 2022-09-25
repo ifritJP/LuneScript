@@ -2973,6 +2973,22 @@ pub override fn convFilter.processIfUnwrap(
    self.pushIndent( ## );
 
    let mut tempTypeList:List<&Ast.TypeInfo> = [];
+   // 一度テンポラリ変数にセットする必要があるかどうかのリスト。
+   let needStrTempList:List<bool> = [];
+   foreach varSym, index in node.$varSymList {
+      if #node.$expList.$expTypeList >= index {
+         if varSym.$name == "_" {
+            needStrTempList.insert( false );
+         } else {
+            let expType = node.$expList.$expTypeList[ index ];
+            needStrTempList.insert( expType.$nilable );
+         }
+      } else {
+         needStrTempList.insert( true );
+      }
+   }
+
+   
    // 一旦 nil かどうかを確認するために、テンポラリ変数にセット
    foreach varSym, index in node.$varSymList {
       if index > 1 {
@@ -2981,7 +2997,11 @@ pub override fn convFilter.processIfUnwrap(
       if varSym.$name == "_" {
          self.writeRaw( "_" );
       } else {
-         self.writeRaw( "_" .. self.getSymbolSym( varSym ) );
+         if needStrTempList[ index ] {
+            self.writeRaw( "_" .. self.getSymbolSym( varSym ) );
+         } else {
+            self.writeRaw( self.getSymbolSym( varSym ) );
+         }
       }
       tempTypeList.insert( Ast.builtinTypeStem_ );
    }
@@ -2999,8 +3019,8 @@ pub override fn convFilter.processIfUnwrap(
    // テンポラリ変数が nil かどうかを確認
    self.writeRaw( "if " );
    let mut hasSym = false;
-   foreach varSym in node.$varSymList {
-      if varSym.$name ~= "_" {
+   foreach varSym, index in node.$varSymList {
+      if needStrTempList[ index ] {
          if hasSym {
             self.writeRaw( " && " );
          }
@@ -3013,13 +3033,11 @@ pub override fn convFilter.processIfUnwrap(
    // nil でなければ値を入れなおす
    self.pushIndent( ## );
    foreach varSym, index in node.$varSymList {
-      if varSym.$name ~= "_" {
+      if needStrTempList[ index ] {
          if varSym.hasAccess() {
             self.writeRaw( "%s := _%s" ( self.getSymbolSym( varSym ),
                                          self.getSymbolSym( varSym )) );    
-            if node.$expList.getExpTypeNoDDDAt( index ).$nilable {
-               self.outputAny2Type( varSym.$typeInfo );
-            }
+            self.outputAny2Type( varSym.$typeInfo );
             self.writeln( "" );
          }
       }
@@ -3096,7 +3114,7 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
          self.writeRaw( "if " );
          let mut hasCond = false;
          foreach varInfo, index in node.$varList {
-            if expList.getExpTypeNoDDDAt( index ).$nilable {
+            if varInfo.$name.txt ~= "_" and expList.getExpTypeNoDDDAt( index ).$nilable {
                if hasCond {
                   self.writeRaw( " || " );
                }
@@ -3112,12 +3130,14 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
             self.writeln( "} else {" );
             self.pushIndent(##);
             foreach varInfo, index in node.$symbolInfoList {
-               self.writeRaw( "%s = _%s" (self.getSymbolSym( varInfo ),
-                                           normalizeSym( varInfo.$name) ) );
-               if expList.getExpTypeNoDDDAt( index ).$nilable {
-                  self.outputAny2Type( varInfo.$typeInfo );
+               if varInfo.$name ~= "_" {
+                  self.writeRaw( "%s = _%s" (self.getSymbolSym( varInfo ),
+                                              normalizeSym( varInfo.$name) ) );
+                  if expList.getExpTypeNoDDDAt( index ).$nilable {
+                     self.outputAny2Type( varInfo.$typeInfo );
+                  }
+                  self.writeln( "" );
                }
-               self.writeln( "" );
             }
             self.popIndent();
             filter( thenBlock, self, node );
@@ -3127,12 +3147,14 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
             self.writeln( "} else {" );
             self.pushIndent(##);
             foreach varInfo, index in node.$symbolInfoList {
-               self.writeRaw( "%s = _%s" (self.getSymbolSym( varInfo ),
-                                           normalizeSym( varInfo.$name )) );
-               if expList.getExpTypeNoDDDAt( index ).$nilable {
-                  self.outputAny2Type( varInfo.$typeInfo );
+               if varInfo.$name ~= "_" {
+                  self.writeRaw( "%s = _%s" (self.getSymbolSym( varInfo ),
+                                              normalizeSym( varInfo.$name )) );
+                  if expList.getExpTypeNoDDDAt( index ).$nilable {
+                     self.outputAny2Type( varInfo.$typeInfo );
+                  }
+                  self.writeln( "" );
                }
-               self.writeln( "" );
             }
             self.popIndent();
             self.writeln( "}" );
@@ -3222,7 +3244,8 @@ pub override fn convFilter.processDeclVar(
          self.writeRaw( "if " );
          let mut hasCond = false;
          foreach varSym, index in node.$symbolInfoList {
-            if expList.getExpTypeNoDDDAt( index ).$nilable {
+            if varSym.$name ~= "_" and expList.getExpTypeNoDDDAt( index ).$nilable
+            {
                if hasCond {
                   self.writeRaw( " || " );
                }
