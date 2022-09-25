@@ -3871,6 +3871,25 @@ function convFilter:processIfUnwrap( node, opt )
    
    local tempTypeList = {}
    
+   local needStrTempList = {}
+   for index, varSym in ipairs( node:get_varSymList() ) do
+      if #node:get_expList():get_expTypeList() >= index then
+         if varSym:get_name() == "_" then
+            table.insert( needStrTempList, false )
+         else
+          
+            local expType = node:get_expList():get_expTypeList()[index]
+            table.insert( needStrTempList, expType:get_nilable() )
+         end
+         
+      else
+       
+         table.insert( needStrTempList, true )
+      end
+      
+   end
+   
+   
    for index, varSym in ipairs( node:get_varSymList() ) do
       if index > 1 then
          self:writeRaw( ", " )
@@ -3880,7 +3899,13 @@ function convFilter:processIfUnwrap( node, opt )
          self:writeRaw( "_" )
       else
        
-         self:writeRaw( "_" .. self:getSymbolSym( varSym ) )
+         if needStrTempList[index] then
+            self:writeRaw( "_" .. self:getSymbolSym( varSym ) )
+         else
+          
+            self:writeRaw( self:getSymbolSym( varSym ) )
+         end
+         
       end
       
       table.insert( tempTypeList, Ast.builtinTypeStem_ )
@@ -3899,8 +3924,8 @@ function convFilter:processIfUnwrap( node, opt )
    
    self:writeRaw( "if " )
    local hasSym = false
-   for __index, varSym in ipairs( node:get_varSymList() ) do
-      if varSym:get_name() ~= "_" then
+   for index, varSym in ipairs( node:get_varSymList() ) do
+      if needStrTempList[index] then
          if hasSym then
             self:writeRaw( " && " )
          end
@@ -3915,13 +3940,10 @@ function convFilter:processIfUnwrap( node, opt )
    
    self:pushIndent(  )
    for index, varSym in ipairs( node:get_varSymList() ) do
-      if varSym:get_name() ~= "_" then
+      if needStrTempList[index] then
          if varSym:hasAccess(  ) then
             self:writeRaw( string.format( "%s := _%s", self:getSymbolSym( varSym ), self:getSymbolSym( varSym )) )
-            if node:get_expList():getExpTypeNoDDDAt( index ):get_nilable() then
-               self:outputAny2Type( varSym:get_typeInfo() )
-            end
-            
+            self:outputAny2Type( varSym:get_typeInfo() )
             self:writeln( "" )
          end
          
@@ -4012,7 +4034,7 @@ function convFilter:outputLetVar( node )
             self:writeRaw( "if " )
             local hasCond = false
             for index, varInfo in ipairs( node:get_varList() ) do
-               if expList:getExpTypeNoDDDAt( index ):get_nilable() then
+               if varInfo:get_name().txt ~= "_" and expList:getExpTypeNoDDDAt( index ):get_nilable() then
                   if hasCond then
                      self:writeRaw( " || " )
                   end
@@ -4033,12 +4055,15 @@ function convFilter:outputLetVar( node )
                   self:writeln( "} else {" )
                   self:pushIndent(  )
                   for index, varInfo in ipairs( node:get_symbolInfoList() ) do
-                     self:writeRaw( string.format( "%s = _%s", self:getSymbolSym( varInfo ), normalizeSym( varInfo:get_name() )) )
-                     if expList:getExpTypeNoDDDAt( index ):get_nilable() then
-                        self:outputAny2Type( varInfo:get_typeInfo() )
+                     if varInfo:get_name() ~= "_" then
+                        self:writeRaw( string.format( "%s = _%s", self:getSymbolSym( varInfo ), normalizeSym( varInfo:get_name() )) )
+                        if expList:getExpTypeNoDDDAt( index ):get_nilable() then
+                           self:outputAny2Type( varInfo:get_typeInfo() )
+                        end
+                        
+                        self:writeln( "" )
                      end
                      
-                     self:writeln( "" )
                   end
                   
                   self:popIndent(  )
@@ -4048,12 +4073,15 @@ function convFilter:outputLetVar( node )
                   self:writeln( "} else {" )
                   self:pushIndent(  )
                   for index, varInfo in ipairs( node:get_symbolInfoList() ) do
-                     self:writeRaw( string.format( "%s = _%s", self:getSymbolSym( varInfo ), normalizeSym( varInfo:get_name() )) )
-                     if expList:getExpTypeNoDDDAt( index ):get_nilable() then
-                        self:outputAny2Type( varInfo:get_typeInfo() )
+                     if varInfo:get_name() ~= "_" then
+                        self:writeRaw( string.format( "%s = _%s", self:getSymbolSym( varInfo ), normalizeSym( varInfo:get_name() )) )
+                        if expList:getExpTypeNoDDDAt( index ):get_nilable() then
+                           self:outputAny2Type( varInfo:get_typeInfo() )
+                        end
+                        
+                        self:writeln( "" )
                      end
                      
-                     self:writeln( "" )
                   end
                   
                   self:popIndent(  )
@@ -4167,7 +4195,7 @@ function convFilter:processDeclVar( node, opt )
          self:writeRaw( "if " )
          local hasCond = false
          for index, varSym in ipairs( node:get_symbolInfoList() ) do
-            if expList:getExpTypeNoDDDAt( index ):get_nilable() then
+            if varSym:get_name() ~= "_" and expList:getExpTypeNoDDDAt( index ):get_nilable() then
                if hasCond then
                   self:writeRaw( " || " )
                end

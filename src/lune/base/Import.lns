@@ -179,7 +179,7 @@ class _TypeInfoAlias extend _TypeInfo {
 
       // param.typeId2Scope で親のスコースを取得するために、
       // param.getTypeInfo() しておく。
-      let! _ = param.getTypeInfo( self.parentId ) {
+      if not param.getTypeInfo( self.parentId ) {
          return nil, "%s: not found parentInfo %d %s" ( __func__,
                                                         self.parentId, self.rawTxt );
       };

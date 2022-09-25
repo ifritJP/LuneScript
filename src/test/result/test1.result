@@ -2028,7 +2028,11 @@ test/error/symbol.lns:7:7: error: symbol must not begin with '_' -- '_func'
 test/error/symbol.lns:7:7: error: symbol must not begin with '_' -- '_func'
 test/error/symbol.lns:10:7: error: macro name must begin with '_' -- 'Hoge'
 test/error/symbol.lns:12:5: error: this symbol is special keyword -- self
-test/error/symbol.lns:16:18: error: not found type -- val
+test/error/symbol.lns:20:7: error: all '_' symbol is invalid.
+test/error/symbol.lns:23:7: error: all '_' symbol is invalid.
+test/error/symbol.lns:30:18: error: not found type -- val
+test/error/symbol.lns:19:7: warning: 'sub3' var isn't accessed
+test/error/symbol2.lns:1:8: error: not found type -- __func__
 test/error/symbolEmpty.lns:2:8: warning: 'val' var isn't accessed
 test/error/symbolEmpty.lns:3:8: warning: 'val2' var isn't accessed
 test/error/symbolEmpty.lns:4:7: warning: 'func' var isn't accessed

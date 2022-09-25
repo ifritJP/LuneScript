@@ -621,6 +621,7 @@ TEST_CASE += Alge3.lns
 TEST_CASE += Alge4.lns
 TEST_CASE += exp.lns
 TEST_CASE += symbol.lns
+TEST_CASE += symbol2.lns
 TEST_CASE += symbolEmpty.lns
 TEST_CASE += static.lns
 TEST_CASE += generics.lns

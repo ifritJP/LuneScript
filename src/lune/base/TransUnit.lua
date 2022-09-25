@@ -6728,6 +6728,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
    local nextToken = Parser.getEofToken(  )
    
    if letFlag then
+      local hasValidName = false
       repeat 
          
          local mutable = initMutable
@@ -6741,6 +6742,10 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
          end
          
          local varName = self:checkSymbol( nextToken, SymbolMode.MustNot_Or_ )
+         if varName.txt ~= "_" then
+            hasValidName = true
+         end
+         
          nextToken = self:getToken(  )
          local typeInfo = Ast.builtinTypeEmpty
          if nextToken.txt == ":" then
@@ -6766,6 +6771,10 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
          
          table.insert( typeInfoList, typeInfo )
       until nextToken.txt ~= ","
+      if not hasValidName then
+         self:addErrMess( firstPos, "all '_' symbol is invalid." )
+      end
+      
    else
     
       while true do

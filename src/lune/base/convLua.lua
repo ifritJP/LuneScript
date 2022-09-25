@@ -2923,12 +2923,17 @@ function ConvFilter:processDeclVar( node, opt )
       if _exp ~= nil then
          self:writeln( "" )
          self:writeRaw( "if " )
-         for index, varName in ipairs( varNameList ) do
-            if index > 1 then
-               self:writeRaw( " or " )
+         local hasVar = false
+         for __index, varName in ipairs( varNameList ) do
+            if varName ~= "_" then
+               if hasVar then
+                  self:writeRaw( " or " )
+               end
+               
+               hasVar = true
+               self:writeRaw( " nil == " .. varName )
             end
             
-            self:writeRaw( " nil == " .. varName )
          end
          
          self:writeln( " then" )

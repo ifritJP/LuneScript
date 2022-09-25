@@ -3837,6 +3837,7 @@ fn TransUnit.analyzeLetAndInitExp(
    let mut nextToken = Parser.getEofToken();
 
    if letFlag {
+      let mut hasValidName = false;
       repeat {
          // 変数名と : で明示している型情報を取得。
          let mut mutable = initMutable;
@@ -3848,6 +3849,9 @@ fn TransUnit.analyzeLetAndInitExp(
             }
          }
          let varName = self.checkSymbol( nextToken, .MustNot_Or_ );
+         if varName.txt ~= "_" {
+            hasValidName = true;
+         }
          nextToken = self.getToken(##);
          let mut typeInfo = Ast.builtinTypeEmpty;
          if nextToken.txt == ":" {
@@ -3879,6 +3883,9 @@ fn TransUnit.analyzeLetAndInitExp(
          }
          typeInfoList.insert( typeInfo );
       } nextToken.txt ~= ",";
+      if not hasValidName {
+         self.addErrMess( firstPos, "all '_' symbol is invalid." );
+      }
    } else {
       while true {
          let symbolToken = self.getToken(##);

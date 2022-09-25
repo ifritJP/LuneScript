@@ -2371,12 +2371,15 @@ pub override fn ConvFilter.processDeclVar(
    if! node.$unwrapBlock {
       self.writeln( "" );
       self.writeRaw( "if " );
-      foreach varName, index in varNameList {
-         if index > 1 {
-            self.writeRaw( " or " );
+      let mut hasVar = false;
+      foreach varName in varNameList {
+         if varName ~= "_" {
+            if hasVar {
+               self.writeRaw( " or " );
+            }
+            hasVar = true;
+            self.writeRaw( " nil == " .. varName);
          }
-         self.writeRaw(
-            " nil == " .. varName);
       }
       self.writeln( " then" );
       self.pushIndent(##);
