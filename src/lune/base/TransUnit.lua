@@ -2645,7 +2645,7 @@ function TransUnit:analyzeMatch( firstToken )
 
    local exp = self:analyzeExpOneRVal( false, false )
    
-   local algeTypeInfo = _lune.__Cast( exp:get_expType():get_srcTypeInfo(), 3, Ast.AlgeTypeInfo )
+   local algeTypeInfo = _lune.__Cast( exp:get_expType():get_srcTypeInfo():get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
    if  nil == algeTypeInfo then
       local _algeTypeInfo = algeTypeInfo
    
@@ -2660,6 +2660,18 @@ function TransUnit:analyzeMatch( firstToken )
          self:addErrMess( firstToken.pos, string.format( "need to import module -- %s (%s)", fullname, algeTypeInfo:getTxt(  )) )
       end
       
+   end
+   
+   
+   local alt2typeMap
+   
+   do
+      local genTypeInfo = _lune.__Cast( exp:get_expType():get_srcTypeInfo(), 3, Ast.GenericTypeInfo )
+      if genTypeInfo ~= nil then
+         alt2typeMap = genTypeInfo:createAlt2typeMap( false )
+      else
+         alt2typeMap = algeTypeInfo:createAlt2typeMap( false )
+      end
    end
    
    
@@ -2697,7 +2709,13 @@ function TransUnit:analyzeMatch( firstToken )
             local paramName = self:getSymbolToken( SymbolMode.MustNot_Or_ )
             self:checkShadowing( paramName.pos, paramName.txt, self:get_scope() )
             
-            local workType = paramType
+            local workType = alt2typeMap[paramType:get_srcTypeInfo():get_nonnilableType()]
+            if  nil == workType then
+               local _workType = workType
+            
+               workType = paramType
+            end
+            
             if Ast.TypeInfo.isMut( paramType ) and not Ast.TypeInfo.isMut( exp:get_expType() ) then
                workType = self:createModifier( workType, Ast.MutMode.IMut )
             end
@@ -10006,10 +10024,27 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          local genericList = {}
+         local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
          do
             local _1, _2, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, algeTypeInfo:createAlt2typeMap( true ), true )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
+               
+               if #algeTypeInfo:get_itemTypeInfoList() > 0 then
+                  for __index, itemType in ipairs( algeTypeInfo:get_itemTypeInfoList() ) do
+                     do
+                        local genType = alt2typeMap[itemType]
+                        if genType ~= nil then
+                           table.insert( genericList, genType )
+                        else
+                           table.insert( genericList, itemType )
+                        end
+                     end
+                     
+                  end
+                  
+               end
+               
             end
          end
          

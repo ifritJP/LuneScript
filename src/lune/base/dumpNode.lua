@@ -394,7 +394,7 @@ end
 
 function dumpFilter:processNewAlgeVal( node, opt )
 
-   self:dump( opt, node, node:get_name().txt )
+   self:dump( opt, node, string.format( "%s: %s", node:get_name().txt, node:get_expType():get_display_stirng()) )
    for __index, exp in ipairs( node:get_paramList() ) do
       filter( exp, self, opt:nextOpt(  ) )
    end

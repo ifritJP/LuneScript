@@ -2866,21 +2866,22 @@ fn TransUnit.analyzeNewAlge(
 
 
       let genericList:List<&Ast.TypeInfo> = [];
+      let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
       if! let _, _, newExpNodeList = self.checkMatchType(
          "call", symbolToken.pos, valInfo.$typeList,
-         argListNode, false, true, algeTypeInfo.createAlt2typeMap(true), true )
+         argListNode, false, true, algeTypeInfo.createAlt2typeMap( true ), true )
       {
          argList = newExpNodeList.$expList;
 
-         // if #algeTypeInfo.$itemTypeInfoList > 0 {
-         //    foreach itemType in algeTypeInfo.$itemTypeInfoList {
-         //       if! let genType = alt2typeMap[ itemType ] {
-         //          genericList.insert( genType );
-         //       } else {
-         //          genericList.insert( itemType );
-         //       }
-         //    }
-         // }
+         if #algeTypeInfo.$itemTypeInfoList > 0 {
+            foreach itemType in algeTypeInfo.$itemTypeInfoList {
+               if! let genType = alt2typeMap[ itemType ] {
+                  genericList.insert( genType );
+               } else {
+                  genericList.insert( itemType );
+               }
+            }
+         }
       }
 
       if algeTypeInfo.$externalFlag and

@@ -220,7 +220,7 @@ func (self *dumpNode_dumpFilter) ProcessDeclAlge(_env *LnsEnv, node *Nodes_DeclA
 // 229: decl @lune.@base.@dumpNode.dumpFilter.processNewAlgeVal
 func (self *dumpNode_dumpFilter) ProcessNewAlgeVal(_env *LnsEnv, node *Nodes_NewAlgeValNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(_env, opt, &node.Nodes_Node, node.FP.Get_name(_env).Txt)
+    self.FP.dump(_env, opt, &node.Nodes_Node, _env.GetVM().String_format("%s: %s", []LnsAny{node.FP.Get_name(_env).Txt, node.FP.Get_expType(_env).FP.Get_display_stirng(_env)}))
     for _, _exp := range( node.FP.Get_paramList(_env).Items ) {
         exp := _exp.(Nodes_NodeDownCast).ToNodes_Node()
         dumpNode_filter_3_(_env, exp, self, opt.FP.NextOpt(_env))

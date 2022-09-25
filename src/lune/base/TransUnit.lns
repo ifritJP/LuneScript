@@ -2239,7 +2239,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
    let exp = self.analyzeExpOneRVal( false, false ## );
 
-   let! algeTypeInfo = exp.$expType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
+   let! algeTypeInfo = exp.$expType.$srcTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
       self.error( "match must have alge value -- %s" (exp.$expType.getTxt(##)) );
    };
 
@@ -2255,7 +2255,14 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             "need to import module -- %s (%s)"
             ( fullname, algeTypeInfo.getTxt(##) ) );
       }
-   }  
+   }
+
+   let alt2typeMap;
+   if! let genTypeInfo = exp.$expType.$srcTypeInfo@@@Ast.GenericTypeInfo {
+      alt2typeMap = genTypeInfo.createAlt2typeMap( false );
+   } else {
+      alt2typeMap = algeTypeInfo.createAlt2typeMap( false );
+   }
    
    
    self.checkNextToken( "{" );
@@ -2287,7 +2294,9 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
             let paramName = self.getSymbolToken( .MustNot_Or_ );
             self.checkShadowing( paramName.pos, paramName.txt, self.$scope );
 
-            let mut workType = paramType;
+            let! mut workType = alt2typeMap[ paramType.$srcTypeInfo.$nonnilableType ] {
+               workType = paramType;
+            };
             if Ast.TypeInfo.isMut( paramType ) and
                not Ast.TypeInfo.isMut( exp.$expType )
             {

@@ -229,7 +229,7 @@ pub override fn dumpFilter.processDeclAlge(
 pub override fn dumpFilter.processNewAlgeVal(
    node: &Nodes.NewAlgeValNode, opt:Opt ) mut
 {
-   self.dump( opt, node, node.$name.txt );
+   self.dump( opt, node, "%s: %s" (node.$name.txt, node.$expType.$display_stirng ) );
    foreach exp in node.$paramList {
       filter( exp, self, opt.nextOpt() );
    }
