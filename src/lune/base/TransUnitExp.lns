@@ -2864,11 +2864,23 @@ fn TransUnit.analyzeNewAlge(
          argListNode = nil;
       }
 
+
+      let genericList:List<&Ast.TypeInfo> = [];
       if! let _, _, newExpNodeList = self.checkMatchType(
          "call", symbolToken.pos, valInfo.$typeList,
-         argListNode, false, true, nil, true )
+         argListNode, false, true, algeTypeInfo.createAlt2typeMap(true), true )
       {
          argList = newExpNodeList.$expList;
+
+         // if #algeTypeInfo.$itemTypeInfoList > 0 {
+         //    foreach itemType in algeTypeInfo.$itemTypeInfoList {
+         //       if! let genType = alt2typeMap[ itemType ] {
+         //          genericList.insert( genType );
+         //       } else {
+         //          genericList.insert( itemType );
+         //       }
+         //    }
+         // }
       }
 
       if algeTypeInfo.$externalFlag and
@@ -2879,10 +2891,18 @@ fn TransUnit.analyzeNewAlge(
                           ( fullname ) );
       }
 
+      let newAlgeTypeInfo:&Ast.AlgeTypeInfo = algeTypeInfo;
+      // if #genericList > 0 {
+      //    newAlgeTypeInfo = self.processInfo.createGeneric(
+      //       algeTypeInfo, genericList, self.moduleType );
+      // } else {
+      //    newAlgeTypeInfo = algeTypeInfo;
+      // }
+
       return Nodes.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), [ algeTypeInfo ],
-         symbolToken, prefix, algeTypeInfo, valInfo, argList );
+         self.macroCtrl.isInAnalyzeArgMode(), [ newAlgeTypeInfo ],
+         symbolToken, prefix, newAlgeTypeInfo, valInfo, argList );
    }
    else {
       let dummySymbol =
@@ -2910,7 +2930,7 @@ fn TransUnit.analyzeExpSymbol(
 
          let expType = exp.$expType;
          if prefixExp.$expType.isModule() {
-            if! let algeType = expType@@@Ast.AlgeTypeInfo {
+            if! let algeType = expType.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
                let nextToken = self.getToken(##);
                if nextToken.txt == "." {
                   return self.analyzeNewAlge( firstToken, algeType, exp );
@@ -2986,7 +3006,7 @@ fn TransUnit.analyzeExpSymbol(
 
          switch symbolInfo.$kind {
             case .Typ {  
-               if! let algeType = typeInfo@@@Ast.AlgeTypeInfo {
+               if! let algeType = typeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
                   let nextToken = self.getToken(##);
                   if nextToken.txt == "." {
                      return self.analyzeNewAlge( firstToken, algeType, nil );
@@ -4042,7 +4062,7 @@ fn TransUnit.analyzeExp(
          self.error( "illegal enum val -- %s.%s"
                      (orgExpectType.getTxt(##), nextToken.txt) );
       }
-      if! let algeTyepInfo = orgExpectType.$srcTypeInfo@@@Ast.AlgeTypeInfo {
+      if! let algeTyepInfo = orgExpectType.$srcTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
          return self.analyzeNewAlge( firstToken, algeTyepInfo, nil );
       }
 

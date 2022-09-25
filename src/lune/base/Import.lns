@@ -716,7 +716,7 @@ class _TypeInfoAlge extend _TypeInfo {
 
       param.typeId2Scope[ self.typeId ] = scope;
       let mut algeTypeInfo = param.processInfo.createAlge(
-         scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt );
+         scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt, [] );
       let newTypeInfo = algeTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = algeTypeInfo;
       param.typeId2TypeDataAccessor[ self.typeId ] = algeTypeInfo;

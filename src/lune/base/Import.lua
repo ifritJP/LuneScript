@@ -1597,7 +1597,7 @@ function _TypeInfoAlge:createTypeInfo( param )
    local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
    
    param.typeId2Scope[self.typeId] = scope
-   local algeTypeInfo = param.processInfo:createAlge( scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt )
+   local algeTypeInfo = param.processInfo:createAlge( scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt, {} )
    local newTypeInfo = algeTypeInfo
    param.typeId2TypeInfo[self.typeId] = algeTypeInfo
    param.typeId2TypeDataAccessor[self.typeId] = algeTypeInfo

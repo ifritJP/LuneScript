@@ -1961,7 +1961,7 @@ test/error/strformat.lns:61:29: error: no string type 'str!' or 'str'
 test/error/Alge.lns:22:17: error: can't access mutable method. -- &List<int>.insert
 test/error/Alge.lns:30:12: error: can't use the prototype class -- Hoge
 test/error/Alge.lns:36:4: error: need to import module -- @Sub5.Sub5alge (Sub5alge)
-test/error/Alge.lns:48:29: error: not found -- ;. expects (
+test/error/Alge.lns:48:29: error: not found -- ';'. actually '('
 test/error/Alge2.lns:13:8: warning: 'test1' var isn't accessed
 test/error/Alge2.lns:14:8: warning: 'test2' var isn't accessed
 test/error/Alge2.lns:15:8: warning: 'test3' var isn't accessed
@@ -1979,7 +1979,7 @@ test/error/Alge3.lns:29:22: warning: 'y' var isn't accessed
 test/error/Alge3.lns:7:4: error: multiple symbole -- Val1
 test/error/Alge3.lns:17:25: error: call: exp(1) type mismatch int(26) <- real(30): index 1 -- 
 test/error/Alge3.lns:18:25: error: call: exp(3) type mismatch @test.@error.@Alge3.Hoge(1008) <- int(26): index 3 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
-test/error/Alge3.lns:19:25: error: call: exp(1) type mismatch AlgeTest(1024) <- int(26): index 1(TypeInfoKind.Alge)
+test/error/Alge3.lns:19:25: error: call: exp(1) type mismatch @test.@error.@Alge3.AlgeTest(1024) <- int(26): index 1(TypeInfoKind.Alge)
 test/error/Alge3.lns:20:8: error: This symbol is shadowed from 22:19 -- x
 test/error/Alge3.lns:20:8: error: This symbol is shadowed from 22:19 -- x
 test/error/Alge3.lns:20:8: error: This symbol is shadowed from 29:19 -- x
@@ -2010,7 +2010,7 @@ test/error/exp.lns:28:7: error: This exp never be false -- __
 test/error/exp.lns:30:7: error: this 'not' operand never be false
 test/error/exp.lns:36:21: error: could not access with []. Use '$[]'-- stem!
 test/error/exp.lns:40:7: error: unmatch value type (index:1) bool <- bool! -- 
-test/error/exp.lns:43:13: error: not found -- ). expects ,
+test/error/exp.lns:43:13: error: not found -- ')'. actually ','
 test/error/exp.lns:3:8: warning: 'val' var isn't accessed
 test/error/exp.lns:10:4: warning: print: 00000:use '##', instate of '&...'.
 test/error/exp.lns:11:8: warning: 'val' var isn't accessed

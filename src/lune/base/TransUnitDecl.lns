@@ -260,7 +260,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                   typeInfo = self.processInfo.createDDD( genericList[1], false, false );
                }
             }
-            case .Class, .IF {
+            case .Class, .IF, .Alge {
                if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
                   foreach itemType in genericList {
                      //let altType = unwrap typeInfo.$itemTypeInfoList[ index ]@@@Ast.AlternateTypeInfo;
@@ -1290,15 +1290,34 @@ fn TransUnit.analyzeDeclAlge(
 
    let name = self.getSymbolToken( .MustNot_ );
 
+   // generic の型宣言解析
+   let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
+   {
+      let mut nextToken = self.getToken(##);
+      if nextToken.txt == "<" {
+         nextToken, altTypeList = self.analyzeDeclAlternateType(
+            true, nextToken, accessMode );
+      }
+      self.pushbackToken( nextToken );
+   }
+   
+
    self.checkNextToken( "{" );
 
    let mut scope = self.$scope;
    let mut algeScope = self.pushScope( .Class ## );
    let mut parentNsInfo = self.$curNsInfo;
+
+   // generic の型をスコープに登録
+   foreach altType in altTypeList {
+      algeScope.addAlternate(
+         self.processInfo, accessMode, altType.$rawTxt, name.pos, altType );
+   }
+   
    
    let mut algeTypeInfo = self.processInfo.createAlge(
       algeScope, parentNsInfo.$typeInfo, parentNsInfo.$typeDataAccessor,
-      false, accessMode, name.txt );
+      false, accessMode, name.txt, altTypeList );
    let _, shadowing = scope.addAlge(
       self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo );
    self.newNSInfo( algeTypeInfo, name.pos );

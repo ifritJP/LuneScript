@@ -1820,6 +1820,53 @@ function TypeInfo.createScope( processInfo, parent, scopeKind, baseInfo, interfa
    
    return Scope._new(processInfo, parent, scopeKind, inheritScope, ifScopeList)
 end
+function TypeInfo:get_generics_display_string( raw, alt2type )
+
+   if #self:get_itemTypeInfoList() > 0 then
+      local txt = raw .. "<"
+      for index, typeInfo in ipairs( self:get_itemTypeInfoList() ) do
+         if index ~= 1 then
+            txt = txt .. ","
+         end
+         
+         txt = txt .. typeInfo:get_display_stirng_with( typeInfo:get_rawTxt(), alt2type )
+      end
+      
+      
+      return txt .. ">"
+   end
+   
+   return raw
+end
+function TypeInfo:get_generics_txt( raw, typeNameCtrl, importInfo, localFlag )
+
+   local parentTxt = ""
+   if typeNameCtrl ~= nil then
+      parentTxt = self:getParentFullName( typeNameCtrl, importInfo, localFlag )
+   end
+   
+   local name
+   
+   if #self:get_itemTypeInfoList() > 0 then
+      local txt = raw .. "<"
+      for index, typeInfo in ipairs( self:get_itemTypeInfoList() ) do
+         if index ~= 1 then
+            txt = txt .. ","
+         end
+         
+         txt = txt .. typeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
+      end
+      
+      
+      name = parentTxt .. txt .. ">"
+   else
+    
+      name = parentTxt .. raw
+   end
+   
+   
+   return name
+end
 function TypeInfo._setmeta( obj )
   setmetatable( obj, { __index = TypeInfo  } )
 end
@@ -2504,6 +2551,14 @@ end
 
 function ModifierTypeInfo:get_genSrcTypeInfo( ... )
    return self.srcTypeInfo:get_genSrcTypeInfo( ... )
+end
+
+function ModifierTypeInfo:get_generics_display_string( ... )
+   return self.srcTypeInfo:get_generics_display_string( ... )
+end
+
+function ModifierTypeInfo:get_generics_txt( ... )
+   return self.srcTypeInfo:get_generics_txt( ... )
 end
 
 function ModifierTypeInfo:get_imutType( ... )
@@ -3217,6 +3272,14 @@ function NilableTypeInfo:get_genSrcTypeInfo( ... )
    return self.nonnilableType:get_genSrcTypeInfo( ... )
 end
 
+function NilableTypeInfo:get_generics_display_string( ... )
+   return self.nonnilableType:get_generics_display_string( ... )
+end
+
+function NilableTypeInfo:get_generics_txt( ... )
+   return self.nonnilableType:get_generics_txt( ... )
+end
+
 function NilableTypeInfo:get_interfaceList( ... )
    return self.nonnilableType:get_interfaceList( ... )
 end
@@ -3462,6 +3525,14 @@ end
 
 function AliasTypeInfo:get_extedType( ... )
    return self.aliasSrcTypeInfo:get_extedType( ... )
+end
+
+function AliasTypeInfo:get_generics_display_string( ... )
+   return self.aliasSrcTypeInfo:get_generics_display_string( ... )
+end
+
+function AliasTypeInfo:get_generics_txt( ... )
+   return self.aliasSrcTypeInfo:get_generics_txt( ... )
 end
 
 function AliasTypeInfo:get_interfaceList( ... )
@@ -5260,6 +5331,14 @@ function BoxTypeInfo:get_genSrcTypeInfo( ... )
    return self.boxingType:get_genSrcTypeInfo( ... )
 end
 
+function BoxTypeInfo:get_generics_display_string( ... )
+   return self.boxingType:get_generics_display_string( ... )
+end
+
+function BoxTypeInfo:get_generics_txt( ... )
+   return self.boxingType:get_generics_txt( ... )
+end
+
 function BoxTypeInfo:get_interfaceList( ... )
    return self.boxingType:get_interfaceList( ... )
 end
@@ -5652,6 +5731,14 @@ end
 
 function GenericTypeInfo:get_externalFlag( ... )
    return self.genSrcTypeInfo:get_externalFlag( ... )
+end
+
+function GenericTypeInfo:get_generics_display_string( ... )
+   return self.genSrcTypeInfo:get_generics_display_string( ... )
+end
+
+function GenericTypeInfo:get_generics_txt( ... )
+   return self.genSrcTypeInfo:get_generics_txt( ... )
 end
 
 function GenericTypeInfo:get_interfaceList( ... )
@@ -6067,16 +6154,17 @@ function AlgeTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
 end
-function AlgeTypeInfo._new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor )
+function AlgeTypeInfo._new( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, itemTypeInfoList )
    local obj = {}
    AlgeTypeInfo._setmeta( obj )
-   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor ); end
+   if obj.__init then obj:__init( processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, itemTypeInfoList ); end
    return obj
 end
-function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor) 
+function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, itemTypeInfoList) 
    TypeInfo.__init( self,scope, processInfo)
    
    
+   self.itemTypeInfoList = itemTypeInfoList
    self.imutType = _moduleObj.headTypeInfo
    self.externalFlag = externalFlag
    self.accessMode = accessMode
@@ -6093,7 +6181,10 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
    
-   scope:set_ownerTypeInfo( self )
+   if scope ~= nil then
+      scope:set_ownerTypeInfo( self )
+   end
+   
 end
 function AlgeTypeInfo:getValInfo( name )
 
@@ -6117,11 +6208,12 @@ function AlgeTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 end
 function AlgeTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
 
-   return rawTxt
+   return self:get_generics_txt( rawTxt, typeNameCtrl, importInfo, localFlag )
 end
 function AlgeTypeInfo:get_display_stirng_with( raw, alt2type )
 
-   return self:getTxtWithRaw( raw )
+   
+   return self:get_generics_display_string( raw, alt2type )
 end
 function AlgeTypeInfo:get_display_stirng(  )
 
@@ -6134,6 +6226,10 @@ end
 function AlgeTypeInfo:get_mutMode(  )
 
    return MutMode.Mut
+end
+function AlgeTypeInfo.create( processInfo, scope, parentInfo, typeDataAccessor, externalFlag, accessMode, algeName, itemTypeInfoList )
+
+   return AlgeTypeInfo._new(processInfo, scope, externalFlag, accessMode, algeName, parentInfo, typeDataAccessor, itemTypeInfoList)
 end
 function AlgeTypeInfo._setmeta( obj )
   setmetatable( obj, { __index = AlgeTypeInfo  } )
@@ -6155,6 +6251,9 @@ function AlgeTypeInfo:get_accessMode()
 end
 function AlgeTypeInfo:get_nilableTypeInfo()
    return self.nilableTypeInfo
+end
+function AlgeTypeInfo:get_itemTypeInfoList()
+   return self.itemTypeInfoList
 end
 function AlgeTypeInfo:get_valInfoMap()
    return self.valInfoMap
@@ -6446,55 +6545,11 @@ function NormalTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 end
 function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
-   local parentTxt = ""
-   if typeNameCtrl ~= nil then
-      parentTxt = self:getParentFullName( typeNameCtrl, importInfo, localFlag )
-   end
-   
-   local name
-   
-   if #self.itemTypeInfoList > 0 then
-      local txt = raw .. "<"
-      for index, typeInfo in ipairs( self.itemTypeInfoList ) do
-         if index ~= 1 then
-            txt = txt .. ","
-         end
-         
-         txt = txt .. typeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
-      end
-      
-      
-      name = parentTxt .. txt .. ">"
-   else
-    
-      name = parentTxt .. raw
-   end
-   
-   
-   return name
+   return self:get_generics_txt( raw, typeNameCtrl, importInfo, localFlag )
 end
 function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
 
-   local parentTxt = ""
-   local name
-   
-   if #self.itemTypeInfoList > 0 then
-      local txt = raw .. "<"
-      for index, typeInfo in ipairs( self.itemTypeInfoList ) do
-         if index ~= 1 then
-            txt = txt .. ","
-         end
-         
-         txt = txt .. typeInfo:get_display_stirng_with( typeInfo:get_rawTxt(), alt2type )
-      end
-      
-      
-      name = parentTxt .. txt .. ">"
-   else
-    
-      name = parentTxt .. raw
-   end
-   
+   local name = self:get_generics_display_string( raw, alt2type )
    
    do
       local _switchExp = self.kind
@@ -8539,6 +8594,14 @@ function ExtTypeInfo:get_genSrcTypeInfo( ... )
    return self.extedType:get_genSrcTypeInfo( ... )
 end
 
+function ExtTypeInfo:get_generics_display_string( ... )
+   return self.extedType:get_generics_display_string( ... )
+end
+
+function ExtTypeInfo:get_generics_txt( ... )
+   return self.extedType:get_generics_txt( ... )
+end
+
 function ExtTypeInfo:get_interfaceList( ... )
    return self.extedType:get_interfaceList( ... )
 end
@@ -8883,6 +8946,14 @@ function AndExpTypeInfo:get_genSrcTypeInfo( ... )
    return self.result:get_genSrcTypeInfo( ... )
 end
 
+function AndExpTypeInfo:get_generics_display_string( ... )
+   return self.result:get_generics_display_string( ... )
+end
+
+function AndExpTypeInfo:get_generics_txt( ... )
+   return self.result:get_generics_txt( ... )
+end
+
 function AndExpTypeInfo:get_imutType( ... )
    return self.result:get_imutType( ... )
 end
@@ -9068,14 +9139,14 @@ accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getPa
 end
 
 
-function ProcessInfo:createAlge( scope, parentInfo, typeDataAccessor, externalFlag, accessMode, algeName )
+function ProcessInfo:createAlge( scope, parentInfo, typeDataAccessor, externalFlag, accessMode, algeName, itemTypeInfoList )
 
    if Parser.isLuaKeyword( algeName ) then
       Util.err( string.format( "This symbol can not use for a alge. -- %s", algeName) )
    end
    
    
-   local info = AlgeTypeInfo._new(self, scope, externalFlag, accessMode, algeName, parentInfo, typeDataAccessor)
+   local info = AlgeTypeInfo.create( self, scope, parentInfo, typeDataAccessor, externalFlag, accessMode, algeName, itemTypeInfoList )
    self:setupImut( info )
    
    local getAlgeName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, MutMode.IMut )
@@ -9116,6 +9187,39 @@ accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ).id, s
    end
    
    stream:write( "} }\n" )
+end
+
+
+local GenAlgeTypeInfo = {}
+setmetatable( GenAlgeTypeInfo, { __index = AlgeTypeInfo } )
+_moduleObj.GenAlgeTypeInfo = GenAlgeTypeInfo
+function GenAlgeTypeInfo._new( processInfo, genSrcTypeInfo, itemTypeInfoList )
+   local obj = {}
+   GenAlgeTypeInfo._setmeta( obj )
+   if obj.__init then obj:__init( processInfo, genSrcTypeInfo, itemTypeInfoList ); end
+   return obj
+end
+function GenAlgeTypeInfo:__init(processInfo, genSrcTypeInfo, itemTypeInfoList) 
+   AlgeTypeInfo.__init( self,processInfo, nil, genSrcTypeInfo:get_externalFlag(), genSrcTypeInfo:get_accessMode(), genSrcTypeInfo:get_rawTxt(), genSrcTypeInfo:get_parentInfo(), nil, itemTypeInfoList)
+   
+   
+   self.genSrcTypeInfo = genSrcTypeInfo
+end
+function GenAlgeTypeInfo:get_orgAlgeType(  )
+
+   return self.genSrcTypeInfo
+end
+function GenAlgeTypeInfo._setmeta( obj )
+  setmetatable( obj, { __index = GenAlgeTypeInfo  } )
+end
+function GenAlgeTypeInfo:get_genSrcTypeInfo()
+   return self.genSrcTypeInfo
+end
+
+
+function ProcessInfo:createGenAlge( orgAlgeTypeInfo, itemTypeInfoList )
+
+   return GenAlgeTypeInfo._new(self, orgAlgeTypeInfo, itemTypeInfoList)
 end
 
 

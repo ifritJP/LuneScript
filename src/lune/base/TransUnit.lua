@@ -1889,7 +1889,7 @@ end
 function TransUnit:checkToken( token, txt )
 
    if token.txt ~= txt then
-      self:error( string.format( "not found -- %s. expects %s", txt, token.txt) )
+      self:error( string.format( "not found -- '%s'. actually '%s'", txt, token.txt) )
    end
    
    return token
@@ -3382,7 +3382,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                   typeInfo = self.processInfo:createDDD( genericList[1], false, false )
                end
                
-            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Alge then
                if checkAlternateTypeCount( #typeInfo:get_itemTypeInfoList() ) then
                   for __index, itemType in ipairs( genericList ) do
                      
@@ -4370,13 +4370,29 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    
    local name = self:getSymbolToken( SymbolMode.MustNot_ )
    
+   local altTypeList = {}
+   do
+      local nextToken = self:getToken(  )
+      if nextToken.txt == "<" then
+         nextToken, altTypeList = self:analyzeDeclAlternateType( true, nextToken, accessMode )
+      end
+      
+      self:pushbackToken( nextToken )
+   end
+   
+   
    self:checkNextToken( "{" )
    
    local scope = self:get_scope()
    local algeScope = self:pushScope( Ast.ScopeKind.Class )
    local parentNsInfo = self:get_curNsInfo()
    
-   local algeTypeInfo = self.processInfo:createAlge( algeScope, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), false, accessMode, name.txt )
+   for __index, altType in ipairs( altTypeList ) do
+      algeScope:addAlternate( self.processInfo, accessMode, altType:get_rawTxt(), name.pos, altType )
+   end
+   
+   
+   local algeTypeInfo = self.processInfo:createAlge( algeScope, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), false, accessMode, name.txt, altTypeList )
    local _1, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
    self:newNSInfo( algeTypeInfo, name.pos )
    self:errorShadowing( name.pos, shadowing )
@@ -4833,7 +4849,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1803, function (  )
+         Log.log( Log.Level.Debug, __func__, 1822, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -9979,8 +9995,9 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          end
          
          
+         local genericList = {}
          do
-            local _1, _2, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil, true )
+            local _1, _2, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, algeTypeInfo:createAlt2typeMap( true ), true )
             if newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
             end
@@ -9993,7 +10010,9 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          end
          
          
-         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, valInfo, argList )
+         local newAlgeTypeInfo = algeTypeInfo
+         
+         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newAlgeTypeInfo}, symbolToken, prefix, newAlgeTypeInfo, valInfo, argList )
       else
          local dummySymbol = _lune.nilacc( algeTypeInfo:get_parentInfo():get_scope(), 'getSymbolInfoChild', 'callmtd' , algeTypeInfo:get_rawTxt() )
          self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )
@@ -10016,7 +10035,7 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
          local expType = exp:get_expType()
          if prefixExp:get_expType():isModule(  ) then
             do
-               local algeType = _lune.__Cast( expType, 3, Ast.AlgeTypeInfo )
+               local algeType = _lune.__Cast( expType:get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
                if algeType ~= nil then
                   local nextToken = self:getToken(  )
                   if nextToken.txt == "." then
@@ -10088,7 +10107,7 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
             local _switchExp = symbolInfo:get_kind()
             if _switchExp == Ast.SymbolKind.Typ then
                do
-                  local algeType = _lune.__Cast( typeInfo, 3, Ast.AlgeTypeInfo )
+                  local algeType = _lune.__Cast( typeInfo:get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
                   if algeType ~= nil then
                      local nextToken = self:getToken(  )
                      if nextToken.txt == "." then
@@ -11104,7 +11123,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       do
-         local algeTyepInfo = _lune.__Cast( orgExpectType:get_srcTypeInfo(), 3, Ast.AlgeTypeInfo )
+         local algeTyepInfo = _lune.__Cast( orgExpectType:get_srcTypeInfo():get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
          if algeTyepInfo ~= nil then
             return self:analyzeNewAlge( firstToken, algeTyepInfo, nil )
          end

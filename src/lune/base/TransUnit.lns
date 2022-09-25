@@ -1481,7 +1481,7 @@ fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Parser.Token {
 
 fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
    if token.txt ~= txt {
-      self.error( "not found -- %s. expects %s" ( txt, token.txt ) );
+      self.error( "not found -- '%s'. actually '%s'" ( txt, token.txt ) );
    }
    return token;
 }
