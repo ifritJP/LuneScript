@@ -282,8 +282,13 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                              itemType.$baseTypeInfo.getTxt(##)) );
                      }
                   }
-                  typeInfo = self.processInfo.createGeneric(
-                     typeInfo, genericList, self.moduleType );
+                  // if! let algeTypeInfo = typeInfo@@@Ast.AlgeTypeInfo {
+                  //    typeInfo = self.processInfo.createGenAlge(
+                  //       algeTypeInfo, genericList );
+                  // } else {
+                     typeInfo = self.processInfo.createGeneric(
+                        typeInfo, genericList, self.moduleType );
+                  // }
                }
             }
             case .Box {

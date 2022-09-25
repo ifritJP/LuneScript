@@ -2087,10 +2087,24 @@ pub override fn DeclAlgeNode.visitSub(
 _declNodeClass( "NewAlgeVal", Node, false, true, false,
                 [ { "name": "&Parser.Token" },
                   { "prefix": "&Node!" },
-                  { "algeTypeInfo": "&Ast.AlgeTypeInfo" },
+                  { "algeOrGen": "&Ast.AlgeOrGen" },
                   { "valInfo": "&Ast.AlgeValInfo" },
                   { "paramList": "&List<&Node>" } ]
 );
+
+pub fn NewAlgeValNode.get_algeTypeInfo() : &Ast.AlgeTypeInfo {
+   _match self.algeOrGen {
+      case .Alge( algeTypeInfo ) {
+         return algeTypeInfo;
+      }
+      case .Gen( genericTypeInfo ) {
+         if! let algeTypeInfo = genericTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
+            return algeTypeInfo;
+         }
+         Util.err( "illegal genericTypeInfo -- %s" (genericTypeInfo.getTxt(##)) );
+      }
+   }
+}
 
 _declNodeClass( "LuneControl", Node, false, false, true,
                 [ {"pragma": "LuneControl.Pragma"} ]
@@ -2107,7 +2121,7 @@ pub class MatchCase {
 _declNodeClass( "Match", Node, false, false, true,
                 [ { "idInNS": "int" },
                   { "val": "&Node" },
-                  { "algeTypeInfo": "&Ast.AlgeTypeInfo" },
+                  { "algeOrGen": "Ast.AlgeOrGen" },
                   { "caseList": "&List<&MatchCase>" },
                   { "defaultBlock": "&Node!" },
                   // case で全ての条件が網羅されているかどうか
@@ -2116,6 +2130,21 @@ _declNodeClass( "Match", Node, false, false, true,
                   { "failSafeDefault": "bool" }
                 ]              
 );
+
+pub fn MatchNode.get_algeTypeInfo() : &Ast.AlgeTypeInfo {
+   _match self.algeOrGen {
+      case .Alge( algeTypeInfo ) {
+         return algeTypeInfo;
+      }
+      case .Gen( genericTypeInfo ) {
+         if! let algeTypeInfo = genericTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
+            return algeTypeInfo;
+         }
+         Util.err( "illegal genericTypeInfo -- %s" (genericTypeInfo.getTxt(##)) );
+      }
+   }
+}
+
 pub override fn MatchNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
    let mut kind = BreakKind.None;

@@ -6322,6 +6322,27 @@ function AlgeTypeInfo:addValInfo( valInfo )
 end
 
 
+local AlgeOrGen = {}
+AlgeOrGen._name2Val = {}
+_moduleObj.AlgeOrGen = AlgeOrGen
+function AlgeOrGen:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "AlgeOrGen.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function AlgeOrGen._from( val )
+   return _lune._AlgeFrom( AlgeOrGen, val )
+end
+
+AlgeOrGen.Alge = { "Alge", {{}}}
+AlgeOrGen._name2Val["Alge"] = AlgeOrGen.Alge
+AlgeOrGen.Gen = { "Gen", {{}}}
+AlgeOrGen._name2Val["Gen"] = AlgeOrGen.Gen
+
+
 local OverridingType = {}
 OverridingType._name2Val = {}
 function OverridingType:_getTxt( val )

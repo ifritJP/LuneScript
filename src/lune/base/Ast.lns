@@ -4418,6 +4418,11 @@ pub fn AlgeTypeInfo.addValInfo( valInfo:&AlgeValInfo ) mut {
 }
 
 
+pub alge AlgeOrGen {
+   Alge( &AlgeTypeInfo ),
+   Gen( &GenericTypeInfo )
+}
+
 alge OverridingType {
    NoReady,       
    NotOverride,   

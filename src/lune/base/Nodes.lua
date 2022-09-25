@@ -11246,28 +11246,28 @@ function NewAlgeValNode:canBeStatement(  )
 
    return false
 end
-function NewAlgeValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
+function NewAlgeValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList )
    local obj = {}
    NewAlgeValNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList ); end
    return obj
 end
-function NewAlgeValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList) 
+function NewAlgeValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList) 
    Node.__init( self,managerId, id, 69, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.name = name
    self.prefix = prefix
-   self.algeTypeInfo = algeTypeInfo
+   self.algeOrGen = algeOrGen
    self.valInfo = valInfo
    self.paramList = paramList
    
    
 end
-function NewAlgeValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList )
+function NewAlgeValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList )
 
-   local node = NewAlgeValNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeTypeInfo, valInfo, paramList)
+   local node = NewAlgeValNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList)
    nodeMan:addNode( node )
    return node
 end
@@ -11341,8 +11341,8 @@ end
 function NewAlgeValNode:get_prefix()
    return self.prefix
 end
-function NewAlgeValNode:get_algeTypeInfo()
-   return self.algeTypeInfo
+function NewAlgeValNode:get_algeOrGen()
+   return self.algeOrGen
 end
 function NewAlgeValNode:get_valInfo()
    return self.valInfo
@@ -11351,6 +11351,31 @@ function NewAlgeValNode:get_paramList()
    return self.paramList
 end
 
+
+
+function NewAlgeValNode:get_algeTypeInfo(  )
+
+   do
+      local _matchExp = self.algeOrGen
+      if _matchExp[1] == Ast.AlgeOrGen.Alge[1] then
+         local algeTypeInfo = _matchExp[2][1]
+      
+         return algeTypeInfo
+      elseif _matchExp[1] == Ast.AlgeOrGen.Gen[1] then
+         local genericTypeInfo = _matchExp[2][1]
+      
+         do
+            local algeTypeInfo = _lune.__Cast( genericTypeInfo:get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
+            if algeTypeInfo ~= nil then
+               return algeTypeInfo
+            end
+         end
+         
+         Util.err( string.format( "illegal genericTypeInfo -- %s", genericTypeInfo:getTxt(  )) )
+      end
+   end
+   
+end
 
 
 function NodeKind.get_LuneControl(  )
@@ -11504,20 +11529,20 @@ function MatchNode:canBeStatement(  )
 
    return true
 end
-function MatchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault )
    local obj = {}
    MatchNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault ); end
    return obj
 end
-function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault) 
+function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault) 
    Node.__init( self,managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.idInNS = idInNS
    self.val = val
-   self.algeTypeInfo = algeTypeInfo
+   self.algeOrGen = algeOrGen
    self.caseList = caseList
    self.defaultBlock = defaultBlock
    self.caseKind = caseKind
@@ -11525,9 +11550,9 @@ function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    
    
 end
-function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault )
 
-   local node = MatchNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault)
+   local node = MatchNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault)
    nodeMan:addNode( node )
    return node
 end
@@ -11597,8 +11622,8 @@ end
 function MatchNode:get_val()
    return self.val
 end
-function MatchNode:get_algeTypeInfo()
-   return self.algeTypeInfo
+function MatchNode:get_algeOrGen()
+   return self.algeOrGen
 end
 function MatchNode:get_caseList()
    return self.caseList
@@ -11611,6 +11636,32 @@ function MatchNode:get_caseKind()
 end
 function MatchNode:get_failSafeDefault()
    return self.failSafeDefault
+end
+
+
+
+function MatchNode:get_algeTypeInfo(  )
+
+   do
+      local _matchExp = self.algeOrGen
+      if _matchExp[1] == Ast.AlgeOrGen.Alge[1] then
+         local algeTypeInfo = _matchExp[2][1]
+      
+         return algeTypeInfo
+      elseif _matchExp[1] == Ast.AlgeOrGen.Gen[1] then
+         local genericTypeInfo = _matchExp[2][1]
+      
+         do
+            local algeTypeInfo = _lune.__Cast( genericTypeInfo:get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
+            if algeTypeInfo ~= nil then
+               return algeTypeInfo
+            end
+         end
+         
+         Util.err( string.format( "illegal genericTypeInfo -- %s", genericTypeInfo:getTxt(  )) )
+      end
+   end
+   
 end
 
 

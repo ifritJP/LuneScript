@@ -2902,7 +2902,7 @@ fn TransUnit.analyzeNewAlge(
       return Nodes.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ newAlgeTypeInfo ],
-         symbolToken, prefix, newAlgeTypeInfo, valInfo, argList );
+         symbolToken, prefix, .Alge( algeTypeInfo ), valInfo, argList );
    }
    else {
       let dummySymbol =
@@ -2911,7 +2911,7 @@ fn TransUnit.analyzeNewAlge(
       return Nodes.NewAlgeValNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ algeTypeInfo ],
-         symbolToken, prefix, algeTypeInfo,
+         symbolToken, prefix, .Alge( algeTypeInfo ),
          new Ast.AlgeValInfo("", [], algeTypeInfo, unwrap dummySymbol ), [] );
    }
 }

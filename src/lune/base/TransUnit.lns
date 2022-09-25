@@ -2347,7 +2347,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
    return Nodes.MatchNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      nsInfo.getNextStmtId( .Match ), exp, algeTypeInfo,
+      nsInfo.getNextStmtId( .Match ), exp, .Alge( algeTypeInfo ),
       caseList, defaultBlock, caseKind, failSafeDefault );
 }
 

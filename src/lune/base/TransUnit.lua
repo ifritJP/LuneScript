@@ -2756,7 +2756,7 @@ function TransUnit:analyzeMatch( firstToken )
    
    local nsInfo = self:get_curNsInfo()
    
-   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Match ), exp, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Match ), exp, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), caseList, defaultBlock, caseKind, failSafeDefault )
 end
 
 
@@ -3398,6 +3398,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                      end
                      
                   end
+                  
                   
                   typeInfo = self.processInfo:createGeneric( typeInfo, genericList, self.moduleType )
                end
@@ -4849,7 +4850,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1822, function (  )
+         Log.log( Log.Level.Debug, __func__, 1827, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -10012,11 +10013,11 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          local newAlgeTypeInfo = algeTypeInfo
          
-         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newAlgeTypeInfo}, symbolToken, prefix, newAlgeTypeInfo, valInfo, argList )
+         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newAlgeTypeInfo}, symbolToken, prefix, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), valInfo, argList )
       else
          local dummySymbol = _lune.nilacc( algeTypeInfo:get_parentInfo():get_scope(), 'getSymbolInfoChild', 'callmtd' , algeTypeInfo:get_rawTxt() )
          self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )
-         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, Ast.AlgeValInfo._new("", {}, algeTypeInfo, _lune.unwrap( dummySymbol)), {} )
+         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {algeTypeInfo}, symbolToken, prefix, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), Ast.AlgeValInfo._new("", {}, algeTypeInfo, _lune.unwrap( dummySymbol)), {} )
       end
    end
    
