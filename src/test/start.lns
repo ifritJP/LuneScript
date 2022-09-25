@@ -248,7 +248,9 @@ class GetTest2 {
 {
    let hoge1: int = 1;
    let hoge2: int = 2;
-   unwrap! hoge1, hoge2 = 3, 4 {
+   let val3:int! = 3;
+   let val4:int! = 4;
+   unwrap! hoge1, hoge2 = val3, val4 {
       print( "NG" );
    }
    then {
@@ -260,7 +262,9 @@ class GetTest2 {
 {
    let mut hoge1: int = 1;
    let mut hoge2: int = 2;
-   sync! hoge1, hoge2 = 3, 4 {
+   let val3:int! = 3;
+   let val4:int! = 4;
+   sync! hoge1, hoge2 = val3, val4 {
       error( "NG" );
    }
    then {
@@ -1651,15 +1655,15 @@ class Test_ccc {
       ,,val
    }
 
-   fn sub() : int, int! {
-      return 1, nil;
+   fn sub() : int, int!, int {
+      return 1, 2, 3;
    }
    let bar = _hoge(
       fn ( arg1:int! ) {
-         let! foo = sub() {
+         let! foo, foo2 = sub() {
             return;
          };
-         print( arg1, foo );
+         print( arg1, foo + 100, foo2 + 100 );
       });
    bar( nil );
 }

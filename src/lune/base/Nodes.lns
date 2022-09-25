@@ -2087,7 +2087,7 @@ pub override fn DeclAlgeNode.visitSub(
 _declNodeClass( "NewAlgeVal", Node, false, true, false,
                 [ { "name": "&Parser.Token" },
                   { "prefix": "&Node!" },
-                  { "algeOrGen": "&Ast.AlgeOrGen" },
+                  { "algeOrGen": "Ast.AlgeOrGen" },
                   { "valInfo": "&Ast.AlgeValInfo" },
                   { "paramList": "&List<&Node>" } ]
 );
@@ -2114,6 +2114,7 @@ _declNodeClass( "LuneControl", Node, false, false, true,
 pub class MatchCase {
    pri let valInfo: &Ast.AlgeValInfo {pub};
    pri let valExpRef: &ExpRefNode {pub};
+   // Generic 後の型が反映されたパラメータ。
    pri let valParamNameList: &List<&Ast.SymbolInfo> {pub};
    pri let block: &BlockNode {pub};
 }

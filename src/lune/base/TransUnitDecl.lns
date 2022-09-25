@@ -3591,14 +3591,15 @@ List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode
       if unwrapFlag {
          // unwrapFlag 値の中に nilable があるかどうか確認する。
          let mut hasNilable = false;
-         foreach _, index in letVarList {
-            if expList.getExpTypeAt( index ).$nilable {
+         foreach varInfo, index in letVarList {
+            if expList.getExpTypeAt( index ).$nilable and varInfo.varName.txt ~= "_"
+            {
                hasNilable = true;
                break;
             }
          }
          if not hasNilable {
-            self.addWarnMess( firstPos, "has no nilable" );
+            self.addErrMess( firstPos, "has no nilable" );
          }
       }
       

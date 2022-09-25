@@ -378,7 +378,7 @@ func (self *GoMod_ModInfo) GetLuaModulePath(_env *LnsEnv, mod string,baseDir Lns
     case *GoMod_GoModResult__NotFound:
         return mod, nil, mod
     case *GoMod_GoModResult__Found:
-    workInfo := _matchExp0.Val1
+        workInfo := _matchExp0.Val1
         info = workInfo
     }
     return info.FP.Get_mod(_env), info.FP.Get_projRoot(_env), info.FP.Get_fullMod(_env)

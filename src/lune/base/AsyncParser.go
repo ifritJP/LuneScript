@@ -244,23 +244,23 @@ func AsyncParser_Parser_create_3_(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAn
     AsyncParser_createStreamFrom = func(_env *LnsEnv)(string, bool, LnsAny, string, LnsAny) {
         switch _matchExp0 := parserSrc.(type) {
         case *Types_ParserSrc__LnsCode:
-        txt := _matchExp0.Val1
-        path := _matchExp0.Val2
-        pipeSize := _matchExp0.Val3
+            txt := _matchExp0.Val1
+            path := _matchExp0.Val2
+            pipeSize := _matchExp0.Val3
             return path, false, NewUtil_TxtStream(_env, txt).FP, "", pipeSize
         case *Types_ParserSrc__LnsPath:
-        path := _matchExp0.Val1
-        mod := _matchExp0.Val2
-        pipeSize := _matchExp0.Val3
+            path := _matchExp0.Val1
+            mod := _matchExp0.Val2
+            pipeSize := _matchExp0.Val3
             var stream LnsAny
             var mess string
             stream,mess = AsyncParser_createStream(_env, mod, path)
             return path, false, stream, mess, pipeSize
         case *Types_ParserSrc__Parser:
-        path := _matchExp0.Val1
-        luaMode := _matchExp0.Val2
-        mod := _matchExp0.Val3
-        pipeSize := _matchExp0.Val4
+            path := _matchExp0.Val1
+            luaMode := _matchExp0.Val2
+            mod := _matchExp0.Val3
+            pipeSize := _matchExp0.Val4
             var stream LnsAny
             var mess string
             stream,mess = AsyncParser_createStream(_env, mod, path)

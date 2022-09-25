@@ -1556,7 +1556,7 @@ func (self *convPython_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name stri
     case *convPython_SymbolKind__Arg:
         return symbolName
     case *convPython_SymbolKind__Var:
-    symbolInfo := _matchExp0.Val1
+        symbolInfo := _matchExp0.Val1
         var modName string
         modName = Str_replace(_env, self.moduleTypeInfo.FP.Get_rawTxt(_env), "@", "")
         if Lns_op_not(symbolInfo.FP.GetModule(_env).FP.Equals(_env, self.processInfo, self.moduleTypeInfo, nil, nil)){
@@ -1574,10 +1574,10 @@ func (self *convPython_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name stri
             symbolName = _env.GetVM().String_format("%s.%s", []LnsAny{self.FP.getModuleName(_env, symbolInfo.FP.GetModule(_env), true), symbolName})
         }
     case *convPython_SymbolKind__Member:
-    external := _matchExp0.Val1
+        external := _matchExp0.Val1
         symbolName = convPython_concatGLSym_11_(_env, symbolName, external)
     case *convPython_SymbolKind__Func:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Method{
             if _switch0 := symbolName; _switch0 == "_toMap" {
                 return "ToMap"
@@ -1628,8 +1628,8 @@ func (self *convPython_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name stri
             }
         }
     case *convPython_SymbolKind__Type:
-    typeInfo := _matchExp0.Val1
-    needPrefix := _matchExp0.Val2
+        typeInfo := _matchExp0.Val1
+        needPrefix := _matchExp0.Val2
         if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__FormFunc{
             return self.FP.getSymbol(_env, &convPython_SymbolKind__Func{typeInfo}, symbolName)
         }
@@ -1648,7 +1648,7 @@ func (self *convPython_convFilter) getSymbol(_env *LnsEnv, kind LnsAny,name stri
             symbolName = _env.GetVM().String_format("%s.%s", []LnsAny{self.FP.getModuleName(_env, typeInfo, true), symbolName})
         }
     case *convPython_SymbolKind__Static:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         var workName string
         workName = self.FP.getSymbol(_env, &convPython_SymbolKind__Type{typeInfo, true}, typeInfo.FP.Get_rawTxt(_env))
         symbolName = _env.GetVM().String_format("%s__%s", []LnsAny{workName, name})
@@ -2241,8 +2241,8 @@ func (self *convPython_convFilter) OutputDeclFunc(_env *LnsEnv, addEnvArg bool,f
     var extFlag bool
     switch _matchExp0 := funcInfo.(type) {
     case *convPython_FuncInfo__DeclInfo:
-    node := _matchExp0.Val1
-    workDeclInfo := _matchExp0.Val2
+        node := _matchExp0.Val1
+        workDeclInfo := _matchExp0.Val2
         extFlag = false
         typeInfo = node.FP.Get_expType(_env)
         prefixType = typeInfo.FP.Get_parentInfo(_env)
@@ -2256,14 +2256,14 @@ func (self *convPython_convFilter) OutputDeclFunc(_env *LnsEnv, addEnvArg bool,f
             name = typeInfo.FP.Get_rawTxt(_env)
         }
     case *convPython_FuncInfo__Type:
-    workTypeInfo := _matchExp0.Val1
+        workTypeInfo := _matchExp0.Val1
         extFlag = workTypeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Ext
         typeInfo = workTypeInfo
         prefixType = typeInfo.FP.Get_parentInfo(_env)
         name = typeInfo.FP.Get_rawTxt(_env)
     case *convPython_FuncInfo__WithClass:
-    classType := _matchExp0.Val1
-    methodType := _matchExp0.Val2
+        classType := _matchExp0.Val1
+        methodType := _matchExp0.Val2
         extFlag = false
         typeInfo = methodType
         prefixType = classType
@@ -2307,8 +2307,8 @@ func (self *convPython_convFilter) OutputDeclFunc(_env *LnsEnv, addEnvArg bool,f
     }
     switch _matchExp1 := funcInfo.(type) {
     case *convPython_FuncInfo__DeclInfo:
-    node := _matchExp1.Val1
-    declInfo := _matchExp1.Val2
+        node := _matchExp1.Val1
+        declInfo := _matchExp1.Val2
         for _index, _arg := range( declInfo.FP.Get_argList(_env).Items ) {
             index := _index + 1
             arg := _arg.(Nodes_NodeDownCast).ToNodes_Node()
@@ -2614,7 +2614,7 @@ func (self *convPython_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNod
         pragma := _pragma
         switch _matchExp0 := pragma.(type) {
         case *LuneControl_Pragma__limit_conv_code:
-        codeSet := _matchExp0.Val1
+            codeSet := _matchExp0.Val1
             if Lns_op_not(codeSet.Has(LuneControl_Code__Python)){
                 self.FP.Writeln(_env, "# This code is transcompiled by LuneScript.")
                 self.FP.Writeln(_env, _env.GetVM().String_format("package %s", []LnsAny{self.option.packageName}))
@@ -3431,13 +3431,13 @@ func (self *convPython_convFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_Dec
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("const %s = ", []LnsAny{self.FP.getSymbol(_env, &convPython_SymbolKind__Static{&node.FP.Get_enumType(_env).Ast_TypeInfo}, valInfo.FP.Get_name(_env))}))
                 switch _matchExp0 := valInfo.FP.Get_val(_env).(type) {
                 case *Ast_EnumLiteral__Int:
-                val := _matchExp0.Val1
+                    val := _matchExp0.Val1
                     self.FP.WriteRaw(_env, _env.GetVM().String_format("%d", []LnsAny{val}))
                 case *Ast_EnumLiteral__Real:
-                val := _matchExp0.Val1
+                    val := _matchExp0.Val1
                     self.FP.WriteRaw(_env, _env.GetVM().String_format("%g", []LnsAny{val}))
                 case *Ast_EnumLiteral__Str:
-                val := _matchExp0.Val1
+                    val := _matchExp0.Val1
                     self.FP.WriteRaw(_env, convPython_str2gostr_14_(_env, _env.GetVM().String_format("\"%s\"", []LnsAny{val})))
                 }
                 self.FP.Writeln(_env, "")
@@ -5472,7 +5472,7 @@ func (self *convPython_convFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpC
     closeTxt = nil
     switch _matchExp0 := callKind.(type) {
     case *convPython_CallKind__RuntimeCall:
-    prefixNode := _matchExp0.Val1
+        prefixNode := _matchExp0.Val1
         convPython_filter_7_(_env, prefixNode, self, node.FP.Get_func(_env))
         if Lns_isCondTrue( node.FP.Get_argList(_env)){
             self.FP.WriteRaw(_env, ",")
@@ -5493,7 +5493,7 @@ func (self *convPython_convFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpC
         }
         addEnvArg = false
     case *convPython_CallKind__SortCall:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         self.FP.WriteRaw(_env, convPython_getAddEnvArg_6_(_env, 2, self.option.FP.Get_addEnvArg(_env)))
         self.FP.WriteRaw(_env, _env.GetVM().String_format("%s, ", []LnsAny{convPython_getLnsItemKind_28_(_env, typeInfo)}))
         {
@@ -5766,10 +5766,10 @@ func (self *convPython_convFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_E
     self.FP.WriteRaw(_env, "[")
     switch _matchExp0 := node.FP.Get_index(_env).(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _matchExp0.Val1
+        index := _matchExp0.Val1
         convPython_filter_7_(_env, index, self, &node.Nodes_Node)
     case *Nodes_IndexVal__SymIdx:
-    index := _matchExp0.Val1
+        index := _matchExp0.Val1
         self.FP.WriteRaw(_env, _env.GetVM().String_format("\"%s\"", []LnsAny{index}))
     }
     self.FP.WriteRaw(_env, "] = ")

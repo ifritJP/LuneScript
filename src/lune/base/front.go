@@ -665,7 +665,7 @@ func (self *front_ModuleMgr) GetAst(_env *LnsEnv, mod string) LnsAny {
     }
     switch _matchExp0 := info.(type) {
     case *front_UptodateInfo__Update:
-    ast := _matchExp0.Val2
+        ast := _matchExp0.Val2
         return ast
     case *front_UptodateInfo__Uptodate:
         return nil
@@ -761,7 +761,7 @@ func (self *front_Front) createAstSub(_env *LnsEnv, importModuleInfo *FrontInter
             _exp := __exp
             switch _matchExp0 := _exp.(type) {
             case *front_UptodateInfo__Update:
-            ast := _matchExp0.Val2
+                ast := _matchExp0.Val2
                 return &Converter_CreateAstResult__Ast{ast}
             case *front_UptodateInfo__Uptodate:
                 Util_err(_env, _env.GetVM().String_format("can't load the multiple module -- %s", []LnsAny{mod}))
@@ -787,10 +787,10 @@ func (self *front_Front) applyAstResult(_env *LnsEnv, result LnsAny) *AstInfo_AS
     __func__ := "@lune.@base.@front.Front.applyAstResult"
     switch _matchExp0 := result.(type) {
     case *Converter_CreateAstResult__Ast:
-    ast := _matchExp0.Val1
+        ast := _matchExp0.Val1
         return ast
     case *Converter_CreateAstResult__Creater:
-    astCreater := _matchExp0.Val1
+        astCreater := _matchExp0.Val1
         var ast *AstInfo_ASTInfo
         var moduleInfo *FrontInterface_ModuleInfo
         var meta *FrontInterface_ModuleMeta
@@ -846,7 +846,7 @@ func (self *front_Front) searchModuleFile(_env *LnsEnv, mod string,suffix string
     case *GoMod_GoModResult__NotFound:
         return nil
     case *GoMod_GoModResult__Found:
-    info := _matchExp0.Val1
+        info := _matchExp0.Val1
         return info.FP.Get_path(_env)
     }
     var lnsSearchPath string
@@ -913,7 +913,7 @@ func (self *front_Front) getModuleIdAndCheckUptodate(_env *LnsEnv, lnsPath strin
     case *Types_CheckingUptodateMode__ForceAll:
         return FrontInterface_ModuleId__tempId, uptodate
     case *Types_CheckingUptodateMode__Force1:
-    forceMod := _matchExp0.Val1
+        forceMod := _matchExp0.Val1
         if mod == forceMod{
             return FrontInterface_ModuleId__tempId, uptodate
         }
@@ -1519,7 +1519,7 @@ func (self *front_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface
                                 case *Types_CheckingUptodateMode__ForceAll:
                                     forceFlag = true
                                 case *Types_CheckingUptodateMode__Force1:
-                                forceMod := _matchExp0.Val1
+                                    forceMod := _matchExp0.Val1
                                     forceFlag = orgMod == forceMod
                                 case *Types_CheckingUptodateMode__Normal:
                                     forceFlag = false
@@ -1764,7 +1764,7 @@ func (self *front_Front) saveToLua(_env *LnsEnv, updateInfo *front_UpdateInfo,ba
             Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*Converter_PythonConverter).FP.SavePython(_env)})/* 1472:13 */)
         })
     case *front_ModuleUptodate__Uptodate:
-    metaInfo := _matchExp0.Val1
+        metaInfo := _matchExp0.Val1
         Util_errorLog(_env, "uptodate -- " + scriptPath)
         var dependsStream LnsAny
         dependsStream = self.option.FP.OpenDepend(_env, dependsPath)
@@ -1772,8 +1772,8 @@ func (self *front_Front) saveToLua(_env *LnsEnv, updateInfo *front_UpdateInfo,ba
         Converter_closeStreams(_env, nil, nil, dependsStream, metaPath, false)
         return nil
     case *front_ModuleUptodate__NeedTouch:
-    metaCode := _matchExp0.Val1
-    metaInfo := _matchExp0.Val2
+        metaCode := _matchExp0.Val1
+        metaInfo := _matchExp0.Val2
         Util_errorLog(_env, "touch -- " + scriptPath)
         var dependsStream LnsAny
         dependsStream = self.option.FP.OpenDepend(_env, dependsPath)
@@ -1811,8 +1811,8 @@ func (self *front_Front) Build(_env *LnsEnv, buildMode LnsAny,astCallback LnsAny
         case *Front_BuildMode__Save:
             return self.FP.saveToLua(_env, updateInfo, baseDir)
         case *Front_BuildMode__Output:
-        streamLua := _matchExp0.Val1
-        streamMeta := _matchExp0.Val2
+            streamLua := _matchExp0.Val1
+            streamMeta := _matchExp0.Val2
             self.FP.convertToLua(_env, updateInfo.FP.Get_scriptPath(_env), baseDir, ConvLua_ConvMode__ConvMeta, streamLua, streamMeta)
         case *Front_BuildMode__CreateAst:
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||

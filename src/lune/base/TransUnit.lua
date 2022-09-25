@@ -6523,8 +6523,8 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       if unwrapFlag then
          
          local hasNilable = false
-         for index, _1 in ipairs( letVarList ) do
-            if expList:getExpTypeAt( index ):get_nilable() then
+         for index, varInfo in ipairs( letVarList ) do
+            if expList:getExpTypeAt( index ):get_nilable() and varInfo.varName.txt ~= "_" then
                hasNilable = true
                break
             end
@@ -6532,7 +6532,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
          end
          
          if not hasNilable then
-            self:addWarnMess( firstPos, "has no nilable" )
+            self:addErrMess( firstPos, "has no nilable" )
          end
          
       end
@@ -10024,10 +10024,10 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          
          
          local genericList = {}
-         local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+         
          do
-            local _1, _2, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, algeTypeInfo:createAlt2typeMap( true ), true )
-            if newExpNodeList ~= nil then
+            local _1, alt2typeMap, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, algeTypeInfo:createAlt2typeMap( true ), true )
+            if alt2typeMap ~= nil and  newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
                
                if #algeTypeInfo:get_itemTypeInfoList() > 0 then

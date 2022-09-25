@@ -3354,7 +3354,7 @@ func (self *convLua_ConvFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCall
                         literal_130 := literal
                         switch _matchExp0 := literal_130.(type) {
                         case *Nodes_Literal__Str:
-                        txt := _matchExp0.Val1
+                            txt := _matchExp0.Val1
                             opList = TransUnit_findForm(_env, txt)
                         }
                     }
@@ -3493,10 +3493,10 @@ func (self *convLua_ConvFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_ExpS
     self.FP.WriteRaw(_env, "[")
     switch _matchExp0 := node.FP.Get_index(_env).(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _matchExp0.Val1
+        index := _matchExp0.Val1
         convLua_filter_9_(_env, index, self, &node.Nodes_Node)
     case *Nodes_IndexVal__SymIdx:
-    index := _matchExp0.Val1
+        index := _matchExp0.Val1
         self.FP.WriteRaw(_env, _env.GetVM().String_format("'%s'", []LnsAny{index}))
     }
     self.FP.WriteRaw(_env, "]")

@@ -2135,8 +2135,9 @@ pub override fn convFilter.processRoot(
    _filter( node.$nodeManager.getIfUnwrapNodeList(),
             fn ( workNode:&Nodes.IfUnwrapNode ) {
                let mut symTypeList:List<&Ast.TypeInfo> = [];
-               for _ = 1, #workNode.$varSymList {
-                  symTypeList.insert( Ast.builtinTypeStem_ );
+               foreach _, index in workNode.$varSymList {
+                  //symTypeList.insert( Ast.builtinTypeStem_ );
+                  symTypeList.insert( workNode.$expList.getExpTypeNoDDDAt( index ) );
                }
                self.processConvExp(
                   workNode, symTypeList, workNode.$expList, false );
@@ -2456,9 +2457,10 @@ processRoot() で、processConvExp() を実行しておく。
 */
 fn convFilter.processSetFromExpList(
    convArgFuncName:str, dstTypeList:&List<&Ast.TypeInfo>,
-   expListNode:&Nodes.ExpListNode, addEnvArg:bool ) mut
+   expListNode:&Nodes.ExpListNode, addEnvArg:bool ) mut : ExpListKind
 {
-   _switch getExpListKind( dstTypeList, expListNode, addEnvArg ) {
+   let expListKind = getExpListKind( dstTypeList, expListNode, addEnvArg );
+   _switch expListKind {
       case .Conv {
          self.writeRaw( "%s(" ( convArgFuncName ) );
          let mRetIndex = expListNode.$mRetExp$.$index;
@@ -2559,6 +2561,7 @@ fn convFilter.processSetFromExpList(
          }
       }
    }
+   return expListKind;
 }
 
 pub override fn convFilter.processStmtExp(
@@ -2972,7 +2975,6 @@ pub override fn convFilter.processIfUnwrap(
    self.writeln( "{" );
    self.pushIndent( ## );
 
-   let mut tempTypeList:List<&Ast.TypeInfo> = [];
    // 一度テンポラリ変数にセットする必要があるかどうかのリスト。
    let needStrTempList:List<bool> = [];
    foreach varSym, index in node.$varSymList {
@@ -2997,23 +2999,26 @@ pub override fn convFilter.processIfUnwrap(
       if varSym.$name == "_" {
          self.writeRaw( "_" );
       } else {
-         if needStrTempList[ index ] {
-            self.writeRaw( "_" .. self.getSymbolSym( varSym ) );
-         } else {
-            self.writeRaw( self.getSymbolSym( varSym ) );
-         }
+         self.writeRaw( "_" .. self.getSymbolSym( varSym ) );
       }
-      tempTypeList.insert( Ast.builtinTypeStem_ );
+      //tempTypeList.insert( Ast.builtinTypeStem_ );
    }
-   if getExpListKind( tempTypeList, node.$expList, self.option.$addEnvArg ) == .Direct {
+
+   let mut tempTypeList:List<&Ast.TypeInfo> = [];
+   foreach _, index in node.$varSymList {
+      tempTypeList.insert( node.$expList.getExpTypeNoDDDAt( index ) );
+   }
+   
+
+   let expListKind = getExpListKind( tempTypeList, node.$expList, false );
+   if expListKind == .Direct {
       for _ =  #node.$varSymList + 1, #node.$expList.$expTypeList {
          self.writeRaw( ", _" );
       }
    }
    self.writeRaw( " := " );
    self.processSetFromExpList(
-      self.getConvExpName( node, node.$expList ),
-      tempTypeList, node.$expList, false );
+      self.getConvExpName( node, node.$expList ), tempTypeList, node.$expList, false );
    self.writeln( "" );
 
    // テンポラリ変数が nil かどうかを確認
@@ -3033,11 +3038,13 @@ pub override fn convFilter.processIfUnwrap(
    // nil でなければ値を入れなおす
    self.pushIndent( ## );
    foreach varSym, index in node.$varSymList {
-      if needStrTempList[ index ] {
+      if varSym.$name ~= "_" {
          if varSym.hasAccess() {
             self.writeRaw( "%s := _%s" ( self.getSymbolSym( varSym ),
-                                         self.getSymbolSym( varSym )) );    
-            self.outputAny2Type( varSym.$typeInfo );
+                                         self.getSymbolSym( varSym )) );
+            if node.$expList.getExpTypeNoDDDAt( index ).$nilable {
+               self.outputAny2Type( varSym.$typeInfo );
+            }
             self.writeln( "" );
          }
       }
@@ -3092,15 +3099,19 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
             if index ~= 1 {
                self.writeRaw( ", " );
             }
-            self.writeRaw( "_%s" ( normalizeSym( varInfo.$name.txt )) );
+            if varInfo.$name.txt == "_" {
+               self.writeRaw( "_" );
+            } else {
+               self.writeRaw( "_%s" ( normalizeSym( varInfo.$name.txt )) );
+            }
          }
 
          let mut tmpVarTypeList:List<&Ast.TypeInfo> = [];
          foreach _, index in node.$symbolInfoList {
             tmpVarTypeList.insert( expList.getExpTypeNoDDDAt( index ) );
          }
-         
-         if getExpListKind( tmpVarTypeList, expList, self.option.$addEnvArg ) == .Direct {
+
+         if getExpListKind( tmpVarTypeList, expList, false ) == .Direct {
             for _ =  #tmpVarTypeList + 1, #expList.$expTypeList {
                self.writeRaw( ", _" );
             }
@@ -3484,6 +3495,7 @@ pub override fn convFilter.processMatch(
       }
       return false;
    }
+
    let val;
    //let nodeIndex = self.indexer.getIndex( node ).$index;
    let nodeIndex = node.$idInNS;
@@ -3497,12 +3509,20 @@ pub override fn convFilter.processMatch(
    filter( node.$val, self, node );
    self.writeln( ".(type) {" );
    foreach caseInfo in node.$caseList {
+      let valInfo = caseInfo.$valInfo;
       self.writeln( "case *%s:" (self.getAlgeSymbol( caseInfo.$valInfo) ) );
+      self.pushIndent(##);
       foreach symbol, index in caseInfo.$valParamNameList {
          if symbol.$posForModToRef {
-            self.writeln( "%s := %s.Val%d" (self.getSymbolSym( symbol ), val, index) );
+            self.write( "%s := %s.Val%d" (self.getSymbolSym( symbol ), val, index) );
+            let orgParamType = valInfo.$typeList[ index ].$nonnilableType.$srcTypeInfo;
+            if orgParamType.$kind == .Alternate {
+               self.outputAny2Type( symbol.$typeInfo );
+            }
+            self.writeln( "" );
          }
       }
+      self.popIndent();
       filter( caseInfo.$block, self, node );
    }
    if! let defaultBlock = node.$defaultBlock {

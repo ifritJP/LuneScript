@@ -80,7 +80,7 @@ func (self *Formatter_FormatterFilter) ProcessLuneControl(_env *LnsEnv, node *No
     case *LuneControl_Pragma__load__lune_module:
         self.FP.Writeln(_env, "load__lune_module")
     case *LuneControl_Pragma__limit_conv_code:
-    codeSet := _matchExp0.Val1
+        codeSet := _matchExp0.Val1
         self.FP.Writeln(_env, "limit_conv_code")
         for _code := range( codeSet.Items ) {
             code := _code.(string)
@@ -901,12 +901,12 @@ func (self *Formatter_FormatterFilter) ProcessExpSetItem(_env *LnsEnv, node *Nod
     Formatter_filter_3_(_env, node.FP.Get_val(_env), self, opt.FP.NextOpt(_env, &node.Nodes_Node))
     switch _matchExp0 := node.FP.Get_index(_env).(type) {
     case *Nodes_IndexVal__NodeIdx:
-    index := _matchExp0.Val1
+        index := _matchExp0.Val1
         self.FP.Write(_env, "[")
         Formatter_filter_3_(_env, index, self, opt.FP.NextOpt(_env, &node.Nodes_Node))
         self.FP.Write(_env, "]")
     case *Nodes_IndexVal__SymIdx:
-    index := _matchExp0.Val1
+        index := _matchExp0.Val1
         self.FP.Write(_env, _env.GetVM().String_format(".%s", []LnsAny{index}))
     }
     self.FP.Write(_env, " = ")

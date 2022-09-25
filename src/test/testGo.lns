@@ -2395,3 +2395,44 @@ _section();
    }
    sub();
 }
+_section();
+{
+   fn func(): int, int!, int {
+      return 1, 2, 3;
+   }
+   fn sub() {
+      if! let val, val2 = func() {
+         print( __line__, val + 1, val2 + 2 );
+      }
+      {
+         let! val, val2 = func() {
+            return;
+         };
+         print( __line__, val + 1, val2 + 2 );
+      }
+      if! let val, val2, _ = func() {
+         print( __line__, val + 1, val2 + 2 );
+      }
+      {
+         let! val, val2, _ = func() {
+            return;
+         };
+         print( __line__, val + 1, val2 + 2 );
+      }
+   }
+   sub();
+}
+_section();
+{
+   alge Hoge<T1,T2> {
+      Val(T1,T2)
+   }
+   {
+      let hoge = Hoge.Val( 1, "abc" );
+      match hoge {
+         case .Val(param1,param2) {
+            print( param1 + 10, param2 .. "hoge"  );
+         }
+      }
+   }
+}

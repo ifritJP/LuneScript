@@ -2866,8 +2866,8 @@ fn TransUnit.analyzeNewAlge(
 
 
       let genericList:List<&Ast.TypeInfo> = [];
-      let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
-      if! let _, _, newExpNodeList = self.checkMatchType(
+      //let mut alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
+      if! let _, alt2typeMap, newExpNodeList = self.checkMatchType(
          "call", symbolToken.pos, valInfo.$typeList,
          argListNode, false, true, algeTypeInfo.createAlt2typeMap( true ), true )
       {

@@ -373,10 +373,10 @@ func (self *Import__TypeInfoExt) CreateTypeInfo(_env *LnsEnv, param *Import_Impo
     var newTypeInfo *Ast_TypeInfo
     switch _matchExp0 := param.ProcessInfo.FP.CreateLuaval(_env, extedType, true).(type) {
     case *Ast_LuavalResult__OK:
-    extType := _matchExp0.Val1
+        extType := _matchExp0.Val1
         newTypeInfo = extType
     case *Ast_LuavalResult__Err:
-    mess := _matchExp0.Val1
+        mess := _matchExp0.Val1
         Util_err(_env, mess)
     }
     param.TypeId2TypeInfo.Set(self.TypeId,newTypeInfo)
@@ -791,15 +791,15 @@ func (self *Import_ModuleLoader) applyExportInfo(_env *LnsEnv, exportInfo LnsAny
 func (self *Import_ModuleLoader) craeteModuleInfo(_env *LnsEnv, moduleMeta *FrontInterface_ModuleMeta) *FrontInterface_ExportInfo {
     switch _matchExp0 := moduleMeta.FP.Get_metaOrModule(_env).(type) {
     case *FrontInterface_MetaOrModule__Module:
-    exportInfo := _matchExp0.Val2
+        exportInfo := _matchExp0.Val2
         self.FP.applyExportInfo(_env, exportInfo)
         return exportInfo
     case *FrontInterface_MetaOrModule__Export:
-    exportInfo := _matchExp0.Val1
+        exportInfo := _matchExp0.Val1
         self.FP.applyExportInfo(_env, exportInfo)
         return exportInfo
     case *FrontInterface_MetaOrModule__MetaRaw:
-    metaInfo := _matchExp0.Val1
+        metaInfo := _matchExp0.Val1
         self.importModuleInfo.FP.Add(_env, self.result.modulePath)
         self.importProcessInfo.FP.SwitchIdProvier(_env, Ast_IdType__Ext)
         var nameList *LnsList

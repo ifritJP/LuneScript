@@ -691,13 +691,13 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
                 }
                 switch _matchExp0 := self.processInfo.FP.CreateLuaval(_env, genTypeList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), true).(type) {
                 case *Ast_LuavalResult__OK:
-                workType := _matchExp0.Val1
+                    workType := _matchExp0.Val1
                     if self.ctrl_info.ValidLuaval{
                         return workType
                     }
                     return genTypeList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                 case *Ast_LuavalResult__Err:
-                mess := _matchExp0.Val1
+                    mess := _matchExp0.Val1
                     Util_err(_env, mess)
                 }
             } else if _switch0 == Ast_TypeInfoKind__DDD {

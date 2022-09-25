@@ -929,13 +929,13 @@ func Ast_isGenericType(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
 func Ast_getEnumLiteralVal(_env *LnsEnv, obj LnsAny) LnsAny {
     switch _matchExp0 := obj.(type) {
     case *Ast_EnumLiteral__Int:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     case *Ast_EnumLiteral__Real:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     case *Ast_EnumLiteral__Str:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     }
 // insert a dummy
@@ -1190,10 +1190,10 @@ func Ast_convToExtTypeList(_env *LnsEnv, processInfo *Ast_ProcessInfo,list *LnsL
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
         switch _matchExp0 := processInfo.FP.CreateLuaval(_env, typeInfo, true).(type) {
         case *Ast_LuavalResult__OK:
-        extType := _matchExp0.Val1
+            extType := _matchExp0.Val1
             extList.Insert(Ast_TypeInfo2Stem(extType))
         case *Ast_LuavalResult__Err:
-        err := _matchExp0.Val1
+            err := _matchExp0.Val1
             return nil, err
         }
     }
@@ -4064,7 +4064,7 @@ func (self *Ast_AccessSymbolInfo) InitAst_AccessSymbolInfo(_env *LnsEnv, process
     case *Ast_OverrideMut__None:
         work = symType
     case *Ast_OverrideMut__Prefix:
-    prefixTypeInfo := _matchExp0.Val1
+        prefixTypeInfo := _matchExp0.Val1
         if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( self.symbolInfo.FP.Get_kind(_env) == Ast_SymbolKind__Mbr) &&
             _env.SetStackVal( symType.FP.Get_kind(_env) == Ast_TypeInfoKind__Alternate) &&
@@ -4084,7 +4084,7 @@ func (self *Ast_AccessSymbolInfo) InitAst_AccessSymbolInfo(_env *LnsEnv, process
             work = symType
         }
     case *Ast_OverrideMut__IMut:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         work = typeInfo
     }
     self.overrideTypeInfo = work
@@ -7056,7 +7056,7 @@ func Lns_Ast_init(_env *LnsEnv) {
     Ast_builtinTypeAbbrNone = &NewAst_AbbrTypeInfo(_env, Ast_rootProcessInfo, "[##]").Ast_TypeInfo
     switch _matchExp0 := Ast_rootProcessInfo.FP.CreateLuaval(_env, Ast_builtinTypeStem, true).(type) {
     case *Ast_LuavalResult__OK:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         Ast_builtinTypeLua = typeInfo
     default:
         Util_err(_env, "illegal")
@@ -7214,14 +7214,14 @@ func (self *Ast_ProcessInfo) CreateModifier(_env *LnsEnv, srcTypeInfo *Ast_TypeI
     if srcTypeInfo.FP.Get_nonnilableType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
         switch _matchExp0 := self.FP.CreateLuaval(_env, self.FP.CreateModifier(_env, srcTypeInfo.FP.Get_extedType(_env), mutMode), false).(type) {
         case *Ast_LuavalResult__OK:
-        workType := _matchExp0.Val1
+            workType := _matchExp0.Val1
             if srcTypeInfo.FP.Get_nilable(_env){
                 modifier = workType.FP.Get_nilableTypeInfo(_env)
             } else { 
                 modifier = workType
             }
         case *Ast_LuavalResult__Err:
-        err := _matchExp0.Val1
+            err := _matchExp0.Val1
             Util_err(_env, err)
         }
     } else { 
@@ -7481,10 +7481,10 @@ func (self *Ast_ProcessInfo) CreateDDD(_env *LnsEnv, typeInfo *Ast_TypeInfo,exte
         _env.SetStackVal( extTypeFlag) ).(bool)){
         switch _matchExp0 := self.FP.CreateLuaval(_env, typeInfo, true).(type) {
         case *Ast_LuavalResult__OK:
-        work := _matchExp0.Val1
+            work := _matchExp0.Val1
             typeInfo = work
         case *Ast_LuavalResult__Err:
-        mess := _matchExp0.Val1
+            mess := _matchExp0.Val1
             Util_err(_env, mess)
         }
     }
@@ -7562,10 +7562,10 @@ func (self *Ast_ProcessInfo) CreateLuaval(_env *LnsEnv, luneType *Ast_TypeInfo,v
                 dddType := _dddType.(*Ast_DDDTypeInfo)
                 switch _matchExp0 := self.FP.CreateLuaval(_env, dddType.FP.Get_typeInfo(_env), validToCheck).(type) {
                 case *Ast_LuavalResult__Err:
-                mess := _matchExp0.Val1
+                    mess := _matchExp0.Val1
                     Util_err(_env, mess)
                 case *Ast_LuavalResult__OK:
-                workType := _matchExp0.Val1
+                    workType := _matchExp0.Val1
                     return &Ast_LuavalResult__OK{&self.FP.CreateDDD(_env, workType, dddType.FP.Get_externalFlag(_env), true).Ast_TypeInfo, false}
                 }
             }
@@ -7593,7 +7593,7 @@ func (self *Ast_ProcessInfo) CreateLuaval(_env *LnsEnv, luneType *Ast_TypeInfo,v
     result = Ast_process(_env)
     switch _matchExp0 := result.(type) {
     case *Ast_LuavalResult__OK:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         Ast_updateCache(_env, typeInfo)
     }
     return result
@@ -8337,10 +8337,10 @@ func (self *Ast_Scope) AddExtModule(_env *LnsEnv, processInfo *Ast_ProcessInfo,n
     if lang != Types_Lang__Same{
         switch _matchExp0 := processInfo.FP.CreateLuaval(_env, typeInfo, true).(type) {
         case *Ast_LuavalResult__Err:
-        mess := _matchExp0.Val1
+            mess := _matchExp0.Val1
             Util_err(_env, mess)
         case *Ast_LuavalResult__OK:
-        luavalTypeInfo := _matchExp0.Val1
+            luavalTypeInfo := _matchExp0.Val1
             typeInfo = luavalTypeInfo
         }
     }
@@ -8836,20 +8836,20 @@ func Ast_TypeInfo_getCommonTypeCombo(_env *LnsEnv, processInfo *Ast_ProcessInfo,
     typeInfo = Ast_builtinTypeNone
     switch _matchExp0 := commonType.(type) {
     case *Ast_CommonType__Combine:
-    comb := _matchExp0.Val1
+        comb := _matchExp0.Val1
         return comb.FP.AndType(_env, processInfo, otherType, alt2type)
     case *Ast_CommonType__Normal:
-    workTypeInfo := _matchExp0.Val1
+        workTypeInfo := _matchExp0.Val1
         typeInfo = workTypeInfo
     }
     var other *Ast_TypeInfo
     other = Ast_builtinTypeNone
     switch _matchExp1 := otherType.(type) {
     case *Ast_CommonType__Combine:
-    comb := _matchExp1.Val1
+        comb := _matchExp1.Val1
         return comb.FP.AndType(_env, processInfo, commonType, alt2type)
     case *Ast_CommonType__Normal:
-    workTypeInfo := _matchExp1.Val1
+        workTypeInfo := _matchExp1.Val1
         other = workTypeInfo
     }
     var Ast_getType func(_env *LnsEnv, workType *Ast_TypeInfo) LnsAny
@@ -8901,10 +8901,10 @@ func Ast_TypeInfo_getCommonTypeCombo(_env *LnsEnv, processInfo *Ast_ProcessInfo,
         Ast_getCommon = func(_env *LnsEnv, workTypeInfo *Ast_TypeInfo,workOther *Ast_TypeInfo,workAlt2type *LnsMap) *Ast_TypeInfo {
             switch _matchExp0 := Ast_TypeInfo_getCommonTypeCombo(_env, processInfo, &Ast_CommonType__Normal{workTypeInfo}, &Ast_CommonType__Normal{workOther}, workAlt2type).(type) {
             case *Ast_CommonType__Normal:
-            info := _matchExp0.Val1
+                info := _matchExp0.Val1
                 return info
             case *Ast_CommonType__Combine:
-            combine := _matchExp0.Val1
+                combine := _matchExp0.Val1
                 return combine.FP.Get_typeInfo(_env, processInfo)
             }
         // insert a dummy
@@ -8944,10 +8944,10 @@ func Ast_TypeInfo_getCommonTypeCombo(_env *LnsEnv, processInfo *Ast_ProcessInfo,
 func Ast_TypeInfo_getCommonType(_env *LnsEnv, processInfo *Ast_ProcessInfo,typeInfo *Ast_TypeInfo,other *Ast_TypeInfo,alt2type *LnsMap) *Ast_TypeInfo {
     switch _matchExp0 := Ast_TypeInfo_getCommonTypeCombo(_env, processInfo, &Ast_CommonType__Normal{typeInfo}, &Ast_CommonType__Normal{other}, alt2type).(type) {
     case *Ast_CommonType__Normal:
-    info := _matchExp0.Val1
+        info := _matchExp0.Val1
         return info
     case *Ast_CommonType__Combine:
-    combine := _matchExp0.Val1
+        combine := _matchExp0.Val1
         return combine.FP.Get_typeInfo(_env, processInfo)
     }
 // insert a dummy
@@ -10270,7 +10270,7 @@ func (self *Ast_AccessSymbolInfo) Get_mutMode(_env *LnsEnv) LnsInt {
     switch _matchExp0 := self.overrideMut.(type) {
     case *Ast_OverrideMut__None:
     case *Ast_OverrideMut__Prefix:
-    prefixTypeInfo := _matchExp0.Val1
+        prefixTypeInfo := _matchExp0.Val1
         if _switch1 := self.symbolInfo.FP.Get_mutMode(_env); _switch1 == Ast_MutMode__Depend {
             return prefixTypeInfo.FP.Get_mutMode(_env)
         } else if _switch1 == Ast_MutMode__AllMut || _switch1 == Ast_MutMode__IMut || _switch1 == Ast_MutMode__IMutRe {
@@ -11045,13 +11045,13 @@ func (self *Ast_EnumTypeInfo) Serialize(_env *LnsEnv, stream Lns_oStream,seriali
             stream.Write(_env, _env.GetVM().String_format("%s = ", []LnsAny{enumValInfo.FP.Get_name(_env)}))
             switch _matchExp0 := enumValInfo.FP.Get_val(_env).(type) {
             case *Ast_EnumLiteral__Int:
-            val := _matchExp0.Val1
+                val := _matchExp0.Val1
                 stream.Write(_env, _env.GetVM().String_format("%d,", []LnsAny{val}))
             case *Ast_EnumLiteral__Real:
-            val := _matchExp0.Val1
+                val := _matchExp0.Val1
                 stream.Write(_env, _env.GetVM().String_format("%g,", []LnsAny{val}))
             case *Ast_EnumLiteral__Str:
-            val := _matchExp0.Val1
+                val := _matchExp0.Val1
                 stream.Write(_env, _env.GetVM().String_format("%q,", []LnsAny{val}))
             }
         }
@@ -11162,7 +11162,7 @@ func (self *Ast_NormalTypeInfo) GetOverridingType(_env *LnsEnv) LnsAny {
     case *Ast_OverridingType__NotOverride:
         return nil
     case *Ast_OverridingType__Override:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         return typeInfo
     case *Ast_OverridingType__NoReady:
         var scope *Ast_Scope
@@ -11707,14 +11707,14 @@ func (self *Ast_CombineType) Get_typeInfo(_env *LnsEnv, processInfo *Ast_Process
 func (self *Ast_CombineType) AndType(_env *LnsEnv, processInfo *Ast_ProcessInfo,other LnsAny,alt2type *LnsMap) LnsAny {
     switch _matchExp0 := other.(type) {
     case *Ast_CommonType__Combine:
-    comboInfo := _matchExp0.Val1
+        comboInfo := _matchExp0.Val1
         self.FP.andIfSet(_env, processInfo, comboInfo.ifSet, alt2type)
         if Lns_op_not(Ast_isMutable(_env, comboInfo.mutMode)){
             self.mutMode = comboInfo.mutMode
         }
         return &Ast_CommonType__Combine{self}
     case *Ast_CommonType__Normal:
-    typeInfo := _matchExp0.Val1
+        typeInfo := _matchExp0.Val1
         if Lns_op_not(Ast_isMutable(_env, typeInfo.FP.Get_mutMode(_env))){
             self.mutMode = typeInfo.FP.Get_mutMode(_env)
         }
@@ -12076,10 +12076,10 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
                 
                 switch _matchExp0 := self.processInfo.FP.CreateLuaval(_env, genericList.GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), true).(type) {
                 case *Ast_LuavalResult__OK:
-                extTypeInfo := _matchExp0.Val1
+                    extTypeInfo := _matchExp0.Val1
                     typeInfo = extTypeInfo
                 case *Ast_LuavalResult__Err:
-                err := _matchExp0.Val1
+                    err := _matchExp0.Val1
                     return nil, pos, err
                 }
             } else {

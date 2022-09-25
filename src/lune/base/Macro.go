@@ -125,25 +125,25 @@ func Macro_getLiteralMacroVal_8_(_env *LnsEnv, obj LnsAny) LnsAny {
     case *Nodes_Literal__Nil:
         return nil
     case *Nodes_Literal__Int:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     case *Nodes_Literal__Real:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     case *Nodes_Literal__Str:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     case *Nodes_Literal__Bool:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     case *Nodes_Literal__Symbol:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return NewLnsList([]LnsAny{val})
     case *Nodes_Literal__Field:
-    val := _matchExp0.Val1
+        val := _matchExp0.Val1
         return val
     case *Nodes_Literal__LIST:
-    list := _matchExp0.Val1
+        list := _matchExp0.Val1
         var newList *LnsList
         newList = NewLnsList([]LnsAny{})
         for _index, _item := range( list.Items ) {
@@ -153,7 +153,7 @@ func Macro_getLiteralMacroVal_8_(_env *LnsEnv, obj LnsAny) LnsAny {
         }
         return newList
     case *Nodes_Literal__ARRAY:
-    list := _matchExp0.Val1
+        list := _matchExp0.Val1
         var newList *LnsList
         newList = NewLnsList([]LnsAny{})
         for _index, _item := range( list.Items ) {
@@ -163,7 +163,7 @@ func Macro_getLiteralMacroVal_8_(_env *LnsEnv, obj LnsAny) LnsAny {
         }
         return newList
     case *Nodes_Literal__SET:
-    list := _matchExp0.Val1
+        list := _matchExp0.Val1
         var newSet *LnsSet
         newSet = NewLnsSet([]LnsAny{})
         for _, _item := range( list.Items ) {
@@ -178,7 +178,7 @@ func Macro_getLiteralMacroVal_8_(_env *LnsEnv, obj LnsAny) LnsAny {
         }
         return newSet
     case *Nodes_Literal__MAP:
-    _map := _matchExp0.Val1
+        _map := _matchExp0.Val1
         var newMap *LnsMap
         newMap = NewLnsMap( map[LnsAny]LnsAny{})
         for _key, _val := range( _map.Items ) {
