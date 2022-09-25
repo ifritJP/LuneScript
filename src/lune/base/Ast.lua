@@ -9215,6 +9215,238 @@ end
 function GenAlgeTypeInfo:get_genSrcTypeInfo()
    return self.genSrcTypeInfo
 end
+function GenAlgeTypeInfo:applyGeneric( ... )
+   return self.genSrcTypeInfo:applyGeneric( ... )
+end
+
+function GenAlgeTypeInfo:canEvalWith( ... )
+   return self.genSrcTypeInfo:canEvalWith( ... )
+end
+
+function GenAlgeTypeInfo:createAlt2typeMap( ... )
+   return self.genSrcTypeInfo:createAlt2typeMap( ... )
+end
+
+function GenAlgeTypeInfo:equals( ... )
+   return self.genSrcTypeInfo:equals( ... )
+end
+
+function GenAlgeTypeInfo:getFullName( ... )
+   return self.genSrcTypeInfo:getFullName( ... )
+end
+
+function GenAlgeTypeInfo:getModule( ... )
+   return self.genSrcTypeInfo:getModule( ... )
+end
+
+function GenAlgeTypeInfo:getOverridingType( ... )
+   return self.genSrcTypeInfo:getOverridingType( ... )
+end
+
+function GenAlgeTypeInfo:getParentFullName( ... )
+   return self.genSrcTypeInfo:getParentFullName( ... )
+end
+
+function GenAlgeTypeInfo:getParentId( ... )
+   return self.genSrcTypeInfo:getParentId( ... )
+end
+
+function GenAlgeTypeInfo:getTxt( ... )
+   return self.genSrcTypeInfo:getTxt( ... )
+end
+
+function GenAlgeTypeInfo:getTxtWithRaw( ... )
+   return self.genSrcTypeInfo:getTxtWithRaw( ... )
+end
+
+function GenAlgeTypeInfo:get_abstractFlag( ... )
+   return self.genSrcTypeInfo:get_abstractFlag( ... )
+end
+
+function GenAlgeTypeInfo:get_accessMode( ... )
+   return self.genSrcTypeInfo:get_accessMode( ... )
+end
+
+function GenAlgeTypeInfo:get_aliasSrc( ... )
+   return self.genSrcTypeInfo:get_aliasSrc( ... )
+end
+
+function GenAlgeTypeInfo:get_argTypeInfoList( ... )
+   return self.genSrcTypeInfo:get_argTypeInfoList( ... )
+end
+
+function GenAlgeTypeInfo:get_asyncMode( ... )
+   return self.genSrcTypeInfo:get_asyncMode( ... )
+end
+
+function GenAlgeTypeInfo:get_autoFlag( ... )
+   return self.genSrcTypeInfo:get_autoFlag( ... )
+end
+
+function GenAlgeTypeInfo:get_baseId( ... )
+   return self.genSrcTypeInfo:get_baseId( ... )
+end
+
+function GenAlgeTypeInfo:get_baseTypeInfo( ... )
+   return self.genSrcTypeInfo:get_baseTypeInfo( ... )
+end
+
+function GenAlgeTypeInfo:get_childId( ... )
+   return self.genSrcTypeInfo:get_childId( ... )
+end
+
+function GenAlgeTypeInfo:get_children( ... )
+   return self.genSrcTypeInfo:get_children( ... )
+end
+
+function GenAlgeTypeInfo:get_display_stirng( ... )
+   return self.genSrcTypeInfo:get_display_stirng( ... )
+end
+
+function GenAlgeTypeInfo:get_display_stirng_with( ... )
+   return self.genSrcTypeInfo:get_display_stirng_with( ... )
+end
+
+function GenAlgeTypeInfo:get_extedType( ... )
+   return self.genSrcTypeInfo:get_extedType( ... )
+end
+
+function GenAlgeTypeInfo:get_externalFlag( ... )
+   return self.genSrcTypeInfo:get_externalFlag( ... )
+end
+
+function GenAlgeTypeInfo:get_generics_display_string( ... )
+   return self.genSrcTypeInfo:get_generics_display_string( ... )
+end
+
+function GenAlgeTypeInfo:get_generics_txt( ... )
+   return self.genSrcTypeInfo:get_generics_txt( ... )
+end
+
+function GenAlgeTypeInfo:get_imutType( ... )
+   return self.genSrcTypeInfo:get_imutType( ... )
+end
+
+function GenAlgeTypeInfo:get_interfaceList( ... )
+   return self.genSrcTypeInfo:get_interfaceList( ... )
+end
+
+function GenAlgeTypeInfo:get_itemTypeInfoList( ... )
+   return self.genSrcTypeInfo:get_itemTypeInfoList( ... )
+end
+
+function GenAlgeTypeInfo:get_kind( ... )
+   return self.genSrcTypeInfo:get_kind( ... )
+end
+
+function GenAlgeTypeInfo:get_mutMode( ... )
+   return self.genSrcTypeInfo:get_mutMode( ... )
+end
+
+function GenAlgeTypeInfo:get_nilable( ... )
+   return self.genSrcTypeInfo:get_nilable( ... )
+end
+
+function GenAlgeTypeInfo:get_nilableTypeInfo( ... )
+   return self.genSrcTypeInfo:get_nilableTypeInfo( ... )
+end
+
+function GenAlgeTypeInfo:get_nilableTypeInfoMut( ... )
+   return self.genSrcTypeInfo:get_nilableTypeInfoMut( ... )
+end
+
+function GenAlgeTypeInfo:get_nonnilableType( ... )
+   return self.genSrcTypeInfo:get_nonnilableType( ... )
+end
+
+function GenAlgeTypeInfo:get_parentInfo( ... )
+   return self.genSrcTypeInfo:get_parentInfo( ... )
+end
+
+function GenAlgeTypeInfo:get_processInfo( ... )
+   return self.genSrcTypeInfo:get_processInfo( ... )
+end
+
+function GenAlgeTypeInfo:get_rawTxt( ... )
+   return self.genSrcTypeInfo:get_rawTxt( ... )
+end
+
+function GenAlgeTypeInfo:get_retTypeInfoList( ... )
+   return self.genSrcTypeInfo:get_retTypeInfoList( ... )
+end
+
+function GenAlgeTypeInfo:get_scope( ... )
+   return self.genSrcTypeInfo:get_scope( ... )
+end
+
+function GenAlgeTypeInfo:get_srcTypeInfo( ... )
+   return self.genSrcTypeInfo:get_srcTypeInfo( ... )
+end
+
+function GenAlgeTypeInfo:get_staticFlag( ... )
+   return self.genSrcTypeInfo:get_staticFlag( ... )
+end
+
+function GenAlgeTypeInfo:get_typeData( ... )
+   return self.genSrcTypeInfo:get_typeData( ... )
+end
+
+function GenAlgeTypeInfo:get_typeId( ... )
+   return self.genSrcTypeInfo:get_typeId( ... )
+end
+
+function GenAlgeTypeInfo:hasBase( ... )
+   return self.genSrcTypeInfo:hasBase( ... )
+end
+
+function GenAlgeTypeInfo:hasRouteNamespaceFrom( ... )
+   return self.genSrcTypeInfo:hasRouteNamespaceFrom( ... )
+end
+
+function GenAlgeTypeInfo:isInheritFrom( ... )
+   return self.genSrcTypeInfo:isInheritFrom( ... )
+end
+
+function GenAlgeTypeInfo:isModule( ... )
+   return self.genSrcTypeInfo:isModule( ... )
+end
+
+function GenAlgeTypeInfo:serialize( ... )
+   return self.genSrcTypeInfo:serialize( ... )
+end
+
+function GenAlgeTypeInfo:serializeTypeInfoList( ... )
+   return self.genSrcTypeInfo:serializeTypeInfoList( ... )
+end
+
+function GenAlgeTypeInfo:set_childId( ... )
+   return self.genSrcTypeInfo:set_childId( ... )
+end
+
+function GenAlgeTypeInfo:set_imutType( ... )
+   return self.genSrcTypeInfo:set_imutType( ... )
+end
+
+function GenAlgeTypeInfo:switchScope( ... )
+   return self.genSrcTypeInfo:switchScope( ... )
+end
+
+function GenAlgeTypeInfo:addValInfo( ... )
+   return self.genSrcTypeInfo:addValInfo( ... )
+end
+
+function GenAlgeTypeInfo:getValInfo( ... )
+   return self.genSrcTypeInfo:getValInfo( ... )
+end
+
+function GenAlgeTypeInfo:get_valInfoMap( ... )
+   return self.genSrcTypeInfo:get_valInfoMap( ... )
+end
+
+function GenAlgeTypeInfo:get_valInfoNum( ... )
+   return self.genSrcTypeInfo:get_valInfoNum( ... )
+end
+
 
 
 function ProcessInfo:createGenAlge( orgAlgeTypeInfo, itemTypeInfoList )

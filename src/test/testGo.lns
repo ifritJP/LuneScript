@@ -2358,3 +2358,23 @@ _section();
       }
    }
 }
+_section();
+{
+   class Super {
+      pub fn func() {
+      };
+   }
+   class Sub extend Super {
+      pub override fn func() {
+      };
+   }
+   class SubSub extend Sub {
+      let sub:&Sub;
+      pub fn __init( sub:&Sub ) {
+         super( );
+         self.sub = sub;
+      }
+
+      advertise sub;
+   }
+}

@@ -4683,6 +4683,7 @@ fn convFilter.outputDummyAbstractMethodOfClass( classType:&Ast.TypeInfo ) mut
 fn convFilter.outputAdvertise( node: &Nodes.DeclClassNode ) mut
 {
    let methodNameSet = node.createMethodNameSetWithoutAdv();
+   let createdNameSet:Set<str> = (@);
    foreach adv in node.$advertiseList {
       if adv.$prefix ~= "" {
          Util.err( "%s: not support advertise with prefix" (__func__) );
@@ -4692,8 +4693,11 @@ fn convFilter.outputAdvertise( node: &Nodes.DeclClassNode ) mut
             true, scope, .Normal,
             fn ( symbol:&Ast.SymbolInfo ) __trans: bool {
                if symbol.$kind == .Mtd and symbol.$name ~= "__init" and
+                  not createdNameSet.has( symbol.$name ) and
                   not methodNameSet.has( symbol.$name ) and not symbol.$staticFlag
                {
+                  createdNameSet.add( symbol.$name );
+                  
                   let funcType = symbol.$typeInfo;
                   self.writeln( "// advertise -- %d" (node.$pos.lineNo) );
                   self.outputDeclFunc(

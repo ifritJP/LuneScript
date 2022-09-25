@@ -5821,6 +5821,7 @@ function convFilter:outputAdvertise( node )
    local __func__ = '@lune.@base.@convGo.convFilter.outputAdvertise'
 
    local methodNameSet = node:createMethodNameSetWithoutAdv(  )
+   local createdNameSet = {}
    for __index, adv in ipairs( node:get_advertiseList() ) do
       if adv:get_prefix() ~= "" then
          Util.err( string.format( "%s: not support advertise with prefix", __func__) )
@@ -5831,7 +5832,9 @@ function convFilter:outputAdvertise( node )
          if scope ~= nil then
             scope:filterTypeInfoField( true, scope, Ast.ScopeAccess.Normal, function ( symbol )
             
-               if symbol:get_kind() == Ast.SymbolKind.Mtd and symbol:get_name() ~= "__init" and not _lune._Set_has(methodNameSet, symbol:get_name() ) and not symbol:get_staticFlag() then
+               if symbol:get_kind() == Ast.SymbolKind.Mtd and symbol:get_name() ~= "__init" and not _lune._Set_has(createdNameSet, symbol:get_name() ) and not _lune._Set_has(methodNameSet, symbol:get_name() ) and not symbol:get_staticFlag() then
+                  createdNameSet[symbol:get_name()]= true
+                  
                   local funcType = symbol:get_typeInfo()
                   self:writeln( string.format( "// advertise -- %d", node:get_pos().lineNo) )
                   self:outputDeclFunc( self.option:get_addEnvArg(), _lune.newAlge( FuncInfo.WithClass, {node:get_expType(),funcType}) )
