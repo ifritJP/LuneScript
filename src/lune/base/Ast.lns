@@ -6728,6 +6728,10 @@ accessMode = %d, kind = %d, ```
          self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Alge );
    stream.write( txt );    
 
+
+   stream.write( self.serializeTypeInfoList(
+      serializeInfo, "itemTypeId = {", self.itemTypeInfoList## ) );
+   
    stream.write( "algeValList = {" );
    let mut firstFlag = true;
    forsort algeValInfo in self.valInfoMap {
@@ -6873,77 +6877,89 @@ macro _checkEqualsItemType(
    }
 };
 
+/**
+指定の typeInfo が Mapping 可能かどうか調べる。
+
+@param processInfo 処理する ProcessInfo
+@param typeInfo Mapping 可能かどうかを調べる型
+@param checkedTypeMap チェック済みの型情 → 結果
+@return bool Mapping 可能な場合 true
+@return str! Mapping できない場合のエラー情報。 エラーの場合でも nil のケースがある。
+*/
 pub static fn NormalTypeInfo.isAvailableMapping(
    processInfo:&ProcessInfo,
-   mut typeInfo:&TypeInfo, checkedTypeMap:Map<&TypeInfo,bool> ): bool
+   mut typeInfo:&TypeInfo, checkedTypeMap:Map<&TypeInfo,bool> ): bool, str!
 {
-   fn isAvailableMappingSub() __trans : bool {
+   fn isAvailableMappingSub() __trans : bool, str! {
       switch typeInfo.$kind { 
          case .Prim, .Enum {     
-            return true;            
+            return true, nil;
          }
-         case .Alge {            
+         case .Alge {
+            if isGenericType( typeInfo ) {
+               return false, "The generics Alge isn't support mapping yet -- %s" (typeInfo.getTxt(##));
+            }
             let algeTypeInfo = unwrap (typeInfo@@@AlgeTypeInfo);
             foreach valInfo in algeTypeInfo.$valInfoMap {
                foreach paramType in valInfo.$typeList {
                   if not NormalTypeInfo.isAvailableMapping(
                      processInfo, paramType, checkedTypeMap ) {
-                        return false;              
+                        return false, nil;
                      }
                }
             }
-            return true;            
+            return true, nil;
          }
          case .Stem {            
             // stem は mapping 不能なデータもあるが、
             // それは実行時エラーとする。
-            return true;            
+            return true, nil;
          }
          case .Class, .IF {      
             if typeInfo.equals( processInfo, builtinTypeString ##) {
-               return true;            
+               return true, nil;
             }
-            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil );
+            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil ), nil;
          }
          case .Alternate {       
-            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil );
+            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil ), nil;
          }
          case .List, .Array, .Set {
             return NormalTypeInfo.isAvailableMapping(
-               processInfo, typeInfo.$itemTypeInfoList[1], checkedTypeMap );
+               processInfo, typeInfo.$itemTypeInfoList[1], checkedTypeMap )**;
          }
-         case .Map {             
-            if NormalTypeInfo.isAvailableMapping(
-               processInfo, typeInfo.$itemTypeInfoList[2], checkedTypeMap )
-            {
+         case .Map {
+            let ret, mess = NormalTypeInfo.isAvailableMapping(
+               processInfo, typeInfo.$itemTypeInfoList[2], checkedTypeMap );
+            if ret {
                let keyType = typeInfo.$itemTypeInfoList[1];
                if keyType.equals( processInfo, builtinTypeString ## ) or
                   keyType.$kind == .Prim or keyType.$kind == .Enum
                {
-                  return true;            
+                  return true, nil;
                }
             }
-            return false;           
+            return false, mess;
          }
          case .Nilable {         
             return NormalTypeInfo.isAvailableMapping(
-               processInfo, typeInfo.$nonnilableType, checkedTypeMap );
+               processInfo, typeInfo.$nonnilableType, checkedTypeMap )**;
          }
          default {               
-            return false;           
+            return false, nil;
          }
       }
    }
 
    typeInfo = typeInfo.$srcTypeInfo;
    if! checkedTypeMap[ typeInfo ] {
-      return _exp;            
+      return _exp, nil;            
    }
    // チェック前は暫定的に true にする
    checkedTypeMap[ typeInfo ] = true;
-   let result = isAvailableMappingSub();
+   let result, mess = isAvailableMappingSub();
    checkedTypeMap[ typeInfo ] = result;
-   return result;          
+   return result, mess;          
 }
 
 // other のクラスが、この型のクラスの継承関係にあるか調べる
@@ -6958,7 +6974,7 @@ pub override fn NormalTypeInfo.isInheritFrom(
        ( other.$kind ~= .Class and other.$kind ~= .IF )
    {
       if other == builtinTypeMapping {
-         return NormalTypeInfo.isAvailableMapping( processInfo, self, {} ); 
+         return (NormalTypeInfo.isAvailableMapping( processInfo, self, {} )); 
       }
       return false;           
    }

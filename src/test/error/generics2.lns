@@ -164,4 +164,13 @@ ctrl.process( new Super2<str>(), 1 ); // error
    }
    func2<int>(); // error
 }
-
+alge HogeHoge<T> {
+   Val
+}
+pub fn funcfunc( hoge:HogeHoge<str> ) { // error
+}
+{
+   class Hoge extend (Mapping) {
+      let hoge:HogeHoge<int>; // error
+   }
+}

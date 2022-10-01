@@ -5728,8 +5728,17 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       local checkedTypeMap = {}
       for __index, memberNode in ipairs( node:get_memberList() ) do
          local memberType = memberNode:get_expType()
-         if not Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, memberType, checkedTypeMap ) then
-            self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s", memberType:getTxt(  )) )
+         local ret, workMess = Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, memberType, checkedTypeMap )
+         if not ret then
+            local mess
+            
+            if workMess ~= nil then
+               mess = string.format( ": %s", workMess)
+            else
+               mess = ""
+            end
+            
+            self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s%s", memberType:getTxt(  ), mess) )
          elseif memberType:get_kind() == Ast.TypeInfoKind.IF then
             self:addErrMess( memberNode:get_pos(), string.format( "Mapping class has not the interface type member. -- %s", memberNode:get_name().txt) )
          elseif memberType:get_abstractFlag() then

@@ -9183,6 +9183,8 @@ function AlgeTypeInfo:serialize( stream, serializeInfo )
 accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ).id, self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Alge)
    stream:write( txt )
    
+   stream:write( self:serializeTypeInfoList( serializeInfo, "itemTypeId = {", self.itemTypeInfoList ) )
+   
    stream:write( "algeValList = {" )
    local firstFlag = true
    do
@@ -9552,7 +9554,6 @@ end
 
 
 
-
 function NormalTypeInfo.isAvailableMapping( processInfo, typeInfo, checkedTypeMap )
 
    local function isAvailableMappingSub(  )
@@ -9560,48 +9561,53 @@ function NormalTypeInfo.isAvailableMapping( processInfo, typeInfo, checkedTypeMa
       do
          local _switchExp = typeInfo:get_kind()
          if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.Enum then
-            return true
+            return true, nil
          elseif _switchExp == TypeInfoKind.Alge then
+            if isGenericType( typeInfo ) then
+               return false, string.format( "The generics Alge isn't support mapping yet -- %s", typeInfo:getTxt(  ))
+            end
+            
             local algeTypeInfo = _lune.unwrap( (_lune.__Cast( typeInfo, 3, AlgeTypeInfo ) ))
             for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
                for __index, paramType in ipairs( valInfo:get_typeList() ) do
                   if not NormalTypeInfo.isAvailableMapping( processInfo, paramType, checkedTypeMap ) then
-                     return false
+                     return false, nil
                   end
                   
                end
                
             end
             
-            return true
+            return true, nil
          elseif _switchExp == TypeInfoKind.Stem then
             
-            return true
+            return true, nil
          elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
             if typeInfo:equals( processInfo, _moduleObj.builtinTypeString ) then
-               return true
+               return true, nil
             end
             
-            return typeInfo:isInheritFrom( processInfo, _moduleObj.builtinTypeMapping, nil )
+            return typeInfo:isInheritFrom( processInfo, _moduleObj.builtinTypeMapping, nil ), nil
          elseif _switchExp == TypeInfoKind.Alternate then
-            return typeInfo:isInheritFrom( processInfo, _moduleObj.builtinTypeMapping, nil )
+            return typeInfo:isInheritFrom( processInfo, _moduleObj.builtinTypeMapping, nil ), nil
          elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
             return NormalTypeInfo.isAvailableMapping( processInfo, typeInfo:get_itemTypeInfoList()[1], checkedTypeMap )
          elseif _switchExp == TypeInfoKind.Map then
-            if NormalTypeInfo.isAvailableMapping( processInfo, typeInfo:get_itemTypeInfoList()[2], checkedTypeMap ) then
+            local ret, mess = NormalTypeInfo.isAvailableMapping( processInfo, typeInfo:get_itemTypeInfoList()[2], checkedTypeMap )
+            if ret then
                local keyType = typeInfo:get_itemTypeInfoList()[1]
                if keyType:equals( processInfo, _moduleObj.builtinTypeString ) or keyType:get_kind() == TypeInfoKind.Prim or keyType:get_kind() == TypeInfoKind.Enum then
-                  return true
+                  return true, nil
                end
                
             end
             
-            return false
+            return false, mess
          elseif _switchExp == TypeInfoKind.Nilable then
             return NormalTypeInfo.isAvailableMapping( processInfo, typeInfo:get_nonnilableType(), checkedTypeMap )
          else 
             
-               return false
+               return false, nil
          end
       end
       
@@ -9611,15 +9617,15 @@ function NormalTypeInfo.isAvailableMapping( processInfo, typeInfo, checkedTypeMa
    do
       local _exp = checkedTypeMap[typeInfo]
       if _exp ~= nil then
-         return _exp
+         return _exp, nil
       end
    end
    
    
    checkedTypeMap[typeInfo] = true
-   local result = isAvailableMappingSub(  )
+   local result, mess = isAvailableMappingSub(  )
    checkedTypeMap[typeInfo] = result
-   return result
+   return result, mess
 end
 
 function NormalTypeInfo:isInheritFrom( processInfo, other, alt2type )
@@ -9630,7 +9636,7 @@ function NormalTypeInfo:isInheritFrom( processInfo, other, alt2type )
    
    if (self:get_kind() ~= TypeInfoKind.Class and self:get_kind() ~= TypeInfoKind.IF ) or (other:get_kind() ~= TypeInfoKind.Class and other:get_kind() ~= TypeInfoKind.IF ) then
       if other == _moduleObj.builtinTypeMapping then
-         return NormalTypeInfo.isAvailableMapping( processInfo, self, {} )
+         return (NormalTypeInfo.isAvailableMapping( processInfo, self, {} ) )
       end
       
       return false

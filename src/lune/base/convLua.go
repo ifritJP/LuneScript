@@ -75,31 +75,31 @@ func convLua_convExp1_513(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 1436
-func convLua_convExp2_1779(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_1780(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1437
-func convLua_convExp2_1794(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_1795(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1447
-func convLua_convExp2_1856(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_1857(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1455
-func convLua_convExp2_1907(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_1908(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1523
-func convLua_convExp2_2276(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2278(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1585
-func convLua_convExp2_2549(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2551(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1916
-func convLua_convExp2_4157(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_4159(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 3048
@@ -1793,7 +1793,7 @@ func (self *convLua_ConvFilter) getMapInfo(_env *LnsEnv, typeInfo *Ast_TypeInfo)
         funcTxt = "_lune._toStem"
     } else if _switch1 == Ast_TypeInfoKind__Class || _switch1 == Ast_TypeInfoKind__IF {
         if Lns_op_not(nonnilableType.FP.Equals(_env, self.processInfo, Ast_builtinTypeString, nil, nil)){
-            if Ast_NormalTypeInfo_isAvailableMapping(_env, self.processInfo, nonnilableType, NewLnsMap( map[LnsAny]LnsAny{})){
+            if Lns_car(Ast_NormalTypeInfo_isAvailableMapping(_env, self.processInfo, nonnilableType, NewLnsMap( map[LnsAny]LnsAny{}))).(bool){
                 funcTxt = _env.GetVM().String_format("%s._fromMap", []LnsAny{self.FP.getFullName(_env, nonnilableType)})
                 if convLua_isGenericType_12_(_env, nonnilableType){
                     var memStream *Util_memStream
@@ -1909,7 +1909,7 @@ func (self *convLua_ConvFilter) ProcessDeclAlge(_env *LnsEnv, node *Nodes_DeclAl
                     if index > 1{
                         self.FP.WriteRaw(_env, ",")
                     }
-                    if Ast_NormalTypeInfo_isAvailableMapping(_env, self.processInfo, &node.FP.Get_algeType(_env).Ast_TypeInfo, NewLnsMap( map[LnsAny]LnsAny{})){
+                    if Lns_car(Ast_NormalTypeInfo_isAvailableMapping(_env, self.processInfo, &node.FP.Get_algeType(_env).Ast_TypeInfo, NewLnsMap( map[LnsAny]LnsAny{}))).(bool){
                         var funcTxt string
                         var nilable bool
                         var child string

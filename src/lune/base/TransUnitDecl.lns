@@ -2736,12 +2736,18 @@ fn TransUnit.analyzeDeclClass(
       let mut checkedTypeMap:Map<&Ast.TypeInfo,bool> = {};
       foreach memberNode in node.$memberList {
          let memberType = memberNode.$expType;
-         if not Ast.NormalTypeInfo.isAvailableMapping(
-            self.processInfo, memberType, checkedTypeMap )
-         {
+         let ret, workMess = Ast.NormalTypeInfo.isAvailableMapping(
+            self.processInfo, memberType, checkedTypeMap );
+         if not ret {
+            let mess;
+            when! workMess {
+               mess = ": %s" (workMess);
+            } else {
+               mess = "";
+            }
             self.addErrMess(
                memberNode.$pos,
-               "member type is not Mapping -- %s" ( memberType.getTxt(##)) );
+               "member type is not Mapping -- %s%s" ( memberType.getTxt(##), mess ) );
          } elseif memberType.$kind == .IF {
             self.addErrMess(
                memberNode.$pos,

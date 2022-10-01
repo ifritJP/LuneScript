@@ -113,6 +113,7 @@ help:
 	@echo "  make test-govslua [NO_BATCH=y] [ONLY_CONV=y]"
 	@echo "  make goprof [LNSC_OP=]"
 	@echo "  make view-goprof [BROWSER=y]"
+	@echo "  make update-lnstags"
 
 
 exec:
@@ -1096,7 +1097,8 @@ endif
 	diff -u -r work/glue work/newglue
 ifeq ($(RUNTIME_ORG_VER),$(RUNTIME_NEW_VER))
 # meta が等しいか確認する
-	diff -x '*.so' -x 'proj' -x '*.meta2' -I 'buildId =' -r work/0-1/test/ work/4/test/
+	diff -x '*.so' -x 'proj' -x '*.meta2' -I 'buildId =' \
+		-I '_moduleObj.__formatVersion' -r work/0-1/test/ work/4/test/
 endif
 ifeq ($(WITH_GO),y)
 	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
@@ -1930,3 +1932,5 @@ test-reference:
 test-reference-sample:
 	$(call exeLune,$(LNSC),.,test/checkReference.lns shebang)
 
+update-lnstags:
+	(../../lnstags/lnstags build lune/base/front.lns)

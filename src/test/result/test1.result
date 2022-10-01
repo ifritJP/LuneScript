@@ -491,6 +491,9 @@ nil	nil
  1234.57
 -----	2078	-----
 abc
+-----	2092	-----
+11	strabc
+abcxyz	11
 11
 12
 12
@@ -2209,6 +2212,8 @@ test/error/generics2.lns:142:15: error: can't access mutable method. -- &Hoge.fu
 test/error/generics2.lns:153:15: error: can't access mutable method. -- &Hoge.func
 test/error/generics2.lns:162:13: error: generic type count is unmatch. -- 1, func
 test/error/generics2.lns:165:9: error: generic type count is unmatch. -- 1, func2
+test/error/generics2.lns:170:23: error: This type must be public. -- HogeHoge<T>
+test/error/generics2.lns:174:7: error: member type is not Mapping -- HogeHoge<T>: It's not support mapping yet -- HogeHoge<T>
 test/error/generics3.lns:50:8: warning: 'test3' var isn't accessed
 test/error/generics3.lns:13:21: error: can't access mutable method. -- &Set<int>.add
 test/error/generics3.lns:17:12: error: Only class can use the generics. -- IF 

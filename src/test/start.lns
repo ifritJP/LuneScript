@@ -2088,3 +2088,12 @@ __test {
    let val = AltBase<str>.valid( "abc" );
    print( val.$val );
 }
+{
+   Macro._section();
+   match SUB2.AAA.Val1(1,"str") {
+      case .Val1( t1, t2 ) {
+         print( t1 + 10, t2 .. "abc" );
+      }
+   }
+   SUB2.AAAfunc( .Val1( "abc", 1 ) );
+}
