@@ -394,7 +394,7 @@ end
 
 function dumpFilter:processNewAlgeVal( node, opt )
 
-   self:dump( opt, node, node:get_name().txt )
+   self:dump( opt, node, string.format( "%s: %s", node:get_name().txt, node:get_expType():get_display_stirng()) )
    for __index, exp in ipairs( node:get_paramList() ) do
       filter( exp, self, opt:nextOpt(  ) )
    end
@@ -483,9 +483,7 @@ end
 function dumpFilter:processIfUnwrap( node, opt )
 
    self:dump( opt, node, "" )
-   for __index, expNode in ipairs( node:get_expList():get_expList() ) do
-      filter( expNode, self, opt:nextOpt(  ) )
-   end
+   filter( node:get_expList(), self, opt:nextOpt(  ) )
    
    filter( node:get_block(), self, opt:nextOpt(  ) )
    if node:get_nilBlock() then

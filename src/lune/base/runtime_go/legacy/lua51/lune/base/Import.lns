@@ -179,7 +179,7 @@ class _TypeInfoAlias extend _TypeInfo {
 
       // param.typeId2Scope で親のスコースを取得するために、
       // param.getTypeInfo() しておく。
-      let! _ = param.getTypeInfo( self.parentId ) {
+      if not param.getTypeInfo( self.parentId ) {
          return nil, "%s: not found parentInfo %d %s" ( __func__,
                                                         self.parentId, self.rawTxt );
       };
@@ -702,6 +702,7 @@ class _TypeInfoAlge extend _TypeInfo {
    pub let txt:str;
    pub let accessMode:Ast.AccessMode;
    pub let algeValList: &List<&_TypeInfoAlgeVal>;
+   pub let itemTypeId:&List<&_IdInfo>;
 
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
@@ -714,9 +715,16 @@ class _TypeInfoAlge extend _TypeInfo {
       let mut scope = new Ast.Scope(
          param.processInfo, parentScope, .Class, nil ## );
 
+      let itemTypeInfo:List<&Ast.TypeInfo> = [];
+      foreach typeId in self.itemTypeId {
+         //itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+         itemTypeInfo.insert( unwrap param.getTypeInfoFrom( typeId ) );
+      }
+      
       param.typeId2Scope[ self.typeId ] = scope;
       let mut algeTypeInfo = param.processInfo.createAlge(
-         scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt );
+         scope, parentInfo, parentTypeDataAccessor, true, accessMode, self.txt,
+         itemTypeInfo );
       let newTypeInfo = algeTypeInfo;
       param.typeId2TypeInfo[ self.typeId ] = algeTypeInfo;
       param.typeId2TypeDataAccessor[ self.typeId ] = algeTypeInfo;

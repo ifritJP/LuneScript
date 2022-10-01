@@ -1150,6 +1150,50 @@ static な型か。
       return new Scope( processInfo, parent, scopeKind, inheritScope, ifScopeList );
    }
 
+   pro fn get_generics_display_string(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str
+   {
+      if #self.$itemTypeInfoList > 0 {
+         let mut txt = raw .. "<";
+         foreach typeInfo, index in self.$itemTypeInfoList {
+            if index ~= 1 {   
+               txt = txt .. ","; 
+            }
+            txt = txt .. typeInfo.get_display_stirng_with( typeInfo.$rawTxt, alt2type );
+         }
+
+         return txt .. ">";
+      }
+      return raw;
+   }
+
+   pro fn get_generics_txt( mut raw:str, typeNameCtrl:&TypeNameCtrl!,
+                            importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      let mut parentTxt = "";
+      when! typeNameCtrl {
+         parentTxt = self.getParentFullName( typeNameCtrl, importInfo, localFlag );
+      }
+      let mut name;  
+      if #self.$itemTypeInfoList > 0 {
+         let mut txt = raw .. "<";
+         foreach typeInfo, index in self.$itemTypeInfoList {
+            if index ~= 1 {
+               txt = txt .. ",";
+            }
+            txt = txt .. typeInfo.getTxt( typeNameCtrl, importInfo, localFlag );
+         }
+
+         name = parentTxt .. txt .. ">";
+      }
+      else {         
+         name = parentTxt .. raw;
+      }
+
+      return name;
+   }
+   
+
    // prototype
    pub fn createAlt2typeMap( detectFlag:bool ): Map<&TypeInfo,&TypeInfo>;
    pub fn getFullName(
@@ -4233,6 +4277,8 @@ pub class AlgeTypeInfo extend TypeInfo {
    // アクセスモード "pub", "pro", "pri"
    pri let accessMode: AccessMode { pub };
    pri let nilableTypeInfo: TypeInfo { pub& };
+   // generic のタイプ
+   pri let itemTypeInfoList: &List<&TypeInfo> { pub };
 
    pri let mut valInfoMap:Map<str,&AlgeValInfo> {pub};
    pri let mut valInfoNum:int {pub};
@@ -4247,13 +4293,18 @@ pub class AlgeTypeInfo extend TypeInfo {
    }
    
 
-   local fn __init(
-      processInfo:ProcessInfo, scope: Scope, externalFlag: bool,
+/**
+@param scope 本来 Scope は 非 nilable だが、 GenAlgeTypeInfo の処理用に nilable を許可する。
+*/
+   pro fn __init(
+      processInfo:ProcessInfo, scope: Scope!, externalFlag: bool,
       accessMode: AccessMode, txt: str,
-      parentInfo: &TypeInfo!, typeDataAccessor: TypeDataAccessor! ) 
+      parentInfo: &TypeInfo!, typeDataAccessor: TypeDataAccessor!,
+      itemTypeInfoList:&List<&TypeInfo> ) 
    {
       super( scope, processInfo );
 
+      self.itemTypeInfoList = itemTypeInfoList;
       self.imutType = headTypeInfo;
       self.externalFlag = externalFlag;
       self.accessMode = accessMode;
@@ -4273,7 +4324,9 @@ pub class AlgeTypeInfo extend TypeInfo {
 
       self.nilableTypeInfo = new NilableTypeInfo( processInfo, self );
 
-      scope.set_ownerTypeInfo( self );
+      when! scope {
+         scope.set_ownerTypeInfo( self );
+      }
    }
 
    pub fn getValInfo( name:str ) : &AlgeValInfo! {
@@ -4303,13 +4356,15 @@ pub class AlgeTypeInfo extend TypeInfo {
       rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
       importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      return rawTxt;
+      return self.get_generics_txt( rawTxt, typeNameCtrl, importInfo, localFlag );
+      //return rawTxt;
    }
 
    pub override fn get_display_stirng_with(
       raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str
    {
-      return self.getTxtWithRaw( raw ##);
+      // return self.getTxtWithRaw( raw ##);
+      return self.get_generics_display_string( raw, alt2type );
    }
    pub override fn get_display_stirng(): str {
       return self.get_display_stirng_with( self.$rawTxt, nil );
@@ -4325,6 +4380,18 @@ pub class AlgeTypeInfo extend TypeInfo {
    pub override fn get_mutMode(): MutMode {
       return .Mut;   
    };
+
+   local static fn create(
+      processInfo:ProcessInfo,
+      scope: Scope, parentInfo: &TypeInfo, typeDataAccessor: TypeDataAccessor,
+      externalFlag: bool,     
+      accessMode: AccessMode, algeName: str,
+      itemTypeInfoList:&List<&TypeInfo> ) mut : AlgeTypeInfo
+   {
+      return new AlgeTypeInfo(
+         processInfo, scope, externalFlag, accessMode, algeName,
+         parentInfo, typeDataAccessor, itemTypeInfoList );
+   }
 }
 
 pub class AlgeValInfo {
@@ -4350,6 +4417,11 @@ pub fn AlgeTypeInfo.addValInfo( valInfo:&AlgeValInfo ) mut {
    self.valInfoNum = self.valInfoNum + 1;
 }
 
+
+pub alge AlgeOrGen {
+   Alge( &AlgeTypeInfo ),
+   Gen( &GenericTypeInfo )
+}
 
 alge OverridingType {
    NoReady,       
@@ -4603,49 +4675,14 @@ pub class NormalTypeInfo extend TypeInfo {
       mut raw:str, typeNameCtrl:&TypeNameCtrl!,
       importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
-      let mut parentTxt = "";
-      when! typeNameCtrl {
-         parentTxt = self.getParentFullName( typeNameCtrl, importInfo, localFlag );
-      }
-      let mut name;  
-      if #self.itemTypeInfoList > 0 {
-         let mut txt = raw .. "<";
-         foreach typeInfo, index in self.itemTypeInfoList {
-            if index ~= 1 {
-               txt = txt .. ",";
-            }
-            txt = txt .. typeInfo.getTxt( typeNameCtrl, importInfo, localFlag );
-         }
-
-         name = parentTxt .. txt .. ">";
-      }
-      else {         
-         name = parentTxt .. raw;
-      }
-
-      return name;   
+      return self.get_generics_txt( raw, typeNameCtrl, importInfo, localFlag );
    }
 
 
    pub override fn get_display_stirng_with(
       raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>!  ): str
    {
-      let mut parentTxt = "";
-      let mut name;     
-      if #self.itemTypeInfoList > 0 {
-         let mut txt = raw .. "<";
-         foreach typeInfo, index in self.itemTypeInfoList {
-            if index ~= 1 {   
-               txt = txt .. ","; 
-            }
-            txt = txt .. typeInfo.get_display_stirng_with( typeInfo.$rawTxt, alt2type );
-         }
-
-         name = parentTxt .. txt .. ">";
-      }
-      else {            
-         name = parentTxt .. raw;
-      }
+      let mut name = self.get_generics_display_string( raw, alt2type );
 
       switch self.kind {
          case .Func, .Form, .FormFunc, .Method, .Macro {
@@ -6660,15 +6697,17 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
 pub fn ProcessInfo.createAlge(
    scope: Scope, parentInfo: &TypeInfo, typeDataAccessor: TypeDataAccessor,
    externalFlag: bool,     
-   accessMode: AccessMode, algeName: str ) mut : AlgeTypeInfo
+   accessMode: AccessMode, algeName: str,
+   itemTypeInfoList:&List<&TypeInfo> ) mut : AlgeTypeInfo
 {
    if Parser.isLuaKeyword( algeName ) {
       Util.err( "This symbol can not use for a alge. -- %s"
                 (algeName) );
    }
 
-   let mut info = new AlgeTypeInfo(
-      self, scope, externalFlag, accessMode, algeName, parentInfo, typeDataAccessor );
+   let mut info = AlgeTypeInfo.create(
+      self, scope, parentInfo, typeDataAccessor,
+      externalFlag, accessMode, algeName, itemTypeInfoList );
    self.setupImut( info ); 
 
    let mut getAlgeName = self.createFuncAsync(
@@ -6689,6 +6728,10 @@ accessMode = %d, kind = %d, ```
          self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Alge );
    stream.write( txt );    
 
+
+   stream.write( self.serializeTypeInfoList(
+      serializeInfo, "itemTypeId = {", self.itemTypeInfoList## ) );
+   
    stream.write( "algeValList = {" );
    let mut firstFlag = true;
    forsort algeValInfo in self.valInfoMap {
@@ -6702,6 +6745,33 @@ accessMode = %d, kind = %d, ```
    }
    stream.write( "} }\n" );
 }
+
+pub class GenAlgeTypeInfo extend AlgeTypeInfo {
+   pri let genSrcTypeInfo:&AlgeTypeInfo {pub:&TypeInfo};
+
+   local fn __init( processInfo:ProcessInfo,
+                    genSrcTypeInfo:&AlgeTypeInfo,
+                    itemTypeInfoList:&List<&TypeInfo> )
+   {
+      super( processInfo, nil, genSrcTypeInfo.$externalFlag,
+             genSrcTypeInfo.$accessMode, genSrcTypeInfo.$rawTxt,
+             genSrcTypeInfo.$parentInfo, nil, itemTypeInfoList );
+
+      self.genSrcTypeInfo = genSrcTypeInfo;
+   }
+      
+   pub fn get_orgAlgeType() : &AlgeTypeInfo {
+      return self.genSrcTypeInfo;
+   }
+   advertise genSrcTypeInfo;
+}
+
+pub fn ProcessInfo.createGenAlge(
+   orgAlgeTypeInfo: &AlgeTypeInfo, itemTypeInfoList:&List<&TypeInfo> ) mut : AlgeTypeInfo
+{
+   return new GenAlgeTypeInfo( self, orgAlgeTypeInfo, itemTypeInfoList );
+}
+
 
 
 // other 型の値を、この型の変数に設定できるか判定する。
@@ -6807,77 +6877,89 @@ macro _checkEqualsItemType(
    }
 };
 
+/**
+指定の typeInfo が Mapping 可能かどうか調べる。
+
+@param processInfo 処理する ProcessInfo
+@param typeInfo Mapping 可能かどうかを調べる型
+@param checkedTypeMap チェック済みの型情 → 結果
+@return bool Mapping 可能な場合 true
+@return str! Mapping できない場合のエラー情報。 エラーの場合でも nil のケースがある。
+*/
 pub static fn NormalTypeInfo.isAvailableMapping(
    processInfo:&ProcessInfo,
-   mut typeInfo:&TypeInfo, checkedTypeMap:Map<&TypeInfo,bool> ): bool
+   mut typeInfo:&TypeInfo, checkedTypeMap:Map<&TypeInfo,bool> ): bool, str!
 {
-   fn isAvailableMappingSub() __trans : bool {
+   fn isAvailableMappingSub() __trans : bool, str! {
       switch typeInfo.$kind { 
          case .Prim, .Enum {     
-            return true;            
+            return true, nil;
          }
-         case .Alge {            
+         case .Alge {
+            if isGenericType( typeInfo ) {
+               return false, "The generics Alge isn't support mapping yet -- %s" (typeInfo.getTxt(##));
+            }
             let algeTypeInfo = unwrap (typeInfo@@@AlgeTypeInfo);
             foreach valInfo in algeTypeInfo.$valInfoMap {
                foreach paramType in valInfo.$typeList {
                   if not NormalTypeInfo.isAvailableMapping(
                      processInfo, paramType, checkedTypeMap ) {
-                        return false;              
+                        return false, nil;
                      }
                }
             }
-            return true;            
+            return true, nil;
          }
          case .Stem {            
             // stem は mapping 不能なデータもあるが、
             // それは実行時エラーとする。
-            return true;            
+            return true, nil;
          }
          case .Class, .IF {      
             if typeInfo.equals( processInfo, builtinTypeString ##) {
-               return true;            
+               return true, nil;
             }
-            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil );
+            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil ), nil;
          }
          case .Alternate {       
-            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil );
+            return typeInfo.isInheritFrom( processInfo, builtinTypeMapping, nil ), nil;
          }
          case .List, .Array, .Set {
             return NormalTypeInfo.isAvailableMapping(
-               processInfo, typeInfo.$itemTypeInfoList[1], checkedTypeMap );
+               processInfo, typeInfo.$itemTypeInfoList[1], checkedTypeMap )**;
          }
-         case .Map {             
-            if NormalTypeInfo.isAvailableMapping(
-               processInfo, typeInfo.$itemTypeInfoList[2], checkedTypeMap )
-            {
+         case .Map {
+            let ret, mess = NormalTypeInfo.isAvailableMapping(
+               processInfo, typeInfo.$itemTypeInfoList[2], checkedTypeMap );
+            if ret {
                let keyType = typeInfo.$itemTypeInfoList[1];
                if keyType.equals( processInfo, builtinTypeString ## ) or
                   keyType.$kind == .Prim or keyType.$kind == .Enum
                {
-                  return true;            
+                  return true, nil;
                }
             }
-            return false;           
+            return false, mess;
          }
          case .Nilable {         
             return NormalTypeInfo.isAvailableMapping(
-               processInfo, typeInfo.$nonnilableType, checkedTypeMap );
+               processInfo, typeInfo.$nonnilableType, checkedTypeMap )**;
          }
          default {               
-            return false;           
+            return false, nil;
          }
       }
    }
 
    typeInfo = typeInfo.$srcTypeInfo;
    if! checkedTypeMap[ typeInfo ] {
-      return _exp;            
+      return _exp, nil;            
    }
    // チェック前は暫定的に true にする
    checkedTypeMap[ typeInfo ] = true;
-   let result = isAvailableMappingSub();
+   let result, mess = isAvailableMappingSub();
    checkedTypeMap[ typeInfo ] = result;
-   return result;          
+   return result, mess;          
 }
 
 // other のクラスが、この型のクラスの継承関係にあるか調べる
@@ -6892,7 +6974,7 @@ pub override fn NormalTypeInfo.isInheritFrom(
        ( other.$kind ~= .Class and other.$kind ~= .IF )
    {
       if other == builtinTypeMapping {
-         return NormalTypeInfo.isAvailableMapping( processInfo, self, {} ); 
+         return (NormalTypeInfo.isAvailableMapping( processInfo, self, {} )); 
       }
       return false;           
    }

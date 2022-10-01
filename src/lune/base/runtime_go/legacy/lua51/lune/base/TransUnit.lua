@@ -1889,7 +1889,7 @@ end
 function TransUnit:checkToken( token, txt )
 
    if token.txt ~= txt then
-      self:error( string.format( "not found -- %s. expects %s", txt, token.txt) )
+      self:error( string.format( "not found -- '%s'. actually '%s'", txt, token.txt) )
    end
    
    return token
@@ -2645,7 +2645,7 @@ function TransUnit:analyzeMatch( firstToken )
 
    local exp = self:analyzeExpOneRVal( false, false )
    
-   local algeTypeInfo = _lune.__Cast( exp:get_expType():get_srcTypeInfo(), 3, Ast.AlgeTypeInfo )
+   local algeTypeInfo = _lune.__Cast( exp:get_expType():get_srcTypeInfo():get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
    if  nil == algeTypeInfo then
       local _algeTypeInfo = algeTypeInfo
    
@@ -2660,6 +2660,18 @@ function TransUnit:analyzeMatch( firstToken )
          self:addErrMess( firstToken.pos, string.format( "need to import module -- %s (%s)", fullname, algeTypeInfo:getTxt(  )) )
       end
       
+   end
+   
+   
+   local alt2typeMap
+   
+   do
+      local genTypeInfo = _lune.__Cast( exp:get_expType():get_srcTypeInfo(), 3, Ast.GenericTypeInfo )
+      if genTypeInfo ~= nil then
+         alt2typeMap = genTypeInfo:createAlt2typeMap( false )
+      else
+         alt2typeMap = algeTypeInfo:createAlt2typeMap( false )
+      end
    end
    
    
@@ -2697,7 +2709,13 @@ function TransUnit:analyzeMatch( firstToken )
             local paramName = self:getSymbolToken( SymbolMode.MustNot_Or_ )
             self:checkShadowing( paramName.pos, paramName.txt, self:get_scope() )
             
-            local workType = paramType
+            local workType = alt2typeMap[paramType:get_srcTypeInfo():get_nonnilableType()]
+            if  nil == workType then
+               local _workType = workType
+            
+               workType = paramType
+            end
+            
             if Ast.TypeInfo.isMut( paramType ) and not Ast.TypeInfo.isMut( exp:get_expType() ) then
                workType = self:createModifier( workType, Ast.MutMode.IMut )
             end
@@ -2756,7 +2774,7 @@ function TransUnit:analyzeMatch( firstToken )
    
    local nsInfo = self:get_curNsInfo()
    
-   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Match ), exp, algeTypeInfo, caseList, defaultBlock, caseKind, failSafeDefault )
+   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Match ), exp, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), caseList, defaultBlock, caseKind, failSafeDefault )
 end
 
 
@@ -3382,7 +3400,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                   typeInfo = self.processInfo:createDDD( genericList[1], false, false )
                end
                
-            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+            elseif _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Alge then
                if checkAlternateTypeCount( #typeInfo:get_itemTypeInfoList() ) then
                   for __index, itemType in ipairs( genericList ) do
                      
@@ -3398,6 +3416,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                      end
                      
                   end
+                  
                   
                   typeInfo = self.processInfo:createGeneric( typeInfo, genericList, self.moduleType )
                end
@@ -4370,13 +4389,29 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
    
    local name = self:getSymbolToken( SymbolMode.MustNot_ )
    
+   local altTypeList = {}
+   do
+      local nextToken = self:getToken(  )
+      if nextToken.txt == "<" then
+         nextToken, altTypeList = self:analyzeDeclAlternateType( true, nextToken, accessMode )
+      end
+      
+      self:pushbackToken( nextToken )
+   end
+   
+   
    self:checkNextToken( "{" )
    
    local scope = self:get_scope()
    local algeScope = self:pushScope( Ast.ScopeKind.Class )
    local parentNsInfo = self:get_curNsInfo()
    
-   local algeTypeInfo = self.processInfo:createAlge( algeScope, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), false, accessMode, name.txt )
+   for __index, altType in ipairs( altTypeList ) do
+      algeScope:addAlternate( self.processInfo, accessMode, altType:get_rawTxt(), name.pos, altType )
+   end
+   
+   
+   local algeTypeInfo = self.processInfo:createAlge( algeScope, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), false, accessMode, name.txt, altTypeList )
    local _1, shadowing = scope:addAlge( self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo )
    self:newNSInfo( algeTypeInfo, name.pos )
    self:errorShadowing( name.pos, shadowing )
@@ -4833,7 +4868,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1803, function (  )
+         Log.log( Log.Level.Debug, __func__, 1827, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -5693,8 +5728,17 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
       local checkedTypeMap = {}
       for __index, memberNode in ipairs( node:get_memberList() ) do
          local memberType = memberNode:get_expType()
-         if not Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, memberType, checkedTypeMap ) then
-            self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s", memberType:getTxt(  )) )
+         local ret, workMess = Ast.NormalTypeInfo.isAvailableMapping( self.processInfo, memberType, checkedTypeMap )
+         if not ret then
+            local mess
+            
+            if workMess ~= nil then
+               mess = string.format( ": %s", workMess)
+            else
+               mess = ""
+            end
+            
+            self:addErrMess( memberNode:get_pos(), string.format( "member type is not Mapping -- %s%s", memberType:getTxt(  ), mess) )
          elseif memberType:get_kind() == Ast.TypeInfoKind.IF then
             self:addErrMess( memberNode:get_pos(), string.format( "Mapping class has not the interface type member. -- %s", memberNode:get_name().txt) )
          elseif memberType:get_abstractFlag() then
@@ -6488,8 +6532,8 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
       if unwrapFlag then
          
          local hasNilable = false
-         for index, _1 in ipairs( letVarList ) do
-            if expList:getExpTypeAt( index ):get_nilable() then
+         for index, varInfo in ipairs( letVarList ) do
+            if expList:getExpTypeAt( index ):get_nilable() and varInfo.varName.txt ~= "_" then
                hasNilable = true
                break
             end
@@ -6497,7 +6541,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
          end
          
          if not hasNilable then
-            self:addWarnMess( firstPos, "has no nilable" )
+            self:addErrMess( firstPos, "has no nilable" )
          end
          
       end
@@ -6711,6 +6755,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
    local nextToken = Parser.getEofToken(  )
    
    if letFlag then
+      local hasValidName = false
       repeat 
          
          local mutable = initMutable
@@ -6724,6 +6769,10 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
          end
          
          local varName = self:checkSymbol( nextToken, SymbolMode.MustNot_Or_ )
+         if varName.txt ~= "_" then
+            hasValidName = true
+         end
+         
          nextToken = self:getToken(  )
          local typeInfo = Ast.builtinTypeEmpty
          if nextToken.txt == ":" then
@@ -6749,6 +6798,10 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
          
          table.insert( typeInfoList, typeInfo )
       until nextToken.txt ~= ","
+      if not hasValidName then
+         self:addErrMess( firstPos, "all '_' symbol is invalid." )
+      end
+      
    else
     
       while true do
@@ -9979,10 +10032,28 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          end
          
          
+         local genericList = {}
+         
          do
-            local _1, _2, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, nil, true )
-            if newExpNodeList ~= nil then
+            local _1, alt2typeMap, newExpNodeList = self:checkMatchType( "call", symbolToken.pos, valInfo:get_typeList(), argListNode, false, true, algeTypeInfo:createAlt2typeMap( true ), true )
+            if alt2typeMap ~= nil and  newExpNodeList ~= nil then
                argList = newExpNodeList:get_expList()
+               
+               if #algeTypeInfo:get_itemTypeInfoList() > 0 then
+                  for __index, itemType in ipairs( algeTypeInfo:get_itemTypeInfoList() ) do
+                     do
+                        local genType = alt2typeMap[itemType]
+                        if genType ~= nil then
+                           table.insert( genericList, genType )
+                        else
+                           table.insert( genericList, itemType )
+                        end
+                     end
+                     
+                  end
+                  
+               end
+               
             end
          end
          
@@ -9993,11 +10064,21 @@ function TransUnit:analyzeNewAlge( firstToken, algeTypeInfo, prefix )
          end
          
          
-         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, valInfo, argList )
+         local newAlgeTypeInfo
+         
+         if #genericList > 0 then
+            newAlgeTypeInfo = self.processInfo:createGeneric( algeTypeInfo, genericList, self.moduleType )
+         else
+          
+            newAlgeTypeInfo = algeTypeInfo
+         end
+         
+         
+         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newAlgeTypeInfo}, symbolToken, prefix, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), valInfo, argList )
       else
          local dummySymbol = _lune.nilacc( algeTypeInfo:get_parentInfo():get_scope(), 'getSymbolInfoChild', 'callmtd' , algeTypeInfo:get_rawTxt() )
          self:addErrMess( symbolToken.pos, string.format( "not found Alge -- %s", symbolToken.txt) )
-         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {algeTypeInfo}, symbolToken, prefix, algeTypeInfo, Ast.AlgeValInfo._new("", {}, algeTypeInfo, _lune.unwrap( dummySymbol)), {} )
+         return Nodes.NewAlgeValNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {algeTypeInfo}, symbolToken, prefix, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), Ast.AlgeValInfo._new("", {}, algeTypeInfo, _lune.unwrap( dummySymbol)), {} )
       end
    end
    
@@ -10016,7 +10097,7 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
          local expType = exp:get_expType()
          if prefixExp:get_expType():isModule(  ) then
             do
-               local algeType = _lune.__Cast( expType, 3, Ast.AlgeTypeInfo )
+               local algeType = _lune.__Cast( expType:get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
                if algeType ~= nil then
                   local nextToken = self:getToken(  )
                   if nextToken.txt == "." then
@@ -10088,7 +10169,7 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
             local _switchExp = symbolInfo:get_kind()
             if _switchExp == Ast.SymbolKind.Typ then
                do
-                  local algeType = _lune.__Cast( typeInfo, 3, Ast.AlgeTypeInfo )
+                  local algeType = _lune.__Cast( typeInfo:get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
                   if algeType ~= nil then
                      local nextToken = self:getToken(  )
                      if nextToken.txt == "." then
@@ -11104,7 +11185,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       end
       
       do
-         local algeTyepInfo = _lune.__Cast( orgExpectType:get_srcTypeInfo(), 3, Ast.AlgeTypeInfo )
+         local algeTyepInfo = _lune.__Cast( orgExpectType:get_srcTypeInfo():get_genSrcTypeInfo(), 3, Ast.AlgeTypeInfo )
          if algeTyepInfo ~= nil then
             return self:analyzeNewAlge( firstToken, algeTyepInfo, nil )
          end
