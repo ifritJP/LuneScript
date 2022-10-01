@@ -35,11 +35,11 @@ import (
 var lns_thread_event_log_on = false
 
 const (
-	_THREAD_EVENT_REQ   = 0
-	_THREAD_EVENT_START = 1
-	_THREAD_EVENT_END   = 2
-	_THREAD_EVENT_LOG   = 3
-	_THREAD_EVENT_QUEUE_START = 4
+	_THREAD_EVENT_REQ              = 0
+	_THREAD_EVENT_START            = 1
+	_THREAD_EVENT_END              = 2
+	_THREAD_EVENT_LOG              = 3
+	_THREAD_EVENT_QUEUE_START      = 4
 	_THREAD_EVENT_START_FROM_SUITE = 5
 )
 
@@ -70,20 +70,23 @@ type lnsRunnerInfo struct {
 }
 
 type lnsRunSuite struct {
-    launched bool
-    runnerCh chan *lnsRunnerInfo
+	launched bool
+	runnerCh chan *lnsRunnerInfo
 }
 
-func (self *lnsRunSuite) runnerLoop( threadMgrInfo *Lns_ThreadMgrInfo ) {
-    self.launched = true
-    runnerInfo := <-self.runnerCh
-    for runnerInfo != nil {
-        lnsRunMain( runnerInfo, threadMgrInfo )
-        runnerInfo = threadMgrInfo.endToRun(runnerInfo, self)
-        if runnerInfo == nil {
-            runnerInfo = <-self.runnerCh
-        }
-    }
+/**
+runnerCh から runnerInfo を取得し、その runner を実行する。
+*/
+func (self *lnsRunSuite) runnerLoop(threadMgrInfo *Lns_ThreadMgrInfo) {
+	self.launched = true
+	runnerInfo := <-self.runnerCh
+	for runnerInfo != nil {
+		lnsRunMain(runnerInfo, threadMgrInfo)
+		runnerInfo = threadMgrInfo.endToRun(runnerInfo, self)
+		if runnerInfo == nil {
+			runnerInfo = <-self.runnerCh
+		}
+	}
 }
 
 type Lns_ThreadMgrInfo struct {
@@ -106,7 +109,7 @@ type Lns_ThreadMgrInfo struct {
 	// lnsThreadEvent を格納する list
 	eventList *list.List
 
-    // 待ち状態の lnsRunSuite リスト
+	// 待ち状態の lnsRunSuite リスト
 	freeFreeRunSuiteList *list.List
 }
 
@@ -130,10 +133,14 @@ func (self *Lns_ThreadMgrInfo) newEvent(
 }
 
 const (
+	// 非同期で実行
 	_RUN_KIND_ASYNC = 0
+	// Queue に登録
 	_RUN_KIND_QUEUE = 1
-	_RUN_KIND_SYNC  = 2
-	_RUN_KIND_SKIP  = 3
+	// 同期で実行
+	_RUN_KIND_SYNC = 2
+	// 実行しない
+	_RUN_KIND_SKIP = 3
 )
 
 const (
@@ -161,12 +168,18 @@ func (self *Lns_ThreadMgrInfo) log(_env *LnsEnv, eventId int, mess string) {
   runner を実行する。
 
   @param runner 実行する処理
-  @param mode モード
+  @param mode モード _RUN_MODE
   @return 実行した場合 true
 */
 func (self *Lns_ThreadMgrInfo) run(
 	runner LnsRunner, mode int, _env *LnsEnv, name string) bool {
 
+	// mode から、条件にあう _RUN_KIND を判断して返す
+	//
+	// @return int _RUN_KIND
+	// @return lnsRunnerInfo Runner 管理情報
+	// @return lnsRunSuite runner を動かす lnsRunSuite。
+	//   runner を直ぐに非同期で動かさない場合は nil。
 	process := func() (int, *lnsRunnerInfo, *lnsRunSuite) {
 		self.lock()
 		defer self.unlock()
@@ -209,25 +222,25 @@ func (self *Lns_ThreadMgrInfo) run(
 			}
 		}
 
-        var runSuite *lnsRunSuite = nil
-        if kind == _RUN_KIND_ASYNC {
-            if self.freeFreeRunSuiteList.Len() == 0 {
-                // 空がなければ新規に作成
-                runSuite = &lnsRunSuite{}
-                runSuite.runnerCh = make( chan *lnsRunnerInfo, 1 )
-                runSuite.launched = false
-            } else {
-                // 空きを利用する
-                element := self.freeFreeRunSuiteList.Back()
-                self.freeFreeRunSuiteList.Remove( element )
-                runSuite = element.Value.(*lnsRunSuite)
+		var runSuite *lnsRunSuite = nil
+		if kind == _RUN_KIND_ASYNC {
+			if self.freeFreeRunSuiteList.Len() == 0 {
+				// 空がなければ新規に作成
+				runSuite = &lnsRunSuite{}
+				runSuite.runnerCh = make(chan *lnsRunnerInfo, 1)
+				runSuite.launched = false
+			} else {
+				// 空きを利用する
+				element := self.freeFreeRunSuiteList.Back()
+				self.freeFreeRunSuiteList.Remove(element)
+				runSuite = element.Value.(*lnsRunSuite)
 
-                if lns_thread_event_log_on {
-                    self.eventList.PushBack(
-                        self.newEvent(runnerInfo, _THREAD_EVENT_START_FROM_SUITE, 0, 0))
-                }
-            }
-        }
+				if lns_thread_event_log_on {
+					self.eventList.PushBack(
+						self.newEvent(runnerInfo, _THREAD_EVENT_START_FROM_SUITE, 0, 0))
+				}
+			}
+		}
 
 		return kind, runnerInfo, runSuite
 	}
@@ -235,15 +248,18 @@ func (self *Lns_ThreadMgrInfo) run(
 	result := true
 	switch kind, runnerInfo, runSuite := process(); kind {
 	case _RUN_KIND_ASYNC:
-        runner.GetLnsSyncFlag().wg.Add(1)
-        runSuite.runnerCh <- runnerInfo
-        if !runSuite.launched {
-            go runSuite.runnerLoop( self )
-        }
+		// 非同期で直ぐに動かす
+		runner.GetLnsSyncFlag().wg.Add(1)
+		runSuite.runnerCh <- runnerInfo
+		if !runSuite.launched {
+			go runSuite.runnerLoop(self)
+		}
 	case _RUN_KIND_QUEUE:
+		// Queue に詰む
 		runner.GetLnsSyncFlag().wg.Add(1)
 		self.runQueue.PushBack(runnerInfo)
 	case _RUN_KIND_SYNC:
+		// 同期で動かす
 		self.threadNum--
 		runner.GetLnsSyncFlag().wg.Add(1)
 
@@ -258,9 +274,11 @@ func (self *Lns_ThreadMgrInfo) run(
 
 		runner.GetLnsSyncFlag().wg.Done()
 	case _RUN_KIND_SKIP:
+		// 動かさない
 		self.threadNum--
 		result = false
 	default:
+		// エラー
 		panic(fmt.Sprintf("illegal run_kind -- %d", kind))
 	}
 	return result
@@ -272,36 +290,36 @@ func (self *Lns_ThreadMgrInfo) run(
 runner が runQueue にある場合、先頭の runner を取り出して起動する。
 */
 func (self *Lns_ThreadMgrInfo) endToRun(info *lnsRunnerInfo, runSuite *lnsRunSuite) *lnsRunnerInfo {
-    self.lock()
-    defer self.unlock()
+	self.lock()
+	defer self.unlock()
 
-    if lns_thread_event_log_on {
-        self.eventList.PushBack(
-            self.newEvent(info, _THREAD_EVENT_END, 0, 0))
-    }
+	if lns_thread_event_log_on {
+		self.eventList.PushBack(
+			self.newEvent(info, _THREAD_EVENT_END, 0, 0))
+	}
 
-    self.threadNum--
-    self.aliveNum--
-    self.runNum--
+	self.threadNum--
+	self.aliveNum--
+	self.runNum--
 
-    if self.runQueue.Len() > 0 {
-        self.aliveNum++
-        self.runNum++
-        front := self.runQueue.Front()
+	if self.runQueue.Len() > 0 {
+		self.aliveNum++
+		self.runNum++
+		front := self.runQueue.Front()
 
-        nextRunnerInfo := self.runQueue.Remove(front).(*lnsRunnerInfo)
+		nextRunnerInfo := self.runQueue.Remove(front).(*lnsRunnerInfo)
 
-        if lns_thread_event_log_on {
-            self.eventList.PushBack(
-                self.newEvent(nextRunnerInfo, _THREAD_EVENT_QUEUE_START, info.id, 0))
-        }
-        
-        return nextRunnerInfo
-    }
+		if lns_thread_event_log_on {
+			self.eventList.PushBack(
+				self.newEvent(nextRunnerInfo, _THREAD_EVENT_QUEUE_START, info.id, 0))
+		}
 
-    // 空きに追加
-    self.freeFreeRunSuiteList.PushBack( runSuite )
-    return nil
+		return nextRunnerInfo
+	}
+
+	// 空きに追加
+	self.freeFreeRunSuiteList.PushBack(runSuite)
+	return nil
 }
 
 func (self *Lns_ThreadMgrInfo) dumpEventLog(write func(txt string)) {
@@ -336,7 +354,7 @@ func (self *Lns_ThreadMgrInfo) dump(writer io.Writer) {
 	writer.Write([]byte(fmt.Sprintf("threadNum = %d\n", self.threadNum)))
 	writer.Write([]byte(fmt.Sprintf("peakNum = %d\n", self.peakNum)))
 	writer.Write([]byte(fmt.Sprintf(
-        "freeFreeRunSuiteList = %d\n", self.freeFreeRunSuiteList.Len())))
+		"freeFreeRunSuiteList = %d\n", self.freeFreeRunSuiteList.Len())))
 }
 
 var lns_threadMgrInfo *Lns_ThreadMgrInfo

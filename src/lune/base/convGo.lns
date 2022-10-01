@@ -1061,8 +1061,11 @@ fn convFilter.outputImplicitCast(
          }
          case .IF {
             filter( node, self, parent );
+            let expType = getOrgTypeInfo( node.$expType );
             if Ast.isClass( node.$expType ) {
                self.writeRaw( ".FP" );
+            } elseif expType.$kind == .Alternate {
+               self.outputAny2Type( castType );
             }
          }
          case .FormFunc {
@@ -1921,7 +1924,8 @@ pro fn convFilter.setup() mut {
       Ast.builtinTypeProcessor : "*LnsProcessor",
       self.builtinFuncs.ostream_: "Lns_oStream",
       self.builtinFuncs.istream_: "Lns_iStream",
-      self.builtinFuncs.luastream_ : "Lns_luaStream",
+      self.builtinFuncs.luastream_: "Lns_luaStream",
+      self.builtinFuncs.__runner_: "LnsRunner"
    };
    
 }

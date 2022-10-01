@@ -8,15 +8,15 @@ func (self *Runner_Runner) Run(_env *LnsEnv) {
     self.FP.RunMain(_env)
 }
 // 39: decl @lune.@base.@Runner.Runner.start
-func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt,name LnsAny) {
-    LnsRun(_env, self.FP, mode, name)
+func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt,name LnsAny) bool {
+    return LnsRun(_env, self.FP, mode, name)
 }
 // declaration Class -- Runner
 type Runner_RunnerMtd interface {
     GetLnsSyncFlag() *Lns_syncFlag
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny) bool
 }
 type Runner_Runner struct {
     _syncFlag *Lns_syncFlag

@@ -3167,7 +3167,7 @@ type Import_ModuleLoaderMtd interface {
     processImportMain(_env *LnsEnv, arg1 *Ast_ProcessInfo, arg2 LnsAny, arg3 string, arg4 LnsInt) *Import_ModuleLoader
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny) bool
 }
 type Import_ModuleLoader struct {
     Runner_Runner

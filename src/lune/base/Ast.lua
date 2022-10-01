@@ -2183,6 +2183,12 @@ function TypeInfo:hasBase(  )
 end
 
 
+function TypeInfo:hasBaseImp(  )
+
+   return self:get_baseTypeInfo() ~= _moduleObj.headTypeInfo or #self:get_interfaceList() > 0
+end
+
+
 function Scope:getNamespaceTypeInfo(  )
 
    local scope = self
@@ -2615,6 +2621,10 @@ end
 
 function ModifierTypeInfo:hasBase( ... )
    return self.srcTypeInfo:hasBase( ... )
+end
+
+function ModifierTypeInfo:hasBaseImp( ... )
+   return self.srcTypeInfo:hasBaseImp( ... )
 end
 
 function ModifierTypeInfo:hasRouteNamespaceFrom( ... )
@@ -3332,6 +3342,10 @@ function NilableTypeInfo:hasBase( ... )
    return self.nonnilableType:hasBase( ... )
 end
 
+function NilableTypeInfo:hasBaseImp( ... )
+   return self.nonnilableType:hasBaseImp( ... )
+end
+
 function NilableTypeInfo:hasRouteNamespaceFrom( ... )
    return self.nonnilableType:hasRouteNamespaceFrom( ... )
 end
@@ -3577,6 +3591,10 @@ end
 
 function AliasTypeInfo:hasBase( ... )
    return self.aliasSrcTypeInfo:hasBase( ... )
+end
+
+function AliasTypeInfo:hasBaseImp( ... )
+   return self.aliasSrcTypeInfo:hasBaseImp( ... )
 end
 
 function AliasTypeInfo:hasRouteNamespaceFrom( ... )
@@ -5375,6 +5393,10 @@ function BoxTypeInfo:hasBase( ... )
    return self.boxingType:hasBase( ... )
 end
 
+function BoxTypeInfo:hasBaseImp( ... )
+   return self.boxingType:hasBaseImp( ... )
+end
+
 function BoxTypeInfo:hasRouteNamespaceFrom( ... )
    return self.boxingType:hasRouteNamespaceFrom( ... )
 end
@@ -5787,6 +5809,10 @@ end
 
 function GenericTypeInfo:hasBase( ... )
    return self.genSrcTypeInfo:hasBase( ... )
+end
+
+function GenericTypeInfo:hasBaseImp( ... )
+   return self.genSrcTypeInfo:hasBaseImp( ... )
 end
 
 function GenericTypeInfo:hasRouteNamespaceFrom( ... )
@@ -8667,6 +8693,10 @@ function ExtTypeInfo:hasBase( ... )
    return self.extedType:hasBase( ... )
 end
 
+function ExtTypeInfo:hasBaseImp( ... )
+   return self.extedType:hasBaseImp( ... )
+end
+
 function ExtTypeInfo:hasRouteNamespaceFrom( ... )
    return self.extedType:hasRouteNamespaceFrom( ... )
 end
@@ -9051,6 +9081,10 @@ function AndExpTypeInfo:hasBase( ... )
    return self.result:hasBase( ... )
 end
 
+function AndExpTypeInfo:hasBaseImp( ... )
+   return self.result:hasBaseImp( ... )
+end
+
 function AndExpTypeInfo:hasRouteNamespaceFrom( ... )
    return self.result:hasRouteNamespaceFrom( ... )
 end
@@ -9420,6 +9454,10 @@ end
 
 function GenAlgeTypeInfo:hasBase( ... )
    return self.genSrcTypeInfo:hasBase( ... )
+end
+
+function GenAlgeTypeInfo:hasBaseImp( ... )
+   return self.genSrcTypeInfo:hasBaseImp( ... )
 end
 
 function GenAlgeTypeInfo:hasRouteNamespaceFrom( ... )
@@ -10158,8 +10196,16 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    
    
    if dest:get_kind() ~= otherSrc:get_kind() then
-      if otherSrc:get_kind() == TypeInfoKind.Alternate and otherSrc:hasBase(  ) then
-         return TypeInfo.canEvalWithBase( processInfo, dest, destMut, otherSrc:get_baseTypeInfo(), canEvalType, alt2type )
+      if otherSrc:get_kind() == TypeInfoKind.Alternate then
+         
+         if otherSrc:hasBase(  ) then
+            return TypeInfo.canEvalWithBase( processInfo, dest, destMut, otherSrc:get_baseTypeInfo(), canEvalType, alt2type )
+         end
+         
+         for __index, ifType in ipairs( otherSrc:get_interfaceList() ) do
+            return TypeInfo.canEvalWithBase( processInfo, dest, destMut, ifType, canEvalType, alt2type )
+         end
+         
       end
       
       

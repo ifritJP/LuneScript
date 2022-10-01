@@ -1423,6 +1423,10 @@ pub fn TypeInfo.hasBase(): bool {
    return self.$baseTypeInfo ~= headTypeInfo;
 }
 
+pub fn TypeInfo.hasBaseImp(): bool {
+   return self.$baseTypeInfo ~= headTypeInfo or #self.$interfaceList > 0;
+}
+
 
 pub fn Scope.getNamespaceTypeInfo() : &TypeInfo {
    let mut scope = self;
@@ -7476,9 +7480,18 @@ pub static fn TypeInfo.canEvalWithBase(
 
    
    if dest.$kind ~= otherSrc.$kind {
-      if otherSrc.$kind == .Alternate and otherSrc.hasBase() {
-         return TypeInfo.canEvalWithBase(
-            processInfo, dest, destMut, otherSrc.$baseTypeInfo, canEvalType, alt2type )**;
+      if otherSrc.$kind == .Alternate {
+         // 代入元が Alternate の場合は、
+         // SuperClass, Interface での代入が可能かどうかを判断する
+         if otherSrc.hasBase() {
+            return TypeInfo.canEvalWithBase(
+               processInfo, dest, destMut,
+               otherSrc.$baseTypeInfo, canEvalType, alt2type )**;
+         }
+         foreach ifType in otherSrc.$interfaceList {
+            return TypeInfo.canEvalWithBase(
+               processInfo, dest, destMut, ifType, canEvalType, alt2type )**;
+         }
       }
       
       if dest.$kind == .Nilable {

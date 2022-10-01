@@ -80,6 +80,9 @@ func lnsRunMain(runnerInfo *lnsRunnerInfo, threadMgrInfo *Lns_ThreadMgrInfo) {
 	env.LuaVM.closeVM()
 }
 
+/**
+  Lns の __run() が、この関数に置き換わる。
+*/
 func LnsRun(_env *LnsEnv, runner LnsRunner, mode int, nameOp LnsAny) bool {
 	var name string = ""
 	if nameOp != nil {

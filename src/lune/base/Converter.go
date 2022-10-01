@@ -418,7 +418,7 @@ type Converter_AstCreaterMtd interface {
     GetExportInfo(_env *LnsEnv) LnsAny
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny) bool
 }
 type Converter_AstCreater struct {
     Runner_Runner
@@ -504,7 +504,7 @@ type Converter_LuaConverterMtd interface {
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
     SaveLua(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny) bool
 }
 type Converter_LuaConverter struct {
     Runner_Runner
@@ -601,7 +601,7 @@ type Converter_GoConverterMtd interface {
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
     SaveGo(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny) bool
 }
 type Converter_GoConverter struct {
     Runner_Runner
@@ -691,7 +691,7 @@ type Converter_PythonConverterMtd interface {
     Run(_env *LnsEnv)
     RunMain(_env *LnsEnv)
     SavePython(_env *LnsEnv)
-    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny)
+    Start(_env *LnsEnv, arg1 LnsInt, arg2 LnsAny) bool
 }
 type Converter_PythonConverter struct {
     Runner_Runner

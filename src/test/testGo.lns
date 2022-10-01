@@ -2436,3 +2436,21 @@ _section();
       }
    }
 }
+_section();
+{
+   interface IF1 {
+      pub fn func();
+   }
+   class Hoge2 extend (IF1) {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   fn func1(if1:IF1) {
+      if1.func();
+   }
+   fn func2<T:(IF1)>(t:T) {
+      func1( t );
+   }
+   func2( new Hoge2() );
+}
