@@ -31,6 +31,7 @@ import lune.base.Parser;
 import lune.base.Types;
 import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
+import lune.base.Builtin;
 
 /**
 code に格納されている lua code をロード・実行する。
@@ -377,6 +378,17 @@ pub class MacroCtrl
    pub fn __init( macroEval: &Nodes.MacroEval, validAsyncMacro:bool )
    {
       self.id2use___var = {};
+
+      __asyncLock {
+         // builtin マクロの情報を設定する
+         foreach funcType in Builtin.getBuiltinFunc().$allFuncTypeSet {
+            if funcType.$kind == .Macro {
+               self.id2use___var[ funcType.$typeId ] = false;
+            }
+         }
+      }
+      
+      
       self.validAsyncMacro = validAsyncMacro;
       self.toLuavalLuaAsync = nil;
       self.useLnsLoad = false;

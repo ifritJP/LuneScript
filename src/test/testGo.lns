@@ -792,8 +792,8 @@ _section();
 
       let hoge = new Hoge();
       let test = new Test( hoge );
-      let test1:&Test! = test;
-      let test2:&Test! = test;
+      let test1:&Test<&Hoge>! = test;
+      let test2:&Test<&Hoge>! = test;
       let test3:&stem! = test;
 
       print( "generic class ----" );
@@ -804,7 +804,7 @@ _section();
       _eq( test3, test1 );
       _eq( test3, test2 );
       _eq( test1, nil );
-      _eq( test1, new Test(1) );
+      //_eq( test1, new Test(1) );
 
       _eq( test1$.eq$( hoge ), true );
       _eq( test1$.eq$( new Hoge() ), false );
@@ -2453,4 +2453,25 @@ _section();
       func1( t );
    }
    func2( new Hoge2() );
+}
+_section();
+{
+   form Func<T>( val: T) : T;
+   class Hoge<T> {
+      let val:T;
+      pub fn sub( func:Func<T> ) : T {
+         return func( self.val );
+      }
+   }
+   let hoge = new Hoge( "abc" );
+   print( "000" .. hoge.sub( fn ( val:str ) : str {
+      return val .. "xyz";
+   }) );
+}
+_section();
+{
+   if! let pipe = __lns.Sync._createPipe( int, 1 ) {
+      pipe.put( 10 );
+      print( (unwrap pipe.get()) + 1, "ONLY_GO" );
+   }
 }

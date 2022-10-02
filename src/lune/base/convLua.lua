@@ -3449,6 +3449,9 @@ function ConvFilter:processExpCall( node, opt )
          elseif _switchExp == self.builtinFunc.__lns_sync_createFlag then
             self:writeRaw( "nil" )
             return false
+         elseif _switchExp == self.builtinFunc.__lns_sync__createPipe then
+            self:writeRaw( "nil" )
+            return false
          end
       end
       

@@ -1085,6 +1085,7 @@ test/error/set.lns:19:4: error: add: exp(1) type mismatch str(58) <- int(26): in
 test/error/set.lns:20:4: error: del: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/set.lns:26:4: error: func: exp(1) type mismatch Set<int>(1043) <- Set<stem>(1051): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
 test/error/set.lns:29:17: error: generic type count is unmatch. -- 2
+test/error/set.lns:29:17: error: it's mismatch the number of generics type param -- Set<T>: 1, 2
 test/error/set.lns:30:14: error: has: exp(1) type mismatch T(74) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/set.lns:35:8: error: can't access mutable method. -- &Set<int>.or
 test/error/set.lns:36:8: error: can't access mutable method. -- &Set<int>.and
@@ -1199,14 +1200,14 @@ test/error/class.lns:30:12: error: = operator: exp(1) type mismatch @test.@error
 test/error/class.lns:31:4: error: this node can not be l-value. -- RefType
 test/error/class.lns:31:12: error: = operator: exp(1) type mismatch @test.@error.@class.Test__a(1008) <- (6): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
 test/error/class.lns:31:14: error: The type of exp(1) is None!!
-test/error/class.lns:31:14: error: This arg can't be r-value. -- ExpRef
+test/error/class.lns:31:14: error: This arg can't be r-value. -- RefType
 test/error/class.lns:31:14: error: this node can not be r-value. -- ExpList
-test/error/class.lns:32:14: error: This can't evaluate for '+' -- ExpRef
+test/error/class.lns:32:14: error: This can't evaluate for '+' -- RefType
 test/error/class.lns:32:18: error: no numeric type '' or 'int'
 test/error/class.lns:34:13: error: no numeric type 'int' or ''
-test/error/class.lns:34:15: error: This can't evaluate for '+' -- ExpRef
-test/error/class.lns:34:15: error: this node can not be r-value. -- ExpRef
-test/error/class.lns:35:11: error: This can't evaluate for '+' -- ExpRef
+test/error/class.lns:34:15: error: This can't evaluate for '+' -- RefType
+test/error/class.lns:34:15: error: this node can not be r-value. -- RefType
+test/error/class.lns:35:11: error: This can't evaluate for '+' -- RefType
 test/error/class.lns:35:15: error: no numeric type '' or 'int'
 test/error/class.lns:52:10: error: Type can't access this symbol. -- val2
 test/error/class.lns:54:10: error: can't access this symbol. -- val3
@@ -1517,10 +1518,13 @@ test/error/var.lns:42:7: warning: 'val' var isn't accessed
 test/error/var.lns:57:8: warning: 'map' var isn't accessed
 test/error/var.lns:58:8: warning: 'set' var isn't accessed
 test/error/var.lns:2:12: error: Key or value type is unknown
+test/error/var.lns:2:12: error: it's mismatch the number of generics type param -- Map<stem,stem>: 2, 1
 test/error/var.lns:3:8: error: This symbol is shadowed from 4:8 -- val2
 test/error/var.lns:3:13: error: generic type count is unmatch. -- 2
+test/error/var.lns:3:13: error: it's mismatch the number of generics type param -- Array<T>: 1, 2
 test/error/var.lns:4:8: error: shadowing symbol of 3:8 -- val2
 test/error/var.lns:4:13: error: generic type count is unmatch. -- 2
+test/error/var.lns:4:13: error: it's mismatch the number of generics type param -- List<T>: 1, 2
 test/error/var.lns:8:8: error: must set the item type of Collection. -- val1:List<>
 test/error/var.lns:9:8: error: must set the item type of Collection. -- val2:Set<>
 test/error/var.lns:10:8: error: must set the item type of Collection. -- val3:Array<>
@@ -2195,6 +2199,7 @@ test/error/generics.lns:26:11: warning: 'val3' var isn't accessed
 test/error/generics.lns:35:7: warning: 'sub' var isn't accessed
 test/error/generics.lns:102:11: warning: 'test' var isn't accessed
 test/error/generics.lns:103:11: warning: 'test2' var isn't accessed
+test/error/generics2.lns:184:8: warning: 'hoge' var isn't accessed
 test/error/generics2.lns:10:7: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics2.lns:14:4: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics2.lns:14:27: error: this exp is not nilable -- T
@@ -2206,7 +2211,7 @@ test/error/generics2.lns:76:4: error: func: exp(1) type mismatch int(26) <- str(
 test/error/generics2.lns:88:4: error: func: exp(1) type mismatch int(26) <- str(58): index 1(TypeInfoKind.Alternate)
 test/error/generics2.lns:92:4: error: func: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics2.lns:125:1: error: process<T>: exp(2) type mismatch @test.@error.@generics2.Data(1262) <- &@test.@error.@generics2.Data(1282): index 2(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:127:1: error: process<T>: exp(1) type mismatch @test.@error.@generics2.Super2<T>(TypeInfoKind.Class:1266) <- &@test.@error.@generics2.Test2(TypeInfoKind.Class:1287). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:127:1: error: process<T>: exp(1) type mismatch @test.@error.@generics2.Super2<T>(TypeInfoKind.Class:1266) <- &@test.@error.@generics2.Test2(TypeInfoKind.Class:1287) -- unmatch mutable. if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics2.lns:129:1: error: process<T>: exp(2) type mismatch str(58) <- int(26): index 2(TypeInfoKind.Alternate)
 test/error/generics2.lns:142:15: error: can't access mutable method. -- &Hoge.func
 test/error/generics2.lns:153:15: error: can't access mutable method. -- &Hoge.func
@@ -2214,6 +2219,8 @@ test/error/generics2.lns:162:13: error: generic type count is unmatch. -- 1, fun
 test/error/generics2.lns:165:9: error: generic type count is unmatch. -- 1, func2
 test/error/generics2.lns:170:23: error: This type must be public. -- HogeHoge<T>
 test/error/generics2.lns:174:7: error: member type is not Mapping -- HogeHoge<T>: The generics Alge isn't support mapping yet -- HogeHoge<T>
+test/error/generics2.lns:184:19: error: 'T' of Hoge<T> doesn't inherit 'IF1'
+test/error/generics2.lns:197:17: error: not compatible type '&@test.@error.@generics2.Test3<T>!' or '@test.@error.@generics2.Test3<T>'
 test/error/generics3.lns:50:8: warning: 'test3' var isn't accessed
 test/error/generics3.lns:13:21: error: can't access mutable method. -- &Set<int>.add
 test/error/generics3.lns:17:12: error: Only class can use the generics. -- IF 
@@ -2221,6 +2228,7 @@ test/error/generics3.lns:21:11: error: Only class can use the generics. -- IF2
 test/error/generics3.lns:42:4: error: sub2: exp(1) type mismatch &@test.@error.@generics3.IF2<T2>(1113) <- @test.@error.@generics3.Test2<T>(1134): index 1(TypeInfoKind.IF). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics3.lns:50:16: error: Can't new generic class. -- Test3<T1,T2>
 test/error/generics4.lns:28:19: error: can't use this type without <T>. please use Test<T>.
+test/error/generics4.lns:28:19: error: it's mismatch the number of generics type param -- &Test<T>: 1, 0
 test/error/generics4.lns:32:10: error: Can't new generic class. -- Test<T>
 test/error/generics4.lns:32:14: error: __init: exp(1) type mismatch T(1066) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:34:10: error: Can't new generic class. -- Test<T>
@@ -2228,6 +2236,7 @@ test/error/generics4.lns:34:14: error: __init: exp(1) type mismatch T(1066) <- @
 test/error/generics4.lns:35:10: error: Can't new generic class. -- Test<T>
 test/error/generics4.lns:35:14: error: __init: exp(1) type mismatch T(1066) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:46:20: error: can't use this type without <T>. please use Test2<T>.
+test/error/generics4.lns:46:20: error: it's mismatch the number of generics type param -- &Test2<T>: 1, 0
 test/error/generics4.lns:50:11: error: Can't new generic class. -- Test2<T>
 test/error/generics4.lns:50:15: error: __init: exp(1) type mismatch T(1100) <- @test.@error.@generics4.Sub(1020): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:51:11: error: Can't new generic class. -- Test2<T>

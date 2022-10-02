@@ -1495,12 +1495,6 @@ fn convFilter.processGenericsCall( node:&Nodes.ExpCallNode ) mut {
    self.writeln( "}" );
 }
 
-alge FuncInfo {
-   DeclInfo( node:&Nodes.Node, &Nodes.DeclFuncInfo ),
-   Type( &Ast.TypeInfo ),
-   WithClass( classType:&Ast.TypeInfo, methodType:&Ast.TypeInfo )
-}
-
 fn convFilter.outputRetType(retTypeList:&List<&Ast.TypeInfo>) mut {
    switch #retTypeList {
       case 0 {
@@ -1534,6 +1528,13 @@ class FuncConv {
    }
 }
 
+alge FuncInfo {
+   DeclInfo( node:&Nodes.Node, &Nodes.DeclFuncInfo ),
+   Type( &Ast.TypeInfo ),
+   Anonymous( &Ast.TypeInfo ),
+   WithClass( classType:&Ast.TypeInfo, methodType:&Ast.TypeInfo )
+}
+
 pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &FuncConv
 {
    let typeInfo;
@@ -1561,6 +1562,12 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
          typeInfo = workTypeInfo;
          prefixType = typeInfo.$parentInfo;
          name = typeInfo.$rawTxt;
+      }
+      case .Anonymous( workTypeInfo ) {
+         extFlag = workTypeInfo.$kind == .Ext;
+         typeInfo = workTypeInfo;
+         prefixType = typeInfo.$parentInfo;
+         name = nil;
       }
       case .WithClass( classType, methodType ) {
          extFlag = false;
@@ -1612,6 +1619,16 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
    if addEnvArg {
       self.writeRaw( self.getEnvArgDecl( #workType.$argTypeInfoList ) );
    }
+
+
+   fn defaultDeclArg() {
+      foreach argType, index in workType.$argTypeInfoList {
+         if index ~= 1 {
+            self.writeRaw( "," );
+         }
+         self.writeRaw( "arg%d %s" (index, self.type2gotype( argType ) ) );
+      }
+   }
    
    _match funcInfo {
       case .DeclInfo( node, declInfo ) {
@@ -1636,20 +1653,13 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
          }
       }
       case .Type( _ ) {
-         foreach argType, index in workType.$argTypeInfoList {
-            if index ~= 1 {
-               self.writeRaw( "," );
-            }
-            self.writeRaw( "arg%d %s" (index, self.type2gotype( argType ) ) );
-         }
+         defaultDeclArg();
+      }
+      case .Anonymous( _ ) {
+         defaultDeclArg();
       }
       case .WithClass( _, _ ) {
-         foreach argType, index in workType.$argTypeInfoList {
-            if index ~= 1 {
-               self.writeRaw( "," );
-            }
-            self.writeRaw( "arg%d %s" (index, self.type2gotype( argType ) ) );
-         }
+         defaultDeclArg();
       }
    }
    self.writeRaw( ")" );
@@ -1659,10 +1669,105 @@ pub fn convFilter.outputDeclFunc( addEnvArg:bool, funcInfo:FuncInfo ) mut : &Fun
    return funcConv;
 }
 
+fn convFilter.outputConvToFormFunc( node:&Nodes.ExpCastNode ) mut {
+
+   // 現状はユーザ form を暗黙キャストしている場合のみ対応
+   
+   let castType = node.$castType;
+   let funcType = node.$exp.$expType.$extedType;
+   if node.$exp.$expType.$kind == .Ext and funcType.$srcTypeInfo.$kind == .Form
+   {
+      self.writeln(
+         ```      
+func %s( luaform LnsAny ) LnsForm {
+    return func (argList []LnsAny) []LnsAny {
+        return %s.RunLoadedfunc( luaform.(*Lns_luaValue), argList )
+    }
+}``` (self.getConv2formName( node ), self.env.getCommonVm() ) );
+      return;
+   }
+   
+   self.writeln( "// for %d: %s"
+                 (node.$pos.lineNo, Nodes.getNodeKindName( node.$kind )));
+   self.writeRaw( "func %s( src func (%s"
+                  ( self.getConv2formName( node ),
+                    self.getEnvArgDecl( #funcType.$argTypeInfoList ) ) );
+   foreach argType, index in funcType.$argTypeInfoList {
+      if index > 1 {
+         self.writeRaw( ", " );
+      }
+      self.writeRaw( "arg%d %s" (index, self.type2gotype( argType )) );
+   }
+   self.writeRaw( ")" );
+   self.outputRetType( funcType.$retTypeInfoList );
+   self.write( ") " );
+   self.outputDeclFunc( self.option.$addEnvArg, FuncInfo.Anonymous( castType ) );
+   self.writeln( "{" );
+   self.pushIndent( ## );
+   self.write( "return " );
+   self.outputDeclFunc( self.option.$addEnvArg, FuncInfo.Anonymous( castType ) );
+   self.writeln( " {" );
+   self.pushIndent( ## );
+
+   // body 部。 関数の変換
+
+   // 戻り値を格納する変数宣言
+   foreach _, index in funcType.$retTypeInfoList {
+      if index > 1 {
+         self.write( "," );
+      }
+      self.write( "ret%d" (index) );
+   }
+   if #funcType.$retTypeInfoList > 0 {
+      self.write( " := " );
+   }
+   // 元の関数を実行
+   self.write( "src(" );
+   if self.option.$addEnvArg {
+      self.write( "_env, " );
+   }
+   foreach argType, index in castType.$argTypeInfoList {
+      if index > 1 {
+         self.write( "," );
+      }
+      self.writeRaw( "arg%d" (index) );
+      let castArgType = funcType.$argTypeInfoList[ index ];
+      if isAnyType( argType ) {
+         self.outputAny2Type( castArgType );
+      }
+   }
+   self.writeln( ")" );
+   // 戻り値の return
+   self.write( "return " );
+   foreach _, index in funcType.$retTypeInfoList {
+      if index > 1 {
+         self.write( "," );
+      }
+      self.write( "ret%d" (index) );
+   }
+   self.writeln( "" );
+   self.popIndent();
+   self.writeln( "}" );
+   self.popIndent();
+   self.writeln( "}" );
+}
+
+
 fn convFilter.outputConvToForm( node:&Nodes.ExpCastNode ) mut {
    let castType = node.$castType.$nonnilableType.$extedType;
-   if castType.$kind ~= .Form {
-      return;
+   switch castType.$kind {
+      case .Form {
+      }
+      case .FormFunc {
+         if #castType.$itemTypeInfoList == 0 {
+            return;
+         }
+         self.outputConvToFormFunc( node );
+         return;
+      }
+      default {
+         return;
+      }
    }
 
    let funcType = node.$exp.$expType.$extedType;
@@ -5093,6 +5198,15 @@ pub override fn convFilter.processExpCall(
       self.writeRaw( ")" );
       return;
    }
+   if funcType == self.builtinFuncs.__lns_sync__createPipe {
+      self.writeRaw( "LnsAny(NewLnspipe( " );
+      if! let argList = node.$argList {
+         filter( argList.$expList[ 2 ], self, node );
+      }
+      self.writeRaw( "))");
+      return;
+   }
+   
 
    // if funcType == self.builtinFuncs.list___new {
    //    self.writeRaw( "NewLnsList(make([]LnsAny," );

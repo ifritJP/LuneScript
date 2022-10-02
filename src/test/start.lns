@@ -133,7 +133,7 @@ fn mfunc1( val: str ) {
 
 _test2( 1, print );
 
-macro _classtest( macroVal: int, fieldInfoList: Map<str,str>[] ) {
+macro _classtest( macroVal: int, fieldInfoList: List<Map<str,str>> ) {
    {
       let name = ,,,"classTest%d" (macroVal);
       let mut field:stat[] = [];

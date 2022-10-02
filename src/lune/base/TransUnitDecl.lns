@@ -30,9 +30,12 @@ subfile owner lune.base.TransUnit;
 @param accessMode この型のアクセス制御
 @param allowDDD ... を型として許す場合 true
 @param parentPub この型を使用している親の空間自体が public な場合 true
+@param allowOmitTypeParamFlag generics の型参照の時、
+    <> の型パラメータを省略を許可するかどうか。
 */
 fn TransUnit.analyzeRefType(
-   accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool ) mut: Nodes.RefTypeNode
+   accessMode: Ast.AccessMode, allowDDD:bool,
+   parentPub:bool, allowOmitTypeParamFlag:bool ) mut: Nodes.RefTypeNode
 {
    let firstToken = self.getToken(##);
    let mut token = firstToken;
@@ -84,10 +87,46 @@ fn TransUnit.analyzeRefType(
                           ( Nodes.getNodeKindName( name.$kind ) ) );
       }
    }
-   return self.analyzeRefTypeWithSymbol(
+
+   let mut refTypeNode = self.analyzeRefTypeWithSymbol(
       accessMode, allowDDD, mutMode, name, parentPub );
+
+   if not allowOmitTypeParamFlag {
+      let valid, mess = refTypeNode.checkValidGenerics();
+      if not valid {
+         self.addErrMess( refTypeNode.$pos, mess );
+      }
+   }
+   return refTypeNode;
 }
 
+fn TransUnit.createGeneric(
+   pos:&Types.Position, genSrcTypeInfo:&Ast.TypeInfo,
+   itemTypeInfoList:&List<&Ast.TypeInfo> ) mut : Ast.GenericTypeInfo, Ast.Scope
+{
+   foreach itemType, index in genSrcTypeInfo.$itemTypeInfoList {
+      if itemType.hasBase() and
+         not itemTypeInfoList[ index ].isInheritFrom(
+            self.processInfo, itemType.$baseTypeInfo ##) 
+      {
+         self.addErrMess(
+            pos,
+            "'%s' of %s doesn't inherit '%s'"
+            (itemType.getTxt(##), genSrcTypeInfo.getTxt(##),
+              itemType.$baseTypeInfo.getTxt(##)) );
+      }
+      foreach ifType in itemType.$interfaceList {
+         if not itemTypeInfoList[ index ].isInheritFrom( self.processInfo, ifType ##) {
+            self.addErrMess(
+               pos,
+               "'%s' of %s doesn't inherit '%s'"
+               (itemType.getTxt(##), genSrcTypeInfo.getTxt(##), ifType.getTxt(##)) );
+         }
+      }
+   }
+   return self.processInfo.createGeneric(
+      genSrcTypeInfo, itemTypeInfoList, self.moduleType )**;
+}
 
 /**
 generic の型引数の実引数の解析。
@@ -106,7 +145,7 @@ fn TransUnit.analyzeTypeParamArg(
    let mut genericList: List<&Ast.TypeInfo> = [];
    let mut nextToken: &Parser.Token = Parser.getEofToken();
    repeat {
-      let typeExp = self.analyzeRefType( accessMode, false, parentPub );
+      let typeExp = self.analyzeRefType( accessMode, false, parentPub, false );
       itemNodeList.insert( typeExp );
       genericList.insert( typeExp.$expType );
       if typeExp.$expType.$mutMode == .Depend {
@@ -175,7 +214,12 @@ fn TransUnit.analyzeRefTypeWithSymbol(
 
    let mut itemNodeList:List<&Nodes.Node> = [];
    let mut arrayMode = "no";
+
    while true {
+      if #itemNodeList > 0 {
+         self.pushback();
+         break;
+      }
       if token.txt == '[' or token.txt == '[@' {
          if token.txt == '[' {
             arrayMode = "list";
@@ -195,6 +239,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          itemNodeList.insert( symbolNode );
       }
       elseif token.txt == "<" {
+      // if token.txt == "<" {
          let genericList = self.analyzeTypeParamArg(
             accessMode, parentPub, itemNodeList );
 
@@ -260,35 +305,16 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                   typeInfo = self.processInfo.createDDD( genericList[1], false, false );
                }
             }
-            case .Class, .IF, .Alge {
+            case .Class, .IF, .Alge, .FormFunc {
                if checkAlternateTypeCount( #typeInfo.$itemTypeInfoList ) {
                   foreach itemType in genericList {
-                     //let altType = unwrap typeInfo.$itemTypeInfoList[ index ]@@@Ast.AlternateTypeInfo;
                      if itemType.$nilable {
                         self.addErrMess(
                            symbolNode.$pos,
                            "can't use nilable type -- %s" (itemType.getTxt(##)) );
                      }
                   }
-                  foreach itemType, index in typeInfo.$itemTypeInfoList {
-                     if itemType.hasBase() and
-                        not genericList[ index ].isInheritFrom(
-                           self.processInfo, itemType.$baseTypeInfo ##) 
-                     {
-                        self.addErrMess(
-                           symbolNode.$pos,
-                           "'%s' of %s doesn't inherit '%s'"
-                           (itemType.getTxt(##), typeInfo.getTxt(##),
-                             itemType.$baseTypeInfo.getTxt(##)) );
-                     }
-                  }
-                  // if! let algeTypeInfo = typeInfo@@@Ast.AlgeTypeInfo {
-                  //    typeInfo = self.processInfo.createGenAlge(
-                  //       algeTypeInfo, genericList );
-                  // } else {
-                     typeInfo = self.processInfo.createGeneric(
-                        typeInfo, genericList, self.moduleType );
-                  // }
+                  typeInfo = self.createGeneric( symbolNode.$pos, typeInfo, genericList );
                }
             }
             case .Box {
@@ -371,7 +397,7 @@ fn TransUnit.analyzeDeclArgList(
          let mut dddTypeInfo = Ast.builtinTypeDDD;
          if flag and workToken.txt == "<" {
             self.pushbackToken( nextToken );
-            let refTypeNode = self.analyzeRefType( accessMode, true, parentPub );
+            let refTypeNode = self.analyzeRefType( accessMode, true, parentPub, false );
             dddTypeInfo = refTypeNode.$expType;
          }
 
@@ -389,7 +415,7 @@ fn TransUnit.analyzeDeclArgList(
 
          self.checkNextToken( ":" );
 
-         let refType = self.analyzeRefType( accessMode, false, parentPub );
+         let refType = self.analyzeRefType( accessMode, false, parentPub, false );
          
          if refType.$expType.$kind == .Class and #refType.$expType.$itemTypeInfoList > 0
          {
@@ -695,7 +721,7 @@ fn TransUnit.analyzeDeclMacroSub(
 
    let retTypeList;
    if nextToken.txt == ":" {
-      retTypeList = self.analyzeRefType( accessMode, true, false ).$expTypeList;
+      retTypeList = self.analyzeRefType( accessMode, true, false, false ).$expTypeList;
       self.checkNextToken( "{");
    }
    else {
@@ -870,7 +896,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
    if nextToken.txt ~= "(" {
       self.pushback();
       let workBaseRefType = self.analyzeRefType(
-         accessMode, false, Ast.isPubToExternal( accessMode ) );
+         accessMode, false, Ast.isPubToExternal( accessMode ), false );
       baseRef = workBaseRefType;
       let baseType = workBaseRefType.$expType;
       if baseType.$kind ~= .Class {
@@ -894,7 +920,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
          }
          self.pushback();
          let ifTypeNode = self.analyzeRefType(
-            accessMode, false, Ast.isPubToExternal( accessMode ) );
+            accessMode, false, Ast.isPubToExternal( accessMode ), false );
          ifRefList.insert( ifTypeNode );
          let ifType = ifTypeNode.$expType;
          if ifType.$kind ~= .IF {
@@ -1359,7 +1385,7 @@ fn TransUnit.analyzeDeclAlge(
             }
             
             let typeNode = self.analyzeRefType(
-               .Pub, false, Ast.isPubToExternal( accessMode ) );
+               .Pub, false, Ast.isPubToExternal( accessMode ), false );
             if self.nsInfoMap[ typeNode.$expType ]$.$nobody {
                self.addErrMess(
                   typeNode.$pos,
@@ -1478,7 +1504,7 @@ fn TransUnit.analyzeRetTypeList(
    if token.txt == ":" {
       let mut hasDDDFlag = false;
       while true {
-         let refTypeNode = self.analyzeRefType( accessMode, true, parentPub );
+         let refTypeNode = self.analyzeRefType( accessMode, true, parentPub, false );
          if hasDDDFlag {
             self.addErrMess( refTypeNode.$pos, "Type exists after '...'." );
          }
@@ -1551,14 +1577,32 @@ mut : Nodes.DeclFormNode
          "You must declare this form at the outside scope. -- %s"
          (name.txt) );
    }
+
+   // generic の型宣言解析
+   let mut altTypeList:List<&Ast.AlternateTypeInfo> = [];
+   {
+      let mut nextToken = self.getToken(##);
+      if nextToken.txt == "<" {
+         nextToken, altTypeList = self.analyzeDeclAlternateType(
+            true, nextToken, accessMode );
+      }
+      self.pushbackToken( nextToken );
+   }
+
+   let mut bodyScope = self.pushScope( .Other ## );
+   // generic の型をスコープに登録
+   foreach altType in altTypeList {
+      bodyScope.addAlternate(
+         self.processInfo, accessMode, altType.$rawTxt, name.pos, altType );
+   }
+   
    
    
    self.checkNextToken( "(" );
    let mut argList:List<&Nodes.Node> = [];
-   let mut funcBodyScope = self.pushScope( .Other ## );
 
    let mut nextToken = self.analyzeDeclArgList(
-      accessMode, funcBodyScope, argList, Ast.isPubToExternal( accessMode ) );
+      accessMode, bodyScope, argList, Ast.isPubToExternal( accessMode ) );
 
    self.checkToken( nextToken, ")" );
 
@@ -1583,13 +1627,13 @@ mut : Nodes.DeclFormNode
 
    let mut parentNsInfo = self.$curNsInfo;
    let formType = self.processInfo.createFuncAsync(
-      false, false, nil, .FormFunc,
+      false, false, bodyScope, .FormFunc,
       parentNsInfo.$typeInfo,
       parentNsInfo.$typeDataAccessor,
       false, false,
       true, accessMode, name.txt,
       self.getDefaultAsync( .FormFunc, self.getCurrentClass(), asyncMode ),
-      nil, argTypeInfoList, retTypeList, .IMut );
+      altTypeList, argTypeInfoList, retTypeList, .IMut );
 
    let formSymbol, shadowing = self.$scope.addForm(
       self.processInfo, name.pos, formType, accessMode );
@@ -1732,7 +1776,7 @@ fn TransUnit.analyzeDeclMember(
       let varName = self.checkSymbol( nextToken, .MustNot_ );
       let mut token = self.getToken(##);
       let refType = self.analyzeRefType(
-         accessMode, false, Ast.isPubToExternal( classTypeInfo.$accessMode ));
+         accessMode, false, Ast.isPubToExternal( classTypeInfo.$accessMode ), false);
       token = self.getToken(##);
 
       if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ## ) {
@@ -1782,7 +1826,8 @@ fn TransUnit.analyzeDeclMember(
                   }
                   if workToken.txt == ":" {
                      let typeNode = self.analyzeRefType(
-                        mode, false, Ast.isPubToExternal( classTypeInfo.$accessMode ) );
+                        mode, false,
+                        Ast.isPubToExternal( classTypeInfo.$accessMode ), false );
                      retType = typeNode.$expType;
                      workToken = self.getToken(##);
                   }
@@ -2793,8 +2838,8 @@ fn TransUnit.analyzeDeclClass(
       // }
 
       //
-      let pipeType = self.processInfo.createGeneric(
-         self.builtinFunc.__pipe_, [classTypeInfo], self.moduleType );
+      let pipeType = self.createGeneric(
+         firstToken.pos, self.builtinFunc.__pipe_, [classTypeInfo] );
       let createPipeFuncTypeInfo = self.processInfo.createFuncAsync(
          false, false, nil, .Func, classTypeInfo, typeDataAccessor,
          true, false, true, .Pub, "_createPipe", .Async, 
@@ -3864,7 +3909,7 @@ fn TransUnit.analyzeLetAndInitExp(
          if nextToken.txt == ":" {
             // 型を明示している場合
             let refType = self.analyzeRefType(
-               accessMode, false, Ast.isPubToExternal( accessMode ));
+               accessMode, false, Ast.isPubToExternal( accessMode ), false );
             letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
             typeInfo = refType.$expType;
             if unwrapFlag and typeInfo.$nilable {

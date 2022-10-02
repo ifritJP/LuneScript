@@ -37,7 +37,7 @@ pub interface Writer {
 
 pub class XML extend (Writer) {
    pri let mut stream: oStream;
-   pri let mut elementList:str[];
+   pri let mut elementList:List<str>;
    pri let mut depth: int;
 
    pub fn __init( stream:oStream ) {

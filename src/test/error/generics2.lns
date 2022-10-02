@@ -174,3 +174,25 @@ pub fn funcfunc( hoge:HogeHoge<str> ) { // error
       let hoge:HogeHoge<int>; // error
    }
 }
+{
+   interface IF1 {
+   }
+   interface IF2 {
+   }
+   class Hoge<T:(IF1)> {
+   }
+   let hoge = new Hoge<IF2>(); // error
+}
+{
+   class Test3<T> {
+      let val:T {pub};
+   }
+   class Hoge {
+   }
+
+   let hoge = new Hoge();
+   let test2 = new Test3( hoge );
+   let test1:&Test3<&Hoge>! = test2;
+   print( test1 == new Test3(hoge) );
+   print( test1 == new Test3(1 ) ); // error
+}

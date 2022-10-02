@@ -227,6 +227,12 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "__pipe<T>": {
+         "put": { "type": [ "method" ], "arg": [ "T!" ], "ret": [ ] },
+         "get": { "type": [ "method" ], "arg": [], "ret": [ "T!" ] },
+      },
+   },
+   {
       "__lns.runMode" : {
          "__attrib": { "type": [ "class" ] },
          "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
@@ -259,6 +265,7 @@ _DefBuiltinFuncType( [
          "__attrib": { "type": [ "class" ] },
          "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
          "createProcesser": { "arg": [ "str" ], "ret": [ "__Processor"] },
+         "_createPipe": { "type": ["macro"], "arg": [ "__exp", "int" ], "ret": [ "__pipe!"] },
       },
    },
    {
@@ -287,12 +294,6 @@ _DefBuiltinFuncType( [
       "__Processor": {
          "__attrib": { "type": [ "interface" ], "implements": [ "__Runner" ] },
          "end": { "type": [ "mut" ], "arg": [], "ret": [ ] },
-      },
-   },
-   {
-      "__pipe<T>": {
-         "put": { "type": [ "method" ], "arg": [ "T!" ], "ret": [ ] },
-         "get": { "type": [ "method" ], "arg": [], "ret": [ "T!" ] },
       },
    },
    {
@@ -893,4 +894,11 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
    }
 
    return builtinFunc;
+}
+
+pub fn Builtin.getBuiltInFuncType() mut : BuiltinFuncType {
+   if readyBuiltin {
+      return builtinFunc;
+   }
+   Util.err( "builtinFunc is not ready" );
 }

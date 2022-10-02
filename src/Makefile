@@ -949,7 +949,7 @@ endif
 # 新しい lnsc で test-go を実行
 test-comp-go-new:
 ifeq ($(WITH_GO),y)
-	(cd work/3; $(MAKE) test-go LNSC=$(CUR_DIR)/work/3/lnsc)
+	(cd work/3; $(MAKE) test-go LNSC=$(CUR_DIR)/work/3/lnsc NO_LUA_DIFF=y)
 endif
 
 
@@ -1102,7 +1102,7 @@ ifeq ($(RUNTIME_ORG_VER),$(RUNTIME_NEW_VER))
 endif
 ifeq ($(WITH_GO),y)
 	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
-		work/result-testGo.txt work/3/work/result-testGo.txt 
+		work/result-testGo.txt work/3/work/result-testGo.txt
 endif
 
 
@@ -1569,8 +1569,8 @@ define test-go-one-exec
 	$(call convGo,$1,$2,$4/$3,--main $5 $6)
 #	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
 	$(call buildGo,$2,test.exe,testgo) > work/result-testGo.txt
+	$(call exeLune,$1,$2,$4/$3.lns,shebang) > work/result-testGo2.txt
 	if test "${NO_LUA_DIFF}" = ""; then					\
-		$(call exeLune,$1,$2,$4/$3.lns,shebang) > work/result-testGo2.txt &&	\
 		diff -C 2 -I 'ONLY_GO' -I 'ONLY_LUA' -I 'DIFF_IGNORE'		\
 				work/result-testGo.txt work/result-testGo2.txt;	\
 	fi
