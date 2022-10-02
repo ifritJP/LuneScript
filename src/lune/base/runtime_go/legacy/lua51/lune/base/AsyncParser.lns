@@ -62,7 +62,7 @@ pub fn isLuaKeyword( txt:str ) : bool {
 
 
 fn createReserveInfo( luaMode: bool! ) :
-Set<str>, Set<str>, Set<str>, Map<str,str[@]>
+Set<str>, Set<str>, Set<str>, Map<str,Array<str>>
 {
    let mut keywordSet:Set<str> = (@);
    let mut typeSet:Set<str> = (@);

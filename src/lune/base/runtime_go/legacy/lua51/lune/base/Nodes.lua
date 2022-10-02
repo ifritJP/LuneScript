@@ -1843,6 +1843,31 @@ end
 
 
 
+function RefTypeNode:checkValidGenerics(  )
+
+   local typeInfo = self:get_expType():get_nonnilableType()
+   if typeInfo:get_kind() == Ast.TypeInfoKind.DDD or typeInfo:get_kind() == Ast.TypeInfoKind.Box then
+      return true, ""
+   end
+   
+   local genTypeNum
+   
+   if typeInfo:get_kind() == Ast.TypeInfoKind.Ext then
+      genTypeNum = 1
+   else
+    
+      genTypeNum = #typeInfo:get_itemTypeInfoList()
+   end
+   
+   if genTypeNum ~= #self.itemNodeList then
+      local txt = string.format( "it's mismatch the number of generics type param -- %s: %d, %d", typeInfo:getTxt(  ), genTypeNum, #self.itemNodeList)
+      return false, txt
+   end
+   
+   return true, ""
+end
+
+
 local BlockKind = {}
 _moduleObj.BlockKind = BlockKind
 BlockKind._val2NameMap = {}

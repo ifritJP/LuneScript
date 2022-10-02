@@ -1703,6 +1703,51 @@ fn TransUnit.checkNoasyncType( pos:&Parser.Position, funcTypeInfo:&Ast.TypeInfo 
    }
 }
 
+fn TransUnit.processCreatePipe(
+   firstToken:&Types.Token, funcExp: &Nodes.Node, argList:&Nodes.ExpListNode! )
+mut : Nodes.ExpCallNode
+{
+   let mut itemTypeList:&List<&Ast.TypeInfo> = [];
+   when! argList {
+      if #argList.$expList > 0 {
+         let argNode = argList.$expList[ 1 ];
+         let mut findFlag = false;
+         argNode.visit(
+            fn ( node:&Nodes.Node, parent:&Nodes.Node,
+                 relation:str, depth:int ): Nodes.NodeVisitMode
+            {
+               if not parent@@@Nodes.ExpMacroArgExpNode {
+                  return .Child;
+               }
+               if! let refTypeNode = node@@@Nodes.RefTypeNode {
+                  let refType = refTypeNode.$name.$expType;
+                  itemTypeList = [ refType ];
+                  findFlag = true;
+                  if not Ast.isBuiltin( refType.$typeId.id ) and
+                     not refType.isInheritFrom(
+                        self.processInfo, Ast.builtinTypeAsyncItem, nil )
+                  {
+                     self.addErrMess(
+                        refTypeNode.$pos,
+                        "The pipe's type has to inherit __AsyncItem. -- %s"
+                        (refType.getTxt(##)) );
+                  }
+               }
+               return .Child;
+            }, 0, (@) );
+         if not findFlag {
+            self.addErrMess( firstToken.pos, "It has to set the type for the pipe." );
+         }
+      }
+   }
+   let genPipeType = self.createGeneric(
+      firstToken.pos, self.builtinFunc.__pipe_, itemTypeList );
+   
+   return Nodes.ExpCallNode.create(
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(),
+      [ genPipeType.$nilableTypeInfo ], funcExp, false, false, argList );
+}
 
 /**
 関数コール処理。
@@ -1776,8 +1821,11 @@ fn TransUnit.analyzeExpCall(
 
    let mut exp:Nodes.Node;
    if funcTypeInfo.get_kind() == .Macro {
-      //self.macroCtrl.finishMacroMode();
-      exp = self.evalMacro( firstToken, funcTypeInfo, argList );
+      if funcTypeInfo == self.builtinFunc.__lns_sync__createPipe {
+         exp = self.processCreatePipe( firstToken, funcExp, argList );
+      } else {
+         exp = self.evalMacro( firstToken, funcTypeInfo, argList );
+      }
    }
    else {
       // processFunc
@@ -1792,7 +1840,7 @@ fn TransUnit.analyzeExpCall(
 fn TransUnit.analyzeExpCast(
    firstToken:&Parser.Token, opTxt:str, exp:Nodes.Node ) mut : Nodes.Node
 {
-   let castTypeNode = self.analyzeRefType( .Local, false, false );
+   let castTypeNode = self.analyzeRefType( .Local, false, false, false );
    let mut castType = castTypeNode.$expType;
 
    if exp.$expType.$kind == .Ext and castType.$kind ~= .Ext and castType.$kind ~= .Stem {
@@ -2822,8 +2870,7 @@ fn TransUnit.analyzeExpField(
             let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList );
 
             if #typeInfo.$itemTypeInfoList == #genericList {
-               typeInfo = self.processInfo.createGeneric(
-                  typeInfo, genericList, self.moduleType );
+               typeInfo = self.createGeneric( nextToken.pos, typeInfo, genericList );
             } else {
                self.addErrMess(
                   nextToken.pos,
@@ -2894,8 +2941,8 @@ fn TransUnit.analyzeNewAlge(
 
       let newAlgeTypeInfo:&Ast.TypeInfo;
       if #genericList > 0 {
-         newAlgeTypeInfo = self.processInfo.createGeneric(
-            algeTypeInfo, genericList, self.moduleType );
+         newAlgeTypeInfo = self.createGeneric(
+            firstToken.pos, algeTypeInfo, genericList );
       } else {
          newAlgeTypeInfo = algeTypeInfo;
       }
@@ -3076,8 +3123,8 @@ fn TransUnit.analyzeExpSymbol(
                let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList );
 
                if #typeInfo.$itemTypeInfoList == #genericList {
-                  let newTypeInfo = self.processInfo.createGeneric(
-                     typeInfo, genericList, self.moduleType );
+                  let newTypeInfo = self.createGeneric(
+                     firstToken.pos, typeInfo, genericList );
                   
                   exp = Nodes.RefTypeNode.create(
                      self.nodeManager, firstToken.pos, self.inTestBlock,
@@ -4071,7 +4118,7 @@ fn TransUnit.analyzeExp(
    }
 
    fn processsNewExp( token:&Parser.Token ): Nodes.Node {
-      let mut exp:Nodes.Node = self.analyzeRefType( .Local, false, false );
+      let mut exp:Nodes.Node = self.analyzeRefType( .Local, false, false, true );
 
       let mut classTypeInfo = exp.$expType;
       switch classTypeInfo.$kind {
@@ -4156,8 +4203,8 @@ fn TransUnit.analyzeExp(
             }
 
             if detect {
-               classTypeInfo = self.processInfo.createGeneric(
-                  classTypeInfo, genTypeList, self.moduleType );
+               classTypeInfo = self.createGeneric(
+                  firstToken.pos, classTypeInfo, genTypeList );
             }
          }
       }
@@ -4414,8 +4461,13 @@ fn TransUnit.analyzeExp(
       }; 
       exp = Nodes.ExpRefNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ], 
+         self.macroCtrl.isInAnalyzeArgMode(), [ symbolTypeInfo.$typeInfo ], 
          new Ast.AccessSymbolInfo( self.processInfo, symbolTypeInfo, .None, false ) );
+
+      exp = Nodes.RefTypeNode.create(
+         self.nodeManager, firstToken.$pos, self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+         exp, [], .Mut, "no" );
    }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" )

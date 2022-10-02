@@ -621,7 +621,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 221, function (  )
+   Log.log( Log.Level.Trace, __func__, 223, function (  )
    
       return "start"
    end )
@@ -5554,13 +5554,22 @@ function GenericTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type 
    
    
    if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) then
-      return false, nil
+      return false, "unmatch mutable"
    end
    
    
    local otherSrc = other:get_srcTypeInfo()
    if self == otherSrc then
       return true, nil
+   end
+   
+   
+   if self.genSrcTypeInfo:get_kind() == TypeInfoKind.FormFunc then
+      for alt, genType in pairs( self.alt2typeMap ) do
+         alt2type[alt] = genType
+      end
+      
+      return self.genSrcTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    end
    
    
@@ -6207,10 +6216,7 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
    
-   if scope ~= nil then
-      scope:set_ownerTypeInfo( self )
-   end
-   
+   scope:set_ownerTypeInfo( self )
 end
 function AlgeTypeInfo:getValInfo( name )
 
@@ -7126,6 +7132,33 @@ function AlternateTypeInfo:canSetFrom( processInfo, other, canEvalType, alt2type
       end
       
       workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
+      
+      local function checkInherit(  )
+      
+         if self:hasBase(  ) then
+            if other:isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) then
+               return true
+            end
+            
+         end
+         
+         
+         for __index, ifType in ipairs( self.interfaceList ) do
+            if other:isInheritFrom( processInfo, ifType, workAlt2type ) then
+               return true
+            end
+            
+         end
+         
+         return false
+      end
+      
+      if checkInherit(  ) then
+         workAlt2type[self] = otherWork
+         return true
+      end
+      
+      return false
    else
     
       workAlt2type = alt2type
@@ -9246,276 +9279,6 @@ accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ).id, s
    stream:write( "} }\n" )
 end
 
-
-local GenAlgeTypeInfo = {}
-setmetatable( GenAlgeTypeInfo, { __index = AlgeTypeInfo } )
-_moduleObj.GenAlgeTypeInfo = GenAlgeTypeInfo
-function GenAlgeTypeInfo._new( processInfo, genSrcTypeInfo, itemTypeInfoList )
-   local obj = {}
-   GenAlgeTypeInfo._setmeta( obj )
-   if obj.__init then obj:__init( processInfo, genSrcTypeInfo, itemTypeInfoList ); end
-   return obj
-end
-function GenAlgeTypeInfo:__init(processInfo, genSrcTypeInfo, itemTypeInfoList) 
-   AlgeTypeInfo.__init( self,processInfo, nil, genSrcTypeInfo:get_externalFlag(), genSrcTypeInfo:get_accessMode(), genSrcTypeInfo:get_rawTxt(), genSrcTypeInfo:get_parentInfo(), nil, itemTypeInfoList)
-   
-   
-   self.genSrcTypeInfo = genSrcTypeInfo
-end
-function GenAlgeTypeInfo:get_orgAlgeType(  )
-
-   return self.genSrcTypeInfo
-end
-function GenAlgeTypeInfo._setmeta( obj )
-  setmetatable( obj, { __index = GenAlgeTypeInfo  } )
-end
-function GenAlgeTypeInfo:get_genSrcTypeInfo()
-   return self.genSrcTypeInfo
-end
-function GenAlgeTypeInfo:applyGeneric( ... )
-   return self.genSrcTypeInfo:applyGeneric( ... )
-end
-
-function GenAlgeTypeInfo:canEvalWith( ... )
-   return self.genSrcTypeInfo:canEvalWith( ... )
-end
-
-function GenAlgeTypeInfo:createAlt2typeMap( ... )
-   return self.genSrcTypeInfo:createAlt2typeMap( ... )
-end
-
-function GenAlgeTypeInfo:equals( ... )
-   return self.genSrcTypeInfo:equals( ... )
-end
-
-function GenAlgeTypeInfo:getFullName( ... )
-   return self.genSrcTypeInfo:getFullName( ... )
-end
-
-function GenAlgeTypeInfo:getModule( ... )
-   return self.genSrcTypeInfo:getModule( ... )
-end
-
-function GenAlgeTypeInfo:getOverridingType( ... )
-   return self.genSrcTypeInfo:getOverridingType( ... )
-end
-
-function GenAlgeTypeInfo:getParentFullName( ... )
-   return self.genSrcTypeInfo:getParentFullName( ... )
-end
-
-function GenAlgeTypeInfo:getParentId( ... )
-   return self.genSrcTypeInfo:getParentId( ... )
-end
-
-function GenAlgeTypeInfo:getTxt( ... )
-   return self.genSrcTypeInfo:getTxt( ... )
-end
-
-function GenAlgeTypeInfo:getTxtWithRaw( ... )
-   return self.genSrcTypeInfo:getTxtWithRaw( ... )
-end
-
-function GenAlgeTypeInfo:get_abstractFlag( ... )
-   return self.genSrcTypeInfo:get_abstractFlag( ... )
-end
-
-function GenAlgeTypeInfo:get_accessMode( ... )
-   return self.genSrcTypeInfo:get_accessMode( ... )
-end
-
-function GenAlgeTypeInfo:get_aliasSrc( ... )
-   return self.genSrcTypeInfo:get_aliasSrc( ... )
-end
-
-function GenAlgeTypeInfo:get_argTypeInfoList( ... )
-   return self.genSrcTypeInfo:get_argTypeInfoList( ... )
-end
-
-function GenAlgeTypeInfo:get_asyncMode( ... )
-   return self.genSrcTypeInfo:get_asyncMode( ... )
-end
-
-function GenAlgeTypeInfo:get_autoFlag( ... )
-   return self.genSrcTypeInfo:get_autoFlag( ... )
-end
-
-function GenAlgeTypeInfo:get_baseId( ... )
-   return self.genSrcTypeInfo:get_baseId( ... )
-end
-
-function GenAlgeTypeInfo:get_baseTypeInfo( ... )
-   return self.genSrcTypeInfo:get_baseTypeInfo( ... )
-end
-
-function GenAlgeTypeInfo:get_childId( ... )
-   return self.genSrcTypeInfo:get_childId( ... )
-end
-
-function GenAlgeTypeInfo:get_children( ... )
-   return self.genSrcTypeInfo:get_children( ... )
-end
-
-function GenAlgeTypeInfo:get_display_stirng( ... )
-   return self.genSrcTypeInfo:get_display_stirng( ... )
-end
-
-function GenAlgeTypeInfo:get_display_stirng_with( ... )
-   return self.genSrcTypeInfo:get_display_stirng_with( ... )
-end
-
-function GenAlgeTypeInfo:get_extedType( ... )
-   return self.genSrcTypeInfo:get_extedType( ... )
-end
-
-function GenAlgeTypeInfo:get_externalFlag( ... )
-   return self.genSrcTypeInfo:get_externalFlag( ... )
-end
-
-function GenAlgeTypeInfo:get_generics_display_string( ... )
-   return self.genSrcTypeInfo:get_generics_display_string( ... )
-end
-
-function GenAlgeTypeInfo:get_generics_txt( ... )
-   return self.genSrcTypeInfo:get_generics_txt( ... )
-end
-
-function GenAlgeTypeInfo:get_imutType( ... )
-   return self.genSrcTypeInfo:get_imutType( ... )
-end
-
-function GenAlgeTypeInfo:get_interfaceList( ... )
-   return self.genSrcTypeInfo:get_interfaceList( ... )
-end
-
-function GenAlgeTypeInfo:get_itemTypeInfoList( ... )
-   return self.genSrcTypeInfo:get_itemTypeInfoList( ... )
-end
-
-function GenAlgeTypeInfo:get_kind( ... )
-   return self.genSrcTypeInfo:get_kind( ... )
-end
-
-function GenAlgeTypeInfo:get_mutMode( ... )
-   return self.genSrcTypeInfo:get_mutMode( ... )
-end
-
-function GenAlgeTypeInfo:get_nilable( ... )
-   return self.genSrcTypeInfo:get_nilable( ... )
-end
-
-function GenAlgeTypeInfo:get_nilableTypeInfo( ... )
-   return self.genSrcTypeInfo:get_nilableTypeInfo( ... )
-end
-
-function GenAlgeTypeInfo:get_nilableTypeInfoMut( ... )
-   return self.genSrcTypeInfo:get_nilableTypeInfoMut( ... )
-end
-
-function GenAlgeTypeInfo:get_nonnilableType( ... )
-   return self.genSrcTypeInfo:get_nonnilableType( ... )
-end
-
-function GenAlgeTypeInfo:get_parentInfo( ... )
-   return self.genSrcTypeInfo:get_parentInfo( ... )
-end
-
-function GenAlgeTypeInfo:get_processInfo( ... )
-   return self.genSrcTypeInfo:get_processInfo( ... )
-end
-
-function GenAlgeTypeInfo:get_rawTxt( ... )
-   return self.genSrcTypeInfo:get_rawTxt( ... )
-end
-
-function GenAlgeTypeInfo:get_retTypeInfoList( ... )
-   return self.genSrcTypeInfo:get_retTypeInfoList( ... )
-end
-
-function GenAlgeTypeInfo:get_scope( ... )
-   return self.genSrcTypeInfo:get_scope( ... )
-end
-
-function GenAlgeTypeInfo:get_srcTypeInfo( ... )
-   return self.genSrcTypeInfo:get_srcTypeInfo( ... )
-end
-
-function GenAlgeTypeInfo:get_staticFlag( ... )
-   return self.genSrcTypeInfo:get_staticFlag( ... )
-end
-
-function GenAlgeTypeInfo:get_typeData( ... )
-   return self.genSrcTypeInfo:get_typeData( ... )
-end
-
-function GenAlgeTypeInfo:get_typeId( ... )
-   return self.genSrcTypeInfo:get_typeId( ... )
-end
-
-function GenAlgeTypeInfo:hasBase( ... )
-   return self.genSrcTypeInfo:hasBase( ... )
-end
-
-function GenAlgeTypeInfo:hasBaseImp( ... )
-   return self.genSrcTypeInfo:hasBaseImp( ... )
-end
-
-function GenAlgeTypeInfo:hasRouteNamespaceFrom( ... )
-   return self.genSrcTypeInfo:hasRouteNamespaceFrom( ... )
-end
-
-function GenAlgeTypeInfo:isInheritFrom( ... )
-   return self.genSrcTypeInfo:isInheritFrom( ... )
-end
-
-function GenAlgeTypeInfo:isModule( ... )
-   return self.genSrcTypeInfo:isModule( ... )
-end
-
-function GenAlgeTypeInfo:serialize( ... )
-   return self.genSrcTypeInfo:serialize( ... )
-end
-
-function GenAlgeTypeInfo:serializeTypeInfoList( ... )
-   return self.genSrcTypeInfo:serializeTypeInfoList( ... )
-end
-
-function GenAlgeTypeInfo:set_childId( ... )
-   return self.genSrcTypeInfo:set_childId( ... )
-end
-
-function GenAlgeTypeInfo:set_imutType( ... )
-   return self.genSrcTypeInfo:set_imutType( ... )
-end
-
-function GenAlgeTypeInfo:switchScope( ... )
-   return self.genSrcTypeInfo:switchScope( ... )
-end
-
-function GenAlgeTypeInfo:addValInfo( ... )
-   return self.genSrcTypeInfo:addValInfo( ... )
-end
-
-function GenAlgeTypeInfo:getValInfo( ... )
-   return self.genSrcTypeInfo:getValInfo( ... )
-end
-
-function GenAlgeTypeInfo:get_valInfoMap( ... )
-   return self.genSrcTypeInfo:get_valInfoMap( ... )
-end
-
-function GenAlgeTypeInfo:get_valInfoNum( ... )
-   return self.genSrcTypeInfo:get_valInfoNum( ... )
-end
-
-
-
-function ProcessInfo:createGenAlge( orgAlgeTypeInfo, itemTypeInfoList )
-
-   return GenAlgeTypeInfo._new(self, orgAlgeTypeInfo, itemTypeInfoList)
-end
-
-
 function BoxTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
    if self == other then
@@ -10855,7 +10618,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                
                
                for __index, itemType in ipairs( genericList ) do
-                  
                   if itemType:get_nilable() then
                      local mess = string.format( "can't use nilable type -- %s", itemType:getTxt(  ))
                      return nil, pos, mess

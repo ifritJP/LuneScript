@@ -1994,28 +1994,6 @@ function convFilter:processGenericsCall( node )
 end
 
 
-local FuncInfo = {}
-FuncInfo._name2Val = {}
-function FuncInfo:_getTxt( val )
-   local name = val[ 1 ]
-   if name then
-      return string.format( "FuncInfo.%s", name )
-   end
-   return string.format( "illegal val -- %s", val )
-end
-
-function FuncInfo._from( val )
-   return _lune._AlgeFrom( FuncInfo, val )
-end
-
-FuncInfo.DeclInfo = { "DeclInfo", {{},{}}}
-FuncInfo._name2Val["DeclInfo"] = FuncInfo.DeclInfo
-FuncInfo.Type = { "Type", {{}}}
-FuncInfo._name2Val["Type"] = FuncInfo.Type
-FuncInfo.WithClass = { "WithClass", {{},{}}}
-FuncInfo._name2Val["WithClass"] = FuncInfo.WithClass
-
-
 function convFilter:outputRetType( retTypeList )
 
    do
@@ -2068,6 +2046,30 @@ function FuncConv:get_retList()
 end
 
 
+local FuncInfo = {}
+FuncInfo._name2Val = {}
+function FuncInfo:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "FuncInfo.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function FuncInfo._from( val )
+   return _lune._AlgeFrom( FuncInfo, val )
+end
+
+FuncInfo.Anonymous = { "Anonymous", {{}}}
+FuncInfo._name2Val["Anonymous"] = FuncInfo.Anonymous
+FuncInfo.DeclInfo = { "DeclInfo", {{},{}}}
+FuncInfo._name2Val["DeclInfo"] = FuncInfo.DeclInfo
+FuncInfo.Type = { "Type", {{}}}
+FuncInfo._name2Val["Type"] = FuncInfo.Type
+FuncInfo.WithClass = { "WithClass", {{},{}}}
+FuncInfo._name2Val["WithClass"] = FuncInfo.WithClass
+
+
 function convFilter:outputDeclFunc( addEnvArg, funcInfo )
 
    local typeInfo
@@ -2107,6 +2109,13 @@ function convFilter:outputDeclFunc( addEnvArg, funcInfo )
          typeInfo = workTypeInfo
          prefixType = typeInfo:get_parentInfo()
          name = typeInfo:get_rawTxt()
+      elseif _matchExp[1] == FuncInfo.Anonymous[1] then
+         local workTypeInfo = _matchExp[2][1]
+      
+         extFlag = workTypeInfo:get_kind() == Ast.TypeInfoKind.Ext
+         typeInfo = workTypeInfo
+         prefixType = typeInfo:get_parentInfo()
+         name = nil
       elseif _matchExp[1] == FuncInfo.WithClass[1] then
          local classType = _matchExp[2][1]
          local methodType = _matchExp[2][2]
@@ -2172,6 +2181,18 @@ function convFilter:outputDeclFunc( addEnvArg, funcInfo )
    end
    
    
+   local function defaultDeclArg(  )
+   
+      for index, argType in ipairs( workType:get_argTypeInfoList() ) do
+         if index ~= 1 then
+            self:writeRaw( "," )
+         end
+         
+         self:writeRaw( string.format( "arg%d %s", index, self:type2gotype( argType )) )
+      end
+      
+   end
+   
    do
       local _matchExp = funcInfo
       if _matchExp[1] == FuncInfo.DeclInfo[1] then
@@ -2208,26 +2229,16 @@ function convFilter:outputDeclFunc( addEnvArg, funcInfo )
       elseif _matchExp[1] == FuncInfo.Type[1] then
          local _ = _matchExp[2][1]
       
-         for index, argType in ipairs( workType:get_argTypeInfoList() ) do
-            if index ~= 1 then
-               self:writeRaw( "," )
-            end
-            
-            self:writeRaw( string.format( "arg%d %s", index, self:type2gotype( argType )) )
-         end
-         
+         defaultDeclArg(  )
+      elseif _matchExp[1] == FuncInfo.Anonymous[1] then
+         local _ = _matchExp[2][1]
+      
+         defaultDeclArg(  )
       elseif _matchExp[1] == FuncInfo.WithClass[1] then
          local _ = _matchExp[2][1]
          local _ = _matchExp[2][2]
       
-         for index, argType in ipairs( workType:get_argTypeInfoList() ) do
-            if index ~= 1 then
-               self:writeRaw( "," )
-            end
-            
-            self:writeRaw( string.format( "arg%d %s", index, self:type2gotype( argType )) )
-         end
-         
+         defaultDeclArg(  )
       end
    end
    
@@ -2239,11 +2250,110 @@ function convFilter:outputDeclFunc( addEnvArg, funcInfo )
 end
 
 
+function convFilter:outputConvToFormFunc( node )
+
+   
+   local castType = node:get_castType()
+   local funcType = node:get_exp():get_expType():get_extedType()
+   if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Ext and funcType:get_srcTypeInfo():get_kind() == Ast.TypeInfoKind.Form then
+      self:writeln( string.format( [==[      
+func %s( luaform LnsAny ) LnsForm {
+    return func (argList []LnsAny) []LnsAny {
+        return %s.RunLoadedfunc( luaform.(*Lns_luaValue), argList )
+    }
+}]==], self:getConv2formName( node ), self.env:getCommonVm(  )) )
+      return 
+   end
+   
+   
+   self:writeln( string.format( "// for %d: %s", node:get_pos().lineNo, Nodes.getNodeKindName( node:get_kind() )) )
+   self:writeRaw( string.format( "func %s( src func (%s", self:getConv2formName( node ), self:getEnvArgDecl( #funcType:get_argTypeInfoList() )) )
+   for index, argType in ipairs( funcType:get_argTypeInfoList() ) do
+      if index > 1 then
+         self:writeRaw( ", " )
+      end
+      
+      self:writeRaw( string.format( "arg%d %s", index, self:type2gotype( argType )) )
+   end
+   
+   self:writeRaw( ")" )
+   self:outputRetType( funcType:get_retTypeInfoList() )
+   self:write( ") " )
+   self:outputDeclFunc( self.option:get_addEnvArg(), _lune.newAlge( FuncInfo.Anonymous, {castType}) )
+   self:writeln( "{" )
+   self:pushIndent(  )
+   self:write( "return " )
+   self:outputDeclFunc( self.option:get_addEnvArg(), _lune.newAlge( FuncInfo.Anonymous, {castType}) )
+   self:writeln( " {" )
+   self:pushIndent(  )
+   
+   for index, _1 in ipairs( funcType:get_retTypeInfoList() ) do
+      if index > 1 then
+         self:write( "," )
+      end
+      
+      self:write( string.format( "ret%d", index) )
+   end
+   
+   if #funcType:get_retTypeInfoList() > 0 then
+      self:write( " := " )
+   end
+   
+   
+   self:write( "src(" )
+   if self.option:get_addEnvArg() then
+      self:write( "_env, " )
+   end
+   
+   for index, argType in ipairs( castType:get_argTypeInfoList() ) do
+      if index > 1 then
+         self:write( "," )
+      end
+      
+      self:writeRaw( string.format( "arg%d", index) )
+      local castArgType = funcType:get_argTypeInfoList()[index]
+      if isAnyType( argType ) then
+         self:outputAny2Type( castArgType )
+      end
+      
+   end
+   
+   self:writeln( ")" )
+   
+   self:write( "return " )
+   for index, _2 in ipairs( funcType:get_retTypeInfoList() ) do
+      if index > 1 then
+         self:write( "," )
+      end
+      
+      self:write( string.format( "ret%d", index) )
+   end
+   
+   self:writeln( "" )
+   self:popIndent(  )
+   self:writeln( "}" )
+   self:popIndent(  )
+   self:writeln( "}" )
+end
+
+
 function convFilter:outputConvToForm( node )
 
    local castType = node:get_castType():get_nonnilableType():get_extedType()
-   if castType:get_kind() ~= Ast.TypeInfoKind.Form then
-      return 
+   do
+      local _switchExp = castType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Form then
+      elseif _switchExp == Ast.TypeInfoKind.FormFunc then
+         if #castType:get_itemTypeInfoList() == 0 then
+            return 
+         end
+         
+         self:outputConvToFormFunc( node )
+         return 
+      else 
+         
+            return 
+      end
    end
    
    
@@ -6283,6 +6393,19 @@ function convFilter:processExpCall( node, opt )
       
       filter( fieldNode:get_prefix(), self, node )
       self:writeRaw( ")" )
+      return 
+   end
+   
+   if funcType == self.builtinFuncs.__lns_sync__createPipe then
+      self:writeRaw( "LnsAny(NewLnspipe( " )
+      do
+         local argList = node:get_argList()
+         if argList ~= nil then
+            filter( argList:get_expList()[2], self, node )
+         end
+      end
+      
+      self:writeRaw( "))" )
       return 
    end
    

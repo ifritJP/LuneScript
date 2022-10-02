@@ -86,7 +86,9 @@ pub enum TypeInfoKind {
    Box,
    CanEvalCtrl,
    Etc,
+   /** デフォルトの form。 ユーザ定義の form は FormFunc。 */
    Form,
+   /** ユーザ定義の form */
    FormFunc,
    /** Lua などの外部モジュール */
    Ext,
@@ -3870,7 +3872,7 @@ pub class GenericTypeInfo extend TypeInfo {
       }
       
       if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) {
-         return false, nil;
+         return false, "unmatch mutable";
       }
 
       let otherSrc = other.$srcTypeInfo;
@@ -3878,6 +3880,14 @@ pub class GenericTypeInfo extend TypeInfo {
          return true, nil;
       }
 
+      if self.genSrcTypeInfo.$kind == .FormFunc {
+         foreach genType, alt in self.alt2typeMap {
+            alt2type[ alt ] = genType;
+         }
+         return self.genSrcTypeInfo.canEvalWith(
+            processInfo, other, canEvalType, alt2type )**;
+      }
+      
       // other のスーパークラスを辿って、一致するか調べる
       let mut work = otherSrc;
       while true {
@@ -4297,11 +4307,8 @@ pub class AlgeTypeInfo extend TypeInfo {
    }
    
 
-/**
-@param scope 本来 Scope は 非 nilable だが、 GenAlgeTypeInfo の処理用に nilable を許可する。
-*/
-   pro fn __init(
-      processInfo:ProcessInfo, scope: Scope!, externalFlag: bool,
+   pri fn __init(
+      processInfo:ProcessInfo, scope: Scope, externalFlag: bool,
       accessMode: AccessMode, txt: str,
       parentInfo: &TypeInfo!, typeDataAccessor: TypeDataAccessor!,
       itemTypeInfoList:&List<&TypeInfo> ) 
@@ -4328,9 +4335,7 @@ pub class AlgeTypeInfo extend TypeInfo {
 
       self.nilableTypeInfo = new NilableTypeInfo( processInfo, self );
 
-      when! scope {
-         scope.set_ownerTypeInfo( self );
-      }
+      scope.set_ownerTypeInfo( self );
    }
 
    pub fn getValInfo( name:str ) : &AlgeValInfo! {
@@ -5139,6 +5144,7 @@ pri fn AlternateTypeInfo.canSetFrom(
       return true;      
    }
 
+
    if! let genType = alt2type[ self ] {
       when! canEvalType {
          return (genType.canEvalWith( processInfo, otherWork, canEvalType, alt2type ));
@@ -5151,6 +5157,27 @@ pri fn AlternateTypeInfo.canSetFrom(
          return false;     
       }
       workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
+
+      // この Alt の条件に other の派生が設定してある場合、セット可能とする。
+      fn checkInherit() __trans : bool {
+         if self.hasBase() {
+            if other.isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) {
+               return true;
+            }
+         };
+         foreach ifType in self.interfaceList {
+            if other.isInheritFrom( processInfo, ifType, workAlt2type ) {
+               return true;
+            }
+         }
+         return false;
+      }
+
+      if checkInherit() {
+         workAlt2type[ self ] = otherWork;
+         return true;
+      }
+      return false;
    } else {
       workAlt2type = alt2type;
    }
@@ -5167,7 +5194,7 @@ pri fn AlternateTypeInfo.canSetFrom(
    }
 
    workAlt2type[ self ] = otherWork;
-   return true;      
+   return true;
 }
 
 
@@ -6750,34 +6777,6 @@ accessMode = %d, kind = %d, ```
    stream.write( "} }\n" );
 }
 
-pub class GenAlgeTypeInfo extend AlgeTypeInfo {
-   pri let genSrcTypeInfo:&AlgeTypeInfo {pub:&TypeInfo};
-
-   local fn __init( processInfo:ProcessInfo,
-                    genSrcTypeInfo:&AlgeTypeInfo,
-                    itemTypeInfoList:&List<&TypeInfo> )
-   {
-      super( processInfo, nil, genSrcTypeInfo.$externalFlag,
-             genSrcTypeInfo.$accessMode, genSrcTypeInfo.$rawTxt,
-             genSrcTypeInfo.$parentInfo, nil, itemTypeInfoList );
-
-      self.genSrcTypeInfo = genSrcTypeInfo;
-   }
-      
-   pub fn get_orgAlgeType() : &AlgeTypeInfo {
-      return self.genSrcTypeInfo;
-   }
-   advertise genSrcTypeInfo;
-}
-
-pub fn ProcessInfo.createGenAlge(
-   orgAlgeTypeInfo: &AlgeTypeInfo, itemTypeInfoList:&List<&TypeInfo> ) mut : AlgeTypeInfo
-{
-   return new GenAlgeTypeInfo( self, orgAlgeTypeInfo, itemTypeInfoList );
-}
-
-
-
 // other 型の値を、この型の変数に設定できるか判定する。
 pub override fn BoxTypeInfo.canEvalWith(
    processInfo:&ProcessInfo, other:&TypeInfo,
@@ -8094,8 +8093,6 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             case .Class, .IF {       
                _checkAlternateTypeCount( #typeInfo.$itemTypeInfoList );
                foreach itemType in genericList {
-                  // let altType =         
-                  //    unwrap typeInfo.$itemTypeInfoList[ index ]@@@AlternateTypeInfo;
                   if itemType.$nilable {   
                      let mess = "can't use nilable type -- %s" (itemType.getTxt(##));
                      return nil, pos, mess;   

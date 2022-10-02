@@ -2831,6 +2831,10 @@ pub override fn ConvFilter.processExpCall(
             self.writeRaw( "nil" );
             return false;
          }
+         case self.builtinFunc.__lns_sync__createPipe {
+            self.writeRaw( "nil" );
+            return false;
+         }
       }
       
       let prefixNode = fieldNode.$prefix;

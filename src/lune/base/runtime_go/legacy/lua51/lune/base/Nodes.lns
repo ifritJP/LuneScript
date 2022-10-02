@@ -549,7 +549,7 @@ Node を定義するマクロ。
 */
 macro _declNodeClass(
    baseName:str, superClass:sym, canBeLeftFlag:bool!, canBeRightFlag:bool!,
-   canBeStatementFlag:bool!, fieldInfoList:Map<str,str>[] )
+   canBeStatementFlag:bool!, fieldInfoList:&List<Map<str,str>> )
 {
    {
       let className = ,,,"%sNode" (baseName);
@@ -882,6 +882,25 @@ _declNodeClass( "RefType", Node, false, false, false,
                   { "mutMode": "Ast.MutMode!" },
                   { "array": "str" } ]
 );
+
+pub fn RefTypeNode.checkValidGenerics() : bool, str {
+   let typeInfo = self.$expType.$nonnilableType;
+   if typeInfo.$kind == .DDD or typeInfo.$kind == .Box {
+      return true, "";
+   }
+   let genTypeNum;
+   if typeInfo.$kind == .Ext {
+      genTypeNum = 1;
+   } else {
+      genTypeNum = #typeInfo.$itemTypeInfoList;
+   }
+   if genTypeNum ~= #self.itemNodeList {
+      let txt = "it's mismatch the number of generics type param -- %s: %d, %d"
+          (typeInfo.getTxt(##), genTypeNum, #self.itemNodeList );
+      return false, txt;
+   }
+   return true, "";
+}
 
 pub enum BlockKind {
    If,

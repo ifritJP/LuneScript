@@ -289,6 +289,7 @@ local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
+local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local function loadCode( code )
 
    local ret
@@ -779,6 +780,18 @@ function MacroCtrl._new( macroEval, validAsyncMacro )
 end
 function MacroCtrl:__init(macroEval, validAsyncMacro) 
    self.id2use___var = {}
+   
+   do
+      for funcType, __val in pairs( Builtin.getBuiltinFunc(  ):get_allFuncTypeSet() ) do
+         if funcType:get_kind() == Ast.TypeInfoKind.Macro then
+            self.id2use___var[funcType:get_typeId()] = false
+         end
+         
+      end
+      
+   end
+   
+   
    self.validAsyncMacro = validAsyncMacro
    self.toLuavalLuaAsync = nil
    self.useLnsLoad = false
