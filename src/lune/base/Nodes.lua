@@ -1841,22 +1841,27 @@ end
 
 function RefTypeNode:checkValidGenerics(  )
 
-   local typeInfo = self:get_expType():get_nonnilableType()
+   local typeInfo = self:get_expType():get_nonnilableType():get_srcTypeInfo()
    if typeInfo:get_kind() == Ast.TypeInfoKind.DDD or typeInfo:get_kind() == Ast.TypeInfoKind.Box then
       return true, ""
    end
    
    local genTypeNum
    
-   if typeInfo:get_kind() == Ast.TypeInfoKind.Ext then
+   local dispType
+   
+   if self.name:get_expType():get_kind() == Ast.TypeInfoKind.Ext then
+      
       genTypeNum = 1
+      dispType = self.name:get_expType()
    else
     
       genTypeNum = #typeInfo:get_itemTypeInfoList()
+      dispType = self:get_expType()
    end
    
    if genTypeNum ~= #self.itemNodeList then
-      local txt = string.format( "it's mismatch the number of generics type param -- %s: %d, %d", typeInfo:getTxt(  ), genTypeNum, #self.itemNodeList)
+      local txt = string.format( "it's mismatch the number of generics type param -- %s: %d, %d", dispType:getTxt(  ), genTypeNum, #self.itemNodeList)
       return false, txt
    end
    

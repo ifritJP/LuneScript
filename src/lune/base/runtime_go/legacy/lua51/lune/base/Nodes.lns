@@ -884,19 +884,25 @@ _declNodeClass( "RefType", Node, false, false, false,
 );
 
 pub fn RefTypeNode.checkValidGenerics() : bool, str {
-   let typeInfo = self.$expType.$nonnilableType;
+   let typeInfo = self.$expType.$nonnilableType.$srcTypeInfo;
    if typeInfo.$kind == .DDD or typeInfo.$kind == .Box {
       return true, "";
    }
    let genTypeNum;
-   if typeInfo.$kind == .Ext {
+   let dispType;
+   if self.name.$expType.$kind == .Ext {
+      // Luavalは Luaval オプションが無効だと元の lns の型に丸められるので、
+      // 丸めまえの self.name.$expType で判定する。
+      // また Luaval の genTypeNum は 1 つで固定。
       genTypeNum = 1;
+      dispType = self.name.$expType;
    } else {
       genTypeNum = #typeInfo.$itemTypeInfoList;
+      dispType = self.$expType;
    }
    if genTypeNum ~= #self.itemNodeList {
       let txt = "it's mismatch the number of generics type param -- %s: %d, %d"
-          (typeInfo.getTxt(##), genTypeNum, #self.itemNodeList );
+          ( dispType.getTxt(##), genTypeNum, #self.itemNodeList );
       return false, txt;
    }
    return true, "";

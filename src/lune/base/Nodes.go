@@ -819,7 +819,7 @@ return "IndexVal.SymIdx"
 }
 type Nodes_NodeVisitor func (_env *LnsEnv, arg1 *Nodes_Node,arg2 *Nodes_Node,arg3 string,arg4 LnsInt) LnsInt
 type Nodes_macroStatmentProc func (_env *LnsEnv, arg1 *LnsMap) *LnsMap
-// for 2646
+// for 2652
 func Nodes_convExp0_29620(arg1 string, arg2 []LnsAny) (string, []LnsAny) {
     return arg1, Lns_2DDD( arg2[0:])
 }
@@ -827,55 +827,55 @@ func Nodes_convExp0_29620(arg1 string, arg2 []LnsAny) (string, []LnsAny) {
 func Nodes_convExp0_949(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 2468
+// for 2474
 func Nodes_convExp0_28856(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2501
+// for 2507
 func Nodes_convExp0_28993(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2535
+// for 2541
 func Nodes_convExp0_29130(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2567
+// for 2573
 func Nodes_convExp0_29264(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2568
+// for 2574
 func Nodes_convExp0_29272(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2590
+// for 2596
 func Nodes_convExp0_29362(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 2638
+// for 2644
 func Nodes_convExp0_29573(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2716
+// for 2722
 func Nodes_convExp0_29896(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 2747
+// for 2753
 func Nodes_convExp0_30016(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 2807
+// for 2813
 func Nodes_convExp0_30247(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 2857
+// for 2863
 func Nodes_convExp0_30371(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 2883
+// for 2889
 func Nodes_convExp0_30469(arg1 []LnsAny) (bool, LnsInt, LnsReal, string, *Ast_TypeInfo) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(LnsInt), Lns_getFromMulti( arg1, 2 ).(LnsReal), Lns_getFromMulti( arg1, 3 ).(string), Lns_getFromMulti( arg1, 4 ).(*Ast_TypeInfo)
 }
-// for 2884
+// for 2890
 func Nodes_convExp0_30485(arg1 []LnsAny) (bool, LnsInt, LnsReal, string, *Ast_TypeInfo) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(LnsInt), Lns_getFromMulti( arg1, 2 ).(LnsReal), Lns_getFromMulti( arg1, 3 ).(string), Lns_getFromMulti( arg1, 4 ).(*Ast_TypeInfo)
 }
@@ -935,7 +935,7 @@ func Nodes_getNodeKindName(_env *LnsEnv, kind LnsInt) string {
 }
 
 
-// 982: decl @lune.@base.@Nodes.getBreakKindForStmtList
+// 988: decl @lune.@base.@Nodes.getBreakKindForStmtList
 func Nodes_getBreakKindForStmtList_42_(_env *LnsEnv, checkMode LnsInt,stmtList *LnsList) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
@@ -1001,7 +1001,7 @@ func Nodes_getBreakKindForStmtList_42_(_env *LnsEnv, checkMode LnsInt,stmtList *
     return Nodes_BreakKind__None
 }
 
-// 2691: decl @lune.@base.@Nodes.enumLiteral2Literal
+// 2697: decl @lune.@base.@Nodes.enumLiteral2Literal
 func Nodes_enumLiteral2Literal_142_(_env *LnsEnv, obj LnsAny)(LnsAny, LnsAny) {
     switch _matchExp0 := obj.(type) {
     case *Ast_EnumLiteral__Int:
@@ -1018,14 +1018,14 @@ func Nodes_enumLiteral2Literal_142_(_env *LnsEnv, obj LnsAny)(LnsAny, LnsAny) {
     return nil,nil
 }
 
-// 3018: decl @lune.@base.@Nodes.hasMultiValNode
+// 3024: decl @lune.@base.@Nodes.hasMultiValNode
 func Nodes_hasMultiValNode(_env *LnsEnv, node *Nodes_Node) bool {
     return _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( node.FP.Get_expTypeList(_env).Len() > 1) ||
         _env.SetStackVal( node.FP.Get_expType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__DDD) ).(bool)
 }
 
-// 3039: decl @lune.@base.@Nodes.getUnwraped
+// 3045: decl @lune.@base.@Nodes.getUnwraped
 func Nodes_getUnwraped(_env *LnsEnv, node *Nodes_Node) *Nodes_Node {
     {
         _work := Nodes_ExpMRetNodeDownCastF(node.FP)
@@ -1044,7 +1044,7 @@ func Nodes_getUnwraped(_env *LnsEnv, node *Nodes_Node) *Nodes_Node {
     return node
 }
 
-// 3049: decl @lune.@base.@Nodes.getCastUnwraped
+// 3055: decl @lune.@base.@Nodes.getCastUnwraped
 func Nodes_getCastUnwraped(_env *LnsEnv, node *Nodes_Node) *Nodes_Node {
     {
         _work := Nodes_ExpCastNodeDownCastF(node.FP)
@@ -1056,7 +1056,7 @@ func Nodes_getCastUnwraped(_env *LnsEnv, node *Nodes_Node) *Nodes_Node {
     return node
 }
 
-// 2315: decl @lune.@base.@Nodes.Node.getSymbolInfo.processExpNode
+// 2321: decl @lune.@base.@Nodes.Node.getSymbolInfo.processExpNode
 func Nodes_Node_getSymbolInfo__processExpNode_0_(_env *LnsEnv, node *Nodes_Node) *LnsList {
     if _switch0 := (node.FP.Get_kind(_env)); _switch0 == Nodes_NodeKind_get_ExpRef(_env) {
         return NewLnsList([]LnsAny{Ast_SymbolInfo2Stem((Lns_unwrap( (Nodes_ExpRefNodeDownCastF(node.FP))).(*Nodes_ExpRefNode)).FP.Get_symbolInfo(_env))})
@@ -9749,7 +9749,7 @@ func NewNodes_DefMacroInfo(_env *LnsEnv, arg1 LnsAny, arg2 *Nodes_DeclMacroInfo,
     obj.InitNodes_DefMacroInfo(_env, arg1, arg2, arg3)
     return obj
 }
-// 2955: DeclConstr
+// 2961: DeclConstr
 func (self *Nodes_DefMacroInfo) InitNodes_DefMacroInfo(_env *LnsEnv, _func LnsAny,declInfo *Nodes_DeclMacroInfo,symbol2MacroValInfoMap *LnsMap) {
     self.InitNodes_MacroInfo(_env, _func, symbol2MacroValInfoMap)
     self.DeclInfo = declInfo
@@ -10683,10 +10683,10 @@ func (self *Nodes_Filter) ProcessLiteralSymbol(_env *LnsEnv, node *Nodes_Literal
     self.FP.DefaultProcess(_env, &node.Nodes_Node, opt)
     self.FP.popOpt(_env, opt)
 }
-// 3001: decl @lune.@base.@Nodes.Filter.processBlockSub
+// 3007: decl @lune.@base.@Nodes.Filter.processBlockSub
 func (self *Nodes_Filter) ProcessBlockSub(_env *LnsEnv, node *Nodes_BlockNode,_opt LnsAny) {
 }
-// 3004: decl @lune.@base.@Nodes.Filter.processBlock
+// 3010: decl @lune.@base.@Nodes.Filter.processBlock
 func (self *Nodes_Filter) ProcessBlock(_env *LnsEnv, node *Nodes_BlockNode,_opt LnsAny) {
     opt := _opt
     self.moduleInfoManager.FP.Push(_env, node.FP.Get_scope(_env).FP)
@@ -10791,7 +10791,7 @@ func (self *Nodes_Node) HasNilAccess(_env *LnsEnv) bool {
 func (self *Nodes_Node) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return true
 }
-// 2314: decl @lune.@base.@Nodes.Node.getSymbolInfo
+// 2320: decl @lune.@base.@Nodes.Node.getSymbolInfo
 func (self *Nodes_Node) GetSymbolInfo(_env *LnsEnv) *LnsList {
     return Nodes_Node_getSymbolInfo__processExpNode_0_(_env, self)
 }
@@ -11237,7 +11237,7 @@ func (self *Nodes_NodeManager) GetLiteralBoolNodeList(_env *LnsEnv) *LnsList {
 func (self *Nodes_NodeManager) GetLiteralSymbolNodeList(_env *LnsEnv) *LnsList {
     return (*LnsList)(self.FP.GetList(_env, 89))
 }
-// 2987: decl @lune.@base.@Nodes.NodeManager.MultiTo1
+// 2993: decl @lune.@base.@Nodes.NodeManager.MultiTo1
 func (self *Nodes_NodeManager) MultiTo1(_env *LnsEnv, node *Nodes_Node) *Nodes_Node {
     var expType *Ast_TypeInfo
     expType = node.FP.Get_expType(_env)
@@ -11913,21 +11913,24 @@ func (self *Nodes_RefTypeNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
 // 886: decl @lune.@base.@Nodes.RefTypeNode.checkValidGenerics
 func (self *Nodes_RefTypeNode) CheckValidGenerics(_env *LnsEnv)(bool, string) {
     var typeInfo *Ast_TypeInfo
-    typeInfo = self.FP.Get_expType(_env).FP.Get_nonnilableType(_env)
+    typeInfo = self.FP.Get_expType(_env).FP.Get_nonnilableType(_env).FP.Get_srcTypeInfo(_env)
     if _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__DDD) ||
         _env.SetStackVal( typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Box) ).(bool){
         return true, ""
     }
     var genTypeNum LnsInt
-    if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
+    var dispType *Ast_TypeInfo
+    if self.name.FP.Get_expType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
         genTypeNum = 1
+        dispType = self.name.FP.Get_expType(_env)
     } else { 
         genTypeNum = typeInfo.FP.Get_itemTypeInfoList(_env).Len()
+        dispType = self.FP.Get_expType(_env)
     }
     if genTypeNum != self.itemNodeList.Len(){
         var txt string
-        txt = _env.GetVM().String_format("it's mismatch the number of generics type param -- %s: %d, %d", []LnsAny{typeInfo.FP.GetTxt(_env, nil, nil, nil), genTypeNum, self.itemNodeList.Len()})
+        txt = _env.GetVM().String_format("it's mismatch the number of generics type param -- %s: %d, %d", []LnsAny{dispType.FP.GetTxt(_env, nil, nil, nil), genTypeNum, self.itemNodeList.Len()})
         return false, txt
     }
     return true, ""
@@ -11979,7 +11982,7 @@ func (self *Nodes_BlockNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1007: decl @lune.@base.@Nodes.BlockNode.getBreakKind
+// 1013: decl @lune.@base.@Nodes.BlockNode.getBreakKind
 func (self *Nodes_BlockNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     return Nodes_getBreakKindForStmtList_42_(_env, checkMode, self.stmtList)
 }
@@ -12055,7 +12058,7 @@ func Nodes_IfNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_Posi
 func (self *Nodes_IfNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1027: decl @lune.@base.@Nodes.IfNode.getBreakKind
+// 1033: decl @lune.@base.@Nodes.IfNode.getBreakKind
 func (self *Nodes_IfNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     var hasElseFlag bool
     hasElseFlag = false
@@ -12103,7 +12106,7 @@ func (self *Nodes_IfNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     }
     return Nodes_BreakKind__None
 }
-// 1044: decl @lune.@base.@Nodes.IfNode.visitSub
+// 1050: decl @lune.@base.@Nodes.IfNode.visitSub
 func (self *Nodes_IfNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     for _, _stmt := range( self.FP.Get_stmtList(_env).Items ) {
         stmt := _stmt.(Nodes_IfStmtInfoDownCast).ToNodes_IfStmtInfo()
@@ -12173,7 +12176,7 @@ func (self *Nodes_ExpListNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1069: decl @lune.@base.@Nodes.ExpListNode.canBeLeft
+// 1075: decl @lune.@base.@Nodes.ExpListNode.canBeLeft
 func (self *Nodes_ExpListNode) CanBeLeft(_env *LnsEnv) bool {
     for _, _expNode := range( self.FP.Get_expList(_env).Items ) {
         expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
@@ -12183,7 +12186,7 @@ func (self *Nodes_ExpListNode) CanBeLeft(_env *LnsEnv) bool {
     }
     return true
 }
-// 1077: decl @lune.@base.@Nodes.ExpListNode.canBeRight
+// 1083: decl @lune.@base.@Nodes.ExpListNode.canBeRight
 func (self *Nodes_ExpListNode) CanBeRight(_env *LnsEnv, processInfo *Ast_ProcessInfo) bool {
     for _, _expNode := range( self.FP.Get_expList(_env).Items ) {
         expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
@@ -12193,14 +12196,14 @@ func (self *Nodes_ExpListNode) CanBeRight(_env *LnsEnv, processInfo *Ast_Process
     }
     return true
 }
-// 1085: decl @lune.@base.@Nodes.ExpListNode.setLValue
+// 1091: decl @lune.@base.@Nodes.ExpListNode.setLValue
 func (self *Nodes_ExpListNode) SetLValue(_env *LnsEnv) {
     for _, _expNode := range( self.FP.Get_expList(_env).Items ) {
         expNode := _expNode.(Nodes_NodeDownCast).ToNodes_Node()
         expNode.IsLValue = true
     }
 }
-// 1102: decl @lune.@base.@Nodes.ExpListNode.getExpTypeAt
+// 1108: decl @lune.@base.@Nodes.ExpListNode.getExpTypeAt
 func (self *Nodes_ExpListNode) GetExpTypeAt(_env *LnsEnv, index LnsInt) *Ast_TypeInfo {
     if index > self.FP.Get_expTypeList(_env).Len(){
         var lastExpType *Ast_TypeInfo
@@ -12216,7 +12219,7 @@ func (self *Nodes_ExpListNode) GetExpTypeAt(_env *LnsEnv, index LnsInt) *Ast_Typ
     }
     return self.FP.Get_expTypeList(_env).GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
 }
-// 1122: decl @lune.@base.@Nodes.ExpListNode.getExpTypeNoDDDAt
+// 1128: decl @lune.@base.@Nodes.ExpListNode.getExpTypeNoDDDAt
 func (self *Nodes_ExpListNode) GetExpTypeNoDDDAt(_env *LnsEnv, index LnsInt) *Ast_TypeInfo {
     if index >= self.FP.Get_expTypeList(_env).Len(){
         var lastExpType *Ast_TypeInfo
@@ -12299,7 +12302,7 @@ func (self *Nodes_SwitchNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dept
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1160: decl @lune.@base.@Nodes.SwitchNode.getBreakKind
+// 1166: decl @lune.@base.@Nodes.SwitchNode.getBreakKind
 func (self *Nodes_SwitchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     var kind LnsInt
     kind = Nodes_BreakKind__None
@@ -12381,7 +12384,7 @@ func (self *Nodes_SwitchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsIn
     }
     return Nodes_BreakKind__None
 }
-// 1189: decl @lune.@base.@Nodes.SwitchNode.visitSub
+// 1195: decl @lune.@base.@Nodes.SwitchNode.visitSub
 func (self *Nodes_SwitchNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     for _, _caseInfo := range( self.caseList.Items ) {
         caseInfo := _caseInfo.(Nodes_CaseInfoDownCast).ToNodes_CaseInfo()
@@ -12472,7 +12475,7 @@ func (self *Nodes_WhileNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2371: decl @lune.@base.@Nodes.WhileNode.getBreakKind
+// 2377: decl @lune.@base.@Nodes.WhileNode.getBreakKind
 func (self *Nodes_WhileNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
@@ -12626,7 +12629,7 @@ func (self *Nodes_RepeatNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dept
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1202: decl @lune.@base.@Nodes.RepeatNode.getBreakKind
+// 1208: decl @lune.@base.@Nodes.RepeatNode.getBreakKind
 func (self *Nodes_RepeatNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
@@ -12731,7 +12734,7 @@ func (self *Nodes_ForNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth L
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1202: decl @lune.@base.@Nodes.ForNode.getBreakKind
+// 1208: decl @lune.@base.@Nodes.ForNode.getBreakKind
 func (self *Nodes_ForNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
@@ -12800,7 +12803,7 @@ func (self *Nodes_ApplyNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1202: decl @lune.@base.@Nodes.ApplyNode.getBreakKind
+// 1208: decl @lune.@base.@Nodes.ApplyNode.getBreakKind
 func (self *Nodes_ApplyNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
@@ -12869,7 +12872,7 @@ func (self *Nodes_ForeachNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1202: decl @lune.@base.@Nodes.ForeachNode.getBreakKind
+// 1208: decl @lune.@base.@Nodes.ForeachNode.getBreakKind
 func (self *Nodes_ForeachNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
@@ -12938,7 +12941,7 @@ func (self *Nodes_ForsortNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1202: decl @lune.@base.@Nodes.ForsortNode.getBreakKind
+// 1208: decl @lune.@base.@Nodes.ForsortNode.getBreakKind
 func (self *Nodes_ForsortNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( checkMode != Nodes_CheckBreakMode__Normal) &&
@@ -12995,7 +12998,7 @@ func (self *Nodes_ReturnNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dept
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1273: decl @lune.@base.@Nodes.ReturnNode.getBreakKind
+// 1279: decl @lune.@base.@Nodes.ReturnNode.getBreakKind
 func (self *Nodes_ReturnNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     return Nodes_BreakKind__Return
 }
@@ -13027,7 +13030,7 @@ func Nodes_BreakNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_P
 func (self *Nodes_BreakNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1279: decl @lune.@base.@Nodes.BreakNode.getBreakKind
+// 1285: decl @lune.@base.@Nodes.BreakNode.getBreakKind
 func (self *Nodes_BreakNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     return Nodes_BreakKind__Break
 }
@@ -13207,17 +13210,17 @@ func Nodes_ExpRefNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Types_
 func (self *Nodes_ExpRefNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1303: decl @lune.@base.@Nodes.ExpRefNode.canBeLeft
+// 1309: decl @lune.@base.@Nodes.ExpRefNode.canBeLeft
 func (self *Nodes_ExpRefNode) CanBeLeft(_env *LnsEnv) bool {
     return self.FP.Get_symbolInfo(_env).FP.Get_canBeLeft(_env)
 }
-// 1307: decl @lune.@base.@Nodes.ExpRefNode.canBeRight
+// 1313: decl @lune.@base.@Nodes.ExpRefNode.canBeRight
 func (self *Nodes_ExpRefNode) CanBeRight(_env *LnsEnv, processInfo *Ast_ProcessInfo) bool {
     return _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( self.FP.Get_symbolInfo(_env).FP.Get_canBeRight(_env)) &&
         _env.SetStackVal( self.FP.Get_symbolInfo(_env).FP.Get_hasValueFlag(_env)) ).(bool)
 }
-// 2768: decl @lune.@base.@Nodes.ExpRefNode.getLiteral
+// 2774: decl @lune.@base.@Nodes.ExpRefNode.getLiteral
 func (self *Nodes_ExpRefNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var typeInfo *Ast_TypeInfo
     typeInfo = self.symbolInfo.FP.Get_typeInfo(_env)
@@ -13416,7 +13419,7 @@ func (self *Nodes_ExpOp2Node) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dept
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2806: decl @lune.@base.@Nodes.ExpOp2Node.getValType
+// 2812: decl @lune.@base.@Nodes.ExpOp2Node.getValType
 func (self *Nodes_ExpOp2Node) getValType(_env *LnsEnv, node *Nodes_Node)(bool, LnsInt, LnsReal, string, *Ast_TypeInfo) {
     var literal LnsAny
     
@@ -13454,7 +13457,7 @@ func (self *Nodes_ExpOp2Node) getValType(_env *LnsEnv, node *Nodes_Node)(bool, L
     }
     return true, intVal, realVal, strVal, retTypeInfo
 }
-// 2856: decl @lune.@base.@Nodes.ExpOp2Node.setupLiteralTokenList
+// 2862: decl @lune.@base.@Nodes.ExpOp2Node.setupLiteralTokenList
 func (self *Nodes_ExpOp2Node) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     var literal LnsAny
     literal = Nodes_convExp0_30371(Lns_2DDD(self.FP.GetLiteral(_env)))
@@ -13480,7 +13483,7 @@ func (self *Nodes_ExpOp2Node) SetupLiteralTokenList(_env *LnsEnv, list *LnsList)
 // insert a dummy
     return false
 }
-// 2881: decl @lune.@base.@Nodes.ExpOp2Node.getLiteral
+// 2887: decl @lune.@base.@Nodes.ExpOp2Node.getLiteral
 func (self *Nodes_ExpOp2Node) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var ret1 bool
     var int1 LnsInt
@@ -13706,7 +13709,7 @@ func (self *Nodes_IfUnwrapNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,de
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1365: decl @lune.@base.@Nodes.IfUnwrapNode.getBreakKind
+// 1371: decl @lune.@base.@Nodes.IfUnwrapNode.getBreakKind
 func (self *Nodes_IfUnwrapNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     var kind LnsInt
     kind = self.block.FP.GetBreakKind(_env, checkMode)
@@ -13836,7 +13839,7 @@ func (self *Nodes_WhenNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth 
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1391: decl @lune.@base.@Nodes.WhenNode.getBreakKind
+// 1397: decl @lune.@base.@Nodes.WhenNode.getBreakKind
 func (self *Nodes_WhenNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     var kind LnsInt
     kind = self.block.FP.GetBreakKind(_env, checkMode)
@@ -13966,15 +13969,15 @@ func (self *Nodes_ExpCastNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1430: decl @lune.@base.@Nodes.ExpCastNode.getPrefix
+// 1436: decl @lune.@base.@Nodes.ExpCastNode.getPrefix
 func (self *Nodes_ExpCastNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self.exp.FP.GetPrefix(_env)
 }
-// 1433: decl @lune.@base.@Nodes.ExpCastNode.getLiteral
+// 1439: decl @lune.@base.@Nodes.ExpCastNode.getLiteral
 func (self *Nodes_ExpCastNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return self.exp.FP.GetLiteral(_env)
 }
-// 1436: decl @lune.@base.@Nodes.ExpCastNode.setupLiteralTokenList
+// 1442: decl @lune.@base.@Nodes.ExpCastNode.setupLiteralTokenList
 func (self *Nodes_ExpCastNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     return self.exp.FP.SetupLiteralTokenList(_env, list)
 }
@@ -14174,11 +14177,11 @@ func (self *Nodes_ExpRefItemNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1474: decl @lune.@base.@Nodes.ExpRefItemNode.getPrefix
+// 1480: decl @lune.@base.@Nodes.ExpRefItemNode.getPrefix
 func (self *Nodes_ExpRefItemNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self.val
 }
-// 1477: decl @lune.@base.@Nodes.ExpRefItemNode.canBeLeft
+// 1483: decl @lune.@base.@Nodes.ExpRefItemNode.canBeLeft
 func (self *Nodes_ExpRefItemNode) CanBeLeft(_env *LnsEnv) bool {
     if self.val.FP.Get_expType(_env) == Ast_builtinTypeStem{
         return false
@@ -14251,15 +14254,15 @@ func (self *Nodes_ExpCallNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1491: decl @lune.@base.@Nodes.ExpCallNode.get_effectivePos
+// 1497: decl @lune.@base.@Nodes.ExpCallNode.get_effectivePos
 func (self *Nodes_ExpCallNode) Get_effectivePos(_env *LnsEnv) Types_Position {
     return self._func.FP.Get_effectivePos(_env)
 }
-// 1494: decl @lune.@base.@Nodes.ExpCallNode.getPrefix
+// 1500: decl @lune.@base.@Nodes.ExpCallNode.getPrefix
 func (self *Nodes_ExpCallNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self._func
 }
-// 1498: decl @lune.@base.@Nodes.ExpCallNode.canBeRight
+// 1504: decl @lune.@base.@Nodes.ExpCallNode.canBeRight
 func (self *Nodes_ExpCallNode) CanBeRight(_env *LnsEnv, processInfo *Ast_ProcessInfo) bool {
     var expType *Ast_TypeInfo
     expType = self.FP.Get_expType(_env)
@@ -14270,7 +14273,7 @@ func (self *Nodes_ExpCallNode) CanBeRight(_env *LnsEnv, processInfo *Ast_Process
     }
     return true
 }
-// 1509: decl @lune.@base.@Nodes.ExpCallNode.getBreakKind
+// 1515: decl @lune.@base.@Nodes.ExpCallNode.getBreakKind
 func (self *Nodes_ExpCallNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     if self.errorFunc{
         return Nodes_BreakKind__NeverRet
@@ -14321,7 +14324,7 @@ func (self *Nodes_ExpMRetNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1520: decl @lune.@base.@Nodes.ExpMRetNode.getPrefix
+// 1526: decl @lune.@base.@Nodes.ExpMRetNode.getPrefix
 func (self *Nodes_ExpMRetNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self.mRet.FP.GetPrefix(_env)
 }
@@ -14369,7 +14372,7 @@ func (self *Nodes_ExpAccessMRetNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisit
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1529: decl @lune.@base.@Nodes.ExpAccessMRetNode.getPrefix
+// 1535: decl @lune.@base.@Nodes.ExpAccessMRetNode.getPrefix
 func (self *Nodes_ExpAccessMRetNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self.mRet.FP.GetPrefix(_env)
 }
@@ -14417,7 +14420,7 @@ func (self *Nodes_ExpMultiTo1Node) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1536: decl @lune.@base.@Nodes.ExpMultiTo1Node.getPrefix
+// 1542: decl @lune.@base.@Nodes.ExpMultiTo1Node.getPrefix
 func (self *Nodes_ExpMultiTo1Node) GetPrefix(_env *LnsEnv) LnsAny {
     return self.exp.FP.GetPrefix(_env)
 }
@@ -14465,11 +14468,11 @@ func (self *Nodes_ExpParenNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,de
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1543: decl @lune.@base.@Nodes.ExpParenNode.getPrefix
+// 1549: decl @lune.@base.@Nodes.ExpParenNode.getPrefix
 func (self *Nodes_ExpParenNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self.exp.FP.GetPrefix(_env)
 }
-// 1547: decl @lune.@base.@Nodes.ExpParenNode.getSymbolInfo
+// 1553: decl @lune.@base.@Nodes.ExpParenNode.getSymbolInfo
 func (self *Nodes_ExpParenNode) GetSymbolInfo(_env *LnsEnv) *LnsList {
     return self.exp.FP.GetSymbolInfo(_env)
 }
@@ -14536,11 +14539,11 @@ func (self *Nodes_ExpMacroExpNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1559: decl @lune.@base.@Nodes.ExpMacroExpNode.canBeRight
+// 1565: decl @lune.@base.@Nodes.ExpMacroExpNode.canBeRight
 func (self *Nodes_ExpMacroExpNode) CanBeRight(_env *LnsEnv, processInfo *Ast_ProcessInfo) bool {
     return self.FP.Get_expType(_env) != Ast_builtinTypeNone
 }
-// 1563: decl @lune.@base.@Nodes.ExpMacroExpNode.getBreakKind
+// 1569: decl @lune.@base.@Nodes.ExpMacroExpNode.getBreakKind
 func (self *Nodes_ExpMacroExpNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     return Nodes_getBreakKindForStmtList_42_(_env, checkMode, self.stmtList)
 }
@@ -14591,7 +14594,7 @@ func (self *Nodes_ExpMacroStatNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisito
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2743: decl @lune.@base.@Nodes.ExpMacroStatNode.getLiteral
+// 2749: decl @lune.@base.@Nodes.ExpMacroStatNode.getLiteral
 func (self *Nodes_ExpMacroStatNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var txt string
     txt = ""
@@ -14656,7 +14659,7 @@ func (self *Nodes_ExpMacroArgExpNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisi
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2762: decl @lune.@base.@Nodes.ExpMacroArgExpNode.getLiteral
+// 2768: decl @lune.@base.@Nodes.ExpMacroArgExpNode.getLiteral
 func (self *Nodes_ExpMacroArgExpNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return &Nodes_Literal__Str{self.FP.Get_codeTxt(_env)}, nil
 }
@@ -14700,11 +14703,11 @@ func (self *Nodes_StmtExpNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1585: decl @lune.@base.@Nodes.StmtExpNode.canBeStatement
+// 1591: decl @lune.@base.@Nodes.StmtExpNode.canBeStatement
 func (self *Nodes_StmtExpNode) CanBeStatement(_env *LnsEnv) bool {
     return self.FP.Get_exp(_env).FP.CanBeStatement(_env)
 }
-// 1589: decl @lune.@base.@Nodes.StmtExpNode.getBreakKind
+// 1595: decl @lune.@base.@Nodes.StmtExpNode.getBreakKind
 func (self *Nodes_StmtExpNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     return self.FP.Get_exp(_env).FP.GetBreakKind(_env, checkMode)
 }
@@ -14780,13 +14783,13 @@ func Nodes_ExpOmitEnumNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos T
 func (self *Nodes_ExpOmitEnumNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2787: decl @lune.@base.@Nodes.ExpOmitEnumNode.getLiteral
+// 2793: decl @lune.@base.@Nodes.ExpOmitEnumNode.getLiteral
 func (self *Nodes_ExpOmitEnumNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var enumval *Ast_EnumValInfo
     enumval = self.valInfo
     return Nodes_enumLiteral2Literal_142_(_env, enumval.FP.Get_val(_env))
 }
-// 2795: decl @lune.@base.@Nodes.ExpOmitEnumNode.setupLiteralTokenList
+// 2801: decl @lune.@base.@Nodes.ExpOmitEnumNode.setupLiteralTokenList
 func (self *Nodes_ExpOmitEnumNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     var enumval *Ast_EnumValInfo
     enumval = self.valInfo
@@ -14834,15 +14837,15 @@ func (self *Nodes_RefFieldNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,de
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1612: decl @lune.@base.@Nodes.RefFieldNode.get_effectivePos
+// 1618: decl @lune.@base.@Nodes.RefFieldNode.get_effectivePos
 func (self *Nodes_RefFieldNode) Get_effectivePos(_env *LnsEnv) Types_Position {
     return self.field.Pos
 }
-// 1615: decl @lune.@base.@Nodes.RefFieldNode.getPrefix
+// 1621: decl @lune.@base.@Nodes.RefFieldNode.getPrefix
 func (self *Nodes_RefFieldNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self.prefix
 }
-// 1618: decl @lune.@base.@Nodes.RefFieldNode.canBeLeft
+// 1624: decl @lune.@base.@Nodes.RefFieldNode.canBeLeft
 func (self *Nodes_RefFieldNode) CanBeLeft(_env *LnsEnv) bool {
     {
         __exp := self.FP.Get_symbolInfo(_env)
@@ -14853,7 +14856,7 @@ func (self *Nodes_RefFieldNode) CanBeLeft(_env *LnsEnv) bool {
     }
     return false
 }
-// 1633: decl @lune.@base.@Nodes.RefFieldNode.canBeRight
+// 1639: decl @lune.@base.@Nodes.RefFieldNode.canBeRight
 func (self *Nodes_RefFieldNode) CanBeRight(_env *LnsEnv, processInfo *Ast_ProcessInfo) bool {
     {
         __exp := self.FP.Get_symbolInfo(_env)
@@ -14875,7 +14878,7 @@ func (self *Nodes_RefFieldNode) CanBeRight(_env *LnsEnv, processInfo *Ast_Proces
     }
     return true
 }
-// 2706: decl @lune.@base.@Nodes.RefFieldNode.getLiteral
+// 2712: decl @lune.@base.@Nodes.RefFieldNode.getLiteral
 func (self *Nodes_RefFieldNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var typeInfo *Ast_TypeInfo
     typeInfo = self.FP.Get_expType(_env)
@@ -14968,11 +14971,11 @@ func (self *Nodes_GetFieldNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,de
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1657: decl @lune.@base.@Nodes.GetFieldNode.get_effectivePos
+// 1663: decl @lune.@base.@Nodes.GetFieldNode.get_effectivePos
 func (self *Nodes_GetFieldNode) Get_effectivePos(_env *LnsEnv) Types_Position {
     return self.field.Pos
 }
-// 1660: decl @lune.@base.@Nodes.GetFieldNode.getPrefix
+// 1666: decl @lune.@base.@Nodes.GetFieldNode.getPrefix
 func (self *Nodes_GetFieldNode) GetPrefix(_env *LnsEnv) LnsAny {
     return self.prefix
 }
@@ -15128,7 +15131,7 @@ func (self *Nodes_DeclVarNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,dep
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1701: decl @lune.@base.@Nodes.DeclVarNode.getBreakKind
+// 1707: decl @lune.@base.@Nodes.DeclVarNode.getBreakKind
 func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     var kind LnsInt
     kind = Nodes_BreakKind__None
@@ -15238,7 +15241,7 @@ func (self *Nodes_DeclVarNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsI
     }
     return Nodes_BreakKind__None
 }
-// 1770: decl @lune.@base.@Nodes.DeclVarNode.visitSub
+// 1776: decl @lune.@base.@Nodes.DeclVarNode.visitSub
 func (self *Nodes_DeclVarNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     for _, _varInfo := range( self.varList.Items ) {
         varInfo := _varInfo.(Nodes_VarInfoDownCast).ToNodes_VarInfo()
@@ -15263,7 +15266,7 @@ func (self *Nodes_DeclVarNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,
     }
     return true
 }
-// 1821: decl @lune.@base.@Nodes.DeclFuncInfo.createFrom
+// 1827: decl @lune.@base.@Nodes.DeclFuncInfo.createFrom
 func Nodes_DeclFuncInfo_createFrom(_env *LnsEnv, info *Nodes_DeclFuncInfo,name *Types_Token,symbol *Ast_SymbolInfo) *Nodes_DeclFuncInfo {
     return NewNodes_DeclFuncInfo(_env, info.FP.Get_kind(_env), info.classTypeInfo, info.declClassNode, info.outsizeOfClass, name, symbol, info.argList, info.staticFlag, info.accessMode, info.asyncMode, info.body, info.retTypeInfoList, info.retTypeNodeList, info.has__func__Symbol, info.overrideFlag, info.stmtNum)
 }
@@ -15415,11 +15418,11 @@ func (self *Nodes_DeclFuncNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,de
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1838: decl @lune.@base.@Nodes.DeclFuncNode.canBeRight
+// 1844: decl @lune.@base.@Nodes.DeclFuncNode.canBeRight
 func (self *Nodes_DeclFuncNode) CanBeRight(_env *LnsEnv, processInfo *Ast_ProcessInfo) bool {
     return Types_Token2Stem(self.declInfo.FP.Get_name(_env)) == nil
 }
-// 1842: decl @lune.@base.@Nodes.DeclFuncNode.canBeStatement
+// 1848: decl @lune.@base.@Nodes.DeclFuncNode.canBeStatement
 func (self *Nodes_DeclFuncNode) CanBeStatement(_env *LnsEnv) bool {
     return Lns_op_not((Types_Token2Stem(self.declInfo.FP.Get_name(_env)) == nil))
 }
@@ -15827,7 +15830,7 @@ func (self *Nodes_ExpCallSuperNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisito
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1876: decl @lune.@base.@Nodes.ExpCallSuperNode.canBeRight
+// 1882: decl @lune.@base.@Nodes.ExpCallSuperNode.canBeRight
 func (self *Nodes_ExpCallSuperNode) CanBeRight(_env *LnsEnv, processInfo *Ast_ProcessInfo) bool {
     return self.FP.Get_expType(_env) != Ast_builtinTypeNone
 }
@@ -15979,19 +15982,19 @@ func (self *Nodes_DeclMemberNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1915: decl @lune.@base.@Nodes.DeclMemberNode.getGetterSym
+// 1921: decl @lune.@base.@Nodes.DeclMemberNode.getGetterSym
 func (self *Nodes_DeclMemberNode) GetGetterSym(_env *LnsEnv) LnsAny {
     if self.getterMode != Ast_AccessMode__None{
         return _env.NilAccFin(_env.NilAccPush(self.classType.FP.Get_scope(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.GetVM().String_format("get_%s", []LnsAny{self.name.Txt}))})/* 1917:14 */)
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.GetVM().String_format("get_%s", []LnsAny{self.name.Txt}))})/* 1923:14 */)
     }
     return nil
 }
-// 1922: decl @lune.@base.@Nodes.DeclMemberNode.getSetterSym
+// 1928: decl @lune.@base.@Nodes.DeclMemberNode.getSetterSym
 func (self *Nodes_DeclMemberNode) GetSetterSym(_env *LnsEnv) LnsAny {
     if self.setterMode != Ast_AccessMode__None{
         return _env.NilAccFin(_env.NilAccPush(self.classType.FP.Get_scope(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.GetVM().String_format("set_%s", []LnsAny{self.name.Txt}))})/* 1924:14 */)
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, _env.GetVM().String_format("set_%s", []LnsAny{self.name.Txt}))})/* 1930:14 */)
     }
     return nil
 }
@@ -16099,7 +16102,7 @@ func Nodes_DeclAdvertiseNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos
 func (self *Nodes_DeclAdvertiseNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1950: decl @lune.@base.@Nodes.ClassInheritInfo.visit
+// 1956: decl @lune.@base.@Nodes.ClassInheritInfo.visit
 func (self *Nodes_ClassInheritInfo) Visit(_env *LnsEnv, parent *Nodes_Node,visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     {
         _base := self.base
@@ -16164,7 +16167,7 @@ func Nodes_ProtoClassNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Ty
 func (self *Nodes_ProtoClassNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 1967: decl @lune.@base.@Nodes.ProtoClassNode.visitSub
+// 1973: decl @lune.@base.@Nodes.ProtoClassNode.visitSub
 func (self *Nodes_ProtoClassNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.inheritInfo.FP.Visit(_env, &self.Nodes_Node, visitor, depth, alreadySet)
 }
@@ -16272,15 +16275,15 @@ func (self *Nodes_DeclClassNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,d
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2018: decl @lune.@base.@Nodes.DeclClassNode.visitSub
+// 2024: decl @lune.@base.@Nodes.DeclClassNode.visitSub
 func (self *Nodes_DeclClassNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.inheritInfo.FP.Visit(_env, &self.Nodes_Node, visitor, depth, alreadySet)
 }
-// 2024: decl @lune.@base.@Nodes.DeclClassNode.isModule
+// 2030: decl @lune.@base.@Nodes.DeclClassNode.isModule
 func (self *Nodes_DeclClassNode) IsModule(_env *LnsEnv) bool {
     return Types_Token2Stem(self.moduleName) != nil
 }
-// 2031: decl @lune.@base.@Nodes.DeclClassNode.createMethodNameSetWithoutAdv
+// 2037: decl @lune.@base.@Nodes.DeclClassNode.createMethodNameSetWithoutAdv
 func (self *Nodes_DeclClassNode) CreateMethodNameSetWithoutAdv(_env *LnsEnv) *LnsSet {
     var methodNameSet *LnsSet
     methodNameSet = NewLnsSet([]LnsAny{})
@@ -16317,11 +16320,11 @@ func (self *Nodes_DeclClassNode) CreateMethodNameSetWithoutAdv(_env *LnsEnv) *Ln
     }
     return methodNameSet
 }
-// 2059: decl @lune.@base.@Nodes.DeclClassNode.setHasOldCtor
+// 2065: decl @lune.@base.@Nodes.DeclClassNode.setHasOldCtor
 func (self *Nodes_DeclClassNode) SetHasOldCtor(_env *LnsEnv) {
     self.hasOldCtor = true
 }
-// 2063: decl @lune.@base.@Nodes.DeclClassNode.hasUserInit
+// 2069: decl @lune.@base.@Nodes.DeclClassNode.hasUserInit
 func (self *Nodes_DeclClassNode) HasUserInit(_env *LnsEnv) bool {
     var scope *Ast_Scope
     scope = Lns_unwrap( self.FP.Get_expType(_env).FP.Get_scope(_env)).(*Ast_Scope)
@@ -16385,7 +16388,7 @@ func Nodes_DeclAlgeNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Type
 func (self *Nodes_DeclAlgeNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2093: decl @lune.@base.@Nodes.DeclAlgeNode.visitSub
+// 2099: decl @lune.@base.@Nodes.DeclAlgeNode.visitSub
 func (self *Nodes_DeclAlgeNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     for _, _valInfo := range( self.algeValList.Items ) {
         valInfo := _valInfo.(Nodes_DeclAlgeValInfoDownCast).ToNodes_DeclAlgeValInfo()
@@ -16474,7 +16477,7 @@ func (self *Nodes_NewAlgeValNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2114: decl @lune.@base.@Nodes.NewAlgeValNode.get_algeTypeInfo
+// 2120: decl @lune.@base.@Nodes.NewAlgeValNode.get_algeTypeInfo
 func (self *Nodes_NewAlgeValNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo {
     switch _matchExp0 := self.algeOrGen.(type) {
     case *Ast_AlgeOrGen__Alge:
@@ -16586,7 +16589,7 @@ func (self *Nodes_MatchNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2154: decl @lune.@base.@Nodes.MatchNode.get_algeTypeInfo
+// 2160: decl @lune.@base.@Nodes.MatchNode.get_algeTypeInfo
 func (self *Nodes_MatchNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo {
     switch _matchExp0 := self.algeOrGen.(type) {
     case *Ast_AlgeOrGen__Alge:
@@ -16606,7 +16609,7 @@ func (self *Nodes_MatchNode) Get_algeTypeInfo(_env *LnsEnv) *Ast_AlgeTypeInfo {
 // insert a dummy
     return nil
 }
-// 2168: decl @lune.@base.@Nodes.MatchNode.getBreakKind
+// 2174: decl @lune.@base.@Nodes.MatchNode.getBreakKind
 func (self *Nodes_MatchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt {
     var kind LnsInt
     kind = Nodes_BreakKind__None
@@ -16685,7 +16688,7 @@ func (self *Nodes_MatchNode) GetBreakKind(_env *LnsEnv, checkMode LnsInt) LnsInt
     }
     return Nodes_BreakKind__None
 }
-// 2189: decl @lune.@base.@Nodes.MatchNode.visitSub
+// 2195: decl @lune.@base.@Nodes.MatchNode.visitSub
 func (self *Nodes_MatchNode) VisitSub(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     for _, _caseInfo := range( self.caseList.Items ) {
         caseInfo := _caseInfo.(Nodes_MatchCaseDownCast).ToNodes_MatchCase()
@@ -16895,7 +16898,7 @@ func (self *Nodes_TestBlockNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,d
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2238: decl @lune.@base.@Nodes.TestBlockNode.isInnerPos
+// 2244: decl @lune.@base.@Nodes.TestBlockNode.isInnerPos
 func (self *Nodes_TestBlockNode) IsInnerPos(_env *LnsEnv, pos Types_Position) bool {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( self.FP.Get_pos(_env).StreamName == pos.StreamName) &&
@@ -17050,11 +17053,11 @@ func Nodes_LiteralNilNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Ty
 func (self *Nodes_LiteralNilNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2431: decl @lune.@base.@Nodes.LiteralNilNode.getLiteral
+// 2437: decl @lune.@base.@Nodes.LiteralNilNode.getLiteral
 func (self *Nodes_LiteralNilNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return Nodes_Literal__Nil_Obj, nil
 }
-// 2434: decl @lune.@base.@Nodes.LiteralNilNode.setupLiteralTokenList
+// 2440: decl @lune.@base.@Nodes.LiteralNilNode.setupLiteralTokenList
 func (self *Nodes_LiteralNilNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Symb, "nil")
     return true
@@ -17087,11 +17090,11 @@ func Nodes_LiteralCharNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos T
 func (self *Nodes_LiteralCharNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2440: decl @lune.@base.@Nodes.LiteralCharNode.getLiteral
+// 2446: decl @lune.@base.@Nodes.LiteralCharNode.getLiteral
 func (self *Nodes_LiteralCharNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return &Nodes_Literal__Int{self.num}, nil
 }
-// 2443: decl @lune.@base.@Nodes.LiteralCharNode.setupLiteralTokenList
+// 2449: decl @lune.@base.@Nodes.LiteralCharNode.setupLiteralTokenList
 func (self *Nodes_LiteralCharNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Char, _env.GetVM().String_format("%d", []LnsAny{self.num}))
     return true
@@ -17124,11 +17127,11 @@ func Nodes_LiteralIntNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos Ty
 func (self *Nodes_LiteralIntNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2448: decl @lune.@base.@Nodes.LiteralIntNode.getLiteral
+// 2454: decl @lune.@base.@Nodes.LiteralIntNode.getLiteral
 func (self *Nodes_LiteralIntNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return &Nodes_Literal__Int{self.num}, nil
 }
-// 2451: decl @lune.@base.@Nodes.LiteralIntNode.setupLiteralTokenList
+// 2457: decl @lune.@base.@Nodes.LiteralIntNode.setupLiteralTokenList
 func (self *Nodes_LiteralIntNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Int, _env.GetVM().String_format("%d", []LnsAny{self.num}))
     return true
@@ -17161,11 +17164,11 @@ func Nodes_LiteralRealNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos T
 func (self *Nodes_LiteralRealNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2456: decl @lune.@base.@Nodes.LiteralRealNode.getLiteral
+// 2462: decl @lune.@base.@Nodes.LiteralRealNode.getLiteral
 func (self *Nodes_LiteralRealNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return &Nodes_Literal__Real{self.num}, nil
 }
-// 2459: decl @lune.@base.@Nodes.LiteralRealNode.setupLiteralTokenList
+// 2465: decl @lune.@base.@Nodes.LiteralRealNode.setupLiteralTokenList
 func (self *Nodes_LiteralRealNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Real, _env.GetVM().String_format("%g", []LnsAny{self.num}))
     return true
@@ -17218,7 +17221,7 @@ func (self *Nodes_LiteralArrayNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisito
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2464: decl @lune.@base.@Nodes.LiteralArrayNode.getLiteral
+// 2470: decl @lune.@base.@Nodes.LiteralArrayNode.getLiteral
 func (self *Nodes_LiteralArrayNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var literalList *LnsList
     literalList = NewLnsList([]LnsAny{})
@@ -17242,7 +17245,7 @@ func (self *Nodes_LiteralArrayNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     }
     return &Nodes_Literal__ARRAY{literalList}, nil
 }
-// 2480: decl @lune.@base.@Nodes.LiteralArrayNode.setupLiteralTokenList
+// 2486: decl @lune.@base.@Nodes.LiteralArrayNode.setupLiteralTokenList
 func (self *Nodes_LiteralArrayNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Dlmt, "[@")
     {
@@ -17312,7 +17315,7 @@ func (self *Nodes_LiteralListNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2497: decl @lune.@base.@Nodes.LiteralListNode.getLiteral
+// 2503: decl @lune.@base.@Nodes.LiteralListNode.getLiteral
 func (self *Nodes_LiteralListNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var literalList *LnsList
     literalList = NewLnsList([]LnsAny{})
@@ -17336,7 +17339,7 @@ func (self *Nodes_LiteralListNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     }
     return &Nodes_Literal__LIST{literalList}, nil
 }
-// 2513: decl @lune.@base.@Nodes.LiteralListNode.setupLiteralTokenList
+// 2519: decl @lune.@base.@Nodes.LiteralListNode.setupLiteralTokenList
 func (self *Nodes_LiteralListNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Dlmt, "[")
     {
@@ -17406,7 +17409,7 @@ func (self *Nodes_LiteralSetNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2531: decl @lune.@base.@Nodes.LiteralSetNode.getLiteral
+// 2537: decl @lune.@base.@Nodes.LiteralSetNode.getLiteral
 func (self *Nodes_LiteralSetNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var literalList *LnsList
     literalList = NewLnsList([]LnsAny{})
@@ -17430,7 +17433,7 @@ func (self *Nodes_LiteralSetNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     }
     return &Nodes_Literal__SET{literalList}, nil
 }
-// 2547: decl @lune.@base.@Nodes.LiteralSetNode.setupLiteralTokenList
+// 2553: decl @lune.@base.@Nodes.LiteralSetNode.setupLiteralTokenList
 func (self *Nodes_LiteralSetNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Dlmt, "(@")
     {
@@ -17520,7 +17523,7 @@ func (self *Nodes_LiteralMapNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2564: decl @lune.@base.@Nodes.LiteralMapNode.getLiteral
+// 2570: decl @lune.@base.@Nodes.LiteralMapNode.getLiteral
 func (self *Nodes_LiteralMapNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var litMap *LnsMap
     litMap = NewLnsMap( map[LnsAny]LnsAny{})
@@ -17548,7 +17551,7 @@ func (self *Nodes_LiteralMapNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     }
     return &Nodes_Literal__MAP{litMap}, nil
 }
-// 2584: decl @lune.@base.@Nodes.LiteralMapNode.setupLiteralTokenList
+// 2590: decl @lune.@base.@Nodes.LiteralMapNode.setupLiteralTokenList
 func (self *Nodes_LiteralMapNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Dlmt, "{")
     var lit2valNode *LnsMap
@@ -17585,7 +17588,7 @@ func (self *Nodes_LiteralMapNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsL
             }
             self.FP.AddTokenList(_env, list, Types_TokenKind__Dlmt, ":")
             if Lns_op_not(_env.NilAccFin(_env.NilAccPush(self._map.Get(key)) && 
-            Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Nodes_Node).FP.SetupLiteralTokenList(_env, list)})/* 2614:14 */)){
+            Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Nodes_Node).FP.SetupLiteralTokenList(_env, list)})/* 2620:14 */)){
                 return false
             }
             self.FP.AddTokenList(_env, list, Types_TokenKind__Dlmt, ",")
@@ -17662,7 +17665,7 @@ func (self *Nodes_LiteralStringNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisit
     }
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2624: decl @lune.@base.@Nodes.LiteralStringNode.getLiteral
+// 2630: decl @lune.@base.@Nodes.LiteralStringNode.getLiteral
 func (self *Nodes_LiteralStringNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     var txt string
     txt = self.token.Txt
@@ -17696,7 +17699,7 @@ func (self *Nodes_LiteralStringNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     }
     return &Nodes_Literal__Str{txt}, nil
 }
-// 2651: decl @lune.@base.@Nodes.LiteralStringNode.setupLiteralTokenList
+// 2657: decl @lune.@base.@Nodes.LiteralStringNode.setupLiteralTokenList
 func (self *Nodes_LiteralStringNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Str, self.token.Txt)
     {
@@ -17747,11 +17750,11 @@ func Nodes_LiteralBoolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos T
 func (self *Nodes_LiteralBoolNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2669: decl @lune.@base.@Nodes.LiteralBoolNode.getLiteral
+// 2675: decl @lune.@base.@Nodes.LiteralBoolNode.getLiteral
 func (self *Nodes_LiteralBoolNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return &Nodes_Literal__Bool{self.token.Txt == "true"}, nil
 }
-// 2673: decl @lune.@base.@Nodes.LiteralBoolNode.setupLiteralTokenList
+// 2679: decl @lune.@base.@Nodes.LiteralBoolNode.setupLiteralTokenList
 func (self *Nodes_LiteralBoolNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Kywd, self.token.Txt)
     return true
@@ -17784,28 +17787,28 @@ func Nodes_LiteralSymbolNode_create(_env *LnsEnv, nodeMan *Nodes_NodeManager,pos
 func (self *Nodes_LiteralSymbolNode) Visit(_env *LnsEnv, visitor Nodes_NodeVisitor,depth LnsInt,alreadySet *LnsSet) bool {
     return self.FP.VisitSub(_env, visitor, depth + 1, alreadySet)
 }
-// 2680: decl @lune.@base.@Nodes.LiteralSymbolNode.getLiteral
+// 2686: decl @lune.@base.@Nodes.LiteralSymbolNode.getLiteral
 func (self *Nodes_LiteralSymbolNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
     return &Nodes_Literal__Symbol{self.token.Txt}, nil
 }
-// 2684: decl @lune.@base.@Nodes.LiteralSymbolNode.setupLiteralTokenList
+// 2690: decl @lune.@base.@Nodes.LiteralSymbolNode.setupLiteralTokenList
 func (self *Nodes_LiteralSymbolNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
     self.FP.AddTokenList(_env, list, Types_TokenKind__Symb, self.token.Txt)
     return true
 }
-// 2944: decl @lune.@base.@Nodes.DefMacroInfo.get_name
+// 2950: decl @lune.@base.@Nodes.DefMacroInfo.get_name
 func (self *Nodes_DefMacroInfo) Get_name(_env *LnsEnv) string {
     return self.DeclInfo.FP.Get_name(_env).Txt
 }
-// 2948: decl @lune.@base.@Nodes.DefMacroInfo.getArgList
+// 2954: decl @lune.@base.@Nodes.DefMacroInfo.getArgList
 func (self *Nodes_DefMacroInfo) GetArgList(_env *LnsEnv) *LnsList {
     return self.argList
 }
-// 2951: decl @lune.@base.@Nodes.DefMacroInfo.getTokenList
+// 2957: decl @lune.@base.@Nodes.DefMacroInfo.getTokenList
 func (self *Nodes_DefMacroInfo) GetTokenList(_env *LnsEnv) *LnsList {
     return self.DeclInfo.FP.Get_tokenList(_env)
 }
-// 2975: decl @lune.@base.@Nodes.ExportInfo.assign
+// 2981: decl @lune.@base.@Nodes.ExportInfo.assign
 func (self *Nodes_ExportInfo) Assign(_env *LnsEnv, assignName string) *FrontInterface_ExportInfo {
     var info *Nodes_ExportInfo
     info = NewNodes_ExportInfo(_env, self.FP.Get_moduleTypeInfo(_env), self.FP.Get_provideInfo(_env), self.FP.Get_processInfo(_env), self.FP.Get_globalSymbolList(_env), self.FP.Get_importedAliasMap(_env), self.FP.Get_moduleId(_env), self.FP.Get_fullName(_env), assignName, self.FP.Get_streamName(_env), NewLnsMap( map[LnsAny]LnsAny{}), self.typeId2DefMacroInfo)
