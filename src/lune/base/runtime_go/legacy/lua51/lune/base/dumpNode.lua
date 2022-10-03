@@ -412,6 +412,17 @@ end
 function dumpFilter:processDeclClass( node, opt )
 
    self:dump( opt, node, string.format( "%s (%s)", node:get_name(  ).txt, self:getFull( node:get_expType(), false )) )
+   do
+      local baseNode = node:get_inheritInfo():get_base()
+      if baseNode ~= nil then
+         filter( baseNode, self, opt:nextOpt(  ) )
+      end
+   end
+   
+   for __index, ifNode in ipairs( node:get_inheritInfo():get_impliments() ) do
+      filter( ifNode, self, opt:nextOpt(  ) )
+   end
+   
    for __index, field in ipairs( node:get_fieldList(  ) ) do
       filter( field, self, opt:nextOpt(  ) )
    end

@@ -445,6 +445,10 @@ function FormatterFilter:outputDeclClass( protoFlag, classType, gluePrefix, modu
       self:write( "pub " )
    end
    
+   if classType:get_abstractFlag() then
+      self:write( "abstract " )
+   end
+   
    do
       local _switchExp = classType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Class then
@@ -490,7 +494,7 @@ function FormatterFilter:outputDeclClass( protoFlag, classType, gluePrefix, modu
    if classType:hasBase(  ) or #classType:get_interfaceList() > 0 then
       self:write( " extend " )
       if classType:hasBase(  ) then
-         self:write( classType:get_baseTypeInfo():getTxt(  ) )
+         self:write( classType:get_baseTypeInfo():get_display_stirng() )
       end
       
       if #classType:get_interfaceList() > 0 then
@@ -982,21 +986,24 @@ function FormatterFilter:processRefType( node, opt )
    
    filter( node:get_name(), self, opt:nextOpt( node ) )
    
-   local expType = node:get_expType():get_nonnilableType()
-   
-   do
-      local _switchExp = expType:get_kind()
-      if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Set then
-         self:write( "<" )
-         filter( node:get_itemNodeList()[1], self, opt:nextOpt( node ) )
-         self:write( ">" )
-      elseif _switchExp == Ast.TypeInfoKind.Map then
-         self:write( "<" )
-         filter( node:get_itemNodeList()[1], self, opt:nextOpt( node ) )
-         self:write( "," )
-         filter( node:get_itemNodeList()[2], self, opt:nextOpt( node ) )
-         self:write( ">" )
+   if #node:get_itemNodeList() > 0 then
+      self:write( "<" )
+      for index, itemNode in ipairs( node:get_itemNodeList() ) do
+         if index > 1 then
+            self:write( "," )
+         end
+         
+         do
+            local alt = node:get_itemIndex2alt()[index]
+            if alt ~= nil then
+               self:write( string.format( "%s=", alt:get_rawTxt()) )
+            end
+         end
+         
+         filter( itemNode, self, opt:nextOpt( node ) )
       end
+      
+      self:write( ">" )
    end
    
    

@@ -4910,13 +4910,13 @@ function AlternateTypeInfo:get_nilableTypeInfoMut(  )
 
    return self.nilableTypeInfo
 end
-function AlternateTypeInfo._new( processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
+function AlternateTypeInfo._new( processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo )
    local obj = {}
    AlternateTypeInfo._setmeta( obj )
-   if obj.__init then obj:__init( processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList ); end
+   if obj.__init then obj:__init( processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo ); end
    return obj
 end
-function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList) 
+function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo) 
    TypeInfo.__init( self,scope, processInfo)
    
    self.typeId = processInfo:newId( self )
@@ -4930,11 +4930,12 @@ function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex,
    self.altIndex = altIndex
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
    self.imutType = _moduleObj.headTypeInfo
+   self.refTypeInfo = refTypeInfo
 end
-function AlternateTypeInfo.create( processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
+function AlternateTypeInfo.create( processInfo, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo )
 
    local scope = TypeInfo.createScope( processInfo, nil, ScopeKind.Class, baseTypeInfo, interfaceList )
-   local newType = AlternateTypeInfo._new(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList)
+   local newType = AlternateTypeInfo._new(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo)
    processInfo:setupImut( newType )
    
    return newType, scope
@@ -5167,6 +5168,9 @@ function AlternateTypeInfo:get_imutType()
 end
 function AlternateTypeInfo:set_imutType( imutType )
    self.imutType = imutType
+end
+function AlternateTypeInfo:get_refTypeInfo()
+   return self.refTypeInfo
 end
 
 
@@ -6858,9 +6862,9 @@ function ProcessInfo:duplicate(  )
 end
 
 
-function ProcessInfo:createAlternate( belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
+function ProcessInfo:createAlternate( belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo )
 
-   return AlternateTypeInfo.create( self, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList )
+   return AlternateTypeInfo.create( self, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo )
 end
 
 
@@ -7109,6 +7113,10 @@ function AlternateTypeInfo:canSetFrom( processInfo, other, canEvalType, alt2type
 
    local otherWork = AlternateTypeInfo.getAssign( other, alt2type )
    if self == otherWork then
+      return true
+   end
+   
+   if self.refTypeInfo == otherWork then
       return true
    end
    

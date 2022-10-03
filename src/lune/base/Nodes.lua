@@ -1741,27 +1741,28 @@ function RefTypeNode:canBeStatement(  )
 
    return false
 end
-function RefTypeNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
+function RefTypeNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, itemIndex2alt, mutMode, array )
    local obj = {}
    RefTypeNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, itemIndex2alt, mutMode, array ); end
    return obj
 end
-function RefTypeNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array) 
+function RefTypeNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, itemIndex2alt, mutMode, array) 
    Node.__init( self,managerId, id, 7, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.name = name
    self.itemNodeList = itemNodeList
+   self.itemIndex2alt = itemIndex2alt
    self.mutMode = mutMode
    self.array = array
    
    
 end
-function RefTypeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array )
+function RefTypeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, itemIndex2alt, mutMode, array )
 
-   local node = RefTypeNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, mutMode, array)
+   local node = RefTypeNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, name, itemNodeList, itemIndex2alt, mutMode, array)
    nodeMan:addNode( node )
    return node
 end
@@ -1829,6 +1830,9 @@ function RefTypeNode:get_name()
 end
 function RefTypeNode:get_itemNodeList()
    return self.itemNodeList
+end
+function RefTypeNode:get_itemIndex2alt()
+   return self.itemIndex2alt
 end
 function RefTypeNode:get_mutMode()
    return self.mutMode

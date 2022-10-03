@@ -879,6 +879,8 @@ pub fn RootNode.set_provide( node: ProvideNode ) mut {
 _declNodeClass( "RefType", Node, false, false, false,
                 [ { "name": "&Node" },
                   { "itemNodeList": "&List<&Node>" },
+                  // Map<T=str,str> のような T=str の部分の型パラメータ index -> T
+                  { "itemIndex2alt" : "&Map<int,&Ast.AlternateTypeInfo>" },
                   { "mutMode": "Ast.MutMode!" },
                   { "array": "str" } ]
 );

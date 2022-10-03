@@ -1091,7 +1091,7 @@ alias で置き換えている元の Type → alias の型
    pub fn getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token;
    pri fn analyzeRefTypeWithSymbol(
       accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
-      symbolNode:&Nodes.Node, parentPub:bool ) mut: Nodes.RefTypeNode;
+      symbolNode:&Nodes.Node, parentPub:bool, allowToSetAlt:bool ) mut: Nodes.RefTypeNode;
    fn analyzeFuncBlock(
       analyzingState:AnalyzingState, firstToken: &Parser.Token,
       classTypeInfo:&Ast.TypeInfo!, funcTypeInfo:&Ast.TypeInfo,

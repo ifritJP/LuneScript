@@ -3222,7 +3222,7 @@ function TransUnit:analyzeScope( firstToken )
 end
 
 
-function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag )
+function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
 
    local firstToken = self:getToken(  )
    local token = firstToken
@@ -3270,7 +3270,7 @@ function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTyp
    end
    
    
-   local refTypeNode = self:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, name, parentPub )
+   local refTypeNode = self:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, name, parentPub, allowToSetAlt )
    
    if not allowOmitTypeParamFlag then
       local valid, mess = refTypeNode:checkValidGenerics(  )
@@ -3303,12 +3303,36 @@ function TransUnit:createGeneric( pos, genSrcTypeInfo, itemTypeInfoList )
    return self.processInfo:createGeneric( genSrcTypeInfo, itemTypeInfoList, self.moduleType )
 end
 
-function TransUnit:analyzeTypeParamArg( accessMode, parentPub, itemNodeList )
+function TransUnit:analyzeTypeParamArg( accessMode, parentPub, itemNodeList, itemIndex2alt )
 
    local genericList = {}
    local nextToken = Parser.getEofToken(  )
    repeat 
-      local typeExp = self:analyzeRefType( accessMode, false, parentPub, false )
+      local altToken = self:getToken(  )
+      local altMode
+      
+      if self:getToken(  ).txt ~= "=" then
+         altMode = false
+         self:pushback(  )
+         self:pushback(  )
+      else
+       
+         altMode = true
+      end
+      
+      
+      local typeExp = self:analyzeRefType( accessMode, false, parentPub, false, false )
+      if altMode then
+         local altType = self.processInfo:createAlternate( false, #genericList + 1, altToken.txt, accessMode, self.moduleType, nil, {}, typeExp:get_expType() )
+         if itemIndex2alt ~= nil then
+            itemIndex2alt[#genericList + 1] = altType
+         else
+            self:addErrMess( altToken.pos, string.format( "It can't use the type parameter's name. -- %s", altToken.txt) )
+         end
+         
+      end
+      
+      
       table.insert( itemNodeList, typeExp )
       table.insert( genericList, typeExp:get_expType() )
       if typeExp:get_expType():get_mutMode() == Ast.MutMode.Depend then
@@ -3323,7 +3347,7 @@ function TransUnit:analyzeTypeParamArg( accessMode, parentPub, itemNodeList )
 end
 
 
-function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symbolNode, parentPub )
+function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symbolNode, parentPub, allowToSetAlt )
 
    local typeInfo = symbolNode:get_expType()
    if typeInfo:get_kind() == Ast.TypeInfoKind.Set and not self.helperInfo.useSet then
@@ -3360,6 +3384,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
    
    local itemNodeList = {}
    local arrayMode = "no"
+   local itemIndex2alt = allowToSetAlt and {} or nil
    
    while true do
       if #itemNodeList > 0 then
@@ -3386,7 +3411,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
          table.insert( itemNodeList, symbolNode )
       elseif token.txt == "<" then
          
-         local genericList = self:analyzeTypeParamArg( accessMode, parentPub, itemNodeList )
+         local genericList = self:analyzeTypeParamArg( accessMode, parentPub, itemNodeList, itemIndex2alt )
          
          local function checkAlternateTypeCount( count )
          
@@ -3501,7 +3526,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
    end
    
    
-   return Nodes.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, symbolNode, itemNodeList, mutMode, arrayMode )
+   return Nodes.RefTypeNode.create( self.nodeManager, symbolNode:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, symbolNode, itemNodeList, _lune.unwrapDefault( itemIndex2alt, {}), mutMode, arrayMode )
 end
 
 
@@ -3537,7 +3562,7 @@ function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
          local dddTypeInfo = Ast.builtinTypeDDD
          if flag and workToken.txt == "<" then
             self:pushbackToken( nextToken )
-            local refTypeNode = self:analyzeRefType( accessMode, true, parentPub, false )
+            local refTypeNode = self:analyzeRefType( accessMode, true, parentPub, false, false )
             dddTypeInfo = refTypeNode:get_expType()
          end
          
@@ -3552,7 +3577,7 @@ function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
          
          self:checkNextToken( ":" )
          
-         local refType = self:analyzeRefType( accessMode, false, parentPub, false )
+         local refType = self:analyzeRefType( accessMode, false, parentPub, false, false )
          
          if refType:get_expType():get_kind() == Ast.TypeInfoKind.Class and #refType:get_expType():get_itemTypeInfoList() > 0 then
             local argType = refType:get_expType():get_srcTypeInfo()
@@ -3863,7 +3888,7 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
    local retTypeList
    
    if nextToken.txt == ":" then
-      retTypeList = self:analyzeRefType( accessMode, true, false, false ):get_expTypeList()
+      retTypeList = self:analyzeRefType( accessMode, true, false, false, false ):get_expTypeList()
       self:checkNextToken( "{" )
    else
     
@@ -3995,7 +4020,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
    local nextToken = self:getToken(  )
    if nextToken.txt ~= "(" then
       self:pushback(  )
-      local workBaseRefType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ), false )
+      local workBaseRefType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ), false, true )
       baseRef = workBaseRefType
       local baseType = workBaseRefType:get_expType()
       if baseType:get_kind() ~= Ast.TypeInfoKind.Class then
@@ -4017,7 +4042,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
          end
          
          self:pushback(  )
-         local ifTypeNode = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ), false )
+         local ifTypeNode = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ), false, true )
          table.insert( ifRefList, ifTypeNode )
          local ifType = ifTypeNode:get_expType()
          if ifType:get_kind() ~= Ast.TypeInfoKind.IF then
@@ -4478,7 +4503,7 @@ function TransUnit:analyzeDeclAlge( accessMode, firstToken )
             end
             
             
-            local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false, Ast.isPubToExternal( accessMode ), false )
+            local typeNode = self:analyzeRefType( Ast.AccessMode.Pub, false, Ast.isPubToExternal( accessMode ), false, false )
             if _lune.nilacc( self.nsInfoMap[typeNode:get_expType()], 'get_nobody', 'callmtd' ) then
                self:addErrMess( typeNode:get_pos(), string.format( "can't use the prototype class -- %s", typeNode:get_expType():getTxt(  )) )
             end
@@ -4584,7 +4609,7 @@ function TransUnit:analyzeRetTypeList( pubToExtFlag, accessMode, token, parentPu
    if token.txt == ":" then
       local hasDDDFlag = false
       while true do
-         local refTypeNode = self:analyzeRefType( accessMode, true, parentPub, false )
+         local refTypeNode = self:analyzeRefType( accessMode, true, parentPub, false, false )
          if hasDDDFlag then
             self:addErrMess( refTypeNode:get_pos(), "Type exists after '...'." )
          end
@@ -4828,7 +4853,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
    
    local varName = self:checkSymbol( nextToken, SymbolMode.MustNot_ )
    local token = self:getToken(  )
-   local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( classTypeInfo:get_accessMode() ), false )
+   local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( classTypeInfo:get_accessMode() ), false, false )
    token = self:getToken(  )
    
    if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ) then
@@ -4873,7 +4898,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
                end
                
                if workToken.txt == ":" then
-                  local typeNode = self:analyzeRefType( mode, false, Ast.isPubToExternal( classTypeInfo:get_accessMode() ), false )
+                  local typeNode = self:analyzeRefType( mode, false, Ast.isPubToExternal( classTypeInfo:get_accessMode() ), false, false )
                   retType = typeNode:get_expType()
                   workToken = self:getToken(  )
                end
@@ -4913,7 +4938,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1872, function (  )
+         Log.log( Log.Level.Debug, __func__, 1903, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -5698,6 +5723,17 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    
    
    local classScope = self:get_scope()
+   
+   do
+      local baseNode = inheritInfo:get_base()
+      if baseNode ~= nil then
+         for __index, altType in pairs( baseNode:get_itemIndex2alt() ) do
+            classScope:addAlternate( self.processInfo, classAccessMode, altType:get_rawTxt(), firstToken.pos, altType )
+         end
+         
+      end
+   end
+   
    
    self:checkToken( nextToken, "{" )
    
@@ -6822,7 +6858,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
          local typeInfo = Ast.builtinTypeEmpty
          if nextToken.txt == ":" then
             
-            local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ), false )
+            local refType = self:analyzeRefType( accessMode, false, Ast.isPubToExternal( accessMode ), false, false )
             table.insert( letVarList, LetVarInfo._new(mutable, varName, refType) )
             typeInfo = refType:get_expType()
             if unwrapFlag and typeInfo:get_nilable() then
@@ -9062,7 +9098,7 @@ end
 
 function TransUnit:analyzeExpCast( firstToken, opTxt, exp )
 
-   local castTypeNode = self:analyzeRefType( Ast.AccessMode.Local, false, false, false )
+   local castTypeNode = self:analyzeRefType( Ast.AccessMode.Local, false, false, false, false )
    local castType = castTypeNode:get_expType()
    
    if exp:get_expType():get_kind() == Ast.TypeInfoKind.Ext and castType:get_kind() ~= Ast.TypeInfoKind.Ext and castType:get_kind() ~= Ast.TypeInfoKind.Stem then
@@ -10076,7 +10112,7 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
             local nextToken = self:getToken(  )
             if nextToken.txt == "<" then
                local itemNodeList = {}
-               local genericList = self:analyzeTypeParamArg( Ast.AccessMode.Pri, false, itemNodeList )
+               local genericList = self:analyzeTypeParamArg( Ast.AccessMode.Pri, false, itemNodeList, nil )
                
                if #typeInfo:get_itemTypeInfoList() == #genericList then
                   typeInfo = self:createGeneric( nextToken.pos, typeInfo, genericList )
@@ -10336,12 +10372,12 @@ function TransUnit:analyzeExpSymbol( firstToken, symbolToken, mode, prefixExp, s
             local nextToken = self:getToken(  )
             if nextToken.txt == "<" then
                local itemNodeList = {}
-               local genericList = self:analyzeTypeParamArg( Ast.AccessMode.Pri, false, itemNodeList )
+               local genericList = self:analyzeTypeParamArg( Ast.AccessMode.Pri, false, itemNodeList, nil )
                
                if #typeInfo:get_itemTypeInfoList() == #genericList then
                   local newTypeInfo = self:createGeneric( firstToken.pos, typeInfo, genericList )
                   
-                  exp = Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newTypeInfo}, exp, itemNodeList, typeInfo:get_mutMode(), "no" )
+                  exp = Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {newTypeInfo}, exp, itemNodeList, {}, typeInfo:get_mutMode(), "no" )
                else
                 
                   self:addErrMess( nextToken.pos, string.format( "generic type count is unmatch. -- %d, %s", #genericList, typeInfo:getTxt(  )) )
@@ -11289,7 +11325,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
    local function processsNewExp( token )
    
       local _
-      local exp = self:analyzeRefType( Ast.AccessMode.Local, false, false, true )
+      local exp = self:analyzeRefType( Ast.AccessMode.Local, false, false, true, false )
       
       local classTypeInfo = exp:get_expType()
       do
@@ -11572,7 +11608,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       if #symbolInfoList == 1 then
          local symbolInfo = symbolInfoList[1]
          if symbolInfo:get_kind() == Ast.SymbolKind.Typ then
-            exp = self:analyzeRefTypeWithSymbol( Ast.AccessMode.Local, false, nil, exp, false )
+            exp = self:analyzeRefTypeWithSymbol( Ast.AccessMode.Local, false, nil, exp, false, false )
             local workToken = self:getToken(  )
             if workToken.txt == "." then
                exp = self:analyzeExpSymbol( firstToken, self:getToken(  ), ExpSymbolMode.Field, exp, false, canLeftExp )
@@ -11595,7 +11631,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
       
       exp = Nodes.ExpRefNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {symbolTypeInfo:get_typeInfo()}, Ast.AccessSymbolInfo._new(self.processInfo, symbolTypeInfo, _lune.newAlge( Ast.OverrideMut.None), false) )
       
-      exp = Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, {}, Ast.MutMode.Mut, "no" )
+      exp = Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, {}, {}, Ast.MutMode.Mut, "no" )
    elseif token.kind == Parser.TokenKind.Kywd and (token.txt == "true" or token.txt == "false" ) then
       exp = Nodes.LiteralBoolNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeBool}, token )
    elseif token.kind == Parser.TokenKind.Kywd and (token.txt == "nil" or token.txt == "null" ) then

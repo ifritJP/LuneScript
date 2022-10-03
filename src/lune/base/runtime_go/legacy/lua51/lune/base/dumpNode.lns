@@ -247,6 +247,12 @@ pub override fn dumpFilter.processDeclClass(
    self.dump(
       opt, node,
       "%s (%s)" ( node.get_name().txt, self.getFull( node.$expType, false ) ) );
+   if! let baseNode = node.$inheritInfo.$base {
+      filter( baseNode, self, opt.nextOpt() );
+   }
+   foreach ifNode in node.$inheritInfo.$impliments {
+      filter( ifNode, self, opt.nextOpt() );
+   }
    foreach field in node.get_fieldList() {
       filter( field, self, opt.nextOpt() );
    }	

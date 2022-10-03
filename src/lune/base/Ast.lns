@@ -3346,6 +3346,12 @@ pub class AlternateTypeInfo extend TypeInfo {
    /** 何番目の型パラメータか */
    pri let altIndex:int {pub};
    pri let mut imutType:&TypeInfo {pub,local};
+   /**
+   AlternateTypeInfo が参照する型情報。
+   基本は nil。
+   <T=int> のように型パラメータを指定する場合に利用する。
+   */ 
+   pri let refTypeInfo:&TypeInfo! {pub};
 
    local override fn get_nilableTypeInfoMut() mut: TypeInfo {
       return self.nilableTypeInfo;
@@ -3355,7 +3361,8 @@ pub class AlternateTypeInfo extend TypeInfo {
    local fn __init(
       processInfo:ProcessInfo, scope:Scope, belongClassFlag:bool, altIndex:int,
       txt:str, accessMode:AccessMode, parentInfo:&TypeInfo,
-      baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>! ) 
+      baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>!,
+      refTypeInfo:&TypeInfo! ) 
    {
       super( scope, processInfo );
 
@@ -3374,18 +3381,20 @@ pub class AlternateTypeInfo extend TypeInfo {
       //processInfo.$idProv.increment();
       self.nilableTypeInfo = new NilableTypeInfo( processInfo, self );
       self.imutType = headTypeInfo;
+      self.refTypeInfo = refTypeInfo;
    }
 
    local static fn create(
       processInfo:ProcessInfo, belongClassFlag:bool, altIndex:int,
       txt:str, accessMode:AccessMode, parentInfo:&TypeInfo, baseTypeInfo: &TypeInfo!,
-      interfaceList: &List<&TypeInfo>! ) : AlternateTypeInfo, Scope
+      interfaceList: &List<&TypeInfo>!, refTypeInfo:&TypeInfo! ) :
+      AlternateTypeInfo, Scope
    {
       let mut scope = TypeInfo.createScope(
          processInfo, nil, .Class, baseTypeInfo, interfaceList );
       let mut newType = new AlternateTypeInfo(
          processInfo, scope, belongClassFlag, altIndex,
-         txt, accessMode, parentInfo, baseTypeInfo, interfaceList );
+         txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo );
       processInfo.setupImut( newType );
       
       return newType, scope;
@@ -4912,12 +4921,12 @@ pub fn ProcessInfo.duplicate() : ProcessInfo {
 
 pub fn ProcessInfo.createAlternate(
    belongClassFlag:bool, altIndex:int, txt:str, accessMode:AccessMode,
-   parentInfo:&TypeInfo, baseTypeInfo: &TypeInfo!,
-   interfaceList: &List<&TypeInfo>! ) mut : AlternateTypeInfo, Scope
+   parentInfo:&TypeInfo, baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>!,
+   refTypeInfo:&TypeInfo! ) mut : AlternateTypeInfo, Scope
 {
    return AlternateTypeInfo.create(
       self, belongClassFlag, altIndex, txt,
-      accessMode, parentInfo, baseTypeInfo, interfaceList )**;
+      accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo )**;
 }
 
 
@@ -5142,6 +5151,9 @@ pri fn AlternateTypeInfo.canSetFrom(
    let otherWork = AlternateTypeInfo.getAssign( other, alt2type );
    if self == otherWork {
       return true;      
+   }
+   if self.refTypeInfo == otherWork {
+      return true;
    }
 
 

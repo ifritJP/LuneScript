@@ -273,6 +273,9 @@ fn FormatterFilter.outputDeclClass(
    if classType.$accessMode == .Pub {
       self.write( "pub " );
    }
+   if classType.$abstractFlag {
+      self.write( "abstract " );
+   }
    switch classType.$kind {
       case .Class {
          if moduleName {
@@ -311,7 +314,7 @@ fn FormatterFilter.outputDeclClass(
    if classType.hasBase() or #classType.$interfaceList > 0 {
       self.write( " extend " );
       if classType.hasBase() {
-         self.write( classType.$baseTypeInfo.getTxt(##) );
+         self.write( classType.$baseTypeInfo.$display_stirng );
       }
       if #classType.$interfaceList > 0 {
          self.write( "(" );
@@ -762,22 +765,37 @@ pub override fn FormatterFilter.processRefType(
    }
    filter( node.$name, self, opt.nextOpt( node ) );
 
-   let expType = node.$expType.$nonnilableType;
+   // let expType = node.$expType.$nonnilableType;
 
-   switch expType.$kind {
-      case .List, .Set {
-         self.write( "<" );
-         filter( node.$itemNodeList[ 1 ], self, opt.nextOpt( node ) );
-         self.write( ">" );
+   // switch expType.$kind {
+   //    case .List, .Set {
+   //       self.write( "<" );
+   //       filter( node.$itemNodeList[ 1 ], self, opt.nextOpt( node ) );
+   //       self.write( ">" );
+   //    }
+   //    case .Map {
+   //       self.write( "<" );
+   //       filter( node.$itemNodeList[ 1 ], self, opt.nextOpt( node ) );
+   //       self.write( "," );
+   //       filter( node.$itemNodeList[ 2 ], self, opt.nextOpt( node ) );
+   //       self.write( ">" );
+   //    }
+   // }
+
+   if #node.$itemNodeList > 0 {
+      self.write( "<" );
+      foreach itemNode, index in node.$itemNodeList {
+         if index > 1 {
+            self.write( "," );
+         }
+         if! let alt = node.$itemIndex2alt[ index ] {
+            self.write( "%s=" (alt.$rawTxt) );
+         }
+         filter( itemNode, self, opt.nextOpt( node ) );
       }
-      case .Map {
-         self.write( "<" );
-         filter( node.$itemNodeList[ 1 ], self, opt.nextOpt( node ) );
-         self.write( "," );
-         filter( node.$itemNodeList[ 2 ], self, opt.nextOpt( node ) );
-         self.write( ">" );
-      }
+      self.write( ">" );
    }
+   
 
    if node.$expType.$nilable {
       self.write( "!" );

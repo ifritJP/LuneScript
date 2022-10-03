@@ -2475,3 +2475,20 @@ _section();
       print( (unwrap pipe.get()) + 1, "ONLY_GO" );
    }
 }
+_section();
+{
+   abstract class Hoge<T> {
+      pro abstract fn func() : T;
+      pub fn aaa() : T {
+         return self.func();
+      }
+   }
+
+   class Sub extend Hoge<A=int> {
+      pro override fn func() : A {
+         return 10;
+      }
+   }
+   let sub = new Sub();
+   print( sub.aaa() + 1 );
+}

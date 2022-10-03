@@ -34,8 +34,8 @@ subfile owner lune.base.TransUnit;
     <> の型パラメータを省略を許可するかどうか。
 */
 fn TransUnit.analyzeRefType(
-   accessMode: Ast.AccessMode, allowDDD:bool,
-   parentPub:bool, allowOmitTypeParamFlag:bool ) mut: Nodes.RefTypeNode
+   accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool,
+   allowOmitTypeParamFlag:bool, allowToSetAlt:bool ) mut: Nodes.RefTypeNode
 {
    let firstToken = self.getToken(##);
    let mut token = firstToken;
@@ -89,7 +89,7 @@ fn TransUnit.analyzeRefType(
    }
 
    let mut refTypeNode = self.analyzeRefTypeWithSymbol(
-      accessMode, allowDDD, mutMode, name, parentPub );
+      accessMode, allowDDD, mutMode, name, parentPub, allowToSetAlt );
 
    if not allowOmitTypeParamFlag {
       let valid, mess = refTypeNode.checkValidGenerics();
@@ -136,16 +136,41 @@ Map<int,str> の <int,str> を解析する。
 
 @param accessMode この型のアクセス制御
 @param parentPub この型を使用している親の空間自体が public な場合 true
+@param itemIndex2alt <T=int,str> の T= の部分の、 型パラメータ index -> AlternateTypeInfo>。
+   この情報を定義できない場合は、 nil を指定する。
 @return 型引数の実引数の型のリスト。
 */
 fn TransUnit.analyzeTypeParamArg(
-   accessMode: Ast.AccessMode, parentPub:bool, itemNodeList:List<&Nodes.Node> ) mut
-: &List<&Ast.TypeInfo>
+   accessMode: Ast.AccessMode, parentPub:bool, itemNodeList:List<&Nodes.Node>,
+   itemIndex2alt:Map<int,&Ast.AlternateTypeInfo>! ) mut : &List<&Ast.TypeInfo>
 {
    let mut genericList: List<&Ast.TypeInfo> = [];
    let mut nextToken: &Parser.Token = Parser.getEofToken();
    repeat {
-      let typeExp = self.analyzeRefType( accessMode, false, parentPub, false );
+      let altToken = self.getToken(##);
+      let altMode;
+      if self.getToken(##).txt ~= "=" {
+         altMode = false;
+         self.pushback();
+         self.pushback();
+      } else {
+         altMode = true;
+      }
+      
+      let typeExp = self.analyzeRefType( accessMode, false, parentPub, false, false );
+      if altMode {
+         let altType = self.processInfo.createAlternate(
+            false, #genericList + 1, altToken.txt,
+            accessMode, self.moduleType, nil, [], typeExp.$expType );
+         when! itemIndex2alt {
+            itemIndex2alt[ #genericList + 1 ] = altType;
+         } else {
+            self.addErrMess(
+               altToken.pos,  
+               "It can't use the type parameter's name. -- %s" (altToken.txt) );
+         }
+      }
+      
       itemNodeList.insert( typeExp );
       genericList.insert( typeExp.$expType );
       if typeExp.$expType.$mutMode == .Depend {
@@ -162,8 +187,8 @@ fn TransUnit.analyzeTypeParamArg(
 }
 
 fn TransUnit.analyzeRefTypeWithSymbol(
-   accessMode: Ast.AccessMode, allowDDD:bool,
-   mutMode:Ast.MutMode!, symbolNode:&Nodes.Node, parentPub:bool ) mut:
+   accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
+   symbolNode:&Nodes.Node, parentPub:bool, allowToSetAlt:bool ) mut:
    Nodes.RefTypeNode
 {
    let mut typeInfo = symbolNode.$expType;
@@ -214,6 +239,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
 
    let mut itemNodeList:List<&Nodes.Node> = [];
    let mut arrayMode = "no";
+   let itemIndex2alt:Map<int,&Ast.AlternateTypeInfo>! = allowToSetAlt and {} or nil;
 
    while true {
       if #itemNodeList > 0 {
@@ -239,9 +265,9 @@ fn TransUnit.analyzeRefTypeWithSymbol(
          itemNodeList.insert( symbolNode );
       }
       elseif token.txt == "<" {
-      // if token.txt == "<" {
+         // if token.txt == "<" {
          let genericList = self.analyzeTypeParamArg(
-            accessMode, parentPub, itemNodeList );
+            accessMode, parentPub, itemNodeList, itemIndex2alt );
 
          fn checkAlternateTypeCount( count:int ) __trans : bool {
             if #genericList ~= count {
@@ -363,7 +389,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    return Nodes.RefTypeNode.create(
       self.nodeManager, symbolNode.$pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-      symbolNode, itemNodeList, mutMode, arrayMode );
+      symbolNode, itemNodeList, unwrap itemIndex2alt default {}, mutMode, arrayMode );
 }
 
 fn TransUnit.analyzeDeclArgList(
@@ -397,7 +423,8 @@ fn TransUnit.analyzeDeclArgList(
          let mut dddTypeInfo = Ast.builtinTypeDDD;
          if flag and workToken.txt == "<" {
             self.pushbackToken( nextToken );
-            let refTypeNode = self.analyzeRefType( accessMode, true, parentPub, false );
+            let refTypeNode = self.analyzeRefType(
+               accessMode, true, parentPub, false, false );
             dddTypeInfo = refTypeNode.$expType;
          }
 
@@ -415,7 +442,7 @@ fn TransUnit.analyzeDeclArgList(
 
          self.checkNextToken( ":" );
 
-         let refType = self.analyzeRefType( accessMode, false, parentPub, false );
+         let refType = self.analyzeRefType( accessMode, false, parentPub, false, false );
          
          if refType.$expType.$kind == .Class and #refType.$expType.$itemTypeInfoList > 0
          {
@@ -721,7 +748,8 @@ fn TransUnit.analyzeDeclMacroSub(
 
    let retTypeList;
    if nextToken.txt == ":" {
-      retTypeList = self.analyzeRefType( accessMode, true, false, false ).$expTypeList;
+      retTypeList = self.analyzeRefType(
+         accessMode, true, false, false, false ).$expTypeList;
       self.checkNextToken( "{");
    }
    else {
@@ -896,7 +924,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
    if nextToken.txt ~= "(" {
       self.pushback();
       let workBaseRefType = self.analyzeRefType(
-         accessMode, false, Ast.isPubToExternal( accessMode ), false );
+         accessMode, false, Ast.isPubToExternal( accessMode ), false, true );
       baseRef = workBaseRefType;
       let baseType = workBaseRefType.$expType;
       if baseType.$kind ~= .Class {
@@ -920,7 +948,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
          }
          self.pushback();
          let ifTypeNode = self.analyzeRefType(
-            accessMode, false, Ast.isPubToExternal( accessMode ), false );
+            accessMode, false, Ast.isPubToExternal( accessMode ), false, true );
          ifRefList.insert( ifTypeNode );
          let ifType = ifTypeNode.$expType;
          if ifType.$kind ~= .IF {
@@ -1107,7 +1135,7 @@ fn TransUnit.analyzeDeclAlternateType(
 
       let altType = self.processInfo.createAlternate(
          belongClassFlag, altIndex, genericSymToken.txt,
-         accessMode, self.moduleType, baseTypeInfo, interfaceList );
+         accessMode, self.moduleType, baseTypeInfo, interfaceList ## );
       altTypeList.insert( altType );
 
       if workToken.txt == ">" {
@@ -1385,7 +1413,7 @@ fn TransUnit.analyzeDeclAlge(
             }
             
             let typeNode = self.analyzeRefType(
-               .Pub, false, Ast.isPubToExternal( accessMode ), false );
+               .Pub, false, Ast.isPubToExternal( accessMode ), false, false );
             if self.nsInfoMap[ typeNode.$expType ]$.$nobody {
                self.addErrMess(
                   typeNode.$pos,
@@ -1504,7 +1532,8 @@ fn TransUnit.analyzeRetTypeList(
    if token.txt == ":" {
       let mut hasDDDFlag = false;
       while true {
-         let refTypeNode = self.analyzeRefType( accessMode, true, parentPub, false );
+         let refTypeNode = self.analyzeRefType(
+            accessMode, true, parentPub, false, false );
          if hasDDDFlag {
             self.addErrMess( refTypeNode.$pos, "Type exists after '...'." );
          }
@@ -1776,7 +1805,8 @@ fn TransUnit.analyzeDeclMember(
       let varName = self.checkSymbol( nextToken, .MustNot_ );
       let mut token = self.getToken(##);
       let refType = self.analyzeRefType(
-         accessMode, false, Ast.isPubToExternal( classTypeInfo.$accessMode ), false);
+         accessMode, false,
+         Ast.isPubToExternal( classTypeInfo.$accessMode ), false, false);
       token = self.getToken(##);
 
       if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ## ) {
@@ -1827,7 +1857,8 @@ fn TransUnit.analyzeDeclMember(
                   if workToken.txt == ":" {
                      let typeNode = self.analyzeRefType(
                         mode, false,
-                        Ast.isPubToExternal( classTypeInfo.$accessMode ), false );
+                        Ast.isPubToExternal( classTypeInfo.$accessMode ),
+                        false, false ); 
                      retType = typeNode.$expType;
                      workToken = self.getToken(##);
                   }
@@ -2690,6 +2721,16 @@ fn TransUnit.analyzeDeclClass(
 
 
    let mut classScope = self.$scope;
+
+
+   if! let baseNode = inheritInfo.$base {
+      foreach altType in baseNode.$itemIndex2alt {
+         classScope.addAlternate(
+            self.processInfo, classAccessMode, altType.$rawTxt, firstToken.pos, altType );
+      }
+   }
+
+   
 
    self.checkToken( nextToken, "{" );
 
@@ -3909,7 +3950,7 @@ fn TransUnit.analyzeLetAndInitExp(
          if nextToken.txt == ":" {
             // 型を明示している場合
             let refType = self.analyzeRefType(
-               accessMode, false, Ast.isPubToExternal( accessMode ), false );
+               accessMode, false, Ast.isPubToExternal( accessMode ), false, false );
             letVarList.insert( new LetVarInfo( mutable, varName, refType ) );
             typeInfo = refType.$expType;
             if unwrapFlag and typeInfo.$nilable {

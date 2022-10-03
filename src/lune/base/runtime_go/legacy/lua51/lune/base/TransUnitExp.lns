@@ -1840,7 +1840,7 @@ fn TransUnit.analyzeExpCall(
 fn TransUnit.analyzeExpCast(
    firstToken:&Parser.Token, opTxt:str, exp:Nodes.Node ) mut : Nodes.Node
 {
-   let castTypeNode = self.analyzeRefType( .Local, false, false, false );
+   let castTypeNode = self.analyzeRefType( .Local, false, false, false, false );
    let mut castType = castTypeNode.$expType;
 
    if exp.$expType.$kind == .Ext and castType.$kind ~= .Ext and castType.$kind ~= .Stem {
@@ -2867,7 +2867,7 @@ fn TransUnit.analyzeExpField(
          let nextToken = self.getToken(##);
          if nextToken.txt == "<" {
             let itemNodeList:List<&Nodes.Node> = [];
-            let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList );
+            let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList, nil );
 
             if #typeInfo.$itemTypeInfoList == #genericList {
                typeInfo = self.createGeneric( nextToken.pos, typeInfo, genericList );
@@ -3120,7 +3120,7 @@ fn TransUnit.analyzeExpSymbol(
             let nextToken = self.getToken(##);
             if nextToken.txt == "<" {
                let itemNodeList:List<&Nodes.Node> = [];
-               let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList );
+               let genericList = self.analyzeTypeParamArg( .Pri, false, itemNodeList, nil );
 
                if #typeInfo.$itemTypeInfoList == #genericList {
                   let newTypeInfo = self.createGeneric(
@@ -3129,7 +3129,7 @@ fn TransUnit.analyzeExpSymbol(
                   exp = Nodes.RefTypeNode.create(
                      self.nodeManager, firstToken.pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(), [ newTypeInfo ],
-                     exp, itemNodeList, typeInfo.$mutMode, "no" );
+                     exp, itemNodeList, {}, typeInfo.$mutMode, "no" );
                } else {
                   self.addErrMess(
                      nextToken.pos,
@@ -4118,7 +4118,7 @@ fn TransUnit.analyzeExp(
    }
 
    fn processsNewExp( token:&Parser.Token ): Nodes.Node {
-      let mut exp:Nodes.Node = self.analyzeRefType( .Local, false, false, true );
+      let mut exp:Nodes.Node = self.analyzeRefType( .Local, false, false, true, false );
 
       let mut classTypeInfo = exp.$expType;
       switch classTypeInfo.$kind {
@@ -4443,7 +4443,7 @@ fn TransUnit.analyzeExp(
          let symbolInfo = symbolInfoList[ 1 ];
          if symbolInfo.$kind == .Typ {
             exp = self.analyzeRefTypeWithSymbol(
-               .Local, false, nil, exp, false );
+               .Local, false, nil, exp, false, false );
             let workToken = self.getToken(##);
             if workToken.txt == "." {
                exp = self.analyzeExpSymbol(
@@ -4467,7 +4467,7 @@ fn TransUnit.analyzeExp(
       exp = Nodes.RefTypeNode.create(
          self.nodeManager, firstToken.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         exp, [], .Mut, "no" );
+         exp, [], {}, .Mut, "no" );
    }
    elseif token.kind == Parser.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" )

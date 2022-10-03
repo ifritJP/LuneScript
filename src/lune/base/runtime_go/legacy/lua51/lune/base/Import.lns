@@ -234,7 +234,7 @@ class _TypeInfoAlternate extend _TypeInfo {
       }
       let mut newTypeInfo = param.processInfo.createAlternate(
          self.belongClassFlag, self.altIndex,
-         self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList );
+         self.txt, self.accessMode, param.moduleTypeInfo, baseInfo, interfaceList ## );
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
       param.typeId2TypeDataAccessor[ self.typeId ] = newTypeInfo;
       newTypeInfo.$typeId.set_orgId( self.typeId );
