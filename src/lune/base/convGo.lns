@@ -5206,6 +5206,17 @@ pub override fn convFilter.processExpCall(
       self.writeRaw( "))");
       return;
    }
+   if funcType == self.builtinFuncs.__pipe_get {
+      let pipeGenType = getOrgTypeInfo( node.$expType );
+      if Ast.isClass( pipeGenType ) and not pipeGenType.$finalFlag {
+         // final でないクラスはそのまま使用すると不正な型になる可能性がある。
+         // そのため downcast してやる。
+         self.writeRaw( "%sDownCastF("
+            (self.getTypeSymbolWithPrefix( node.$expType )));
+      } else {
+         self.writeRaw( "(" );
+      }
+   }
    
 
    // if funcType == self.builtinFuncs.list___new {
@@ -5434,6 +5445,10 @@ pub override fn convFilter.processExpCall(
    }
 
    if callKind == .FormCall {
+      self.writeRaw( ")" );
+   }
+
+   if funcType == self.builtinFuncs.__pipe_get {
       self.writeRaw( ")" );
    }
 }

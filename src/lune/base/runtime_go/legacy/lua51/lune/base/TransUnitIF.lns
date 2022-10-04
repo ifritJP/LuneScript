@@ -553,7 +553,7 @@ curNsInfo が nil になる。
    */
    pub fn pushClass(
       processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:DeclClassMode, abstractFlag: bool,
+      errPos:&Parser.Position, mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       allowMultiple:bool, accessMode:Ast.AccessMode,
@@ -676,7 +676,8 @@ curNsInfo が nil になる。
          }
 
          let mut newType = processInfo.createClassAsync(
-            mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
+            mode ~= .Interface, finalFlag,
+            abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentNsInfo.$typeInfo, parentNsInfo.$typeDataAccessor,
             externalFlag, accessMode, name );
          typeInfo = newType;
@@ -710,14 +711,14 @@ curNsInfo が nil になる。
    */
    pub fn pushClassLow(
       processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:DeclClassMode, abstractFlag: bool,
+      errPos:&Parser.Position, mode:DeclClassMode, finalFlag: bool, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       allowMultiple:bool, accessMode:Ast.AccessMode,
       defNamespace: Nodes.NamespaceInfo! ) mut : &Ast.TypeInfo
    {
       return self.pushClass(
-         processInfo, errPos, mode, abstractFlag,
+         processInfo, errPos, mode, finalFlag, abstractFlag,
          baseInfo, interfaceList, genTypeList, externalFlag, name,
          allowMultiple, accessMode, defNamespace ).$typeInfo;
    }

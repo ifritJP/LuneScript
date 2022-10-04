@@ -732,7 +732,8 @@ fn Builtin.registClass(
             }
             classType = self.transUnit.pushClassLow(
                self.processInfo, pos,
-               declMode, false, nil, interfaceList,
+               declMode, declMode ~= .Interface or regName == "Nilable",
+               false, nil, interfaceList,
                genTypeList, true, regName, true, .Pub ## );
             builtinFunc.registerClass( classType );
          }

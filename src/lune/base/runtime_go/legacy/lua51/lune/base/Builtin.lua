@@ -1591,7 +1591,7 @@ function Builtin:registClass( nameList, name2FieldInfo, pos, genTypeList )
                declMode = TransUnitIF.DeclClassMode.Interface
             end
             
-            classType = self.transUnit:pushClassLow( self.processInfo, pos, declMode, false, nil, interfaceList, genTypeList, true, regName, true, Ast.AccessMode.Pub )
+            classType = self.transUnit:pushClassLow( self.processInfo, pos, declMode, declMode ~= TransUnitIF.DeclClassMode.Interface or regName == "Nilable", false, nil, interfaceList, genTypeList, true, regName, true, Ast.AccessMode.Pub )
             builtinFunc:registerClass( classType )
          elseif _switchExp == TransUnitIF.DeclClassMode.Module then
             classType = self.transUnit:pushModuleLow( self.processInfo, true, regName, true )

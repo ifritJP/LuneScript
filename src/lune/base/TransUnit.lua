@@ -4027,6 +4027,10 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
          self:addErrMess( workBaseRefType:get_pos(), string.format( "%s is not class.", baseType:getTxt(  )) )
       end
       
+      if baseType:get_finalFlag() then
+         self:addErrMess( workBaseRefType:get_pos(), string.format( "final class can't extend -- (%s)", baseType:getTxt(  )) )
+      end
+      
       if Ast.isPubToExternal( accessMode ) and not Ast.isPubToExternal( baseType:get_accessMode() ) then
          self:addErrMess( workBaseRefType:get_pos(), string.format( "%s can't be external symbol.", baseType:getTxt(  )) )
       end
@@ -4125,7 +4129,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
 end
 
 
-function TransUnit:analyzePushClass( mode, abstractFlag, firstToken, name, allowMultiple, requirePath, moduleLang, accessMode, altTypeList )
+function TransUnit:analyzePushClass( mode, finalFlag, abstractFlag, firstToken, name, allowMultiple, requirePath, moduleLang, accessMode, altTypeList )
 
    if Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self:get_scope() then
       self:addErrMess( firstToken.pos, "The public class must declare at top scope." )
@@ -4177,7 +4181,7 @@ function TransUnit:analyzePushClass( mode, abstractFlag, firstToken, name, allow
          local parentScope = self:get_scope()
          nsInfo = self:pushExtModule( false, name.txt, accessMode, name.pos, mode == TransUnitIF.DeclClassMode.LazyModule, _lune.unwrap( moduleLang), (_lune.unwrap( requirePath) ):getExcludedDelimitTxt(  ) )
       elseif _switchExp == TransUnitIF.DeclClassMode.Class or _switchExp == TransUnitIF.DeclClassMode.Interface then
-         nsInfo = self:pushClass( self.processInfo, firstToken.pos, mode, abstractFlag, baseTypeInfo, interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode )
+         nsInfo = self:pushClass( self.processInfo, firstToken.pos, mode, finalFlag, abstractFlag, baseTypeInfo, interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode )
       end
    end
    
@@ -4245,6 +4249,12 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
       nextToken = self:getToken(  )
    end
    
+   local finalFlag = false
+   if nextToken.txt == "final" then
+      finalFlag = true
+      nextToken = self:getToken(  )
+   end
+   
    
    if nextToken.txt == "class" or nextToken.txt == "interface" then
       local name = self:getSymbolToken( SymbolMode.MustNot_ )
@@ -4281,7 +4291,7 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
       
       local nsInfo
       
-      nextToken, nsInfo, inheritInfo = self:analyzePushClass( declMode, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
+      nextToken, nsInfo, inheritInfo = self:analyzePushClass( declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
       classTypeInfo = nsInfo:get_typeInfo()
       
       nsInfo:set_nobody( true )
@@ -4774,6 +4784,12 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
       token = self:getToken(  )
    end
    
+   local finalFlag = false
+   if token.txt == "final" then
+      finalFlag = true
+      token = self:getToken(  )
+   end
+   
    
    if token.txt == "let" then
       return self:analyzeDeclVar( Nodes.DeclVarMode.Let, accessMode, firstToken )
@@ -4786,11 +4802,11 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
       end
       
    elseif token.txt == "class" then
-      return self:analyzeDeclClass( abstractFlag, accessMode, firstToken, TransUnitIF.DeclClassMode.Class )
+      return self:analyzeDeclClass( finalFlag, abstractFlag, accessMode, firstToken, TransUnitIF.DeclClassMode.Class )
    elseif token.txt == "interface" then
-      return self:analyzeDeclClass( true, accessMode, firstToken, TransUnitIF.DeclClassMode.Interface )
+      return self:analyzeDeclClass( false, true, accessMode, firstToken, TransUnitIF.DeclClassMode.Interface )
    elseif token.txt == "module" then
-      return self:analyzeDeclClass( false, accessMode, firstToken, TransUnitIF.DeclClassMode.Module )
+      return self:analyzeDeclClass( true, false, accessMode, firstToken, TransUnitIF.DeclClassMode.Module )
    elseif token.txt == "proto" then
       return self:analyzeDeclProto( accessMode, firstToken )
    elseif token.txt == "macro" then
@@ -4938,7 +4954,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1903, function (  )
+         Log.log( Log.Level.Debug, __func__, 1919, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -5567,7 +5583,7 @@ function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode
 end
 
 
-function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstToken, mode )
+function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMode, firstToken, mode )
 
    local _
    if mode == TransUnitIF.DeclClassMode.Module then
@@ -5703,7 +5719,7 @@ function TransUnit:analyzeDeclClass( classAbstructFlag, classAccessMode, firstTo
    
    local existSymbolInfo = self:get_scope():getSymbolTypeInfo( name.txt, self:get_scope(), self:get_scope(), self.scopeAccess )
    
-   local nextToken, nsInfo, inheritInfo = self:analyzePushClass( mode, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
+   local nextToken, nsInfo, inheritInfo = self:analyzePushClass( mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
    local classTypeInfo = nsInfo:get_typeInfo()
    local typeDataAccessor = nsInfo:get_typeDataAccessor()
    

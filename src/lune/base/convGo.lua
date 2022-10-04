@@ -6409,6 +6409,18 @@ function convFilter:processExpCall( node, opt )
       return 
    end
    
+   if funcType == self.builtinFuncs.__pipe_get then
+      local pipeGenType = getOrgTypeInfo( node:get_expType() )
+      if Ast.isClass( pipeGenType ) and not pipeGenType:get_finalFlag() then
+         
+         self:writeRaw( string.format( "%sDownCastF(", self:getTypeSymbolWithPrefix( node:get_expType() )) )
+      else
+       
+         self:writeRaw( "(" )
+      end
+      
+   end
+   
    
    local retGenerics
    
@@ -6661,6 +6673,11 @@ function convFilter:processExpCall( node, opt )
    
    
    if callKind == _lune.newAlge( CallKind.FormCall) then
+      self:writeRaw( ")" )
+   end
+   
+   
+   if funcType == self.builtinFuncs.__pipe_get then
       self:writeRaw( ")" )
    end
    

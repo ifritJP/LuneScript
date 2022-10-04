@@ -740,7 +740,7 @@ function TransUnitBase:pushClassScope( errPos, classTypeInfo, scope )
    self.scope = scope
    self.curNsInfo = self.nsInfoMap[classTypeInfo]
 end
-function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
+function TransUnitBase:pushClass( processInfo, errPos, mode, finalFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
 
    local nsInfo
    
@@ -846,7 +846,7 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
          end
          
          
-         local newType = processInfo:createClassAsync( mode ~= DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), externalFlag, accessMode, name )
+         local newType = processInfo:createClassAsync( mode ~= DeclClassMode.Interface, finalFlag, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), externalFlag, accessMode, name )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          nsInfo = self:newNSInfo( newType, errPos )
@@ -876,9 +876,9 @@ function TransUnitBase:pushClass( processInfo, errPos, mode, abstractFlag, baseI
    
    return nsInfo
 end
-function TransUnitBase:pushClassLow( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
+function TransUnitBase:pushClassLow( processInfo, errPos, mode, finalFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
 
-   return self:pushClass( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace ):get_typeInfo()
+   return self:pushClass( processInfo, errPos, mode, finalFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace ):get_typeInfo()
 end
 function TransUnitBase:popClass(  )
 

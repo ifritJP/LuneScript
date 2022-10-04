@@ -1654,6 +1654,10 @@ function TypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
    return false, nil
 end
+function TypeInfo:get_finalFlag(  )
+
+   return false
+end
 function TypeInfo:get_abstractFlag(  )
 
    return false
@@ -2555,6 +2559,10 @@ function ModifierTypeInfo:get_externalFlag( ... )
    return self.srcTypeInfo:get_externalFlag( ... )
 end
 
+function ModifierTypeInfo:get_finalFlag( ... )
+   return self.srcTypeInfo:get_finalFlag( ... )
+end
+
 function ModifierTypeInfo:get_genSrcTypeInfo( ... )
    return self.srcTypeInfo:get_genSrcTypeInfo( ... )
 end
@@ -3278,6 +3286,10 @@ function NilableTypeInfo:get_externalFlag( ... )
    return self.nonnilableType:get_externalFlag( ... )
 end
 
+function NilableTypeInfo:get_finalFlag( ... )
+   return self.nonnilableType:get_finalFlag( ... )
+end
+
 function NilableTypeInfo:get_genSrcTypeInfo( ... )
    return self.nonnilableType:get_genSrcTypeInfo( ... )
 end
@@ -3539,6 +3551,10 @@ end
 
 function AliasTypeInfo:get_extedType( ... )
    return self.aliasSrcTypeInfo:get_extedType( ... )
+end
+
+function AliasTypeInfo:get_finalFlag( ... )
+   return self.aliasSrcTypeInfo:get_finalFlag( ... )
 end
 
 function AliasTypeInfo:get_generics_display_string( ... )
@@ -5205,6 +5221,10 @@ function BoxTypeInfo:get_scope(  )
 
    return TypeInfo.get_scope( self)
 end
+function BoxTypeInfo:get_finalFlag(  )
+
+   return true
+end
 function BoxTypeInfo:get_kind(  )
 
    return TypeInfoKind.Box
@@ -5766,6 +5786,10 @@ end
 
 function GenericTypeInfo:get_externalFlag( ... )
    return self.genSrcTypeInfo:get_externalFlag( ... )
+end
+
+function GenericTypeInfo:get_finalFlag( ... )
+   return self.genSrcTypeInfo:get_finalFlag( ... )
 end
 
 function GenericTypeInfo:get_generics_display_string( ... )
@@ -6450,13 +6474,13 @@ function NormalTypeInfo:switchScopeTo( scope )
 
    self:switchScope( scope )
 end
-function NormalTypeInfo._new( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode )
+function NormalTypeInfo._new( processInfo, finalFlag, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode )
    local obj = {}
    NormalTypeInfo._setmeta( obj )
-   if obj.__init then obj:__init( processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode ); end
+   if obj.__init then obj:__init( processInfo, finalFlag, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode ); end
    return obj
 end
-function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode) 
+function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode) 
    TypeInfo.__init( self,scope, processInfo)
    
    
@@ -6479,6 +6503,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
    self.requirePath = ""
    self.moduleLang = moduleLang
    self.abstractFlag = abstractFlag
+   self.finalFlag = finalFlag
    self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
    self.interfaceList = _lune.unwrapDefault( interfaceList, {})
    self.autoFlag = autoFlag
@@ -6567,7 +6592,7 @@ function NormalTypeInfo:__init(processInfo, abstractFlag, scope, baseTypeInfo, i
 end
 function NormalTypeInfo:cloneForMeta( processInfo )
 
-   local newType = NormalTypeInfo._new(processInfo, self.abstractFlag, nil, self.baseTypeInfo, self.interfaceList, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, self.parentInfo, nil, self.kind, self.itemTypeInfoList, self.argTypeInfoList, self.retTypeInfoList, self.mutMode, self.moduleLang, self.asyncMode)
+   local newType = NormalTypeInfo._new(processInfo, self.finalFlag, self.abstractFlag, nil, self.baseTypeInfo, self.interfaceList, self.autoFlag, self.externalFlag, self.staticFlag, self.accessMode, self.rawTxt, self.parentInfo, nil, self.kind, self.itemTypeInfoList, self.argTypeInfoList, self.retTypeInfoList, self.mutMode, self.moduleLang, self.asyncMode)
    newType.typeId = self.typeId
    return newType
 end
@@ -6654,9 +6679,10 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
    local parentId = self:getParentId(  )
    
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %s, txt = '%s',
+  finalFlag = %s,
   abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d,
   asyncMode = %d,     
-]==], SerializeKind.Normal, parentId.id, self.typeId.id, serializeInfo:serializeId( self:get_baseId() ), self.rawTxt, tostring( self.abstractFlag), tostring( self.staticFlag), self.accessMode, self.kind, self.mutMode, self.asyncMode)
+]==], SerializeKind.Normal, parentId.id, self.typeId.id, serializeInfo:serializeId( self:get_baseId() ), self.rawTxt, tostring( self.finalFlag), tostring( self.abstractFlag), tostring( self.staticFlag), self.accessMode, self.kind, self.mutMode, self.asyncMode)
    do
       local _exp = self.moduleLang
       if _exp ~= nil then
@@ -6792,6 +6818,9 @@ function NormalTypeInfo:get_autoFlag()
 end
 function NormalTypeInfo:get_abstractFlag()
    return self.abstractFlag
+end
+function NormalTypeInfo:get_finalFlag()
+   return self.finalFlag
 end
 function NormalTypeInfo:get_baseTypeInfo()
    return self.baseTypeInfo
@@ -7024,7 +7053,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
       end
    end
    
-   local info = NormalTypeInfo._new(rootProcessInfo, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
+   local info = NormalTypeInfo._new(rootProcessInfo, kind ~= TypeInfoKind.IF, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    rootProcessInfo:setupImut( info )
    
    registBuiltin( idName, typeTxt, kind, info, info, _moduleObj.headTypeInfo, scope )
@@ -7354,9 +7383,20 @@ end
 
 function AlternateTypeInfo.getAssign( typeInfo, alt2type )
 
-   if typeInfo:get_kind() ~= TypeInfoKind.Alternate then
+   local altType = _lune.__Cast( typeInfo, 3, AlternateTypeInfo )
+   if  nil == altType then
+      local _altType = altType
+   
       return typeInfo
    end
+   
+   do
+      local refTypeInfo = altType.refTypeInfo
+      if refTypeInfo ~= nil then
+         return refTypeInfo
+      end
+   end
+   
    
    local otherWork = typeInfo
    while true do
@@ -7469,7 +7509,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7497,7 +7537,7 @@ function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7525,7 +7565,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeArray, nil, false, false, false, AccessMode.Pub, "Array", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Array, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7553,7 +7593,7 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo._new(self, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      return NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
    end
    
    
@@ -7585,14 +7625,14 @@ function ProcessInfo:createModule( scope, parentInfo, typeDataAccessor, external
 end
 
 
-function ProcessInfo:createClassAsync( classFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, typeDataAccessor, externalFlag, accessMode, className )
+function ProcessInfo:createClassAsync( classFlag, finalFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, typeDataAccessor, externalFlag, accessMode, className )
 
    if Parser.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
    
    
-   local info = NormalTypeInfo._new(self, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
+   local info = NormalTypeInfo._new(self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
    self:setupImut( info )
    
    for __index, genType in ipairs( genTypeList ) do
@@ -7612,7 +7652,7 @@ function ProcessInfo:createExtModule( scope, parentInfo, typeDataAccessor, exter
    end
    
    
-   local info = NormalTypeInfo._new(self, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
+   local info = NormalTypeInfo._new(self, true, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
    self:setupImut( info )
    info:set_requirePath( requirePath )
    return info
@@ -7626,7 +7666,7 @@ function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, pa
    end
    
    
-   local info = NormalTypeInfo._new(self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutMode, nil, asyncMode)
+   local info = NormalTypeInfo._new(self, true, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutMode, nil, asyncMode)
    self:setupImut( info )
    
    if altTypeList ~= nil then
@@ -7653,7 +7693,7 @@ _moduleObj.builtinTypeLnsLoad = builtinTypeLnsLoad
 
 function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
 
-   local info = NormalTypeInfo._new(self, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self:get_dummyParentType(), TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
+   local info = NormalTypeInfo._new(self, true, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self:get_dummyParentType(), TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
    self:setupImut( info )
    
    return info
@@ -8678,6 +8718,10 @@ function ExtTypeInfo:get_externalFlag( ... )
    return self.extedType:get_externalFlag( ... )
 end
 
+function ExtTypeInfo:get_finalFlag( ... )
+   return self.extedType:get_finalFlag( ... )
+end
+
 function ExtTypeInfo:get_genSrcTypeInfo( ... )
    return self.extedType:get_genSrcTypeInfo( ... )
 end
@@ -9032,6 +9076,10 @@ end
 
 function AndExpTypeInfo:get_externalFlag( ... )
    return self.result:get_externalFlag( ... )
+end
+
+function AndExpTypeInfo:get_finalFlag( ... )
+   return self.result:get_finalFlag( ... )
 end
 
 function AndExpTypeInfo:get_genSrcTypeInfo( ... )
@@ -9785,7 +9833,6 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    if dest ~= dest:get_aliasSrc() then
       return dest:get_aliasSrc():canEvalWith( processInfo, other, canEvalType, alt2type )
    end
-   
    
    if dest == _moduleObj.builtinTypeExp or dest == _moduleObj.builtinTypeMultiExp or dest == _moduleObj.builtinTypeBlockArg then
       if other == _moduleObj.builtinTypeMultiExp and dest ~= _moduleObj.builtinTypeMultiExp then

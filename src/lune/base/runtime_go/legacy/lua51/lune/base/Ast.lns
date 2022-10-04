@@ -955,6 +955,11 @@ pub abstract class TypeInfo extend (TypeDataAccessor) {
       return false, nil;
    }
 
+   /** この型が final かどうか */
+   pub fn get_finalFlag(): bool {
+      return false;
+   }
+   
    /** この型が abstract かどうか */
    pub fn get_abstractFlag(): bool {
       return false;
@@ -3654,6 +3659,10 @@ pub class BoxTypeInfo extend TypeInfo {
       return super();
    }
 
+   pub override fn get_finalFlag(): bool {
+      return true;
+   }
+   
    pub override fn get_kind(): TypeInfoKind {
       return .Box;
    }
@@ -4472,6 +4481,8 @@ pub class NormalTypeInfo extend TypeInfo {
    pri let autoFlag: bool { pub };
    /** */         
    pri let abstractFlag: bool { pub };
+   /** finalかどうか */
+   pri let finalFlag: bool {pub};
 
    // 基底クラス。 無効な場合は headTypeInfo。
    pri let baseTypeInfo: &TypeInfo { pub };
@@ -4533,7 +4544,7 @@ pub class NormalTypeInfo extend TypeInfo {
    }
    
    local fn __init(
-      processInfo:ProcessInfo, abstractFlag:bool, scope: Scope!,
+      processInfo:ProcessInfo, finalFlag: bool, abstractFlag:bool, scope: Scope!,
       baseTypeInfo: &TypeInfo!, interfaceList: &List<&TypeInfo>!,
       autoFlag: bool, externalFlag: bool, staticFlag: bool,
       accessMode: AccessMode, txt: str,
@@ -4560,6 +4571,7 @@ pub class NormalTypeInfo extend TypeInfo {
       self.requirePath = "";
       self.moduleLang = moduleLang;
       self.abstractFlag = abstractFlag;
+      self.finalFlag = finalFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
       self.interfaceList = unwrap interfaceList default [];
       self.autoFlag = autoFlag;
@@ -4643,7 +4655,7 @@ pub class NormalTypeInfo extend TypeInfo {
 
    local fn cloneForMeta( processInfo:ProcessInfo ) : NormalTypeInfo {
       let mut newType = new NormalTypeInfo(
-         processInfo, self.abstractFlag, nil,
+         processInfo, self.finalFlag, self.abstractFlag, nil,
          self.baseTypeInfo, self.interfaceList, self.autoFlag,
          self.externalFlag, self.staticFlag,
          self.accessMode, self.rawTxt,
@@ -4744,13 +4756,14 @@ pub class NormalTypeInfo extend TypeInfo {
       let parentId = self.getParentId();
 
       let mut txt = ```{ skind=%d, parentId = %d, typeId = %d, baseId = %s, txt = '%s',
+  finalFlag = %s,
   abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d,
   asyncMode = %d,     
 ```
           ( SerializeKind.Normal,
             parentId.id, self.typeId.id,
             serializeInfo.serializeId( self.$baseId ), self.rawTxt,
-            self.abstractFlag, self.staticFlag, self.accessMode,
+            self.finalFlag, self.abstractFlag, self.staticFlag, self.accessMode,
             self.kind, self.mutMode, self.asyncMode );
       if! self.moduleLang {
          txt = txt .. 'moduleLang = %d, ' (_exp );
@@ -5081,7 +5094,8 @@ local static fn NormalTypeInfo.createBuiltin(
       }
    }
    let mut info = new NormalTypeInfo(
-      rootProcessInfo, false, scope, nil, ifList, false, false, false,
+      rootProcessInfo, kind ~= .IF,
+      false, scope, nil, ifList, false, false, false,
       AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, 
       kind, genTypeList, argTypeList, retTypeList, .Mut, nil, .Async );
    rootProcessInfo.setupImut( info );
@@ -5325,9 +5339,13 @@ fn failCreateLuavalWith(
 pub static fn AlternateTypeInfo.getAssign(
    typeInfo:&TypeInfo, alt2type:&Map<&TypeInfo,&TypeInfo> ) : &TypeInfo
 {
-   if typeInfo.$kind ~= .Alternate {
-      return typeInfo;  
+   let! altType = typeInfo@@@AlternateTypeInfo {
+      return typeInfo;
+   };
+   if! let refTypeInfo = altType.refTypeInfo {
+      return refTypeInfo;
    }
+   
    let mut otherWork = typeInfo;
    while true {      
       if! alt2type[ otherWork ] {
@@ -5439,7 +5457,7 @@ pub fn ProcessInfo.createSet(
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       return new NormalTypeInfo(
-         self, false, nil, builtinTypeSet,
+         self, true, false, nil, builtinTypeSet,
          nil, false, false, false, AccessMode.Pub,
          "Set", self.$dummyParentType, self.$dummyParentType, .Set, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
@@ -5452,7 +5470,7 @@ pub fn ProcessInfo.createList(
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       return new NormalTypeInfo(
-         self, false, nil, builtinTypeList,
+         self, true, false, nil, builtinTypeList,
          nil, false, false, false, AccessMode.Pub,
          "List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
@@ -5465,7 +5483,7 @@ pub fn ProcessInfo.createArray(
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       return new NormalTypeInfo(
-         self, false, nil, builtinTypeArray,
+         self, true, false, nil, builtinTypeArray,
          nil, false, false, false, AccessMode.Pub,
          "Array", self.$dummyParentType, self.$dummyParentType, .Array, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async ); } );
@@ -5478,7 +5496,7 @@ pub fn ProcessInfo.createMap(
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       return new NormalTypeInfo(
-         self, false, nil, builtinTypeMap,
+         self, true, false, nil, builtinTypeMap,
          nil, false, false, false, AccessMode.Pub,
          "Map", self.$dummyParentType, self.$dummyParentType, .Map,
          [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil, .Async );
@@ -5509,7 +5527,8 @@ pub fn ProcessInfo.createModule(
 }
 
 pub fn ProcessInfo.createClassAsync(
-   classFlag: bool, abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo!,
+   classFlag: bool, finalFlag:bool,
+   abstractFlag: bool, scope: Scope!, baseInfo: &TypeInfo!,
    interfaceList: &List<&TypeInfo>!, genTypeList: &List<&AlternateTypeInfo>,
    parentInfo: &TypeInfo, typeDataAccessor:TypeDataAccessor, externalFlag: bool,
    accessMode: AccessMode, className: str ) mut : TypeInfo
@@ -5520,7 +5539,7 @@ pub fn ProcessInfo.createClassAsync(
    }
 
    let mut info = new NormalTypeInfo(
-      self, abstractFlag, scope, baseInfo, interfaceList, false,
+      self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
       className, parentInfo, typeDataAccessor,
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
@@ -5555,7 +5574,7 @@ pub fn ProcessInfo.createExtModule(
    }
 
    let mut info = new NormalTypeInfo(
-      self, false, scope, nil, nil, false,
+      self, true, false, scope, nil, nil, false,
       externalFlag, false, accessMode,
       className, parentInfo, typeDataAccessor,
       .ExtModule, nil, nil, nil, .Mut, moduleLang, .Noasync );
@@ -5578,7 +5597,7 @@ pub fn ProcessInfo.createFuncAsync(
    }
 
    let mut info = new NormalTypeInfo(
-      self, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
+      self, true, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, typeDataAccessor,
       kind, unwrap altTypeList default [], unwrap argTypeList default [],
       unwrap retTypeInfoList default [], mutMode, nil, asyncMode );
@@ -5607,7 +5626,7 @@ pub fn ProcessInfo.createDummyNameSpace(
    scope: Scope, parentInfo: &TypeInfo, asyncMode:Async ) mut : NormalTypeInfo
 {
    let mut info = new NormalTypeInfo(
-      self, false, scope, nil, nil, true, false, true,
+      self, true, false, scope, nil, nil, true, false, true,
       .Local, "__scope_%d" (scope.$scopeId), parentInfo, self.$dummyParentType,
       .Func, [], [], [], MutMode.IMut, nil, asyncMode );
    self.setupImut( info );
@@ -7329,7 +7348,6 @@ pub static fn TypeInfo.canEvalWithBase(
       return dest.$aliasSrc.canEvalWith(
          processInfo, other, canEvalType, alt2type )**;
    }
-   
    if dest == builtinTypeExp or dest == builtinTypeMultiExp or
       dest == builtinTypeBlockArg
    {
@@ -8280,11 +8298,11 @@ __test case1(ctrl) {
 
     // Super と Sub の canEvalWith
     let superType = processInfo.createClassAsync(
-       true, false, new Scope( processInfo, rootScope, .Class ## ),
+       true, false, false, new Scope( processInfo, rootScope, .Class ## ),
        nil, nil, [], headTypeInfoMut, headTypeInfoMut, false, .Local, "Super" );
     testScope.addClass( processInfo, "Super", nil, superType );   
     let subType = processInfo.createClassAsync(
-       true, false, new Scope( processInfo, rootScope, .Class ## ),
+       true, false, false, new Scope( processInfo, rootScope, .Class ## ),
        superType, nil, [], headTypeInfoMut, headTypeInfoMut, false, .Local, "Sub" );
     testScope.addClass( processInfo, "Sub", nil, subType );   
 
@@ -8362,7 +8380,7 @@ __test case1(ctrl) {
     let mut alter = processInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## );
     genTypeList.insert( alter );
     let hogeType = processInfo.createClassAsync(
-       true, false, new Scope( processInfo, rootScope, .Class ## ),
+       true, false, false, new Scope( processInfo, rootScope, .Class ## ),
        nil, nil, genTypeList, headTypeInfoMut, headTypeInfoMut, false, .Local, "Hoge" );
     testScope.addClass( processInfo, "Hoge", nil, hogeType );
 

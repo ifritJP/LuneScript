@@ -235,7 +235,7 @@ function TransUnit:pushClassScope( errPos, classTypeInfo, scope )
    
    self.scope = scope
 end
-function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
+function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
 
    local typeInfo
    
@@ -247,6 +247,10 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
          
          if typeInfo:get_abstractFlag() ~= abstractFlag then
             self:error( string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt(  )) )
+         end
+         
+         if typeInfo:get_finalFlag() ~= finalFlag then
+            self:error( string.format( "mismatch class(%s) final for prototpye. %s, %s", typeInfo:getTxt(  ), typeInfo:get_finalFlag(), finalFlag) )
          end
          
          if typeInfo:get_accessMode() ~= accessMode then
@@ -335,7 +339,7 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, abstractFlag, baseIn
          end
          
          
-         local newType = processInfo:createClassAsync( mode ~= TransUnitIF.DeclClassMode.Interface, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, parentInfo, externalFlag, accessMode, name )
+         local newType = processInfo:createClassAsync( mode ~= TransUnitIF.DeclClassMode.Interface, finalFlag, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, parentInfo, externalFlag, accessMode, name )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )

@@ -1328,6 +1328,7 @@ test/error/class.lns:518:7: error: Mapping class has not the interface type memb
 test/error/class.lns:519:7: error: Mapping class has not the abstract class member. -- val2
 test/error/class.lns:542:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2262) <- &@test.@error.@class.Hoge(2264): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/class.lns:550:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2262) <- &@test.@error.@class.Hoge(2264): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/class.lns:557:21: error: final class can't extend -- (Super)
 test/error/class2.lns:2:8: error: This member can't have setter, this member is immutable. -- val
 test/error/class2.lns:9:19: error: __init: exp(2) type mismatch int <- [##]: dst 2 -- 
 test/error/class2.lns:10:9: error: can't access mutable method. -- &TestAcc.set_val

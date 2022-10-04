@@ -605,7 +605,7 @@ func Builtin_getBuiltInInfo_5_(_env *LnsEnv) *LnsList {
 
 
 
-// 783: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
+// 784: decl @lune.@base.@Builtin.Builtin.registBuiltInScope.processCopyAlterList
 func Builtin_Builtin_registBuiltInScope__processCopyAlterList_0_(_env *LnsEnv, alterList *LnsList,typeList *LnsList) {
     for _, _typeInfo := range( typeList.Items ) {
         typeInfo := _typeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -934,7 +934,9 @@ func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2Fi
             } else { 
                 declMode = TransUnitIF_DeclClassMode__Interface
             }
-            classType = self.transUnit.FP.PushClassLow(_env, self.processInfo, pos, declMode, false, nil, interfaceList, genTypeList, true, regName, true, Ast_AccessMode__Pub, nil)
+            classType = self.transUnit.FP.PushClassLow(_env, self.processInfo, pos, declMode, _env.PopVal( _env.IncStack() ||
+                _env.SetStackVal( declMode != TransUnitIF_DeclClassMode__Interface) ||
+                _env.SetStackVal( regName == "Nilable") ).(bool), false, nil, interfaceList, genTypeList, true, regName, true, Ast_AccessMode__Pub, nil)
             Builtin_builtinFunc.FP.RegisterClass(_env, classType)
         } else if _switch0 == TransUnitIF_DeclClassMode__Module {
             classType = self.transUnit.FP.PushModuleLow(_env, self.processInfo, true, regName, true)
@@ -951,7 +953,7 @@ func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2Fi
     }
     return parentInfo
 }
-// 759: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
+// 760: decl @lune.@base.@Builtin.Builtin.registBuiltInScope
 func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFuncType {
     if Builtin_readyBuiltin{
         return Builtin_builtinFunc
@@ -1053,7 +1055,7 @@ func (self *Builtin_Builtin) RegistBuiltInScope(_env *LnsEnv) *Builtin_BuiltinFu
     }
     return Builtin_builtinFunc
 }
-// 899: decl @lune.@base.@Builtin.Builtin.getBuiltInFuncType
+// 900: decl @lune.@base.@Builtin.Builtin.getBuiltInFuncType
 func (self *Builtin_Builtin) GetBuiltInFuncType(_env *LnsEnv) *Builtin_BuiltinFuncType {
     if Builtin_readyBuiltin{
         return Builtin_builtinFunc

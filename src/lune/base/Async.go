@@ -13,7 +13,7 @@ func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
                 var val LnsAny
                 
                 {
-                    _val := pipe.Get(_env)
+                    _val := (pipe.Get(_env))
                     if _val == nil{
                         return nil
                     } else {

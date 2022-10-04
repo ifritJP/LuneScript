@@ -931,6 +931,10 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
          self.addErrMess( workBaseRefType.$pos,
                           "%s is not class." ( baseType.getTxt(##) ) );
       }
+      if baseType.$finalFlag {
+         self.addErrMess( workBaseRefType.$pos,
+                          "final class can't extend -- (%s)" (baseType.getTxt(##)));
+      }
       if Ast.isPubToExternal( accessMode ) and
          not Ast.isPubToExternal( baseType.$accessMode )
       {
@@ -1034,7 +1038,8 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
 }
 
 fn TransUnit.analyzePushClass(
-   mode:DeclClassMode, abstractFlag: bool, firstToken:&Parser.Token, name:&Parser.Token,
+   mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
+   firstToken:&Parser.Token, name:&Parser.Token,
    allowMultiple:bool, requirePath:&Parser.Token!, moduleLang:Types.Lang!,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
    &Parser.Token, TransUnitIF.NSInfo, &Nodes.ClassInheritInfo
@@ -1087,7 +1092,8 @@ fn TransUnit.analyzePushClass(
       }
       case .Class, .Interface {
          nsInfo = self.pushClass(
-            self.processInfo, firstToken.pos, mode, abstractFlag, baseTypeInfo,
+            self.processInfo, firstToken.pos, mode,
+            finalFlag, abstractFlag, baseTypeInfo,
             interfaceList, altTypeList, false, name.txt, allowMultiple, accessMode ## );
       }
    }
@@ -1156,6 +1162,11 @@ fn TransUnit.analyzeDeclProto(
       abstractFlag = true;
       nextToken = self.getToken(##);
    }
+   let mut finalFlag = false;
+   if nextToken.txt == "final" {
+      finalFlag = true;
+      nextToken = self.getToken(##);
+   }
 
 
    if nextToken.txt == "class" or nextToken.txt == "interface" {
@@ -1187,7 +1198,7 @@ fn TransUnit.analyzeDeclProto(
       let inheritInfo;
       let mut nsInfo;
       nextToken, nsInfo, inheritInfo = self.analyzePushClass(
-         declMode, abstractFlag,
+         declMode, finalFlag, abstractFlag,
          firstToken, name, false, nil, nil, accessMode, altTypeList );
       classTypeInfo = nsInfo.$typeInfo;
 
@@ -1706,6 +1717,11 @@ fn TransUnit.analyzeDecl(
       abstractFlag = true;
       token = self.getToken(##);
    }
+   let mut finalFlag = false;
+   if token.txt == "final" {
+      finalFlag = true;
+      token = self.getToken(##);
+   }
 
    if token.txt == "let" {
       return self.analyzeDeclVar( .Let, accessMode, firstToken );
@@ -1726,13 +1742,13 @@ fn TransUnit.analyzeDecl(
       // anonymous 関数の場合は、 関数定義ではなく関数オブジェクトを利用した式。
    }
    elseif token.txt == "class" {
-      return self.analyzeDeclClass( abstractFlag, accessMode, firstToken, .Class );
+      return self.analyzeDeclClass( finalFlag, abstractFlag, accessMode, firstToken, .Class );
    }
    elseif token.txt == "interface" {
-      return self.analyzeDeclClass( true, accessMode, firstToken, .Interface );
+      return self.analyzeDeclClass( false, true, accessMode, firstToken, .Interface );
    }
    elseif token.txt == "module" {
-      return self.analyzeDeclClass( false, accessMode, firstToken, .Module );
+      return self.analyzeDeclClass( true, false, accessMode, firstToken, .Module );
    }
    // elseif token.txt == "__module" {
    //    return self.analyzeDeclClass( false, accessMode, firstToken, .LazyModule );
@@ -2587,6 +2603,7 @@ nil の場合、メンバの宣言位置。
 }
 
 fn TransUnit.analyzeDeclClass(
+   finalFlag:bool, 
    classAbstructFlag: bool,  mut classAccessMode: Ast.AccessMode,
    firstToken: &Parser.Token, mut mode:DeclClassMode ) mut : Nodes.DeclClassNode
 {
@@ -2703,7 +2720,7 @@ fn TransUnit.analyzeDeclClass(
       name.txt, self.$scope, self.$scope, self.scopeAccess );
 
    let mut nextToken, mut nsInfo, inheritInfo = self.analyzePushClass(
-      mode, classAbstructFlag, firstToken, name, true, moduleName,
+      mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName,
       moduleLang or Types.Lang.Same, classAccessMode, altTypeList );
    let classTypeInfo = nsInfo.$typeInfo;
    let mut typeDataAccessor = nsInfo.$typeDataAccessor;

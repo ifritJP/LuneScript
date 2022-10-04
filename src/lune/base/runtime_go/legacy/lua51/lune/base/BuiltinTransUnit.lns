@@ -146,7 +146,8 @@ pub class TransUnit {
    */
    pub fn pushClassLow(
       processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode, abstractFlag: bool,
+      errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode,
+      finalFlag: bool, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       allowMultiple:bool, accessMode:Ast.AccessMode,
@@ -161,6 +162,11 @@ pub class TransUnit {
             self.error(
                "mismatch class(%s) abstract for prototpye"
                (typeInfo.getTxt(##)));
+         }
+         if typeInfo.$finalFlag ~= finalFlag {
+            self.error(
+               "mismatch class(%s) final for prototpye. %s, %s"
+               (typeInfo.getTxt(##), typeInfo.$finalFlag, finalFlag ));
          }
          if typeInfo.$accessMode ~= accessMode {
             self.error(
@@ -251,7 +257,7 @@ pub class TransUnit {
          }
 
          let mut newType = processInfo.createClassAsync(
-            mode ~= .Interface, abstractFlag, scope, baseInfo, interfaceList,
+            mode ~= .Interface, finalFlag, abstractFlag, scope, baseInfo, interfaceList,
             workGenTypeList, parentInfo, parentInfo, externalFlag, accessMode, name );
          typeInfo = newType;
          self.namespace2Scope[ typeInfo ] = scope;

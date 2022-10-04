@@ -386,6 +386,7 @@ class _TypeInfoModule extend _TypeInfo {
 
 class _TypeInfoNormal extend _TypeInfo {
    pub let parentId:int;
+   pub let finalFlag: bool;
    pub let abstractFlag: bool;
    pub let baseId: &_IdInfo;
    pub let txt:str;
@@ -509,7 +510,8 @@ class _TypeInfoNormal extend _TypeInfo {
                   let mut parentTypeDataAccessor =
                      param.getTypeDataAccessor( self.parentId );
                   let mut workTypeInfo = param.processInfo.createClassAsync(
-                     self.kind == Ast.TypeInfoKind.Class, self.abstractFlag,
+                     self.kind == Ast.TypeInfoKind.Class,
+                     self.finalFlag, self.abstractFlag,   
                      scope, baseInfo, interfaceList, altTypeList,
                      parentInfo, parentTypeDataAccessor, true, .Pub, self.txt );
                   parentScope.addClassLazy(

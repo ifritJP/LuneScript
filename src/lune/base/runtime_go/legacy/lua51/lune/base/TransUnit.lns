@@ -532,7 +532,7 @@ class AccessSymbolSetQueue {
    }
 }
 
-class FuncBlockInfo extend (__AsyncItem) {
+final class FuncBlockInfo extend (__AsyncItem) {
    let declFuncInfo:Nodes.DeclFuncInfo {pub};
    let nsInfo:TransUnitIF.NSInfo {pub};
    let funcType:&Ast.TypeInfo{pub};
@@ -1072,7 +1072,7 @@ alias で置き換えている元の Type → alias の型
       mut classTypeInfo: &Ast.TypeInfo!,
       firstToken: &Parser.Token, name: &Parser.Token! ) mut : Nodes.Node;
    pri fn analyzeDeclClass(
-      abstractFlag:bool, classAccessMode: Ast.AccessMode,
+      finalFlag:bool, abstractFlag:bool, classAccessMode: Ast.AccessMode,
       classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode;
    pri fn analyzeExp(
       allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool,

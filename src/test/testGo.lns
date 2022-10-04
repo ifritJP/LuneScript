@@ -2477,18 +2477,117 @@ _section();
 }
 _section();
 {
-   abstract class Hoge<T> {
-      pro abstract fn func() : T;
-      pub fn aaa() : T {
-         return self.func();
-      }
+   abstract class Hoge<T1,T2> {
+      pub abstract fn func1() : T1;
+      pub abstract fn func2() : T2;
    }
 
-   class Sub extend Hoge<A=int> {
-      pro override fn func() : A {
+   class Sub extend Hoge<A=int,B=str> {
+      pub override fn func1() : A {
          return 10;
+      }
+      pub override fn func2() : B {
+         return "abc";
+      }
+      pub fn sub() {
+         print( self.func1() + 1, self.func1() + 1,
+                self.func2() .. "xyz", "xyz" .. self.func2() );
       }
    }
    let sub = new Sub();
-   print( sub.aaa() + 1 );
+   sub.sub();
+}
+_section();
+{
+   abstract class RunnerBase<T> extend (__Runner, __AsyncItem ) {
+      let pipe:__pipe<RunnerBase<T>>!;
+      let mut artifact:T! {pub};
+      let mut ranFlag:bool {pub};
+
+      pub fn __init( pipe:__pipe<RunnerBase<T>>! ) __async {
+         self.pipe = pipe;
+         self.artifact = nil;
+         self.ranFlag = false;
+      }
+
+      pro abstract fn runMain() __async mut : T;
+      
+      pub fn run() __async mut {
+         self.artifact = self.runMain();
+         self.ranFlag = true;
+         
+         if! let pipe = self.pipe {
+            pipe.put( self );
+         }
+      }
+   }
+
+   form EndProcessFunc<T>( t:RunnerBase<T> ) __trans;
+
+   class RunnerWaiter<T> {
+      let pipe:__pipe<RunnerBase<T>>!;
+      let mut startNum:int;
+      let finTargetList:List<RunnerBase<T>>;
+
+      pub fn __init(pipe:__pipe<RunnerBase<T>>!) __async {
+         self.pipe = pipe;
+         self.startNum = 0;
+         self.finTargetList = [];
+      }
+      
+      local fn startTarget( target: RunnerBase<T>, mode:int, name:str ) mut : bool {
+         self.startNum = self.startNum + 1;
+         let result = __run( target, mode, name );
+         if not result or not self.pipe {
+            self.startNum = self.startNum - 1;
+            self.finTargetList.insert( target );
+         }
+         return result;
+      }
+
+      pub fn wait( func:EndProcessFunc<T> ) __async mut {
+         if! let pipe = self.pipe {
+            for _ = 1, self.startNum {
+               let! mut runner = pipe.get() {
+                  break;
+               };
+               func( runner );
+            }
+         }
+         foreach target in self.finTargetList {
+            func( target );
+         }
+      }
+   }
+
+   class TestRunner extend RunnerBase<T=str> {
+      let num:int;
+      pro override fn runMain() __async mut : T {
+         return "%d" (self.num);
+      }
+   }
+
+   {
+      let mut pipe = __lns.Sync._createPipe( RunnerBase<str>, 1 );
+      let mut endProcess = new RunnerWaiter<str>( pipe );
+
+      for count = 1, 10 {
+         let mut hoge = new TestRunner( pipe, count );
+         endProcess.startTarget( hoge, __lns.runMode.Queue, "test" );
+      }
+
+      // 出力確認ソート用に一度マップに登録する
+      let map:Map<str,RunnerBase<str>> = {};
+      endProcess.wait(
+         fn ( runner: RunnerBase<str> ) {
+            let! val = runner.$artifact {
+               return;
+            };
+            map[ val ] = runner;
+         }
+      );
+      forsort runner in map {
+         print( runner.$ranFlag, runner.$artifact );
+      }
+   }
 }

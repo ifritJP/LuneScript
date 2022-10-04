@@ -551,3 +551,9 @@ class Test9 extend Super7 {
       };
    }
 }
+{
+   final class Super {
+   }
+   class Sub extend Super { // error
+   }
+}
