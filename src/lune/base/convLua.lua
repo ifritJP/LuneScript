@@ -3458,12 +3458,6 @@ function ConvFilter:processExpCall( node, opt )
       
       local prefixNode = fieldNode:get_prefix()
       
-      if prefixNode:get_expType():isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) and node:get_func():get_expType():get_rawTxt() == "_createPipe" then
-         self:writeRaw( "nil" )
-         return false
-      end
-      
-      
       local fieldTxt
       
       if node:get_func():get_expType():get_nonnilableType() == self.builtinFunc.str_replace then

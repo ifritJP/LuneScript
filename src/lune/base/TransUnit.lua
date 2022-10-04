@@ -5853,14 +5853,6 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
    end
    
    
-   if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
-      
-      local pipeType = self:createGeneric( firstToken.pos, self.builtinFunc.__pipe_, {classTypeInfo} )
-      local createPipeFuncTypeInfo = self.processInfo:createFuncAsync( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, typeDataAccessor, true, false, true, Ast.AccessMode.Pub, "_createPipe", Ast.Async.Async, nil, {Ast.builtinTypeInt}, {pipeType:get_nilableTypeInfo()}, Ast.MutMode.IMut )
-      classScope:addMethod( self.processInfo, nil, createPipeFuncTypeInfo, Ast.AccessMode.Pub, true )
-   end
-   
-   
    self:popClass(  )
    
    return node

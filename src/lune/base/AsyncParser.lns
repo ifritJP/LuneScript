@@ -232,7 +232,8 @@ pub class Parser extend Async.Pipe<AsyncItem> {
    pub fn __init( streamName:str, stream:iStream, luaMode:bool,
                   overridePos:&Types.Position!, pipeSize:int! )
    {
-      super( AsyncItem._createPipe( unwrap pipeSize default defaultPipeSize ) );
+      super( __lns.Sync._createPipe( AsyncItem,
+                                     unwrap pipeSize default defaultPipeSize ) );
 
       self.stream = stream;
       self.lineList = [];

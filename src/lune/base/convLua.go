@@ -103,11 +103,11 @@ func convLua_convExp2_4159(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 3052
-func convLua_convExp4_2096(arg1 []LnsAny) LnsAny {
+func convLua_convExp4_2058(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3067
-func convLua_convExp4_2172(arg1 []LnsAny) LnsInt {
+func convLua_convExp4_2134(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
 // 78: decl @lune.@base.@convLua.getSymbolTxt
@@ -3149,12 +3149,6 @@ func (self *convLua_ConvFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCall
         }
         var prefixNode *Nodes_Node
         prefixNode = fieldNode.FP.Get_prefix(_env)
-        if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-            _env.SetStackVal( prefixNode.FP.Get_expType(_env).FP.IsInheritFrom(_env, self.processInfo, Ast_builtinTypeAsyncItem, nil)) &&
-            _env.SetStackVal( node.FP.Get_func(_env).FP.Get_expType(_env).FP.Get_rawTxt(_env) == "_createPipe") ).(bool)){
-            self.FP.WriteRaw(_env, "nil")
-            return false
-        }
         var fieldTxt string
         if node.FP.Get_func(_env).FP.Get_expType(_env).FP.Get_nonnilableType(_env) == self.builtinFunc.Str_replace{
             wroteFuncFlag = true
@@ -3352,10 +3346,10 @@ func (self *convLua_ConvFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCall
                 opList = NewLnsList([]LnsAny{})
                 if expList.Len() > 0{
                     var literal LnsAny
-                    literal = convLua_convExp4_2096(Lns_2DDD(expList.GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.GetLiteral(_env)))
+                    literal = convLua_convExp4_2058(Lns_2DDD(expList.GetAt(1).(Nodes_NodeDownCast).ToNodes_Node().FP.GetLiteral(_env)))
                     if literal != nil{
-                        literal_131 := literal
-                        switch _matchExp0 := literal_131.(type) {
+                        literal_130 := literal
+                        switch _matchExp0 := literal_130.(type) {
                         case *Nodes_Literal__Str:
                             txt := _matchExp0.Val1
                             opList = TransUnit_findForm(_env, txt)
@@ -3371,7 +3365,7 @@ func (self *convLua_ConvFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCall
                         self.FP.WriteRaw(_env, ", ")
                         if index - 1 <= opList.Len(){
                             var formType LnsInt
-                            formType = convLua_convExp4_2172(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index - 1).(string), argNode.FP.Get_expType(_env), self.targetLuaVer)))
+                            formType = convLua_convExp4_2134(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index - 1).(string), argNode.FP.Get_expType(_env), self.targetLuaVer)))
                             if formType == TransUnit_FormType__NeedConv{
                                 self.FP.WriteRaw(_env, "tostring( ")
                                 convLua_filter_9_(_env, argNode, self, &node.Nodes_Node)

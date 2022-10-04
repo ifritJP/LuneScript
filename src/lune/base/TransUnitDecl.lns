@@ -2885,26 +2885,26 @@ fn TransUnit.analyzeDeclClass(
          self.processInfo, nil, fromStemFuncTypeInfo, ctorAccessMode, true );
    }
 
-   if classTypeInfo.isInheritFrom(
-      self.processInfo, Ast.builtinTypeAsyncItem, nil )
-   {
-      // if not classTypeInfo.isInheritFrom(
-      //    self.processInfo, Ast.builtinTypeMapping, nil )
-      // {
-      //    self.addErrMess(
-      //       firstToken.pos, "__AsyncItem implemented class must inherit Mapping." );
-      // }
+   // if classTypeInfo.isInheritFrom(
+   //    self.processInfo, Ast.builtinTypeAsyncItem, nil )
+   // {
+   //    // if not classTypeInfo.isInheritFrom(
+   //    //    self.processInfo, Ast.builtinTypeMapping, nil )
+   //    // {
+   //    //    self.addErrMess(
+   //    //       firstToken.pos, "__AsyncItem implemented class must inherit Mapping." );
+   //    // }
 
-      //
-      let pipeType = self.createGeneric(
-         firstToken.pos, self.builtinFunc.__pipe_, [classTypeInfo] );
-      let createPipeFuncTypeInfo = self.processInfo.createFuncAsync(
-         false, false, nil, .Func, classTypeInfo, typeDataAccessor,
-         true, false, true, .Pub, "_createPipe", .Async, 
-         nil, [ Ast.builtinTypeInt ], [ pipeType.$nilableTypeInfo ], .IMut );
-      classScope.addMethod(
-         self.processInfo, nil, createPipeFuncTypeInfo, .Pub, true );
-   }
+   //    //
+   //    let pipeType = self.createGeneric(
+   //       firstToken.pos, self.builtinFunc.__pipe_, [classTypeInfo] );
+   //    let createPipeFuncTypeInfo = self.processInfo.createFuncAsync(
+   //       false, false, nil, .Func, classTypeInfo, typeDataAccessor,
+   //       true, false, true, .Pub, "_createPipe", .Async, 
+   //       nil, [ Ast.builtinTypeInt ], [ pipeType.$nilableTypeInfo ], .IMut );
+   //    classScope.addMethod(
+   //       self.processInfo, nil, createPipeFuncTypeInfo, .Pub, true );
+   // }
 
    self.popClass();
 

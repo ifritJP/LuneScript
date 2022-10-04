@@ -4649,14 +4649,14 @@ fn convFilter.outputAlter2MapFunc( alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>) mu
 
 
 fn convFilter.outputAsyncItem( node: &Nodes.DeclClassNode ) mut {
-   let classType = node.$expType;
-   let classScope = unwrap classType.$scope;
-   let createSym = unwrap classScope.getSymbolInfoChild( "_createPipe" );
-   self.outputDeclFunc(
-      self.option.$addEnvArg, .WithClass( classType, createSym.$typeInfo ) );
-   self.writeln( "{" );
-   self.writeln( "   return NewLnspipe( arg1 )" );
-   self.writeln( "}" );
+   // let classType = node.$expType;
+   // let classScope = unwrap classType.$scope;
+   // let createSym = unwrap classScope.getSymbolInfoChild( "_createPipe" );
+   // self.outputDeclFunc(
+   //    self.option.$addEnvArg, .WithClass( classType, createSym.$typeInfo ) );
+   // self.writeln( "{" );
+   // self.writeln( "   return NewLnspipe( arg1 )" );
+   // self.writeln( "}" );
 }
 
 fn convFilter.outputMapping( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut {
@@ -5211,6 +5211,9 @@ pub override fn convFilter.processExpCall(
       if Ast.isClass( pipeGenType ) and not pipeGenType.$finalFlag {
          // final でないクラスはそのまま使用すると不正な型になる可能性がある。
          // そのため downcast してやる。
+         // downcast は、そこそこオーバーヘッドがかかるので、
+         // pipe.get() を大量にやるようなケースでは、
+         // __pipe<T> の T には final クラスを指定した方が良い。
          self.writeRaw( "%sDownCastF("
             (self.getTypeSymbolWithPrefix( node.$expType )));
       } else {

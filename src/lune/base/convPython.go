@@ -4936,16 +4936,6 @@ func (self *convPython_convFilter) outputAlter2MapFunc(_env *LnsEnv, alt2Map *Ln
 }
 // 4382: decl @lune.@base.@convPython.convFilter.outputAsyncItem
 func (self *convPython_convFilter) outputAsyncItem(_env *LnsEnv, node *Nodes_DeclClassNode) {
-    var classType *Ast_TypeInfo
-    classType = node.FP.Get_expType(_env)
-    var classScope *Ast_Scope
-    classScope = Lns_unwrap( classType.FP.Get_scope(_env)).(*Ast_Scope)
-    var createSym *Ast_SymbolInfo
-    createSym = Lns_unwrap( classScope.FP.GetSymbolInfoChild(_env, "_createPipe")).(*Ast_SymbolInfo)
-    self.FP.OutputDeclFunc(_env, self.option.FP.Get_addEnvArg(_env), &convPython_FuncInfo__WithClass{classType, createSym.FP.Get_typeInfo(_env)})
-    self.FP.Writeln(_env, "{")
-    self.FP.Writeln(_env, "   return NewLnspipe( arg1 )")
-    self.FP.Writeln(_env, "}")
 }
 // 4393: decl @lune.@base.@convPython.convFilter.outputMapping
 func (self *convPython_convFilter) outputMapping(_env *LnsEnv, node *Nodes_DeclClassNode,absImmutFlag bool) {

@@ -2839,13 +2839,13 @@ pub override fn ConvFilter.processExpCall(
       
       let prefixNode = fieldNode.$prefix;
 
-      if prefixNode.$expType.isInheritFrom(
-         self.processInfo, Ast.builtinTypeAsyncItem, nil) and
-         node.$func.$expType.$rawTxt == "_createPipe"
-      {
-         self.writeRaw( "nil" );
-         return false;
-      }
+      // if prefixNode.$expType.isInheritFrom(
+      //    self.processInfo, Ast.builtinTypeAsyncItem, nil) and
+      //    node.$func.$expType.$rawTxt == "_createPipe"
+      // {
+      //    self.writeRaw( "nil" );
+      //    return false;
+      // }
 
       let fieldTxt;
       if node.$func.$expType.$nonnilableType == self.builtinFunc.str_replace {
