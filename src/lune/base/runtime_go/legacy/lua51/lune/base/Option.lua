@@ -173,12 +173,13 @@ local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 
 
 local function getBuildCount(  )
 
-   return 12645
+   return 12734
 end
 
 
@@ -738,6 +739,9 @@ end
                elseif _switchExp == "--projDir" then
                   option.projDir = getNextOp(  )
                elseif _switchExp == "--builtin" then
+                  local builtin = Builtin.Builtin._new(option.targetLuaVer, option.transCtrlInfo)
+                  local builtinFunc = builtin:registBuiltInScope(  )
+                  
                   do
                      local __sorted = {}
                      local __map = Ast.getBuiltInTypeIdMap(  )
@@ -1036,7 +1040,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 754, function (  )
+   Log.log( Log.Level.Log, __func__, 759, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

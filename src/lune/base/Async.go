@@ -3,7 +3,7 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Async bool
 var Async__mod__ string
-type Async_EndProcessFunc_3_ func (_env *LnsEnv, arg1 *Async_RunnerBase)
+type Async_EndProcessFunc func (_env *LnsEnv, arg1 *Async_RunnerBase)
 // 51: decl @lune.@base.@Async.Pipe.getNext
 func (self *Async_Pipe) GetNext(_env *LnsEnv) LnsAny {
     if self.started{
@@ -93,7 +93,7 @@ func (self *Async_Waiter) startRunner(_env *LnsEnv, runner *Async_RunnerBase,mod
     return result
 }
 // 183: decl @lune.@base.@Async.Waiter.wait
-func (self *Async_Waiter) Wait(_env *LnsEnv, _func Async_EndProcessFunc_3_) {
+func (self *Async_Waiter) Wait(_env *LnsEnv, _func Async_EndProcessFunc) {
     for _, _runner := range( self.finRunnerList.Items ) {
         runner := _runner.(Async_RunnerBaseDownCast).ToAsync_RunnerBase()
         _func(_env, runner)
@@ -258,7 +258,7 @@ func (self *Async_RunnerBase) InitAsync_RunnerBase(_env *LnsEnv, pipe LnsAny) {
 type Async_WaiterMtd interface {
     Get_pipe(_env *LnsEnv) LnsAny
     startRunner(_env *LnsEnv, arg1 *Async_RunnerBase, arg2 LnsInt, arg3 string) bool
-    Wait(_env *LnsEnv, arg1 Async_EndProcessFunc_3_)
+    Wait(_env *LnsEnv, arg1 Async_EndProcessFunc)
 }
 type Async_Waiter struct {
     pipe LnsAny

@@ -743,12 +743,12 @@ function ConvFilter:outputMeta( node )
          return true
       end
       
-      return self.moduleTypeInfo:get_processInfo() ~= typeInfo:get_processInfo()
+      
+      return self.moduleTypeInfo:get_processInfo() ~= typeInfo:get_typeId():get_processInfo()
    end
    
    local function pickupTypeId( typeInfo, forceFlag, pickupChildFlag )
    
-      
       if typeInfo:get_typeId() == Ast.rootTypeIdInfo then
          return 
       end
@@ -1227,6 +1227,12 @@ function ConvFilter:outputMeta( node )
                end
             end
             
+         elseif _switchExp == Ast.TypeInfoKind.Module then
+            
+            if not typeInfo:hasRouteNamespaceFrom( self.moduleTypeInfo ) then
+               return 
+            end
+            
          end
       end
       
@@ -1470,7 +1476,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1062, function (  )
+   Log.log( Log.Level.Log, __func__, 1077, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
    end )

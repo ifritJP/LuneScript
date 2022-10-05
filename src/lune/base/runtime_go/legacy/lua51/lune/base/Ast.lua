@@ -1513,10 +1513,6 @@ function SerializeInfo:isValidChildren( idInfo )
 end
 function SerializeInfo:serializeId( idInfo )
 
-   local id = idInfo:get_orgId()
-   if id >= extStartId then
-      return string.format( "{ id = %d, mod = 0 }", id)
-   end
    
    local processId = _lune.unwrap( self.processInfo2Id[idInfo:get_processInfo()])
    return string.format( "{ id = %d, mod = %d }", idInfo:get_orgId(), processId)
@@ -7145,8 +7141,16 @@ function AlternateTypeInfo:canSetFrom( processInfo, other, canEvalType, alt2type
       return true
    end
    
-   if self.refTypeInfo == otherWork then
-      return true
+   do
+      local refTypeInfo = self.refTypeInfo
+      if refTypeInfo ~= nil then
+         if canEvalType ~= nil then
+            local ret = refTypeInfo:canEvalWith( processInfo, otherWork, canEvalType, alt2type )
+            return ret
+         end
+         
+         return refTypeInfo:equals( processInfo, otherWork, alt2type )
+      end
    end
    
    

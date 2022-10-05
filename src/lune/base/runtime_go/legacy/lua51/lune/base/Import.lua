@@ -1290,10 +1290,8 @@ function _TypeInfoNormal:createTypeInfo( param )
                local workTypeInfo
                
                local scope = nil
-               if self.kind ~= Ast.TypeInfoKind.FormFunc then
-                  scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Other, nil)
-               end
                
+               scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Other, nil)
                
                local parentTypeDataAccessor = param:getTypeDataAccessor( self.parentId )
                local workTypeInfoMut = param.processInfo:createFuncAsync( self.abstractFlag, false, scope, typeInfoKind, parentInfo, parentTypeDataAccessor, false, true, self.staticFlag, accessMode, self.txt, self.asyncMode, itemTypeInfo, argTypeInfo, retTypeInfo, self.mutMode )
@@ -1909,7 +1907,7 @@ function ModuleLoader:getExportInfo(  )
    _lune.nilacc( self.syncFlag, 'wait', 'callmtd'  )
    
    if not self.result:get_exportInfo() then
-      Log.log( Log.Level.Err, __func__, 962, function (  )
+      Log.log( Log.Level.Err, __func__, 964, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.fullModulePath)
       end )
@@ -1930,7 +1928,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
    
    do
       local metaInfo = metaInfoStem
-      Log.log( Log.Level.Info, __func__, 979, function (  )
+      Log.log( Log.Level.Info, __func__, 981, function (  )
       
          return string.format( "%s processing", fullModulePath)
       end )
@@ -2253,7 +2251,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
                   
                elseif _switchExp == Ast.TypeInfoKind.Module then
                   self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-                  Log.log( Log.Level.Debug, __func__, 1292, function (  )
+                  Log.log( Log.Level.Debug, __func__, 1294, function (  )
                   
                      return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
                   end )
@@ -2471,7 +2469,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1484, function (  )
+   Log.log( Log.Level.Info, __func__, 1486, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, tostring( baseDir))
    end )
@@ -2480,7 +2478,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local exportInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if exportInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1492, function (  )
+      Log.log( Log.Level.Info, __func__, 1494, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2540,7 +2538,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = exportInfo
    
-   Log.log( Log.Level.Info, __func__, 1543, function (  )
+   Log.log( Log.Level.Info, __func__, 1545, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2557,7 +2555,7 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    
    modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
    
-   Log.log( Log.Level.Info, __func__, 1556, function (  )
+   Log.log( Log.Level.Info, __func__, 1558, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, tostring( baseDir))
    end )

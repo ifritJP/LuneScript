@@ -468,14 +468,22 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
       if Ast.isExtId( typeInfo ) {
          return true;
       }
-      return self.moduleTypeInfo.$processInfo ~= typeInfo.$processInfo;
+      // if self.moduleTypeInfo.$processInfo ~= typeInfo.$processInfo {
+      //    return true;
+      // }
+      // return false;
+
+      
+      // GenericTypeInfo は、typeInfo.$processInfo が
+      // genSrcType の $processInfo になっているので、
+      // typeInfo.$typeId.$processInfo と比較する。
+      return self.moduleTypeInfo.$processInfo ~= typeInfo.$typeId.$processInfo;
    }
    
    // 公開される型情報を typeId2TypeInfo にピックアップする
    fn pickupTypeId(
       typeInfo: &Ast.TypeInfo, forceFlag: bool!, pickupChildFlag: bool! ) __trans
    {
-
       if typeInfo.$typeId == Ast.rootTypeIdInfo {
          return;
       }
@@ -875,6 +883,13 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
                                  (typeInfo.$accessMode, self.getFullName( typeInfo )) );
                   return;
                }
+            }
+         }
+         case .Module {
+            // モジュールの参照情報のゴミが混ったときのための除外処理。
+            // 本来はゴミが混じらないように制御すべきだが。。。
+            if not typeInfo.hasRouteNamespaceFrom( self.moduleTypeInfo ) {
+               return;
             }
          }
       }
@@ -2839,13 +2854,13 @@ pub override fn ConvFilter.processExpCall(
       
       let prefixNode = fieldNode.$prefix;
 
-      if prefixNode.$expType.isInheritFrom(
-         self.processInfo, Ast.builtinTypeAsyncItem, nil) and
-         node.$func.$expType.$rawTxt == "_createPipe"
-      {
-         self.writeRaw( "nil" );
-         return false;
-      }
+      // if prefixNode.$expType.isInheritFrom(
+      //    self.processInfo, Ast.builtinTypeAsyncItem, nil) and
+      //    node.$func.$expType.$rawTxt == "_createPipe"
+      // {
+      //    self.writeRaw( "nil" );
+      //    return false;
+      // }
 
       let fieldTxt;
       if node.$func.$expType.$nonnilableType == self.builtinFunc.str_replace {

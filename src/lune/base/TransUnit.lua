@@ -243,6 +243,7 @@ local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local Import = _lune.loadModule( 'lune.base.Import' )
 local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
+local Async = _lune.loadModule( 'lune.base.Async' )
 
 
 
@@ -12589,7 +12590,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 711, function (  )
+   Log.log( Log.Level.Log, __func__, 723, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12667,7 +12668,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       local workExportInfo = Nodes.ExportInfo._new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 787, function (  )
+      Log.log( Log.Level.Log, __func__, 799, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )

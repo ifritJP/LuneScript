@@ -47,12 +47,13 @@ class TransUnitForRunner extend TransUnit {
 }
 
 class TransUnitRunner extend (__Runner) {
-//class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockResult>> {
+// class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockResult>> {
    let transUnit:TransUnitForRunner {local};
    let srcTranUnit:&TransUnit;
    let alreadyToSetup:__lns.Sync.Flag!;
    
    pub fn __init(
+      // pipe:__pipe<Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>>!,
       srcTranUnit:&TransUnit,
       moduleId:&frontInterface.ModuleId,
       importModuleInfo:&frontInterface.ImportModuleInfo,
@@ -64,6 +65,8 @@ class TransUnitRunner extend (__Runner) {
       list:&List<&FuncBlockInfo>,
       managerId:int )
    {
+      // super(pipe);
+      
       self.transUnit = new TransUnitForRunner(
          moduleId, importModuleInfo, macroEval, enableMultiPhase,
          analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc,

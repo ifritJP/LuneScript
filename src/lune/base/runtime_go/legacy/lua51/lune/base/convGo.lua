@@ -5802,13 +5802,6 @@ end
 
 function convFilter:outputAsyncItem( node )
 
-   local classType = node:get_expType()
-   local classScope = _lune.unwrap( classType:get_scope())
-   local createSym = _lune.unwrap( classScope:getSymbolInfoChild( "_createPipe" ))
-   self:outputDeclFunc( self.option:get_addEnvArg(), _lune.newAlge( FuncInfo.WithClass, {classType,createSym:get_typeInfo()}) )
-   self:writeln( "{" )
-   self:writeln( "   return NewLnspipe( arg1 )" )
-   self:writeln( "}" )
 end
 
 

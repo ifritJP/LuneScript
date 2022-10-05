@@ -266,3 +266,6 @@ pub fn AAAfunc( val:AAA<str,int> ) {
       }
    }
 }
+pub fn genericFunc<T>(val:T) {
+   print( val );
+}

@@ -803,10 +803,10 @@ pub class SerializeInfo {
       return not self.validChildrenMap[ idInfo ];
    }
    pub fn serializeId(idInfo:&IdInfo) : str {
-      let id = idInfo.$orgId;
-      if id >= extStartId {
-         return "{ id = %d, mod = 0 }" ( id );
-      }
+      // let id = idInfo.$orgId;
+      // if id >= extStartId {
+      //    return "{ id = %d, mod = 0 }" ( id );
+      // }
       let processId = unwrap self.processInfo2Id[ idInfo.$processInfo ];
       return "{ id = %d, mod = %d }" ( idInfo.$orgId, processId );
    }
@@ -5166,8 +5166,13 @@ pri fn AlternateTypeInfo.canSetFrom(
    if self == otherWork {
       return true;      
    }
-   if self.refTypeInfo == otherWork {
-      return true;
+   if! let refTypeInfo = self.refTypeInfo {
+      when! canEvalType {
+         let ret = refTypeInfo.canEvalWith(
+            processInfo, otherWork, canEvalType, alt2type );
+         return ret;
+      }
+      return refTypeInfo.equals( processInfo, otherWork, alt2type ## );
    }
 
 

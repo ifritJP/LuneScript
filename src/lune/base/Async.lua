@@ -167,6 +167,7 @@ end
 
 local RunnerBase = {}
 setmetatable( RunnerBase, { ifList = {__Runner,__AsyncItem,} } )
+_moduleObj.RunnerBase = RunnerBase
 function RunnerBase._new( pipe )
    local obj = {}
    RunnerBase._setmeta( obj )
@@ -205,6 +206,7 @@ end
 
 
 local Waiter = {}
+_moduleObj.Waiter = Waiter
 function Waiter._new( pipeItemCount )
    local obj = {}
    Waiter._setmeta( obj )

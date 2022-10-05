@@ -2964,7 +2964,7 @@ fn TransUnit.analyzeNewAlge(
    }
 }
 
-fn TransUnit.analyzeExpSymbol(
+local fn TransUnit.analyzeExpSymbol(
    firstToken: &Parser.Token, symbolToken: &Parser.Token, mode: ExpSymbolMode,
    prefixExp: &Nodes.Node!, mut skipFlag: bool, canLeftExp:bool ) mut : Nodes.Node
 {

@@ -55,6 +55,14 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
+function _lune._run( runner, mod )
+    if mod == 2 then
+      return false
+    end
+    runner:run()
+    return true
+end
+
 if not _lune7 then
    _lune7 = _lune
 end
@@ -154,6 +162,102 @@ function Pipe:stop(  )
 end
 function Pipe._setmeta( obj )
   setmetatable( obj, { __index = Pipe  } )
+end
+
+
+local RunnerBase = {}
+setmetatable( RunnerBase, { ifList = {__Runner,__AsyncItem,} } )
+_moduleObj.RunnerBase = RunnerBase
+function RunnerBase._new( pipe )
+   local obj = {}
+   RunnerBase._setmeta( obj )
+   if obj.__init then obj:__init( pipe ); end
+   return obj
+end
+function RunnerBase:__init(pipe) 
+   self.pipe = pipe
+   self.artifact = nil
+   self.ranFlag = false
+end
+function RunnerBase:run(  )
+
+   self.artifact = self:runMain(  )
+   self.ranFlag = true
+   
+   do
+      local pipe = self.pipe
+      if pipe ~= nil then
+         pipe:put( self )
+      end
+   end
+   
+end
+function RunnerBase._setmeta( obj )
+  setmetatable( obj, { __index = RunnerBase  } )
+end
+function RunnerBase:get_artifact()
+   return self.artifact
+end
+function RunnerBase:get_ranFlag()
+   return self.ranFlag
+end
+
+
+
+
+local Waiter = {}
+_moduleObj.Waiter = Waiter
+function Waiter._new( pipeItemCount )
+   local obj = {}
+   Waiter._setmeta( obj )
+   if obj.__init then obj:__init( pipeItemCount ); end
+   return obj
+end
+function Waiter:__init(pipeItemCount) 
+   self.pipe = nil
+   self.asyncNum = 0
+   self.finRunnerList = {}
+end
+function Waiter:startRunner( runner, mode, name )
+
+   self.asyncNum = self.asyncNum + 1
+   local result = _lune._run(runner, mode, name )
+   if not self.pipe or not result then
+      self.asyncNum = self.asyncNum - 1
+      table.insert( self.finRunnerList, runner )
+   end
+   
+   return result
+end
+function Waiter:wait( func )
+
+   for __index, runner in ipairs( self.finRunnerList ) do
+      func( runner )
+   end
+   
+   do
+      local pipe = self.pipe
+      if pipe ~= nil then
+         for _1 = 1, self.asyncNum do
+            local runner = pipe:get(  )
+            if  nil == runner then
+               local _runner = runner
+            
+               break
+            end
+            
+            func( runner )
+         end
+         
+      end
+   end
+   
+end
+function Waiter._setmeta( obj )
+  setmetatable( obj, { __index = Waiter  } )
+end
+function Waiter:get_pipe()
+   return self.pipe
 end
 
 

@@ -4380,14 +4380,14 @@ fn convFilter.outputAlter2MapFunc( alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>) mu
 
 
 fn convFilter.outputAsyncItem( node: &Nodes.DeclClassNode ) mut {
-   let classType = node.$expType;
-   let classScope = unwrap classType.$scope;
-   let createSym = unwrap classScope.getSymbolInfoChild( "_createPipe" );
-   self.outputDeclFunc(
-      self.option.$addEnvArg, .WithClass( classType, createSym.$typeInfo ) );
-   self.writeln( "{" );
-   self.writeln( "   return NewLnspipe( arg1 )" );
-   self.writeln( "}" );
+   // let classType = node.$expType;
+   // let classScope = unwrap classType.$scope;
+   // let createSym = unwrap classScope.getSymbolInfoChild( "_createPipe" );
+   // self.outputDeclFunc(
+   //    self.option.$addEnvArg, .WithClass( classType, createSym.$typeInfo ) );
+   // self.writeln( "{" );
+   // self.writeln( "   return NewLnspipe( arg1 )" );
+   // self.writeln( "}" );
 }
 
 fn convFilter.outputMapping( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut {

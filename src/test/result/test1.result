@@ -494,6 +494,8 @@ abc
 -----	2092	-----
 11	strabc
 abcxyz	11
+-----	2101	-----
+999
 11
 12
 12
@@ -2226,6 +2228,10 @@ test/error/generics2.lns:170:23: error: This type must be public. -- HogeHoge<T>
 test/error/generics2.lns:174:7: error: member type is not Mapping -- HogeHoge<T>: The generics Alge isn't support mapping yet -- HogeHoge<T>
 test/error/generics2.lns:184:19: error: 'T' of Hoge<T> doesn't inherit 'IF1'
 test/error/generics2.lns:197:17: error: not compatible type '&@test.@error.@generics2.Test3<T>!' or '@test.@error.@generics2.Test3<T>'
+test/error/generics2.lns:215:19: error: return: exp(1) type mismatch List<@test.@error.@generics2.Val>!(1576) <- List<&@test.@error.@generics2.Val>(1603): index 1(TypeInfoKind.Nilable)
+test/error/generics2.lns:219:19: error: return: exp(1) type mismatch List<@test.@error.@generics2.Val>!(1576) <- &List<@test.@error.@generics2.Val>(1615): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:240:19: error: return: exp(1) type mismatch List<&@test.@error.@generics2.Val>!(1635) <- &List<@test.@error.@generics2.Val>(1674): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:257:19: error: return: exp(1) type mismatch &List<@test.@error.@generics2.Val>!(1694) <- List<&@test.@error.@generics2.Val>(1721): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics3.lns:50:8: warning: 'test3' var isn't accessed
 test/error/generics3.lns:13:21: error: can't access mutable method. -- &Set<int>.add
 test/error/generics3.lns:42:4: error: sub2: exp(1) type mismatch &@test.@error.@generics3.IF2<T2>(1115) <- @test.@error.@generics3.Test2<T>(1136): index 1(TypeInfoKind.IF). if your code is the old style, use the opiton '--legacy-mutable-control'.

@@ -35,6 +35,7 @@ import lune.base.LuaVer;
 import lune.base.Depend;
 import lune.base.Log;
 import lune.base.Ast;
+import lune.base.Builtin;
 
 macro _defGetBuildCount() {
    {
@@ -484,6 +485,10 @@ usage:
                   option.projDir = getNextOp();
                }
                case "--builtin" {
+                  let mut builtin = new Builtin.Builtin(
+                     option.targetLuaVer, option.transCtrlInfo );
+                  let builtinFunc = builtin.registBuiltInScope();
+                  
                   forsort builtinTypeInfo, typeId in Ast.getBuiltInTypeIdMap() {
                      Util.println( typeId, builtinTypeInfo.$typeInfo.getTxt( ## ) );
                   }

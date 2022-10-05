@@ -2097,3 +2097,7 @@ __test {
    }
    SUB2.AAAfunc( .Val1( "abc", 1 ) );
 }
+{
+   Macro._section();
+   SUB2.genericFunc( 999 );
+}

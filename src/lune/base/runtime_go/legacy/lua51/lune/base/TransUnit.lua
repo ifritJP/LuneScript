@@ -243,6 +243,7 @@ local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local Import = _lune.loadModule( 'lune.base.Import' )
 local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
+local Async = _lune.loadModule( 'lune.base.Async' )
 
 
 
@@ -4791,6 +4792,12 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    end
    
    
+   if accessMode == Ast.AccessMode.None and token.txt ~= "fn" then
+      
+      accessMode = Ast.AccessMode.Local
+   end
+   
+   
    if token.txt == "let" then
       return self:analyzeDeclVar( Nodes.DeclVarMode.Let, accessMode, firstToken )
    elseif token.txt == "fn" then
@@ -4954,7 +4961,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1919, function (  )
+         Log.log( Log.Level.Debug, __func__, 1926, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -5649,12 +5656,6 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
       end
       
       self:pushbackToken( nextToken )
-      
-      if #altTypeList > 0 and mode ~= TransUnitIF.DeclClassMode.Class then
-         
-         self:addErrMess( name.pos, string.format( "Only class can use the generics. -- %s ", name.txt) )
-      end
-      
    end
    
    
@@ -5748,6 +5749,13 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
          end
          
       end
+   end
+   
+   for __index, ifTypeNode in ipairs( inheritInfo:get_impliments() ) do
+      for __index, altType in pairs( ifTypeNode:get_itemIndex2alt() ) do
+         classScope:addAlternate( self.processInfo, classAccessMode, altType:get_rawTxt(), firstToken.pos, altType )
+      end
+      
    end
    
    
@@ -5853,14 +5861,6 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
    end
    
    
-   if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
-      
-      local pipeType = self:createGeneric( firstToken.pos, self.builtinFunc.__pipe_, {classTypeInfo} )
-      local createPipeFuncTypeInfo = self.processInfo:createFuncAsync( false, false, nil, Ast.TypeInfoKind.Func, classTypeInfo, typeDataAccessor, true, false, true, Ast.AccessMode.Pub, "_createPipe", Ast.Async.Async, nil, {Ast.builtinTypeInt}, {pipeType:get_nilableTypeInfo()}, Ast.MutMode.IMut )
-      classScope:addMethod( self.processInfo, nil, createPipeFuncTypeInfo, Ast.AccessMode.Pub, true )
-   end
-   
-   
    self:popClass(  )
    
    return node
@@ -5934,6 +5934,16 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfoMut, alt2t
             if prottype:get_asyncMode() ~= typeInfo:get_asyncMode() then
                self:addErrMess( name.pos, string.format( "mismatch async -- %s / %s", Ast.Async:_getTxt( prottype:get_asyncMode())
                , Ast.Async:_getTxt( typeInfo:get_asyncMode())
+               ) )
+               matched = false
+            end
+            
+         end
+         
+         do
+            if prottype:get_accessMode() ~= typeInfo:get_accessMode() then
+               self:addErrMess( name.pos, string.format( "mismatch accessMode -- %s / %s", Ast.AccessMode:_getTxt( prottype:get_accessMode())
+               , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
                ) )
                matched = false
             end
@@ -6074,6 +6084,18 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       
       name = self:getSymbolToken( SymbolMode.MustNot_ )
       token = self:getToken(  )
+      
+      if accessMode == Ast.AccessMode.None then
+         accessMode = Ast.AccessMode.Pri
+      end
+      
+   else
+    
+      
+      if accessMode == Ast.AccessMode.None then
+         accessMode = Ast.AccessMode.Local
+      end
+      
    end
    
    
@@ -6208,6 +6230,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       
       
       if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner ) and Ast.isPubToExternal( accessMode ) then
+         
          for index, argNode in ipairs( argList ) do
             if not self:canBeAsyncParam( argNode:get_expType() ) then
                self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument with public method. -- %d: %s", index, argNode:get_expType():getTxt(  )) )
@@ -11747,7 +11770,7 @@ function TransUnit:analyzeStatement( termTxt )
    
    
    if not statement then
-      statement = self:analyzeDecl( Ast.AccessMode.Local, false, token, token )
+      statement = self:analyzeDecl( Ast.AccessMode.None, false, token, token )
    end
    
    
@@ -11900,8 +11923,44 @@ end
 
 local unsupportStatement = {["import"] = true, ["subfile"] = true, ["provide"] = true}
 
+local TransUnitForRunner = {}
+setmetatable( TransUnitForRunner, { __index = TransUnit } )
+function TransUnitForRunner._new( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
+   local obj = {}
+   TransUnitForRunner._setmeta( obj )
+   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
+   return obj
+end
+function TransUnitForRunner:__init(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
+   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+   
+   
+   self.funcBlockCtl = ListFuncBlockCtl._new(list)
+   self.nodeManager:set_managerId( managerId )
+   self.resultMap = {}
+end
+function TransUnitForRunner:analyzeStatementToken( token )
+
+   if _lune._Set_has(unsupportStatement, token.txt ) then
+      self:errorAt( token.pos, string.format( "unsupport the '%s' statement on the multi phase ast. ", token.txt) .. "please declare '_lune_control single_phase_ast'" )
+   end
+   
+   return nil
+end
+function TransUnitForRunner:run(  )
+
+   self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.parser:getStreamName(  ) )
+end
+function TransUnitForRunner._setmeta( obj )
+  setmetatable( obj, { __index = TransUnitForRunner  } )
+end
+function TransUnitForRunner:get_resultMap()
+   return self.resultMap
+end
+
+
 local TransUnitRunner = {}
-setmetatable( TransUnitRunner, { __index = TransUnit,ifList = {__Runner,} } )
+setmetatable( TransUnitRunner, { ifList = {__Runner,} } )
 function TransUnitRunner._new( srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
    local obj = {}
    TransUnitRunner._setmeta( obj )
@@ -11909,18 +11968,14 @@ function TransUnitRunner._new( srcTranUnit, moduleId, importModuleInfo, macroEva
    return obj
 end
 function TransUnitRunner:__init(srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
-   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+   self.transUnit = TransUnitForRunner._new(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId)
    
-   
-   self.funcBlockCtl = ListFuncBlockCtl._new(list)
-   self.resultMap = {}
-   self.nodeManager:set_managerId( managerId )
    self.srcTranUnit = srcTranUnit
    self.alreadyToSetup = nil
 end
 function TransUnitRunner:run(  )
 
-   self:setup( self.srcTranUnit )
+   self.transUnit:setup( self.srcTranUnit )
    do
       local _exp = self.alreadyToSetup
       if _exp ~= nil then
@@ -11929,7 +11984,7 @@ function TransUnitRunner:run(  )
    end
    
    
-   self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.parser:getStreamName(  ) )
+   self.transUnit:run(  )
 end
 function TransUnitRunner:waitToSetup(  )
 
@@ -11944,18 +11999,13 @@ end
 function TransUnitRunner:get(  )
 
    
-   return self.resultMap
-end
-function TransUnitRunner:analyzeStatementToken( token )
-
-   if _lune._Set_has(unsupportStatement, token.txt ) then
-      self:errorAt( token.pos, string.format( "unsupport the '%s' statement on the multi phase ast. ", token.txt) .. "please declare '_lune_control single_phase_ast'" )
-   end
-   
-   return nil
+   return self.transUnit:get_resultMap()
 end
 function TransUnitRunner._setmeta( obj )
   setmetatable( obj, { __index = TransUnitRunner  } )
+end
+function TransUnitRunner:get_transUnit()
+   return self.transUnit
 end
 
 
@@ -12489,7 +12539,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
       
       for __index, runner in ipairs( runnerList ) do
          local workMap = runner:get(  )
-         self:mergeFrom( runner, resultMap )
+         self:mergeFrom( runner:get_transUnit(), resultMap )
          for key, result in pairs( workMap ) do
             resultMap[key] = result
          end
@@ -12540,7 +12590,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 687, function (  )
+   Log.log( Log.Level.Log, __func__, 723, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, parser:getStreamName(  ), tostring( baseDir), tostring( macroFlag), AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12618,7 +12668,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       local workExportInfo = Nodes.ExportInfo._new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 763, function (  )
+      Log.log( Log.Level.Log, __func__, 799, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), tostring( moduleTypeInfo), tostring( moduleTypeInfo:get_scope()))
       end )

@@ -556,10 +556,12 @@ class _TypeInfoNormal extend _TypeInfo {
 
                   let mut workTypeInfo:&Ast.TypeInfo;
                   let mut scope:Ast.Scope! = nil;
-                  if self.kind ~= Ast.TypeInfoKind.FormFunc {
-                     scope = new Ast.Scope(
-                        param.processInfo, parentScope, .Other, nil ## );
-                  }
+                  // if self.kind ~= Ast.TypeInfoKind.FormFunc {
+                  //    scope = new Ast.Scope(
+                  //       param.processInfo, parentScope, .Other, nil ## );
+                  // }
+                  scope = new Ast.Scope(
+                     param.processInfo, parentScope, .Other, nil ## );
 
                   let mut parentTypeDataAccessor =
                      param.getTypeDataAccessor( self.parentId );
