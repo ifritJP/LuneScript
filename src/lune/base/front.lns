@@ -259,7 +259,7 @@ loadedMap で管理する前にシステムにロードされているため、
    pub fn error( message:str ) __async;
 }
 
-fn Front.error( message:str ) __async {
+pub fn Front.error( message:str ) __async {
    Util.errorLog( message );
    Util.printStackTrace();
    os.exit( 1 );
@@ -427,7 +427,7 @@ fn Front.convertFromAst(
 /**
 マクロ解析用
 */
-fn Front.loadFromLnsTxt(
+pub fn Front.loadFromLnsTxt(
    importModuleInfo:frontInterface.ImportModuleInfo,
    baseDir:str!, name:str, txt:str ) mut : Luaval<&stem>
 {
@@ -900,7 +900,7 @@ fn Front.loadFile(
 
 
 
-fn Front.searchModule( mod:str, baseDir:str!, addSearchPath:str! ) mut : str! {
+pub fn Front.searchModule( mod:str, baseDir:str!, addSearchPath:str! ) mut : str! {
    return self.searchModuleFile( mod, ".lns", baseDir, addSearchPath );
 }
 
@@ -1084,7 +1084,7 @@ mod のモジュールをロードする。
 @return Luaval<&stem>! モジュール情報
 @return Luaval<&stem> META 情報
 */
-fn Front.loadModule( mut mod:str ) __async mut :
+pub fn Front.loadModule( mut mod:str ) __async mut :
 Luaval<&stem>!, frontInterface.ModuleMeta
 {
    return self.loadModuleWithBaseDir( mod, nil )**;
@@ -1095,7 +1095,7 @@ pub fn Front.getLuaModulePath( mod:str, baseDir:str! ) mut : str, str!, str {
    return self.gomodMap.getLuaModulePath( mod, baseDir )**;
 }
 
-fn Front.loadMeta(
+pub fn Front.loadMeta(
    importModuleInfo:frontInterface.ImportModuleInfo, mod:str, orgMod:str,
    baseDir:str!, loader:frontInterface.ModuleLoader ) mut : frontInterface.ModuleMeta!
 {

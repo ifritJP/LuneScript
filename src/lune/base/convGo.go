@@ -1279,88 +1279,25 @@ func (self *convGo_ProcessDeclMethodItem) Get_fieldNode(_env *LnsEnv) *Nodes_Dec
 // declaration Class -- ConvRunner
 type convGo_ConvRunnerMtd interface {
     GetLnsSyncFlag() *Lns_syncFlag
-    concatSymWithType(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo) string
     DefaultProcess(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny)
-    expList2Slice(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 bool)
-    getAccessorSym(_env *LnsEnv, arg1 LnsInt, arg2 string) string
-    getAlgeSymbol(_env *LnsEnv, arg1 *Ast_AlgeValInfo) string
-    getCanonicalName(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
-    getConstrSymbol(_env *LnsEnv, arg1 *Ast_TypeInfo) string
-    getConv2formName(_env *LnsEnv, arg1 *Nodes_Node) string
-    getConvExpName(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_ExpListNode) string
-    getConvGenericsName(_env *LnsEnv, arg1 *Nodes_Node) string
-    getEnumGetTxtSym(_env *LnsEnv, arg1 *Ast_EnumTypeInfo) string
-    getEnvArgDecl(_env *LnsEnv, arg1 LnsInt) string
-    getFromStemName(_env *LnsEnv, arg1 *Ast_TypeInfo) string
     GetFull(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
-    getFuncSymbol(_env *LnsEnv, arg1 *Ast_TypeInfo) string
-    getModuleName(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
-    getModuleSym(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool) string
     GetResult(_env *LnsEnv) string
-    getSymbol(_env *LnsEnv, arg1 LnsAny, arg2 string) string
-    getSymbolSym(_env *LnsEnv, arg1 *Ast_SymbolInfo) string
-    getTypeSymbol(_env *LnsEnv, arg1 *Ast_TypeInfo) string
-    getTypeSymbolWithPrefix(_env *LnsEnv, arg1 *Ast_TypeInfo) string
     Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
     Get_optStack(_env *LnsEnv) *LnsList
     Get_stepIndent(_env *LnsEnv) LnsInt
     Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
     IsExtSymbol(_env *LnsEnv, arg1 *Ast_SymbolInfo) bool
     IsExtType(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    isImplementedRunner(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    isInheritAbsImmut(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
     IsPubSym(_env *LnsEnv, arg1 *Ast_SymbolInfo) bool
     IsPubType(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    isSameModDir(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    isSamePackage(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    isSamePackageExtModule(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
-    needConvFormFunc(_env *LnsEnv, arg1 *Nodes_ExpCastNode) bool
-    needPrefix(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
     OutputAccessor(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputAdvertise(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputAlter2MapFunc(_env *LnsEnv, arg1 *LnsMap)
-    outputAny2Type(_env *LnsEnv, arg1 *Ast_TypeInfo)
-    outputAsyncItem(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
     OutputCallPrefix(_env *LnsEnv, arg1 string, arg2 *Nodes_Node, arg3 LnsAny, arg4 *Ast_SymbolInfo)(bool, LnsAny)
-    outputCastReceiver(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputClassType(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 bool)
-    outputConstructor(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 bool)
-    outputConvExt(_env *LnsEnv, arg1 *Nodes_Node)
-    outputConvItemType(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 LnsAny)
-    outputConvItemTypeList(_env *LnsEnv, arg1 *LnsList, arg2 LnsAny)
-    outputConvToForm(_env *LnsEnv, arg1 *Nodes_ExpCastNode)
-    outputConvToFormFunc(_env *LnsEnv, arg1 *Nodes_ExpCastNode)
     OutputDeclFunc(_env *LnsEnv, arg1 bool, arg2 LnsAny) *convGo_FuncConv
-    outputDeclFuncArg(_env *LnsEnv, arg1 *Ast_TypeInfo)
     OutputDeclFuncInfo(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_DeclFuncInfo)
-    outputDownCast(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputDummyAbstractMethod(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *Ast_TypeInfo)
-    outputDummyAbstractMethodOfClass(_env *LnsEnv, arg1 *Ast_TypeInfo)
-    outputDummyReturn(_env *LnsEnv, arg1 *LnsList)
-    outputForeachLua(_env *LnsEnv, arg1 *Nodes_Node, arg2 bool, arg3 *Nodes_Node, arg4 *Ast_SymbolInfo, arg5 LnsAny, arg6 *Nodes_BlockNode)
-    outputIFMethods(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputImplicitCast(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *Nodes_Node, arg3 *Nodes_ExpCastNode)
-    outputImport(_env *LnsEnv, arg1 *Nodes_ImportNode)
-    outputInterfaceType(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputLetVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode)
-    outputMapping(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 bool)
-    outputMethodIF(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputModule(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 bool)
-    outputModuleImport(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputNewSetup(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo, arg3 bool)
-    outputNilAccCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode)
-    outputRetType(_env *LnsEnv, arg1 *LnsList)
-    outputStaticMember(_env *LnsEnv, arg1 *Nodes_DeclClassNode)
-    outputStem2Type(_env *LnsEnv, arg1 *Ast_TypeInfo)
-    outputSymbol(_env *LnsEnv, arg1 LnsAny, arg2 string)
-    outputToStem(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 bool)
-    outputTopScopeVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode)
-    output_to_decl__func__sym(_env *LnsEnv, arg1 *Nodes_DeclFuncInfo, arg2 *Ast_TypeInfo)
     PopIndent(_env *LnsEnv)
     popProcessMode(_env *LnsEnv)
     ProcessAbbr(_env *LnsEnv, arg1 *Nodes_AbbrNode, arg2 LnsAny)
     ProcessAlias(_env *LnsEnv, arg1 *Nodes_AliasNode, arg2 LnsAny)
-    processAndOr(_env *LnsEnv, arg1 *Nodes_ExpOp2Node, arg2 string, arg3 *Nodes_Node)
     ProcessApply(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 LnsAny)
     ProcessAsyncLock(_env *LnsEnv, arg1 *Nodes_AsyncLockNode, arg2 LnsAny)
     ProcessBlankLine(_env *LnsEnv, arg1 *Nodes_BlankLineNode, arg2 LnsAny)
@@ -1368,8 +1305,6 @@ type convGo_ConvRunnerMtd interface {
     ProcessBlockSub(_env *LnsEnv, arg1 *Nodes_BlockNode, arg2 LnsAny)
     ProcessBoxing(_env *LnsEnv, arg1 *Nodes_BoxingNode, arg2 LnsAny)
     ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
-    processCond(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node)
-    processConvExp(_env *LnsEnv, arg1 *Nodes_Node, arg2 *LnsList, arg3 LnsAny, arg4 bool)
     ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
     ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
     ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)
@@ -1412,7 +1347,6 @@ type convGo_ConvRunnerMtd interface {
     ProcessFor(_env *LnsEnv, arg1 *Nodes_ForNode, arg2 LnsAny)
     ProcessForeach(_env *LnsEnv, arg1 *Nodes_ForeachNode, arg2 LnsAny)
     ProcessForsort(_env *LnsEnv, arg1 *Nodes_ForsortNode, arg2 LnsAny)
-    processGenericsCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode)
     ProcessGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode, arg2 LnsAny)
     ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
     ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
@@ -1431,7 +1365,6 @@ type convGo_ConvRunnerMtd interface {
     ProcessLuneControl(_env *LnsEnv, arg1 *Nodes_LuneControlNode, arg2 LnsAny)
     ProcessLuneKind(_env *LnsEnv, arg1 *Nodes_LuneKindNode, arg2 LnsAny)
     ProcessMatch(_env *LnsEnv, arg1 *Nodes_MatchNode, arg2 LnsAny)
-    processMethodAsync(_env *LnsEnv, arg1 *LnsList) *LnsList
     ProcessNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode, arg2 LnsAny)
     ProcessNone(_env *LnsEnv, arg1 *Nodes_NoneNode, arg2 LnsAny)
     ProcessProtoClass(_env *LnsEnv, arg1 *Nodes_ProtoClassNode, arg2 LnsAny)
@@ -1444,7 +1377,6 @@ type convGo_ConvRunnerMtd interface {
     ProcessReturn(_env *LnsEnv, arg1 *Nodes_ReturnNode, arg2 LnsAny)
     ProcessRoot(_env *LnsEnv, arg1 *Nodes_RootNode, arg2 LnsAny)
     ProcessScope(_env *LnsEnv, arg1 *Nodes_ScopeNode, arg2 LnsAny)
-    processSetFromExpList(_env *LnsEnv, arg1 string, arg2 *LnsList, arg3 *Nodes_ExpListNode, arg4 bool) LnsInt
     ProcessShebang(_env *LnsEnv, arg1 *Nodes_ShebangNode, arg2 LnsAny)
     ProcessStmtExp(_env *LnsEnv, arg1 *Nodes_StmtExpNode, arg2 LnsAny)
     ProcessSubfile(_env *LnsEnv, arg1 *Nodes_SubfileNode, arg2 LnsAny)
@@ -1461,8 +1393,6 @@ type convGo_ConvRunnerMtd interface {
     Run(_env *LnsEnv)
     Setup(_env *LnsEnv)
     SwitchToHeader(_env *LnsEnv)
-    type2gotype(_env *LnsEnv, arg1 *Ast_TypeInfo) string
-    type2gotypeOrg(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 LnsInt) string
     Write(_env *LnsEnv, arg1 string)
     WriteRaw(_env *LnsEnv, arg1 string)
     Writeln(_env *LnsEnv, arg1 string)

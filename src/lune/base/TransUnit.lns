@@ -1081,7 +1081,7 @@ alias で置き換えている元の Type → alias の型
       allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
       expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
    pri fn analyzeStatement( termTxt: str! ) mut : Nodes.Node!;
-   pri fn analyzeExpSymbol(
+   local fn analyzeExpSymbol(
       firstToken: &Parser.Token, token: &Parser.Token, mode: ExpSymbolMode,
       prefixExp: &Nodes.Node!, skipFlag: bool, canLeftExp:bool ) mut : Nodes.Node;
    pri fn analyzeExpList(
@@ -1349,7 +1349,7 @@ fn TransUnit.isValidBlockWithoutTesting(): bool {
    return not self.inTestBlock or self.ctrl_info.testing;
 }
 
-fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
+pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
 {
    let mut token;
 
@@ -1386,7 +1386,7 @@ fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
 
 
 
-fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
+pro fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
    let token = self.getTokenNoErr(##);
    if token == Parser.getEofToken() {
       if allowEof {
@@ -1402,7 +1402,7 @@ pub fn TransUnit.pushback() __async mut {
    self.parser.pushback();
 }
 
-fn TransUnit.pushbackStr(
+pub fn TransUnit.pushbackStr(
    asyncParse:bool!, name: str, statement: str, pos:&Types.Position ) __async mut
 {
    let! async = asyncParse {
@@ -1474,19 +1474,19 @@ fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.
    return token;
 }
 
-fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Parser.Token {
+local fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Parser.Token {
    return self.checkSymbol( self.getToken(##), mode );
 }
 
 
-fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
+local fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
    if token.txt ~= txt {
       self.error( "not found -- '%s'. actually '%s'" ( txt, token.txt ) );
    }
    return token;
 }
 
-fn TransUnit.checkNextToken( txt: str ) mut : &Parser.Token {
+local fn TransUnit.checkNextToken( txt: str ) mut : &Parser.Token {
    return self.checkToken( self.getToken(##), txt );
 }
 
@@ -1549,7 +1549,7 @@ termTxt が表われるまで statement を解析し、 stmtList に格納する
 @return Nodes.Node! 最後に解析した statement
 @return int 最後に解析した statement の直前の行
 */
-fn TransUnit.analyzeStatementList(
+local fn TransUnit.analyzeStatementList(
    stmtList: List<&Nodes.Node>,
    mut firstSwitchingParser:bool, termTxt: str! ) mut : Nodes.Node!, int
 {
@@ -1663,7 +1663,7 @@ fn TransUnit.analyzeStatementList(
    return lastStatement, lastLineNo;
 }
 
-fn TransUnit.analyzeStatementListSubfile(
+local fn TransUnit.analyzeStatementListSubfile(
    stmtList: List<&Nodes.Node> ) mut : &Nodes.Node!
 {
    let statement = self.analyzeStatement( ##);
@@ -1813,7 +1813,7 @@ enum TentativeMode {
    Finish,
 }
 
-fn TransUnit.analyzeBlock(
+local fn TransUnit.analyzeBlock(
    blockKind: Nodes.BlockKind,
    tentativeMode:TentativeMode, scope: Ast.Scope!,
    refAccessSymPosList:&List<RefAccessSymPos>! ) mut : Nodes.BlockNode
@@ -1931,7 +1931,7 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
    return tokenList;
 }
 
-fn TransUnit.skipAndCreateDummyBlock() mut : Nodes.BlockNode {
+local fn TransUnit.skipAndCreateDummyBlock() mut : Nodes.BlockNode {
    let blockToken = self.checkNextToken( "{" );
    self.pushback();
    let blockScope = self.pushScope( .Other ## );

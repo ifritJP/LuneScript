@@ -585,6 +585,8 @@ TEST_CASE += class4.lns
 TEST_CASE += class5.lns
 TEST_CASE += class6.lns
 TEST_CASE += class7.lns
+TEST_CASE += class8.lns
+TEST_CASE += class9.lns
 TEST_CASE += depend.lns
 TEST_CASE += provide1.lns
 TEST_CASE += provide2.lns
@@ -658,7 +660,7 @@ TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/error/,$(addsuffix .log,$(TEST_CASE)))
 # テストケースを実行して、テストケース毎にログをログディレクトリに出力する
 $(LOG_DIR)/error/%.log: test/error/%
 	echo $@ > $@
-	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,exe,$(EXE_OPT) 2>&1)  >> $@
+	-$(call exeLune,$(LNSC),$(TEST_DIR),$<,diag --disableMultiPhaseAst --disableMultiThreadAst,$(EXE_OPT) 2>&1)  >> $@
 
 test-error-all: $(TEST_CASE_LOGS)
 	cat $(TEST_CASE_LOGS) | grep -e 'error:' -e 'warning:'

@@ -2499,6 +2499,33 @@ _section();
 }
 _section();
 {
+   {
+      interface IF<T> {
+         pub fn func() : T;
+      }
+      class Hoge extend (IF<A=int>) {
+         pub fn func() : A {
+            return 10;
+         }
+      }
+      let hoge = new Hoge();
+      print( hoge.func() + 1) ;
+   }
+   {
+      interface IF<T> {
+         pub fn func(val:T);
+      }
+      class Hoge extend (IF<int>) {
+         pub fn func( val:int ) {
+            print( val + 10 );
+         }
+      }
+      let hoge = new Hoge();
+      hoge.func( 1 );
+   }
+}
+_section();
+{
    // 非同期処理で T 型のデータを生成する際の基底クラス。
    // 実際に非同期処理する場合は、この基底クラスを派生し、
    // runMain() メソッドを override 実装する。

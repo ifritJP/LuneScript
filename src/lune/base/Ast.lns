@@ -7324,7 +7324,7 @@ fn isSettableToForm( processInfo:&ProcessInfo, typeInfo:&TypeInfo ): bool, str {
    return true, "";        
 }
 
-pub static fn TypeInfo.canEvalWithBase(
+pro static fn TypeInfo.canEvalWithBase(
    processInfo:&ProcessInfo, 
    dest:&TypeInfo, destMut:bool, other:&TypeInfo, canEvalType:CanEvalType,
    alt2type:Map<&TypeInfo,&TypeInfo> ) : bool, str!
@@ -7989,7 +7989,7 @@ class TypeAnalyzer {
    }
 }
 
-pub fn TypeAnalyzer.analyzeTypeSub( allowDDD:bool ) __noasync mut :
+pri fn TypeAnalyzer.analyzeTypeSub( allowDDD:bool ) __noasync mut :
    &RefTypeInfo!, &Parser.Position!, str!
 {
    let firstToken = self.parser.getTokenNoErr(##);

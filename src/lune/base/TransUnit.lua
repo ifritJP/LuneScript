@@ -4791,6 +4791,12 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    end
    
    
+   if accessMode == Ast.AccessMode.None and token.txt ~= "fn" then
+      
+      accessMode = Ast.AccessMode.Local
+   end
+   
+   
    if token.txt == "let" then
       return self:analyzeDeclVar( Nodes.DeclVarMode.Let, accessMode, firstToken )
    elseif token.txt == "fn" then
@@ -4954,7 +4960,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1919, function (  )
+         Log.log( Log.Level.Debug, __func__, 1926, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -5649,12 +5655,6 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
       end
       
       self:pushbackToken( nextToken )
-      
-      if #altTypeList > 0 and mode ~= TransUnitIF.DeclClassMode.Class then
-         
-         self:addErrMess( name.pos, string.format( "Only class can use the generics. -- %s ", name.txt) )
-      end
-      
    end
    
    
@@ -5748,6 +5748,13 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
          end
          
       end
+   end
+   
+   for __index, ifTypeNode in ipairs( inheritInfo:get_impliments() ) do
+      for __index, altType in pairs( ifTypeNode:get_itemIndex2alt() ) do
+         classScope:addAlternate( self.processInfo, classAccessMode, altType:get_rawTxt(), firstToken.pos, altType )
+      end
+      
    end
    
    
@@ -5932,6 +5939,16 @@ function TransUnit:processAddFunc( isFunc, parentScope, name, typeInfoMut, alt2t
             
          end
          
+         do
+            if prottype:get_accessMode() ~= typeInfo:get_accessMode() then
+               self:addErrMess( name.pos, string.format( "mismatch accessMode -- %s / %s", Ast.AccessMode:_getTxt( prottype:get_accessMode())
+               , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
+               ) )
+               matched = false
+            end
+            
+         end
+         
          
          do
             local workNsInfo = self.nsInfoMap[prottype]
@@ -6066,6 +6083,18 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       
       name = self:getSymbolToken( SymbolMode.MustNot_ )
       token = self:getToken(  )
+      
+      if accessMode == Ast.AccessMode.None then
+         accessMode = Ast.AccessMode.Pri
+      end
+      
+   else
+    
+      
+      if accessMode == Ast.AccessMode.None then
+         accessMode = Ast.AccessMode.Local
+      end
+      
    end
    
    
@@ -6200,6 +6229,7 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       
       
       if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner ) and Ast.isPubToExternal( accessMode ) then
+         
          for index, argNode in ipairs( argList ) do
             if not self:canBeAsyncParam( argNode:get_expType() ) then
                self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument with public method. -- %d: %s", index, argNode:get_expType():getTxt(  )) )
@@ -11739,7 +11769,7 @@ function TransUnit:analyzeStatement( termTxt )
    
    
    if not statement then
-      statement = self:analyzeDecl( Ast.AccessMode.Local, false, token, token )
+      statement = self:analyzeDecl( Ast.AccessMode.None, false, token, token )
    end
    
    

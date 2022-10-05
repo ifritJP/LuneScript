@@ -1,0 +1,8 @@
+{
+   class Hoge {
+   }
+   fn Hoge.func() {
+   }
+   let hoge = new Hoge();
+   hoge.func(); // error
+}

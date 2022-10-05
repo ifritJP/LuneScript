@@ -1,0 +1,9 @@
+{
+   class Hoge {
+      pro fn func2();
+   }
+   fn Hoge.func() {
+   }
+   fn Hoge.func2() { // error
+   }
+}

@@ -99,7 +99,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
    };
 
    if not statement {
-      statement = self.analyzeDecl( .Local, false, token, token );
+      statement = self.analyzeDecl( .None, false, token, token );
    }
 
    if not statement {

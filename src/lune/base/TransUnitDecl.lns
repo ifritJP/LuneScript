@@ -552,7 +552,7 @@ fn TransUnit.checkOverrideMethod(
 }
 
 
-fn TransUnit.checkOverriededMethodOfAllClass() mut
+local fn TransUnit.checkOverriededMethodOfAllClass() mut
 {
    fn process(
       pos:&Parser.Position, alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
@@ -1697,7 +1697,7 @@ pro fn TransUnit.analyzeDeclToken(
 }
 
 fn TransUnit.analyzeDecl(
-   accessMode: Ast.AccessMode, mut staticFlag: bool,
+   mut accessMode: Ast.AccessMode, mut staticFlag: bool,
    firstToken: &Parser.Token, mut token: &Parser.Token ) mut : Nodes.Node!
 {
    if not staticFlag {
@@ -1723,6 +1723,13 @@ fn TransUnit.analyzeDecl(
       token = self.getToken(##);
    }
 
+   if accessMode == .None and token.txt ~= "fn" {
+      // fn 以外で None の場合は、 Local に設定。
+      // fn は、 analyzeDeclFunc() 内で適宜変更。
+      accessMode = .Local;
+   }
+
+   
    if token.txt == "let" {
       return self.analyzeDeclVar( .Let, accessMode, firstToken );
    }
@@ -2662,13 +2669,13 @@ fn TransUnit.analyzeDeclClass(
       }
       self.pushbackToken( nextToken );
 
-      if #altTypeList > 0 and mode ~= .Class {
-         // インタフェースの generics を当面禁止する。
-         // インタフェースの generics をサポートするには、
-         // そのインタフェースを implements しているクラスのどの型情報が
-         // 型パラメータに紐付くのかを処理する必要がある。
-         self.addErrMess( name.pos, "Only class can use the generics. -- %s " (name.txt) );
-      }
+      // if #altTypeList > 0 and mode ~= .Class {
+      //    // インタフェースの generics を当面禁止する。
+      //    // インタフェースの generics をサポートするには、
+      //    // そのインタフェースを implements しているクラスのどの型情報が
+      //    // 型パラメータに紐付くのかを処理する必要がある。
+      //    self.addErrMess( name.pos, "Only class can use the generics. -- %s " (name.txt) );
+      // }
    }
 
    if classAccessMode == .Local {
@@ -2740,8 +2747,15 @@ fn TransUnit.analyzeDeclClass(
    let mut classScope = self.$scope;
 
 
+   // extend Hoge<T=int> の T の AlternateTypeInfo を登録する
    if! let baseNode = inheritInfo.$base {
       foreach altType in baseNode.$itemIndex2alt {
+         classScope.addAlternate(
+            self.processInfo, classAccessMode, altType.$rawTxt, firstToken.pos, altType );
+      }
+   }
+   foreach ifTypeNode in inheritInfo.$impliments {
+      foreach altType in ifTypeNode.$itemIndex2alt {
          classScope.addAlternate(
             self.processInfo, classAccessMode, altType.$rawTxt, firstToken.pos, altType );
       }
@@ -2983,6 +2997,15 @@ fn TransUnit.processAddFunc(
             matched = false;
          }
       }
+      {
+         if prottype.$accessMode ~= typeInfo.$accessMode {
+            self.addErrMess(
+               name.pos,
+               "mismatch accessMode -- %s / %s"
+               (prottype.$accessMode.$_txt, typeInfo.$accessMode.$_txt) );
+            matched = false;
+         }
+      }
       
       if! let mut workNsInfo = self.nsInfoMap[ prottype ] {
          nsInfo = workNsInfo;
@@ -3114,9 +3137,15 @@ fn TransUnit.analyzeDeclFunc(
       name = self.getSymbolToken( .MustNot_ );
       token = self.getToken(##);
 
-      // if accessMode == .Local {
-      //    accessMode = .Pri;
-      // }
+      if accessMode == .None {
+         accessMode = .Pri;
+      }
+   } else {
+      // ここまで来て .None のままなら .Local に設定。
+      // メソッド宣言の場合は、この直前の処理で .Pri に設定される。
+      if accessMode == .None {
+         accessMode = .Local;
+      }
    }
 
 
@@ -3250,6 +3279,10 @@ fn TransUnit.analyzeDeclFunc(
       if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeRunner ## ) and
          Ast.isPubToExternal( accessMode )
       {
+         // public なメソッドは、 mutable な引数を持てないようにする。
+         // mutable 引数を渡せると、別スレッドとのメモリー競合が発生する可能性があるので、
+         // 競合防止のため。
+         // protected などは、同じスレッドになるので許可する。
          foreach argNode, index in argList {
             if not self.canBeAsyncParam( argNode.$expType ) {
                self.addErrMess(
