@@ -88,50 +88,109 @@ pub abstract class Pipe<T> {
 
 }
 
-// /**
-// 渡された T 型のデータを別スレッドで処理する。
-// */
-// pub abstract class WritePipe<T> extend LnsThread {
-//    let pipe:__pipe<T>!;
-//    let mut started:bool;
-   
-//    pro fn __init( pipe:__pipe<T>! ) {
-//       super();
-//       self.pipe = pipe;
-//       self.started = false;
-//    }
 
-// /**
-// T 型のデータを処理する。
-// item が nil の場合、処理終了。
-// */
-//    pro abstract fn process(item:T!) mut;
+/**
+複数の型 T! のデータ生成を並列に行ない、マージする際に利用する runner の基底クラス。
 
-//    pub fn put( item:T! ) mut {
-//       if self.started {
-//          if! let mut pipe = self.pipe {
-//             pipe.put( item );
-//          }
-//       } else {
-//          error( "not started" );
-//       }
-//       self.process( item );
-//    }
+このクラスを派生したクラスは、 runMain() で 1 つの型 T! のデータ生成を行なう。
 
-//    pro override fn loop() mut {
-//       let! mut pipe = self.pipe {
-//          return;
-//       };
-//       while true {
-//          let mut item = pipe.get();
-//          self.process( item );
-//          if not item {
-//             break;
-//          }
-//       }
-//    }
-//    pub fn start() mut {
-//       self.started = true;
-//       _lune_control run_async_pipe;
-//    }
-// }
+Waiter<T> クラスの startRunner() で、この派生クラスの処理を開始し、
+Waiter<T> クラスの wait() で、処理終了を待ちマージを行なう。
+*/
+abstract class RunnerBase<T> extend (__Runner, __AsyncItem ) {
+   /** 処理終了を通知する pipe */
+   let pipe:__pipe<RunnerBase<T>>!;
+   /** この runner で生成した T 型のデータ */
+   let mut artifact:T! {pub};
+   /** この runner を実行済みかどうか */
+   let mut ranFlag:bool {pub};
+
+   /**
+Waiter<T> から取得した pipe を指定して、クラスを生成する。
+   */
+   pub fn __init( pipe:__pipe<RunnerBase<T>>! ) __async {
+      self.pipe = pipe;
+      self.artifact = nil;
+      self.ranFlag = false;
+   }
+
+   /**
+T! 型のデータを生成する処理。
+
+@return 生成した T! 型のデータ。
+   */
+   pro abstract fn runMain() __async mut : T!;
+
+
+   /**
+runner 実行処理。
+   */
+   pub fn run() __async mut {
+      self.artifact = self.runMain();
+      self.ranFlag = true;
+      
+      if! let pipe = self.pipe {
+         pipe.put( self );
+      }
+   }
+}
+
+form EndProcessFunc<T>( t:RunnerBase<T> ) __trans;
+
+class Waiter<T> {
+   /** 処理済みの RunnerBase<T> を受けとる pipe */
+   let pipe:__pipe<RunnerBase<T>>! {pub};
+   /** 非同期に実行した RunnerBase<T> の数 */
+   let mut asyncNum:int;
+   /** 非同期に実行しなかった RunnerBase<T> のリスト */
+   let finRunnerList:List<RunnerBase<T>>;
+
+   /**
+生成する
+
+@param pipeItemCount pipe で同時に入れられるアイテム数
+   */
+   pub fn __init(pipeItemCount:int) __async {
+      self.pipe = __lns.Sync._createPipe( RunnerBase<str>, pipeItemCount );
+      self.asyncNum = 0;
+      self.finRunnerList = [];
+   }
+
+   /**
+指定の RunnerBase<T> を開始する。
+
+@param runner RunnerBase<T>
+@param mode __run() の開始モード
+@param name RunnerBase<T> の実行名
+@return __run() の戻り値
+   */ 
+   local fn startRunner( runner: RunnerBase<T>, mode:int, name:str ) mut : bool {
+      self.asyncNum = self.asyncNum + 1;
+      let result = __run( runner, mode, name );
+      if not self.pipe or not result {
+         self.asyncNum = self.asyncNum - 1;
+         self.finRunnerList.insert( runner );
+      }
+      return result;
+   }
+
+/**
+startRunner() で実行した runner の処理終了を待つ。
+
+@param func runner が処理終了した時に呼ばれる処理。
+処理終了随時呼ばれる。
+*/
+   pub fn wait( func:EndProcessFunc<T> ) __async mut {
+      foreach runner in self.finRunnerList {
+         func( runner );
+      }
+      if! let pipe = self.pipe {
+         for _ = 1, self.asyncNum {
+            let! mut runner = pipe.get() {
+               break;
+            };
+            func( runner );
+         }
+      }
+   }
+}

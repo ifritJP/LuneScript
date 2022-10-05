@@ -2499,6 +2499,9 @@ _section();
 }
 _section();
 {
+   // 非同期処理で T 型のデータを生成する際の基底クラス。
+   // 実際に非同期処理する場合は、この基底クラスを派生し、
+   // runMain() メソッドを override 実装する。
    abstract class RunnerBase<T> extend (__Runner, __AsyncItem ) {
       let pipe:__pipe<RunnerBase<T>>!;
       let mut artifact:T! {pub};
@@ -2522,8 +2525,10 @@ _section();
       }
    }
 
+   // RunnerBase<T> で非同期処理した結果の T を処理するコールバック関数型。
    form EndProcessFunc<T>( t:RunnerBase<T> ) __trans;
 
+   // RunnerBase<T> の非同期処理開始と、処理終了待ちを制御する。
    class RunnerWaiter<T> {
       let pipe:__pipe<RunnerBase<T>>!;
       let mut startNum:int;
@@ -2560,6 +2565,9 @@ _section();
       }
    }
 
+   // 実際に非同期処理を書くクラス。
+   // RunnerBase<T=str> を派生している。
+   // T=str は、結果が T で、 runMain() の戻り値として T を利用する。
    class TestRunner extend RunnerBase<T=str> {
       let num:int;
       pro override fn runMain() __async mut : T {
