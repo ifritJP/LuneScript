@@ -97,7 +97,7 @@ pub abstract class Pipe<T> {
 Waiter<T> クラスの startRunner() で、この派生クラスの処理を開始し、
 Waiter<T> クラスの wait() で、処理終了を待ちマージを行なう。
 */
-abstract class RunnerBase<T> extend (__Runner, __AsyncItem ) {
+pub abstract class RunnerBase<T> extend (__Runner, __AsyncItem ) {
    /** 処理終了を通知する pipe */
    let pipe:__pipe<RunnerBase<T>>!;
    /** この runner で生成した T 型のデータ */
@@ -135,9 +135,9 @@ runner 実行処理。
    }
 }
 
-form EndProcessFunc<T>( t:RunnerBase<T> ) __trans;
+pub form EndProcessFunc<T>( t:RunnerBase<T> ) __trans;
 
-class Waiter<T> {
+pub class Waiter<T> {
    /** 処理済みの RunnerBase<T> を受けとる pipe */
    let pipe:__pipe<RunnerBase<T>>! {pub};
    /** 非同期に実行した RunnerBase<T> の数 */

@@ -7,9 +7,48 @@ let unsupportStatement =
       "provide"
     );
 
-class TransUnitRunner extend TransUnit(__Runner) {
+class TransUnitForRunner extend TransUnit {
+   let mut resultMap:&Map<&FuncBlockInfo,FuncBlockResult> {local};
    let funcBlockCtl:FuncBlockCtlIF;
-   let mut resultMap:&Map<&FuncBlockInfo,FuncBlockResult>;
+
+   local fn __init( moduleId:&frontInterface.ModuleId,
+                    importModuleInfo:&frontInterface.ImportModuleInfo,
+                    macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
+                    analyzeModule:str!, mode:AnalyzeMode!,
+                    pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
+                    ctrl_info: &Types.TransCtrlInfo,
+                    builtinFunc:&Builtin.BuiltinFuncType,
+                    list:&List<&FuncBlockInfo>, managerId:int)      
+   {
+      super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
+             analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
+
+      self.funcBlockCtl = new ListFuncBlockCtl( list );
+      self.nodeManager.set_managerId( managerId );
+      self.resultMap = {};
+   }
+
+   pro override fn analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+   {
+      if unsupportStatement.has( token.txt ) {
+         self.errorAt(
+            token.pos,
+            "unsupport the '%s' statement on the multi phase ast. " (token.txt) ..
+            "please declare '_lune_control single_phase_ast'"
+         );
+      }
+      return nil;
+   }
+
+   local fn run() __async mut {
+      self.resultMap = self.processFuncBlockInfo(
+         self.funcBlockCtl, self.parser.getStreamName() );
+   }
+}
+
+class TransUnitRunner extend (__Runner) {
+//class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockResult>> {
+   let transUnit:TransUnitForRunner {local};
    let srcTranUnit:&TransUnit;
    let alreadyToSetup:__lns.Sync.Flag!;
    
@@ -24,50 +63,44 @@ class TransUnitRunner extend TransUnit(__Runner) {
       builtinFunc:&Builtin.BuiltinFuncType,
       list:&List<&FuncBlockInfo>,
       managerId:int )
-  {
-      super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
-             analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
+   {
+      self.transUnit = new TransUnitForRunner(
+         moduleId, importModuleInfo, macroEval, enableMultiPhase,
+         analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc,
+         list, managerId );
 
-     self.funcBlockCtl = new ListFuncBlockCtl( list );
-     self.resultMap = {};
-     self.nodeManager.set_managerId( managerId );
-     self.srcTranUnit = srcTranUnit;
-     self.alreadyToSetup = __lns.Sync.createFlag();
-  }
+      self.srcTranUnit = srcTranUnit;
+      self.alreadyToSetup = __lns.Sync.createFlag();
+   }
 
-  pub fn run() __async mut {
-     self.setup( self.srcTranUnit );
-     if! self.alreadyToSetup {
-        _exp.set();
-     }
-     
-     self.resultMap = self.processFuncBlockInfo(
-        self.funcBlockCtl, self.parser.getStreamName() );
-  }
+   pub fn run() __async mut {
+      self.transUnit.setup( self.srcTranUnit );
+      if! self.alreadyToSetup {
+         _exp.set();
+      }
 
-  pub fn waitToSetup() {
-     if! self.alreadyToSetup {
-        _exp.wait();
-     }
-  }
+      self.transUnit.run();
+   }
 
-  pub fn get() mut : &Map<&FuncBlockInfo,FuncBlockResult> {
-     __join( self );
-     return self.resultMap;
-  }
+   // pro override fn runMain() __async mut : T! {
+   //    self.runSub();
 
-  pro override fn analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
-  {
-     if unsupportStatement.has( token.txt ) {
-        self.errorAt(
-           token.pos,
-           "unsupport the '%s' statement on the multi phase ast. " (token.txt) ..
-           "please declare '_lune_control single_phase_ast'"
-        );
-     }
-     return nil;
-  }
- }
+   //    return self.transUnit.$resultMap;
+   // }
+   
+   
+
+   pub fn waitToSetup() {
+      if! self.alreadyToSetup {
+         _exp.wait();
+      }
+   }
+
+   pub fn get() mut : &Map<&FuncBlockInfo,FuncBlockResult> {
+      __join( self );
+      return self.transUnit.$resultMap;
+   }
+}
 
 
 pub class TransUnitCtrl extend TransUnit {
@@ -75,15 +108,15 @@ pub class TransUnitCtrl extend TransUnit {
    /** マクロを展開する際にマクロを評価する MacroEval のオブジェクト */
    pri let macroEval: &Nodes.MacroEval;
    
-//    /** このモジュール内から直接 import しているモジュールのセット */
-//    pri let importModuleSet: Set<&Ast.TypeInfo>;
+   //    /** このモジュール内から直接 import しているモジュールのセット */
+   //    pri let importModuleSet: Set<&Ast.TypeInfo>;
    let mut importCtrl:Import.Import!;
-//    /**
-// インポートしているモジュール内で定義している alias 情報。
+   //    /**
+   // インポートしているモジュール内で定義している alias 情報。
 
-// alias で置き換えている元の Type → alias の型
-//    */
-//    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
+   // alias で置き換えている元の Type → alias の型
+   //    */
+   //    let importedAliasMap: Map<&Ast.TypeInfo,&Ast.AliasTypeInfo> {pub&};
    pri let importModuleInfo: frontInterface.ImportModuleInfo;
 
 
@@ -273,7 +306,7 @@ fn TransUnitCtrl.analyzeImportFor(
       }
       moduleSymbolInfo = shadowing;
    }
-  
+   
    when! moduleSymbolInfo {
       let info = new Nodes.ImportInfo( pos, modulePath, lazyLoad, assignName,
                                        assigned, moduleSymbolInfo, moduleTypeInfo );
@@ -641,7 +674,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       
       foreach runner in runnerList {
          let workMap = runner.get();
-         self.mergeFrom( runner, resultMap );
+         self.mergeFrom( runner.$transUnit, resultMap );
          foreach result, key in workMap {
             resultMap[ key ] = result;
          }
@@ -859,7 +892,7 @@ pub fn TransUnitCtrl.createAST(
       
 
       self.processFuncBlock( streamName );
-     
+      
 
       self.checkOverriededMethodOfAllClass();
 

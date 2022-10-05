@@ -11922,8 +11922,44 @@ end
 
 local unsupportStatement = {["import"] = true, ["subfile"] = true, ["provide"] = true}
 
+local TransUnitForRunner = {}
+setmetatable( TransUnitForRunner, { __index = TransUnit } )
+function TransUnitForRunner._new( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
+   local obj = {}
+   TransUnitForRunner._setmeta( obj )
+   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
+   return obj
+end
+function TransUnitForRunner:__init(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
+   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+   
+   
+   self.funcBlockCtl = ListFuncBlockCtl._new(list)
+   self.nodeManager:set_managerId( managerId )
+   self.resultMap = {}
+end
+function TransUnitForRunner:analyzeStatementToken( token )
+
+   if _lune._Set_has(unsupportStatement, token.txt ) then
+      self:errorAt( token.pos, string.format( "unsupport the '%s' statement on the multi phase ast. ", token.txt) .. "please declare '_lune_control single_phase_ast'" )
+   end
+   
+   return nil
+end
+function TransUnitForRunner:run(  )
+
+   self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.parser:getStreamName(  ) )
+end
+function TransUnitForRunner._setmeta( obj )
+  setmetatable( obj, { __index = TransUnitForRunner  } )
+end
+function TransUnitForRunner:get_resultMap()
+   return self.resultMap
+end
+
+
 local TransUnitRunner = {}
-setmetatable( TransUnitRunner, { __index = TransUnit,ifList = {__Runner,} } )
+setmetatable( TransUnitRunner, { ifList = {__Runner,} } )
 function TransUnitRunner._new( srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
    local obj = {}
    TransUnitRunner._setmeta( obj )
@@ -11931,18 +11967,14 @@ function TransUnitRunner._new( srcTranUnit, moduleId, importModuleInfo, macroEva
    return obj
 end
 function TransUnitRunner:__init(srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
-   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+   self.transUnit = TransUnitForRunner._new(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId)
    
-   
-   self.funcBlockCtl = ListFuncBlockCtl._new(list)
-   self.resultMap = {}
-   self.nodeManager:set_managerId( managerId )
    self.srcTranUnit = srcTranUnit
    self.alreadyToSetup = nil
 end
 function TransUnitRunner:run(  )
 
-   self:setup( self.srcTranUnit )
+   self.transUnit:setup( self.srcTranUnit )
    do
       local _exp = self.alreadyToSetup
       if _exp ~= nil then
@@ -11951,7 +11983,7 @@ function TransUnitRunner:run(  )
    end
    
    
-   self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.parser:getStreamName(  ) )
+   self.transUnit:run(  )
 end
 function TransUnitRunner:waitToSetup(  )
 
@@ -11966,18 +11998,13 @@ end
 function TransUnitRunner:get(  )
 
    
-   return self.resultMap
-end
-function TransUnitRunner:analyzeStatementToken( token )
-
-   if _lune._Set_has(unsupportStatement, token.txt ) then
-      self:errorAt( token.pos, string.format( "unsupport the '%s' statement on the multi phase ast. ", token.txt) .. "please declare '_lune_control single_phase_ast'" )
-   end
-   
-   return nil
+   return self.transUnit:get_resultMap()
 end
 function TransUnitRunner._setmeta( obj )
   setmetatable( obj, { __index = TransUnitRunner  } )
+end
+function TransUnitRunner:get_transUnit()
+   return self.transUnit
 end
 
 
@@ -12511,7 +12538,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
       
       for __index, runner in ipairs( runnerList ) do
          local workMap = runner:get(  )
-         self:mergeFrom( runner, resultMap )
+         self:mergeFrom( runner:get_transUnit(), resultMap )
          for key, result in pairs( workMap ) do
             resultMap[key] = result
          end
@@ -12562,7 +12589,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 687, function (  )
+   Log.log( Log.Level.Log, __func__, 711, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, parser:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12640,7 +12667,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       local workExportInfo = Nodes.ExportInfo._new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 763, function (  )
+      Log.log( Log.Level.Log, __func__, 787, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end )

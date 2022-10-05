@@ -48,6 +48,7 @@ import lune.base.TransUnitIF;
 import lune.base.Builtin;
 import lune.base.Import;
 import lune.base.AstInfo;
+import lune.base.Async;
 
 
 _lune_control ignore_symbol_;
@@ -594,7 +595,7 @@ enum AnalyzePhase {
    Main,
 }
 
-pub class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
+pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
 
    /** 解析モード */
    local let analyzeMode: AnalyzeMode;
