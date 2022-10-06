@@ -252,6 +252,14 @@ pub abstract class Node {
       return 0;
    }
 
+   pub fn compUsingPos( node:&Node ) : int {
+      let compRet = self.pos.comp( node.pos );
+      if compRet ~= 0 {
+         return compRet;
+      }
+      return self.comp( node );
+   }
+   
    pub fn getIdTxt() : str {
       return "%d_%d" (self.managerId,self.id);
    }
@@ -365,7 +373,13 @@ _declNodeClass ではカバーできない visit() のカスタマイズ用
    pub abstract fn visit( visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ): bool;
 }
 
-
+pub fn cloneNodeList<T>(list:&List<&T>) : List<&T> {
+   let newList:List<&T> = [];
+   foreach node in list {
+      newList.insert(node);
+   }
+   return newList;
+}
 
 pub class NamespaceInfo {
    pub let name: str;
@@ -555,6 +569,7 @@ macro _declNodeClass(
       let className = ,,,"%sNode" (baseName);
       let nodeKindSym = ,,,"%s" (baseName);
       let nodeKindGetter = ,,,"get_%s" (baseName);
+      let imutClassName = ,,,"&%sNode" (baseName);
 
       let mut nodeKindList:List<str>;
       if! let mut workNodeKindList = __var.nodeKindList {
@@ -751,6 +766,13 @@ macro _declNodeClass(
       pub override fn visit( visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ): bool {
          ,,visitStatList;
          return self.visitSub( visitor, depth + 1, alreadySet );
+      }
+
+      pub static fn sortList( list:List<,,imutClassName> ) : &List<,,imutClassName> {
+         list.sort( fn ( node1:,,imutClassName, node2:,,imutClassName ): bool {
+            return node1.compUsingPos( node2 ) < 0;
+         });
+         return list;
       }
    }
 }

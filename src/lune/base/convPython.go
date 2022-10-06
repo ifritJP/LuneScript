@@ -214,17 +214,13 @@ type convPython_convFilter_processRoot__ProcNode_1_ func (_env *LnsEnv, arg1 *No
 func convPython_convExp0_585(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 4970
-func convPython_convExp0_4339(arg1 []LnsAny) (bool, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
-}
 // for 684
 func convPython_convExp1_2011(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 5781
-func convPython_convExp0_8712(arg1 []LnsAny) bool {
-    return Lns_getFromMulti( arg1, 0 ).(bool)
+// for 4970
+func convPython_convExp0_4339(arg1 []LnsAny) (bool, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 426
 func convPython_convExp1_716(arg1 []LnsAny) string {
@@ -233,6 +229,10 @@ func convPython_convExp1_716(arg1 []LnsAny) string {
 // for 427
 func convPython_convExp1_745(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
+}
+// for 5781
+func convPython_convExp0_8712(arg1 []LnsAny) bool {
+    return Lns_getFromMulti( arg1, 0 ).(bool)
 }
 // 94: decl @lune.@base.@convPython.isMain
 func convPython_isMain_3_(_env *LnsEnv, funcType *Ast_TypeInfo) bool {
@@ -500,6 +500,7 @@ func convPython_getExpListKind_21_(_env *LnsEnv, dstTypeList *LnsList,node *Node
     return convPython_ExpListKind__Conv
 }
 
+
 // 1338: decl @lune.@base.@convPython.isRetGenerics
 func convPython_isRetGenerics_22_(_env *LnsEnv, node *Nodes_ExpCallNode) bool {
     var funcType *Ast_TypeInfo
@@ -517,6 +518,24 @@ func convPython_isRetGenerics_22_(_env *LnsEnv, node *Nodes_ExpCallNode) bool {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // 3755: decl @lune.@base.@convPython.getLnsItemKind
 func convPython_getLnsItemKind_28_(_env *LnsEnv, typeInfo *Ast_TypeInfo) string {
     {
@@ -529,10 +548,7 @@ func convPython_getLnsItemKind_28_(_env *LnsEnv, typeInfo *Ast_TypeInfo) string 
     return "LnsItemKindStem"
 }
 
-// 6034: decl @lune.@base.@convPython.createFilter
-func ConvPython_createFilter(_env *LnsEnv, enableTest bool,streamName string,stream Lns_oStream,ast *AstInfo_ASTInfo,option *ConvPython_Option) *Nodes_Filter {
-    return &NewconvPython_convFilter(_env, enableTest, streamName, stream, ast, option).Nodes_Filter
-}
+
 
 
 
@@ -550,26 +566,10 @@ func convPython_convFilter_processAndOr__isAndOr_0_(_env *LnsEnv, exp *Nodes_Nod
     return false
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 6034: decl @lune.@base.@convPython.createFilter
+func ConvPython_createFilter(_env *LnsEnv, enableTest bool,streamName string,stream Lns_oStream,ast *AstInfo_ASTInfo,option *ConvPython_Option) *Nodes_Filter {
+    return &NewconvPython_convFilter(_env, enableTest, streamName, stream, ast, option).Nodes_Filter
+}
 
 
 

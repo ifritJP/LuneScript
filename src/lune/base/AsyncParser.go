@@ -180,6 +180,8 @@ func AsyncParser_setDefaultPipeSize(_env *LnsEnv, size LnsInt) {
     AsyncParser_defaultPipeSize = size
 }
 
+
+
 // 343: decl @lune.@base.@AsyncParser.create
 func AsyncParser_create(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,overridePos LnsAny,async bool)(LnsAny, string) {
     if async{
@@ -196,8 +198,6 @@ func AsyncParser_create(_env *LnsEnv, parserSrc LnsAny,stdinFile LnsAny,override
     }
     return parser, mess
 }
-
-
 
 
 

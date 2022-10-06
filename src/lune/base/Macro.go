@@ -47,12 +47,12 @@ func Macro_convExp2_828(arg1 []LnsAny) (LnsAny, LnsAny) {
 func Macro_convExp2_927(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 88
-func Macro_convExp2_1278(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
 // for 9
 func Macro_convExp2_1378(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
+}
+// for 88
+func Macro_convExp2_1278(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 88
@@ -205,6 +205,7 @@ func Macro_equalsType_14_(_env *LnsEnv, typeInfo *Ast_TypeInfo,builtinType *Ast_
     return typeInfo.FP.Get_srcTypeInfo(_env) == builtinType
 }
 
+
 // 882: decl @lune.@base.@Macro.expandVal
 func Macro_expandVal_15_(_env *LnsEnv, tokenList *LnsList,workval LnsAny,pos Types_Position) LnsAny {
     if workval != nil{
@@ -272,19 +273,6 @@ func Macro_pushbackTxt_16_(_env *LnsEnv, pushbackParser Parser_PushbackParser,tx
     }
 }
 
-// 1327: decl @lune.@base.@Macro.nodeToCodeTxt
-func Macro_nodeToCodeTxt(_env *LnsEnv, node *Nodes_Node,moduleTypeInfo *Ast_TypeInfo) string {
-    var code string
-    var memStream *Util_memStream
-    memStream = NewUtil_memStream(_env)
-    var formatter *Nodes_Filter
-    formatter = Formatter_createFilter(_env, moduleTypeInfo, memStream.FP)
-    node.FP.ProcessFilter(_env, formatter, Formatter_Opt2Stem(NewFormatter_Opt(_env, node)))
-    code = memStream.FP.Get_txt(_env)
-    return code
-}
-
-
 
 // 973: decl @lune.@base.@Macro.MacroCtrl.expandMacroVal.macroVal2strList
 func Macro_MacroCtrl_expandMacroVal__macroVal2strList_1_(_env *LnsEnv, name string,macroVal *Nodes_MacroValInfo,workParser Parser_PushbackParser) *LnsList {
@@ -313,6 +301,18 @@ func Macro_MacroCtrl_expandMacroVal__macroVal2strList_1_(_env *LnsEnv, name stri
         }
     }
     return list
+}
+
+// 1327: decl @lune.@base.@Macro.nodeToCodeTxt
+func Macro_nodeToCodeTxt(_env *LnsEnv, node *Nodes_Node,moduleTypeInfo *Ast_TypeInfo) string {
+    var code string
+    var memStream *Util_memStream
+    memStream = NewUtil_memStream(_env)
+    var formatter *Nodes_Filter
+    formatter = Formatter_createFilter(_env, moduleTypeInfo, memStream.FP)
+    node.FP.ProcessFilter(_env, formatter, Formatter_Opt2Stem(NewFormatter_Opt(_env, node)))
+    code = memStream.FP.Get_txt(_env)
+    return code
 }
 
 // 132: decl @lune.@base.@Macro.MacroParser.createPosition

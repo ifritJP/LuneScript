@@ -80,7 +80,7 @@ func (self *Async_RunnerBase) Run(_env *LnsEnv) {
     }
 }
 // 167: decl @lune.@base.@Async.Waiter.startRunner
-func (self *Async_Waiter) startRunner(_env *LnsEnv, runner *Async_RunnerBase,mode LnsInt,name string) bool {
+func (self *Async_Waiter) StartRunner(_env *LnsEnv, runner *Async_RunnerBase,mode LnsInt,name string) bool {
     self.asyncNum = self.asyncNum + 1
     var result bool
     result = LnsRun(_env, runner.FP, mode, name)
@@ -257,7 +257,7 @@ func (self *Async_RunnerBase) InitAsync_RunnerBase(_env *LnsEnv, pipe LnsAny) {
 // declaration Class -- Waiter
 type Async_WaiterMtd interface {
     Get_pipe(_env *LnsEnv) LnsAny
-    startRunner(_env *LnsEnv, arg1 *Async_RunnerBase, arg2 LnsInt, arg3 string) bool
+    StartRunner(_env *LnsEnv, arg1 *Async_RunnerBase, arg2 LnsInt, arg3 string) bool
     Wait(_env *LnsEnv, arg1 Async_EndProcessFunc)
 }
 type Async_Waiter struct {

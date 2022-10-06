@@ -5,13 +5,13 @@ var init_Parser bool
 var Parser__mod__ string
 var Parser_noneToken *Types_Token
 var Parser_eofToken *Types_Token
-// for 182
-func Parser_convExp0_320(arg1 []LnsAny) (LnsAny, string) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
-}
 // for 87
 func Parser_convExp0_853(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
+}
+// for 182
+func Parser_convExp0_320(arg1 []LnsAny) (LnsAny, string) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 type Parser_TxtStream = Util_TxtStream
 type Parser_Position = Types_Position

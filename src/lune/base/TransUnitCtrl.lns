@@ -46,14 +46,14 @@ class TransUnitForRunner extend TransUnit {
    }
 }
 
-class TransUnitRunner extend (__Runner) {
-// class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockResult>> {
+// class TransUnitRunner extend (__Runner) {
+class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockResult>> {
    let transUnit:TransUnitForRunner {local};
    let srcTranUnit:&TransUnit;
    let alreadyToSetup:__lns.Sync.Flag!;
    
    pub fn __init(
-      // pipe:__pipe<Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>>!,
+      pipe:__pipe<Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>>!,
       srcTranUnit:&TransUnit,
       moduleId:&frontInterface.ModuleId,
       importModuleInfo:&frontInterface.ImportModuleInfo,
@@ -65,7 +65,7 @@ class TransUnitRunner extend (__Runner) {
       list:&List<&FuncBlockInfo>,
       managerId:int )
    {
-      // super(pipe);
+      super(pipe);
       
       self.transUnit = new TransUnitForRunner(
          moduleId, importModuleInfo, macroEval, enableMultiPhase,
@@ -76,7 +76,7 @@ class TransUnitRunner extend (__Runner) {
       self.alreadyToSetup = __lns.Sync.createFlag();
    }
 
-   pub fn run() __async mut {
+   pub fn runSub() __async mut {
       self.transUnit.setup( self.srcTranUnit );
       if! self.alreadyToSetup {
          _exp.set();
@@ -85,11 +85,11 @@ class TransUnitRunner extend (__Runner) {
       self.transUnit.run();
    }
 
-   // pro override fn runMain() __async mut : T! {
-   //    self.runSub();
+   pro override fn runMain() __async mut : T! {
+      self.runSub();
 
-   //    return self.transUnit.$resultMap;
-   // }
+      return self.transUnit.$resultMap;
+   }
    
    
 
@@ -587,6 +587,7 @@ local override fn TransUnitCtrl.addFuncBlockInfoList( funcBlockInfo:FuncBlockInf
 }
 
 fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
+   let mut waiter = new Async.Waiter<&Map<&FuncBlockInfo,FuncBlockResult>>(self.ctrl_info.threadPerUnitThread + 1);
    let runnerList:List<TransUnitRunner> = [];
    let mut resultMap:Map<&FuncBlockInfo,FuncBlockResult> = {};
    let noRunnerList:List<List<&FuncBlockInfo>> = [];
@@ -634,6 +635,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
                   }
                }
                let mut runner = new TransUnitRunner(
+                  waiter.$pipe,
                   self,
                   self.moduleId,
                   self.importModuleInfo,
@@ -644,7 +646,14 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
                   self.builtinFunc,
                   list, managerId );
 
-               if __run( runner, __lns.runMode.Skip, "astMain -- %s" (streamName) ) {
+               let startFlag;
+               // startFlag = __run(
+               //    runner, __lns.runMode.Skip, "astMain -- %s" (streamName) )
+               startFlag = waiter.startRunner(
+                  runner, __lns.runMode.Skip, "astMain -- %s" (streamName) );
+                  
+               // if  {
+               if startFlag {
                   runnerList.insert( runner );
                } else {
                   noRunnerList.insert( list );
@@ -674,14 +683,36 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
             new ListFuncBlockCtl( lastPartList ), self.parser.getStreamName() );
          __lns.runtime.log( "process lastpart" );
       }
-      
-      foreach runner in runnerList {
-         let workMap = runner.get();
-         self.mergeFrom( runner.$transUnit, resultMap );
-         foreach result, key in workMap {
-            resultMap[ key ] = result;
+
+      if self.ctrl_info.useWaiter {
+         waiter.wait(
+            fn (runnerBase:Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>) __trans {
+               if runnerBase.$ranFlag {
+                  if! let mut runner = runnerBase@@@TransUnitRunner {
+                     let workMap = runner.get();
+                     self.mergeFrom( runner.$transUnit, resultMap );
+                     foreach result, key in workMap {
+                        resultMap[ key ] = result;
+                     }
+                  }
+               }
+            });
+      } else {
+         waiter.wait(
+            fn (runnerBase:Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>) __trans {
+            });
+         
+         foreach runner in runnerList {
+            let workMap = runner.get();
+            self.mergeFrom( runner.$transUnit, resultMap );
+            foreach result, key in workMap {
+               resultMap[ key ] = result;
+            }
          }
       }
+
+
+      
       __lns.runtime.log( "merged AST." );
       // runner 起動できなかった処理を行なう
       foreach noRunner in noRunnerList {

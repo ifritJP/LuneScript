@@ -62,14 +62,6 @@ func convLua_convExp0_4650(arg1 []LnsAny) LnsAny {
 func convLua_convExp0_3627(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
-// for 3849
-func convLua_convExp0_4180(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 3923
-func convLua_convExp0_4398(arg1 []LnsAny) (LnsAny, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
-}
 // for 335
 func convLua_convExp1_513(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
@@ -110,6 +102,15 @@ func convLua_convExp4_2058(arg1 []LnsAny) LnsAny {
 func convLua_convExp4_2134(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
+// for 3849
+func convLua_convExp0_4180(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
+// for 3923
+func convLua_convExp0_4398(arg1 []LnsAny) (LnsAny, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
+}
+
 // 78: decl @lune.@base.@convLua.getSymbolTxt
 func convLua_getSymbolTxt_5_(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) string {
     if symbolInfo.FP.Get_name(_env) == "_"{
@@ -133,6 +134,11 @@ func convLua_filter_9_(_env *LnsEnv, node *Nodes_Node,filter *convLua_ConvFilter
     node.FP.ProcessFilter(_env, &filter.Nodes_Filter, ConvLua_Opt2Stem(NewConvLua_Opt(_env, parent)))
 }
 
+
+
+
+
+
 // 1379: decl @lune.@base.@convLua.isGenericType
 func convLua_isGenericType_12_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     if Ast_isGenericType(_env, typeInfo){
@@ -146,22 +152,16 @@ func convLua_isGenericType_12_(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     return false
 }
 
+
+
+
+
 // 3762: decl @lune.@base.@convLua.createFilter
 func ConvLua_createFilter(_env *LnsEnv, streamName string,stream Lns_oStream,metaStream Lns_oStream,convMode LnsInt,inMacro bool,moduleTypeInfo *Ast_TypeInfo,processInfo *Ast_ProcessInfo,moduleSymbolKind LnsInt,builtinFunc *Builtin_BuiltinFuncType,useLuneRuntime LnsAny,targetLuaVer *LuaVer_LuaVerInfo,enableTest bool,useIpairs bool,option *ConvLua_Option) *ConvLua_FilterInfo {
     var convFilter *convLua_ConvFilter
     convFilter = NewconvLua_ConvFilter(_env, streamName, stream, metaStream, convMode, inMacro, moduleTypeInfo, processInfo, moduleSymbolKind, builtinFunc, useLuneRuntime, targetLuaVer, enableTest, useIpairs, option)
     return NewConvLua_FilterInfo(_env, &convFilter.Nodes_Filter)
 }
-
-
-
-
-
-
-
-
-
-
 
 
 

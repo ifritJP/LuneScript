@@ -143,11 +143,11 @@ Val4 LnsAny
 func (self *Types_ParserSrc__Parser) GetTxt() string {
 return "ParserSrc.Parser"
 }
-// 139: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 142: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
     return NewTypes_TransCtrlInfo(_env)
 }
-// 165: decl @lune.@base.@Types.Position.get_orgPos
+// 168: decl @lune.@base.@Types.Position.get_orgPos
 func (self Types_Position) Get_orgPos(_env *LnsEnv) Types_Position {
     {
         __exp := self.OrgPos
@@ -158,15 +158,15 @@ func (self Types_Position) Get_orgPos(_env *LnsEnv) Types_Position {
     }
     return self
 }
-// 172: decl @lune.@base.@Types.Position.get_RawOrgPos
+// 175: decl @lune.@base.@Types.Position.get_RawOrgPos
 func (self Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
     return self.OrgPos
 }
-// 176: decl @lune.@base.@Types.Position.create
+// 179: decl @lune.@base.@Types.Position.create
 func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) Types_Position {
     return NewTypes_Position(_env, lineNo, column, streamName, orgPos)
 }
-// 182: decl @lune.@base.@Types.Position.getDisplayTxt
+// 185: decl @lune.@base.@Types.Position.getDisplayTxt
 func (self Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     var txt string
     txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
@@ -179,7 +179,41 @@ func (self Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     }
     return txt
 }
-// 226: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 195: decl @lune.@base.@Types.Position.comp
+func (self Types_Position) Comp(_env *LnsEnv, other Types_Position) LnsInt {
+    if self.StreamName < other.StreamName{
+        return -1
+    }
+    if self.StreamName > other.StreamName{
+        return 1
+    }
+    if self.LineNo < other.LineNo{
+        return -1
+    }
+    if self.LineNo > other.LineNo{
+        return 1
+    }
+    if self.Column < other.Column{
+        return -1
+    }
+    if self.Column > other.Column{
+        return 1
+    }
+    var orgPos Types_Position
+    var otherOrgPos Types_Position
+    
+    {
+        _orgPos, _otherOrgPos := self.OrgPos, other.OrgPos
+        if _orgPos == nil || _otherOrgPos == nil{
+            return 0
+        } else {
+            orgPos = _orgPos.(Types_Position)
+            otherOrgPos = _otherOrgPos.(Types_Position)
+        }
+    }
+    return orgPos.Comp(_env, otherOrgPos)
+}
+// 254: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -193,7 +227,7 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 246: decl @lune.@base.@Types.Token.getLineCount
+// 274: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
@@ -268,6 +302,7 @@ type Types_TransCtrlInfo struct {
     ThreadPerUnitThread LnsInt
     MacroAsyncParseStmtLen LnsInt
     ValidMacroAsync bool
+    UseWaiter bool
     FP Types_TransCtrlInfoMtd
 }
 func Types_TransCtrlInfo2Stem( obj LnsAny ) LnsAny {
@@ -296,8 +331,9 @@ func NewTypes_TransCtrlInfo(_env *LnsEnv) *Types_TransCtrlInfo {
     obj.InitTypes_TransCtrlInfo(_env)
     return obj
 }
-// 118: DeclConstr
+// 120: DeclConstr
 func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
+    self.UseWaiter = true
     self.MacroAsyncParseStmtLen = 500
     self.WarningShadowing = false
     self.CompatComment = false
@@ -324,6 +360,7 @@ func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
 // declaration Class -- Position
 type Types_PositionMtd interface {
     ToMap() *LnsMap
+    Comp(_env *LnsEnv, arg1 Types_Position) LnsInt
     GetDisplayTxt(_env *LnsEnv) string
     Get_RawOrgPos(_env *LnsEnv) LnsAny
     Get_orgPos(_env *LnsEnv) Types_Position
@@ -412,7 +449,7 @@ func Types_Position_FromMapMain( newObj Types_Position, objMap *LnsMap, paramLis
     }
     return true, newObj, nil
 }
-// 158: DeclConstr
+// 161: DeclConstr
 func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) {
     self.LineNo = lineNo
     self.Column = column
@@ -524,7 +561,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 216: DeclConstr
+// 244: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     self.Txt = txt

@@ -187,14 +187,6 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-function _lune._run( runner, mod )
-    if mod == 2 then
-      return false
-    end
-    runner:run()
-    return true
-end
-
 function _lune.replace( txt, src, dst )
    local result = ""
    local index = 1
@@ -11958,22 +11950,24 @@ function TransUnitForRunner:get_resultMap()
    return self.resultMap
 end
 
-
 local TransUnitRunner = {}
-setmetatable( TransUnitRunner, { ifList = {__Runner,} } )
-function TransUnitRunner._new( srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
+setmetatable( TransUnitRunner, { __index = Async.RunnerBase } )
+function TransUnitRunner._new( pipe, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
    local obj = {}
    TransUnitRunner._setmeta( obj )
-   if obj.__init then obj:__init( srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
+   if obj.__init then obj:__init( pipe, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
    return obj
 end
-function TransUnitRunner:__init(srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
+function TransUnitRunner:__init(pipe, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
+   Async.RunnerBase.__init( self,pipe)
+   
+   
    self.transUnit = TransUnitForRunner._new(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId)
    
    self.srcTranUnit = srcTranUnit
    self.alreadyToSetup = nil
 end
-function TransUnitRunner:run(  )
+function TransUnitRunner:runSub(  )
 
    self.transUnit:setup( self.srcTranUnit )
    do
@@ -11985,6 +11979,12 @@ function TransUnitRunner:run(  )
    
    
    self.transUnit:run(  )
+end
+function TransUnitRunner:runMain(  )
+
+   self:runSub(  )
+   
+   return self.transUnit:get_resultMap()
 end
 function TransUnitRunner:waitToSetup(  )
 
@@ -12459,6 +12459,7 @@ end
 
 function TransUnitCtrl:processFuncBlock( streamName )
 
+   local waiter = Async.Waiter._new(self.ctrl_info.threadPerUnitThread + 1)
    local runnerList = {}
    local resultMap = {}
    local noRunnerList = {}
@@ -12502,9 +12503,14 @@ function TransUnitCtrl:processFuncBlock( streamName )
                   
                end
                
-               local runner = TransUnitRunner._new(self, self.moduleId, self.importModuleInfo, self.macroEval, false, self.moduleName, AnalyzeMode.Compile, nil, self.targetLuaVer, self.ctrl_info, self.builtinFunc, list, managerId)
+               local runner = TransUnitRunner._new(waiter:get_pipe(), self, self.moduleId, self.importModuleInfo, self.macroEval, false, self.moduleName, AnalyzeMode.Compile, nil, self.targetLuaVer, self.ctrl_info, self.builtinFunc, list, managerId)
                
-               if _lune._run(runner, 2, string.format( "astMain -- %s", streamName) ) then
+               local startFlag
+               
+               
+               startFlag = waiter:startRunner( runner, 2, string.format( "astMain -- %s", streamName) )
+               
+               if startFlag then
                   table.insert( runnerList, runner )
                else
                 
@@ -12537,14 +12543,42 @@ function TransUnitCtrl:processFuncBlock( streamName )
       end
       
       
-      for __index, runner in ipairs( runnerList ) do
-         local workMap = runner:get(  )
-         self:mergeFrom( runner:get_transUnit(), resultMap )
-         for key, result in pairs( workMap ) do
-            resultMap[key] = result
+      if self.ctrl_info.useWaiter then
+         waiter:wait( function ( runnerBase )
+         
+            if runnerBase:get_ranFlag() then
+               do
+                  local runner = _lune.__Cast( runnerBase, 3, TransUnitRunner )
+                  if runner ~= nil then
+                     local workMap = runner:get(  )
+                     self:mergeFrom( runner:get_transUnit(), resultMap )
+                     for key, result in pairs( workMap ) do
+                        resultMap[key] = result
+                     end
+                     
+                  end
+               end
+               
+            end
+            
+         end )
+      else
+       
+         waiter:wait( function ( runnerBase )
+         
+         end )
+         
+         for __index, runner in ipairs( runnerList ) do
+            local workMap = runner:get(  )
+            self:mergeFrom( runner:get_transUnit(), resultMap )
+            for key, result in pairs( workMap ) do
+               resultMap[key] = result
+            end
+            
          end
          
       end
+      
       
       
       
@@ -12590,7 +12624,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 723, function (  )
+   Log.log( Log.Level.Log, __func__, 754, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, parser:getStreamName(  ), tostring( baseDir), tostring( macroFlag), AnalyzePhase:_getTxt( self.analyzePhase)
@@ -12668,7 +12702,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       local workExportInfo = Nodes.ExportInfo._new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 799, function (  )
+      Log.log( Log.Level.Log, __func__, 830, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), tostring( moduleTypeInfo), tostring( moduleTypeInfo:get_scope()))
       end )

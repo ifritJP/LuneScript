@@ -164,7 +164,7 @@ pub class Waiter<T> {
 @param name RunnerBase<T> の実行名
 @return __run() の戻り値
    */ 
-   local fn startRunner( runner: RunnerBase<T>, mode:int, name:str ) mut : bool {
+   pub fn startRunner( runner: RunnerBase<T>, mode:int, name:str ) mut : bool {
       self.asyncNum = self.asyncNum + 1;
       let result = __run( runner, mode, name );
       if not self.pipe or not result {

@@ -547,6 +547,15 @@ function Node:comp( node )
    
    return 0
 end
+function Node:compUsingPos( node )
+
+   local compRet = self.pos:comp( node.pos )
+   if compRet ~= 0 then
+      return compRet
+   end
+   
+   return self:comp( node )
+end
 function Node:getIdTxt(  )
 
    return string.format( "%d_%d", self.managerId, self.id)
@@ -681,6 +690,17 @@ function Node:get_inTestBlock()
    return self.inTestBlock
 end
 
+
+local function cloneNodeList( list )
+
+   local newList = {}
+   for __index, node in ipairs( list ) do
+      table.insert( newList, node )
+   end
+   
+   return newList
+end
+_moduleObj.cloneNodeList = cloneNodeList
 
 local NamespaceInfo = {}
 _moduleObj.NamespaceInfo = NamespaceInfo
@@ -958,6 +978,14 @@ function NoneNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function NoneNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function NoneNode._setmeta( obj )
   setmetatable( obj, { __index = NoneNode  } )
 end
@@ -1030,6 +1058,14 @@ function ShebangNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ShebangNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ShebangNode._setmeta( obj )
   setmetatable( obj, { __index = ShebangNode  } )
@@ -1107,6 +1143,14 @@ function ConvStatNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ConvStatNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ConvStatNode._setmeta( obj )
   setmetatable( obj, { __index = ConvStatNode  } )
 end
@@ -1183,6 +1227,14 @@ function BlankLineNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function BlankLineNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function BlankLineNode._setmeta( obj )
   setmetatable( obj, { __index = BlankLineNode  } )
 end
@@ -1257,6 +1309,14 @@ function SubfileNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function SubfileNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function SubfileNode._setmeta( obj )
   setmetatable( obj, { __index = SubfileNode  } )
@@ -1410,6 +1470,14 @@ function ImportNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ImportNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ImportNode._setmeta( obj )
   setmetatable( obj, { __index = ImportNode  } )
@@ -1653,6 +1721,14 @@ function RootNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function RootNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function RootNode._setmeta( obj )
   setmetatable( obj, { __index = RootNode  } )
 end
@@ -1825,6 +1901,14 @@ function RefTypeNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function RefTypeNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function RefTypeNode._setmeta( obj )
   setmetatable( obj, { __index = RefTypeNode  } )
@@ -2054,6 +2138,14 @@ function BlockNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function BlockNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function BlockNode._setmeta( obj )
   setmetatable( obj, { __index = BlockNode  } )
 end
@@ -2188,6 +2280,14 @@ function ScopeNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ScopeNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ScopeNode._setmeta( obj )
   setmetatable( obj, { __index = ScopeNode  } )
@@ -2405,6 +2505,14 @@ function IfNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function IfNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function IfNode._setmeta( obj )
   setmetatable( obj, { __index = IfNode  } )
@@ -2628,6 +2736,14 @@ function ExpListNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpListNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpListNode._setmeta( obj )
   setmetatable( obj, { __index = ExpListNode  } )
@@ -2895,6 +3011,14 @@ function SwitchNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function SwitchNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function SwitchNode._setmeta( obj )
   setmetatable( obj, { __index = SwitchNode  } )
@@ -3181,6 +3305,14 @@ function WhileNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function WhileNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function WhileNode._setmeta( obj )
   setmetatable( obj, { __index = WhileNode  } )
 end
@@ -3310,6 +3442,14 @@ function RepeatNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function RepeatNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function RepeatNode._setmeta( obj )
   setmetatable( obj, { __index = RepeatNode  } )
@@ -3505,6 +3645,14 @@ function ForNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ForNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ForNode._setmeta( obj )
   setmetatable( obj, { __index = ForNode  } )
 end
@@ -3658,6 +3806,14 @@ function ApplyNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ApplyNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ApplyNode._setmeta( obj )
   setmetatable( obj, { __index = ApplyNode  } )
 end
@@ -3805,6 +3961,14 @@ function ForeachNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ForeachNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ForeachNode._setmeta( obj )
   setmetatable( obj, { __index = ForeachNode  } )
@@ -3958,6 +4122,14 @@ function ForsortNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ForsortNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ForsortNode._setmeta( obj )
   setmetatable( obj, { __index = ForsortNode  } )
 end
@@ -4090,6 +4262,14 @@ function ReturnNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ReturnNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ReturnNode._setmeta( obj )
   setmetatable( obj, { __index = ReturnNode  } )
 end
@@ -4169,6 +4349,14 @@ function BreakNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function BreakNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function BreakNode._setmeta( obj )
   setmetatable( obj, { __index = BreakNode  } )
 end
@@ -4247,6 +4435,14 @@ function ProvideNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ProvideNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ProvideNode._setmeta( obj )
   setmetatable( obj, { __index = ProvideNode  } )
@@ -4377,6 +4573,14 @@ function ExpNewNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpNewNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpNewNode._setmeta( obj )
   setmetatable( obj, { __index = ExpNewNode  } )
@@ -4513,6 +4717,14 @@ function ExpUnwrapNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpUnwrapNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpUnwrapNode._setmeta( obj )
   setmetatable( obj, { __index = ExpUnwrapNode  } )
 end
@@ -4583,6 +4795,14 @@ function ExpRefNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpRefNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpRefNode._setmeta( obj )
   setmetatable( obj, { __index = ExpRefNode  } )
@@ -4721,6 +4941,14 @@ function ExpSetValNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpSetValNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpSetValNode._setmeta( obj )
   setmetatable( obj, { __index = ExpSetValNode  } )
@@ -4877,6 +5105,14 @@ function ExpSetItemNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpSetItemNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpSetItemNode._setmeta( obj )
   setmetatable( obj, { __index = ExpSetItemNode  } )
 end
@@ -5007,6 +5243,14 @@ function ExpOp2Node:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpOp2Node.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpOp2Node._setmeta( obj )
   setmetatable( obj, { __index = ExpOp2Node  } )
@@ -5167,6 +5411,14 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function UnwrapSetNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function UnwrapSetNode._setmeta( obj )
   setmetatable( obj, { __index = UnwrapSetNode  } )
 end
@@ -5326,6 +5578,14 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function IfUnwrapNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function IfUnwrapNode._setmeta( obj )
   setmetatable( obj, { __index = IfUnwrapNode  } )
@@ -5573,6 +5833,14 @@ function WhenNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function WhenNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function WhenNode._setmeta( obj )
   setmetatable( obj, { __index = WhenNode  } )
@@ -5827,6 +6095,14 @@ function ExpCastNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpCastNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpCastNode._setmeta( obj )
   setmetatable( obj, { __index = ExpCastNode  } )
 end
@@ -5955,6 +6231,14 @@ function ExpToDDDNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpToDDDNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpToDDDNode._setmeta( obj )
   setmetatable( obj, { __index = ExpToDDDNode  } )
 end
@@ -6055,6 +6339,14 @@ function ExpSubDDDNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpSubDDDNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpSubDDDNode._setmeta( obj )
   setmetatable( obj, { __index = ExpSubDDDNode  } )
@@ -6194,6 +6486,14 @@ function ExpOp1Node:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpOp1Node.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpOp1Node._setmeta( obj )
   setmetatable( obj, { __index = ExpOp1Node  } )
 end
@@ -6330,6 +6630,14 @@ function ExpRefItemNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpRefItemNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpRefItemNode._setmeta( obj )
   setmetatable( obj, { __index = ExpRefItemNode  } )
@@ -6487,6 +6795,14 @@ function ExpCallNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpCallNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpCallNode._setmeta( obj )
   setmetatable( obj, { __index = ExpCallNode  } )
 end
@@ -6627,6 +6943,14 @@ function ExpMRetNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpMRetNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpMRetNode._setmeta( obj )
   setmetatable( obj, { __index = ExpMRetNode  } )
 end
@@ -6732,6 +7056,14 @@ function ExpAccessMRetNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpAccessMRetNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpAccessMRetNode._setmeta( obj )
   setmetatable( obj, { __index = ExpAccessMRetNode  } )
@@ -6841,6 +7173,14 @@ function ExpMultiTo1Node:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpMultiTo1Node.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpMultiTo1Node._setmeta( obj )
   setmetatable( obj, { __index = ExpMultiTo1Node  } )
 end
@@ -6945,6 +7285,14 @@ function ExpParenNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpParenNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpParenNode._setmeta( obj )
   setmetatable( obj, { __index = ExpParenNode  } )
@@ -7086,6 +7434,14 @@ function ExpMacroExpNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpMacroExpNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpMacroExpNode._setmeta( obj )
   setmetatable( obj, { __index = ExpMacroExpNode  } )
@@ -7239,6 +7595,14 @@ function ExpMacroStatNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpMacroStatNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpMacroStatNode._setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatNode  } )
 end
@@ -7340,6 +7704,14 @@ function ExpMacroArgExpNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpMacroArgExpNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpMacroArgExpNode._setmeta( obj )
   setmetatable( obj, { __index = ExpMacroArgExpNode  } )
 end
@@ -7438,6 +7810,14 @@ function StmtExpNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function StmtExpNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function StmtExpNode._setmeta( obj )
   setmetatable( obj, { __index = StmtExpNode  } )
@@ -7550,6 +7930,14 @@ function ExpMacroStatListNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function ExpMacroStatListNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function ExpMacroStatListNode._setmeta( obj )
   setmetatable( obj, { __index = ExpMacroStatListNode  } )
 end
@@ -7628,6 +8016,14 @@ function ExpOmitEnumNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpOmitEnumNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpOmitEnumNode._setmeta( obj )
   setmetatable( obj, { __index = ExpOmitEnumNode  } )
@@ -7736,6 +8132,14 @@ function RefFieldNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function RefFieldNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function RefFieldNode._setmeta( obj )
   setmetatable( obj, { __index = RefFieldNode  } )
@@ -7903,6 +8307,14 @@ function GetFieldNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function GetFieldNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function GetFieldNode._setmeta( obj )
   setmetatable( obj, { __index = GetFieldNode  } )
 end
@@ -8026,6 +8438,14 @@ function AliasNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function AliasNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function AliasNode._setmeta( obj )
   setmetatable( obj, { __index = AliasNode  } )
@@ -8295,6 +8715,14 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclVarNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function DeclVarNode._setmeta( obj )
   setmetatable( obj, { __index = DeclVarNode  } )
@@ -8781,6 +9209,14 @@ function DeclFormNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function DeclFormNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function DeclFormNode._setmeta( obj )
   setmetatable( obj, { __index = DeclFormNode  } )
 end
@@ -8918,6 +9354,14 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclFuncNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function DeclFuncNode._setmeta( obj )
   setmetatable( obj, { __index = DeclFuncNode  } )
@@ -9077,6 +9521,14 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function DeclMethodNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function DeclMethodNode._setmeta( obj )
   setmetatable( obj, { __index = DeclMethodNode  } )
 end
@@ -9222,6 +9674,14 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ProtoMethodNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ProtoMethodNode._setmeta( obj )
   setmetatable( obj, { __index = ProtoMethodNode  } )
@@ -9369,6 +9829,14 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function DeclConstrNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function DeclConstrNode._setmeta( obj )
   setmetatable( obj, { __index = DeclConstrNode  } )
 end
@@ -9515,6 +9983,14 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function DeclDestrNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function DeclDestrNode._setmeta( obj )
   setmetatable( obj, { __index = DeclDestrNode  } )
 end
@@ -9621,6 +10097,14 @@ function ExpCallSuperCtorNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpCallSuperCtorNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpCallSuperCtorNode._setmeta( obj )
   setmetatable( obj, { __index = ExpCallSuperCtorNode  } )
@@ -9730,6 +10214,14 @@ function ExpCallSuperNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpCallSuperNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ExpCallSuperNode._setmeta( obj )
   setmetatable( obj, { __index = ExpCallSuperNode  } )
@@ -9878,6 +10370,14 @@ function AsyncLockNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function AsyncLockNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function AsyncLockNode._setmeta( obj )
   setmetatable( obj, { __index = AsyncLockNode  } )
 end
@@ -10005,6 +10505,14 @@ function RequestNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function RequestNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function RequestNode._setmeta( obj )
   setmetatable( obj, { __index = RequestNode  } )
 end
@@ -10118,6 +10626,14 @@ function DeclMemberNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclMemberNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function DeclMemberNode._setmeta( obj )
   setmetatable( obj, { __index = DeclMemberNode  } )
@@ -10279,6 +10795,14 @@ function DeclArgNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function DeclArgNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function DeclArgNode._setmeta( obj )
   setmetatable( obj, { __index = DeclArgNode  } )
 end
@@ -10358,6 +10882,14 @@ function DeclArgDDDNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclArgDDDNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function DeclArgDDDNode._setmeta( obj )
   setmetatable( obj, { __index = DeclArgDDDNode  } )
@@ -10461,6 +10993,14 @@ function DeclAdvertiseNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclAdvertiseNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function DeclAdvertiseNode._setmeta( obj )
   setmetatable( obj, { __index = DeclAdvertiseNode  } )
@@ -10613,6 +11153,14 @@ function ProtoClassNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ProtoClassNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function ProtoClassNode._setmeta( obj )
   setmetatable( obj, { __index = ProtoClassNode  } )
@@ -10850,6 +11398,14 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function DeclClassNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function DeclClassNode._setmeta( obj )
   setmetatable( obj, { __index = DeclClassNode  } )
 end
@@ -11050,6 +11606,14 @@ function DeclEnumNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function DeclEnumNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function DeclEnumNode._setmeta( obj )
   setmetatable( obj, { __index = DeclEnumNode  } )
 end
@@ -11191,6 +11755,14 @@ function DeclAlgeNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclAlgeNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function DeclAlgeNode._setmeta( obj )
   setmetatable( obj, { __index = DeclAlgeNode  } )
@@ -11370,6 +11942,14 @@ function NewAlgeValNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function NewAlgeValNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function NewAlgeValNode._setmeta( obj )
   setmetatable( obj, { __index = NewAlgeValNode  } )
 end
@@ -11482,6 +12062,14 @@ function LuneControlNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function LuneControlNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function LuneControlNode._setmeta( obj )
   setmetatable( obj, { __index = LuneControlNode  } )
@@ -11650,6 +12238,14 @@ function MatchNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function MatchNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function MatchNode._setmeta( obj )
   setmetatable( obj, { __index = MatchNode  } )
@@ -11931,6 +12527,14 @@ function LuneKindNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LuneKindNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LuneKindNode._setmeta( obj )
   setmetatable( obj, { __index = LuneKindNode  } )
 end
@@ -12006,6 +12610,14 @@ function DeclMacroNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function DeclMacroNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function DeclMacroNode._setmeta( obj )
   setmetatable( obj, { __index = DeclMacroNode  } )
@@ -12150,6 +12762,14 @@ function TestCaseNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function TestCaseNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function TestCaseNode._setmeta( obj )
   setmetatable( obj, { __index = TestCaseNode  } )
 end
@@ -12263,6 +12883,14 @@ function TestBlockNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function TestBlockNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function TestBlockNode._setmeta( obj )
   setmetatable( obj, { __index = TestBlockNode  } )
 end
@@ -12346,6 +12974,14 @@ function AbbrNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function AbbrNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function AbbrNode._setmeta( obj )
   setmetatable( obj, { __index = AbbrNode  } )
@@ -12443,6 +13079,14 @@ function BoxingNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function BoxingNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function BoxingNode._setmeta( obj )
   setmetatable( obj, { __index = BoxingNode  } )
@@ -12544,6 +13188,14 @@ function UnboxingNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function UnboxingNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function UnboxingNode._setmeta( obj )
   setmetatable( obj, { __index = UnboxingNode  } )
 end
@@ -12618,6 +13270,14 @@ function LiteralNilNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LiteralNilNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LiteralNilNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
 end
@@ -12691,6 +13351,14 @@ function LiteralCharNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function LiteralCharNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function LiteralCharNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralCharNode  } )
@@ -12772,6 +13440,14 @@ function LiteralIntNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LiteralIntNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LiteralIntNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralIntNode  } )
 end
@@ -12851,6 +13527,14 @@ function LiteralRealNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function LiteralRealNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function LiteralRealNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralRealNode  } )
@@ -12960,6 +13644,14 @@ function LiteralArrayNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LiteralArrayNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LiteralArrayNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralArrayNode  } )
 end
@@ -13065,6 +13757,14 @@ function LiteralListNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LiteralListNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LiteralListNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralListNode  } )
 end
@@ -13169,6 +13869,14 @@ function LiteralSetNode:visit( visitor, depth, alreadySet )
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function LiteralSetNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function LiteralSetNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralSetNode  } )
@@ -13327,6 +14035,14 @@ function LiteralMapNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LiteralMapNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LiteralMapNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralMapNode  } )
 end
@@ -13465,6 +14181,14 @@ function LiteralStringNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LiteralStringNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LiteralStringNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralStringNode  } )
 end
@@ -13547,6 +14271,14 @@ function LiteralBoolNode:visit( visitor, depth, alreadySet )
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
+function LiteralBoolNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
 function LiteralBoolNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralBoolNode  } )
 end
@@ -13622,6 +14354,14 @@ function LiteralSymbolNode:visit( visitor, depth, alreadySet )
 
    
    return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function LiteralSymbolNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
 end
 function LiteralSymbolNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralSymbolNode  } )

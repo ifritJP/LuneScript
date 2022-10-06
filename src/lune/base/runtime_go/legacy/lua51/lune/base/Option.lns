@@ -172,7 +172,11 @@ pub class Option {
    /** convGo 内の runner 数 */
    pub let mut convGoRunnerNum:int;
 
+   /** コード生成する際に再現性があるようにソートする */
+   local let mut sortGenerateCode:bool {pub};
+
    pub fn __init() {
+      self.sortGenerateCode = true;
       self.dumpDebugAst = false;
       self.legacyNewName = false;
       self.stdinFile = nil;
@@ -412,8 +416,15 @@ usage:
                case "--noEnvArg" {
                   option.addEnvArg = false;
                }
+               case "--noUseWaiter" {
+                  option.transCtrlInfo.useWaiter = false;
+                  option.sortGenerateCode = false;
+               }
                case "--debug-dump-ast" {
                   option.dumpDebugAst = true;
+               }
+               case "--unsortGenerateCode" {
+                  option.sortGenerateCode = false;
                }
                case "--disableMultiPhaseAst" {
                   option.transCtrlInfo.validMultiPhaseTransUnit = false;

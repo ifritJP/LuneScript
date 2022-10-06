@@ -284,6 +284,7 @@ function TransCtrlInfo._new(  )
    return obj
 end
 function TransCtrlInfo:__init() 
+   self.useWaiter = true
    self.macroAsyncParseStmtLen = 500
    self.warningShadowing = false
    self.compatComment = false
@@ -357,6 +358,42 @@ function Position:getDisplayTxt(  )
    end
    
    return txt
+end
+function Position:comp( other )
+
+   if self.streamName < other.streamName then
+      return -1
+   end
+   
+   if self.streamName > other.streamName then
+      return 1
+   end
+   
+   if self.lineNo < other.lineNo then
+      return -1
+   end
+   
+   if self.lineNo > other.lineNo then
+      return 1
+   end
+   
+   if self.column < other.column then
+      return -1
+   end
+   
+   if self.column > other.column then
+      return 1
+   end
+   
+   local orgPos, otherOrgPos = self.orgPos, other.orgPos
+   if  nil == orgPos or  nil == otherOrgPos then
+      local _orgPos = orgPos
+      local _otherOrgPos = otherOrgPos
+   
+      return 0
+   end
+   
+   return orgPos:comp( otherOrgPos )
 end
 function Position._setmeta( obj )
   setmetatable( obj, { __index = Position  } )

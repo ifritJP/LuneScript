@@ -357,21 +357,22 @@ _moduleObj.Option = Option
 function Option._setmeta( obj )
   setmetatable( obj, { __index = Option  } )
 end
-function Option._new( packageName, appName, mainModule, addEnvArg, runnerNum )
+function Option._new( packageName, appName, mainModule, addEnvArg, runnerNum, sortCode )
    local obj = {}
    Option._setmeta( obj )
    if obj.__init then
-      obj:__init( packageName, appName, mainModule, addEnvArg, runnerNum )
+      obj:__init( packageName, appName, mainModule, addEnvArg, runnerNum, sortCode )
    end
    return obj
 end
-function Option:__init( packageName, appName, mainModule, addEnvArg, runnerNum )
+function Option:__init( packageName, appName, mainModule, addEnvArg, runnerNum, sortCode )
 
    self.packageName = packageName
    self.appName = appName
    self.mainModule = mainModule
    self.addEnvArg = addEnvArg
    self.runnerNum = runnerNum
+   self.sortCode = sortCode
 end
 function Option:get_packageName()
    return self.packageName
@@ -387,6 +388,9 @@ function Option:get_addEnvArg()
 end
 function Option:get_runnerNum()
    return self.runnerNum
+end
+function Option:get_sortCode()
+   return self.sortCode
 end
 
 
@@ -2840,6 +2844,8 @@ function convFilter:processRoot( node, opt )
    
    self:popProcessMode(  )
    
+   
+   
    do
       local function procNode( workNode )
       
@@ -2927,6 +2933,7 @@ function convFilter:processRoot( node, opt )
    end
    
    
+   
    do
       local function procNode( workNode )
       
@@ -2940,7 +2947,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getIfUnwrapNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.IfUnwrapNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getIfUnwrapNodeList(  ) ) ) or node:get_nodeManager():getIfUnwrapNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -2957,7 +2964,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getExpSetValNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.ExpSetValNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getExpSetValNodeList(  ) ) ) or node:get_nodeManager():getExpSetValNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -2976,7 +2983,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getExpCallNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.ExpCallNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getExpCallNodeList(  ) ) ) or node:get_nodeManager():getExpCallNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -2994,7 +3001,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getExpCallSuperCtorNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.ExpCallSuperCtorNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getExpCallSuperCtorNodeList(  ) ) ) or node:get_nodeManager():getExpCallSuperCtorNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -3012,7 +3019,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getExpCallSuperNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.ExpCallSuperNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getExpCallSuperNodeList(  ) ) ) or node:get_nodeManager():getExpCallSuperNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -3049,7 +3056,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getDeclVarNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.DeclVarNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getDeclVarNodeList(  ) ) ) or node:get_nodeManager():getDeclVarNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -3078,6 +3085,7 @@ function convFilter:processRoot( node, opt )
    
    
    self:pushProcessMode( ProcessMode.NonClosureFuncDecl )
+   
    do
       local function procNode( workNode )
       
@@ -3086,7 +3094,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getDeclFuncNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.DeclFuncNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getDeclFuncNodeList(  ) ) ) or node:get_nodeManager():getDeclFuncNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end

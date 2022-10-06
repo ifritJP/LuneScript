@@ -679,12 +679,40 @@ func Ast_convExp4_3120(arg1 []LnsAny) LnsAny {
 func Ast_convExp0_5243(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_AlternateTypeInfo).Ast_TypeInfo
 }
+// for 6598
+func Ast_convExp4_3495(arg1 []LnsAny) (LnsAny, bool) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
+}
 // for 8136
 func Ast_convExp0_17554(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo).Ast_TypeInfo
 }
-// for 6598
-func Ast_convExp4_3495(arg1 []LnsAny) (LnsAny, bool) {
+// for 5263
+func Ast_convExp3_3405(arg1 []LnsAny) (LnsAny, bool) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
+}
+// for 5263
+func Ast_convExp3_3523(arg1 []LnsAny) (LnsAny, bool) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
+}
+// for 5263
+func Ast_convExp3_3577(arg1 []LnsAny) (LnsAny, bool) {
+    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
+}
+// for 1680
+func Ast_convExp1_2483(arg1 []LnsAny) (bool, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
+}
+// for 3943
+func Ast_convExp2_4119(arg1 []LnsAny) (bool, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
+}
+// for 5171
+func Ast_convExp3_2876(arg1 []LnsAny) bool {
+    return Lns_getFromMulti( arg1, 0 ).(bool)
+}
+// for 6294
+func Ast_convExp4_2705(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 6971
@@ -735,18 +763,6 @@ func Ast_convExp0_15065(arg1 []LnsAny) (LnsInt, string) {
 func Ast_convExp0_15102(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 6907
-func Ast_convExp0_15322(arg1 []LnsAny) (bool, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
-}
-// for 6907
-func Ast_convExp0_15455(arg1 []LnsAny) (bool, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
-}
-// for 6907
-func Ast_convExp0_15552(arg1 []LnsAny) (bool, LnsAny) {
-    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
-}
 // for 7723
 func Ast_convExp0_15848(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
@@ -763,33 +779,20 @@ func Ast_convExp0_16310(arg1 []LnsAny) (LnsAny, bool) {
 func Ast_convExp0_17081(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 1680
-func Ast_convExp1_2483(arg1 []LnsAny) (bool, LnsAny) {
+// for 6907
+func Ast_convExp0_15322(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
-// for 3943
-func Ast_convExp2_4119(arg1 []LnsAny) (bool, LnsAny) {
+// for 6907
+func Ast_convExp0_15455(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
-// for 5171
-func Ast_convExp3_2876(arg1 []LnsAny) bool {
-    return Lns_getFromMulti( arg1, 0 ).(bool)
+// for 6907
+func Ast_convExp0_15552(arg1 []LnsAny) (bool, LnsAny) {
+    return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
-// for 5263
-func Ast_convExp3_3405(arg1 []LnsAny) (LnsAny, bool) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
-}
-// for 5263
-func Ast_convExp3_3523(arg1 []LnsAny) (LnsAny, bool) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
-}
-// for 5263
-func Ast_convExp3_3577(arg1 []LnsAny) (LnsAny, bool) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
-}
-// for 6294
-func Ast_convExp4_2705(arg1 []LnsAny) (LnsAny, bool) {
-    return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
+func Ast_ProcessInfo_switchIdProvier___anonymous_0_(_env *LnsEnv) string {
+    return "start"
 }
 // 273: decl @lune.@base.@Ast.getRootProcessInfo
 func Ast_getRootProcessInfo(_env *LnsEnv) *Ast_ProcessInfo {
@@ -903,6 +906,7 @@ func Ast_getAllNameForKind(_env *LnsEnv, classInfo *Ast_TypeInfo,kind LnsInt,sym
     return nameSet
 }
 
+
 // 1286: decl @lune.@base.@Ast.getAllMethodName
 func Ast_getAllMethodName(_env *LnsEnv, classInfo *Ast_TypeInfo,kind LnsInt) *Util_OrderedSet {
     return Ast_getAllNameForKind(_env, classInfo, kind, Ast_SymbolKind__Mtd)
@@ -924,10 +928,64 @@ func Ast_dumpOuterScope(_env *LnsEnv, workScope *Ast_Scope,toScope *Ast_Scope,pr
     }))
 }
 
+
 // 2878: decl @lune.@base.@Ast.dumpScope
 func Ast_dumpScope(_env *LnsEnv, workscope LnsAny,workprefix string) {
     Ast_dumpScope__dumpScopeSub_0_(_env, workscope, workprefix, NewLnsSet([]LnsAny{}))
 }
+
+// 2883: decl @lune.@base.@Ast.dumpScope.dumpScopeSub
+func Ast_dumpScope__dumpScopeSub_0_(_env *LnsEnv, scope LnsAny,prefix string,readyIdSet *LnsSet) {
+    {
+        __exp := scope
+        if !Lns_IsNil( __exp ) {
+            _exp := __exp.(*Ast_Scope)
+            if readyIdSet.Has(Ast_Scope2Stem(_exp)){
+                return 
+            }
+            readyIdSet.Add(Ast_Scope2Stem(_exp))
+            if len(prefix) > 20{
+                Util_err(_env, "illegal")
+            }
+            {
+                __forsortCollection0 := _exp.FP.Get_symbol2SymbolInfoMap(_env)
+                __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
+                __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
+                for _, _symbol := range( __forsortSorted0.Items ) {
+                    symbolInfo := __forsortCollection0.Items[ _symbol ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
+                    symbol := _symbol.(string)
+                    Util_log(_env, _env.GetVM().String_format("scope: %s, %s, %s", []LnsAny{prefix, _exp, symbol}))
+                    {
+                        _subScope := symbolInfo.FP.Get_typeInfo(_env).FP.Get_scope(_env)
+                        if !Lns_IsNil( _subScope ) {
+                            subScope := _subScope.(*Ast_Scope)
+                            Ast_dumpScope__dumpScopeSub_0_(_env, subScope, prefix + "  ", readyIdSet)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// 2911: decl @lune.@base.@Ast.Scope.setClosure.getFuncScope
+func Ast_Scope_setClosure__getFuncScope_0_(_env *LnsEnv, scope *Ast_Scope) *Ast_Scope {
+    for {
+        {
+            __exp := scope.FP.Get_ownerTypeInfo(_env)
+            if !Lns_IsNil( __exp ) {
+                _exp := __exp.(*Ast_TypeInfo)
+                if _exp.FP.Get_kind(_env) == Ast_TypeInfoKind__Func{
+                    return scope
+                }
+            }
+        }
+        scope = scope.FP.Get_outerScope(_env)
+        if scope.FP.IsRoot(_env){ break }
+    }
+    return scope
+}
+
 
 // 4014: decl @lune.@base.@Ast.isGenericType
 func Ast_isGenericType(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
@@ -1037,6 +1095,7 @@ func Ast_isClass(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
         _env.SetStackVal( typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__Class) &&
         _env.SetStackVal( typeInfo != Ast_builtinTypeString) ).(bool)
 }
+
 
 // 5258: decl @lune.@base.@Ast.failCreateLuavalWith
 func Ast_failCreateLuavalWith_82_(_env *LnsEnv, typeInfo *Ast_TypeInfo,convFlag LnsInt,validToCheck bool)(LnsAny, bool) {
@@ -1170,6 +1229,12 @@ func Ast_isConditionalbe(_env *LnsEnv, processInfo *Ast_ProcessInfo,typeInfo *As
     return false
 }
 
+
+
+
+
+
+
 // 6265: decl @lune.@base.@Ast.applyGenericList
 func Ast_applyGenericList_88_(_env *LnsEnv, processInfo *Ast_ProcessInfo,typeList *LnsList,alt2typeMap *LnsMap,moduleTypeInfo *Ast_TypeInfo)(LnsAny, bool) {
     var typeInfoList *LnsList
@@ -1194,6 +1259,8 @@ func Ast_applyGenericList_88_(_env *LnsEnv, processInfo *Ast_ProcessInfo,typeLis
     return typeInfoList, needNew
 }
 
+
+
 // 6642: decl @lune.@base.@Ast.convToExtTypeList
 func Ast_convToExtTypeList(_env *LnsEnv, processInfo *Ast_ProcessInfo,list *LnsList)(LnsAny, string) {
     var extList *LnsList
@@ -1217,9 +1284,21 @@ func Ast_isNumberType(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     return Ast_numberTypeSet.Has(Ast_TypeInfo2Stem(typeInfo.FP.Get_srcTypeInfo(_env)))
 }
 
+
 // 7026: decl @lune.@base.@Ast.createProcessInfo
 func Ast_createProcessInfo(_env *LnsEnv, validCheckingMutable bool,validExtType bool,validDetailError bool) *Ast_ProcessInfo {
     return Ast_ProcessInfo_createUser_25_(_env, validCheckingMutable, validExtType, validDetailError, Ast_builtinTypeInfo2Map.FP.Clone(_env))
+}
+
+
+
+
+// 7288: decl @lune.@base.@Ast.TypeInfo.checkMatchTypeAsync.mismatchErrMess
+func Ast_TypeInfo_checkMatchTypeAsync__mismatchErrMess_0_(_env *LnsEnv, index LnsInt,errorMess LnsAny,dstType *Ast_TypeInfo,srcType *Ast_TypeInfo,alt2typeWork *LnsMap) string {
+    return _env.GetVM().String_format("exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", []LnsAny{index, dstType.FP.GetTxt(_env, Ast_defaultTypeNameCtrl, nil, nil), dstType.FP.Get_typeId(_env).Id, srcType.FP.GetTxt(_env, Ast_defaultTypeNameCtrl, nil, nil), srcType.FP.Get_typeId(_env).Id, index, _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( errorMess) &&
+        _env.SetStackVal( _env.GetVM().String_format(" -- %s", []LnsAny{errorMess})) ||
+        _env.SetStackVal( _env.GetVM().String_format("(%s)", []LnsAny{Ast_TypeInfoKind_getTxt( dstType.FP.Get_kind(_env))})) ).(string)})
 }
 
 // 7312: decl @lune.@base.@Ast.isSettableToForm
@@ -1246,6 +1325,8 @@ func Ast_isSettableToForm_98_(_env *LnsEnv, processInfo *Ast_ProcessInfo,typeInf
     return true, ""
 }
 
+
+
 // 7899: decl @lune.@base.@Ast.isPrimitive
 func Ast_isPrimitive(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     var srcType *Ast_TypeInfo
@@ -1258,87 +1339,6 @@ func Ast_isPrimitive(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     }
     return false
 }
-
-
-
-
-
-// 7288: decl @lune.@base.@Ast.TypeInfo.checkMatchTypeAsync.mismatchErrMess
-func Ast_TypeInfo_checkMatchTypeAsync__mismatchErrMess_0_(_env *LnsEnv, index LnsInt,errorMess LnsAny,dstType *Ast_TypeInfo,srcType *Ast_TypeInfo,alt2typeWork *LnsMap) string {
-    return _env.GetVM().String_format("exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", []LnsAny{index, dstType.FP.GetTxt(_env, Ast_defaultTypeNameCtrl, nil, nil), dstType.FP.Get_typeId(_env).Id, srcType.FP.GetTxt(_env, Ast_defaultTypeNameCtrl, nil, nil), srcType.FP.Get_typeId(_env).Id, index, _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( errorMess) &&
-        _env.SetStackVal( _env.GetVM().String_format(" -- %s", []LnsAny{errorMess})) ||
-        _env.SetStackVal( _env.GetVM().String_format("(%s)", []LnsAny{Ast_TypeInfoKind_getTxt( dstType.FP.Get_kind(_env))})) ).(string)})
-}
-
-
-
-func Ast_ProcessInfo_switchIdProvier___anonymous_0_(_env *LnsEnv) string {
-    return "start"
-}
-
-
-// 2883: decl @lune.@base.@Ast.dumpScope.dumpScopeSub
-func Ast_dumpScope__dumpScopeSub_0_(_env *LnsEnv, scope LnsAny,prefix string,readyIdSet *LnsSet) {
-    {
-        __exp := scope
-        if !Lns_IsNil( __exp ) {
-            _exp := __exp.(*Ast_Scope)
-            if readyIdSet.Has(Ast_Scope2Stem(_exp)){
-                return 
-            }
-            readyIdSet.Add(Ast_Scope2Stem(_exp))
-            if len(prefix) > 20{
-                Util_err(_env, "illegal")
-            }
-            {
-                __forsortCollection0 := _exp.FP.Get_symbol2SymbolInfoMap(_env)
-                __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
-                __forsortSorted0.Sort( _env, LnsItemKindStr, nil )
-                for _, _symbol := range( __forsortSorted0.Items ) {
-                    symbolInfo := __forsortCollection0.Items[ _symbol ].(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
-                    symbol := _symbol.(string)
-                    Util_log(_env, _env.GetVM().String_format("scope: %s, %s, %s", []LnsAny{prefix, _exp, symbol}))
-                    {
-                        _subScope := symbolInfo.FP.Get_typeInfo(_env).FP.Get_scope(_env)
-                        if !Lns_IsNil( _subScope ) {
-                            subScope := _subScope.(*Ast_Scope)
-                            Ast_dumpScope__dumpScopeSub_0_(_env, subScope, prefix + "  ", readyIdSet)
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// 2911: decl @lune.@base.@Ast.Scope.setClosure.getFuncScope
-func Ast_Scope_setClosure__getFuncScope_0_(_env *LnsEnv, scope *Ast_Scope) *Ast_Scope {
-    for {
-        {
-            __exp := scope.FP.Get_ownerTypeInfo(_env)
-            if !Lns_IsNil( __exp ) {
-                _exp := __exp.(*Ast_TypeInfo)
-                if _exp.FP.Get_kind(_env) == Ast_TypeInfoKind__Func{
-                    return scope
-                }
-            }
-        }
-        scope = scope.FP.Get_outerScope(_env)
-        if scope.FP.IsRoot(_env){ break }
-    }
-    return scope
-}
-
-
-
-
-
-
-
-
-
-
 
 
 

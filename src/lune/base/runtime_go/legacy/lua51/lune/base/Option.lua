@@ -179,7 +179,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 12734
+   return 12760
 end
 
 
@@ -333,6 +333,7 @@ function Option._new(  )
    return obj
 end
 function Option:__init() 
+   self.sortGenerateCode = true
    self.dumpDebugAst = false
    self.legacyNewName = false
    self.stdinFile = nil
@@ -424,6 +425,9 @@ function Option:set_stdinFile( stdinFile )
 end
 function Option:get_legacyNewName()
    return self.legacyNewName
+end
+function Option:get_sortGenerateCode()
+   return self.sortGenerateCode
 end
 
 
@@ -675,8 +679,13 @@ end
                   option.validProf = true
                elseif _switchExp == "--noEnvArg" then
                   option.addEnvArg = false
+               elseif _switchExp == "--noUseWaiter" then
+                  option.transCtrlInfo.useWaiter = false
+                  option.sortGenerateCode = false
                elseif _switchExp == "--debug-dump-ast" then
                   option.dumpDebugAst = true
+               elseif _switchExp == "--unsortGenerateCode" then
+                  option.sortGenerateCode = false
                elseif _switchExp == "--disableMultiPhaseAst" then
                   option.transCtrlInfo.validMultiPhaseTransUnit = false
                elseif _switchExp == "--disableMultiThreadAst" then
@@ -1040,7 +1049,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 759, function (  )
+   Log.log( Log.Level.Log, __func__, 770, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

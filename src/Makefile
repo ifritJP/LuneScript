@@ -1894,21 +1894,21 @@ goprof:
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
 view-goprof:
 ifdef BROWSER
-	go tool pprof -http=0.0.0.0:8888 lnsc @-.profi
+	go tool pprof -http=0.0.0.0:8100 lnsc @-.profi
 else
-	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profi
+	go tool pprof -http=0.0.0.0:8100 -no_browser lnsc @-.profi
 endif
 view-goprofmem:
 ifdef BROWSER
-	go tool pprof -http=0.0.0.0:8888 lnsc @-.profimem
+	go tool pprof -http=0.0.0.0:8100 lnsc @-.profimem
 else
-	go tool pprof -http=0.0.0.0:8888 -no_browser lnsc @-.profimem
+	go tool pprof -http=0.0.0.0:8100 -no_browser lnsc @-.profimem
 endif
 view-gotrace:
 ifdef BROWSER
-	go tool trace -http=0.0.0.0:8888 @-.profitrace
+	go tool trace -http=0.0.0.0:8100 @-.profitrace
 else
-	go tool trace -http=0.0.0.0:8888 -no_browser @-.profitrace
+	go tool trace -http=0.0.0.0:8100 -no_browser @-.profitrace
 endif
 
 luaprof:

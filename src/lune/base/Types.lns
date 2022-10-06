@@ -114,8 +114,11 @@ pub class TransCtrlInfo {
    pub let mut macroAsyncParseStmtLen:int;
    /** マクロの実行を非同期で行なうかどうか。 */
    pub let mut validMacroAsync:bool;
+   /** AST 解析の runner の待ち処理を Async.Waiter を使うかどうか */
+   pub let mut useWaiter:bool;
 
    pub fn __init() {
+      self.useWaiter = true;
       self.macroAsyncParseStmtLen = 500;
       self.warningShadowing = false;
       self.compatComment = false;
@@ -187,6 +190,31 @@ TransUnit においては 擬似的な値にする必要がある。
          return "%s: (%s)" (txt2, txt);
       }
       return txt;
+   }
+
+   pub fn comp( other:&Position ) : int {
+      if self.streamName < other.streamName {
+         return -1;
+      }
+      if self.streamName > other.streamName {
+         return 1;
+      }
+      if self.lineNo < other.lineNo {
+         return -1;
+      }
+      if self.lineNo > other.lineNo {
+         return 1;
+      }
+      if self.column < other.column {
+         return -1;
+      }
+      if self.column > other.column {
+         return 1;
+      }
+      let! orgPos, otherOrgPos = self.orgPos, other.orgPos {
+         return 0;
+      };
+      return orgPos.comp( otherOrgPos );
    }
 }
 
