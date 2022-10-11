@@ -1,4 +1,5 @@
 // +build !gopherlua
+
 package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 import _ "embed"
@@ -90,7 +91,7 @@ var lune_base_glueFilter []byte
 var lune_base_front []byte
 //go:embed runtime7.lua
 var lune_base_runtime7 []byte
-func init() {
+func InitBinding() {
 AddlnsSrcInfo( "lune.base.Async", lune_base_Async )
 AddlnsSrcInfo( "lune.base.Runner", lune_base_Runner )
 AddlnsSrcInfo( "lune.base.Str", lune_base_Str )
@@ -134,4 +135,5 @@ AddlnsSrcInfo( "lune.base.Converter", lune_base_Converter )
 AddlnsSrcInfo( "lune.base.glueFilter", lune_base_glueFilter )
 AddlnsSrcInfo( "lune.base.front", lune_base_front )
 AddlnsSrcInfo( "lune.base.runtime7", lune_base_runtime7 )
-AddlnsLnsInfo( "lune.base.Testing", lns_lune_base_Testing )}
+AddlnsLnsInfo( "lune.base.Testing", lns_lune_base_Testing )
+}

@@ -87,13 +87,33 @@ import エラーを回避するため、
 func Lns_InitMod() {
 }
 
+/**
+  go 側から直接 LnsEnv を生成する場合に利用する。
+
+  通常は main や run の内部処理から生成するので、これを直接は利用しない。
+
+  使用が終ったら Lns_ReleaseEnv() を実行して開放する。
+*/
+func Lns_createEnv(async bool, runnerName string, runnerId int) *LnsEnv {
+	return createEnv(async, runnerName, runnerId)
+}
+
+/*
+  go 側から直接 LnsEnv を生成する場合に利用する。
+
+   Lns_createEnv() で生成した env を開放する。
+*/
+func Lns_releaseEnv(env *LnsEnv) {
+	env.LuaVM.closeVM()
+}
+
 func createEnv(async bool, runnerName string, runnerId int) *LnsEnv {
 	env := &LnsEnv{}
 	env.valStack = make([]LnsAny, 2)
 	env.nilAccStack = make([]LnsAny, 2)
 	env.runnerName = runnerName
 	env.runnerId = runnerId
-	env.LuaVM = createVM()
+	env.LuaVM = requestVM()
 	if async {
 		env.CommonLuaVM = cur_LnsEnv.LuaVM
 	} else {
@@ -146,6 +166,8 @@ func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
 		lnsRuntimeOpt = opts[0]
 	}
 
+	// go producerLuaVM()
+
 	cur_LnsEnv = createEnv(false, "main", 0)
 
 	Lns_package_path = cur_LnsEnv.LuaVM.GetPackagePath()
@@ -174,21 +196,21 @@ func Lns_IsNil(val LnsAny) bool {
 	// 	}
 	// 	return value.IsNil()
 	// }
-    value := reflect.ValueOf(val)
-    switch value.Kind() {
-    case reflect.Int:
-        return false
-    case reflect.Float64:
-        return false
-    case reflect.Bool:
-        return false
-    case reflect.String:
-        return false
-    case reflect.Struct:
-        return false
-    default:
-        return value.IsNil()
-    }
+	value := reflect.ValueOf(val)
+	switch value.Kind() {
+	case reflect.Int:
+		return false
+	case reflect.Float64:
+		return false
+	case reflect.Bool:
+		return false
+	case reflect.String:
+		return false
+	case reflect.Struct:
+		return false
+	default:
+		return value.IsNil()
+	}
 }
 
 func Lns_type(val LnsAny) string {

@@ -29,7 +29,7 @@ package runtimelns
 import (
 	"fmt"
 
-	"github.com/yuin/gopher-lua"
+	lua "github.com/yuin/gopher-lua"
 )
 
 //import "sync"

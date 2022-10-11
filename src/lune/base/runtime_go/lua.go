@@ -85,6 +85,7 @@ const lns_luaValueCoreNum = 10
 
 var lns_luaValChan chan *Lns_luaValueCore
 var lns_luaValProcEndChan chan bool
+var lns_lnsLuaVMChan chan *Lns_luaVM
 
 /**
 symbol を globalVal から除外する
@@ -183,12 +184,19 @@ func depend_getBindLns(mod string) LnsAny {
 	return nil
 }
 
+// func producerLuaVM() {
+// 	for {
+// 		lns_lnsLuaVMChan <- newLuaVM()
+// 	}
+// }
+
 func init() {
 	lnsLnsMap = map[string]string{}
 	lns_globalValSym = Lns_toRawStr(lns_globalValMapName)
 	lns_defaultPushedVal = &lns_pushedVal{}
 	lns_luaValChan = make(chan *Lns_luaValueCore, 1000)
 	lns_luaValProcEndChan = make(chan bool, 0)
+	// lns_lnsLuaVMChan = make(chan *Lns_luaVM, 5)
 
 	go lns_luaValChanProc()
 }
@@ -214,36 +222,42 @@ func getVMFromCache() *Lns_luaVM {
 	return luaVM
 }
 
-func createVM() *Lns_luaVM {
-	luaVM := getVMFromCache()
+func requestVM() *Lns_luaVM {
+	if luaVM := getVMFromCache(); luaVM != nil {
+		return luaVM
+	}
 
-	if luaVM == nil {
-		luaVM = &Lns_luaVM{}
-		luaVM.vm = LuaL_newstate(600)
-		LuaL_openlibs(luaVM.vm)
-		luaVM.lns_luvValueCoreMap = map[*Lns_luaValueCore]bool{}
-		luaVM.freeCoreWorkList = make([]*Lns_luaValueCore, lns_luaValueCoreNum)
-		luaVM.freeCoreWorkIndex = 0
+	//return <-lns_lnsLuaVMChan
+	return newLuaVM()
+}
 
-		luaVM.closed = false
-		luaVM.lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
-		luaVM.lns_hasLuvValueCoreFree = false
-		luaVM.regexCache = newRegexpCache(20)
+func newLuaVM() *Lns_luaVM {
+	luaVM := &Lns_luaVM{}
+	luaVM.vm = LuaL_newstate(600)
+	LuaL_openlibs(luaVM.vm)
+	luaVM.lns_luvValueCoreMap = map[*Lns_luaValueCore]bool{}
+	luaVM.freeCoreWorkList = make([]*Lns_luaValueCore, lns_luaValueCoreNum)
+	luaVM.freeCoreWorkIndex = 0
 
-		lua_createtable(luaVM.vm)
-		lua_setglobal(luaVM.vm, lns_globalValSym)
+	luaVM.closed = false
+	luaVM.lns_luvValueCoreFreeList = []*Lns_luaValueCoreList{}
+	luaVM.lns_hasLuvValueCoreFree = false
+	luaVM.regexCache = newRegexpCache(20)
 
-		// マクロ定義中の _lnsLoad() をサポートするために
-		// lua 版の LuneScript をロードしておく。
-		// _lnsLoad() は、マクロ内から LuneScript のコードを実行するための仕組み。
-		// また、 go 版 lnsc 単体で Lua 版 LuneScript を実行できるようにするため。
-		Lns_initPreload(luaVM.vm)
+	lua_createtable(luaVM.vm)
+	lua_setglobal(luaVM.vm, lns_globalValSym)
 
-		if lns_enableRevertingVM {
-			// デフォルトの global 値を lns_builtinGlobals に保持しておく。
-			// デフォルトの package.loaded 値を lns_builtinLoaded に保持しておく
-			// これらは closeVM() 時に、 VM の状態をデフォルトに戻すために保持しておく
-			luaVM.run_script(`
+	// マクロ定義中の _lnsLoad() をサポートするために
+	// lua 版の LuneScript をロードしておく。
+	// _lnsLoad() は、マクロ内から LuneScript のコードを実行するための仕組み。
+	// また、 go 版 lnsc 単体で Lua 版 LuneScript を実行できるようにするため。
+	Lns_initPreload(luaVM.vm)
+
+	if lns_enableRevertingVM {
+		// デフォルトの global 値を lns_builtinGlobals に保持しておく。
+		// デフォルトの package.loaded 値を lns_builtinLoaded に保持しておく
+		// これらは closeVM() 時に、 VM の状態をデフォルトに戻すために保持しておく
+		luaVM.run_script(`
 lns_builtinGlobals = {}
 lns_builtinLoaded = {}
 lns_builtinGlobals[ "lns_builtinLoaded" ] = true
@@ -256,8 +270,8 @@ for key, val in pairs( package.loaded ) do
 end
 `, []LnsAny{})
 
-			// createVM() で保持しておいたデフォルト値以外を開放する処理を生成しておく
-			loaded, err := luaVM.Load(`
+		// newLuaVM() で保持しておいたデフォルト値以外を開放する処理を生成しておく
+		loaded, err := luaVM.Load(`
 local function release( target, default )
    local work = {}
    for key, val in pairs( target ) do
@@ -274,13 +288,11 @@ release( package.loaded, lns_builtinLoaded )
 collectgarbage()
 `, nil)
 
-			if err != nil {
-				panic(err)
-			}
-			luaVM.funcForReverting = loaded.(*Lns_luaValue)
+		if err != nil {
+			panic(err)
 		}
+		luaVM.funcForReverting = loaded.(*Lns_luaValue)
 	}
-
 	return luaVM
 }
 
@@ -308,8 +320,8 @@ func (self *Lns_luaVM) closeVM() {
 
 // 全ての LUA VM を停止させる
 //
-// これを実行した後は、 createVM() を実行してはならない。
-// もし createVM() を実行したい場合は、
+// これを実行した後は、 newLuaVM() を実行してはならない。
+// もし newLuaVM() を実行したい場合は、
 //
 func Lns_shutdownAllVM() {
 	// vm.funcForReverting を開放するために nil をセットする

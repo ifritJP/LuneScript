@@ -40,6 +40,7 @@ func main() {
 		args = append(args, arg)
 	}
 
+	lnsc.InitBinding()
 	Lns_InitModOnce()
 	Lns_RunMain(lnsc.Front___main)
 }

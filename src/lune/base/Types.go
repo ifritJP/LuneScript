@@ -213,7 +213,7 @@ func (self Types_Position) Comp(_env *LnsEnv, other Types_Position) LnsInt {
     }
     return orgPos.Comp(_env, otherOrgPos)
 }
-// 254: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 266: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -227,7 +227,7 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 274: decl @lune.@base.@Types.Token.getLineCount
+// 286: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
@@ -561,7 +561,7 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 244: DeclConstr
+// 256: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     self.Txt = txt

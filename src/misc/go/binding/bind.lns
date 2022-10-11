@@ -115,6 +115,7 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
          } else {
             ostream.write( "// +build gopherlua\n" );
          }
+         ostream.write( "\n" );
          ostream.write( "package lnsc\n" );
          ostream.write(
             'import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"\n' );
@@ -138,7 +139,7 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
          }
 
          
-         ostream.write( "func init() {\n" );
+         ostream.write( "func InitBinding() {\n" );
          foreach path in list {
             print( path.$src );
             if enableByteCompile {
@@ -161,7 +162,7 @@ pub fn createBinding( makeDir:str, baseDir:str, enableByteCompile:bool ) : bool 
          foreach bindSym, modPath in lnsBindSym2Mod {
             ostream.write( 'AddlnsLnsInfo( "%s", %s )' (modPath,bindSym) );
          }
-         ostream.write( "}\n" );
+         ostream.write( "\n}\n" );
          ostream.close();
          return true;
       }

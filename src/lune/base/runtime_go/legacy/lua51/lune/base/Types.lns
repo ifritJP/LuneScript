@@ -219,17 +219,29 @@ TransUnit においては 擬似的な値にする必要がある。
 }
 
 pub enum TokenKind {
+   /** コメント */
    Cmnt,
+   /** 文字列 */
    Str,
+   /** 整数 */
    Int,
+   /** 実数 */
    Real,
+   /** 文字 */
    Char,
+   /** シンボル */
    Symb,
+   /** 区切り文字 */
    Dlmt,
+   /** キーワード */
    Kywd,
+   /** 演算子 */
    Ope,
+   /** 型 */
    Type,
+   /** shebang */
    Sheb,
+   /** EOF */
    Eof,
 }
 

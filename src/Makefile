@@ -89,6 +89,7 @@ help:
 	@echo usage:
 	@echo "  make install"
 	@echo "  make test-comp"
+	@echo "  make test-comp-with-go"
 	@echo "  make test-global"
 	@echo "  make release-check"
 	@echo "  make accept-package [WITH_GO=y]"
@@ -464,6 +465,7 @@ define cp_src_set
 	cp $2/lune.js $1
 
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
+	cp -au $2/lune/base/binding_dummy.go $1/lune/base
 	cp -au $2/misc $1/misc
 
 	$(call dump-lns-lua-ver,$(LNSC_GO),$1/ver_lns_lua)
@@ -1196,7 +1198,7 @@ ifneq ($(ENABLE_LUA51),)
 	cp work/6/lune/base/*.lua $(ORG_DIR)lune/base/runtime_go/legacy/lua51/lune/base
 	cat work/6/lune/base/binding.go | sed 's@!gopherlua@gopherlua@g' |	\
 		sed 's/package lnsc/package runtimelns/g'		|	\
-		sed 's/func init/func init_bind/g'			|	\
+		sed 's/func InitBinding/func init_bind/g'			|	\
 		sed 's@import \.@//import .@g'				|	\
 		sed 's@:embed @:embed legacy/lua51/lune/base/@g' >		\
 		$(ORG_DIR)lune/base/runtime_go/binding51.go
@@ -1557,6 +1559,7 @@ define setup-go
 			--include='*.lns' --exclude='*.*' lune $1
 #	cp -au go.mod $1
 	cp -au lune/base/runtime_go $1/lune/base/
+	cp -au lune/base/binding_dummy.go $1/lune/base/
 	cp -au build.counter $1
 	-rm work/result-testGo.txt work/result-testGo2.txt
 endef
