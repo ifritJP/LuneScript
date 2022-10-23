@@ -88,14 +88,14 @@ func Lns_InitMod() {
 }
 
 /**
-  go 側から直接 LnsEnv を生成する場合に利用する。
+  go 側から直接 Async 用の LnsEnv を生成する場合に利用する。
 
   通常は main や run の内部処理から生成するので、これを直接は利用しない。
 
   使用が終ったら Lns_ReleaseEnv() を実行して開放する。
 */
-func Lns_createEnv(async bool, runnerName string, runnerId int) *LnsEnv {
-	return createEnv(async, runnerName, runnerId)
+func Lns_createAsyncEnv(runnerName string) *LnsEnv {
+	return lns_threadMgrInfo.createAsyncEnv(runnerName)
 }
 
 /*

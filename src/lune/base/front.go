@@ -423,7 +423,7 @@ func front_loadFromChunk_8_(_env *LnsEnv, chunk LnsAny,err LnsAny) LnsAny {
         if chunk != nil{
             chunk_70 := chunk.(*Lns_luaValue)
             {
-                _work := front_convExp1_848(Lns_2DDD(_env.GetVM().RunLoadedfunc(chunk_70,Lns_2DDD([]LnsAny{}))[0]))
+                _work := front_convExp1_848(Lns_2DDD(_env.GetVM().RunLoadedfunc(chunk_70,Lns_2DDD([]LnsAny{}))))
                 if !Lns_IsNil( _work ) {
                     work := _work
                     ret = work
@@ -733,7 +733,7 @@ func (self *front_Front) loadLua(_env *LnsEnv, path string) LnsAny {
         chunk,err = _env.GetVM().Loadfile(path)
         if chunk != nil{
             chunk_30 := chunk.(*Lns_luaValue)
-            ret = Lns_unwrap( Lns_car(_env.GetVM().RunLoadedfunc(chunk_30,Lns_2DDD([]LnsAny{}))[0]))
+            ret = Lns_unwrap( Lns_car(_env.GetVM().RunLoadedfunc(chunk_30,Lns_2DDD([]LnsAny{}))))
         } else {
             Util_errorLog(_env, Lns_unwrapDefault( err, _env.GetVM().String_format("load error -- %s.", []LnsAny{path})).(string))
             ret = nil
@@ -1933,7 +1933,7 @@ func (self *front_Front) executeLns(_env *LnsEnv, path string,baseDir LnsAny) {
             var preloadFunc LnsAny
             
             {
-                _preloadFunc := front_convExp0_2358(Lns_2DDD(_env.GetVM().RunLoadedfunc(loaded,Lns_2DDD([]LnsAny{}))[0]))
+                _preloadFunc := front_convExp0_2358(Lns_2DDD(_env.GetVM().RunLoadedfunc(loaded,Lns_2DDD([]LnsAny{}))))
                 if _preloadFunc == nil{
                     panic("failed to preloadFunc")
                 } else {
@@ -1954,7 +1954,7 @@ func (self *front_Front) executeLns(_env *LnsEnv, path string,baseDir LnsAny) {
             if loaded != nil{
                 loaded_614 := loaded.(*Lns_luaValue)
                 {
-                    _testFunc := front_convExp0_2442(Lns_2DDD(_env.GetVM().RunLoadedfunc(loaded_614,Lns_2DDD([]LnsAny{}))[0]))
+                    _testFunc := front_convExp0_2442(Lns_2DDD(_env.GetVM().RunLoadedfunc(loaded_614,Lns_2DDD([]LnsAny{}))))
                     if !Lns_IsNil( _testFunc ) {
                         testFunc := _testFunc
                         _env.GetVM().RunLoadedfunc((testFunc.(*Lns_luaValue)),Lns_2DDD([]LnsAny{mod}))

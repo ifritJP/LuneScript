@@ -2363,12 +2363,13 @@ function convFilter:outputConvToForm( node )
    
    local funcType = node:get_exp():get_expType():get_extedType()
    if node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Ext and funcType:get_srcTypeInfo():get_kind() == Ast.TypeInfoKind.Form then
-      self:writeln( string.format( [==[      
+      self:writeln( string.format( [==[
+// for %d
 func %s( luaform LnsAny ) LnsForm {
     return func (argList []LnsAny) []LnsAny {
         return %s.RunLoadedfunc( luaform.(*Lns_luaValue), argList )
     }
-}]==], self:getConv2formName( node ), self.env:getCommonVm(  )) )
+}]==], node:get_pos().lineNo, self:getConv2formName( node ), self.env:getCommonVm(  )) )
       return 
    end
    
@@ -6617,7 +6618,7 @@ function convFilter:processExpCall( node, opt )
    
    self:writeRaw( ")" )
    if callKind == _lune.newAlge( CallKind.LuaCall) or callKind == _lune.newAlge( CallKind.RunLoaded) then
-      if #funcType:get_retTypeInfoList() == 1 then
+      if #funcType:get_retTypeInfoList() == 1 and funcType:get_retTypeInfoList()[1]:get_kind() ~= Ast.TypeInfoKind.DDD then
          if opt.parent:get_kind() ~= Nodes.NodeKind.get_StmtExp() then
             self:writeRaw( "[0]" )
             local retTypeList = _lune.unwrap( Ast.convToExtTypeList( self.processInfo, funcType:get_retTypeInfoList() ))

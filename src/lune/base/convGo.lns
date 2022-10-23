@@ -1775,12 +1775,13 @@ fn convFilter.outputConvToForm( node:&Nodes.ExpCastNode ) mut {
    if node.$exp.$expType.$kind == .Ext and funcType.$srcTypeInfo.$kind == .Form
    {
       self.writeln(
-         ```      
+         ```
+// for %d
 func %s( luaform LnsAny ) LnsForm {
     return func (argList []LnsAny) []LnsAny {
         return %s.RunLoadedfunc( luaform.(*Lns_luaValue), argList )
     }
-}``` (self.getConv2formName( node ), self.env.getCommonVm() ) );
+}``` (node.$pos.lineNo, self.getConv2formName( node ), self.env.getCommonVm() ) );
       return;
    }
    
@@ -5415,7 +5416,9 @@ pub override fn convFilter.processExpCall(
    }
    self.writeRaw( ")" );
    if callKind == .LuaCall or callKind == .RunLoaded {
-      if #funcType.$retTypeInfoList == 1 {
+      if #funcType.$retTypeInfoList == 1 and
+         funcType.$retTypeInfoList[1].$kind ~= .DDD
+      {
          if opt.parent.$kind ~= Nodes.NodeKind.$StmtExp {
             self.writeRaw( "[0]" );
             let retTypeList = unwrap Ast.convToExtTypeList(

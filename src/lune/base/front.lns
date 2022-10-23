@@ -1519,7 +1519,7 @@ fn Front.outputBootC( scriptPath:str )
 }
 
 pub fn convertLnsCode2LuaCodeWithOpt(
-   option:Option.Option, lnsCode:str, path:str, baseDir:str! ) __noasync : str
+   option:&Option.Option, lnsCode:str, path:str, baseDir:str! ) __noasync : str
 {
    let mut front = new Front( option ## );
    

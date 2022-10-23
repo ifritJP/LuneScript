@@ -68,7 +68,7 @@ func Macro_loadCode_0_(_env *LnsEnv, code string) LnsAny {
         if loaded != nil{
             loaded_6 := loaded.(*Lns_luaValue)
             {
-                _obj := Macro_convExp1_41(Lns_2DDD(_env.GetVM().RunLoadedfunc(loaded_6,Lns_2DDD([]LnsAny{}))[0]))
+                _obj := Macro_convExp1_41(Lns_2DDD(_env.GetVM().RunLoadedfunc(loaded_6,Lns_2DDD([]LnsAny{}))))
                 if !Lns_IsNil( _obj ) {
                     obj := _obj
                     ret = obj

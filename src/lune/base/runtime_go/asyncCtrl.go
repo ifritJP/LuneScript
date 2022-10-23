@@ -120,6 +120,15 @@ func (self *Lns_ThreadMgrInfo) unlock() {
 	self.mutex.Unlock()
 }
 
+func (self *Lns_ThreadMgrInfo) createAsyncEnv(runnerName string) *LnsEnv {
+	self.lock()
+	defer self.unlock()
+
+	self.totalReqNum++
+
+	return createEnv(true, runnerName, self.totalReqNum)
+}
+
 func (self *Lns_ThreadMgrInfo) newThreadEvent(
 	runnerId int, runnerName string,
 	eventId int, info1 int, info2 int, mess string) *lnsThreadEvent {

@@ -44,7 +44,7 @@ func FrontInterface_dummyLoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInte
         loaded = frontInterface_convExp0_1410(Lns_2DDD(_env.GetVM().Load("return {}", nil)))
         if loaded != nil{
             loaded_316 := loaded.(*Lns_luaValue)
-            emptyTable = Lns_unwrap( Lns_car(_env.GetVM().RunLoadedfunc(loaded_316,Lns_2DDD([]LnsAny{}))[0]))
+            emptyTable = Lns_unwrap( Lns_car(_env.GetVM().RunLoadedfunc(loaded_316,Lns_2DDD([]LnsAny{}))))
         } else {
             panic("load error")
         }
