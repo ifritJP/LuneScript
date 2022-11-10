@@ -1,0 +1,7 @@
+pub enum enumTestSub2 {
+   val1,
+}
+pub class Class {
+}
+pub class IF {
+}

@@ -339,6 +339,7 @@ define build-testcode
 	$(call exeLune,$1,$2,test/Sub6.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Sub8.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Sub10.lns,$3 save,$4) > /dev/null
+	$(call exeLune,$1,$2,test/Sub11.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/simple.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Class1.lns,$3 save,$4) > /dev/null
 	$(call exeLune,$1,$2,test/Class2.lns,$3 save,$4) > /dev/null
@@ -897,6 +898,10 @@ test-new2:
 	cp -a work/3_2/lune work/4
 	$(call exeLune,$(LNSC),work/3_2,test/start.lns,-u SAVE ../4 $(EXE_OPT),)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
+# .meta がある状態で変換
+	rm -f work/3_2/test/start.meta work/3_2/test/start.lua
+	rm -f work/3_2/test/simple.meta work/3_2/test/simple.lua
+	$(call exeLune,$(LNSC),work/3_2,test/start.lns,lua > /dev/null,)
 
 
 # batch モードでビルドして、

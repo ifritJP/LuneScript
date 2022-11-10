@@ -2,6 +2,7 @@ import test.Sub2;
 import test.Sub3;
 import test.Sub3_2;
 import test.Sub4;
+import test.Sub11;
 
 print( Sub2.sub2val );
 print( "sub2globalfun", sub2globalfun() );
@@ -78,4 +79,7 @@ macro _test( val:Map<str,int> ) {
 {
    _test( { "a":1, "b":1 } );
    print( test.a, test.b );
+}
+pub fn aaaa() : Sub11.enumTestSub2!, Sub11.Class!, Sub11.IF! {
+   return nil, nil, nil;
 }

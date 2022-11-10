@@ -1382,15 +1382,13 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
         }
         typeInfo.FP.Serialize(_env, self.FP, NewAst_SerializeInfo(_env, importProcessInfo2Index, validChildren))
     }
-    for _typeId, _typeInfo := range( self.pubEnumId2EnumTypeInfo.Items ) {
-        typeId := _typeId.(Ast_IdInfoDownCast).ToAst_IdInfo()
+    for _, _typeInfo := range( self.pubEnumId2EnumTypeInfo.Items ) {
         typeInfo := _typeInfo.(Ast_EnumTypeInfoDownCast).ToAst_EnumTypeInfo()
-        typeId2TypeInfo.Set(typeId,&typeInfo.Ast_TypeInfo)
+        convLua_pickupTypeId(_env, &typeInfo.Ast_TypeInfo, true, nil)
     }
-    for _typeId, _typeInfo := range( self.pubAlgeId2AlgeTypeInfo.Items ) {
-        typeId := _typeId.(Ast_IdInfoDownCast).ToAst_IdInfo()
+    for _, _typeInfo := range( self.pubAlgeId2AlgeTypeInfo.Items ) {
         typeInfo := _typeInfo.(Ast_AlgeTypeInfoDownCast).ToAst_AlgeTypeInfo()
-        typeId2TypeInfo.Set(typeId,&typeInfo.Ast_TypeInfo)
+        convLua_pickupTypeId(_env, &typeInfo.Ast_TypeInfo, true, nil)
         {
             __forsortCollection7 := typeInfo.FP.Get_valInfoMap(_env)
             __forsortSorted7 := __forsortCollection7.CreateKeyListStr()
@@ -1411,8 +1409,8 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
             aliasType = Lns_unwrap( Ast_AliasTypeInfoDownCastF(workNode.FP.Get_expType(_env).FP)).(*Ast_AliasTypeInfo)
             var aliasSrcType *Ast_TypeInfo
             aliasSrcType = aliasType.FP.Get_aliasSrc(_env)
-            typeId2TypeInfo.Set(aliasType.FP.Get_typeId(_env),&aliasType.Ast_TypeInfo)
-            typeId2TypeInfo.Set(aliasSrcType.FP.Get_typeId(_env),aliasSrcType)
+            convLua_pickupTypeId(_env, &aliasType.Ast_TypeInfo, true, nil)
+            convLua_pickupTypeId(_env, aliasSrcType, true, nil)
         }
     }
     self.FP.writeln(_env, "local __dependIdMap = {}")

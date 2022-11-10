@@ -910,11 +910,11 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
          importProcessInfo2Index, validChildren ) );
    }
 
-   foreach typeInfo, typeId in self.pubEnumId2EnumTypeInfo {
-      typeId2TypeInfo[ typeId ] = typeInfo;
+   foreach typeInfo in self.pubEnumId2EnumTypeInfo {
+      pickupTypeId( typeInfo, true ## );
    }
-   foreach typeInfo, typeId in self.pubAlgeId2AlgeTypeInfo {
-      typeId2TypeInfo[ typeId ] = typeInfo;
+   foreach typeInfo in self.pubAlgeId2AlgeTypeInfo {
+      pickupTypeId( typeInfo, true ## );
       forsort valInfo in typeInfo.$valInfoMap {
          foreach valType in valInfo.$typeList {
             pickupTypeId( valType, true ## );
@@ -925,8 +925,8 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
       if Ast.isPubToExternal( workNode.$expType.$accessMode ) {
          let aliasType = unwrap workNode.$expType@@@Ast.AliasTypeInfo;
          let aliasSrcType = aliasType.$aliasSrc;
-         typeId2TypeInfo[ aliasType.$typeId ] = aliasType;
-         typeId2TypeInfo[ aliasSrcType.$typeId ] = aliasSrcType;
+         pickupTypeId( aliasType, true ## );
+         pickupTypeId( aliasSrcType, true ## );
       }
    }
 

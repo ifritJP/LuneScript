@@ -814,36 +814,39 @@ fn Front.loadParserToLuaCode(
 
    if self.option.updateOnLoad {
       fn saveFile( suffix:str, txt:str, byteCompile:bool,
-                   stripDebugInfo:bool, checkUpdate:bool ){
-                      let mut newpath = "";
-                      if! let dir = self.option.outputDir {
-                         newpath = "%s/%s%s" ( dir, mod.gsub( "%.", "/" ), suffix );
-                      }
-                      else {       
-                         newpath = path.gsub( ".lns$", suffix );
-                      }
-                      let mut saveTxt = txt;
-                      if byteCompile {
-                         saveTxt = Converter.byteCompileFromLuaTxt( saveTxt, stripDebugInfo );
-                      }
-                      if not forceUpdateMeta and checkUpdate {
-                         if! let mut fileObj = io.open( newpath ## ) {
-                            let oldTxt = fileObj.read( "*a" );
-                            fileObj.close();
-                            if saveTxt == oldTxt {
-                               // 同じ場合はセーブしない
-                               return;      
-                            }
-                         }
-                      }
-                      if! let mut fileObj = io.open( newpath, "w" ) {
-                         fileObj.write( saveTxt );
-                         fileObj.close();
-                      }
-                   }
-                   saveFile( ".lua", luaTxt, self.option.byteCompile,
-                             self.option.stripDebugInfo, false );
-      saveFile( ".meta", metaTxt, self.option.byteCompile, true, true );
+                   stripDebugInfo:bool, checkUpdate:bool )
+      {
+         let mut newpath = "";
+         if! let dir = self.option.outputDir {
+            newpath = "%s/%s%s" ( dir, mod.gsub( "%.", "/" ), suffix );
+         }
+         else {       
+            newpath = path.gsub( ".lns$", suffix );
+         }
+         let mut saveTxt = txt;
+         if byteCompile {
+            saveTxt = Converter.byteCompileFromLuaTxt( saveTxt, stripDebugInfo );
+         }
+         if not forceUpdateMeta and checkUpdate {
+            if! let mut fileObj = io.open( newpath ## ) {
+               let oldTxt = fileObj.read( "*a" );
+               fileObj.close();
+               if saveTxt == oldTxt {
+                  // 同じ場合はセーブしない
+                  return;      
+               }
+            }
+         }
+         if! let mut fileObj = io.open( newpath, "w" ) {
+            fileObj.write( saveTxt );
+            fileObj.close();
+         }
+      }
+      saveFile( ".lua", luaTxt, self.option.byteCompile,
+                self.option.stripDebugInfo, false );
+      if self.option.mode == .SaveMeta {
+         saveFile( ".meta", metaTxt, self.option.byteCompile, true, true );
+      }
 
       {
          let mut memStream = new Util.memStream();

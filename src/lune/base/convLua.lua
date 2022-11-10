@@ -1256,12 +1256,12 @@ function ConvFilter:outputMeta( node )
       typeInfo:serialize( self, Ast.SerializeInfo._new(importProcessInfo2Index, validChildren) )
    end
    
-   for typeId, typeInfo in pairs( self.pubEnumId2EnumTypeInfo ) do
-      typeId2TypeInfo[typeId] = typeInfo
+   for __index, typeInfo in pairs( self.pubEnumId2EnumTypeInfo ) do
+      pickupTypeId( typeInfo, true )
    end
    
-   for typeId, typeInfo in pairs( self.pubAlgeId2AlgeTypeInfo ) do
-      typeId2TypeInfo[typeId] = typeInfo
+   for __index, typeInfo in pairs( self.pubAlgeId2AlgeTypeInfo ) do
+      pickupTypeId( typeInfo, true )
       do
          local __sorted = {}
          local __map = typeInfo:get_valInfoMap()
@@ -1286,8 +1286,8 @@ function ConvFilter:outputMeta( node )
       if Ast.isPubToExternal( workNode:get_expType():get_accessMode() ) then
          local aliasType = _lune.unwrap( _lune.__Cast( workNode:get_expType(), 3, Ast.AliasTypeInfo ))
          local aliasSrcType = aliasType:get_aliasSrc()
-         typeId2TypeInfo[aliasType:get_typeId()] = aliasType
-         typeId2TypeInfo[aliasSrcType:get_typeId()] = aliasSrcType
+         pickupTypeId( aliasType, true )
+         pickupTypeId( aliasSrcType, true )
       end
       
    end
