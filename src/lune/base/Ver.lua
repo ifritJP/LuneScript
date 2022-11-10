@@ -16,7 +16,7 @@ if not _lune7 then
    _lune7 = _lune
 end
 
-local version = "1.5.1"
+local version = "1.5.2"
 _moduleObj.version = version
 
 local metaVersion = "1.0.159"
