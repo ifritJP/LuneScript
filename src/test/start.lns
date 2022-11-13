@@ -16,6 +16,7 @@ import test.mapping;
 import test.test2.test2.test as TESTSUB;
 import.l test.Sub8;
 import.d test.Sub10;
+import test.Sub11;
 
 macro _print( symbol2:stat, format:str! ) {
    {
@@ -2100,4 +2101,13 @@ __test {
 {
    Macro._section();
    SUB2.genericFunc( 999 );
+}
+{
+   class AAA extend Sub11.Class {
+      fn __free() {             // skip-lua51
+         print( __func__ );     // skip-lua51
+      }                         // skip-lua51
+   }
+   new AAA();
+   collectgarbage();
 }

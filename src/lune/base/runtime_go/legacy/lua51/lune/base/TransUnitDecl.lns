@@ -3574,6 +3574,9 @@ fn TransUnit.analyzeDeclFunc(
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], info );
       }
       case Nodes.NodeKind.$DeclDestr {
+         if typeInfo.$accessMode ~= .Pri {
+            self.addErrMess( firstToken.$pos, "__free must be private." );
+         }
          let info = createDeclFuncInfo( .Dstr );
          node = Nodes.DeclDestrNode.create(
             self.nodeManager, firstToken.pos, self.inTestBlock,

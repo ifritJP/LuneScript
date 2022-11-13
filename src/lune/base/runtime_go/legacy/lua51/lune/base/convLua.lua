@@ -868,6 +868,9 @@ function ConvFilter:outputMeta( node )
                      end
                   end
                   
+               elseif itemTypeInfo:get_kind() == Ast.TypeInfoKind.Method and itemTypeInfo:get_rawTxt() == "__free" then
+                  
+                  typeId2TypeInfo[itemTypeInfo:get_typeId(  )] = itemTypeInfo
                end
                
             end
@@ -1477,7 +1480,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1077, function (  )
+   Log.log( Log.Level.Log, __func__, 1083, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, tostring( self.enableTest))
    end )
@@ -2189,7 +2192,7 @@ function ConvFilter:processDeclClass( node, opt )
    do
       local _exp = self:getDestrClass( node:get_expType(  ) )
       if _exp ~= nil then
-         destTxt = string.format( ", __gc = %s.__free", _exp:getTxt(  ))
+         destTxt = string.format( ", __gc = %s.__free", self:getFullName( _exp ))
       end
    end
    
@@ -2641,7 +2644,7 @@ function ConvFilter:processDeclDestr( node, opt )
    do
       local _exp = self:getDestrClass( classTypeInfo:get_baseTypeInfo() )
       if _exp ~= nil then
-         self:writeln( string.format( "%s.__free( self )", _exp:getTxt(  )) )
+         self:writeln( string.format( "%s.__free( self )", self:getFullName( _exp )) )
       end
    end
    

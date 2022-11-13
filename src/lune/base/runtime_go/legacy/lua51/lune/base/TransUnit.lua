@@ -6496,6 +6496,10 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
          local info = createDeclFuncInfo( Nodes.FuncKind.Ctor )
          node = Nodes.DeclConstrNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, info )
       elseif _switchExp == Nodes.NodeKind.get_DeclDestr() then
+         if typeInfo:get_accessMode() ~= Ast.AccessMode.Pri then
+            self:addErrMess( firstToken.pos, "__free must be private." )
+         end
+         
          local info = createDeclFuncInfo( Nodes.FuncKind.Dstr )
          node = Nodes.DeclDestrNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, info )
       elseif _switchExp == Nodes.NodeKind.get_DeclMethod() then

@@ -1120,6 +1120,7 @@ define setup-lua51-test
 	$(MAKE) build-glue GLUE_DIR=work/newglue LUA_INC_DIR=$(LUA51_INC) LUA_GLUE=51
 	mv test/glueTest51.so $1/test/glueTest.so 
 	grep -v -e 'skip-lua51' $2 test/start.lns > $1/test/start.lns
+	grep -v -e 'skip-lua51' $2 test/Sub11.lns > $1/test/Sub11.lns
 endef
 
 define setup-lua51-test-cross

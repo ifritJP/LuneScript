@@ -590,6 +590,12 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
                         pickupTypeId( itemTypeInfo, true, true );
                      }
                   }
+               } elseif itemTypeInfo.$kind == .Method and
+                  itemTypeInfo.$rawTxt == "__free"
+               {
+                  // __free は必ず meta 出力する。
+                  // そうしないと、外部クラスがデストラクタを持つかどうかが判断できない。
+                  typeId2TypeInfo[ itemTypeInfo.get_typeId() ] = itemTypeInfo;
                }
 	    }
          }
@@ -1727,8 +1733,9 @@ pub override fn ConvFilter.processDeclClass(
 
    let mut destTxt = "";
    if! self.getDestrClass( node.get_expType() ) {
-      destTxt = ", __gc = %s.__free" (_exp.getTxt(##));
+      destTxt = ", __gc = %s.__free" ( self.getFullName( _exp ));
    }
+
 
    self.writeln(```
 function %s.%s( obj )
@@ -2145,7 +2152,7 @@ pub override fn ConvFilter.processDeclDestr(
 
    let classTypeInfo = node.$expType.$parentInfo;
    if! self.getDestrClass( classTypeInfo.$baseTypeInfo ) {
-      self.writeln( "%s.__free( self )" (_exp.getTxt(##) ) );
+      self.writeln( "%s.__free( self )" ( self.getFullName( _exp ) ) );
    }
 
    self.writeln( "end" );
