@@ -46,10 +46,10 @@ macro _defGetBuildCount() {
          }
          fileObj.close();
       }
-      if count == 0 {
-         // build.counter が 0 なのはエラーとする
-         error( "error -- build.counter" );
-      }
+      // if count == 0 {
+      //    // build.counter が 0 なのはエラーとする
+      //    error( "error -- build.counter" );
+      // }
    }
    fn getBuildCount(): int {
       return ,,count;
