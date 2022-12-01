@@ -119,10 +119,11 @@ lns-command-get-lnsc からパスを取得する。
 	(when (not lnsc-path)
 	  (setq work-path (expand-file-name work-path proj-dir))
 	  (when (file-exists-p work-path)
-	    (setq lnsc-path work-path))))
-      lnsc-path)
+	    (setq lnsc-path work-path)))))
     (when (not lnsc-path)
-      (setq lnsc-path (car (lns-command-get-command nil))))))
+      (setq lnsc-path (car (lns-command-get-command nil))))
+    lnsc-path
+    ))
 
 
 (defun lns-command-get-command (&rest args)
