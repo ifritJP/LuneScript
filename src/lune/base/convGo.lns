@@ -912,6 +912,7 @@ macro _declIgnoreNode( name:sym )
 
 _declIgnoreNode( BlankLine );
 _declIgnoreNode( None );
+_declIgnoreNode( Shebang );
 
 pub override fn convFilter.processImport(
    node: &Nodes.ImportNode, opt: Opt ) mut
