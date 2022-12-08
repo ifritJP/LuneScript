@@ -6580,6 +6580,7 @@ function convFilter:processExpCall( node, opt )
       
       elseif _matchExp[1] == CallKind.LuaCall[1] then
       
+         addEnvArg = false
          closeTxt = ")"
       end
    end

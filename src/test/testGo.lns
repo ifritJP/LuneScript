@@ -2626,3 +2626,15 @@ _section();
       }
    }
 }
+_section();
+{
+   __luago {
+      let! mut proc = io.popen( "ls" ) {
+         error( "error ls" );
+      };
+      if not proc.read( "*a" ) {
+         error( "read error" );
+      };
+      proc.close();
+   }
+}

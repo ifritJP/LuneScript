@@ -5381,6 +5381,7 @@ pub override fn convFilter.processExpCall(
       case .BuiltinCallEnv {
       }
       case .LuaCall {
+         addEnvArg = false;
          closeTxt = ")";
       }
    }
