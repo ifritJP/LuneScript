@@ -1690,23 +1690,23 @@ pub fn build( option:Option.Option, astCallback:AstCallback! ) mut {
 }
 
 
-fn Front.executeLns( path:str, baseDir:str! ) mut {
+fn Front.executeLns( path:str, baseDir:str! ) mut : Luaval<&stem>!, str {
    // // LuneScript の runtime をロードするために runLuaOnLns() を実行。
    // DependLuaOnLns.runLuaOnLns( "", nil, false );
 
    let mod = Util.scriptPath2ModuleFromProjDir( path, baseDir );
-   {
-      // 指定の path の Lns コードを Lua コードに変換する。
-      // この時に path が import している submod の lua への変換を行なう。
-      let parserSrc = Types.ParserSrc.LnsPath( path, mod, nil );
-      let _, luaCode = self.loadParserToLuaCode(
-         new frontInterface.ImportModuleInfo(), parserSrc, path, mod, baseDir )**;
-      Log._log2( .Debug, "luacode: " .. luaCode );
 
-      __luaLock {
-         // import( submod ) の処理で、変換済みの submod の lua をロードするように
-         // package.preload を設定する。
-         let subModPreLoad = ```
+   // 指定の path の Lns コードを Lua コードに変換する。
+   // この時に path が import している submod の lua への変換を行なう。
+   let parserSrc = Types.ParserSrc.LnsPath( path, mod, nil );
+   let _, luaCode = self.loadParserToLuaCode(
+      new frontInterface.ImportModuleInfo(), parserSrc, path, mod, baseDir )**;
+   Log._log2( .Debug, "luacode: " .. luaCode );
+
+   __luaLock {
+      // import( submod ) の処理で、変換済みの submod の lua をロードするように
+      // package.preload を設定する。
+      let subModPreLoad = ```
 return function( submod2Code, dumpCode )
    local preloadFunc = function( mod )
       code = submod2Code[ mod ]
@@ -1725,20 +1725,23 @@ return function( submod2Code, dumpCode )
    end
 end
 ```;
-         let! loaded = _load( subModPreLoad ## ) {
-            error( "failed to subModPreLoad" );
-         };
-         let! preloadFunc = loaded(##) {
-            error( "failed to preloadFunc" );
-         };
-             (preloadFunc@@form)( self.convertedMap, Log.getLevel() >= Log.Level.Debug );
-      }
-
-      // path の luacode を実行する。
-      // preload を設定しているので 変換済みの submod の lua がロードされる。
-      loadFromLuaTxt( luaCode );
+      let! loaded = _load( subModPreLoad ## ) {
+         error( "failed to subModPreLoad" );
+      };
+      let! preloadFunc = loaded(##) {
+         error( "failed to preloadFunc" );
+      };
+          (preloadFunc@@form)( self.convertedMap, Log.getLevel() >= Log.Level.Debug );
    }
 
+   // path の luacode を実行する。
+   // preload を設定しているので 変換済みの submod の lua がロードされる。
+   return loadFromLuaTxt( luaCode ), mod;
+}
+
+fn Front.executeLnsAndTest( path:str, baseDir:str! ) mut {
+   let _, mod = self.executeLns( path, baseDir );
+   
    if self.option.testing {
       let code = ```
 local Testing = require( "lune.base.Testing" )
@@ -1818,16 +1821,26 @@ pub fn Front.exec() mut
       case .Shebang {
          Depend.setupShebang();
          __luaLock {
-            let scriptPath, baseDir =
-               getBaseDir( self.option.scriptPath, self.option.$projDir );
-            if! let modObj =
-               self.loadModuleWithBaseDir(
-                  self.scriptPath2Module( scriptPath, baseDir ), baseDir )
+            let! modObj = self.executeLns(
+               getBaseDir( self.option.scriptPath, self.option.$projDir )** )
             {
-               let code = Depend.runMain( modObj.__main, self.option.shebangArgList );
-               os.exit( code );
-            }
+               os.exit( 1 );
+            };
+            let code = Depend.runMain( modObj.__main, self.option.shebangArgList );
+            os.exit( code );
          }
+         
+         // __luaLock {
+         //    let scriptPath, baseDir =
+         //       getBaseDir( self.option.scriptPath, self.option.$projDir );
+         //    if! let modObj =
+         //       self.loadModuleWithBaseDir(
+         //          self.scriptPath2Module( scriptPath, baseDir ), baseDir )
+         //    {
+         //       let code = Depend.runMain( modObj.__main, self.option.shebangArgList );
+         //       os.exit( code );
+         //    }
+         // }
       }
       case .GoMod {
          foreach path in self.gomodMap.getModPathList() {
@@ -1835,7 +1848,7 @@ pub fn Front.exec() mut
          }
       }
       case .Exec {
-         self.executeLns(
+         self.executeLnsAndTest(
             getBaseDir( self.option.scriptPath, self.option.$projDir )** );
       }
       case .BootC {

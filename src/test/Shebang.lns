@@ -1,5 +1,7 @@
 #! lnsc -shebang
 
+import test.Sub4;
+
 pub fn __main( argList:List<str> ) : int {
    foreach val, index in argList {
       if index ~= 1 {

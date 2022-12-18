@@ -1301,6 +1301,11 @@ function convFilter:processNone( node, opt )
 end
 
 
+function convFilter:processShebang( node, opt )
+
+end
+
+
 
 function convFilter:processImport( node, opt )
 

@@ -2292,22 +2292,21 @@ _moduleObj.build = build
 function Front:executeLns( path, baseDir )
    local __func__ = '@lune.@base.@front.Front.executeLns'
 
+   local _
    
    local mod = Util.scriptPath2ModuleFromProjDir( path, baseDir )
+   
+   local parserSrc = _lune.newAlge( Types.ParserSrc.LnsPath, {path,mod,nil})
+   local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, baseDir )
+   Log.log( Log.Level.Debug, __func__, 1704, function (  )
+   
+      return "luacode: " .. luaCode
+   end )
+   
+   
    do
-      local _
       
-      local parserSrc = _lune.newAlge( Types.ParserSrc.LnsPath, {path,mod,nil})
-      local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, baseDir )
-      Log.log( Log.Level.Debug, __func__, 1704, function (  )
-      
-         return "luacode: " .. luaCode
-      end )
-      
-      
-      do
-         
-         local subModPreLoad = [==[
+      local subModPreLoad = [==[
 return function( submod2Code, dumpCode )
    local preloadFunc = function( mod )
       code = submod2Code[ mod ]
@@ -2326,27 +2325,32 @@ return function( submod2Code, dumpCode )
    end
 end
 ]==]
-         local loaded = _lune.loadstring52( subModPreLoad )
-         if  nil == loaded then
-            local _loaded = loaded
-         
-            error( "failed to subModPreLoad" )
-         end
-         
-         local preloadFunc = loaded(  )
-         if  nil == preloadFunc then
-            local _preloadFunc = preloadFunc
-         
-            error( "failed to preloadFunc" )
-         end
-         
-         (preloadFunc )( self.convertedMap, Log.getLevel(  ) >= Log.Level.Debug )
+      local loaded = _lune.loadstring52( subModPreLoad )
+      if  nil == loaded then
+         local _loaded = loaded
+      
+         error( "failed to subModPreLoad" )
       end
       
+      local preloadFunc = loaded(  )
+      if  nil == preloadFunc then
+         local _preloadFunc = preloadFunc
       
-      loadFromLuaTxt( luaCode )
+         error( "failed to preloadFunc" )
+      end
+      
+      (preloadFunc )( self.convertedMap, Log.getLevel(  ) >= Log.Level.Debug )
    end
    
+   
+   return loadFromLuaTxt( luaCode ), mod
+end
+
+
+function Front:executeLnsAndTest( path, baseDir )
+
+   local _
+   local _1, mod = self:executeLns( path, baseDir )
    
    if self.option.testing then
       local code = [==[
@@ -2380,7 +2384,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1765, function (  )
+   Log.log( Log.Level.Trace, __func__, 1768, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2425,15 +2429,15 @@ function Front:exec(  )
       elseif _switchExp == Option.ModeKind.Shebang then
          Depend.setupShebang(  )
          do
-            local scriptPath, baseDir = getBaseDir( self.option.scriptPath, self.option:get_projDir() )
-            do
-               local modObj = self:loadModuleWithBaseDir( self:scriptPath2Module( scriptPath, baseDir ), baseDir )
-               if modObj ~= nil then
-                  local code = Depend.runMain( modObj['__main'], self.option.shebangArgList )
-                  os.exit( code )
-               end
+            local modObj = self:executeLns( getBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
+            if  nil == modObj then
+               local _modObj = modObj
+            
+               os.exit( 1 )
             end
             
+            local code = Depend.runMain( modObj['__main'], self.option.shebangArgList )
+            os.exit( code )
          end
          
       elseif _switchExp == Option.ModeKind.GoMod then
@@ -2442,7 +2446,7 @@ function Front:exec(  )
          end
          
       elseif _switchExp == Option.ModeKind.Exec then
-         self:executeLns( getBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
+         self:executeLnsAndTest( getBaseDir( self.option.scriptPath, self.option:get_projDir() ) )
       elseif _switchExp == Option.ModeKind.BootC then
          self:outputBootC( self.option.scriptPath )
       elseif _switchExp == Option.ModeKind.Builtin then
