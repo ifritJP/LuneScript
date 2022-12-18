@@ -2925,13 +2925,13 @@ function SwitchNode:canBeStatement(  )
 
    return true
 end
-function SwitchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault )
+function SwitchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_ )
    local obj = {}
    SwitchNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_ ); end
    return obj
 end
-function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault) 
+function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_) 
    Node.__init( self,managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
    
    
@@ -2942,12 +2942,13 @@ function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    self.default = default
    self.caseKind = caseKind
    self.failSafeDefault = failSafeDefault
+   self.is_ = is_
    
    
 end
-function SwitchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault )
+function SwitchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_ )
 
-   local node = SwitchNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault)
+   local node = SwitchNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_)
    nodeMan:addNode( node )
    return node
 end
@@ -3036,6 +3037,9 @@ function SwitchNode:get_caseKind()
 end
 function SwitchNode:get_failSafeDefault()
    return self.failSafeDefault
+end
+function SwitchNode:get_is_()
+   return self.is_
 end
 
 
@@ -7347,31 +7351,55 @@ function ExpMacroExpNode:canBeStatement(  )
 
    return true
 end
-function ExpMacroExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList )
+function ExpMacroExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList )
    local obj = {}
    ExpMacroExpNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList ); end
    return obj
 end
-function ExpMacroExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList) 
+function ExpMacroExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList) 
    Node.__init( self,managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
+   self.macroRefNode = macroRefNode
    self.macroType = macroType
    self.expList = expList
    self.stmtList = stmtList
    
    
 end
-function ExpMacroExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList )
+function ExpMacroExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList )
 
-   local node = ExpMacroExpNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, macroType, expList, stmtList)
+   local node = ExpMacroExpNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList)
    nodeMan:addNode( node )
    return node
 end
 function ExpMacroExpNode:visit( visitor, depth, alreadySet )
 
+   do
+      local child = self.macroRefNode
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'macroRefNode', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+      end
+      
+      
+      
+   end
+   
    do
       do
          local child = self.expList
@@ -7441,6 +7469,9 @@ function ExpMacroExpNode.sortList( list )
 end
 function ExpMacroExpNode._setmeta( obj )
   setmetatable( obj, { __index = ExpMacroExpNode  } )
+end
+function ExpMacroExpNode:get_macroRefNode()
+   return self.macroRefNode
 end
 function ExpMacroExpNode:get_macroType()
    return self.macroType
@@ -12151,13 +12182,13 @@ function MatchNode:canBeStatement(  )
 
    return true
 end
-function MatchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_ )
    local obj = {}
    MatchNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_ ); end
    return obj
 end
-function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault) 
+function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_) 
    Node.__init( self,managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
    
    
@@ -12169,12 +12200,13 @@ function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    self.defaultBlock = defaultBlock
    self.caseKind = caseKind
    self.failSafeDefault = failSafeDefault
+   self.is_ = is_
    
    
 end
-function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault )
+function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_ )
 
-   local node = MatchNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault)
+   local node = MatchNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_)
    nodeMan:addNode( node )
    return node
 end
@@ -12266,6 +12298,9 @@ function MatchNode:get_caseKind()
 end
 function MatchNode:get_failSafeDefault()
    return self.failSafeDefault
+end
+function MatchNode:get_is_()
+   return self.is_
 end
 
 

@@ -1816,7 +1816,7 @@ end
 function Front:format( parserSrc, mod, moduleId, baseDir )
 
    local ast = self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
-   ast:get_node():processFilter( Formatter.createFilter( ast:get_exportInfo():get_moduleTypeInfo(), io.stdout ), Formatter.Opt._new(ast:get_node()) )
+   ast:get_node():processFilter( Formatter.createFilter( ast:get_exportInfo():get_moduleTypeInfo(), io.stdout, false ), Formatter.Opt._new(ast:get_node()) )
 end
 
 

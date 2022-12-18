@@ -2630,7 +2630,7 @@ function TransUnit:analyzeSwitch( firstToken )
    local defaultBlock, failSafeDefault = self:processCaseDefault( firstToken, caseKind, nextToken, #caseList ~= 0 )
    local nsInfo = self:get_curNsInfo()
    
-   return Nodes.SwitchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Switch ), exp, caseList, defaultBlock, caseKind, failSafeDefault )
+   return Nodes.SwitchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Switch ), exp, caseList, defaultBlock, caseKind, failSafeDefault, firstToken.txt == "_switch" )
 end
 
 
@@ -2767,7 +2767,7 @@ function TransUnit:analyzeMatch( firstToken )
    
    local nsInfo = self:get_curNsInfo()
    
-   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Match ), exp, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), caseList, defaultBlock, caseKind, failSafeDefault )
+   return Nodes.MatchNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:getNextStmtId( TransUnitIF.StmtKind.Match ), exp, _lune.newAlge( Ast.AlgeOrGen.Alge, {algeTypeInfo}), caseList, defaultBlock, caseKind, failSafeDefault, firstToken.txt == "_match" )
 end
 
 
@@ -7554,6 +7554,7 @@ function TransUnit:analyzeExpList( allowNoneType, skipOp2Flag, canLeftExp, expNo
       
       
       if self.macroCtrl:get_analyzeInfo():get_mode() == Nodes.MacroMode.AnalyzeArg then
+         
          do
             local _switchExp = expectType
             if _switchExp == Ast.builtinTypeExp or _switchExp == Ast.builtinTypeMultiExp then
@@ -8427,8 +8428,9 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
 end
 
 
-function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
+function TransUnit:evalMacro( firstToken, macroRefNode, expList )
 
+   local macroTypeInfo = macroRefNode:get_expType():get_nonnilableType()
    local stmtList = {}
    
    self:evalMacroOp( firstToken, macroTypeInfo, expList, function (  )
@@ -8483,7 +8485,7 @@ function TransUnit:evalMacro( firstToken, macroTypeInfo, expList )
    end
    
    
-   return Nodes.ExpMacroExpNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, macroTypeInfo, expList, stmtList )
+   return Nodes.ExpMacroExpNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, macroRefNode, macroTypeInfo, expList, stmtList )
 end
 
 local function findForm( format )
@@ -9117,7 +9119,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
          exp = self:processCreatePipe( firstToken, funcExp, argList )
       else
        
-         exp = self:evalMacro( firstToken, funcTypeInfo, argList )
+         exp = self:evalMacro( firstToken, funcExp, argList )
       end
       
    else

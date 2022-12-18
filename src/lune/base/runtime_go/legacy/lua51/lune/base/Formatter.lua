@@ -154,16 +154,17 @@ end
 
 local FormatterFilter = {}
 setmetatable( FormatterFilter, { __index = Nodes.Filter } )
-function FormatterFilter._new( moduleTypeInfo, moduleInfoManager, stream )
+function FormatterFilter._new( moduleTypeInfo, moduleInfoManager, stream, forMacroFlag )
    local obj = {}
    FormatterFilter._setmeta( obj )
-   if obj.__init then obj:__init( moduleTypeInfo, moduleInfoManager, stream ); end
+   if obj.__init then obj:__init( moduleTypeInfo, moduleInfoManager, stream, forMacroFlag ); end
    return obj
 end
-function FormatterFilter:__init(moduleTypeInfo, moduleInfoManager, stream) 
+function FormatterFilter:__init(moduleTypeInfo, moduleInfoManager, stream, forMacroFlag) 
    Nodes.Filter.__init( self,true, moduleTypeInfo, moduleInfoManager)
    
    self.stream = Util.SimpleSourceOStream._new(stream, nil, 3)
+   self.forMacroFlag = forMacroFlag
 end
 function FormatterFilter._setmeta( obj )
   setmetatable( obj, { __index = FormatterFilter  } )
@@ -202,9 +203,9 @@ end
 
 
 
-local function createFilter( moduleTypeInfo, stream )
+local function createFilter( moduleTypeInfo, stream, forMacroFlag )
 
-   return FormatterFilter._new(moduleTypeInfo, moduleTypeInfo:get_scope(), stream)
+   return FormatterFilter._new(moduleTypeInfo, moduleTypeInfo:get_scope(), stream, forMacroFlag)
 end
 _moduleObj.createFilter = createFilter
 
@@ -279,56 +280,56 @@ end
 
 function FormatterFilter:processLuneControl( node, opt )
 
-   self:writeln( "_lune_control " )
+   self:write( "_lune_control " )
    do
       local _matchExp = node:get_pragma()
       if _matchExp[1] == LuneControl.Pragma.default__init[1] then
       
-         self:writeln( "default__init" )
+         self:write( "default__init" )
       elseif _matchExp[1] == LuneControl.Pragma.default__init_old[1] then
       
-         self:writeln( "default__init_old" )
+         self:write( "default__init_old" )
       elseif _matchExp[1] == LuneControl.Pragma.disable_mut_control[1] then
       
-         self:writeln( "disable_mut_control" )
+         self:write( "disable_mut_control" )
       elseif _matchExp[1] == LuneControl.Pragma.ignore_symbol_[1] then
       
-         self:writeln( "ignore_symbol_" )
+         self:write( "ignore_symbol_" )
       elseif _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
       
-         self:writeln( "load__lune_module" )
+         self:write( "load__lune_module" )
       elseif _matchExp[1] == LuneControl.Pragma.limit_conv_code[1] then
          local codeSet = _matchExp[2][1]
       
-         self:writeln( "limit_conv_code" )
+         self:write( "limit_conv_code" )
          for code, __val in pairs( codeSet ) do
             self:write( string.format( " %s", code) )
          end
          
       elseif _matchExp[1] == LuneControl.Pragma.use_async[1] then
       
-         self:writeln( "use_async" )
+         self:write( "use_async" )
       elseif _matchExp[1] == LuneControl.Pragma.run_async_pipe[1] then
       
-         self:writeln( "run_async_pipe" )
+         self:write( "run_async_pipe" )
       elseif _matchExp[1] == LuneControl.Pragma.default_async_func[1] then
       
-         self:writeln( "default_async_func" )
+         self:write( "default_async_func" )
       elseif _matchExp[1] == LuneControl.Pragma.default_async_all[1] then
       
-         self:writeln( "default_async_all" )
+         self:write( "default_async_all" )
       elseif _matchExp[1] == LuneControl.Pragma.default_async_this_class[1] then
       
-         self:writeln( "default_async_this_class" )
+         self:write( "default_async_this_class" )
       elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
       
-         self:writeln( "default_noasync_this_class" )
+         self:write( "default_noasync_this_class" )
       elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
       
-         self:writeln( "use_macro_special_var" )
+         self:write( "use_macro_special_var" )
       elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
       
-         self:writeln( "single_phase_ast" )
+         self:write( "single_phase_ast" )
       end
    end
    
@@ -351,18 +352,17 @@ function FormatterFilter:processAsyncLock( node, opt )
    do
       local _switchExp = node:get_lockKind()
       if _switchExp == Nodes.LockKind.AsyncLock then
-         self:writeln( "__asyncLock {" )
+         self:write( "__asyncLock " )
       elseif _switchExp == Nodes.LockKind.LuaGo then
-         self:writeln( "__luago {" )
+         self:write( "__luago " )
       elseif _switchExp == Nodes.LockKind.LuaLock then
-         self:writeln( "__luaLock {" )
+         self:write( "__luaLock " )
       elseif _switchExp == Nodes.LockKind.LuaDepend then
-         self:writeln( "__luaDepend {" )
+         self:write( "__luaDepend " )
       end
    end
    
    filter( node:get_block(), self, opt:nextOpt( node ) )
-   self:writeln( "}" )
 end
 
 function FormatterFilter:processBlockSub( node, opt )
@@ -379,7 +379,7 @@ function FormatterFilter:processBlockSub( node, opt )
    
    do
       local _switchExp = node:get_blockKind()
-      if _switchExp == Nodes.BlockKind.LetUnwrap or _switchExp == Nodes.BlockKind.Repeat then
+      if _switchExp == Nodes.BlockKind.LetUnwrap or _switchExp == Nodes.BlockKind.Repeat or _switchExp == Nodes.BlockKind.IfUnwrap or _switchExp == Nodes.BlockKind.When or _switchExp == Nodes.BlockKind.If then
          self:write( "}" )
       else 
          
@@ -494,7 +494,8 @@ function FormatterFilter:outputDeclClass( protoFlag, classType, gluePrefix, modu
    if classType:hasBase(  ) or #classType:get_interfaceList() > 0 then
       self:write( " extend " )
       if classType:hasBase(  ) then
-         self:write( classType:get_baseTypeInfo():get_display_stirng() )
+         
+         self:write( self:getFull( classType:get_baseTypeInfo(), true ) )
       end
       
       if #classType:get_interfaceList() > 0 then
@@ -524,7 +525,6 @@ end
 function FormatterFilter:processDeclClass( node, opt )
 
    self:outputDeclClass( false, node:get_expType(), node:get_gluePrefix(), node:get_moduleName() )
-   
    self:writeln( "" )
    self:writeln( "{" )
    self:pushIndent(  )
@@ -573,14 +573,14 @@ function FormatterFilter:processDeclMember( node, opt )
    
    if node:get_getterMode() == Ast.AccessMode.None then
       if node:get_setterMode() ~= Ast.AccessMode.None then
-         self:write( "{none," )
+         self:write( " {none," )
          self:write( Ast.accessMode2txt( node:get_setterMode() ) )
          self:write( "}" )
       end
       
    else
     
-      self:write( "{" )
+      self:write( " {" )
       self:write( Ast.accessMode2txt( node:get_getterMode() ) )
       if not node:get_getterMutable() then
          self:write( "&" )
@@ -603,19 +603,121 @@ function FormatterFilter:processDeclMember( node, opt )
 end
 
 
+
 function FormatterFilter:processExpMacroExp( node, opt )
 
-   
-   local stmtList = node:get_stmtList()
-   for __index, stmt in ipairs( stmtList ) do
-      filter( stmt, self, opt:nextOpt( node ) )
+   if self.forMacroFlag then
+      
+      local stmtList = node:get_stmtList()
+      for __index, stmt in ipairs( stmtList ) do
+         filter( stmt, self, opt:nextOpt( node ) )
+      end
+      
+   else
+    
+      
+      filter( node:get_macroRefNode(), self, opt:nextOpt( node ) )
+      self:write( "(" )
+      do
+         local expList = node:get_expList()
+         if expList ~= nil then
+            filter( expList, self, opt:nextOpt( node ) )
+         end
+      end
+      
+      self:write( ")" )
    end
    
 end
 
 
+function FormatterFilter:processExpMacroArgExp( node, opt )
+
+   filter( node:get_exp(), self, opt:nextOpt( node ) )
+end
+
+
 function FormatterFilter:processDeclMacro( node, opt )
 
+   if self.forMacroFlag then
+      return 
+   end
+   
+   
+   local funcType = node:get_expType()
+   if funcType:get_accessMode() == Ast.AccessMode.Pub then
+      self:write( "pub " )
+   end
+   
+   
+   self:write( "macro " )
+   
+   local declInfo = node:get_declInfo()
+   
+   self:write( declInfo:get_name().txt )
+   self:write( "(" )
+   
+   local argList = declInfo:get_argList()
+   if #argList ~= 0 then
+      self:write( " " )
+   end
+   
+   for index, arg in ipairs( argList ) do
+      if index > 1 then
+         self:write( ", " )
+      end
+      
+      filter( arg, self, opt:nextOpt( node ) )
+   end
+   
+   if #argList ~= 0 then
+      self:write( " " )
+   end
+   
+   self:write( ")" )
+   
+   if #funcType:get_retTypeInfoList() ~= 0 then
+      self:write( " : " )
+      for index, retType in ipairs( funcType:get_retTypeInfoList() ) do
+         if index > 1 then
+            self:write( ", " )
+         end
+         
+         self:write( retType:get_rawTxt() )
+      end
+      
+   end
+   
+   
+   self:writeln( "{" )
+   self:pushIndent(  )
+   
+   do
+      local stmtBlock = declInfo:get_stmtBlock()
+      if stmtBlock ~= nil then
+         filter( stmtBlock, self, opt:nextOpt( node ) )
+      end
+   end
+   
+   local prevLineNo = -1
+   for __index, token in ipairs( declInfo:get_tokenList() ) do
+      if prevLineNo ~= -1 then
+         if token.pos.lineNo ~= prevLineNo then
+            self:writeln( "" )
+         else
+          
+            self:write( " " )
+         end
+         
+      end
+      
+      self:write( token.txt )
+      prevLineNo = token.pos.lineNo
+   end
+   
+   self:writeln( "" )
+   self:popIndent(  )
+   self:writeln( "}" )
 end
 
 
@@ -647,23 +749,35 @@ function FormatterFilter:processIfUnwrap( node, opt )
 
    self:write( "if! " )
    if #node:get_varSymList() ~= 0 then
-      self:write( "let " )
-      for index, varSym in ipairs( node:get_varSymList() ) do
-         if index > 1 then
-            self:write( "," )
+      if #node:get_varSymList() == 1 and node:get_varSymList()[1]:get_name() == "_exp" then
+      else
+       
+         self:write( "let " )
+         for index, varSym in ipairs( node:get_varSymList() ) do
+            if index > 1 then
+               self:write( "," )
+            end
+            
+            if varSym:get_mutable() then
+               self:write( "mut " )
+            end
+            
+            self:write( varSym:get_name() )
          end
          
-         self:write( varSym:get_name() )
+         self:write( " = " )
       end
       
-      self:write( " = " )
    end
    
    filter( node:get_expList(), self, opt:nextOpt( node ) )
    filter( node:get_block(), self, opt:nextOpt( node ) )
    if node:get_nilBlock() then
-      self:write( "else " )
+      self:write( " else " )
       filter( _lune.unwrap( node:get_nilBlock()), self, opt:nextOpt( node ) )
+   else
+    
+      self:writeln( "" )
    end
    
 end
@@ -673,9 +787,15 @@ function FormatterFilter:processWhen( node, opt )
 
    
    self:write( "when!" )
-   local symTxt = " "
-   for __index, symPair in ipairs( node:get_symPairList() ) do
-      symTxt = string.format( "%s%s ", symTxt, symPair:get_src():get_name())
+   local symTxt = ""
+   for index, symPair in ipairs( node:get_symPairList() ) do
+      if index == 1 then
+         symTxt = symPair:get_src():get_name()
+      else
+       
+         symTxt = string.format( "%s, %s", symTxt, symPair:get_src():get_name())
+      end
+      
    end
    
    self:write( symTxt )
@@ -684,8 +804,10 @@ function FormatterFilter:processWhen( node, opt )
    do
       local _exp = node:get_elseBlock()
       if _exp ~= nil then
-         self:write( "else " )
+         self:write( " else " )
          filter( _exp, self, opt:nextOpt( node ) )
+      else
+         self:writeln( "" )
       end
    end
    
@@ -808,11 +930,6 @@ end
 
 
 
-function FormatterFilter:processDeclForm( node, opt )
-
-end
-
-
 function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
 
    local funcType = node:get_expType()
@@ -820,12 +937,22 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
       self:write( "pub " )
    end
    
+   if declInfo:get_overrideFlag() then
+      self:write( "override " )
+   end
+   
    if declInfo:get_staticFlag() and _lune.nilacc( declInfo:get_name(), "txt" ) == "__init" then
       
       self:write( "__init" )
    else
     
-      self:write( "fn " )
+      if node:get_kind() == Nodes.NodeKind.get_DeclForm() then
+         self:write( "form " )
+      else
+       
+         self:write( "fn " )
+      end
+      
       
       if opt:get_parent():get_kind() ~= Nodes.NodeKind.get_DeclClass() and funcType:get_kind() == Ast.TypeInfoKind.Method then
          local classType = funcType:get_parentInfo()
@@ -886,14 +1013,14 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
    end
    
    
-   if #funcType:get_retTypeInfoList() ~= 0 then
+   if #declInfo:get_retTypeNodeList() ~= 0 then
       self:write( " : " )
-      for index, retType in ipairs( funcType:get_retTypeInfoList() ) do
+      for index, retType in ipairs( declInfo:get_retTypeNodeList() ) do
          if index > 1 then
             self:write( ", " )
          end
          
-         self:write( retType:getTxt(  ) )
+         filter( retType, self, opt:nextOpt( node ) )
       end
       
    end
@@ -910,6 +1037,13 @@ function FormatterFilter:processDeclFuncInfo( node, declInfo, opt )
    end
    
 end
+
+
+function FormatterFilter:processDeclForm( node, opt )
+
+   self:processDeclFuncInfo( node, node:get_declInfo(), opt )
+end
+
 
 function FormatterFilter:processDeclFunc( node, opt )
 
@@ -984,6 +1118,7 @@ function FormatterFilter:processRefType( node, opt )
       end
    end
    
+   
    filter( node:get_name(), self, opt:nextOpt( node ) )
    
    if #node:get_itemNodeList() > 0 then
@@ -1023,26 +1158,39 @@ function FormatterFilter:processIf( node, opt )
          if _switchExp == Nodes.IfKind.If then
             self:write( "if " )
          elseif _switchExp == Nodes.IfKind.ElseIf then
-            self:write( "elseif " )
+            self:write( " elseif " )
          elseif _switchExp == Nodes.IfKind.Else then
-            self:write( "else " )
+            self:write( " else " )
          end
       end
       
-      filter( stmt:get_exp(), self, opt:nextOpt( node ) )
-      self:write( " " )
+      if stmt:get_kind() ~= Nodes.IfKind.Else then
+         filter( stmt:get_exp(), self, opt:nextOpt( node ) )
+         self:write( " " )
+      end
+      
       filter( stmt:get_block(), self, opt:nextOpt( node ) )
    end
    
+   self:writeln( "" )
 end
 
 
 function FormatterFilter:processSwitch( node, opt )
 
+   if node:get_is_() then
+      self:write( "_switch " )
+   else
+    
+      self:write( "switch " )
+   end
    
    filter( node:get_exp(), self, opt:nextOpt( node ) )
+   self:writeln( " {" )
+   self:pushIndent(  )
    local caseList = node:get_caseList()
    for __index, caseInfo in ipairs( caseList ) do
+      self:write( "case " )
       filter( caseInfo:get_expList(), self, opt:nextOpt( node ) )
       filter( caseInfo:get_block(), self, opt:nextOpt( node ) )
    end
@@ -1050,29 +1198,58 @@ function FormatterFilter:processSwitch( node, opt )
    do
       local _exp = node:get_default()
       if _exp ~= nil then
+         self:write( "default " )
          filter( _exp, self, opt:nextOpt( node ) )
       end
    end
    
+   self:popIndent(  )
+   self:writeln( "}" )
 end
 
 
 function FormatterFilter:processMatch( node, opt )
 
+   if node:get_is_() then
+      self:write( "_match " )
+   else
+    
+      self:write( "match " )
+   end
    
    filter( node:get_val(), self, opt:nextOpt( node ) )
+   self:writeln( " {" )
+   self:pushIndent(  )
    local caseList = node:get_caseList()
    for __index, caseInfo in ipairs( caseList ) do
+      self:write( string.format( "case .%s", caseInfo:get_valInfo():get_name()) )
+      if #caseInfo:get_valParamNameList() > 0 then
+         self:write( "(" )
+         for index, val in ipairs( caseInfo:get_valParamNameList() ) do
+            self:write( val:get_name() )
+            if index ~= #caseInfo:get_valParamNameList() then
+               self:write( ", " )
+            end
+            
+         end
+         
+         self:write( ")" )
+      end
+      
+      self:write( " " )
       filter( caseInfo:get_block(), self, opt:nextOpt( node ) )
    end
    
    do
       local _exp = node:get_defaultBlock()
       if _exp ~= nil then
+         self:write( "default " )
          filter( _exp, self, opt:nextOpt( node ) )
       end
    end
    
+   self:popIndent(  )
+   self:writeln( "}" )
 end
 
 
@@ -1147,7 +1324,7 @@ function FormatterFilter:processForeach( node, opt )
    
    self:write( " in " )
    filter( node:get_exp(), self, opt:nextOpt( node ) )
-   self:writeln( "" )
+   self:write( " " )
    filter( node:get_block(), self, opt:nextOpt( node ) )
 end
 

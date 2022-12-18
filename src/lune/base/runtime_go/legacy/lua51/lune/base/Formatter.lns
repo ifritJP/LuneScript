@@ -44,19 +44,25 @@ pub class Opt {
 
 class FormatterFilter extend Nodes.Filter<Opt> {
    let mut stream:Util.SimpleSourceOStream;
+   let forMacroFlag:bool;
 
    pub fn __init( moduleTypeInfo:&Ast.TypeInfo,
-                  moduleInfoManager:&Ast.ModuleInfoManager!, stream:oStream )
+                  moduleInfoManager:&Ast.ModuleInfoManager!, stream:oStream,
+                  forMacroFlag:bool )
    {
       super( true, moduleTypeInfo, moduleInfoManager );
       self.stream = new Util.SimpleSourceOStream( stream, nil, 3 );
+      self.forMacroFlag = forMacroFlag;
    }
 
    advertise stream;
 }
 
-pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo, stream:oStream ): Nodes.Filter<Opt> {
-   return new FormatterFilter(moduleTypeInfo, moduleTypeInfo.$scope, stream );
+pub fn createFilter( moduleTypeInfo:&Ast.TypeInfo,
+                     stream:oStream, forMacroFlag:bool ): Nodes.Filter<Opt>
+{
+   return new FormatterFilter(
+      moduleTypeInfo, moduleTypeInfo.$scope, stream, forMacroFlag );
 }
 
 pub fn FormatterFilter.outputHeadComment( node:&Nodes.Node ) mut {
@@ -119,52 +125,52 @@ pub override fn FormatterFilter.processSubfile(
 pub override fn FormatterFilter.processLuneControl(
    node: &Nodes.LuneControlNode, opt: Opt ) mut
 {
-   self.writeln( "_lune_control " );
+   self.write( "_lune_control " );
    _match node.$pragma {
       case .default__init {
-         self.writeln( "default__init" );
+         self.write( "default__init" );
       }
       case .default__init_old {
-         self.writeln( "default__init_old" );
+         self.write( "default__init_old" );
       }
       case .disable_mut_control {
-         self.writeln( "disable_mut_control" );
+         self.write( "disable_mut_control" );
       }
       case .ignore_symbol_ {
-         self.writeln( "ignore_symbol_" );
+         self.write( "ignore_symbol_" );
       }
       case .load__lune_module {
-         self.writeln( "load__lune_module" );
+         self.write( "load__lune_module" );
       }
       case .limit_conv_code( codeSet ) {
-         self.writeln( "limit_conv_code" );
+         self.write( "limit_conv_code" );
          foreach code in codeSet {
             self.write( " %s" (code) );
          }
       }
       case .use_async {
-         self.writeln( "use_async" );
+         self.write( "use_async" );
       }
       case .run_async_pipe {
-         self.writeln( "run_async_pipe" );
+         self.write( "run_async_pipe" );
       }
       case .default_async_func {
-         self.writeln( "default_async_func" );
+         self.write( "default_async_func" );
       }
       case .default_async_all {
-         self.writeln( "default_async_all" );
+         self.write( "default_async_all" );
       }
       case .default_async_this_class {
-         self.writeln( "default_async_this_class" );
+         self.write( "default_async_this_class" );
       }
       case .default_noasync_this_class {
-         self.writeln( "default_noasync_this_class" );
+         self.write( "default_noasync_this_class" );
       }
       case .use_macro_special_var {
-         self.writeln( "use_macro_special_var" );
+         self.write( "use_macro_special_var" );
       }
       case .single_phase_ast {
-         self.writeln( "single_phase_ast" );
+         self.write( "single_phase_ast" );
       }
    }
    self.writeln( ";" );
@@ -184,20 +190,19 @@ pub override fn FormatterFilter.processAsyncLock(
 {
    _switch node.$lockKind {
       case .AsyncLock {
-         self.writeln( "__asyncLock {" );
+         self.write( "__asyncLock " );
       }
       case .LuaGo {
-         self.writeln( "__luago {" );
+         self.write( "__luago " );
       }
       case .LuaLock {
-         self.writeln( "__luaLock {" );
+         self.write( "__luaLock " );
       }
       case .LuaDepend {
-         self.writeln( "__luaDepend {" );
+         self.write( "__luaDepend " );
       }
    }
    filter( node.$block, self, opt.nextOpt( node ) );
-   self.writeln( "}" );
 }
 pub override fn FormatterFilter.processBlockSub(
    node: &Nodes.BlockNode, opt:Opt ) mut
@@ -212,7 +217,7 @@ pub override fn FormatterFilter.processBlockSub(
    self.popIndent();
 
    switch node.$blockKind {
-      case .LetUnwrap, .Repeat {
+      case .LetUnwrap, .Repeat, .IfUnwrap, .When, .If {
          self.write( "}" );
       }
       default {
@@ -314,7 +319,8 @@ fn FormatterFilter.outputDeclClass(
    if classType.hasBase() or #classType.$interfaceList > 0 {
       self.write( " extend " );
       if classType.hasBase() {
-         self.write( classType.$baseTypeInfo.$display_stirng );
+         //self.write( classType.$baseTypeInfo.$display_stirng );
+         self.write( self.getFull(classType.$baseTypeInfo, true ) );
       }
       if #classType.$interfaceList > 0 {
          self.write( "(" );
@@ -340,61 +346,6 @@ pub override fn FormatterFilter.processDeclClass(
 {
    self.outputDeclClass(
       false, node.$expType, node.$gluePrefix, node.$moduleName );
-   // if node.$accessMode == .Pub {
-   //    self.write( "pub " );
-   // }
-   // switch node.$expType.$kind {
-   //    case .Class {
-   //       if node.$moduleName {
-   //          self.write( "module " );
-   //       }
-   //       else {
-   //          self.write( "class " );
-   //       }
-   //    }
-   //    case .IF {
-   //       self.write( "interface " );
-   //    }
-   // }
-   // self.write( node.$name.txt );
-
-   // let classType = node.$expType;
-   // if #classType.$itemTypeInfoList > 0 {
-   //    self.write( "<" );
-   //    foreach genType, index in classType.$itemTypeInfoList {
-   //       if index > 1 {
-   //          self.write( ",");
-   //       }
-   //       self.write( genType.getTxt( ## ) );
-   //    }
-   //    self.write( ">" );
-   // }
-
-   // if! let moduleName = node.$moduleName {
-   //    self.write( " require " );
-   //    self.write( "%s " ( moduleName.txt ) );
-   //    if! let gluePrefix = node.$gluePrefix {
-   //       self.write( "glue " );
-   //       self.write( gluePrefix );
-   //    }
-   // }
-
-   // if classType.hasBase() or #classType.$interfaceList > 0 {
-   //    self.write( " extend " );
-   //    if classType.hasBase() {
-   //       self.write( classType.$baseTypeInfo.getTxt(##) );
-   //    }
-   //    if #classType.$interfaceList > 0 {
-   //       self.write( "(" );
-   //       foreach ifType, index in classType.$interfaceList {
-   //          if index > 1 {
-   //             self.write( "," );
-   //          }
-   //          self.write( ifType.getTxt(##) );
-   //       }
-   //       self.write( ")" );
-   //    }
-   // }
    self.writeln( "" );
    self.writeln( "{" );
    self.pushIndent( ## );
@@ -438,16 +389,15 @@ pub override fn FormatterFilter.processDeclMember(
 
    filter( node.$refType, self, opt.nextOpt( node ) );
 
-
    if node.$getterMode == .None {
       if node.$setterMode ~= .None {
-         self.write( "{none," );
+         self.write( " {none," );
          self.write( Ast.accessMode2txt( node.$setterMode ) );
          self.write( "}" );
       }
    }
    else {
-      self.write( "{" );
+      self.write( " {" );
       self.write( Ast.accessMode2txt( node.$getterMode ) );
       if not node.$getterMutable {
          self.write( "&" );
@@ -468,16 +418,94 @@ pub override fn FormatterFilter.processDeclMember(
 pub override fn FormatterFilter.processExpMacroExp(
    node: &Nodes.ExpMacroExpNode, opt:Opt ) mut
 {
-   
-   let stmtList = node.$stmtList;
-   foreach stmt in stmtList {
-      filter( stmt, self,  opt.nextOpt( node ) );
+   if self.forMacroFlag {
+      // マクロを展開する
+      let stmtList = node.$stmtList;
+      foreach stmt in stmtList {
+         filter( stmt, self, opt.nextOpt( node ) );
+      }
+   } else {
+      // マクロを展開しない
+      filter( node.$macroRefNode, self, opt.nextOpt( node ) );
+      self.write( "(" );
+      if! let expList = node.$expList {
+         filter( expList, self, opt.nextOpt( node ) );
+      }
+      self.write( ")" );
    }
 };
+pub override fn FormatterFilter.processExpMacroArgExp(
+   node: &Nodes.ExpMacroArgExpNode, opt:Opt ) mut
+{
+   filter( node.$exp, self, opt.nextOpt( node ));
+}
+
+
 pub override fn FormatterFilter.processDeclMacro(
    node: &Nodes.DeclMacroNode, opt:Opt ) mut
 {
+   if self.forMacroFlag {
+      return;
+   }
    
+   let funcType = node.$expType;
+   if funcType.$accessMode == .Pub {
+      self.write( "pub " );
+   }
+
+   self.write( "macro " );
+
+   let declInfo = node.$declInfo;
+   
+   self.write( declInfo.$name.txt );
+   self.write( "(" );
+   
+   let argList = declInfo.$argList;
+   if #argList ~= 0 {
+      self.write( " " );
+   }
+   foreach arg, index in argList {
+      if index > 1 {
+         self.write( ", " );
+      }
+      filter( arg, self, opt.nextOpt( node ) );
+   }
+   if #argList ~= 0 {
+      self.write( " " );
+   }
+   self.write( ")" );
+      
+   if #funcType.$retTypeInfoList ~= 0 {
+      self.write( " : " );
+      foreach retType, index in funcType.$retTypeInfoList {
+         if index > 1 {
+            self.write( ", " );
+         }
+         self.write( retType.$rawTxt );
+      }
+   }
+
+   self.writeln( "{" );
+   self.pushIndent( ## );
+
+   if! let stmtBlock = declInfo.$stmtBlock {
+      filter( stmtBlock, self, opt.nextOpt( node ) );
+   }
+   let mut prevLineNo = -1;
+   foreach token in declInfo.$tokenList {
+      if prevLineNo ~= -1 {
+         if token.pos.lineNo ~= prevLineNo {
+            self.writeln( "" );
+         } else {
+            self.write( " " );
+         }
+      }
+      self.write( token.txt );
+      prevLineNo = token.pos.lineNo;
+   }
+   self.writeln( "" );
+   self.popIndent();
+   self.writeln( "}" );
 };
 pub override fn FormatterFilter.processExpMacroStat(
    node: &Nodes.ExpMacroStatNode, opt:Opt ) mut
@@ -506,20 +534,29 @@ pub override fn FormatterFilter.processIfUnwrap(
 {
    self.write( "if! " );
    if #node.$varSymList ~= 0 {
-      self.write( "let " );
-      foreach varSym, index in node.$varSymList {
-         if index > 1 {
-            self.write( "," );
+      if #node.$varSymList == 1 and node.$varSymList[1].$name == "_exp" {
+         // _exp は自動で入るので省略
+      } else {
+         self.write( "let " );
+         foreach varSym, index in node.$varSymList {
+            if index > 1 {
+               self.write( "," );
+            }
+            if varSym.$mutable {
+               self.write( "mut " );
+            }
+            self.write( varSym.$name );
          }
-         self.write( varSym.$name );
-                           }
-      self.write( " = " );
+         self.write( " = " );
+      }
    }
    filter( node.$expList, self, opt.nextOpt( node ) );
    filter( node.$block, self, opt.nextOpt( node ) );
    if node.$nilBlock {
-      self.write( "else " );
+      self.write( " else " );
       filter( unwrap node.$nilBlock, self, opt.nextOpt( node ) );
+   } else {
+      self.writeln( "" );
    }
 }
 
@@ -528,16 +565,22 @@ pub override fn FormatterFilter.processWhen(
 {
 
    self.write( "when!" );
-   let mut symTxt = " ";
-   foreach symPair in node.$symPairList {
-      symTxt = "%s%s " (symTxt, symPair.$src.$name );
+   let mut symTxt = "";
+   foreach symPair, index in node.$symPairList {
+      if index == 1 {
+         symTxt = symPair.$src.$name;
+      } else {
+         symTxt = "%s, %s" (symTxt, symPair.$src.$name );
+      }
    }
    self.write( symTxt );
    
    filter( node.$block, self, opt.nextOpt( node ) );
    if! node.$elseBlock {
-      self.write( "else " );
+      self.write( " else " );
       filter( _exp, self, opt.nextOpt( node ) );
+   } else {
+      self.writeln( "" );
    }
 }
 
@@ -624,12 +667,6 @@ pub override fn FormatterFilter.processExpSubDDD(
    
 };
 
-
-pub override fn FormatterFilter.processDeclForm( node: &Nodes.DeclFormNode, opt:Opt ) mut
-{
-   
-}
-
 fn FormatterFilter.processDeclFuncInfo(
    node: &Nodes.Node, declInfo: &Nodes.DeclFuncInfo, opt:Opt ) mut
 {
@@ -637,12 +674,19 @@ fn FormatterFilter.processDeclFuncInfo(
    if funcType.$accessMode == .Pub {
       self.write( "pub " );
    }
+   if declInfo.$overrideFlag {
+      self.write( "override " );
+   }
    if declInfo.$staticFlag and declInfo.$name$.$txt == "__init" {
       // __init block 
       self.write( "__init" );
    }
    else {
-      self.write( "fn " );
+      if node.$kind == Nodes.NodeKind.$DeclForm {
+         self.write( "form " );
+      } else {
+         self.write( "fn " );
+      }
 
       if opt.$parent.$kind ~= Nodes.NodeKind.$DeclClass and funcType.$kind == .Method
       {
@@ -689,16 +733,26 @@ fn FormatterFilter.processDeclFuncInfo(
       }
    }
 
-   if #funcType.$retTypeInfoList ~= 0 {
+   // if #funcType.$retTypeInfoList ~= 0 {
+   //    self.write( " : " );
+   //    foreach retType, index in funcType.$retTypeInfoList {
+   //       if index > 1 {
+   //          self.write( ", " );
+   //       }
+   //       self.write( retType.getTxt(##) );
+   //    }
+   // }
+
+   if #declInfo.$retTypeNodeList ~= 0 {
       self.write( " : " );
-      foreach retType, index in funcType.$retTypeInfoList {
+      foreach retType, index in declInfo.$retTypeNodeList {
          if index > 1 {
             self.write( ", " );
          }
-         self.write( retType.getTxt(##) );
+         filter( retType, self, opt.nextOpt( node ) );
       }
    }
-
+   
    if! declInfo.$body {
       self.write( " " );
       filter( _exp, self, opt.nextOpt( node ) );
@@ -707,6 +761,13 @@ fn FormatterFilter.processDeclFuncInfo(
       self.writeln( ";" );
    }
 }
+
+pub override fn FormatterFilter.processDeclForm( node: &Nodes.DeclFormNode, opt:Opt ) mut
+{
+   self.processDeclFuncInfo( node, node.$declInfo, opt );
+}
+
+
 pub override fn FormatterFilter.processDeclFunc(
    node: &Nodes.DeclFuncNode, opt:Opt ) mut
 {
@@ -763,6 +824,10 @@ pub override fn FormatterFilter.processRefType(
          }
       }
    }
+
+   // self.write( node.$name.$expType.getParentFullName(
+   //    self.$typeNameCtrl, self.$moduleInfoManager, true ) );
+
    filter( node.$name, self, opt.nextOpt( node ) );
 
    // let expType = node.$expType.$nonnilableType;
@@ -811,43 +876,77 @@ pub override fn FormatterFilter.processIf(
             self.write( "if " );
          }
          case .ElseIf {
-            self.write( "elseif " );
+            self.write( " elseif " );
          }
          case .Else {
-            self.write( "else " );
+            self.write( " else " );
          }
       }
-      filter( stmt.$exp, self, opt.nextOpt( node ) );
-      self.write( " " );
+      if stmt.$kind ~= .Else {
+         filter( stmt.$exp, self, opt.nextOpt( node ) );
+         self.write( " " );
+      }
       filter( stmt.$block, self, opt.nextOpt( node ) );
    }
+   self.writeln( "" );
 };
 pub override fn FormatterFilter.processSwitch(
    node: &Nodes.SwitchNode, opt:Opt ) mut
 {
-   
+   if node.$is_ {
+      self.write( "_switch " );
+   } else {
+      self.write( "switch " );
+   }
    filter( node.$exp, self, opt.nextOpt( node ) );
+   self.writeln( " {" );
+   self.pushIndent( ## );
    let caseList = node.$caseList;
    foreach caseInfo in caseList {
+      self.write( "case " );
       filter( caseInfo.$expList, self, opt.nextOpt( node ) );
       filter( caseInfo.$block, self, opt.nextOpt( node ) );
    }
    if! node.$default {
+      self.write( "default " );
       filter( _exp, self, opt.nextOpt( node ) );
    }
+   self.popIndent();
+   self.writeln( "}" );
 };
 pub override fn FormatterFilter.processMatch(
    node: &Nodes.MatchNode, opt:Opt ) mut
 {
-   
+   if node.$is_ {
+      self.write( "_match " );
+   } else {
+      self.write( "match " );
+   }
    filter( node.$val, self, opt.nextOpt( node ) );
+   self.writeln( " {" );
+   self.pushIndent( ## );
    let caseList = node.$caseList;
    foreach caseInfo in caseList {
+      self.write( "case .%s" (caseInfo.$valInfo.$name) );
+      if #caseInfo.$valParamNameList > 0 {
+         self.write( "(" );
+         foreach val, index in caseInfo.$valParamNameList {
+            self.write( val.$name );
+            if index ~= #caseInfo.$valParamNameList {
+               self.write( ", " );
+            }
+         }
+         self.write( ")" );
+      } 
+      self.write( " " );
       filter( caseInfo.$block, self, opt.nextOpt( node ) );
    }
    if! node.$defaultBlock {
+      self.write( "default " );
       filter( _exp, self, opt.nextOpt( node ) );
    }
+   self.popIndent();
+   self.writeln( "}" );
 };
 pub override fn FormatterFilter.processWhile(
    node: &Nodes.WhileNode, opt:Opt ) mut
@@ -907,7 +1006,7 @@ pub override fn FormatterFilter.processForeach(
    }
    self.write( " in " );
    filter( node.$exp, self, opt.nextOpt( node ) );
-   self.writeln( "" );
+   self.write( " " );
    filter( node.$block, self, opt.nextOpt( node ) );
 };
 pub override fn FormatterFilter.processForsort(

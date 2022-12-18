@@ -1049,6 +1049,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                        argVal = toLuaval( val )
                                     end
                                     
+                                    
                                     if argVal ~= nil then
                                        macroArgValMap[declArgNode:get_name()] = argVal
                                     end
@@ -1179,6 +1180,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                      
                                        argVal = toLuaval( val )
                                     end
+                                    
                                     
                                     if argVal ~= nil then
                                        macroArgValMap[declArgNode:get_name()] = argVal
@@ -1880,7 +1882,7 @@ local function nodeToCodeTxt( node, moduleTypeInfo )
    local code
    
    local memStream = Util.memStream._new()
-   local formatter = Formatter.createFilter( moduleTypeInfo, memStream )
+   local formatter = Formatter.createFilter( moduleTypeInfo, memStream, true )
    
    node:processFilter( formatter, Formatter.Opt._new(node) )
    

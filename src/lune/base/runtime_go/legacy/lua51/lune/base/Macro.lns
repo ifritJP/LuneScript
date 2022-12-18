@@ -1324,11 +1324,18 @@ pub fn MacroCtrl.isInExpandMode(): bool {
 }
 
 
+/**
+マクロ用にノードを展開する。
+
+@param node 展開する Node
+@param moduleTypeInfo 現在のモジュールタイプ
+@return str 展開後の Lns コード
+*/
 pub fn nodeToCodeTxt(node:&Nodes.Node, moduleTypeInfo:&Ast.TypeInfo ) :str
 {
    let code;
    let mut memStream = new Util.memStream();
-   let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream );
+   let mut formatter = Formatter.createFilter( moduleTypeInfo, memStream, true );
 
    node.processFilter( formatter, new Formatter.Opt( node ) );
    

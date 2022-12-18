@@ -195,6 +195,7 @@ fn TransUnit.analyzeExpList(
       let mut exp;
       
       if self.macroCtrl.$analyzeInfo.$mode == .AnalyzeArg {
+         // マクロ用の引数解析
          switch expectType {
             case Ast.builtinTypeExp, Ast.builtinTypeMultiExp {
                self.macroCtrl.switchMacroMode();
@@ -1141,9 +1142,10 @@ fn TransUnit.evalMacroOp(
 
 
 fn TransUnit.evalMacro(
-   firstToken: &Parser.Token,
-   macroTypeInfo: &Ast.TypeInfo, expList: &Nodes.ExpListNode! ) mut : Nodes.ExpMacroExpNode
+   firstToken: &Parser.Token, macroRefNode: Nodes.Node,
+   expList: &Nodes.ExpListNode! ) mut : Nodes.ExpMacroExpNode
 {
+   let macroTypeInfo = macroRefNode.$expType.$nonnilableType;
    let mut stmtList:List<&Nodes.Node> = [];
    
    self.evalMacroOp( firstToken, macroTypeInfo, expList,
@@ -1205,7 +1207,7 @@ fn TransUnit.evalMacro(
    return Nodes.ExpMacroExpNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), expTypeList,
-      macroTypeInfo, expList, stmtList );
+      macroRefNode, macroTypeInfo, expList, stmtList );
 }
 
 /**
@@ -1824,7 +1826,7 @@ fn TransUnit.analyzeExpCall(
       if funcTypeInfo == self.builtinFunc.__lns_sync__createPipe {
          exp = self.processCreatePipe( firstToken, funcExp, argList );
       } else {
-         exp = self.evalMacro( firstToken, funcTypeInfo, argList );
+         exp = self.evalMacro( firstToken, funcExp, argList );
       }
    }
    else {

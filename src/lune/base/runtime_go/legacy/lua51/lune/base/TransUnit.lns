@@ -2233,7 +2233,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       nsInfo.getNextStmtId( .Switch ), exp, caseList,
-      defaultBlock, caseKind, failSafeDefault );
+      defaultBlock, caseKind, failSafeDefault, firstToken.txt == "_switch" );
 }
 
 
@@ -2358,7 +2358,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       nsInfo.getNextStmtId( .Match ), exp, .Alge( algeTypeInfo ),
-      caseList, defaultBlock, caseKind, failSafeDefault );
+      caseList, defaultBlock, caseKind, failSafeDefault, firstToken.txt == "_match" );
 }
 
 

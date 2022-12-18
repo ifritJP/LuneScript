@@ -1264,7 +1264,7 @@ pub fn Front.format( parserSrc:&Types.ParserSrc, mod:str,
       nil, .Compile ## );
    ast.$node.processFilter(
       Formatter.createFilter(
-         ast.$exportInfo.$moduleTypeInfo, io.stdout ),
+         ast.$exportInfo.$moduleTypeInfo, io.stdout, false ),
       new Formatter.Opt( ast.$node ) );
 }
 

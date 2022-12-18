@@ -1183,7 +1183,9 @@ _declNodeClass( "Switch", Node, false, false, true,
                   // case で全ての条件が網羅されているかどうか
                   { "caseKind": "CaseKind"},
                   // default ブロックがある場合、 default_ で宣言している。
-                  { "failSafeDefault": "bool" }
+                  { "failSafeDefault": "bool" },
+                  // _match かどうか
+                  { "is_": "bool" }
                 ]
 );
 
@@ -1581,7 +1583,8 @@ pub override fn ExpParenNode.getSymbolInfo(): &List<&Ast.SymbolInfo> {
 
 /** マクロ展開後のノード */
 _declNodeClass( "ExpMacroExp", Node, false, nil, true,
-                [ { "macroType": "&Ast.TypeInfo" },
+                [ { "macroRefNode": "&Node" },
+                  { "macroType": "&Ast.TypeInfo" },
                   { "expList": "&ExpListNode!" },
                   { "stmtList": "List<&Node>" } ]
 );
@@ -2177,7 +2180,9 @@ _declNodeClass( "Match", Node, false, false, true,
                   // case で全ての条件が網羅されているかどうか
                   { "caseKind": "CaseKind"},
                   // default ブロックがある場合、 default_ で宣言している。
-                  { "failSafeDefault": "bool" }
+                  { "failSafeDefault": "bool" },
+                  // _match かどうか
+                  { "is_": "bool" }
                 ]              
 );
 
