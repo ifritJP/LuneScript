@@ -3780,7 +3780,7 @@ fn TransUnit.analyzeExpOp2(
 fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMacroStatNode {
    let mut expStrList: List<&Nodes.Node> = [];
 
-   self.checkNextToken( "{" );
+   //self.checkNextToken( "{" );
 
    let mut braceCount = 0;
    let mut prevToken = firstToken;
@@ -4222,7 +4222,7 @@ fn TransUnit.analyzeExp(
 
    fn processOp1( token:&Parser.Token ): Nodes.Node, bool {
       // 単項演算
-      if token.txt == "`" {
+      if token.txt == "`{" {
          return self.analyzeExpMacroStat( token ), false;
       }  
 
@@ -4299,7 +4299,7 @@ fn TransUnit.analyzeExp(
             }  
             typeInfo = Ast.builtinTypeString;
          }  
-         case "`" {
+         case "`{" {
             typeInfo = Ast.builtinTypeNone;
          }  
          case "~" {

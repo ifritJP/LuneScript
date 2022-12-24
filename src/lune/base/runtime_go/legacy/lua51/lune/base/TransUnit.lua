@@ -1627,7 +1627,7 @@ local function setupOpLevel(  )
    regOpLevel( 2, {".."} )
    regOpLevel( 2, {"+", "-"} )
    regOpLevel( 2, {"*", "/", "//", "%"} )
-   regOpLevel( 1, {"`", ",,", ",,,", ",,,,"} )
+   regOpLevel( 1, {"`{", ",,", ",,,", ",,,,"} )
    regOpLevel( 1, {"not", "#", "-", "~"} )
    regOpLevel( 1, {"^"} )
    
@@ -2316,7 +2316,7 @@ function TransUnit:skipBlock( recordToken )
       
       do
          local _switchExp = token.txt
-         if _switchExp == "{" then
+         if _switchExp == "{" or _switchExp == "`{" then
             blockDepth = blockDepth + 1
          elseif _switchExp == "}" then
             blockDepth = blockDepth - 1
@@ -11014,8 +11014,6 @@ function TransUnit:analyzeExpMacroStat( firstToken )
 
    local expStrList = {}
    
-   self:checkNextToken( "{" )
-   
    local braceCount = 0
    local prevToken = firstToken
    
@@ -11463,7 +11461,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
    local function processOp1( token )
    
       
-      if token.txt == "`" then
+      if token.txt == "`{" then
          return self:analyzeExpMacroStat( token ), false
       end
       
@@ -11524,7 +11522,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, prevOpLev
             end
             
             typeInfo = Ast.builtinTypeString
-         elseif _switchExp == "`" then
+         elseif _switchExp == "`{" then
             typeInfo = Ast.builtinTypeNone
          elseif _switchExp == "~" then
             if not expType:equals( self.processInfo, Ast.builtinTypeInt ) then

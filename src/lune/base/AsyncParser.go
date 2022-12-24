@@ -80,12 +80,12 @@ func AsyncParser_convExp0_3026(arg1 []LnsAny) LnsAny {
 func AsyncParser_convExp0_3171(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 662
-func AsyncParser_convExp0_3289(arg1 []LnsAny) (string, LnsInt) {
+// for 660
+func AsyncParser_convExp0_3290(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // for 698
-func AsyncParser_convExp0_3541(arg1 []LnsAny) (string, LnsInt) {
+func AsyncParser_convExp0_3546(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // 59: decl @lune.@base.@AsyncParser.isLuaKeyword
@@ -626,15 +626,15 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
             } else if findChar == 96{
                 if Lns_isCondTrue( (_env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( nextChar == findChar) &&
-                    _env.SetStackVal( LnsInt(rawLine[index + 2-1]) == 96) ).(bool))){
+                    _env.SetStackVal( AsyncParser_getChar(_env, index + 2) == 96) ).(bool))){
                     var txt string
                     var nextIndex LnsInt
                     txt,nextIndex = AsyncParser_multiComment(_env, index + 3, "```")
                     self.FP.addVal(_env, list, Types_TokenKind__Str, "```" + txt, index)
                     searchIndex = nextIndex
-                } else { 
-                    self.FP.addVal(_env, list, Types_TokenKind__Ope, "`", index)
-                    searchIndex = index + 1
+                } else if nextChar == 123{
+                    self.FP.addVal(_env, list, Types_TokenKind__Ope, "`{", index)
+                    searchIndex = index + 2
                 }
             } else if findChar == 63{
                 var codeChar string
@@ -920,7 +920,7 @@ func Lns_AsyncParser_init(_env *LnsEnv) {
     AsyncParser_luaKeywordSet = NewLnsSet([]LnsAny{"if", "else", "elseif", "while", "for", "in", "return", "break", "nil", "true", "false", "{", "}", "do", "require", "function", "then", "end", "repeat", "until", "goto", "local"})
     AsyncParser_quotedCharSet = NewLnsSet([]LnsAny{"a", "b", "f", "n", "r", "t", "v", "\\", "\"", "'"})
     AsyncParser_op2Set = NewLnsSet([]LnsAny{"+", "-", "*", "/", "^", "%", "&", "~", "|", "|>>", "|<<", "..", "<", "<=", ">", ">=", "==", "~=", "and", "or", "@", "@@", "@@@", "="})
-    AsyncParser_op1Set = NewLnsSet([]LnsAny{"-", "not", "#", "~", "`", ",,", ",,,", ",,,,"})
+    AsyncParser_op1Set = NewLnsSet([]LnsAny{"-", "not", "#", "~", "`{", ",,", ",,,", ",,,,"})
     AsyncParser_defaultPipeSize = 100
 }
 func init() {

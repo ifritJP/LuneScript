@@ -1255,7 +1255,7 @@ fn setupOpLevel() : &Map<str,int>, &Map<str,int> {
    regOpLevel( 2, [@ ".." ] );
    regOpLevel( 2, [@ "+", "-" ] );
    regOpLevel( 2, [@ "*", "/", "//", "%" ] );
-   regOpLevel( 1, [@ "`", ",,", ",,,", ",,,," ] );
+   regOpLevel( 1, [@ "`{", ",,", ",,,", ",,,," ] );
    regOpLevel( 1, [@ "not", "#", "-", "~" ] );
    regOpLevel( 1, [@ "^" ] );
 
@@ -1912,7 +1912,7 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
          self.error( "EOF" );
       }
       switch token.txt {
-         case "{" {
+         case "{", "`{" {
             blockDepth = blockDepth + 1;
          }
          case "}" {

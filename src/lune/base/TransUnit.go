@@ -279,25 +279,25 @@ type TransUnit_checkImplicitCastCallback_10_ func (_env *LnsEnv, arg1 *Ast_TypeI
 type TransUnit_ReadyExportInfo func (_env *LnsEnv, arg1 *FrontInterface_ExportInfo)
 type TransUnit_checkCompForm_31_ func (_env *LnsEnv, arg1 *Writer_JSON,arg2 string)
 // for 689: ExpCast
-func conv2Form0_18217( src func (_env *LnsEnv, arg1 *Async_RunnerBase)) func (_env *LnsEnv, arg1 *Async_RunnerBase){
+func conv2Form0_18208( src func (_env *LnsEnv, arg1 *Async_RunnerBase)) func (_env *LnsEnv, arg1 *Async_RunnerBase){
     return func (_env *LnsEnv, arg1 *Async_RunnerBase) {
         src(_env, arg1)
         return 
     }
 }
 // for 702: ExpCast
-func conv2Form0_18241( src func (_env *LnsEnv, arg1 *Async_RunnerBase)) func (_env *LnsEnv, arg1 *Async_RunnerBase){
+func conv2Form0_18232( src func (_env *LnsEnv, arg1 *Async_RunnerBase)) func (_env *LnsEnv, arg1 *Async_RunnerBase){
     return func (_env *LnsEnv, arg1 *Async_RunnerBase) {
         src(_env, arg1)
         return 
     }
 }
 // for 2160
-func TransUnit_convExp1_6749(arg1 []LnsAny) LnsAny {
+func TransUnit_convExp1_6751(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 2373
-func TransUnit_convExp1_7891(arg1 []LnsAny) LnsAny {
+func TransUnit_convExp1_7893(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 458
@@ -329,11 +329,11 @@ func TransUnit_convExp0_8914(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 57
-func TransUnit_convExp0_14358(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
+func TransUnit_convExp0_14349(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 )
 }
 // for 850
-func TransUnit_convExp0_19093(arg1 []LnsAny) (LnsAny, LnsInt) {
+func TransUnit_convExp0_19084(arg1 []LnsAny) (LnsAny, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // for 343
@@ -449,7 +449,7 @@ func TransUnit_convExp0_9302(arg1 []LnsAny) (*Nodes_Node, *Nodes_Node) {
     return Lns_getFromMulti( arg1, 0 ).(*Nodes_Node), Lns_getFromMulti( arg1, 1 ).(*Nodes_Node)
 }
 // for 4208
-func TransUnit_convExp0_12216(arg1 []LnsAny) *Ast_TypeInfo {
+func TransUnit_convExp0_12207(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo).Ast_TypeInfo
 }
 // for 841
@@ -461,39 +461,39 @@ func TransUnit_convExp0_1984(arg1 []LnsAny) (*LnsMap, *LnsMap) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsMap), Lns_getFromMulti( arg1, 1 ).(*LnsMap)
 }
 // for 2014
-func TransUnit_convExp1_5846(arg1 []LnsAny) (*Types_Token, bool) {
+func TransUnit_convExp1_5848(arg1 []LnsAny) (*Types_Token, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 2081
-func TransUnit_convExp1_6212(arg1 []LnsAny) string {
+func TransUnit_convExp1_6214(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 2228
-func TransUnit_convExp1_6982(arg1 []LnsAny) (LnsAny, bool) {
+func TransUnit_convExp1_6984(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 2352
-func TransUnit_convExp1_7766(arg1 []LnsAny) (LnsAny, bool) {
+func TransUnit_convExp1_7768(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 2591
-func TransUnit_convExp1_9091(arg1 []LnsAny) (LnsAny, string) {
+func TransUnit_convExp1_9093(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 272
-func TransUnit_convExp0_16159(arg1 []LnsAny) (LnsAny, string) {
+func TransUnit_convExp0_16150(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 298
-func TransUnit_convExp0_16298(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp0_16289(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 95
-func TransUnit_convExp1_10542(arg1 []LnsAny) (bool, string) {
+func TransUnit_convExp1_10544(arg1 []LnsAny) (bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 162
-func TransUnit_convExp1_10833(arg1 []LnsAny) *Ast_AlternateTypeInfo {
+func TransUnit_convExp1_10835(arg1 []LnsAny) *Ast_AlternateTypeInfo {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_AlternateTypeInfo)
 }
 // for 233
@@ -673,19 +673,19 @@ func TransUnit_convExp0_6892(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny, *LnsList) 
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*LnsList)
 }
 // for 3909
-func TransUnit_convExp0_10636(arg1 []LnsAny) (*Types_Token, bool) {
+func TransUnit_convExp0_10627(arg1 []LnsAny) (*Types_Token, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 4025
-func TransUnit_convExp0_11193(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
+func TransUnit_convExp0_11184(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 )
 }
 // for 4187
-func TransUnit_convExp0_12105(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
+func TransUnit_convExp0_12096(arg1 []LnsAny) (LnsInt, *LnsMap, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*LnsMap), Lns_getFromMulti( arg1, 2 )
 }
 // for 4387
-func TransUnit_convExp0_13287(arg1 []LnsAny) (*Nodes_Node, bool) {
+func TransUnit_convExp0_13278(arg1 []LnsAny) (*Nodes_Node, bool) {
     return Lns_getFromMulti( arg1, 0 ).(*Nodes_Node), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 type TransUnit_DeclClassMode = TransUnitIF_DeclClassMode
@@ -755,7 +755,7 @@ func TransUnit_setupOpLevel_21_(_env *LnsEnv)(*LnsMap, *LnsMap) {
     TransUnit_regOpLevel(_env, 2, NewLnsList([]LnsAny{".."}))
     TransUnit_regOpLevel(_env, 2, NewLnsList([]LnsAny{"+", "-"}))
     TransUnit_regOpLevel(_env, 2, NewLnsList([]LnsAny{"*", "/", "//", "%"}))
-    TransUnit_regOpLevel(_env, 1, NewLnsList([]LnsAny{"`", ",,", ",,,", ",,,,"}))
+    TransUnit_regOpLevel(_env, 1, NewLnsList([]LnsAny{"`{", ",,", ",,,", ",,,,"}))
     TransUnit_regOpLevel(_env, 1, NewLnsList([]LnsAny{"not", "#", "-", "~"}))
     TransUnit_regOpLevel(_env, 1, NewLnsList([]LnsAny{"^"}))
     TransUnit_opTopLevel = opLevelBase + 1
@@ -3344,7 +3344,7 @@ func (self *TransUnit_TransUnit) skipBlock(_env *LnsEnv, recordToken bool) *LnsL
         if token.Kind == Types_TokenKind__Eof{
             self.FP.Error(_env, "EOF")
         }
-        if _switch0 := token.Txt; _switch0 == "{" {
+        if _switch0 := token.Txt; _switch0 == "{" || _switch0 == "`{" {
             blockDepth = blockDepth + 1
         } else if _switch0 == "}" {
             blockDepth = blockDepth - 1
@@ -3455,7 +3455,7 @@ func (self *TransUnit_TransUnit) analyzeIf(_env *LnsEnv, token *Types_Token) *No
 // 2076: decl @lune.@base.@TransUnit.TransUnit.processCaseDefault
 func (self *TransUnit_TransUnit) processCaseDefault(_env *LnsEnv, firstToken *Types_Token,caseKind LnsInt,nextToken *Types_Token,hasCase bool)(LnsAny, bool) {
     var keyword string
-    keyword = TransUnit_convExp1_6212(Lns_2DDD(_env.GetVM().String_gsub(firstToken.Txt,"_", "")))
+    keyword = TransUnit_convExp1_6214(Lns_2DDD(_env.GetVM().String_gsub(firstToken.Txt,"_", "")))
     var fullKeyword string
     fullKeyword = _env.GetVM().String_format("_%s", []LnsAny{keyword})
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -3536,7 +3536,7 @@ func (self *TransUnit_TransUnit) analyzeSwitch(_env *LnsEnv, firstToken *Types_T
                 }
             }
             {
-                _condLiteral := TransUnit_convExp1_6749(Lns_2DDD(condExp.FP.GetLiteral(_env)))
+                _condLiteral := TransUnit_convExp1_6751(Lns_2DDD(condExp.FP.GetLiteral(_env)))
                 if !Lns_IsNil( _condLiteral ) {
                     condLiteral := _condLiteral
                     var literalObj LnsAny
@@ -3752,7 +3752,7 @@ func (self *TransUnit_TransUnit) analyzeWhile(_env *LnsEnv, token *Types_Token) 
     infinit = false
     if cond.FP.Get_expType(_env) == Ast_builtinTypeBool{
         {
-            _literal := TransUnit_convExp1_7891(Lns_2DDD(cond.FP.GetLiteral(_env)))
+            _literal := TransUnit_convExp1_7893(Lns_2DDD(cond.FP.GetLiteral(_env)))
             if !Lns_IsNil( _literal ) {
                 literal := _literal
                 switch _matchExp0 := literal.(type) {
@@ -4221,7 +4221,7 @@ func (self *TransUnit_TransUnit) analyzeTypeParamArg(_env *LnsEnv, accessMode Ln
         typeExp = self.FP.analyzeRefType(_env, accessMode, false, parentPub, false, false)
         if altMode{
             var altType *Ast_AlternateTypeInfo
-            altType = TransUnit_convExp1_10833(Lns_2DDD(self.ProcessInfo.FP.CreateAlternate(_env, false, genericList.Len() + 1, altToken.Txt, accessMode, self.moduleType, nil, NewLnsList([]LnsAny{}), typeExp.FP.Get_expType(_env))))
+            altType = TransUnit_convExp1_10835(Lns_2DDD(self.ProcessInfo.FP.CreateAlternate(_env, false, genericList.Len() + 1, altToken.Txt, accessMode, self.moduleType, nil, NewLnsList([]LnsAny{}), typeExp.FP.Get_expType(_env))))
             if itemIndex2alt != nil{
                 itemIndex2alt_799 := itemIndex2alt.(*LnsMap)
                 itemIndex2alt_799.Set(genericList.Len() + 1,altType)
@@ -10755,7 +10755,6 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
 func (self *TransUnit_TransUnit) analyzeExpMacroStat(_env *LnsEnv, firstToken *Types_Token) *Nodes_ExpMacroStatNode {
     var expStrList *LnsList
     expStrList = NewLnsList([]LnsAny{})
-    self.FP.checkNextToken(_env, "{")
     var braceCount LnsInt
     braceCount = 0
     var prevToken *Types_Token
@@ -10969,7 +10968,7 @@ func (self *TransUnit_TransUnit) analyzeStrConst(_env *LnsEnv, firstToken *Types
             argNodeList = self.FP.analyzeExpList(_env, false, false, false, nil, nil, nil)
             param = argNodeList
             var workExpList LnsAny
-            _,_,workExpList = TransUnit_convExp0_11193(Lns_2DDD(self.FP.checkMatchType(_env, "str constructor", firstToken.Pos, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeDDD)}), argNodeList, false, false, nil, true)))
+            _,_,workExpList = TransUnit_convExp0_11184(Lns_2DDD(self.FP.checkMatchType(_env, "str constructor", firstToken.Pos, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeDDD)}), argNodeList, false, false, nil, true)))
             if workExpList != nil{
                 workExpList_1944 := workExpList.(*Nodes_ExpListNode)
                 dddParam = workExpList_1944
@@ -11137,7 +11136,7 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
                     }
                 }
                 if detect{
-                    classTypeInfo = TransUnit_convExp0_12216(Lns_2DDD(self.FP.createGeneric(_env, firstToken.Pos, classTypeInfo, genTypeList)))
+                    classTypeInfo = TransUnit_convExp0_12207(Lns_2DDD(self.FP.createGeneric(_env, firstToken.Pos, classTypeInfo, genTypeList)))
                 }
             }
         }
@@ -11147,7 +11146,7 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
     }
     var TransUnit_processOp1 func(_env *LnsEnv, token *Types_Token)(*Nodes_Node, bool)
     TransUnit_processOp1 = func(_env *LnsEnv, token *Types_Token)(*Nodes_Node, bool) {
-        if token.Txt == "`"{
+        if token.Txt == "`{"{
             return &self.FP.analyzeExpMacroStat(_env, token).Nodes_Node, false
         }
         var exp *Nodes_Node
@@ -11207,7 +11206,7 @@ func (self *TransUnit_TransUnit) analyzeExp(_env *LnsEnv, allowNoneType bool,ski
                 self.FP.Error(_env, "unmatch ,,, type, need symbol type")
             }
             typeInfo = Ast_builtinTypeString
-        } else if _switch0 == "`" {
+        } else if _switch0 == "`{" {
             typeInfo = Ast_builtinTypeNone
         } else if _switch0 == "~" {
             if Lns_op_not(expType.FP.Equals(_env, self.ProcessInfo, Ast_builtinTypeInt, nil, nil)){
@@ -11401,7 +11400,7 @@ func (self *TransUnit_TransUnit) analyzeReturn(_env *LnsEnv, token *Types_Token)
         if !Lns_IsNil( _workList ) {
             workList := _workList.(*Nodes_ExpListNode)
             {
-                _, _, _newExpNodeList := TransUnit_convExp0_14358(Lns_2DDD(self.FP.checkMatchType(_env, "return", token.Pos, retTypeList, workList, false, Lns_op_not(workList.FP.Get_followOn(_env)), nil, true)))
+                _, _, _newExpNodeList := TransUnit_convExp0_14349(Lns_2DDD(self.FP.checkMatchType(_env, "return", token.Pos, retTypeList, workList, false, Lns_op_not(workList.FP.Get_followOn(_env)), nil, true)))
                 if !Lns_IsNil( _newExpNodeList ) {
                     newExpNodeList := _newExpNodeList.(*Nodes_ExpListNode)
                     expList = newExpNodeList
@@ -12059,7 +12058,7 @@ func (self *TransUnit_TransUnitCtrl) processFuncBlock(_env *LnsEnv, streamName s
             LnsLog(_env, "process lastpart")
         }
         if self.Ctrl_info.UseWaiter{
-            waiter.FP.Wait(_env, conv2Form0_18217(func(_env *LnsEnv, runnerBase *Async_RunnerBase) {
+            waiter.FP.Wait(_env, conv2Form0_18208(func(_env *LnsEnv, runnerBase *Async_RunnerBase) {
                 if runnerBase.FP.Get_ranFlag(_env){
                     {
                         _runner := TransUnit_TransUnitRunnerDownCastF(runnerBase.FP)
@@ -12078,7 +12077,7 @@ func (self *TransUnit_TransUnitCtrl) processFuncBlock(_env *LnsEnv, streamName s
                 }
             }))
         } else { 
-            waiter.FP.Wait(_env, conv2Form0_18241(TransUnit_TransUnitCtrl_processFuncBlock___anonymous_1_))
+            waiter.FP.Wait(_env, conv2Form0_18232(TransUnit_TransUnitCtrl_processFuncBlock___anonymous_1_))
             for _, _runner := range( runnerList.Items ) {
                 runner := _runner.(TransUnit_TransUnitRunnerDownCast).ToTransUnit_TransUnitRunner()
                 var workMap *LnsMap

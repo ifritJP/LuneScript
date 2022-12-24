@@ -334,7 +334,7 @@ local quotedCharSet = {['a'] = true, ['b'] = true, ['f'] = true, ['n'] = true, [
 
 local op2Set = {['+'] = true, ['-'] = true, ['*'] = true, ['/'] = true, ['^'] = true, ['%'] = true, ['&'] = true, ['~'] = true, ['|'] = true, ['|>>'] = true, ['|<<'] = true, ['..'] = true, ['<'] = true, ['<='] = true, ['>'] = true, ['>='] = true, ['=='] = true, ['~='] = true, ['and'] = true, ['or'] = true, ['@'] = true, ['@@'] = true, ['@@@'] = true, ['='] = true}
 
-local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['`'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
+local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['`{'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
 
 local function isOp2( ope )
 
@@ -900,15 +900,14 @@ function Parser:parse(  )
             end
             
          elseif findChar == 96 then
-            if (nextChar == findChar and string.byte( rawLine, index + 2 ) == 96 ) then
+            if (nextChar == findChar and getChar( index + 2 ) == 96 ) then
                
                local txt, nextIndex = multiComment( index + 3, '```' )
                self:addVal( list, Types.TokenKind.Str, '```' .. txt, index )
                searchIndex = nextIndex
-            else
-             
-               self:addVal( list, Types.TokenKind.Ope, '`', index )
-               searchIndex = index + 1
+            elseif nextChar == 123 then
+               self:addVal( list, Types.TokenKind.Ope, '`{', index )
+               searchIndex = index + 2
             end
             
          elseif findChar == 63 then

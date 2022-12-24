@@ -188,7 +188,7 @@ let op1Set:&Set<str> =
       'not',
       '#',  
       '~',  
-      '`',  
+      '`{',  
       ',,', 
       ',,,',
       ',,,,'
@@ -655,17 +655,17 @@ pub fn Parser.parse() mut : Types.Token[]! {
             }
          }
          elseif findChar == ?` {
-            if ( nextChar == findChar and
-                 rawLine[ index + 2 ] == ?` )
-            { // '```'
+            if ( nextChar == findChar and getChar( index + 2 ) == ?` ) { // '```'
               // 複数行文字列の場合
               let txt, nextIndex = multiComment( index + 3, '```' );
               self.addVal( list, .Str, '```' .. txt, index );
               searchIndex = nextIndex;
-           }
-            else {
-               self.addVal( list, .Ope, '`', index );
-               searchIndex = index + 1;
+            } elseif nextChar == 123 { // {
+               self.addVal( list, .Ope, '`{', index );
+               searchIndex = index + 2;
+            // } else {
+            //    self.addVal( list, .Ope, '`', index );
+            //    searchIndex = index + 1;
             }
          }
          elseif findChar == ?? {
