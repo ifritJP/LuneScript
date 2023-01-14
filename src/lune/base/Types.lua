@@ -614,7 +614,7 @@ end
 
 ParserSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
 ParserSrc._name2Val["LnsCode"] = ParserSrc.LnsCode
-ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
+ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=true, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
 ParserSrc._name2Val["LnsPath"] = ParserSrc.LnsPath
 ParserSrc.Parser = { "Parser", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
 ParserSrc._name2Val["Parser"] = ParserSrc.Parser

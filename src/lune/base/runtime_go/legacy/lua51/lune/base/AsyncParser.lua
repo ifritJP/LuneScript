@@ -464,6 +464,15 @@ function Parser.create( parserSrc, stdinFile, overridePos )
       
       return nil, string.format( "failed to open -- %s", path)
    end
+   local function createStreamWithBaseDir( mod, baseDir, path )
+   
+      if baseDir ~= nil then
+         return createStream( mod, Util.pathJoin( baseDir, path ) )
+      else
+         return createStream( mod, path )
+      end
+      
+   end
    
    local function createStreamFrom(  )
    
@@ -476,11 +485,12 @@ function Parser.create( parserSrc, stdinFile, overridePos )
          
             return path, false, Util.TxtStream._new(txt), "", pipeSize
          elseif _matchExp[1] == Types.ParserSrc.LnsPath[1] then
-            local path = _matchExp[2][1]
-            local mod = _matchExp[2][2]
-            local pipeSize = _matchExp[2][3]
+            local baseDir = _matchExp[2][1]
+            local path = _matchExp[2][2]
+            local mod = _matchExp[2][3]
+            local pipeSize = _matchExp[2][4]
          
-            local stream, mess = createStream( mod, path )
+            local stream, mess = createStreamWithBaseDir( mod, baseDir, path )
             return path, false, stream, mess, pipeSize
          elseif _matchExp[1] == Types.ParserSrc.Parser[1] then
             local path = _matchExp[2][1]

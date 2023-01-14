@@ -3346,13 +3346,15 @@ fn TransUnit.analyzeDeclFunc(
 
          if name.txt == "__main" {
             if #typeInfo.$argTypeInfoList ~= 1 or
+               typeInfo.$argTypeInfoList[1].$mutMode ~= .IMut or
                typeInfo.$argTypeInfoList[1].$kind ~= .List or
                typeInfo.$argTypeInfoList[1].$itemTypeInfoList[1] ~=
                Ast.builtinTypeString or
                #typeInfo.$retTypeInfoList ~= 1 or
-               typeInfo.$retTypeInfoList[1] ~= Ast.builtinTypeInt
+               typeInfo.$retTypeInfoList[1] ~= Ast.builtinTypeInt or
+               typeInfo.$accessMode ~= .Pub
             {
-               let mess = "'__main' function's type has to be __main( argList:List<str> ) : int -- %s" (typeInfo.$display_stirng );
+               let mess = "'__main' function's type has to be 'pub fn __main( argList:&List<str> ) : int' -- %s" (typeInfo.$display_stirng );
                self.addErrMess( name.pos, mess );
             }
          }

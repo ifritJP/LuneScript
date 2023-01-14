@@ -3857,7 +3857,8 @@ __test {
          Util.err( "not failed to open -- %s" (scriptPath) );
       };
       let mut ast = createAstFromStream(
-         Types.ParserSrc.LnsPath( scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
+         Types.ParserSrc.LnsPath(
+            nil, scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
          scriptPath, stream, option );
       stream.close();
       return ast;

@@ -303,7 +303,7 @@ pub class StdinFile {
 
 pub alge ParserSrc {
    LnsCode( code:str, path:str, pipeSize:int! ),
-   LnsPath( path:str, moduleName:str, pipeSize:int! ),
+   LnsPath( baseDir:str!, path:str, moduleName:str, pipeSize:int! ),
    Parser( path: str, luaMode: bool, moduleName:str, pipeSize:int! ),
 }
 

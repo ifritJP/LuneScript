@@ -278,6 +278,13 @@ pub class Parser extend Async.Pipe<AsyncItem> {
          }
          return nil, "failed to open -- %s" (path);
       }
+      fn createStreamWithBaseDir(mod:str,baseDir:str!, path:str) __trans : iStream!, str {
+         when! baseDir {
+            return createStream( mod, Util.pathJoin( baseDir, path ) )**;
+         } else {
+            return createStream( mod, path )**;
+         }
+      }
       
 
       fn createStreamFrom() __trans : str, bool, iStream!, str, int! {
@@ -285,8 +292,8 @@ pub class Parser extend Async.Pipe<AsyncItem> {
             case .LnsCode( txt, path, pipeSize ) {
                return path, false, new Util.TxtStream( txt ), "", pipeSize;
             }
-            case .LnsPath( path, mod, pipeSize ) {
-               let mut stream, mess = createStream( mod, path );
+            case .LnsPath( baseDir, path, mod, pipeSize ) {
+               let mut stream, mess = createStreamWithBaseDir( mod, baseDir, path );
                return path, false, stream, mess, pipeSize;
             }
             case .Parser( path, luaMode, mod, pipeSize ) {

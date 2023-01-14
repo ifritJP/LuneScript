@@ -283,9 +283,10 @@ function AstCreater:__init(importModuleInfo, parserSrc, mod, baseDir, moduleId, 
       
          lnsPath = path
       elseif _matchExp[1] == Types.ParserSrc.LnsPath[1] then
-         local path = _matchExp[2][1]
-         local _ = _matchExp[2][2]
+         local _ = _matchExp[2][1]
+         local path = _matchExp[2][2]
          local _ = _matchExp[2][3]
+         local _ = _matchExp[2][4]
       
          lnsPath = path
       elseif _matchExp[1] == Types.ParserSrc.Parser[1] then

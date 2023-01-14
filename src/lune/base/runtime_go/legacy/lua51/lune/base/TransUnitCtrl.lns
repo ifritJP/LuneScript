@@ -881,7 +881,8 @@ pub fn TransUnitCtrl.createAST(
          }
 
          let mut subParser = Parser.StreamParser.create(
-            Types.ParserSrc.LnsPath( file, subModule, nil ), true, self.stdinFile, nil );
+            Types.ParserSrc.LnsPath( baseDir, file, subModule, nil ),
+            true, self.stdinFile, nil );
 
          self.setParser( new Parser.DefaultPushbackParser( subParser ) );
 

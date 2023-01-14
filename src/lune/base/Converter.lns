@@ -155,7 +155,7 @@ pub class AstCreater extend Runner.Runner {
          case .LnsCode( _, path, _ ) {
             lnsPath = path;
          }
-         case .LnsPath( path, _, _ ) {
+         case .LnsPath( _, path, _, _ ) {
             lnsPath = path;
          }
          case .Parser( path, _, _, _ ) {

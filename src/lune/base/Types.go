@@ -127,9 +127,10 @@ func (self *Types_ParserSrc__LnsCode) GetTxt() string {
 return "ParserSrc.LnsCode"
 }
 type Types_ParserSrc__LnsPath struct{
-Val1 string
+Val1 LnsAny
 Val2 string
-Val3 LnsAny
+Val3 string
+Val4 LnsAny
 }
 func (self *Types_ParserSrc__LnsPath) GetTxt() string {
 return "ParserSrc.LnsPath"

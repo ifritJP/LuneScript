@@ -54,8 +54,8 @@ func convLua_ExportIdKind_getTxt(arg1 LnsInt) string {
 }
 var convLua_stepIndent LnsInt
 type convLua_outputMacroStmtBlock_13_ func (_env *LnsEnv)
-// for 3932
-func convLua_convExp0_4650(arg1 []LnsAny) LnsAny {
+// for 3933
+func convLua_convExp0_4652(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3691
@@ -106,8 +106,8 @@ func convLua_convExp4_2134(arg1 []LnsAny) LnsInt {
 func convLua_convExp0_4180(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 3930
-func convLua_convExp0_4398(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 3931
+func convLua_convExp0_4400(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 

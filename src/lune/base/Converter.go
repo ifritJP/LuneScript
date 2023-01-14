@@ -81,8 +81,8 @@ func Converter_byteCompileFromLuaTxt(_env *LnsEnv, txt string,stripDebugInfo boo
         var err LnsAny
         chunk,err = _env.GetVM().Load(txt, nil)
         if chunk != nil{
-            chunk_247 := chunk.(*Lns_luaValue)
-            ret = _env.GetVM().String_dump(chunk_247, stripDebugInfo)
+            chunk_248 := chunk.(*Lns_luaValue)
+            ret = _env.GetVM().String_dump(chunk_248, stripDebugInfo)
         } else {
             panic(Lns_unwrapDefault( err, "load error").(string))
         }
@@ -124,19 +124,19 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
             var oldLine LnsAny
             oldLine = oldStream.FP.Read(_env, "*l")
             if oldLine != nil{
-                oldLine_296 := oldLine.(string)
+                oldLine_297 := oldLine.(string)
                 if len(oldBuildIdLine) == 0{
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_296,"^_moduleObj.__buildId", nil, nil))){
-                        oldBuildIdLine = oldLine_296
+                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_297,"^_moduleObj.__buildId", nil, nil))){
+                        oldBuildIdLine = oldLine_297
                     }
                 }
             }
             
             if newLine != nil{
-                newLine_300 := newLine.(string)
+                newLine_301 := newLine.(string)
                 if len(newBuildIdLine) == 0{
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_300,"^_moduleObj.__buildId", nil, nil))){
-                        newBuildIdLine = newLine_300
+                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_301,"^_moduleObj.__buildId", nil, nil))){
+                        newBuildIdLine = newLine_301
                     }
                 }
             }
@@ -145,20 +145,20 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
                 var cont bool
                 cont = false
                 if newLine != nil && oldLine != nil{
-                    newLine_306 := newLine.(string)
-                    oldLine_307 := oldLine.(string)
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_307,"^_moduleObj.__buildId", nil, nil))){
-                        if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_306,"^_moduleObj.__buildId", nil, nil))){
+                    newLine_307 := newLine.(string)
+                    oldLine_308 := oldLine.(string)
+                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(oldLine_308,"^_moduleObj.__buildId", nil, nil))){
+                        if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(newLine_307,"^_moduleObj.__buildId", nil, nil))){
                             tailBeginPos = newStream.FP.Get_lineNo(_env)
                             cont = true
                         }
                     } else if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(oldLine_307,"^__dependModuleMap.*buildId =", nil, nil))) &&
-                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(newLine_306,"^__dependModuleMap.*buildId =", nil, nil))) )){
+                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(oldLine_308,"^__dependModuleMap.*buildId =", nil, nil))) &&
+                        _env.SetStackVal( Lns_car(_env.GetVM().String_find(newLine_307,"^__dependModuleMap.*buildId =", nil, nil))) )){
                         var oldSub string
-                        oldSub = Converter_convExp0_1999(Lns_2DDD(_env.GetVM().String_gsub(oldLine_307,"buildId =.*", "")))
+                        oldSub = Converter_convExp0_1999(Lns_2DDD(_env.GetVM().String_gsub(oldLine_308,"buildId =.*", "")))
                         var newSub string
-                        newSub = Converter_convExp0_2012(Lns_2DDD(_env.GetVM().String_gsub(newLine_306,"buildId =.*", "")))
+                        newSub = Converter_convExp0_2012(Lns_2DDD(_env.GetVM().String_gsub(newLine_307,"buildId =.*", "")))
                         if oldSub == newSub{
                             cont = true
                         }
@@ -197,18 +197,18 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
         return false,""
     }
     if stream != nil{
-        stream_327 := stream.(Lns_oStream)
-        stream_327.Close(_env)
+        stream_328 := stream.(Lns_oStream)
+        stream_328.Close(_env)
     }
     if dependStream != nil{
-        dependStream_329 := dependStream.(Lns_oStream)
-        dependStream_329.Close(_env)
+        dependStream_330 := dependStream.(Lns_oStream)
+        dependStream_330.Close(_env)
     }
     if metaStream != nil{
-        metaStream_331 := metaStream.(*Util_memStream)
+        metaStream_332 := metaStream.(*Util_memStream)
         if saveMetaFlag{
             var newMetaTxt string
-            newMetaTxt = metaStream_331.FP.Get_txt(_env)
+            newMetaTxt = metaStream_332.FP.Get_txt(_env)
             var oldMetaTxt string
             oldMetaTxt = ""
             {
@@ -359,8 +359,8 @@ func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     metaMemStream = NewUtil_memStream(_env)
     metaMemStream.FP.Write(_env, metaTxt)
     if dependsStreamDst != nil{
-        dependsStreamDst_365 := dependsStreamDst.(Lns_oStream)
-        dependsStreamDst_365.Write(_env, Lns_unwrap( dependTxt).(string))
+        dependsStreamDst_366 := dependsStreamDst.(Lns_oStream)
+        dependsStreamDst_366.Write(_env, Lns_unwrap( dependTxt).(string))
     }
     Converter_closeStreams(_env, streamDst, metaMemStream, dependsStreamDst, self.metaPath, self.option.Mode == Option_ModeKind__SaveMeta)
 }
@@ -488,7 +488,7 @@ func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, importM
         path := _matchExp0.Val2
         lnsPath = path
     case *Types_ParserSrc__LnsPath:
-        path := _matchExp0.Val1
+        path := _matchExp0.Val2
         lnsPath = path
     case *Types_ParserSrc__Parser:
         path := _matchExp0.Val1

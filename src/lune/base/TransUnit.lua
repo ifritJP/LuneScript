@@ -6284,8 +6284,8 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
          funcSym = workSym
          
          if name.txt == "__main" then
-            if #typeInfo:get_argTypeInfoList() ~= 1 or typeInfo:get_argTypeInfoList()[1]:get_kind() ~= Ast.TypeInfoKind.List or typeInfo:get_argTypeInfoList()[1]:get_itemTypeInfoList()[1] ~= Ast.builtinTypeString or #typeInfo:get_retTypeInfoList() ~= 1 or typeInfo:get_retTypeInfoList()[1] ~= Ast.builtinTypeInt then
-               local mess = string.format( "'__main' function's type has to be __main( argList:List<str> ) : int -- %s", typeInfo:get_display_stirng())
+            if #typeInfo:get_argTypeInfoList() ~= 1 or typeInfo:get_argTypeInfoList()[1]:get_mutMode() ~= Ast.MutMode.IMut or typeInfo:get_argTypeInfoList()[1]:get_kind() ~= Ast.TypeInfoKind.List or typeInfo:get_argTypeInfoList()[1]:get_itemTypeInfoList()[1] ~= Ast.builtinTypeString or #typeInfo:get_retTypeInfoList() ~= 1 or typeInfo:get_retTypeInfoList()[1] ~= Ast.builtinTypeInt or typeInfo:get_accessMode() ~= Ast.AccessMode.Pub then
+               local mess = string.format( "'__main' function's type has to be 'pub fn __main( argList:&List<str> ) : int' -- %s", typeInfo:get_display_stirng())
                self:addErrMess( name.pos, mess )
             end
             
@@ -12764,7 +12764,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
          end
          
          
-         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {file,subModule,nil}), true, self.stdinFile, nil )
+         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,file,subModule,nil}), true, self.stdinFile, nil )
          
          self:setParser( Parser.DefaultPushbackParser._new(subParser) )
          
