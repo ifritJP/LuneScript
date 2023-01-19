@@ -88,6 +88,7 @@ func Types_TokenKind__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
 func Types_TokenKind_getTxt(arg1 LnsInt) string {
     return Types_TokenKindMap_[arg1];
 }
+var Types_nonePos Types_Position
 var Types_noneToken *Types_Token
 var Types_defaultParserPipeSize LnsInt
 // decl alge -- CheckingUptodateMode
@@ -620,7 +621,8 @@ func Lns_Types_init(_env *LnsEnv) {
     init_Types = true
     Types__mod__ = "@lune.@base.@Types"
     Lns_InitMod()
-    Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", NewTypes_Position(_env, 0, -1, "eof", nil), false, NewLnsList([]LnsAny{}))
+    Types_nonePos = NewTypes_Position(_env, 0, -1, "eof", nil)
+    Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", Types_nonePos, false, NewLnsList([]LnsAny{}))
     Types_defaultParserPipeSize = 100
 }
 func init() {

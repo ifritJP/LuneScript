@@ -2,11 +2,11 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@TestingMacro'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 

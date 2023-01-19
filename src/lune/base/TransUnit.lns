@@ -1076,17 +1076,19 @@ alias で置き換えている元の Type → alias の型
       finalFlag:bool, abstractFlag:bool, classAccessMode: Ast.AccessMode,
       classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode;
    pri fn analyzeExp(
-      allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool,
+      allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool,
       opLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
    pri fn analyzeExpOneRVal(
-      allowNoneType:bool, skipOp2Flag: bool, opLevel: int!,        
+      allowNoneType:bool, skipOp2Flag: bool, canCondRet:bool!, opLevel: int!,        
       expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
    pri fn analyzeStatement( termTxt: str! ) mut : Nodes.Node!;
    local fn analyzeExpSymbol(
       firstToken: &Parser.Token, token: &Parser.Token, mode: ExpSymbolMode,
-      prefixExp: &Nodes.Node!, skipFlag: bool, canLeftExp:bool ) mut : Nodes.Node;
+      prefixExp: &Nodes.Node!, skipFlag: bool,
+      canLeftExp:bool, canCondRet:bool ) mut : Nodes.Node;
    pri fn analyzeExpList(
-      allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, expNode: &Nodes.Node!,
+      allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool,
+      expNode: &Nodes.Node!,
       expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ) mut : Nodes.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pub fn getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token;
@@ -1541,6 +1543,20 @@ fn TransUnit.getDefaultAsync(
    return .Noasync;
 }
 
+
+/**
+CondRetNode が登録されている場合、CondRetListNode を生成して返す。
+*/
+local fn TransUnit.checkCondRet() mut : &Nodes.CondRetInfo! {
+   if #self.$curNsInfo.$condRetNodeList > 0 {
+      let info = new Nodes.CondRetInfo( self.$curNsInfo.$condRetNodeList );
+      self.$curNsInfo.clearCondRetNodeList();
+      return info;
+   }
+   return nil;
+}
+
+
 /**
 termTxt が表われるまで statement を解析し、 stmtList に格納する。
 
@@ -1950,13 +1966,13 @@ local fn TransUnit.skipAndCreateDummyBlock() mut : Nodes.BlockNode {
 
 fn TransUnit.analyzeRequest( reqToken: &Parser.Token ) mut : Nodes.RequestNode
 {
-   let processor = self.analyzeExp( false, true, false, nil, Ast.builtinTypeProcessor );
+   let processor = self.analyzeExp( false, true, false, false, nil, Ast.builtinTypeProcessor );
    if processor.$expType ~= Ast.builtinTypeProcessor {
       self.addErrMess(
          processor.$pos,
          "It must be 'processor'. -- %s" (processor.$expType.getTxt(##)) );
    }
-   let exp = self.analyzeExp( false, true, false, nil, nil );
+   let exp = self.analyzeExp( false, true, false, false, nil, nil );
 
    return Nodes.RequestNode.create(
       self.nodeManager, reqToken.pos, self.inTestBlock,
@@ -2018,8 +2034,10 @@ fn TransUnit.analyzeIf(
    self.pushback();
 
    let mut list:Nodes.IfStmtInfo[] = [];
-   let ifExp = self.analyzeExpOneRVal( false, false ## );
-   list.insert( new Nodes.IfStmtInfo( .If, ifExp,
+   let ifExp = self.analyzeExpOneRVal( false, false, true ## );
+   let condRetInfo = self.checkCondRet();
+   
+   list.insert( new Nodes.IfStmtInfo( .If, condRetInfo, ifExp,
                                       self.analyzeBlock( .If, .Start ## ) ) );
 
    fn checkCond( condExp:&Nodes.Node ) {
@@ -2047,7 +2065,7 @@ fn TransUnit.analyzeIf(
    if nextToken.txt == "elseif" {
       while nextToken.txt == "elseif" {
          let condExp = self.analyzeExpOneRVal( false, false ## );
-         list.insert( new Nodes.IfStmtInfo( .ElseIf, condExp,
+         list.insert( new Nodes.IfStmtInfo( .ElseIf, nil, condExp,
                                             self.analyzeBlock( .Elseif, .Merge ## ) ));
          checkCond( condExp );
          nextToken = self.getToken( true );
@@ -2056,7 +2074,7 @@ fn TransUnit.analyzeIf(
 
    if nextToken.txt == "else" {
       list.insert( new Nodes.IfStmtInfo(
-         .Else, self.createNoneNode( nextToken.pos ),
+         .Else, nil, self.createNoneNode( nextToken.pos ),
          self.analyzeBlock( .Else, .Finish ## ) ));
    }
    else {
@@ -2141,7 +2159,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
    while ( nextToken.txt == "case" ) {
       self.checkToken( nextToken, "case" );
       let condexpList = self.analyzeExpList(
-         false, false, false, nil, [ exp.$expType ], true );
+         false, false, false, false, nil, [ exp.$expType ], true );
       let condBock = self.analyzeBlock(
          .Switch, firstFlag and TentativeMode.Start or TentativeMode.Merge ## );
       if firstFlag {
@@ -2247,7 +2265,9 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
    if not self.moduleType.equals(
       self.processInfo, algeTypeInfo.getModule() ## )
    {
-      if not self.importModuleSet.has( algeTypeInfo.getModule() ) {
+      if not self.importModuleSet.has( algeTypeInfo.getModule() ) and
+         algeTypeInfo.getModule() ~= Ast.headTypeInfo
+      {
          // alge を宣言しているモジュールを import していない場合
          let fullname = algeTypeInfo.getFullName(
             self.typeNameCtrl, self.$scope, true );
@@ -2483,7 +2503,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    } nextToken.txt ~= ",";
    self.checkToken( nextToken, "of" );
 
-   let expListNode = self.analyzeExpList( false, false, false ## );
+   let expListNode = self.analyzeExpList( false, false, false, false ## );
 
    let mut itFunc = Ast.builtinTypeNone;
    
@@ -2755,7 +2775,7 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
       nextToken = self.getToken( ## );
       while nextToken.txt ~= ")" {
          let symbolNode = self.analyzeExpSymbol(
-            nextToken, nextToken, .Symbol, nil, true, false );
+            nextToken, nextToken, .Symbol, nil, true, false, false );
          let workSymList = symbolNode.getSymbolInfo();
          if #workSymList > 0 {
             //let symbol = workSymList[ 1 ];

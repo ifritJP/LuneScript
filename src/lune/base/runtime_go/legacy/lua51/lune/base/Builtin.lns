@@ -58,7 +58,9 @@ pub class Builtin {
    }
 }
 
-macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<str>>>>> )
+macro _DefBuiltinFuncType(
+   class2symMapList:List<Map<str,Map<str,Map<str,List<str>>>>>,
+   algesymList:List<Map<str,List<Map<str,List<str>>>>> )
 {
    {
       let mut defMemberList:List<stat> = [];
@@ -124,6 +126,26 @@ macro _DefBuiltinFuncType( class2symMapList:List<Map<str,Map<str,Map<str,List<st
             }
          }
       }
+
+      let mut algeCaseList:List<stat> = [];
+      foreach algeMap in algesymList {
+         foreach _, genAlgeName in algeMap {
+            let algeName = genAlgeName.gsub( "<.*", "" ).gsub( "%.", "_" );
+
+            let algeTypeName = "%s_" ( algeName ~= "" and algeName.lower() or "lns" );
+            defMemberList.insert( `{
+               pub let mut ,,,algeTypeName:&Ast.TypeInfo;
+            } );
+            initMemberList.insert( `{
+               self.,,,algeTypeName = Ast.headTypeInfo;
+            });
+            algeCaseList.insert( `{
+               case ,,algeName ~~{
+                  self. ,,,algeTypeName = algeInfo;
+               }
+            });
+         }
+      }
    }
    /**
 builtin 関数の TypeInfo を保持するクラス。
@@ -158,14 +180,20 @@ builtin 関数の TypeInfo を保持するクラス。
          return self.luavalFuncTypeSet.has( typeInfo );
       }
 
-      pub fn register( symbolInfo:&Ast.SymbolInfo ) mut {
+      local fn register( symbolInfo:&Ast.SymbolInfo ) mut {
          self.allSymbol.insert( symbolInfo );
          self.allSymbolSet.add( symbolInfo );
       }
-      pub fn registerClass( classInfo:&Ast.TypeInfo ) mut {
+      local fn registerClass( classInfo:&Ast.TypeInfo ) mut {
          self.allClass.insert( classInfo );
          switch classInfo.$rawTxt {
             ,,classCaseList
+         }
+      }
+      local fn registerAlge( algeInfo:&Ast.TypeInfo ) mut {
+         self.allClass.insert( algeInfo );
+         switch algeInfo.$rawTxt {
+            ,,algeCaseList
          }
       }
    }
@@ -189,9 +217,18 @@ builtin 関数の TypeInfo を保持するクラス。
    fn getBuiltInInfo(): &List<&Map<str,&Map<str,&Map<str,&List<str>>>>> {
       return ,,class2symMapList;
    }
+   fn getBuiltinAlgeInfo(): List<Map<str,List<Map<str,List<str>>>>> {
+      return ,,algesymList;
+   }
 }
 
 _DefBuiltinFuncType( [
+   {
+      "__Er": {
+         "__attrib": { "type": [ "interface" ] },
+         "get_txt": { "type": [ "method" ], "arg": [ ], "ret": [ "str" ] },
+      },
+   },
    {
       "": {
          "type": { "arg": [ "&stem!" ], "ret": ["str"] },
@@ -209,6 +246,7 @@ _DefBuiltinFuncType( [
          "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
          "__run": { "arg": [ "__Runner", "int", "str!" ], "ret":[ "bool" ] },
          "__join": { "arg": [ "&__Runner" ], "ret":[ "" ] },
+         "__serr": { "arg": ["str"], "ret": [ "__Er"] },
       },
    },
    {
@@ -408,7 +446,22 @@ _DefBuiltinFuncType( [
          "val": { "type": [ "method" ], "arg": [ ], "ret": [ "_T!" ] },
       }
    }
-] );
+   // {
+   //    "__lns.Err" : {
+   //       "__attrib": { "type": [ "class" ] },
+   //       "create": { "arg": ["str"], "ret": [ "__Er"] },
+   //    },
+   // }
+],
+[
+   {
+      "__Ret<T1,T2>": [
+         { "Ok": [ "T1" ] },
+         { "Err": [ "T2" ] }
+      ]
+   }
+]
+ );
 
 pub fn BuiltinFuncType.isStrFormFunc( typeInfo:&Ast.TypeInfo ) __async :bool {
    if typeInfo.$srcTypeInfo == self.string_format {
@@ -755,6 +808,73 @@ fn Builtin.registClass(
    return parentInfo;
 }
 
+fn Builtin.createGenType(
+   typeName:str, genTypeList:List<&Ast.AlternateTypeInfo>) mut : str
+{
+   let mut name = typeName;
+   if typeName.find( "<" ## ) {
+      name = "";
+      __luago {
+         apply token of typeName.gmatch( "[^<>,%s]+" ) {
+            if #name == 0 {
+               name = token;
+            }
+            else {
+               genTypeList.insert(
+                  (self.processInfo.createAlternate(
+                     true, #genTypeList + 1,
+                     token, .Pri, Ast.headTypeInfo ## )) );
+            }
+         }
+      }
+   }
+   return name;
+}
+
+fn Builtin.createBuiltinAlge(
+   algesymList:List<Map<str,List<Map<str,List<str>>>>> ) __noasync mut
+{
+   let parentInfo = Ast.headTypeInfo;
+   
+   foreach algeMap in algesymList {
+      foreach valMapList, genAlgeName in algeMap {
+         let mut genTypeList:List<&Ast.AlternateTypeInfo> = [];
+         let algeName = self.createGenType( genAlgeName, genTypeList );
+
+         let typename2typeInfo:Map<str,&Ast.TypeInfo> = {};
+         foreach genType in genTypeList {
+            typename2typeInfo[ genType.$rawTxt ] = genType;
+         }
+
+         let mut algeScope = new Ast.Scope(
+            self.processInfo, self.transUnit.$scope, .Class, nil## );
+         let mut algeTypeInfo = self.processInfo.createAlge(
+            algeScope, parentInfo, Ast.getBuiltinMut( parentInfo ),
+            false, .Pub, algeName, genTypeList );
+         Ast.addBuiltinMut( algeTypeInfo, algeScope );
+         builtinFunc.registerAlge( algeTypeInfo );
+
+         self.transUnit.$scope.addAlge(
+            self.processInfo, .Pub, algeName, nil, algeTypeInfo );
+
+         foreach valMap in valMapList {
+            foreach valTypeNameList, valName in valMap {
+               let algeValSym = unwrap algeScope.addAlgeVal(
+                  self.processInfo, valName, Types.nonePos, algeTypeInfo );
+               let valTypeList:List<&Ast.TypeInfo> = [];
+               foreach typeName in valTypeNameList {
+                  valTypeList.insert(
+                     typename2typeInfo[ typeName ] or self.getTypeInfo( typeName ) );
+               }
+               let algeValInfo = new Ast.AlgeValInfo(
+                  algeValSym.$name, valTypeList, algeTypeInfo, algeValSym );
+               algeTypeInfo.addValInfo( algeValInfo );
+            }
+         }
+      }
+   }
+}
+
 
 let mut readyBuiltin = false;
 pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
@@ -823,22 +943,23 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                   genTypeList, Ast.builtinTypeBox.$itemTypeInfoList );
             }
             default {
-               if className.find( "<" ## ) {
-                  name = "";
-                  __luago {
-                     apply token of className.gmatch( "[^<>,%s]+" ) {
-                        if #name == 0 {
-                           name = token;
-                        }
-                        else {
-                           genTypeList.insert(
-                              (self.processInfo.createAlternate(
-                                 true, #genTypeList + 1,
-                                 token, .Pri, Ast.headTypeInfo ## )) );
-                        }
-                     }
-                  }
-               }
+               name = self.createGenType( className, genTypeList );
+               // if className.find( "<" ## ) {
+               //    name = "";
+               //    __luago {
+               //       apply token of className.gmatch( "[^<>,%s]+" ) {
+               //          if #name == 0 {
+               //             name = token;
+               //          }
+               //          else {
+               //             genTypeList.insert(
+               //                (self.processInfo.createAlternate(
+               //                   true, #genTypeList + 1,
+               //                   token, .Pri, Ast.headTypeInfo ## )) );
+               //          }
+               //       }
+               //    }
+               // }
             }
          }
 
@@ -873,6 +994,8 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
          }
       }
    }
+
+   self.createBuiltinAlge( getBuiltinAlgeInfo() );
 
    // スレッド毎に処理を分ける必要がある builtin 関数を登録する
    let threadSafeSet =

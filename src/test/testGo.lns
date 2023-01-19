@@ -2322,7 +2322,7 @@ _section();
    }
 
    let mut test = new Hoge( new Val(1) );
-   for index = 1, 10000 * 1000 {
+   for index = 1, 1000 * 1000 {
       test = new Hoge( new Val(index) );
    }
    print( test.func2().func() );
@@ -2638,5 +2638,185 @@ _section();
          error( "read error" );
       };
       proc.close();
+   }
+}
+_section();
+{
+   alge Result<T1,T2>{
+      Ok( val:T1 ),
+      Ng( val:T2 ),
+   }
+
+   class LnsErr extend (__Er) {
+      pub fn get_txt() __async : str {
+         return "hoge";
+      }
+   }
+
+   fn func( index:int ) : Result<str,__Er> {
+      if index == 1 {
+         return .Ok("ok!!");
+      }
+      return .Ng( new LnsErr() );
+   }
+
+   for index = 1,2 {
+      match func( index ) {
+         case .Ok(val) {
+            print( val );
+         }
+         case .Ng( val ) {
+            print( val.$txt );
+         }
+      }
+   }
+}
+_section();
+{
+   class Hoge {
+      pub fn func(): &Hoge! {
+         return nil;
+      }
+      pub fn sub(): &Hoge! {
+         return nil;
+      }
+      pub fn ok(): &Hoge! {
+         return self;
+      }
+      pub fn foo() {
+         print( "ok" );
+      }
+   }
+
+   fn func(hoge:Hoge!,index:int): str! {
+      switch index {
+         case 0 {
+            hoge!.foo();
+         }
+         case 1 {
+            hoge!.func()!.foo();
+         }
+         case 2 {
+            hoge!.func()!.sub()!.foo();
+         }
+      }
+      return nil;
+   }
+
+   let mut hoge = new Hoge();
+   func( hoge, 2 );
+   func( hoge, 1 );
+   func( hoge, 0 );
+}
+_section();
+{
+   fn func1(val:int) : __Ret<str,int> {
+      if val == 0 {
+         return .Err( 0 );
+      }
+      return .Ok( "ok" );
+   }
+   for index = 0, 1 {
+      match func1( index ) {
+         case .Ok( val ) {
+            print( val .. "abc" );
+         }
+         case .Err( val ) {
+            print( val + 10 );
+         }
+      }
+   }
+   fn create(): __Er {
+      return __serr( "foo" );
+   }
+   let err = create();
+   print( err.$txt );
+}
+_section();
+{
+   class Hoge {
+      let val:str {pub};
+      pub fn func(val:int) : __Ret<&Hoge,__Er> {
+         if val == 1 {
+            return .Err( __serr( "err" ) );
+         }
+         return .Ok( self );
+      }
+
+      fn foo() {
+         print( __func__ );
+      }
+
+      fn bar() : str! {
+         return __func__;
+      }
+
+      pub fn sub(val:int) : __Ret<str,__Er> {
+         let obj = self.func(val)!;
+         switch val {
+            case 2 {  
+               if! obj.func(val)!.bar() {
+                  return .Ok( _exp );
+               }
+            }
+            case 3 {
+               if! let txt = obj.func(val)!.bar() {
+                  return .Ok( txt .. "xyz" );
+               }
+            }
+         }
+         return .Ok( obj.$val );
+      }
+   }
+   let hoge = new Hoge( "abc" );
+   for index = 1, 4, 1 {
+      print( index );
+      match hoge.sub( index ) {
+         case .Err( err ) {
+            print( "err", err.$txt );
+         }
+         case .Ok( val ) {
+            print( "ok", val );
+         }
+      }
+   }
+}
+_section();
+{
+   class Hoge {
+      let val:str {pub};
+      pub fn func(val:int) : __Ret<&Hoge,__Er> {
+         if val == 1 {
+            return .Err( __serr( "err" ) );
+         }
+         return .Ok( self );
+      }
+
+      fn foo() {
+         print( __func__ );
+      }
+
+      fn bar() : str! {
+         return __func__;
+      }
+
+      pub fn sub(val:int) : __Ret<str,__Er> {
+         if self.func(val)!.$val == self.$val {
+            return .Ok( self.val );
+         }
+         return .Ok( "NG" );
+      }
+   }
+   let hoge = new Hoge( "abc" );
+   for index = 1, 2 {
+      print( index );
+      match hoge.sub( index ) {
+         case .Err( err ) {
+            print( "err", err.$txt );
+         }
+         case .Ok( val ) {
+            print( "ok", val );
+         }
+      }
    }
 }

@@ -2,9 +2,46 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convLua'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
+function _lune.newAlge( kind, vals )
+   local memInfoList = kind[ 2 ]
+   if not memInfoList then
+      return kind
+   end
+   return { kind[ 1 ], vals }
+end
+
+function _lune._fromList( obj, list, memInfoList )
+   if type( list ) ~= "table" then
+      return false
+   end
+   for index, memInfo in ipairs( memInfoList ) do
+      local val, key = memInfo.func( list[ index ], memInfo.child )
+      if val == nil and not memInfo.nilable then
+         return false, key and string.format( "%s[%s]", memInfo.name, key) or memInfo.name
+      end
+      obj[ index ] = val
+   end
+   return true
+end
+function _lune._AlgeFrom( Alge, val )
+   local work = Alge._name2Val[ val[ 1 ] ]
+   if not work then
+      return nil
+   end
+   if #work == 1 then
+     return work
+   end
+   local paramList = {}
+   local result, mess = _lune._fromList( paramList, val[ 2 ], work[ 2 ] )
+   if not result then
+      return nil, mess
+   end
+   return { work[ 1 ], paramList }
+end
+
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
       setObj[ val ] = true
@@ -194,8 +231,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 
@@ -459,6 +496,14 @@ function ConvFilter:get_indent(  )
 end
 function ConvFilter:getCanonicalName( typeInfo, localFlag )
 
+   do
+      local _switchExp = typeInfo
+      if _switchExp == self.builtinFunc.__ret_ then
+         return "_lune.Result"
+      end
+   end
+   
+   
    local enumName = typeInfo:getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), localFlag )
    local moduleType = typeInfo:get_genSrcTypeInfo():get_srcTypeInfo():getModule(  )
    local canonical = (enumName:gsub( "&", "" ) )
@@ -1479,7 +1524,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1083, function (  )
+   Log.log( Log.Level.Log, __func__, 1090, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
    end )
@@ -1512,6 +1557,14 @@ function ConvFilter:processRoot( node, opt )
 if %s then
    _lune = %s
 end]==], luneSymbol, luneSymbol) )
+         
+         if node:get_luneHelperInfo().useResult then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Result ) )
+         end
+         
+         if node:get_luneHelperInfo().useError then
+            self:writeln( LuaMod.getCode( LuaMod.CodeKind.Error ) )
+         end
          
          if node:get_luneHelperInfo().useAlge then
             self:writeln( LuaMod.getCode( LuaMod.CodeKind.Alge ) )
@@ -1726,9 +1779,75 @@ function ConvFilter:processScope( node, opt )
 end
 
 
+function ConvFilter:processCondRet( node, opt )
+
+   self:writeRaw( string.format( "_cond%s", node:get_order()) )
+end
+
+
+
+function ConvFilter:outputCondRet( node )
+
+   local symName = string.format( "_cond%d", node:get_order())
+   if node:get_exp():get_expType():get_nilable() then
+      self:write( string.format( "local %s = ", symName) )
+      filter( node:get_exp(), self, node )
+      self:writeln( "" )
+      self:writeln( string.format( "if %s == nil then return nil end", symName) )
+   else
+    
+      self:writeln( string.format( "local %s", symName) )
+      self:writeln( "do" )
+      self:pushIndent(  )
+      self:write( "local _matchExp = " )
+      filter( node:get_exp(), self, node )
+      self:writeln( "" )
+      self:writeln( "if _matchExp[1] == _lune.Result.Err[1] then" )
+      self:pushIndent(  )
+      self:writeln( "return _matchExp" )
+      self:popIndent(  )
+      
+      self:writeln( "elseif _matchExp[1] == _lune.Result.Ok[1] then" )
+      self:pushIndent(  )
+      self:writeln( string.format( "%s = _matchExp[2][1]", symName) )
+      self:popIndent(  )
+      self:writeln( "end" )
+      self:popIndent(  )
+      self:writeln( "end" )
+   end
+   
+end
+
+
+
+function ConvFilter:processCondRetList( node, opt )
+
+   filter( node:get_exp(), self, node )
+end
+
+
+
+function ConvFilter:outputCondRetInfo( info )
+
+   for __index, condRetNode in ipairs( info:get_list() ) do
+      self:outputCondRet( condRetNode )
+   end
+   
+end
+
+
 function ConvFilter:processStmtExp( node, opt )
 
-   filter( node:get_exp(  ), self, node )
+   do
+      local condRetListNode = _lune.__Cast( node:get_exp(), 3, Nodes.CondRetListNode )
+      if condRetListNode ~= nil then
+         self:outputCondRetInfo( condRetListNode:get_info() )
+      end
+   end
+   
+   
+   
+   filter( node:get_exp(), self, node )
 end
 
 
@@ -2809,6 +2928,14 @@ end
 
 function ConvFilter:processIfUnwrap( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    self:writeln( "do" )
    self:pushIndent(  )
    self:writeRaw( "local " )
@@ -2886,6 +3013,13 @@ end
 
 function ConvFilter:processDeclVar( node, opt )
 
+   do
+      local condRetInfo = node:get_condRetInfo()
+      if condRetInfo ~= nil then
+         self:outputCondRetInfo( condRetInfo )
+      end
+   end
+   
    if node:get_syncBlock() then
       self:writeln( "do" )
       self:pushIndent(  )
@@ -3123,6 +3257,13 @@ function ConvFilter:processIf( node, opt )
 
    local valList = node:get_stmtList(  )
    for index, val in ipairs( valList ) do
+      do
+         local _exp = val:get_condRetInfo()
+         if _exp ~= nil then
+            self:outputCondRetInfo( _exp )
+         end
+      end
+      
       if index == 1 then
          self:writeRaw( "if " )
          filter( val:get_exp(), self, node )
@@ -3635,6 +3776,9 @@ function ConvFilter:processExpCall( node, opt )
                   wroteFuncFlag = true
                elseif _switchExp == self.builtinFunc.lns___join then
                   return 
+               elseif _switchExp == self.builtinFunc.lns___serr then
+                  self:writeRaw( "_lune.LnsErr.create(" )
+                  wroteFuncFlag = true
                end
             end
             

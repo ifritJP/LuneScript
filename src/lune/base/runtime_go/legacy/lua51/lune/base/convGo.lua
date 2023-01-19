@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@convGo'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -232,8 +232,8 @@ function _lune._run( runner, mod )
     return true
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 
@@ -3524,8 +3524,74 @@ function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expList
 end
 
 
+function convFilter:processCondRet( node, opt )
+
+   self:writeRaw( string.format( "_cond%d", node:get_order()) )
+end
+
+
+
+function convFilter:outputCondRetNode( node )
+
+   local symName = string.format( "_cond%d", node:get_order())
+   if node:get_exp():get_expType():get_nilable() then
+      self:write( string.format( "%s_ := ", symName) )
+      filter( node:get_exp(), self, node )
+      self:writeln( "" )
+      self:writeln( string.format( "if %s_ == nil { return nil }", symName) )
+      self:write( string.format( "%s := %s_", symName, symName) )
+      self:outputAny2Type( node:get_expType() )
+      self:writeln( "" )
+   else
+    
+      self:writeln( string.format( "var %s %s", symName, self:type2gotype( node:get_expType() )) )
+      local valName = "_matchExp"
+      self:write( string.format( "switch %s := ", valName) )
+      filter( node:get_exp(), self, node )
+      self:writeln( ".(type) {" )
+      self:writeln( "case *G__Ret__Err:" )
+      self:pushIndent(  )
+      self:writeln( string.format( "return %s", valName) )
+      self:popIndent(  )
+      
+      self:writeln( "case *G__Ret__Ok:" )
+      self:pushIndent(  )
+      self:write( string.format( "%s = %s.Val1", symName, valName) )
+      self:outputAny2Type( node:get_expType() )
+      self:writeln( "" )
+      self:popIndent(  )
+      self:writeln( "}" )
+   end
+   
+end
+
+
+function convFilter:processCondRetList( node, opt )
+
+   filter( node:get_exp(), self, node )
+end
+
+
+function convFilter:outputCondRetInfo( info )
+
+   for __index, condRetNode in ipairs( info:get_list() ) do
+      self:outputCondRetNode( condRetNode )
+   end
+   
+end
+
+
 function convFilter:processStmtExp( node, opt )
 
+   do
+      local condRetListNode = _lune.__Cast( node:get_exp(), 3, Nodes.CondRetListNode )
+      if condRetListNode ~= nil then
+         self:outputCondRetInfo( condRetListNode:get_info() )
+      end
+   end
+   
+   
+   
    filter( node:get_exp(), self, node )
    self:writeln( "" )
 end
@@ -3999,6 +4065,14 @@ function convFilter:processIfUnwrap( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
+   do
+      local condRetInfo = node:get_condRetInfo()
+      if condRetInfo ~= nil then
+         self:outputCondRetInfo( condRetInfo )
+      end
+   end
+   
+   
    local needStrTempList = {}
    for index, varSym in ipairs( node:get_varSymList() ) do
       if #node:get_expList():get_expTypeList() >= index then
@@ -4279,6 +4353,13 @@ function convFilter:processDeclVar( node, opt )
    local __func__ = '@lune.@base.@convGo.convFilter.processDeclVar'
 
    do
+      local condRetInfo = node:get_condRetInfo()
+      if condRetInfo ~= nil then
+         self:outputCondRetInfo( condRetInfo )
+      end
+   end
+   
+   do
       local _switchExp = node:get_mode()
       if _switchExp == Nodes.DeclVarMode.Let then
          self:outputLetVar( node )
@@ -4508,6 +4589,13 @@ end
 function convFilter:processIf( node, opt )
 
    for __index, stmt in ipairs( node:get_stmtList() ) do
+      do
+         local _exp = stmt:get_condRetInfo()
+         if _exp ~= nil then
+            self:outputCondRetInfo( _exp )
+         end
+      end
+      
       do
          local _switchExp = stmt:get_kind()
          if _switchExp == Nodes.IfKind.If then
@@ -6493,7 +6581,7 @@ function convFilter:processExpCall( node, opt )
                      if _switchExp == Ast.builtinTypeForm then
                         filter( node:get_func(), self, node )
                         callKind = _lune.newAlge( CallKind.FormCall)
-                     elseif _switchExp == self.builtinFuncs.lns___run or _switchExp == self.builtinFuncs.lns___join then
+                     elseif _switchExp == self.builtinFuncs.lns___run or _switchExp == self.builtinFuncs.lns___join or _switchExp == self.builtinFuncs.lns___serr then
                         filter( node:get_func(), self, node )
                      else 
                         
@@ -7062,6 +7150,8 @@ function convFilter:processExpRef( node, opt )
                         self:writeRaw( "LnsRun" )
                      elseif _switchExp == builtinFunc.lns___join then
                         self:writeRaw( "LnsJoin" )
+                     elseif _switchExp == builtinFunc.lns___serr then
+                        self:writeRaw( "LnsErr_create" )
                      else 
                         
                            Util.err( string.format( "%s: not support -- %s", __func__, node:get_symbolInfo():get_name()) )

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@dumpNode'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -117,8 +117,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 
@@ -1060,6 +1060,22 @@ function dumpFilter:processReturn( node, opt )
       end
    end
    
+end
+
+
+
+function dumpFilter:processCondRet( node, opt )
+
+   self:dump( opt, node, "" )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
+end
+
+
+
+function dumpFilter:processCondRetList( node, opt )
+
+   self:dump( opt, node, "" )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
 end
 
 

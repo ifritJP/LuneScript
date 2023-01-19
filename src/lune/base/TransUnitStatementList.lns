@@ -25,32 +25,18 @@ SOFTWARE.
 subfile owner lune.base.TransUnit;
 
 fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
-   let mut expList: &Nodes.ExpListNode! = nil;
-   let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
-   if not Ast.TypeInfo.hasParent( funcTypeInfo ) or
-      ( funcTypeInfo.$kind ~= .Func and funcTypeInfo.$kind ~= .Method )
-   {
-      self.addErrMess(
-         token.pos,
-         "'return' could not use here" );
-   }
-   let nsInfo = self.getNSInfo( funcTypeInfo );
-   if nsInfo.isLockedAsync() {
-      self.addErrMess( token.pos, "can't use 'return' in the __asyncLock." );
-   }
 
+   self.canReturnFromHere( token.pos );
+
+   let mut expList: &Nodes.ExpListNode! = nil;
    let nextToken = self.getToken(##);
 
+   let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
    let retTypeList = funcTypeInfo.$retTypeInfoList;
    if nextToken.txt ~= ";" {
       self.pushback();
-      expList = self.analyzeExpList( false, false, false, nil, retTypeList ## );
+      expList = self.analyzeExpList( false, false, false, false, nil, retTypeList ## );
       self.checkNextToken( ";" );
-   }
-
-   if funcTypeInfo.getTxt(##) == "__init" {
-      // フロー解析するのが面倒なので、 __init 内では return を禁止。
-      self.addErrMess( token.pos, "__init method can't return" );
    }
 
    if! let workList = expList {
@@ -230,15 +216,21 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
             self.pushback();
 
             self.accessSymbolSetQueue.push();
-            
-            let mut exp = self.analyzeExp( true, false, true ## );
+
+            let mut exp = self.analyzeExp( true, false, true, true ## );
             let mut nextToken = self.getToken(##);
             if nextToken.txt == "," {
-               let mut expList = self.analyzeExpList( true, true, true, exp ## );
+               let mut expList = self.analyzeExpList( true, true, true, false, exp ## );
                exp = self.analyzeExpOp2( token, expList, nil );
                nextToken = self.getToken(##);
             }
             self.checkToken( nextToken, ";" );
+            if! let condRetInfo = self.checkCondRet() {
+               exp = Nodes.CondRetListNode.create(
+                  self.nodeManager, exp.$pos, self.inTestBlock,
+                  self.macroCtrl.isInAnalyzeArgMode(),
+                  exp.$expTypeList,  condRetInfo, exp );    
+            }
 
             if! let setNode = exp@@@Nodes.ExpSetValNode {
                let mut set:Set<&Ast.SymbolInfo> = (@);

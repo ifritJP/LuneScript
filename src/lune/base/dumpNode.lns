@@ -765,6 +765,21 @@ pub override fn dumpFilter.processReturn(
    }
 };
 
+pub override fn dumpFilter.processCondRet(
+   node: &Nodes.CondRetNode, opt:Opt ) mut
+{
+   self.dump( opt, node, "" );
+   filter( node.$exp, self, opt.nextOpt() );
+};
+
+pub override fn dumpFilter.processCondRetList(
+   node: &Nodes.CondRetListNode, opt:Opt ) mut
+{
+   self.dump( opt, node, "" );
+   filter( node.$exp, self, opt.nextOpt() );
+};
+
+
 pub override fn dumpFilter.processProvide(
    node: &Nodes.ProvideNode, opt:Opt ) mut
 {

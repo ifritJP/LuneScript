@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@LuaMod'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
 function _lune.unwrap( val )
    if val == nil then
@@ -75,8 +75,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 
@@ -156,9 +156,15 @@ CodeKind.__allList[17] = CodeKind.Run
 CodeKind.StrReplace = 17
 CodeKind._val2NameMap[17] = 'StrReplace'
 CodeKind.__allList[18] = CodeKind.StrReplace
-CodeKind.Finalize = 18
-CodeKind._val2NameMap[18] = 'Finalize'
-CodeKind.__allList[19] = CodeKind.Finalize
+CodeKind.Error = 18
+CodeKind._val2NameMap[18] = 'Error'
+CodeKind.__allList[19] = CodeKind.Error
+CodeKind.Result = 19
+CodeKind._val2NameMap[19] = 'Result'
+CodeKind.__allList[20] = CodeKind.Result
+CodeKind.Finalize = 20
+CodeKind._val2NameMap[20] = 'Finalize'
+CodeKind.__allList[21] = CodeKind.Finalize
 
 
 local codeMap
@@ -606,6 +612,53 @@ function _lune.replace( txt, src, dst )
    end
    return result
 end
+]==]
+   
+   work[CodeKind.Error] = [==[
+local LnsErr = {}
+_lune.LnsErr = LnsErr
+function LnsErr:get_txt(  )
+   return self.txt
+end
+function LnsErr._setmeta( obj )
+  setmetatable( obj, { __index = LnsErr  } )
+end
+function LnsErr._new( txt )
+   local obj = {}
+   LnsErr._setmeta( obj )
+   if obj.__init then
+      obj:__init( txt )
+   end
+   return obj
+end
+function LnsErr:__init( txt )
+  self.txt = txt
+end
+function LnsErr.create( txt )
+   return LnsErr._new( txt )
+end
+]==]
+   
+   work[CodeKind.Result] = [==[
+local Result = {}
+Result._name2Val = {}
+_lune.Result = Result
+function Result:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "__Ret.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function Result._from( val )
+   return _lune._AlgeFrom( Result, val )
+end
+
+Result.Err = { "Err", {{}}}
+Result._name2Val["Err"] = Result.Err
+Result.Ok = { "Ok", {{}}}
+Result._name2Val["Ok"] = Result.Ok
 ]==]
    
    work[CodeKind.Finalize] = [==[

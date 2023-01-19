@@ -2019,6 +2019,7 @@ pro fn convFilter.setup() mut {
       self.builtinFuncs.__lns_runtime_dumpLog: "LnsDumpRunnerLog",
       self.builtinFuncs.__lns_sync_createFlag: "LnsCreateSyncFlag",
       self.builtinFuncs.__lns_sync_createProcesser: "LnsCreateProcessor",
+      //self.builtinFuncs.__lns_err_create: "LnsErr_create",
    };
    
 
@@ -2689,9 +2690,62 @@ fn convFilter.processSetFromExpList(
    return expListKind;
 }
 
+pub override fn convFilter.processCondRet(
+   node: &Nodes.CondRetNode, opt: Opt ) mut
+{
+   self.writeRaw( "_cond%d" (node.$order) );
+};
+
+fn convFilter.outputCondRetNode( node: &Nodes.CondRetNode ) mut {
+   let symName = "_cond%d" (node.$order);
+   if node.$exp.$expType.$nilable {
+      self.write( "%s_ := " (symName) );
+      filter( node.$exp, self, node );
+      self.writeln( "" );
+      self.writeln( "if %s_ == nil { return nil }" (symName) );
+      self.write( "%s := %s_" (symName, symName) );
+      self.outputAny2Type( node.$expType );
+      self.writeln( "" );
+   } else {
+      self.writeln( "var %s %s" (symName, self.type2gotype( node.$expType )) );
+      let valName = "_matchExp";
+      self.write( "switch %s := " (valName) );
+      filter( node.$exp, self, node );
+      self.writeln( ".(type) {" );
+      self.writeln( "case *G__Ret__Err:" );
+      self.pushIndent( ## );
+      self.writeln( "return %s" (valName) );
+      self.popIndent();
+
+      self.writeln( "case *G__Ret__Ok:" );
+      self.pushIndent(##);
+      self.write( "%s = %s.Val1" (symName, valName) );
+      self.outputAny2Type( node.$expType );
+      self.writeln( "" );
+      self.popIndent();
+      self.writeln( "}" );
+   }
+}
+
+pub override fn convFilter.processCondRetList(
+   node: &Nodes.CondRetListNode, opt: Opt ) mut
+{
+   filter( node.$exp, self, node );
+}
+
+fn convFilter.outputCondRetInfo( info: &Nodes.CondRetInfo ) mut {
+   foreach condRetNode in info.$list {
+      self.outputCondRetNode( condRetNode );
+   }
+}
+
 pub override fn convFilter.processStmtExp(
    node: &Nodes.StmtExpNode, opt: Opt ) mut
 {
+   if! let condRetListNode = node.$exp@@@Nodes.CondRetListNode {
+      self.outputCondRetInfo( condRetListNode.$info );
+   };
+   
    filter( node.$exp, self, node );
    self.writeln( "" );
 }
@@ -3100,6 +3154,10 @@ pub override fn convFilter.processIfUnwrap(
    self.writeln( "{" );
    self.pushIndent( ## );
 
+   if! let condRetInfo = node.$condRetInfo {
+      self.outputCondRetInfo( condRetInfo );
+   }
+   
    // 一度テンポラリ変数にセットする必要があるかどうかのリスト。
    let needStrTempList:List<bool> = [];
    foreach varSym, index in node.$varSymList {
@@ -3336,6 +3394,9 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
 pub override fn convFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt: Opt ) mut
 {
+   if! let condRetInfo = node.$condRetInfo {
+      self.outputCondRetInfo( condRetInfo );
+   }
    switch node.$mode {
       case .Let {
          self.outputLetVar( node );
@@ -3550,6 +3611,9 @@ pub override fn convFilter.processIf(
    node: &Nodes.IfNode, opt: Opt ) mut
 {
    foreach stmt in node.$stmtList {
+      if! stmt.$condRetInfo {
+         self.outputCondRetInfo( _exp );
+      }
       switch stmt.$kind {
          case .If {
             self.writeRaw( "if " );
@@ -5300,7 +5364,8 @@ pub override fn convFilter.processExpCall(
                   callKind = .FormCall;
                }
                case self.builtinFuncs.lns___run,
-                    self.builtinFuncs.lns___join
+                    self.builtinFuncs.lns___join,
+                    self.builtinFuncs.lns___serr
                {
                   filter( node.$func, self, node );
                }
@@ -5820,6 +5885,13 @@ pub override fn convFilter.processExpRef(
                      case builtinFunc.lns___join {
                         self.writeRaw( "LnsJoin" );
                      }
+                     case builtinFunc.lns___serr {
+                        self.writeRaw( "LnsErr_create" );
+                     }
+                     // case self.builtinFuncs.__lns_err_create {
+                     // case self.builtinFuncs._lns___serr {
+                     //    self.writeRaw( "LnsErr_create" );
+                     // }
                      default {
                         Util.err( "%s: not support -- %s"
                                   (__func__, node.$symbolInfo.$name) );

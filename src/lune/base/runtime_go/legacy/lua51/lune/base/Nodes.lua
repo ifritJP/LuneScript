@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Nodes'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -228,8 +228,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -2377,6 +2377,252 @@ function BlockNode:getBreakKind( checkMode )
 end
 
 
+function NodeKind.get_CondRet(  )
+
+   return 10
+end
+
+
+local CondRetNode = {}
+regKind( "CondRet" )
+function Filter:processCondRet( node, opt )
+
+   self:pushOpt( opt )
+   self:defaultProcess( node, opt )
+   self:popOpt( opt )
+end
+
+
+function NodeManager:getCondRetNodeList(  )
+
+   return self:getList( 10 )
+end
+
+
+
+setmetatable( CondRetNode, { __index = Node } )
+_moduleObj.CondRetNode = CondRetNode
+function CondRetNode:processFilter( filter, opt )
+
+   filter:processCondRet( self, opt )
+end
+function CondRetNode:canBeRight( processInfo )
+
+   return true
+end
+function CondRetNode:canBeLeft(  )
+
+   return false
+end
+function CondRetNode:canBeStatement(  )
+
+   return false
+end
+function CondRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, order )
+   local obj = {}
+   CondRetNode._setmeta( obj )
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, order ); end
+   return obj
+end
+function CondRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, order) 
+   Node.__init( self,managerId, id, 10, pos, inTestBlock, macroArgFlag, typeList)
+   
+   
+   
+   self.exp = exp
+   self.order = order
+   
+   
+end
+function CondRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, order )
+
+   local node = CondRetNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, order)
+   nodeMan:addNode( node )
+   return node
+end
+function CondRetNode:visit( visitor, depth, alreadySet )
+
+   do
+      local child = self.exp
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+      end
+      
+      
+      
+   end
+   
+   
+   
+   return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function CondRetNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
+function CondRetNode._setmeta( obj )
+  setmetatable( obj, { __index = CondRetNode  } )
+end
+function CondRetNode:get_exp()
+   return self.exp
+end
+function CondRetNode:get_order()
+   return self.order
+end
+
+
+
+local CondRetInfo = {}
+_moduleObj.CondRetInfo = CondRetInfo
+function CondRetInfo._setmeta( obj )
+  setmetatable( obj, { __index = CondRetInfo  } )
+end
+function CondRetInfo._new( list )
+   local obj = {}
+   CondRetInfo._setmeta( obj )
+   if obj.__init then
+      obj:__init( list )
+   end
+   return obj
+end
+function CondRetInfo:__init( list )
+
+   self.list = list
+end
+function CondRetInfo:get_list()
+   return self.list
+end
+
+
+function NodeKind.get_CondRetList(  )
+
+   return 11
+end
+
+
+local CondRetListNode = {}
+regKind( "CondRetList" )
+function Filter:processCondRetList( node, opt )
+
+   self:pushOpt( opt )
+   self:defaultProcess( node, opt )
+   self:popOpt( opt )
+end
+
+
+function NodeManager:getCondRetListNodeList(  )
+
+   return self:getList( 11 )
+end
+
+
+
+setmetatable( CondRetListNode, { __index = Node } )
+_moduleObj.CondRetListNode = CondRetListNode
+function CondRetListNode:processFilter( filter, opt )
+
+   filter:processCondRetList( self, opt )
+end
+function CondRetListNode:canBeRight( processInfo )
+
+   return true
+end
+function CondRetListNode:canBeLeft(  )
+
+   return false
+end
+function CondRetListNode:canBeStatement(  )
+
+   return true
+end
+function CondRetListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, info, exp )
+   local obj = {}
+   CondRetListNode._setmeta( obj )
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, info, exp ); end
+   return obj
+end
+function CondRetListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, info, exp) 
+   Node.__init( self,managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
+   
+   
+   
+   self.info = info
+   self.exp = exp
+   
+   
+end
+function CondRetListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, info, exp )
+
+   local node = CondRetListNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, info, exp)
+   nodeMan:addNode( node )
+   return node
+end
+function CondRetListNode:visit( visitor, depth, alreadySet )
+
+   do
+      local child = self.exp
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+      end
+      
+      
+      
+   end
+   
+   
+   
+   return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function CondRetListNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
+function CondRetListNode._setmeta( obj )
+  setmetatable( obj, { __index = CondRetListNode  } )
+end
+function CondRetListNode:get_info()
+   return self.info
+end
+function CondRetListNode:get_exp()
+   return self.exp
+end
+
+
+
 local IfKind = {}
 _moduleObj.IfKind = IfKind
 IfKind._val2NameMap = {}
@@ -2415,22 +2661,26 @@ _moduleObj.IfStmtInfo = IfStmtInfo
 function IfStmtInfo._setmeta( obj )
   setmetatable( obj, { __index = IfStmtInfo  } )
 end
-function IfStmtInfo._new( kind, exp, block )
+function IfStmtInfo._new( kind, condRetInfo, exp, block )
    local obj = {}
    IfStmtInfo._setmeta( obj )
    if obj.__init then
-      obj:__init( kind, exp, block )
+      obj:__init( kind, condRetInfo, exp, block )
    end
    return obj
 end
-function IfStmtInfo:__init( kind, exp, block )
+function IfStmtInfo:__init( kind, condRetInfo, exp, block )
 
    self.kind = kind
+   self.condRetInfo = condRetInfo
    self.exp = exp
    self.block = block
 end
 function IfStmtInfo:get_kind()
    return self.kind
+end
+function IfStmtInfo:get_condRetInfo()
+   return self.condRetInfo
 end
 function IfStmtInfo:get_exp()
    return self.exp
@@ -2441,7 +2691,7 @@ end
 
 function NodeKind.get_If(  )
 
-   return 10
+   return 12
 end
 
 
@@ -2457,7 +2707,7 @@ end
 
 function NodeManager:getIfNodeList(  )
 
-   return self:getList( 10 )
+   return self:getList( 12 )
 end
 
 
@@ -2487,7 +2737,7 @@ function IfNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, s
    return obj
 end
 function IfNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, stmtList) 
-   Node.__init( self,managerId, id, 10, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2650,7 +2900,7 @@ end
 
 function NodeKind.get_ExpList(  )
 
-   return 11
+   return 13
 end
 
 
@@ -2666,7 +2916,7 @@ end
 
 function NodeManager:getExpListNodeList(  )
 
-   return self:getList( 11 )
+   return self:getList( 13 )
 end
 
 
@@ -2688,7 +2938,7 @@ function ExpListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn) 
-   Node.__init( self,managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 13, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2890,7 +3140,7 @@ CaseKind.__allList[3] = CaseKind.MustFull
 
 function NodeKind.get_Switch(  )
 
-   return 12
+   return 14
 end
 
 
@@ -2906,7 +3156,7 @@ end
 
 function NodeManager:getSwitchNodeList(  )
 
-   return self:getList( 12 )
+   return self:getList( 14 )
 end
 
 
@@ -2936,7 +3186,7 @@ function SwitchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_) 
-   Node.__init( self,managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3195,7 +3445,7 @@ end
 
 function NodeKind.get_While(  )
 
-   return 13
+   return 15
 end
 
 
@@ -3211,7 +3461,7 @@ end
 
 function NodeManager:getWhileNodeList(  )
 
-   return self:getList( 13 )
+   return self:getList( 15 )
 end
 
 
@@ -3241,7 +3491,7 @@ function WhileNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
    return obj
 end
 function WhileNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block) 
-   Node.__init( self,managerId, id, 13, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 15, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3334,7 +3584,7 @@ end
 
 function NodeKind.get_Repeat(  )
 
-   return 14
+   return 16
 end
 
 
@@ -3350,7 +3600,7 @@ end
 
 function NodeManager:getRepeatNodeList(  )
 
-   return self:getList( 14 )
+   return self:getList( 16 )
 end
 
 
@@ -3380,7 +3630,7 @@ function RepeatNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function RepeatNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, block, exp) 
-   Node.__init( self,managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 16, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3481,7 +3731,7 @@ end
 
 function NodeKind.get_For(  )
 
-   return 15
+   return 17
 end
 
 
@@ -3497,7 +3747,7 @@ end
 
 function NodeManager:getForNodeList(  )
 
-   return self:getList( 15 )
+   return self:getList( 17 )
 end
 
 
@@ -3527,7 +3777,7 @@ function ForNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, 
    return obj
 end
 function ForNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta) 
-   Node.__init( self,managerId, id, 15, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 17, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3695,7 +3945,7 @@ end
 
 function NodeKind.get_Apply(  )
 
-   return 16
+   return 18
 end
 
 
@@ -3711,7 +3961,7 @@ end
 
 function NodeManager:getApplyNodeList(  )
 
-   return self:getList( 16 )
+   return self:getList( 18 )
 end
 
 
@@ -3741,7 +3991,7 @@ function ApplyNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
    return obj
 end
 function ApplyNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block) 
-   Node.__init( self,managerId, id, 16, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 18, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3850,7 +4100,7 @@ end
 
 function NodeKind.get_Foreach(  )
 
-   return 17
+   return 19
 end
 
 
@@ -3866,7 +4116,7 @@ end
 
 function NodeManager:getForeachNodeList(  )
 
-   return self:getList( 17 )
+   return self:getList( 19 )
 end
 
 
@@ -3896,7 +4146,7 @@ function ForeachNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ForeachNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block) 
-   Node.__init( self,managerId, id, 17, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 19, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4009,7 +4259,7 @@ end
 
 function NodeKind.get_Forsort(  )
 
-   return 18
+   return 20
 end
 
 
@@ -4025,7 +4275,7 @@ end
 
 function NodeManager:getForsortNodeList(  )
 
-   return self:getList( 18 )
+   return self:getList( 20 )
 end
 
 
@@ -4055,7 +4305,7 @@ function ForsortNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ForsortNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort) 
-   Node.__init( self,managerId, id, 18, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 20, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4172,7 +4422,7 @@ end
 
 function NodeKind.get_Return(  )
 
-   return 19
+   return 21
 end
 
 
@@ -4188,7 +4438,7 @@ end
 
 function NodeManager:getReturnNodeList(  )
 
-   return self:getList( 19 )
+   return self:getList( 21 )
 end
 
 
@@ -4218,7 +4468,7 @@ function ReturnNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ReturnNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 19, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 21, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4290,7 +4540,7 @@ end
 
 function NodeKind.get_Break(  )
 
-   return 20
+   return 22
 end
 
 
@@ -4306,7 +4556,7 @@ end
 
 function NodeManager:getBreakNodeList(  )
 
-   return self:getList( 20 )
+   return self:getList( 22 )
 end
 
 
@@ -4336,7 +4586,7 @@ function BreakNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
    return obj
 end
 function BreakNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
-   Node.__init( self,managerId, id, 20, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 22, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4375,7 +4625,7 @@ end
 
 function NodeKind.get_Provide(  )
 
-   return 21
+   return 23
 end
 
 
@@ -4391,7 +4641,7 @@ end
 
 function NodeManager:getProvideNodeList(  )
 
-   return self:getList( 21 )
+   return self:getList( 23 )
 end
 
 
@@ -4421,7 +4671,7 @@ function ProvideNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ProvideNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbol) 
-   Node.__init( self,managerId, id, 21, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 23, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4459,7 +4709,7 @@ end
 
 function NodeKind.get_ExpNew(  )
 
-   return 22
+   return 24
 end
 
 
@@ -4475,7 +4725,7 @@ end
 
 function NodeManager:getExpNewNodeList(  )
 
-   return self:getList( 22 )
+   return self:getList( 24 )
 end
 
 
@@ -4505,7 +4755,7 @@ function ExpNewNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpNewNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList) 
-   Node.__init( self,managerId, id, 22, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 24, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4603,7 +4853,7 @@ end
 
 function NodeKind.get_ExpUnwrap(  )
 
-   return 23
+   return 25
 end
 
 
@@ -4619,7 +4869,7 @@ end
 
 function NodeManager:getExpUnwrapNodeList(  )
 
-   return self:getList( 23 )
+   return self:getList( 25 )
 end
 
 
@@ -4649,7 +4899,7 @@ function ExpUnwrapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function ExpUnwrapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, default) 
-   Node.__init( self,managerId, id, 23, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4743,7 +4993,7 @@ end
 
 function NodeKind.get_ExpRef(  )
 
-   return 24
+   return 26
 end
 
 
@@ -4759,7 +5009,7 @@ end
 
 function NodeManager:getExpRefNodeList(  )
 
-   return self:getList( 24 )
+   return self:getList( 26 )
 end
 
 
@@ -4781,7 +5031,7 @@ function ExpRefNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpRefNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbolInfo) 
-   Node.__init( self,managerId, id, 24, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4831,7 +5081,7 @@ end
 
 function NodeKind.get_ExpSetVal(  )
 
-   return 25
+   return 27
 end
 
 
@@ -4847,7 +5097,7 @@ end
 
 function NodeManager:getExpSetValNodeList(  )
 
-   return self:getList( 25 )
+   return self:getList( 27 )
 end
 
 
@@ -4877,7 +5127,7 @@ function ExpSetValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function ExpSetValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet) 
-   Node.__init( self,managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4995,7 +5245,7 @@ IndexVal._name2Val["SymIdx"] = IndexVal.SymIdx
 
 function NodeKind.get_ExpSetItem(  )
 
-   return 26
+   return 28
 end
 
 
@@ -5011,7 +5261,7 @@ end
 
 function NodeManager:getExpSetItemNodeList(  )
 
-   return self:getList( 26 )
+   return self:getList( 28 )
 end
 
 
@@ -5041,7 +5291,7 @@ function ExpSetItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2) 
-   Node.__init( self,managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5134,7 +5384,7 @@ end
 
 function NodeKind.get_ExpOp2(  )
 
-   return 27
+   return 29
 end
 
 
@@ -5150,7 +5400,7 @@ end
 
 function NodeManager:getExpOp2NodeList(  )
 
-   return self:getList( 27 )
+   return self:getList( 29 )
 end
 
 
@@ -5180,7 +5430,7 @@ function ExpOp2Node._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpOp2Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2) 
-   Node.__init( self,managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5273,7 +5523,7 @@ end
 
 function NodeKind.get_UnwrapSet(  )
 
-   return 28
+   return 30
 end
 
 
@@ -5289,7 +5539,7 @@ end
 
 function NodeManager:getUnwrapSetNodeList(  )
 
-   return self:getList( 28 )
+   return self:getList( 30 )
 end
 
 
@@ -5319,7 +5569,7 @@ function UnwrapSetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function UnwrapSetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock) 
-   Node.__init( self,managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5440,7 +5690,7 @@ end
 
 function NodeKind.get_IfUnwrap(  )
 
-   return 29
+   return 31
 end
 
 
@@ -5456,7 +5706,7 @@ end
 
 function NodeManager:getIfUnwrapNodeList(  )
 
-   return self:getList( 29 )
+   return self:getList( 31 )
 end
 
 
@@ -5479,27 +5729,28 @@ function IfUnwrapNode:canBeStatement(  )
 
    return true
 end
-function IfUnwrapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock )
+function IfUnwrapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, varSymList, condRetInfo, expList, block, nilBlock )
    local obj = {}
    IfUnwrapNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, varSymList, condRetInfo, expList, block, nilBlock ); end
    return obj
 end
-function IfUnwrapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock) 
-   Node.__init( self,managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
+function IfUnwrapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, varSymList, condRetInfo, expList, block, nilBlock) 
+   Node.__init( self,managerId, id, 31, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.varSymList = varSymList
+   self.condRetInfo = condRetInfo
    self.expList = expList
    self.block = block
    self.nilBlock = nilBlock
    
    
 end
-function IfUnwrapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock )
+function IfUnwrapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, varSymList, condRetInfo, expList, block, nilBlock )
 
-   local node = IfUnwrapNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, varSymList, expList, block, nilBlock)
+   local node = IfUnwrapNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, varSymList, condRetInfo, expList, block, nilBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -5596,6 +5847,9 @@ function IfUnwrapNode._setmeta( obj )
 end
 function IfUnwrapNode:get_varSymList()
    return self.varSymList
+end
+function IfUnwrapNode:get_condRetInfo()
+   return self.condRetInfo
 end
 function IfUnwrapNode:get_expList()
    return self.expList
@@ -5719,7 +5973,7 @@ end
 
 function NodeKind.get_When(  )
 
-   return 30
+   return 32
 end
 
 
@@ -5735,7 +5989,7 @@ end
 
 function NodeManager:getWhenNodeList(  )
 
-   return self:getList( 30 )
+   return self:getList( 32 )
 end
 
 
@@ -5765,7 +6019,7 @@ function WhenNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList,
    return obj
 end
 function WhenNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock) 
-   Node.__init( self,managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 32, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5978,7 +6232,7 @@ CastKind.__allList[3] = CastKind.Implicit
 
 function NodeKind.get_ExpCast(  )
 
-   return 31
+   return 33
 end
 
 
@@ -5994,7 +6248,7 @@ end
 
 function NodeManager:getExpCastNodeList(  )
 
-   return self:getList( 31 )
+   return self:getList( 33 )
 end
 
 
@@ -6024,7 +6278,7 @@ function ExpCastNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpCastNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind) 
-   Node.__init( self,managerId, id, 31, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 33, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6146,7 +6400,7 @@ end
 
 function NodeKind.get_ExpToDDD(  )
 
-   return 32
+   return 34
 end
 
 
@@ -6162,7 +6416,7 @@ end
 
 function NodeManager:getExpToDDDNodeList(  )
 
-   return self:getList( 32 )
+   return self:getList( 34 )
 end
 
 
@@ -6192,7 +6446,7 @@ function ExpToDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function ExpToDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 32, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6254,7 +6508,7 @@ end
 
 function NodeKind.get_ExpSubDDD(  )
 
-   return 33
+   return 35
 end
 
 
@@ -6270,7 +6524,7 @@ end
 
 function NodeManager:getExpSubDDDNodeList(  )
 
-   return self:getList( 33 )
+   return self:getList( 35 )
 end
 
 
@@ -6300,7 +6554,7 @@ function ExpSubDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function ExpSubDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex) 
-   Node.__init( self,managerId, id, 33, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6399,7 +6653,7 @@ MacroMode.__allList[3] = MacroMode.AnalyzeArg
 
 function NodeKind.get_ExpOp1(  )
 
-   return 34
+   return 36
 end
 
 
@@ -6415,7 +6669,7 @@ end
 
 function NodeManager:getExpOp1NodeList(  )
 
-   return self:getList( 34 )
+   return self:getList( 36 )
 end
 
 
@@ -6445,7 +6699,7 @@ function ExpOp1Node._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpOp1Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp) 
-   Node.__init( self,managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6515,7 +6769,7 @@ end
 
 function NodeKind.get_ExpRefItem(  )
 
-   return 35
+   return 37
 end
 
 
@@ -6531,7 +6785,7 @@ end
 
 function NodeManager:getExpRefItemNodeList(  )
 
-   return self:getList( 35 )
+   return self:getList( 37 )
 end
 
 
@@ -6561,7 +6815,7 @@ function ExpRefItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function ExpRefItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index) 
-   Node.__init( self,managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6679,7 +6933,7 @@ end
 
 function NodeKind.get_ExpCall(  )
 
-   return 36
+   return 38
 end
 
 
@@ -6695,7 +6949,7 @@ end
 
 function NodeManager:getExpCallNodeList(  )
 
-   return self:getList( 36 )
+   return self:getList( 38 )
 end
 
 
@@ -6725,7 +6979,7 @@ function ExpCallNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpCallNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList) 
-   Node.__init( self,managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6858,7 +7112,7 @@ end
 
 function NodeKind.get_ExpMRet(  )
 
-   return 37
+   return 39
 end
 
 
@@ -6874,7 +7128,7 @@ end
 
 function NodeManager:getExpMRetNodeList(  )
 
-   return self:getList( 37 )
+   return self:getList( 39 )
 end
 
 
@@ -6904,7 +7158,7 @@ function ExpMRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpMRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mRet) 
-   Node.__init( self,managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6971,7 +7225,7 @@ end
 
 function NodeKind.get_ExpAccessMRet(  )
 
-   return 38
+   return 40
 end
 
 
@@ -6987,7 +7241,7 @@ end
 
 function NodeManager:getExpAccessMRetNodeList(  )
 
-   return self:getList( 38 )
+   return self:getList( 40 )
 end
 
 
@@ -7017,7 +7271,7 @@ function ExpAccessMRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
    return obj
 end
 function ExpAccessMRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mRet, index) 
-   Node.__init( self,managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7088,7 +7342,7 @@ end
 
 function NodeKind.get_ExpMultiTo1(  )
 
-   return 39
+   return 41
 end
 
 
@@ -7104,7 +7358,7 @@ end
 
 function NodeManager:getExpMultiTo1NodeList(  )
 
-   return self:getList( 39 )
+   return self:getList( 41 )
 end
 
 
@@ -7134,7 +7388,7 @@ function ExpMultiTo1Node._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function ExpMultiTo1Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7201,7 +7455,7 @@ end
 
 function NodeKind.get_ExpParen(  )
 
-   return 40
+   return 42
 end
 
 
@@ -7217,7 +7471,7 @@ end
 
 function NodeManager:getExpParenNodeList(  )
 
-   return self:getList( 40 )
+   return self:getList( 42 )
 end
 
 
@@ -7247,7 +7501,7 @@ function ExpParenNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function ExpParenNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7320,7 +7574,7 @@ end
 
 function NodeKind.get_ExpMacroExp(  )
 
-   return 41
+   return 43
 end
 
 
@@ -7336,7 +7590,7 @@ end
 
 function NodeManager:getExpMacroExpNodeList(  )
 
-   return self:getList( 41 )
+   return self:getList( 43 )
 end
 
 
@@ -7362,7 +7616,7 @@ function ExpMacroExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function ExpMacroExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList) 
-   Node.__init( self,managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7533,7 +7787,7 @@ MacroStatKind.__allList[2] = MacroStatKind.Exp
 
 function NodeKind.get_ExpMacroStat(  )
 
-   return 42
+   return 44
 end
 
 
@@ -7549,7 +7803,7 @@ end
 
 function NodeManager:getExpMacroStatNodeList(  )
 
-   return self:getList( 42 )
+   return self:getList( 44 )
 end
 
 
@@ -7579,7 +7833,7 @@ function ExpMacroStatNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
    return obj
 end
 function ExpMacroStatNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expStrList) 
-   Node.__init( self,managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 44, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7645,7 +7899,7 @@ end
 
 function NodeKind.get_ExpMacroArgExp(  )
 
-   return 43
+   return 45
 end
 
 
@@ -7661,7 +7915,7 @@ end
 
 function NodeManager:getExpMacroArgExpNodeList(  )
 
-   return self:getList( 43 )
+   return self:getList( 45 )
 end
 
 
@@ -7691,7 +7945,7 @@ function ExpMacroArgExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag,
    return obj
 end
 function ExpMacroArgExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp) 
-   Node.__init( self,managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 45, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7757,7 +8011,7 @@ end
 
 function NodeKind.get_StmtExp(  )
 
-   return 44
+   return 46
 end
 
 
@@ -7773,7 +8027,7 @@ end
 
 function NodeManager:getStmtExpNodeList(  )
 
-   return self:getList( 44 )
+   return self:getList( 46 )
 end
 
 
@@ -7799,7 +8053,7 @@ function StmtExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function StmtExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 44, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 46, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7872,7 +8126,7 @@ end
 
 function NodeKind.get_ExpMacroStatList(  )
 
-   return 45
+   return 47
 end
 
 
@@ -7888,7 +8142,7 @@ end
 
 function NodeManager:getExpMacroStatListNodeList(  )
 
-   return self:getList( 45 )
+   return self:getList( 47 )
 end
 
 
@@ -7918,7 +8172,7 @@ function ExpMacroStatListNode._new( managerId, id, pos, inTestBlock, macroArgFla
    return obj
 end
 function ExpMacroStatListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 45, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7980,7 +8234,7 @@ end
 
 function NodeKind.get_ExpOmitEnum(  )
 
-   return 46
+   return 48
 end
 
 
@@ -7996,7 +8250,7 @@ end
 
 function NodeManager:getExpOmitEnumNodeList(  )
 
-   return self:getList( 46 )
+   return self:getList( 48 )
 end
 
 
@@ -8026,7 +8280,7 @@ function ExpOmitEnumNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function ExpOmitEnumNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo) 
-   Node.__init( self,managerId, id, 46, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 48, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8076,7 +8330,7 @@ end
 
 function NodeKind.get_RefField(  )
 
-   return 47
+   return 49
 end
 
 
@@ -8092,7 +8346,7 @@ end
 
 function NodeManager:getRefFieldNodeList(  )
 
-   return self:getList( 47 )
+   return self:getList( 49 )
 end
 
 
@@ -8118,7 +8372,7 @@ function RefFieldNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function RefFieldNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix) 
-   Node.__init( self,managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8241,7 +8495,7 @@ end
 
 function NodeKind.get_GetField(  )
 
-   return 48
+   return 50
 end
 
 
@@ -8257,7 +8511,7 @@ end
 
 function NodeManager:getGetFieldNodeList(  )
 
-   return self:getList( 48 )
+   return self:getList( 50 )
 end
 
 
@@ -8291,7 +8545,7 @@ function GetFieldNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function GetFieldNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
-   Node.__init( self,managerId, id, 48, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8379,7 +8633,7 @@ end
 
 function NodeKind.get_Alias(  )
 
-   return 49
+   return 51
 end
 
 
@@ -8395,7 +8649,7 @@ end
 
 function NodeManager:getAliasNodeList(  )
 
-   return self:getList( 49 )
+   return self:getList( 51 )
 end
 
 
@@ -8425,7 +8679,7 @@ function AliasNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
    return obj
 end
 function AliasNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo) 
-   Node.__init( self,managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8558,7 +8812,7 @@ DeclVarMode.__allList[3] = DeclVarMode.Unwrap
 
 function NodeKind.get_DeclVar(  )
 
-   return 50
+   return 52
 end
 
 
@@ -8574,7 +8828,7 @@ end
 
 function NodeManager:getDeclVarNodeList(  )
 
-   return self:getList( 50 )
+   return self:getList( 52 )
 end
 
 
@@ -8597,20 +8851,21 @@ function DeclVarNode:canBeStatement(  )
 
    return true
 end
-function DeclVarNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
    local obj = {}
    DeclVarNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
    return obj
 end
-function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
-   Node.__init( self,managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
+function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
+   Node.__init( self,managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.mode = mode
    self.accessMode = accessMode
    self.staticFlag = staticFlag
+   self.condRetInfo = condRetInfo
    self.varList = varList
    self.expList = expList
    self.symbolInfoList = symbolInfoList
@@ -8623,9 +8878,9 @@ function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeL
    
    
 end
-function DeclVarNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
 
-   local node = DeclVarNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
+   local node = DeclVarNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -8766,6 +9021,9 @@ function DeclVarNode:get_accessMode()
 end
 function DeclVarNode:get_staticFlag()
    return self.staticFlag
+end
+function DeclVarNode:get_condRetInfo()
+   return self.condRetInfo
 end
 function DeclVarNode:get_varList()
    return self.varList
@@ -9105,7 +9363,7 @@ end
 
 function NodeKind.get_DeclForm(  )
 
-   return 51
+   return 53
 end
 
 
@@ -9121,7 +9379,7 @@ end
 
 function NodeManager:getDeclFormNodeList(  )
 
-   return self:getList( 51 )
+   return self:getList( 53 )
 end
 
 
@@ -9151,7 +9409,7 @@ function DeclFormNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function DeclFormNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9259,7 +9517,7 @@ end
 
 function NodeKind.get_DeclFunc(  )
 
-   return 52
+   return 54
 end
 
 
@@ -9275,7 +9533,7 @@ end
 
 function NodeManager:getDeclFuncNodeList(  )
 
-   return self:getList( 52 )
+   return self:getList( 54 )
 end
 
 
@@ -9297,7 +9555,7 @@ function DeclFuncNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function DeclFuncNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 54, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9417,7 +9675,7 @@ end
 
 function NodeKind.get_DeclMethod(  )
 
-   return 53
+   return 55
 end
 
 
@@ -9433,7 +9691,7 @@ end
 
 function NodeManager:getDeclMethodNodeList(  )
 
-   return self:getList( 53 )
+   return self:getList( 55 )
 end
 
 
@@ -9463,7 +9721,7 @@ function DeclMethodNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function DeclMethodNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 55, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9571,7 +9829,7 @@ end
 
 function NodeKind.get_ProtoMethod(  )
 
-   return 54
+   return 56
 end
 
 
@@ -9587,7 +9845,7 @@ end
 
 function NodeManager:getProtoMethodNodeList(  )
 
-   return self:getList( 54 )
+   return self:getList( 56 )
 end
 
 
@@ -9617,7 +9875,7 @@ function ProtoMethodNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function ProtoMethodNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,managerId, id, 54, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 56, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9725,7 +9983,7 @@ end
 
 function NodeKind.get_DeclConstr(  )
 
-   return 55
+   return 57
 end
 
 
@@ -9741,7 +9999,7 @@ end
 
 function NodeManager:getDeclConstrNodeList(  )
 
-   return self:getList( 55 )
+   return self:getList( 57 )
 end
 
 
@@ -9771,7 +10029,7 @@ function DeclConstrNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function DeclConstrNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,managerId, id, 55, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 57, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -9879,7 +10137,7 @@ end
 
 function NodeKind.get_DeclDestr(  )
 
-   return 56
+   return 58
 end
 
 
@@ -9895,7 +10153,7 @@ end
 
 function NodeManager:getDeclDestrNodeList(  )
 
-   return self:getList( 56 )
+   return self:getList( 58 )
 end
 
 
@@ -9925,7 +10183,7 @@ function DeclDestrNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function DeclDestrNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,managerId, id, 56, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 58, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10033,7 +10291,7 @@ end
 
 function NodeKind.get_ExpCallSuperCtor(  )
 
-   return 57
+   return 59
 end
 
 
@@ -10049,7 +10307,7 @@ end
 
 function NodeManager:getExpCallSuperCtorNodeList(  )
 
-   return self:getList( 57 )
+   return self:getList( 59 )
 end
 
 
@@ -10079,7 +10337,7 @@ function ExpCallSuperCtorNode._new( managerId, id, pos, inTestBlock, macroArgFla
    return obj
 end
 function ExpCallSuperCtorNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
-   Node.__init( self,managerId, id, 57, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 59, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10154,7 +10412,7 @@ end
 
 function NodeKind.get_ExpCallSuper(  )
 
-   return 58
+   return 60
 end
 
 
@@ -10170,7 +10428,7 @@ end
 
 function NodeManager:getExpCallSuperNodeList(  )
 
-   return self:getList( 58 )
+   return self:getList( 60 )
 end
 
 
@@ -10196,7 +10454,7 @@ function ExpCallSuperNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
    return obj
 end
 function ExpCallSuperNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
-   Node.__init( self,managerId, id, 58, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 60, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10311,7 +10569,7 @@ LockKind.__allList[4] = LockKind.LuaDepend
 
 function NodeKind.get_AsyncLock(  )
 
-   return 59
+   return 61
 end
 
 
@@ -10327,7 +10585,7 @@ end
 
 function NodeManager:getAsyncLockNodeList(  )
 
-   return self:getList( 59 )
+   return self:getList( 61 )
 end
 
 
@@ -10357,7 +10615,7 @@ function AsyncLockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function AsyncLockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block) 
-   Node.__init( self,managerId, id, 59, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10423,7 +10681,7 @@ end
 
 function NodeKind.get_Request(  )
 
-   return 60
+   return 62
 end
 
 
@@ -10439,7 +10697,7 @@ end
 
 function NodeManager:getRequestNodeList(  )
 
-   return self:getList( 60 )
+   return self:getList( 62 )
 end
 
 
@@ -10469,7 +10727,7 @@ function RequestNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function RequestNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, processor, exp) 
-   Node.__init( self,managerId, id, 60, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10558,7 +10816,7 @@ end
 
 function NodeKind.get_DeclMember(  )
 
-   return 61
+   return 63
 end
 
 
@@ -10574,7 +10832,7 @@ end
 
 function NodeManager:getDeclMemberNodeList(  )
 
-   return self:getList( 61 )
+   return self:getList( 63 )
 end
 
 
@@ -10604,7 +10862,7 @@ function DeclMemberNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function DeclMemberNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken) 
-   Node.__init( self,managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 63, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10730,7 +10988,7 @@ end
 
 function NodeKind.get_DeclArg(  )
 
-   return 62
+   return 64
 end
 
 
@@ -10746,7 +11004,7 @@ end
 
 function NodeManager:getDeclArgNodeList(  )
 
-   return self:getList( 62 )
+   return self:getList( 64 )
 end
 
 
@@ -10776,7 +11034,7 @@ function DeclArgNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function DeclArgNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType) 
-   Node.__init( self,managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 64, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10851,7 +11109,7 @@ end
 
 function NodeKind.get_DeclArgDDD(  )
 
-   return 63
+   return 65
 end
 
 
@@ -10867,7 +11125,7 @@ end
 
 function NodeManager:getDeclArgDDDNodeList(  )
 
-   return self:getList( 63 )
+   return self:getList( 65 )
 end
 
 
@@ -10897,7 +11155,7 @@ function DeclArgDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function DeclArgDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
-   Node.__init( self,managerId, id, 63, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 65, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10960,7 +11218,7 @@ end
 
 function NodeKind.get_DeclAdvertise(  )
 
-   return 64
+   return 66
 end
 
 
@@ -10976,7 +11234,7 @@ end
 
 function NodeManager:getDeclAdvertiseNodeList(  )
 
-   return self:getList( 64 )
+   return self:getList( 66 )
 end
 
 
@@ -11006,7 +11264,7 @@ function DeclAdvertiseNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
    return obj
 end
 function DeclAdvertiseNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, advInfo) 
-   Node.__init( self,managerId, id, 64, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 66, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11119,7 +11377,7 @@ end
 
 function NodeKind.get_ProtoClass(  )
 
-   return 65
+   return 67
 end
 
 
@@ -11135,7 +11393,7 @@ end
 
 function NodeManager:getProtoClassNodeList(  )
 
-   return self:getList( 65 )
+   return self:getList( 67 )
 end
 
 
@@ -11165,7 +11423,7 @@ function ProtoClassNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function ProtoClassNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo) 
-   Node.__init( self,managerId, id, 65, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 67, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11237,7 +11495,7 @@ end
 
 function NodeKind.get_DeclClass(  )
 
-   return 66
+   return 68
 end
 
 
@@ -11253,7 +11511,7 @@ end
 
 function NodeManager:getDeclClassNodeList(  )
 
-   return self:getList( 66 )
+   return self:getList( 68 )
 end
 
 
@@ -11283,7 +11541,7 @@ function DeclClassNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function DeclClassNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
-   Node.__init( self,managerId, id, 66, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 68, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11568,7 +11826,7 @@ end
 
 function NodeKind.get_DeclEnum(  )
 
-   return 67
+   return 69
 end
 
 
@@ -11584,7 +11842,7 @@ end
 
 function NodeManager:getDeclEnumNodeList(  )
 
-   return self:getList( 67 )
+   return self:getList( 69 )
 end
 
 
@@ -11614,7 +11872,7 @@ function DeclEnumNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function DeclEnumNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope) 
-   Node.__init( self,managerId, id, 67, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 69, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11718,7 +11976,7 @@ end
 
 function NodeKind.get_DeclAlge(  )
 
-   return 68
+   return 70
 end
 
 
@@ -11734,7 +11992,7 @@ end
 
 function NodeManager:getDeclAlgeNodeList(  )
 
-   return self:getList( 68 )
+   return self:getList( 70 )
 end
 
 
@@ -11764,7 +12022,7 @@ function DeclAlgeNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function DeclAlgeNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope) 
-   Node.__init( self,managerId, id, 68, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 70, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -11848,7 +12106,7 @@ end
 
 function NodeKind.get_NewAlgeVal(  )
 
-   return 69
+   return 71
 end
 
 
@@ -11864,7 +12122,7 @@ end
 
 function NodeManager:getNewAlgeValNodeList(  )
 
-   return self:getList( 69 )
+   return self:getList( 71 )
 end
 
 
@@ -11894,7 +12152,7 @@ function NewAlgeValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function NewAlgeValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList) 
-   Node.__init( self,managerId, id, 69, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12029,7 +12287,7 @@ end
 
 function NodeKind.get_LuneControl(  )
 
-   return 70
+   return 72
 end
 
 
@@ -12045,7 +12303,7 @@ end
 
 function NodeManager:getLuneControlNodeList(  )
 
-   return self:getList( 70 )
+   return self:getList( 72 )
 end
 
 
@@ -12075,7 +12333,7 @@ function LuneControlNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LuneControlNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, pragma) 
-   Node.__init( self,managerId, id, 70, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 72, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12147,7 +12405,7 @@ end
 
 function NodeKind.get_Match(  )
 
-   return 71
+   return 73
 end
 
 
@@ -12163,7 +12421,7 @@ end
 
 function NodeManager:getMatchNodeList(  )
 
-   return self:getList( 71 )
+   return self:getList( 73 )
 end
 
 
@@ -12193,7 +12451,7 @@ function MatchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
    return obj
 end
 function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_) 
-   Node.__init( self,managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12473,7 +12731,7 @@ end
 
 function NodeKind.get_LuneKind(  )
 
-   return 72
+   return 74
 end
 
 
@@ -12489,7 +12747,7 @@ end
 
 function NodeManager:getLuneKindNodeList(  )
 
-   return self:getList( 72 )
+   return self:getList( 74 )
 end
 
 
@@ -12519,7 +12777,7 @@ function LuneKindNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function LuneKindNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 72, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 74, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12581,7 +12839,7 @@ end
 
 function NodeKind.get_DeclMacro(  )
 
-   return 73
+   return 75
 end
 
 
@@ -12597,7 +12855,7 @@ end
 
 function NodeManager:getDeclMacroNodeList(  )
 
-   return self:getList( 73 )
+   return self:getList( 75 )
 end
 
 
@@ -12627,7 +12885,7 @@ function DeclMacroNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function DeclMacroNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
-   Node.__init( self,managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 75, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12682,7 +12940,7 @@ end
 
 function NodeKind.get_TestCase(  )
 
-   return 74
+   return 76
 end
 
 
@@ -12698,7 +12956,7 @@ end
 
 function NodeManager:getTestCaseNodeList(  )
 
-   return self:getList( 74 )
+   return self:getList( 76 )
 end
 
 
@@ -12728,7 +12986,7 @@ function TestCaseNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function TestCaseNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block) 
-   Node.__init( self,managerId, id, 74, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12825,7 +13083,7 @@ end
 
 function NodeKind.get_TestBlock(  )
 
-   return 75
+   return 77
 end
 
 
@@ -12841,7 +13099,7 @@ end
 
 function NodeManager:getTestBlockNodeList(  )
 
-   return self:getList( 75 )
+   return self:getList( 77 )
 end
 
 
@@ -12871,7 +13129,7 @@ function TestBlockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function TestBlockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, stmtList) 
-   Node.__init( self,managerId, id, 75, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 77, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12947,7 +13205,7 @@ end
 
 function NodeKind.get_Abbr(  )
 
-   return 76
+   return 78
 end
 
 
@@ -12963,7 +13221,7 @@ end
 
 function NodeManager:getAbbrNodeList(  )
 
-   return self:getList( 76 )
+   return self:getList( 78 )
 end
 
 
@@ -12993,7 +13251,7 @@ function AbbrNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList 
    return obj
 end
 function AbbrNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
-   Node.__init( self,managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 78, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13026,7 +13284,7 @@ end
 
 function NodeKind.get_Boxing(  )
 
-   return 77
+   return 79
 end
 
 
@@ -13042,7 +13300,7 @@ end
 
 function NodeManager:getBoxingNodeList(  )
 
-   return self:getList( 77 )
+   return self:getList( 79 )
 end
 
 
@@ -13072,7 +13330,7 @@ function BoxingNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function BoxingNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src) 
-   Node.__init( self,managerId, id, 77, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 79, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13134,7 +13392,7 @@ end
 
 function NodeKind.get_Unboxing(  )
 
-   return 78
+   return 80
 end
 
 
@@ -13150,7 +13408,7 @@ end
 
 function NodeManager:getUnboxingNodeList(  )
 
-   return self:getList( 78 )
+   return self:getList( 80 )
 end
 
 
@@ -13180,7 +13438,7 @@ function UnboxingNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function UnboxingNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src) 
-   Node.__init( self,managerId, id, 78, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 80, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13242,7 +13500,7 @@ end
 
 function NodeKind.get_LiteralNil(  )
 
-   return 79
+   return 81
 end
 
 
@@ -13258,7 +13516,7 @@ end
 
 function NodeManager:getLiteralNilNodeList(  )
 
-   return self:getList( 79 )
+   return self:getList( 81 )
 end
 
 
@@ -13288,7 +13546,7 @@ function LiteralNilNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralNilNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
-   Node.__init( self,managerId, id, 79, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13321,7 +13579,7 @@ end
 
 function NodeKind.get_LiteralChar(  )
 
-   return 80
+   return 82
 end
 
 
@@ -13337,7 +13595,7 @@ end
 
 function NodeManager:getLiteralCharNodeList(  )
 
-   return self:getList( 80 )
+   return self:getList( 82 )
 end
 
 
@@ -13367,7 +13625,7 @@ function LiteralCharNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralCharNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
-   Node.__init( self,managerId, id, 80, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13409,7 +13667,7 @@ end
 
 function NodeKind.get_LiteralInt(  )
 
-   return 81
+   return 83
 end
 
 
@@ -13425,7 +13683,7 @@ end
 
 function NodeManager:getLiteralIntNodeList(  )
 
-   return self:getList( 81 )
+   return self:getList( 83 )
 end
 
 
@@ -13455,7 +13713,7 @@ function LiteralIntNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralIntNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
-   Node.__init( self,managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13497,7 +13755,7 @@ end
 
 function NodeKind.get_LiteralReal(  )
 
-   return 82
+   return 84
 end
 
 
@@ -13513,7 +13771,7 @@ end
 
 function NodeManager:getLiteralRealNodeList(  )
 
-   return self:getList( 82 )
+   return self:getList( 84 )
 end
 
 
@@ -13543,7 +13801,7 @@ function LiteralRealNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralRealNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
-   Node.__init( self,managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13585,7 +13843,7 @@ end
 
 function NodeKind.get_LiteralArray(  )
 
-   return 83
+   return 85
 end
 
 
@@ -13601,7 +13859,7 @@ end
 
 function NodeManager:getLiteralArrayNodeList(  )
 
-   return self:getList( 83 )
+   return self:getList( 85 )
 end
 
 
@@ -13631,7 +13889,7 @@ function LiteralArrayNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
    return obj
 end
 function LiteralArrayNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13698,7 +13956,7 @@ end
 
 function NodeKind.get_LiteralList(  )
 
-   return 84
+   return 86
 end
 
 
@@ -13714,7 +13972,7 @@ end
 
 function NodeManager:getLiteralListNodeList(  )
 
-   return self:getList( 84 )
+   return self:getList( 86 )
 end
 
 
@@ -13744,7 +14002,7 @@ function LiteralListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13811,7 +14069,7 @@ end
 
 function NodeKind.get_LiteralSet(  )
 
-   return 85
+   return 87
 end
 
 
@@ -13827,7 +14085,7 @@ end
 
 function NodeManager:getLiteralSetNodeList(  )
 
-   return self:getList( 85 )
+   return self:getList( 87 )
 end
 
 
@@ -13857,7 +14115,7 @@ function LiteralSetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralSetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13949,7 +14207,7 @@ end
 
 function NodeKind.get_LiteralMap(  )
 
-   return 86
+   return 88
 end
 
 
@@ -13965,7 +14223,7 @@ end
 
 function NodeManager:getLiteralMapNodeList(  )
 
-   return self:getList( 86 )
+   return self:getList( 88 )
 end
 
 
@@ -13995,7 +14253,7 @@ function LiteralMapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralMapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, map, pairList) 
-   Node.__init( self,managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14092,7 +14350,7 @@ end
 
 function NodeKind.get_LiteralString(  )
 
-   return 87
+   return 89
 end
 
 
@@ -14108,7 +14366,7 @@ end
 
 function NodeManager:getLiteralStringNodeList(  )
 
-   return self:getList( 87 )
+   return self:getList( 89 )
 end
 
 
@@ -14138,7 +14396,7 @@ function LiteralStringNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
    return obj
 end
 function LiteralStringNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam) 
-   Node.__init( self,managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14241,7 +14499,7 @@ end
 
 function NodeKind.get_LiteralBool(  )
 
-   return 88
+   return 90
 end
 
 
@@ -14257,7 +14515,7 @@ end
 
 function NodeManager:getLiteralBoolNodeList(  )
 
-   return self:getList( 88 )
+   return self:getList( 90 )
 end
 
 
@@ -14287,7 +14545,7 @@ function LiteralBoolNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralBoolNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token) 
-   Node.__init( self,managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 90, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14325,7 +14583,7 @@ end
 
 function NodeKind.get_LiteralSymbol(  )
 
-   return 89
+   return 91
 end
 
 
@@ -14341,7 +14599,7 @@ end
 
 function NodeManager:getLiteralSymbolNodeList(  )
 
-   return self:getList( 89 )
+   return self:getList( 91 )
 end
 
 
@@ -14371,7 +14629,7 @@ function LiteralSymbolNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
    return obj
 end
 function LiteralSymbolNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token) 
-   Node.__init( self,managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
+   Node.__init( self,managerId, id, 91, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -15398,246 +15656,252 @@ nodeKindEnum.__allList[9] = nodeKindEnum.Block
 nodeKindEnum.Scope = 9
 nodeKindEnum._val2NameMap[9] = 'Scope'
 nodeKindEnum.__allList[10] = nodeKindEnum.Scope
-nodeKindEnum.If = 10
-nodeKindEnum._val2NameMap[10] = 'If'
-nodeKindEnum.__allList[11] = nodeKindEnum.If
-nodeKindEnum.ExpList = 11
-nodeKindEnum._val2NameMap[11] = 'ExpList'
-nodeKindEnum.__allList[12] = nodeKindEnum.ExpList
-nodeKindEnum.Switch = 12
-nodeKindEnum._val2NameMap[12] = 'Switch'
-nodeKindEnum.__allList[13] = nodeKindEnum.Switch
-nodeKindEnum.While = 13
-nodeKindEnum._val2NameMap[13] = 'While'
-nodeKindEnum.__allList[14] = nodeKindEnum.While
-nodeKindEnum.Repeat = 14
-nodeKindEnum._val2NameMap[14] = 'Repeat'
-nodeKindEnum.__allList[15] = nodeKindEnum.Repeat
-nodeKindEnum.For = 15
-nodeKindEnum._val2NameMap[15] = 'For'
-nodeKindEnum.__allList[16] = nodeKindEnum.For
-nodeKindEnum.Apply = 16
-nodeKindEnum._val2NameMap[16] = 'Apply'
-nodeKindEnum.__allList[17] = nodeKindEnum.Apply
-nodeKindEnum.Foreach = 17
-nodeKindEnum._val2NameMap[17] = 'Foreach'
-nodeKindEnum.__allList[18] = nodeKindEnum.Foreach
-nodeKindEnum.Forsort = 18
-nodeKindEnum._val2NameMap[18] = 'Forsort'
-nodeKindEnum.__allList[19] = nodeKindEnum.Forsort
-nodeKindEnum.Return = 19
-nodeKindEnum._val2NameMap[19] = 'Return'
-nodeKindEnum.__allList[20] = nodeKindEnum.Return
-nodeKindEnum.Break = 20
-nodeKindEnum._val2NameMap[20] = 'Break'
-nodeKindEnum.__allList[21] = nodeKindEnum.Break
-nodeKindEnum.Provide = 21
-nodeKindEnum._val2NameMap[21] = 'Provide'
-nodeKindEnum.__allList[22] = nodeKindEnum.Provide
-nodeKindEnum.ExpNew = 22
-nodeKindEnum._val2NameMap[22] = 'ExpNew'
-nodeKindEnum.__allList[23] = nodeKindEnum.ExpNew
-nodeKindEnum.ExpUnwrap = 23
-nodeKindEnum._val2NameMap[23] = 'ExpUnwrap'
-nodeKindEnum.__allList[24] = nodeKindEnum.ExpUnwrap
-nodeKindEnum.ExpRef = 24
-nodeKindEnum._val2NameMap[24] = 'ExpRef'
-nodeKindEnum.__allList[25] = nodeKindEnum.ExpRef
-nodeKindEnum.ExpSetVal = 25
-nodeKindEnum._val2NameMap[25] = 'ExpSetVal'
-nodeKindEnum.__allList[26] = nodeKindEnum.ExpSetVal
-nodeKindEnum.ExpSetItem = 26
-nodeKindEnum._val2NameMap[26] = 'ExpSetItem'
-nodeKindEnum.__allList[27] = nodeKindEnum.ExpSetItem
-nodeKindEnum.ExpOp2 = 27
-nodeKindEnum._val2NameMap[27] = 'ExpOp2'
-nodeKindEnum.__allList[28] = nodeKindEnum.ExpOp2
-nodeKindEnum.UnwrapSet = 28
-nodeKindEnum._val2NameMap[28] = 'UnwrapSet'
-nodeKindEnum.__allList[29] = nodeKindEnum.UnwrapSet
-nodeKindEnum.IfUnwrap = 29
-nodeKindEnum._val2NameMap[29] = 'IfUnwrap'
-nodeKindEnum.__allList[30] = nodeKindEnum.IfUnwrap
-nodeKindEnum.When = 30
-nodeKindEnum._val2NameMap[30] = 'When'
-nodeKindEnum.__allList[31] = nodeKindEnum.When
-nodeKindEnum.ExpCast = 31
-nodeKindEnum._val2NameMap[31] = 'ExpCast'
-nodeKindEnum.__allList[32] = nodeKindEnum.ExpCast
-nodeKindEnum.ExpToDDD = 32
-nodeKindEnum._val2NameMap[32] = 'ExpToDDD'
-nodeKindEnum.__allList[33] = nodeKindEnum.ExpToDDD
-nodeKindEnum.ExpSubDDD = 33
-nodeKindEnum._val2NameMap[33] = 'ExpSubDDD'
-nodeKindEnum.__allList[34] = nodeKindEnum.ExpSubDDD
-nodeKindEnum.ExpOp1 = 34
-nodeKindEnum._val2NameMap[34] = 'ExpOp1'
-nodeKindEnum.__allList[35] = nodeKindEnum.ExpOp1
-nodeKindEnum.ExpRefItem = 35
-nodeKindEnum._val2NameMap[35] = 'ExpRefItem'
-nodeKindEnum.__allList[36] = nodeKindEnum.ExpRefItem
-nodeKindEnum.ExpCall = 36
-nodeKindEnum._val2NameMap[36] = 'ExpCall'
-nodeKindEnum.__allList[37] = nodeKindEnum.ExpCall
-nodeKindEnum.ExpMRet = 37
-nodeKindEnum._val2NameMap[37] = 'ExpMRet'
-nodeKindEnum.__allList[38] = nodeKindEnum.ExpMRet
-nodeKindEnum.ExpAccessMRet = 38
-nodeKindEnum._val2NameMap[38] = 'ExpAccessMRet'
-nodeKindEnum.__allList[39] = nodeKindEnum.ExpAccessMRet
-nodeKindEnum.ExpMultiTo1 = 39
-nodeKindEnum._val2NameMap[39] = 'ExpMultiTo1'
-nodeKindEnum.__allList[40] = nodeKindEnum.ExpMultiTo1
-nodeKindEnum.ExpParen = 40
-nodeKindEnum._val2NameMap[40] = 'ExpParen'
-nodeKindEnum.__allList[41] = nodeKindEnum.ExpParen
-nodeKindEnum.ExpMacroExp = 41
-nodeKindEnum._val2NameMap[41] = 'ExpMacroExp'
-nodeKindEnum.__allList[42] = nodeKindEnum.ExpMacroExp
-nodeKindEnum.ExpMacroStat = 42
-nodeKindEnum._val2NameMap[42] = 'ExpMacroStat'
-nodeKindEnum.__allList[43] = nodeKindEnum.ExpMacroStat
-nodeKindEnum.ExpMacroArgExp = 43
-nodeKindEnum._val2NameMap[43] = 'ExpMacroArgExp'
-nodeKindEnum.__allList[44] = nodeKindEnum.ExpMacroArgExp
-nodeKindEnum.StmtExp = 44
-nodeKindEnum._val2NameMap[44] = 'StmtExp'
-nodeKindEnum.__allList[45] = nodeKindEnum.StmtExp
-nodeKindEnum.ExpMacroStatList = 45
-nodeKindEnum._val2NameMap[45] = 'ExpMacroStatList'
-nodeKindEnum.__allList[46] = nodeKindEnum.ExpMacroStatList
-nodeKindEnum.ExpOmitEnum = 46
-nodeKindEnum._val2NameMap[46] = 'ExpOmitEnum'
-nodeKindEnum.__allList[47] = nodeKindEnum.ExpOmitEnum
-nodeKindEnum.RefField = 47
-nodeKindEnum._val2NameMap[47] = 'RefField'
-nodeKindEnum.__allList[48] = nodeKindEnum.RefField
-nodeKindEnum.GetField = 48
-nodeKindEnum._val2NameMap[48] = 'GetField'
-nodeKindEnum.__allList[49] = nodeKindEnum.GetField
-nodeKindEnum.Alias = 49
-nodeKindEnum._val2NameMap[49] = 'Alias'
-nodeKindEnum.__allList[50] = nodeKindEnum.Alias
-nodeKindEnum.DeclVar = 50
-nodeKindEnum._val2NameMap[50] = 'DeclVar'
-nodeKindEnum.__allList[51] = nodeKindEnum.DeclVar
-nodeKindEnum.DeclForm = 51
-nodeKindEnum._val2NameMap[51] = 'DeclForm'
-nodeKindEnum.__allList[52] = nodeKindEnum.DeclForm
-nodeKindEnum.DeclFunc = 52
-nodeKindEnum._val2NameMap[52] = 'DeclFunc'
-nodeKindEnum.__allList[53] = nodeKindEnum.DeclFunc
-nodeKindEnum.DeclMethod = 53
-nodeKindEnum._val2NameMap[53] = 'DeclMethod'
-nodeKindEnum.__allList[54] = nodeKindEnum.DeclMethod
-nodeKindEnum.ProtoMethod = 54
-nodeKindEnum._val2NameMap[54] = 'ProtoMethod'
-nodeKindEnum.__allList[55] = nodeKindEnum.ProtoMethod
-nodeKindEnum.DeclConstr = 55
-nodeKindEnum._val2NameMap[55] = 'DeclConstr'
-nodeKindEnum.__allList[56] = nodeKindEnum.DeclConstr
-nodeKindEnum.DeclDestr = 56
-nodeKindEnum._val2NameMap[56] = 'DeclDestr'
-nodeKindEnum.__allList[57] = nodeKindEnum.DeclDestr
-nodeKindEnum.ExpCallSuperCtor = 57
-nodeKindEnum._val2NameMap[57] = 'ExpCallSuperCtor'
-nodeKindEnum.__allList[58] = nodeKindEnum.ExpCallSuperCtor
-nodeKindEnum.ExpCallSuper = 58
-nodeKindEnum._val2NameMap[58] = 'ExpCallSuper'
-nodeKindEnum.__allList[59] = nodeKindEnum.ExpCallSuper
-nodeKindEnum.AsyncLock = 59
-nodeKindEnum._val2NameMap[59] = 'AsyncLock'
-nodeKindEnum.__allList[60] = nodeKindEnum.AsyncLock
-nodeKindEnum.Request = 60
-nodeKindEnum._val2NameMap[60] = 'Request'
-nodeKindEnum.__allList[61] = nodeKindEnum.Request
-nodeKindEnum.DeclMember = 61
-nodeKindEnum._val2NameMap[61] = 'DeclMember'
-nodeKindEnum.__allList[62] = nodeKindEnum.DeclMember
-nodeKindEnum.DeclArg = 62
-nodeKindEnum._val2NameMap[62] = 'DeclArg'
-nodeKindEnum.__allList[63] = nodeKindEnum.DeclArg
-nodeKindEnum.DeclArgDDD = 63
-nodeKindEnum._val2NameMap[63] = 'DeclArgDDD'
-nodeKindEnum.__allList[64] = nodeKindEnum.DeclArgDDD
-nodeKindEnum.DeclAdvertise = 64
-nodeKindEnum._val2NameMap[64] = 'DeclAdvertise'
-nodeKindEnum.__allList[65] = nodeKindEnum.DeclAdvertise
-nodeKindEnum.ProtoClass = 65
-nodeKindEnum._val2NameMap[65] = 'ProtoClass'
-nodeKindEnum.__allList[66] = nodeKindEnum.ProtoClass
-nodeKindEnum.DeclClass = 66
-nodeKindEnum._val2NameMap[66] = 'DeclClass'
-nodeKindEnum.__allList[67] = nodeKindEnum.DeclClass
-nodeKindEnum.DeclEnum = 67
-nodeKindEnum._val2NameMap[67] = 'DeclEnum'
-nodeKindEnum.__allList[68] = nodeKindEnum.DeclEnum
-nodeKindEnum.DeclAlge = 68
-nodeKindEnum._val2NameMap[68] = 'DeclAlge'
-nodeKindEnum.__allList[69] = nodeKindEnum.DeclAlge
-nodeKindEnum.NewAlgeVal = 69
-nodeKindEnum._val2NameMap[69] = 'NewAlgeVal'
-nodeKindEnum.__allList[70] = nodeKindEnum.NewAlgeVal
-nodeKindEnum.LuneControl = 70
-nodeKindEnum._val2NameMap[70] = 'LuneControl'
-nodeKindEnum.__allList[71] = nodeKindEnum.LuneControl
-nodeKindEnum.Match = 71
-nodeKindEnum._val2NameMap[71] = 'Match'
-nodeKindEnum.__allList[72] = nodeKindEnum.Match
-nodeKindEnum.LuneKind = 72
-nodeKindEnum._val2NameMap[72] = 'LuneKind'
-nodeKindEnum.__allList[73] = nodeKindEnum.LuneKind
-nodeKindEnum.DeclMacro = 73
-nodeKindEnum._val2NameMap[73] = 'DeclMacro'
-nodeKindEnum.__allList[74] = nodeKindEnum.DeclMacro
-nodeKindEnum.TestCase = 74
-nodeKindEnum._val2NameMap[74] = 'TestCase'
-nodeKindEnum.__allList[75] = nodeKindEnum.TestCase
-nodeKindEnum.TestBlock = 75
-nodeKindEnum._val2NameMap[75] = 'TestBlock'
-nodeKindEnum.__allList[76] = nodeKindEnum.TestBlock
-nodeKindEnum.Abbr = 76
-nodeKindEnum._val2NameMap[76] = 'Abbr'
-nodeKindEnum.__allList[77] = nodeKindEnum.Abbr
-nodeKindEnum.Boxing = 77
-nodeKindEnum._val2NameMap[77] = 'Boxing'
-nodeKindEnum.__allList[78] = nodeKindEnum.Boxing
-nodeKindEnum.Unboxing = 78
-nodeKindEnum._val2NameMap[78] = 'Unboxing'
-nodeKindEnum.__allList[79] = nodeKindEnum.Unboxing
-nodeKindEnum.LiteralNil = 79
-nodeKindEnum._val2NameMap[79] = 'LiteralNil'
-nodeKindEnum.__allList[80] = nodeKindEnum.LiteralNil
-nodeKindEnum.LiteralChar = 80
-nodeKindEnum._val2NameMap[80] = 'LiteralChar'
-nodeKindEnum.__allList[81] = nodeKindEnum.LiteralChar
-nodeKindEnum.LiteralInt = 81
-nodeKindEnum._val2NameMap[81] = 'LiteralInt'
-nodeKindEnum.__allList[82] = nodeKindEnum.LiteralInt
-nodeKindEnum.LiteralReal = 82
-nodeKindEnum._val2NameMap[82] = 'LiteralReal'
-nodeKindEnum.__allList[83] = nodeKindEnum.LiteralReal
-nodeKindEnum.LiteralArray = 83
-nodeKindEnum._val2NameMap[83] = 'LiteralArray'
-nodeKindEnum.__allList[84] = nodeKindEnum.LiteralArray
-nodeKindEnum.LiteralList = 84
-nodeKindEnum._val2NameMap[84] = 'LiteralList'
-nodeKindEnum.__allList[85] = nodeKindEnum.LiteralList
-nodeKindEnum.LiteralSet = 85
-nodeKindEnum._val2NameMap[85] = 'LiteralSet'
-nodeKindEnum.__allList[86] = nodeKindEnum.LiteralSet
-nodeKindEnum.LiteralMap = 86
-nodeKindEnum._val2NameMap[86] = 'LiteralMap'
-nodeKindEnum.__allList[87] = nodeKindEnum.LiteralMap
-nodeKindEnum.LiteralString = 87
-nodeKindEnum._val2NameMap[87] = 'LiteralString'
-nodeKindEnum.__allList[88] = nodeKindEnum.LiteralString
-nodeKindEnum.LiteralBool = 88
-nodeKindEnum._val2NameMap[88] = 'LiteralBool'
-nodeKindEnum.__allList[89] = nodeKindEnum.LiteralBool
-nodeKindEnum.LiteralSymbol = 89
-nodeKindEnum._val2NameMap[89] = 'LiteralSymbol'
-nodeKindEnum.__allList[90] = nodeKindEnum.LiteralSymbol
+nodeKindEnum.CondRet = 10
+nodeKindEnum._val2NameMap[10] = 'CondRet'
+nodeKindEnum.__allList[11] = nodeKindEnum.CondRet
+nodeKindEnum.CondRetList = 11
+nodeKindEnum._val2NameMap[11] = 'CondRetList'
+nodeKindEnum.__allList[12] = nodeKindEnum.CondRetList
+nodeKindEnum.If = 12
+nodeKindEnum._val2NameMap[12] = 'If'
+nodeKindEnum.__allList[13] = nodeKindEnum.If
+nodeKindEnum.ExpList = 13
+nodeKindEnum._val2NameMap[13] = 'ExpList'
+nodeKindEnum.__allList[14] = nodeKindEnum.ExpList
+nodeKindEnum.Switch = 14
+nodeKindEnum._val2NameMap[14] = 'Switch'
+nodeKindEnum.__allList[15] = nodeKindEnum.Switch
+nodeKindEnum.While = 15
+nodeKindEnum._val2NameMap[15] = 'While'
+nodeKindEnum.__allList[16] = nodeKindEnum.While
+nodeKindEnum.Repeat = 16
+nodeKindEnum._val2NameMap[16] = 'Repeat'
+nodeKindEnum.__allList[17] = nodeKindEnum.Repeat
+nodeKindEnum.For = 17
+nodeKindEnum._val2NameMap[17] = 'For'
+nodeKindEnum.__allList[18] = nodeKindEnum.For
+nodeKindEnum.Apply = 18
+nodeKindEnum._val2NameMap[18] = 'Apply'
+nodeKindEnum.__allList[19] = nodeKindEnum.Apply
+nodeKindEnum.Foreach = 19
+nodeKindEnum._val2NameMap[19] = 'Foreach'
+nodeKindEnum.__allList[20] = nodeKindEnum.Foreach
+nodeKindEnum.Forsort = 20
+nodeKindEnum._val2NameMap[20] = 'Forsort'
+nodeKindEnum.__allList[21] = nodeKindEnum.Forsort
+nodeKindEnum.Return = 21
+nodeKindEnum._val2NameMap[21] = 'Return'
+nodeKindEnum.__allList[22] = nodeKindEnum.Return
+nodeKindEnum.Break = 22
+nodeKindEnum._val2NameMap[22] = 'Break'
+nodeKindEnum.__allList[23] = nodeKindEnum.Break
+nodeKindEnum.Provide = 23
+nodeKindEnum._val2NameMap[23] = 'Provide'
+nodeKindEnum.__allList[24] = nodeKindEnum.Provide
+nodeKindEnum.ExpNew = 24
+nodeKindEnum._val2NameMap[24] = 'ExpNew'
+nodeKindEnum.__allList[25] = nodeKindEnum.ExpNew
+nodeKindEnum.ExpUnwrap = 25
+nodeKindEnum._val2NameMap[25] = 'ExpUnwrap'
+nodeKindEnum.__allList[26] = nodeKindEnum.ExpUnwrap
+nodeKindEnum.ExpRef = 26
+nodeKindEnum._val2NameMap[26] = 'ExpRef'
+nodeKindEnum.__allList[27] = nodeKindEnum.ExpRef
+nodeKindEnum.ExpSetVal = 27
+nodeKindEnum._val2NameMap[27] = 'ExpSetVal'
+nodeKindEnum.__allList[28] = nodeKindEnum.ExpSetVal
+nodeKindEnum.ExpSetItem = 28
+nodeKindEnum._val2NameMap[28] = 'ExpSetItem'
+nodeKindEnum.__allList[29] = nodeKindEnum.ExpSetItem
+nodeKindEnum.ExpOp2 = 29
+nodeKindEnum._val2NameMap[29] = 'ExpOp2'
+nodeKindEnum.__allList[30] = nodeKindEnum.ExpOp2
+nodeKindEnum.UnwrapSet = 30
+nodeKindEnum._val2NameMap[30] = 'UnwrapSet'
+nodeKindEnum.__allList[31] = nodeKindEnum.UnwrapSet
+nodeKindEnum.IfUnwrap = 31
+nodeKindEnum._val2NameMap[31] = 'IfUnwrap'
+nodeKindEnum.__allList[32] = nodeKindEnum.IfUnwrap
+nodeKindEnum.When = 32
+nodeKindEnum._val2NameMap[32] = 'When'
+nodeKindEnum.__allList[33] = nodeKindEnum.When
+nodeKindEnum.ExpCast = 33
+nodeKindEnum._val2NameMap[33] = 'ExpCast'
+nodeKindEnum.__allList[34] = nodeKindEnum.ExpCast
+nodeKindEnum.ExpToDDD = 34
+nodeKindEnum._val2NameMap[34] = 'ExpToDDD'
+nodeKindEnum.__allList[35] = nodeKindEnum.ExpToDDD
+nodeKindEnum.ExpSubDDD = 35
+nodeKindEnum._val2NameMap[35] = 'ExpSubDDD'
+nodeKindEnum.__allList[36] = nodeKindEnum.ExpSubDDD
+nodeKindEnum.ExpOp1 = 36
+nodeKindEnum._val2NameMap[36] = 'ExpOp1'
+nodeKindEnum.__allList[37] = nodeKindEnum.ExpOp1
+nodeKindEnum.ExpRefItem = 37
+nodeKindEnum._val2NameMap[37] = 'ExpRefItem'
+nodeKindEnum.__allList[38] = nodeKindEnum.ExpRefItem
+nodeKindEnum.ExpCall = 38
+nodeKindEnum._val2NameMap[38] = 'ExpCall'
+nodeKindEnum.__allList[39] = nodeKindEnum.ExpCall
+nodeKindEnum.ExpMRet = 39
+nodeKindEnum._val2NameMap[39] = 'ExpMRet'
+nodeKindEnum.__allList[40] = nodeKindEnum.ExpMRet
+nodeKindEnum.ExpAccessMRet = 40
+nodeKindEnum._val2NameMap[40] = 'ExpAccessMRet'
+nodeKindEnum.__allList[41] = nodeKindEnum.ExpAccessMRet
+nodeKindEnum.ExpMultiTo1 = 41
+nodeKindEnum._val2NameMap[41] = 'ExpMultiTo1'
+nodeKindEnum.__allList[42] = nodeKindEnum.ExpMultiTo1
+nodeKindEnum.ExpParen = 42
+nodeKindEnum._val2NameMap[42] = 'ExpParen'
+nodeKindEnum.__allList[43] = nodeKindEnum.ExpParen
+nodeKindEnum.ExpMacroExp = 43
+nodeKindEnum._val2NameMap[43] = 'ExpMacroExp'
+nodeKindEnum.__allList[44] = nodeKindEnum.ExpMacroExp
+nodeKindEnum.ExpMacroStat = 44
+nodeKindEnum._val2NameMap[44] = 'ExpMacroStat'
+nodeKindEnum.__allList[45] = nodeKindEnum.ExpMacroStat
+nodeKindEnum.ExpMacroArgExp = 45
+nodeKindEnum._val2NameMap[45] = 'ExpMacroArgExp'
+nodeKindEnum.__allList[46] = nodeKindEnum.ExpMacroArgExp
+nodeKindEnum.StmtExp = 46
+nodeKindEnum._val2NameMap[46] = 'StmtExp'
+nodeKindEnum.__allList[47] = nodeKindEnum.StmtExp
+nodeKindEnum.ExpMacroStatList = 47
+nodeKindEnum._val2NameMap[47] = 'ExpMacroStatList'
+nodeKindEnum.__allList[48] = nodeKindEnum.ExpMacroStatList
+nodeKindEnum.ExpOmitEnum = 48
+nodeKindEnum._val2NameMap[48] = 'ExpOmitEnum'
+nodeKindEnum.__allList[49] = nodeKindEnum.ExpOmitEnum
+nodeKindEnum.RefField = 49
+nodeKindEnum._val2NameMap[49] = 'RefField'
+nodeKindEnum.__allList[50] = nodeKindEnum.RefField
+nodeKindEnum.GetField = 50
+nodeKindEnum._val2NameMap[50] = 'GetField'
+nodeKindEnum.__allList[51] = nodeKindEnum.GetField
+nodeKindEnum.Alias = 51
+nodeKindEnum._val2NameMap[51] = 'Alias'
+nodeKindEnum.__allList[52] = nodeKindEnum.Alias
+nodeKindEnum.DeclVar = 52
+nodeKindEnum._val2NameMap[52] = 'DeclVar'
+nodeKindEnum.__allList[53] = nodeKindEnum.DeclVar
+nodeKindEnum.DeclForm = 53
+nodeKindEnum._val2NameMap[53] = 'DeclForm'
+nodeKindEnum.__allList[54] = nodeKindEnum.DeclForm
+nodeKindEnum.DeclFunc = 54
+nodeKindEnum._val2NameMap[54] = 'DeclFunc'
+nodeKindEnum.__allList[55] = nodeKindEnum.DeclFunc
+nodeKindEnum.DeclMethod = 55
+nodeKindEnum._val2NameMap[55] = 'DeclMethod'
+nodeKindEnum.__allList[56] = nodeKindEnum.DeclMethod
+nodeKindEnum.ProtoMethod = 56
+nodeKindEnum._val2NameMap[56] = 'ProtoMethod'
+nodeKindEnum.__allList[57] = nodeKindEnum.ProtoMethod
+nodeKindEnum.DeclConstr = 57
+nodeKindEnum._val2NameMap[57] = 'DeclConstr'
+nodeKindEnum.__allList[58] = nodeKindEnum.DeclConstr
+nodeKindEnum.DeclDestr = 58
+nodeKindEnum._val2NameMap[58] = 'DeclDestr'
+nodeKindEnum.__allList[59] = nodeKindEnum.DeclDestr
+nodeKindEnum.ExpCallSuperCtor = 59
+nodeKindEnum._val2NameMap[59] = 'ExpCallSuperCtor'
+nodeKindEnum.__allList[60] = nodeKindEnum.ExpCallSuperCtor
+nodeKindEnum.ExpCallSuper = 60
+nodeKindEnum._val2NameMap[60] = 'ExpCallSuper'
+nodeKindEnum.__allList[61] = nodeKindEnum.ExpCallSuper
+nodeKindEnum.AsyncLock = 61
+nodeKindEnum._val2NameMap[61] = 'AsyncLock'
+nodeKindEnum.__allList[62] = nodeKindEnum.AsyncLock
+nodeKindEnum.Request = 62
+nodeKindEnum._val2NameMap[62] = 'Request'
+nodeKindEnum.__allList[63] = nodeKindEnum.Request
+nodeKindEnum.DeclMember = 63
+nodeKindEnum._val2NameMap[63] = 'DeclMember'
+nodeKindEnum.__allList[64] = nodeKindEnum.DeclMember
+nodeKindEnum.DeclArg = 64
+nodeKindEnum._val2NameMap[64] = 'DeclArg'
+nodeKindEnum.__allList[65] = nodeKindEnum.DeclArg
+nodeKindEnum.DeclArgDDD = 65
+nodeKindEnum._val2NameMap[65] = 'DeclArgDDD'
+nodeKindEnum.__allList[66] = nodeKindEnum.DeclArgDDD
+nodeKindEnum.DeclAdvertise = 66
+nodeKindEnum._val2NameMap[66] = 'DeclAdvertise'
+nodeKindEnum.__allList[67] = nodeKindEnum.DeclAdvertise
+nodeKindEnum.ProtoClass = 67
+nodeKindEnum._val2NameMap[67] = 'ProtoClass'
+nodeKindEnum.__allList[68] = nodeKindEnum.ProtoClass
+nodeKindEnum.DeclClass = 68
+nodeKindEnum._val2NameMap[68] = 'DeclClass'
+nodeKindEnum.__allList[69] = nodeKindEnum.DeclClass
+nodeKindEnum.DeclEnum = 69
+nodeKindEnum._val2NameMap[69] = 'DeclEnum'
+nodeKindEnum.__allList[70] = nodeKindEnum.DeclEnum
+nodeKindEnum.DeclAlge = 70
+nodeKindEnum._val2NameMap[70] = 'DeclAlge'
+nodeKindEnum.__allList[71] = nodeKindEnum.DeclAlge
+nodeKindEnum.NewAlgeVal = 71
+nodeKindEnum._val2NameMap[71] = 'NewAlgeVal'
+nodeKindEnum.__allList[72] = nodeKindEnum.NewAlgeVal
+nodeKindEnum.LuneControl = 72
+nodeKindEnum._val2NameMap[72] = 'LuneControl'
+nodeKindEnum.__allList[73] = nodeKindEnum.LuneControl
+nodeKindEnum.Match = 73
+nodeKindEnum._val2NameMap[73] = 'Match'
+nodeKindEnum.__allList[74] = nodeKindEnum.Match
+nodeKindEnum.LuneKind = 74
+nodeKindEnum._val2NameMap[74] = 'LuneKind'
+nodeKindEnum.__allList[75] = nodeKindEnum.LuneKind
+nodeKindEnum.DeclMacro = 75
+nodeKindEnum._val2NameMap[75] = 'DeclMacro'
+nodeKindEnum.__allList[76] = nodeKindEnum.DeclMacro
+nodeKindEnum.TestCase = 76
+nodeKindEnum._val2NameMap[76] = 'TestCase'
+nodeKindEnum.__allList[77] = nodeKindEnum.TestCase
+nodeKindEnum.TestBlock = 77
+nodeKindEnum._val2NameMap[77] = 'TestBlock'
+nodeKindEnum.__allList[78] = nodeKindEnum.TestBlock
+nodeKindEnum.Abbr = 78
+nodeKindEnum._val2NameMap[78] = 'Abbr'
+nodeKindEnum.__allList[79] = nodeKindEnum.Abbr
+nodeKindEnum.Boxing = 79
+nodeKindEnum._val2NameMap[79] = 'Boxing'
+nodeKindEnum.__allList[80] = nodeKindEnum.Boxing
+nodeKindEnum.Unboxing = 80
+nodeKindEnum._val2NameMap[80] = 'Unboxing'
+nodeKindEnum.__allList[81] = nodeKindEnum.Unboxing
+nodeKindEnum.LiteralNil = 81
+nodeKindEnum._val2NameMap[81] = 'LiteralNil'
+nodeKindEnum.__allList[82] = nodeKindEnum.LiteralNil
+nodeKindEnum.LiteralChar = 82
+nodeKindEnum._val2NameMap[82] = 'LiteralChar'
+nodeKindEnum.__allList[83] = nodeKindEnum.LiteralChar
+nodeKindEnum.LiteralInt = 83
+nodeKindEnum._val2NameMap[83] = 'LiteralInt'
+nodeKindEnum.__allList[84] = nodeKindEnum.LiteralInt
+nodeKindEnum.LiteralReal = 84
+nodeKindEnum._val2NameMap[84] = 'LiteralReal'
+nodeKindEnum.__allList[85] = nodeKindEnum.LiteralReal
+nodeKindEnum.LiteralArray = 85
+nodeKindEnum._val2NameMap[85] = 'LiteralArray'
+nodeKindEnum.__allList[86] = nodeKindEnum.LiteralArray
+nodeKindEnum.LiteralList = 86
+nodeKindEnum._val2NameMap[86] = 'LiteralList'
+nodeKindEnum.__allList[87] = nodeKindEnum.LiteralList
+nodeKindEnum.LiteralSet = 87
+nodeKindEnum._val2NameMap[87] = 'LiteralSet'
+nodeKindEnum.__allList[88] = nodeKindEnum.LiteralSet
+nodeKindEnum.LiteralMap = 88
+nodeKindEnum._val2NameMap[88] = 'LiteralMap'
+nodeKindEnum.__allList[89] = nodeKindEnum.LiteralMap
+nodeKindEnum.LiteralString = 89
+nodeKindEnum._val2NameMap[89] = 'LiteralString'
+nodeKindEnum.__allList[90] = nodeKindEnum.LiteralString
+nodeKindEnum.LiteralBool = 90
+nodeKindEnum._val2NameMap[90] = 'LiteralBool'
+nodeKindEnum.__allList[91] = nodeKindEnum.LiteralBool
+nodeKindEnum.LiteralSymbol = 91
+nodeKindEnum._val2NameMap[91] = 'LiteralSymbol'
+nodeKindEnum.__allList[92] = nodeKindEnum.LiteralSymbol
 
 
 

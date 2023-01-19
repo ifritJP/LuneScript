@@ -109,6 +109,11 @@ pub class NSInfo {
 
    let mut idSetInfo:IdSetInfo;
 
+   /** セットされている CondRet */
+   let mut condRetNodeList:List<&Nodes.CondRetNode> {pub&};
+   let mut condRetCount:int;
+
+   
    /** 非同期処理が有効な場合 true */
    let validAsyncCtrl:bool;
 
@@ -165,6 +170,8 @@ pub class NSInfo {
       self.pos = pos;
       self.validAsyncCtrl = validAsyncCtrl;
       self.stmtNum = 0;
+      self.condRetNodeList = [];
+      self.condRetCount = 0;
    }
 
    pub fn duplicate() : NSInfo {
@@ -237,6 +244,24 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
          }
       }
       return false;
+   }
+
+   pub fn addCondRet( nodeManager:Nodes.NodeManager, pos:&Types.Position,
+                      inTestBlock:bool, isInAnalyzeArgMode:bool,
+                      expOkType:&Ast.TypeInfo, exp:&Nodes.Node ) mut : Nodes.CondRetNode
+   {
+      self.condRetCount = self.condRetCount + 1;
+      let mut condRetNode = Nodes.CondRetNode.create(
+         nodeManager, pos, inTestBlock,
+         isInAnalyzeArgMode, [ expOkType ], exp, self.condRetCount );
+      self.condRetNodeList.insert( condRetNode );
+      return condRetNode;
+   }
+   
+   pub fn clearCondRetNodeList() mut {
+      if #self.condRetNodeList > 0 {
+         self.condRetNodeList = [];
+      }
    }
 }
 
@@ -418,7 +443,15 @@ curNsInfo が nil になる。
 
    pub fn popScope() mut {
       self.scope = self.scope.$outerScope;
-      self.curNsInfo = self.nsInfoMap[ self.getCurrentNamespaceTypeInfo() ];
+      let mut nsInfo = self.nsInfoMap[ self.getCurrentNamespaceTypeInfo() ];
+      if nsInfo ~= self.curNsInfo {
+         if! let curNsInfo = self.curNsInfo {
+            if #curNsInfo.$condRetNodeList ~= 0 {
+               self.error( "internal error. condRetNodeList is not nil." );
+            }
+         }
+         self.curNsInfo = nsInfo;
+      }
    }
 
 

@@ -89,8 +89,8 @@ var lune_base_Converter []byte
 var lune_base_glueFilter []byte
 //go:embed front.lua
 var lune_base_front []byte
-//go:embed runtime7.lua
-var lune_base_runtime7 []byte
+//go:embed runtime8.lua
+var lune_base_runtime8 []byte
 func InitBinding() {
 AddlnsSrcInfo( "lune.base.Async", lune_base_Async )
 AddlnsSrcInfo( "lune.base.Runner", lune_base_Runner )
@@ -134,6 +134,6 @@ AddlnsSrcInfo( "lune.base.OutputDepend", lune_base_OutputDepend )
 AddlnsSrcInfo( "lune.base.Converter", lune_base_Converter )
 AddlnsSrcInfo( "lune.base.glueFilter", lune_base_glueFilter )
 AddlnsSrcInfo( "lune.base.front", lune_base_front )
-AddlnsSrcInfo( "lune.base.runtime7", lune_base_runtime7 )
+AddlnsSrcInfo( "lune.base.runtime8", lune_base_runtime8 )
 AddlnsLnsInfo( "lune.base.Testing", lns_lune_base_Testing )
 }

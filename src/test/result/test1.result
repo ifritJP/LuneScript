@@ -2491,9 +2491,9 @@ test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@
 --lua
 local _moduleObj = {}
 local __mod__ = '@lua'
-local _lune = require( "lune.base.runtime7" )
-if not _lune7 then
-   _lune7 = _lune
+local _lune = require( "lune.base.runtime8" )
+if not _lune8 then
+   _lune8 = _lune
 end
 print( 1 + 10 )
 

@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@frontInterface'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -189,8 +189,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -298,6 +298,8 @@ function LuneHelperInfo:__init()
    self.useLazyLoad = false
    self.useLazyRequire = false
    self.useRun = false
+   self.useResult = false
+   self.useError = false
 end
 function LuneHelperInfo:mergeFrom( src )
 
@@ -326,6 +328,10 @@ function LuneHelperInfo:mergeFrom( src )
    self.useRun = self.useRun or src.useRun
    
    self.useStrReplace = self.useStrReplace or src.useStrReplace
+   
+   self.useResult = self.useResult or src.useResult
+   
+   self.useError = self.useError or src.useError
    
    for val, __val in pairs( src.pragmaSet ) do
       self.pragmaSet[val]= true

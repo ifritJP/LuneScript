@@ -535,7 +535,7 @@ fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Su
 fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode {
    let token = self.getSymbolToken( .MustNot_ );
    let symbolNode = self.analyzeExpSymbol(
-      firstToken, token, .Symbol, nil, true, false );
+      firstToken, token, .Symbol, nil, true, false, false );
    self.checkNextToken( ";" );
 
    let symbolInfoList = symbolNode.getSymbolInfo();

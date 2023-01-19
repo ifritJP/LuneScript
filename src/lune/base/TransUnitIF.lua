@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@TransUnitIF'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -117,8 +117,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 
@@ -343,6 +343,8 @@ function NSInfo:__init(typeInfo, typeDataAccessor, pos, validAsyncCtrl)
    self.pos = pos
    self.validAsyncCtrl = validAsyncCtrl
    self.stmtNum = 0
+   self.condRetNodeList = {}
+   self.condRetCount = 0
 end
 function NSInfo:duplicate(  )
 
@@ -401,6 +403,20 @@ function NSInfo:canAccessLuaval(  )
    
    return false
 end
+function NSInfo:addCondRet( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, expOkType, exp )
+
+   self.condRetCount = self.condRetCount + 1
+   local condRetNode = Nodes.CondRetNode.create( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, {expOkType}, exp, self.condRetCount )
+   table.insert( self.condRetNodeList, condRetNode )
+   return condRetNode
+end
+function NSInfo:clearCondRetNodeList(  )
+
+   if #self.condRetNodeList > 0 then
+      self.condRetNodeList = {}
+   end
+   
+end
 function NSInfo._setmeta( obj )
   setmetatable( obj, { __index = NSInfo  } )
 end
@@ -421,6 +437,9 @@ function NSInfo:get_pos()
 end
 function NSInfo:get_loopScopeQueue()
    return self.loopScopeQueue
+end
+function NSInfo:get_condRetNodeList()
+   return self.condRetNodeList
 end
 function NSInfo:get_stmtNum()
    return self.stmtNum
@@ -635,7 +654,21 @@ end
 function TransUnitBase:popScope(  )
 
    self.scope = self.scope:get_outerScope()
-   self.curNsInfo = self.nsInfoMap[self:getCurrentNamespaceTypeInfo(  )]
+   local nsInfo = self.nsInfoMap[self:getCurrentNamespaceTypeInfo(  )]
+   if nsInfo ~= self.curNsInfo then
+      do
+         local curNsInfo = self.curNsInfo
+         if curNsInfo ~= nil then
+            if #curNsInfo:get_condRetNodeList() ~= 0 then
+               self:error( "internal error. condRetNodeList is not nil." )
+            end
+            
+         end
+      end
+      
+      self.curNsInfo = nsInfo
+   end
+   
 end
 function TransUnitBase:newNSInfoWithTypeData( typeInfo, typeDataAccessor, pos )
 

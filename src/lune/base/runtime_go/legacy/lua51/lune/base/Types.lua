@@ -2,8 +2,8 @@
 local _moduleObj = {}
 local __mod__ = '@lune.@base.@Types'
 local _lune = {}
-if _lune7 then
-   _lune = _lune7
+if _lune8 then
+   _lune = _lune8
 end
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -187,8 +187,8 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 
-if not _lune7 then
-   _lune7 = _lune
+if not _lune8 then
+   _lune8 = _lune
 end
 
 
@@ -567,7 +567,10 @@ function Token._fromMapSub( obj, val )
 end
 
 
-local noneToken = Token._new(TokenKind.Eof, "", Position._new(0, -1, "eof"), false, {})
+local nonePos = Position._new(0, -1, "eof")
+_moduleObj.nonePos = nonePos
+
+local noneToken = Token._new(TokenKind.Eof, "", _moduleObj.nonePos, false, {})
 _moduleObj.noneToken = noneToken
 
 

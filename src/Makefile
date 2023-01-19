@@ -109,7 +109,7 @@ help:
 	@echo "  make test-miniGo [NO_TEST=y] [NO_LUA_DIFF=y]"
 	@echo "  make scratch-go"
 	@echo "  make test-tutorial-go"
-	@echo "  make go-build [GOTAG=gopherlua]"
+	@echo "  make go-build [GOTAG=gopherlua] [NO_TEST=y]"
 	@echo "  make setup-pkg-lua"
 	@echo "  make test-govslua [NO_BATCH=y] [ONLY_CONV=y]"
 	@echo "  make goprof [LNSC_OP=]"
@@ -1082,7 +1082,7 @@ endif
 
 
 diff-result:
-	(cd work/1; find test/ -iname '*.lua' -exec diff -U 0 {} ../4/{} \; ) | tee work/diff.work1
+	(cd work/1; find test/ -iname '*.lua' -exec diff -I " _lune" -U 0 {} ../4/{} \; ) | tee work/diff.work1
 	@if test -s work/diff.work1; then echo "======diff work/diff.work1====== "; exit 1; fi
 	diff -u -r test/proj/  work/3/test/proj/ \
 		-I '_moduleObj.__buildId.*' -I '.*buildId = .*'
@@ -1097,7 +1097,7 @@ ifeq ($(WITH_GO),y)
 endif
 	diff work/test1.result work/test2.result
 	diff work/ast1.result work/ast2.result
-	diff work/lua1.result work/lua2.result
+	diff work/lua1.result work/lua2.result -I " _lune"
 	diff work/test.result work/test3.result
 	diff work/test3.result work/test4.result
 	diff work/test4.result work/test4-2.result
@@ -1189,9 +1189,7 @@ ifndef ACCEPT
 	if [ $${ANS}x != yx ]; then exit 1; fi;
 endif
 #	rm lune/base/*.lua
-ifeq ($(WITH_GO),y)
-	cp work/test1.result test/result/test1.result
-endif
+	cp work/test2.result test/result/test1.result
 	cp work/3/lune/base/*.lua $(ORG_DIR)lune/base/
 	cp work/3/lune/base/*.meta $(ORG_DIR)lune/base/
 #	cp work/3/lune/*.* $(ORG_DIR)lune/

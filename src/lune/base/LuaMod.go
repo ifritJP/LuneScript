@@ -8,7 +8,8 @@ type LuaMod_CodeKind = LnsInt
 const LuaMod_CodeKind__Alge = 8
 const LuaMod_CodeKind__AlgeMapping = 9
 const LuaMod_CodeKind__Cast = 13
-const LuaMod_CodeKind__Finalize = 18
+const LuaMod_CodeKind__Error = 18
+const LuaMod_CodeKind__Finalize = 20
 const LuaMod_CodeKind__Init = 0
 const LuaMod_CodeKind__InstanceOf = 12
 const LuaMod_CodeKind__LazyLoad = 14
@@ -18,6 +19,7 @@ const LuaMod_CodeKind__LoadStr51 = 5
 const LuaMod_CodeKind__LoadStr52 = 6
 const LuaMod_CodeKind__Mapping = 7
 const LuaMod_CodeKind__NilAcc = 2
+const LuaMod_CodeKind__Result = 19
 const LuaMod_CodeKind__Run = 16
 const LuaMod_CodeKind__SetMapping = 10
 const LuaMod_CodeKind__SetOp = 11
@@ -43,6 +45,8 @@ var LuaMod_CodeKindList_ = NewLnsList( []LnsAny {
   LuaMod_CodeKind__LazyRequire,
   LuaMod_CodeKind__Run,
   LuaMod_CodeKind__StrReplace,
+  LuaMod_CodeKind__Error,
+  LuaMod_CodeKind__Result,
   LuaMod_CodeKind__Finalize,
 })
 func LuaMod_CodeKind_get__allList(_env *LnsEnv) *LnsList{
@@ -52,6 +56,7 @@ var LuaMod_CodeKindMap_ = map[LnsInt]string {
   LuaMod_CodeKind__Alge: "CodeKind.Alge",
   LuaMod_CodeKind__AlgeMapping: "CodeKind.AlgeMapping",
   LuaMod_CodeKind__Cast: "CodeKind.Cast",
+  LuaMod_CodeKind__Error: "CodeKind.Error",
   LuaMod_CodeKind__Finalize: "CodeKind.Finalize",
   LuaMod_CodeKind__Init: "CodeKind.Init",
   LuaMod_CodeKind__InstanceOf: "CodeKind.InstanceOf",
@@ -62,6 +67,7 @@ var LuaMod_CodeKindMap_ = map[LnsInt]string {
   LuaMod_CodeKind__LoadStr52: "CodeKind.LoadStr52",
   LuaMod_CodeKind__Mapping: "CodeKind.Mapping",
   LuaMod_CodeKind__NilAcc: "CodeKind.NilAcc",
+  LuaMod_CodeKind__Result: "CodeKind.Result",
   LuaMod_CodeKind__Run: "CodeKind.Run",
   LuaMod_CodeKind__SetMapping: "CodeKind.SetMapping",
   LuaMod_CodeKind__SetOp: "CodeKind.SetOp",
@@ -107,7 +113,7 @@ func LuaMod_CastKind_getTxt(arg1 LnsInt) string {
     return LuaMod_CastKindMap_[arg1];
 }
 var LuaMod_codeMap *LnsMap
-// 479: decl @lune.@base.@LuaMod.getCode
+// 531: decl @lune.@base.@LuaMod.getCode
 func LuaMod_getCode(_env *LnsEnv, kind LnsInt) string {
     return Lns_unwrap( LuaMod_codeMap.Get(kind)).(string)
 }
@@ -138,6 +144,8 @@ func Lns_LuaMod_init(_env *LnsEnv) {
         work.Set(LuaMod_CodeKind__LazyRequire,"function _lune._lazyRequire( modName )\n  local mod\n  return function()\n    if mod then\n       return mod\n    end\n    mod = require( modName )\n    return mod\n  end\nend\n")
         work.Set(LuaMod_CodeKind__Run,"function _lune._run( runner, mod )\n    if mod == 2 then\n      return false\n    end\n    runner:run()\n    return true\nend\n")
         work.Set(LuaMod_CodeKind__StrReplace,"function _lune.replace( txt, src, dst )\n   local result = \"\"\n   local index = 1\n   while index <= #txt do\n      local findIndex = string.find( txt, src, index, true )\n      if not findIndex then\n         result = result .. string.sub( txt, index )\n         break\n      end\n      if findIndex ~= index then\n         result = result .. (string.sub( txt, index, findIndex - 1 ) .. dst)\n      else\n         result = result .. dst\n      end\n      index = findIndex + #src\n   end\n   return result\nend\n")
+        work.Set(LuaMod_CodeKind__Error,"local LnsErr = {}\n_lune.LnsErr = LnsErr\nfunction LnsErr:get_txt(  )\n   return self.txt\nend\nfunction LnsErr._setmeta( obj )\n  setmetatable( obj, { __index = LnsErr  } )\nend\nfunction LnsErr._new( txt )\n   local obj = {}\n   LnsErr._setmeta( obj )\n   if obj.__init then\n      obj:__init( txt )\n   end\n   return obj\nend\nfunction LnsErr:__init( txt )\n  self.txt = txt\nend\nfunction LnsErr.create( txt )\n   return LnsErr._new( txt )\nend\n")
+        work.Set(LuaMod_CodeKind__Result,"local Result = {}\nResult._name2Val = {}\n_lune.Result = Result\nfunction Result:_getTxt( val )\n   local name = val[ 1 ]\n   if name then\n      return string.format( \"__Ret.%s\", name )\n   end\n   return string.format( \"illegal val -- %s\", val )\nend\n\nfunction Result._from( val )\n   return _lune._AlgeFrom( Result, val )\nend\n\nResult.Err = { \"Err\", {{}}}\nResult._name2Val[\"Err\"] = Result.Err\nResult.Ok = { \"Ok\", {{}}}\nResult._name2Val[\"Ok\"] = Result.Ok\n")
         work.Set(LuaMod_CodeKind__Finalize,"return _lune\n")
         LuaMod_codeMap = work
     }

@@ -90,6 +90,8 @@ pub class LuneHelperInfo {
    pub let mut useLazyRequire:bool;
    pub let mut useRun:bool;
    pub let mut useStrReplace:bool;
+   pub let mut useResult:bool;
+   pub let mut useError:bool;
 
    pub fn __init() {
       self.useStrReplace = false;
@@ -105,6 +107,8 @@ pub class LuneHelperInfo {
       self.useLazyLoad = false;
       self.useLazyRequire = false;
       self.useRun = false;
+      self.useResult = false;
+      self.useError = false;
    }
 
    pub fn mergeFrom( src:&LuneHelperInfo ) mut {
@@ -125,6 +129,8 @@ pub class LuneHelperInfo {
       _mergeBool( useLazyRequire );
       _mergeBool( useRun );
       _mergeBool( useStrReplace );
+      _mergeBool( useResult );
+      _mergeBool( useError );
       foreach val in src.pragmaSet {
          self.pragmaSet.add( val );
       }

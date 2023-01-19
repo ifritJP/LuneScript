@@ -374,4 +374,45 @@ function _lune.replace( txt, src, dst )
    end
    return result
 end
+local LnsErr = {}
+_lune.LnsErr = LnsErr
+function LnsErr:get_txt(  )
+   return self.txt
+end
+function LnsErr._setmeta( obj )
+  setmetatable( obj, { __index = LnsErr  } )
+end
+function LnsErr._new( txt )
+   local obj = {}
+   LnsErr._setmeta( obj )
+   if obj.__init then
+      obj:__init( txt )
+   end
+   return obj
+end
+function LnsErr:__init( txt )
+  self.txt = txt
+end
+function LnsErr.create( txt )
+   return LnsErr._new( txt )
+end
+local Result = {}
+Result._name2Val = {}
+_lune.Result = Result
+function Result:_getTxt( val )
+   local name = val[ 1 ]
+   if name then
+      return string.format( "__Ret.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+
+function Result._from( val )
+   return _lune._AlgeFrom( Result, val )
+end
+
+Result.Err = { "Err", {{}}}
+Result._name2Val["Err"] = Result.Err
+Result.Ok = { "Ok", {{}}}
+Result._name2Val["Ok"] = Result.Ok
 return _lune

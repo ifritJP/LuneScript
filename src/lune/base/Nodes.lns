@@ -1038,6 +1038,21 @@ pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return getBreakKindForStmtList( checkMode, self.stmtList );
 }
 
+
+_declNodeClass( "CondRet", Node, false, true, false,
+                [ { "exp": "&Node" },
+                  { "order": "int" } ] 
+);
+
+pub class CondRetInfo {
+   let list: &List<&CondRetNode> {pub};
+}
+
+_declNodeClass( "CondRetList", Node, false, true, true,
+                [ { "info": "&CondRetInfo" },
+                  { "exp": "&Node" } ]
+);
+
 pub enum IfKind {
    If,
    ElseIf,
@@ -1046,6 +1061,7 @@ pub enum IfKind {
 
 pub class IfStmtInfo {
    pri let kind: IfKind { pub };
+   pri let condRetInfo: &CondRetInfo! {pub};
    pri let exp: &Node { pub };
    pri let block: &BlockNode { pub };
 }
@@ -1389,6 +1405,7 @@ _declNodeClass( "UnwrapSet", Node, false, false, true,
 
 _declNodeClass( "IfUnwrap", Node, false, false, true,
                 [ { "varSymList": "&List<&Ast.SymbolInfo>" },
+                  { "condRetInfo": "&CondRetInfo!" },
                   { "expList": "&ExpListNode" },
                   { "block": "&BlockNode" },
                   { "nilBlock": "&BlockNode!" } ]
@@ -1719,6 +1736,7 @@ _declNodeClass( "DeclVar", Node, false, false, true,
                 [ { "mode": "DeclVarMode" },
                   { "accessMode": "Ast.AccessMode" },
                   { "staticFlag": "bool" },
+                  { "condRetInfo": "&CondRetInfo!" },
                   { "varList": "&List<&VarInfo>" },
                   { "expList": "&ExpListNode!" },
                   { "symbolInfoList": "&List<&Ast.SymbolInfo>"},

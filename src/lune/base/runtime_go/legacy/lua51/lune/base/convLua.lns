@@ -208,6 +208,13 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    }
 
    fn getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
+      switch typeInfo {
+         case self.builtinFunc.__ret_ {
+            return "_lune.Result";
+         }
+      }
+      
+      
       let mut enumName = typeInfo.getFullName(
          self.$typeNameCtrl, self.$moduleInfoManager, localFlag );
       let moduleType = typeInfo.$genSrcTypeInfo.$srcTypeInfo.getModule();
@@ -1113,7 +1120,13 @@ pub override fn ConvFilter.processRoot(
 if %s then
    _lune = %s
 end``` (luneSymbol, luneSymbol) );
-      
+
+      if node.$luneHelperInfo.$useResult {
+         self.writeln( LuaMod.getCode( .Result ) );
+      }
+      if node.$luneHelperInfo.$useError {
+         self.writeln( LuaMod.getCode( .Error ) );
+      }
       if node.$luneHelperInfo.$useAlge {
          self.writeln( LuaMod.getCode( .Alge ) );
          self.writeln( LuaMod.getCode( .AlgeMapping ) );
@@ -1309,11 +1322,62 @@ pub override fn ConvFilter.processScope(
    filter( node.$block, self, node );
 }
 
+pub override fn ConvFilter.processCondRet(
+   node: &Nodes.CondRetNode, opt: Opt ) mut
+{
+   self.writeRaw( "_cond%s" (node.$order) );
+};
+
+fn ConvFilter.outputCondRet( node: &Nodes.CondRetNode ) mut
+{
+   let symName = "_cond%d" (node.$order);
+   if node.$exp.$expType.$nilable {
+      self.write( "local %s = " (symName) );
+      filter( node.$exp, self, node );
+      self.writeln( "" );
+      self.writeln( "if %s == nil then return nil end" (symName) );
+   } else {
+      self.writeln( "local %s" (symName) );
+      self.writeln( "do" );
+      self.pushIndent( ## );
+      self.write( "local _matchExp = " );
+      filter( node.$exp, self, node );
+      self.writeln( "" );
+      self.writeln( "if _matchExp[1] == _lune.Result.Err[1] then" );
+      self.pushIndent( ## );
+      self.writeln( "return _matchExp" );
+      self.popIndent();
+
+      self.writeln( "elseif _matchExp[1] == _lune.Result.Ok[1] then" );
+      self.pushIndent( ## );
+      self.writeln( "%s = _matchExp[2][1]" (symName));
+      self.popIndent();
+      self.writeln( "end" );
+      self.popIndent();
+      self.writeln( "end" );
+   }
+};
+
+pub override fn ConvFilter.processCondRetList(
+   node: &Nodes.CondRetListNode, opt: Opt ) mut
+{
+   filter( node.$exp, self, node );
+};
+
+fn ConvFilter.outputCondRetInfo( info: &Nodes.CondRetInfo ) mut {
+   foreach condRetNode in info.$list {
+      self.outputCondRet( condRetNode );
+   }
+}
 
 pub override fn ConvFilter.processStmtExp(
    node: &Nodes.StmtExpNode, opt: Opt ) mut
 {
-   filter( node.get_exp(),  self, node );
+   if! let condRetListNode = node.$exp@@@Nodes.CondRetListNode {
+      self.outputCondRetInfo( condRetListNode.$info );
+   };
+   
+   filter( node.$exp,  self, node );
 };
 
 pub override fn ConvFilter.processDeclEnum(
@@ -2292,6 +2356,10 @@ pub override fn ConvFilter.processExpMRet(
 pub override fn ConvFilter.processIfUnwrap(
    node: &Nodes.IfUnwrapNode, opt: Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    self.writeln( "do" );
    self.pushIndent(##);
    self.writeRaw( "local " );
@@ -2357,6 +2425,9 @@ pub override fn ConvFilter.processWhen(
 pub override fn ConvFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt: Opt ) mut
 {
+   if! let condRetInfo = node.$condRetInfo {
+      self.outputCondRetInfo( condRetInfo );
+   }
    if node.$syncBlock {
       self.writeln( "do" );
       self.pushIndent(##);
@@ -2551,6 +2622,9 @@ pub override fn ConvFilter.processIf(
 {
    let valList = node.get_stmtList();
    foreach val, index in valList {
+      if! val.$condRetInfo {
+         self.outputCondRetInfo( _exp );
+      }
       if index == 1 {
          self.writeRaw( "if " );
          filter( val.$exp,  self, node );
@@ -2857,6 +2931,11 @@ pub override fn ConvFilter.processExpCall(
             self.writeRaw( "nil" );
             return false;
          }
+         // case self.builtinFunc.__lns_err_create {
+         //    self.writeRaw( "_lune.LnsErr.create(" );
+         //    wroteFuncFlag = true;
+         //    return true;
+         // }
       }
       
       let prefixNode = fieldNode.$prefix;
@@ -3020,6 +3099,10 @@ pub override fn ConvFilter.processExpCall(
             }
             case self.builtinFunc.lns___join {
                return;
+            }
+            case self.builtinFunc.lns___serr {
+               self.writeRaw( "_lune.LnsErr.create(" );
+               wroteFuncFlag = true;
             }
          }
       }

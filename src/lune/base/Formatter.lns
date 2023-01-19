@@ -1235,6 +1235,19 @@ pub override fn FormatterFilter.processGetField(
    self.write( node.$field.txt );
 };
 
+pub override fn FormatterFilter.processCondRet(
+   node: &Nodes.CondRetNode, opt:Opt ) mut
+{
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   self.write( "!" );
+};
+
+pub override fn FormatterFilter.processCondRetList(
+   node: &Nodes.CondRetListNode, opt:Opt ) mut
+{
+   filter( node.$exp, self, opt.nextOpt( node ) );
+};
+
 pub override fn FormatterFilter.processReturn(
    node: &Nodes.ReturnNode, opt:Opt ) mut
 

@@ -73,7 +73,7 @@ fn TransUnit.analyzeRefType(
          new Ast.AccessSymbolInfo( self.processInfo, dddSym, .None, true ) );
    }
    else {
-      name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true, false );
+      name = self.analyzeExpSymbol( firstToken, token, .Symbol, nil, true, false, false );
       let symbolList = name.getSymbolInfo();
       if #symbolList > 0 {
          let symbol = symbolList[ 1 ];
@@ -194,8 +194,11 @@ fn TransUnit.analyzeRefTypeWithSymbol(
    let mut typeInfo = symbolNode.$expType;
    if typeInfo.$kind == .Set and not self.helperInfo.useSet {
       self.helperInfo.useSet = true;
+   } elseif typeInfo == self.builtinFunc.__ret_ and not self.helperInfo.useResult {
+      self.helperInfo.useResult = true;
+   } elseif typeInfo == self.builtinFunc.__er_ and not self.helperInfo.useError {
+      self.helperInfo.useError = true;
    }
-
    
 
    if! let aliasType = typeInfo@@@Ast.AliasTypeInfo {
@@ -1356,7 +1359,9 @@ fn TransUnit.analyzeDeclEnum(
 fn TransUnit.analyzeDeclAlge(
    accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut : Nodes.DeclAlgeNode
 {
-   self.helperInfo.useAlge = true;
+   if not self.helperInfo.useAlge {
+      self.helperInfo.useAlge = true;
+   }
 
    let name = self.getSymbolToken( .MustNot_ );
 
@@ -1481,7 +1486,7 @@ fn TransUnit.analyzeAlias(
    let srcToken = self.getToken(##);
 
    let symbolNode = self.analyzeExpSymbol(
-      srcToken, srcToken, .Symbol, nil, true, false );
+      srcToken, srcToken, .Symbol, nil, true, false, false );
 
 
    let mut newTypeInfo = Ast.builtinTypeNone;
@@ -3723,7 +3728,7 @@ List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode
          unwrap varInfo.varType$.$expType default Ast.builtinTypeNone );
    }
    
-   expList = self.analyzeExpList( false, false, false, nil, expectTypeList ## );
+   expList = self.analyzeExpList( false, false, false, true, nil, expectTypeList ## );
    if not expList {
       self.error( "expList is nil" );
    }
@@ -4091,6 +4096,8 @@ fn TransUnit.analyzeDeclVar(
          firstToken.pos, mode == .Let,
          mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag );
 
+   let condRetInfo = self.checkCondRet();
+
    if mode == .Let and #typeInfoList == 1 {
       when! expList {
          let typeInfo = typeInfoList[ 1 ];
@@ -4306,7 +4313,7 @@ fn TransUnit.analyzeDeclVar(
    let mut node = Nodes.DeclVarNode.create(
       self.nodeManager, firstToken.pos,  self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], mode, accessMode, false,
+      [ Ast.builtinTypeNone ], mode, accessMode, false, condRetInfo,
       varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock,
       thenBlock, syncSymbolList, syncBlock );
 
@@ -4341,6 +4348,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
       workTypeInfoList, letVarList, _, workExpList = self.analyzeInitExp(
          firstToken.pos, .Local, true, tmpLetVarList, tmpTypeInfoList );
    }
+   let condRetInfo = self.checkCondRet();
    typeInfoList = workTypeInfoList;
    when! workExpList {
       expList = workExpList;
@@ -4419,7 +4427,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    return Nodes.IfUnwrapNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], varList, expList, block, elseBlock );
+      [ Ast.builtinTypeNone ], varList, condRetInfo, expList, block, elseBlock );
 }
 
 fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
@@ -4432,7 +4440,7 @@ fn TransUnit.analyzeWhen( firstToken: &Parser.Token ) mut : Nodes.Node
       self.addErrMess( nextToken.pos, "'when' need '!'" );
    }
 
-   let symListNode = self.analyzeExpList( false, false, false ## );
+   let symListNode = self.analyzeExpList( false, false, false, false ## );
 
    let mut scope = self.pushScope( .Other ## );
 

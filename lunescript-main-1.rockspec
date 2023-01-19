@@ -34,6 +34,7 @@ build = {
    modules = {
       [ "lune.base.runtime" ] = "src/lune/base/runtime.lua",
       [ "lune.base.runtime7" ] = "src/lune/base/runtime7.lua",
+      [ "lune.base.runtime8" ] = "src/lune/base/runtime8.lua",
       [ "lune.base.base" ] = "src/lune/base/base.lua",
       [ "lune.base.Str" ] = "src/lune/base/Str.lua",
       [ "lune.base.Types" ] = "src/lune/base/Types.lua",

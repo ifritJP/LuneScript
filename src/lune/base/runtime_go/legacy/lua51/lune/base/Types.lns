@@ -294,7 +294,8 @@ pub class Token extend (Mapping) {
    }
 }
 
-pub let noneToken = new Token( .Eof, "", new Position( 0, -1, "eof" ## ), false, [] );
+pub let nonePos = new Position( 0, -1, "eof" ## );
+pub let noneToken = new Token( .Eof, "", nonePos, false, [] );
 
 pub class StdinFile {
    let mod:str {pub};
