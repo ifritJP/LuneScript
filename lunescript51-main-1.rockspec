@@ -33,7 +33,6 @@ build = {
    type = "builtin",
    modules = {
       [ "lune.base.runtime" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/runtime.lua",
-      [ "lune.base.runtime7" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/runtime7.lua",
       [ "lune.base.runtime8" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/runtime8.lua",
       [ "lune.base.base" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/base.lua",
       [ "lune.base.Str" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Str.lua",
