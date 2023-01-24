@@ -556,7 +556,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
          if not typeInfo.$externalFlag {
             switch typeInfo.$kind {
                case .IF, .Class, .Form, .FormFunc, .Alge, .Enum,
-                    .Map, .Set, .List, .Array, .Alternate, .Box
+                    .Map, .Set, .List, .Array, .Tuple, .Alternate, .Box
                {
                   pickupTypeId( typeInfo.$nilableTypeInfo, true, false );
                   // // Modifier の Type を export しておく
@@ -1135,7 +1135,7 @@ end``` (luneSymbol, luneSymbol) );
          self.writeln( LuaMod.getCode( .SetOp ) );
          self.writeln( LuaMod.getCode( .SetMapping ) );
       }
-      if node.$luneHelperInfo.$useUnpack and not self.targetLuaVer.$hasTableUnpack {
+      if ( node.$luneHelperInfo.$useUnpack and not self.targetLuaVer.$hasTableUnpack ) {
          self.writeln( LuaMod.getCode( .Unpack ) );
       }
       if node.$luneHelperInfo.$useLoad or
@@ -2422,6 +2422,24 @@ pub override fn ConvFilter.processWhen(
 }
 
 
+pub override fn ConvFilter.processExpandTuple(
+   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+{
+   foreach var, index in node.$symbolInfoList {
+      if index > 1 {
+         self.writeRaw( ", " );
+      }
+      let name = getSymbolTxt( var );
+      self.writeRaw( name );
+   }
+
+   self.writeRaw( "=" );
+   self.writeRaw( "table.unpack( " );
+   filter( node.$expList, self, node );
+   self.writeln( ")" );
+}
+
+
 pub override fn ConvFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt: Opt ) mut
 {
@@ -2608,7 +2626,7 @@ pub override fn ConvFilter.processRefType(
          self.writeRaw( "+" );
       }
    }
-   filter( node.get_name(),  self, node );
+   filter( node.$typeNode,  self, node );
    if node.get_array() == "array" {
       self.writeRaw( "[@]" );
    }
@@ -3030,7 +3048,7 @@ pub override fn ConvFilter.processExpCall(
       }
       else {
          switch prefixType.$kind {
-            case .List, .Array {
+            case .List, .Array, .Tuple {
                setArgFlag = true;
                wroteFuncFlag = true;
                self.writeRaw( "table.%s( " (fieldTxt ) );
@@ -3668,6 +3686,15 @@ pub override fn ConvFilter.processUnboxing(
    self.writeRaw( "[1]" );
 }
 
+pub override fn ConvFilter.processTupleConst(
+   node: &Nodes.TupleConstNode, opt: Opt ) mut
+{
+   self.writeRaw( "{" );
+
+   filter( node.$expList, self, node );
+
+   self.writeRaw( "}" );
+};
 
 pub override fn ConvFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt: Opt ) mut

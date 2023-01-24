@@ -1,0 +1,17 @@
+fn func1() : (int,str) {
+   return (= 1, "abc"), (= 2); // error
+}
+fn func2() : (int,str), (int) {
+   return (= 1, "abc"), (= 2);
+}
+
+{
+   let (val1, val2) = func2(); // error
+   print( val1 + 10, val2 .. "xyz" );
+}
+{
+   let (val1) = func1(); // error
+}
+{
+   let (val1), val2 = func1(); // error
+}

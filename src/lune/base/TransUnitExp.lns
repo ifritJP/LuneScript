@@ -875,7 +875,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 
 fn TransUnit.analyzeListItems(
    firstPos:&Parser.Position, nextToken:&Parser.Token, termTxt:str,
-   expectTypeList:List<&Ast.TypeInfo>! ) mut : &Nodes.ExpListNode!, &Ast.TypeInfo
+   expectTypeList:&List<&Ast.TypeInfo>! ) mut : &Nodes.ExpListNode!, &Ast.TypeInfo
 {
    let mut expList:&Nodes.ExpListNode! = nil;
    let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
@@ -958,7 +958,7 @@ fn TransUnit.analyzeListConst(
       token.$pos, nextToken, "]", expectTypeList );
    
    
-   let mut typeInfoList = [ Ast.builtinTypeNone ];
+   let mut typeInfoList;
    if token.txt == '[' {
       typeInfoList = [ self.processInfo.createList( .Local, self.getCurrentClass(),
                                                       [ itemTypeInfo ], .Mut ) ];
@@ -976,7 +976,8 @@ fn TransUnit.analyzeListConst(
 }
 
 fn TransUnit.analyzeSetConst(
-   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node {
+   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+{
 
    self.helperInfo.useSet = true;
 
@@ -1007,13 +1008,53 @@ fn TransUnit.analyzeSetConst(
    }
    
    
-   let mut typeInfoList = [ Ast.builtinTypeNone ];
+   let mut typeInfoList;
    typeInfoList = [ self.processInfo.createSet( .Local, self.getCurrentClass(),
                                                   [ itemTypeInfo ], .Mut ) ];
    return Nodes.LiteralSetNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
 }
+
+
+fn TransUnit.analyzeTupleConst(
+   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+{
+   
+   //self.helperInfo.useSet = true;
+
+   let nextToken = self.getToken(##);
+
+   let mut expectTypeList:&List<&Ast.TypeInfo>! = nil;
+   if expectType$.$kind == .Tuple {
+      if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
+         expectTypeList = itemTypeInfoList;
+      }
+   }
+
+   let! mut expList = self.analyzeListItems(
+      token.$pos, nextToken, ")", expectTypeList )
+   {
+      self.error( "'Tuple' must not size 0." );
+   };
+
+   foreach exp in expList.$expList {
+      let expType = exp.$expType;
+      if expType.$nilable {
+         self.addErrMess(
+            exp.$pos,
+            "'Tuple' object can't store nilable. -- %s" (expType.getTxt(##)));
+      }
+   }
+
+   let mut typeInfoList = [
+      self.processInfo.createTuple( false, .Local, expList.$expTypeList )
+   ];
+   return Nodes.TupleConstNode.create(
+      self.nodeManager, token.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+}
+
 
 fn TransUnit.analyzeMapConst(
    token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.LiteralMapNode
@@ -1468,6 +1509,79 @@ fn TransUnit.checkArgForSort(
 }
 
 
+fn TransUnit.getRetTypeInfo(
+   firstToken:&Parser.Token,
+   refFieldNode:&Nodes.RefFieldNode!, funcTypeInfo:&Ast.TypeInfo,
+   alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
+   genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo )
+mut : &List<&Ast.TypeInfo>
+{
+   when! refFieldNode {
+      if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
+         funcTypeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
+      {
+         // unpack の型を list の要素の DDD 型にする
+         let prefixType = refFieldNode.$prefix.$expType;
+         if #prefixType.$itemTypeInfoList > 0 {
+            let dddType = self.processInfo.createDDD(
+               prefixType.$itemTypeInfoList[ 1 ], false, false );
+            return [dddType];
+         }
+      }
+   }
+
+   let prefixMutMode:Ast.MutMode;
+   when! refFieldNode {
+      prefixMutMode = refFieldNode.$prefix.$expType.$mutMode;
+   } else {
+      prefixMutMode = .Mut;
+   }
+
+   let mut workRetTypeInfoList:List<&Ast.TypeInfo> = [];
+   
+   foreach retType in funcTypeInfo.$retTypeInfoList {
+      let mut workType = retType;
+
+      if! let applyType = retType.applyGeneric(
+         self.processInfo, alt2typeMap, self.moduleType )
+      {
+         workType = applyType;
+      }
+      else {
+         if funcTypeInfo == self.builtinFunc.list_remove {
+            // pending: List.remove の戻り値設定を暫定対応
+            workType = genericTypeList[ 1 ].$nilableTypeInfo;
+         }
+         elseif funcTypeInfo.$kind == .Func and
+             ( funcTypeInfo.$rawTxt == "_fromMap" or
+               funcTypeInfo.$rawTxt == "_fromStem" ) and
+            genericsClass.isInheritFrom( self.processInfo,
+                                         Ast.builtinTypeMapping, alt2typeMap )    
+         {
+            workType = genericsClass.$nilableTypeInfo;
+         }
+         else {
+            self.addErrMess(
+               firstToken.pos,
+               "not support generics yet. -- %s" (retType.getTxt(##)) );
+         }
+      }
+
+      if retType.$mutMode == .Depend {
+         // depend の場合、 prefix の MutMode に依存する。
+         if prefixMutMode == .Mut {
+            workRetTypeInfoList.insert( workType.$srcTypeInfo );
+         } else {
+            workRetTypeInfoList.insert(
+               self.createModifier( workType.$srcTypeInfo, .IMut ) );
+         }
+      } else {
+         workRetTypeInfoList.insert( workType );
+      }
+   }
+   return workRetTypeInfoList;
+}
+
 
 fn TransUnit.processFunc(
    firstToken:&Parser.Token, nextToken:&Parser.Token,
@@ -1531,69 +1645,9 @@ fn TransUnit.processFunc(
       }
    }
 
-   let prefixMutMode:Ast.MutMode;
-   when! refFieldNode {
-      prefixMutMode = refFieldNode.$prefix.$expType.$mutMode;
-   } else {
-      prefixMutMode = .Mut;
-   }
-   
-   let mut retTypeInfoList:List<&Ast.TypeInfo> = [];
-   foreach retType in funcTypeInfo.$retTypeInfoList {
-      let mut workType = retType;
-
-      if! let applyType = retType.applyGeneric(
-         self.processInfo, alt2typeMap, self.moduleType ) {
-            workType = applyType;
-      }
-      else {
-         if funcTypeInfo == self.builtinFunc.list_remove {
-            // pending: List.remove の戻り値設定を暫定対応
-            workType = genericTypeList[ 1 ].$nilableTypeInfo;
-         }
-         elseif funcTypeInfo.$kind == .Func and
-             ( funcTypeInfo.$rawTxt == "_fromMap" or
-               funcTypeInfo.$rawTxt == "_fromStem" ) and
-            genericsClass.isInheritFrom( self.processInfo,
-                                         Ast.builtinTypeMapping, alt2typeMap )    
-         {
-            workType = genericsClass.$nilableTypeInfo;
-         }
-         else {
-            self.addErrMess(
-               firstToken.pos,
-               "not support generics yet. -- %s" (retType.getTxt(##)) );
-         }
-      }
-
-      if retType.$mutMode == .Depend {
-         // depend の場合、 prefix の MutMode に依存する。
-         if prefixMutMode == .Mut {
-            retTypeInfoList.insert( workType.$srcTypeInfo );
-         } else {
-            retTypeInfoList.insert(
-               self.createModifier( workType.$srcTypeInfo, .IMut ) );
-         }
-      } else {
-         retTypeInfoList.insert( workType );
-      }
-   }
-   
-   when! refFieldNode {
-      if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
-         funcTypeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
-      {
-         // unpack の型を list の要素の DDD 型にする
-         let prefixType = refFieldNode.$prefix.$expType;
-         if #prefixType.$itemTypeInfoList > 0 {
-            let dddType = self.processInfo.createDDD(
-               prefixType.$itemTypeInfoList[ 1 ], false, false );
-            retTypeInfoList = [];
-            retTypeInfoList.insert( dddType );
-         }
-      }
-   }
-   
+   let mut retTypeInfoList = self.getRetTypeInfo(
+      firstToken, refFieldNode, funcTypeInfo,
+      alt2typeMap, genericTypeList, genericsClass );
    
    if nilAccess {
       let mut retList:List<&Ast.TypeInfo> = [];
@@ -1725,7 +1779,7 @@ mut : Nodes.ExpCallNode
                   return .Child;
                }
                if! let refTypeNode = node@@@Nodes.RefTypeNode {
-                  let refType = refTypeNode.$name.$expType;
+                  let refType = refTypeNode.$typeNode.$expType;
                   itemTypeList = [ refType ];
                   findFlag = true;
                   if not Ast.isBuiltin( refType.$typeId.id ) and
@@ -2693,7 +2747,7 @@ fn TransUnit.analyzeExpField(
    let mut getterTypeInfo:&Ast.TypeInfo! = nil;
    let mut symbolInfo:&Ast.SymbolInfo! = nil;
    switch prefixExpType.$kind {
-      case .Class, .Module, .ExtModule, .IF, .List, .Array, .Set, .Box, .Alternate {
+      case .Class, .Module, .ExtModule, .IF, .List, .Array, .Set, .Tuple, .Box, .Alternate {
          let mut getterFlag = false;
          typeInfo, symbolInfo, getterFlag =
             self.analyzeAccessClassField( prefixExpType, mode, fieldToken );
@@ -2909,7 +2963,7 @@ fn TransUnit.analyzeExpField(
    {
       self.helperInfo.useUnpack = true;
    }
-   if typeInfo.equals( self.processInfo, self.builtinFunc.str_replace ## ) {
+   elseif typeInfo.equals( self.processInfo, self.builtinFunc.str_replace ## ) {
       self.helperInfo.useStrReplace = true;
    }
 
@@ -4502,6 +4556,9 @@ fn TransUnit.analyzeExp(
       }
       elseif token.txt == '(@' {
          exp = self.analyzeSetConst( token, expectType );
+      }  
+      elseif token.txt == '(=' {
+         exp = self.analyzeTupleConst( token, expectType );
       }  
       elseif token.txt == '{' {
          exp = self.analyzeMapConst( token, expectType );

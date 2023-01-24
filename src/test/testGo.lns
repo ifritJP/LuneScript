@@ -2820,3 +2820,14 @@ _section();
       }
    }
 }
+_section();
+{
+   fn func() : (int,str) {
+      return (= 1, "abc");
+   }
+
+   {
+      let (val1, val2) = func();
+      print( val1 + 10, val2 .. "xyz" );
+   }
+}

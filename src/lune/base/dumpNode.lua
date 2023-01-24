@@ -524,6 +524,22 @@ function dumpFilter:processWhen( node, opt )
 end
 
 
+function dumpFilter:processExpandTuple( node, opt )
+
+   local varName = ""
+   for index, var in ipairs( node:get_varList(  ) ) do
+      if index > 1 then
+         varName = varName .. ","
+      end
+      
+      varName = string.format( "%s %s", varName, var:get_name(  ).txt)
+   end
+   
+   self:dump( opt, node, varName )
+   filter( node:get_expList(), self, opt:nextOpt(  ) )
+end
+
+
 function dumpFilter:processDeclVar( node, opt )
 
    local varName = ""
@@ -553,7 +569,7 @@ function dumpFilter:processDeclVar( node, opt )
    end
    
    do
-      local _exp = node:get_expList(  )
+      local _exp = node:get_expList()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
@@ -692,7 +708,7 @@ end
 function dumpFilter:processRefType( node, opt )
 
    self:dump( opt, node, node:get_expType():get_display_stirng() )
-   filter( node:get_name(  ), self, opt:nextOpt(  ) )
+   filter( node:get_typeNode(), self, opt:nextOpt(  ) )
 end
 
 
@@ -894,7 +910,7 @@ function dumpFilter:processExpList( node, opt )
    
    
    self:dump( opt, node, mess )
-   local expList = node:get_expList(  )
+   local expList = node:get_expList()
    for __index, exp in ipairs( expList ) do
       filter( exp, self, opt:nextOpt(  ) )
    end
@@ -1054,7 +1070,7 @@ function dumpFilter:processReturn( node, opt )
 
    self:dump( opt, node, "" )
    do
-      local _exp = node:get_expList(  )
+      local _exp = node:get_expList()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
@@ -1123,11 +1139,19 @@ function dumpFilter:processUnboxing( node, opt )
 end
 
 
+function dumpFilter:processTupleConst( node, opt )
+
+   self:dump( opt, node, "(=)" )
+   filter( node:get_expList(), self, opt:nextOpt(  ) )
+end
+
+
+
 function dumpFilter:processLiteralList( node, opt )
 
    self:dump( opt, node, "[]" )
    do
-      local _exp = node:get_expList(  )
+      local _exp = node:get_expList()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
@@ -1140,7 +1164,7 @@ function dumpFilter:processLiteralSet( node, opt )
 
    self:dump( opt, node, "(@)" )
    do
-      local _exp = node:get_expList(  )
+      local _exp = node:get_expList()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
@@ -1165,7 +1189,7 @@ function dumpFilter:processLiteralArray( node, opt )
 
    self:dump( opt, node, "[@]" )
    do
-      local _exp = node:get_expList(  )
+      local _exp = node:get_expList()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end

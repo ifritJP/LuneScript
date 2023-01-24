@@ -116,7 +116,7 @@ Set<str>, Set<str>, Set<str>, Map<str,Array<str>>
       multiCharDelimitMap[ "|<" ] = [@ "|<<"];
       multiCharDelimitMap[ "|>" ] = [@ "|>>"];
       multiCharDelimitMap[ "[" ] = [@ "[@" ];
-      multiCharDelimitMap[ "(" ] = [@ "(@" ];
+      multiCharDelimitMap[ "(" ] = [@ "(@", "(=" ];
       multiCharDelimitMap[ "~" ] = [@ "~=", "~~" ];
       multiCharDelimitMap[ "$" ] = [@ "$[", "$.", "$(" ];
       multiCharDelimitMap[ "$." ] = [@ "$.$" ];

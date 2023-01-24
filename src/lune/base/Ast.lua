@@ -403,6 +403,9 @@ TypeInfoKind.__allList[26] = TypeInfoKind.CombineIF
 TypeInfoKind.ExtModule = 26
 TypeInfoKind._val2NameMap[26] = 'ExtModule'
 TypeInfoKind.__allList[27] = TypeInfoKind.ExtModule
+TypeInfoKind.Tuple = 27
+TypeInfoKind._val2NameMap[27] = 'Tuple'
+TypeInfoKind.__allList[28] = TypeInfoKind.Tuple
 
 
 local extStartId = 100000
@@ -621,7 +624,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 223, function (  )
+   Log.log( Log.Level.Trace, __func__, 225, function (  )
    
       return "start"
    end )
@@ -1005,6 +1008,9 @@ SerializeKind.__allList[11] = SerializeKind.Box
 SerializeKind.Ext = 11
 SerializeKind._val2NameMap[11] = 'Ext'
 SerializeKind.__allList[12] = SerializeKind.Ext
+SerializeKind.Tuple = 12
+SerializeKind._val2NameMap[12] = 'Tuple'
+SerializeKind.__allList[13] = SerializeKind.Tuple
 
 
 local function isBuiltin( typeId )
@@ -6399,6 +6405,118 @@ AlgeOrGen.Gen = { "Gen", {{}}}
 AlgeOrGen._name2Val["Gen"] = AlgeOrGen.Gen
 
 
+local TupleTypeInfo = {}
+setmetatable( TupleTypeInfo, { __index = TypeInfo } )
+_moduleObj.TupleTypeInfo = TupleTypeInfo
+function TupleTypeInfo:get_nilableTypeInfoMut(  )
+
+   return self.nilableTypeInfo
+end
+function TupleTypeInfo:get_rawTxt(  )
+
+   return "__tuple"
+end
+function TupleTypeInfo:get_baseTypeInfo(  )
+
+   return _moduleObj.headTypeInfo
+end
+function TupleTypeInfo._new( processInfo, externalFlag, accessMode, itemTypeInfoList )
+   local obj = {}
+   TupleTypeInfo._setmeta( obj )
+   if obj.__init then obj:__init( processInfo, externalFlag, accessMode, itemTypeInfoList ); end
+   return obj
+end
+function TupleTypeInfo:__init(processInfo, externalFlag, accessMode, itemTypeInfoList) 
+   TypeInfo.__init( self,nil, processInfo)
+   
+   
+   self.itemTypeInfoList = itemTypeInfoList
+   self.imutType = _moduleObj.headTypeInfo
+   self.externalFlag = externalFlag
+   self.accessMode = accessMode
+   self.parentInfo = processInfo:get_dummyParentType()
+   self.typeId = processInfo:newId( self )
+   self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
+end
+function TupleTypeInfo:isModule(  )
+
+   return false
+end
+function TupleTypeInfo:get_kind(  )
+
+   return TypeInfoKind.Tuple
+end
+function TupleTypeInfo:getParentId(  )
+
+   return self.parentInfo:get_typeId()
+end
+function TupleTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
+
+   return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
+end
+function TupleTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag )
+
+   return self:get_generics_txt( rawTxt, typeNameCtrl, importInfo, localFlag )
+end
+function TupleTypeInfo:get_display_stirng_with( raw, alt2type )
+
+   return self:get_generics_display_string( raw, alt2type )
+end
+function TupleTypeInfo:get_display_stirng(  )
+
+   return self:get_display_stirng_with( self:get_rawTxt(), nil )
+end
+function TupleTypeInfo:get_mutMode(  )
+
+   return MutMode.Mut
+end
+function TupleTypeInfo.create( processInfo, externalFlag, accessMode, itemTypeInfoList )
+
+   return TupleTypeInfo._new(processInfo, externalFlag, accessMode, itemTypeInfoList)
+end
+function TupleTypeInfo:serialize( stream, serializeInfo )
+
+   local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, 
+accessMode = %d, kind = %d, ]==], SerializeKind.Tuple, self:getParentId(  ).id, self.typeId.id, self.accessMode, TypeInfoKind.Tuple)
+   stream:write( txt )
+   
+   stream:write( self:serializeTypeInfoList( serializeInfo, "itemTypeId = {", self.itemTypeInfoList ) )
+   
+   stream:write( "}\n" )
+end
+function TupleTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
+
+   return TypeInfo.canEvalWithBase( processInfo, self, false, other, canEvalType, alt2type )
+end
+function TupleTypeInfo._setmeta( obj )
+  setmetatable( obj, { __index = TupleTypeInfo  } )
+end
+function TupleTypeInfo:get_externalFlag()
+   return self.externalFlag
+end
+function TupleTypeInfo:get_parentInfo()
+   return self.parentInfo
+end
+function TupleTypeInfo:get_typeId()
+   return self.typeId
+end
+function TupleTypeInfo:get_accessMode()
+   return self.accessMode
+end
+function TupleTypeInfo:get_nilableTypeInfo()
+   return self.nilableTypeInfo
+end
+function TupleTypeInfo:get_itemTypeInfoList()
+   return self.itemTypeInfoList
+end
+function TupleTypeInfo:get_imutType()
+   return self.imutType
+end
+function TupleTypeInfo:set_imutType( imutType )
+   self.imutType = imutType
+end
+
+
 local OverridingType = {}
 OverridingType._name2Val = {}
 function OverridingType:_getTxt( val )
@@ -7693,6 +7811,15 @@ end
 
 local builtinTypeLnsLoad = rootProcessInfo:createFuncAsync( false, true, nil, TypeInfoKind.Func, headTypeInfoMut, headTypeInfoMut, false, true, true, AccessMode.Pub, "_lnsLoad", Async.Async, nil, {_moduleObj.builtinTypeString, _moduleObj.builtinTypeString}, {_moduleObj.builtinTypeStem}, MutMode.IMut )
 _moduleObj.builtinTypeLnsLoad = builtinTypeLnsLoad
+
+
+function ProcessInfo:createTuple( externalFlag, accessMode, itemTypeInfoList )
+
+   local info = TupleTypeInfo.create( self, externalFlag, accessMode, itemTypeInfoList )
+   self:setupImut( info )
+   
+   return info
+end
 
 
 function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
@@ -10239,6 +10366,29 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          
          return false, ""
          
+      elseif _switchExp == TypeInfoKind.Tuple then
+         if #dest:get_itemTypeInfoList() ~= #otherSrc:get_itemTypeInfoList() then
+            return false, ""
+            
+         end
+         
+         for index, _1 in ipairs( dest:get_itemTypeInfoList() ) do
+            if #dest:get_itemTypeInfoList() >= index and #otherSrc:get_itemTypeInfoList() >= index then
+               
+               local ret, mess = (dest:get_itemTypeInfoList()[index] ):canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[index], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
+               if not ret then
+                  return false, mess
+               end
+               
+            else
+             
+               return false, nil
+            end
+            
+            
+         end
+         
+         return true, nil
       elseif _switchExp == TypeInfoKind.Form then
          if isSettableToForm( processInfo, otherSrc ) then
             return true, nil

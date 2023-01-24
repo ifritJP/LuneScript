@@ -1712,6 +1712,82 @@ function _TypeInfoAlge._fromMapSub( obj, val )
    return obj
 end
 
+
+local _TypeInfoTuple = {}
+setmetatable( _TypeInfoTuple, { __index = _TypeInfo } )
+function _TypeInfoTuple:createTypeInfo( param )
+
+   local accessMode = _lune.unwrap( Ast.AccessMode._from( self.accessMode ))
+   
+   local parentScope = _lune.unwrap( param.typeId2Scope[self.parentId])
+   local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Class, nil)
+   
+   local itemTypeInfo = {}
+   for __index, typeId in ipairs( self.itemTypeId ) do
+      
+      table.insert( itemTypeInfo, _lune.unwrap( param:getTypeInfoFrom( typeId )) )
+   end
+   
+   
+   param.typeId2Scope[self.typeId] = scope
+   local tupleTypeInfo = param.processInfo:createTuple( true, accessMode, itemTypeInfo )
+   local newTypeInfo = tupleTypeInfo
+   param.typeId2TypeInfo[self.typeId] = tupleTypeInfo
+   param.typeId2TypeDataAccessor[self.typeId] = tupleTypeInfo
+   
+   tupleTypeInfo:get_typeId():set_orgId( self.typeId )
+   
+   return newTypeInfo, nil
+end
+function _TypeInfoTuple._setmeta( obj )
+  setmetatable( obj, { __index = _TypeInfoTuple  } )
+end
+function _TypeInfoTuple._new( parentId, accessMode, itemTypeId )
+   local obj = {}
+   _TypeInfoTuple._setmeta( obj )
+   if obj.__init then
+      obj:__init( parentId, accessMode, itemTypeId )
+   end
+   return obj
+end
+function _TypeInfoTuple:__init( parentId, accessMode, itemTypeId )
+
+   _TypeInfo.__init( self)
+   self.parentId = parentId
+   self.accessMode = accessMode
+   self.itemTypeId = itemTypeId
+end
+function _TypeInfoTuple:_toMap()
+  return self
+end
+function _TypeInfoTuple._fromMap( val )
+  local obj, mes = _TypeInfoTuple._fromMapSub( {}, val )
+  if obj then
+     _TypeInfoTuple._setmeta( obj )
+  end
+  return obj, mes
+end
+function _TypeInfoTuple._fromStem( val )
+  return _TypeInfoTuple._fromMap( val )
+end
+
+function _TypeInfoTuple._fromMapSub( obj, val )
+   local result, mes = _TypeInfo._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "parentId", func = _lune._toInt, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "accessMode", func = Ast.AccessMode._from, nilable = false, child = {} } )
+   table.insert( memInfo, { name = "itemTypeId", func = _lune._toList, nilable = false, child = { { func = _IdInfo._fromMap, nilable = false, child = {} } } } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
 local DependModuleInfo = {}
 function DependModuleInfo:getTypeInfo( metaTypeId )
 
@@ -1944,7 +2020,7 @@ function ModuleLoader:getExportInfo(  )
    _lune.nilacc( self.syncFlag, 'wait', 'callmtd'  )
    
    if not self.result:get_exportInfo() then
-      Log.log( Log.Level.Err, __func__, 964, function (  )
+      Log.log( Log.Level.Err, __func__, 999, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.fullModulePath)
       end )
@@ -1965,7 +2041,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
    
    do
       local metaInfo = metaInfoStem
-      Log.log( Log.Level.Info, __func__, 981, function (  )
+      Log.log( Log.Level.Info, __func__, 1016, function (  )
       
          return string.format( "%s processing", fullModulePath)
       end )
@@ -2080,6 +2156,8 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
                      actInfo, mess = _TypeInfoEnum._fromMap( atomInfo )
                   elseif _switchExp == Ast.SerializeKind.Alge then
                      actInfo, mess = _TypeInfoAlge._fromMap( atomInfo )
+                  elseif _switchExp == Ast.SerializeKind.Tuple then
+                     actInfo, mess = _TypeInfoTuple._fromMap( atomInfo )
                   elseif _switchExp == Ast.SerializeKind.Module then
                      actInfo, mess = _TypeInfoModule._fromMap( atomInfo )
                   elseif _switchExp == Ast.SerializeKind.Normal then
@@ -2288,7 +2366,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
                   
                elseif _switchExp == Ast.TypeInfoKind.Module then
                   self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-                  Log.log( Log.Level.Debug, __func__, 1294, function (  )
+                  Log.log( Log.Level.Debug, __func__, 1332, function (  )
                   
                      return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
                   end )
@@ -2506,7 +2584,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1486, function (  )
+   Log.log( Log.Level.Info, __func__, 1524, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, baseDir)
    end )
@@ -2515,7 +2593,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local exportInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if exportInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1494, function (  )
+      Log.log( Log.Level.Info, __func__, 1532, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2575,7 +2653,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = exportInfo
    
-   Log.log( Log.Level.Info, __func__, 1545, function (  )
+   Log.log( Log.Level.Info, __func__, 1583, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2592,7 +2670,7 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    
    modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
    
-   Log.log( Log.Level.Info, __func__, 1558, function (  )
+   Log.log( Log.Level.Info, __func__, 1596, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, baseDir)
    end )

@@ -1092,6 +1092,9 @@ alias で置き換えている元の Type → alias の型
       expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ) mut : Nodes.ExpListNode;
    pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
    pub fn getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token;
+   fn analyzeRefType(
+      accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool,
+      allowOmitTypeParamFlag:bool, allowToSetAlt:bool ) mut: Nodes.RefTypeNode;
    pri fn analyzeRefTypeWithSymbol(
       accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
       symbolNode:&Nodes.Node, parentPub:bool, allowToSetAlt:bool ) mut: Nodes.RefTypeNode;
@@ -2830,3 +2833,4 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
    
    return node;
 }
+

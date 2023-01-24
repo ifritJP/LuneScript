@@ -100,6 +100,8 @@ pub enum TypeInfoKind {
    CombineIF,
    // module宣言
    ExtModule,
+   // タプル
+   Tuple,
 }
 
 
@@ -398,6 +400,7 @@ pub enum SerializeKind {
    Generic,
    Box,
    Ext,
+   Tuple,
 }
 
 pub fn isBuiltin( typeId: int ) : bool {
@@ -4450,6 +4453,131 @@ pub alge AlgeOrGen {
    Gen( &GenericTypeInfo )
 }
 
+
+
+pub class TupleTypeInfo extend TypeInfo {
+   // 外部モジュールで定義した TypeInfo かどうか
+   pri let externalFlag: bool { pub };
+   // 親のタイプ。メソッドの親はクラスとなる。
+   pri let mut parentInfo: &TypeInfo { pub };
+   // タイプ ID
+   pri let typeId: &IdInfo { pub };
+   // アクセスモード "pub", "pro", "pri"
+   pri let accessMode: AccessMode { pub };
+   pri let nilableTypeInfo: TypeInfo { pub& };
+   // generic のタイプ
+   pri let itemTypeInfoList: &List<&TypeInfo> { pub };
+
+   pri let mut imutType:&TypeInfo {pub,local};
+
+   local override fn get_nilableTypeInfoMut() mut: TypeInfo {
+      return self.nilableTypeInfo;
+   }
+
+   pub override fn get_rawTxt() : str {
+      return "__tuple";
+   }
+   /** super クラス。 継承していない場合は headTypeInfo。 */
+   pub override fn get_baseTypeInfo(): &TypeInfo {
+      return headTypeInfo;
+   }
+   
+   
+
+   pri fn __init(
+      processInfo:ProcessInfo, externalFlag: bool, accessMode: AccessMode,
+      itemTypeInfoList:&List<&TypeInfo> ) 
+   {
+      super( nil, processInfo );
+
+      self.itemTypeInfoList = itemTypeInfoList;
+      self.imutType = headTypeInfo;
+      self.externalFlag = externalFlag;
+      self.accessMode = accessMode;
+      self.parentInfo = processInfo.$dummyParentType;
+      self.typeId = processInfo.newId( self );
+
+      // when! typeDataAccessor {
+      //    typeDataAccessor.$typeData.addChildren( self );
+      // }
+      
+      self.nilableTypeInfo = new NilableTypeInfo( processInfo, self );
+   }
+
+   pub override fn isModule(): bool {
+      return false;
+   }
+
+   pub override fn get_kind(): TypeInfoKind {
+      return .Tuple;
+   }
+
+   pub override fn getParentId(): &IdInfo {
+      return self.parentInfo.$typeId;
+   }
+
+   /** この型の名前を取得する。 */
+   pub override fn getTxt(
+      typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      return self.getTxtWithRaw( self.$rawTxt, typeNameCtrl, importInfo, localFlag );
+   }
+   pro override fn getTxtWithRaw(
+      rawTxt:str, typeNameCtrl:&TypeNameCtrl!,
+      importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
+   {
+      return self.get_generics_txt( rawTxt, typeNameCtrl, importInfo, localFlag );
+   }
+
+   pub override fn get_display_stirng_with(
+      raw:str, alt2type:&Map<&TypeInfo,&TypeInfo>! ): str
+   {
+      return self.get_generics_display_string( raw, alt2type );
+   }
+   pub override fn get_display_stirng(): str {
+      return self.get_display_stirng_with( self.$rawTxt, nil );
+   }
+
+   pub override fn get_mutMode(): MutMode {
+      return .Mut;   
+   };
+
+   local static fn create(
+      processInfo:ProcessInfo, externalFlag: bool, accessMode: AccessMode,
+      itemTypeInfoList:&List<&TypeInfo> ) mut : TupleTypeInfo
+   {
+      return new TupleTypeInfo(
+         processInfo, externalFlag, accessMode, itemTypeInfoList );
+   }
+
+   pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo )
+   {
+      let txt = ```{ skind = %d, parentId = %d, typeId = %d, 
+accessMode = %d, kind = %d, ```
+          ( SerializeKind.Tuple, self.getParentId().id,
+            self.typeId.id, self.accessMode, TypeInfoKind.Tuple );
+      stream.write( txt );
+
+      stream.write( self.serializeTypeInfoList(
+         serializeInfo, "itemTypeId = {", self.itemTypeInfoList## ) );
+      
+      stream.write( "}\n" );
+   }
+
+   pub override fn canEvalWith(
+      processInfo:&ProcessInfo, other:&TypeInfo,
+      canEvalType:CanEvalType, alt2type:Map<&TypeInfo,&TypeInfo> ): bool, str!
+   {
+      return TypeInfo.canEvalWithBase(
+         processInfo, self, false, other, canEvalType, alt2type )**;
+   }
+}
+
+
+
+
+
 alge OverridingType {
    NoReady,       
    NotOverride,   
@@ -4594,7 +4722,8 @@ pub class NormalTypeInfo extend TypeInfo {
          let mut alt2typeMap:Map<&TypeInfo,&TypeInfo> = {};
          switch kind {  
             case .Set, .Map, .List, .Array, .Box {
-               if #self.itemTypeInfoList ~= #self.baseTypeInfo.$itemTypeInfoList {
+               if #self.itemTypeInfoList ~= #self.baseTypeInfo.$itemTypeInfoList
+               {
                   Util.err( "unmatch generic type number -- %d, %d"
                             (#self.itemTypeInfoList,
                               #self.baseTypeInfo.$itemTypeInfoList ) );
@@ -5508,7 +5637,6 @@ pub fn ProcessInfo.createMap(
    });
 }
 
-
 pub fn ProcessInfo.createModule(
    scope: Scope, parentInfo: &TypeInfo,
    typeDataAccessor: TypeDataAccessor, externalFlag: bool,
@@ -5557,8 +5685,6 @@ pub fn ProcessInfo.createClassAsync(
 
    return info;      
 }
-
-
 
 pub fn ProcessInfo.createExtModule(
    scope: Scope!, parentInfo: &TypeInfo,
@@ -5623,6 +5749,24 @@ pub let builtinTypeLnsLoad:&TypeInfo = rootProcessInfo.createFuncAsync(
    false, true, nil, .Func, headTypeInfoMut, headTypeInfoMut, false, true,
    true, .Pub, "_lnsLoad", .Async, nil, [ builtinTypeString, builtinTypeString ],
    [ builtinTypeStem ], .IMut );
+
+
+pub fn ProcessInfo.createTuple(
+   externalFlag: bool,
+   accessMode: AccessMode, itemTypeInfoList:&List<&TypeInfo> ) mut : TupleTypeInfo
+{
+   let mut info = TupleTypeInfo.create(
+      self, externalFlag, accessMode, itemTypeInfoList );
+   self.setupImut( info );
+
+   // let mut getTupleName = self.createFuncAsync(
+   //    false, true, nil, .Method, info, info,
+   //    true, externalFlag, false, AccessMode.Pub,
+   //    "get__txt", .Async, nil, nil, [ builtinTypeString ], .IMut );
+   // scope.addMethod( self, nil, getTupleName, AccessMode.Pub, false );
+
+   return info;            
+}
 
 
 
@@ -6885,7 +7029,7 @@ pub override fn NilableTypeInfo.canEvalWith(
 }
 
 macro _checkEqualsItemType(
-   type1:sym, type2:sym, index:int, alt2type:sym, destMut:sym, multiFlag:bool )
+   type1:sym, type2:sym, index:__exp, alt2type:sym, destMut:sym, multiFlag:bool )
 {
    {
       let retStat1:stat;      
@@ -7709,6 +7853,16 @@ pro static fn TypeInfo.canEvalWithBase(
          return false, _pos();   
          // return otherSrc.isInheritFrom( dest, alt2type );
       }
+      case .Tuple {
+         if #dest.$itemTypeInfoList ~= #otherSrc.$itemTypeInfoList {
+            return false, _pos();
+         }
+         foreach _, index in dest.$itemTypeInfoList {
+            _checkEqualsItemType(
+               dest, otherSrc, index, alt2type, destMut, true );
+         }
+         return true, nil;
+      }
       case .Form {            
          if isSettableToForm( processInfo, otherSrc ) {
             return true, nil;       
@@ -8121,6 +8275,13 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
                typeInfo = self.processInfo.createSet(
                   self.accessMode, self.parentInfo, genericList, .Mut );
             }
+            // case .Tuple {             
+            //    if #genericList == 0 {   
+            //       return nil, pos, "tuple type size must not 0 ";
+            //    }
+            //    typeInfo = self.processInfo.createTuple(
+            //       self.accessMode, self.parentInfo, genericList );
+            // }
             case .DDD {              
                _checkAlternateTypeCount( 1 );
                typeInfo = self.processInfo.createDDD( genericList[1], false, false );

@@ -1209,7 +1209,7 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
          end
          
          return "*Lns_luaValue"
-      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Tuple then
          return "*LnsList"
       elseif _switchExp == Ast.TypeInfoKind.Set then
          return "*LnsSet"
@@ -4349,6 +4349,39 @@ function convFilter:outputLetVar( node )
 end
 
 
+function convFilter:processExpandTuple( node, opt )
+
+   for __index, var in ipairs( node:get_symbolInfoList() ) do
+      if var:get_name() ~= "_" then
+         self:writeRaw( string.format( "var %s ", var:get_name()) )
+         self:writeln( self:type2gotype( var:get_typeInfo() ) )
+      end
+      
+   end
+   
+   
+   self:writeln( "{" )
+   self:pushIndent(  )
+   
+   self:write( "__tuple := " )
+   filter( node:get_expList(), self, node )
+   self:writeln( ".Unpack()" )
+   
+   for index, var in ipairs( node:get_symbolInfoList() ) do
+      if var:get_name() ~= "_" then
+         self:writeRaw( string.format( "%s = __tuple[%d]", var:get_name(), index - 1) )
+         self:outputAny2Type( var:get_typeInfo() )
+         self:writeln( "" )
+      end
+      
+   end
+   
+   
+   self:popIndent(  )
+   self:writeln( "}" )
+end
+
+
 function convFilter:processDeclVar( node, opt )
    local __func__ = '@lune.@base.@convGo.convFilter.processDeclVar'
 
@@ -5327,7 +5360,7 @@ function convFilter:processExpNew( node, opt )
          local refTypeNode = _lune.__Cast( node:get_symbol(), 3, Nodes.RefTypeNode )
          if refTypeNode ~= nil then
             do
-               local refNode = _lune.__Cast( refTypeNode:get_name(), 3, Nodes.RefFieldNode )
+               local refNode = _lune.__Cast( refTypeNode:get_typeNode(), 3, Nodes.RefFieldNode )
                if refNode ~= nil then
                   filter( refNode:get_prefix(), self, node )
                   self:writeRaw( "." )
@@ -6544,7 +6577,7 @@ function convFilter:processExpCall( node, opt )
       if fieldNode ~= nil then
          do
             local _switchExp = fieldNode:get_prefix():get_expType():get_kind()
-            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Array then
+            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Tuple then
                addEnvArg = false
             end
          end
@@ -7561,6 +7594,14 @@ function convFilter:processUnboxing( node, opt )
    local __func__ = '@lune.@base.@convGo.convFilter.processUnboxing'
 
    Util.err( string.format( "not support -- %s", __func__) )
+end
+
+
+function convFilter:processTupleConst( node, opt )
+
+   self:writeRaw( "NewLnsList(" )
+   self:expList2Slice( node:get_expList(), true )
+   self:writeRaw( ")" )
 end
 
 

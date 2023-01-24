@@ -25,6 +25,43 @@ SOFTWARE.
 subfile owner lune.base.TransUnit;
 
 /**
+タプル型の解析。
+*/
+fn TransUnit.analyzeRefTypeTuple(
+   firstToken:&Types.Token, accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool,
+   allowOmitTypeParamFlag:bool, allowToSetAlt:bool ) mut : Nodes.RefTypeNode
+{
+   let refTypeNodeList:List<&Nodes.RefTypeNode> = [];
+   let typeList:List<&Ast.TypeInfo> = [];
+   while true {
+      let refTypeNode = self.analyzeRefType(
+         accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt );
+      refTypeNodeList.insert( refTypeNode );
+      typeList.insert( refTypeNode.$expType );
+      let token = self.getToken(##);
+      if token.txt == ")" {
+         break;
+      }
+      self.checkToken( token, "," );
+   }
+
+   if #refTypeNodeList == 0 {
+      self.addErrMess( firstToken.pos, "tuple size is 0." );
+   }
+
+   let tupleTypeInfo = self.processInfo.createTuple( false, accessMode, typeList );
+
+   let declTupleNode = Nodes.DeclTupleNode.create(
+      self.nodeManager, firstToken.$pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ tupleTypeInfo ], refTypeNodeList );
+   
+   return Nodes.RefTypeNode.create(
+      self.nodeManager, firstToken.$pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ tupleTypeInfo ],
+      declTupleNode, [], {}, .IMut, "no" );
+}
+
+/**
 参照する型情報を解析する。
 
 @param accessMode この型のアクセス制御
@@ -38,6 +75,13 @@ fn TransUnit.analyzeRefType(
    allowOmitTypeParamFlag:bool, allowToSetAlt:bool ) mut: Nodes.RefTypeNode
 {
    let firstToken = self.getToken(##);
+
+   if firstToken.txt == "(" {
+      return self.analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parentPub,
+                                       allowOmitTypeParamFlag, allowToSetAlt );
+   }
+
+   
    let mut token = firstToken;
    let mutMode:Ast.MutMode!;
    switch token.txt {
@@ -3962,6 +4006,19 @@ List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode
    return typeInfoList, letVarList, orgExpTypeList, nil;
 }
 
+fn TransUnit.analyzeExpandTuple(
+   firstPos:&Types.Position, condRetInfo:&Nodes.CondRetInfo!,
+   typeInfoList:&List<&Ast.TypeInfo>, varList:&List<&Nodes.VarInfo>,
+   symbolInfoList:&List<&Ast.SymbolInfo>,
+   expList:&Nodes.ExpListNode ) mut : Nodes.ExpandTupleNode
+{
+   return Nodes.ExpandTupleNode.create(
+      self.nodeManager, firstPos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      condRetInfo, varList, expList, symbolInfoList );
+}
+
+
 /*
 let で宣言している変数シンボル、型、初期値の型情報を解析して返す。
 
@@ -3979,8 +4036,8 @@ let で宣言している変数シンボル、型、初期値の型情報を解�
 */
 fn TransUnit.analyzeLetAndInitExp(
    firstPos:&Parser.Position, letFlag:bool, initMutable:Ast.MutMode,
-   accessMode:Ast.AccessMode, unwrapFlag:bool ) mut :
-   List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode!
+   accessMode:Ast.AccessMode, unwrapFlag:bool, expandTuple:bool ) mut :
+&List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
    // 宣言している変数の型リスト
    let mut typeInfoList : List<&Ast.TypeInfo> = [];
@@ -4059,7 +4116,30 @@ fn TransUnit.analyzeLetAndInitExp(
       }
    }
 
+   if expandTuple {
+      self.checkToken( nextToken, ")" );
+      self.checkNextToken( "=" );
 
+      let expListNode = self.analyzeExpList( false, false, false, false ## );
+      let expType = expListNode.$expType;
+      if expType.$kind ~= .Tuple {
+         self.errorAt( expListNode.$pos,
+                       "expects the tuple value, but -- %s" (expType.getTxt(##)) );
+      }
+      if #expListNode.$expTypeList ~= 1 {
+         self.addErrMess(
+            expListNode.$pos,
+            "expects 1 tuple value, but -- %d value" (#expListNode.$expTypeList) );
+      }
+      if #expType.$itemTypeInfoList ~= #letVarList {
+         self.addErrMess(
+            expListNode.$pos,
+            "expects %d item tuple, but -- %d item"
+            (#letVarList, #expType.$itemTypeInfoList) );
+      }
+      return expType.$itemTypeInfoList, letVarList, expType.$itemTypeInfoList, expListNode;
+   }
+   
    if nextToken.txt ~= "=" {
       self.pushback();
       let mut orgExpTypeList: List<&Ast.TypeInfo> = [];
@@ -4091,12 +4171,25 @@ fn TransUnit.analyzeDeclVar(
       }
    }
 
+   let expandTuple;
+   {
+      let workToken = self.getToken(##);
+      if workToken.txt == "(" and mode == .Let {
+         expandTuple = true;
+      } else {
+         expandTuple = false;
+         self.pushback();
+      }
+   }
+   
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp(
          firstToken.pos, mode == .Let,
-         mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag );
+         mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut,
+         accessMode, unwrapFlag, expandTuple );
 
    let condRetInfo = self.checkCondRet();
+
 
    if mode == .Let and #typeInfoList == 1 {
       when! expList {
@@ -4221,12 +4314,22 @@ fn TransUnit.analyzeDeclVar(
       }
       symbolInfoList.insert( nsInfo.registerSym(
          unwrap self.$scope.getSymbolInfo( varName.txt, self.$scope,
-                                          true, self.scopeAccess ) ) );
+                                           true, self.scopeAccess ) ) );
    }
+
+
    if mode ~= .Sync and self.macroScope {
       self.macroCtrl.registVar( symbolInfoList );
    }
-   
+
+   if expandTuple {
+      when! expList {
+         return self.analyzeExpandTuple( firstToken.pos, condRetInfo, typeInfoList,
+                                         varList, symbolInfoList, expList );
+      } else {
+         self.errorAt( firstToken.pos, "expanding tuple must set init value." );
+      }
+   }
 
    let mut unwrapBlock: Nodes.BlockNode! = nil;
    let mut thenBlock: Nodes.BlockNode! = nil;
@@ -4329,7 +4432,7 @@ if! の解析。
 fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode
 {
    let mut nextToken = self.getToken(##);
-   let mut typeInfoList:List<&Ast.TypeInfo> = [];
+   let mut typeInfoList:&List<&Ast.TypeInfo> = [];
    let mut varNameList:List<&Parser.Token> = [];
    let mut expList:&Nodes.ExpListNode;
    let mut varList:List<&Ast.SymbolInfo> = [];
@@ -4337,7 +4440,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    let mut workTypeInfoList, mut letVarList, workExpList;
    if nextToken.txt == "let" {
       workTypeInfoList, letVarList, _, workExpList = self.analyzeLetAndInitExp(
-         firstToken.pos, true, .IMut, .Local, true );
+         firstToken.pos, true, .IMut, .Local, true, false );
    } else {
       self.pushback();
       let mut tmpTypeInfoList : List<&Ast.TypeInfo> = [ Ast.builtinTypeEmpty ];

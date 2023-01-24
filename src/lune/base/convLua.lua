@@ -867,7 +867,7 @@ function ConvFilter:outputMeta( node )
          if not typeInfo:get_externalFlag() then
             do
                local _switchExp = typeInfo:get_kind()
-               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
+               if _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Form or _switchExp == Ast.TypeInfoKind.FormFunc or _switchExp == Ast.TypeInfoKind.Alge or _switchExp == Ast.TypeInfoKind.Enum or _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Tuple or _switchExp == Ast.TypeInfoKind.Alternate or _switchExp == Ast.TypeInfoKind.Box then
                   pickupTypeId( typeInfo:get_nilableTypeInfo(), true, false )
                end
             end
@@ -1576,7 +1576,7 @@ end]==], luneSymbol, luneSymbol) )
             self:writeln( LuaMod.getCode( LuaMod.CodeKind.SetMapping ) )
          end
          
-         if node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() then
+         if (node:get_luneHelperInfo().useUnpack and not self.targetLuaVer:get_hasTableUnpack() ) then
             self:writeln( LuaMod.getCode( LuaMod.CodeKind.Unpack ) )
          end
          
@@ -3011,6 +3011,25 @@ function ConvFilter:processWhen( node, opt )
 end
 
 
+function ConvFilter:processExpandTuple( node, opt )
+
+   for index, var in ipairs( node:get_symbolInfoList() ) do
+      if index > 1 then
+         self:writeRaw( ", " )
+      end
+      
+      local name = getSymbolTxt( var )
+      self:writeRaw( name )
+   end
+   
+   
+   self:writeRaw( "=" )
+   self:writeRaw( "table.unpack( " )
+   filter( node:get_expList(), self, node )
+   self:writeln( ")" )
+end
+
+
 function ConvFilter:processDeclVar( node, opt )
 
    do
@@ -3242,7 +3261,7 @@ function ConvFilter:processRefType( node, opt )
       end
    end
    
-   filter( node:get_name(  ), self, node )
+   filter( node:get_typeNode(), self, node )
    if node:get_array(  ) == "array" then
       self:writeRaw( "[@]" )
    elseif node:get_array(  ) == "list" then
@@ -3707,7 +3726,7 @@ function ConvFilter:processExpCall( node, opt )
        
          do
             local _switchExp = prefixType:get_kind()
-            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+            if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Tuple then
                setArgFlag = true
                wroteFuncFlag = true
                self:writeRaw( string.format( "table.%s( ", fieldTxt) )
@@ -4438,6 +4457,17 @@ function ConvFilter:processUnboxing( node, opt )
    filter( node:get_src(), self, node )
    self:writeRaw( "[1]" )
 end
+
+
+function ConvFilter:processTupleConst( node, opt )
+
+   self:writeRaw( "{" )
+   
+   filter( node:get_expList(), self, node )
+   
+   self:writeRaw( "}" )
+end
+
 
 
 function ConvFilter:processLiteralList( node, opt )

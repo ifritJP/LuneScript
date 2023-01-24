@@ -2464,6 +2464,12 @@ test/error/async5.lns:39:1: error: not implements method -- __Runner.run at Hoge
 test/error/async5.lns:42:22: error: __init: exp(2) type mismatch allmut @test.@error.@async5.Val <- [##]: dst 2 -- 
 test/error/async5.lns:44:17: error: can't access noasync function in async. -- func1 on func
 test/error/async5.lns:46:7: error: can't access noasync function in async. -- foo1 on func
+test/error/tuple.lns:2:4: error: return: over exp. expect: 1: actual: 2
+test/error/tuple.lns:9:23: error: expects 1 tuple value, but -- 2 value
+test/error/tuple.lns:13:17: error: expects 1 item tuple, but -- 2 item
+test/error/tuple.lns:16:14: error: not found -- '='. actually ','
+test/error/tuple.lns:13:9: warning: 'val1' var isn't accessed
+test/error/tuple2.lns:1:14: error: expects the tuple value, but -- int
 test/error/abbr.lns:3:1: warning: func: 00000:use '##', instate of '...'.
 test/error/dis_mutable.lns:5:4: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:6:4: warning: 'val2' var isn't accessed

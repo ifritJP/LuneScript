@@ -814,6 +814,40 @@ function FormatterFilter:processWhen( node, opt )
 end
 
 
+function FormatterFilter:processExpandTuple( node, opt )
+
+   self:write( "let " )
+   
+   for index, symInfo in ipairs( node:get_symbolInfoList() ) do
+      if index > 1 then
+         self:write( ", " )
+      end
+      
+      if symInfo:get_mutable() then
+         self:write( "mut " )
+      end
+      
+      self:write( symInfo:get_name() )
+      if #node:get_varList() >= index then
+         local varInfo = node:get_varList()[index]
+         do
+            local varType = varInfo:get_refType()
+            if varType ~= nil then
+               self:write( ":" )
+               filter( varType, self, opt:nextOpt( node ) )
+            end
+         end
+         
+      end
+      
+   end
+   
+   
+   self:write( " = " )
+   filter( node:get_expList(), self, opt:nextOpt( node ) )
+end
+
+
 function FormatterFilter:processDeclVar( node, opt )
 
    do
@@ -1119,7 +1153,7 @@ function FormatterFilter:processRefType( node, opt )
    end
    
    
-   filter( node:get_name(), self, opt:nextOpt( node ) )
+   filter( node:get_typeNode(), self, opt:nextOpt( node ) )
    
    if #node:get_itemNodeList() > 0 then
       self:write( "<" )
@@ -1677,6 +1711,18 @@ function FormatterFilter:processUnboxing( node, opt )
 
    
    filter( node:get_src(), self, opt:nextOpt( node ) )
+end
+
+
+function FormatterFilter:processTupleConst( node, opt )
+
+   self:write( "(=" )
+   
+   self:write( " " )
+   filter( node:get_expList(), self, opt:nextOpt( node ) )
+   self:write( " " )
+   
+   self:write( ")" )
 end
 
 

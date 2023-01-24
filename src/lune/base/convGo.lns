@@ -812,7 +812,7 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          }
          return "*Lns_luaValue";
       }
-      case .List, .Array {
+      case .List, .Array, .Tuple {
          return "*LnsList";
       }
       case .Set {
@@ -3391,6 +3391,36 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
    }
 }
 
+pub override fn convFilter.processExpandTuple(
+   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+{
+   foreach var in node.$symbolInfoList {
+      if var.$name ~= "_" {
+         self.writeRaw( "var %s " (var.$name) );
+         self.writeln( self.type2gotype( var.$typeInfo ) );
+      }
+   }
+
+   self.writeln( "{" );
+   self.pushIndent(##);
+
+   self.write( "__tuple := " );
+   filter( node.$expList, self, node );
+   self.writeln( ".Unpack()" );
+   
+   foreach var, index in node.$symbolInfoList {
+      if var.$name ~= "_" {
+         self.writeRaw( "%s = __tuple[%d]" (var.$name,index-1) );
+         self.outputAny2Type( var.$typeInfo );
+         self.writeln( "" );
+      }
+   }
+   
+   self.popIndent();
+   self.writeln( "}" );
+}
+
+
 pub override fn convFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt: Opt ) mut
 {
@@ -4228,7 +4258,7 @@ pub override fn convFilter.processExpNew(
       self.writeRaw( "New%s(" ( className ) );
    } else {
       if! let refTypeNode = node.$symbol@@@Nodes.RefTypeNode {
-         if! let refNode = refTypeNode.$name@@@Nodes.RefFieldNode {
+         if! let refNode = refTypeNode.$typeNode@@@Nodes.RefFieldNode {
             filter( refNode.$prefix, self, node );
             self.writeRaw( "." );
          }
@@ -5331,7 +5361,7 @@ pub override fn convFilter.processExpCall(
    let withPrefix;
    if! let fieldNode = node.$func@@@Nodes.RefFieldNode {
       switch fieldNode.$prefix.$expType.$kind {
-         case .List, .Map, .Set, .Array {
+         case .List, .Map, .Set, .Array, .Tuple {
             addEnvArg = false;
          }
       }
@@ -6229,6 +6259,14 @@ pub override fn convFilter.processUnboxing(
    node: &Nodes.UnboxingNode, opt: Opt ) mut
 {
    Util.err( "not support -- %s" (__func__) );
+}
+
+pub override fn convFilter.processTupleConst(
+   node: &Nodes.TupleConstNode, opt: Opt ) mut
+{
+   self.writeRaw( "NewLnsList(" );
+   self.expList2Slice( node.$expList, true );
+   self.writeRaw( ")" );
 }
 
 pub override fn convFilter.processLiteralList(

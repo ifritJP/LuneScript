@@ -899,12 +899,14 @@ pub fn RootNode.set_provide( node: ProvideNode ) mut {
 }
 
 _declNodeClass( "RefType", Node, false, false, false,
-                [ { "name": "&Node" },
-                  { "itemNodeList": "&List<&Node>" },
-                  // Map<T=str,str> のような T=str の部分の型パラメータ index -> T
-                  { "itemIndex2alt" : "&Map<int,&Ast.AlternateTypeInfo>" },
-                  { "mutMode": "Ast.MutMode!" },
-                  { "array": "str" } ]
+                [  // Hoge<int> の Hoge の部分。
+                   // ただし、タプルの場合は DeclTupleNode が入る。
+                   { "typeNode": "&Node" },
+                   { "itemNodeList": "&List<&Node>" },
+                   // Map<T=str,str> のような T=str の部分の型パラメータ index -> T
+                   { "itemIndex2alt" : "&Map<int,&Ast.AlternateTypeInfo>" },
+                   { "mutMode": "Ast.MutMode!" },
+                   { "array": "str" } ]
 );
 
 pub fn RefTypeNode.checkValidGenerics() : bool, str {
@@ -914,12 +916,12 @@ pub fn RefTypeNode.checkValidGenerics() : bool, str {
    }
    let genTypeNum;
    let dispType;
-   if self.name.$expType.$kind == .Ext {
+   if self.typeNode.$expType.$kind == .Ext {
       // Luavalは Luaval オプションが無効だと元の lns の型に丸められるので、
       // 丸めまえの self.name.$expType で判定する。
       // また Luaval の genTypeNum は 1 つで固定。
       genTypeNum = 1;
-      dispType = self.name.$expType;
+      dispType = self.typeNode.$expType;
    } else {
       genTypeNum = #typeInfo.$itemTypeInfoList;
       dispType = self.$expType;
@@ -931,6 +933,11 @@ pub fn RefTypeNode.checkValidGenerics() : bool, str {
    }
    return true, "";
 }
+
+_declNodeClass( "DeclTuple", Node, false, false, false,
+                [ { "refTypeList": "&List<&RefTypeNode>" } ]
+);
+
 
 pub enum BlockKind {
    If,
@@ -1726,6 +1733,14 @@ pub class VarInfo {
    pri let actualType: &Ast.TypeInfo { pub };
 }
 
+// tuple の展開
+_declNodeClass( "ExpandTuple", Node, false, false, true,
+                [ { "condRetInfo": "&CondRetInfo!" },
+                  { "varList": "&List<&VarInfo>" },
+                  { "expList": "&ExpListNode" },
+                  { "symbolInfoList": "&List<&Ast.SymbolInfo>"} ]
+);
+
 pub enum DeclVarMode {
    Let,
    Sync,
@@ -1751,52 +1766,6 @@ _declNodeClass( "DeclVar", Node, false, false, true,
 
 pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
 {
-   // if checkMode ~= .Normal and checkMode ~= .Return {
-   //    if! let block = self.unwrapBlock {
-   //       let kind = block.getBreakKind( checkMode );
-   //       switch kind {
-   //          case .Return, .NeverRet, .Break {
-   //             return kind;
-   //          }
-   //       }
-   //    }
-   //    if! let block = self.thenBlock {
-   //       let kind = block.getBreakKind( checkMode );
-   //       switch kind {
-   //          case .Return, .NeverRet, .Break {
-   //             return kind;
-   //          }
-   //       }
-   //    }
-   //    if! let block = self.syncBlock {
-   //       let kind = block.getBreakKind( checkMode );
-   //       switch kind {
-   //          case .Return, .NeverRet, .Break {
-   //             return kind;
-   //          }
-   //       }
-   //    }
-   //    return .None;
-   // }
-   // else {
-   //    let mut kind = BreakKind.None;
-   //    let mut work = BreakKind.None;
-   //    if! let block = self.unwrapBlock {
-   //       work = block.getBreakKind( checkMode );
-   //       _setBreakKind( work, kind, true, checkMode );
-   //       if! let thenBlock = self.thenBlock {
-   //          work = thenBlock.getBreakKind( checkMode );
-   //          _setBreakKind( work, kind, true, checkMode );
-   //          if! let syncBlock = self.syncBlock {
-   //             work = syncBlock.getBreakKind( checkMode );
-   //             _setBreakKind( work, kind, true, checkMode );
-   //             return kind;
-   //          }     
-   //       }  
-   //    }
-   //    return .None;
-   // }
-   
    let mut kind = BreakKind.None;
    let mut work = BreakKind.None;
    if! let block = self.unwrapBlock {
@@ -2364,6 +2333,11 @@ _declNodeClass( "LiteralSymbol", Node, false, true, false,
                 [ { "token": "&Parser.Token" } ]
 );
 
+_declNodeClass( "TupleConst", Node, false, true, false,
+                [ { "expList": "&ExpListNode" } ]
+);
+                
+
 pub fn Node.getSymbolInfo(): &List<&Ast.SymbolInfo> {
    fn processExpNode( node: &Node ): &List<&Ast.SymbolInfo> {
       switch ( node.$kind ) {
@@ -2411,7 +2385,7 @@ pub fn Node.getSymbolInfo(): &List<&Ast.SymbolInfo> {
          }
          case NodeKind.$RefType {
             if! let refTypeNode = node@@@RefTypeNode {
-               return refTypeNode.$name.getSymbolInfo();
+               return refTypeNode.$typeNode.getSymbolInfo();
             }
          }
       }

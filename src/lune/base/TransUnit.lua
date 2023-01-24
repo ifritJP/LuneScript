@@ -3267,9 +3267,44 @@ function TransUnit:analyzeScope( firstToken )
 end
 
 
+function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
+
+   local refTypeNodeList = {}
+   local typeList = {}
+   while true do
+      local refTypeNode = self:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
+      table.insert( refTypeNodeList, refTypeNode )
+      table.insert( typeList, refTypeNode:get_expType() )
+      local token = self:getToken(  )
+      if token.txt == ")" then
+         break
+      end
+      
+      self:checkToken( token, "," )
+   end
+   
+   
+   if #refTypeNodeList == 0 then
+      self:addErrMess( firstToken.pos, "tuple size is 0." )
+   end
+   
+   
+   local tupleTypeInfo = self.processInfo:createTuple( false, accessMode, typeList )
+   
+   local declTupleNode = Nodes.DeclTupleNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, refTypeNodeList )
+   
+   return Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, declTupleNode, {}, {}, Ast.MutMode.IMut, "no" )
+end
+
 function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
 
    local firstToken = self:getToken(  )
+   
+   if firstToken.txt == "(" then
+      return self:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
+   end
+   
+   
    local token = firstToken
    local mutMode
    
@@ -5012,7 +5047,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1931, function (  )
+         Log.log( Log.Level.Debug, __func__, 1975, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -6920,7 +6955,14 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
    return typeInfoList, letVarList, orgExpTypeList, nil
 end
 
-function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessMode, unwrapFlag )
+
+function TransUnit:analyzeExpandTuple( firstPos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
+
+   return Nodes.ExpandTupleNode.create( self.nodeManager, firstPos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, condRetInfo, varList, expList, symbolInfoList )
+end
+
+
+function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessMode, unwrapFlag, expandTuple )
 
    
    local typeInfoList = {}
@@ -7000,6 +7042,28 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
    end
    
    
+   if expandTuple then
+      self:checkToken( nextToken, ")" )
+      self:checkNextToken( "=" )
+      
+      local expListNode = self:analyzeExpList( false, false, false, false )
+      local expType = expListNode:get_expType()
+      if expType:get_kind() ~= Ast.TypeInfoKind.Tuple then
+         self:errorAt( expListNode:get_pos(), string.format( "expects the tuple value, but -- %s", expType:getTxt(  )) )
+      end
+      
+      if #expListNode:get_expTypeList() ~= 1 then
+         self:addErrMess( expListNode:get_pos(), string.format( "expects 1 tuple value, but -- %d value", #expListNode:get_expTypeList()) )
+      end
+      
+      if #expType:get_itemTypeInfoList() ~= #letVarList then
+         self:addErrMess( expListNode:get_pos(), string.format( "expects %d item tuple, but -- %d item", #letVarList, #expType:get_itemTypeInfoList()) )
+      end
+      
+      return expType:get_itemTypeInfoList(), letVarList, expType:get_itemTypeInfoList(), expListNode
+   end
+   
+   
    if nextToken.txt ~= "=" then
       self:pushback(  )
       local orgExpTypeList = {}
@@ -7034,7 +7098,22 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag )
+   local expandTuple
+   
+   do
+      local workToken = self:getToken(  )
+      if workToken.txt == "(" and mode == Nodes.DeclVarMode.Let then
+         expandTuple = true
+      else
+       
+         expandTuple = false
+         self:pushback(  )
+      end
+      
+   end
+   
+   
+   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag, expandTuple )
    
    local condRetInfo = self:checkCondRet(  )
    
@@ -7153,8 +7232,19 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       table.insert( symbolInfoList, nsInfo:registerSym( _lune.unwrap( self:get_scope():getSymbolInfo( varName.txt, self:get_scope(), true, self.scopeAccess )) ) )
    end
    
+   
    if mode ~= Nodes.DeclVarMode.Sync and self.macroScope then
       self.macroCtrl:registVar( symbolInfoList )
+   end
+   
+   
+   if expandTuple then
+      if expList ~= nil then
+         return self:analyzeExpandTuple( firstToken.pos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
+      else
+         self:errorAt( firstToken.pos, "expanding tuple must set init value." )
+      end
+      
    end
    
    
@@ -7259,7 +7349,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    
    if nextToken.txt == "let" then
       local _
-      workTypeInfoList, letVarList, _, workExpList = self:analyzeLetAndInitExp( firstToken.pos, true, Ast.MutMode.IMut, Ast.AccessMode.Local, true )
+      workTypeInfoList, letVarList, _, workExpList = self:analyzeLetAndInitExp( firstToken.pos, true, Ast.MutMode.IMut, Ast.AccessMode.Local, true, false )
    else
     
       local _
@@ -8332,7 +8422,8 @@ function TransUnit:analyzeListConst( token, expectType )
    
    local expList, itemTypeInfo = self:analyzeListItems( token.pos, nextToken, "]", expectTypeList )
    
-   local typeInfoList = {Ast.builtinTypeNone}
+   local typeInfoList
+   
    if token.txt == '[' then
       typeInfoList = {self.processInfo:createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
       return Nodes.LiteralListNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
@@ -8381,9 +8472,49 @@ function TransUnit:analyzeSetConst( token, expectType )
    end
    
    
-   local typeInfoList = {Ast.builtinTypeNone}
+   local typeInfoList
+   
    typeInfoList = {self.processInfo:createSet( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
    return Nodes.LiteralSetNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
+end
+
+
+function TransUnit:analyzeTupleConst( token, expectType )
+
+   
+   local nextToken = self:getToken(  )
+   
+   local expectTypeList = nil
+   if _lune.nilacc( expectType, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.Tuple then
+      do
+         local itemTypeInfoList = _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' )
+         if itemTypeInfoList ~= nil then
+            expectTypeList = itemTypeInfoList
+         end
+      end
+      
+   end
+   
+   
+   local expList = self:analyzeListItems( token.pos, nextToken, ")", expectTypeList )
+   if  nil == expList then
+      local _expList = expList
+   
+      self:error( "'Tuple' must not size 0." )
+   end
+   
+   
+   for __index, exp in ipairs( expList:get_expList() ) do
+      local expType = exp:get_expType()
+      if expType:get_nilable() then
+         self:addErrMess( exp:get_pos(), string.format( "'Tuple' object can't store nilable. -- %s", expType:getTxt(  )) )
+      end
+      
+   end
+   
+   
+   local typeInfoList = {self.processInfo:createTuple( false, Ast.AccessMode.Local, expList:get_expTypeList() )}
+   return Nodes.TupleConstNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
 end
 
 
@@ -8820,6 +8951,75 @@ function TransUnit:checkArgForSort( firstToken, genericTypeList, argList )
 end
 
 
+function TransUnit:getRetTypeInfo( firstToken, refFieldNode, funcTypeInfo, alt2typeMap, genericTypeList, genericsClass )
+
+   if refFieldNode ~= nil then
+      if funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
+         
+         local prefixType = refFieldNode:get_prefix():get_expType()
+         if #prefixType:get_itemTypeInfoList() > 0 then
+            local dddType = self.processInfo:createDDD( prefixType:get_itemTypeInfoList()[1], false, false )
+            return {dddType}
+         end
+         
+      end
+      
+   end
+   
+   
+   local prefixMutMode
+   
+   if refFieldNode ~= nil then
+      prefixMutMode = refFieldNode:get_prefix():get_expType():get_mutMode()
+   else
+      prefixMutMode = Ast.MutMode.Mut
+   end
+   
+   
+   local workRetTypeInfoList = {}
+   
+   for __index, retType in ipairs( funcTypeInfo:get_retTypeInfoList() ) do
+      local workType = retType
+      
+      do
+         local applyType = retType:applyGeneric( self.processInfo, alt2typeMap, self.moduleType )
+         if applyType ~= nil then
+            workType = applyType
+         else
+            if funcTypeInfo == self.builtinFunc.list_remove then
+               
+               workType = genericTypeList[1]:get_nilableTypeInfo()
+            elseif funcTypeInfo:get_kind() == Ast.TypeInfoKind.Func and (funcTypeInfo:get_rawTxt() == "_fromMap" or funcTypeInfo:get_rawTxt() == "_fromStem" ) and genericsClass:isInheritFrom( self.processInfo, Ast.builtinTypeMapping, alt2typeMap ) then
+               workType = genericsClass:get_nilableTypeInfo()
+            else
+             
+               self:addErrMess( firstToken.pos, string.format( "not support generics yet. -- %s", retType:getTxt(  )) )
+            end
+            
+         end
+      end
+      
+      
+      if retType:get_mutMode() == Ast.MutMode.Depend then
+         
+         if prefixMutMode == Ast.MutMode.Mut then
+            table.insert( workRetTypeInfoList, workType:get_srcTypeInfo() )
+         else
+          
+            table.insert( workRetTypeInfoList, self:createModifier( workType:get_srcTypeInfo(), Ast.MutMode.IMut ) )
+         end
+         
+      else
+       
+         table.insert( workRetTypeInfoList, workType )
+      end
+      
+   end
+   
+   return workRetTypeInfoList
+end
+
+
 function TransUnit:processFunc( firstToken, nextToken, refFieldNode, funcExp, funcType, alt2typeMap, genericTypeList, genericsClass, argList )
 
    local funcSymbol
@@ -8886,69 +9086,7 @@ function TransUnit:processFunc( firstToken, nextToken, refFieldNode, funcExp, fu
    end
    
    
-   local prefixMutMode
-   
-   if refFieldNode ~= nil then
-      prefixMutMode = refFieldNode:get_prefix():get_expType():get_mutMode()
-   else
-      prefixMutMode = Ast.MutMode.Mut
-   end
-   
-   
-   local retTypeInfoList = {}
-   for __index, retType in ipairs( funcTypeInfo:get_retTypeInfoList() ) do
-      local workType = retType
-      
-      do
-         local applyType = retType:applyGeneric( self.processInfo, alt2typeMap, self.moduleType )
-         if applyType ~= nil then
-            workType = applyType
-         else
-            if funcTypeInfo == self.builtinFunc.list_remove then
-               
-               workType = genericTypeList[1]:get_nilableTypeInfo()
-            elseif funcTypeInfo:get_kind() == Ast.TypeInfoKind.Func and (funcTypeInfo:get_rawTxt() == "_fromMap" or funcTypeInfo:get_rawTxt() == "_fromStem" ) and genericsClass:isInheritFrom( self.processInfo, Ast.builtinTypeMapping, alt2typeMap ) then
-               workType = genericsClass:get_nilableTypeInfo()
-            else
-             
-               self:addErrMess( firstToken.pos, string.format( "not support generics yet. -- %s", retType:getTxt(  )) )
-            end
-            
-         end
-      end
-      
-      
-      if retType:get_mutMode() == Ast.MutMode.Depend then
-         
-         if prefixMutMode == Ast.MutMode.Mut then
-            table.insert( retTypeInfoList, workType:get_srcTypeInfo() )
-         else
-          
-            table.insert( retTypeInfoList, self:createModifier( workType:get_srcTypeInfo(), Ast.MutMode.IMut ) )
-         end
-         
-      else
-       
-         table.insert( retTypeInfoList, workType )
-      end
-      
-   end
-   
-   
-   if refFieldNode ~= nil then
-      if funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
-         
-         local prefixType = refFieldNode:get_prefix():get_expType()
-         if #prefixType:get_itemTypeInfoList() > 0 then
-            local dddType = self.processInfo:createDDD( prefixType:get_itemTypeInfoList()[1], false, false )
-            retTypeInfoList = {}
-            table.insert( retTypeInfoList, dddType )
-         end
-         
-      end
-      
-   end
-   
+   local retTypeInfoList = self:getRetTypeInfo( firstToken, refFieldNode, funcTypeInfo, alt2typeMap, genericTypeList, genericsClass )
    
    if nilAccess then
       local retList = {}
@@ -9084,7 +9222,7 @@ function TransUnit:processCreatePipe( firstToken, funcExp, argList )
             do
                local refTypeNode = _lune.__Cast( node, 3, Nodes.RefTypeNode )
                if refTypeNode ~= nil then
-                  local refType = refTypeNode:get_name():get_expType()
+                  local refType = refTypeNode:get_typeNode():get_expType()
                   itemTypeList = {refType}
                   findFlag = true
                   if not Ast.isBuiltin( refType:get_typeId().id ) and not refType:isInheritFrom( self.processInfo, Ast.builtinTypeAsyncItem, nil ) then
@@ -10043,7 +10181,7 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    local symbolInfo = nil
    do
       local _switchExp = prefixExpType:get_kind()
-      if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.ExtModule or _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Box or _switchExp == Ast.TypeInfoKind.Alternate then
+      if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.Module or _switchExp == Ast.TypeInfoKind.ExtModule or _switchExp == Ast.TypeInfoKind.IF or _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Set or _switchExp == Ast.TypeInfoKind.Tuple or _switchExp == Ast.TypeInfoKind.Box or _switchExp == Ast.TypeInfoKind.Alternate then
          local getterFlag = false
          typeInfo, symbolInfo, getterFlag = self:analyzeAccessClassField( prefixExpType, mode, fieldToken )
          if getterFlag then
@@ -10271,9 +10409,7 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    
    if typeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or typeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
       self.helperInfo.useUnpack = true
-   end
-   
-   if typeInfo:equals( self.processInfo, self.builtinFunc.str_replace ) then
+   elseif typeInfo:equals( self.processInfo, self.builtinFunc.str_replace ) then
       self.helperInfo.useStrReplace = true
    end
    
@@ -11805,6 +11941,8 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, canCondRe
          exp = self:analyzeListConst( token, expectType )
       elseif token.txt == '(@' then
          exp = self:analyzeSetConst( token, expectType )
+      elseif token.txt == '(=' then
+         exp = self:analyzeTupleConst( token, expectType )
       elseif token.txt == '{' then
          exp = self:analyzeMapConst( token, expectType )
       elseif token.txt == "(" then

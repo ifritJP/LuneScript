@@ -751,6 +751,41 @@ class _TypeInfoAlge extend _TypeInfo {
    }
 }
 
+class _TypeInfoTuple extend _TypeInfo {
+   pub let parentId: int;
+   pub let accessMode:Ast.AccessMode;
+   pub let itemTypeId:&List<&_IdInfo>;
+
+   pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
+   {
+      let accessMode = unwrap Ast.AccessMode._from( self.accessMode );
+      //let parentInfo = unwrap param.typeId2TypeInfo[ self.parentId ];
+      // let mut parentTypeDataAccessor, parentInfo =
+      //    param.getTypeDataAccessor( self.parentId );
+      //let mut name2TupleValInfo:Map<str,Ast.TupleValInfo> = {};
+      let mut parentScope = unwrap param.typeId2Scope[ self.parentId ];
+      let mut scope = new Ast.Scope(
+         param.processInfo, parentScope, .Class, nil ## );
+
+      let itemTypeInfo:List<&Ast.TypeInfo> = [];
+      foreach typeId in self.itemTypeId {
+         //itemTypeInfo.insert( unwrap param.typeId2TypeInfo[ typeId ] );
+         itemTypeInfo.insert( unwrap param.getTypeInfoFrom( typeId ) );
+      }
+      
+      param.typeId2Scope[ self.typeId ] = scope;
+      let mut tupleTypeInfo = param.processInfo.createTuple(
+         true, accessMode, itemTypeInfo );
+      let newTypeInfo = tupleTypeInfo;
+      param.typeId2TypeInfo[ self.typeId ] = tupleTypeInfo;
+      param.typeId2TypeDataAccessor[ self.typeId ] = tupleTypeInfo;
+
+      tupleTypeInfo.$typeId.set_orgId( self.typeId );
+
+      return newTypeInfo, nil;
+   }
+}
+
 /**
 modulePath で指定されたモジュールからメタ情報を読み込み、型情報を反映する。
 
@@ -1075,6 +1110,9 @@ fn ModuleLoader.processImportFromFile(
                case .Alge {
                   actInfo, mess = _TypeInfoAlge._fromMap( atomInfo );
                   //self.helperInfo.useAlge = true;
+               }
+               case .Tuple {
+                  actInfo, mess = _TypeInfoTuple._fromMap( atomInfo );
                }
                case .Module {
                   actInfo, mess = _TypeInfoModule._fromMap( atomInfo );

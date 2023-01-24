@@ -4646,7 +4646,7 @@ function convFilter:processExpNew( node, opt )
          local refTypeNode = _lune.__Cast( node:get_symbol(), 3, Nodes.RefTypeNode )
          if refTypeNode ~= nil then
             do
-               local refNode = _lune.__Cast( refTypeNode:get_name(), 3, Nodes.RefFieldNode )
+               local refNode = _lune.__Cast( refTypeNode:get_typeNode(), 3, Nodes.RefFieldNode )
                if refNode ~= nil then
                   filter( refNode:get_prefix(), self, node )
                   self:writeRaw( "." )

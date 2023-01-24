@@ -3879,7 +3879,7 @@ pub override fn convFilter.processExpNew(
       self.writeRaw( "New%s(" ( className ) );
    } else {
       if! let refTypeNode = node.$symbol@@@Nodes.RefTypeNode {
-         if! let refNode = refTypeNode.$name@@@Nodes.RefFieldNode {
+         if! let refNode = refTypeNode.$typeNode@@@Nodes.RefFieldNode {
             filter( refNode.$prefix, self, node );
             self.writeRaw( "." );
          }

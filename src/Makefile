@@ -655,6 +655,8 @@ TEST_CASE += lua.lns
 TEST_CASE += async3.lns
 TEST_CASE += async4.lns
 TEST_CASE += async5.lns
+TEST_CASE += tuple.lns
+TEST_CASE += tuple2.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
 TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/error/,$(addsuffix .log,$(TEST_CASE)))
 
@@ -1944,3 +1946,4 @@ test-reference-sample:
 
 update-lnstags:
 	(../../lnstags/lnstags build lune/base/front.lns)
+x

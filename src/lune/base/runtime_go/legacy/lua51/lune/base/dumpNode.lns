@@ -337,6 +337,20 @@ pub override fn dumpFilter.processWhen(
    }
 }
 
+pub override fn dumpFilter.processExpandTuple(
+   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+{
+   let mut varName = "";
+   foreach var, index in node.get_varList() {
+      if index > 1 {
+	 varName = varName .. ",";
+      }
+      varName = "%s %s" (varName, var.get_name().txt );
+   }
+   self.dump( opt, node, varName );
+   filter( node.$expList, self, opt.nextOpt() );
+}
+
 
 pub override fn dumpFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt:Opt ) mut
@@ -359,7 +373,7 @@ pub override fn dumpFilter.processDeclVar(
          filter( _exp, self, opt.nextOpt() );
       }
    }
-   if! node.get_expList() {
+   if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }
    if! node.$unwrapBlock {
@@ -465,7 +479,7 @@ pub override fn dumpFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
 {
    self.dump( opt, node, node.$expType.$display_stirng );
-   filter( node.get_name(), self, opt.nextOpt() );
+   filter( node.$typeNode, self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processIf(
    node: &Nodes.IfNode, opt:Opt ) mut
@@ -616,7 +630,7 @@ pub override fn dumpFilter.processExpList(
    }
    
    self.dump( opt, node, mess );
-   let expList = node.get_expList();
+   let expList = node.$expList;
    foreach exp in expList {
       filter( exp, self, opt.nextOpt() );
    }	
@@ -760,7 +774,7 @@ pub override fn dumpFilter.processReturn(
    node: &Nodes.ReturnNode, opt:Opt ) mut
 {
    self.dump( opt, node, "" );
-   if! node.get_expList() {
+   if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }
 };
@@ -822,11 +836,18 @@ pub override fn dumpFilter.processUnboxing(
    filter( node.$src, self, opt.nextOpt() );
 }
 
+pub override fn dumpFilter.processTupleConst(
+   node: &Nodes.TupleConstNode, opt:Opt ) mut
+{
+   self.dump( opt, node, "(=)" );
+   filter( node.$expList, self, opt.nextOpt() );
+};
+
 pub override fn dumpFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt:Opt ) mut
 {
    self.dump( opt, node, "[]" );
-   if! node.get_expList() {
+   if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }
 };
@@ -834,7 +855,7 @@ pub override fn dumpFilter.processLiteralSet(
    node: &Nodes.LiteralSetNode, opt:Opt ) mut
 {
    self.dump( opt, node, "(@)" );
-   if! node.get_expList() {
+   if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }
 };
@@ -853,7 +874,7 @@ pub override fn dumpFilter.processLiteralArray(
    node: &Nodes.LiteralArrayNode, opt:Opt ) mut
 {
    self.dump( opt, node, "[@]" );
-   if! node.get_expList() {
+   if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }
 };
