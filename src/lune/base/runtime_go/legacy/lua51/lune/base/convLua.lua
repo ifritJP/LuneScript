@@ -3014,6 +3014,7 @@ end
 
 function ConvFilter:processExpandTuple( node, opt )
 
+   self:write( "local " )
    for index, var in ipairs( node:get_symbolInfoList() ) do
       if index > 1 then
          self:writeRaw( ", " )

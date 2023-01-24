@@ -2831,3 +2831,22 @@ _section();
       print( val1 + 10, val2 .. "xyz" );
    }
 }
+_section();
+{
+   fn func() : List<(int,str)> {
+      return [(= 1, "abc"), (= 2, "ABC")];
+   }
+
+   {
+      foreach tuple in func() {
+         let (val1, _) = tuple;
+         print( val1 + 10 );
+      }
+   }
+   {
+      foreach tuple in func() {
+         let (val1, val2) = tuple;
+         print( val1 + 10, val2 .. "xyz" );
+      }
+   }
+}

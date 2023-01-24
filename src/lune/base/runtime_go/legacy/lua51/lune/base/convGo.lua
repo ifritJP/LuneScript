@@ -1209,12 +1209,14 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
          end
          
          return "*Lns_luaValue"
-      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Tuple then
+      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
          return "*LnsList"
       elseif _switchExp == Ast.TypeInfoKind.Set then
          return "*LnsSet"
       elseif _switchExp == Ast.TypeInfoKind.Map then
          return "*LnsMap"
+      elseif _switchExp == Ast.TypeInfoKind.Tuple then
+         return "[]LnsAny"
       elseif _switchExp == Ast.TypeInfoKind.Form then
          
          return "LnsForm"
@@ -4363,9 +4365,9 @@ function convFilter:processExpandTuple( node, opt )
    self:writeln( "{" )
    self:pushIndent(  )
    
-   self:write( "__tuple := " )
+   self:writeRaw( "__tuple := " )
    filter( node:get_expList(), self, node )
-   self:writeln( ".Unpack()" )
+   self:writeln( "" )
    
    for index, var in ipairs( node:get_symbolInfoList() ) do
       if var:get_name() ~= "_" then
@@ -7599,9 +7601,7 @@ end
 
 function convFilter:processTupleConst( node, opt )
 
-   self:writeRaw( "NewLnsList(" )
    self:expList2Slice( node:get_expList(), true )
-   self:writeRaw( ")" )
 end
 
 

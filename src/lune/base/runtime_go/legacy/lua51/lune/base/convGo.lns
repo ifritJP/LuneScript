@@ -812,7 +812,7 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          }
          return "*Lns_luaValue";
       }
-      case .List, .Array, .Tuple {
+      case .List, .Array {
          return "*LnsList";
       }
       case .Set {
@@ -820,6 +820,9 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
       }
       case .Map {
          return "*LnsMap";
+      }
+      case .Tuple {
+         return "[]LnsAny";
       }
       case .Form {
          // if orgType == Ast.builtinTypeLoadedFunc {
@@ -3404,9 +3407,9 @@ pub override fn convFilter.processExpandTuple(
    self.writeln( "{" );
    self.pushIndent(##);
 
-   self.write( "__tuple := " );
+   self.writeRaw( "__tuple := " );
    filter( node.$expList, self, node );
-   self.writeln( ".Unpack()" );
+   self.writeln( "" );
    
    foreach var, index in node.$symbolInfoList {
       if var.$name ~= "_" {
@@ -6264,9 +6267,7 @@ pub override fn convFilter.processUnboxing(
 pub override fn convFilter.processTupleConst(
    node: &Nodes.TupleConstNode, opt: Opt ) mut
 {
-   self.writeRaw( "NewLnsList(" );
    self.expList2Slice( node.$expList, true );
-   self.writeRaw( ")" );
 }
 
 pub override fn convFilter.processLiteralList(
