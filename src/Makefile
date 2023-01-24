@@ -1946,4 +1946,3 @@ test-reference-sample:
 
 update-lnstags:
 	(../../lnstags/lnstags build lune/base/front.lns)
-x
