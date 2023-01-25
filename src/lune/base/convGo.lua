@@ -4353,6 +4353,14 @@ end
 
 function convFilter:processExpandTuple( node, opt )
 
+   do
+      local condRetInfo = node:get_condRetInfo()
+      if condRetInfo ~= nil then
+         self:outputCondRetInfo( condRetInfo )
+      end
+   end
+   
+   
    for __index, var in ipairs( node:get_symbolInfoList() ) do
       if var:get_name() ~= "_" then
          self:writeRaw( string.format( "var %s ", var:get_name()) )

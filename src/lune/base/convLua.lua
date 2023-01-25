@@ -3013,6 +3013,14 @@ end
 
 function ConvFilter:processExpandTuple( node, opt )
 
+   do
+      local condRetInfo = node:get_condRetInfo()
+      if condRetInfo ~= nil then
+         self:outputCondRetInfo( condRetInfo )
+      end
+   end
+   
+   
    self:write( "local " )
    for index, var in ipairs( node:get_symbolInfoList() ) do
       if index > 1 then

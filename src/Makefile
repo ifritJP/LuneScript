@@ -657,6 +657,8 @@ TEST_CASE += async4.lns
 TEST_CASE += async5.lns
 TEST_CASE += tuple.lns
 TEST_CASE += tuple2.lns
+TEST_CASE += tuple3.lns
+TEST_CASE += tuple4.lns
 TEST_CASE_SRCS := $(addprefix test/error/,$(TEST_CASE))
 TEST_CASE_LOGS := $(addprefix $(LOG_DIR)/error/,$(addsuffix .log,$(TEST_CASE)))
 

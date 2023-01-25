@@ -2425,6 +2425,10 @@ pub override fn ConvFilter.processWhen(
 pub override fn ConvFilter.processExpandTuple(
    node: &Nodes.ExpandTupleNode, opt:Opt ) mut
 {
+   if! let condRetInfo = node.$condRetInfo {
+      self.outputCondRetInfo( condRetInfo );
+   }
+   
    self.write( "local " );
    foreach var, index in node.$symbolInfoList {
       if index > 1 {

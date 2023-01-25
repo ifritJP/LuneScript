@@ -3269,12 +3269,35 @@ end
 
 function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
 
-   local refTypeNodeList = {}
+   local tupleParamList = {}
    local typeList = {}
    while true do
+      local symToken = nil
+      do
+         local work = self:getToken(  )
+         if work.kind == Parser.TokenKind.Symb then
+            if self:getToken(  ).txt == ":" then
+               symToken = work
+            else
+             
+               self:pushback(  )
+            end
+            
+         else
+          
+            self:pushback(  )
+         end
+         
+      end
+      
+      
       local refTypeNode = self:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
-      table.insert( refTypeNodeList, refTypeNode )
+      table.insert( tupleParamList, Nodes.TupleParamInfo._new(symToken, refTypeNode) )
       table.insert( typeList, refTypeNode:get_expType() )
+      if refTypeNode:get_expType():get_nilable() then
+         self:addErrMess( refTypeNode:get_pos(), string.format( "tuple can't include nilable -- %s", refTypeNode:get_expType():getTxt(  )) )
+      end
+      
       local token = self:getToken(  )
       if token.txt == ")" then
          break
@@ -3284,14 +3307,14 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
    end
    
    
-   if #refTypeNodeList == 0 then
+   if #tupleParamList == 0 then
       self:addErrMess( firstToken.pos, "tuple size is 0." )
    end
    
    
    local tupleTypeInfo = self.processInfo:createTuple( false, accessMode, typeList )
    
-   local declTupleNode = Nodes.DeclTupleNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, refTypeNodeList )
+   local declTupleNode = Nodes.DeclTupleNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, tupleParamList )
    
    return Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, declTupleNode, {}, {}, Ast.MutMode.IMut, "no" )
 end
@@ -5047,7 +5070,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1975, function (  )
+         Log.log( Log.Level.Debug, __func__, 1994, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -7046,7 +7069,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
       self:checkToken( nextToken, ")" )
       self:checkNextToken( "=" )
       
-      local expListNode = self:analyzeExpList( false, false, false, false )
+      local expListNode = self:analyzeExpList( false, false, false, true )
       local expType = expListNode:get_expType()
       if expType:get_kind() ~= Ast.TypeInfoKind.Tuple then
          self:errorAt( expListNode:get_pos(), string.format( "expects the tuple value, but -- %s", expType:getTxt(  )) )
@@ -7057,7 +7080,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
       end
       
       if #expType:get_itemTypeInfoList() ~= #letVarList then
-         self:addErrMess( expListNode:get_pos(), string.format( "expects %d item tuple, but -- %d item", #letVarList, #expType:get_itemTypeInfoList()) )
+         self:errorAt( expListNode:get_pos(), string.format( "expects %d item tuple, but -- %d item", #letVarList, #expType:get_itemTypeInfoList()) )
       end
       
       return expType:get_itemTypeInfoList(), letVarList, expType:get_itemTypeInfoList(), expListNode

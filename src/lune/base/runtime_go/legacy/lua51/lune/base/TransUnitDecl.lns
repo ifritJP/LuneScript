@@ -31,13 +31,32 @@ fn TransUnit.analyzeRefTypeTuple(
    firstToken:&Types.Token, accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool,
    allowOmitTypeParamFlag:bool, allowToSetAlt:bool ) mut : Nodes.RefTypeNode
 {
-   let refTypeNodeList:List<&Nodes.RefTypeNode> = [];
+   let tupleParamList:List<&Nodes.TupleParamInfo> = [];
    let typeList:List<&Ast.TypeInfo> = [];
    while true {
+      let mut symToken:&Types.Token! = nil;
+      {
+         let work = self.getToken(##);
+         if work.kind == .Symb {
+            if self.getToken(##).txt == ":" {
+               symToken = work;
+            } else {
+               self.pushback();
+            }
+         } else {
+            self.pushback();
+         }
+      }
+      
       let refTypeNode = self.analyzeRefType(
          accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt );
-      refTypeNodeList.insert( refTypeNode );
+      tupleParamList.insert( new Nodes.TupleParamInfo( symToken, refTypeNode ) );
       typeList.insert( refTypeNode.$expType );
+      if refTypeNode.$expType.$nilable {
+         self.addErrMess(
+            refTypeNode.$pos,
+            "tuple can't include nilable -- %s" (refTypeNode.$expType.getTxt(##)) );
+      }
       let token = self.getToken(##);
       if token.txt == ")" {
          break;
@@ -45,7 +64,7 @@ fn TransUnit.analyzeRefTypeTuple(
       self.checkToken( token, "," );
    }
 
-   if #refTypeNodeList == 0 {
+   if #tupleParamList == 0 {
       self.addErrMess( firstToken.pos, "tuple size is 0." );
    }
 
@@ -53,7 +72,7 @@ fn TransUnit.analyzeRefTypeTuple(
 
    let declTupleNode = Nodes.DeclTupleNode.create(
       self.nodeManager, firstToken.$pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), [ tupleTypeInfo ], refTypeNodeList );
+      self.macroCtrl.isInAnalyzeArgMode(), [ tupleTypeInfo ], tupleParamList );
    
    return Nodes.RefTypeNode.create(
       self.nodeManager, firstToken.$pos, self.inTestBlock,
@@ -4120,7 +4139,7 @@ fn TransUnit.analyzeLetAndInitExp(
       self.checkToken( nextToken, ")" );
       self.checkNextToken( "=" );
 
-      let expListNode = self.analyzeExpList( false, false, false, false ## );
+      let expListNode = self.analyzeExpList( false, false, false, true ## );
       let expType = expListNode.$expType;
       if expType.$kind ~= .Tuple {
          self.errorAt( expListNode.$pos,
@@ -4132,7 +4151,7 @@ fn TransUnit.analyzeLetAndInitExp(
             "expects 1 tuple value, but -- %d value" (#expListNode.$expTypeList) );
       }
       if #expType.$itemTypeInfoList ~= #letVarList {
-         self.addErrMess(
+         self.errorAt(
             expListNode.$pos,
             "expects %d item tuple, but -- %d item"
             (#letVarList, #expType.$itemTypeInfoList) );

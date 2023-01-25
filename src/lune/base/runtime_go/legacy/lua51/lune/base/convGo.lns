@@ -3397,6 +3397,10 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
 pub override fn convFilter.processExpandTuple(
    node: &Nodes.ExpandTupleNode, opt:Opt ) mut
 {
+   if! let condRetInfo = node.$condRetInfo {
+      self.outputCondRetInfo( condRetInfo );
+   }
+   
    foreach var in node.$symbolInfoList {
       if var.$name ~= "_" {
          self.writeRaw( "var %s " (var.$name) );

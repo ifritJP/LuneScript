@@ -1961,6 +1961,32 @@ function RefTypeNode:checkValidGenerics(  )
 end
 
 
+local TupleParamInfo = {}
+_moduleObj.TupleParamInfo = TupleParamInfo
+function TupleParamInfo._setmeta( obj )
+  setmetatable( obj, { __index = TupleParamInfo  } )
+end
+function TupleParamInfo._new( name, typeRef )
+   local obj = {}
+   TupleParamInfo._setmeta( obj )
+   if obj.__init then
+      obj:__init( name, typeRef )
+   end
+   return obj
+end
+function TupleParamInfo:__init( name, typeRef )
+
+   self.name = name
+   self.typeRef = typeRef
+end
+function TupleParamInfo:get_name()
+   return self.name
+end
+function TupleParamInfo:get_typeRef()
+   return self.typeRef
+end
+
+
 function NodeKind.get_DeclTuple(  )
 
    return 8
@@ -2002,57 +2028,29 @@ function DeclTupleNode:canBeStatement(  )
 
    return false
 end
-function DeclTupleNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, refTypeList )
+function DeclTupleNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, paramList )
    local obj = {}
    DeclTupleNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, refTypeList ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, paramList ); end
    return obj
 end
-function DeclTupleNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, refTypeList) 
+function DeclTupleNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, paramList) 
    Node.__init( self,managerId, id, 8, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
-   self.refTypeList = refTypeList
+   self.paramList = paramList
    
    
 end
-function DeclTupleNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, refTypeList )
+function DeclTupleNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, paramList )
 
-   local node = DeclTupleNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, refTypeList)
+   local node = DeclTupleNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, paramList)
    nodeMan:addNode( node )
    return node
 end
 function DeclTupleNode:visit( visitor, depth, alreadySet )
 
-   do
-      local list = self.refTypeList
-      for __index, child in ipairs( list ) do
-         if not _lune._Set_has(alreadySet, child ) then
-            alreadySet[child]= true
-            do
-               local _switchExp = visitor( child, self, 'refTypeList', depth )
-               if _switchExp == NodeVisitMode.Child then
-                  if not child:visit( visitor, depth + 1, alreadySet ) then
-                     return false
-                  end
-                  
-               elseif _switchExp == NodeVisitMode.End then
-                  return false
-               elseif _switchExp == NodeVisitMode.Next then
-               end
-            end
-            
-         end
-         
-         
-         
-      end
-      
-      
-   end
-   
-   
    
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
@@ -2067,8 +2065,8 @@ end
 function DeclTupleNode._setmeta( obj )
   setmetatable( obj, { __index = DeclTupleNode  } )
 end
-function DeclTupleNode:get_refTypeList()
-   return self.refTypeList
+function DeclTupleNode:get_paramList()
+   return self.paramList
 end
 
 

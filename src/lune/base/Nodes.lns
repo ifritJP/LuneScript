@@ -934,8 +934,13 @@ pub fn RefTypeNode.checkValidGenerics() : bool, str {
    return true, "";
 }
 
+pub class TupleParamInfo {
+   let name:&Types.Token! {pub};
+   let typeRef:&RefTypeNode {pub};
+}
+
 _declNodeClass( "DeclTuple", Node, false, false, false,
-                [ { "refTypeList": "&List<&RefTypeNode>" } ]
+                [ { "paramList": "&List<&TupleParamInfo>" } ]
 );
 
 

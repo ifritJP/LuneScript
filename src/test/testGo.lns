@@ -2833,7 +2833,7 @@ _section();
 }
 _section();
 {
-   fn func() : List<(int,str)> {
+   fn func() : List<(a:int,b:str)> {
       return [(= 1, "abc"), (= 2, "ABC")];
    }
 
@@ -2847,6 +2847,33 @@ _section();
       foreach tuple in func() {
          let (val1, val2) = tuple;
          print( val1 + 10, val2 .. "xyz" );
+      }
+   }
+}
+_section();
+{
+   fn sub(flag:bool) : __Ret<(int,str),__Er> {
+      if flag {
+         return .Ok( (=1,"abc") );
+      }
+      return .Err( __serr( "err" ));
+   }
+
+   fn func(flag:bool) : __Ret<int,__Er> {
+      let (val1, val2) = sub(flag)!;
+      let (val3, val4) = sub(flag)!;
+      print( val1, val2, val3, val4 );
+      return .Ok( val1 + val3 );
+   }
+
+   foreach cond in [true,false] {
+      match func( cond ) {
+         case .Ok( val ) {
+            print( "ok", val );
+         }
+         case .Err( val ) {
+            print( "ng", val.$txt );
+         }
       }
    }
 }
