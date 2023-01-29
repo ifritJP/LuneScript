@@ -1,0 +1,54 @@
+{
+   fn func(): int! {
+      return nil;
+   }
+   fn sub(): int {
+      func()!; // error
+      return 0;
+   }
+}
+{
+   fn func(): int {
+      return 0;
+   }
+   fn sub(): int {
+      func()!;// error
+      return 0;
+   }
+}
+{
+   fn func(): __Ret<int,str> {
+      return .Err("");
+   }
+   fn sub(): __Ret<int,int> {
+      func()!; // error
+      return .Ok(0);
+   }
+}
+{
+   fn func(): int!,str {
+      return 0,"";
+   }
+   fn sub(): str,str {
+      func()!; // error
+      return "", "";
+   }
+}
+{
+   fn func(): int!,str {
+      return 0,"";
+   }
+   fn sub(): str!,int {
+      func()!; // error
+      return "", 0;
+   }
+}
+{
+   fn func(): int,str {
+      return 0,"";
+   }
+   fn sub(): str!,str {
+      func()!; // error
+      return "", "";
+   }
+}
