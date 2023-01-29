@@ -9,7 +9,9 @@
 
 Latest document.
 
-https://ifritjp.github.io/documents/en/lunescript/
+- https://ifritjp.github.io/documents/lunescript/ (latest)
+
+- https://ifritjp.github.io/documents/en/lunescript/
 
 ** What is LuneScript
 
