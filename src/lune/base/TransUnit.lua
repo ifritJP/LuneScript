@@ -3294,9 +3294,6 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
       local refTypeNode = self:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
       table.insert( tupleParamList, Nodes.TupleParamInfo._new(symToken, refTypeNode) )
       table.insert( typeList, refTypeNode:get_expType() )
-      if refTypeNode:get_expType():get_nilable() then
-         self:addErrMess( refTypeNode:get_pos(), string.format( "tuple can't include nilable -- %s", refTypeNode:get_expType():getTxt(  )) )
-      end
       
       local token = self:getToken(  )
       if token.txt == ")" then
@@ -3313,6 +3310,15 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
    
    
    local tupleTypeInfo = self.processInfo:createTuple( false, accessMode, typeList )
+   
+   local nextToken = self:getToken(  )
+   if nextToken.txt == "!" then
+      tupleTypeInfo = tupleTypeInfo:get_nilableTypeInfo()
+   else
+    
+      self:pushback(  )
+   end
+   
    
    local declTupleNode = Nodes.DeclTupleNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, tupleParamList )
    
@@ -5070,7 +5076,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 1994, function (  )
+         Log.log( Log.Level.Debug, __func__, 2002, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -8527,15 +8533,6 @@ function TransUnit:analyzeTupleConst( token, expectType )
    end
    
    
-   for __index, exp in ipairs( expList:get_expList() ) do
-      local expType = exp:get_expType()
-      if expType:get_nilable() then
-         self:addErrMess( exp:get_pos(), string.format( "'Tuple' object can't store nilable. -- %s", expType:getTxt(  )) )
-      end
-      
-   end
-   
-   
    local typeInfoList = {self.processInfo:createTuple( false, Ast.AccessMode.Local, expList:get_expTypeList() )}
    return Nodes.TupleConstNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
 end
@@ -9517,6 +9514,7 @@ function TransUnit:analyzeCondRet( firstToken, exp )
    self:canReturnFromHere( firstToken.pos )
    
    local nsInfo = self:get_curNsInfo()
+   
    local typeInfo = nsInfo:get_typeInfo()
    do
       local _switchExp = typeInfo:get_kind()
@@ -9530,49 +9528,93 @@ function TransUnit:analyzeCondRet( firstToken, exp )
    
    
    local retTypeList = typeInfo:get_retTypeInfoList()
-   if #retTypeList ~= 1 then
-      self:addErrMess( firstToken.pos, string.format( "%s '%s' has multi return values", mess, typeInfo:get_rawTxt()) )
-      return exp
-   end
-   
-   local retType = retTypeList[1]
-   local expType = exp:get_expType()
-   
-   if expType:get_nilable() then
-      if retType:get_nilable() then
+   do
+      local _switchExp = #retTypeList
+      if _switchExp == 1 then
+         local retType = retTypeList[1]
+         local expType = exp:get_expType()
          
-         return nsInfo:addCondRet( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expType:get_nonnilableType(), exp )
-      else
-       
-         self:addErrMess( firstToken.pos, string.format( "%s '%s' is not nilable.", mess, expType:getTxt(  )) )
-         return exp
+         if expType:get_nilable() then
+            if retType:get_nilable() then
+               
+               return nsInfo:addCondRet( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expType:get_nonnilableType(), exp, Nodes.CondRetKind.Nilable )
+            else
+             
+               self:addErrMess( firstToken.pos, string.format( "%s '%s' is not nilable.", mess, retType:getTxt(  )) )
+               return exp
+            end
+            
+         else
+          
+            local _
+            
+            local expOkType, expErrType = self:getRetErrTypeInfo( firstToken.pos, mess, expType )
+            if  nil == expOkType or  nil == expErrType then
+               local _expOkType = expOkType
+               local _expErrType = expErrType
+            
+               return exp
+            end
+            
+            local _1, retErrType = self:getRetErrTypeInfo( firstToken.pos, mess, retType )
+            if  nil == _1 or  nil == retErrType then
+               local __1 = _1
+               local _retErrType = retErrType
+            
+               return exp
+            end
+            
+            
+            if retErrType:canEvalWith( self.processInfo, expErrType, Ast.CanEvalType.SetOp, {} ) then
+               return nsInfo:addCondRet( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expOkType, exp, Nodes.CondRetKind.Ret )
+            else
+             
+               self:addErrMess( exp:get_pos(), string.format( "%s it must be compatible type '%s' and '%s'.", mess, retErrType:getTxt(  ), expErrType:getTxt(  )) )
+               return exp
+            end
+            
+         end
+         
+      elseif _switchExp == 2 then
+         local expTypeList = exp:get_expTypeList()
+         if #expTypeList ~= 2 then
+            self:addErrMess( exp:get_pos(), string.format( "%s this must return 2 values. but %d value.", mess, #expTypeList) )
+            return exp
+         end
+         
+         local func1stType = retTypeList[1]
+         local func2ndType = retTypeList[2]
+         
+         local exp1stType = expTypeList[1]
+         local exp2ndType = expTypeList[2]
+         
+         if func1stType:get_nilable() then
+            if exp1stType:get_nilable() then
+               if func2ndType:canEvalWith( self.processInfo, exp2ndType, Ast.CanEvalType.SetOp, {} ) then
+                  
+                  return nsInfo:addCondRet( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), exp1stType:get_nonnilableType(), exp, Nodes.CondRetKind.Two )
+               else
+                
+                  self:addErrMess( exp:get_pos(), string.format( "%s can't set the value from '%s' to '%s'", mess, exp2ndType:getTxt(  ), func2ndType:getTxt(  )) )
+                  return exp
+               end
+               
+            else
+             
+               self:addErrMess( exp:get_pos(), string.format( "%s this must be nilable at 1st value. but it's '%s'.", mess, exp1stType:getTxt(  )) )
+               return exp
+            end
+            
+         else
+          
+            self:addErrMess( exp:get_pos(), string.format( "%s '%s' must return nilable at 1st value. but %s.", mess, typeInfo:getTxt(  ), func1stType:getTxt(  )) )
+            return exp
+         end
+         
+      else 
+         
+            self:addErrMess( firstToken.pos, string.format( "%s '%s' has multi return values", mess, typeInfo:get_rawTxt()) )
       end
-      
-   else
-    
-      local _
-      
-      local expOkType, expErrType = self:getRetErrTypeInfo( firstToken.pos, mess, expType )
-      if  nil == expOkType or  nil == expErrType then
-         local _expOkType = expOkType
-         local _expErrType = expErrType
-      
-         return exp
-      end
-      
-      local _1, retErrType = self:getRetErrTypeInfo( firstToken.pos, mess, retType )
-      if  nil == _1 or  nil == retErrType then
-         local __1 = _1
-         local _retErrType = retErrType
-      
-         return exp
-      end
-      
-      
-      if retErrType:canEvalWith( self.processInfo, expErrType, Ast.CanEvalType.SetOp, {} ) then
-         return nsInfo:addCondRet( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expOkType, exp )
-      end
-      
    end
    
    

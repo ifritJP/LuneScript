@@ -246,14 +246,15 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
       return false;
    }
 
-   pub fn addCondRet( nodeManager:Nodes.NodeManager, pos:&Types.Position,
-                      inTestBlock:bool, isInAnalyzeArgMode:bool,
-                      expOkType:&Ast.TypeInfo, exp:&Nodes.Node ) mut : Nodes.CondRetNode
+   pub fn addCondRet(
+      nodeManager:Nodes.NodeManager, pos:&Types.Position,
+      inTestBlock:bool, isInAnalyzeArgMode:bool, expOkType:&Ast.TypeInfo,
+      exp:&Nodes.Node, kind:Nodes.CondRetKind ) mut : Nodes.CondRetNode
    {
       self.condRetCount = self.condRetCount + 1;
       let mut condRetNode = Nodes.CondRetNode.create(
          nodeManager, pos, inTestBlock,
-         isInAnalyzeArgMode, [ expOkType ], exp, self.condRetCount );
+         isInAnalyzeArgMode, [ expOkType ], exp, kind, self.condRetCount );
       self.condRetNodeList.insert( condRetNode );
       return condRetNode;
    }

@@ -52,11 +52,11 @@ fn TransUnit.analyzeRefTypeTuple(
          accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt );
       tupleParamList.insert( new Nodes.TupleParamInfo( symToken, refTypeNode ) );
       typeList.insert( refTypeNode.$expType );
-      if refTypeNode.$expType.$nilable {
-         self.addErrMess(
-            refTypeNode.$pos,
-            "tuple can't include nilable -- %s" (refTypeNode.$expType.getTxt(##)) );
-      }
+      // if refTypeNode.$expType.$nilable {
+      //    self.addErrMess(
+      //       refTypeNode.$pos,
+      //       "tuple can't include nilable -- %s" (refTypeNode.$expType.getTxt(##)) );
+      // }
       let token = self.getToken(##);
       if token.txt == ")" {
          break;
@@ -68,7 +68,15 @@ fn TransUnit.analyzeRefTypeTuple(
       self.addErrMess( firstToken.pos, "tuple size is 0." );
    }
 
-   let tupleTypeInfo = self.processInfo.createTuple( false, accessMode, typeList );
+   let mut tupleTypeInfo:&Ast.TypeInfo =
+      self.processInfo.createTuple( false, accessMode, typeList );
+
+   let nextToken = self.getToken(##);
+   if nextToken.txt == "!" {
+      tupleTypeInfo = tupleTypeInfo.$nilableTypeInfo;
+   } else {
+      self.pushback();
+   }
 
    let declTupleNode = Nodes.DeclTupleNode.create(
       self.nodeManager, firstToken.$pos, self.inTestBlock,

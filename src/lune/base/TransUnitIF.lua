@@ -403,10 +403,10 @@ function NSInfo:canAccessLuaval(  )
    
    return false
 end
-function NSInfo:addCondRet( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, expOkType, exp )
+function NSInfo:addCondRet( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, expOkType, exp, kind )
 
    self.condRetCount = self.condRetCount + 1
-   local condRetNode = Nodes.CondRetNode.create( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, {expOkType}, exp, self.condRetCount )
+   local condRetNode = Nodes.CondRetNode.create( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, {expOkType}, exp, kind, self.condRetCount )
    table.insert( self.condRetNodeList, condRetNode )
    return condRetNode
 end

@@ -2465,11 +2465,22 @@ test/error/async5.lns:42:22: error: __init: exp(2) type mismatch allmut @test.@e
 test/error/async5.lns:44:17: error: can't access noasync function in async. -- func1 on func
 test/error/async5.lns:46:7: error: can't access noasync function in async. -- foo1 on func
 test/error/tuple.lns:2:4: error: return: over exp. expect: 1: actual: 2
-test/error/tuple.lns:7:15: error: tuple can't include nilable -- int!
-test/error/tuple.lns:12:23: error: expects 1 tuple value, but -- 2 value
+test/error/tuple.lns:8:23: error: expects 1 tuple value, but -- 2 value
 test/error/tuple2.lns:1:14: error: expects the tuple value, but -- int
 test/error/tuple3.lns:2:17: error: expects 1 item tuple, but -- 2 item
 test/error/tuple4.lns:2:14: error: not found -- '='. actually ','
+test/error/condRet.lns:5:7: warning: 'sub' var isn't accessed
+test/error/condRet.lns:14:7: warning: 'sub' var isn't accessed
+test/error/condRet.lns:23:7: warning: 'sub' var isn't accessed
+test/error/condRet.lns:32:7: warning: 'sub' var isn't accessed
+test/error/condRet.lns:41:7: warning: 'sub' var isn't accessed
+test/error/condRet.lns:50:7: warning: 'sub' var isn't accessed
+test/error/condRet.lns:6:13: error: can't use '!' here. -- 'int' is not nilable.
+test/error/condRet.lns:15:13: error: can't use '!' here. -- 'int' is not __Ret.
+test/error/condRet.lns:24:7: error: can't use '!' here. -- it must be compatible type 'int' and 'str'.
+test/error/condRet.lns:33:7: error: can't use '!' here. -- 'sub' must return nilable at 1st value. but str.
+test/error/condRet.lns:42:7: error: can't use '!' here. -- can't set the value from 'str' to 'int'
+test/error/condRet.lns:51:7: error: can't use '!' here. -- this must be nilable at 1st value. but it's 'int'.
 test/error/abbr.lns:3:1: warning: func: 00000:use '##', instate of '...'.
 test/error/dis_mutable.lns:5:4: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:6:4: warning: 'val2' var isn't accessed

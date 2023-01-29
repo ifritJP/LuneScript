@@ -1331,30 +1331,45 @@ pub override fn ConvFilter.processCondRet(
 fn ConvFilter.outputCondRet( node: &Nodes.CondRetNode ) mut
 {
    let symName = "_cond%d" (node.$order);
-   if node.$exp.$expType.$nilable {
-      self.write( "local %s = " (symName) );
-      filter( node.$exp, self, node );
-      self.writeln( "" );
-      self.writeln( "if %s == nil then return nil end" (symName) );
-   } else {
-      self.writeln( "local %s" (symName) );
-      self.writeln( "do" );
-      self.pushIndent( ## );
-      self.write( "local _matchExp = " );
-      filter( node.$exp, self, node );
-      self.writeln( "" );
-      self.writeln( "if _matchExp[1] == _lune.Result.Err[1] then" );
-      self.pushIndent( ## );
-      self.writeln( "return _matchExp" );
-      self.popIndent();
+   _switch node.$condKind {
+      case .Nilable {
+         self.write( "local %s = " (symName) );
+         filter( node.$exp, self, node );
+         self.writeln( "" );
+         self.writeln( "if %s == nil then return nil end" (symName) );
+      }
+      case .Ret {
+         self.writeln( "local %s" (symName) );
+         self.writeln( "do" );
+         self.pushIndent( ## );
+         self.write( "local _matchExp = " );
+         filter( node.$exp, self, node );
+         self.writeln( "" );
+         self.writeln( "if _matchExp[1] == _lune.Result.Err[1] then" );
+         self.pushIndent( ## );
+         self.writeln( "return _matchExp" );
+         self.popIndent();
 
-      self.writeln( "elseif _matchExp[1] == _lune.Result.Ok[1] then" );
-      self.pushIndent( ## );
-      self.writeln( "%s = _matchExp[2][1]" (symName));
-      self.popIndent();
-      self.writeln( "end" );
-      self.popIndent();
-      self.writeln( "end" );
+         self.writeln( "elseif _matchExp[1] == _lune.Result.Ok[1] then" );
+         self.pushIndent( ## );
+         self.writeln( "%s = _matchExp[2][1]" (symName));
+         self.popIndent();
+         self.writeln( "end" );
+         self.popIndent();
+         self.writeln( "end" );
+      }
+      case .Two {
+         self.writeln( "local %s" (symName) );
+         self.writeln( "do" );
+         self.pushIndent(##);
+         self.writeln( "local __condWork" );
+         self.write( "%s, __condWork = " (symName));
+         filter( node.$exp, self, node );
+         self.writeln( "" );
+         self.writeln( "if %s == nil then return nil, __condWork end" (symName) );
+         self.popIndent();
+         self.writeln("end" );
+      }
    }
 };
 

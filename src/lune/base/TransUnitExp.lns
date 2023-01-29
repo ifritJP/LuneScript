@@ -1038,15 +1038,6 @@ fn TransUnit.analyzeTupleConst(
       self.error( "'Tuple' must not size 0." );
    };
 
-   foreach exp in expList.$expList {
-      let expType = exp.$expType;
-      if expType.$nilable {
-         self.addErrMess(
-            exp.$pos,
-            "'Tuple' object can't store nilable. -- %s" (expType.getTxt(##)));
-      }
-   }
-
    let mut typeInfoList = [
       self.processInfo.createTuple( false, .Local, expList.$expTypeList )
    ];
@@ -2076,6 +2067,7 @@ fn TransUnit.analyzeCondRet(
    self.canReturnFromHere( firstToken.pos );
 
    let mut nsInfo = self.$curNsInfo;
+   // 現在の関数タイプ
    let typeInfo = nsInfo.$typeInfo;
    switch typeInfo.$kind {
       case .Func, .Method {
@@ -2088,41 +2080,96 @@ fn TransUnit.analyzeCondRet(
    }
    // 関数の戻り値取得
    let retTypeList = typeInfo.$retTypeInfoList;
-   if #retTypeList ~= 1 {
-      self.addErrMess(
-         firstToken.pos, "%s '%s' has multi return values" (mess, typeInfo.$rawTxt) );
-      return exp;
-   }
-   let retType = retTypeList[1];
-   let expType = exp.$expType;
-   
-   if expType.$nilable {
-      if retType.$nilable {
-         // 評価結果が nilable で、関数の戻り値が nilable の場合
-         // CondRetNode を生成する
-         return nsInfo.addCondRet(
-            self.nodeManager, firstToken.pos, self.inTestBlock,
-            self.macroCtrl.isInAnalyzeArgMode(), expType.$nonnilableType, exp );
-      } else {
-         self.addErrMess(
-            firstToken.pos, "%s '%s' is not nilable." ( mess, expType.getTxt(##) ) );
-         return exp;
-      }
-   } else {
-      // nilable でない場合は __Ret かどうか確認する
-      let! expOkType, expErrType =
-         self.getRetErrTypeInfo( firstToken.pos, mess, expType )
-      {
-         return exp;
-      };
-      let! _, retErrType = self.getRetErrTypeInfo( firstToken.pos, mess, retType ) {
-         return exp;
-      };
+   switch #retTypeList {
+      case 1 {
+         let retType = retTypeList[1];
+         let expType = exp.$expType;
+         
+         if expType.$nilable {
+            if retType.$nilable {
+               // 評価結果が nilable で、関数の戻り値が nilable の場合
+               // CondRetNode を生成する
+               return nsInfo.addCondRet(
+                  self.nodeManager, firstToken.pos, self.inTestBlock,
+                  self.macroCtrl.isInAnalyzeArgMode(), expType.$nonnilableType,
+                  exp, .Nilable );
+            } else {
+               self.addErrMess(
+                  firstToken.pos,
+                  "%s '%s' is not nilable." ( mess, retType.getTxt(##) ) );
+               return exp;
+            }
+         } else {
+            // nilable でない場合は __Ret かどうか確認する
+            let! expOkType, expErrType =
+               self.getRetErrTypeInfo( firstToken.pos, mess, expType )
+            {
+               return exp;
+            };
+            let! _, retErrType = self.getRetErrTypeInfo( firstToken.pos, mess, retType ) {
+               return exp;
+            };
 
-      if retErrType.canEvalWith( self.processInfo, expErrType, .SetOp, {} ) {
-         return nsInfo.addCondRet(
-            self.nodeManager, firstToken.pos, self.inTestBlock,
-            self.macroCtrl.isInAnalyzeArgMode(), expOkType, exp );
+            if retErrType.canEvalWith( self.processInfo, expErrType, .SetOp, {} ) {
+               return nsInfo.addCondRet(
+                  self.nodeManager, firstToken.pos, self.inTestBlock,
+                  self.macroCtrl.isInAnalyzeArgMode(), expOkType, exp, .Ret );            
+            } else {
+               self.addErrMess(
+                  exp.$pos,
+                  "%s it must be compatible type '%s' and '%s'."
+                  (mess, retErrType.getTxt(##), expErrType.getTxt(##) ));
+               return exp;
+            }
+         }
+      }
+      case 2 {
+         let expTypeList = exp.$expTypeList;
+         if #expTypeList ~= 2 {
+            self.addErrMess(
+               exp.$pos, "%s this must return 2 values. but %d value."  (mess, #expTypeList ));
+            return exp;
+         }
+         let func1stType = retTypeList[ 1 ];
+         let func2ndType = retTypeList[ 2 ];
+
+         let exp1stType = expTypeList[ 1 ];
+         let exp2ndType = expTypeList[ 2 ];
+
+         if func1stType.$nilable {
+            if exp1stType.$nilable {
+               if func2ndType.canEvalWith( self.processInfo, exp2ndType, .SetOp, {} ) {
+                  // 関数の第 1 戻り値型と、評価対象の第 1 値型が nilable で、かつ、
+                  // 関数の第 2 戻り値型が、評価対象の第 2 値型に代入可能な場合
+                  return nsInfo.addCondRet(
+                     self.nodeManager, firstToken.pos, self.inTestBlock,
+                     self.macroCtrl.isInAnalyzeArgMode(),
+                     exp1stType.$nonnilableType, exp, .Two );
+               } else {
+                  self.addErrMess(
+                     exp.$pos,
+                     "%s can't set the value from '%s' to '%s'"
+                     (mess, exp2ndType.getTxt(##), func2ndType.getTxt(##) ));
+                  return exp;
+               }
+            } else {
+               self.addErrMess(
+                  exp.$pos,
+                  "%s this must be nilable at 1st value. but it's '%s'."
+                  (mess, exp1stType.getTxt(##) ));
+               return exp;
+            }
+         } else {
+            self.addErrMess(
+               exp.$pos,
+               "%s '%s' must return nilable at 1st value. but %s."
+               (mess, typeInfo.getTxt(##), func1stType.getTxt(##) ));
+            return exp;
+         }
+      }
+      default {
+         self.addErrMess(
+            firstToken.pos, "%s '%s' has multi return values" (mess, typeInfo.$rawTxt) );
       }
    }
    

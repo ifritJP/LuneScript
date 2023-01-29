@@ -2701,32 +2701,49 @@ pub override fn convFilter.processCondRet(
 
 fn convFilter.outputCondRetNode( node: &Nodes.CondRetNode ) mut {
    let symName = "_cond%d" (node.$order);
-   if node.$exp.$expType.$nilable {
-      self.write( "%s_ := " (symName) );
-      filter( node.$exp, self, node );
-      self.writeln( "" );
-      self.writeln( "if %s_ == nil { return nil }" (symName) );
-      self.write( "%s := %s_" (symName, symName) );
-      self.outputAny2Type( node.$expType );
-      self.writeln( "" );
-   } else {
-      self.writeln( "var %s %s" (symName, self.type2gotype( node.$expType )) );
-      let valName = "_matchExp";
-      self.write( "switch %s := " (valName) );
-      filter( node.$exp, self, node );
-      self.writeln( ".(type) {" );
-      self.writeln( "case *G__Ret__Err:" );
-      self.pushIndent( ## );
-      self.writeln( "return %s" (valName) );
-      self.popIndent();
+   _switch node.$condKind {
+      case .Nilable {
+         self.write( "%s_ := " (symName) );
+         filter( node.$exp, self, node );
+         self.writeln( "" );
+         self.writeln( "if %s_ == nil { return nil }" (symName) );
+         self.write( "%s := %s_" (symName, symName) );
+         self.outputAny2Type( node.$expType );
+         self.writeln( "" );
+      }
+      case .Ret {
+         self.writeln( "var %s %s" (symName, self.type2gotype( node.$expType )) );
+         let valName = "_matchExp";
+         self.write( "switch %s := " (valName) );
+         filter( node.$exp, self, node );
+         self.writeln( ".(type) {" );
+         self.writeln( "case *G__Ret__Err:" );
+         self.pushIndent( ## );
+         self.writeln( "return %s" (valName) );
+         self.popIndent();
 
-      self.writeln( "case *G__Ret__Ok:" );
-      self.pushIndent(##);
-      self.write( "%s = %s.Val1" (symName, valName) );
-      self.outputAny2Type( node.$expType );
-      self.writeln( "" );
-      self.popIndent();
-      self.writeln( "}" );
+         self.writeln( "case *G__Ret__Ok:" );
+         self.pushIndent(##);
+         self.write( "%s = %s.Val1" (symName, valName) );
+         self.outputAny2Type( node.$expType );
+         self.writeln( "" );
+         self.popIndent();
+         self.writeln( "}" );
+      }
+      case .Two {
+         self.writeln( "var %s %s" (symName, self.type2gotype( node.$expType )) );
+         self.writeln( "{" );
+         self.pushIndent(##);
+         self.write( "__condWork1, __condWork2 := " );
+         filter( node.$exp, self, node );
+         self.writeln( "" );
+         self.writeln( "if __condWork1 == nil { return nil, __condWork2 }" );
+         self.write( "%s = __condWork1" (symName) );
+         self.outputAny2Type( node.$expType );
+         self.writeln( "" );
+         self.popIndent();
+         self.writeln("}" );
+      }
    }
 }
 

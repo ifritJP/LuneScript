@@ -3536,33 +3536,48 @@ end
 function convFilter:outputCondRetNode( node )
 
    local symName = string.format( "_cond%d", node:get_order())
-   if node:get_exp():get_expType():get_nilable() then
-      self:write( string.format( "%s_ := ", symName) )
-      filter( node:get_exp(), self, node )
-      self:writeln( "" )
-      self:writeln( string.format( "if %s_ == nil { return nil }", symName) )
-      self:write( string.format( "%s := %s_", symName, symName) )
-      self:outputAny2Type( node:get_expType() )
-      self:writeln( "" )
-   else
-    
-      self:writeln( string.format( "var %s %s", symName, self:type2gotype( node:get_expType() )) )
-      local valName = "_matchExp"
-      self:write( string.format( "switch %s := ", valName) )
-      filter( node:get_exp(), self, node )
-      self:writeln( ".(type) {" )
-      self:writeln( "case *G__Ret__Err:" )
-      self:pushIndent(  )
-      self:writeln( string.format( "return %s", valName) )
-      self:popIndent(  )
-      
-      self:writeln( "case *G__Ret__Ok:" )
-      self:pushIndent(  )
-      self:write( string.format( "%s = %s.Val1", symName, valName) )
-      self:outputAny2Type( node:get_expType() )
-      self:writeln( "" )
-      self:popIndent(  )
-      self:writeln( "}" )
+   do
+      local _switchExp = node:get_condKind()
+      if _switchExp == Nodes.CondRetKind.Nilable then
+         self:write( string.format( "%s_ := ", symName) )
+         filter( node:get_exp(), self, node )
+         self:writeln( "" )
+         self:writeln( string.format( "if %s_ == nil { return nil }", symName) )
+         self:write( string.format( "%s := %s_", symName, symName) )
+         self:outputAny2Type( node:get_expType() )
+         self:writeln( "" )
+      elseif _switchExp == Nodes.CondRetKind.Ret then
+         self:writeln( string.format( "var %s %s", symName, self:type2gotype( node:get_expType() )) )
+         local valName = "_matchExp"
+         self:write( string.format( "switch %s := ", valName) )
+         filter( node:get_exp(), self, node )
+         self:writeln( ".(type) {" )
+         self:writeln( "case *G__Ret__Err:" )
+         self:pushIndent(  )
+         self:writeln( string.format( "return %s", valName) )
+         self:popIndent(  )
+         
+         self:writeln( "case *G__Ret__Ok:" )
+         self:pushIndent(  )
+         self:write( string.format( "%s = %s.Val1", symName, valName) )
+         self:outputAny2Type( node:get_expType() )
+         self:writeln( "" )
+         self:popIndent(  )
+         self:writeln( "}" )
+      elseif _switchExp == Nodes.CondRetKind.Two then
+         self:writeln( string.format( "var %s %s", symName, self:type2gotype( node:get_expType() )) )
+         self:writeln( "{" )
+         self:pushIndent(  )
+         self:write( "__condWork1, __condWork2 := " )
+         filter( node:get_exp(), self, node )
+         self:writeln( "" )
+         self:writeln( "if __condWork1 == nil { return nil, __condWork2 }" )
+         self:write( string.format( "%s = __condWork1", symName) )
+         self:outputAny2Type( node:get_expType() )
+         self:writeln( "" )
+         self:popIndent(  )
+         self:writeln( "}" )
+      end
    end
    
 end

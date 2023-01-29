@@ -1789,31 +1789,44 @@ end
 function ConvFilter:outputCondRet( node )
 
    local symName = string.format( "_cond%d", node:get_order())
-   if node:get_exp():get_expType():get_nilable() then
-      self:write( string.format( "local %s = ", symName) )
-      filter( node:get_exp(), self, node )
-      self:writeln( "" )
-      self:writeln( string.format( "if %s == nil then return nil end", symName) )
-   else
-    
-      self:writeln( string.format( "local %s", symName) )
-      self:writeln( "do" )
-      self:pushIndent(  )
-      self:write( "local _matchExp = " )
-      filter( node:get_exp(), self, node )
-      self:writeln( "" )
-      self:writeln( "if _matchExp[1] == _lune.Result.Err[1] then" )
-      self:pushIndent(  )
-      self:writeln( "return _matchExp" )
-      self:popIndent(  )
-      
-      self:writeln( "elseif _matchExp[1] == _lune.Result.Ok[1] then" )
-      self:pushIndent(  )
-      self:writeln( string.format( "%s = _matchExp[2][1]", symName) )
-      self:popIndent(  )
-      self:writeln( "end" )
-      self:popIndent(  )
-      self:writeln( "end" )
+   do
+      local _switchExp = node:get_condKind()
+      if _switchExp == Nodes.CondRetKind.Nilable then
+         self:write( string.format( "local %s = ", symName) )
+         filter( node:get_exp(), self, node )
+         self:writeln( "" )
+         self:writeln( string.format( "if %s == nil then return nil end", symName) )
+      elseif _switchExp == Nodes.CondRetKind.Ret then
+         self:writeln( string.format( "local %s", symName) )
+         self:writeln( "do" )
+         self:pushIndent(  )
+         self:write( "local _matchExp = " )
+         filter( node:get_exp(), self, node )
+         self:writeln( "" )
+         self:writeln( "if _matchExp[1] == _lune.Result.Err[1] then" )
+         self:pushIndent(  )
+         self:writeln( "return _matchExp" )
+         self:popIndent(  )
+         
+         self:writeln( "elseif _matchExp[1] == _lune.Result.Ok[1] then" )
+         self:pushIndent(  )
+         self:writeln( string.format( "%s = _matchExp[2][1]", symName) )
+         self:popIndent(  )
+         self:writeln( "end" )
+         self:popIndent(  )
+         self:writeln( "end" )
+      elseif _switchExp == Nodes.CondRetKind.Two then
+         self:writeln( string.format( "local %s", symName) )
+         self:writeln( "do" )
+         self:pushIndent(  )
+         self:writeln( "local __condWork" )
+         self:write( string.format( "%s, __condWork = ", symName) )
+         filter( node:get_exp(), self, node )
+         self:writeln( "" )
+         self:writeln( string.format( "if %s == nil then return nil, __condWork end", symName) )
+         self:popIndent(  )
+         self:writeln( "end" )
+      end
    end
    
 end

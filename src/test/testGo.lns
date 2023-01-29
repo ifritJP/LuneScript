@@ -2877,3 +2877,49 @@ _section();
       }
    }
 }
+_section();
+{
+   fn sub(flag:bool) : (int,str)!,str! {
+      if flag {
+         return (= 1,"abc"),nil;
+      }
+      return nil, "err";
+   }
+
+   fn func(flag:bool) : int!,str! {
+      let (val1, val2) = sub(flag)!;
+      let (val3, val4) = sub(flag)!;
+      print( val1, val2, val3, val4 );
+      return val1 + val3, nil;
+   }
+
+   foreach cond in [true,false] {
+      let ok, err = func( cond );
+      when! ok {
+         print( "ok", ok );
+      } else {
+         print( "ng", err );
+      }
+   }
+}
+_section();
+{
+   {
+      fn sub() : (str!,int) {
+         return (= nil, 1 );
+      }
+      fn sub2() : (str!,int) {
+         return (= "abc", 1 );
+      }
+      fn dump( tuple:(str!,int) ) {
+         let (val1, val2) = tuple;
+         when! val1 {
+            print( val1 .. "xyz", val2 + 10 );
+         } else {
+            print( val2 + 10 );
+         }
+      }
+      dump( sub() );
+      dump( sub2() );
+   }
+}

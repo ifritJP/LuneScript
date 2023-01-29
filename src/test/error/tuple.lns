@@ -4,10 +4,6 @@ fn func1() : (int,str) {
 fn func2() : (int,str), (int) {
    return (= 1, "abc"), (= 2);
 }
-fn func3() : (int!) { // error
-   return (= 1);
-}
-
 {
    let (val1, val2) = func2(); // error
    print( val1 + 10, val2 .. "xyz" );

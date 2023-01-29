@@ -2487,6 +2487,38 @@ function BlockNode:getBreakKind( checkMode )
 end
 
 
+local CondRetKind = {}
+_moduleObj.CondRetKind = CondRetKind
+CondRetKind._val2NameMap = {}
+function CondRetKind:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "CondRetKind.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function CondRetKind._from( val )
+   if CondRetKind._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+CondRetKind.__allList = {}
+function CondRetKind.get__allList()
+   return CondRetKind.__allList
+end
+
+CondRetKind.Nilable = 0
+CondRetKind._val2NameMap[0] = 'Nilable'
+CondRetKind.__allList[1] = CondRetKind.Nilable
+CondRetKind.Ret = 1
+CondRetKind._val2NameMap[1] = 'Ret'
+CondRetKind.__allList[2] = CondRetKind.Ret
+CondRetKind.Two = 2
+CondRetKind._val2NameMap[2] = 'Two'
+CondRetKind.__allList[3] = CondRetKind.Two
+
 function NodeKind.get_CondRet(  )
 
    return 11
@@ -2528,25 +2560,26 @@ function CondRetNode:canBeStatement(  )
 
    return false
 end
-function CondRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, order )
+function CondRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order )
    local obj = {}
    CondRetNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, order ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order ); end
    return obj
 end
-function CondRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, order) 
+function CondRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order) 
    Node.__init( self,managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.exp = exp
+   self.condKind = condKind
    self.order = order
    
    
 end
-function CondRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, order )
+function CondRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order )
 
-   local node = CondRetNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, order)
+   local node = CondRetNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order)
    nodeMan:addNode( node )
    return node
 end
@@ -2592,6 +2625,9 @@ function CondRetNode._setmeta( obj )
 end
 function CondRetNode:get_exp()
    return self.exp
+end
+function CondRetNode:get_condKind()
+   return self.condKind
 end
 function CondRetNode:get_order()
    return self.order

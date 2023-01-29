@@ -1051,8 +1051,17 @@ pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
 }
 
 
+pub enum CondRetKind {
+   // nilable 1 つ
+   Nilable,
+   // __Ret 型
+   Ret,
+   // nilable 型とエラー情報
+   Two,
+}
 _declNodeClass( "CondRet", Node, false, true, false,
                 [ { "exp": "&Node" },
+                  { "condKind": "CondRetKind" },
                   { "order": "int" } ] 
 );
 
