@@ -10372,19 +10372,11 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             
          end
          
-         for index, _1 in ipairs( dest:get_itemTypeInfoList() ) do
-            if #dest:get_itemTypeInfoList() >= index and #otherSrc:get_itemTypeInfoList() >= index then
-               
-               local ret, mess = (dest:get_itemTypeInfoList()[index] ):canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[index], destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, alt2type )
-               if not ret then
-                  return false, mess
-               end
-               
-            else
-             
-               return false, nil
+         for index, dstItem in ipairs( dest:get_itemTypeInfoList() ) do
+            local srcItem = otherSrc:get_itemTypeInfoList()[index]
+            if not dstItem:equals( processInfo, srcItem, alt2type, true ) then
+               return false, string.format( "umatch %s -- %s", dstItem:getTxt(  ), srcItem:getTxt(  ))
             end
-            
             
          end
          

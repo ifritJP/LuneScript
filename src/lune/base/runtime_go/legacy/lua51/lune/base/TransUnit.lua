@@ -8533,8 +8533,15 @@ function TransUnit:analyzeTupleConst( token, expectType )
    end
    
    
-   local typeInfoList = {self.processInfo:createTuple( false, Ast.AccessMode.Local, expList:get_expTypeList() )}
-   return Nodes.TupleConstNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
+   local tupleType
+   
+   if expectType ~= nil then
+      tupleType = expectType:get_srcTypeInfo()
+   else
+      tupleType = self.processInfo:createTuple( false, Ast.AccessMode.Local, expList:get_expTypeList() )
+   end
+   
+   return Nodes.TupleConstNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleType}, expList )
 end
 
 

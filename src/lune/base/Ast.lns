@@ -7857,9 +7857,11 @@ pro static fn TypeInfo.canEvalWithBase(
          if #dest.$itemTypeInfoList ~= #otherSrc.$itemTypeInfoList {
             return false, _pos();
          }
-         foreach _, index in dest.$itemTypeInfoList {
-            _checkEqualsItemType(
-               dest, otherSrc, index, alt2type, destMut, true );
+         foreach dstItem, index in dest.$itemTypeInfoList {
+            let srcItem = otherSrc.$itemTypeInfoList[ index ];
+            if not dstItem.equals( processInfo, srcItem, alt2type, true ) {
+               return false, "umatch %s -- %s" (dstItem.getTxt(##), srcItem.getTxt(##));
+            }
          }
          return true, nil;
       }

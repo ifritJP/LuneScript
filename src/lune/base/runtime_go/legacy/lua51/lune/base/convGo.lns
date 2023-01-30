@@ -272,7 +272,8 @@ class convFilter extend Nodes.Filter<Opt> {
    pro fn isExtSymbol( symbol:&Ast.SymbolInfo ) mut : bool {
       return not symbol.getModule().equals( self.processInfo, self.moduleTypeInfo ## );
    }
-
+   fn tuple2gotype( typeInfo:&Ast.TypeInfo ) mut : str;
+   
    advertise stream;
 }
 
@@ -822,7 +823,7 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          return "*LnsMap";
       }
       case .Tuple {
-         return "[]LnsAny";
+         return self.tuple2gotype( typeInfo );
       }
       case .Form {
          // if orgType == Ast.builtinTypeLoadedFunc {
@@ -864,6 +865,16 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
    return self.type2gotypeOrg( typeInfo, .Normal );
 }
 
+fn convFilter.tuple2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
+   let mut txt = "*LnsTuple%d[" (#typeInfo.$itemTypeInfoList);
+   foreach itemType, index in typeInfo.$itemTypeInfoList {
+      txt = txt .. self.type2gotypeOrg( itemType, .Normal );
+      if index ~= #typeInfo.$itemTypeInfoList {
+         txt = txt .. ",";
+      }
+   }
+   return txt .. "]";
+}
 
 fn getExpType( expListNode:&Nodes.ExpListNode, index:int ) : &Ast.TypeInfo {
    let list = expListNode.$expTypeList;
@@ -3434,8 +3445,8 @@ pub override fn convFilter.processExpandTuple(
    
    foreach var, index in node.$symbolInfoList {
       if var.$name ~= "_" {
-         self.writeRaw( "%s = __tuple[%d]" (var.$name,index-1) );
-         self.outputAny2Type( var.$typeInfo );
+         self.writeRaw( "%s = __tuple.Val%d" (var.$name,index) );
+         //self.outputAny2Type( var.$typeInfo );
          self.writeln( "" );
       }
    }
@@ -6288,7 +6299,13 @@ pub override fn convFilter.processUnboxing(
 pub override fn convFilter.processTupleConst(
    node: &Nodes.TupleConstNode, opt: Opt ) mut
 {
-   self.expList2Slice( node.$expList, true );
+   self.writeRaw( "&" );
+   self.writeRaw( self.tuple2gotype( node.$expType ).sub( 2## ) );
+   self.writeRaw( "{" );
+
+   filter( node.$expList, self, node );
+
+   self.writeRaw( "}" );
 }
 
 pub override fn convFilter.processLiteralList(

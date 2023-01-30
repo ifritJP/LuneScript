@@ -5,6 +5,12 @@ fn func2() : (int,str), (int) {
    return (= 1, "abc"), (= 2);
 }
 {
+   let mut tuple1:(int,str!) = (= 1, "" );
+   let tuple2:(int,str) = (= 1, "");
+   tuple1 = tuple2; // error
+   print( tuple1, tuple2 );
+}
+{
    let (val1, val2) = func2(); // error
    print( val1 + 10, val2 .. "xyz" );
 }

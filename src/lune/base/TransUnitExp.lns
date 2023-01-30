@@ -1038,12 +1038,15 @@ fn TransUnit.analyzeTupleConst(
       self.error( "'Tuple' must not size 0." );
    };
 
-   let mut typeInfoList = [
-      self.processInfo.createTuple( false, .Local, expList.$expTypeList )
-   ];
+   let tupleType;
+   when! expectType {
+      tupleType = expectType.$srcTypeInfo;
+   } else {
+      tupleType = self.processInfo.createTuple( false, .Local, expList.$expTypeList );
+   }
    return Nodes.TupleConstNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+      self.macroCtrl.isInAnalyzeArgMode(), [ tupleType ], expList );
 }
 
 

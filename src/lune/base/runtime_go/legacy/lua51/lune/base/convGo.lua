@@ -1216,7 +1216,7 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
       elseif _switchExp == Ast.TypeInfoKind.Map then
          return "*LnsMap"
       elseif _switchExp == Ast.TypeInfoKind.Tuple then
-         return "[]LnsAny"
+         return self:tuple2gotype( typeInfo )
       elseif _switchExp == Ast.TypeInfoKind.Form then
          
          return "LnsForm"
@@ -1257,6 +1257,21 @@ end
 function convFilter:type2gotype( typeInfo )
 
    return self:type2gotypeOrg( typeInfo, ClassAsterMode.Normal )
+end
+
+
+function convFilter:tuple2gotype( typeInfo )
+
+   local txt = string.format( "*LnsTuple%d[", #typeInfo:get_itemTypeInfoList())
+   for index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+      txt = txt .. self:type2gotypeOrg( itemType, ClassAsterMode.Normal )
+      if index ~= #typeInfo:get_itemTypeInfoList() then
+         txt = txt .. ","
+      end
+      
+   end
+   
+   return txt .. "]"
 end
 
 
@@ -4394,8 +4409,8 @@ function convFilter:processExpandTuple( node, opt )
    
    for index, var in ipairs( node:get_symbolInfoList() ) do
       if var:get_name() ~= "_" then
-         self:writeRaw( string.format( "%s = __tuple[%d]", var:get_name(), index - 1) )
-         self:outputAny2Type( var:get_typeInfo() )
+         self:writeRaw( string.format( "%s = __tuple.Val%d", var:get_name(), index) )
+         
          self:writeln( "" )
       end
       
@@ -7624,7 +7639,13 @@ end
 
 function convFilter:processTupleConst( node, opt )
 
-   self:expList2Slice( node:get_expList(), true )
+   self:writeRaw( "&" )
+   self:writeRaw( self:tuple2gotype( node:get_expType() ):sub( 2 ) )
+   self:writeRaw( "{" )
+   
+   filter( node:get_expList(), self, node )
+   
+   self:writeRaw( "}" )
 end
 
 
