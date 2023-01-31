@@ -282,6 +282,7 @@ _DefBuiltinFuncType( [
       "__lns.runtime" : {
          "log": { "arg": [ "str" ], "ret": [] },
          "enableLog": { "arg": [ "bool" ], "ret": [] },
+         "enableDebugLog": { "arg": [ "bool" ], "ret": [] },
          "dumpLog": { "arg": [ "oStream" ], "ret": [] },
       },
    },
@@ -528,7 +529,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
          switch typeInfo.$kind {
             case .Map {
                if #genTypeList ~= 2 {
-                  Util.err( "illegal map param -- %d" (#genTypeList) );
+                  Util.err( "illegal map param -- %d" (#genTypeList) ); // バグ
                }
                let keyType = genTypeList[ 1 ];
                let valType = genTypeList[ 2 ];
@@ -538,7 +539,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
             case .Ext {
                self.hasLuaval = true;
                if #genTypeList ~= 1 {
-                  Util.err( "illegal param -- %d" (#genTypeList) );
+                  Util.err( "illegal param -- %d" (#genTypeList) ); // バグ
                }
                match self.processInfo.createLuaval( genTypeList[ 1 ], true ) {
                   case .OK( workType, _ ) {
@@ -552,18 +553,18 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
                      return genTypeList[ 1 ];
                   }
                   case .Err( mess ) {
-                     Util.err( mess );
+                     Util.err( mess ); // バグ
                   }
                }
             }
             case .DDD {
                if #genTypeList ~= 1 {
-                  Util.err( "illegal map param -- %d" (#genTypeList) );
+                  Util.err( "illegal map param -- %d" (#genTypeList) ); // バグ
                }
                return self.processInfo.createDDD( genTypeList[ 1 ], true, false );
             }
             default {
-               Util.err( "not support type -- %s" (typeInfo.getTxt(##)) );
+               Util.err( "not support type -- %s" (typeInfo.getTxt(##)) ); // バグ
             }
          }
       }
@@ -604,7 +605,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
          typeInfo = _exp;
       }
       else {
-         Util.err( "not found builtin -- %s" (orgTypeName) );
+         Util.err( "not found builtin -- %s" (orgTypeName) ); // バグ
       }
       typeInfo = typeInfo.$nilableTypeInfo;
    }
@@ -613,7 +614,7 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
          typeInfo = _exp;
       }
       else {
-         Util.err( "not found builtin -- %s" (typeName) );
+         Util.err( "not found builtin -- %s" (typeName) ); // バグ
       }
    }
    if mutable {
@@ -1024,5 +1025,5 @@ pub fn Builtin.getBuiltInFuncType() mut : BuiltinFuncType {
    if readyBuiltin {
       return builtinFunc;
    }
-   Util.err( "builtinFunc is not ready" );
+   Util.err( "builtinFunc is not ready" ); // バグ
 }

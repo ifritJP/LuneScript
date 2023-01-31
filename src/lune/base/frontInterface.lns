@@ -344,7 +344,7 @@ pub fn dummyLoadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
       when! loaded {
          emptyTable = unwrap loaded(##);
       } else {
-         error( "load error" );
+         Util.err( "load error" ); // バグ
       }
       moduleMeta = new ModuleMeta( mod.gsub( "%.", "/" ) .. ".lns",
                                    MetaOrModule.MetaRaw( emptyTable ) );           
@@ -360,23 +360,23 @@ class dummyFront extend (frontInterface) {
    pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
                     baseDir:str!, loader:ModuleLoader )  mut : ModuleMeta!
    {
-      error( "not implements: %s" (__func__) );
+      Util.err( "not implements: %s" (__func__) ); // バグ
    }
    pub fn loadFromLnsTxt(
       importModuleInfo:ImportModuleInfo,
       baseDir:str!, name:str, txt:str )  mut : Luaval<&stem>
    {
-      error( "not implements: %s" (__func__) );
+      Util.err( "not implements: %s" (__func__) ); // バグ
    }
    pub fn getLuaModulePath( mod:str, baseDir:str! )  mut : str, str!, str {
       return mod, nil, mod;
       //error( "not implements: %s" (__func__) );
    }
    pub fn searchModule( mod:str, baseDir:str! , addSearchPath:str!)  mut: str! {
-      error( "not implements: %s" (__func__) );
+      Util.err( "not implements: %s" (__func__) ); // バグ
    }
    pub fn error( message:str )  {
-      error( message );
+      Util.err( message ); // バグ
    }
 }
 

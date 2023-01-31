@@ -8210,8 +8210,7 @@ function CombineType:get_typeInfo( processInfo )
       return processInfo:createModifier( work, self.mutMode )
    end
    
-   
-   error( "illegal" )
+   Util.err( "illegal" )
 end
 function CombineType._setmeta( obj )
   setmetatable( obj, { __index = CombineType  } )
@@ -9049,6 +9048,7 @@ do
    else 
       
          Util.err( "illegal" )
+         
    end
 end
 

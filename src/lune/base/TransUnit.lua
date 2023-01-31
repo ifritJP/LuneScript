@@ -9768,10 +9768,10 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    
    if not fieldTypeInfo then
       for name, val in pairs( classScope:get_symbol2SymbolInfoMap() ) do
-         Util.errorLog( string.format( "debug: %s, %s", name, val) )
+         Util.debugLog( string.format( "debug: %s, %s", name, val) )
       end
       
-      Util.errorLog( string.format( "class, scope: -- %s, %s", classTypeInfo, classScope) )
+      Util.debugLog( string.format( "class, scope: -- %s, %s", classTypeInfo, classScope) )
       self:error( string.format( "not found field typeInfo: %s.%s -- %s", classTypeInfo:getFullName( self.typeNameCtrl, self:get_scope(), false ), token.txt, Ast.TypeInfoKind:_getTxt( classTypeInfo:get_kind())
       ) )
    end

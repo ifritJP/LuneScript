@@ -207,8 +207,7 @@ local function byteCompileFromLuaTxt( txt, stripDebugInfo )
       if chunk ~= nil then
          ret = string.dump( chunk, stripDebugInfo )
       else
-         
-         error( _lune.unwrapDefault( err, "load error") )
+         Util.err( _lune.unwrapDefault( err, "load error") )
       end
       
    end
@@ -264,7 +263,7 @@ function AstCreater:__init(importModuleInfo, parserSrc, mod, baseDir, moduleId, 
       local ast = self:createAst( importModuleInfo, parserSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
       self.ast = ast
       self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId )
-      Log.log( Log.Level.Log, __func__, 150, function (  )
+      Log.log( Log.Level.Log, __func__, 149, function (  )
       
          return string.format( "generated AST -- %s", mod)
       end )
@@ -330,7 +329,7 @@ function AstCreater:getExportInfo(  )
    end
    
    if not self.exportInfo then
-      Log.log( Log.Level.Err, __func__, 192, function (  )
+      Log.log( Log.Level.Err, __func__, 191, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.mod)
       end )
@@ -451,7 +450,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 288, function (  )
+               Log.log( Log.Level.Debug, __func__, 287, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )
@@ -632,7 +631,7 @@ function LuaConverter:saveLua(  )
    if  nil == streamDst then
       local _streamDst = streamDst
    
-      error( string.format( "write open error -- %s", self.luaPath) )
+      Util.err( string.format( "write open error -- %s", self.luaPath) )
    end
    
    local dependsStreamDst = self.option:openDepend( self.dependsPath )
@@ -729,7 +728,7 @@ function GoConverter:saveGo(  )
    if  nil == file then
       local _file = file
    
-      error( string.format( "can't open file -- %s", self.path) )
+      Util.err( string.format( "can't open file -- %s", self.path) )
    end
    
    
@@ -819,7 +818,7 @@ function PythonConverter:savePython(  )
    if  nil == file then
       local _file = file
    
-      error( string.format( "can't open file -- %s", self.path) )
+      Util.err( string.format( "can't open file -- %s", self.path) )
    end
    
    

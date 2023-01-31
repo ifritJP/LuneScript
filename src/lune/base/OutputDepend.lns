@@ -108,22 +108,22 @@ __test {
       //_lune_control default_noasync_this_class;
       
       pub fn loadModule( mod:str ) mut: Luaval<&stem>!, &frontInterface.ModuleMeta {
-         Util.err( "not implements" );
+         Util.err( "not implements" ); // バグ
       }
       pub fn loadFromLnsTxt(
          importModuleInfo:frontInterface.ImportModuleInfo,
          baseDir:str!, name:str, txt:str ) mut : Luaval<&stem>
       {
-         Util.err( "not implements" );
+         Util.err( "not implements" ); // バグ
       }
       pub fn getLuaModulePath( mod:str, baseDir:str! ) mut : str, str!, str {
          return mod, nil, mod;
       }
       pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! ) mut : str! {
-         Util.err( "not implements" );
+         Util.err( "not implements" ); // バグ
       }
       pub fn error( message:str ) {
-         Util.err( message );
+         Util.err( message ); // バグ
       }
 
       pub fn loadMeta(

@@ -80,7 +80,7 @@ fn getSymbolTxt( symbolInfo:&Ast.SymbolInfo ) : str {
       if! let annonymous = symbolInfo@@@Ast.AnonymousSymbolInfo {
          return "_%d" (annonymous.$anonymousId);
       } else {
-         Util.err( "can't cast to AnonymousSymbolInfo. -- %s:%s"
+         Util.err( "can't cast to AnonymousSymbolInfo. -- %s:%s" // バグ
                    (symbolInfo.$pos$.lineNo, symbolInfo.$pos$.column) );
       }
    }
@@ -159,7 +159,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
       super(true, moduleTypeInfo, moduleTypeInfo.$scope);
 
       if stream == metaStream {
-         Util.err( "streamName == stream" );
+         Util.err( "streamName == stream" ); // バグ
       }
 
       self.newMethod = NewMethod.create( option.$legacyNewMode );
@@ -312,7 +312,7 @@ fn ConvFilter.pushIndent( newIndent:int! ) mut {
 
 fn ConvFilter.popIndent() mut {
    if #self.indentQueue == 0 {
-      Util.err( "self.indentQueue == 0" );
+      Util.err( "self.indentQueue == 0" );// バグ
    }
    self.indentQueue.remove(##);
 }
@@ -700,7 +700,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
       forsort classTypeInfo, classTypeId in workClassMap {
          if not Ast.isBuiltin( classTypeId ) {
             let! scope = classTypeInfo.$scope {
-               Util.err( "%s.scope is nil" (classTypeInfo.getTxt(##)) );
+               Util.err( "%s.scope is nil" (classTypeInfo.getTxt(##)) ); // バグ
             };
             
             pickupTypeId( classTypeInfo, true,
@@ -1526,7 +1526,7 @@ fn ConvFilter.getMapInfo(
                funcTxt = '_lune._toBool';
             }
             default {
-               Util.err( "unknown type -- %s" (nonnilableType.getTxt(##)) );
+               Util.err( "unknown type -- %s" (nonnilableType.getTxt(##)) ); // バグ
             }
          }
       }
@@ -2189,7 +2189,7 @@ pub override fn ConvFilter.processDeclConstr(
       }
       else {
          let name = unwrap node.get_declInfo().$name;
-         Util.err( "not support ... in macro -- %s" (name.txt) );
+         Util.err( "not support ... in macro -- %s" (name.txt) ); // バグ
       }
    }
    self.writeln( " )" );
@@ -2950,6 +2950,7 @@ pub override fn ConvFilter.processExpCall(
       switch node.$func.$expType {
          case self.builtinFunc.__lns_runtime_log,
               self.builtinFunc.__lns_runtime_enableLog,
+              self.builtinFunc.__lns_runtime_enableDebugLog,
               self.builtinFunc.__lns_runtime_dumpLog,
               self.builtinFunc.__processor_end
          {
@@ -3511,7 +3512,7 @@ pub override fn ConvFilter.processExpRefItem(
          }
          else {
             // index がないのはバグ
-            error( "index is nil" );
+            Util.err( "index is nil" ); // バグ
          }
          self.writeRaw( " )" );
       }
@@ -3984,7 +3985,7 @@ __test {
    
    pub fn createAstFromFile( scriptPath:str, option:&LnsOpt.Option ) __noasync: AstInfo.ASTInfo {
       let! mut stream = io.open( scriptPath## ) {
-         Util.err( "not failed to open -- %s" (scriptPath) );
+         Util.err( "not failed to open -- %s" (scriptPath) ); // バグ
       };
       let mut ast = createAstFromStream(
          Types.ParserSrc.LnsPath(

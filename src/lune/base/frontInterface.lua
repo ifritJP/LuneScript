@@ -660,7 +660,7 @@ local function dummyLoadModule( mod )
       if loaded ~= nil then
          emptyTable = _lune.unwrap( loaded(  ))
       else
-         error( "load error" )
+         Util.err( "load error" )
       end
       
       moduleMeta = ModuleMeta._new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.MetaRaw, {emptyTable}))
@@ -680,12 +680,12 @@ end
 function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
    local __func__ = '@lune.@base.@frontInterface.dummyFront.loadMeta'
 
-   error( string.format( "not implements: %s", __func__) )
+   Util.err( string.format( "not implements: %s", __func__) )
 end
 function dummyFront:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
    local __func__ = '@lune.@base.@frontInterface.dummyFront.loadFromLnsTxt'
 
-   error( string.format( "not implements: %s", __func__) )
+   Util.err( string.format( "not implements: %s", __func__) )
 end
 function dummyFront:getLuaModulePath( mod, baseDir )
 
@@ -694,11 +694,11 @@ end
 function dummyFront:searchModule( mod, baseDir, addSearchPath )
    local __func__ = '@lune.@base.@frontInterface.dummyFront.searchModule'
 
-   error( string.format( "not implements: %s", __func__) )
+   Util.err( string.format( "not implements: %s", __func__) )
 end
 function dummyFront:error( message )
 
-   error( message )
+   Util.err( message )
 end
 function dummyFront._setmeta( obj )
   setmetatable( obj, { __index = dummyFront  } )

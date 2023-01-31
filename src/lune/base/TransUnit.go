@@ -9664,9 +9664,9 @@ func (self *TransUnit_TransUnit) analyzeAccessClassField(_env *LnsEnv, classType
         for _name, _val := range( classScope.FP.Get_symbol2SymbolInfoMap(_env).Items ) {
             name := _name.(string)
             val := _val.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
-            Util_errorLog(_env, _env.GetVM().String_format("debug: %s, %s", []LnsAny{name, val}))
+            Util_debugLog(_env, _env.GetVM().String_format("debug: %s, %s", []LnsAny{name, val}))
         }
-        Util_errorLog(_env, _env.GetVM().String_format("class, scope: -- %s, %s", []LnsAny{classTypeInfo, classScope}))
+        Util_debugLog(_env, _env.GetVM().String_format("class, scope: -- %s, %s", []LnsAny{classTypeInfo, classScope}))
         self.FP.Error(_env, _env.GetVM().String_format("not found field typeInfo: %s.%s -- %s", []LnsAny{classTypeInfo.FP.GetFullName(_env, self.TypeNameCtrl, self.FP.Get_scope(_env).FP, false), token.Txt, Ast_TypeInfoKind_getTxt( classTypeInfo.FP.Get_kind(_env))}))
     }
     var typeInfo *Ast_TypeInfo

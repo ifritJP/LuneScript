@@ -339,13 +339,13 @@ local function loadCode( code )
                ret = obj
             else
                
-               error( "failed to load" )
+               Util.err( "failed to load" )
             end
          end
          
       else
          
-         error( string.format( "%s -- %s", mess, code) )
+         Util.err( string.format( "%s -- %s", mess, code) )
       end
       
    end
@@ -1575,13 +1575,13 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       return work
    end
    
-   local function macroVal2strList( name, macroVal, workParser )
+   local function macroVal2strList( name, macroVal )
    
       local val = macroVal.val
       if  nil == val then
          local _val = val
       
-         workParser:error( string.format( "macroVal is nil -- %s", name) )
+         Util.err( string.format( "macroVal is nil -- %s", name) )
       end
       
       if macroVal.argNode then
@@ -1617,7 +1617,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
       if  nil == macroVal then
          local _macroVal = macroVal
       
-         parser:error( string.format( "unknown macro val -- %s", nextToken.txt) )
+         Util.err( string.format( "unknown macro val -- %s", nextToken.txt) )
       end
       
       
@@ -1625,7 +1625,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
             local txtList = {}
-            for __index, txt in ipairs( macroVal2strList( nextToken.txt, macroVal, parser ) ) do
+            for __index, txt in ipairs( macroVal2strList( nextToken.txt, macroVal ) ) do
                table.insert( txtList, txt )
             end
             
@@ -1641,7 +1641,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
             if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
-               local strList = macroVal2strList( nextToken.txt, macroVal, parser )
+               local strList = macroVal2strList( nextToken.txt, macroVal )
                for index = #strList, 1, -1 do
                   parser:pushbackStr( nil, string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
                end
@@ -1654,11 +1654,11 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                   local argNode = macroVal.argNode
                   if argNode ~= nil then
                      if not argNode:setupLiteralTokenList( tokenList ) then
-                        parser:error( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
+                        Util.err( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
                      end
                      
                   else
-                     parser:error( string.format( "not support ,, -- %s", nextToken.txt) )
+                     Util.err( string.format( "not support ,, -- %s", nextToken.txt) )
                   end
                end
                
@@ -1689,7 +1689,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                local argNode = macroVal.argNode
                if argNode ~= nil then
                   if not argNode:setupLiteralTokenList( tokenList ) then
-                     parser:error( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
+                     Util.err( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
                   end
                   
                else
@@ -1706,7 +1706,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
          else
           
-            parser:error( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )
+            Util.err( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )
          end
          
       elseif tokenTxt == ',,,,' then
@@ -1736,7 +1736,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             parser:pushbackToken( nextToken )
          else
           
-            parser:error( string.format( "not support this symbol -- %s%s", tokenTxt, nextToken.txt) )
+            Util.err( string.format( "not support this symbol -- %s%s", tokenTxt, nextToken.txt) )
          end
          
       end

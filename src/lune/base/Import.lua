@@ -1109,7 +1109,7 @@ function _TypeInfoModule:createTypeInfo( param )
       local _exp = newTypeInfo
       if _exp ~= nil then
          
-         error( "internal error" )
+         Util.err( "internal error" )
       else
          local scope = Ast.Scope._new(param.processInfo, parentScope, Ast.ScopeKind.Module, nil)
          
@@ -1257,7 +1257,7 @@ function _TypeInfoNormal:createTypeInfo( param )
       end
       
       if newTypeInfo and (self.kind == Ast.TypeInfoKind.Class or self.kind == Ast.TypeInfoKind.ExtModule or self.kind == Ast.TypeInfoKind.IF ) then
-         error( "internal error" )
+         Util.err( "internal error" )
       else
        
          local function postProcess( workTypeInfo, scope )

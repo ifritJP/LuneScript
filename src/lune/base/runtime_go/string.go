@@ -518,7 +518,9 @@ func (luaVM *Lns_luaVM) String_find(
 		}
 		goResult = result
 	}
-	print(fmt.Sprintf("log: fallback -- string.find()  %s, %s, %v\n", txt, src, index))
+	if validRuntimeDebugLog {
+		print(fmt.Sprintf("log: fallback -- string.find()  %s, %s, %v\n", txt, src, index))
+	}
 
 	// goFind で処理できなかった場合は、 lua のランタイムで処理する
 

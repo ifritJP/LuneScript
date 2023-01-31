@@ -20,7 +20,7 @@ func glueFilter_convExp0_1244(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 409
-func glueFilter_convExp0_1559(arg1 []LnsAny) string {
+func glueFilter_convExp0_1560(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 69: decl @lune.@base.@glueFilter.getDeclFuncInfo
@@ -335,7 +335,7 @@ func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNod
                 return _exp
             }
         }
-        panic(_env.GetVM().String_format("open error -- %s ", []LnsAny{filePath}))
+        Util_err(_env, _env.GetVM().String_format("open error -- %s ", []LnsAny{filePath}))
     // insert a dummy
         return nil
     }
@@ -346,7 +346,7 @@ func (self *glueFilter_glueFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNod
             if !Lns_IsNil( _moduleName ) {
                 moduleName := _moduleName.(*Types_Token)
                 var moduleSymbolName string
-                moduleSymbolName = glueFilter_convExp0_1559(Lns_2DDD(_env.GetVM().String_gsub(moduleName.FP.GetExcludedDelimitTxt(_env),"%.", "_")))
+                moduleSymbolName = glueFilter_convExp0_1560(Lns_2DDD(_env.GetVM().String_gsub(moduleName.FP.GetExcludedDelimitTxt(_env),"%.", "_")))
                 {
                     __exp := declClassNode.FP.Get_gluePrefix(_env)
                     if !Lns_IsNil( __exp ) {

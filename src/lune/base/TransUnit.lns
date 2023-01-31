@@ -915,7 +915,7 @@ alias で置き換えている元の Type → alias の型
 
    pri fn popAnalyzingState() mut {
       if #self.analyzingStateQueue == 0 {
-         self.error( "underflow analyzingStateQueue" );
+         self.error( "underflow analyzingStateQueue" ); // バグ
       }
       self.analyzingStateQueue.remove(##);
    }
@@ -1324,7 +1324,7 @@ pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut
       Util.println( "------" );
    }
    
-   Util.err( "has error" );
+   Util.err( "has error" ); // エラー
 }
 
 fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
@@ -1398,7 +1398,7 @@ pro fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
       if allowEof {
          return token;
       }
-      self.error( "EOF" );
+      self.error( "EOF" ); // 要対応
    };
 
    return token;
@@ -1487,7 +1487,7 @@ local fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Parser.Token {
 
 local fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
    if token.txt ~= txt {
-      self.error( "not found -- '%s'. actually '%s'" ( txt, token.txt ) );
+      self.error( "not found -- '%s'. actually '%s'" ( txt, token.txt ) ); // 要対応
    }
    return token;
 }
@@ -1690,11 +1690,11 @@ local fn TransUnit.analyzeStatementListSubfile(
 
    if! statement {
       if _exp.$kind ~= Nodes.NodeKind.$Subfile {
-         self.error( "subfile must have 'subfile' declaration at top." );
+         self.error( "subfile must have 'subfile' declaration at top." ); // 要対応
       }
    }
    else {
-      self.error( "subfile must have 'subfile' declaration at top." );
+      self.error( "subfile must have 'subfile' declaration at top." ); // 要対応
    }
 
    return (self.analyzeStatementList( stmtList, true ## ));
@@ -1928,7 +1928,7 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
          tokenList.insert( token );
       }
       if token.kind == .Eof {
-         self.error( "EOF" );
+         self.error( "EOF" ); // 要対応
       }
       switch token.txt {
          case "{", "`{" {
@@ -1945,7 +1945,7 @@ fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
       }
    }
    if blockDepth < 0 {
-      self.error( "mismatch '}'" );
+      self.error( "mismatch '}'" ); // 要対応
    }
 
    return tokenList;
@@ -2262,7 +2262,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
    let exp = self.analyzeExpOneRVal( false, false ## );
 
    let! algeTypeInfo = exp.$expType.$srcTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
-      self.error( "match must have alge value -- %s" (exp.$expType.getTxt(##)) );
+      self.error( "match must have alge value -- %s" (exp.$expType.getTxt(##)) ); // 要対応
    };
 
    if not self.moduleType.equals(
@@ -2303,7 +2303,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
       self.checkAlgeComp( valNameToken, algeTypeInfo );
 
       let! valInfo = algeTypeInfo.getValInfo( valNameToken.txt ) {
-         self.error( "not found val -- %s" (valNameToken.txt) );
+         self.error( "not found val -- %s" (valNameToken.txt) ); // 要対応
       };
       if algeValNameSet.has( valNameToken.txt ) {
          self.addErrMess( valNameToken.pos, "multiple val -- %s" (valNameToken.txt) );
@@ -2436,7 +2436,7 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
 
    let val = self.getToken(##);
    if val.kind ~= Parser.TokenKind.Symb {
-      self.error( "not symbol" );
+      self.error( "not symbol" ); // 要対応
    }
    self.checkNextToken( "=" );
    let mut exp1 = self.analyzeExpOneRVal( false, false## );
@@ -2499,7 +2499,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
    repeat {
       let var = self.getSymbolToken( .MustNot_Or_ );
       if var.kind ~= Parser.TokenKind.Symb {
-         self.error( "illegal symbol" );
+         self.error( "illegal symbol" ); // 要対応
       }
       varList.insert( var );
       nextToken = self.getToken(##);
@@ -2630,7 +2630,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    for index = 1, 2 {
       let symbol = self.getToken(##);
       if symbol.kind ~= Parser.TokenKind.Symb {
-         self.error( "illegal symbol" );
+         self.error( "illegal symbol" ); // 要対応
       }
       if index == 1 {
          mainSymToken = symbol;
@@ -2768,7 +2768,7 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
          scopeKind = .Root;
       }
       default {
-         self.error( "illegal scope kind. -- %s" (nextToken.txt) );
+         self.error( "illegal scope kind. -- %s" (nextToken.txt) ); // 要対応
       }
    }
 
@@ -2792,7 +2792,7 @@ fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
                nextToken = self.getToken( ## );
             }
             default {
-               self.error(
+               self.error( // 要対応
                   "illegal token: expects ')' or ',' but -- %s" (nextToken.txt) );
             }
          }

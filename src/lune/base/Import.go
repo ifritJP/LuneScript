@@ -105,7 +105,7 @@ func Import_convExp1_1138(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 365
-func Import_convExp1_1256(arg1 []LnsAny) Ast_TypeDataAccessor {
+func Import_convExp1_1257(arg1 []LnsAny) Ast_TypeDataAccessor {
     return Lns_getFromMulti( arg1, 0 ).(Ast_TypeDataAccessor)
 }
 // for 419
@@ -117,15 +117,15 @@ func Import_convExp2_176(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 511
-func Import_convExp2_686(arg1 []LnsAny) Ast_TypeDataAccessor {
+func Import_convExp2_687(arg1 []LnsAny) Ast_TypeDataAccessor {
     return Lns_getFromMulti( arg1, 0 ).(Ast_TypeDataAccessor)
 }
 // for 540
-func Import_convExp2_929(arg1 []LnsAny) Ast_TypeDataAccessor {
+func Import_convExp2_930(arg1 []LnsAny) Ast_TypeDataAccessor {
     return Lns_getFromMulti( arg1, 0 ).(Ast_TypeDataAccessor)
 }
 // for 567
-func Import_convExp2_1084(arg1 []LnsAny) Ast_TypeDataAccessor {
+func Import_convExp2_1085(arg1 []LnsAny) Ast_TypeDataAccessor {
     return Lns_getFromMulti( arg1, 0 ).(Ast_TypeDataAccessor)
 }
 // for 658
@@ -438,7 +438,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
     {
         __ := newTypeInfo
         if !Lns_IsNil( __ ) {
-            panic("internal error")
+            Util_err(_env, "internal error")
         } else {
             var scope *Ast_Scope
             scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Module, nil, nil)
@@ -448,7 +448,7 @@ func (self *Import__TypeInfoModule) CreateTypeInfo(_env *LnsEnv, param *Import_I
                     mutable = param.MetaInfo.GetAt( "__moduleMutable" ).(bool)
                 }
             var parentTypeDataAccessor Ast_TypeDataAccessor
-            parentTypeDataAccessor = Import_convExp1_1256(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, parentInfo.FP.Get_typeId(_env).Id)))
+            parentTypeDataAccessor = Import_convExp1_1257(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, parentInfo.FP.Get_typeId(_env).Id)))
             var workTypeInfo *Ast_TypeInfo
             workTypeInfo = param.ProcessInfo.FP.CreateModule(_env, scope, parentInfo, parentTypeDataAccessor, true, self.Txt, mutable)
             newTypeInfo = workTypeInfo
@@ -547,7 +547,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 _env.SetStackVal( self.Kind == Ast_TypeInfoKind__Class) ||
                 _env.SetStackVal( self.Kind == Ast_TypeInfoKind__ExtModule) ||
                 _env.SetStackVal( self.Kind == Ast_TypeInfoKind__IF) ).(bool))) )){
-            panic("internal error")
+            Util_err(_env, "internal error")
         } else { 
             var Import_postProcess func(_env *LnsEnv, workTypeInfo *Ast_TypeInfo,scope LnsAny)
             Import_postProcess = func(_env *LnsEnv, workTypeInfo *Ast_TypeInfo,scope LnsAny) {
@@ -588,7 +588,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                     altTypeList.Insert(Ast_AlternateTypeInfo2Stem(Lns_unwrap( (Ast_AlternateTypeInfoDownCastF(itemType.FP))).(*Ast_AlternateTypeInfo)))
                 }
                 var parentTypeDataAccessor Ast_TypeDataAccessor
-                parentTypeDataAccessor = Import_convExp2_686(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
+                parentTypeDataAccessor = Import_convExp2_687(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateClassAsync(_env, self.Kind == Ast_TypeInfoKind__Class, self.FinalFlag, self.AbstractFlag, scope, baseInfo, interfaceList, altTypeList, parentInfo, parentTypeDataAccessor, true, Ast_AccessMode__Pub, self.Txt)
                 parentScope.FP.AddClassLazy(_env, param.ProcessInfo, self.Txt, nil, workTypeInfo, param.LazyModuleSet.Has(self.TypeId))
@@ -609,7 +609,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 var scope *Ast_Scope
                 scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Module, nil, NewLnsList([]LnsAny{}))
                 var parentTypeDataAccessor Ast_TypeDataAccessor
-                parentTypeDataAccessor = Import_convExp2_929(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
+                parentTypeDataAccessor = Import_convExp2_930(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
                 var workTypeInfo *Ast_TypeInfo
                 workTypeInfo = param.ProcessInfo.FP.CreateExtModule(_env, scope, parentInfo, parentTypeDataAccessor, true, Ast_AccessMode__Pub, self.Txt, Lns_unwrap( self.ModuleLang).(LnsInt), Lns_unwrap( self.RequirePath).(string))
                 parentScope.FP.AddExtModule(_env, param.ProcessInfo, self.Txt, nil, workTypeInfo, param.LazyModuleSet.Has(self.TypeId), Lns_unwrap( self.ModuleLang).(LnsInt))
@@ -624,7 +624,7 @@ func (self *Import__TypeInfoNormal) CreateTypeInfo(_env *LnsEnv, param *Import_I
                 scope = nil
                 scope = NewAst_Scope(_env, param.ProcessInfo, parentScope, Ast_ScopeKind__Other, nil, nil)
                 var parentTypeDataAccessor Ast_TypeDataAccessor
-                parentTypeDataAccessor = Import_convExp2_1084(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
+                parentTypeDataAccessor = Import_convExp2_1085(Lns_2DDD(param.FP.GetTypeDataAccessor(_env, self.ParentId)))
                 var workTypeInfoMut *Ast_NormalTypeInfo
                 workTypeInfoMut = param.ProcessInfo.FP.CreateFuncAsync(_env, self.AbstractFlag, false, scope, typeInfoKind, parentInfo, parentTypeDataAccessor, false, true, self.StaticFlag, accessMode, self.Txt, self.AsyncMode, itemTypeInfo, argTypeInfo, retTypeInfo, self.MutMode)
                 param.TypeId2TypeDataAccessor.Set(self.TypeId,workTypeInfoMut.FP)

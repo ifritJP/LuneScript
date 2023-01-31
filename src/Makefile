@@ -75,6 +75,11 @@ LNSC_OP=
 # $(shell pwd) で取得する。
 CUR_DIR:=$(shell pwd)
 
+
+ifneq "$(wildcard Makefile.local)" ""
+include Makefile.local
+endif
+
 .PHONY: help exec build build_from_d luarocks-check luarocks-check-sub
 .PHONY: release-check build test-save build-countup test-comp
 .PHONY: test-registered-rockspec test-etc test-error-all test-error test-org

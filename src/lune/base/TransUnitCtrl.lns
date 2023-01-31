@@ -273,7 +273,7 @@ fn TransUnitCtrl.analyzeImportFor(
       when! work {
          exportInfo = work;
       } else {
-         self.error( err );
+         self.error( err ); // 要対応
       }
    }
 
@@ -305,7 +305,7 @@ fn TransUnitCtrl.analyzeImportFor(
       let err = shadowing.$typeInfo ~= moduleTypeInfo;
       self.errorShadowingOp( pos, shadowing, err );
       if err {
-         self.error( "failed to import -- %s" (modulePath) );
+         self.error( "failed to import -- %s" (modulePath) ); // 要対応
       }
       moduleSymbolInfo = shadowing;
    }
@@ -317,7 +317,7 @@ fn TransUnitCtrl.analyzeImportFor(
          self.nodeManager, pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );
    }
-   self.error( "failed to import -- %s" (modulePath) );
+   self.error( "failed to import -- %s" (modulePath) ); // 要対応
 }
 
 
@@ -334,7 +334,7 @@ fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode
          }
          default {
             lazyLoad = .Off;
-            self.error( "illegal import mode -- %s" (modeToken.txt) );
+            self.error( "illegal import mode -- %s" (modeToken.txt) ); // バグ
          }
       }
    } else {
@@ -411,7 +411,7 @@ fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCas
 
    let moduleType = importNode.$expType;
    let! ctrlType = moduleType.$scope$.getTypeInfoChild$( "Ctrl" ) {
-      self.error( "not found Testing.Ctrl class" );
+      self.error( "not found Testing.Ctrl class" ); // バグ
    };
    self.addLocalVar(
       ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, .IMut, false );
@@ -478,7 +478,7 @@ pro override fn TransUnitCtrl.analyzeDeclToken(
 fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode
 {
    if self.$scope ~= self.moduleScope {
-      self.error( "'module' must be top scope." );
+      self.error( "'module' must be top scope." ); // 要対応
    }
 
 
@@ -540,7 +540,7 @@ fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.Provide
 
    let symbolInfoList = symbolNode.getSymbolInfo();
    if #symbolInfoList ~= 1 {
-      self.error( "'provide' must be symbol." );
+      self.error( "'provide' must be symbol." ); // 要対応
    }
    let symbolInfo = symbolInfoList[ 1 ];
 
@@ -733,7 +733,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
          declFuncInfo.set_stmtNum( result.$stmtNum );
       } else {
          if not noRunnerTypeSet.has( funcBlockInfo.$funcType ) {
-            Util.err(  "not found result -- %s" (funcBlockInfo.$funcType.getTxt(##)) );
+            Util.err(  "not found result -- %s" (funcBlockInfo.$funcType.getTxt(##)) ); // バグ
          }
       }
    }
@@ -761,7 +761,7 @@ pub fn TransUnitCtrl.createAST(
       // 自分自身をインポートしないように、self.importModuleInfo に登録する。
       if self.importModuleInfo.len() == 0 and not self.importModuleInfo.add( moduleName )
       {
-         self.error( "already imported -- %s" (moduleName) );
+         self.error( "already imported -- %s" (moduleName) ); // 要対応
       }
    }
    
@@ -860,7 +860,7 @@ pub fn TransUnitCtrl.createAST(
 
       let mut token = self.getTokenNoErr(##);
       if token ~= Parser.getEofToken() {
-         self.error( "%s:%d:%d:(%s) not eof -- %s"
+         self.error( "%s:%d:%d:(%s) not eof -- %s" // バグ
                      ( self.parser.getStreamName(),
                        token.pos.lineNo, token.pos.column,
                        token.kind.$_txt, token.txt ) );
@@ -872,12 +872,12 @@ pub fn TransUnitCtrl.createAST(
             if! frontInterface.searchModule( subModule, self.baseDir, nil ) {
                file = _exp;
             } else {
-               self.error( "not found subfile -- %s" ( subModule ) );
+               self.error( "not found subfile -- %s" ( subModule ) ); // 要対応
             }
          }
 
          if self.$scope ~= self.moduleScope {
-            self.error( "scope does not close" );
+            self.error( "scope does not close" ); // 要対応
          }
 
          let mut subParser = Parser.StreamParser.create(
@@ -890,7 +890,7 @@ pub fn TransUnitCtrl.createAST(
 
          token = self.getTokenNoErr(##);
          if token ~= Parser.getEofToken() {
-            Util.err( "unknown:%d:%d:(%s) %s"
+            Util.err( "unknown:%d:%d:(%s) %s" // バグ
                       ( token.pos.lineNo, token.pos.column,
                         token.kind.$_txt, token.txt ) );
          }
@@ -986,10 +986,10 @@ pub fn TransUnitCtrl.createAST(
       foreach mess in TransUnitIF.sortMess( self.errMessList ) {
          Util.errorLog( mess.$mess );
       }
-      Util.err( "has error" );
+      Util.err( "has error" ); // 要対応
    }
    if self.ctrl_info.stopByWarning and #self.warnMessList > 0 {
-      Util.err( "has error" );
+      Util.err( "has error" ); // 要対応
    }
 
    switch self.analyzeMode {

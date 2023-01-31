@@ -642,7 +642,7 @@ pub fn Parser.parse() mut : Types.Token[]! {
             while true {
                let! endIndex = string.find( rawLine, workPattern, workIndex ## ) {
                   // 文字列の区切り文字がない場合はエラー
-                  Util.err( "%s:%d:%d: error: illegal string -- %s"
+                  Util.err( "%s:%d:%d: error: illegal string -- %s" // 要対応
                             ( self.streamName, self.lineNo, index, rawLine ) );
                };
                let workChar = rawLine[ endIndex];
@@ -716,7 +716,7 @@ pub fn Parser.parse() mut : Types.Token[]! {
                   searchIndex = index + 1;
                }
             } else {
-               Util.err( "%s:%d:%d: error: illegal syntax -- %s"
+               Util.err( "%s:%d:%d: error: illegal syntax -- %s" // 要対応
                          ( self.streamName, self.lineNo, index, rawLine ) );
             }
          }

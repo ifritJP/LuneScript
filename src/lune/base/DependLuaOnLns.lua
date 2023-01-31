@@ -137,8 +137,7 @@ function __luneGetLocal( varName )
       index = index + 1
    end
    
-   
-   error( "not found -- " .. varName )
+   Util.err( "not found -- " .. varName )
 end
 _moduleObj.__luneGetLocal = __luneGetLocal
 
@@ -185,7 +184,7 @@ end
                
                (func )( luaPathList )
             else
-               error( "failed to load func" )
+               Util.err( "failed to load func" )
             end
          end
          

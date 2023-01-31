@@ -208,7 +208,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          statement = self.createNoneNode( token.pos );
       }
       elseif token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
-         self.error( "illegal macro op -- %s" (token.txt) );
+         self.error( "illegal macro op -- %s" (token.txt) ); // 要対応
       }
       else {
          statement = self.analyzeStatementToken( token );

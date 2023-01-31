@@ -506,7 +506,7 @@ fn convFilter.isSamePackageExtModule( typeInfo:&Ast.TypeInfo ) : bool {
    let! extModuleType =
       typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc@@@Ast.NormalTypeInfo
    {
-      Util.err( "illegal type -- %s" (typeInfo.getTxt(##)) );
+      Util.err( "illegal type -- %s" (typeInfo.getTxt(##)) ); // バグ
    };
    let requireParent = extModuleType.$requirePath.gsub( "[^%.]+$", "" );
    let moduleParent = self.getFull( self.moduleTypeInfo, false ).
@@ -630,7 +630,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) mut : str {
                   }
                }
                default {
-                  Util.err( "%s: not support -- %s:%s"
+                  Util.err( "%s: not support -- %s:%s" // バグ
                             ( __func__,  typeInfo.getFullName(
                                self.$typeNameCtrl, self.$moduleInfoManager, true ),
                               typeInfo.$parentInfo.$kind.$_txt ) );
@@ -731,7 +731,7 @@ fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) mut : str {
          return self.getTypeSymbol( symbolInfo.$typeInfo );
       }
       default {
-         Util.err( "not support -- %s" (symbolInfo.$kind.$_txt) );
+         Util.err( "not support -- %s" (symbolInfo.$kind.$_txt) ); // バグ
       }
    }
 }
@@ -858,7 +858,7 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          return self.type2gotypeOrg( typeInfo.$baseTypeInfo, mode );
       }
    }
-   Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) );
+   Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) ); // バグ
 }
 
 fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
@@ -881,7 +881,7 @@ fn getExpType( expListNode:&Nodes.ExpListNode, index:int ) : &Ast.TypeInfo {
    if #list >= index {
       return list[ index ];
    }
-   Util.err( "not support yet -- %s, %d: %d" (__func__, expListNode.$pos.lineNo, index ) );
+   Util.err( "not support yet -- %s, %d: %d" (__func__, expListNode.$pos.lineNo, index ) ); // バグ
 }
 
 // LnsAny から dstType への型変換用コードを出力する
@@ -2030,6 +2030,7 @@ pro fn convFilter.setup() mut {
    self.builtin2runtimeEnv = {
       self.builtinFuncs.__lns_runtime_log: "LnsLog",
       self.builtinFuncs.__lns_runtime_enableLog: "LnsStartRunnerLog",
+      self.builtinFuncs.__lns_runtime_enableDebugLog: "LnsEnableDebugLog",
       self.builtinFuncs.__lns_runtime_dumpLog: "LnsDumpRunnerLog",
       self.builtinFuncs.__lns_sync_createFlag: "LnsCreateSyncFlag",
       self.builtinFuncs.__lns_sync_createProcesser: "LnsCreateProcessor",
@@ -2086,7 +2087,7 @@ class ConvRunner extend convFilter (__Runner) {
    pub fn getResult() mut : str {
       __join( self );
       let! mut memStream = self.orgStream@@@Util.memStream {
-         Util.err( "convert err " );
+         Util.err( "convert err " ); // バグ
       };
       return memStream.$txt;
    }
@@ -2850,7 +2851,7 @@ pub override fn convFilter.processDeclMacro(
 pub override fn convFilter.processExpMacroStat(
    node: &Nodes.ExpMacroStatNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) );// バグ
 }
 
 fn convFilter.outputDeclFuncArg(funcType:&Ast.TypeInfo) mut {
@@ -2918,7 +2919,7 @@ pub override fn convFilter.processDeclConstr(
 
 
    let! scope = classType.$scope {
-      error( "illegal scope" );
+      Util.err( "illegal scope" ); // バグ
    };
    let initFuncType = unwrap scope.getTypeInfoField( "__init", true, scope, .Normal );
    self.output_to_decl__func__sym( node.$declInfo, initFuncType );
@@ -2930,7 +2931,7 @@ pub override fn convFilter.processDeclConstr(
 pub override fn convFilter.processDeclDestr(
    node: &Nodes.DeclDestrNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) ); // バグ
 }
 
 pub override fn convFilter.processExpCallSuperCtor(
@@ -3176,7 +3177,7 @@ pub override fn convFilter.processDeclEnum(
 pub override fn convFilter.processUnwrapSet(
    node: &Nodes.UnwrapSetNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) ); // バグ
 }
 
 pub override fn convFilter.processIfUnwrap(
@@ -3473,7 +3474,7 @@ pub override fn convFilter.processDeclVar(
             self.writeln( "var _%s LnsAny" (varSym.$name) );
          }
          let! expList = node.$expList {
-            Util.err( "illegal" );
+            Util.err( "illegal" ); // バグ
          };
 
          fn setVals() {
@@ -3534,7 +3535,7 @@ pub override fn convFilter.processDeclVar(
          self.writeln( "}" );
       }
       default {
-         Util.err( "not support -- %s" (__func__) );
+         Util.err( "not support -- %s" (__func__) ); // バグ
       }
    }
 }
@@ -3593,7 +3594,7 @@ pub override fn convFilter.processDeclArgDDD(
 pub override fn convFilter.processExpSubDDD(
    node: &Nodes.ExpSubDDDNode, opt:Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) ); // バグ
 }
 
 
@@ -3973,7 +3974,7 @@ fn convFilter.outputForeachLua(
       if! node@@@Nodes.ForsortNode {
          nodeIndex = _exp.$idInNS;
       } else {
-         Util.err( "illegal node -- %s" (Nodes.getNodeKindName( node.$kind )) );
+         Util.err( "illegal node -- %s" (Nodes.getNodeKindName( node.$kind )) ); // バグ
       }
    }
 
@@ -4049,7 +4050,7 @@ fn convFilter.outputForeachLua(
          self.writeln( "}" );
       }
       default {  
-         Util.err( "not support -- %s" (__func__) );
+         Util.err( "not support -- %s" (__func__) ); // バグ
       }
    }
 }
@@ -4150,7 +4151,7 @@ pub override fn convFilter.processForeach(
          self.popIndent();
       }
       default {
-         Util.err( "not support -- %s" (__func__) );
+         Util.err( "not support -- %s" (__func__) ); // バグ
       }
    }
    filter( node.$block, self, node );
@@ -4651,7 +4652,7 @@ pub fn convFilter.outputAccessor( node: &Nodes.DeclClassNode ) mut
                   self.writeRaw( "%s%s.FP" (prefix, self.getSymbolSym( memberSym)) );
                }
                else {
-                  Util.err( "not support" );
+                  Util.err( "not support" ); // バグ
                }
             }
          } else {
@@ -4721,7 +4722,7 @@ fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo) mut : str {
          return "%s_FromMap" (self.getTypeSymbol(workTypeInfo));
       }
       default {
-         Util.err( "%s: not support -- %s" (__func__, workTypeInfo.$kind.$_txt ) );
+         Util.err( "%s: not support -- %s" (__func__, workTypeInfo.$kind.$_txt ) ); // バグ
       }
    }
 }
@@ -4781,7 +4782,7 @@ fn convFilter.outputAlter2MapFunc( alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>) mu
    foreach assinType, altType in alt2Map {
       if altType.$kind == .Alternate {
          if assinType.$kind == .Alternate {
-            Util.err( "not support: %s" (__func__) );
+            Util.err( "not support: %s" (__func__) ); // バグ
          }
          else {
             self.outputConvItemType( assinType, alt2Map );
@@ -4983,7 +4984,7 @@ fn convFilter.outputAdvertise( node: &Nodes.DeclClassNode ) mut
    let createdNameSet:Set<str> = (@);
    foreach adv in node.$advertiseList {
       if adv.$prefix ~= "" {
-         Util.err( "%s: not support advertise with prefix" (__func__) );
+         Util.err( "%s: not support advertise with prefix" (__func__) ); // バグ
       }
       if! let scope = adv.$member.$expType.$scope {
          scope.filterTypeInfoField(
@@ -5085,8 +5086,8 @@ pub override fn convFilter.processDeclClass(
                   self.outputInterfaceType( node );
                }
                default {
-                  Util.err(
-                     "%s: not support -- %s:%d"
+                  Util.err(  // バグ
+                     "%s: not support -- %s:%d" 
                      (__func__, node.$expType.$kind.$_txt, node.$pos.lineNo ) );
                }
             }
@@ -5215,7 +5216,7 @@ pub fn convFilter.outputCallPrefix(
       
       if prefixType == Ast.builtinTypeString {
          if node.hasNilAccess() {
-            Util.err( "not support nilAccName" );
+            Util.err( "not support nilAccName" ); // バグ
          }
          if! let runtime = self.getVM( funcType ) {
             callKind = .RuntimeCall( prefixNode );
@@ -5336,7 +5337,7 @@ pub override fn convFilter.processExpCall(
          (self.getEnumGetTxtSym(
             unwrap funcType.$parentInfo.$aliasSrc@@@Ast.EnumTypeInfo ) ));
       let! fieldNode = node.$func@@@Nodes.RefFieldNode {
-         Util.err( "not support -- __func__" );
+         Util.err( "not support -- __func__" ); // バグ
       };
       
       filter( fieldNode.$prefix, self, node );
@@ -5439,7 +5440,7 @@ pub override fn convFilter.processExpCall(
                //    callKind = .RunLoaded;
                // }
                default {
-                  Util.err( "%s: not support -- %s:%d"
+                  Util.err( "%s: not support -- %s:%d" // バグ
                      (__func__, funcType.getTxt(##), node.$pos.lineNo) );
                }
             }
@@ -5534,7 +5535,7 @@ pub override fn convFilter.processExpCall(
        (funcType.$rawTxt == "_fromMap" or funcType.$rawTxt == "_fromStem")
    {
       let! fieldNode = node.$func@@@Nodes.RefFieldNode {
-         Util.err( "not support -- __func__" );
+         Util.err( "not support -- __func__" ); // バグ
       };
       self.writeRaw( "," );
       
@@ -5674,7 +5675,7 @@ pub override fn convFilter.processExpOp1(
                      self.writeRaw( ".Len()" );
                   }
                   default {
-                     Util.err( "%s: not support -- %s"
+                     Util.err( "%s: not support -- %s" // バグ
                                (__func__, node.$exp.$expType.getTxt(##)) );
                   }
                }
@@ -5687,7 +5688,7 @@ pub override fn convFilter.processExpOp1(
          }
       }
       default {
-         Util.err( "%s: not support -- %s" (__func__, node.$op.txt) );
+         Util.err( "%s: not support -- %s" (__func__, node.$op.txt) ); // バグ
       }
    }
 }
@@ -5958,7 +5959,7 @@ pub override fn convFilter.processExpRef(
                      //    self.writeRaw( "LnsErr_create" );
                      // }
                      default {
-                        Util.err( "%s: not support -- %s"
+                        Util.err( "%s: not support -- %s" // バグ
                                   (__func__, node.$symbolInfo.$name) );
                      }
                   }
@@ -6086,7 +6087,7 @@ pub override fn convFilter.processExpRefItem(
             self.writeRaw( "-1])" );
             
          } else {
-            Util.err( "%s: not support -- %d, %s"
+            Util.err( "%s: not support -- %d, %s" // バグ
                       (__func__, node.$pos.lineNo, prefixType.$kind.$_txt) );
          }
       }
@@ -6133,7 +6134,7 @@ pub override fn convFilter.processRefField(
       if not node.$prefix.hasNilAccess() {
          filter( node.$prefix, self, node );
       } else {
-         Util.err( "%s: not support" ( __func__ ) );
+         Util.err( "%s: not support" ( __func__ ) ); // バグ
       }
    } else {
       if not node.$prefix.hasNilAccess() {
@@ -6172,7 +6173,7 @@ pub override fn convFilter.processRefField(
          }
       }
    } else {
-      Util.err( "not support -- %s" (__func__) );
+      Util.err( "not support -- %s" (__func__) ); // バグ
    }
    
 
@@ -6231,7 +6232,7 @@ pub override fn convFilter.processGetField(
          }
       }
    } else {
-      Util.err( "not support -- %s" (__func__) );
+      Util.err( "not support -- %s" (__func__) ); // バグ
    }
 }
 
@@ -6276,7 +6277,7 @@ pub override fn convFilter.processTestBlock(
 pub override fn convFilter.processProvide(
    node: &Nodes.ProvideNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) ); // バグ
 }
 
 pub override fn convFilter.processAlias(
@@ -6287,13 +6288,13 @@ pub override fn convFilter.processAlias(
 pub override fn convFilter.processBoxing(
    node: &Nodes.BoxingNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) ); // バグ
 }
 
 pub override fn convFilter.processUnboxing(
    node: &Nodes.UnboxingNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) ); // バグ
 }
 
 pub override fn convFilter.processTupleConst(
@@ -6433,7 +6434,7 @@ pub override fn convFilter.processBreak(
 pub override fn convFilter.processLiteralSymbol(
    node: &Nodes.LiteralSymbolNode, opt: Opt ) mut
 {
-   Util.err( "not support -- %s" (__func__) );
+   Util.err( "not support -- %s" (__func__) ); // バグ
 }
 
 pub override fn convFilter.processLuneControl(
@@ -6475,9 +6476,7 @@ pub override fn convFilter.processLuneControl(
 pub override fn convFilter.processAbbr(
    node: &Nodes.AbbrNode, opt: Opt ) mut
 {
-   Util.err(
-      "not support -- %s:%d"
-      (__func__, node.$pos.lineNo ) );
+   Util.err( "not support -- %s:%d" (__func__, node.$pos.lineNo ) ); // バグ
 }
 
 pub fn createFilter(
