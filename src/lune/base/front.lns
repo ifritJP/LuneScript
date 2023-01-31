@@ -309,7 +309,7 @@ fn Front.createAstSub(
             return Converter.CreateAstResult.Ast( ast );
          }
          case .Uptodate( _ ) {
-            Util.err( "can't load the multiple module -- %s" (mod) );
+            Util.err( "can't load the multiple module -- %s" (mod) ); // 要対応
          }
       }
    }
@@ -398,7 +398,7 @@ fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
          }
       } else {
          // chunk が nil はバグ
-         error( "failed to error" );
+         Util.err( "failed to error" ); // バグ
       }
    }
    return ret;
@@ -690,7 +690,7 @@ metaTime
 
    let moduleId = getModuleId( lnsPath, mod, self.option.outputDir, metaInfo );
    if moduleId == frontInterface.ModuleId.tempId {
-      Util.err( "not found -- %s" ( lnsPath ) );
+      Util.err( "not found -- %s" ( lnsPath ) ); // 要対応
    }
    return moduleId, uptodate;
 }
@@ -1014,7 +1014,7 @@ Luaval<&stem>!, frontInterface.ModuleMeta
          }
          else {
             // convertedMap に登録されていて getMeta() が失敗するのはバグ
-            error( "nothing meta -- %s" ( mod ) );
+            Util.err( "nothing meta -- %s" ( mod ) ); // バグ
          }
       }
       else {
@@ -1080,7 +1080,7 @@ Luaval<&stem>!, frontInterface.ModuleMeta
       return _exp.mod, _exp.meta;
    }
    // ここにくるのはバグ
-   error( "load error, %s" ( mod ) );
+   Util.err( "load error, %s" ( mod ) ); // バグ
 }
 
 /**
@@ -1727,10 +1727,10 @@ return function( submod2Code, dumpCode )
 end
 ```;
       let! loaded = _load( subModPreLoad ## ) {
-         error( "failed to subModPreLoad" );
+         Util.err( "failed to subModPreLoad" ); // バグ
       };
       let! preloadFunc = loaded(##) {
-         error( "failed to preloadFunc" );
+         Util.err( "failed to preloadFunc" ); // バグ
       };
           (preloadFunc@@form)( self.convertedMap, Log.getLevel() >= Log.Level.Debug );
    }

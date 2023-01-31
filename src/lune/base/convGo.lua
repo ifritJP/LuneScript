@@ -2626,7 +2626,7 @@ function convFilter:setup(  )
    
    self.builtin2runtime = builtin2runtime
    
-   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor"}
+   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_enableDebugLog] = "LnsEnableDebugLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor"}
    
    self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [Ast.builtinTypeProcessor] = "*LnsProcessor", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream", [self.builtinFuncs.__runner_] = "LnsRunner"}
 end
@@ -3798,7 +3798,7 @@ function convFilter:processDeclConstr( node, opt )
    if  nil == scope then
       local _scope = scope
    
-      error( "illegal scope" )
+      Util.err( "illegal scope" )
    end
    
    local initFuncType = _lune.unwrap( scope:getTypeInfoField( "__init", true, scope, Ast.ScopeAccess.Normal ))
@@ -5861,6 +5861,7 @@ end
 
 
 local type2FromStemNameMap = {[Ast.builtinTypeInt] = "Lns_ToInt", [Ast.builtinTypeReal] = "Lns_ToReal", [Ast.builtinTypeBool] = "Lns_ToBool", [Ast.builtinTypeString] = "Lns_ToStr", [Ast.builtinTypeStem] = "Lns_ToStem"}
+
 function convFilter:getFromStemName( typeInfo )
    local __func__ = '@lune.@base.@convGo.convFilter.getFromStemName'
 

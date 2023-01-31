@@ -77,8 +77,7 @@ pub fn byteCompileFromLuaTxt( txt:str, stripDebugInfo:bool ): str {
       when! chunk {
          ret = string.dump( chunk, stripDebugInfo );
       } else {
-         // load 出来ないのはバグ
-         error( unwrap err default "load error" );
+         Util.err( unwrap err default "load error" ); // バグ
       }
    }
    return ret;
@@ -177,7 +176,7 @@ pub class AstCreater extend Runner.Runner {
    {
       __join( self );
       let! exportInfo = self.exportInfo {
-         Util.err( "exportInfo is nil -- %s" (self.mod) );
+         Util.err( "exportInfo is nil -- %s" (self.mod) ); // バグ
       };
       let mut moduleMeta = new frontInterface.ModuleMeta(
          exportInfo.$streamName, .Export( exportInfo ));
@@ -341,7 +340,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
                fileObj.write( meta );
                fileObj.close();
             } else {
-               Util.err( "failed to open -- %s" (metaPath) );
+               Util.err( "failed to open -- %s" (metaPath) ); // 要対応
             }
          }
          
@@ -457,7 +456,7 @@ pub class LuaConverter extend Runner.Runner {
       }
       
       let! mut streamDst = io.open( self.luaPath, "w" ) {
-         error( "write open error -- %s" (self.luaPath) );
+         Util.err( "write open error -- %s" (self.luaPath) ); // 要対応
       };
       let mut dependsStreamDst = self.option.openDepend( self.dependsPath );
       
@@ -534,7 +533,7 @@ pub class GoConverter extend Runner.Runner {
       
       
       let! mut file = io.open( self.path, "w" ) {
-         error( "can't open file -- %s" (self.path) );
+         Util.err( "can't open file -- %s" (self.path) ); // 要対応
       };
       
       file.write( self.memStream.$txt );
@@ -603,7 +602,7 @@ pub class PythonConverter extend Runner.Runner {
       
       
       let! mut file = io.open( self.path, "w" ) {
-         error( "can't open file -- %s" (self.path) );
+         Util.err( "can't open file -- %s" (self.path) ); // 要対応
       };
       
       file.write( self.memStream.$txt );

@@ -259,8 +259,8 @@ func convGo_convExp1_893(arg1 []LnsAny) string {
 func convGo_convExp1_2512(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 5411
-func convGo_convExp0_6191(arg1 []LnsAny) (bool, LnsAny) {
+// for 5412
+func convGo_convExp0_6192(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 394
@@ -307,12 +307,12 @@ func convGo_convExp2_2482(arg1 []LnsAny) (string, LnsInt) {
 func convGo_convExp2_2520(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 2374
-func convGo_convExp2_6417(arg1 []LnsAny) string {
+// for 2375
+func convGo_convExp2_6423(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 6212
-func convGo_convExp0_10447(arg1 []LnsAny) bool {
+// for 6213
+func convGo_convExp0_10448(arg1 []LnsAny) bool {
     return Lns_getFromMulti( arg1, 0 ).(bool)
 }
 // 88: decl @lune.@base.@convGo.isMain
@@ -688,7 +688,7 @@ func convGo_isRetGenerics_23_(_env *LnsEnv, node *Nodes_ExpCallNode) bool {
 
 
 
-// 4167: decl @lune.@base.@convGo.getLnsItemKind
+// 4168: decl @lune.@base.@convGo.getLnsItemKind
 func convGo_getLnsItemKind_29_(_env *LnsEnv, typeInfo *Ast_TypeInfo) string {
     {
         _kind := convGo_type2LnsItemKindMap.Get(typeInfo)
@@ -704,7 +704,7 @@ func convGo_getLnsItemKind_29_(_env *LnsEnv, typeInfo *Ast_TypeInfo) string {
 
 
 
-// 5822: decl @lune.@base.@convGo.convFilter.processAndOr.isAndOr
+// 5823: decl @lune.@base.@convGo.convFilter.processAndOr.isAndOr
 func convGo_convFilter_processAndOr__isAndOr_0_(_env *LnsEnv, exp *Nodes_Node) bool {
     {
         _parentNode := Nodes_ExpOp2NodeDownCastF(exp.FP)
@@ -718,7 +718,7 @@ func convGo_convFilter_processAndOr__isAndOr_0_(_env *LnsEnv, exp *Nodes_Node) b
     return false
 }
 
-// 6483: decl @lune.@base.@convGo.createFilter
+// 6482: decl @lune.@base.@convGo.createFilter
 func ConvGo_createFilter(_env *LnsEnv, enableTest bool,streamName string,stream Lns_oStream,ast *AstInfo_ASTInfo,option *ConvGo_Option) *Nodes_Filter {
     return &NewconvGo_convFilter(_env, enableTest, streamName, stream, ast, option).Nodes_Filter
 }
@@ -1450,7 +1450,7 @@ func NewconvGo_ConvRunner(_env *LnsEnv, arg1 bool, arg2 *AstInfo_ASTInfo, arg3 *
     obj.InitconvGo_ConvRunner(_env, arg1, arg2, arg3, arg4)
     return obj
 }
-// 2066: DeclConstr
+// 2067: DeclConstr
 func (self *convGo_ConvRunner) InitconvGo_ConvRunner(_env *LnsEnv, enableTest bool,ast *AstInfo_ASTInfo,option *ConvGo_Option,declMethodItemList *LnsList) {
     self._syncFlag = &Lns_syncFlag{}
     self.InitconvGo_convFilter(_env, enableTest, "", NewUtil_memStream(_env), ast, option)
@@ -2835,10 +2835,10 @@ func (self *convGo_convFilter) Setup(_env *LnsEnv) {
     builtin2runtime.Set(self.builtinFuncs.Math_random,"GETVM.Math_random")
     builtin2runtime.Set(self.builtinFuncs.Math_randomseed,"GETVM.Math_randomseed")
     self.builtin2runtime = builtin2runtime
-    self.builtin2runtimeEnv = NewLnsMap( map[LnsAny]LnsAny{self.builtinFuncs.G__lns_runtime_log:"LnsLog",self.builtinFuncs.G__lns_runtime_enableLog:"LnsStartRunnerLog",self.builtinFuncs.G__lns_runtime_dumpLog:"LnsDumpRunnerLog",self.builtinFuncs.G__lns_sync_createFlag:"LnsCreateSyncFlag",self.builtinFuncs.G__lns_sync_createProcesser:"LnsCreateProcessor",})
+    self.builtin2runtimeEnv = NewLnsMap( map[LnsAny]LnsAny{self.builtinFuncs.G__lns_runtime_log:"LnsLog",self.builtinFuncs.G__lns_runtime_enableLog:"LnsStartRunnerLog",self.builtinFuncs.G__lns_runtime_enableDebugLog:"LnsEnableDebugLog",self.builtinFuncs.G__lns_runtime_dumpLog:"LnsDumpRunnerLog",self.builtinFuncs.G__lns_sync_createFlag:"LnsCreateSyncFlag",self.builtinFuncs.G__lns_sync_createProcesser:"LnsCreateProcessor",})
     self.type2gotypeMap = NewLnsMap( map[LnsAny]LnsAny{Ast_builtinTypeInt:"LnsInt",Ast_builtinTypeReal:"LnsReal",Ast_builtinTypeStem:"LnsAny",Ast_builtinTypeString:"string",Ast_builtinTypeBool:"bool",Ast_builtinTypeProcessor:"*LnsProcessor",self.builtinFuncs.Ostream_:"Lns_oStream",self.builtinFuncs.Istream_:"Lns_iStream",self.builtinFuncs.Luastream_:"Lns_luaStream",self.builtinFuncs.G__runner_:"LnsRunner",})
 }
-// 2095: decl @lune.@base.@convGo.convFilter.processMethodAsync
+// 2096: decl @lune.@base.@convGo.convFilter.processMethodAsync
 func (self *convGo_convFilter) processMethodAsync(_env *LnsEnv, nodeList *LnsList) *LnsList {
     var totalStmtNum LnsInt
     totalStmtNum = 0
@@ -2918,7 +2918,7 @@ func (self *convGo_convFilter) processMethodAsync(_env *LnsEnv, nodeList *LnsLis
     }
     return runnerList
 }
-// 2163: decl @lune.@base.@convGo.convFilter.processRoot
+// 2164: decl @lune.@base.@convGo.convFilter.processRoot
 func (self *convGo_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_opt LnsAny) {
     for _, _importNode := range( node.FP.Get_nodeManager(_env).FP.GetImportNodeList(_env).Items ) {
         importNode := _importNode.(Nodes_ImportNodeDownCast).ToNodes_ImportNode()
@@ -3268,7 +3268,7 @@ func (self *convGo_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_o
     self.FP.Writeln(_env, _env.GetVM().String_format("%s = \"%s\"", []LnsAny{self.FP.getSymbolSym(_env, modSym), node.FP.Get_moduleTypeInfo(_env).FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), nil)}))
     self.FP.Writeln(_env, "Lns_InitMod()")
     var modulePath string
-    modulePath = convGo_convExp2_6417(Lns_2DDD(_env.GetVM().String_gsub(node.FP.Get_moduleTypeInfo(_env).FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), nil),"@", "")))
+    modulePath = convGo_convExp2_6423(Lns_2DDD(_env.GetVM().String_gsub(node.FP.Get_moduleTypeInfo(_env).FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), nil),"@", "")))
     var moduleName string
     moduleName = self.FP.getModuleName(_env, node.FP.Get_moduleTypeInfo(_env), false)
     if self.enableTest{
@@ -3320,10 +3320,10 @@ func (self *convGo_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_o
         self.FP.WriteRaw(_env, runner.FP.GetResult(_env))
     }
 }
-// 2437: decl @lune.@base.@convGo.convFilter.processSubfile
+// 2438: decl @lune.@base.@convGo.convFilter.processSubfile
 func (self *convGo_convFilter) ProcessSubfile(_env *LnsEnv, node *Nodes_SubfileNode,_opt LnsAny) {
 }
-// 2443: decl @lune.@base.@convGo.convFilter.processRequest
+// 2444: decl @lune.@base.@convGo.convFilter.processRequest
 func (self *convGo_convFilter) ProcessRequest(_env *LnsEnv, node *Nodes_RequestNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "func() ")
     self.FP.outputRetType(_env, node.FP.Get_expTypeList(_env))
@@ -3373,7 +3373,7 @@ func (self *convGo_convFilter) ProcessRequest(_env *LnsEnv, node *Nodes_RequestN
     }
     self.FP.WriteRaw(_env, "}()")
 }
-// 2491: decl @lune.@base.@convGo.convFilter.processAsyncLock
+// 2492: decl @lune.@base.@convGo.convFilter.processAsyncLock
 func (self *convGo_convFilter) ProcessAsyncLock(_env *LnsEnv, node *Nodes_AsyncLockNode,_opt LnsAny) {
     if _switch0 := node.FP.Get_lockKind(_env); _switch0 == Nodes_LockKind__AsyncLock || _switch0 == Nodes_LockKind__LuaLock {
         self.FP.Writeln(_env, _env.GetVM().String_format("Lns_LockEnvSync( %s, %d, func () {", []LnsAny{self.env.FP.getEnv(_env), node.FP.Get_pos(_env).LineNo}))
@@ -3383,7 +3383,7 @@ func (self *convGo_convFilter) ProcessAsyncLock(_env *LnsEnv, node *Nodes_AsyncL
         convGo_filter_7_(_env, &node.FP.Get_block(_env).Nodes_Node, self, &node.Nodes_Node)
     }
 }
-// 2509: decl @lune.@base.@convGo.convFilter.processBlockSub
+// 2510: decl @lune.@base.@convGo.convFilter.processBlockSub
 func (self *convGo_convFilter) ProcessBlockSub(_env *LnsEnv, node *Nodes_BlockNode,_opt LnsAny) {
     if _switch0 := node.FP.Get_blockKind(_env); _switch0 == Nodes_BlockKind__Block {
         self.FP.Writeln(_env, "{")
@@ -3402,7 +3402,7 @@ func (self *convGo_convFilter) ProcessBlockSub(_env *LnsEnv, node *Nodes_BlockNo
         self.FP.Writeln(_env, "}")
     }
 }
-// 2535: decl @lune.@base.@convGo.convFilter.expList2Slice
+// 2536: decl @lune.@base.@convGo.convFilter.expList2Slice
 func (self *convGo_convFilter) expList2Slice(_env *LnsEnv, subList *Nodes_ExpListNode,toStem bool) {
     var convGo_processExp func(_env *LnsEnv, exp *Nodes_Node)
     convGo_processExp = func(_env *LnsEnv, exp *Nodes_Node) {
@@ -3469,7 +3469,7 @@ func (self *convGo_convFilter) expList2Slice(_env *LnsEnv, subList *Nodes_ExpLis
         }
     }
 }
-// 2598: decl @lune.@base.@convGo.convFilter.processSetFromExpList
+// 2599: decl @lune.@base.@convGo.convFilter.processSetFromExpList
 func (self *convGo_convFilter) processSetFromExpList(_env *LnsEnv, convArgFuncName string,dstTypeList *LnsList,expListNode *Nodes_ExpListNode,addEnvArg bool) LnsInt {
     var expListKind LnsInt
     expListKind = convGo_getExpListKind_22_(_env, dstTypeList, expListNode, addEnvArg)
@@ -3580,11 +3580,11 @@ func (self *convGo_convFilter) processSetFromExpList(_env *LnsEnv, convArgFuncNa
     }
     return expListKind
 }
-// 2707: decl @lune.@base.@convGo.convFilter.processCondRet
+// 2708: decl @lune.@base.@convGo.convFilter.processCondRet
 func (self *convGo_convFilter) ProcessCondRet(_env *LnsEnv, node *Nodes_CondRetNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, _env.GetVM().String_format("_cond%d", []LnsAny{node.FP.Get_order(_env)}))
 }
-// 2713: decl @lune.@base.@convGo.convFilter.outputCondRetNode
+// 2714: decl @lune.@base.@convGo.convFilter.outputCondRetNode
 func (self *convGo_convFilter) outputCondRetNode(_env *LnsEnv, node *Nodes_CondRetNode) {
     var symName string
     symName = _env.GetVM().String_format("_cond%d", []LnsAny{node.FP.Get_order(_env)})
@@ -3629,18 +3629,18 @@ func (self *convGo_convFilter) outputCondRetNode(_env *LnsEnv, node *Nodes_CondR
         self.FP.Writeln(_env, "}")
     }
 }
-// 2761: decl @lune.@base.@convGo.convFilter.processCondRetList
+// 2762: decl @lune.@base.@convGo.convFilter.processCondRetList
 func (self *convGo_convFilter) ProcessCondRetList(_env *LnsEnv, node *Nodes_CondRetListNode,_opt LnsAny) {
     convGo_filter_7_(_env, node.FP.Get_exp(_env), self, &node.Nodes_Node)
 }
-// 2767: decl @lune.@base.@convGo.convFilter.outputCondRetInfo
+// 2768: decl @lune.@base.@convGo.convFilter.outputCondRetInfo
 func (self *convGo_convFilter) outputCondRetInfo(_env *LnsEnv, info *Nodes_CondRetInfo) {
     for _, _condRetNode := range( info.FP.Get_list(_env).Items ) {
         condRetNode := _condRetNode.(Nodes_CondRetNodeDownCast).ToNodes_CondRetNode()
         self.FP.outputCondRetNode(_env, condRetNode)
     }
 }
-// 2773: decl @lune.@base.@convGo.convFilter.processStmtExp
+// 2774: decl @lune.@base.@convGo.convFilter.processStmtExp
 func (self *convGo_convFilter) ProcessStmtExp(_env *LnsEnv, node *Nodes_StmtExpNode,_opt LnsAny) {
     {
         _condRetListNode := Nodes_CondRetListNodeDownCastF(node.FP.Get_exp(_env).FP)
@@ -3652,7 +3652,7 @@ func (self *convGo_convFilter) ProcessStmtExp(_env *LnsEnv, node *Nodes_StmtExpN
     convGo_filter_7_(_env, node.FP.Get_exp(_env), self, &node.Nodes_Node)
     self.FP.Writeln(_env, "")
 }
-// 2784: decl @lune.@base.@convGo.convFilter.processDeclAlge
+// 2785: decl @lune.@base.@convGo.convFilter.processDeclAlge
 func (self *convGo_convFilter) ProcessDeclAlge(_env *LnsEnv, node *Nodes_DeclAlgeNode,_opt LnsAny) {
     self.FP.Writeln(_env, _env.GetVM().String_format("// decl alge -- %s", []LnsAny{node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
     self.FP.Writeln(_env, _env.GetVM().String_format("type %s = LnsAny", []LnsAny{self.FP.getTypeSymbol(_env, &node.FP.Get_algeType(_env).Ast_TypeInfo)}))
@@ -3680,7 +3680,7 @@ func (self *convGo_convFilter) ProcessDeclAlge(_env *LnsEnv, node *Nodes_DeclAlg
         }
     }
 }
-// 2806: decl @lune.@base.@convGo.convFilter.processNewAlgeVal
+// 2807: decl @lune.@base.@convGo.convFilter.processNewAlgeVal
 func (self *convGo_convFilter) ProcessNewAlgeVal(_env *LnsEnv, node *Nodes_NewAlgeValNode,_opt LnsAny) {
     var algeSym string
     algeSym = self.FP.getAlgeSymbol(_env, node.FP.Get_valInfo(_env))
@@ -3699,13 +3699,13 @@ func (self *convGo_convFilter) ProcessNewAlgeVal(_env *LnsEnv, node *Nodes_NewAl
         self.FP.WriteRaw(_env, "}")
     }
 }
-// 2825: decl @lune.@base.@convGo.convFilter.processDeclMember
+// 2826: decl @lune.@base.@convGo.convFilter.processDeclMember
 func (self *convGo_convFilter) ProcessDeclMember(_env *LnsEnv, node *Nodes_DeclMemberNode,_opt LnsAny) {
     self.FP.outputSymbol(_env, &convGo_SymbolKind__Member{Ast_isPubToExternal(_env, node.FP.Get_accessMode(_env))}, node.FP.Get_name(_env).Txt)
     self.FP.WriteRaw(_env, _env.GetVM().String_format(" %s", []LnsAny{self.FP.type2gotype(_env, node.FP.Get_refType(_env).FP.Get_expType(_env))}))
     self.FP.Writeln(_env, "")
 }
-// 2834: decl @lune.@base.@convGo.convFilter.processExpMacroExp
+// 2835: decl @lune.@base.@convGo.convFilter.processExpMacroExp
 func (self *convGo_convFilter) ProcessExpMacroExp(_env *LnsEnv, node *Nodes_ExpMacroExpNode,_opt LnsAny) {
     for _, _stmt := range( node.FP.Get_stmtList(_env).Items ) {
         stmt := _stmt.(Nodes_NodeDownCast).ToNodes_Node()
@@ -3714,15 +3714,15 @@ func (self *convGo_convFilter) ProcessExpMacroExp(_env *LnsEnv, node *Nodes_ExpM
         }
     }
 }
-// 2844: decl @lune.@base.@convGo.convFilter.processDeclMacro
+// 2845: decl @lune.@base.@convGo.convFilter.processDeclMacro
 func (self *convGo_convFilter) ProcessDeclMacro(_env *LnsEnv, node *Nodes_DeclMacroNode,_opt LnsAny) {
 }
-// 2850: decl @lune.@base.@convGo.convFilter.processExpMacroStat
+// 2851: decl @lune.@base.@convGo.convFilter.processExpMacroStat
 func (self *convGo_convFilter) ProcessExpMacroStat(_env *LnsEnv, node *Nodes_ExpMacroStatNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processExpMacroStat"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 2856: decl @lune.@base.@convGo.convFilter.outputDeclFuncArg
+// 2857: decl @lune.@base.@convGo.convFilter.outputDeclFuncArg
 func (self *convGo_convFilter) outputDeclFuncArg(_env *LnsEnv, funcType *Ast_TypeInfo) {
     self.FP.WriteRaw(_env, self.FP.getEnvArgDecl(_env, funcType.FP.Get_argTypeInfoList(_env).Len()))
     for _index, _argType := range( funcType.FP.Get_argTypeInfoList(_env).Items ) {
@@ -3735,7 +3735,7 @@ func (self *convGo_convFilter) outputDeclFuncArg(_env *LnsEnv, funcType *Ast_Typ
         self.FP.WriteRaw(_env, self.FP.type2gotype(_env, argType))
     }
 }
-// 2867: decl @lune.@base.@convGo.convFilter.isImplementedRunner
+// 2868: decl @lune.@base.@convGo.convFilter.isImplementedRunner
 func (self *convGo_convFilter) isImplementedRunner(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     for _, _ifType := range( typeInfo.FP.Get_interfaceList(_env).Items ) {
         ifType := _ifType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -3745,7 +3745,7 @@ func (self *convGo_convFilter) isImplementedRunner(_env *LnsEnv, typeInfo *Ast_T
     }
     return false
 }
-// 2879: decl @lune.@base.@convGo.convFilter.output_to_decl__func__sym
+// 2880: decl @lune.@base.@convGo.convFilter.output_to_decl__func__sym
 func (self *convGo_convFilter) output_to_decl__func__sym(_env *LnsEnv, declInfo *Nodes_DeclFuncInfo,funcType *Ast_TypeInfo) {
     if declInfo.FP.Get_has__func__Symbol(_env){
         var nameSpace string
@@ -3762,11 +3762,11 @@ func (self *convGo_convFilter) output_to_decl__func__sym(_env *LnsEnv, declInfo 
         }
         var funcSym_ *Ast_SymbolInfo
         funcSym_ = Lns_unwrap( _env.NilAccFin(_env.NilAccPush(funcType.FP.Get_scope(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, "__func__")})/* 2890:29 */)).(*Ast_SymbolInfo)
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, "__func__")})/* 2891:29 */)).(*Ast_SymbolInfo)
         self.FP.Writeln(_env, _env.GetVM().String_format("%s := \"%s.%s\"", []LnsAny{self.FP.getSymbolSym(_env, funcSym_), nameSpace, funcName}))
     }
 }
-// 2895: decl @lune.@base.@convGo.convFilter.processDeclConstr
+// 2896: decl @lune.@base.@convGo.convFilter.processDeclConstr
 func (self *convGo_convFilter) ProcessDeclConstr(_env *LnsEnv, node *Nodes_DeclConstrNode,_opt LnsAny) {
     var classType *Ast_TypeInfo
     classType = node.FP.Get_expType(_env).FP.Get_parentInfo(_env)
@@ -3794,7 +3794,7 @@ func (self *convGo_convFilter) ProcessDeclConstr(_env *LnsEnv, node *Nodes_DeclC
     {
         _scope := classType.FP.Get_scope(_env)
         if _scope == nil{
-            panic("illegal scope")
+            Util_err(_env, "illegal scope")
         } else {
             scope = _scope.(*Ast_Scope)
         }
@@ -3805,12 +3805,12 @@ func (self *convGo_convFilter) ProcessDeclConstr(_env *LnsEnv, node *Nodes_DeclC
     convGo_filter_7_(_env, &Lns_unwrap( node.FP.Get_declInfo(_env).FP.Get_body(_env)).(*Nodes_BlockNode).Nodes_Node, self, &node.Nodes_Node)
     self.FP.Writeln(_env, "}")
 }
-// 2930: decl @lune.@base.@convGo.convFilter.processDeclDestr
+// 2931: decl @lune.@base.@convGo.convFilter.processDeclDestr
 func (self *convGo_convFilter) ProcessDeclDestr(_env *LnsEnv, node *Nodes_DeclDestrNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processDeclDestr"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 2936: decl @lune.@base.@convGo.convFilter.processExpCallSuperCtor
+// 2937: decl @lune.@base.@convGo.convFilter.processExpCallSuperCtor
 func (self *convGo_convFilter) ProcessExpCallSuperCtor(_env *LnsEnv, node *Nodes_ExpCallSuperCtorNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, _env.GetVM().String_format("self.%s(", []LnsAny{self.FP.getConstrSymbol(_env, node.FP.Get_superType(_env))}))
     {
@@ -3824,7 +3824,7 @@ func (self *convGo_convFilter) ProcessExpCallSuperCtor(_env *LnsEnv, node *Nodes
     }
     self.FP.Writeln(_env, ")")
 }
-// 2950: decl @lune.@base.@convGo.convFilter.processExpCallSuper
+// 2951: decl @lune.@base.@convGo.convFilter.processExpCallSuper
 func (self *convGo_convFilter) ProcessExpCallSuper(_env *LnsEnv, node *Nodes_ExpCallSuperNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, _env.GetVM().String_format("self.%s.%s(", []LnsAny{self.FP.getTypeSymbol(_env, node.FP.Get_methodType(_env).FP.Get_parentInfo(_env)), self.FP.getFuncSymbol(_env, node.FP.Get_methodType(_env))}))
     {
@@ -3838,7 +3838,7 @@ func (self *convGo_convFilter) ProcessExpCallSuper(_env *LnsEnv, node *Nodes_Exp
     }
     self.FP.WriteRaw(_env, ")")
 }
-// 2965: decl @lune.@base.@convGo.convFilter.outputDummyReturn
+// 2966: decl @lune.@base.@convGo.convFilter.outputDummyReturn
 func (self *convGo_convFilter) outputDummyReturn(_env *LnsEnv, retTypeInfoList *LnsList) {
     self.FP.Writeln(_env, "// insert a dummy")
     self.FP.WriteRaw(_env, "    return ")
@@ -3867,7 +3867,7 @@ func (self *convGo_convFilter) outputDummyReturn(_env *LnsEnv, retTypeInfoList *
     }
     self.FP.Writeln(_env, "")
 }
-// 2999: decl @lune.@base.@convGo.convFilter.outputDeclFuncInfo
+// 3000: decl @lune.@base.@convGo.convFilter.outputDeclFuncInfo
 func (self *convGo_convFilter) OutputDeclFuncInfo(_env *LnsEnv, node *Nodes_Node,declInfo *Nodes_DeclFuncInfo) {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( Lns_op_not(self.enableTest)) &&
@@ -3948,18 +3948,18 @@ func (self *convGo_convFilter) OutputDeclFuncInfo(_env *LnsEnv, node *Nodes_Node
         self.FP.Writeln(_env, "")
     }
 }
-// 3078: decl @lune.@base.@convGo.convFilter.processDeclMethod
+// 3079: decl @lune.@base.@convGo.convFilter.processDeclMethod
 func (self *convGo_convFilter) ProcessDeclMethod(_env *LnsEnv, node *Nodes_DeclMethodNode,_opt LnsAny) {
     self.FP.OutputDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env))
 }
-// 3084: decl @lune.@base.@convGo.convFilter.processProtoMethod
+// 3085: decl @lune.@base.@convGo.convFilter.processProtoMethod
 func (self *convGo_convFilter) ProcessProtoMethod(_env *LnsEnv, node *Nodes_ProtoMethodNode,_opt LnsAny) {
 }
-// 3090: decl @lune.@base.@convGo.convFilter.getEnumGetTxtSym
+// 3091: decl @lune.@base.@convGo.convFilter.getEnumGetTxtSym
 func (self *convGo_convFilter) getEnumGetTxtSym(_env *LnsEnv, enumType *Ast_EnumTypeInfo) string {
     return _env.GetVM().String_format("%s_getTxt", []LnsAny{self.FP.getTypeSymbol(_env, &enumType.Ast_TypeInfo)})
 }
-// 3094: decl @lune.@base.@convGo.convFilter.processDeclEnum
+// 3095: decl @lune.@base.@convGo.convFilter.processDeclEnum
 func (self *convGo_convFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclEnumNode,_opt LnsAny) {
     if _switch0 := self.processMode; _switch0 == convGo_ProcessMode__DeclTopScopeVar {
         self.FP.Writeln(_env, _env.GetVM().String_format("// decl enum -- %s ", []LnsAny{node.FP.Get_enumType(_env).FP.GetTxt(_env, nil, nil, nil)}))
@@ -4030,12 +4030,12 @@ func (self *convGo_convFilter) ProcessDeclEnum(_env *LnsEnv, node *Nodes_DeclEnu
     } else {
     }
 }
-// 3176: decl @lune.@base.@convGo.convFilter.processUnwrapSet
+// 3177: decl @lune.@base.@convGo.convFilter.processUnwrapSet
 func (self *convGo_convFilter) ProcessUnwrapSet(_env *LnsEnv, node *Nodes_UnwrapSetNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processUnwrapSet"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 3182: decl @lune.@base.@convGo.convFilter.processIfUnwrap
+// 3183: decl @lune.@base.@convGo.convFilter.processIfUnwrap
 func (self *convGo_convFilter) ProcessIfUnwrap(_env *LnsEnv, node *Nodes_IfUnwrapNode,_opt LnsAny) {
     self.FP.Writeln(_env, "{")
     self.FP.PushIndent(_env, nil)
@@ -4141,7 +4141,7 @@ func (self *convGo_convFilter) ProcessIfUnwrap(_env *LnsEnv, node *Nodes_IfUnwra
     self.FP.WriteRaw(_env, "}")
     self.FP.Writeln(_env, "")
 }
-// 3286: decl @lune.@base.@convGo.convFilter.outputLetVar
+// 3287: decl @lune.@base.@convGo.convFilter.outputLetVar
 func (self *convGo_convFilter) outputLetVar(_env *LnsEnv, node *Nodes_DeclVarNode) {
     var convGo_declVar func(_env *LnsEnv)
     convGo_declVar = func(_env *LnsEnv) {
@@ -4297,7 +4297,7 @@ func (self *convGo_convFilter) outputLetVar(_env *LnsEnv, node *Nodes_DeclVarNod
         }
     }
 }
-// 3425: decl @lune.@base.@convGo.convFilter.processExpandTuple
+// 3426: decl @lune.@base.@convGo.convFilter.processExpandTuple
 func (self *convGo_convFilter) ProcessExpandTuple(_env *LnsEnv, node *Nodes_ExpandTupleNode,_opt LnsAny) {
     {
         _condRetInfo := node.FP.Get_condRetInfo(_env)
@@ -4329,7 +4329,7 @@ func (self *convGo_convFilter) ProcessExpandTuple(_env *LnsEnv, node *Nodes_Expa
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 3459: decl @lune.@base.@convGo.convFilter.processDeclVar
+// 3460: decl @lune.@base.@convGo.convFilter.processDeclVar
 func (self *convGo_convFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVarNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processDeclVar"
     {
@@ -4432,7 +4432,7 @@ func (self *convGo_convFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVarN
         Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
     }
 }
-// 3543: decl @lune.@base.@convGo.convFilter.processWhen
+// 3544: decl @lune.@base.@convGo.convFilter.processWhen
 func (self *convGo_convFilter) ProcessWhen(_env *LnsEnv, node *Nodes_WhenNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "if ")
     for _index, _symPair := range( node.FP.Get_symPairList(_env).Items ) {
@@ -4469,27 +4469,27 @@ func (self *convGo_convFilter) ProcessWhen(_env *LnsEnv, node *Nodes_WhenNode,_o
     }
     self.FP.Writeln(_env, "")
 }
-// 3580: decl @lune.@base.@convGo.convFilter.processDeclArg
+// 3581: decl @lune.@base.@convGo.convFilter.processDeclArg
 func (self *convGo_convFilter) ProcessDeclArg(_env *LnsEnv, node *Nodes_DeclArgNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, _env.GetVM().String_format("%s ", []LnsAny{self.FP.getSymbolSym(_env, node.FP.Get_symbolInfo(_env))}))
     convGo_filter_7_(_env, &Lns_unwrap( node.FP.Get_argType(_env)).(*Nodes_RefTypeNode).Nodes_Node, self, &node.Nodes_Node)
 }
-// 3587: decl @lune.@base.@convGo.convFilter.processDeclArgDDD
+// 3588: decl @lune.@base.@convGo.convFilter.processDeclArgDDD
 func (self *convGo_convFilter) ProcessDeclArgDDD(_env *LnsEnv, node *Nodes_DeclArgDDDNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "ddd []LnsAny")
 }
-// 3593: decl @lune.@base.@convGo.convFilter.processExpSubDDD
+// 3594: decl @lune.@base.@convGo.convFilter.processExpSubDDD
 func (self *convGo_convFilter) ProcessExpSubDDD(_env *LnsEnv, node *Nodes_ExpSubDDDNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processExpSubDDD"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 3600: decl @lune.@base.@convGo.convFilter.processDeclForm
+// 3601: decl @lune.@base.@convGo.convFilter.processDeclForm
 func (self *convGo_convFilter) ProcessDeclForm(_env *LnsEnv, node *Nodes_DeclFormNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, _env.GetVM().String_format("type %s ", []LnsAny{self.FP.getFuncSymbol(_env, node.FP.Get_expType(_env))}))
     self.FP.OutputDeclFunc(_env, self.option.FP.Get_addEnvArg(_env), &convGo_FuncInfo__Type{node.FP.Get_expType(_env)})
     self.FP.Writeln(_env, "")
 }
-// 3609: decl @lune.@base.@convGo.convFilter.processDeclFunc
+// 3610: decl @lune.@base.@convGo.convFilter.processDeclFunc
 func (self *convGo_convFilter) ProcessDeclFunc(_env *LnsEnv, node *Nodes_DeclFuncNode,_opt LnsAny) {
     {
         _funcSym := node.FP.Get_declInfo(_env).FP.Get_symbol(_env)
@@ -4529,11 +4529,11 @@ func (self *convGo_convFilter) ProcessDeclFunc(_env *LnsEnv, node *Nodes_DeclFun
     }
     self.FP.OutputDeclFuncInfo(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env))
 }
-// 3642: decl @lune.@base.@convGo.convFilter.processRefType
+// 3643: decl @lune.@base.@convGo.convFilter.processRefType
 func (self *convGo_convFilter) ProcessRefType(_env *LnsEnv, node *Nodes_RefTypeNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, self.FP.type2gotype(_env, node.FP.Get_expType(_env)))
 }
-// 3664: decl @lune.@base.@convGo.convFilter.processCond
+// 3665: decl @lune.@base.@convGo.convFilter.processCond
 func (self *convGo_convFilter) processCond(_env *LnsEnv, node *Nodes_Node,parent *Nodes_Node) {
     if node.FP.Get_expType(_env) != Ast_builtinTypeBool{
         self.FP.WriteRaw(_env, "Lns_isCondTrue( ")
@@ -4543,7 +4543,7 @@ func (self *convGo_convFilter) processCond(_env *LnsEnv, node *Nodes_Node,parent
         convGo_filter_7_(_env, node, self, parent)
     }
 }
-// 3675: decl @lune.@base.@convGo.convFilter.processIf
+// 3676: decl @lune.@base.@convGo.convFilter.processIf
 func (self *convGo_convFilter) ProcessIf(_env *LnsEnv, node *Nodes_IfNode,_opt LnsAny) {
     for _, _stmt := range( node.FP.Get_stmtList(_env).Items ) {
         stmt := _stmt.(Nodes_IfStmtInfoDownCast).ToNodes_IfStmtInfo()
@@ -4571,7 +4571,7 @@ func (self *convGo_convFilter) ProcessIf(_env *LnsEnv, node *Nodes_IfNode,_opt L
     }
     self.FP.Writeln(_env, "}")
 }
-// 3704: decl @lune.@base.@convGo.convFilter.processSwitch
+// 3705: decl @lune.@base.@convGo.convFilter.processSwitch
 func (self *convGo_convFilter) ProcessSwitch(_env *LnsEnv, node *Nodes_SwitchNode,_opt LnsAny) {
     var nodeIndex LnsInt
     nodeIndex = node.FP.Get_idInNS(_env)
@@ -4608,7 +4608,7 @@ func (self *convGo_convFilter) ProcessSwitch(_env *LnsEnv, node *Nodes_SwitchNod
     }
     self.FP.Writeln(_env, "}")
 }
-// 3739: decl @lune.@base.@convGo.convFilter.processMatch
+// 3740: decl @lune.@base.@convGo.convFilter.processMatch
 func (self *convGo_convFilter) ProcessMatch(_env *LnsEnv, node *Nodes_MatchNode,_opt LnsAny) {
     var convGo_hasAccessing func(_env *LnsEnv) bool
     convGo_hasAccessing = func(_env *LnsEnv) bool {
@@ -4667,7 +4667,7 @@ func (self *convGo_convFilter) ProcessMatch(_env *LnsEnv, node *Nodes_MatchNode,
     }
     self.FP.Writeln(_env, "}")
 }
-// 3790: decl @lune.@base.@convGo.convFilter.processWhile
+// 3791: decl @lune.@base.@convGo.convFilter.processWhile
 func (self *convGo_convFilter) ProcessWhile(_env *LnsEnv, node *Nodes_WhileNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "for ")
     if Lns_op_not(node.FP.Get_infinit(_env)){
@@ -4677,7 +4677,7 @@ func (self *convGo_convFilter) ProcessWhile(_env *LnsEnv, node *Nodes_WhileNode,
     convGo_filter_7_(_env, &node.FP.Get_block(_env).Nodes_Node, self, &node.Nodes_Node)
     self.FP.Writeln(_env, "}")
 }
-// 3804: decl @lune.@base.@convGo.convFilter.processRepeat
+// 3805: decl @lune.@base.@convGo.convFilter.processRepeat
 func (self *convGo_convFilter) ProcessRepeat(_env *LnsEnv, node *Nodes_RepeatNode,_opt LnsAny) {
     self.FP.Writeln(_env, "for {")
     convGo_filter_7_(_env, &node.FP.Get_block(_env).Nodes_Node, self, &node.Nodes_Node)
@@ -4688,7 +4688,7 @@ func (self *convGo_convFilter) ProcessRepeat(_env *LnsEnv, node *Nodes_RepeatNod
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 3822: decl @lune.@base.@convGo.convFilter.processFor
+// 3823: decl @lune.@base.@convGo.convFilter.processFor
 func (self *convGo_convFilter) ProcessFor(_env *LnsEnv, node *Nodes_ForNode,_opt LnsAny) {
     self.FP.Writeln(_env, "{")
     self.FP.PushIndent(_env, nil)
@@ -4745,7 +4745,7 @@ func (self *convGo_convFilter) ProcessFor(_env *LnsEnv, node *Nodes_ForNode,_opt
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 3888: decl @lune.@base.@convGo.convFilter.processApply
+// 3889: decl @lune.@base.@convGo.convFilter.processApply
 func (self *convGo_convFilter) ProcessApply(_env *LnsEnv, node *Nodes_ApplyNode,_opt LnsAny) {
     self.FP.Writeln(_env, "{")
     self.FP.PushIndent(_env, nil)
@@ -4813,7 +4813,7 @@ func (self *convGo_convFilter) ProcessApply(_env *LnsEnv, node *Nodes_ApplyNode,
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 3964: decl @lune.@base.@convGo.convFilter.outputForeachLua
+// 3965: decl @lune.@base.@convGo.convFilter.outputForeachLua
 func (self *convGo_convFilter) outputForeachLua(_env *LnsEnv, node *Nodes_Node,sortFlag bool,exp *Nodes_Node,val *Ast_SymbolInfo,key LnsAny,block *Nodes_BlockNode) {
     __func__ := "@lune.@base.@convGo.convFilter.outputForeachLua"
     var nodeIndex LnsInt
@@ -4904,7 +4904,7 @@ func (self *convGo_convFilter) outputForeachLua(_env *LnsEnv, node *Nodes_Node,s
         Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
     }
 }
-// 4057: decl @lune.@base.@convGo.convFilter.processForeach
+// 4058: decl @lune.@base.@convGo.convFilter.processForeach
 func (self *convGo_convFilter) ProcessForeach(_env *LnsEnv, node *Nodes_ForeachNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processForeach"
     if node.FP.Get_exp(_env).FP.Get_expType(_env).FP.Get_srcTypeInfo(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
@@ -5054,7 +5054,7 @@ func (self *convGo_convFilter) ProcessForeach(_env *LnsEnv, node *Nodes_ForeachN
     self.FP.WriteRaw(_env, "}")
     self.FP.Writeln(_env, "")
 }
-// 4175: decl @lune.@base.@convGo.convFilter.processForsort
+// 4176: decl @lune.@base.@convGo.convFilter.processForsort
 func (self *convGo_convFilter) ProcessForsort(_env *LnsEnv, node *Nodes_ForsortNode,_opt LnsAny) {
     if node.FP.Get_exp(_env).FP.Get_expType(_env).FP.Get_srcTypeInfo(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Ext{
         self.FP.outputForeachLua(_env, &node.Nodes_Node, true, node.FP.Get_exp(_env), node.FP.Get_val(_env), node.FP.Get_key(_env), node.FP.Get_block(_env))
@@ -5125,7 +5125,7 @@ func (self *convGo_convFilter) ProcessForsort(_env *LnsEnv, node *Nodes_ForsortN
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 4260: decl @lune.@base.@convGo.convFilter.processExpUnwrap
+// 4261: decl @lune.@base.@convGo.convFilter.processExpUnwrap
 func (self *convGo_convFilter) ProcessExpUnwrap(_env *LnsEnv, node *Nodes_ExpUnwrapNode,_opt LnsAny) {
     {
         _def := node.FP.Get_default(_env)
@@ -5143,7 +5143,7 @@ func (self *convGo_convFilter) ProcessExpUnwrap(_env *LnsEnv, node *Nodes_ExpUnw
     self.FP.WriteRaw(_env, ")")
     self.FP.outputAny2Type(_env, node.FP.Get_expType(_env))
 }
-// 4276: decl @lune.@base.@convGo.convFilter.processExpToDDD
+// 4277: decl @lune.@base.@convGo.convFilter.processExpToDDD
 func (self *convGo_convFilter) ProcessExpToDDD(_env *LnsEnv, node *Nodes_ExpToDDDNode,_opt LnsAny) {
     if Lns_isCondTrue( node.FP.Get_expList(_env).FP.Get_mRetExp(_env)){
         convGo_filter_7_(_env, &node.FP.Get_expList(_env).Nodes_Node, self, &node.Nodes_Node)
@@ -5153,7 +5153,7 @@ func (self *convGo_convFilter) ProcessExpToDDD(_env *LnsEnv, node *Nodes_ExpToDD
         self.FP.Write(_env, "}")
     }
 }
-// 4288: decl @lune.@base.@convGo.convFilter.processExpNew
+// 4289: decl @lune.@base.@convGo.convFilter.processExpNew
 func (self *convGo_convFilter) ProcessExpNew(_env *LnsEnv, node *Nodes_ExpNewNode,_opt LnsAny) {
     var className string
     className = self.FP.getTypeSymbol(_env, node.FP.Get_expType(_env))
@@ -5191,7 +5191,7 @@ func (self *convGo_convFilter) ProcessExpNew(_env *LnsEnv, node *Nodes_ExpNewNod
     }
     self.FP.WriteRaw(_env, ")")
 }
-// 4316: decl @lune.@base.@convGo.convFilter.outputIFMethods
+// 4317: decl @lune.@base.@convGo.convFilter.outputIFMethods
 func (self *convGo_convFilter) outputIFMethods(_env *LnsEnv, node *Nodes_DeclClassNode) {
     self.FP.PushIndent(_env, nil)
     if node.FP.Get_expType(_env).FP.IsInheritFrom(_env, self.processInfo, Ast_builtinTypeRunner, nil){
@@ -5236,7 +5236,7 @@ func (self *convGo_convFilter) outputIFMethods(_env *LnsEnv, node *Nodes_DeclCla
     }
     self.FP.PopIndent(_env)
 }
-// 4358: decl @lune.@base.@convGo.convFilter.outputMethodIF
+// 4359: decl @lune.@base.@convGo.convFilter.outputMethodIF
 func (self *convGo_convFilter) outputMethodIF(_env *LnsEnv, node *Nodes_DeclClassNode) {
     self.FP.WriteRaw(_env, "type ")
     self.FP.WriteRaw(_env, self.FP.getTypeSymbol(_env, node.FP.Get_expType(_env)))
@@ -5244,7 +5244,7 @@ func (self *convGo_convFilter) outputMethodIF(_env *LnsEnv, node *Nodes_DeclClas
     self.FP.outputIFMethods(_env, node)
     self.FP.Writeln(_env, "}")
 }
-// 4368: decl @lune.@base.@convGo.convFilter.outputInterfaceType
+// 4369: decl @lune.@base.@convGo.convFilter.outputInterfaceType
 func (self *convGo_convFilter) outputInterfaceType(_env *LnsEnv, node *Nodes_DeclClassNode) {
     self.FP.Writeln(_env, _env.GetVM().String_format("type %s interface {", []LnsAny{self.FP.getTypeSymbol(_env, node.FP.Get_expType(_env))}))
     self.FP.PushIndent(_env, nil)
@@ -5260,7 +5260,7 @@ func (self *convGo_convFilter) outputInterfaceType(_env *LnsEnv, node *Nodes_Dec
     self.FP.Writeln(_env, "    return nil")
     self.FP.Writeln(_env, "}")
 }
-// 4391: decl @lune.@base.@convGo.convFilter.outputClassType
+// 4392: decl @lune.@base.@convGo.convFilter.outputClassType
 func (self *convGo_convFilter) outputClassType(_env *LnsEnv, node *Nodes_DeclClassNode,absImmutFlag bool) {
     self.FP.WriteRaw(_env, "type ")
     self.FP.WriteRaw(_env, self.FP.getTypeSymbol(_env, node.FP.Get_expType(_env)))
@@ -5291,7 +5291,7 @@ func (self *convGo_convFilter) outputClassType(_env *LnsEnv, node *Nodes_DeclCla
         self.FP.Writeln(_env, _env.GetVM().String_format("func (self *%s) GetLnsSyncFlag() *Lns_syncFlag { return self._syncFlag }", []LnsAny{self.FP.getTypeSymbol(_env, node.FP.Get_expType(_env))}))
     }
 }
-// 4429: decl @lune.@base.@convGo.convFilter.outputToStem
+// 4430: decl @lune.@base.@convGo.convFilter.outputToStem
 func (self *convGo_convFilter) outputToStem(_env *LnsEnv, node *Nodes_DeclClassNode,absImmutFlag bool) {
     self.FP.Writeln(_env, _env.GetVM().String_format("func %s2Stem( obj LnsAny ) LnsAny {", []LnsAny{self.FP.getTypeSymbolWithPrefix(_env, node.FP.Get_expType(_env))}))
     self.FP.PushIndent(_env, nil)
@@ -5307,7 +5307,7 @@ func (self *convGo_convFilter) outputToStem(_env *LnsEnv, node *Nodes_DeclClassN
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 4447: decl @lune.@base.@convGo.convFilter.outputDownCast
+// 4448: decl @lune.@base.@convGo.convFilter.outputDownCast
 func (self *convGo_convFilter) outputDownCast(_env *LnsEnv, node *Nodes_DeclClassNode) {
     var symbol string
     symbol = self.FP.getTypeSymbol(_env, node.FP.Get_expType(_env))
@@ -5332,7 +5332,7 @@ func (self *convGo_convFilter) outputDownCast(_env *LnsEnv, node *Nodes_DeclClas
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 4473: decl @lune.@base.@convGo.convFilter.outputCastReceiver
+// 4474: decl @lune.@base.@convGo.convFilter.outputCastReceiver
 func (self *convGo_convFilter) outputCastReceiver(_env *LnsEnv, node *Nodes_DeclClassNode) {
     var gotype string
     gotype = self.FP.type2gotype(_env, node.FP.Get_expType(_env))
@@ -5348,7 +5348,7 @@ func (self *convGo_convFilter) outputCastReceiver(_env *LnsEnv, node *Nodes_Decl
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 4488: decl @lune.@base.@convGo.convFilter.outputNewSetup
+// 4489: decl @lune.@base.@convGo.convFilter.outputNewSetup
 func (self *convGo_convFilter) outputNewSetup(_env *LnsEnv, objName string,classType *Ast_TypeInfo,absImmutFlag bool) {
     var className string
     className = self.FP.getTypeSymbol(_env, classType)
@@ -5372,7 +5372,7 @@ func (self *convGo_convFilter) outputNewSetup(_env *LnsEnv, objName string,class
         }
     }
 }
-// 4513: decl @lune.@base.@convGo.convFilter.outputConstructor
+// 4514: decl @lune.@base.@convGo.convFilter.outputConstructor
 func (self *convGo_convFilter) outputConstructor(_env *LnsEnv, node *Nodes_DeclClassNode,absImmutFlag bool) {
     var scope *Ast_Scope
     scope = Lns_unwrap( node.FP.Get_expType(_env).FP.Get_scope(_env)).(*Ast_Scope)
@@ -5461,7 +5461,7 @@ func (self *convGo_convFilter) outputConstructor(_env *LnsEnv, node *Nodes_DeclC
         self.FP.Writeln(_env, "}")
     }
 }
-// 4609: decl @lune.@base.@convGo.convFilter.outputAccessor
+// 4610: decl @lune.@base.@convGo.convFilter.outputAccessor
 func (self *convGo_convFilter) OutputAccessor(_env *LnsEnv, node *Nodes_DeclClassNode) {
     var classType *Ast_TypeInfo
     classType = node.FP.Get_expType(_env)
@@ -5481,7 +5481,7 @@ func (self *convGo_convFilter) OutputAccessor(_env *LnsEnv, node *Nodes_DeclClas
             getterName = _env.GetVM().String_format("get_%s", []LnsAny{memberName})
             var getterSym *Ast_SymbolInfo
             getterSym = Lns_unwrap( _env.NilAccFin(_env.NilAccPush(classType.FP.Get_scope(_env)) && 
-            Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, getterName)})/* 4623:33 */)).(*Ast_SymbolInfo)
+            Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, getterName)})/* 4624:33 */)).(*Ast_SymbolInfo)
             self.FP.OutputDeclFunc(_env, self.option.FP.Get_addEnvArg(_env), &convGo_FuncInfo__Type{getterSym.FP.Get_typeInfo(_env)})
             var retType *Ast_TypeInfo
             retType = getterSym.FP.Get_typeInfo(_env).FP.Get_retTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.Get_srcTypeInfo(_env)
@@ -5523,14 +5523,14 @@ func (self *convGo_convFilter) OutputAccessor(_env *LnsEnv, node *Nodes_DeclClas
             setterName = _env.GetVM().String_format("set_%s", []LnsAny{memberName})
             var setterSym *Ast_SymbolInfo
             setterSym = Lns_unwrap( _env.NilAccFin(_env.NilAccPush(classType.FP.Get_scope(_env)) && 
-            Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, setterName)})/* 4664:33 */)).(*Ast_SymbolInfo)
+            Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.GetSymbolInfoChild(_env, setterName)})/* 4665:33 */)).(*Ast_SymbolInfo)
             self.FP.OutputDeclFunc(_env, self.option.FP.Get_addEnvArg(_env), &convGo_FuncInfo__Type{setterSym.FP.Get_typeInfo(_env)})
             self.FP.WriteRaw(_env, _env.GetVM().String_format("{ self.%s = arg1 ", []LnsAny{self.FP.getSymbolSym(_env, memberSym)}))
             self.FP.Writeln(_env, "}")
         }
     }
 }
-// 4673: decl @lune.@base.@convGo.convFilter.outputStaticMember
+// 4674: decl @lune.@base.@convGo.convFilter.outputStaticMember
 func (self *convGo_convFilter) outputStaticMember(_env *LnsEnv, node *Nodes_DeclClassNode) {
     if self.processMode == convGo_ProcessMode__DeclClass{
         for _, _memberNode := range( node.FP.Get_memberList(_env).Items ) {
@@ -5557,7 +5557,7 @@ func (self *convGo_convFilter) outputStaticMember(_env *LnsEnv, node *Nodes_Decl
         }
     }
 }
-// 4705: decl @lune.@base.@convGo.convFilter.getFromStemName
+// 4706: decl @lune.@base.@convGo.convFilter.getFromStemName
 func (self *convGo_convFilter) getFromStemName(_env *LnsEnv, typeInfo *Ast_TypeInfo) string {
     __func__ := "@lune.@base.@convGo.convFilter.getFromStemName"
     var workTypeInfo *Ast_TypeInfo
@@ -5583,7 +5583,7 @@ func (self *convGo_convFilter) getFromStemName(_env *LnsEnv, typeInfo *Ast_TypeI
 // insert a dummy
     return ""
 }
-// 4732: decl @lune.@base.@convGo.convFilter.outputConvItemType
+// 4733: decl @lune.@base.@convGo.convFilter.outputConvItemType
 func (self *convGo_convFilter) outputConvItemType(_env *LnsEnv, typeInfo *Ast_TypeInfo,alt2type LnsAny) {
     var workTypeInfo *Ast_TypeInfo
     workTypeInfo = typeInfo.FP.Get_srcTypeInfo(_env).FP.Get_nonnilableType(_env)
@@ -5614,7 +5614,7 @@ func (self *convGo_convFilter) outputConvItemType(_env *LnsEnv, typeInfo *Ast_Ty
         }
     }
 }
-// 4757: decl @lune.@base.@convGo.convFilter.outputConvItemTypeList
+// 4758: decl @lune.@base.@convGo.convFilter.outputConvItemTypeList
 func (self *convGo_convFilter) outputConvItemTypeList(_env *LnsEnv, itemTypeInfoList *LnsList,alt2type LnsAny) {
     if itemTypeInfoList.Len() > 0{
         self.FP.WriteRaw(_env, "[]Lns_ToObjParam{")
@@ -5633,7 +5633,7 @@ func (self *convGo_convFilter) outputConvItemTypeList(_env *LnsEnv, itemTypeInfo
         self.FP.WriteRaw(_env, "nil")
     }
 }
-// 4777: decl @lune.@base.@convGo.convFilter.outputAlter2MapFunc
+// 4778: decl @lune.@base.@convGo.convFilter.outputAlter2MapFunc
 func (self *convGo_convFilter) outputAlter2MapFunc(_env *LnsEnv, alt2Map *LnsMap) {
     __func__ := "@lune.@base.@convGo.convFilter.outputAlter2MapFunc"
     self.FP.WriteRaw(_env, "{")
@@ -5650,10 +5650,10 @@ func (self *convGo_convFilter) outputAlter2MapFunc(_env *LnsEnv, alt2Map *LnsMap
     }
     self.FP.WriteRaw(_env, "}")
 }
-// 4796: decl @lune.@base.@convGo.convFilter.outputAsyncItem
+// 4797: decl @lune.@base.@convGo.convFilter.outputAsyncItem
 func (self *convGo_convFilter) outputAsyncItem(_env *LnsEnv, node *Nodes_DeclClassNode) {
 }
-// 4807: decl @lune.@base.@convGo.convFilter.outputMapping
+// 4808: decl @lune.@base.@convGo.convFilter.outputMapping
 func (self *convGo_convFilter) outputMapping(_env *LnsEnv, node *Nodes_DeclClassNode,absImmutFlag bool) {
     var classType *Ast_TypeInfo
     classType = node.FP.Get_expType(_env)
@@ -5755,14 +5755,14 @@ func (self *convGo_convFilter) outputMapping(_env *LnsEnv, node *Nodes_DeclClass
     self.FP.PopIndent(_env)
     self.FP.Writeln(_env, "}")
 }
-// 4935: decl @lune.@base.@convGo.convFilter.outputDummyAbstractMethod
+// 4936: decl @lune.@base.@convGo.convFilter.outputDummyAbstractMethod
 func (self *convGo_convFilter) outputDummyAbstractMethod(_env *LnsEnv, classType *Ast_TypeInfo,methodType *Ast_TypeInfo) {
     self.FP.OutputDeclFunc(_env, self.option.FP.Get_addEnvArg(_env), &convGo_FuncInfo__WithClass{classType, methodType})
     self.FP.Writeln(_env, "{")
     self.FP.outputDummyReturn(_env, methodType.FP.Get_retTypeInfoList(_env))
     self.FP.Writeln(_env, "}")
 }
-// 4947: decl @lune.@base.@convGo.convFilter.outputDummyAbstractMethodOfClass
+// 4948: decl @lune.@base.@convGo.convFilter.outputDummyAbstractMethodOfClass
 func (self *convGo_convFilter) outputDummyAbstractMethodOfClass(_env *LnsEnv, classType *Ast_TypeInfo) {
     var name2typeMap *LnsMap
     name2typeMap = NewLnsMap( map[LnsAny]LnsAny{})
@@ -5796,7 +5796,7 @@ func (self *convGo_convFilter) outputDummyAbstractMethodOfClass(_env *LnsEnv, cl
         }
     }
 }
-// 4980: decl @lune.@base.@convGo.convFilter.outputAdvertise
+// 4981: decl @lune.@base.@convGo.convFilter.outputAdvertise
 func (self *convGo_convFilter) outputAdvertise(_env *LnsEnv, node *Nodes_DeclClassNode) {
     __func__ := "@lune.@base.@convGo.convFilter.outputAdvertise"
     var methodNameSet *LnsSet
@@ -5850,10 +5850,10 @@ func (self *convGo_convFilter) outputAdvertise(_env *LnsEnv, node *Nodes_DeclCla
         }
     }
 }
-// 5029: decl @lune.@base.@convGo.convFilter.processProtoClass
+// 5030: decl @lune.@base.@convGo.convFilter.processProtoClass
 func (self *convGo_convFilter) ProcessProtoClass(_env *LnsEnv, node *Nodes_ProtoClassNode,_opt LnsAny) {
 }
-// 5034: decl @lune.@base.@convGo.convFilter.processDeclClass
+// 5035: decl @lune.@base.@convGo.convFilter.processDeclClass
 func (self *convGo_convFilter) ProcessDeclClass(_env *LnsEnv, node *Nodes_DeclClassNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processDeclClass"
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -5902,7 +5902,7 @@ func (self *convGo_convFilter) ProcessDeclClass(_env *LnsEnv, node *Nodes_DeclCl
         self.FP.outputStaticMember(_env, node)
     }
 }
-// 5132: decl @lune.@base.@convGo.convFilter.outputCallPrefix
+// 5133: decl @lune.@base.@convGo.convFilter.outputCallPrefix
 func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node *Nodes_Node,prefixNode LnsAny,funcSymbol *Ast_SymbolInfo)(bool, LnsAny) {
     var funcType *Ast_TypeInfo
     funcType = funcSymbol.FP.Get_typeInfo(_env)
@@ -6084,7 +6084,7 @@ func (self *convGo_convFilter) OutputCallPrefix(_env *LnsEnv, callId string,node
     }
     return closeParen, callKind
 }
-// 5326: decl @lune.@base.@convGo.convFilter.processExpCall
+// 5327: decl @lune.@base.@convGo.convFilter.processExpCall
 func (self *convGo_convFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processExpCall"
     opt := _opt.(*ConvGo_Opt)
@@ -6344,14 +6344,14 @@ func (self *convGo_convFilter) ProcessExpCall(_env *LnsEnv, node *Nodes_ExpCallN
         self.FP.WriteRaw(_env, ")")
     }
 }
-// 5608: decl @lune.@base.@convGo.convFilter.processExpMRet
+// 5609: decl @lune.@base.@convGo.convFilter.processExpMRet
 func (self *convGo_convFilter) ProcessExpMRet(_env *LnsEnv, node *Nodes_ExpMRetNode,_opt LnsAny) {
     convGo_filter_7_(_env, node.FP.Get_mRet(_env), self, &node.Nodes_Node)
 }
-// 5615: decl @lune.@base.@convGo.convFilter.processExpAccessMRet
+// 5616: decl @lune.@base.@convGo.convFilter.processExpAccessMRet
 func (self *convGo_convFilter) ProcessExpAccessMRet(_env *LnsEnv, node *Nodes_ExpAccessMRetNode,_opt LnsAny) {
 }
-// 5623: decl @lune.@base.@convGo.convFilter.processExpList
+// 5624: decl @lune.@base.@convGo.convFilter.processExpList
 func (self *convGo_convFilter) ProcessExpList(_env *LnsEnv, node *Nodes_ExpListNode,_opt LnsAny) {
     for _index, _exp := range( node.FP.Get_expList(_env).Items ) {
         index := _index + 1
@@ -6380,7 +6380,7 @@ func (self *convGo_convFilter) ProcessExpList(_env *LnsEnv, node *Nodes_ExpListN
         convGo_filter_7_(_env, exp, self, &node.Nodes_Node)
     }
 }
-// 5647: decl @lune.@base.@convGo.convFilter.processExpOp1
+// 5648: decl @lune.@base.@convGo.convFilter.processExpOp1
 func (self *convGo_convFilter) ProcessExpOp1(_env *LnsEnv, node *Nodes_ExpOp1Node,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processExpOp1"
     if _switch2 := node.FP.Get_op(_env).Txt; _switch2 == "~" {
@@ -6413,14 +6413,14 @@ func (self *convGo_convFilter) ProcessExpOp1(_env *LnsEnv, node *Nodes_ExpOp1Nod
         Util_err(_env, _env.GetVM().String_format("%s: not support -- %s", []LnsAny{__func__, node.FP.Get_op(_env).Txt}))
     }
 }
-// 5695: decl @lune.@base.@convGo.convFilter.processExpMultiTo1
+// 5696: decl @lune.@base.@convGo.convFilter.processExpMultiTo1
 func (self *convGo_convFilter) ProcessExpMultiTo1(_env *LnsEnv, node *Nodes_ExpMultiTo1Node,_opt LnsAny) {
     self.FP.WriteRaw(_env, "Lns_car(")
     convGo_filter_7_(_env, node.FP.Get_exp(_env), self, &node.Nodes_Node)
     self.FP.WriteRaw(_env, ")")
     self.FP.outputAny2Type(_env, node.FP.Get_expType(_env))
 }
-// 5707: decl @lune.@base.@convGo.convFilter.processExpCast
+// 5708: decl @lune.@base.@convGo.convFilter.processExpCast
 func (self *convGo_convFilter) ProcessExpCast(_env *LnsEnv, node *Nodes_ExpCastNode,_opt LnsAny) {
     if _switch1 := node.FP.Get_castKind(_env); _switch1 == Nodes_CastKind__Force {
         if convGo_isAnyType_8_(_env, node.FP.Get_exp(_env).FP.Get_expType(_env)){
@@ -6470,7 +6470,7 @@ func (self *convGo_convFilter) ProcessExpCast(_env *LnsEnv, node *Nodes_ExpCastN
         }
     }
 }
-// 5767: decl @lune.@base.@convGo.convFilter.processExpParen
+// 5768: decl @lune.@base.@convGo.convFilter.processExpParen
 func (self *convGo_convFilter) ProcessExpParen(_env *LnsEnv, node *Nodes_ExpParenNode,_opt LnsAny) {
     if node.FP.Get_exp(_env).FP.Get_expTypeList(_env).Len() >= 2{
         self.FP.WriteRaw(_env, "Lns_car(")
@@ -6483,7 +6483,7 @@ func (self *convGo_convFilter) ProcessExpParen(_env *LnsEnv, node *Nodes_ExpPare
         self.FP.WriteRaw(_env, ")")
     }
 }
-// 5784: decl @lune.@base.@convGo.convFilter.processExpSetVal
+// 5785: decl @lune.@base.@convGo.convFilter.processExpSetVal
 func (self *convGo_convFilter) ProcessExpSetVal(_env *LnsEnv, node *Nodes_ExpSetValNode,_opt LnsAny) {
     convGo_filter_7_(_env, node.FP.Get_exp1(_env), self, &node.Nodes_Node)
     if convGo_getExpListKind_22_(_env, node.FP.Get_exp1(_env).FP.Get_expTypeList(_env), node.FP.Get_exp2(_env), self.option.FP.Get_addEnvArg(_env)) == convGo_ExpListKind__Direct{
@@ -6498,7 +6498,7 @@ func (self *convGo_convFilter) ProcessExpSetVal(_env *LnsEnv, node *Nodes_ExpSet
     self.FP.WriteRaw(_env, " = ")
     self.FP.processSetFromExpList(_env, self.FP.getConvExpName(_env, &node.Nodes_Node, node.FP.Get_exp2(_env)), node.FP.Get_exp1(_env).FP.Get_expTypeList(_env), node.FP.Get_exp2(_env), false)
 }
-// 5801: decl @lune.@base.@convGo.convFilter.processExpSetItem
+// 5802: decl @lune.@base.@convGo.convFilter.processExpSetItem
 func (self *convGo_convFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_ExpSetItemNode,_opt LnsAny) {
     convGo_filter_7_(_env, node.FP.Get_val(_env), self, &node.Nodes_Node)
     self.FP.WriteRaw(_env, ".Set(")
@@ -6514,7 +6514,7 @@ func (self *convGo_convFilter) ProcessExpSetItem(_env *LnsEnv, node *Nodes_ExpSe
     convGo_filter_7_(_env, node.FP.Get_exp2(_env), self, &node.Nodes_Node)
     self.FP.WriteRaw(_env, ")")
 }
-// 5819: decl @lune.@base.@convGo.convFilter.processAndOr
+// 5820: decl @lune.@base.@convGo.convFilter.processAndOr
 func (self *convGo_convFilter) processAndOr(_env *LnsEnv, node *Nodes_ExpOp2Node,opTxt string,parent *Nodes_Node) {
     var getEnvTxt string
     getEnvTxt = self.env.FP.getEnv(_env)
@@ -6551,7 +6551,7 @@ func (self *convGo_convFilter) processAndOr(_env *LnsEnv, node *Nodes_ExpOp2Node
         self.FP.PopIndent(_env)
     }
 }
-// 5880: decl @lune.@base.@convGo.convFilter.processExpOp2
+// 5881: decl @lune.@base.@convGo.convFilter.processExpOp2
 func (self *convGo_convFilter) ProcessExpOp2(_env *LnsEnv, node *Nodes_ExpOp2Node,_opt LnsAny) {
     opt := _opt.(*ConvGo_Opt)
     var opTxt string
@@ -6591,7 +6591,7 @@ func (self *convGo_convFilter) ProcessExpOp2(_env *LnsEnv, node *Nodes_ExpOp2Nod
         }
     }
 }
-// 5925: decl @lune.@base.@convGo.convFilter.processExpRef
+// 5926: decl @lune.@base.@convGo.convFilter.processExpRef
 func (self *convGo_convFilter) ProcessExpRef(_env *LnsEnv, node *Nodes_ExpRefNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processExpRef"
     if node.FP.Get_expType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__DDD{
@@ -6632,7 +6632,7 @@ func (self *convGo_convFilter) ProcessExpRef(_env *LnsEnv, node *Nodes_ExpRefNod
         }
     }
 }
-// 5985: decl @lune.@base.@convGo.convFilter.processExpRefItem
+// 5986: decl @lune.@base.@convGo.convFilter.processExpRefItem
 func (self *convGo_convFilter) ProcessExpRefItem(_env *LnsEnv, node *Nodes_ExpRefItemNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processExpRefItem"
     var getEnvTxt string
@@ -6745,7 +6745,7 @@ func (self *convGo_convFilter) ProcessExpRefItem(_env *LnsEnv, node *Nodes_ExpRe
         }
     }
 }
-// 6096: decl @lune.@base.@convGo.convFilter.processRefField
+// 6097: decl @lune.@base.@convGo.convFilter.processRefField
 func (self *convGo_convFilter) ProcessRefField(_env *LnsEnv, node *Nodes_RefFieldNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processRefField"
     opt := _opt.(*ConvGo_Opt)
@@ -6845,11 +6845,11 @@ func (self *convGo_convFilter) ProcessRefField(_env *LnsEnv, node *Nodes_RefFiel
         }
     }
 }
-// 6184: decl @lune.@base.@convGo.convFilter.processExpOmitEnum
+// 6185: decl @lune.@base.@convGo.convFilter.processExpOmitEnum
 func (self *convGo_convFilter) ProcessExpOmitEnum(_env *LnsEnv, node *Nodes_ExpOmitEnumNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, self.FP.getSymbol(_env, &convGo_SymbolKind__Static{node.FP.Get_expType(_env).FP.Get_aliasSrc(_env)}, node.FP.Get_valInfo(_env).FP.Get_name(_env)))
 }
-// 6190: decl @lune.@base.@convGo.convFilter.processGetField
+// 6191: decl @lune.@base.@convGo.convFilter.processGetField
 func (self *convGo_convFilter) ProcessGetField(_env *LnsEnv, node *Nodes_GetFieldNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processGetField"
     opt := _opt.(*ConvGo_Opt)
@@ -6881,7 +6881,7 @@ func (self *convGo_convFilter) ProcessGetField(_env *LnsEnv, node *Nodes_GetFiel
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", []LnsAny{convGo_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env))}))
             } else { 
                 var closeParen bool
-                closeParen = convGo_convExp0_10447(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
+                closeParen = convGo_convExp0_10448(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", []LnsAny{convGo_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env))}))
                 var retType *Ast_TypeInfo
                 retType = symbolInfo.FP.Get_typeInfo(_env).FP.Get_retTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()
@@ -6906,7 +6906,7 @@ func (self *convGo_convFilter) ProcessGetField(_env *LnsEnv, node *Nodes_GetFiel
         }
     }
 }
-// 6239: decl @lune.@base.@convGo.convFilter.processReturn
+// 6240: decl @lune.@base.@convGo.convFilter.processReturn
 func (self *convGo_convFilter) ProcessReturn(_env *LnsEnv, node *Nodes_ReturnNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "return ")
     {
@@ -6918,7 +6918,7 @@ func (self *convGo_convFilter) ProcessReturn(_env *LnsEnv, node *Nodes_ReturnNod
     }
     self.FP.Writeln(_env, "")
 }
-// 6249: decl @lune.@base.@convGo.convFilter.processTestCase
+// 6250: decl @lune.@base.@convGo.convFilter.processTestCase
 func (self *convGo_convFilter) ProcessTestCase(_env *LnsEnv, node *Nodes_TestCaseNode,_opt LnsAny) {
     if Lns_op_not(self.enableTest){
         return 
@@ -6927,7 +6927,7 @@ func (self *convGo_convFilter) ProcessTestCase(_env *LnsEnv, node *Nodes_TestCas
     convGo_filter_7_(_env, &node.FP.Get_block(_env).Nodes_Node, self, &node.Nodes_Node)
     self.FP.Writeln(_env, "}")
 }
-// 6264: decl @lune.@base.@convGo.convFilter.processTestBlock
+// 6265: decl @lune.@base.@convGo.convFilter.processTestBlock
 func (self *convGo_convFilter) ProcessTestBlock(_env *LnsEnv, node *Nodes_TestBlockNode,_opt LnsAny) {
     var stmtList *LnsList
     stmtList = node.FP.Get_stmtList(_env)
@@ -6938,25 +6938,25 @@ func (self *convGo_convFilter) ProcessTestBlock(_env *LnsEnv, node *Nodes_TestBl
         }
     }
 }
-// 6276: decl @lune.@base.@convGo.convFilter.processProvide
+// 6277: decl @lune.@base.@convGo.convFilter.processProvide
 func (self *convGo_convFilter) ProcessProvide(_env *LnsEnv, node *Nodes_ProvideNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processProvide"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 6282: decl @lune.@base.@convGo.convFilter.processAlias
+// 6283: decl @lune.@base.@convGo.convFilter.processAlias
 func (self *convGo_convFilter) ProcessAlias(_env *LnsEnv, node *Nodes_AliasNode,_opt LnsAny) {
 }
-// 6287: decl @lune.@base.@convGo.convFilter.processBoxing
+// 6288: decl @lune.@base.@convGo.convFilter.processBoxing
 func (self *convGo_convFilter) ProcessBoxing(_env *LnsEnv, node *Nodes_BoxingNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processBoxing"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 6293: decl @lune.@base.@convGo.convFilter.processUnboxing
+// 6294: decl @lune.@base.@convGo.convFilter.processUnboxing
 func (self *convGo_convFilter) ProcessUnboxing(_env *LnsEnv, node *Nodes_UnboxingNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processUnboxing"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 6299: decl @lune.@base.@convGo.convFilter.processTupleConst
+// 6300: decl @lune.@base.@convGo.convFilter.processTupleConst
 func (self *convGo_convFilter) ProcessTupleConst(_env *LnsEnv, node *Nodes_TupleConstNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "&")
     self.FP.WriteRaw(_env, _env.GetVM().String_sub(self.FP.tuple2gotype(_env, node.FP.Get_expType(_env)),2, nil))
@@ -6964,7 +6964,7 @@ func (self *convGo_convFilter) ProcessTupleConst(_env *LnsEnv, node *Nodes_Tuple
     convGo_filter_7_(_env, &node.FP.Get_expList(_env).Nodes_Node, self, &node.Nodes_Node)
     self.FP.WriteRaw(_env, "}")
 }
-// 6311: decl @lune.@base.@convGo.convFilter.processLiteralList
+// 6312: decl @lune.@base.@convGo.convFilter.processLiteralList
 func (self *convGo_convFilter) ProcessLiteralList(_env *LnsEnv, node *Nodes_LiteralListNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "NewLnsList(")
     {
@@ -6978,7 +6978,7 @@ func (self *convGo_convFilter) ProcessLiteralList(_env *LnsEnv, node *Nodes_Lite
     }
     self.FP.WriteRaw(_env, ")")
 }
-// 6324: decl @lune.@base.@convGo.convFilter.processLiteralSet
+// 6325: decl @lune.@base.@convGo.convFilter.processLiteralSet
 func (self *convGo_convFilter) ProcessLiteralSet(_env *LnsEnv, node *Nodes_LiteralSetNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "NewLnsSet(")
     {
@@ -6992,7 +6992,7 @@ func (self *convGo_convFilter) ProcessLiteralSet(_env *LnsEnv, node *Nodes_Liter
     }
     self.FP.WriteRaw(_env, ")")
 }
-// 6338: decl @lune.@base.@convGo.convFilter.processLiteralMap
+// 6339: decl @lune.@base.@convGo.convFilter.processLiteralMap
 func (self *convGo_convFilter) ProcessLiteralMap(_env *LnsEnv, node *Nodes_LiteralMapNode,_opt LnsAny) {
     var hasNilable bool
     hasNilable = false
@@ -7019,7 +7019,7 @@ func (self *convGo_convFilter) ProcessLiteralMap(_env *LnsEnv, node *Nodes_Liter
         self.FP.WriteRaw(_env, ".Correct()")
     }
 }
-// 6366: decl @lune.@base.@convGo.convFilter.processLiteralArray
+// 6367: decl @lune.@base.@convGo.convFilter.processLiteralArray
 func (self *convGo_convFilter) ProcessLiteralArray(_env *LnsEnv, node *Nodes_LiteralArrayNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "NewLnsList(")
     {
@@ -7033,19 +7033,19 @@ func (self *convGo_convFilter) ProcessLiteralArray(_env *LnsEnv, node *Nodes_Lit
     }
     self.FP.WriteRaw(_env, ")")
 }
-// 6380: decl @lune.@base.@convGo.convFilter.processLiteralChar
+// 6381: decl @lune.@base.@convGo.convFilter.processLiteralChar
 func (self *convGo_convFilter) ProcessLiteralChar(_env *LnsEnv, node *Nodes_LiteralCharNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, _env.GetVM().String_format("%d", []LnsAny{node.FP.Get_num(_env)}))
 }
-// 6386: decl @lune.@base.@convGo.convFilter.processLiteralInt
+// 6387: decl @lune.@base.@convGo.convFilter.processLiteralInt
 func (self *convGo_convFilter) ProcessLiteralInt(_env *LnsEnv, node *Nodes_LiteralIntNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, node.FP.Get_token(_env).Txt)
 }
-// 6392: decl @lune.@base.@convGo.convFilter.processLiteralReal
+// 6393: decl @lune.@base.@convGo.convFilter.processLiteralReal
 func (self *convGo_convFilter) ProcessLiteralReal(_env *LnsEnv, node *Nodes_LiteralRealNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, node.FP.Get_token(_env).Txt)
 }
-// 6398: decl @lune.@base.@convGo.convFilter.processLiteralString
+// 6399: decl @lune.@base.@convGo.convFilter.processLiteralString
 func (self *convGo_convFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_LiteralStringNode,_opt LnsAny) {
     var txt string
     txt = node.FP.Get_token(_env).Txt
@@ -7061,25 +7061,25 @@ func (self *convGo_convFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_Li
         }
     }
 }
-// 6414: decl @lune.@base.@convGo.convFilter.processLiteralBool
+// 6415: decl @lune.@base.@convGo.convFilter.processLiteralBool
 func (self *convGo_convFilter) ProcessLiteralBool(_env *LnsEnv, node *Nodes_LiteralBoolNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, node.FP.Get_token(_env).Txt)
 }
-// 6420: decl @lune.@base.@convGo.convFilter.processLiteralNil
+// 6421: decl @lune.@base.@convGo.convFilter.processLiteralNil
 func (self *convGo_convFilter) ProcessLiteralNil(_env *LnsEnv, node *Nodes_LiteralNilNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "nil")
 }
-// 6426: decl @lune.@base.@convGo.convFilter.processBreak
+// 6427: decl @lune.@base.@convGo.convFilter.processBreak
 func (self *convGo_convFilter) ProcessBreak(_env *LnsEnv, node *Nodes_BreakNode,_opt LnsAny) {
     self.FP.WriteRaw(_env, "break")
     self.FP.Writeln(_env, "")
 }
-// 6433: decl @lune.@base.@convGo.convFilter.processLiteralSymbol
+// 6434: decl @lune.@base.@convGo.convFilter.processLiteralSymbol
 func (self *convGo_convFilter) ProcessLiteralSymbol(_env *LnsEnv, node *Nodes_LiteralSymbolNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processLiteralSymbol"
     Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{__func__}))
 }
-// 6439: decl @lune.@base.@convGo.convFilter.processLuneControl
+// 6440: decl @lune.@base.@convGo.convFilter.processLuneControl
 func (self *convGo_convFilter) ProcessLuneControl(_env *LnsEnv, node *Nodes_LuneControlNode,_opt LnsAny) {
     switch node.FP.Get_pragma(_env).(type) {
     case *LuneControl_Pragma__default__init:
@@ -7099,12 +7099,12 @@ func (self *convGo_convFilter) ProcessLuneControl(_env *LnsEnv, node *Nodes_Lune
     case *LuneControl_Pragma__single_phase_ast:
     }
 }
-// 6475: decl @lune.@base.@convGo.convFilter.processAbbr
+// 6476: decl @lune.@base.@convGo.convFilter.processAbbr
 func (self *convGo_convFilter) ProcessAbbr(_env *LnsEnv, node *Nodes_AbbrNode,_opt LnsAny) {
     __func__ := "@lune.@base.@convGo.convFilter.processAbbr"
     Util_err(_env, _env.GetVM().String_format("not support -- %s:%d", []LnsAny{__func__, node.FP.Get_pos(_env).LineNo}))
 }
-// 2074: decl @lune.@base.@convGo.ConvRunner.run
+// 2075: decl @lune.@base.@convGo.ConvRunner.run
 func (self *convGo_ConvRunner) Run(_env *LnsEnv) {
     self.FP.Setup(_env)
     self.FP.pushProcessMode(_env, convGo_ProcessMode__DeclClass)
@@ -7115,7 +7115,7 @@ func (self *convGo_ConvRunner) Run(_env *LnsEnv) {
     }
     self.FP.popProcessMode(_env)
 }
-// 2086: decl @lune.@base.@convGo.ConvRunner.getResult
+// 2087: decl @lune.@base.@convGo.ConvRunner.getResult
 func (self *convGo_ConvRunner) GetResult(_env *LnsEnv) string {
     LnsJoin(_env, self.FP)
     var memStream *Util_memStream

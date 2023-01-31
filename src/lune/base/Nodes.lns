@@ -421,7 +421,7 @@ pub fn getNodeKindName( kind: int ): str {
 
 pro fn Filter.defaultProcess( node: &Node, opt:T ) mut {
    if self.errorOnDefault {
-      Util.err( "not implement yet -- %s" ( getNodeKindName( node.$kind ) ) );
+      Util.err( "not implement yet -- %s" ( getNodeKindName( node.$kind ) ) ); // バグ
    }
 }
 
@@ -2154,7 +2154,7 @@ pub fn NewAlgeValNode.get_algeTypeInfo() : &Ast.AlgeTypeInfo {
          if! let algeTypeInfo = genericTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
             return algeTypeInfo;
          }
-         Util.err( "illegal genericTypeInfo -- %s" (genericTypeInfo.getTxt(##)) );
+         Util.err( "illegal genericTypeInfo -- %s" (genericTypeInfo.getTxt(##)) ); // バグ
       }
    }
 }
@@ -2196,7 +2196,7 @@ pub fn MatchNode.get_algeTypeInfo() : &Ast.AlgeTypeInfo {
          if! let algeTypeInfo = genericTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
             return algeTypeInfo;
          }
-         Util.err( "illegal genericTypeInfo -- %s" (genericTypeInfo.getTxt(##)) );
+         Util.err( "illegal genericTypeInfo -- %s" (genericTypeInfo.getTxt(##)) ); // バグ
       }
    }
 }

@@ -47,7 +47,7 @@ pub class TransUnit {
    }
 
    pub fn error( mess: str ) __async mut : __ {
-      Util.err( mess );
+      Util.err( mess ); // バグ
    }
 
    pub fn pushScope( scopeKind:Ast.ScopeKind, baseInfo: &Ast.TypeInfo!,
@@ -85,7 +85,7 @@ pub class TransUnit {
          if! let mut scope = self.namespace2Scope[ typeInfo ] {
             self.scope = scope;
          } else {
-            self.error( "not found scope -- %s" (name) );
+            self.error( "not found scope -- %s" (name) ); // バグ
          }
       }
       else {
@@ -100,7 +100,7 @@ pub class TransUnit {
 
          let _, existSym = parentScope.addClass( processInfo, modName, nil, typeInfo );
          when! existSym {
-            self.error(
+            self.error( // バグ
                "module symbols exist -- %s.%s -- %s.%s"
                ( existSym.$namespaceTypeInfo.getTxt(##),
                  existSym.$name, parentInfo.getTxt(##), modName ) );
@@ -129,7 +129,7 @@ pub class TransUnit {
             classParentName = "nil";
             classParentTypeId = Ast.dummyIdInfo;
          }
-         self.error(
+         self.error( // バグ
             "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)"
             ( classTypeInfo.getTxt( ## ),
               self.scope.$ownerTypeInfo$.getTxt$(##),
@@ -159,24 +159,24 @@ pub class TransUnit {
          typeInfo = _exp;
 
          if typeInfo.$abstractFlag ~= abstractFlag {
-            self.error(
+            self.error( // バグ
                "mismatch class(%s) abstract for prototpye"
                (typeInfo.getTxt(##)));
          }
          if typeInfo.$finalFlag ~= finalFlag {
-            self.error(
+            self.error( // バグ
                "mismatch class(%s) final for prototpye. %s, %s"
                (typeInfo.getTxt(##), typeInfo.$finalFlag, finalFlag ));
          }
          if typeInfo.$accessMode ~= accessMode {
-            self.error(
+            self.error( // バグ
                "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
                ( typeInfo.getTxt(##),
                  accessMode.$_txt, typeInfo.$accessMode.$_txt));
          }
          when! baseInfo {
             if typeInfo.$baseTypeInfo ~= baseInfo {
-               self.error(
+               self.error( // バグ
                   "mismatch class(%s) base class(%s) for prototpye base class(%s)"
                   ( typeInfo.getTxt(##),
                     baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
@@ -184,7 +184,7 @@ pub class TransUnit {
          }
          else {
             if typeInfo.hasBase() {
-               self.error(
+               self.error( // バグ
                   "mismatch class(%s) base class(None) for prototpye base class(%s)"
                   ( typeInfo.getTxt(##),
                     typeInfo.$baseTypeInfo.getTxt(##)));
@@ -197,7 +197,7 @@ pub class TransUnit {
             if #protoList == #typeList {
                foreach protoType, index in protoList {
                   if protoType ~= typeList[ index ] {
-                     self.error(
+                     self.error( // バグ
                         "mismatch class(%s) %s(%s) for prototpye %s(%s)"
                         ( typeInfo.getTxt(##), message,
                           typeList[ index ].getTxt(##),
@@ -206,7 +206,7 @@ pub class TransUnit {
                }
             }
             else {
-               self.error(
+               self.error( // バグ
                   "mismatch class(%s) %s(%d) for prototpye %s(%d)"
                   ( typeInfo.getTxt(##), message, #typeList,
                     message, #protoList) );
@@ -227,18 +227,18 @@ pub class TransUnit {
             if! let mut scope = Ast.TypeInfo.getBuiltinInfo( typeInfo ).$scope {
                self.scope = scope;
             } else {
-               self.error("not find scope -- %s" (name) );
+               self.error("not find scope -- %s" (name) ); // バグ
             }
          }
          switch ( typeInfo.$kind ) {
             case .Class {
                if mode == .Interface {
-                  self.error( "define interface already -- %s" (name) );
+                  self.error( "define interface already -- %s" (name) ); // バグ 
                }
             }
             case .IF {
                if mode ~= .Interface {
-                  self.error( "define class already -- %s" (name) );
+                  self.error( "define class already -- %s" (name) ); // バグ 
                }
             }
          }

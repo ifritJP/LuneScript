@@ -24,6 +24,8 @@ SOFTWARE.
 
 _lune_control default_async_all;
 
+import lune.base.Util;
+
 pub macro _matchAlt( alt:__exp, val:sym, err:sym, validBlock:__block, errBlock:__block ) {
    {}
    if! let ,,err = ,,alt.$err {
@@ -276,7 +278,7 @@ pub class Token extend (Mapping) {
          }
       }
       // 文字列トークンが ' or " or ``` 以外で括られているのはバグなので error
-      error( "illegal delimit -- %s" (self.txt) );
+      Util.err( "illegal delimit -- %s" (self.txt) ); // バグ
    }
 
    // pub fn set_commentList( commentList: &List<&Token> ) {

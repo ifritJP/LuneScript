@@ -597,3 +597,9 @@ func (self *LnsEnv) PopVal(dummy bool) LnsAny {
 	self.valStack = self.valStack[:len(self.valStack)-1]
 	return val
 }
+
+var validRuntimeDebugLog = false
+
+func LnsEnableDebugLog(_env *LnsEnv, valid bool) {
+	validRuntimeDebugLog = valid
+}

@@ -376,6 +376,7 @@ function StreamParser:__init(parserSrc, async, stdinFile, pos)
          self.asyncParser = _exp
       else
          Util.err( errMess )
+         
       end
    end
    
@@ -538,10 +539,6 @@ function DefaultPushbackParser:newPushback( tokenList )
       self:pushbackToken( tokenList[index] )
    end
    
-end
-function DefaultPushbackParser:error( message )
-
-   Util.err( message )
 end
 function DefaultPushbackParser:getLastPos(  )
 

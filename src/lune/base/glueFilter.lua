@@ -561,7 +561,7 @@ function glueFilter:processRoot( node, dummy )
          end
       end
       
-      error( string.format( "open error -- %s ", filePath) )
+      Util.err( string.format( "open error -- %s ", filePath) )
    end
    
    for __index, declClassNode in ipairs( node:get_nodeManager():getDeclClassNodeList(  ) ) do

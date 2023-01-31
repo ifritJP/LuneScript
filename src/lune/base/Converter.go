@@ -18,11 +18,11 @@ func (self *Converter_CreateAstResult__Creater) GetTxt() string {
 return "CreateAstResult.Creater"
 }
 type Converter_ConverterFunc func (_env *LnsEnv)
-// for 331
+// for 330
 func Converter_convExp0_2288(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 340
+// for 339
 func Converter_convExp0_2359(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
@@ -30,32 +30,32 @@ func Converter_convExp0_2359(arg1 []LnsAny) LnsAny {
 func Converter_convExp0_1419(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// for 221
+// for 220
 func Converter_convExp0_1748(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 280
+// for 279
 func Converter_convExp0_1999(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 281
+// for 280
 func Converter_convExp0_2012(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 336
+// for 335
 func Converter_convExp0_2312(arg1 []LnsAny) (bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 459
-func Converter_convExp0_2558(arg1 []LnsAny) LnsAny {
+// for 458
+func Converter_convExp0_2559(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 536
-func Converter_convExp0_2687(arg1 []LnsAny) LnsAny {
+// for 535
+func Converter_convExp0_2689(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 605
-func Converter_convExp0_2759(arg1 []LnsAny) LnsAny {
+// for 604
+func Converter_convExp0_2762(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 44: decl @lune.@base.@Converter.createModuleInfo
@@ -84,14 +84,14 @@ func Converter_byteCompileFromLuaTxt(_env *LnsEnv, txt string,stripDebugInfo boo
             chunk_248 := chunk.(*Lns_luaValue)
             ret = _env.GetVM().String_dump(chunk_248, stripDebugInfo)
         } else {
-            panic(Lns_unwrapDefault( err, "load error").(string))
+            Util_err(_env, Lns_unwrapDefault( err, "load error").(string))
         }
     return ret
 }
 
 
 
-// 206: decl @lune.@base.@Converter.getAstFromResult
+// 205: decl @lune.@base.@Converter.getAstFromResult
 func Converter_getAstFromResult_6_(_env *LnsEnv, result LnsAny) *AstInfo_ASTInfo {
     switch _matchExp0 := result.(type) {
     case *Converter_CreateAstResult__Ast:
@@ -105,7 +105,7 @@ func Converter_getAstFromResult_6_(_env *LnsEnv, result LnsAny) *AstInfo_ASTInfo
     return nil
 }
 
-// 217: decl @lune.@base.@Converter.closeStreams
+// 216: decl @lune.@base.@Converter.closeStreams
 func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,dependStream LnsAny,metaPath string,saveMetaFlag bool) {
     var Converter_checkDiff func(_env *LnsEnv, oldStream *Util_TxtStream,newStream *Util_TxtStream)(bool, string)
     Converter_checkDiff = func(_env *LnsEnv, oldStream *Util_TxtStream,newStream *Util_TxtStream)(bool, string) {
@@ -165,7 +165,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
                     }
                 }
                 if Lns_op_not(cont){
-                    Log_log(_env, Log_Level__Debug, __func__, 288, Log_CreateMessage(func(_env *LnsEnv) string {
+                    Log_log(_env, Log_Level__Debug, __func__, 287, Log_CreateMessage(func(_env *LnsEnv) string {
                         return _env.GetVM().String_format("<%s>, <%s>", []LnsAny{oldLine, newLine})
                     }))
                     
@@ -246,7 +246,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
     }
 }
 
-// 220: decl @lune.@base.@Converter.closeStreams.txt2ModuleId
+// 219: decl @lune.@base.@Converter.closeStreams.txt2ModuleId
 func Converter_closeStreams__txt2ModuleId_0_(_env *LnsEnv, txt string) *FrontInterface_ModuleId {
     var buildIdTxt string
     buildIdTxt = Converter_convExp0_1748(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(txt,"^_moduleObj.__buildId = ", "")).(string),"\"", "")))
@@ -261,7 +261,7 @@ func Converter_closeStreams__txt2ModuleId_0_(_env *LnsEnv, txt string) *FrontInt
 
 
 
-// 104: decl @lune.@base.@Converter.AstCreater.createAst
+// 103: decl @lune.@base.@Converter.AstCreater.createAst
 func (self *Converter_AstCreater) createAst(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,parserSrc LnsAny,baseDir LnsAny,stdinFile LnsAny,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny) *AstInfo_ASTInfo {
     var transUnit *TransUnit_TransUnitCtrl
     transUnit = NewTransUnit_TransUnitCtrl(_env, self.moduleId, importModuleInfo, &NewConvLua_MacroEvalImp(_env, self.builtinFunc).Nodes_MacroEval, true, analyzeModule, analyzeMode, pos, self.option.TargetLuaVer, self.option.TransCtrlInfo, self.builtinFunc)
@@ -276,11 +276,11 @@ func (self *Converter_AstCreater) createAst(_env *LnsEnv, importModuleInfo *Fron
         }
     }))
 }
-// 170: decl @lune.@base.@Converter.AstCreater.runMain
+// 169: decl @lune.@base.@Converter.AstCreater.runMain
 func (self *Converter_AstCreater) RunMain(_env *LnsEnv) {
     self.converter(_env)
 }
-// 175: decl @lune.@base.@Converter.AstCreater.getAst
+// 174: decl @lune.@base.@Converter.AstCreater.getAst
 func (self *Converter_AstCreater) GetAst(_env *LnsEnv)(*AstInfo_ASTInfo, *FrontInterface_ModuleInfo, *FrontInterface_ModuleMeta) {
     LnsJoin(_env, self.FP)
     var exportInfo *FrontInterface_ExportInfo
@@ -297,7 +297,7 @@ func (self *Converter_AstCreater) GetAst(_env *LnsEnv)(*AstInfo_ASTInfo, *FrontI
     moduleMeta = NewFrontInterface_ModuleMeta(_env, exportInfo.FP.Get_streamName(_env), &FrontInterface_MetaOrModule__Export{exportInfo})
     return Lns_unwrap( self.ast).(*AstInfo_ASTInfo), Lns_unwrap( self.moduleInfo).(*FrontInterface_ModuleInfo), moduleMeta
 }
-// 187: decl @lune.@base.@Converter.AstCreater.getExportInfo
+// 186: decl @lune.@base.@Converter.AstCreater.getExportInfo
 func (self *Converter_AstCreater) GetExportInfo(_env *LnsEnv) LnsAny {
     __func__ := "@lune.@base.@Converter.AstCreater.getExportInfo"
     {
@@ -308,24 +308,24 @@ func (self *Converter_AstCreater) GetExportInfo(_env *LnsEnv) LnsAny {
         }
     }
     if Lns_op_not(self.exportInfo){
-        Log_log(_env, Log_Level__Err, __func__, 192, Log_CreateMessage(func(_env *LnsEnv) string {
+        Log_log(_env, Log_Level__Err, __func__, 191, Log_CreateMessage(func(_env *LnsEnv) string {
             return _env.GetVM().String_format("exportInfo is nil -- %s", []LnsAny{self.mod})
         }))
         
     }
     return self.exportInfo
 }
-// 428: decl @lune.@base.@Converter.LuaConverter.runMain
+// 427: decl @lune.@base.@Converter.LuaConverter.runMain
 func (self *Converter_LuaConverter) RunMain(_env *LnsEnv) {
     self.converterFunc(_env)
 }
-// 432: decl @lune.@base.@Converter.LuaConverter.saveLua
+// 431: decl @lune.@base.@Converter.LuaConverter.saveLua
 func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     LnsJoin(_env, self.FP)
     var ast *AstInfo_ASTInfo
     ast = Converter_getAstFromResult_6_(_env, self.astResult)
     _env.NilAccFin(_env.NilAccPush(self.filterInfo) && 
-    Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*ConvLua_FilterInfo).FP.OutputMeta(_env, Lns_unwrap( Nodes_RootNodeDownCastF(ast.FP.Get_node(_env).FP)).(*Nodes_RootNode))})/* 436:7 */)
+    Lns_NilAccCall0( _env, func () {_env.NilAccPop().(*ConvLua_FilterInfo).FP.OutputMeta(_env, Lns_unwrap( Nodes_RootNodeDownCastF(ast.FP.Get_node(_env).FP)).(*Nodes_RootNode))})/* 435:7 */)
     if self.byteCompile{
         self.streamMem.FP.Write(_env, Converter_byteCompileFromLuaTxt(_env, self.byteStream.FP.Get_txt(_env), self.stripDebugInfo))
         self.metaStreamMem.FP.Write(_env, Converter_byteCompileFromLuaTxt(_env, self.byteMetaStream.FP.Get_txt(_env), true))
@@ -345,9 +345,9 @@ func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     var streamDst Lns_luaStream
     
     {
-        _streamDst := Converter_convExp0_2558(Lns_2DDD(Lns_io_open(self.luaPath, "w")))
+        _streamDst := Converter_convExp0_2559(Lns_2DDD(Lns_io_open(self.luaPath, "w")))
         if _streamDst == nil{
-            panic(_env.GetVM().String_format("write open error -- %s", []LnsAny{self.luaPath}))
+            Util_err(_env, _env.GetVM().String_format("write open error -- %s", []LnsAny{self.luaPath}))
         } else {
             streamDst = _streamDst.(Lns_luaStream)
         }
@@ -364,11 +364,11 @@ func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     }
     Converter_closeStreams(_env, streamDst, metaMemStream, dependsStreamDst, self.metaPath, self.option.Mode == Option_ModeKind__SaveMeta)
 }
-// 524: decl @lune.@base.@Converter.GoConverter.runMain
+// 523: decl @lune.@base.@Converter.GoConverter.runMain
 func (self *Converter_GoConverter) RunMain(_env *LnsEnv) {
     self.converter(_env)
 }
-// 528: decl @lune.@base.@Converter.GoConverter.saveGo
+// 527: decl @lune.@base.@Converter.GoConverter.saveGo
 func (self *Converter_GoConverter) SaveGo(_env *LnsEnv) {
     LnsJoin(_env, self.FP)
     if Lns_op_not(self.validFlag){
@@ -377,9 +377,9 @@ func (self *Converter_GoConverter) SaveGo(_env *LnsEnv) {
     var file Lns_luaStream
     
     {
-        _file := Converter_convExp0_2687(Lns_2DDD(Lns_io_open(self.path, "w")))
+        _file := Converter_convExp0_2689(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
-            panic(_env.GetVM().String_format("can't open file -- %s", []LnsAny{self.path}))
+            Util_err(_env, _env.GetVM().String_format("can't open file -- %s", []LnsAny{self.path}))
         } else {
             file = _file.(Lns_luaStream)
         }
@@ -387,11 +387,11 @@ func (self *Converter_GoConverter) SaveGo(_env *LnsEnv) {
     file.Write(_env, self.memStream.FP.Get_txt(_env))
     file.Close(_env)
 }
-// 593: decl @lune.@base.@Converter.PythonConverter.runMain
+// 592: decl @lune.@base.@Converter.PythonConverter.runMain
 func (self *Converter_PythonConverter) RunMain(_env *LnsEnv) {
     self.converter(_env)
 }
-// 597: decl @lune.@base.@Converter.PythonConverter.savePython
+// 596: decl @lune.@base.@Converter.PythonConverter.savePython
 func (self *Converter_PythonConverter) SavePython(_env *LnsEnv) {
     LnsJoin(_env, self.FP)
     if Lns_op_not(self.validFlag){
@@ -400,9 +400,9 @@ func (self *Converter_PythonConverter) SavePython(_env *LnsEnv) {
     var file Lns_luaStream
     
     {
-        _file := Converter_convExp0_2759(Lns_2DDD(Lns_io_open(self.path, "w")))
+        _file := Converter_convExp0_2762(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
-            panic(_env.GetVM().String_format("can't open file -- %s", []LnsAny{self.path}))
+            Util_err(_env, _env.GetVM().String_format("can't open file -- %s", []LnsAny{self.path}))
         } else {
             file = _file.(Lns_luaStream)
         }
@@ -460,7 +460,7 @@ func NewConverter_AstCreater(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo
     obj.InitConverter_AstCreater(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
     return obj
 }
-// 127: DeclConstr
+// 126: DeclConstr
 func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,parserSrc LnsAny,mod string,baseDir LnsAny,moduleId *FrontInterface_ModuleId,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny,builtinFunc *Builtin_BuiltinFuncType,option *Option_Option) {
     self.InitRunner_Runner(_env)
     self.option = option
@@ -477,7 +477,7 @@ func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, importM
         ast = self.FP.createAst(_env, importModuleInfo, parserSrc, baseDir, option.FP.Get_stdinFile(_env), analyzeModule, analyzeMode, pos)
         self.ast = ast
         self.moduleInfo = Converter_createModuleInfo_0_(_env, ast, self.mod, self.moduleId)
-        Log_log(_env, Log_Level__Log, __func__, 150, Log_CreateMessage(func(_env *LnsEnv) string {
+        Log_log(_env, Log_Level__Log, __func__, 149, Log_CreateMessage(func(_env *LnsEnv) string {
             return _env.GetVM().String_format("generated AST -- %s", []LnsAny{mod})
         }))
         
@@ -551,7 +551,7 @@ func NewConverter_LuaConverter(_env *LnsEnv, arg1 string, arg2 string, arg3 LnsA
     obj.InitConverter_LuaConverter(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     return obj
 }
-// 377: DeclConstr
+// 376: DeclConstr
 func (self *Converter_LuaConverter) InitConverter_LuaConverter(_env *LnsEnv, luaPath string,metaPath string,dependsPath LnsAny,astResult LnsAny,convMode LnsInt,path string,byteCompile bool,stripDebugInfo bool,option *Option_Option) {
     self.InitRunner_Runner(_env)
     self.luaPath = luaPath
@@ -638,7 +638,7 @@ func NewConverter_GoConverter(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 strin
     obj.InitConverter_GoConverter(_env, arg1, arg2, arg3, arg4, arg5)
     return obj
 }
-// 484: DeclConstr
+// 483: DeclConstr
 func (self *Converter_GoConverter) InitConverter_GoConverter(_env *LnsEnv, scriptPath string,astResult LnsAny,mod string,option *Option_Option,goOpt *ConvGo_Option) {
     self.InitRunner_Runner(_env)
     self.validFlag = true
@@ -728,7 +728,7 @@ func NewConverter_PythonConverter(_env *LnsEnv, arg1 string, arg2 LnsAny, arg3 s
     obj.InitConverter_PythonConverter(_env, arg1, arg2, arg3, arg4, arg5)
     return obj
 }
-// 553: DeclConstr
+// 552: DeclConstr
 func (self *Converter_PythonConverter) InitConverter_PythonConverter(_env *LnsEnv, scriptPath string,astResult LnsAny,mod string,option *Option_Option,pythonOpt *ConvPython_Option) {
     self.InitRunner_Runner(_env)
     self.validFlag = true

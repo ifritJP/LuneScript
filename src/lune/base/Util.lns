@@ -80,6 +80,14 @@ pub fn setErrorCode( code:int ) {
    errorCode = code;
 }
 
+pub fn debugLog( message: str ) {
+   __asyncLock {
+      if debugFlag {
+         errStream.write( message .. "\n" );
+      }
+   }
+}
+
 pub fn errorLog( message: str ) {
    __asyncLock { 
       errStream.write( message .. "\n" );
@@ -144,7 +152,7 @@ pub class OrderedSet<T> {
 
    pub fn removeLast() mut {
       if #self.list == 0 {
-         err( "empty" );
+         err( "empty" ); // バグ
       }
       self.set.del( self.list[ #self.list ] );
       self.list.remove(##);
@@ -237,7 +245,7 @@ fromLineNo: 1,  toLineNo: 2 を指定した場合、 1 行目だけを取得す�
 
    pub fn read( mode:stem! ) mut : str! {
       if mode ~= '*l' {
-         err( "not support -- %s" (mode) );
+         err( "not support -- %s" (mode) ); // バグ
       }
       if self.lineNo > #self.lineList {
          return nil;
@@ -355,14 +363,14 @@ pub class SimpleSourceOStream extend (SourceStream) {
       let indent = unwrap newIndent default self.$indent + self.stepIndent;
       self.indentQueue.insert( indent );
       if indent > #SimpleSourceOStream.indentSpaceList {
-         err( "overflow indent -- %d" (indent) );
+         err( "overflow indent -- %d" (indent) ); // 通常ありえないので非処置
       }
       self.indentSpace = SimpleSourceOStream.indentSpaceList[ indent + 1 ];
    }
 
    pub fn popIndent() mut {
       if #self.indentQueue == 0 {
-         err( "self.indentQueue == 0" );
+         err( "self.indentQueue == 0" ); // バグ
       }
       self.indentQueue.remove(##);
       self.indentSpace = SimpleSourceOStream.indentSpaceList[ self.$indent + 1 ];
@@ -409,7 +417,7 @@ pub fn getReadyCode( depPath:str, tgtPath:str ): bool {
 
 pub fn scriptPath2Module( path:str ):str {
    if path.find( "^/" ## ) {
-      err( "script must be relative-path -- " .. path );
+      err( "script must be relative-path -- " .. path ); // 要対応
    }
    let mod = path.gsub( "^./", "" ).gsub( "/", "." );
    return ( string.gsub( mod, "%.lns$", "" ) );

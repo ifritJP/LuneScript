@@ -675,7 +675,7 @@ usage:
                option.mode = mode;
             }
             else {
-               Util.err( "unknown mode -- %s" ( arg ) );
+               Util.err( "unknown mode -- %s" ( arg ) ); // 要対応
             }
          }
          else {
@@ -742,7 +742,7 @@ usage:
 
    if useStdInFlag {
       let! code = io.stdin.read("*a") {
-         Util.err( "read error from stdin." );
+         Util.err( "read error from stdin." ); // 要対応
       };
       if option.analyzeModule {
          option.stdinFile = new Types.StdinFile( unwrap option.analyzeModule, code );

@@ -451,6 +451,7 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    
    if stream == metaStream then
       Util.err( "streamName == stream" )
+      
    end
    
    
@@ -3632,7 +3633,7 @@ function ConvFilter:processExpCall( node, opt )
       
       do
          local _switchExp = node:get_func():get_expType()
-         if _switchExp == self.builtinFunc.__lns_runtime_log or _switchExp == self.builtinFunc.__lns_runtime_enableLog or _switchExp == self.builtinFunc.__lns_runtime_dumpLog or _switchExp == self.builtinFunc.__processor_end then
+         if _switchExp == self.builtinFunc.__lns_runtime_log or _switchExp == self.builtinFunc.__lns_runtime_enableLog or _switchExp == self.builtinFunc.__lns_runtime_enableDebugLog or _switchExp == self.builtinFunc.__lns_runtime_dumpLog or _switchExp == self.builtinFunc.__processor_end then
             return false
          elseif _switchExp == self.builtinFunc.__lns_sync_createProcesser then
             self:writeRaw( "{}" )
@@ -4243,7 +4244,7 @@ function ConvFilter:processExpRefItem( node, opt )
                filter( _exp, self, node )
             else
                
-               error( "index is nil" )
+               Util.err( "index is nil" )
             end
          end
          
