@@ -1444,7 +1444,7 @@ __test case1(ctrl) {
    let mut rootNode = Nodes.createTestNodes();
 
    let mut memStream = new Util.memStream();
-   let mut fomatter = createFilter( rootNode.$moduleTypeInfo, memStream );
+   let mut fomatter = createFilter( rootNode.$moduleTypeInfo, memStream, false );
 
    rootNode.processFilter( fomatter, new Opt( rootNode ) );
    __t._eq( ctrl, memStream.$txt, "form( 'hoge' );\n" );

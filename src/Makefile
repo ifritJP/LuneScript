@@ -1953,4 +1953,4 @@ test-reference-sample:
 	$(call exeLune,$(LNSC),.,test/checkReference.lns shebang)
 
 update-lnstags:
-	(../../lnstags/lnstags build lune/base/front.lns)
+	(../../lnstags/lnstags build lune/base/front.lns --log debug)

@@ -1869,7 +1869,7 @@ pub fn ProcessInfo.createModifier(
             }
          }
          case .Err( err ) {
-            Util.err( err );  // 要対応
+            Util.err( err );  // バグ
          }
       }
    } else {
@@ -6563,7 +6563,7 @@ pub let builtinTypeAbbrNone:&TypeInfo = new AbbrTypeInfo( rootProcessInfo, "[##]
 
 pub class ExtTypeInfo extend TypeInfo {
    pri let typeId: &IdInfo { pub };
-   /** 対応する LuneScript のタイプ。 必ず no-nolable になる。 */
+   /** 対応する LuneScript のタイプ。 必ず no-nilable になる。 */
    pri let extedType: &TypeInfo { pub };
    pri let nilableTypeInfo: TypeInfo { pub& };
    pri let mut imutType:&TypeInfo {pub,local};

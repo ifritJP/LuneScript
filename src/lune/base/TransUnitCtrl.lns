@@ -28,7 +28,7 @@ class TransUnitForRunner extend TransUnit {
       self.resultMap = {};
    }
 
-   pro override fn analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+   pro override fn analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!, bool
    {
       if unsupportStatement.has( token.txt ) {
          self.errorAt(
@@ -37,7 +37,7 @@ class TransUnitForRunner extend TransUnit {
             "please declare '_lune_control single_phase_ast'"
          );
       }
-      return nil;
+      return nil, true;
    }
 
    local fn run() __async mut {
@@ -226,7 +226,7 @@ pro override fn TransUnitCtrl.analyzeLuneControlToken(
 
 fn TransUnitCtrl.analyzeImportFor(
    pos: &Parser.Position, modulePath:str, assignName:str,
-   assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.ImportNode
+   assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.ImportNode!
 {
    let mut backupScope = self.$scope;
    // スコープをルートに変更
@@ -266,16 +266,16 @@ fn TransUnitCtrl.analyzeImportFor(
       self.macroEval );
    let mut moduleLoader = importObj.processImport(
       modulePath, moduleLoaderParam );
-   
-   let exportInfo;
+
+   let work, workErr;
    __asyncLock {
-      let work, err = importObj.loadModuleInfo( moduleLoader );
-      when! work {
-         exportInfo = work;
-      } else {
-         self.error( err ); // 要対応
-      }
+      work, workErr = importObj.loadModuleInfo( moduleLoader );
    }
+   
+   let! exportInfo = work {
+      self.addErrMess( pos, workErr );
+      return nil;
+   };   
 
    foreach symbol in exportInfo.$globalSymbolList {
       self.globalScope.addSymbolInfo( self.processInfo, symbol );
@@ -305,7 +305,8 @@ fn TransUnitCtrl.analyzeImportFor(
       let err = shadowing.$typeInfo ~= moduleTypeInfo;
       self.errorShadowingOp( pos, shadowing, err );
       if err {
-         self.error( "failed to import -- %s" (modulePath) ); // 要対応
+         self.addErrMess( pos, "failed to import -- %s" (modulePath) );
+         return nil;
       }
       moduleSymbolInfo = shadowing;
    }
@@ -317,11 +318,12 @@ fn TransUnitCtrl.analyzeImportFor(
          self.nodeManager, pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ moduleTypeInfo ], info );
    }
-   self.error( "failed to import -- %s" (modulePath) ); // 要対応
+   self.addErrMess( pos, "failed to import -- %s" (modulePath) );
+   return nil;
 }
 
 
-fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode {
+fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode! {
    let lazyLoad:Nodes.LazyLoad;
    if self.getToken(##).txt == "." {
       let modeToken = self.getToken(##);
@@ -385,9 +387,11 @@ fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode
       node = self.analyzeImportFor(
          opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad );
    }
-   self.importModuleSet.add( node.$expType );
-   
-   return node;
+   when! node {
+      self.importModuleSet.add( node.$expType );
+      return node;
+   }
+   return nil;
 }
 
 fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
@@ -396,47 +400,49 @@ fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCas
 
    let importNode;
 
+   let testMod = "lune.base.Testing";
    __asyncLock {
-      importNode = self.analyzeImportFor(
-         firstToken.pos, "lune.base.Testing", "__t", false, .Off );
+      importNode = self.analyzeImportFor( firstToken.pos, testMod, "__t", false, .Off );
    }
-   
-   let nameToken = self.getSymbolToken( .MustNot_ );
+   when! importNode {
+      let nameToken = self.getSymbolToken( .MustNot_ );
 
-   self.checkNextToken( "(" );
+      self.checkNextToken( "(" );
 
-   let ctrlToken = self.getSymbolToken( .MustNot_ );
-   let ctrlName = ctrlToken.txt;
-   self.checkNextToken( ")" );
+      let ctrlToken = self.getSymbolToken( .MustNot_ );
+      let ctrlName = ctrlToken.txt;
+      self.checkNextToken( ")" );
 
-   let moduleType = importNode.$expType;
-   let! ctrlType = moduleType.$scope$.getTypeInfoChild$( "Ctrl" ) {
-      self.error( "not found Testing.Ctrl class" ); // バグ
-   };
-   self.addLocalVar(
-      ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, .IMut, false );
+      let moduleType = importNode.$expType;
+      let! ctrlType = moduleType.$scope$.getTypeInfoChild$( "Ctrl" ) {
+         self.error( "not found Testing.Ctrl class" ); // バグ
+      };
+      self.addLocalVar(
+         ctrlToken.pos, true, false, ctrlToken.txt, ctrlType, .IMut, false );
 
-   self.scopeAccess = .Full;
+      self.scopeAccess = .Full;
 
-   self.inTestBlock = true;
-   let block;
-   if self.ctrl_info.testing {
-      block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
-   } else {
-      // テスト無効な場合、高速化のためテストケースを解析しない。
-      block = self.skipAndCreateDummyBlock();
+      self.inTestBlock = true;
+      let block;
+      if self.ctrl_info.testing {
+         block = self.analyzeBlock( .Test, .Ignore, newScope, nil );
+      } else {
+         // テスト無効な場合、高速化のためテストケースを解析しない。
+         block = self.skipAndCreateDummyBlock();
+      }
+      self.inTestBlock = false;
+      
+
+      self.scopeAccess = .Normal;
+
+      self.popScope();
+      
+      return Nodes.TestCaseNode.create(
+         self.nodeManager, firstToken.pos, self.inTestBlock,
+         self.macroCtrl.isInAnalyzeArgMode(),
+         [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
    }
-   self.inTestBlock = false;
-   
-
-   self.scopeAccess = .Normal;
-
-   self.popScope();
-   
-   return Nodes.TestCaseNode.create(
-      self.nodeManager, firstToken.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], nameToken, importNode, ctrlName, block );
+   self.errorAt( firstToken.pos, "failed to import -- '%s'" (testMod) ); // バグ
 }
 
 fn TransUnitCtrl.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
@@ -475,10 +481,11 @@ pro override fn TransUnitCtrl.analyzeDeclToken(
 }
 
 
-fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode
+fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode!
 {
    if self.$scope ~= self.moduleScope {
-      self.error( "'module' must be top scope." ); // 要対応
+      self.addErrMess( token.pos, "'module' must be top scope." );
+      return nil;
    }
 
 
@@ -532,7 +539,7 @@ fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Su
       [ Ast.builtinTypeNone ], usePath );
 }
 
-fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode {
+fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode! {
    let token = self.getSymbolToken( .MustNot_ );
    let symbolNode = self.analyzeExpSymbol(
       firstToken, token, .Symbol, nil, true, false, false );
@@ -540,7 +547,8 @@ fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.Provide
 
    let symbolInfoList = symbolNode.getSymbolInfo();
    if #symbolInfoList ~= 1 {
-      self.error( "'provide' must be symbol." ); // 要対応
+      self.addErrMess( firstToken.pos, "'provide' must be symbol." );
+      return nil;
    }
    let symbolInfo = symbolInfoList[ 1 ];
 
@@ -563,21 +571,40 @@ fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.Provide
    return node;
 }
 
-pro override fn TransUnitCtrl.analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+
+/*
+statement を解析する。
+
+@return Nodes.Node! 解析した Node。 適切なノードがない場合は nil。
+@return bool 解析を続ける場合 true
+*/
+pro override fn TransUnitCtrl.analyzeStatementToken( token:&Parser.Token )
+   mut : Nodes.Node!, bool
 {
    let statement:Nodes.Node!;
    if token.txt == "import"  {
-      statement = self.analyzeImport( token );
+      if! self.analyzeImport( token ) {
+         statement = _exp;
+      } else {
+         return nil, false;
+      }
    } elseif token.txt == "subfile" {
       __asyncLock {
          statement = self.analyzeSubfile( token );
       }
+      if not statement {
+         return nil, false;
+      }
    } elseif token.txt == "provide" {
-      statement = self.analyzeProvide( token );
+      if! self.analyzeProvide( token ) {
+         statement = _exp;
+      } else {
+         return nil, false;
+      }
    } else {
       statement = nil;
    }   
-   return statement;
+   return statement, true;
 }
 
 local override fn TransUnitCtrl.addFuncBlockInfoList( funcBlockInfo:FuncBlockInfo ) mut

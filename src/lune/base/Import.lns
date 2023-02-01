@@ -855,7 +855,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    fn processImportFromFile(
       processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
       fullModulePath:str, mut modulePath:str, nameList:&List<str>,
-      baseDir:str!, depth:int ) mut : &frontInterface.ModuleInfo;
+      baseDir:str!, depth:int ) mut : &frontInterface.ModuleInfo!, str;
    fn processImportMain(
       processInfo:Ast.ProcessInfo, baseDir:str!,
       mut modulePath:str, depth:int ) mut : ModuleLoader;
@@ -873,16 +873,16 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 
    
    fn craeteModuleInfo(
-      moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ExportInfo
+      moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ExportInfo!, str
    {
       _match moduleMeta.$metaOrModule {
          case .Module( _, exportInfo ) {
             self.applyExportInfo( exportInfo );
-            return exportInfo;
+            return exportInfo, "";
          }
          case .Export( exportInfo ) {
             self.applyExportInfo( exportInfo );
-            return exportInfo;
+            return exportInfo, "";
          }
          case .MetaRaw( metaInfo ) {
             self.importModuleInfo.add( self.result.modulePath );
@@ -890,15 +890,18 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 
             let mut nameList = Util.splitStr(self.result.modulePath, '[^%./:]+' );
 
-            let moduleInfo = self.processImportFromFile(
+            let! moduleInfo, err = self.processImportFromFile(
                self.importProcessInfo, moduleMeta.$lnsPath, metaInfo,
                self.result.fullModulePath, self.result.modulePath,
-               nameList, self.result.baseDir, self.result.depth );
+               nameList, self.result.baseDir, self.result.depth )
+            {
+               return nil, err;
+            };
 
             self.importProcessInfo.switchIdProvier( .Base );
             self.importModuleInfo.remove();
             
-            return moduleInfo.$exportInfo;
+            return moduleInfo.$exportInfo, "";
          }
       }
    }
@@ -954,7 +957,8 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
                      fullModulePath, baseDir, self )
                   {
                      let mut moduleMeta = _exp;
-                     self.result.exportInfo = self.craeteModuleInfo( moduleMeta );
+                     self.result.exportInfo, self.result.err =
+                        self.craeteModuleInfo( moduleMeta );
                   } else {
                      self.result.err = "failed to load meta -- %s on %s"
                      (  fullModulePath, baseDir or "./" );
@@ -1004,21 +1008,21 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 }
 
 fn ModuleLoader.processImportFromFile(
-// fn Import.processImportFromFile(
    processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
    fullModulePath:str, mut modulePath:str,
    nameList:&List<str>, baseDir:str!, depth:int ) mut
-: &frontInterface.ModuleInfo
+: &frontInterface.ModuleInfo!, str
 {
-   let moduleInfo:&frontInterface.ModuleInfo;
+   let mut dependLibId2DependInfo:Map<int,&frontInterface.ExportInfo> = {};
+   let mut err:str! = nil;
+   let metaInfo;
    __luago {
-      let metaInfo = metaInfoStem@@=Meta._MetaInfo;
+      metaInfo = metaInfoStem@@=Meta._MetaInfo;
       Log._log2( .Info, "%s processing" (fullModulePath) );
 
 
 
       // 依存するモジュールのメタ情報を読み込み
-      let mut dependLibId2DependInfo:Map<int,&frontInterface.ExportInfo> = {};
       {
          let loaderMap:Map<ModuleLoader,int> = {};
          forsort dependInfo, dependName in metaInfo.__dependModuleMap {
@@ -1034,13 +1038,20 @@ fn ModuleLoader.processImportFromFile(
                self.applyExportInfo( _exp );
                dependLibId2DependInfo[ typeId ] = _exp;
             } else {
-               self.transUnitIF.error( result.err ); // 要対応
+               err = result.err;
+               break;
             };
          }
       }
+   }
+   when! err { 
+      return nil, err;
+   }
 
+   let moduleInfo:&frontInterface.ModuleInfo;
+   __luago {
       // 型情報の登録
-
+      
       // meta情報内の typeId -> typeInfo
       let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
       let mut typeId2TypeDataAccessor: Map<int,Ast.TypeDataAccessor> = {};
@@ -1460,7 +1471,7 @@ fn ModuleLoader.processImportFromFile(
       
       moduleInfo = new frontInterface.ModuleInfo( exportInfo );
    }
-   return moduleInfo;
+   return moduleInfo, "";
 }
 
 pub class Import {

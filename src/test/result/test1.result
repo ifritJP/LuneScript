@@ -1931,8 +1931,8 @@ test/error/flow_match.lns:136:17: error: This arg can't be r-value. -- ExpRef
 test/error/flow_match.lns:136:17: error: this node can't be r-value. -- ExpRef
 test/error/flow_match.lns:153:10: error: This 'match' hasn't enough 'case' condition.
 test/error/flow_match.lns:157:13: error: '_match' can't have default.
-test/error/imp2.lns:1:25: error: recursive import:  -> test.error.import -> test.error.imp1 -> test.error.imp2 -> test.error.import
-test/error/import2.lns:1:15: error: failed to load meta -- noexist on ./
+test/error/imp2.lns:1:1: error: recursive import:  -> test.error.import -> test.error.imp1 -> test.error.imp2 -> test.error.import
+test/error/import2.lns:1:1: error: failed to load meta -- noexist on ./
 test/error/import3.lns:8:8: warning: 'test' var isn't accessed
 test/error/import4.lns:4:12: error: can't access to __init of Test
 test/error/import4.lns:4:16: error: __init: exp(1) type mismatch @test.@error.@Sub5.Hoge <- nil: short
