@@ -236,6 +236,18 @@ local function setErrorCode( code )
 end
 _moduleObj.setErrorCode = setErrorCode
 
+local function debugLog( message )
+
+   do
+      if debugFlag then
+         errStream:write( message .. "\n" )
+      end
+      
+   end
+   
+end
+_moduleObj.debugLog = debugLog
+
 local function errorLog( message )
 
    do
@@ -655,7 +667,7 @@ local function getReadyCode( depPath, tgtPath )
       return true
    end
    
-   Log.log( Log.Level.Warn, __func__, 405, function (  )
+   Log.log( Log.Level.Warn, __func__, 413, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end )

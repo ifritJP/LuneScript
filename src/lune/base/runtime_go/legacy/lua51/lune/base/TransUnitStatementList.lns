@@ -61,9 +61,9 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
       self.macroCtrl.isInAnalyzeArgMode(), retTypeList, expList );
 }
 
-pro fn TransUnit.analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!
+pro fn TransUnit.analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!,bool
 {
-   return nil;
+   return nil, true;
 }
 
 
@@ -208,10 +208,15 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          statement = self.createNoneNode( token.pos );
       }
       elseif token.txt == ",," or token.txt == ",,," or token.txt == ",,,," {
-         self.error( "illegal macro op -- %s" (token.txt) );
+         self.error( "illegal macro op -- %s" (token.txt) ); // 要対応
       }
       else {
-         statement = self.analyzeStatementToken( token );
+         let cont;
+         statement, cont = self.analyzeStatementToken( token );
+         if not cont {
+            return nil;
+         }
+         
          if not statement {
             self.pushback();
 

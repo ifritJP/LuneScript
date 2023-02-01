@@ -703,7 +703,7 @@ local function loadFromChunk( chunk, err )
          
       else
          
-         error( "failed to error" )
+         Util.err( "failed to error" )
       end
       
    end
@@ -1509,7 +1509,7 @@ function Front:loadModuleWithBaseDir( orgMod, baseDir )
                   self:setLoadInfo( mod, LoadInfo._new(_lune.unwrap( loadFromLuaTxt( luaTxt )), meta) )
                else
                   
-                  error( string.format( "nothing meta -- %s", mod) )
+                  Util.err( string.format( "nothing meta -- %s", mod) )
                end
             end
             
@@ -1606,7 +1606,7 @@ function Front:loadModuleWithBaseDir( orgMod, baseDir )
    end
    
    
-   error( string.format( "load error, %s", mod) )
+   Util.err( string.format( "load error, %s", mod) )
 end
 
 function Front:loadModule( mod )
@@ -2330,14 +2330,14 @@ end
       if  nil == loaded then
          local _loaded = loaded
       
-         error( "failed to subModPreLoad" )
+         Util.err( "failed to subModPreLoad" )
       end
       
       local preloadFunc = loaded(  )
       if  nil == preloadFunc then
          local _preloadFunc = preloadFunc
       
-         error( "failed to preloadFunc" )
+         Util.err( "failed to preloadFunc" )
       end
       
       (preloadFunc )( self.convertedMap, Log.getLevel(  ) >= Log.Level.Debug )

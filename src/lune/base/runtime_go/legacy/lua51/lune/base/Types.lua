@@ -137,6 +137,13 @@ function _lune._fromMap( obj, map, memInfoList )
    return true
 end
 
+function _lune.loadModule( mod )
+   if __luneScript and not package.preload[ mod ] then
+      return  __luneScript:loadModule( mod )
+   end
+   return require( mod )
+end
+
 function _lune.__isInstanceOf( obj, class )
    while obj do
       local meta = getmetatable( obj )
@@ -191,6 +198,8 @@ if not _lune8 then
    _lune8 = _lune
 end
 
+
+local Util = _lune.loadModule( 'lune.base.Util' )
 
 
 local AltBase = {}
@@ -518,7 +527,7 @@ function Token:getExcludedDelimitTxt(  )
    end
    
    
-   error( string.format( "illegal delimit -- %s", self.txt) )
+   Util.err( string.format( "illegal delimit -- %s", self.txt) )
 end
 function Token:getLineCount(  )
 

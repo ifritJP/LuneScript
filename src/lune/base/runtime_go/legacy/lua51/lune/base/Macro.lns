@@ -48,11 +48,11 @@ fn loadCode( code:str ) : Luaval<&stem> {
             ret = obj;
          } else {
             // ここでは、lua code の実行ができない場合はエラーとする
-            error( "failed to load" );
+            Util.err( "failed to load" ); // 要対応   
          }
       } else {
          // ここでは、lua code の実行ができない場合はエラーとする
-         error( "%s -- %s" (mess, code) );
+         Util.err( "%s -- %s" (mess, code) ); // バグ
       }
    }
    return ret;
@@ -357,7 +357,7 @@ pub class MacroCtrl
       if! self.id2use___var[ typeId ] {
          return _exp;
       }
-      Util.err( "unknown macro -- %s" (macroType.getTxt(##)) );
+      Util.err( "unknown macro -- %s" (macroType.getTxt(##)) ); // バグ
    }
 
    pub fn setUsing__var() mut {
@@ -548,7 +548,7 @@ pub fn MacroCtrl.evalMacroOp(
          }
          macroInfo = defInfo;
       } else {
-         Util.err( "not found macroInfo -- %d" (macroTypeInfo.$typeId.$id) );
+         Util.err( "not found macroInfo -- %d" (macroTypeInfo.$typeId.$id) ); // バグ
       }
    }
    
@@ -665,7 +665,7 @@ pub fn MacroCtrl.evalMacroOp(
                // これは convLua の processDeclVar() でセットしている。
                foreach name in (unwrap macroVars.__names)@@Map<int,str> {
                   let! valInfo = macroInfo.$symbol2MacroValInfoMap[ name ] {
-                     Util.err( "not found macro symbol -- %s" (name) );
+                     Util.err( "not found macro symbol -- %s" (name) ); // バグ
                   };
                   let typeInfo = valInfo.typeInfo;
                   // macro-statment で定義する変数は、
@@ -750,7 +750,7 @@ pub fn MacroCtrl.importMacro(
          orgPos = new Types.Position(
             macroInfo.pos[ 1 ], macroInfo.pos[ 2 ], lnsPath ## );
       } else {
-         Util.err( "macroInfo.pos is illegal" );
+         Util.err( "macroInfo.pos is illegal" ); // バグ
       }
       let mut argList:List<&Nodes.MacroArgInfo> = [];
       let mut argNameList:List<str> = [];
@@ -970,10 +970,9 @@ pub fn MacroCtrl.expandMacroVal(
       return work;
    }
    
-   fn macroVal2strList( name:str, macroVal: &Nodes.MacroValInfo,
-                        workParser:Parser.PushbackParser ) : &List<str> {
+   fn macroVal2strList( name:str, macroVal: &Nodes.MacroValInfo ) : &List<str> {
       let! val = macroVal.val {
-         workParser.error( "macroVal is nil -- %s" (name) );
+         Util.err( "macroVal is nil -- %s" (name) ); // バグ
       };
       if macroVal.argNode {
          // マクロ引数の場合、そのまま List<str> にキャスト
@@ -994,14 +993,14 @@ pub fn MacroCtrl.expandMacroVal(
       let mut nextToken = getToken();
 
       let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
-         parser.error( "unknown macro val -- %s" (nextToken.txt) );
+         Util.err( "unknown macro val -- %s" (nextToken.txt) ); // 要対応
       };
 
       if tokenTxt == ',,' {
          //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
             let mut txtList:List<str> = [];
-            foreach txt in macroVal2strList( nextToken.txt, macroVal, parser ) {
+            foreach txt in macroVal2strList( nextToken.txt, macroVal ) {
                txtList.insert( txt );
             }
             pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos ); 
@@ -1030,7 +1029,7 @@ pub fn MacroCtrl.expandMacroVal(
             {
                let pos = macroVal.argNode$.$pos$.$RawOrgPos or
                   nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
-               let strList = macroVal2strList( nextToken.txt, macroVal, parser );
+               let strList = macroVal2strList( nextToken.txt, macroVal );
                for index = #strList, 1, -1 {
                   parser.pushbackStr(
                      nil, "macroVal %s[%d]" (nextToken.txt, index),
@@ -1042,11 +1041,11 @@ pub fn MacroCtrl.expandMacroVal(
 
                if! let argNode = macroVal.argNode {
                   if not argNode.setupLiteralTokenList( tokenList ) {
-                     parser.error( "illegal macro val ,, -- %s" (nextToken.txt) );
+                     Util.err( "illegal macro val ,, -- %s" (nextToken.txt) ); // 要対応
                   }
                }
                else {
-                  parser.error( "not support ,, -- %s" (nextToken.txt) );
+                  Util.err( "not support ,, -- %s" (nextToken.txt) ); // 要対応
                }
 
                parser.newPushback( tokenList );
@@ -1077,7 +1076,7 @@ pub fn MacroCtrl.expandMacroVal(
 
             if! let argNode = macroVal.argNode {
                if not argNode.setupLiteralTokenList( tokenList ) {
-                  parser.error( "illegal macro val ,, -- %s" (nextToken.txt) );
+                  Util.err( "illegal macro val ,, -- %s" (nextToken.txt) ); // 要対応
                }
             }
             else {
@@ -1093,8 +1092,8 @@ pub fn MacroCtrl.expandMacroVal(
                          nextToken.txt, nextToken.pos );
          }
          else {
-            parser.error( "',,,' does not support this type -- %s"
-                          (macroVal.typeInfo.getTxt(##)) );
+            Util.err( "',,,' does not support this type -- %s" // 要対応
+                      (macroVal.typeInfo.getTxt(##)) );
          }
       }
       elseif tokenTxt == ',,,,' {
@@ -1128,8 +1127,8 @@ pub fn MacroCtrl.expandMacroVal(
             parser.pushbackToken( nextToken );
          }
          else {
-            parser.error( "not support this symbol -- %s%s"
-                          (tokenTxt, nextToken.txt) );
+            Util.err( "not support this symbol -- %s%s" // 要対応
+                      (tokenTxt, nextToken.txt) );
          }
       }
       nextToken = getToken();

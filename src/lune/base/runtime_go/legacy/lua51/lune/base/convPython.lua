@@ -3180,7 +3180,7 @@ function convFilter:processExpMacroExp( node, opt )
             
          else 
             
-               error( string.format( "not support macro -- %s", node:get_macroType():getTxt(  )) )
+               Util.err( string.format( "not support macro -- %s", node:get_macroType():getTxt(  )) )
          end
       end
       
@@ -5107,6 +5107,7 @@ end
 
 
 local type2FromStemNameMap = {[Ast.builtinTypeInt] = "Lns_ToInt", [Ast.builtinTypeReal] = "Lns_ToReal", [Ast.builtinTypeBool] = "Lns_ToBool", [Ast.builtinTypeString] = "Lns_ToStr", [Ast.builtinTypeStem] = "Lns_ToStem"}
+
 function convFilter:getFromStemName( typeInfo )
    local __func__ = '@lune.@base.@convPython.convFilter.getFromStemName'
 

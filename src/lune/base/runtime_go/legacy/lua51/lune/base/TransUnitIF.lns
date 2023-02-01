@@ -373,7 +373,7 @@ curNsInfo が nil になる。
       if! self.curNsInfo {
          return _exp;
       }
-      self.error( "not found NSInfo for %s" (self.getCurrentNamespaceTypeInfo()) );
+      self.error( "not found NSInfo for %s" (self.getCurrentNamespaceTypeInfo()) ); // 要対応
    }
    pro fn set_curNsInfo( nsInfo:NSInfo ) mut {
       self.curNsInfo = nsInfo;
@@ -388,7 +388,7 @@ curNsInfo が nil になる。
 
    pro fn getNSInfo( typeInfo:&Ast.TypeInfo ) mut : NSInfo {
       let! mut nsInfo = self.nsInfoMap[ typeInfo ] {
-         self.error( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) );
+         self.error( "not found TypeInfo -- %s" (typeInfo.getTxt(##)) ); // バグ
       };
       return nsInfo;
    }
@@ -448,7 +448,7 @@ curNsInfo が nil になる。
       if nsInfo ~= self.curNsInfo {
          if! let curNsInfo = self.curNsInfo {
             if #curNsInfo.$condRetNodeList ~= 0 {
-               self.error( "internal error. condRetNodeList is not nil." );
+               self.error( "internal error. condRetNodeList is not nil." ); // バグ
             }
          }
          self.curNsInfo = nsInfo;
@@ -500,7 +500,7 @@ curNsInfo が nil になる。
          if! let mut scope = self.namespace2Scope[ typeInfo ] {
             self.scope = scope;
          } else {
-            self.error( "not found scope -- %s" (name) );
+            self.error( "not found scope -- %s" (name) ); // バグ
          }
          nsInfo = unwrap self.nsInfoMap[ typeInfo ];
       }
@@ -606,7 +606,7 @@ curNsInfo が nil になる。
                errPos,     
                "multiple class(%s)" (typeInfo.getTxt( self.typeNameCtrl ##)));
             // クラスの複数定義は、その後の解析すると、
-            self.error( "stop by error" );
+            self.error( "stop by error" ); // 要対応
          }
 
          if typeInfo.$abstractFlag ~= abstractFlag {
@@ -778,7 +778,7 @@ pub class SimpeTransUnit extend TransUnitBase {
          Util.println( "------" );
       }
       
-      Util.err( "has error" );
+      Util.err( "has error" ); // バグ
    }
    pub override fn getLatestPos() : &Parser.Position {
       return self.latestPos;

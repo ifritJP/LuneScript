@@ -111,12 +111,12 @@ pub fn ImportParam.getTypeDataAccessor(typeId:int) mut :
    let typeInfo, mess = self.getTypeInfo( typeId );
    when! typeInfo {
       let! mut typeDataAccessor = self.typeId2TypeDataAccessor[ typeId ] {
-         Util.err( "not found TypeDataAccessor for %d: %s"
+         Util.err( "not found TypeDataAccessor for %d: %s" // バグ
                    (typeId, typeInfo.getTxt(##)) );
       };
       return typeDataAccessor, typeInfo;
    }
-   Util.err( "not found TypeDataAccessor for %d: %s" (typeId, mess or "") );
+   Util.err( "not found TypeDataAccessor for %d: %s" (typeId, mess or "") ); // バグ
 }
 
 
@@ -133,7 +133,7 @@ pub fn ImportParam.getTypeInfoFrom(typeId:&_IdInfo) mut :&Ast.TypeInfo!, str! {
       return Ast.getRootProcessInfoRo().getTypeInfo( typeId.id), nil;
    }
    let! exportInfo = self.dependLibId2DependInfo[ typeId.mod ] {
-      Util.err( "%s, %d, %d" (self.moduleTypeInfo.getTxt(##), typeId.mod, typeId.id) );
+      Util.err( "%s, %d, %d" (self.moduleTypeInfo.getTxt(##), typeId.mod, typeId.id) ); // バグ
    };
    if! let typeInfo = exportInfo.$importId2localTypeInfoMap[ typeId.id ] {
       return typeInfo, nil;
@@ -152,7 +152,7 @@ class _TypeInfoNilable extend _TypeInfo {
    pro override fn createTypeInfo( param:ImportParam ): &Ast.TypeInfo!, str!
    {
       let! orgTypeInfo = param.getTypeInfoFrom( self.orgTypeId ) {
-         Util.err( "failed to createTypeInfo -- self.orgTypeId = (%d,%d)"
+         Util.err( "failed to createTypeInfo -- self.orgTypeId = (%d,%d)" // バグ
                    ( self.orgTypeId.mod, self.orgTypeId.id ) );
       };
       let mut newTypeInfo = orgTypeInfo.get_nilableTypeInfo();
@@ -291,7 +291,7 @@ class _TypeInfoExt extend _TypeInfo {
             newTypeInfo = extType;
          }
          case .Err( mess ) {
-            Util.err( mess );
+            Util.err( mess ); // バグ
          }
       }
       param.typeId2TypeInfo[ self.typeId ] = newTypeInfo;
@@ -328,7 +328,7 @@ class _TypeInfoModule extend _TypeInfo {
       if self.parentId ~= Ast.userRootId {
          //let! workTypeInfo = param.typeId2TypeInfo[ self.parentId ] {
          let! workTypeInfo = param.getTypeInfo( self.parentId ) {
-            Util.err( "not found parentInfo %d %s"
+            Util.err( "not found parentInfo %d %s" // バグ
                       ( self.parentId, self.txt ) );
          };
          parentInfo = workTypeInfo;
@@ -341,7 +341,7 @@ class _TypeInfoModule extend _TypeInfo {
       let mut newTypeInfo = parentScope.getTypeInfoChild( self.txt );
       if! newTypeInfo {
          // ここには入らないはず
-         error( "internal error" );
+         Util.err( "internal error" ); // バグ
          // param.typeId2Scope[ self.typeId ] = Ast.getScope( _exp );
          // if not _exp.$scope {
          //    return nil, "not found scope %s %d %s %s %s" ( parentScope, self.parentId,
@@ -467,7 +467,7 @@ class _TypeInfoNormal extend _TypeInfo {
                               self.kind == Ast.TypeInfoKind.ExtModule or
                               self.kind == Ast.TypeInfoKind.IF )
          {
-            error("internal error");
+            Util.err("internal error"); // バグ
             // 登録済みのクラスはないはず。
          }
          else {
@@ -622,7 +622,7 @@ class _TypeInfoNormal extend _TypeInfo {
                   postProcess( workTypeInfo, nil );
                }
                default {
-                  Util.err( "illegal kind -- %s" (self.kind.$_txt) );
+                  Util.err( "illegal kind -- %s" (self.kind.$_txt) ); // バグ
                }
             }
          }
@@ -855,7 +855,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    fn processImportFromFile(
       processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
       fullModulePath:str, mut modulePath:str, nameList:&List<str>,
-      baseDir:str!, depth:int ) mut : &frontInterface.ModuleInfo;
+      baseDir:str!, depth:int ) mut : &frontInterface.ModuleInfo!, str;
    fn processImportMain(
       processInfo:Ast.ProcessInfo, baseDir:str!,
       mut modulePath:str, depth:int ) mut : ModuleLoader;
@@ -873,16 +873,16 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 
    
    fn craeteModuleInfo(
-      moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ExportInfo
+      moduleMeta:frontInterface.ModuleMeta ) mut : &frontInterface.ExportInfo!, str
    {
       _match moduleMeta.$metaOrModule {
          case .Module( _, exportInfo ) {
             self.applyExportInfo( exportInfo );
-            return exportInfo;
+            return exportInfo, "";
          }
          case .Export( exportInfo ) {
             self.applyExportInfo( exportInfo );
-            return exportInfo;
+            return exportInfo, "";
          }
          case .MetaRaw( metaInfo ) {
             self.importModuleInfo.add( self.result.modulePath );
@@ -890,15 +890,18 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 
             let mut nameList = Util.splitStr(self.result.modulePath, '[^%./:]+' );
 
-            let moduleInfo = self.processImportFromFile(
+            let! moduleInfo, err = self.processImportFromFile(
                self.importProcessInfo, moduleMeta.$lnsPath, metaInfo,
                self.result.fullModulePath, self.result.modulePath,
-               nameList, self.result.baseDir, self.result.depth );
+               nameList, self.result.baseDir, self.result.depth )
+            {
+               return nil, err;
+            };
 
             self.importProcessInfo.switchIdProvier( .Base );
             self.importModuleInfo.remove();
             
-            return moduleInfo.$exportInfo;
+            return moduleInfo.$exportInfo, "";
          }
       }
    }
@@ -954,7 +957,8 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
                      fullModulePath, baseDir, self )
                   {
                      let mut moduleMeta = _exp;
-                     self.result.exportInfo = self.craeteModuleInfo( moduleMeta );
+                     self.result.exportInfo, self.result.err =
+                        self.craeteModuleInfo( moduleMeta );
                   } else {
                      self.result.err = "failed to load meta -- %s on %s"
                      (  fullModulePath, baseDir or "./" );
@@ -1004,21 +1008,21 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
 }
 
 fn ModuleLoader.processImportFromFile(
-// fn Import.processImportFromFile(
    processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
    fullModulePath:str, mut modulePath:str,
    nameList:&List<str>, baseDir:str!, depth:int ) mut
-: &frontInterface.ModuleInfo
+: &frontInterface.ModuleInfo!, str
 {
-   let moduleInfo:&frontInterface.ModuleInfo;
+   let mut dependLibId2DependInfo:Map<int,&frontInterface.ExportInfo> = {};
+   let mut err:str! = nil;
+   let metaInfo;
    __luago {
-      let metaInfo = metaInfoStem@@=Meta._MetaInfo;
+      metaInfo = metaInfoStem@@=Meta._MetaInfo;
       Log._log2( .Info, "%s processing" (fullModulePath) );
 
 
 
       // 依存するモジュールのメタ情報を読み込み
-      let mut dependLibId2DependInfo:Map<int,&frontInterface.ExportInfo> = {};
       {
          let loaderMap:Map<ModuleLoader,int> = {};
          forsort dependInfo, dependName in metaInfo.__dependModuleMap {
@@ -1034,13 +1038,20 @@ fn ModuleLoader.processImportFromFile(
                self.applyExportInfo( _exp );
                dependLibId2DependInfo[ typeId ] = _exp;
             } else {
-               self.transUnitIF.error( result.err );
+               err = result.err;
+               break;
             };
          }
       }
+   }
+   when! err { 
+      return nil, err;
+   }
 
+   let moduleInfo:&frontInterface.ModuleInfo;
+   __luago {
       // 型情報の登録
-
+      
       // meta情報内の typeId -> typeInfo
       let mut typeId2TypeInfo: Map<int,&Ast.TypeInfo> = {};
       let mut typeId2TypeDataAccessor: Map<int,Ast.TypeDataAccessor> = {};
@@ -1095,8 +1106,8 @@ fn ModuleLoader.processImportFromFile(
       let mut id2atomMap:Map<int,_TypeInfo> = {};
       let mut _typeInfoNormalList:List<_TypeInfoNormal> = [];
       foreach atomInfoLua in metaInfo.__typeInfoList {
-         let! workAtomInfo = expandLuavalMap( atomInfoLua ) {
-            self.transUnitIF.error( "illegal atomInfo" );
+         let! workAtomInfo = expandLuavalMap( atomInfoLua ) { 
+            self.transUnitIF.error( "illegal atomInfo" ); // バグ
          };
          let atomInfo = workAtomInfo@@Map<str,&stem>;
          if! let skind = atomInfo.skind {
@@ -1161,7 +1172,7 @@ fn ModuleLoader.processImportFromFile(
                when! mess {
                   Util.errorLog( mess );
                }
-               Util.err( "_TypeInfo.%s._fromMap error" (kind.$_txt) );
+               Util.err( "_TypeInfo.%s._fromMap error" (kind.$_txt) ); // バグ
             }
          }
       }
@@ -1188,7 +1199,7 @@ fn ModuleLoader.processImportFromFile(
       foreach atomInfo in _typeInfoList {
          let newTypeInfo, errMess = atomInfo.createTypeInfoCache( importParam );
          if! errMess {
-            Util.err( "Failed to createType -- %s: %s(%d): %s"
+            Util.err( "Failed to createType -- %s: %s(%d): %s" // バグ
                       ( fullModulePath, atomInfo.skind.$_txt, atomInfo.typeId, _exp ) );
          }
          when! newTypeInfo {
@@ -1218,7 +1229,7 @@ fn ModuleLoader.processImportFromFile(
                      ; // nop
                   }
                   default {
-                     Util.err( "%s: not support kind -- %s"
+                     Util.err( "%s: not support kind -- %s" // バグ
                                (__func__, newTypeInfo.$kind.$_txt) );
                   }
                }
@@ -1233,7 +1244,7 @@ fn ModuleLoader.processImportFromFile(
             let mut scope = unwrap typeId2Scope[ atomInfo.typeId ];
             foreach childId in atomInfo.children {
                let! typeInfo = importParam.getTypeInfoFrom( childId ) {
-                  Util.err( "not found childId -- %s, %d, %s(%d)"
+                  Util.err( "not found childId -- %s, %d, %s(%d)" // バグ
                             (fullModulePath, childId.id,
                               atomInfo.txt, atomInfo.typeId ) );
                };
@@ -1298,7 +1309,7 @@ fn ModuleLoader.processImportFromFile(
                   
                   if! metaInfo.__typeId2ClassInfoMap[ classTypeId ] {
                      let! classInfo = expandLuavalMap( _exp ) {
-                        self.transUnitIF.error( "illegal val" );
+                        self.transUnitIF.error( "illegal val" ); // バグ
                      };
                      foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
                         if! let typeId = _IdInfo._fromStem(
@@ -1315,12 +1326,12 @@ fn ModuleLoader.processImportFromFile(
                                  (unwrap fieldInfo.mutMode)@@int ) );
                         }
                         else {
-                           self.transUnitIF.error( "not found fieldInfo.typeId" );
+                           self.transUnitIF.error( "not found fieldInfo.typeId" ); // バグ
                         }
                      }
                   }
                   else {
-                     self.transUnitIF.error(
+                     self.transUnitIF.error( // バグ
                         "not found class -- %s: %d, %s"
                         (fullModulePath, classTypeId, classTypeInfo.getTxt(##)) );
                   }
@@ -1413,7 +1424,7 @@ fn ModuleLoader.processImportFromFile(
                varNameInfo.mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
          }
          else {
-            self.transUnitIF.error( "illegal varInfo.typeId" );
+            self.transUnitIF.error( "illegal varInfo.typeId" ); // バグ
          }
       }
 
@@ -1460,7 +1471,7 @@ fn ModuleLoader.processImportFromFile(
       
       moduleInfo = new frontInterface.ModuleInfo( exportInfo );
    }
-   return moduleInfo;
+   return moduleInfo, "";
 }
 
 pub class Import {

@@ -80,7 +80,7 @@ pub class XML extend (Writer) {
          self.stream.write( '\n' );
       }
       elseif self.depth < 0 {
-         Util.err( "illegal depth" );
+         Util.err( "illegal depth" ); // バグ
       }
    }
    pub fn writeValue( val:stem ) mut {
@@ -141,7 +141,7 @@ pub class JSON extend (Writer) {
 
    pub fn endLayer() mut {
       if #self.layerQueue == 0 {
-         Util.err( "illegal depth" );
+         Util.err( "illegal depth" ); // バグ
       }
 
       while #self.layerQueue > 0 {
@@ -183,7 +183,7 @@ pub class JSON extend (Writer) {
       let mut info = unwrap self.getLayerInfo();
       let mut nameSet = info.elementNameSet;
       if not info.arrayFlag and nameSet.has( name ) {
-         Util.err( "exist same name: " .. name );
+         Util.err( "exist same name: " .. name ); // バグ
       }
       nameSet.add( name );
    }
@@ -218,7 +218,7 @@ pub class JSON extend (Writer) {
          self.stream.write( "," );
       }
       elseif self.equalLayerState( 'named' ) {
-         Util.err( 'illegal layer state' );
+         Util.err( 'illegal layer state' ); // バグ
       }
       elseif self.equalLayerState( 'none' ) {
          ;
@@ -230,7 +230,7 @@ pub class JSON extend (Writer) {
       let mut info = unwrap self.getLayerInfo();
 
       if info.openElement {
-         Util.err( 'illegal openElement' );
+         Util.err( 'illegal openElement' ); // バグ
       }
       info.openElement = true;
 
@@ -253,7 +253,7 @@ pub class JSON extend (Writer) {
          }
       }
       else  {
-         Util.err( 'illegal layer state %s'  (self.getLayerName() ) );
+         Util.err( 'illegal layer state %s'  (self.getLayerName() ) ); // バグ
       }
       self.setLayerState( 'termed' );
    }
@@ -297,7 +297,7 @@ pub class JSON extend (Writer) {
          self.endLayer();
       }
       else {
-         Util.err( 'illegal' );
+         Util.err( 'illegal' ); // バグ
       }
    }
 }

@@ -48,7 +48,7 @@ pub class IdProvider {
    pub fn getNewId() mut : int {
       self.id = self.id + 1;
       if self.id >= self.maxId {
-         Util.err( "id is over" );
+         Util.err( "id is over" );  // memo: 通常ありえない
       }
       return self.id;
    }
@@ -1869,7 +1869,7 @@ pub fn ProcessInfo.createModifier(
             }
          }
          case .Err( err ) {
-            Util.err( err );
+            Util.err( err );  // バグ
          }
       }
    } else {
@@ -2016,7 +2016,7 @@ pub class CanEvalCtrlTypeInfo extend TypeInfo {
          }
       }
       else {
-         Util.err( "no exist needAutoBoxing" );
+         Util.err( "no exist needAutoBoxing" );  // 現状 autoBoxing は対応していない
       }
    }
 
@@ -2853,7 +2853,7 @@ pub fn Scope.addExtModule(
    if lang ~= .Same {
       _match processInfo.createLuaval( typeInfo, true ) {
          case .Err( mess ) {
-            Util.err( mess );
+            Util.err( mess ); // 要対応
          }
          case .OK( luavalTypeInfo, _ ) {
             typeInfo = luavalTypeInfo;
@@ -2890,7 +2890,7 @@ pub fn dumpScope( workscope: &Scope!, workprefix:str ) {
          }
          readyIdSet.add( _exp );
          if #prefix > 20 {
-            Util.err("illegal");
+            Util.err("illegal"); // デバッグ用なので対応しない
          }
 
          forsort symbolInfo, symbol in _exp.$symbol2SymbolInfoMap {
@@ -3195,7 +3195,7 @@ pub override fn NormalSymbolInfo.canAccess(
          return nil;
       }
       case .None {
-         Util.err( "illegl accessmode -- %s, %s"
+         Util.err( "illegl accessmode -- %s, %s" // ここにくるのはバグ
                    (self.$accessMode, self.$name) );
       }
    }
@@ -3790,7 +3790,7 @@ pub class GenericTypeInfo extend TypeInfo {
       self.genSrcTypeInfo = genSrcTypeInfo;
 
       if #genSrcTypeInfo.$itemTypeInfoList ~= #itemTypeInfoList {
-         Util.err( "unmatch generic type number -- %d, %d, %s"
+         Util.err( "unmatch generic type number -- %d, %d, %s"  // バグなので
                    (#genSrcTypeInfo.$itemTypeInfoList, #itemTypeInfoList,
                      genSrcTypeInfo.get_display_stirng() ) );
       }
@@ -4724,7 +4724,7 @@ pub class NormalTypeInfo extend TypeInfo {
             case .Set, .Map, .List, .Array, .Box {
                if #self.itemTypeInfoList ~= #self.baseTypeInfo.$itemTypeInfoList
                {
-                  Util.err( "unmatch generic type number -- %d, %d"
+                  Util.err( "unmatch generic type number -- %d, %d" // バグ
                             (#self.itemTypeInfoList,
                               #self.baseTypeInfo.$itemTypeInfoList ) );
                }
@@ -5109,11 +5109,11 @@ addBuiltinMut( headTypeInfoMut, rootScope );
 
 pub static fn TypeInfo.getBuiltinInfo( typeInfo:&TypeInfo ) __noasync : BuiltinTypeInfo {
    if typeInfo.$typeId.$processInfo ~= rootProcessInfoRo {
-      Util.err( "not found builtinMut, mismatch processInfo-- %s (%d)"
+      Util.err( "not found builtinMut, mismatch processInfo-- %s (%d)" // バグ
                 (typeInfo.getTxt(##), typeInfo.$typeId.id ) );
    }
    let! mut info = builtInTypeIdSetWork[ typeInfo.$typeId.id ] {
-      Util.err( "not found builtinMut -- %s( %d)"
+      Util.err( "not found builtinMut -- %s( %d)" // バグ
          (typeInfo.getTxt(##), typeInfo.$typeId.id ) );
    };
    return info;      
@@ -5123,7 +5123,7 @@ pub static fn TypeInfo.getBuiltinInfo( typeInfo:&TypeInfo ) __noasync : BuiltinT
 pub fn getBuiltinMut( typeInfo:&TypeInfo ) __noasync : TypeInfo {
    let mut info = TypeInfo.getBuiltinInfo( typeInfo );
    let! mut typeInfoMut = info.$typeInfoMut {
-      Util.err( "typeInfoMut is nil -- %s (%d)"
+      Util.err( "typeInfoMut is nil -- %s (%d)" // バグ
                 (typeInfo.getTxt(##), typeInfo.$typeId.id ) );
    };
    return typeInfoMut;
@@ -5379,10 +5379,11 @@ pub let builtinTypeNil:&TypeInfo = registBuiltin(
 /**               
 typeInfo の Luaval を生成可能かどうかを調べる。
 
-@param convFlag true の場合、Luaval と LuneScript との値の変換を自動で行なえるかどうか。
+@param convFlag 確認種別。
 @param validToCheck true の場合、 convFlag を利用して typeInfo の型を Luaval として生成可能かどうか調べる。
        通常は true を指定する。 false を指定するのは、例外。
-@return 生成可能な場合は nil。 生成できない場合は メッセージを返す。
+@return str! 生成可能な場合は nil。 生成できない場合は メッセージを返す。
+@return bool luaval に変換可能かどうか。
 */
 fn failCreateLuavalWith(
    typeInfo:&TypeInfo, convFlag:LuavalConvKind, validToCheck:bool ) : str!, bool
@@ -5647,7 +5648,7 @@ pub fn ProcessInfo.createModule(
    // }              
 
    if Parser.isLuaKeyword( moduleName ) {
-      Util.err( "This symbol can not use for a class or script file. -- %s"
+      Util.err( "This symbol can not use for a class or script file. -- %s" // 要対応
                 (moduleName) );
    }
 
@@ -5667,7 +5668,7 @@ pub fn ProcessInfo.createClassAsync(
    accessMode: AccessMode, className: str ) mut : TypeInfo
 {
    if Parser.isLuaKeyword( className ) {
-      Util.err( "This symbol can not use for a class or script file. -- %s"
+      Util.err( "This symbol can not use for a class or script file. -- %s" // 要対応
                 (className) );
    }
 
@@ -5700,7 +5701,7 @@ pub fn ProcessInfo.createExtModule(
    // }              
 
    if Parser.isLuaKeyword( className ) {
-      Util.err( "This symbol can not use for a class or script file. -- %s"
+      Util.err( "This symbol can not use for a class or script file. -- %s" // 要対応
                 (className) );
    }
 
@@ -5724,7 +5725,7 @@ pub fn ProcessInfo.createFuncAsync(
    mutMode: MutMode ) mut : NormalTypeInfo
 {
    if not builtinFlag and Parser.isLuaKeyword( funcName ) {
-      Util.err( "This symbol can not use for a function. -- %s" (funcName) );
+      Util.err( "This symbol can not use for a function. -- %s" (funcName) ); // 要対応
    }
 
    let mut info = new NormalTypeInfo(
@@ -5997,7 +5998,7 @@ pub fn ProcessInfo.createDDD(
             typeInfo = work;  
          }
          case .Err( mess ) {
-            Util.err( mess ); 
+            Util.err( mess );  // 要対応
          }
       }
    }
@@ -6012,7 +6013,7 @@ pub fn ProcessInfo.createDDD(
    }
    if! dddMap[ typeInfo ] {
       if _exp.$typeId.id < userStartId and typeInfo.$typeId.id >= userStartId {
-         Util.err( "on cache" );
+         Util.err( "on cache" ); // バグ
       }
       return _exp;      
    }
@@ -6143,8 +6144,7 @@ pub class CombineType {
          }
          return processInfo.createModifier( work, self.mutMode );
       }
-      // 内部エラー        
-      error( "illegal" );  
+      Util.err( "illegal" );  // バグ
    }
 }
 
@@ -6523,7 +6523,7 @@ pub class AbbrTypeInfo extend TypeInfo {
    }
 
    pub override fn serialize( stream: oStream, serializeInfo: &SerializeInfo ) {
-      Util.err( "illegal call" );
+      Util.err( "illegal call" ); // バグ
    }
 
    pub override fn get_display_stirng_with(
@@ -6563,7 +6563,7 @@ pub let builtinTypeAbbrNone:&TypeInfo = new AbbrTypeInfo( rootProcessInfo, "[##]
 
 pub class ExtTypeInfo extend TypeInfo {
    pri let typeId: &IdInfo { pub };
-   /** 対応する LuneScript のタイプ。 必ず no-nolable になる。 */
+   /** 対応する LuneScript のタイプ。 必ず no-nilable になる。 */
    pri let extedType: &TypeInfo { pub };
    pri let nilableTypeInfo: TypeInfo { pub& };
    pri let mut imutType:&TypeInfo {pub,local};
@@ -6684,7 +6684,7 @@ pub class ExtTypeInfo extend TypeInfo {
       let typeInfo = self.extedType.applyGeneric(
          processInfo, alt2typeMap, moduleTypeInfo );
       if typeInfo ~= self.extedType {
-         Util.err( "not support generics -- %s" (self.extedType.getTxt(##) ) );
+         Util.err( "not support generics -- %s" (self.extedType.getTxt(##) ) ); // 要対応
       }
       return self;               
    }
@@ -6711,7 +6711,7 @@ pub fn ProcessInfo.createLuaval(
    }
    if! let extType = self.$typeInfo2Map.ExtMap[ luneType ] {
       if extType.$typeId.id < userStartId and luneType.$typeId.id >= userStartId {
-         Util.err( "on cache" ); 
+         Util.err( "on cache" );  // ここにくるのはバグ
       }
       if extType.$kind == .Ext {
          return .OK( extType, false );
@@ -6730,7 +6730,7 @@ pub fn ProcessInfo.createLuaval(
       if! let dddType = luneType@@@DDDTypeInfo {
          _match self.createLuaval( dddType.$typeInfo, validToCheck ) {
             case .Err( mess ) {     
-               Util.err( mess );       
+               Util.err( mess ); // 要対応
             }
             case .OK( workType, _ ) {
                return .OK( self.createDDD(
@@ -6775,7 +6775,7 @@ match rootProcessInfo.createLuaval( builtinTypeStem, true ) {
       builtinTypeLua = typeInfo;
    }
    default {               
-      Util.err( "illegal" );  
+      Util.err( "illegal" );  // バグ
    }
 }
 registBuiltin( "Luaval", "Luaval", .Ext, builtinTypeLua, nil, headTypeInfo, nil );
@@ -6841,7 +6841,7 @@ pub fn ProcessInfo.createEnum(
    enumName: str, valTypeInfo:&TypeInfo ) mut : EnumTypeInfo
 {
    if Parser.isLuaKeyword( enumName ) {
-      Util.err( "This symbol can not use for a enum. -- %s"
+      Util.err( "This symbol can not use for a enum. -- %s" // 要対応
                 (enumName) );
    }
 
@@ -6912,7 +6912,7 @@ pub fn ProcessInfo.createAlge(
    itemTypeInfoList:&List<&TypeInfo> ) mut : AlgeTypeInfo
 {
    if Parser.isLuaKeyword( algeName ) {
-      Util.err( "This symbol can not use for a alge. -- %s"
+      Util.err( "This symbol can not use for a alge. -- %s" // 要対応
                 (algeName) );
    }
 

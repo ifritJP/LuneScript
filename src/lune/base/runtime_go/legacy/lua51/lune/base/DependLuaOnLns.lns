@@ -92,8 +92,7 @@ global fn __luneGetLocal( varName:str ):stem!
       //print( name, val )
       index = index + 1;
    }
-   // 指定のローカル変数の値を取得できないのはバグ
-   error( "not found -- " .. varName );
+   Util.err( "not found -- " .. varName ); // 指定のローカル変数の値を取得できないのはバグ
 }
 
 global fn __luneSym2Str( val:stem! ):str! {
@@ -133,7 +132,7 @@ end
             }
             (func@@form)( luaPathList );
          } else {
-            error( "failed to load func" );
+            Util.err( "failed to load func" ); // バグ
          }
       } else {
          Util.println( mess );

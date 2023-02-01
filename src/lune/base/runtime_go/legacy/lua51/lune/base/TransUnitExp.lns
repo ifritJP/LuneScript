@@ -1035,7 +1035,7 @@ fn TransUnit.analyzeTupleConst(
    let! mut expList = self.analyzeListItems(
       token.$pos, nextToken, ")", expectTypeList )
    {
-      self.error( "'Tuple' must not size 0." );
+      self.error( "'Tuple' must not size 0." ); // 要対応
    };
 
    let tupleType;
@@ -1152,7 +1152,7 @@ fn TransUnit.evalMacroOp(
       self.setParser( new Parser.DefaultPushbackParser( parser ) );
    }
    else {
-      self.error( unwrap mess );
+      self.error( unwrap mess ); // 要対応
    }
    
    self.macroCtrl.startExpandMode(
@@ -1371,7 +1371,7 @@ fn TransUnit.prepareExpCall(
       if self.macroCtrl.isUsing__var( funcTypeInfo ) and
          funcTypeInfo.$parentInfo ~= self.$curNsInfo.$typeInfo
       {
-         self.error(
+         self.error( // 要対応
             "The macro (%s) only can use at the same scope declared it, because it's access __ver."
             (funcTypeInfo.getTxt( ## ) ) );
       }
@@ -1404,7 +1404,7 @@ fn TransUnit.prepareExpCall(
 
    if funcTypeInfo.$kind == .Macro and matchResult == .Error {
       // マクロの場合、引数が一致していない時はエラーで止める。
-      self.error( "unmatch macro arguments. -- %s" (funcTypeInfo.getTxt(##) ) );
+      self.error( "unmatch macro arguments. -- %s" (funcTypeInfo.getTxt(##) ) ); // 要対応
    }
 
 
@@ -1441,7 +1441,7 @@ fn TransUnit.checkArgForStringForm(
             formArgTypeList.insert( workNode.$expType );
          }
       } else {
-         self.error( "illegal node -- %s"
+         self.error( "illegal node -- %s" // バグ
                      (Nodes.getNodeKindName( argList.$expList[ 2 ].$kind) ));
       }
    }
@@ -1625,14 +1625,14 @@ fn TransUnit.processFunc(
                case .Method, .Func, .Form, .FormFunc {
                }
                default {
-                  self.error( "can't call the type -- %s, %s"
+                  self.error( "can't call the type -- %s, %s" // 要対応
                               ( funcTypeInfo.getTxt(##),
                                 funcTypeInfo.$kind.$_txt ) );
                }
             }
          }
          else {
-            self.error( "can't call the type -- %s, %s"
+            self.error( "can't call the type -- %s, %s" // 要対応
                         ( funcTypeInfo.getTxt(##),
                           funcTypeInfo.$kind.$_txt ) );
          }
@@ -2267,7 +2267,7 @@ fn TransUnit.analyzeAccessClassField(
    }
    let className = classTypeInfo.getTxt(##);
    let! classScope = classTypeInfo.$scope {
-      self.error( "not found field: %s, %s"
+      self.error( "not found field: %s, %s" // バグ
                   ( className, classTypeInfo ) );
    };
    
@@ -2320,10 +2320,10 @@ fn TransUnit.analyzeAccessClassField(
    }
    if not fieldTypeInfo {
       foreach val, name in classScope.$symbol2SymbolInfoMap {
-         Util.errorLog( "debug: %s, %s" ( name, val ) );
+         Util.debugLog( "debug: %s, %s" ( name, val ) );
       }
-      Util.errorLog( "class, scope: -- %s, %s" (classTypeInfo, classScope));
-      self.error( "not found field typeInfo: %s.%s -- %s"
+      Util.debugLog( "class, scope: -- %s, %s" (classTypeInfo, classScope));
+      self.error( "not found field typeInfo: %s.%s -- %s" // 要対応
                   ( classTypeInfo.getFullName( self.typeNameCtrl, self.$scope, false ),
                     token.txt, classTypeInfo.$kind.$_txt ) );
    }
@@ -2906,7 +2906,7 @@ fn TransUnit.analyzeExpField(
                [ typeInfo ], prefixExp, accessNil, fieldToken.txt, nil );
          }
          else {
-            self.error( "illegal type -- %s, %s"
+            self.error( "illegal type -- %s, %s" // 要対応
                         ( prefixExpType.getTxt(##),
                           prefixExpType.get_kind().$_txt ) );
          }
@@ -3232,7 +3232,7 @@ local fn TransUnit.analyzeExpSymbol(
          }
       }
       else {
-         Util.err( "prefixExp is nil" );
+         Util.err( "prefixExp is nil" ); // バグ
       }
    }
    elseif mode == .Symbol {
@@ -3250,7 +3250,7 @@ local fn TransUnit.analyzeExpSymbol(
             if self.macroCtrl.$isDeclaringMacro and
                symbolToken.txt == "__var" and self.analyzePhase == .Runner
             {
-               self.error( "declare '_lune_control use_macro_special_var'." );
+               self.error( "declare '_lune_control use_macro_special_var'." ); // 要対応
             } else {
                if self.analyzeMode ~= .Diag and Log.getLevel() >= .Debug {
                   let mut work:&Ast.Scope = self.$scope;
@@ -3269,7 +3269,7 @@ local fn TransUnit.analyzeExpSymbol(
                         return true;
                      } );
                }
-               self.error( "not found type -- " .. symbolToken.txt );
+               self.error( "not found type -- " .. symbolToken.txt ); // 要対応
             }
          };
 
@@ -3393,7 +3393,7 @@ local fn TransUnit.analyzeExpSymbol(
          .Func, false, false, false, .Local, false, nil, symbolToken, nil );
    }
    else {
-      self.error( "illegal mode -- %s" ( mode ) );
+      self.error( "illegal mode -- %s" ( mode ) ); // バグ
    }
 
    if self.analyzeMode == .Inquire and self.isTargetToken ( symbolToken ) {
@@ -3679,7 +3679,7 @@ fn TransUnit.analyzeExpOp2(
                   ( opTxt, Nodes.getNodeKindName( exp.$kind ) ) );
             }
             let! opLevel = op2levelMap[ opTxt ] {
-               self.error( "unknown op -- %s %s" (opTxt, prevOpLevel ) );
+               self.error( "unknown op -- %s %s" (opTxt, prevOpLevel ) ); // 要対応
             };
             if! prevOpLevel {
                if opLevel <= _exp {
@@ -4002,7 +4002,7 @@ fn TransUnit.analyzeExpOp2(
                   }
                }
                default {
-                  self.error( "unknown op " .. opTxt );
+                  self.error( "unknown op " .. opTxt ); // 要対応
                }
             }
 
@@ -4013,7 +4013,7 @@ fn TransUnit.analyzeExpOp2(
                self.nodeManager.MultiTo1( exp ), self.nodeManager.MultiTo1( exp2 ) );
          }
          else {
-            self.error( "illegal op" );
+            self.error( "illegal op" ); // 要対応
          }
       }
       else {
@@ -4112,10 +4112,10 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
       else {
          if currentFunc.$rawTxt == "__init" {
             let! superScope = superType.$scope {
-               self.error( "not found super scope" );
+               self.error( "not found super scope" ); // 要対応
             };    
             let! superCtorType = superScope.getTypeInfoChild( "__init" ) {
-               self.error( "not found super '__init'" );
+               self.error( "not found super '__init'" ); // バグ
             }; 
             self.checkMatchValType(
                firstToken.$pos, superCtorType, expList, [], classType );
@@ -4355,7 +4355,7 @@ fn TransUnit.analyzeExp(
             return self.analyzeExpCont( firstToken, exp, false, canLeftExp, canCondRet );
          }
 
-         self.error( "illegal enum val -- %s.%s"
+         self.error( "illegal enum val -- %s.%s" // 要対応
                      (orgExpectType.getTxt(##), nextToken.txt) );
       }
       if! let algeTyepInfo = orgExpectType.$srcTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
@@ -4363,7 +4363,7 @@ fn TransUnit.analyzeExp(
             firstToken, orgExpectType.$srcTypeInfo, algeTyepInfo, nil );
       }
 
-      self.error( "illegal type for '.' -- %s" (orgExpectType.getTxt(##) ) );
+      self.error( "illegal type for '.' -- %s" (orgExpectType.getTxt(##) ) ); // 要対応
    }
 
    fn processsNewExp( token:&Parser.Token ): Nodes.Node {
@@ -4373,11 +4373,11 @@ fn TransUnit.analyzeExp(
       switch classTypeInfo.$kind {
          case .Class, .IF {
             if classTypeInfo.equals( self.processInfo, Ast.builtinTypeString## ) {
-               self.error( "'new' can't use this type -- %s" (classTypeInfo.getTxt(##)));
+               self.error( "'new' can't use this type -- %s" (classTypeInfo.getTxt(##))); // 要対応
             }
          }
          default {
-            self.error( "'new' can't use this type -- %s" (classTypeInfo.getTxt(##)));
+            self.error( "'new' can't use this type -- %s" (classTypeInfo.getTxt(##))); // 要対応
          }
       }
       
@@ -4395,7 +4395,7 @@ fn TransUnit.analyzeExp(
       
       let classScope = classTypeInfo.get_scope();
       let! initTypeInfo = (unwrap classScope).getTypeInfoChild( "__init" ) {
-         self.error( "not found __init" );
+         self.error( "not found __init" ); // バグ
       };
 
       self.checkNoasyncType( token.pos, initTypeInfo );
@@ -4535,14 +4535,14 @@ fn TransUnit.analyzeExp(
          case ",,," {
             macroExpFlag = true;
             if not expType.equals( self.processInfo, Ast.builtinTypeString ##) {
-               self.error( "unmatch ,,, type, need string type" );
+               self.error( "unmatch ,,, type, need string type" ); // 要対応
             }  
             typeInfo = Ast.builtinTypeSymbol;
          }
          case ",,,," {
             macroExpFlag = true;
             if not expType.equals( self.processInfo, Ast.builtinTypeSymbol ##) {
-               self.error( "unmatch ,,, type, need symbol type" );
+               self.error( "unmatch ,,, type, need symbol type" ); // 要対応
             }  
             typeInfo = Ast.builtinTypeString;
          }  
@@ -4558,7 +4558,7 @@ fn TransUnit.analyzeExp(
             typeInfo = Ast.builtinTypeInt;
          }
          default {
-            self.error( "unknown op1" );
+            self.error( "unknown op1" ); // 要対応
          }
       }  
 
@@ -4598,7 +4598,7 @@ fn TransUnit.analyzeExp(
             }
             exp = processsExpectExp( token, orgExpectType );
          } else {
-            self.error( "illegal '.'" );
+            self.error( "illegal '.'" ); // 要対応
          }
       }
       elseif token.txt == '[' or token.txt == '[@' {
@@ -4709,7 +4709,7 @@ fn TransUnit.analyzeExp(
    }  
    elseif token.kind == Parser.TokenKind.Type {
       let! symbolTypeInfo = Ast.getSym2builtInTypeMap()[ token.txt ] {
-         self.error( "unknown type -- %s" ( token.txt ) );
+         self.error( "unknown type -- %s" ( token.txt ) ); // バグ
       }; 
       exp = Nodes.ExpRefNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
@@ -4737,7 +4737,7 @@ fn TransUnit.analyzeExp(
    }
 
    if exp.$kind == Nodes.NodeKind.$None {
-      self.error( "illegal exp" );
+      self.error( "illegal exp" ); // 要対応
    }
 
    if skipOp2Flag {

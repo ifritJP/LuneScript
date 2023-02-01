@@ -427,7 +427,7 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                   typeInfo = self.createExtType( symbolNode.$pos, genericList[1] );
                }
             } default {
-               self.error( string.format( "not support generic: %s",
+               self.error( string.format( "not support generic: %s", // 要対応
                                           typeInfo.getTxt(##) ) );
             }
          }
@@ -784,7 +784,7 @@ fn TransUnit.analyzeDeclMacroSub(
 {
    if self.macroCtrl.$isDeclaringMacro {
       // macro 定義内に、別のマクロ定義はサポート外
-      self.error( "can't declare the macro in the macro." );
+      self.error( "can't declare the macro in the macro." ); // 要対応
    }
    
  
@@ -812,7 +812,7 @@ fn TransUnit.analyzeDeclMacroSub(
          argList.insert( _exp );
       }
       else {
-         self.error( "macro argument can not use '...'." );
+         self.error( "macro argument can not use '...'." ); // 要対応
       }
       let argType = argNode.$expType;
       argTypeList.insert( argType );
@@ -1030,7 +1030,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
          ifRefList.insert( ifTypeNode );
          let ifType = ifTypeNode.$expType;
          if ifType.$kind ~= .IF {
-            self.error( "%s is not interface -- %d"
+            self.error( "%s is not interface -- %d" // 要対応
                         (ifType.getTxt(##), ifType.$kind ) );
          }
 
@@ -1054,7 +1054,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
             if nextToken.txt == ")" {
                break;
             }
-            self.error( "illegal token" );
+            self.error( "illegal token" ); // 要対応
          }
       }
       nextToken = self.getToken(##);
@@ -1285,7 +1285,7 @@ fn TransUnit.analyzeDeclProto(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(),  [ classTypeInfo ], name, inheritInfo );
    }
-   self.error( "illegal proto" );
+   self.error( "illegal proto" ); // 要対応
 }
 
 fn TransUnit.analyzeDeclEnum(
@@ -1349,12 +1349,12 @@ fn TransUnit.analyzeDeclEnum(
                   valTypeInfo = Ast.builtinTypeString;
                }
                default {
-                  self.error( "illegal enum val -- %s" ( literal.$_txt ) );
+                  self.error( "illegal enum val -- %s" ( literal.$_txt ) ); // 要対応
                }
             }
          }
          else {
-            self.error( "illegal enum val -- %s" (mess) );
+            self.error( "illegal enum val -- %s" (mess) ); // 要対応
          }
 
          nextToken = self.getToken(##);
@@ -2456,7 +2456,7 @@ nil の場合、メンバの宣言位置。
       }
       
       if mode ~= .Class {
-         self.error( "%s can not have __init block." (mode) );
+         self.error( "%s can not have __init block." (mode) ); // 要対応
       }
       hasInitBlock = true;
       foreach symbolInfo in self.$scope.$symbol2SymbolInfoMap {
@@ -2507,7 +2507,7 @@ nil の場合、メンバの宣言位置。
       }
       self.checkToken( nextToken, ";" );
       let! memberNode = memberName2Node[ memberToken.txt ] {
-         self.error( "not found member -- %s" (memberToken.txt) );
+         self.error( "not found member -- %s" (memberToken.txt) ); // 要対応
       };
       let mut advInfo = new Nodes.AdvertiseInfo( memberNode, prefix, memberToken.pos );
       advertiseList.insert( advInfo );
@@ -2566,7 +2566,7 @@ nil の場合、メンバの宣言位置。
             self.class2defaultAsyncMode[ self.getCurrentNamespaceTypeInfo() ] = .NoAsync;
          }
          default {
-            self.error( "unknown option -- %s" (nextToken.txt) );
+            self.error( "unknown option -- %s" (nextToken.txt) ); // 要対応
          }
       }
       self.checkNextToken( ";" );
@@ -2656,11 +2656,11 @@ nil の場合、メンバの宣言位置。
                   self.checkNextToken( ";" );
                }
                else {
-                  self.error( "illegal field" );
+                  self.error( "illegal field" ); // 要対応
                }
             }
             else {
-               self.error( "illegal field" );
+               self.error( "illegal field" ); // 要対応
             }
          }
       }
@@ -2768,7 +2768,7 @@ fn TransUnit.analyzeDeclClass(
       if nextToken.txt == "of" {
          let langToken = self.getToken(##);
          if langToken.kind ~= .Str {
-            self.error( "it's not a string -- %s" ( langToken.txt ) );
+            self.error( "it's not a string -- %s" ( langToken.txt ) ); // 要対応
          }
          let langIdToken = langToken.getExcludedDelimitTxt();
          if langIdToken ~= "" {
@@ -2915,7 +2915,7 @@ fn TransUnit.analyzeDeclClass(
             }
          }
          default {
-            self.error( "advertise member type is illegal -- %s"
+            self.error( "advertise member type is illegal -- %s" // 要対応
                         (advertiseInfo.$member.$name) );
          }
       }
@@ -3140,7 +3140,7 @@ fn TransUnit.processAddFunc(
 }
 
 local fn TransUnit.addFuncBlockInfoList( funcBlockInfo:FuncBlockInfo ) mut {
-   Util.err( "not implemented" );
+   Util.err( "not implemented" ); // バグ
 }
 
 
@@ -3203,11 +3203,11 @@ fn TransUnit.analyzeDeclFunc(
                                  unwrap self.namespace2Scope[ classTypeInfo ] );       
          }
          else {
-            self.error( "not found class -- %s" (className) );
+            self.error( "not found class -- %s" (className) ); // 要対応
          }
       }
       else {
-         self.error( "can't use '.' for any function name" );
+         self.error( "can't use '.' for any function name" ); // 要対応
       }
 
       name = self.getSymbolToken( .MustNot_ );
@@ -3679,7 +3679,7 @@ fn TransUnit.analyzeDeclFunc(
             self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ], info );
       }
       default {
-         self.error( "illegal kind -- %d" (kind) );
+         self.error( "illegal kind -- %d" (kind) ); // バグ
       }
    }
    self.has__func__Symbol.del( typeInfo );
@@ -3801,7 +3801,7 @@ List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode
    
    expList = self.analyzeExpList( false, false, false, true, nil, expectTypeList ## );
    if not expList {
-      self.error( "expList is nil" );
+      self.error( "expList is nil" ); // 要対応
    }
    
 
@@ -4485,7 +4485,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    }
    else {
       self.addErrMess( nextToken.pos, "if! let has illegal init val." );
-      self.error( "system error" );
+      self.error( "system error" ); // 要対応
    }
    foreach varInfo in letVarList {
       varNameList.insert( varInfo.varName );

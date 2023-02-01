@@ -55,7 +55,6 @@ pub interface PushbackParser {
    pub fn pushbackStr( asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut;
    pub fn newPushback( tokenList: List<&Token> ) mut;
    pub fn getStreamName(): str;
-   pub fn error( message:str ) mut :__;
    pub fn createPosition( lineNo: int, column: int ) : &Position;
 }
 
@@ -86,7 +85,7 @@ pub fn convFromRawToStr( txt:str ) : str {
    while true {
       let! endIndex = string.find( workTxt, workPattern, workIndex ## ) {
          // 文字列の区切り文字がない場合はエラー
-         Util.err( "error: illegal string -- %s" ( workTxt ) );
+         Util.err( "error: illegal string -- %s" ( workTxt ) ); // 要対応
       };
       let workChar = workTxt[ endIndex ];
       if workChar == findChar {
@@ -183,7 +182,7 @@ pub class StreamParser extend Parser {
       if! asyncParser {
          self.asyncParser = _exp;
       } else {
-         Util.err( errMess );
+         Util.err( errMess ); // 要対応
       }
       self.streamName = self.asyncParser.$streamName;
    }
@@ -319,10 +318,6 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       for index = #tokenList, 1, -1  {
          self.pushbackToken( tokenList[ index ] );
       }
-   }
-   pub fn error( message:str ) mut :__
-   {
-      Util.err( message );
    }
 
    pub fn getLastPos() : &Position {
