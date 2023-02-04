@@ -201,6 +201,10 @@ function dumpFilter:dump( opt, node, txt )
       attrib = string.format( "%s %s", attrib, "nilacc")
    end
    
+   if node:isIntermediate(  ) then
+      attrib = string.format( "%s %s", attrib, "inter")
+   end
+   
    if #attrib ~= 0 then
       attrib = string.format( "[%s]", attrib)
    end

@@ -5587,7 +5587,7 @@ pub override fn convFilter.processExpCall(
       self.writeRaw( "})" );
       self.writeRaw( "/* %d:%d */" (node.$pos.lineNo, node.$pos.column) );
       
-      if opt.parent.hasNilAccess() {
+      if node.isIntermediate() and  opt.parent.hasNilAccess() {
          // self.writeln(" && // " );
       } else {
          self.writeRaw( ")" );
@@ -6147,7 +6147,7 @@ pub override fn convFilter.processRefField(
          self.writeln( "&&" );
       }
       self.writeRaw( "%s.NilAccPush(" (getEnvTxt));
-      if opt.parent.hasNilAccess() {
+      if node.isIntermediate() and opt.parent.hasNilAccess() {
          openParenNum = 1;
       } else {
          openParenNum = 2;
@@ -6221,7 +6221,7 @@ pub override fn convFilter.processGetField(
          
          if node.hasNilAccess() {
             self.writeRaw("})" );
-            if opt.parent.hasNilAccess() {
+            if node.isIntermediate() and opt.parent.hasNilAccess() {
                // self.writeln(" && // " );
             } else {
                self.writeRaw( ")" );

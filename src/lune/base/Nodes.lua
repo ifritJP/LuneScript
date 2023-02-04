@@ -523,6 +523,13 @@ NodeVisitMode.__allList[3] = NodeVisitMode.End
 
 
 _moduleObj.Node = Node
+function Node:isIntermediate(  )
+
+   return false
+end
+function Node:setTailExp(  )
+
+end
 function Node:comp( node )
 
    if self.managerId < node.managerId then
@@ -701,14 +708,16 @@ function ExpNode:__init(managerId, id, kind, pos, inTestBlock, macroArgFlag, exp
    
    self.isTailExp = false
 end
+function ExpNode:isIntermediate(  )
+
+   return not self.isTailExp
+end
+function ExpNode:setTailExp(  )
+
+   self.isTailExp = true
+end
 function ExpNode._setmeta( obj )
   setmetatable( obj, { __index = ExpNode  } )
-end
-function ExpNode:get_isTailExp()
-   return self.isTailExp
-end
-function ExpNode:set_isTailExp( isTailExp )
-   self.isTailExp = isTailExp
 end
 
 

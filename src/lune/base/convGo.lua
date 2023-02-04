@@ -6829,7 +6829,7 @@ function convFilter:processExpCall( node, opt )
       self:writeRaw( "})" )
       self:writeRaw( string.format( "/* %d:%d */", node:get_pos().lineNo, node:get_pos().column) )
       
-      if opt.parent:hasNilAccess(  ) then
+      if node:isIntermediate(  ) and opt.parent:hasNilAccess(  ) then
       else
        
          self:writeRaw( ")" )
@@ -7460,8 +7460,14 @@ function convFilter:processRefField( node, opt )
       end
       
       self:writeRaw( string.format( "%s.NilAccPush(", getEnvTxt) )
-      if opt.parent:hasNilAccess(  ) then
-         openParenNum = 1
+      if node:isIntermediate(  ) then
+         if opt.parent:hasNilAccess(  ) then
+            openParenNum = 1
+         else
+          
+            openParenNum = 2
+         end
+         
       else
        
          openParenNum = 2
@@ -7548,7 +7554,7 @@ function convFilter:processGetField( node, opt )
             
             if node:hasNilAccess(  ) then
                self:writeRaw( "})" )
-               if opt.parent:hasNilAccess(  ) then
+               if node:isIntermediate(  ) and opt.parent:hasNilAccess(  ) then
                else
                 
                   self:writeRaw( ")" )

@@ -87,6 +87,9 @@ class dumpFilter extend Nodes.Filter<Opt> {
       if node.hasNilAccess() {
          attrib = "%s %s" (attrib, "nilacc" );
       }
+      if node.isIntermediate() {
+         attrib = "%s %s" (attrib, "inter" );
+      }
       if #attrib ~= 0 {
          attrib = "[%s]" (attrib);
       }

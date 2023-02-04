@@ -4157,7 +4157,7 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    if not continueFlag or nextToken.txt ~= "!" {
       self.pushback();
       self.pushbackToken( firstToken );
-      let exp = self.analyzeExp( false, false, false, false ## );
+      let exp = self.analyzeExpOneRVal( false, false ## );
       self.checkNextToken( ";" );
       if not exp.$expType.$nilable {
          self.addErrMess( exp.$pos, "this value is not nilable." );
@@ -4314,6 +4314,17 @@ fn TransUnit.analyzeStrConst(
 }
 
 fn TransUnit.analyzeExp(
+   allowNoneType: bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool, 
+   prevOpLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+{
+   let mut node = self.analyzeExpSub(
+      allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType );
+   node.setTailExp();
+   return node;
+}
+
+
+fn TransUnit.analyzeExpSub(
    allowNoneType: bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool, 
    prevOpLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {

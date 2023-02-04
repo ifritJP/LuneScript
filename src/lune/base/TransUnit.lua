@@ -11585,7 +11585,7 @@ function TransUnit:analyzeUnwrap( firstToken )
    if not continueFlag or nextToken.txt ~= "!" then
       self:pushback(  )
       self:pushbackToken( firstToken )
-      local exp = self:analyzeExp( false, false, false, false )
+      local exp = self:analyzeExpOneRVal( false, false )
       self:checkNextToken( ";" )
       if not exp:get_expType():get_nilable() then
          self:addErrMess( exp:get_pos(), "this value is not nilable." )
@@ -11739,6 +11739,14 @@ end
 
 
 function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType )
+
+   local node = self:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType )
+   node:setTailExp(  )
+   return node
+end
+
+
+function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType )
 
    local firstToken = self:getToken(  )
    
@@ -12306,6 +12314,7 @@ function TransUnit:analyzeStatement( termTxt )
             self.accessSymbolSetQueue:push(  )
             
             local exp = self:analyzeExp( true, false, true, true )
+            
             local nextToken = self:getToken(  )
             if nextToken.txt == "," then
                local expList = self:analyzeExpList( true, true, true, false, exp )

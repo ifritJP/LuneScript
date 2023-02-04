@@ -223,6 +223,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
             self.accessSymbolSetQueue.push();
 
             let mut exp = self.analyzeExp( true, false, true, true ## );
+            
             let mut nextToken = self.getToken(##);
             if nextToken.txt == "," {
                let mut expList = self.analyzeExpList( true, true, true, false, exp ## );

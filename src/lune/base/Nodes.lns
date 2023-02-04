@@ -236,6 +236,12 @@ pub abstract class Node {
    /** testblock 内の Node かどうか。*/
    let inTestBlock:bool {pub};
 
+   pub fn isIntermediate() : bool {
+      return false;
+   }
+   pub fn setTailExp() mut {
+   }
+   
    pub fn comp( node:&Node ) : int {
       if self.managerId < node.managerId {
          return -1;
@@ -374,14 +380,20 @@ _declNodeClass ではカバーできない visit() のカスタマイズ用
 }
 
 pub abstract class ExpNode extend Node {
-   // aa.bb.cc の cc となる ExpNode かどうか
-   let mut isTailExp:bool {pub,pub};
+   // aa.bb.cc の cc となる ExpNode かどうか。
+   let mut isTailExp:bool;
    pub fn __init(
       managerId:int, id: int, kind: int, pos: &Parser.Position,
       inTestBlock:bool,  macroArgFlag:bool, expTypeList: &List<&Ast.TypeInfo> )
    {
       super( managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList );
       self.isTailExp = false;
+   }
+   pub override fn isIntermediate() : bool {
+      return not self.isTailExp;
+   }
+   pub override fn setTailExp() mut {
+      self.isTailExp = true;
    }
 }
 
