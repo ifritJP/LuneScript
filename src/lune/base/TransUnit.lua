@@ -6457,21 +6457,25 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
     
       if name ~= nil then
          if not _lune._Set_has(CantOverrideMethods, name.txt ) then
-            if self:get_scope():get_parent():getTypeInfoField( name.txt, false, funcBodyScope, Ast.ScopeAccess.Full ) then
-               
-               self:addErrMess( firstToken.pos, "mismatch override --" .. funcName )
-            else
-             
-               do
-                  local ifFunc = self:get_scope():get_parent():getSymbolInfoIfField( name.txt, funcBodyScope, Ast.ScopeAccess.Full )
-                  if ifFunc ~= nil then
-                     if not ifFunc:get_typeInfo():canEvalWith( self.processInfo, typeInfo, Ast.CanEvalType.SetEq, alt2typeMap ) then
-                        self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s", funcName) )
-                     end
-                     
+            do
+               local sameNameType = self:get_scope():get_parent():getTypeInfoField( name.txt, false, funcBodyScope, Ast.ScopeAccess.Full )
+               if sameNameType ~= nil then
+                  if not staticFlag or not sameNameType:get_staticFlag() then
+                     self:addErrMess( firstToken.pos, "can't exist the same name func --" .. funcName )
                   end
+                  
+               else
+                  do
+                     local ifFunc = self:get_scope():get_parent():getSymbolInfoIfField( name.txt, funcBodyScope, Ast.ScopeAccess.Full )
+                     if ifFunc ~= nil then
+                        if not ifFunc:get_typeInfo():canEvalWith( self.processInfo, typeInfo, Ast.CanEvalType.SetEq, alt2typeMap ) then
+                           self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s", funcName) )
+                        end
+                        
+                     end
+                  end
+                  
                end
-               
             end
             
          end

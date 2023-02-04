@@ -3470,16 +3470,16 @@ fn TransUnit.analyzeDeclFunc(
    else {
       when! name {
          if not CantOverrideMethods.has( name.txt ) {
-            if self.$scope.$parent.getTypeInfoField(
+            if! let sameNameType = self.$scope.$parent.getTypeInfoField(
                name.txt, false, funcBodyScope, .Full )
             {
-               // override 宣言していないのに、オーバーライドしている場合エラー
-               self.addErrMess( firstToken.pos,
-                                "mismatch override --" .. funcName );
+               if not staticFlag or not sameNameType.$staticFlag {
+                  self.addErrMess( firstToken.pos,
+                                   "can't exist the same name func --" .. funcName );
+               }
             } else {
-               if! let ifFunc =
-                  self.$scope.$parent.getSymbolInfoIfField(
-                     name.txt, funcBodyScope, .Full )
+               if! let ifFunc = self.$scope.$parent.getSymbolInfoIfField(
+                  name.txt, funcBodyScope, .Full )
                {
                   if not ifFunc.$typeInfo.canEvalWith(
                      self.processInfo, typeInfo, .SetEq, alt2typeMap )

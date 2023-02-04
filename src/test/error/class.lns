@@ -557,3 +557,19 @@ class Test9 extend Super7 {
    class Sub extend Super { // error
    }
 }
+class Hoge {
+   pub static fn hoge1() {
+   }
+   pub static fn hoge2() {
+   }
+   pub fn hoge3() {
+   }
+}
+class Sub extend Hoge { // error
+   pub static fn hoge1() {
+   }
+   pub fn hoge2() { // error
+   }
+   pub static fn hoge3() { // error
+   }
+}

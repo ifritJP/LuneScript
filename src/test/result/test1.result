@@ -1218,14 +1218,14 @@ test/error/class.lns:54:10: error: can't access this symbol. -- val3
 test/error/class.lns:54:15: error: this is not mutable variable. -- val3
 test/error/class.lns:56:8: error: = operator: exp(1) type mismatch int(26) <- @test.@error.@class.Test3(1053): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/class.lns:60:1: error: define interface already -- Test4
-test/error/class.lns:60:1: error: mismatch class(@test.@error.@class.Test4) abstract for prototpye
+test/error/class.lns:60:1: error: mismatch class(@test.@error.@class.Test4) abstract for prototype
 test/error/class.lns:64:1: error: define class already -- Test5
-test/error/class.lns:64:1: error: mismatch class(@test.@error.@class.Test5) abstract for prototpye
+test/error/class.lns:64:1: error: mismatch class(@test.@error.@class.Test5) abstract for prototype
 test/error/class.lns:65:8: error: this symbol is lua keyword -- function
 test/error/class.lns:69:8: error: interface can not have member
 test/error/class.lns:70:4: error: interface's fields must be 'pub'.
 test/error/class.lns:71:18: error: abstract method can't have body.
-test/error/class.lns:75:1: error: mismatch class(@test.@error.@class.Test__a) base class(Test6) for prototpye base class(<head>)
+test/error/class.lns:75:1: error: mismatch class(@test.@error.@class.Test__a) base class(Test6) for prototype base class(<head>)
 test/error/class.lns:75:7: error: already declare symbol -- Test__a
 test/error/class.lns:75:22: error: Test6 is not class.
 test/error/class.lns:78:1: error: This class (Test7) need __init block for initialize static members.
@@ -1264,9 +1264,9 @@ test/error/class.lns:169:19: error: this is not public type -- PriClass
 test/error/class.lns:178:1: error: IFTest2.func: mismatch method type -- unmatch arg(1) type -- int, str: func(str) -- func(str)
 test/error/class.lns:179:11: error: This function doesn't have body. -- func
 test/error/class.lns:179:11: error: mismatch method type -- func
-test/error/class.lns:184:1: error: mismatch class(@test.@error.@class.TestAbs) abstract for prototpye
-test/error/class.lns:184:1: error: mismatch class(@test.@error.@class.TestAbs) accessmode(AccessMode.Pri) for prototpye accessmode(AccessMode.Pub)
-test/error/class.lns:188:1: error: mismatch class(@test.@error.@class.TestProto) accessmode(AccessMode.Pri) for prototpye accessmode(AccessMode.Pub)
+test/error/class.lns:184:1: error: mismatch class(@test.@error.@class.TestAbs) abstract for prototype
+test/error/class.lns:184:1: error: mismatch class(@test.@error.@class.TestAbs) accessmode(AccessMode.Pri) for prototype accessmode(AccessMode.Pub)
+test/error/class.lns:188:1: error: mismatch class(@test.@error.@class.TestProto) accessmode(AccessMode.Pri) for prototype accessmode(AccessMode.Pub)
 test/error/class.lns:194:1: error: not implements method -- IF.func at extIF
 test/error/class.lns:196:1: error: not implements method -- IF.func at extIF2
 test/error/class.lns:198:1: error: not implements method -- IF.func at subIF
@@ -1285,22 +1285,22 @@ test/error/class.lns:262:26: error: IFSuper can't be external symbol.
 test/error/class.lns:262:26: error: This type must be public. -- IFSuper
 test/error/class.lns:266:4: error: The public class must declare at top scope.
 test/error/class.lns:290:12: error: Set member(val) before to access the method-- func
-test/error/class.lns:296:4: error: mismatch class(@test.@error.@class.Sub) interface(1) for prototpye interface(0)
+test/error/class.lns:296:4: error: mismatch class(@test.@error.@class.Sub) interface(1) for prototype interface(0)
 test/error/class.lns:301:14: error: Set member -- s_val
 test/error/class.lns:311:7: error: The '__init' block only support at the top level classes.
 test/error/class.lns:315:14: error: Set member -- Test.val
-test/error/class.lns:324:7: error: mismatch class(@test.@error.@class.Sub) interface(1) for prototpye interface(0)
-test/error/class.lns:327:7: error: mismatch class(@test.@error.@class.Sub2) base class(Super) for prototpye base class(<head>)
-test/error/class.lns:330:7: error: mismatch class(@test.@error.@class.Sub3<T>) generics(0) for prototpye generics(1)
-test/error/class.lns:335:7: error: mismatch class(@test.@error.@class.Sub) interface(0) for prototpye interface(1)
-test/error/class.lns:338:7: error: mismatch class(@test.@error.@class.Sub2) base class(None) for prototpye base class(Super)
-test/error/class.lns:341:7: error: mismatch class(@test.@error.@class.Sub3) generics(1) for prototpye generics(0)
+test/error/class.lns:324:7: error: mismatch class(@test.@error.@class.Sub) interface(1) for prototype interface(0)
+test/error/class.lns:327:7: error: mismatch class(@test.@error.@class.Sub2) base class(Super) for prototype base class(<head>)
+test/error/class.lns:330:7: error: mismatch class(@test.@error.@class.Sub3<T>) generics(0) for prototype generics(1)
+test/error/class.lns:335:7: error: mismatch class(@test.@error.@class.Sub) interface(0) for prototype interface(1)
+test/error/class.lns:338:7: error: mismatch class(@test.@error.@class.Sub2) base class(None) for prototype base class(Super)
+test/error/class.lns:341:7: error: mismatch class(@test.@error.@class.Sub3) generics(1) for prototype generics(0)
 test/error/class.lns:351:14: error: mismatch async -- Async.Async / Async.Noasync
 test/error/class.lns:351:14: error: multiple define -- get_val
 test/error/class.lns:370:12: error: mismatch accessMode -- AccessMode.Pub / AccessMode.Pri
 test/error/class.lns:370:12: error: mismatch async -- Async.Async / Async.Noasync
 test/error/class.lns:370:12: error: multiple define -- get_val
-test/error/class.lns:382:10: error: mismatch override --func1
+test/error/class.lns:382:10: error: can't exist the same name func --func1
 test/error/class.lns:384:19: error: not found override -- func2
 test/error/class.lns:396:4: error: Sub.func2: mismatch method type -- unmatch arg(1) type -- int, Luaval<Hoge>: func2(Luaval<Hoge>) -- func2(Luaval<Hoge>)
 test/error/class.lns:396:4: error: Sub.func2: mismatch method type -- unmatch arg(1) type -- int, Luaval<Hoge>: func2(Luaval<Hoge>) -- func2(Luaval<Hoge>)
@@ -1334,6 +1334,12 @@ test/error/class.lns:519:7: error: Mapping class has not the abstract class memb
 test/error/class.lns:542:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2269) <- &@test.@error.@class.Hoge(2271): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/class.lns:550:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2269) <- &@test.@error.@class.Hoge(2271): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/class.lns:557:21: error: final class can't extend -- (Super)
+test/error/class.lns:568:1: error: Sub.hoge3: mismatch method type -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func: hoge3() -- hoge3()
+test/error/class.lns:568:1: error: Sub.hoge3: mismatch method type -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func: hoge3() -- hoge3()
+test/error/class.lns:568:1: error: Sub.hoge3: mismatch override staticFlag -- hoge3: hoge3() -- hoge3()
+test/error/class.lns:568:1: error: Sub.hoge3: mismatch override staticFlag -- hoge3: hoge3() -- hoge3()
+test/error/class.lns:571:11: error: can't exist the same name func --hoge2
+test/error/class.lns:573:18: error: can't exist the same name func --hoge3
 test/error/class2.lns:2:8: error: This member can't have setter, this member is immutable. -- val
 test/error/class2.lns:9:19: error: __init: exp(2) type mismatch int <- [##]: dst 2 -- 
 test/error/class2.lns:10:9: error: can't access mutable method. -- &TestAcc.set_val

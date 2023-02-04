@@ -246,27 +246,27 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
          typeInfo = _exp
          
          if typeInfo:get_abstractFlag() ~= abstractFlag then
-            self:error( string.format( "mismatch class(%s) abstract for prototpye", typeInfo:getTxt(  )) )
+            self:error( string.format( "mismatch class(%s) abstract for prototype", typeInfo:getTxt(  )) )
          end
          
          if typeInfo:get_finalFlag() ~= finalFlag then
-            self:error( string.format( "mismatch class(%s) final for prototpye. %s, %s", typeInfo:getTxt(  ), typeInfo:get_finalFlag(), finalFlag) )
+            self:error( string.format( "mismatch class(%s) final for prototype. %s, %s", typeInfo:getTxt(  ), typeInfo:get_finalFlag(), finalFlag) )
          end
          
          if typeInfo:get_accessMode() ~= accessMode then
-            self:error( string.format( "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", typeInfo:getTxt(  ), Ast.AccessMode:_getTxt( accessMode)
+            self:error( string.format( "mismatch class(%s) accessmode(%s) for prototype accessmode(%s)", typeInfo:getTxt(  ), Ast.AccessMode:_getTxt( accessMode)
             , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
             ) )
          end
          
          if baseInfo ~= nil then
             if typeInfo:get_baseTypeInfo() ~= baseInfo then
-               self:error( string.format( "mismatch class(%s) base class(%s) for prototpye base class(%s)", typeInfo:getTxt(  ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
+               self:error( string.format( "mismatch class(%s) base class(%s) for prototype base class(%s)", typeInfo:getTxt(  ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
             end
             
          else
             if typeInfo:hasBase(  ) then
-               self:error( string.format( "mismatch class(%s) base class(None) for prototpye base class(%s)", typeInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
+               self:error( string.format( "mismatch class(%s) base class(None) for prototype base class(%s)", typeInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
             end
             
          end
@@ -277,14 +277,14 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
             if #protoList == #typeList then
                for index, protoType in ipairs( protoList ) do
                   if protoType ~= typeList[index] then
-                     self:error( string.format( "mismatch class(%s) %s(%s) for prototpye %s(%s)", typeInfo:getTxt(  ), message, typeList[index]:getTxt(  ), message, protoType:getTxt(  )) )
+                     self:error( string.format( "mismatch class(%s) %s(%s) for prototype %s(%s)", typeInfo:getTxt(  ), message, typeList[index]:getTxt(  ), message, protoType:getTxt(  )) )
                   end
                   
                end
                
             else
              
-               self:error( string.format( "mismatch class(%s) %s(%d) for prototpye %s(%d)", typeInfo:getTxt(  ), message, #typeList, message, #protoList) )
+               self:error( string.format( "mismatch class(%s) %s(%d) for prototype %s(%d)", typeInfo:getTxt(  ), message, #typeList, message, #protoList) )
             end
             
          end

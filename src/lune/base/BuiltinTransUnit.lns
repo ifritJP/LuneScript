@@ -160,24 +160,24 @@ pub class TransUnit {
 
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.error( // バグ
-               "mismatch class(%s) abstract for prototpye"
+               "mismatch class(%s) abstract for prototype"
                (typeInfo.getTxt(##)));
          }
          if typeInfo.$finalFlag ~= finalFlag {
             self.error( // バグ
-               "mismatch class(%s) final for prototpye. %s, %s"
+               "mismatch class(%s) final for prototype. %s, %s"
                (typeInfo.getTxt(##), typeInfo.$finalFlag, finalFlag ));
          }
          if typeInfo.$accessMode ~= accessMode {
             self.error( // バグ
-               "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
+               "mismatch class(%s) accessmode(%s) for prototype accessmode(%s)"
                ( typeInfo.getTxt(##),
                  accessMode.$_txt, typeInfo.$accessMode.$_txt));
          }
          when! baseInfo {
             if typeInfo.$baseTypeInfo ~= baseInfo {
                self.error( // バグ
-                  "mismatch class(%s) base class(%s) for prototpye base class(%s)"
+                  "mismatch class(%s) base class(%s) for prototype base class(%s)"
                   ( typeInfo.getTxt(##),
                     baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
             }
@@ -185,7 +185,7 @@ pub class TransUnit {
          else {
             if typeInfo.hasBase() {
                self.error( // バグ
-                  "mismatch class(%s) base class(None) for prototpye base class(%s)"
+                  "mismatch class(%s) base class(None) for prototype base class(%s)"
                   ( typeInfo.getTxt(##),
                     typeInfo.$baseTypeInfo.getTxt(##)));
             }
@@ -198,7 +198,7 @@ pub class TransUnit {
                foreach protoType, index in protoList {
                   if protoType ~= typeList[ index ] {
                      self.error( // バグ
-                        "mismatch class(%s) %s(%s) for prototpye %s(%s)"
+                        "mismatch class(%s) %s(%s) for prototype %s(%s)"
                         ( typeInfo.getTxt(##), message,
                           typeList[ index ].getTxt(##),
                           message, protoType.getTxt(##)));
@@ -207,7 +207,7 @@ pub class TransUnit {
             }
             else {
                self.error( // バグ
-                  "mismatch class(%s) %s(%d) for prototpye %s(%d)"
+                  "mismatch class(%s) %s(%d) for prototype %s(%d)"
                   ( typeInfo.getTxt(##), message, #typeList,
                     message, #protoList) );
             }

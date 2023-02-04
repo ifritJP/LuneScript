@@ -448,19 +448,19 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
                 self.FP.Error(_env, "stop by error")
             }
             if typeInfo.FP.Get_abstractFlag(_env) != abstractFlag{
-                self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) abstract for prototpye", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil)}))
+                self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) abstract for prototype", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil)}))
             }
             if typeInfo.FP.Get_accessMode(_env) != accessMode{
-                self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), Ast_AccessMode_getTxt( accessMode), Ast_AccessMode_getTxt( typeInfo.FP.Get_accessMode(_env))}))
+                self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) accessmode(%s) for prototype accessmode(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), Ast_AccessMode_getTxt( accessMode), Ast_AccessMode_getTxt( typeInfo.FP.Get_accessMode(_env))}))
             }
             if baseInfo != nil{
                 baseInfo_16 := baseInfo.(*Ast_TypeInfo)
                 if typeInfo.FP.Get_baseTypeInfo(_env) != baseInfo_16{
-                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) base class(%s) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), baseInfo_16.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
+                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) base class(%s) for prototype base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), baseInfo_16.FP.GetTxt(_env, nil, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             } else {
                 if typeInfo.FP.HasBase(_env){
-                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) base class(None) for prototpye base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
+                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) base class(None) for prototype base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             }
             var TransUnitIF_compareList func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string)
@@ -470,11 +470,11 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
                         index := _index + 1
                         protoType := _protoType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         if protoType != typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo(){
-                            self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%s) for prototpye %s(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, protoType.FP.GetTxt(_env, nil, nil, nil)}))
+                            self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%s) for prototype %s(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, protoType.FP.GetTxt(_env, nil, nil, nil)}))
                         }
                     }
                 } else { 
-                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%d) for prototpye %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, typeList.Len(), message, protoList.Len()}))
+                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%d) for prototype %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, typeList.Len(), message, protoList.Len()}))
                 }
             }
             TransUnitIF_compareList(_env, typeInfo.FP.Get_interfaceList(_env), Lns_unwrapDefault( interfaceList, NewLnsList([]LnsAny{})).(*LnsList), "interface")
