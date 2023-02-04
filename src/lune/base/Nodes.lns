@@ -2498,7 +2498,7 @@ pub override fn LiteralNilNode.getLiteral(): Literal!, str! {
    return .Nil, nil;
 }
 pub override fn LiteralNilNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
-   self.addTokenList( list, .Symb, "nil" );
+   self.addTokenList( list, .Kywd, "nil" );
    return true;
 }
 

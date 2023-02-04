@@ -934,6 +934,8 @@ end
 
 
 
+
+
 function NodeKind.get_None(  )
 
    return 0
@@ -2657,6 +2659,7 @@ end
 
 
 
+
 local CondRetInfo = {}
 _moduleObj.CondRetInfo = CondRetInfo
 function CondRetInfo._setmeta( obj )
@@ -2788,6 +2791,7 @@ end
 function CondRetListNode:get_exp()
    return self.exp
 end
+
 
 
 
@@ -3175,6 +3179,7 @@ end
 function ExpListNode:get_followOn()
    return self.followOn
 end
+
 
 
 function ExpListNode:canBeLeft(  )
@@ -5019,6 +5024,7 @@ end
 
 
 
+
 function NodeKind.get_ExpUnwrap(  )
 
    return 26
@@ -5159,6 +5165,7 @@ end
 
 
 
+
 function NodeKind.get_ExpRef(  )
 
    return 27
@@ -5232,6 +5239,7 @@ end
 function ExpRefNode:get_symbolInfo()
    return self.symbolInfo
 end
+
 
 
 
@@ -5686,6 +5694,7 @@ end
 function ExpOp2Node:get_exp2()
    return self.exp2
 end
+
 
 
 
@@ -6550,6 +6559,7 @@ end
 
 
 
+
 function ExpCastNode:getPrefix(  )
 
    return self.exp:getPrefix(  )
@@ -6674,6 +6684,7 @@ end
 
 
 
+
 function NodeKind.get_ExpSubDDD(  )
 
    return 36
@@ -6783,6 +6794,7 @@ end
 function ExpSubDDDNode:get_remainIndex()
    return self.remainIndex
 end
+
 
 
 
@@ -6935,6 +6947,7 @@ end
 
 
 
+
 function NodeKind.get_ExpRefItem(  )
 
    return 38
@@ -7080,6 +7093,7 @@ end
 function ExpRefItemNode:get_index()
    return self.index
 end
+
 
 
 function ExpRefItemNode:getPrefix(  )
@@ -7246,6 +7260,7 @@ function ExpCallNode:get_argList()
 end
 
 
+
 function ExpCallNode:get_effectivePos(  )
 
    return self.func:get_effectivePos()
@@ -7385,6 +7400,7 @@ function ExpMRetNode:get_mRet()
 end
 
 
+
 function ExpMRetNode:getPrefix(  )
 
    return self.mRet:getPrefix(  )
@@ -7502,6 +7518,7 @@ function ExpAccessMRetNode:get_index()
 end
 
 
+
 function ExpAccessMRetNode:getPrefix(  )
 
    return self.mRet:getPrefix(  )
@@ -7615,6 +7632,7 @@ function ExpMultiTo1Node:get_exp()
 end
 
 
+
 function ExpMultiTo1Node:getPrefix(  )
 
    return self.exp:getPrefix(  )
@@ -7726,6 +7744,7 @@ end
 function ExpParenNode:get_exp()
    return self.exp
 end
+
 
 
 function ExpParenNode:getPrefix(  )
@@ -8280,6 +8299,7 @@ function StmtExpNode:get_exp()
 end
 
 
+
 function StmtExpNode:canBeStatement(  )
 
    return self:get_exp():canBeStatement(  )
@@ -8496,6 +8516,7 @@ end
 
 
 
+
 function NodeKind.get_RefField(  )
 
    return 50
@@ -8609,6 +8630,7 @@ end
 function RefFieldNode:get_prefix()
    return self.prefix
 end
+
 
 
 function RefFieldNode:get_effectivePos(  )
@@ -8788,6 +8810,7 @@ function GetFieldNode:get_getterTypeInfo()
 end
 
 
+
 function GetFieldNode:get_effectivePos(  )
 
    return self.field.pos
@@ -8912,6 +8935,7 @@ end
 function AliasNode:get_typeInfo()
    return self.typeInfo
 end
+
 
 
 
@@ -10697,6 +10721,7 @@ end
 
 
 
+
 function NodeKind.get_ExpCallSuper(  )
 
    return 62
@@ -10811,6 +10836,7 @@ end
 function ExpCallSuperNode:get_expList()
    return self.expList
 end
+
 
 
 function ExpCallSuperNode:canBeRight( processInfo )
@@ -12547,6 +12573,7 @@ end
 
 
 
+
 function NewAlgeValNode:get_algeTypeInfo(  )
 
    do
@@ -13124,6 +13151,7 @@ end
 
 
 
+
 function NodeKind.get_DeclMacro(  )
 
    return 77
@@ -13677,6 +13705,7 @@ end
 
 
 
+
 function NodeKind.get_Unboxing(  )
 
    return 82
@@ -13785,6 +13814,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralNil(  )
 
    return 83
@@ -13861,6 +13891,7 @@ end
 function LiteralNilNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
 end
+
 
 
 
@@ -13952,6 +13983,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralInt(  )
 
    return 85
@@ -14040,6 +14072,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralReal(  )
 
    return 86
@@ -14125,6 +14158,7 @@ end
 function LiteralRealNode:get_num()
    return self.num
 end
+
 
 
 
@@ -14241,6 +14275,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralList(  )
 
    return 88
@@ -14354,6 +14389,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralSet(  )
 
    return 89
@@ -14464,6 +14500,7 @@ end
 function LiteralSetNode:get_expList()
    return self.expList
 end
+
 
 
 
@@ -14635,6 +14672,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralString(  )
 
    return 91
@@ -14784,6 +14822,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralBool(  )
 
    return 92
@@ -14865,6 +14904,7 @@ end
 function LiteralBoolNode:get_token()
    return self.token
 end
+
 
 
 
@@ -15060,6 +15100,7 @@ end
 
 
 
+
 function Node:getSymbolInfo(  )
 
    local function processExpNode( node )
@@ -15251,7 +15292,7 @@ end
 
 function LiteralNilNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Symb, "nil" )
+   self:addTokenList( list, Parser.TokenKind.Kywd, "nil" )
    return true
 end
 
