@@ -496,8 +496,13 @@ abc
 abcxyz	11
 -----	2102	-----
 999
+-----	2106	-----
 @test.@start.AAA.__free
 @test.@Sub11.Class.__free
+-----	2116	-----
+nil
+false
+true
 11
 12
 12

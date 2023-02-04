@@ -18686,7 +18686,7 @@ func (self *Nodes_LiteralNilNode) GetLiteral(_env *LnsEnv)(LnsAny, LnsAny) {
 }
 // 2475: decl @lune.@base.@Nodes.LiteralNilNode.setupLiteralTokenList
 func (self *Nodes_LiteralNilNode) SetupLiteralTokenList(_env *LnsEnv, list *LnsList) bool {
-    self.FP.AddTokenList(_env, list, Types_TokenKind__Symb, "nil")
+    self.FP.AddTokenList(_env, list, Types_TokenKind__Kywd, "nil")
     return true
 }
 // 1: decl @lune.@base.@Nodes.LiteralCharNode.processFilter

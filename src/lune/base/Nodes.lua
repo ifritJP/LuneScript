@@ -15225,7 +15225,7 @@ end
 
 function LiteralNilNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Symb, "nil" )
+   self:addTokenList( list, Parser.TokenKind.Kywd, "nil" )
    return true
 end
 
