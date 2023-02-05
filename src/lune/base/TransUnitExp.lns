@@ -4717,6 +4717,7 @@ fn TransUnit.analyzeExpSub(
             }
          }
       }
+      exp.setTailExp();
    }  
    elseif token.kind == Parser.TokenKind.Type {
       let! symbolTypeInfo = Ast.getSym2builtInTypeMap()[ token.txt ] {

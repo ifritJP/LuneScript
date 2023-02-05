@@ -12104,6 +12104,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
          
       end
       
+      exp:setTailExp(  )
    elseif token.kind == Parser.TokenKind.Type then
       local symbolTypeInfo = Ast.getSym2builtInTypeMap(  )[token.txt]
       if  nil == symbolTypeInfo then

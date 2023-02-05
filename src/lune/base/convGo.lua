@@ -7460,14 +7460,8 @@ function convFilter:processRefField( node, opt )
       end
       
       self:writeRaw( string.format( "%s.NilAccPush(", getEnvTxt) )
-      if node:isIntermediate(  ) then
-         if opt.parent:hasNilAccess(  ) then
-            openParenNum = 1
-         else
-          
-            openParenNum = 2
-         end
-         
+      if node:isIntermediate(  ) and opt.parent:hasNilAccess(  ) then
+         openParenNum = 1
       else
        
          openParenNum = 2
