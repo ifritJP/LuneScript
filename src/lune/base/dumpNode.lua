@@ -528,22 +528,6 @@ function dumpFilter:processWhen( node, opt )
 end
 
 
-function dumpFilter:processLetExpandTuple( node, opt )
-
-   local varName = ""
-   for index, var in ipairs( node:get_varList(  ) ) do
-      if index > 1 then
-         varName = varName .. ","
-      end
-      
-      varName = string.format( "%s %s", varName, var:get_name(  ).txt)
-   end
-   
-   self:dump( opt, node, varName )
-   filter( node:get_expList(), self, opt:nextOpt(  ) )
-end
-
-
 function dumpFilter:processExpExpandTuple( node, opt )
 
    self:dump( opt, node, "" )

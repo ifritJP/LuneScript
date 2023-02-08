@@ -1777,6 +1777,11 @@ _declExpNodeClass( "Alias", false, false, true,
                   {"srcNode": "&Node" },
                   {"typeInfo": "&Ast.TypeInfo" } ] );
 
+// tuple の展開
+_declExpNodeClass( "ExpExpandTuple", false, true, false,
+                [ { "exp": "&Node" } ]
+);
+
 pub class VarInfo {
    pri let name: &Parser.Token { pub };
    // 宣言している型。 宣言していない場合は nil
@@ -1784,19 +1789,6 @@ pub class VarInfo {
    // 実際の型。
    pri let actualType: &Ast.TypeInfo { pub };
 }
-
-// let (val1,va2) = tuple;
-_declNodeClass( "LetExpandTuple", Node, false, false, true,
-                [ { "condRetInfo": "&CondRetInfo!" },
-                  { "varList": "&List<&VarInfo>" },
-                  { "expList": "&ExpListNode" },
-                  { "symbolInfoList": "&List<&Ast.SymbolInfo>"} ]
-);
-
-// tuple の展開
-_declExpNodeClass( "ExpExpandTuple", false, true, false,
-                [ { "exp": "&Node" } ]
-);
 
 pub enum DeclVarMode {
    Let,

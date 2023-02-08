@@ -2437,28 +2437,6 @@ pub override fn ConvFilter.processWhen(
 }
 
 
-pub override fn ConvFilter.processLetExpandTuple(
-   node: &Nodes.LetExpandTupleNode, opt:Opt ) mut
-{
-   if! let condRetInfo = node.$condRetInfo {
-      self.outputCondRetInfo( condRetInfo );
-   }
-   
-   self.write( "local " );
-   foreach var, index in node.$symbolInfoList {
-      if index > 1 {
-         self.writeRaw( ", " );
-      }
-      let name = getSymbolTxt( var );
-      self.writeRaw( name );
-   }
-
-   self.writeRaw( "=" );
-   self.writeRaw( "table.unpack( " );
-   filter( node.$expList, self, node );
-   self.writeln( ")" );
-}
-
 pub override fn ConvFilter.processExpExpandTuple(
    node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
 {

@@ -541,7 +541,6 @@ type glueFilter_glueFilterMtd interface {
     ProcessIf(_env *LnsEnv, arg1 *Nodes_IfNode, arg2 LnsAny)
     ProcessIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode, arg2 LnsAny)
     ProcessImport(_env *LnsEnv, arg1 *Nodes_ImportNode, arg2 LnsAny)
-    ProcessLetExpandTuple(_env *LnsEnv, arg1 *Nodes_LetExpandTupleNode, arg2 LnsAny)
     ProcessLiteralArray(_env *LnsEnv, arg1 *Nodes_LiteralArrayNode, arg2 LnsAny)
     ProcessLiteralBool(_env *LnsEnv, arg1 *Nodes_LiteralBoolNode, arg2 LnsAny)
     ProcessLiteralChar(_env *LnsEnv, arg1 *Nodes_LiteralCharNode, arg2 LnsAny)
