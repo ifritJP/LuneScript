@@ -2437,8 +2437,8 @@ pub override fn ConvFilter.processWhen(
 }
 
 
-pub override fn ConvFilter.processExpandTuple(
-   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+pub override fn ConvFilter.processLetExpandTuple(
+   node: &Nodes.LetExpandTupleNode, opt:Opt ) mut
 {
    if! let condRetInfo = node.$condRetInfo {
       self.outputCondRetInfo( condRetInfo );
@@ -2457,6 +2457,14 @@ pub override fn ConvFilter.processExpandTuple(
    self.writeRaw( "table.unpack( " );
    filter( node.$expList, self, node );
    self.writeln( ")" );
+}
+
+pub override fn ConvFilter.processExpExpandTuple(
+   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
+{
+   self.write( "table.unpack(" );
+   filter( node.$exp, self, node );
+   self.write( ")" );
 }
 
 

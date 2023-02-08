@@ -3025,7 +3025,7 @@ function ConvFilter:processWhen( node, opt )
 end
 
 
-function ConvFilter:processExpandTuple( node, opt )
+function ConvFilter:processLetExpandTuple( node, opt )
 
    do
       local condRetInfo = node:get_condRetInfo()
@@ -3050,6 +3050,14 @@ function ConvFilter:processExpandTuple( node, opt )
    self:writeRaw( "table.unpack( " )
    filter( node:get_expList(), self, node )
    self:writeln( ")" )
+end
+
+
+function ConvFilter:processExpExpandTuple( node, opt )
+
+   self:write( "table.unpack(" )
+   filter( node:get_exp(), self, node )
+   self:write( ")" )
 end
 
 

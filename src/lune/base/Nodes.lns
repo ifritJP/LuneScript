@@ -1785,12 +1785,17 @@ pub class VarInfo {
    pri let actualType: &Ast.TypeInfo { pub };
 }
 
-// tuple の展開
-_declNodeClass( "ExpandTuple", Node, false, false, true,
+// let (val1,va2) = tuple;
+_declNodeClass( "LetExpandTuple", Node, false, false, true,
                 [ { "condRetInfo": "&CondRetInfo!" },
                   { "varList": "&List<&VarInfo>" },
                   { "expList": "&ExpListNode" },
                   { "symbolInfoList": "&List<&Ast.SymbolInfo>"} ]
+);
+
+// tuple の展開
+_declExpNodeClass( "ExpExpandTuple", false, true, false,
+                [ { "exp": "&Node" } ]
 );
 
 pub enum DeclVarMode {

@@ -584,8 +584,8 @@ pub override fn FormatterFilter.processWhen(
    }
 }
 
-pub override fn FormatterFilter.processExpandTuple(
-   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+pub override fn FormatterFilter.processLetExpandTuple(
+   node: &Nodes.LetExpandTupleNode, opt:Opt ) mut
 {
    self.write( "let " );
 
@@ -609,6 +609,14 @@ pub override fn FormatterFilter.processExpandTuple(
    self.write( " = " );
    filter( node.$expList, self, opt.nextOpt( node ) );
 }
+
+pub override fn FormatterFilter.processExpExpandTuple(
+   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
+{
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   self.write( "..." );
+}
+
 
 pub override fn FormatterFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt:Opt ) mut
