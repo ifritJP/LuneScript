@@ -1054,110 +1054,111 @@ fn needConvCast( dstType:&Ast.TypeInfo, srcType:&Ast.TypeInfo ) : bool {
 暗黙キャストの処理。
 */
 fn convFilter.outputImplicitCast(
-   castType:&Ast.TypeInfo, node: &Nodes.Node, parent: &Nodes.ExpCastNode ) mut {
-      switch castType.$kind {
-         case .Nilable {
-            self.outputImplicitCast( castType.$nonnilableType, node, parent );
-         }
-         case .Class {
-            if castType == Ast.builtinTypeString or
-               node.$expType.$kind == .Alternate or
-               node.$expType.$genSrcTypeInfo.$srcTypeInfo.$nonnilableType ==
-               castType.$genSrcTypeInfo.$srcTypeInfo.$nonnilableType
-            {
-               filter( node, self, parent );
-            } else {
-               if isAnyType( node.$expType ) {
-                  self.writeRaw( "%sDownCastF(" (self.getTypeSymbolWithPrefix( castType ) ) );
-                  filter( node, self, parent );
-                  self.writeRaw( ")" );
-               }
-               else {
-                  self.writeRaw( "&" );
-                  filter( node, self, parent );
-                  self.writeRaw( ".%s" (self.getTypeSymbol( castType ) ) );
-               }
-            }
-         }
-         case .IF {
+   castType:&Ast.TypeInfo, node: &Nodes.Node, parent: &Nodes.ExpCastNode ) mut
+{
+   switch castType.$kind {
+      case .Nilable {
+         self.outputImplicitCast( castType.$nonnilableType, node, parent );
+      }
+      case .Class {
+         if castType == Ast.builtinTypeString or
+            node.$expType.$kind == .Alternate or
+            node.$expType.$genSrcTypeInfo.$srcTypeInfo.$nonnilableType ==
+            castType.$genSrcTypeInfo.$srcTypeInfo.$nonnilableType
+         {
             filter( node, self, parent );
-            let expType = getOrgTypeInfo( node.$expType );
-            if Ast.isClass( node.$expType ) {
-               self.writeRaw( ".FP" );
-            } elseif expType.$kind == .Alternate {
-               self.outputAny2Type( castType );
-            }
-         }
-         case .FormFunc {
-            let expType = node.$expType;
-            if self.needConvFormFunc( parent ) {
-               self.writeRaw( "%s(" (self.getConv2formName( parent )) );
+         } else {
+            if isAnyType( node.$expType ) {
+               self.writeRaw( "%sDownCastF(" (self.getTypeSymbolWithPrefix( castType ) ) );
                filter( node, self, parent );
-               self.writeRaw( ")");
+               self.writeRaw( ")" );
             }
             else {
-               self.writeRaw( "%s(" (self.getTypeSymbol( castType )) );
+               self.writeRaw( "&" );
                filter( node, self, parent );
-               self.writeRaw( ")");
+               self.writeRaw( ".%s" (self.getTypeSymbol( castType ) ) );
             }
          }
-         case .Alternate {
-            if not castType.hasBase() {
-               if Ast.isClass( node.$expType.$nonnilableType ) {
-                  self.writeRaw( "%s2Stem("
-                                 (self.getTypeSymbolWithPrefix( node.$expType.$nonnilableType )) );
-                  filter( node, self, parent );
-                  self.writeRaw( ")" );
-               } else {
-                  filter( node, self, parent );
-               }
-            } else {
-               self.outputImplicitCast( castType.$baseTypeInfo, node, parent );
-            }
+      }
+      case .IF {
+         filter( node, self, parent );
+         let expType = getOrgTypeInfo( node.$expType );
+         if Ast.isClass( node.$expType ) {
+            self.writeRaw( ".FP" );
+         } elseif expType.$kind == .Alternate {
+            self.outputAny2Type( castType );
          }
-         case .Form {
+      }
+      case .FormFunc {
+         let expType = node.$expType;
+         if self.needConvFormFunc( parent ) {
             self.writeRaw( "%s(" (self.getConv2formName( parent )) );
             filter( node, self, parent );
-            self.writeRaw( ")" );
+            self.writeRaw( ")");
          }
-         case .Prim {
-            if not node.$expType.$nilable {
-               switch castType {
-                  case Ast.builtinTypeInt {
-                     self.writeRaw( "LnsInt(" );
-                     filter( node, self, parent );
-                     self.writeRaw( ")" );
-                  }
-                  case Ast.builtinTypeReal {
-                     self.writeRaw( "LnsReal(" );
-                     filter( node, self, parent );
-                     self.writeRaw( ")" );
-                  }
-                  default {
-                     filter( node, self, parent );
-                  }
-               }
-            } else {
-               filter( node, self, parent );
-            }
+         else {
+            self.writeRaw( "%s(" (self.getTypeSymbol( castType )) );
+            filter( node, self, parent );
+            self.writeRaw( ")");
          }
-         default {
-            if node.$expType.$nilable and Ast.isClass( node.$expType.$nonnilableType ) {
+      }
+      case .Alternate {
+         if not castType.hasBase() {
+            if Ast.isClass( node.$expType.$nonnilableType ) {
                self.writeRaw( "%s2Stem("
                               (self.getTypeSymbolWithPrefix( node.$expType.$nonnilableType )) );
                filter( node, self, parent );
                self.writeRaw( ")" );
             } else {
                filter( node, self, parent );
-               if node.$expType.$kind == .Class and
-                  node.$expType ~= Ast.builtinTypeString
-               {
-                  self.writeRaw( ".FP" );
+            }
+         } else {
+            self.outputImplicitCast( castType.$baseTypeInfo, node, parent );
+         }
+      }
+      case .Form {
+         self.writeRaw( "%s(" (self.getConv2formName( parent )) );
+         filter( node, self, parent );
+         self.writeRaw( ")" );
+      }
+      case .Prim {
+         if not node.$expType.$nilable {
+            switch castType {
+               case Ast.builtinTypeInt {
+                  self.writeRaw( "LnsInt(" );
+                  filter( node, self, parent );
+                  self.writeRaw( ")" );
                }
+               case Ast.builtinTypeReal {
+                  self.writeRaw( "LnsReal(" );
+                  filter( node, self, parent );
+                  self.writeRaw( ")" );
+               }
+               default {
+                  filter( node, self, parent );
+               }
+            }
+         } else {
+            filter( node, self, parent );
+         }
+      }
+      default {
+         if node.$expType.$nilable and Ast.isClass( node.$expType.$nonnilableType ) {
+            self.writeRaw( "%s2Stem("
+                           (self.getTypeSymbolWithPrefix( node.$expType.$nonnilableType )) );
+            filter( node, self, parent );
+            self.writeRaw( ")" );
+         } else {
+            filter( node, self, parent );
+            if node.$expType.$kind == .Class and
+               node.$expType ~= Ast.builtinTypeString
+            {
+               self.writeRaw( ".FP" );
             }
          }
       }
    }
+}
 
    // ExpList を Go に展開する時のパターン
 enum ExpListKind {
