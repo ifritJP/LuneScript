@@ -42,6 +42,7 @@ fn TransUnit.analyzeRefTypeTuple(
                symToken = work;
             } else {
                self.pushback();
+               self.pushback();
             }
          } else {
             self.pushback();

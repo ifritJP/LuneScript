@@ -3281,6 +3281,7 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
             else
              
                self:pushback(  )
+               self:pushback(  )
             end
             
          else
@@ -5076,7 +5077,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2002, function (  )
+         Log.log( Log.Level.Debug, __func__, 2003, function (  )
          
             return string.format( "%s", dummyRetType)
          end )

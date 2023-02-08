@@ -2924,3 +2924,19 @@ _section();
       dump( sub2() );
    }
 }
+_section();
+{
+   class Val1 {
+      let val:int {pub};
+   }
+   class Val2 {
+      let val:int {pub};
+   }
+
+   fn func(): (Val1, Val2) {
+      return (= new Val1(0), new Val2(1) );
+   }
+
+   let val1, val2 = func()...;
+   print( val1.$val, val2.$val );
+}
