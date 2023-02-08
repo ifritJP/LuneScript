@@ -3026,31 +3026,11 @@ function ConvFilter:processWhen( node, opt )
 end
 
 
-function ConvFilter:processExpandTuple( node, opt )
+function ConvFilter:processExpExpandTuple( node, opt )
 
-   do
-      local condRetInfo = node:get_condRetInfo()
-      if condRetInfo ~= nil then
-         self:outputCondRetInfo( condRetInfo )
-      end
-   end
-   
-   
-   self:write( "local " )
-   for index, var in ipairs( node:get_symbolInfoList() ) do
-      if index > 1 then
-         self:writeRaw( ", " )
-      end
-      
-      local name = getSymbolTxt( var )
-      self:writeRaw( name )
-   end
-   
-   
-   self:writeRaw( "=" )
-   self:writeRaw( "table.unpack( " )
-   filter( node:get_expList(), self, node )
-   self:writeln( ")" )
+   self:write( "table.unpack(" )
+   filter( node:get_exp(), self, node )
+   self:write( ")" )
 end
 
 
@@ -4072,6 +4052,14 @@ end
 
 function ConvFilter:processExpSetVal( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_exp1(), self, node )
    self:writeRaw( " = " )
    filter( node:get_exp2(), self, node )
@@ -4081,6 +4069,14 @@ end
 
 function ConvFilter:processExpSetItem( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_val(), self, node )
    self:writeRaw( "[" )
    do

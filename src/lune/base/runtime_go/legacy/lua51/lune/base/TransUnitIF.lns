@@ -611,12 +611,12 @@ curNsInfo が nil になる。
 
          if typeInfo.$abstractFlag ~= abstractFlag {
             self.addErrMess( errPos,
-                             "mismatch class(%s) abstract for prototpye"
+                             "mismatch class(%s) abstract for prototype"
                              (typeInfo.getTxt( self.typeNameCtrl ##)));
          }
          if typeInfo.$accessMode ~= accessMode {
             self.addErrMess( errPos,
-                             "mismatch class(%s) accessmode(%s) for prototpye accessmode(%s)"
+                             "mismatch class(%s) accessmode(%s) for prototype accessmode(%s)"
                              ( typeInfo.getTxt( self.typeNameCtrl ##),
                                accessMode.$_txt, typeInfo.$accessMode.$_txt));
          }
@@ -624,7 +624,7 @@ curNsInfo が nil になる。
             if typeInfo.$baseTypeInfo ~= baseInfo {
                self.addErrMess(
                   errPos,
-                  "mismatch class(%s) base class(%s) for prototpye base class(%s)"
+                  "mismatch class(%s) base class(%s) for prototype base class(%s)"
                   ( typeInfo.getTxt( self.typeNameCtrl##),
                     baseInfo.getTxt(##), typeInfo.$baseTypeInfo.getTxt(##)));
             }
@@ -633,7 +633,7 @@ curNsInfo が nil になる。
             if typeInfo.hasBase() {
                self.addErrMess(
                   errPos,
-                  "mismatch class(%s) base class(None) for prototpye base class(%s)"
+                  "mismatch class(%s) base class(None) for prototype base class(%s)"
                   ( typeInfo.getTxt( self.typeNameCtrl##),
                     typeInfo.$baseTypeInfo.getTxt(##)));
             }
@@ -647,7 +647,7 @@ curNsInfo が nil になる。
                   if protoType ~= typeList[ index ] {
                      self.addErrMess(
                         errPos,
-                        "mismatch class(%s) %s(%s) for prototpye %s(%s)"
+                        "mismatch class(%s) %s(%s) for prototype %s(%s)"
                         ( typeInfo.getTxt(self.typeNameCtrl##), message,
                           typeList[ index ].getTxt(self.typeNameCtrl##),
                           message, protoType.getTxt(##)));
@@ -657,7 +657,7 @@ curNsInfo が nil になる。
             else {
                self.addErrMess(
                   errPos,
-                  "mismatch class(%s) %s(%d) for prototpye %s(%d)"
+                  "mismatch class(%s) %s(%d) for prototype %s(%d)"
                   ( typeInfo.getTxt(self.typeNameCtrl##), message, #typeList,
                     message, #protoList) );
             }

@@ -2940,3 +2940,35 @@ _section();
    let val1, val2 = func()...;
    print( val1.$val, val2.$val );
 }
+_section();
+{
+   fn func(flag:bool): int! {
+      if flag {
+         return 1;
+      }
+      return 0;
+   }
+   fn sub(flag:bool): int! {
+      let list:List<int> = [1];
+      list[1] = func(flag)!;
+
+      return list[1];
+   }
+   print( sub(true), sub(false) );
+}
+_section();
+{
+   fn func(flag:bool): int! {
+      if flag {
+         return 1;
+      }
+      return 0;
+   }
+   fn sub(flag:bool): int! {
+      let val;
+      val = func(flag)!;
+
+      return val;
+   }
+   print( sub(true), sub(false) );
+}

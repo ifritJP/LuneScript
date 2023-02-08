@@ -5794,6 +5794,10 @@ pub override fn convFilter.processExpParen(
 pub override fn convFilter.processExpSetVal(
    node: &Nodes.ExpSetValNode, opt: Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$exp1, self, node );
    if getExpListKind( node.$exp1.$expTypeList, node.$exp2,
                       self.option.$addEnvArg ) == .Direct
@@ -5811,6 +5815,10 @@ pub override fn convFilter.processExpSetVal(
 pub override fn convFilter.processExpSetItem(
    node: &Nodes.ExpSetItemNode, opt: Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$val, self, node );
    self.writeRaw( ".Set(" );
    _match node.$index {

@@ -2217,6 +2217,23 @@ fn TransUnit.analyzeExpCont(
          exp = self.analyzeCondRet( nextToken, exp );
          nextToken = self.getToken(##);
       }
+
+      if nextToken.txt == "..." {
+         if exp.$expType.$kind == .Tuple {
+            if #exp.$expTypeList > 1 {
+               exp = Nodes.ExpMultiTo1Node.create(
+                  self.nodeManager, exp.$pos, self.inTestBlock,
+                  exp.$macroArgFlag, [ exp.$expType ], exp );
+            }
+            exp = Nodes.ExpExpandTupleNode.create(
+               self.nodeManager, exp.$pos, self.inTestBlock,
+               self.macroCtrl.isInAnalyzeArgMode(),
+               exp.$expType.$itemTypeInfoList, exp );
+            nextToken = self.getToken(##);
+         } else {
+            self.addErrMess( nextToken.pos, "can only use '...' with a tuple" );
+         }
+      }
    }
 
    switch nextToken.txt {
@@ -3458,7 +3475,9 @@ fn TransUnit.analyzeExpOpSet(
       listRefItemNode = process( exp );
    }
    
-   let mut expList = self.analyzeExpList( false, false, false, false, nil, expectTypeList## );
+   let mut expList = self.analyzeExpList( false, false, false, true, nil, expectTypeList## );
+   let condRetInfo = self.checkCondRet();
+
    foreach expType, index in expList.$expTypeList {
       if expType.$asyncMode == .Transient {
          // Transient は変数への代入禁止
@@ -3560,13 +3579,13 @@ fn TransUnit.analyzeExpOpSet(
       return Nodes.ExpSetItemNode.create(
          self.nodeManager, exp.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         listRefItemNode.$val, index, expList );
+         listRefItemNode.$val, index, expList, condRetInfo );
    }
 
    return Nodes.ExpSetValNode.create(
       self.nodeManager, exp.$pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], exp, expList, symbolList, initSymSet );
+      [ Ast.builtinTypeNone ], exp, condRetInfo, expList, symbolList, initSymSet );
 }
 
 
@@ -4157,7 +4176,7 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    if not continueFlag or nextToken.txt ~= "!" {
       self.pushback();
       self.pushbackToken( firstToken );
-      let exp = self.analyzeExp( false, false, false, false ## );
+      let exp = self.analyzeExpOneRVal( false, false ## );
       self.checkNextToken( ";" );
       if not exp.$expType.$nilable {
          self.addErrMess( exp.$pos, "this value is not nilable." );
@@ -4314,6 +4333,17 @@ fn TransUnit.analyzeStrConst(
 }
 
 fn TransUnit.analyzeExp(
+   allowNoneType: bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool, 
+   prevOpLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+{
+   let mut node = self.analyzeExpSub(
+      allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType );
+   node.setTailExp();
+   return node;
+}
+
+
+fn TransUnit.analyzeExpSub(
    allowNoneType: bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool, 
    prevOpLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
@@ -4626,7 +4656,7 @@ fn TransUnit.analyzeExp(
             self.macroCtrl.isInAnalyzeArgMode(), [ exp.$expType ], exp );
          exp = self.analyzeExpCont( firstToken, exp, false, canLeftExp, canCondRet );
       }
-   }  
+   }
 
    if token.txt == "new" {
       exp = processsNewExp( token );
@@ -4706,6 +4736,7 @@ fn TransUnit.analyzeExp(
             }
          }
       }
+      exp.setTailExp();
    }  
    elseif token.kind == Parser.TokenKind.Type {
       let! symbolTypeInfo = Ast.getSym2builtInTypeMap()[ token.txt ] {

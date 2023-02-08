@@ -2437,26 +2437,12 @@ pub override fn ConvFilter.processWhen(
 }
 
 
-pub override fn ConvFilter.processExpandTuple(
-   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+pub override fn ConvFilter.processExpExpandTuple(
+   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
 {
-   if! let condRetInfo = node.$condRetInfo {
-      self.outputCondRetInfo( condRetInfo );
-   }
-   
-   self.write( "local " );
-   foreach var, index in node.$symbolInfoList {
-      if index > 1 {
-         self.writeRaw( ", " );
-      }
-      let name = getSymbolTxt( var );
-      self.writeRaw( name );
-   }
-
-   self.writeRaw( "=" );
-   self.writeRaw( "table.unpack( " );
-   filter( node.$expList, self, node );
-   self.writeln( ")" );
+   self.write( "table.unpack(" );
+   filter( node.$exp, self, node );
+   self.write( ")" );
 }
 
 
@@ -3358,6 +3344,10 @@ pub override fn ConvFilter.processExpParen(
 
 pub override fn ConvFilter.processExpSetVal( node: &Nodes.ExpSetValNode, opt:Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$exp1, self, node );
    self.writeRaw( " = " );
    filter( node.$exp2, self, node );
@@ -3366,6 +3356,10 @@ pub override fn ConvFilter.processExpSetVal( node: &Nodes.ExpSetValNode, opt:Opt
 pub override fn ConvFilter.processExpSetItem(
    node: &Nodes.ExpSetItemNode, opt:Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$val, self, node );
    self.writeRaw( "[" );
    _match node.$index {

@@ -236,6 +236,13 @@ pub abstract class Node {
    /** testblock 内の Node かどうか。*/
    let inTestBlock:bool {pub};
 
+   /** aa.bb.cc の aa あるいは bb かどうか */
+   pub fn isIntermediate() : bool {
+      return false;
+   }
+   pub fn setTailExp() mut {
+   }
+   
    pub fn comp( node:&Node ) : int {
       if self.managerId < node.managerId {
          return -1;
@@ -373,6 +380,25 @@ _declNodeClass ではカバーできない visit() のカスタマイズ用
    pub abstract fn visit( visitor:NodeVisitor, depth:int, alreadySet:Set<&Node> ): bool;
 }
 
+pub abstract class ExpNode extend Node {
+   // aa.bb.cc の cc となる ExpNode かどうか。
+   let mut isTailExp:bool;
+   pub fn __init(
+      managerId:int, id: int, kind: int, pos: &Parser.Position,
+      inTestBlock:bool,  macroArgFlag:bool, expTypeList: &List<&Ast.TypeInfo> )
+   {
+      super( managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList );
+      self.isTailExp = false;
+   }
+   pub override fn isIntermediate() : bool {
+      return not self.isTailExp;
+   }
+   pub override fn setTailExp() mut {
+      self.isTailExp = true;
+   }
+}
+
+
 pub fn cloneNodeList<T>(list:&List<&T>) : List<&T> {
    let newList:List<&T> = [];
    foreach node in list {
@@ -389,7 +415,7 @@ pub class NamespaceInfo {
 
 
 pub proto abstract class MacroEval;
-pub proto class ExpListNode extend Node;
+pub proto class ExpListNode extend ExpNode;
 pub proto class DeclArgNode extend Node;
 pub proto class BlockNode extend Node;
 pub proto class DeclClassNode extend Node;
@@ -777,6 +803,16 @@ macro _declNodeClass(
    }
 }
 
+macro _declExpNodeClass(
+   baseName:str, canBeLeftFlag:bool!, canBeRightFlag:bool!,
+   canBeStatementFlag:bool!, fieldInfoList:&List<Map<str,str>> )
+{
+   {}
+   _declNodeClass( ,,baseName, ExpNode, ,,canBeLeftFlag, ,,canBeRightFlag,
+                   ,,canBeStatementFlag, ,,fieldInfoList );
+}
+
+
 _declNodeClass( "None", Node, false, false, true, []);
 
 _declNodeClass( "Shebang", Node, false, false, true,
@@ -1051,6 +1087,7 @@ pub override fn BlockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
 }
 
 
+
 pub enum CondRetKind {
    // nilable 1 つ
    Nilable,
@@ -1059,17 +1096,18 @@ pub enum CondRetKind {
    // nilable 型とエラー情報
    Two,
 }
-_declNodeClass( "CondRet", Node, false, true, false,
+
+_declExpNodeClass( "CondRet", false, true, false,
                 [ { "exp": "&Node" },
                   { "condKind": "CondRetKind" },
-                  { "order": "int" } ] 
+                  { "order": "int" } ]
 );
 
 pub class CondRetInfo {
    let list: &List<&CondRetNode> {pub};
 }
 
-_declNodeClass( "CondRetList", Node, false, true, true,
+_declExpNodeClass( "CondRetList", false, true, true,
                 [ { "info": "&CondRetInfo" },
                   { "exp": "&Node" } ]
 );
@@ -1125,7 +1163,7 @@ pub class MRetExp {
    let index:int {pub};
 }
 
-_declNodeClass( "ExpList", Node, nil, nil, false,
+_declExpNodeClass( "ExpList", nil, nil, false,
                 [ { "expList": "&List<&Node>" },
                   // 多値使用している exp。
                   // nil の場合は多値未使用。
@@ -1353,18 +1391,18 @@ _declNodeClass( "Provide", Node, false, false, true,
                 [ { "symbol": "&Ast.SymbolInfo" } ]
 );
 
-_declNodeClass( "ExpNew", Node, false, true, true,
+_declExpNodeClass( "ExpNew", false, true, true,
                 [ { "symbol": "&Node" },
                   { "ctorTypeInfo": "&Ast.TypeInfo" },
                   { "argList": "&ExpListNode!" } ]
 );
 
-_declNodeClass( "ExpUnwrap", Node, false, true, false,
+_declExpNodeClass( "ExpUnwrap", false, true, false,
                 [ { "exp": "&Node" },
                   { "default": "&Node!" } ]
 );
 
-_declNodeClass( "ExpRef", Node, nil, nil, false,
+_declExpNodeClass( "ExpRef", nil, nil, false,
                 //[ { "symbolInfo": "&Ast.SymbolInfo" } ]
                 [ { "symbolInfo": "&Ast.SymbolInfo" } ]
 );
@@ -1385,6 +1423,7 @@ pub override fn ExpRefNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
 */
 _declNodeClass( "ExpSetVal", Node, false, false, true,
                 [ { "exp1": "&Node" },
+                  { "condRetInfo": "&CondRetInfo!" },
                   { "exp2": "&ExpListNode" },
                   // 代入先のシンボルリスト
                   { "LeftSymList": "&List<&Ast.SymbolInfo>" },
@@ -1408,11 +1447,12 @@ _declNodeClass( "ExpSetItem", Node, false, false, true,
                   // 要素のインデックス
                   { "index": "IndexVal" },
                   // 設定する値
-                  { "exp2": "&Node" }
+                  { "exp2": "&Node" },
+                  { "condRetInfo": "&CondRetInfo!" }
                 ]
 );
 
-_declNodeClass( "ExpOp2", Node, false, true, false,
+_declExpNodeClass( "ExpOp2", false, true, false,
                 [ { "op": "&Parser.Token" },
                   { "exp1": "&Node" },
                   { "exp2": "&Node" } ]
@@ -1486,7 +1526,7 @@ ExpCastNode の expType は、 castKind によって異なる。
 Implicit の場合、 exp の型がそのまま入る。
 Implicit 以外の場合、キャスト後の型が入る。
 */
-_declNodeClass( "ExpCast", Node, false, true, false,
+_declExpNodeClass( "ExpCast", false, true, false,
                 [ { "exp": "&Node" },
                   // キャスト後の型
                   { "castType": "&Ast.TypeInfo" },
@@ -1509,12 +1549,12 @@ pub override fn ExpCastNode.setupLiteralTokenList( list: List<&Parser.Token> ): 
 
 
 
-_declNodeClass( "ExpToDDD", Node, false, true, false,
+_declExpNodeClass( "ExpToDDD", false, true, false,
                 //[ { "expList": "&List<&Node>" } ]
                 [ { "expList": "&ExpListNode" } ]
 );
 
-_declNodeClass( "ExpSubDDD", Node, false, true, false,
+_declExpNodeClass( "ExpSubDDD", false, true, false,
                 [ { "src": "&Node" },
                   { "remainIndex": "int" } ]
 );
@@ -1529,13 +1569,13 @@ pub enum MacroMode {
    AnalyzeArg,
 }
 
-_declNodeClass( "ExpOp1", Node, false, true, false,
+_declExpNodeClass( "ExpOp1", false, true, false,
                 [ { "op": "&Parser.Token" },
                   { "macroMode": "MacroMode" },
                   { "exp": "&Node" } ]
 );
 
-_declNodeClass( "ExpRefItem", Node, nil, true, false,
+_declExpNodeClass( "ExpRefItem", nil, true, false,
                 [ { "val": "&Node" },
                   { "nilAccess": "bool" },
                   { "symbol": "str!" },
@@ -1552,7 +1592,7 @@ pub override fn ExpRefItemNode.canBeLeft(): bool {
    return Ast.TypeInfo.isMut( self.$val.$expType ) and not self.nilAccess;
 }
 
-_declNodeClass( "ExpCall", Node, false, nil, true,
+_declExpNodeClass( "ExpCall", false, nil, true,
                 [ { "func": "&Node" },
                   { "errorFunc": "bool" },
                   { "nilAccess": "bool" },
@@ -1584,7 +1624,7 @@ pub override fn ExpCallNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind 
 }
 
 // 多値戻り値の先頭
-_declNodeClass( "ExpMRet", Node, false, true, false,
+_declExpNodeClass( "ExpMRet", false, true, false,
                 [ { "mRet": "&Node" } ]
 );
 pub override fn ExpMRetNode.getPrefix(): &Node! {
@@ -1592,7 +1632,7 @@ pub override fn ExpMRetNode.getPrefix(): &Node! {
 }
 
 // 多値戻り値の index 番目 ( index >= 2 )
-_declNodeClass( "ExpAccessMRet", Node, false, true, false,
+_declExpNodeClass( "ExpAccessMRet", false, true, false,
                 [ { "mRet": "&Node" },
                   { "index": "int" } ]
 );
@@ -1600,14 +1640,14 @@ pub override fn ExpAccessMRetNode.getPrefix() : &Node! {
    return self.mRet.getPrefix();
 }
 // 多値戻り値の先頭だけ使用する場合
-_declNodeClass( "ExpMultiTo1", Node, false, true, false,
+_declExpNodeClass( "ExpMultiTo1", false, true, false,
                 [ { "exp": "&Node" } ]
 );
 pub override fn ExpMultiTo1Node.getPrefix() : &Node! {
    return self.exp.getPrefix();
 }
 
-_declNodeClass( "ExpParen", Node, false, true, false,
+_declExpNodeClass( "ExpParen", false, true, false,
                 [ { "exp": "&Node" } ]
 );
 pub override fn ExpParenNode.getPrefix() : &Node! {
@@ -1650,7 +1690,7 @@ _declNodeClass( "ExpMacroArgExp", Node, false, true, false,
 );
 
 
-_declNodeClass( "StmtExp", Node, false, true, nil,
+_declExpNodeClass( "StmtExp", false, true, nil,
                 [ { "exp": "&Node" } ]
 );
 pub override fn StmtExpNode.canBeStatement():bool {
@@ -1666,14 +1706,14 @@ _declNodeClass( "ExpMacroStatList", Node, false, true, false,
 );
 
 
-_declNodeClass( "ExpOmitEnum", Node, true, true, false,
+_declExpNodeClass( "ExpOmitEnum", true, true, false,
                 [ { "valToken": "&Parser.Token" },
                   { "valInfo": "&Ast.EnumValInfo" },
                   { "aliasType": "&Ast.AliasTypeInfo!" },
                   { "enumTypeInfo": "&Ast.EnumTypeInfo" }]
 );
 
-_declNodeClass( "RefField", Node, nil, nil, false,
+_declExpNodeClass( "RefField", nil, nil, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&Ast.SymbolInfo!" },
@@ -1717,7 +1757,7 @@ pub override fn RefFieldNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
    return true;
 }
 
-_declNodeClass( "GetField", Node, false, true, false,
+_declExpNodeClass( "GetField", false, true, false,
                 [ { "field": "&Parser.Token" },
                   //{ "overrideCanBeLeft": "bool!" },
                   { "symbolInfo": "&Ast.SymbolInfo!" },
@@ -1734,10 +1774,15 @@ pub override fn GetFieldNode.getPrefix() : &Node! {
 
 
 
-_declNodeClass( "Alias", Node, false, false, true,
+_declExpNodeClass( "Alias", false, false, true,
                 [ {"newSymbol": "&Ast.SymbolInfo" },
                   {"srcNode": "&Node" },
                   {"typeInfo": "&Ast.TypeInfo" } ] );
+
+// tuple の展開
+_declExpNodeClass( "ExpExpandTuple", false, true, false,
+                [ { "exp": "&Node" } ]
+);
 
 pub class VarInfo {
    pri let name: &Parser.Token { pub };
@@ -1746,14 +1791,6 @@ pub class VarInfo {
    // 実際の型。
    pri let actualType: &Ast.TypeInfo { pub };
 }
-
-// tuple の展開
-_declNodeClass( "ExpandTuple", Node, false, false, true,
-                [ { "condRetInfo": "&CondRetInfo!" },
-                  { "varList": "&List<&VarInfo>" },
-                  { "expList": "&ExpListNode" },
-                  { "symbolInfoList": "&List<&Ast.SymbolInfo>"} ]
-);
 
 pub enum DeclVarMode {
    Let,
@@ -1896,13 +1933,13 @@ _declNodeClass( "DeclDestr", Node, false, false, true,
                 [ { "declInfo": "&DeclFuncInfo" } ]
 );
 
-_declNodeClass( "ExpCallSuperCtor", Node, false, false, true,
+_declExpNodeClass( "ExpCallSuperCtor", false, false, true,
                 [ { "superType": "&Ast.TypeInfo" },
                   { "methodType": "&Ast.TypeInfo" },
                   { "expList": "&ExpListNode!" } ]
 );
 
-_declNodeClass( "ExpCallSuper", Node, false, nil, true,
+_declExpNodeClass( "ExpCallSuper", false, nil, true,
                 [ { "superType": "&Ast.TypeInfo" },
                   { "methodType": "&Ast.TypeInfo" },
                   { "expList": "&ExpListNode!" } ]
@@ -2137,7 +2174,7 @@ pub override fn DeclAlgeNode.visitSub(
 
 
 
-_declNodeClass( "NewAlgeVal", Node, false, true, false,
+_declExpNodeClass( "NewAlgeVal", false, true, false,
                 [ { "name": "&Parser.Token" },
                   { "prefix": "&Node!" },
                   { "algeOrGen": "Ast.AlgeOrGen" },
@@ -2235,7 +2272,7 @@ pub override fn MatchNode.visitSub(
 
 
 
-_declNodeClass( "LuneKind", Node, false, true, false,
+_declExpNodeClass( "LuneKind", false, true, false,
                 [ { "exp": "&Node" } ]
 );
 
@@ -2285,40 +2322,40 @@ _declNodeClass( "Abbr", Node, false, true, false,
 );
 
 
-_declNodeClass( "Boxing", Node, false, true, false,
+_declExpNodeClass( "Boxing", false, true, false,
                 [ { "src": "&Node" } ]
 );
 
-_declNodeClass( "Unboxing", Node, false, true, false,
+_declExpNodeClass( "Unboxing", false, true, false,
                 [ { "src": "&Node" } ]
 );
 
-_declNodeClass( "LiteralNil", Node, false, true, false, [] );
+_declExpNodeClass( "LiteralNil", false, true, false, [] );
 
-_declNodeClass( "LiteralChar", Node, false, true, false,
+_declExpNodeClass( "LiteralChar", false, true, false,
                 [ { "token": "&Parser.Token" },
                   { "num": "int" } ]
 );
 
-_declNodeClass( "LiteralInt", Node, false, true, false,
+_declExpNodeClass( "LiteralInt", false, true, false,
                 [ { "token": "&Parser.Token" },
                   { "num": "int" } ]
 );
 
-_declNodeClass( "LiteralReal", Node, false, true, false,
+_declExpNodeClass( "LiteralReal", false, true, false,
                 [ { "token": "&Parser.Token" },
                   { "num": "real" } ]
 );
 
-_declNodeClass( "LiteralArray", Node, false, true, false,
+_declExpNodeClass( "LiteralArray", false, true, false,
                 [ { "expList": "&ExpListNode!" } ]
 );
 
-_declNodeClass( "LiteralList", Node, false, true, false,
+_declExpNodeClass( "LiteralList", false, true, false,
                 [ { "expList": "&ExpListNode!" } ]
 );
 
-_declNodeClass( "LiteralSet", Node, false, true, false,
+_declExpNodeClass( "LiteralSet", false, true, false,
                 [ { "expList": "&ExpListNode!" } ]
 );
 
@@ -2326,12 +2363,12 @@ pub class PairItem {
    pri let key: &Node { pub };
    pri let val: &Node { pub };
 }
-_declNodeClass( "LiteralMap", Node, false, true, false,
+_declExpNodeClass( "LiteralMap", false, true, false,
                 [ { "map": "Map<&Node,&Node>" },
                   { "pairList": "List<&PairItem>" } ]
 );
 
-_declNodeClass( "LiteralString", Node, false, true, false,
+_declExpNodeClass( "LiteralString", false, true, false,
                 [ { "token": "&Parser.Token" },
                   // 文字列リテラルの %s に対する各パラメータ
                   { "orgParam": "&ExpListNode!" },
@@ -2339,7 +2376,7 @@ _declNodeClass( "LiteralString", Node, false, true, false,
                   { "dddParam": "&ExpListNode!" } ]
 );
 
-_declNodeClass( "LiteralBool", Node, false, true, false,
+_declExpNodeClass( "LiteralBool", false, true, false,
                 [ { "token": "&Parser.Token" } ]
 );
 
@@ -2347,7 +2384,7 @@ _declNodeClass( "LiteralSymbol", Node, false, true, false,
                 [ { "token": "&Parser.Token" } ]
 );
 
-_declNodeClass( "TupleConst", Node, false, true, false,
+_declExpNodeClass( "TupleConst", false, true, false,
                 [ { "expList": "&ExpListNode" } ]
 );
                 
@@ -2473,7 +2510,7 @@ pub override fn LiteralNilNode.getLiteral(): Literal!, str! {
    return .Nil, nil;
 }
 pub override fn LiteralNilNode.setupLiteralTokenList( list: List<&Parser.Token> ): bool {
-   self.addTokenList( list, .Symb, "nil" );
+   self.addTokenList( list, .Kywd, "nil" );
    return true;
 }
 

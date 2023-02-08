@@ -4051,6 +4051,14 @@ end
 
 function ConvFilter:processExpSetVal( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_exp1(), self, node )
    self:writeRaw( " = " )
    filter( node:get_exp2(), self, node )
@@ -4060,6 +4068,14 @@ end
 
 function ConvFilter:processExpSetItem( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_val(), self, node )
    self:writeRaw( "[" )
    do

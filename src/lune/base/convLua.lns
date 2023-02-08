@@ -3344,6 +3344,10 @@ pub override fn ConvFilter.processExpParen(
 
 pub override fn ConvFilter.processExpSetVal( node: &Nodes.ExpSetValNode, opt:Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$exp1, self, node );
    self.writeRaw( " = " );
    filter( node.$exp2, self, node );
@@ -3352,6 +3356,10 @@ pub override fn ConvFilter.processExpSetVal( node: &Nodes.ExpSetValNode, opt:Opt
 pub override fn ConvFilter.processExpSetItem(
    node: &Nodes.ExpSetItemNode, opt:Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$val, self, node );
    self.writeRaw( "[" );
    _match node.$index {

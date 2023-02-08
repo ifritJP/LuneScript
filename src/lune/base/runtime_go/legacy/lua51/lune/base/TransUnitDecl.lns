@@ -42,6 +42,7 @@ fn TransUnit.analyzeRefTypeTuple(
                symToken = work;
             } else {
                self.pushback();
+               self.pushback();
             }
          } else {
             self.pushback();
@@ -3470,16 +3471,16 @@ fn TransUnit.analyzeDeclFunc(
    else {
       when! name {
          if not CantOverrideMethods.has( name.txt ) {
-            if self.$scope.$parent.getTypeInfoField(
+            if! let sameNameType = self.$scope.$parent.getTypeInfoField(
                name.txt, false, funcBodyScope, .Full )
             {
-               // override 宣言していないのに、オーバーライドしている場合エラー
-               self.addErrMess( firstToken.pos,
-                                "mismatch override --" .. funcName );
+               if not staticFlag or not sameNameType.$staticFlag {
+                  self.addErrMess( firstToken.pos,
+                                   "can't exist the same name func --" .. funcName );
+               }
             } else {
-               if! let ifFunc =
-                  self.$scope.$parent.getSymbolInfoIfField(
-                     name.txt, funcBodyScope, .Full )
+               if! let ifFunc = self.$scope.$parent.getSymbolInfoIfField(
+                  name.txt, funcBodyScope, .Full )
                {
                   if not ifFunc.$typeInfo.canEvalWith(
                      self.processInfo, typeInfo, .SetEq, alt2typeMap )
@@ -4033,19 +4034,6 @@ List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode
    return typeInfoList, letVarList, orgExpTypeList, nil;
 }
 
-fn TransUnit.analyzeExpandTuple(
-   firstPos:&Types.Position, condRetInfo:&Nodes.CondRetInfo!,
-   typeInfoList:&List<&Ast.TypeInfo>, varList:&List<&Nodes.VarInfo>,
-   symbolInfoList:&List<&Ast.SymbolInfo>,
-   expList:&Nodes.ExpListNode ) mut : Nodes.ExpandTupleNode
-{
-   return Nodes.ExpandTupleNode.create(
-      self.nodeManager, firstPos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      condRetInfo, varList, expList, symbolInfoList );
-}
-
-
 /*
 let で宣言している変数シンボル、型、初期値の型情報を解析して返す。
 
@@ -4063,7 +4051,7 @@ let で宣言している変数シンボル、型、初期値の型情報を解�
 */
 fn TransUnit.analyzeLetAndInitExp(
    firstPos:&Parser.Position, letFlag:bool, initMutable:Ast.MutMode,
-   accessMode:Ast.AccessMode, unwrapFlag:bool, expandTuple:bool ) mut :
+   accessMode:Ast.AccessMode, unwrapFlag:bool ) mut :
 &List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
    // 宣言している変数の型リスト
@@ -4143,30 +4131,6 @@ fn TransUnit.analyzeLetAndInitExp(
       }
    }
 
-   if expandTuple {
-      self.checkToken( nextToken, ")" );
-      self.checkNextToken( "=" );
-
-      let expListNode = self.analyzeExpList( false, false, false, true ## );
-      let expType = expListNode.$expType;
-      if expType.$kind ~= .Tuple {
-         self.errorAt( expListNode.$pos,
-                       "expects the tuple value, but -- %s" (expType.getTxt(##)) );
-      }
-      if #expListNode.$expTypeList ~= 1 {
-         self.addErrMess(
-            expListNode.$pos,
-            "expects 1 tuple value, but -- %d value" (#expListNode.$expTypeList) );
-      }
-      if #expType.$itemTypeInfoList ~= #letVarList {
-         self.errorAt(
-            expListNode.$pos,
-            "expects %d item tuple, but -- %d item"
-            (#letVarList, #expType.$itemTypeInfoList) );
-      }
-      return expType.$itemTypeInfoList, letVarList, expType.$itemTypeInfoList, expListNode;
-   }
-   
    if nextToken.txt ~= "=" {
       self.pushback();
       let mut orgExpTypeList: List<&Ast.TypeInfo> = [];
@@ -4198,22 +4162,11 @@ fn TransUnit.analyzeDeclVar(
       }
    }
 
-   let expandTuple;
-   {
-      let workToken = self.getToken(##);
-      if workToken.txt == "(" and mode == .Let {
-         expandTuple = true;
-      } else {
-         expandTuple = false;
-         self.pushback();
-      }
-   }
-   
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp(
          firstToken.pos, mode == .Let,
          mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut,
-         accessMode, unwrapFlag, expandTuple );
+         accessMode, unwrapFlag );
 
    let condRetInfo = self.checkCondRet();
 
@@ -4349,15 +4302,6 @@ fn TransUnit.analyzeDeclVar(
       self.macroCtrl.registVar( symbolInfoList );
    }
 
-   if expandTuple {
-      when! expList {
-         return self.analyzeExpandTuple( firstToken.pos, condRetInfo, typeInfoList,
-                                         varList, symbolInfoList, expList );
-      } else {
-         self.errorAt( firstToken.pos, "expanding tuple must set init value." );
-      }
-   }
-
    let mut unwrapBlock: Nodes.BlockNode! = nil;
    let mut thenBlock: Nodes.BlockNode! = nil;
    if unwrapFlag {
@@ -4467,7 +4411,7 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNo
    let mut workTypeInfoList, mut letVarList, workExpList;
    if nextToken.txt == "let" {
       workTypeInfoList, letVarList, _, workExpList = self.analyzeLetAndInitExp(
-         firstToken.pos, true, .IMut, .Local, true, false );
+         firstToken.pos, true, .IMut, .Local, true );
    } else {
       self.pushback();
       let mut tmpTypeInfoList : List<&Ast.TypeInfo> = [ Ast.builtinTypeEmpty ];

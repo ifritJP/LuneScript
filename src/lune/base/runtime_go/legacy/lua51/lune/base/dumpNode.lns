@@ -87,6 +87,9 @@ class dumpFilter extend Nodes.Filter<Opt> {
       if node.hasNilAccess() {
          attrib = "%s %s" (attrib, "nilacc" );
       }
+      if node.isIntermediate() {
+         attrib = "%s %s" (attrib, "inter" );
+      }
       if #attrib ~= 0 {
          attrib = "[%s]" (attrib);
       }
@@ -337,18 +340,11 @@ pub override fn dumpFilter.processWhen(
    }
 }
 
-pub override fn dumpFilter.processExpandTuple(
-   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+pub override fn dumpFilter.processExpExpandTuple(
+   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
 {
-   let mut varName = "";
-   foreach var, index in node.get_varList() {
-      if index > 1 {
-	 varName = varName .. ",";
-      }
-      varName = "%s %s" (varName, var.get_name().txt );
-   }
-   self.dump( opt, node, varName );
-   filter( node.$expList, self, opt.nextOpt() );
+   self.dump( opt, node, "" );
+   filter( node.$exp, self, opt.nextOpt() );
 }
 
 

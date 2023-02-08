@@ -584,31 +584,13 @@ pub override fn FormatterFilter.processWhen(
    }
 }
 
-pub override fn FormatterFilter.processExpandTuple(
-   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+pub override fn FormatterFilter.processExpExpandTuple(
+   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
 {
-   self.write( "let " );
-
-   foreach symInfo, index in node.$symbolInfoList {
-      if index > 1 {
-	 self.write( ", " );
-      }
-      if symInfo.$mutable {
-         self.write( "mut " );
-      }
-      self.write( symInfo.$name );
-      if #node.$varList >= index {
-         let varInfo = node.$varList[ index ];
-         if! let varType = varInfo.$refType {
-            self.write( ":" );
-            filter( varType, self, opt.nextOpt( node ) );
-         }
-      }
-   }
-
-   self.write( " = " );
-   filter( node.$expList, self, opt.nextOpt( node ) );
+   filter( node.$exp, self, opt.nextOpt( node ) );
+   self.write( "..." );
 }
+
 
 pub override fn FormatterFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt:Opt ) mut

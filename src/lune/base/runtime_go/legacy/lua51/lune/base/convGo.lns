@@ -169,6 +169,9 @@ class convFilter extend Nodes.Filter<Opt> {
 
    // 動的な更新は processBlockSub
    let processModeStack:List<ProcessMode>;
+
+
+   let localPrefix:str;
    
 
    pub fn __init( enableTest:bool, streamName: str, stream: oStream,
@@ -209,6 +212,7 @@ class convFilter extend Nodes.Filter<Opt> {
       let modDir = self.moduleTypeInfo.getParentFullName(
          self.$typeNameCtrl, self.$moduleInfoManager, false );
       self.modDir = Str.replace( modDir, "@", "" ).gsub( "%.$", "" );
+      self.localPrefix = Str.replace( self.moduleTypeInfo.$rawTxt, "@", "" );
 
       self.noneNode = Nodes.NoneNode.create(
          self.nodeManager, Parser.noneToken.pos, false, false,
@@ -552,7 +556,7 @@ fn convFilter.getSymbol( kind:SymbolKind, name:str ) mut : str {
          return symbolName;
       }
       case .Var( symbolInfo ) {
-         let modName = Str.replace( self.moduleTypeInfo.$rawTxt,  "@", "" );
+         let modName = self.localPrefix;
          if not symbolInfo.getModule().equals( self.processInfo, self.moduleTypeInfo## )
          {
             symbolName = "%s_%s" (self.getModuleName(symbolInfo.getModule(), false),
@@ -1240,8 +1244,7 @@ fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
 
 fn convFilter.getConvExpName( node:&Nodes.Node, argListNode:&Nodes.ExpListNode ): str
 {
-   return "%s_convExp%s"
-   ( Str.replace( self.moduleTypeInfo.$rawTxt, "@", "" ), node.getIdTxt() );
+   return "%s_convExp%s" ( self.localPrefix, node.getIdTxt() );
 }
 
 fn convFilter.processConvExp( node:&Nodes.Node, dstTypeList:&List<&Ast.TypeInfo>,
@@ -1444,8 +1447,7 @@ fn convFilter.outputNilAccCall( node: &Nodes.ExpCallNode ) mut {
          nils = "%s,nil" (nils);
          lists = "%s,list[%d]" (lists, count - 1);
       }
-      let name = "%s_%s" ( Str.replace( self.moduleTypeInfo.$rawTxt, "@", "" ),
-                           node.getIdTxt() );
+      let name = "%s_%s" ( self.localPrefix, node.getIdTxt() );
       self.writeRaw(
          ```
 func lns_NilAccCall_%s( env *LnsEnv, call func () (%s) ) bool {
@@ -2256,6 +2258,10 @@ pub override fn convFilter.processRoot(
    _filter( node.$nodeManager.getDeclFormNodeList(),
             fn ( workNode:&Nodes.Node ) {
                filter( workNode, self, node );
+            } );
+   _filter( node.$nodeManager.getExpExpandTupleNodeList(),
+            fn ( workNode:&Nodes.ExpExpandTupleNode ) {
+               self.outputExpExpandTupleNode( workNode );
             } );
    _filter( node.$nodeManager.getExpCallNodeList(),
             fn ( workNode:&Nodes.ExpCallNode ) {
@@ -3423,39 +3429,43 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
    }
 }
 
-pub override fn convFilter.processExpandTuple(
-   node: &Nodes.ExpandTupleNode, opt:Opt ) mut
+pub fn convFilter.outputExpExpandTupleNode( node:&Nodes.ExpExpandTupleNode ) mut
 {
-   if! let condRetInfo = node.$condRetInfo {
-      self.outputCondRetInfo( condRetInfo );
-   }
-   
-   foreach var in node.$symbolInfoList {
-      if var.$name ~= "_" {
-         self.writeRaw( "var %s " (var.$name) );
-         self.writeln( self.type2gotype( var.$typeInfo ) );
+   let symbol = "%s_expTuple%s" ( self.localPrefix, node.getIdTxt() );
+   self.writeRaw(
+      "func %s(tuple %s) (" (symbol, self.tuple2gotype( node.$exp.$expType ) ) );
+   foreach typeInfo, index in node.$expTypeList {
+      if index ~= 1 {
+         self.writeRaw( "," );
       }
+      self.writeRaw( self.type2gotype( typeInfo ) );
    }
+   self.writeln( ") {" );
+   self.pushIndent( ## );
 
-   self.writeln( "{" );
-   self.pushIndent(##);
+   self.writeRaw( "return " );
 
-   self.writeRaw( "__tuple := " );
-   filter( node.$expList, self, node );
+   foreach _, index in node.$expTypeList {
+      if index ~= 1 {
+         self.writeRaw( "," );
+      }
+      self.writeRaw( "tuple.Val%d" (index) );
+   }
    self.writeln( "" );
-   
-   foreach var, index in node.$symbolInfoList {
-      if var.$name ~= "_" {
-         self.writeRaw( "%s = __tuple.Val%d" (var.$name,index) );
-         //self.outputAny2Type( var.$typeInfo );
-         self.writeln( "" );
-      }
-   }
    
    self.popIndent();
    self.writeln( "}" );
 }
 
+
+pub override fn convFilter.processExpExpandTuple(
+   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
+{
+   let symbol = "%s_expTuple%s" ( self.localPrefix, node.getIdTxt() );
+   self.writeRaw( "%s(" (symbol));
+   filter( node.$exp, self, node );
+   self.writeRaw( ")" );
+}
 
 pub override fn convFilter.processDeclVar(
    node: &Nodes.DeclVarNode, opt: Opt ) mut
@@ -5135,8 +5145,7 @@ pub fn convFilter.outputCallPrefix(
    prefixNode:&Nodes.Node!, funcSymbol:&Ast.SymbolInfo ) mut : bool, CallKind
 {
    let funcType = funcSymbol.$typeInfo;
-   let nilAccName =
-      "%s_%s" ( Str.replace( self.moduleTypeInfo.$rawTxt, "@", "" ), callId );
+   let nilAccName = "%s_%s" ( self.localPrefix, callId );
 
    let mut callKind:CallKind = .Normal;
    
@@ -5587,7 +5596,7 @@ pub override fn convFilter.processExpCall(
       self.writeRaw( "})" );
       self.writeRaw( "/* %d:%d */" (node.$pos.lineNo, node.$pos.column) );
       
-      if opt.parent.hasNilAccess() {
+      if node.isIntermediate() and  opt.parent.hasNilAccess() {
          // self.writeln(" && // " );
       } else {
          self.writeRaw( ")" );
@@ -5785,6 +5794,10 @@ pub override fn convFilter.processExpParen(
 pub override fn convFilter.processExpSetVal(
    node: &Nodes.ExpSetValNode, opt: Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$exp1, self, node );
    if getExpListKind( node.$exp1.$expTypeList, node.$exp2,
                       self.option.$addEnvArg ) == .Direct
@@ -5802,6 +5815,10 @@ pub override fn convFilter.processExpSetVal(
 pub override fn convFilter.processExpSetItem(
    node: &Nodes.ExpSetItemNode, opt: Opt ) mut
 {
+   if! node.$condRetInfo {
+      self.outputCondRetInfo( _exp );
+   }
+   
    filter( node.$val, self, node );
    self.writeRaw( ".Set(" );
    _match node.$index {
@@ -6147,7 +6164,7 @@ pub override fn convFilter.processRefField(
          self.writeln( "&&" );
       }
       self.writeRaw( "%s.NilAccPush(" (getEnvTxt));
-      if opt.parent.hasNilAccess() {
+      if node.isIntermediate() and opt.parent.hasNilAccess() {
          openParenNum = 1;
       } else {
          openParenNum = 2;
@@ -6221,7 +6238,7 @@ pub override fn convFilter.processGetField(
          
          if node.hasNilAccess() {
             self.writeRaw("})" );
-            if opt.parent.hasNilAccess() {
+            if node.isIntermediate() and opt.parent.hasNilAccess() {
                // self.writeln(" && // " );
             } else {
                self.writeRaw( ")" );

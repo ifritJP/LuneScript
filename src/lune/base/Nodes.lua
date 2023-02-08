@@ -5305,27 +5305,28 @@ function ExpSetValNode:canBeStatement(  )
 
    return true
 end
-function ExpSetValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
+function ExpSetValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet )
    local obj = {}
    ExpSetValNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet ); end
    return obj
 end
-function ExpSetValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet) 
+function ExpSetValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet) 
    Node.__init( self,managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.exp1 = exp1
+   self.condRetInfo = condRetInfo
    self.exp2 = exp2
    self.LeftSymList = LeftSymList
    self.initSymSet = initSymSet
    
    
 end
-function ExpSetValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
+function ExpSetValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet )
 
-   local node = ExpSetValNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet)
+   local node = ExpSetValNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet)
    nodeMan:addNode( node )
    return node
 end
@@ -5394,6 +5395,9 @@ function ExpSetValNode._setmeta( obj )
 end
 function ExpSetValNode:get_exp1()
    return self.exp1
+end
+function ExpSetValNode:get_condRetInfo()
+   return self.condRetInfo
 end
 function ExpSetValNode:get_exp2()
    return self.exp2
@@ -5469,13 +5473,13 @@ function ExpSetItemNode:canBeStatement(  )
 
    return true
 end
-function ExpSetItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 )
+function ExpSetItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo )
    local obj = {}
    ExpSetItemNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo ); end
    return obj
 end
-function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2) 
+function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo) 
    Node.__init( self,managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
    
    
@@ -5483,12 +5487,13 @@ function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, ty
    self.val = val
    self.index = index
    self.exp2 = exp2
+   self.condRetInfo = condRetInfo
    
    
 end
-function ExpSetItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 )
+function ExpSetItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo )
 
-   local node = ExpSetItemNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, index, exp2)
+   local node = ExpSetItemNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -5563,6 +5568,9 @@ function ExpSetItemNode:get_index()
 end
 function ExpSetItemNode:get_exp2()
    return self.exp2
+end
+function ExpSetItemNode:get_condRetInfo()
+   return self.condRetInfo
 end
 
 

@@ -1423,6 +1423,7 @@ pub override fn ExpRefNode.canBeRight( processInfo:Ast.ProcessInfo ):bool {
 */
 _declNodeClass( "ExpSetVal", Node, false, false, true,
                 [ { "exp1": "&Node" },
+                  { "condRetInfo": "&CondRetInfo!" },
                   { "exp2": "&ExpListNode" },
                   // 代入先のシンボルリスト
                   { "LeftSymList": "&List<&Ast.SymbolInfo>" },
@@ -1446,7 +1447,8 @@ _declNodeClass( "ExpSetItem", Node, false, false, true,
                   // 要素のインデックス
                   { "index": "IndexVal" },
                   // 設定する値
-                  { "exp2": "&Node" }
+                  { "exp2": "&Node" },
+                  { "condRetInfo": "&CondRetInfo!" }
                 ]
 );
 
