@@ -1175,7 +1175,7 @@ fn TransUnit.analyzePushClass(
       }
    }
 
-   return nextToken, nsInfo, inheritInfo;
+   return (= nextToken, nsInfo, inheritInfo );
 }
 
 fn TransUnit.analyzeDeclAlternateType(
@@ -1276,7 +1276,7 @@ fn TransUnit.analyzeDeclProto(
       let mut nsInfo;
       nextToken, nsInfo, inheritInfo = self.analyzePushClass(
          declMode, finalFlag, abstractFlag,
-         firstToken, name, false, nil, nil, accessMode, altTypeList );
+         firstToken, name, false, nil, nil, accessMode, altTypeList )!...;
       classTypeInfo = nsInfo.$typeInfo;
 
       nsInfo.set_nobody( true );
@@ -1815,6 +1815,13 @@ fn TransUnit.analyzeDecl(
       accessMode = .Local;
    }
 
+
+   macro _checkNil( node:__exp ) {
+      if! let mut work = ,,node {
+         return work, true;
+      }
+      return nil, false;
+   }
    
    if token.txt == "let" {
       return self.analyzeDeclVar( .Let, accessMode, firstToken ), true;
@@ -1835,13 +1842,16 @@ fn TransUnit.analyzeDecl(
       // anonymous 関数の場合は、 関数定義ではなく関数オブジェクトを利用した式。
    }
    elseif token.txt == "class" {
-      return self.analyzeDeclClass( finalFlag, abstractFlag, accessMode, firstToken, .Class );
+      _checkNil( self.analyzeDeclClass(
+         finalFlag, abstractFlag, accessMode, firstToken, .Class ) );
    }
    elseif token.txt == "interface" {
-      return self.analyzeDeclClass( false, true, accessMode, firstToken, .Interface );
+      _checkNil( self.analyzeDeclClass(
+         false, true, accessMode, firstToken, .Interface ) );
    }
    elseif token.txt == "module" {
-      return self.analyzeDeclClass( true, false, accessMode, firstToken, .Module );
+      _checkNil( self.analyzeDeclClass(
+         true, false, accessMode, firstToken, .Module ) );
    }
    // elseif token.txt == "__module" {
    //    return self.analyzeDeclClass( false, accessMode, firstToken, .LazyModule );
@@ -2698,7 +2708,7 @@ nil の場合、メンバの宣言位置。
 fn TransUnit.analyzeDeclClass(
    finalFlag:bool, 
    classAbstructFlag: bool,  mut classAccessMode: Ast.AccessMode,
-   firstToken: &Parser.Token, mut mode:DeclClassMode ) mut : Nodes.DeclClassNode!, bool
+   firstToken: &Parser.Token, mut mode:DeclClassMode ) mut : Nodes.DeclClassNode!
 {
    if mode == .Module {
       if self.getToken(##).txt == "." {
@@ -2814,7 +2824,7 @@ fn TransUnit.analyzeDeclClass(
 
    let mut nextToken, mut nsInfo, inheritInfo = self.analyzePushClass(
       mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName,
-      moduleLang or Types.Lang.Same, classAccessMode, altTypeList );
+      moduleLang or Types.Lang.Same, classAccessMode, altTypeList )!...;
    let classTypeInfo = nsInfo.$typeInfo;
    let mut typeDataAccessor = nsInfo.$typeDataAccessor;
 

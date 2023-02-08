@@ -1074,7 +1074,7 @@ alias で置き換えている元の Type → alias の型
       firstToken: &Parser.Token, name: &Parser.Token! ) mut : Nodes.Node;
    pri fn analyzeDeclClass(
       finalFlag:bool, abstractFlag:bool, classAccessMode: Ast.AccessMode,
-      classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode!, bool;
+      classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode!;
    pri fn analyzeExpSub(
       allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool,
       opLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
