@@ -4273,9 +4273,10 @@ function TransUnit:analyzePushClass( mode, finalFlag, abstractFlag, firstToken, 
                   self:addErrMess( firstToken.pos, "The access mode of '__init' is 'pri'." )
                end
                
+            else
+               return nil
             end
          end
-         
          
       end
       
@@ -4300,7 +4301,7 @@ function TransUnit:analyzePushClass( mode, finalFlag, abstractFlag, firstToken, 
    end
    
    
-   return nextToken, nsInfo, inheritInfo
+   return {nextToken, nsInfo, inheritInfo}
 end
 
 
@@ -4405,7 +4406,9 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
       
       local nsInfo
       
-      nextToken, nsInfo, inheritInfo = self:analyzePushClass( declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
+      local _cond1 = self:analyzePushClass( declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
+      if _cond1 == nil then return nil end
+      nextToken, nsInfo, inheritInfo = table.unpack(_cond1)
       classTypeInfo = nsInfo:get_typeInfo()
       
       nsInfo:set_nobody( true )
@@ -4877,7 +4880,6 @@ function TransUnit:analyzeDeclToken( accessMode, staticFlag, firstToken, token )
    return nil
 end
 
-
 function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
 
    if not staticFlag then
@@ -4914,38 +4916,72 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    end
    
    
+   
+   
    if token.txt == "let" then
-      return self:analyzeDeclVar( Nodes.DeclVarMode.Let, accessMode, firstToken )
+      return self:analyzeDeclVar( Nodes.DeclVarMode.Let, accessMode, firstToken ), true
    elseif token.txt == "fn" then
       local nextToken = self:getToken(  )
       self:pushback(  )
       if nextToken.kind == Parser.TokenKind.Symb or Ast.isPubToExternal( accessMode ) or staticFlag or overrideFlag or abstractFlag then
          
-         return self:analyzeDeclFunc( DeclFuncMode.Func, false, abstractFlag, overrideFlag, accessMode, staticFlag, nil, firstToken, nil )
+         return self:analyzeDeclFunc( DeclFuncMode.Func, false, abstractFlag, overrideFlag, accessMode, staticFlag, nil, firstToken, nil ), true
       end
       
    elseif token.txt == "class" then
-      return self:analyzeDeclClass( finalFlag, abstractFlag, accessMode, firstToken, TransUnitIF.DeclClassMode.Class )
+      do
+         local work = self:analyzeDeclClass( finalFlag, abstractFlag, accessMode, firstToken, TransUnitIF.DeclClassMode.Class )
+         if work ~= nil then
+            return work, true
+         end
+      end
+      
+      return nil, false
+      
    elseif token.txt == "interface" then
-      return self:analyzeDeclClass( false, true, accessMode, firstToken, TransUnitIF.DeclClassMode.Interface )
+      do
+         local work = self:analyzeDeclClass( false, true, accessMode, firstToken, TransUnitIF.DeclClassMode.Interface )
+         if work ~= nil then
+            return work, true
+         end
+      end
+      
+      return nil, false
+      
    elseif token.txt == "module" then
-      return self:analyzeDeclClass( true, false, accessMode, firstToken, TransUnitIF.DeclClassMode.Module )
+      do
+         local work = self:analyzeDeclClass( true, false, accessMode, firstToken, TransUnitIF.DeclClassMode.Module )
+         if work ~= nil then
+            return work, true
+         end
+      end
+      
+      return nil, false
+      
    elseif token.txt == "proto" then
-      return self:analyzeDeclProto( accessMode, firstToken )
+      do
+         local work = self:analyzeDeclProto( accessMode, firstToken )
+         if work ~= nil then
+            return work, true
+         end
+      end
+      
+      return nil, false
+      
    elseif token.txt == "macro" then
-      return self:analyzeDeclMacro( accessMode, firstToken )
+      return self:analyzeDeclMacro( accessMode, firstToken ), true
    elseif token.txt == "enum" then
-      return self:analyzeDeclEnum( accessMode, firstToken )
+      return self:analyzeDeclEnum( accessMode, firstToken ), true
    elseif token.txt == "alge" then
-      return self:analyzeDeclAlge( accessMode, firstToken )
+      return self:analyzeDeclAlge( accessMode, firstToken ), true
    elseif token.txt == "form" then
-      return self:analyzeDeclForm( accessMode, firstToken )
+      return self:analyzeDeclForm( accessMode, firstToken ), true
    elseif token.txt == "alias" then
-      return self:analyzeAlias( accessMode, firstToken )
+      return self:analyzeAlias( accessMode, firstToken ), true
    end
    
    
-   return self:analyzeDeclToken( accessMode, staticFlag, firstToken, token )
+   return self:analyzeDeclToken( accessMode, staticFlag, firstToken, token ), true
 end
 
 
@@ -5077,7 +5113,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2003, function (  )
+         Log.log( Log.Level.Debug, __func__, 2022, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -5790,7 +5826,8 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
       if nextToken.txt == "of" then
          local langToken = self:getToken(  )
          if langToken.kind ~= Parser.TokenKind.Str then
-            self:error( string.format( "it's not a string -- %s", langToken.txt) )
+            self:addErrMess( langToken.pos, string.format( "it's not a string -- %s", langToken.txt) )
+            return nil
          end
          
          local langIdToken = langToken:getExcludedDelimitTxt(  )
@@ -5836,7 +5873,9 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
    
    local existSymbolInfo = self:get_scope():getSymbolTypeInfo( name.txt, self:get_scope(), self:get_scope(), self.scopeAccess )
    
-   local nextToken, nsInfo, inheritInfo = self:analyzePushClass( mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
+   local _cond1 = self:analyzePushClass( mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
+   if _cond1 == nil then return nil end
+   local nextToken, nsInfo, inheritInfo = table.unpack(_cond1)
    local classTypeInfo = nsInfo:get_typeInfo()
    local typeDataAccessor = nsInfo:get_typeDataAccessor()
    
@@ -5937,7 +5976,8 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
             
          else 
             
-               self:error( string.format( "advertise member type is illegal -- %s", tostring( advertiseInfo:get_member():get_name())) )
+               self:addErrMess( firstToken.pos, string.format( "advertise member type is illegal -- %s", tostring( advertiseInfo:get_member():get_name())) )
+               return nil
          end
       end
       
@@ -8462,25 +8502,16 @@ end
 function TransUnit:analyzeTupleConst( token, expectType )
 
    
-   local nextToken = self:getToken(  )
+   local expList = self:analyzeExpList( false, false, false, false, nil, _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' ) )
+   self:checkNextToken( ")" )
    
-   local expectTypeList = nil
-   if _lune.nilacc( expectType, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.Tuple then
-      do
-         local itemTypeInfoList = _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' )
-         if itemTypeInfoList ~= nil then
-            expectTypeList = itemTypeInfoList
-         end
+   if expectType ~= nil then
+      local _
+      local _1, _2, workExpList = self:checkMatchType( "tuple", token.pos, expectType:get_itemTypeInfoList(), expList, false, true, nil, true )
+      if workExpList ~= nil then
+         expList = workExpList
       end
       
-   end
-   
-   
-   local expList = self:analyzeListItems( token.pos, nextToken, ")", expectTypeList )
-   if  nil == expList then
-      local _expList = expList
-   
-      self:error( "'Tuple' must not size 0." )
    end
    
    
@@ -12167,7 +12198,13 @@ function TransUnit:analyzeStatement( termTxt )
    
    
    if not statement then
-      statement = self:analyzeDecl( Ast.AccessMode.None, false, token, token )
+      local success
+      
+      statement, success = self:analyzeDecl( Ast.AccessMode.None, false, token, token )
+      if not success then
+         self:error( "illegal statement" )
+      end
+      
    end
    
    
@@ -12195,9 +12232,15 @@ function TransUnit:analyzeStatement( termTxt )
             nextToken = self:getToken(  )
          end
          
-         statement = self:analyzeDecl( accessMode, staticFlag, token, nextToken )
+         local success
+         
+         statement, success = self:analyzeDecl( accessMode, staticFlag, token, nextToken )
          if not statement then
             self:addErrMess( nextToken.pos, string.format( "This token is illegal -- %s", nextToken.txt) )
+         end
+         
+         if not success then
+            self:error( "illegal statement" )
          end
          
       elseif token.txt == "{" then

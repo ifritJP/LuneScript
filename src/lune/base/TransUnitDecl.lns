@@ -2788,7 +2788,8 @@ fn TransUnit.analyzeDeclClass(
       if nextToken.txt == "of" {
          let langToken = self.getToken(##);
          if langToken.kind ~= .Str {
-            self.error( "it's not a string -- %s" ( langToken.txt ) ); // 要対応
+            self.addErrMess( langToken.pos, "it's not a string -- %s" ( langToken.txt ) );
+            return nil;
          }
          let langIdToken = langToken.getExcludedDelimitTxt();
          if langIdToken ~= "" {
@@ -2935,8 +2936,10 @@ fn TransUnit.analyzeDeclClass(
             }
          }
          default {
-            self.error( "advertise member type is illegal -- %s" // 要対応
-                        (advertiseInfo.$member.$name) );
+            self.addErrMess( firstToken.pos,
+                             "advertise member type is illegal -- %s"
+                             (advertiseInfo.$member.$name) );
+            return nil;
          }
       }
    }

@@ -5826,7 +5826,8 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
       if nextToken.txt == "of" then
          local langToken = self:getToken(  )
          if langToken.kind ~= Parser.TokenKind.Str then
-            self:error( string.format( "it's not a string -- %s", langToken.txt) )
+            self:addErrMess( langToken.pos, string.format( "it's not a string -- %s", langToken.txt) )
+            return nil
          end
          
          local langIdToken = langToken:getExcludedDelimitTxt(  )
@@ -5975,7 +5976,8 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
             
          else 
             
-               self:error( string.format( "advertise member type is illegal -- %s", advertiseInfo:get_member():get_name()) )
+               self:addErrMess( firstToken.pos, string.format( "advertise member type is illegal -- %s", advertiseInfo:get_member():get_name()) )
+               return nil
          end
       end
       
@@ -12196,7 +12198,13 @@ function TransUnit:analyzeStatement( termTxt )
    
    
    if not statement then
-      statement = self:analyzeDecl( Ast.AccessMode.None, false, token, token )
+      local success
+      
+      statement, success = self:analyzeDecl( Ast.AccessMode.None, false, token, token )
+      if not success then
+         self:error( "illegal statement" )
+      end
+      
    end
    
    
@@ -12224,9 +12232,15 @@ function TransUnit:analyzeStatement( termTxt )
             nextToken = self:getToken(  )
          end
          
-         statement = self:analyzeDecl( accessMode, staticFlag, token, nextToken )
+         local success
+         
+         statement, success = self:analyzeDecl( accessMode, staticFlag, token, nextToken )
          if not statement then
             self:addErrMess( nextToken.pos, string.format( "This token is illegal -- %s", nextToken.txt) )
+         end
+         
+         if not success then
+            self:error( "illegal statement" )
          end
          
       elseif token.txt == "{" then

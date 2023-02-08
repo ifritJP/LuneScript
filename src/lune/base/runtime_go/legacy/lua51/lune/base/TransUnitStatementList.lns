@@ -85,7 +85,11 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
    };
 
    if not statement {
-      statement = self.analyzeDecl( .None, false, token, token );
+      let success;
+      statement, success = self.analyzeDecl( .None, false, token, token );
+      if not success {
+         self.error( "illegal statement" ); // 要対応
+      }
    }
 
    if not statement {
@@ -109,10 +113,15 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          if token.txt ~= "static" {
             nextToken = self.getToken(##);
          }
-         statement = self.analyzeDecl( accessMode, staticFlag, token, nextToken );
+         let success;
+         statement, success = self.analyzeDecl(
+            accessMode, staticFlag, token, nextToken );
          if not statement {
             self.addErrMess( nextToken.pos,
                              "This token is illegal -- %s" (nextToken.txt) );
+         }
+         if not success {
+            self.error( "illegal statement" ); // 要対応
          }
       }
       elseif token.txt == "{" {

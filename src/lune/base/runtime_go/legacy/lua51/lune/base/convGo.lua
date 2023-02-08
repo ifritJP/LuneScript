@@ -2781,6 +2781,47 @@ function convFilter:processMethodAsync( nodeList )
 end
 
 
+function convFilter:outputExpExpandTupleNode( node )
+
+   local symbol = string.format( "%s_expTuple%s", self.localPrefix, node:getIdTxt(  ))
+   self:writeRaw( string.format( "func %s(tuple %s) (", symbol, self:tuple2gotype( node:get_exp():get_expType() )) )
+   for index, typeInfo in ipairs( node:get_expTypeList() ) do
+      if index ~= 1 then
+         self:writeRaw( "," )
+      end
+      
+      self:writeRaw( self:type2gotype( typeInfo ) )
+   end
+   
+   self:writeln( ") {" )
+   self:pushIndent(  )
+   
+   self:writeRaw( "return " )
+   
+   for index, _1 in ipairs( node:get_expTypeList() ) do
+      if index ~= 1 then
+         self:writeRaw( "," )
+      end
+      
+      self:writeRaw( string.format( "tuple.Val%d", index) )
+   end
+   
+   self:writeln( "" )
+   
+   self:popIndent(  )
+   self:writeln( "}" )
+end
+
+
+function convFilter:processExpExpandTuple( node, opt )
+
+   local symbol = string.format( "%s_expTuple%s", self.localPrefix, node:getIdTxt(  ))
+   self:writeRaw( string.format( "%s(", symbol) )
+   filter( node:get_exp(), self, node )
+   self:writeRaw( ")" )
+end
+
+
 function convFilter:processRoot( node, opt )
 
    for __index, importNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
@@ -2911,7 +2952,7 @@ function convFilter:processRoot( node, opt )
       end
       
       
-      for __index, tmpNode in ipairs( node:get_nodeManager():getExpExpandTupleNodeList(  ) ) do
+      for __index, tmpNode in ipairs( self.option.sortCode and Nodes.ExpExpandTupleNode.sortList( Nodes.cloneNodeList( node:get_nodeManager():getExpExpandTupleNodeList(  ) ) ) or node:get_nodeManager():getExpExpandTupleNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -4396,47 +4437,6 @@ function convFilter:outputLetVar( node )
       
    end
    
-end
-
-
-function convFilter:outputExpExpandTupleNode( node )
-
-   local symbol = string.format( "%s_expTuple%s", self.localPrefix, node:getIdTxt(  ))
-   self:writeRaw( string.format( "func %s(tuple %s) (", symbol, self:tuple2gotype( node:get_exp():get_expType() )) )
-   for index, typeInfo in ipairs( node:get_expTypeList() ) do
-      if index ~= 1 then
-         self:writeRaw( "," )
-      end
-      
-      self:writeRaw( self:type2gotype( typeInfo ) )
-   end
-   
-   self:writeln( ") {" )
-   self:pushIndent(  )
-   
-   self:writeRaw( "return " )
-   
-   for index, _1 in ipairs( node:get_expTypeList() ) do
-      if index ~= 1 then
-         self:writeRaw( "," )
-      end
-      
-      self:writeRaw( string.format( "tuple.Val%d", index) )
-   end
-   
-   self:writeln( "" )
-   
-   self:popIndent(  )
-   self:writeln( "}" )
-end
-
-
-function convFilter:processExpExpandTuple( node, opt )
-
-   local symbol = string.format( "%s_expTuple%s", self.localPrefix, node:getIdTxt(  ))
-   self:writeRaw( string.format( "%s(", symbol) )
-   filter( node:get_exp(), self, node )
-   self:writeRaw( ")" )
 end
 
 
