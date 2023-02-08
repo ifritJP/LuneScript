@@ -2164,6 +2164,44 @@ fn convFilter.processMethodAsync(
    return runnerList;
 }
 
+pub fn convFilter.outputExpExpandTupleNode( node:&Nodes.ExpExpandTupleNode ) mut
+{
+   let symbol = "%s_expTuple%s" ( self.localPrefix, node.getIdTxt() );
+   self.writeRaw(
+      "func %s(tuple %s) (" (symbol, self.tuple2gotype( node.$exp.$expType ) ) );
+   foreach typeInfo, index in node.$expTypeList {
+      if index ~= 1 {
+         self.writeRaw( "," );
+      }
+      self.writeRaw( self.type2gotype( typeInfo ) );
+   }
+   self.writeln( ") {" );
+   self.pushIndent( ## );
+
+   self.writeRaw( "return " );
+
+   foreach _, index in node.$expTypeList {
+      if index ~= 1 {
+         self.writeRaw( "," );
+      }
+      self.writeRaw( "tuple.Val%d" (index) );
+   }
+   self.writeln( "" );
+   
+   self.popIndent();
+   self.writeln( "}" );
+}
+
+
+pub override fn convFilter.processExpExpandTuple(
+   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
+{
+   let symbol = "%s_expTuple%s" ( self.localPrefix, node.getIdTxt() );
+   self.writeRaw( "%s(" (symbol));
+   filter( node.$exp, self, node );
+   self.writeRaw( ")" );
+}
+
 pub override fn convFilter.processRoot(
    node: &Nodes.RootNode, opt: Opt ) mut
 {
@@ -2260,7 +2298,7 @@ pub override fn convFilter.processRoot(
             fn ( workNode:&Nodes.Node ) {
                filter( workNode, self, node );
             } );
-   _filter( node.$nodeManager.getExpExpandTupleNodeList(),
+   _filter( _sortNode( ExpExpandTupleNode ),
             fn ( workNode:&Nodes.ExpExpandTupleNode ) {
                self.outputExpExpandTupleNode( workNode );
             } );
@@ -3428,44 +3466,6 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
          self.writeln( "" );   
       }
    }
-}
-
-pub fn convFilter.outputExpExpandTupleNode( node:&Nodes.ExpExpandTupleNode ) mut
-{
-   let symbol = "%s_expTuple%s" ( self.localPrefix, node.getIdTxt() );
-   self.writeRaw(
-      "func %s(tuple %s) (" (symbol, self.tuple2gotype( node.$exp.$expType ) ) );
-   foreach typeInfo, index in node.$expTypeList {
-      if index ~= 1 {
-         self.writeRaw( "," );
-      }
-      self.writeRaw( self.type2gotype( typeInfo ) );
-   }
-   self.writeln( ") {" );
-   self.pushIndent( ## );
-
-   self.writeRaw( "return " );
-
-   foreach _, index in node.$expTypeList {
-      if index ~= 1 {
-         self.writeRaw( "," );
-      }
-      self.writeRaw( "tuple.Val%d" (index) );
-   }
-   self.writeln( "" );
-   
-   self.popIndent();
-   self.writeln( "}" );
-}
-
-
-pub override fn convFilter.processExpExpandTuple(
-   node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
-{
-   let symbol = "%s_expTuple%s" ( self.localPrefix, node.getIdTxt() );
-   self.writeRaw( "%s(" (symbol));
-   filter( node.$exp, self, node );
-   self.writeRaw( ")" );
 }
 
 pub override fn convFilter.processDeclVar(

@@ -1857,7 +1857,7 @@ fn TransUnit.analyzeDecl(
    //    return self.analyzeDeclClass( false, accessMode, firstToken, .LazyModule );
    // }
    elseif token.txt == "proto" {
-      return self.analyzeDeclProto( accessMode, firstToken ), true;
+      _checkNil( self.analyzeDeclProto( accessMode, firstToken ) );
    }
    elseif token.txt == "macro" {
       return self.analyzeDeclMacro( accessMode, firstToken ),  true;
