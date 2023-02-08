@@ -2918,6 +2918,7 @@ _section();
          } else {
             print( val2 + 10 );
          }
+         print( tuple...**, 20 );
       }
       dump( sub() );
       dump( sub2() );
