@@ -2475,8 +2475,12 @@ test/error/async5.lns:39:1: error: not implements method -- __Runner.run at Hoge
 test/error/async5.lns:42:22: error: __init: exp(2) type mismatch allmut @test.@error.@async5.Val <- [##]: dst 2 -- 
 test/error/async5.lns:44:17: error: can't access noasync function in async. -- func1 on func
 test/error/async5.lns:46:7: error: can't access noasync function in async. -- foo1 on func
+test/error/tuple.lns:18:7: warning: 'func' var isn't accessed
+test/error/tuple.lns:22:7: warning: 'sub' var isn't accessed
 test/error/tuple.lns:2:4: error: return: over exp. expect: 1: actual: 2
-test/error/tuple.lns:10:11: error: = operator: exp(1) type mismatch __tuple<int,str!>(1031) <- __tuple<int,str>(1036): index 1 -- umatch str! -- str
+test/error/tuple.lns:10:11: error: = operator: exp(1) type mismatch __tuple<int,str!>(1034) <- __tuple<int,str>(1040): index 1 -- umatch str! -- str
+test/error/tuple.lns:20:14: error: tuple: exp(1) type mismatch @test.@error.@tuple.Hoge(1048) <- &@test.@error.@tuple.Hoge(1076): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/tuple.lns:23:14: error: tuple: exp(1) type mismatch @test.@error.@tuple.Sub(1058) <- @test.@error.@tuple.Hoge(1048): index 1 -- not inherit Sub(1058) <- Hoge(1048)
 test/error/tuple2.lns:2:8: warning: 'val1' var isn't accessed
 test/error/tuple2.lns:2:14: warning: 'val2' var isn't accessed
 test/error/tuple2.lns:2:4: error: unmatch value type (index:2) :: <- nil

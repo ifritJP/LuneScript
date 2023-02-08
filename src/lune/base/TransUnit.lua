@@ -8484,6 +8484,16 @@ function TransUnit:analyzeTupleConst( token, expectType )
    end
    
    
+   if expectType ~= nil then
+      local _
+      local _1, _2, workExpList = self:checkMatchType( "tuple", token.pos, expectType:get_itemTypeInfoList(), expList, false, true, nil, true )
+      if workExpList ~= nil then
+         expList = workExpList
+      end
+      
+   end
+   
+   
    local tupleType
    
    if expectType ~= nil then

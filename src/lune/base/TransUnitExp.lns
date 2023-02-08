@@ -1038,6 +1038,15 @@ fn TransUnit.analyzeTupleConst(
       self.error( "'Tuple' must not size 0." ); // 要対応
    };
 
+   when! expectType {
+      let _, _, mut workExpList = self.checkMatchType(
+         "tuple", token.$pos, expectType.$itemTypeInfoList,
+         expList, false, true, nil, true );
+      when! workExpList {
+         expList = workExpList;
+      }
+   }
+
    let tupleType;
    when! expectType {
       tupleType = expectType.$srcTypeInfo;

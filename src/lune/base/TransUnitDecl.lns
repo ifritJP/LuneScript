@@ -3953,7 +3953,7 @@ List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode
 
       {
          let mut alt2typeMap =
-         Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
+            Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap(false);
 
          if! self.checkImplicitCast(
             alt2typeMap, true, typeInfoList, workList,

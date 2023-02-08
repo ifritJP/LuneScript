@@ -10,3 +10,16 @@ fn func2() : (int,str), (int) {
    tuple1 = tuple2; // error
    print( tuple1, tuple2 );
 }
+{
+   class Hoge {
+   }
+   class Sub {
+   }
+   fn func(): (Hoge) {
+      let hoge = new Hoge();
+      return (= hoge); // error
+   }
+   fn sub(): (Sub) {
+      return (= new Hoge()); // error
+   }
+}

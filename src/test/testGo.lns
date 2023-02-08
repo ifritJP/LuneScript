@@ -2972,3 +2972,21 @@ _section();
    }
    print( sub(true), sub(false) );
 }
+_section();
+{
+   class Hoge {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   class Sub extend Hoge {
+   }
+   class Sub2 {
+   }
+   fn func(): (&Hoge) {
+      let sub = new Sub();
+      return (= sub );
+   }
+   let hoge = func()...;
+   hoge.func();
+}
