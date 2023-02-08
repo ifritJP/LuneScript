@@ -7056,6 +7056,14 @@ end
 
 function convFilter:processExpSetVal( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_exp1(), self, node )
    if getExpListKind( node:get_exp1():get_expTypeList(), node:get_exp2(), self.option:get_addEnvArg() ) == ExpListKind.Direct then
       for _1 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
@@ -7071,6 +7079,14 @@ end
 
 function convFilter:processExpSetItem( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_val(), self, node )
    self:writeRaw( ".Set(" )
    do

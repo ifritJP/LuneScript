@@ -3281,6 +3281,7 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
             else
              
                self:pushback(  )
+               self:pushback(  )
             end
             
          else
@@ -5076,7 +5077,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2002, function (  )
+         Log.log( Log.Level.Debug, __func__, 2003, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -6457,21 +6458,25 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
     
       if name ~= nil then
          if not _lune._Set_has(CantOverrideMethods, name.txt ) then
-            if self:get_scope():get_parent():getTypeInfoField( name.txt, false, funcBodyScope, Ast.ScopeAccess.Full ) then
-               
-               self:addErrMess( firstToken.pos, "mismatch override --" .. funcName )
-            else
-             
-               do
-                  local ifFunc = self:get_scope():get_parent():getSymbolInfoIfField( name.txt, funcBodyScope, Ast.ScopeAccess.Full )
-                  if ifFunc ~= nil then
-                     if not ifFunc:get_typeInfo():canEvalWith( self.processInfo, typeInfo, Ast.CanEvalType.SetEq, alt2typeMap ) then
-                        self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s", funcName) )
-                     end
-                     
+            do
+               local sameNameType = self:get_scope():get_parent():getTypeInfoField( name.txt, false, funcBodyScope, Ast.ScopeAccess.Full )
+               if sameNameType ~= nil then
+                  if not staticFlag or not sameNameType:get_staticFlag() then
+                     self:addErrMess( firstToken.pos, "can't exist the same name func --" .. funcName )
                   end
+                  
+               else
+                  do
+                     local ifFunc = self:get_scope():get_parent():getSymbolInfoIfField( name.txt, funcBodyScope, Ast.ScopeAccess.Full )
+                     if ifFunc ~= nil then
+                        if not ifFunc:get_typeInfo():canEvalWith( self.processInfo, typeInfo, Ast.CanEvalType.SetEq, alt2typeMap ) then
+                           self:addErrMess( firstToken.pos, string.format( "mismatch method type -- %s", funcName) )
+                        end
+                        
+                     end
+                  end
+                  
                end
-               
             end
             
          end
@@ -6984,14 +6989,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
    return typeInfoList, letVarList, orgExpTypeList, nil
 end
 
-
-function TransUnit:analyzeExpandTuple( firstPos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
-
-   return Nodes.ExpandTupleNode.create( self.nodeManager, firstPos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, condRetInfo, varList, expList, symbolInfoList )
-end
-
-
-function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessMode, unwrapFlag, expandTuple )
+function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessMode, unwrapFlag )
 
    
    local typeInfoList = {}
@@ -7071,28 +7069,6 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
    end
    
    
-   if expandTuple then
-      self:checkToken( nextToken, ")" )
-      self:checkNextToken( "=" )
-      
-      local expListNode = self:analyzeExpList( false, false, false, true )
-      local expType = expListNode:get_expType()
-      if expType:get_kind() ~= Ast.TypeInfoKind.Tuple then
-         self:errorAt( expListNode:get_pos(), string.format( "expects the tuple value, but -- %s", expType:getTxt(  )) )
-      end
-      
-      if #expListNode:get_expTypeList() ~= 1 then
-         self:addErrMess( expListNode:get_pos(), string.format( "expects 1 tuple value, but -- %d value", #expListNode:get_expTypeList()) )
-      end
-      
-      if #expType:get_itemTypeInfoList() ~= #letVarList then
-         self:errorAt( expListNode:get_pos(), string.format( "expects %d item tuple, but -- %d item", #letVarList, #expType:get_itemTypeInfoList()) )
-      end
-      
-      return expType:get_itemTypeInfoList(), letVarList, expType:get_itemTypeInfoList(), expListNode
-   end
-   
-   
    if nextToken.txt ~= "=" then
       self:pushback(  )
       local orgExpTypeList = {}
@@ -7127,22 +7103,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local expandTuple
-   
-   do
-      local workToken = self:getToken(  )
-      if workToken.txt == "(" and mode == Nodes.DeclVarMode.Let then
-         expandTuple = true
-      else
-       
-         expandTuple = false
-         self:pushback(  )
-      end
-      
-   end
-   
-   
-   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag, expandTuple )
+   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag )
    
    local condRetInfo = self:checkCondRet(  )
    
@@ -7267,16 +7228,6 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   if expandTuple then
-      if expList ~= nil then
-         return self:analyzeExpandTuple( firstToken.pos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
-      else
-         self:errorAt( firstToken.pos, "expanding tuple must set init value." )
-      end
-      
-   end
-   
-   
    local unwrapBlock = nil
    local thenBlock = nil
    if unwrapFlag then
@@ -7378,7 +7329,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    
    if nextToken.txt == "let" then
       local _
-      workTypeInfoList, letVarList, _, workExpList = self:analyzeLetAndInitExp( firstToken.pos, true, Ast.MutMode.IMut, Ast.AccessMode.Local, true, false )
+      workTypeInfoList, letVarList, _, workExpList = self:analyzeLetAndInitExp( firstToken.pos, true, Ast.MutMode.IMut, Ast.AccessMode.Local, true )
    else
     
       local _
@@ -9672,6 +9623,22 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag, canLeftExp, canCon
          nextToken = self:getToken(  )
       end
       
+      
+      if nextToken.txt == "..." then
+         if exp:get_expType():get_kind() == Ast.TypeInfoKind.Tuple then
+            if #exp:get_expTypeList() > 1 then
+               exp = Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), self.inTestBlock, exp:get_macroArgFlag(), {exp:get_expType()}, exp )
+            end
+            
+            exp = Nodes.ExpExpandTupleNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), exp:get_expType():get_itemTypeInfoList(), exp )
+            nextToken = self:getToken(  )
+         else
+          
+            self:addErrMess( nextToken.pos, "can only use '...' with a tuple" )
+         end
+         
+      end
+      
    end
    
    
@@ -10931,7 +10898,9 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local expList = self:analyzeExpList( false, false, false, false, nil, expectTypeList )
+   local expList = self:analyzeExpList( false, false, false, true, nil, expectTypeList )
+   local condRetInfo = self:checkCondRet(  )
+   
    for index, expType in ipairs( expList:get_expTypeList() ) do
       if expType:get_asyncMode() == Ast.Async.Transient then
          
@@ -11035,11 +11004,11 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
          
       end
       
-      return Nodes.ExpSetItemNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, listRefItemNode:get_val(), index, expList )
+      return Nodes.ExpSetItemNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, listRefItemNode:get_val(), index, expList, condRetInfo )
    end
    
    
-   return Nodes.ExpSetValNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, expList, symbolList, initSymSet )
+   return Nodes.ExpSetValNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, condRetInfo, expList, symbolList, initSymSet )
 end
 
 
@@ -11581,7 +11550,7 @@ function TransUnit:analyzeUnwrap( firstToken )
    if not continueFlag or nextToken.txt ~= "!" then
       self:pushback(  )
       self:pushbackToken( firstToken )
-      local exp = self:analyzeExp( false, false, false, false )
+      local exp = self:analyzeExpOneRVal( false, false )
       self:checkNextToken( ";" )
       if not exp:get_expType():get_nilable() then
          self:addErrMess( exp:get_pos(), "this value is not nilable." )
@@ -11735,6 +11704,14 @@ end
 
 
 function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType )
+
+   local node = self:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType )
+   node:setTailExp(  )
+   return node
+end
+
+
+function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCondRet, prevOpLevel, expectType )
 
    local firstToken = self:getToken(  )
    
@@ -12092,6 +12069,7 @@ function TransUnit:analyzeExp( allowNoneType, skipOp2Flag, canLeftExp, canCondRe
          
       end
       
+      exp:setTailExp(  )
    elseif token.kind == Parser.TokenKind.Type then
       local symbolTypeInfo = Ast.getSym2builtInTypeMap(  )[token.txt]
       if  nil == symbolTypeInfo then
@@ -12302,6 +12280,7 @@ function TransUnit:analyzeStatement( termTxt )
             self.accessSymbolSetQueue:push(  )
             
             local exp = self:analyzeExp( true, false, true, true )
+            
             local nextToken = self:getToken(  )
             if nextToken.txt == "," then
                local expList = self:analyzeExpList( true, true, true, false, exp )

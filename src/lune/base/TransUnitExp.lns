@@ -3475,7 +3475,9 @@ fn TransUnit.analyzeExpOpSet(
       listRefItemNode = process( exp );
    }
    
-   let mut expList = self.analyzeExpList( false, false, false, false, nil, expectTypeList## );
+   let mut expList = self.analyzeExpList( false, false, false, true, nil, expectTypeList## );
+   let condRetInfo = self.checkCondRet();
+
    foreach expType, index in expList.$expTypeList {
       if expType.$asyncMode == .Transient {
          // Transient は変数への代入禁止
@@ -3577,13 +3579,13 @@ fn TransUnit.analyzeExpOpSet(
       return Nodes.ExpSetItemNode.create(
          self.nodeManager, exp.$pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-         listRefItemNode.$val, index, expList );
+         listRefItemNode.$val, index, expList, condRetInfo );
    }
 
    return Nodes.ExpSetValNode.create(
       self.nodeManager, exp.$pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(),
-      [ Ast.builtinTypeNone ], exp, expList, symbolList, initSymSet );
+      [ Ast.builtinTypeNone ], exp, condRetInfo, expList, symbolList, initSymSet );
 }
 
 

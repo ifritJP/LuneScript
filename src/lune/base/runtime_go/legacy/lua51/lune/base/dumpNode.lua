@@ -201,6 +201,10 @@ function dumpFilter:dump( opt, node, txt )
       attrib = string.format( "%s %s", attrib, "nilacc")
    end
    
+   if node:isIntermediate(  ) then
+      attrib = string.format( "%s %s", attrib, "inter")
+   end
+   
    if #attrib ~= 0 then
       attrib = string.format( "[%s]", attrib)
    end
@@ -524,19 +528,10 @@ function dumpFilter:processWhen( node, opt )
 end
 
 
-function dumpFilter:processExpandTuple( node, opt )
+function dumpFilter:processExpExpandTuple( node, opt )
 
-   local varName = ""
-   for index, var in ipairs( node:get_varList(  ) ) do
-      if index > 1 then
-         varName = varName .. ","
-      end
-      
-      varName = string.format( "%s %s", varName, var:get_name(  ).txt)
-   end
-   
-   self:dump( opt, node, varName )
-   filter( node:get_expList(), self, opt:nextOpt(  ) )
+   self:dump( opt, node, "" )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
 end
 
 

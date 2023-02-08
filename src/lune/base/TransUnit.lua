@@ -10898,7 +10898,9 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
    end
    
    
-   local expList = self:analyzeExpList( false, false, false, false, nil, expectTypeList )
+   local expList = self:analyzeExpList( false, false, false, true, nil, expectTypeList )
+   local condRetInfo = self:checkCondRet(  )
+   
    for index, expType in ipairs( expList:get_expTypeList() ) do
       if expType:get_asyncMode() == Ast.Async.Transient then
          
@@ -11002,11 +11004,11 @@ function TransUnit:analyzeExpOpSet( exp, opeToken, expectTypeList )
          
       end
       
-      return Nodes.ExpSetItemNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, listRefItemNode:get_val(), index, expList )
+      return Nodes.ExpSetItemNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, listRefItemNode:get_val(), index, expList, condRetInfo )
    end
    
    
-   return Nodes.ExpSetValNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, expList, symbolList, initSymSet )
+   return Nodes.ExpSetValNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, condRetInfo, expList, symbolList, initSymSet )
 end
 
 

@@ -527,6 +527,13 @@ NodeVisitMode.__allList[3] = NodeVisitMode.End
 
 
 _moduleObj.Node = Node
+function Node:isIntermediate(  )
+
+   return false
+end
+function Node:setTailExp(  )
+
+end
 function Node:comp( node )
 
    if self.managerId < node.managerId then
@@ -688,6 +695,33 @@ function Node:get_macroArgFlag()
 end
 function Node:get_inTestBlock()
    return self.inTestBlock
+end
+
+
+local ExpNode = {}
+setmetatable( ExpNode, { __index = Node } )
+_moduleObj.ExpNode = ExpNode
+function ExpNode._new( managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList )
+   local obj = {}
+   ExpNode._setmeta( obj )
+   if obj.__init then obj:__init( managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList ); end
+   return obj
+end
+function ExpNode:__init(managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList) 
+   Node.__init( self,managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList)
+   
+   self.isTailExp = false
+end
+function ExpNode:isIntermediate(  )
+
+   return not self.isTailExp
+end
+function ExpNode:setTailExp(  )
+
+   self.isTailExp = true
+end
+function ExpNode._setmeta( obj )
+  setmetatable( obj, { __index = ExpNode  } )
 end
 
 
@@ -909,6 +943,8 @@ end
 function NodeKind:__init(  )
 
 end
+
+
 
 
 
@@ -2519,6 +2555,7 @@ CondRetKind.Two = 2
 CondRetKind._val2NameMap[2] = 'Two'
 CondRetKind.__allList[3] = CondRetKind.Two
 
+
 function NodeKind.get_CondRet(  )
 
    return 11
@@ -2542,7 +2579,7 @@ end
 
 
 
-setmetatable( CondRetNode, { __index = Node } )
+setmetatable( CondRetNode, { __index = ExpNode } )
 _moduleObj.CondRetNode = CondRetNode
 function CondRetNode:processFilter( filter, opt )
 
@@ -2567,7 +2604,7 @@ function CondRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function CondRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order) 
-   Node.__init( self,managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2635,6 +2672,7 @@ end
 
 
 
+
 local CondRetInfo = {}
 _moduleObj.CondRetInfo = CondRetInfo
 function CondRetInfo._setmeta( obj )
@@ -2680,7 +2718,7 @@ end
 
 
 
-setmetatable( CondRetListNode, { __index = Node } )
+setmetatable( CondRetListNode, { __index = ExpNode } )
 _moduleObj.CondRetListNode = CondRetListNode
 function CondRetListNode:processFilter( filter, opt )
 
@@ -2705,7 +2743,7 @@ function CondRetListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function CondRetListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, info, exp) 
-   Node.__init( self,managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -2766,6 +2804,7 @@ end
 function CondRetListNode:get_exp()
    return self.exp
 end
+
 
 
 
@@ -3067,7 +3106,7 @@ end
 
 
 
-setmetatable( ExpListNode, { __index = Node } )
+setmetatable( ExpListNode, { __index = ExpNode } )
 _moduleObj.ExpListNode = ExpListNode
 function ExpListNode:processFilter( filter, opt )
 
@@ -3084,7 +3123,7 @@ function ExpListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn) 
-   Node.__init( self,managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -3153,6 +3192,7 @@ end
 function ExpListNode:get_followOn()
    return self.followOn
 end
+
 
 
 function ExpListNode:canBeLeft(  )
@@ -4876,7 +4916,7 @@ end
 
 
 
-setmetatable( ExpNewNode, { __index = Node } )
+setmetatable( ExpNewNode, { __index = ExpNode } )
 _moduleObj.ExpNewNode = ExpNewNode
 function ExpNewNode:processFilter( filter, opt )
 
@@ -4901,7 +4941,7 @@ function ExpNewNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpNewNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList) 
-   Node.__init( self,managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -4997,6 +5037,7 @@ end
 
 
 
+
 function NodeKind.get_ExpUnwrap(  )
 
    return 26
@@ -5020,7 +5061,7 @@ end
 
 
 
-setmetatable( ExpUnwrapNode, { __index = Node } )
+setmetatable( ExpUnwrapNode, { __index = ExpNode } )
 _moduleObj.ExpUnwrapNode = ExpUnwrapNode
 function ExpUnwrapNode:processFilter( filter, opt )
 
@@ -5045,7 +5086,7 @@ function ExpUnwrapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function ExpUnwrapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, default) 
-   Node.__init( self,managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5137,6 +5178,7 @@ end
 
 
 
+
 function NodeKind.get_ExpRef(  )
 
    return 27
@@ -5160,7 +5202,7 @@ end
 
 
 
-setmetatable( ExpRefNode, { __index = Node } )
+setmetatable( ExpRefNode, { __index = ExpNode } )
 _moduleObj.ExpRefNode = ExpRefNode
 function ExpRefNode:processFilter( filter, opt )
 
@@ -5177,7 +5219,7 @@ function ExpRefNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpRefNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbolInfo) 
-   Node.__init( self,managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5210,6 +5252,7 @@ end
 function ExpRefNode:get_symbolInfo()
    return self.symbolInfo
 end
+
 
 
 
@@ -5266,27 +5309,28 @@ function ExpSetValNode:canBeStatement(  )
 
    return true
 end
-function ExpSetValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
+function ExpSetValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet )
    local obj = {}
    ExpSetValNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet ); end
    return obj
 end
-function ExpSetValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet) 
+function ExpSetValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet) 
    Node.__init( self,managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
    self.exp1 = exp1
+   self.condRetInfo = condRetInfo
    self.exp2 = exp2
    self.LeftSymList = LeftSymList
    self.initSymSet = initSymSet
    
    
 end
-function ExpSetValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet )
+function ExpSetValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet )
 
-   local node = ExpSetValNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp1, exp2, LeftSymList, initSymSet)
+   local node = ExpSetValNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet)
    nodeMan:addNode( node )
    return node
 end
@@ -5355,6 +5399,9 @@ function ExpSetValNode._setmeta( obj )
 end
 function ExpSetValNode:get_exp1()
    return self.exp1
+end
+function ExpSetValNode:get_condRetInfo()
+   return self.condRetInfo
 end
 function ExpSetValNode:get_exp2()
    return self.exp2
@@ -5430,13 +5477,13 @@ function ExpSetItemNode:canBeStatement(  )
 
    return true
 end
-function ExpSetItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 )
+function ExpSetItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo )
    local obj = {}
    ExpSetItemNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo ); end
    return obj
 end
-function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2) 
+function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo) 
    Node.__init( self,managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
    
    
@@ -5444,12 +5491,13 @@ function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, ty
    self.val = val
    self.index = index
    self.exp2 = exp2
+   self.condRetInfo = condRetInfo
    
    
 end
-function ExpSetItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2 )
+function ExpSetItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo )
 
-   local node = ExpSetItemNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, index, exp2)
+   local node = ExpSetItemNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo)
    nodeMan:addNode( node )
    return node
 end
@@ -5525,6 +5573,9 @@ end
 function ExpSetItemNode:get_exp2()
    return self.exp2
 end
+function ExpSetItemNode:get_condRetInfo()
+   return self.condRetInfo
+end
 
 
 
@@ -5551,7 +5602,7 @@ end
 
 
 
-setmetatable( ExpOp2Node, { __index = Node } )
+setmetatable( ExpOp2Node, { __index = ExpNode } )
 _moduleObj.ExpOp2Node = ExpOp2Node
 function ExpOp2Node:processFilter( filter, opt )
 
@@ -5576,7 +5627,7 @@ function ExpOp2Node._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpOp2Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2) 
-   Node.__init( self,managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -5664,6 +5715,7 @@ end
 function ExpOp2Node:get_exp2()
    return self.exp2
 end
+
 
 
 
@@ -6399,7 +6451,7 @@ end
 
 
 
-setmetatable( ExpCastNode, { __index = Node } )
+setmetatable( ExpCastNode, { __index = ExpNode } )
 _moduleObj.ExpCastNode = ExpCastNode
 function ExpCastNode:processFilter( filter, opt )
 
@@ -6424,7 +6476,7 @@ function ExpCastNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpCastNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind) 
-   Node.__init( self,managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6528,6 +6580,7 @@ end
 
 
 
+
 function ExpCastNode:getPrefix(  )
 
    return self.exp:getPrefix(  )
@@ -6567,7 +6620,7 @@ end
 
 
 
-setmetatable( ExpToDDDNode, { __index = Node } )
+setmetatable( ExpToDDDNode, { __index = ExpNode } )
 _moduleObj.ExpToDDDNode = ExpToDDDNode
 function ExpToDDDNode:processFilter( filter, opt )
 
@@ -6592,7 +6645,7 @@ function ExpToDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function ExpToDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6652,6 +6705,7 @@ end
 
 
 
+
 function NodeKind.get_ExpSubDDD(  )
 
    return 36
@@ -6675,7 +6729,7 @@ end
 
 
 
-setmetatable( ExpSubDDDNode, { __index = Node } )
+setmetatable( ExpSubDDDNode, { __index = ExpNode } )
 _moduleObj.ExpSubDDDNode = ExpSubDDDNode
 function ExpSubDDDNode:processFilter( filter, opt )
 
@@ -6700,7 +6754,7 @@ function ExpSubDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
    return obj
 end
 function ExpSubDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex) 
-   Node.__init( self,managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6764,6 +6818,7 @@ end
 
 
 
+
 local MacroMode = {}
 _moduleObj.MacroMode = MacroMode
 MacroMode._val2NameMap = {}
@@ -6820,7 +6875,7 @@ end
 
 
 
-setmetatable( ExpOp1Node, { __index = Node } )
+setmetatable( ExpOp1Node, { __index = ExpNode } )
 _moduleObj.ExpOp1Node = ExpOp1Node
 function ExpOp1Node:processFilter( filter, opt )
 
@@ -6845,7 +6900,7 @@ function ExpOp1Node._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function ExpOp1Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp) 
-   Node.__init( self,managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -6913,6 +6968,7 @@ end
 
 
 
+
 function NodeKind.get_ExpRefItem(  )
 
    return 38
@@ -6936,7 +6992,7 @@ end
 
 
 
-setmetatable( ExpRefItemNode, { __index = Node } )
+setmetatable( ExpRefItemNode, { __index = ExpNode } )
 _moduleObj.ExpRefItemNode = ExpRefItemNode
 function ExpRefItemNode:hasNilAccess(  )
 
@@ -6961,7 +7017,7 @@ function ExpRefItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function ExpRefItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index) 
-   Node.__init( self,managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7060,6 +7116,7 @@ function ExpRefItemNode:get_index()
 end
 
 
+
 function ExpRefItemNode:getPrefix(  )
 
    return self.val
@@ -7100,7 +7157,7 @@ end
 
 
 
-setmetatable( ExpCallNode, { __index = Node } )
+setmetatable( ExpCallNode, { __index = ExpNode } )
 _moduleObj.ExpCallNode = ExpCallNode
 function ExpCallNode:hasNilAccess(  )
 
@@ -7125,7 +7182,7 @@ function ExpCallNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpCallNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList) 
-   Node.__init( self,managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7224,6 +7281,7 @@ function ExpCallNode:get_argList()
 end
 
 
+
 function ExpCallNode:get_effectivePos(  )
 
    return self.func:get_effectivePos()
@@ -7279,7 +7337,7 @@ end
 
 
 
-setmetatable( ExpMRetNode, { __index = Node } )
+setmetatable( ExpMRetNode, { __index = ExpNode } )
 _moduleObj.ExpMRetNode = ExpMRetNode
 function ExpMRetNode:processFilter( filter, opt )
 
@@ -7304,7 +7362,7 @@ function ExpMRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function ExpMRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mRet) 
-   Node.__init( self,managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7363,6 +7421,7 @@ function ExpMRetNode:get_mRet()
 end
 
 
+
 function ExpMRetNode:getPrefix(  )
 
    return self.mRet:getPrefix(  )
@@ -7392,7 +7451,7 @@ end
 
 
 
-setmetatable( ExpAccessMRetNode, { __index = Node } )
+setmetatable( ExpAccessMRetNode, { __index = ExpNode } )
 _moduleObj.ExpAccessMRetNode = ExpAccessMRetNode
 function ExpAccessMRetNode:processFilter( filter, opt )
 
@@ -7417,7 +7476,7 @@ function ExpAccessMRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
    return obj
 end
 function ExpAccessMRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mRet, index) 
-   Node.__init( self,managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7480,6 +7539,7 @@ function ExpAccessMRetNode:get_index()
 end
 
 
+
 function ExpAccessMRetNode:getPrefix(  )
 
    return self.mRet:getPrefix(  )
@@ -7509,7 +7569,7 @@ end
 
 
 
-setmetatable( ExpMultiTo1Node, { __index = Node } )
+setmetatable( ExpMultiTo1Node, { __index = ExpNode } )
 _moduleObj.ExpMultiTo1Node = ExpMultiTo1Node
 function ExpMultiTo1Node:processFilter( filter, opt )
 
@@ -7534,7 +7594,7 @@ function ExpMultiTo1Node._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function ExpMultiTo1Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7593,6 +7653,7 @@ function ExpMultiTo1Node:get_exp()
 end
 
 
+
 function ExpMultiTo1Node:getPrefix(  )
 
    return self.exp:getPrefix(  )
@@ -7622,7 +7683,7 @@ end
 
 
 
-setmetatable( ExpParenNode, { __index = Node } )
+setmetatable( ExpParenNode, { __index = ExpNode } )
 _moduleObj.ExpParenNode = ExpParenNode
 function ExpParenNode:processFilter( filter, opt )
 
@@ -7647,7 +7708,7 @@ function ExpParenNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function ExpParenNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -7704,6 +7765,7 @@ end
 function ExpParenNode:get_exp()
    return self.exp
 end
+
 
 
 function ExpParenNode:getPrefix(  )
@@ -8178,7 +8240,7 @@ end
 
 
 
-setmetatable( StmtExpNode, { __index = Node } )
+setmetatable( StmtExpNode, { __index = ExpNode } )
 _moduleObj.StmtExpNode = StmtExpNode
 function StmtExpNode:processFilter( filter, opt )
 
@@ -8199,7 +8261,7 @@ function StmtExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    return obj
 end
 function StmtExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8256,6 +8318,7 @@ end
 function StmtExpNode:get_exp()
    return self.exp
 end
+
 
 
 function StmtExpNode:canBeStatement(  )
@@ -8401,7 +8464,7 @@ end
 
 
 
-setmetatable( ExpOmitEnumNode, { __index = Node } )
+setmetatable( ExpOmitEnumNode, { __index = ExpNode } )
 _moduleObj.ExpOmitEnumNode = ExpOmitEnumNode
 function ExpOmitEnumNode:processFilter( filter, opt )
 
@@ -8426,7 +8489,7 @@ function ExpOmitEnumNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function ExpOmitEnumNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo) 
-   Node.__init( self,managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8474,6 +8537,7 @@ end
 
 
 
+
 function NodeKind.get_RefField(  )
 
    return 50
@@ -8497,7 +8561,7 @@ end
 
 
 
-setmetatable( RefFieldNode, { __index = Node } )
+setmetatable( RefFieldNode, { __index = ExpNode } )
 _moduleObj.RefFieldNode = RefFieldNode
 function RefFieldNode:hasNilAccess(  )
 
@@ -8518,7 +8582,7 @@ function RefFieldNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function RefFieldNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix) 
-   Node.__init( self,managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8587,6 +8651,7 @@ end
 function RefFieldNode:get_prefix()
    return self.prefix
 end
+
 
 
 function RefFieldNode:get_effectivePos(  )
@@ -8662,7 +8727,7 @@ end
 
 
 
-setmetatable( GetFieldNode, { __index = Node } )
+setmetatable( GetFieldNode, { __index = ExpNode } )
 _moduleObj.GetFieldNode = GetFieldNode
 function GetFieldNode:hasNilAccess(  )
 
@@ -8691,7 +8756,7 @@ function GetFieldNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function GetFieldNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
-   Node.__init( self,managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8766,6 +8831,7 @@ function GetFieldNode:get_getterTypeInfo()
 end
 
 
+
 function GetFieldNode:get_effectivePos(  )
 
    return self.field.pos
@@ -8800,7 +8866,7 @@ end
 
 
 
-setmetatable( AliasNode, { __index = Node } )
+setmetatable( AliasNode, { __index = ExpNode } )
 _moduleObj.AliasNode = AliasNode
 function AliasNode:processFilter( filter, opt )
 
@@ -8825,7 +8891,7 @@ function AliasNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
    return obj
 end
 function AliasNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo) 
-   Node.__init( self,managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -8893,6 +8959,116 @@ end
 
 
 
+
+function NodeKind.get_ExpExpandTuple(  )
+
+   return 53
+end
+
+
+local ExpExpandTupleNode = {}
+regKind( "ExpExpandTuple" )
+function Filter:processExpExpandTuple( node, opt )
+
+   self:pushOpt( opt )
+   self:defaultProcess( node, opt )
+   self:popOpt( opt )
+end
+
+
+function NodeManager:getExpExpandTupleNodeList(  )
+
+   return self:getList( 53 )
+end
+
+
+
+setmetatable( ExpExpandTupleNode, { __index = ExpNode } )
+_moduleObj.ExpExpandTupleNode = ExpExpandTupleNode
+function ExpExpandTupleNode:processFilter( filter, opt )
+
+   filter:processExpExpandTuple( self, opt )
+end
+function ExpExpandTupleNode:canBeRight( processInfo )
+
+   return true
+end
+function ExpExpandTupleNode:canBeLeft(  )
+
+   return false
+end
+function ExpExpandTupleNode:canBeStatement(  )
+
+   return false
+end
+function ExpExpandTupleNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp )
+   local obj = {}
+   ExpExpandTupleNode._setmeta( obj )
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp ); end
+   return obj
+end
+function ExpExpandTupleNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
+   ExpNode.__init( self,managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
+   
+   
+   
+   self.exp = exp
+   
+   
+end
+function ExpExpandTupleNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
+
+   local node = ExpExpandTupleNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, exp)
+   nodeMan:addNode( node )
+   return node
+end
+function ExpExpandTupleNode:visit( visitor, depth, alreadySet )
+
+   do
+      local child = self.exp
+      if not _lune._Set_has(alreadySet, child ) then
+         alreadySet[child]= true
+         do
+            local _switchExp = visitor( child, self, 'exp', depth )
+            if _switchExp == NodeVisitMode.Child then
+               if not child:visit( visitor, depth + 1, alreadySet ) then
+                  return false
+               end
+               
+            elseif _switchExp == NodeVisitMode.End then
+               return false
+            elseif _switchExp == NodeVisitMode.Next then
+            end
+         end
+         
+      end
+      
+      
+      
+   end
+   
+   
+   
+   return self:visitSub( visitor, depth + 1, alreadySet )
+end
+function ExpExpandTupleNode.sortList( list )
+
+   table.sort( list, function ( node1, node2 )
+   
+      return node1:compUsingPos( node2 ) < 0
+   end )
+   return list
+end
+function ExpExpandTupleNode._setmeta( obj )
+  setmetatable( obj, { __index = ExpExpandTupleNode  } )
+end
+function ExpExpandTupleNode:get_exp()
+   return self.exp
+end
+
+
+
+
 local VarInfo = {}
 _moduleObj.VarInfo = VarInfo
 function VarInfo._setmeta( obj )
@@ -8921,126 +9097,6 @@ end
 function VarInfo:get_actualType()
    return self.actualType
 end
-
-
-function NodeKind.get_ExpandTuple(  )
-
-   return 53
-end
-
-
-local ExpandTupleNode = {}
-regKind( "ExpandTuple" )
-function Filter:processExpandTuple( node, opt )
-
-   self:pushOpt( opt )
-   self:defaultProcess( node, opt )
-   self:popOpt( opt )
-end
-
-
-function NodeManager:getExpandTupleNodeList(  )
-
-   return self:getList( 53 )
-end
-
-
-
-setmetatable( ExpandTupleNode, { __index = Node } )
-_moduleObj.ExpandTupleNode = ExpandTupleNode
-function ExpandTupleNode:processFilter( filter, opt )
-
-   filter:processExpandTuple( self, opt )
-end
-function ExpandTupleNode:canBeRight( processInfo )
-
-   return false
-end
-function ExpandTupleNode:canBeLeft(  )
-
-   return false
-end
-function ExpandTupleNode:canBeStatement(  )
-
-   return true
-end
-function ExpandTupleNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, condRetInfo, varList, expList, symbolInfoList )
-   local obj = {}
-   ExpandTupleNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, condRetInfo, varList, expList, symbolInfoList ); end
-   return obj
-end
-function ExpandTupleNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, condRetInfo, varList, expList, symbolInfoList) 
-   Node.__init( self,managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
-   self.condRetInfo = condRetInfo
-   self.varList = varList
-   self.expList = expList
-   self.symbolInfoList = symbolInfoList
-   
-   
-end
-function ExpandTupleNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, condRetInfo, varList, expList, symbolInfoList )
-
-   local node = ExpandTupleNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, condRetInfo, varList, expList, symbolInfoList)
-   nodeMan:addNode( node )
-   return node
-end
-function ExpandTupleNode:visit( visitor, depth, alreadySet )
-
-   do
-      local child = self.expList
-      if not _lune._Set_has(alreadySet, child ) then
-         alreadySet[child]= true
-         do
-            local _switchExp = visitor( child, self, 'expList', depth )
-            if _switchExp == NodeVisitMode.Child then
-               if not child:visit( visitor, depth + 1, alreadySet ) then
-                  return false
-               end
-               
-            elseif _switchExp == NodeVisitMode.End then
-               return false
-            elseif _switchExp == NodeVisitMode.Next then
-            end
-         end
-         
-      end
-      
-      
-      
-   end
-   
-   
-   
-   return self:visitSub( visitor, depth + 1, alreadySet )
-end
-function ExpandTupleNode.sortList( list )
-
-   table.sort( list, function ( node1, node2 )
-   
-      return node1:compUsingPos( node2 ) < 0
-   end )
-   return list
-end
-function ExpandTupleNode._setmeta( obj )
-  setmetatable( obj, { __index = ExpandTupleNode  } )
-end
-function ExpandTupleNode:get_condRetInfo()
-   return self.condRetInfo
-end
-function ExpandTupleNode:get_varList()
-   return self.varList
-end
-function ExpandTupleNode:get_expList()
-   return self.expList
-end
-function ExpandTupleNode:get_symbolInfoList()
-   return self.symbolInfoList
-end
-
 
 
 local DeclVarMode = {}
@@ -10577,7 +10633,7 @@ end
 
 
 
-setmetatable( ExpCallSuperCtorNode, { __index = Node } )
+setmetatable( ExpCallSuperCtorNode, { __index = ExpNode } )
 _moduleObj.ExpCallSuperCtorNode = ExpCallSuperCtorNode
 function ExpCallSuperCtorNode:processFilter( filter, opt )
 
@@ -10602,7 +10658,7 @@ function ExpCallSuperCtorNode._new( managerId, id, pos, inTestBlock, macroArgFla
    return obj
 end
 function ExpCallSuperCtorNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
-   Node.__init( self,managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10675,6 +10731,7 @@ end
 
 
 
+
 function NodeKind.get_ExpCallSuper(  )
 
    return 62
@@ -10698,7 +10755,7 @@ end
 
 
 
-setmetatable( ExpCallSuperNode, { __index = Node } )
+setmetatable( ExpCallSuperNode, { __index = ExpNode } )
 _moduleObj.ExpCallSuperNode = ExpCallSuperNode
 function ExpCallSuperNode:processFilter( filter, opt )
 
@@ -10719,7 +10776,7 @@ function ExpCallSuperNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
    return obj
 end
 function ExpCallSuperNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
-   Node.__init( self,managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -10789,6 +10846,7 @@ end
 function ExpCallSuperNode:get_expList()
    return self.expList
 end
+
 
 
 function ExpCallSuperNode:canBeRight( processInfo )
@@ -12392,7 +12450,7 @@ end
 
 
 
-setmetatable( NewAlgeValNode, { __index = Node } )
+setmetatable( NewAlgeValNode, { __index = ExpNode } )
 _moduleObj.NewAlgeValNode = NewAlgeValNode
 function NewAlgeValNode:processFilter( filter, opt )
 
@@ -12417,7 +12475,7 @@ function NewAlgeValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function NewAlgeValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList) 
-   Node.__init( self,managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -12522,6 +12580,7 @@ end
 function NewAlgeValNode:get_paramList()
    return self.paramList
 end
+
 
 
 
@@ -13017,7 +13076,7 @@ end
 
 
 
-setmetatable( LuneKindNode, { __index = Node } )
+setmetatable( LuneKindNode, { __index = ExpNode } )
 _moduleObj.LuneKindNode = LuneKindNode
 function LuneKindNode:processFilter( filter, opt )
 
@@ -13042,7 +13101,7 @@ function LuneKindNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function LuneKindNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
-   Node.__init( self,managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13099,6 +13158,7 @@ end
 function LuneKindNode:get_exp()
    return self.exp
 end
+
 
 
 
@@ -13570,7 +13630,7 @@ end
 
 
 
-setmetatable( BoxingNode, { __index = Node } )
+setmetatable( BoxingNode, { __index = ExpNode } )
 _moduleObj.BoxingNode = BoxingNode
 function BoxingNode:processFilter( filter, opt )
 
@@ -13595,7 +13655,7 @@ function BoxingNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    return obj
 end
 function BoxingNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src) 
-   Node.__init( self,managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13655,6 +13715,7 @@ end
 
 
 
+
 function NodeKind.get_Unboxing(  )
 
    return 82
@@ -13678,7 +13739,7 @@ end
 
 
 
-setmetatable( UnboxingNode, { __index = Node } )
+setmetatable( UnboxingNode, { __index = ExpNode } )
 _moduleObj.UnboxingNode = UnboxingNode
 function UnboxingNode:processFilter( filter, opt )
 
@@ -13703,7 +13764,7 @@ function UnboxingNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
    return obj
 end
 function UnboxingNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src) 
-   Node.__init( self,managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13763,6 +13824,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralNil(  )
 
    return 83
@@ -13786,7 +13848,7 @@ end
 
 
 
-setmetatable( LiteralNilNode, { __index = Node } )
+setmetatable( LiteralNilNode, { __index = ExpNode } )
 _moduleObj.LiteralNilNode = LiteralNilNode
 function LiteralNilNode:processFilter( filter, opt )
 
@@ -13811,7 +13873,7 @@ function LiteralNilNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralNilNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
-   Node.__init( self,managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13842,6 +13904,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralChar(  )
 
    return 84
@@ -13865,7 +13928,7 @@ end
 
 
 
-setmetatable( LiteralCharNode, { __index = Node } )
+setmetatable( LiteralCharNode, { __index = ExpNode } )
 _moduleObj.LiteralCharNode = LiteralCharNode
 function LiteralCharNode:processFilter( filter, opt )
 
@@ -13890,7 +13953,7 @@ function LiteralCharNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralCharNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
-   Node.__init( self,managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -13930,6 +13993,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralInt(  )
 
    return 85
@@ -13953,7 +14017,7 @@ end
 
 
 
-setmetatable( LiteralIntNode, { __index = Node } )
+setmetatable( LiteralIntNode, { __index = ExpNode } )
 _moduleObj.LiteralIntNode = LiteralIntNode
 function LiteralIntNode:processFilter( filter, opt )
 
@@ -13978,7 +14042,7 @@ function LiteralIntNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralIntNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
-   Node.__init( self,managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14018,6 +14082,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralReal(  )
 
    return 86
@@ -14041,7 +14106,7 @@ end
 
 
 
-setmetatable( LiteralRealNode, { __index = Node } )
+setmetatable( LiteralRealNode, { __index = ExpNode } )
 _moduleObj.LiteralRealNode = LiteralRealNode
 function LiteralRealNode:processFilter( filter, opt )
 
@@ -14066,7 +14131,7 @@ function LiteralRealNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralRealNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
-   Node.__init( self,managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14106,6 +14171,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralArray(  )
 
    return 87
@@ -14129,7 +14195,7 @@ end
 
 
 
-setmetatable( LiteralArrayNode, { __index = Node } )
+setmetatable( LiteralArrayNode, { __index = ExpNode } )
 _moduleObj.LiteralArrayNode = LiteralArrayNode
 function LiteralArrayNode:processFilter( filter, opt )
 
@@ -14154,7 +14220,7 @@ function LiteralArrayNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
    return obj
 end
 function LiteralArrayNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14219,6 +14285,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralList(  )
 
    return 88
@@ -14242,7 +14309,7 @@ end
 
 
 
-setmetatable( LiteralListNode, { __index = Node } )
+setmetatable( LiteralListNode, { __index = ExpNode } )
 _moduleObj.LiteralListNode = LiteralListNode
 function LiteralListNode:processFilter( filter, opt )
 
@@ -14267,7 +14334,7 @@ function LiteralListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14332,6 +14399,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralSet(  )
 
    return 89
@@ -14355,7 +14423,7 @@ end
 
 
 
-setmetatable( LiteralSetNode, { __index = Node } )
+setmetatable( LiteralSetNode, { __index = ExpNode } )
 _moduleObj.LiteralSetNode = LiteralSetNode
 function LiteralSetNode:processFilter( filter, opt )
 
@@ -14380,7 +14448,7 @@ function LiteralSetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralSetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14445,6 +14513,7 @@ end
 
 
 
+
 local PairItem = {}
 _moduleObj.PairItem = PairItem
 function PairItem._setmeta( obj )
@@ -14493,7 +14562,7 @@ end
 
 
 
-setmetatable( LiteralMapNode, { __index = Node } )
+setmetatable( LiteralMapNode, { __index = ExpNode } )
 _moduleObj.LiteralMapNode = LiteralMapNode
 function LiteralMapNode:processFilter( filter, opt )
 
@@ -14518,7 +14587,7 @@ function LiteralMapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function LiteralMapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, map, pairList) 
-   Node.__init( self,managerId, id, 90, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 90, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14613,6 +14682,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralString(  )
 
    return 91
@@ -14636,7 +14706,7 @@ end
 
 
 
-setmetatable( LiteralStringNode, { __index = Node } )
+setmetatable( LiteralStringNode, { __index = ExpNode } )
 _moduleObj.LiteralStringNode = LiteralStringNode
 function LiteralStringNode:processFilter( filter, opt )
 
@@ -14661,7 +14731,7 @@ function LiteralStringNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
    return obj
 end
 function LiteralStringNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam) 
-   Node.__init( self,managerId, id, 91, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 91, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14762,6 +14832,7 @@ end
 
 
 
+
 function NodeKind.get_LiteralBool(  )
 
    return 92
@@ -14785,7 +14856,7 @@ end
 
 
 
-setmetatable( LiteralBoolNode, { __index = Node } )
+setmetatable( LiteralBoolNode, { __index = ExpNode } )
 _moduleObj.LiteralBoolNode = LiteralBoolNode
 function LiteralBoolNode:processFilter( filter, opt )
 
@@ -14810,7 +14881,7 @@ function LiteralBoolNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
    return obj
 end
 function LiteralBoolNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token) 
-   Node.__init( self,managerId, id, 92, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 92, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -14843,6 +14914,7 @@ end
 function LiteralBoolNode:get_token()
    return self.token
 end
+
 
 
 
@@ -14953,7 +15025,7 @@ end
 
 
 
-setmetatable( TupleConstNode, { __index = Node } )
+setmetatable( TupleConstNode, { __index = ExpNode } )
 _moduleObj.TupleConstNode = TupleConstNode
 function TupleConstNode:processFilter( filter, opt )
 
@@ -14978,7 +15050,7 @@ function TupleConstNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
    return obj
 end
 function TupleConstNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
-   Node.__init( self,managerId, id, 94, pos, inTestBlock, macroArgFlag, typeList)
+   ExpNode.__init( self,managerId, id, 94, pos, inTestBlock, macroArgFlag, typeList)
    
    
    
@@ -15035,6 +15107,7 @@ end
 function TupleConstNode:get_expList()
    return self.expList
 end
+
 
 
 
@@ -15229,7 +15302,7 @@ end
 
 function LiteralNilNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Symb, "nil" )
+   self:addTokenList( list, Parser.TokenKind.Kywd, "nil" )
    return true
 end
 
@@ -16158,9 +16231,9 @@ nodeKindEnum.__allList[52] = nodeKindEnum.GetField
 nodeKindEnum.Alias = 52
 nodeKindEnum._val2NameMap[52] = 'Alias'
 nodeKindEnum.__allList[53] = nodeKindEnum.Alias
-nodeKindEnum.ExpandTuple = 53
-nodeKindEnum._val2NameMap[53] = 'ExpandTuple'
-nodeKindEnum.__allList[54] = nodeKindEnum.ExpandTuple
+nodeKindEnum.ExpExpandTuple = 53
+nodeKindEnum._val2NameMap[53] = 'ExpExpandTuple'
+nodeKindEnum.__allList[54] = nodeKindEnum.ExpExpandTuple
 nodeKindEnum.DeclVar = 54
 nodeKindEnum._val2NameMap[54] = 'DeclVar'
 nodeKindEnum.__allList[55] = nodeKindEnum.DeclVar

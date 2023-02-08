@@ -444,6 +444,7 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    
    local modDir = self.moduleTypeInfo:getParentFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), false )
    self.modDir = Str.replace( modDir, "@", "" ):gsub( "%.$", "" )
+   self.localPrefix = Str.replace( self.moduleTypeInfo:get_rawTxt(), "@", "" )
    
    self.noneNode = Nodes.NoneNode.create( self.nodeManager, Parser.noneToken.pos, false, false, {Ast.builtinTypeNone} )
    
@@ -884,7 +885,7 @@ function convFilter:getSymbol( kind, name )
       elseif _matchExp[1] == SymbolKind.Var[1] then
          local symbolInfo = _matchExp[2][1]
       
-         local modName = Str.replace( self.moduleTypeInfo:get_rawTxt(), "@", "" )
+         local modName = self.localPrefix
          if not symbolInfo:getModule(  ):equals( self.processInfo, self.moduleTypeInfo ) then
             symbolName = string.format( "%s_%s", self:getModuleName( symbolInfo:getModule(  ), false ), symbolInfo:get_name())
          elseif name == "__mod__" then
@@ -1687,7 +1688,7 @@ end
 
 function convFilter:getConvExpName( node, argListNode )
 
-   return string.format( "%s_convExp%s", Str.replace( self.moduleTypeInfo:get_rawTxt(), "@", "" ), node:getIdTxt(  ))
+   return string.format( "%s_convExp%s", self.localPrefix, node:getIdTxt(  ))
 end
 
 
@@ -1942,7 +1943,7 @@ function convFilter:outputNilAccCall( node )
          lists = string.format( "%s,list[%d]", lists, count - 1)
       end
       
-      local name = string.format( "%s_%s", Str.replace( self.moduleTypeInfo:get_rawTxt(), "@", "" ), node:getIdTxt(  ))
+      local name = string.format( "%s_%s", self.localPrefix, node:getIdTxt(  ))
       self:writeRaw( string.format( [==[
 func lns_NilAccCall_%s( env *LnsEnv, call func () (%s) ) bool {
     return env.NilAccPush( Lns_2DDD( call() ) )
@@ -2894,6 +2895,23 @@ function convFilter:processRoot( node, opt )
       
       
       for __index, tmpNode in ipairs( node:get_nodeManager():getDeclFormNodeList(  ) ) do
+         if self.enableTest or not isUsingInTest( tmpNode ) then
+            procNode( tmpNode )
+         end
+         
+      end
+      
+   end
+   
+   
+   do
+      local function procNode( workNode )
+      
+         self:outputExpExpandTupleNode( workNode )
+      end
+      
+      
+      for __index, tmpNode in ipairs( node:get_nodeManager():getExpExpandTupleNodeList(  ) ) do
          if self.enableTest or not isUsingInTest( tmpNode ) then
             procNode( tmpNode )
          end
@@ -4381,44 +4399,44 @@ function convFilter:outputLetVar( node )
 end
 
 
-function convFilter:processExpandTuple( node, opt )
+function convFilter:outputExpExpandTupleNode( node )
 
-   do
-      local condRetInfo = node:get_condRetInfo()
-      if condRetInfo ~= nil then
-         self:outputCondRetInfo( condRetInfo )
-      end
-   end
-   
-   
-   for __index, var in ipairs( node:get_symbolInfoList() ) do
-      if var:get_name() ~= "_" then
-         self:writeRaw( string.format( "var %s ", var:get_name()) )
-         self:writeln( self:type2gotype( var:get_typeInfo() ) )
+   local symbol = string.format( "%s_expTuple%s", self.localPrefix, node:getIdTxt(  ))
+   self:writeRaw( string.format( "func %s(tuple %s) (", symbol, self:tuple2gotype( node:get_exp():get_expType() )) )
+   for index, typeInfo in ipairs( node:get_expTypeList() ) do
+      if index ~= 1 then
+         self:writeRaw( "," )
       end
       
+      self:writeRaw( self:type2gotype( typeInfo ) )
    end
    
-   
-   self:writeln( "{" )
+   self:writeln( ") {" )
    self:pushIndent(  )
    
-   self:writeRaw( "__tuple := " )
-   filter( node:get_expList(), self, node )
-   self:writeln( "" )
+   self:writeRaw( "return " )
    
-   for index, var in ipairs( node:get_symbolInfoList() ) do
-      if var:get_name() ~= "_" then
-         self:writeRaw( string.format( "%s = __tuple.Val%d", var:get_name(), index) )
-         
-         self:writeln( "" )
+   for index, _1 in ipairs( node:get_expTypeList() ) do
+      if index ~= 1 then
+         self:writeRaw( "," )
       end
       
+      self:writeRaw( string.format( "tuple.Val%d", index) )
    end
    
+   self:writeln( "" )
    
    self:popIndent(  )
    self:writeln( "}" )
+end
+
+
+function convFilter:processExpExpandTuple( node, opt )
+
+   local symbol = string.format( "%s_expTuple%s", self.localPrefix, node:getIdTxt(  ))
+   self:writeRaw( string.format( "%s(", symbol) )
+   filter( node:get_exp(), self, node )
+   self:writeRaw( ")" )
 end
 
 
@@ -6312,7 +6330,7 @@ CallKind._name2Val["SortCall"] = CallKind.SortCall
 function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
 
    local funcType = funcSymbol:get_typeInfo()
-   local nilAccName = string.format( "%s_%s", Str.replace( self.moduleTypeInfo:get_rawTxt(), "@", "" ), callId)
+   local nilAccName = string.format( "%s_%s", self.localPrefix, callId)
    
    local callKind = _lune.newAlge( CallKind.Normal)
    
@@ -6829,7 +6847,7 @@ function convFilter:processExpCall( node, opt )
       self:writeRaw( "})" )
       self:writeRaw( string.format( "/* %d:%d */", node:get_pos().lineNo, node:get_pos().column) )
       
-      if opt.parent:hasNilAccess(  ) then
+      if node:isIntermediate(  ) and opt.parent:hasNilAccess(  ) then
       else
        
          self:writeRaw( ")" )
@@ -7038,6 +7056,14 @@ end
 
 function convFilter:processExpSetVal( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_exp1(), self, node )
    if getExpListKind( node:get_exp1():get_expTypeList(), node:get_exp2(), self.option:get_addEnvArg() ) == ExpListKind.Direct then
       for _1 = #node:get_exp1():get_expTypeList() + 1, #node:get_exp2():get_expTypeList() do
@@ -7053,6 +7079,14 @@ end
 
 function convFilter:processExpSetItem( node, opt )
 
+   do
+      local _exp = node:get_condRetInfo()
+      if _exp ~= nil then
+         self:outputCondRetInfo( _exp )
+      end
+   end
+   
+   
    filter( node:get_val(), self, node )
    self:writeRaw( ".Set(" )
    do
@@ -7460,7 +7494,7 @@ function convFilter:processRefField( node, opt )
       end
       
       self:writeRaw( string.format( "%s.NilAccPush(", getEnvTxt) )
-      if opt.parent:hasNilAccess(  ) then
+      if node:isIntermediate(  ) and opt.parent:hasNilAccess(  ) then
          openParenNum = 1
       else
        
@@ -7548,7 +7582,7 @@ function convFilter:processGetField( node, opt )
             
             if node:hasNilAccess(  ) then
                self:writeRaw( "})" )
-               if opt.parent:hasNilAccess(  ) then
+               if node:isIntermediate(  ) and opt.parent:hasNilAccess(  ) then
                else
                 
                   self:writeRaw( ")" )
