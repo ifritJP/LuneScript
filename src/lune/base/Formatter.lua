@@ -814,7 +814,7 @@ function FormatterFilter:processWhen( node, opt )
 end
 
 
-function FormatterFilter:processExpandTuple( node, opt )
+function FormatterFilter:processLetExpandTuple( node, opt )
 
    self:write( "let " )
    
@@ -845,6 +845,13 @@ function FormatterFilter:processExpandTuple( node, opt )
    
    self:write( " = " )
    filter( node:get_expList(), self, opt:nextOpt( node ) )
+end
+
+
+function FormatterFilter:processExpExpandTuple( node, opt )
+
+   filter( node:get_exp(), self, opt:nextOpt( node ) )
+   self:write( "..." )
 end
 
 

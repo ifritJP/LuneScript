@@ -2827,7 +2827,7 @@ _section();
    }
 
    {
-      let (val1, val2) = func();
+      let val1, val2 = func()...;
       print( val1 + 10, val2 .. "xyz" );
    }
 }
@@ -2839,13 +2839,13 @@ _section();
 
    {
       foreach tuple in func() {
-         let (val1, _) = tuple;
+         let val1 = tuple...;
          print( val1 + 10 );
       }
    }
    {
       foreach tuple in func() {
-         let (val1, val2) = tuple;
+         let val1, val2 = tuple...;
          print( val1 + 10, val2 .. "xyz" );
       }
    }
@@ -2860,8 +2860,8 @@ _section();
    }
 
    fn func(flag:bool) : __Ret<int,__Er> {
-      let (val1, val2) = sub(flag)!;
-      let (val3, val4) = sub(flag)!;
+      let val1, val2 = sub(flag)!...;
+      let val3, val4 = sub(flag)!...;
       print( val1, val2, val3, val4 );
       return .Ok( val1 + val3 );
    }
@@ -2887,8 +2887,8 @@ _section();
    }
 
    fn func(flag:bool) : int!,str! {
-      let (val1, val2) = sub(flag)!;
-      let (val3, val4) = sub(flag)!;
+      let val1, val2 = sub(flag)!...;
+      let val3, val4 = sub(flag)!...;
       print( val1, val2, val3, val4 );
       return val1 + val3, nil;
    }
@@ -2912,7 +2912,7 @@ _section();
          return (= "abc", 1 );
       }
       fn dump( tuple:(str!,int) ) {
-         let (val1, val2) = tuple;
+         let val1, val2 = tuple...;
          when! val1 {
             print( val1 .. "xyz", val2 + 10 );
          } else {

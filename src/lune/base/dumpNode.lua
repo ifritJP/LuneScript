@@ -528,7 +528,7 @@ function dumpFilter:processWhen( node, opt )
 end
 
 
-function dumpFilter:processExpandTuple( node, opt )
+function dumpFilter:processLetExpandTuple( node, opt )
 
    local varName = ""
    for index, var in ipairs( node:get_varList(  ) ) do
@@ -541,6 +541,13 @@ function dumpFilter:processExpandTuple( node, opt )
    
    self:dump( opt, node, varName )
    filter( node:get_expList(), self, opt:nextOpt(  ) )
+end
+
+
+function dumpFilter:processExpExpandTuple( node, opt )
+
+   self:dump( opt, node, "" )
+   filter( node:get_exp(), self, opt:nextOpt(  ) )
 end
 
 

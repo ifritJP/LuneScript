@@ -6989,9 +6989,9 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
 end
 
 
-function TransUnit:analyzeExpandTuple( firstPos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
+function TransUnit:analyzeLetExpandTuple( firstPos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
 
-   return Nodes.ExpandTupleNode.create( self.nodeManager, firstPos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, condRetInfo, varList, expList, symbolInfoList )
+   return Nodes.LetExpandTupleNode.create( self.nodeManager, firstPos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, condRetInfo, varList, expList, symbolInfoList )
 end
 
 
@@ -7131,20 +7131,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local expandTuple
-   
-   do
-      local workToken = self:getToken(  )
-      if workToken.txt == "(" and mode == Nodes.DeclVarMode.Let then
-         expandTuple = true
-      else
-       
-         expandTuple = false
-         self:pushback(  )
-      end
-      
-   end
-   
+   local expandTuple = false
    
    local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag, expandTuple )
    
@@ -7273,7 +7260,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    
    if expandTuple then
       if expList ~= nil then
-         return self:analyzeExpandTuple( firstToken.pos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
+         return self:analyzeLetExpandTuple( firstToken.pos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
       else
          self:errorAt( firstToken.pos, "expanding tuple must set init value." )
       end
@@ -9674,6 +9661,22 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag, canLeftExp, canCon
          
          exp = self:analyzeCondRet( nextToken, exp )
          nextToken = self:getToken(  )
+      end
+      
+      
+      if nextToken.txt == "..." then
+         if exp:get_expType():get_kind() == Ast.TypeInfoKind.Tuple then
+            if #exp:get_expTypeList() > 1 then
+               exp = Nodes.ExpMultiTo1Node.create( self.nodeManager, exp:get_pos(), self.inTestBlock, exp:get_macroArgFlag(), {exp:get_expType()}, exp )
+            end
+            
+            exp = Nodes.ExpExpandTupleNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), exp:get_expType():get_itemTypeInfoList(), exp )
+            nextToken = self:getToken(  )
+         else
+          
+            self:addErrMess( nextToken.pos, "can only use '...' with a tuple" )
+         end
+         
       end
       
    end

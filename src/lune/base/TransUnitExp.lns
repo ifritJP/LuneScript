@@ -2217,6 +2217,23 @@ fn TransUnit.analyzeExpCont(
          exp = self.analyzeCondRet( nextToken, exp );
          nextToken = self.getToken(##);
       }
+
+      if nextToken.txt == "..." {
+         if exp.$expType.$kind == .Tuple {
+            if #exp.$expTypeList > 1 {
+               exp = Nodes.ExpMultiTo1Node.create(
+                  self.nodeManager, exp.$pos, self.inTestBlock,
+                  exp.$macroArgFlag, [ exp.$expType ], exp );
+            }
+            exp = Nodes.ExpExpandTupleNode.create(
+               self.nodeManager, exp.$pos, self.inTestBlock,
+               self.macroCtrl.isInAnalyzeArgMode(),
+               exp.$expType.$itemTypeInfoList, exp );
+            nextToken = self.getToken(##);
+         } else {
+            self.addErrMess( nextToken.pos, "can only use '...' with a tuple" );
+         }
+      }
    }
 
    switch nextToken.txt {
@@ -4637,7 +4654,7 @@ fn TransUnit.analyzeExpSub(
             self.macroCtrl.isInAnalyzeArgMode(), [ exp.$expType ], exp );
          exp = self.analyzeExpCont( firstToken, exp, false, canLeftExp, canCondRet );
       }
-   }  
+   }
 
    if token.txt == "new" {
       exp = processsNewExp( token );

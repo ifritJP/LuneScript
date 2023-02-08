@@ -10,7 +10,3 @@ fn func2() : (int,str), (int) {
    tuple1 = tuple2; // error
    print( tuple1, tuple2 );
 }
-{
-   let (val1, val2) = func2(); // error
-   print( val1 + 10, val2 .. "xyz" );
-}

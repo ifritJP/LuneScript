@@ -4033,13 +4033,13 @@ List<&Ast.TypeInfo>, &List<&LetVarInfo>, &List<&Ast.TypeInfo>, Nodes.ExpListNode
    return typeInfoList, letVarList, orgExpTypeList, nil;
 }
 
-fn TransUnit.analyzeExpandTuple(
+fn TransUnit.analyzeLetExpandTuple(
    firstPos:&Types.Position, condRetInfo:&Nodes.CondRetInfo!,
    typeInfoList:&List<&Ast.TypeInfo>, varList:&List<&Nodes.VarInfo>,
    symbolInfoList:&List<&Ast.SymbolInfo>,
-   expList:&Nodes.ExpListNode ) mut : Nodes.ExpandTupleNode
+   expList:&Nodes.ExpListNode ) mut : Nodes.LetExpandTupleNode
 {
-   return Nodes.ExpandTupleNode.create(
+   return Nodes.LetExpandTupleNode.create(
       self.nodeManager, firstPos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       condRetInfo, varList, expList, symbolInfoList );
@@ -4198,16 +4198,16 @@ fn TransUnit.analyzeDeclVar(
       }
    }
 
-   let expandTuple;
-   {
-      let workToken = self.getToken(##);
-      if workToken.txt == "(" and mode == .Let {
-         expandTuple = true;
-      } else {
-         expandTuple = false;
-         self.pushback();
-      }
-   }
+   let expandTuple = false;
+   // {
+   //    let workToken = self.getToken(##);
+   //    if workToken.txt == "(" and mode == .Let {
+   //       expandTuple = true;
+   //    } else {
+   //       expandTuple = false;
+   //       self.pushback();
+   //    }
+   // }
    
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp(
@@ -4351,8 +4351,8 @@ fn TransUnit.analyzeDeclVar(
 
    if expandTuple {
       when! expList {
-         return self.analyzeExpandTuple( firstToken.pos, condRetInfo, typeInfoList,
-                                         varList, symbolInfoList, expList );
+         return self.analyzeLetExpandTuple( firstToken.pos, condRetInfo, typeInfoList,
+                                            varList, symbolInfoList, expList );
       } else {
          self.errorAt( firstToken.pos, "expanding tuple must set init value." );
       }
