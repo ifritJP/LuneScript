@@ -1063,7 +1063,7 @@ alias で置き換えている元の Type → alias の型
    pub fn pushbackStr( asyncParse:bool!, name: str, statement: str, pos:&Types.Position ) __async mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
                        bool, firstToken: &Parser.Token,
-                       token: &Parser.Token ) mut: Nodes.Node!;
+                       token: &Parser.Token ) mut: Nodes.Node!, bool;
    pri fn analyzeDeclVar(
       mode:Nodes.DeclVarMode,
       accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut: Nodes.Node;
@@ -1074,7 +1074,7 @@ alias で置き換えている元の Type → alias の型
       firstToken: &Parser.Token, name: &Parser.Token! ) mut : Nodes.Node;
    pri fn analyzeDeclClass(
       finalFlag:bool, abstractFlag:bool, classAccessMode: Ast.AccessMode,
-      classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode;
+      classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode!, bool;
    pri fn analyzeExpSub(
       allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool,
       opLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
