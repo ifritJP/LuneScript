@@ -8462,27 +8462,8 @@ end
 function TransUnit:analyzeTupleConst( token, expectType )
 
    
-   local nextToken = self:getToken(  )
-   
-   local expectTypeList = nil
-   if _lune.nilacc( expectType, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.Tuple then
-      do
-         local itemTypeInfoList = _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' )
-         if itemTypeInfoList ~= nil then
-            expectTypeList = itemTypeInfoList
-         end
-      end
-      
-   end
-   
-   
-   local expList = self:analyzeListItems( token.pos, nextToken, ")", expectTypeList )
-   if  nil == expList then
-      local _expList = expList
-   
-      self:error( "'Tuple' must not size 0." )
-   end
-   
+   local expList = self:analyzeExpList( false, false, false, false, nil, _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' ) )
+   self:checkNextToken( ")" )
    
    if expectType ~= nil then
       local _

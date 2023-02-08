@@ -1023,21 +1023,25 @@ fn TransUnit.analyzeTupleConst(
    
    //self.helperInfo.useSet = true;
 
-   let nextToken = self.getToken(##);
+   // let nextToken = self.getToken(##);
 
-   let mut expectTypeList:&List<&Ast.TypeInfo>! = nil;
-   if expectType$.$kind == .Tuple {
-      if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
-         expectTypeList = itemTypeInfoList;
-      }
-   }
+   // let mut expectTypeList:&List<&Ast.TypeInfo>! = nil;
+   // if expectType$.$kind == .Tuple {
+   //    if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
+   //       expectTypeList = itemTypeInfoList;
+   //    }
+   // }
 
-   let! mut expList = self.analyzeListItems(
-      token.$pos, nextToken, ")", expectTypeList )
-   {
-      self.error( "'Tuple' must not size 0." ); // 要対応
-   };
+   // let! mut expList = self.analyzeListItems(
+   //    token.$pos, nextToken, ")", expectTypeList )
+   // {
+   //    self.error( "'Tuple' must not size 0." ); // 要対応
+   // };
 
+   let mut expList = self.analyzeExpList(
+      false, false, false, false, nil, expectType$.$itemTypeInfoList ## );
+   self.checkNextToken( ")" );
+   
    when! expectType {
       let _, _, mut workExpList = self.checkMatchType(
          "tuple", token.$pos, expectType.$itemTypeInfoList,
@@ -1046,6 +1050,8 @@ fn TransUnit.analyzeTupleConst(
          expList = workExpList;
       }
    }
+   
+   
 
    let tupleType;
    when! expectType {
