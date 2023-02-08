@@ -3429,40 +3429,6 @@ fn convFilter.outputLetVar( node: &Nodes.DeclVarNode ) mut {
    }
 }
 
-pub override fn convFilter.processLetExpandTuple(
-   node: &Nodes.LetExpandTupleNode, opt:Opt ) mut
-{
-   if! let condRetInfo = node.$condRetInfo {
-      self.outputCondRetInfo( condRetInfo );
-   }
-   
-   foreach var in node.$symbolInfoList {
-      if var.$name ~= "_" {
-         self.writeRaw( "var %s " (var.$name) );
-         self.writeln( self.type2gotype( var.$typeInfo ) );
-      }
-   }
-
-   self.writeln( "{" );
-   self.pushIndent(##);
-
-   self.writeRaw( "__tuple := " );
-   filter( node.$expList, self, node );
-   self.writeln( "" );
-   
-   foreach var, index in node.$symbolInfoList {
-      if var.$name ~= "_" {
-         self.writeRaw( "%s = __tuple.Val%d" (var.$name,index) );
-         //self.outputAny2Type( var.$typeInfo );
-         self.writeln( "" );
-      }
-   }
-   
-   self.popIndent();
-   self.writeln( "}" );
-}
-
-
 pub fn convFilter.outputExpExpandTupleNode( node:&Nodes.ExpExpandTupleNode ) mut
 {
    let symbol = "%s_expTuple%s" ( self.localPrefix, node.getIdTxt() );

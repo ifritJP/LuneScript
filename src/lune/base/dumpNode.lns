@@ -340,20 +340,6 @@ pub override fn dumpFilter.processWhen(
    }
 }
 
-pub override fn dumpFilter.processLetExpandTuple(
-   node: &Nodes.LetExpandTupleNode, opt:Opt ) mut
-{
-   let mut varName = "";
-   foreach var, index in node.get_varList() {
-      if index > 1 {
-	 varName = varName .. ",";
-      }
-      varName = "%s %s" (varName, var.get_name().txt );
-   }
-   self.dump( opt, node, varName );
-   filter( node.$expList, self, opt.nextOpt() );
-}
-
 pub override fn dumpFilter.processExpExpandTuple(
    node: &Nodes.ExpExpandTupleNode, opt:Opt ) mut
 {

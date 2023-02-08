@@ -4399,47 +4399,6 @@ function convFilter:outputLetVar( node )
 end
 
 
-function convFilter:processLetExpandTuple( node, opt )
-
-   do
-      local condRetInfo = node:get_condRetInfo()
-      if condRetInfo ~= nil then
-         self:outputCondRetInfo( condRetInfo )
-      end
-   end
-   
-   
-   for __index, var in ipairs( node:get_symbolInfoList() ) do
-      if var:get_name() ~= "_" then
-         self:writeRaw( string.format( "var %s ", var:get_name()) )
-         self:writeln( self:type2gotype( var:get_typeInfo() ) )
-      end
-      
-   end
-   
-   
-   self:writeln( "{" )
-   self:pushIndent(  )
-   
-   self:writeRaw( "__tuple := " )
-   filter( node:get_expList(), self, node )
-   self:writeln( "" )
-   
-   for index, var in ipairs( node:get_symbolInfoList() ) do
-      if var:get_name() ~= "_" then
-         self:writeRaw( string.format( "%s = __tuple.Val%d", var:get_name(), index) )
-         
-         self:writeln( "" )
-      end
-      
-   end
-   
-   
-   self:popIndent(  )
-   self:writeln( "}" )
-end
-
-
 function convFilter:outputExpExpandTupleNode( node )
 
    local symbol = string.format( "%s_expTuple%s", self.localPrefix, node:getIdTxt(  ))

@@ -814,40 +814,6 @@ function FormatterFilter:processWhen( node, opt )
 end
 
 
-function FormatterFilter:processLetExpandTuple( node, opt )
-
-   self:write( "let " )
-   
-   for index, symInfo in ipairs( node:get_symbolInfoList() ) do
-      if index > 1 then
-         self:write( ", " )
-      end
-      
-      if symInfo:get_mutable() then
-         self:write( "mut " )
-      end
-      
-      self:write( symInfo:get_name() )
-      if #node:get_varList() >= index then
-         local varInfo = node:get_varList()[index]
-         do
-            local varType = varInfo:get_refType()
-            if varType ~= nil then
-               self:write( ":" )
-               filter( varType, self, opt:nextOpt( node ) )
-            end
-         end
-         
-      end
-      
-   end
-   
-   
-   self:write( " = " )
-   filter( node:get_expList(), self, opt:nextOpt( node ) )
-end
-
-
 function FormatterFilter:processExpExpandTuple( node, opt )
 
    filter( node:get_exp(), self, opt:nextOpt( node ) )

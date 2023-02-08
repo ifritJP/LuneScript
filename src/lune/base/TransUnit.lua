@@ -3281,6 +3281,7 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
             else
              
                self:pushback(  )
+               self:pushback(  )
             end
             
          else
@@ -5076,7 +5077,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2002, function (  )
+         Log.log( Log.Level.Debug, __func__, 2003, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -6988,14 +6989,7 @@ function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList,
    return typeInfoList, letVarList, orgExpTypeList, nil
 end
 
-
-function TransUnit:analyzeLetExpandTuple( firstPos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
-
-   return Nodes.LetExpandTupleNode.create( self.nodeManager, firstPos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, condRetInfo, varList, expList, symbolInfoList )
-end
-
-
-function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessMode, unwrapFlag, expandTuple )
+function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessMode, unwrapFlag )
 
    
    local typeInfoList = {}
@@ -7075,28 +7069,6 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
    end
    
    
-   if expandTuple then
-      self:checkToken( nextToken, ")" )
-      self:checkNextToken( "=" )
-      
-      local expListNode = self:analyzeExpList( false, false, false, true )
-      local expType = expListNode:get_expType()
-      if expType:get_kind() ~= Ast.TypeInfoKind.Tuple then
-         self:errorAt( expListNode:get_pos(), string.format( "expects the tuple value, but -- %s", expType:getTxt(  )) )
-      end
-      
-      if #expListNode:get_expTypeList() ~= 1 then
-         self:addErrMess( expListNode:get_pos(), string.format( "expects 1 tuple value, but -- %d value", #expListNode:get_expTypeList()) )
-      end
-      
-      if #expType:get_itemTypeInfoList() ~= #letVarList then
-         self:errorAt( expListNode:get_pos(), string.format( "expects %d item tuple, but -- %d item", #letVarList, #expType:get_itemTypeInfoList()) )
-      end
-      
-      return expType:get_itemTypeInfoList(), letVarList, expType:get_itemTypeInfoList(), expListNode
-   end
-   
-   
    if nextToken.txt ~= "=" then
       self:pushback(  )
       local orgExpTypeList = {}
@@ -7131,9 +7103,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local expandTuple = false
-   
-   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag, expandTuple )
+   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag )
    
    local condRetInfo = self:checkCondRet(  )
    
@@ -7258,16 +7228,6 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   if expandTuple then
-      if expList ~= nil then
-         return self:analyzeLetExpandTuple( firstToken.pos, condRetInfo, typeInfoList, varList, symbolInfoList, expList )
-      else
-         self:errorAt( firstToken.pos, "expanding tuple must set init value." )
-      end
-      
-   end
-   
-   
    local unwrapBlock = nil
    local thenBlock = nil
    if unwrapFlag then
@@ -7369,7 +7329,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    
    if nextToken.txt == "let" then
       local _
-      workTypeInfoList, letVarList, _, workExpList = self:analyzeLetAndInitExp( firstToken.pos, true, Ast.MutMode.IMut, Ast.AccessMode.Local, true, false )
+      workTypeInfoList, letVarList, _, workExpList = self:analyzeLetAndInitExp( firstToken.pos, true, Ast.MutMode.IMut, Ast.AccessMode.Local, true )
    else
     
       local _
