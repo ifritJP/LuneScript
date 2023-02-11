@@ -812,12 +812,10 @@ func (self *Builtin_Builtin) getTypeInfo(_env *LnsEnv, typeName string) *Ast_Typ
 func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName string,info *LnsMap,parentInfo *Ast_TypeInfo) {
     self.hasLuaval = false
     if self.targetLuaVer.FP.IsSupport(_env, _env.GetVM().String_format("%s.%s", []LnsAny{name, fieldName})){
-        if _switch1 := _env.NilAccFin( _env.NilAccPush(
-        info.Get("type")) && 
+        if _switch1 := _env.NilAccFin( _env.NilAccPush( info.Get("type")) && 
         _env.NilAccPush( _env.NilAccPop().(*LnsList).GetAt(1))); _switch1 == "var" {
             var symbol *Ast_SymbolInfo
-            symbol = Lns_unwrap( Lns_car(self.transUnit.FP.Get_scope(_env).FP.Add(_env, self.processInfo, Ast_SymbolKind__Var, false, true, fieldName, nil, self.FP.getTypeInfo(_env, Lns_unwrap( _env.NilAccFin( _env.NilAccPush(
-            info.Get("typeInfo")) && 
+            symbol = Lns_unwrap( Lns_car(self.transUnit.FP.Get_scope(_env).FP.Add(_env, self.processInfo, Ast_SymbolKind__Var, false, true, fieldName, nil, self.FP.getTypeInfo(_env, Lns_unwrap( _env.NilAccFin( _env.NilAccPush( info.Get("typeInfo")) && 
             _env.NilAccPush( _env.NilAccPop().(*LnsList).GetAt(1)))).(string)), Ast_AccessMode__Pub, true, Ast_MutMode__Mut, true, false))).(*Ast_SymbolInfo)
             Builtin_setupBuiltinTypeInfo_4_(_env, name, fieldName, symbol)
         } else {
@@ -836,8 +834,7 @@ func (self *Builtin_Builtin) processField(_env *LnsEnv, name string,fieldName st
                 retTypeList.Insert(Ast_TypeInfo2Stem(retTypeInfo))
             }
             var funcType LnsAny
-            funcType = _env.NilAccFin( _env.NilAccPush(
-            info.Get("type")) && 
+            funcType = _env.NilAccFin( _env.NilAccPush( info.Get("type")) && 
             _env.NilAccPush( _env.NilAccPop().(*LnsList).GetAt(1)))
             var mutable bool
             var staticFlag bool
@@ -911,8 +908,7 @@ func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2Fi
     var classKind LnsInt
     classKind = TransUnitIF_DeclClassMode__Class
     {
-        _types := _env.NilAccFin( _env.NilAccPush(
-        name2FieldInfo.Get("__attrib")) && 
+        _types := _env.NilAccFin( _env.NilAccPush( name2FieldInfo.Get("__attrib")) && 
         _env.NilAccPush( _env.NilAccPop().(*LnsMap).Get("type")))
         if !Lns_IsNil( _types ) {
             types := _types.(*LnsList)
@@ -928,8 +924,7 @@ func (self *Builtin_Builtin) registClass(_env *LnsEnv, nameList *LnsList,name2Fi
     var interfaceList *LnsList
     interfaceList = NewLnsList([]LnsAny{})
     {
-        __exp := _env.NilAccFin( _env.NilAccPush(
-        name2FieldInfo.Get("__attrib")) && 
+        __exp := _env.NilAccFin( _env.NilAccPush( name2FieldInfo.Get("__attrib")) && 
         _env.NilAccPush( _env.NilAccPop().(*LnsMap).Get("implements")))
         if !Lns_IsNil( __exp ) {
             _exp := __exp.(*LnsList)
