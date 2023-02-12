@@ -351,6 +351,184 @@ func (LnsList *LnsList) ToLuaCode(conv *StemToLuaConv) {
 	conv.write("}")
 }
 
+// ======== GenList =======
+
+type LnsList2_[T any] struct {
+	Items       []T
+	lnsItemKind int
+}
+
+func Lns_ToList2Sub[T any](
+	obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	itemParam := paramList[0]
+	if val, ok := obj.(*LnsList2_[T]); ok {
+		list := make([]T, len(val.Items))
+		for index, val := range val.Items {
+			success, conved, mess :=
+				itemParam.Func(val, itemParam.Nilable, itemParam.Child)
+			if !success {
+				return false, nil, fmt.Sprintf("%d:%s", index+1, mess)
+			}
+			list[index] = conved.(T)
+		}
+		return true, NewLnsList2_[T](list), nil
+	} else if val, ok := obj.(*LnsMap); ok {
+		// lua は list と map に明確な差がないので、
+		// 本来 list のデータも map になる可能性があるため、
+		// map からも処理できるようにする。
+		list := make([]T, len(val.Items))
+		for index := 1; index <= len(val.Items); index++ {
+			if val, ok := val.Items[index]; ok {
+				success, conved, mess :=
+					itemParam.Func(val, itemParam.Nilable, itemParam.Child)
+				if !success {
+					return false, nil, fmt.Sprintf("%d:%s", index, mess)
+				}
+				list[index-1] = conved.(T)
+			} else {
+				return false, nil, fmt.Sprintf("%d:%s", index, "no index")
+			}
+		}
+		return true, NewLnsList2_[T](list), nil
+	}
+	return false, nil, "no list"
+}
+
+func (self *LnsList2_[T]) ToCollection() LnsAny {
+	list := make([]LnsAny, len(self.Items))
+	for index, val := range self.Items {
+		list[index] = Lns_ToCollection(val)
+	}
+	return NewLnsList(list)
+}
+
+func (self *LnsList2_[T]) Len() int {
+	return len(self.Items)
+}
+func (self *LnsList2_[T]) Less(idx1, idx2 int) bool {
+	var val1 any = self.Items[idx1]
+	var val2 any = self.Items[idx2]
+	switch self.lnsItemKind {
+	case LnsItemKindInt:
+		return val1.(LnsInt) < val2.(LnsInt)
+	case LnsItemKindReal:
+		return val1.(LnsReal) < val2.(LnsReal)
+	case LnsItemKindStr:
+		return val1.(string) < val2.(string)
+	case LnsItemKindStem:
+		switch val1.(type) {
+		case LnsInt:
+			cval1 := val1.(LnsInt)
+			switch val2.(type) {
+			case LnsInt:
+				return cval1 < val2.(LnsInt)
+			case LnsReal:
+				return LnsReal(cval1) < val2.(LnsReal)
+			default:
+				return true
+			}
+		case LnsReal:
+			cval1 := val1.(LnsReal)
+			switch val2.(type) {
+			case LnsInt:
+				return cval1 < LnsReal(val2.(LnsInt))
+			case LnsReal:
+				return cval1 < val2.(LnsReal)
+			default:
+				return true
+			}
+		case string:
+			cval1 := val1.(string)
+			switch val2.(type) {
+			case LnsInt:
+				return false
+			case LnsReal:
+				return false
+			case string:
+				cval2 := val2.(string)
+				return cval1 < cval2
+			default:
+				return true
+			}
+		default:
+			switch val2.(type) {
+			case LnsInt:
+				return false
+			case LnsReal:
+				return false
+			case string:
+				return false
+			default:
+				return idx1 < idx2
+			}
+		}
+	}
+	panic("error")
+	return false
+}
+func (self *LnsList2_[T]) Swap(idx1, idx2 int) {
+	self.Items[idx1], self.Items[idx2] = self.Items[idx2], self.Items[idx1]
+}
+
+func NewLnsList2_[T any](list []T) *LnsList2_[T] {
+	return &LnsList2_[T]{list, LnsItemKindUnknown}
+}
+func (lnsList *LnsList2_[T]) Insert(val T) {
+	if !Lns_IsNil(val) {
+		lnsList.Items = append(lnsList.Items, val)
+	}
+}
+func (lnsList *LnsList2_[T]) Remove(index LnsAny) T {
+	if Lns_IsNil(index) {
+		ret := lnsList.Items[len(lnsList.Items)-1]
+		lnsList.Items = lnsList.Items[:len(lnsList.Items)-1]
+		return ret
+	} else {
+		work := index.(LnsInt) - 1
+		ret := lnsList.Items[work]
+		lnsList.Items =
+			append(lnsList.Items[:work], lnsList.Items[work+1:]...)
+		return ret
+	}
+}
+func (lnsList *LnsList2_[T]) GetAt(index int) T {
+	return lnsList.Items[index-1]
+}
+func (lnsList *LnsList2_[T]) Set(index int, val T) {
+	index--
+	if len(lnsList.Items) > index {
+		lnsList.Items[index] = val
+	} else {
+		if len(lnsList.Items) == index {
+			lnsList.Items = append(lnsList.Items, val)
+		} else {
+			panic(fmt.Sprintf("illegal index -- %d", index))
+		}
+	}
+}
+func (lnsList *LnsList2_[T]) Unpack() []LnsAny {
+	ret := make([]LnsAny, len(lnsList.Items))
+	for index := 0; index < len(ret); index++ {
+		ret[index] = lnsList.Items[index]
+	}
+	return ret
+}
+
+func (LnsList2_ *LnsList2_[T]) ToLuaCode(conv *StemToLuaConv) {
+	conv.write("{")
+	for _, val := range LnsList2_.Items {
+		conv.conv(val)
+		conv.write(",")
+	}
+	conv.write("}")
+}
+
 // ======== set ========
 
 type LnsSet struct {

@@ -216,7 +216,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 13346
+   return 13386
 end
 
 
@@ -755,6 +755,8 @@ end
                   option.validPostBuild = false
                elseif _switchExp == "--enableAsyncCtl" then
                   option.transCtrlInfo.validAsyncCtrl = true
+               elseif _switchExp == "--disableGenInherit" then
+                  option.transCtrlInfo.defaultGenInherit = false
                elseif _switchExp == "--defaultAsync" then
                   option.transCtrlInfo.defaultAsync = true
                elseif _switchExp == "--limitThread" then
@@ -1086,7 +1088,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 770, function (  )
+   Log.log( Log.Level.Log, __func__, 773, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

@@ -897,10 +897,8 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
       self.processInfo, .Global, "_ENV", nil, mapType, .IMutRe, true );
    self.transUnit.$scope.addVar(
       self.processInfo, .Global, "_G", nil, mapType, .IMutRe, true );
-   //self.transUnit.$scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
    self.transUnit.$scope.addVar(
       self.processInfo, .Global, "__line__", nil, Ast.builtinTypeInt, .IMut, true );
-   //self.transUnit.$scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
 
    fn processCopyAlterList( alterList:List<&Ast.AlternateTypeInfo>,
                             typeList:&List<&Ast.TypeInfo> )
@@ -945,22 +943,6 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
             }
             default {
                name = self.createGenType( className, genTypeList );
-               // if className.find( "<" ## ) {
-               //    name = "";
-               //    __luago {
-               //       apply token of className.gmatch( "[^<>,%s]+" ) {
-               //          if #name == 0 {
-               //             name = token;
-               //          }
-               //          else {
-               //             genTypeList.insert(
-               //                (self.processInfo.createAlternate(
-               //                   true, #genTypeList + 1,
-               //                   token, .Pri, Ast.headTypeInfo ## )) );
-               //          }
-               //       }
-               //    }
-               // }
             }
          }
 

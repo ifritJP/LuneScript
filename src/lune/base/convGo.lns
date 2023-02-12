@@ -735,7 +735,7 @@ fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) mut : str {
          return self.getTypeSymbol( symbolInfo.$typeInfo );
       }
       default {
-         Util.err( "not support -- %s" (symbolInfo.$kind.$_txt) ); // バグ
+         Util.err( "%s: not support -- %s" (__func__, symbolInfo.$kind.$_txt) ); // バグ
       }
    }
 }
@@ -818,7 +818,11 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          return "*Lns_luaValue";
       }
       case .List, .Array {
-         return "*LnsList";
+         if orgType.$canDealGenInherit {
+            return "*LnsList";
+         }
+         let itemType = orgType.$itemTypeInfoList[ 1 ];
+         return "*LnsList2_[%s]" (self.type2gotypeOrg( itemType, .Normal ) );
       }
       case .Set {
          return "*LnsSet";
@@ -861,6 +865,9 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
       case .Alternate {
          return self.type2gotypeOrg( typeInfo.$baseTypeInfo, mode );
       }
+   }
+   if orgType == Ast.builtinTypeNone {
+      return "LnsAny";
    }
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) ); // バグ
 }
@@ -2636,6 +2643,56 @@ fn convFilter.expList2Slice( subList:&Nodes.ExpListNode, toStem:bool ) mut {
    }
 }
 
+
+fn convFilter.expList2SliceRaw( itemType:&Ast.TypeInfo, subList:&Nodes.ExpListNode ) mut
+{
+   // fn processExp( exp:&Nodes.Node ) {
+   //    filter( exp, self, subList );
+   // }
+   
+   // let mRetIndex = subList.$mRetExp$.$index;
+   // if mRetIndex and mRetIndex ~= 1 {
+   //    self.writeRaw( "append( " );
+   // }
+   // let itemTypeTxt = self.type2gotype( itemType );
+   // self.writeRaw( "[]%s{" (itemTypeTxt) );
+   // foreach subExp, subIndex in subList.$expList {
+   //    if mRetIndex == subIndex {
+   //       if mRetIndex ~= 1 {
+   //          self.writeRaw( "}, " );
+   //       }
+   //       if subExp.$expType.$kind ~= .DDD {
+   //          self.writeRaw( "Lns_2DDDGen[%s](" (itemTypeTxt) );
+   //          processExp( subExp );
+   //          self.writeRaw( ")" );
+   //       }
+   //       else {
+   //          processExp( subExp );
+   //       }
+   //       self.writeRaw( "..." );
+   //       break;
+   //    }
+   //    if subIndex ~= 1 {
+   //       self.writeRaw( ', ' );
+   //    }
+   //    processExp( subExp );
+   // }
+   // if mRetIndex and mRetIndex ~= 1 {
+   //    self.writeRaw( ")" );
+   // }
+   // else {
+   //    self.writeRaw( "}" );
+   // }
+   self.writeRaw( "Lns_2DDDGen[%s](" (self.type2gotype( itemType )));
+   foreach subExp, subIndex in subList.$expList {
+      if subIndex ~= 1 {
+         self.writeRaw( "," );
+      }
+      filter( subExp, self, subList );
+   }
+   self.writeRaw( ")" );
+}
+
 /**
 expListNode の式を go で扱える型に変換する。
 
@@ -4084,7 +4141,9 @@ pub override fn convFilter.processForeach(
    macro _keyItemSet( typeSym:sym, typeName:__exp ) {
       if ,,typeName ~= "_" {
          self.writeRaw( "%s := _%s" (,,typeName, ,,typeName) );
-         self.outputStem2Type( ,,typeSym );
+         if loopExpType.$canDealGenInherit {
+            self.outputStem2Type( ,,typeSym );
+         }
          self.writeln( "" );
       }
    }
@@ -6026,7 +6085,9 @@ pub override fn convFilter.processExpRefItem(
          }
       }
       ,,getBlock;
-      self.outputStem2Type( node.$expType );
+      if prefixType.$canDealGenInherit {
+         self.outputStem2Type( node.$expType );
+      }
       if node.$nilAccess {
          self.writeRaw( "))" );
          if nilAccFin {
@@ -6314,14 +6375,26 @@ pub override fn convFilter.processTupleConst(
 pub override fn convFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt: Opt ) mut
 {
-   self.writeRaw( "NewLnsList(" );
-   if! let expList = node.$expList {
-      self.expList2Slice( expList, true );
+   if node.$expType.$canDealGenInherit {
+      self.writeRaw( "NewLnsList(" );
+      if! let expList = node.$expList {
+         self.expList2Slice( expList, true );
+      }
+      else {
+         self.writeRaw( "[]LnsAny{}" );
+      }
+      self.writeRaw( ")" );
+   } else {
+      let itemType = self.type2gotype(node.$expType.$itemTypeInfoList[1] );
+      self.writeRaw( "NewLnsList2_[%s](" (itemType ));
+      if! let expList = node.$expList {
+         self.expList2SliceRaw( node.$expType.$itemTypeInfoList[1], expList );
+      }
+      else {
+         self.writeRaw( "[]%s{}" (itemType) );
+      }
+      self.writeRaw( ")" );
    }
-   else {
-      self.writeRaw( "[]LnsAny{}" );
-   }
-   self.writeRaw( ")" );
 }
 
 pub override fn convFilter.processLiteralSet(

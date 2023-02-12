@@ -8,11 +8,11 @@ func Json_convExp0_198(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 69
-func Json_convExp0_297(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_295(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 126
-func Json_convExp0_515(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_513(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // 6: decl @lune.@base.@Json.getRawTxt

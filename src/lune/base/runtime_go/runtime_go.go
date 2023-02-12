@@ -62,7 +62,7 @@ type LnsEnv struct {
 // デフォルトのシングルタスクで使用する LnsEnv
 var cur_LnsEnv *LnsEnv
 
-/// __nosync を排他するための mutex
+// / __nosync を排他するための mutex
 var sync_LnsEnvMutex sync.Mutex
 
 func Lns_GetEnv() *LnsEnv {
@@ -76,7 +76,8 @@ func (self *LnsEnv) GetVM() *Lns_luaVM {
 	return self.CommonLuaVM
 }
 
-/**
+/*
+*
 各モジュールを初期化する際に実行する関数。
 
 import エラーを回避するため、
@@ -87,21 +88,23 @@ import エラーを回避するため、
 func Lns_InitMod() {
 }
 
-/**
-  go 側から直接 Async 用の LnsEnv を生成する場合に利用する。
+/*
+*
 
-  通常は main や run の内部処理から生成するので、これを直接は利用しない。
+	go 側から直接 Async 用の LnsEnv を生成する場合に利用する。
 
-  使用が終ったら Lns_ReleaseEnv() を実行して開放する。
+	通常は main や run の内部処理から生成するので、これを直接は利用しない。
+
+	使用が終ったら Lns_ReleaseEnv() を実行して開放する。
 */
 func Lns_createAsyncEnv(runnerName string) *LnsEnv {
 	return lns_threadMgrInfo.createAsyncEnv(runnerName)
 }
 
 /*
-  go 側から直接 LnsEnv を生成する場合に利用する。
+go 側から直接 LnsEnv を生成する場合に利用する。
 
-   Lns_createEnv() で生成した env を開放する。
+	Lns_createEnv() で生成した env を開放する。
 */
 func Lns_releaseEnv(env *LnsEnv) {
 	env.LuaVM.closeVM()
@@ -155,7 +158,8 @@ type LnsRuntimeOpt struct {
 
 var lnsRuntimeOpt LnsRuntimeOpt
 
-/**
+/*
+*
 各モジュールを初期化する際に実行する関数。
 */
 func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
@@ -528,6 +532,25 @@ func Lns_2DDD(multi ...LnsAny) []LnsAny {
 		return newMulti
 	}
 	return multi
+}
+
+func Lns_2DDDGen[T any](multi ...LnsAny) []T {
+	if len(multi) == 0 {
+		return []T{}
+	}
+	newMulti := make([]T, len(multi)-1)
+	for index, val := range multi[:len(multi)-1] {
+		newMulti[index] = val.(T)
+	}
+	switch multi[len(multi)-1].(type) {
+	case []T:
+		ddd := multi[len(multi)-1].([]T)
+		for _, val := range ddd {
+			newMulti = append(newMulti, val)
+		}
+		return newMulti
+	}
+	return append(newMulti, multi[len(multi)-1].(T))
 }
 
 func Lns_ToString(val LnsAny) string {

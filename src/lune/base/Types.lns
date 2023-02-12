@@ -118,8 +118,10 @@ pub class TransCtrlInfo {
    pub let mut validMacroAsync:bool;
    /** AST 解析の runner の待ち処理を Async.Waiter を使うかどうか */
    pub let mut useWaiter:bool;
+   pub let mut defaultGenInherit:bool;
 
    pub fn __init() {
+      self.defaultGenInherit = true;
       self.useWaiter = true;
       self.macroAsyncParseStmtLen = 500;
       self.warningShadowing = false;

@@ -4,11 +4,11 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_OutputDepend bool
 var OutputDepend__mod__ string
 // for 145
-func OutputDepend_convExp0_613(arg1 []LnsAny) LnsAny {
+func OutputDepend_convExp0_609(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 143
-func OutputDepend_convExp0_572(arg1 []LnsAny) (LnsAny, LnsAny) {
+func OutputDepend_convExp0_568(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // 95: decl @lune.@base.@OutputDepend.createFilter

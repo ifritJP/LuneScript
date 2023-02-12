@@ -376,9 +376,28 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .List {
                if checkAlternateTypeCount( 1 ) {
-                  typeInfo = self.processInfo.createList(
-                     accessMode, self.getCurrentClass(),
-                     genericList, .Mut );
+                  let canDealGenInherit;
+                  switch symbolNode.$expType {
+                     case Ast.builtinTypeList {
+                        canDealGenInherit = self.ctrl_info.defaultGenInherit;
+                     }
+                     case Ast.builtinTypeList_ {
+                        canDealGenInherit = true;
+                     }
+                     case Ast.builtinTypeList__ {
+                        canDealGenInherit = false;
+                     }
+                     default {
+                        self.error( "illegal list" ); // バグ
+                     }
+                  }
+                  if canDealGenInherit {
+                     typeInfo = self.processInfo.createList(
+                        accessMode, self.getCurrentClass(), genericList, .Mut );
+                  } else {
+                     typeInfo = self.processInfo.createList_(
+                        accessMode, self.getCurrentClass(), genericList, .Mut );
+                  }
                }
             }
             case .Array {

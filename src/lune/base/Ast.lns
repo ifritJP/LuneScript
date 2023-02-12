@@ -893,6 +893,11 @@ pub abstract class TypeInfo extend (TypeDataAccessor) {
       return ( fullname.replace( "@", "" ) );
    }
 
+   /** generics 型を扱う時に型パラメータの継承関係を考慮するか？ */
+   pub fn get_canDealGenInherit() : bool {
+      return true;
+   }
+
    /** この型がモジュールを示す型の場合 true  */
    pub fn isModule(): bool {
       return true;
@@ -1829,8 +1834,6 @@ pub static fn TypeInfo.canBeAbsImmutMember(typeInfo:&TypeInfo): bool {
 
 pub fn ProcessInfo.createModifier(
    mut srcTypeInfo: &TypeInfo, mutMode:MutMode) mut : &TypeInfo
-   // pub static fn NormalTypeInfo.createModifier(
-//    mut srcTypeInfo: &TypeInfo, mutMode:MutMode): &TypeInfo
 {
    srcTypeInfo = srcTypeInfo.$srcTypeInfo;
    if not TypeInfo.isMutableType( srcTypeInfo ) {
@@ -2079,6 +2082,10 @@ pub class NilableTypeInfo extend TypeInfo {
    pub override fn get_aliasSrc() : &TypeInfo {
       return self;
    }
+   pub override fn get_canDealGenInherit() : bool {
+      return self.nonnilableType.$canDealGenInherit;
+   }
+   
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
    }
@@ -2201,6 +2208,9 @@ pub class AliasTypeInfo extend TypeInfo {
    /** 非 nilable の型情報 */
    pub override fn get_nonnilableType(): &TypeInfo {
       return self;
+   }
+   pub override fn get_canDealGenInherit() : bool {
+      return self.aliasSrcTypeInfo.$canDealGenInherit;
    }
    /** Modifier の元となる型情報 */
    pub override fn get_srcTypeInfo(): &TypeInfo {
@@ -3672,6 +3682,9 @@ pub class BoxTypeInfo extend TypeInfo {
    pub override fn get_aliasSrc() : &TypeInfo {
       return self;
    }
+   pub override fn get_canDealGenInherit() : bool {
+      return self.boxingType.$canDealGenInherit;
+   }
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;
    }
@@ -3874,6 +3887,9 @@ pub class GenericTypeInfo extend TypeInfo {
 
    pub override fn get_aliasSrc() : &TypeInfo {
       return self;
+   }
+   pub override fn get_canDealGenInherit() : bool {
+      return self.genSrcTypeInfo.$canDealGenInherit;
    }
    /** Modifier の元となる型情報 */
    pub override fn get_srcTypeInfo(): &TypeInfo {
@@ -4628,6 +4644,8 @@ pub class NormalTypeInfo extend TypeInfo {
 
    pri let asyncMode: Async {pub};
 
+   pri let mut canDealGenInherit: bool {pub,local};
+
    /**            
    オーバーライド元の TypeInfo。
    */
@@ -4683,6 +4701,7 @@ pub class NormalTypeInfo extend TypeInfo {
    {
       super( scope, processInfo );
 
+      self.canDealGenInherit = true;
       self.imutType = headTypeInfo;
       self.asyncMode = asyncMode;
 
@@ -5228,6 +5247,11 @@ local static fn NormalTypeInfo.createBuiltin(
       AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, 
       kind, genTypeList, argTypeList, retTypeList, .Mut, nil, .Async );
    rootProcessInfo.setupImut( info );
+   switch typeTxt {
+      case "__List" {
+         info.set_canDealGenInherit( false );
+      }
+   }
 
    registBuiltin( idName, typeTxt, kind, info, info, headTypeInfo, scope );
    return info;      
@@ -5270,6 +5294,10 @@ pub let builtinTypeSet:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Set", "Set" , .Set## );
 pub let builtinTypeList:&TypeInfo =
    NormalTypeInfo.createBuiltin( "List", "List" , .List## );
+pub let builtinTypeList_:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "_List", "_List" , .List## );
+pub let builtinTypeList__:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "__List", "__List" , .List## );
 pub let builtinTypeArray:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
 
@@ -5536,7 +5564,6 @@ pub fn isConditionalbe( processInfo:&ProcessInfo, typeInfo:&TypeInfo ) : bool {
 }
 
 
-//pub static fn NormalTypeInfo.createBox(
 pub fn ProcessInfo.createBox(
    accessMode:AccessMode, nonnilableType: &TypeInfo ) mut : &TypeInfo
 {
@@ -5585,7 +5612,6 @@ macro _createType( newType:__exp ) {
 }
 
 
-//pub static fn NormalTypeInfo.createSet(
 pub fn ProcessInfo.createSet(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode )  mut : &TypeInfo
@@ -5598,7 +5624,6 @@ pub fn ProcessInfo.createSet(
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
-//pub static fn NormalTypeInfo.createList(
 pub fn ProcessInfo.createList(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
@@ -5611,7 +5636,22 @@ pub fn ProcessInfo.createList(
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
-//pub static fn NormalTypeInfo.createArray(
+pub fn ProcessInfo.createList_(
+   accessMode: AccessMode, parentInfo: &TypeInfo,
+   itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
+{
+   _createType( fn (workMutMode:MutMode) : TypeInfo {
+      let mut typeInfo = new NormalTypeInfo(
+         self, true, false, nil, builtinTypeList,
+         nil, false, false, false, AccessMode.Pub,
+         "_List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
+         nil, nil, workMutMode, nil, .Async );
+      typeInfo.set_canDealGenInherit( false );
+      return typeInfo;
+   } );
+}
+
+
 pub fn ProcessInfo.createArray(
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
@@ -5624,7 +5664,6 @@ pub fn ProcessInfo.createArray(
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
-//pub static fn NormalTypeInfo.createMap(
 pub fn ProcessInfo.createMap(
    accessMode: AccessMode, parentInfo: &TypeInfo, keyTypeInfo: &TypeInfo,
    valTypeInfo: &TypeInfo, mutMode:MutMode ) mut : &TypeInfo
@@ -5771,7 +5810,6 @@ pub fn ProcessInfo.createTuple(
 
 
 
-//pub static fn NormalTypeInfo.createFunc(
 pub fn ProcessInfo.createDummyNameSpace(
    scope: Scope, parentInfo: &TypeInfo, asyncMode:Async ) mut : NormalTypeInfo
 {
@@ -5784,7 +5822,6 @@ pub fn ProcessInfo.createDummyNameSpace(
    return info;      
 }
 
-//pub static fn NormalTypeInfo.createAdvertiseMethodFrom(
 pub fn ProcessInfo.createAdvertiseMethodFrom(
    classTypeInfo:&TypeInfo,
    typeDataAccessor:TypeDataAccessor, typeInfo:&TypeInfo ) mut : &TypeInfo
@@ -5816,7 +5853,6 @@ pub override fn ModifierTypeInfo.get_nilableTypeInfo(): &TypeInfo {
    return orgType.$imutType;
 }
 
-//pub static fn NormalTypeInfo.createAlias(
 pub fn ProcessInfo.createAlias(
    processInfo:ProcessInfo, name:str, externalFlag:bool, accessMode:AccessMode,
    parentInfo: &TypeInfo, typeInfo: &TypeInfo ) mut : AliasTypeInfo
@@ -5981,7 +6017,6 @@ pub class DDDTypeInfo extend TypeInfo {
 }
 
 
-//pub static fn NormalTypeInfo.createDDD(
 pub fn ProcessInfo.createDDD(
    mut typeInfo:&TypeInfo, externalFlag:bool, mut extTypeFlag:bool ) mut : &DDDTypeInfo
 {
@@ -6671,6 +6706,9 @@ pub class ExtTypeInfo extend TypeInfo {
    pub override fn get_srcTypeInfo(): &TypeInfo {
       return self;               
    }
+   pub override fn get_canDealGenInherit() : bool {
+      return self.extedType.$canDealGenInherit;
+   }
    pub override fn get_nonnilableType(): &TypeInfo {
       return self;               
    }
@@ -6694,7 +6732,6 @@ pub class ExtTypeInfo extend TypeInfo {
 }
 
 
-//pub static fn NormalTypeInfo.createLuaval( luneType:&TypeInfo ) : LuavalResult
 pub fn ProcessInfo.createLuaval(
    luneType:&TypeInfo, validToCheck:bool ) mut : LuavalResult
 {
@@ -6834,7 +6871,6 @@ pub fn isNumberType( typeInfo:&TypeInfo ): bool {
 }
 
 
-//pub static fn NormalTypeInfo.createEnum(
 pub fn ProcessInfo.createEnum(
    scope: Scope, parentInfo: &TypeInfo, typeDataAccessor: TypeDataAccessor, 
    externalFlag: bool, accessMode: AccessMode,
@@ -6904,7 +6940,6 @@ accessMode = %d, kind = %d, valTypeId = %d, ```
 
 
 
-//pub static fn NormalTypeInfo.createAlge(
 pub fn ProcessInfo.createAlge(
    scope: Scope, parentInfo: &TypeInfo, typeDataAccessor: TypeDataAccessor,
    externalFlag: bool,     
@@ -7048,9 +7083,14 @@ macro _checkEqualsItemType(
       #,,type2.$itemTypeInfoList >= ,,index
    {
       // ここの .SetEq を制御する
+      let evalMode;
+      if not ,,type1.$canDealGenInherit or ,,destMut {
+         evalMode = CanEvalType.SetEq;
+      } else {
+         evalMode = CanEvalType.SetOpIMut;
+      }
       let ret, mess = (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
-         processInfo, ,,type2.$itemTypeInfoList[ ,,index ],
-         ,,destMut and CanEvalType.SetEq or CanEvalType.SetOpIMut, ,,alt2type );
+         processInfo, ,,type2.$itemTypeInfoList[ ,,index ], evalMode, ,,alt2type );
       if not ret {            
          ,,retStat1;             
       }
@@ -7805,6 +7845,9 @@ pro static fn TypeInfo.canEvalWithBase(
          if otherSrc.$itemTypeInfoList[ 1 ] == builtinTypeNone {
             // literalMap の [], [@] は互換有りとする
             return true, nil;       
+         }
+         if dest.$canDealGenInherit ~= otherSrc.$canDealGenInherit {
+            return false, _pos();
          }
          _checkEqualsItemType( dest, otherSrc, 1, alt2type, destMut, true );
          return true, nil;       

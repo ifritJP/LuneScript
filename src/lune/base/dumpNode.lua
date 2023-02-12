@@ -1144,7 +1144,7 @@ end
 
 function dumpFilter:processLiteralList( node, opt )
 
-   self:dump( opt, node, "[]" )
+   self:dump( opt, node, string.format( "%s", node:get_expType():getTxt(  )) )
    do
       local _exp = node:get_expList()
       if _exp ~= nil then

@@ -919,12 +919,12 @@ aa	skip:
 {
 }
 test/error/nilable1.lns:2:5: error: unmatch value type (index:1) int <- nil -- 
-test/error/nilable1.lns:6:9: error: = operator: exp(1) type mismatch int(26) <- nil(98): index 1 -- 
+test/error/nilable1.lns:6:9: error: = operator: exp(1) type mismatch int(26) <- nil(114): index 1 -- 
 test/error/nilable1.lns:10:15: error: no numeric type 'int!' or 'int'
 test/error/nilable1.lns:16:5: error: This condition never be false
 test/error/nilable1.lns:16:5: error: has no nilable
 test/error/nilable1.lns:24:5: error: unmatch value type (index:1) int <- int! -- 
-test/error/nilable1.lns:29:5: error: get: exp(1) type mismatch int(26) <- nil(98): index 1 -- 
+test/error/nilable1.lns:29:5: error: get: exp(1) type mismatch int(26) <- nil(114): index 1 -- 
 test/error/nilable1.lns:34:5: error: unmatch value type (index:1) stem <- nil -- 
 test/error/nilable1.lns:36:11: error: can't cast from nilable to not nilable  -- int!->int
 test/error/nilable1.lns:38:11: error: can't cast from nilable to not nilable  -- stem!->int
@@ -1009,7 +1009,7 @@ test/error/access5.lns:71:18: error: can't access mutable method. -- &Val.func
 test/error/access5.lns:73:18: error: can't access mutable method. -- &Val.func
 test/error/list.lns:8:9: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
 test/error/list.lns:18:9: error: unmatch value type (index:1) int <- int! -- 
-test/error/list.lns:29:4: error: insert: exp(1) type mismatch int!(27) <- nil(98): index 1 -- is doesn't support nilable.
+test/error/list.lns:29:4: error: insert: exp(1) type mismatch int!(27) <- nil(114): index 1 -- is doesn't support nilable.
 test/error/list.lns:29:16: error: list can't insert nilable
 test/error/list.lns:30:4: error: insert: exp(1) type mismatch int!(27) <- str(58): index 1(TypeInfoKind.Alternate)
 test/error/list.lns:35:10: error: can't access mutable method. -- &List<int>.sort
@@ -1023,8 +1023,8 @@ test/error/list.lns:40:4: error: The callback's argument must have 2 arguments. 
 test/error/list.lns:40:4: error: sort: exp(1) type mismatch sort!(1091) <- @test.@error.@list.(1087): index 1 -- over exp. expect: 2: actual: 3
 test/error/list.lns:45:4: error: unmatch value type (index:1) List<int> <- List<int>! -- 
 test/error/list.lns:47:4: error: unmatch value type (index:1) List<int> <- List<int>! -- 
-test/error/list.lns:60:7: error: func: exp(1) type mismatch List<@test.@error.@list.Super>(1165) <- List<@test.@error.@list.Sub>(1156): index 1 -- 
-test/error/list.lns:66:7: error: func: exp(1) type mismatch List<&@test.@error.@list.Super>(1172) <- List<@test.@error.@list.Sub>(1156): index 1 -- 
+test/error/list.lns:60:7: error: func: exp(1) type mismatch List<@test.@error.@list.Super>(1163) <- List<@test.@error.@list.Sub>(1154): index 1 -- 
+test/error/list.lns:66:7: error: func: exp(1) type mismatch List<&@test.@error.@list.Super>(1170) <- List<@test.@error.@list.Sub>(1154): index 1 -- 
 test/error/list.lns:81:18: error: illegal type -- val
 test/error/list.lns:98:12: error: can't access mutable method. -- &Imp.func
 test/error/list.lns:101:12: error: can't access mutable method. -- &Imp.func
@@ -1034,7 +1034,7 @@ test/error/list.lns:128:12: error: can't access mutable method. -- &Imp.func
 test/error/list.lns:131:12: error: can't access mutable method. -- &Imp.func
 test/error/list.lns:174:8: error: When left-value includes 'list[i]', left-value must be single.
 test/error/list.lns:178:7: error: When left-value includes 'list[i]', left-value must be single.
-test/error/list.lns:185:4: error: sort: exp(1) type mismatch sort!(1488) <- @test.@error.@list.(1484): index 1 -- exp(1) type mismatch @test.@error.@list.Hoge(TypeInfoKind.Class:1463) <- &@test.@error.@list.Hoge(TypeInfoKind.Class:1465) -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/list.lns:185:4: error: sort: exp(1) type mismatch sort!(1486) <- @test.@error.@list.(1482): index 1 -- exp(1) type mismatch @test.@error.@list.Hoge(TypeInfoKind.Class:1461) <- &@test.@error.@list.Hoge(TypeInfoKind.Class:1463) -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/list.lns:191:8: error: illegal type -- List<int>!, TypeInfoKind.Nilable
 test/error/list.lns:3:13: warning: 'val2' var isn't accessed
 test/error/list.lns:8:13: warning: 'val2' var isn't accessed
@@ -1043,9 +1043,9 @@ test/error/list.lns:18:13: warning: 'val2' var isn't accessed
 test/error/list.lns:23:13: warning: 'val2' var isn't accessed
 test/error/list.lns:31:4: warning: remove() is dangerous for nilable's list.
 test/error/list.lns:44:8: warning: 'list2' var isn't accessed
-test/error/list.lns:44:26: warning: this value never be 'false' -- List<>
+test/error/list.lns:44:26: warning: this value never be 'false' -- List<int>
 test/error/list.lns:45:8: warning: 'list3' var isn't accessed
-test/error/list.lns:45:26: warning: this value never be 'false' -- List<>
+test/error/list.lns:45:26: warning: this value never be 'false' -- List<int>
 test/error/list.lns:46:8: warning: 'list4' var isn't accessed
 test/error/list.lns:47:8: warning: 'list5' var isn't accessed
 test/error/list.lns:81:8: warning: 'list' var isn't accessed
@@ -1521,8 +1521,8 @@ test/error/mutable.lns:217:11: error: can't access mutable method. -- &List<int>
 test/error/mutable.lns:225:15: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:228:12: error: can't access mutable method. -- &List<&List<int>>.insert
 test/error/mutable.lns:229:15: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@mutable.Super>(1550) <- List<@test.@error.@mutable.Sub1>(1589): index 1 -- 
-test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &List<List<@test.@error.@mutable.Super>>(1570) <- List<List<@test.@error.@mutable.Sub1>>(1604): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@mutable.Super>(1538) <- List<@test.@error.@mutable.Sub1>(1577): index 1 -- 
+test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &List<List<@test.@error.@mutable.Super>>(1558) <- List<List<@test.@error.@mutable.Sub1>>(1592): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/var.lns:2:8: warning: 'val' var isn't accessed
 test/error/var.lns:4:8: warning: 'val2' var isn't accessed
 test/error/var.lns:8:8: warning: 'val1' var isn't accessed
@@ -2273,11 +2273,11 @@ test/error/box.lns:12:4: error: not support auto boxing
 test/error/box.lns:19:4: error: not support auto boxing
 test/error/form.lns:32:4: warning: 'func' var isn't accessed
 test/error/form.lns:2:4: error: You must declare this form at the outside scope. -- func
-test/error/form.lns:9:4: error: func: exp(1) type mismatch form(107) <- @test.@error.@form.(1013): index 1 -- 
-test/error/form.lns:12:4: error: func: exp(1) type mismatch form(107) <- @test.@error.@form.(1017): index 1 -- 
-test/error/form.lns:15:4: error: func: exp(1) type mismatch form(107) <- @test.@error.@form.(1021): index 1 -- 
-test/error/form.lns:24:9: error: = operator: exp(1) type mismatch form(107) <- @test.@error.@form.(1029): index 1 -- 
-test/error/form.lns:32:9: error: = operator: exp(1) type mismatch form(107) <- @test.@error.@form.(1041): index 1 -- 
+test/error/form.lns:9:4: error: func: exp(1) type mismatch form(123) <- @test.@error.@form.(1013): index 1 -- 
+test/error/form.lns:12:4: error: func: exp(1) type mismatch form(123) <- @test.@error.@form.(1017): index 1 -- 
+test/error/form.lns:15:4: error: func: exp(1) type mismatch form(123) <- @test.@error.@form.(1021): index 1 -- 
+test/error/form.lns:24:9: error: = operator: exp(1) type mismatch form(123) <- @test.@error.@form.(1029): index 1 -- 
+test/error/form.lns:32:9: error: = operator: exp(1) type mismatch form(123) <- @test.@error.@form.(1041): index 1 -- 
 test/error/form.lns:38:4: error: can't call any Type. -- Test
 test/error/form.lns:39:4: error: can't call any Type. -- Test
 test/error/form.lns:39:5: error: can't be r-value in paren. -- RefType
@@ -2516,10 +2516,10 @@ test/error/dis_mutable.lns:253:15: warning: 'work' var isn't accessed
 test/error/dis_mutable.lns:10:4: error: has no nilable
 test/error/dis_mutable.lns:21:4: error: has no nilable
 test/error/dis_mutable.lns:33:4: error: has no nilable
-test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1520) <- List<@test.@error.@dis_mutable.Sub1>(1559): index 1 -- 
-test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1528) <- List<@test.@error.@dis_mutable.Sub1>(1559): index 1 -- 
-test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1538) <- List<List<@test.@error.@dis_mutable.Sub1>>(1574): index 1 -- 
-test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1553) <- List<List<@test.@error.@dis_mutable.Sub1>>(1574): index 1 -- 
+test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1508) <- List<@test.@error.@dis_mutable.Sub1>(1547): index 1 -- 
+test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1516) <- List<@test.@error.@dis_mutable.Sub1>(1547): index 1 -- 
+test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1526) <- List<List<@test.@error.@dis_mutable.Sub1>>(1562): index 1 -- 
+test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1541) <- List<List<@test.@error.@dis_mutable.Sub1>>(1562): index 1 -- 
 -- not exist file access --
 --lua
 local _moduleObj = {}

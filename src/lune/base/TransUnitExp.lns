@@ -896,7 +896,17 @@ fn TransUnit.analyzeListItems(
    let mut itemTypeInfo;
    match itemCommonType {
       case .Normal( info ) {
-         itemTypeInfo = info;
+         fn getTypeInfo() : &Ast.TypeInfo {
+            if info == Ast.builtinTypeNone {
+               when! expectTypeList {
+                  if #expectTypeList >= 1 {
+                     return expectTypeList[ 1 ];
+                  }
+               }
+            }
+            return info;
+         }
+         itemTypeInfo = getTypeInfo();
       }
       case .Combine( info ) {
          itemTypeInfo = info.get_typeInfo( self.processInfo );
@@ -960,11 +970,29 @@ fn TransUnit.analyzeListConst(
    
    let mut typeInfoList;
    if token.txt == '[' {
-      typeInfoList = [ self.processInfo.createList( .Local, self.getCurrentClass(),
-                                                      [ itemTypeInfo ], .Mut ) ];
+      let canDealGenInherit;
+      when! expectType {
+         if expectType == Ast.builtinTypeList {
+            canDealGenInherit = self.ctrl_info.defaultGenInherit;
+         } else {
+            canDealGenInherit = expectType.$canDealGenInherit;
+         }
+      } else {
+         canDealGenInherit = self.ctrl_info.defaultGenInherit;
+      }
+      let listType;
+      if canDealGenInherit {
+         listType = self.processInfo.createList(
+            .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
+      } else {
+         listType = self.processInfo.createList_(
+            .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
+      }
+      
+      
       return Nodes.LiteralListNode.create(
          self.nodeManager, token.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+         self.macroCtrl.isInAnalyzeArgMode(), [ listType ], expList );
    }
    else {
       typeInfoList = [ self.processInfo.createArray( .Local, self.getCurrentClass(),
@@ -3729,7 +3757,8 @@ fn TransUnit.analyzeExpOp2(
                   prefixExpType = prefixExpType.$nonnilableType;
                }
 
-               let mut expectType = Ast.builtinTypeNone;
+               //let mut expectType = Ast.builtinTypeNone;
+               let mut expectType = prefixExpType;
                if! prefixExpType.$srcTypeInfo@@@Ast.GenericTypeInfo {
                   expectType = _exp;
                } else {

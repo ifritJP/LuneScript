@@ -9,19 +9,19 @@ var Util_debugFlag bool
 var Util_errorCode LnsInt
 type Util_ConsoleWriter func (_env *LnsEnv, arg1 string)
 // for 434
-func Util_convExp0_1890(arg1 []LnsAny) string {
+func Util_convExp0_1878(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 451
-func Util_convExp0_1977(arg1 []LnsAny) string {
+func Util_convExp0_1965(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 422
-func Util_convExp0_1820(arg1 []LnsAny) string {
+func Util_convExp0_1808(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 462
-func Util_convExp0_2035(arg1 []LnsAny) string {
+func Util_convExp0_2023(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 46: decl @lune.@base.@Util.setConsoleOStream
@@ -155,7 +155,7 @@ func Util_scriptPath2Module(_env *LnsEnv, path string) string {
         Util_err(_env, "script must be relative-path -- " + path)
     }
     var mod string
-    mod = Util_convExp0_1820(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
+    mod = Util_convExp0_1808(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
     return Lns_car(_env.GetVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
@@ -169,7 +169,7 @@ func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny)
         } else { 
             workpath = projDir_356
         }
-        path = Util_convExp0_1890(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
+        path = Util_convExp0_1878(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
     }
     return Util_scriptPath2Module(_env, path)
 }
@@ -188,7 +188,7 @@ func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
 // 449: decl @lune.@base.@Util.parentPath
 func Util_parentPath(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-        path = Util_convExp0_1977(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
+        path = Util_convExp0_1965(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
     }
     return Lns_car(_env.GetVM().String_gsub(path,"/[^/]+$", "")).(string)
 }
@@ -202,7 +202,7 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
             return work
         }
         var parent string
-        parent = Util_convExp0_2035(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
+        parent = Util_convExp0_2023(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
         if parent == work{
             return nil
         }

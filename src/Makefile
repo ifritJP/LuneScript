@@ -127,6 +127,7 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns ast
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
+CONVGO_OP=
 LNSC_OP=
 EXE_OPT := --valid-luaval 
 COM_OPT := --use-ipairs -Werror --valid-luaval $(LNSC_OP)
@@ -1564,7 +1565,7 @@ GO_WORK_DIR = work/go
 # $4: 出力先ディレクトリ
 # $5: その他オプション
 define convGo
-	$(call exeLune,$1,$2,$3.lns,SAVE -langGo $(LNSC_OP),$4 $5)
+	$(call exeLune,$1,$2,$3.lns,SAVE -langGo $(LNSC_OP) $(CONVGO_OP),$4 $5)
 endef
 
 define setup-go

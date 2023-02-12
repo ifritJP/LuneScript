@@ -1179,13 +1179,13 @@ _section();
          print( __func__ );
       }
    }
-   fn hoge( list:&List<&Test> ) {
-      foreach val in list@@List<&Sub> {
+   fn hoge( list:&_List<&Test> ) {
+      foreach val in list@@_List<&Sub> {
          val.sub();
       }
    }
    let test:Test = new Sub();
-   let mut list:List<&Test> = [];
+   let mut list:_List<&Test> = [];
    list.insert( test );
    hoge( list );
 

@@ -1053,6 +1053,7 @@ end
 
 
 function convFilter:getSymbolSym( symbolInfo )
+   local __func__ = '@lune.@base.@convGo.convFilter.getSymbolSym'
 
    do
       local _switchExp = symbolInfo:get_kind()
@@ -1076,7 +1077,7 @@ function convFilter:getSymbolSym( symbolInfo )
          return self:getTypeSymbol( symbolInfo:get_typeInfo() )
       else 
          
-            Util.err( string.format( "not support -- %s", Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
+            Util.err( string.format( "%s: not support -- %s", __func__, Ast.SymbolKind:_getTxt( symbolInfo:get_kind())
             ) )
       end
    end
@@ -1211,7 +1212,12 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
          
          return "*Lns_luaValue"
       elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
-         return "*LnsList"
+         if orgType:get_canDealGenInherit() then
+            return "*LnsList"
+         end
+         
+         local itemType = orgType:get_itemTypeInfoList()[1]
+         return string.format( "*LnsList2_[%s]", self:type2gotypeOrg( itemType, ClassAsterMode.Normal ))
       elseif _switchExp == Ast.TypeInfoKind.Set then
          return "*LnsSet"
       elseif _switchExp == Ast.TypeInfoKind.Map then
@@ -1249,6 +1255,10 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
       elseif _switchExp == Ast.TypeInfoKind.Alternate then
          return self:type2gotypeOrg( typeInfo:get_baseTypeInfo(), mode )
       end
+   end
+   
+   if orgType == Ast.builtinTypeNone then
+      return "LnsAny"
    end
    
    Util.err( string.format( "not support yet -- %s", typeInfo:getTxt(  )) )
@@ -3471,6 +3481,22 @@ function convFilter:expList2Slice( subList, toStem )
    
 end
 
+
+function convFilter:expList2SliceRaw( itemType, subList )
+
+   
+   self:writeRaw( string.format( "Lns_2DDDGen[%s](", self:type2gotype( itemType )) )
+   for subIndex, subExp in ipairs( subList:get_expList() ) do
+      if subIndex ~= 1 then
+         self:writeRaw( "," )
+      end
+      
+      filter( subExp, self, subList )
+   end
+   
+   self:writeRaw( ")" )
+end
+
 function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expListNode, addEnvArg )
 
    local expListKind = getExpListKind( dstTypeList, expListNode, addEnvArg )
@@ -5169,7 +5195,10 @@ function convFilter:processForeach( node, opt )
          
          if valName ~= "_" then
             self:writeRaw( string.format( "%s := _%s", valName, valName) )
-            self:outputStem2Type( itemType )
+            if loopExpType:get_canDealGenInherit() then
+               self:outputStem2Type( itemType )
+            end
+            
             self:writeln( "" )
          end
          
@@ -5218,7 +5247,10 @@ function convFilter:processForeach( node, opt )
             if key ~= nil then
                if key:get_name() ~= "_" then
                   self:writeRaw( string.format( "%s := _%s", key:get_name(), key:get_name()) )
-                  self:outputStem2Type( keyType )
+                  if loopExpType:get_canDealGenInherit() then
+                     self:outputStem2Type( keyType )
+                  end
+                  
                   self:writeln( "" )
                end
                
@@ -5228,7 +5260,10 @@ function convFilter:processForeach( node, opt )
          
          if valName ~= "_" then
             self:writeRaw( string.format( "%s := _%s", valName, valName) )
-            self:outputStem2Type( itemType )
+            if loopExpType:get_canDealGenInherit() then
+               self:outputStem2Type( itemType )
+            end
+            
             self:writeln( "" )
          end
          
@@ -5255,7 +5290,10 @@ function convFilter:processForeach( node, opt )
          self:pushIndent(  )
          if valName ~= "_" then
             self:writeRaw( string.format( "%s := _%s", valName, valName) )
-            self:outputStem2Type( valType )
+            if loopExpType:get_canDealGenInherit() then
+               self:outputStem2Type( valType )
+            end
+            
             self:writeln( "" )
          end
          
@@ -7341,7 +7379,10 @@ function convFilter:processExpRefItem( node, opt )
          
          
          
-         self:outputStem2Type( node:get_expType() )
+         if prefixType:get_canDealGenInherit() then
+            self:outputStem2Type( node:get_expType() )
+         end
+         
          if node:get_nilAccess() then
             self:writeRaw( "))" )
             if nilAccFin then
@@ -7382,7 +7423,10 @@ function convFilter:processExpRefItem( node, opt )
          
          
          
-         self:outputStem2Type( node:get_expType() )
+         if prefixType:get_canDealGenInherit() then
+            self:outputStem2Type( node:get_expType() )
+         end
+         
          if node:get_nilAccess() then
             self:writeRaw( "))" )
             if nilAccFin then
@@ -7431,7 +7475,10 @@ function convFilter:processExpRefItem( node, opt )
          
          
          
-         self:outputStem2Type( node:get_expType() )
+         if prefixType:get_canDealGenInherit() then
+            self:outputStem2Type( node:get_expType() )
+         end
+         
          if node:get_nilAccess() then
             self:writeRaw( "))" )
             if nilAccFin then
@@ -7736,17 +7783,34 @@ end
 
 function convFilter:processLiteralList( node, opt )
 
-   self:writeRaw( "NewLnsList(" )
-   do
-      local expList = node:get_expList()
-      if expList ~= nil then
-         self:expList2Slice( expList, true )
-      else
-         self:writeRaw( "[]LnsAny{}" )
+   if node:get_expType():get_canDealGenInherit() then
+      self:writeRaw( "NewLnsList(" )
+      do
+         local expList = node:get_expList()
+         if expList ~= nil then
+            self:expList2Slice( expList, true )
+         else
+            self:writeRaw( "[]LnsAny{}" )
+         end
       end
+      
+      self:writeRaw( ")" )
+   else
+    
+      local itemType = self:type2gotype( node:get_expType():get_itemTypeInfoList()[1] )
+      self:writeRaw( string.format( "NewLnsList2_[%s](", itemType) )
+      do
+         local expList = node:get_expList()
+         if expList ~= nil then
+            self:expList2SliceRaw( node:get_expType():get_itemTypeInfoList()[1], expList )
+         else
+            self:writeRaw( string.format( "[]%s{}", itemType) )
+         end
+      end
+      
+      self:writeRaw( ")" )
    end
    
-   self:writeRaw( ")" )
 end
 
 

@@ -887,7 +887,7 @@ func (self *dumpNode_dumpFilter) ProcessTupleConst(_env *LnsEnv, node *Nodes_Tup
 // 842: decl @lune.@base.@dumpNode.dumpFilter.processLiteralList
 func (self *dumpNode_dumpFilter) ProcessLiteralList(_env *LnsEnv, node *Nodes_LiteralListNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
-    self.FP.dump(_env, opt, &node.Nodes_Node, "[]")
+    self.FP.dump(_env, opt, &node.Nodes_Node, _env.GetVM().String_format("%s", []LnsAny{node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil)}))
     {
         __exp := node.FP.Get_expList(_env)
         if !Lns_IsNil( __exp ) {

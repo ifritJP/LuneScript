@@ -3554,7 +3554,29 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                
             elseif _switchExp == Ast.TypeInfoKind.List then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = self.processInfo:createList( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
+                  local canDealGenInherit
+                  
+                  do
+                     local _switchExp = symbolNode:get_expType()
+                     if _switchExp == Ast.builtinTypeList then
+                        canDealGenInherit = self.ctrl_info.defaultGenInherit
+                     elseif _switchExp == Ast.builtinTypeList_ then
+                        canDealGenInherit = true
+                     elseif _switchExp == Ast.builtinTypeList__ then
+                        canDealGenInherit = false
+                     else 
+                        
+                           self:error( "illegal list" )
+                     end
+                  end
+                  
+                  if canDealGenInherit then
+                     typeInfo = self.processInfo:createList( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
+                  else
+                   
+                     typeInfo = self.processInfo:createList_( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
+                  end
+                  
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Array then
@@ -5113,7 +5135,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2022, function (  )
+         Log.log( Log.Level.Debug, __func__, 2041, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -8367,7 +8389,21 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectTypeLis
       if _matchExp[1] == Ast.CommonType.Normal[1] then
          local info = _matchExp[2][1]
       
-         itemTypeInfo = info
+         local function getTypeInfo(  )
+         
+            if info == Ast.builtinTypeNone then
+               if expectTypeList ~= nil then
+                  if #expectTypeList >= 1 then
+                     return expectTypeList[1]
+                  end
+                  
+               end
+               
+            end
+            
+            return info
+         end
+         itemTypeInfo = getTypeInfo(  )
       elseif _matchExp[1] == Ast.CommonType.Combine[1] then
          local info = _matchExp[2][1]
       
@@ -8445,8 +8481,31 @@ function TransUnit:analyzeListConst( token, expectType )
    local typeInfoList
    
    if token.txt == '[' then
-      typeInfoList = {self.processInfo:createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
-      return Nodes.LiteralListNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
+      local canDealGenInherit
+      
+      if expectType ~= nil then
+         if expectType == Ast.builtinTypeList then
+            canDealGenInherit = self.ctrl_info.defaultGenInherit
+         else
+          
+            canDealGenInherit = expectType:get_canDealGenInherit()
+         end
+         
+      else
+         canDealGenInherit = self.ctrl_info.defaultGenInherit
+      end
+      
+      local listType
+      
+      if canDealGenInherit then
+         listType = self.processInfo:createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )
+      else
+       
+         listType = self.processInfo:createList_( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )
+      end
+      
+      
+      return Nodes.LiteralListNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {listType}, expList )
    else
     
       typeInfoList = {self.processInfo:createArray( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
@@ -11169,7 +11228,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                end
                
                
-               local expectType = Ast.builtinTypeNone
+               local expectType = prefixExpType
                do
                   local _exp = _lune.__Cast( prefixExpType:get_srcTypeInfo(), 3, Ast.GenericTypeInfo )
                   if _exp ~= nil then

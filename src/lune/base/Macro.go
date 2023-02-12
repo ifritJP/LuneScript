@@ -16,11 +16,11 @@ func Macro_convExp3_17(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 792
-func Macro_convExp3_359(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Macro_convExp3_353(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 828
-func Macro_convExp3_527(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Macro_convExp3_521(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 45
