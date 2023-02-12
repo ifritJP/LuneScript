@@ -219,7 +219,7 @@ func convPython_convExp1_2011(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 4970
-func convPython_convExp0_4340(arg1 []LnsAny) (bool, LnsAny) {
+func convPython_convExp0_4350(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 426
@@ -231,7 +231,7 @@ func convPython_convExp1_745(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 5781
-func convPython_convExp0_8713(arg1 []LnsAny) bool {
+func convPython_convExp0_8723(arg1 []LnsAny) bool {
     return Lns_getFromMulti( arg1, 0 ).(bool)
 }
 // 94: decl @lune.@base.@convPython.isMain
@@ -6100,7 +6100,7 @@ func (self *convPython_convFilter) ProcessGetField(_env *LnsEnv, node *Nodes_Get
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", []LnsAny{convPython_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env))}))
             } else { 
                 var closeParen bool
-                closeParen = convPython_convExp0_8713(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
+                closeParen = convPython_convExp0_8723(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", []LnsAny{convPython_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env))}))
                 var retType *Ast_TypeInfo
                 retType = symbolInfo.FP.Get_typeInfo(_env).FP.Get_retTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo()

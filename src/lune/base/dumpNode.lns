@@ -842,7 +842,7 @@ pub override fn dumpFilter.processTupleConst(
 pub override fn dumpFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "[]" );
+   self.dump( opt, node, node.$expType.getTxt(##) );
    if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }

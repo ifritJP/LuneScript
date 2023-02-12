@@ -11169,7 +11169,7 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                end
                
                
-               local expectType = Ast.builtinTypeNone
+               local expectType = prefixExpType
                do
                   local _exp = _lune.__Cast( prefixExpType:get_srcTypeInfo(), 3, Ast.GenericTypeInfo )
                   if _exp ~= nil then
