@@ -367,7 +367,7 @@ func Lns_ToList2Sub[T any](
 		return false, nil, "nil"
 	}
 	itemParam := paramList[0]
-	if val, ok := obj.(*LnsList2_[T]); ok {
+	if val, ok := obj.(*LnsList); ok {
 		list := make([]T, len(val.Items))
 		for index, val := range val.Items {
 			success, conved, mess :=
@@ -512,8 +512,8 @@ func (lnsList *LnsList2_[T]) Set(index int, val T) {
 		}
 	}
 }
-func (lnsList *LnsList2_[T]) Unpack() []LnsAny {
-	ret := make([]LnsAny, len(lnsList.Items))
+func (lnsList *LnsList2_[T]) Unpack() []T {
+	ret := make([]T, len(lnsList.Items))
 	for index := 0; index < len(ret); index++ {
 		ret[index] = lnsList.Items[index]
 	}

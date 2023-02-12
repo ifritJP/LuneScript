@@ -1345,6 +1345,8 @@ test/error/class.lns:568:1: error: Sub.hoge3: mismatch override staticFlag -- ho
 test/error/class.lns:568:1: error: Sub.hoge3: mismatch override staticFlag -- hoge3: hoge3() -- hoge3()
 test/error/class.lns:571:11: error: can't exist the same name func --hoge2
 test/error/class.lns:573:18: error: can't exist the same name func --hoge3
+test/error/class.lns:585:4: error: unmatch value type (index:1) &__List<stem> <- __List<@test.@error.@class.Test>
+test/error/class.lns:586:26: error: This type can't cast. (&__List<@test.@error.@class.Super> <- &__List<stem>)
 test/error/class2.lns:2:8: error: This member can't have setter, this member is immutable. -- val
 test/error/class2.lns:9:19: error: __init: exp(2) type mismatch int <- [##]: dst 2 -- 
 test/error/class2.lns:10:9: error: can't access mutable method. -- &TestAcc.set_val

@@ -4,7 +4,7 @@ _lune_control use_macro_special_var;
 
 import test.subGoPkg.SubPkg;
 
-pub fn __main( args:&List<str> ):int {
+pub fn __main( args:&_List<str> ):int {
    return 0;
 }
 
@@ -626,11 +626,11 @@ _section();
 
    let map = hoge._toMap();
    foreach val0, key0 in map {
-      foreach test, index in val0@@List<Map<str,stem>> {
+      foreach test, index in val0@@_List<Map<str,stem>> {
          forsort val, key in test {
             switch key {
                case "val" {
-                  foreach val2, key2 in val@@List<int> {
+                  foreach val2, key2 in val@@_List<int> {
                      print( key0, index, key, key2, val2 );
                   }
                }
@@ -649,17 +649,21 @@ _section();
       }
    }
 
-   let hoge2 = unwrap Hoge._fromStem( map );
-   foreach sub in hoge2.$list {
-      forsort val in sub.$val3 {
-         print( val );
+   let hoge2, mess = Hoge._fromStem( map );
+   when! hoge2 {
+      foreach sub in hoge2.$list {
+         forsort val in sub.$val3 {
+            print( val );
+         }
+         forsort val, key in sub.$val2 {
+            print( key, val );
+         }
+         foreach val, index in sub.$val {
+            print( index, val );
+         }
       }
-      forsort val, key in sub.$val2 {
-         print( key, val );
-      }
-      foreach val, index in sub.$val {
-         print( index, val );
-      }
+   } else {
+      error( "error %d: %s" (__line__, mess) );
    }
 }
 _section();
@@ -898,9 +902,9 @@ _section();
    }
    class Test extend Super {
    }
-   let list = [ new Test() ];
-   let list2:&List<stem> = list;
-   foreach val in list2@@List<Super> {
+   let list:_List<Test> = [ new Test() ];
+   let list2:&_List<stem> = list;
+   foreach val in list2@@_List<Super> {
       val.func();
    }
 }

@@ -573,3 +573,17 @@ class Sub extend Hoge { // error
    pub static fn hoge3() { // error
    }
 }
+{
+   class Super {
+      pub fn func() {
+         print( __func__ );
+      }
+   }
+   class Test extend Super {
+   }
+   let list:__List<Test> = [ new Test() ];
+   let list2:&__List<stem> = list; // error
+   foreach val in list2@@__List<Super> { // error
+      val.func();
+   }
+}

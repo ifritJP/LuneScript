@@ -4953,6 +4953,8 @@ end
 function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo) 
    TypeInfo.__init( self,scope, processInfo)
    
+   
+   self.canDealGenInherit = true
    self.typeId = processInfo:newId( self )
    
    self.txt = txt
@@ -5205,6 +5207,12 @@ function AlternateTypeInfo:set_imutType( imutType )
 end
 function AlternateTypeInfo:get_refTypeInfo()
    return self.refTypeInfo
+end
+function AlternateTypeInfo:get_canDealGenInherit()
+   return self.canDealGenInherit
+end
+function AlternateTypeInfo:set_canDealGenInherit( canDealGenInherit )
+   self.canDealGenInherit = canDealGenInherit
 end
 
 
@@ -7187,11 +7195,29 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    end
    
    
+   local canDealGenInherit
+   
+   do
+      local _switchExp = typeTxt
+      if _switchExp == "__List" then
+         canDealGenInherit = false
+      else 
+         
+            canDealGenInherit = true
+      end
+   end
+   
+   
    local genTypeList = {}
    do
       local _switchExp = kind
       if _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Set then
-         table.insert( genTypeList, (rootProcessInfo:createAlternate( true, 1, "T", AccessMode.Pri, _moduleObj.headTypeInfo ) ) )
+         local alterType = rootProcessInfo:createAlternate( true, 1, "T", AccessMode.Pri, _moduleObj.headTypeInfo )
+         if not canDealGenInherit then
+            alterType:set_canDealGenInherit( false )
+         end
+         
+         table.insert( genTypeList, alterType )
       elseif _switchExp == TypeInfoKind.Map then
          table.insert( genTypeList, (rootProcessInfo:createAlternate( true, 1, "K", AccessMode.Pri, _moduleObj.headTypeInfo ) ) )
          table.insert( genTypeList, (rootProcessInfo:createAlternate( true, 2, "V", AccessMode.Pri, _moduleObj.headTypeInfo ) ) )
@@ -7200,11 +7226,8 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    
    local info = NormalTypeInfo._new(rootProcessInfo, kind ~= TypeInfoKind.IF, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    rootProcessInfo:setupImut( info )
-   do
-      local _switchExp = typeTxt
-      if _switchExp == "__List" then
-         info:set_canDealGenInherit( false )
-      end
+   if not canDealGenInherit then
+      info:set_canDealGenInherit( false )
    end
    
    
@@ -7733,7 +7756,7 @@ function ProcessInfo:createList_( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      local typeInfo = NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "_List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      local typeInfo = NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeList__, nil, false, false, false, AccessMode.Pub, "__List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
       typeInfo:set_canDealGenInherit( false )
       return typeInfo
    end
@@ -10378,19 +10401,32 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          end
          
          if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
+            local workType1 = dest:get_itemTypeInfoList()[1]
+            local workType2 = otherSrc:get_itemTypeInfoList()[1]
             
-            local evalMode
-            
-            if not dest:get_canDealGenInherit() or destMut then
-               evalMode = CanEvalType.SetEq
+            if not dest:get_canDealGenInherit() then
+               if not workType1:equals( processInfo, workType2 ) then
+                  return false, nil
+               end
+               
             else
              
-               evalMode = CanEvalType.SetOpIMut
-            end
-            
-            local ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[1], evalMode, alt2type )
-            if not ret then
-               return false, mess
+               local evalMode
+               
+               if destMut then
+                  evalMode = CanEvalType.SetEq
+               else
+                
+                  evalMode = CanEvalType.SetOpIMut
+               end
+               
+               local ret, mess = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+               
+               
+               if not ret then
+                  return false, mess
+               end
+               
             end
             
          else
@@ -10409,19 +10445,32 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          local function check1(  )
          
             if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
+               local workType1 = dest:get_itemTypeInfoList()[1]
+               local workType2 = otherSrc:get_itemTypeInfoList()[1]
                
-               local evalMode
-               
-               if not dest:get_canDealGenInherit() or destMut then
-                  evalMode = CanEvalType.SetEq
+               if not dest:get_canDealGenInherit() then
+                  if not workType1:equals( processInfo, workType2 ) then
+                     return false
+                  end
+                  
                else
                 
-                  evalMode = CanEvalType.SetOpIMut
-               end
-               
-               local ret, mess = (dest:get_itemTypeInfoList()[1] ):canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[1], evalMode, alt2type )
-               if not ret then
-                  return false
+                  local evalMode
+                  
+                  if destMut then
+                     evalMode = CanEvalType.SetEq
+                  else
+                   
+                     evalMode = CanEvalType.SetOpIMut
+                  end
+                  
+                  local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+                  
+                  
+                  if not ret then
+                     return false
+                  end
+                  
                end
                
             else
@@ -10435,19 +10484,32 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          local function check2(  )
          
             if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
+               local workType1 = dest:get_itemTypeInfoList()[2]
+               local workType2 = otherSrc:get_itemTypeInfoList()[2]
                
-               local evalMode
-               
-               if not dest:get_canDealGenInherit() or destMut then
-                  evalMode = CanEvalType.SetEq
+               if not dest:get_canDealGenInherit() then
+                  if not workType1:equals( processInfo, workType2 ) then
+                     return false
+                  end
+                  
                else
                 
-                  evalMode = CanEvalType.SetOpIMut
-               end
-               
-               local ret, mess = (dest:get_itemTypeInfoList()[2] ):canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[2], evalMode, alt2type )
-               if not ret then
-                  return false
+                  local evalMode
+                  
+                  if destMut then
+                     evalMode = CanEvalType.SetEq
+                  else
+                   
+                     evalMode = CanEvalType.SetOpIMut
+                  end
+                  
+                  local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+                  
+                  
+                  if not ret then
+                     return false
+                  end
+                  
                end
                
             else

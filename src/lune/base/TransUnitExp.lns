@@ -467,8 +467,8 @@ fn TransUnit.checkImplicitCast(
       else {
          if expNode.$expType ~= Ast.builtinTypeNil and
             dstType ~= Ast.builtinTypeEmpty and
-            not dstType.$srcTypeInfo.equals( self.processInfo,
-                                             expNode.$expType.$srcTypeInfo ## ) and       
+            not dstType.$srcTypeInfo.equals(
+               self.processInfo, expNode.$expType.$srcTypeInfo ## ) and       
             not dstType.$nonnilableType.$srcTypeInfo.equals(
                self.processInfo, expNode.$expType.$srcTypeInfo ## )
          {
@@ -518,10 +518,11 @@ fn TransUnit.checkImplicitCast(
                      self.macroCtrl.isInAnalyzeArgMode(),
                      [ dstType ], newExpListNode );
                   return workNode, true;
-               }
-               else {
+               } else {
                   let castType;
-                  if validCastToGen {
+                  if validCastToGen or (dstType.$kind == .Alternate and
+                                         not dstType.$canDealGenInherit )
+                  {
                      castType = unwrap alt2typeMap[ dstType ] default dstType;
                   } else {
                      castType = dstType;
@@ -529,7 +530,7 @@ fn TransUnit.checkImplicitCast(
                   workNode = Nodes.ExpCastNode.create(
                      self.nodeManager, expNode.$pos, self.inTestBlock,
                      self.macroCtrl.isInAnalyzeArgMode(),
-                     [ expNode.$expType ], expNode, castType, nil, "", .Implicit );   
+                     [ expNode.$expType ], expNode, castType, nil, "", .Implicit );
                }
             }
          }
@@ -797,10 +798,11 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    let mut validImplicitCast = true;
    switch funcTypeInfo {
       case self.builtinFunc.list_insert,
+           self.builtinFunc.__list_insert,
            self.builtinFunc.set_add, self.builtinFunc.set_del {
          //argTypeList = genericTypeList;
       }
-      case self.builtinFunc.list_sort {
+      case self.builtinFunc.list_sort, self.builtinFunc.__list_sort  {
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
          let callback = self.processInfo.createFuncAsync(
             // false, false, nil, Ast.TypeInfoKind.Func,
@@ -815,7 +817,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
          // implicitCast すると、 go の変換が出来ないので implicitCast を抑制
          validImplicitCast = false;
       }
-      case self.builtinFunc.list_remove {
+      case self.builtinFunc.list_remove, self.builtinFunc.__list_remove {
       }
       case self.builtinFunc.lns___run {
          self.helperInfo.useRun = true;
@@ -1555,6 +1557,7 @@ mut : &List<&Ast.TypeInfo>
 {
    when! refFieldNode {
       if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
+         funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_unpack ##) or
          funcTypeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
       {
          // unpack の型を list の要素の DDD 型にする
@@ -1585,7 +1588,9 @@ mut : &List<&Ast.TypeInfo>
          workType = applyType;
       }
       else {
-         if funcTypeInfo == self.builtinFunc.list_remove {
+         if funcTypeInfo == self.builtinFunc.list_remove or
+            funcTypeInfo == self.builtinFunc.__list_remove
+         {
             // pending: List.remove の戻り値設定を暫定対応
             workType = genericTypeList[ 1 ].$nilableTypeInfo;
          }
@@ -1889,7 +1894,9 @@ fn TransUnit.analyzeExpCall(
    let mut alt2typeMap, argList = self.prepareExpCall(
       funcExp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
-   if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_insert ##) {
+   if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_insert ##) or
+      funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_insert ##)
+   {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "list can't insert nilable" );
@@ -1903,7 +1910,9 @@ fn TransUnit.analyzeExpCall(
          }
       }
    }
-   elseif funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_remove ##) {
+   elseif funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_remove ##) or
+      funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_remove ##)
+   {
       if #genericTypeList > 0 {
          if genericTypeList[ 1 ].$nilable {
             self.addWarnMess( funcExp.$pos, "remove() is dangerous for nilable's list." );
@@ -2310,7 +2319,11 @@ fn TransUnit.analyzeAccessClassField(
 {
    switch classTypeInfo.get_kind() {
       case .List {
-         classTypeInfo = Ast.builtinTypeList;
+         if classTypeInfo.$canDealGenInherit {
+            classTypeInfo = Ast.builtinTypeList;
+         } else {
+            classTypeInfo = Ast.builtinTypeList__;
+         }
       }
       case .Array {
          classTypeInfo = Ast.builtinTypeArray;
@@ -2498,7 +2511,11 @@ fn TransUnit.dumpFieldComp(
    let typeInfo;
    switch prefixTypeInfo.get_kind() {
       case .List {
-         typeInfo = Ast.builtinTypeList;
+         if prefixTypeInfo.$canDealGenInherit {
+            typeInfo = Ast.builtinTypeList;
+         } else {
+            typeInfo = Ast.builtinTypeList__;
+         }
       }
       case .Array {
          typeInfo = Ast.builtinTypeArray;
@@ -3069,6 +3086,7 @@ fn TransUnit.analyzeExpField(
    }
 
    if typeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
+      typeInfo.equals( self.processInfo, self.builtinFunc.__list_unpack ##) or
       typeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
    {
       self.helperInfo.useUnpack = true;

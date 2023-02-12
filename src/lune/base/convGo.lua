@@ -1501,19 +1501,26 @@ function convFilter:outputImplicitCast( castType, node, parent )
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Alternate then
-         if not castType:hasBase(  ) then
-            if Ast.isClass( node:get_expType():get_nonnilableType() ) then
-               self:writeRaw( string.format( "%s2Stem(", self:getTypeSymbolWithPrefix( node:get_expType():get_nonnilableType() )) )
-               filter( node, self, parent )
-               self:writeRaw( ")" )
-            else
-             
-               filter( node, self, parent )
-            end
+         if not castType:get_canDealGenInherit() then
             
+            filter( node, self, parent )
          else
           
-            self:outputImplicitCast( castType:get_baseTypeInfo(), node, parent )
+            if not castType:hasBase(  ) then
+               if Ast.isClass( node:get_expType():get_nonnilableType() ) then
+                  self:writeRaw( string.format( "%s2Stem(", self:getTypeSymbolWithPrefix( node:get_expType():get_nonnilableType() )) )
+                  filter( node, self, parent )
+                  self:writeRaw( ")" )
+               else
+                
+                  filter( node, self, parent )
+               end
+               
+            else
+             
+               self:outputImplicitCast( castType:get_baseTypeInfo(), node, parent )
+            end
+            
          end
          
       elseif _switchExp == Ast.TypeInfoKind.Form then
@@ -5918,27 +5925,32 @@ end
 
 local type2FromStemNameMap = {[Ast.builtinTypeInt] = "Lns_ToInt", [Ast.builtinTypeReal] = "Lns_ToReal", [Ast.builtinTypeBool] = "Lns_ToBool", [Ast.builtinTypeString] = "Lns_ToStr", [Ast.builtinTypeStem] = "Lns_ToStem"}
 
-function convFilter:getFromStemName( typeInfo )
+function convFilter:getFromStemName( typeInfo, suffix )
    local __func__ = '@lune.@base.@convGo.convFilter.getFromStemName'
 
    local workTypeInfo = getOrgTypeInfo( typeInfo )
    do
       local name = type2FromStemNameMap[workTypeInfo]
       if name ~= nil then
-         return name
+         return name .. suffix
       end
    end
    
    do
       local _switchExp = workTypeInfo:get_kind()
       if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
-         return "Lns_ToList"
+         if workTypeInfo:get_canDealGenInherit() then
+            return "Lns_ToList" .. suffix
+         end
+         
+         local itemType = workTypeInfo:get_itemTypeInfoList()[1]
+         return string.format( "Lns_ToList2%s[%s]", suffix, self:type2gotype( itemType ))
       elseif _switchExp == Ast.TypeInfoKind.Set then
-         return "Lns_ToSet"
+         return "Lns_ToSet" .. suffix
       elseif _switchExp == Ast.TypeInfoKind.Map then
-         return "Lns_ToLnsMap"
+         return "Lns_ToLnsMap" .. suffix
       elseif _switchExp == Ast.TypeInfoKind.Class then
-         return string.format( "%s_FromMap", self:getTypeSymbol( workTypeInfo ))
+         return string.format( "%s_FromMap", self:getTypeSymbol( workTypeInfo )) .. suffix
       else 
          
             Util.err( string.format( "%s: not support -- %s", __func__, Ast.TypeInfoKind:_getTxt( workTypeInfo:get_kind())
@@ -5975,7 +5987,7 @@ function convFilter:outputConvItemType( typeInfo, alt2type )
       else
          self:writeln( "Lns_ToObjParam{" )
          self:pushIndent(  )
-         self:writeRaw( string.format( "%sSub, %s,", self:getFromStemName( workTypeInfo ), typeInfo:get_nilable()) )
+         self:writeRaw( string.format( "%s, %s,", self:getFromStemName( workTypeInfo, "Sub" ), typeInfo:get_nilable()) )
          self:outputConvItemTypeList( workTypeInfo:get_itemTypeInfoList(), alt2type )
          self:popIndent(  )
          self:writeRaw( "}" )
@@ -6063,7 +6075,7 @@ function convFilter:outputMapping( node, absImmutFlag )
    self:writeln( "    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )" )
    self:writeln( "}" )
    
-   local fromStemName = self:getFromStemName( classType )
+   local fromStemName = self:getFromStemName( classType, "" )
    
    local classScope = _lune.unwrap( classType:get_scope())
    if not classType:get_abstractFlag() then
@@ -6109,7 +6121,7 @@ function convFilter:outputMapping( node, absImmutFlag )
    self:pushIndent(  )
    
    if classType:hasBase(  ) then
-      self:writeln( string.format( "if ok,_,mess := %sMain( &newObj.%s, objMap, paramList ); !ok {", self:getFromStemName( classType:get_baseTypeInfo() ), self:getTypeSymbol( classType:get_baseTypeInfo() )) )
+      self:writeln( string.format( "if ok,_,mess := %s( &newObj.%s, objMap, paramList ); !ok {", self:getFromStemName( classType:get_baseTypeInfo(), "Main" ), self:getTypeSymbol( classType:get_baseTypeInfo() )) )
       self:writeln( "    return false,nil,mess" )
       self:writeln( "}" )
    end
@@ -6129,7 +6141,7 @@ function convFilter:outputMapping( node, absImmutFlag )
             
          else
           
-            self:writeRaw( string.format( '%sSub( objMap.Items["%s"], %s, ', self:getFromStemName( memberNode:get_expType() ), memberNode:get_symbolInfo():get_name(), memberNode:get_expType():get_nilable()) )
+            self:writeRaw( string.format( '%s( objMap.Items["%s"], %s, ', self:getFromStemName( memberNode:get_expType(), "Sub" ), memberNode:get_symbolInfo():get_name(), memberNode:get_expType():get_nilable()) )
             self:outputConvItemTypeList( memberNode:get_expType():get_itemTypeInfoList(), nil )
          end
          
@@ -6539,7 +6551,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                                  else
                                     do
                                        local _switchExp = funcType
-                                       if _switchExp == self.builtinFuncs.list_sort or _switchExp == self.builtinFuncs.array_sort then
+                                       if _switchExp == self.builtinFuncs.list_sort or _switchExp == self.builtinFuncs.__list_sort or _switchExp == self.builtinFuncs.array_sort then
                                           callKind = _lune.newAlge( CallKind.SortCall, {prefixType:get_itemTypeInfoList()[1]})
                                        end
                                     end
@@ -7393,6 +7405,7 @@ function convFilter:processExpRefItem( node, opt )
          
          
       elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+         local lnsType = self:type2gotype( prefixType )
          local nilAccFin = false
          if node:get_nilAccess() then
             if not node:get_val():hasNilAccess(  ) then
@@ -7405,12 +7418,12 @@ function convFilter:processExpRefItem( node, opt )
                self:writeln( "&&" )
             end
             
-            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(%s)", getEnvTxt, getEnvTxt, "*LnsList") )
+            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(%s)", getEnvTxt, getEnvTxt, lnsType) )
          else
           
             filter( node:get_val(), self, node )
             if prefixType:get_kind() == Ast.TypeInfoKind.Stem then
-               self:writeRaw( string.format( ".(%s)", "*LnsList") )
+               self:writeRaw( string.format( ".(%s)", lnsType) )
             end
             
          end

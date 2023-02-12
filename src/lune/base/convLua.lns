@@ -2942,7 +2942,6 @@ pub override fn ConvFilter.processExpCall(
          {
             return false;
          }
-         //case self.builtinFunc.list___new,
          case self.builtinFunc.__lns_sync_createProcesser
          {
             self.writeRaw( "{}" );

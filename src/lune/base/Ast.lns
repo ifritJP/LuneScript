@@ -3370,6 +3370,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    <T=int> のように型パラメータを指定する場合に利用する。
    */ 
    pri let refTypeInfo:&TypeInfo! {pub};
+   pri let mut canDealGenInherit: bool {pub,local};
 
    local override fn get_nilableTypeInfoMut() mut: TypeInfo {
       return self.nilableTypeInfo;
@@ -3384,6 +3385,7 @@ pub class AlternateTypeInfo extend TypeInfo {
    {
       super( scope, processInfo );
 
+      self.canDealGenInherit = true;
       // processInfo.$idProv.increment();
       // self.typeId = processInfo.$idProv.$id;
       self.typeId = processInfo.newId( self );
@@ -5228,11 +5230,25 @@ local static fn NormalTypeInfo.createBuiltin(
       }
    }
 
+   let canDealGenInherit;
+   switch typeTxt {
+      case "__List" {
+         canDealGenInherit = false;
+      }
+      default {
+         canDealGenInherit = true;
+      }
+   }
+   
    let mut genTypeList:List<&TypeInfo> = [];
    switch kind {     
       case .Array, .List, .Set {
-         genTypeList.insert(
-            (rootProcessInfo.createAlternate( true, 1, "T", .Pri, headTypeInfo ## )) );
+         let mut alterType = rootProcessInfo.createAlternate(
+            true, 1, "T", .Pri, headTypeInfo ## );
+         if not canDealGenInherit {
+            alterType.set_canDealGenInherit( false );
+         }
+         genTypeList.insert( alterType );
       }
       case .Map {       
          genTypeList.insert(
@@ -5247,10 +5263,8 @@ local static fn NormalTypeInfo.createBuiltin(
       AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, 
       kind, genTypeList, argTypeList, retTypeList, .Mut, nil, .Async );
    rootProcessInfo.setupImut( info );
-   switch typeTxt {
-      case "__List" {
-         info.set_canDealGenInherit( false );
-      }
+   if not canDealGenInherit {
+      info.set_canDealGenInherit( false );
    }
 
    registBuiltin( idName, typeTxt, kind, info, info, headTypeInfo, scope );
@@ -5642,9 +5656,9 @@ pub fn ProcessInfo.createList_(
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       let mut typeInfo = new NormalTypeInfo(
-         self, true, false, nil, builtinTypeList,
+         self, true, false, nil, builtinTypeList__,
          nil, false, false, false, AccessMode.Pub,
-         "_List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
+         "__List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async );
       typeInfo.set_canDealGenInherit( false );
       return typeInfo;
@@ -7067,14 +7081,19 @@ macro _checkEqualsItemType(
    type1:sym, type2:sym, index:__exp, alt2type:sym, destMut:sym, multiFlag:bool )
 {
    {
-      let retStat1:stat;      
-      let retStat2:stat;      
+      let evalStat:stat;
+      let retStat1:stat;
+      let retStat2:stat;
       
-      if multiFlag {          
+      if multiFlag {
+         evalStat = `{ let ret, mess = workType1.canEvalWith(
+            processInfo, workType2, evalMode, ,,alt2type ); };
          retStat1 = `{ return false, mess };
          retStat2 = `{ return false, nil };
       }
       else {                  
+         evalStat = `{ let ret = workType1.canEvalWith(
+            processInfo, workType2, evalMode, ,,alt2type ); };
          retStat1 = `{ return false };
          retStat2 = `{ return false };
       }
@@ -7082,17 +7101,25 @@ macro _checkEqualsItemType(
    if #,,type1.$itemTypeInfoList >= ,,index and
       #,,type2.$itemTypeInfoList >= ,,index
    {
+      let workType1 = ,,type1.$itemTypeInfoList[ ,,index ];
+      let workType2 = ,,type2.$itemTypeInfoList[ ,,index ];
+      
       // ここの .SetEq を制御する
-      let evalMode;
-      if not ,,type1.$canDealGenInherit or ,,destMut {
-         evalMode = CanEvalType.SetEq;
+      if not ,,type1.$canDealGenInherit {
+         if not workType1.equals( processInfo, workType2 ## ) {
+            ,,retStat2;
+         }
       } else {
-         evalMode = CanEvalType.SetOpIMut;
-      }
-      let ret, mess = (,,type1.$itemTypeInfoList[ ,,index ]).canEvalWith(
-         processInfo, ,,type2.$itemTypeInfoList[ ,,index ], evalMode, ,,alt2type );
-      if not ret {            
-         ,,retStat1;             
+         let evalMode;
+         if ,,destMut {
+            evalMode = CanEvalType.SetEq;
+         } else {
+            evalMode = CanEvalType.SetOpIMut;
+         }
+         ,,evalStat;
+         if not ret {            
+            ,,retStat1;             
+         }
       }
    }
    else {                  

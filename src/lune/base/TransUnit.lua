@@ -8038,7 +8038,7 @@ function TransUnit:checkImplicitCast( alt2typeMap, validCastToGen, dstTypeList, 
                    
                      local castType
                      
-                     if validCastToGen then
+                     if validCastToGen or (dstType:get_kind() == Ast.TypeInfoKind.Alternate and not dstType:get_canDealGenInherit() ) then
                         castType = _lune.unwrapDefault( alt2typeMap[dstType], dstType)
                      else
                       
@@ -8287,14 +8287,14 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    local validImplicitCast = true
    do
       local _switchExp = funcTypeInfo
-      if _switchExp == self.builtinFunc.list_insert or _switchExp == self.builtinFunc.set_add or _switchExp == self.builtinFunc.set_del then
-      elseif _switchExp == self.builtinFunc.list_sort then
+      if _switchExp == self.builtinFunc.list_insert or _switchExp == self.builtinFunc.__list_insert or _switchExp == self.builtinFunc.set_add or _switchExp == self.builtinFunc.set_del then
+      elseif _switchExp == self.builtinFunc.list_sort or _switchExp == self.builtinFunc.__list_sort then
          local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
          local callback = self.processInfo:createFuncAsync( false, false, nil, Ast.TypeInfoKind.FormFunc, self.processInfo:get_dummyParentType(), self.processInfo:get_dummyParentType(), false, false, true, Ast.AccessMode.Pri, "sort", Ast.Async.Async, nil, {genericTypeList[1], genericTypeList[1]}, {Ast.builtinTypeBool}, Ast.MutMode.IMut )
          argTypeList = {callback:get_nilableTypeInfo()}
          
          validImplicitCast = false
-      elseif _switchExp == self.builtinFunc.list_remove then
+      elseif _switchExp == self.builtinFunc.list_remove or _switchExp == self.builtinFunc.__list_remove then
       elseif _switchExp == self.builtinFunc.lns___run then
          self.helperInfo.useRun = true
       end
@@ -9022,7 +9022,7 @@ end
 function TransUnit:getRetTypeInfo( firstToken, refFieldNode, funcTypeInfo, alt2typeMap, genericTypeList, genericsClass )
 
    if refFieldNode ~= nil then
-      if funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
+      if funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.__list_unpack ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
          
          local prefixType = refFieldNode:get_prefix():get_expType()
          if #prefixType:get_itemTypeInfoList() > 0 then
@@ -9054,7 +9054,7 @@ function TransUnit:getRetTypeInfo( firstToken, refFieldNode, funcTypeInfo, alt2t
          if applyType ~= nil then
             workType = applyType
          else
-            if funcTypeInfo == self.builtinFunc.list_remove then
+            if funcTypeInfo == self.builtinFunc.list_remove or funcTypeInfo == self.builtinFunc.__list_remove then
                
                workType = genericTypeList[1]:get_nilableTypeInfo()
             elseif funcTypeInfo:get_kind() == Ast.TypeInfoKind.Func and (funcTypeInfo:get_rawTxt() == "_fromMap" or funcTypeInfo:get_rawTxt() == "_fromStem" ) and genericsClass:isInheritFrom( self.processInfo, Ast.builtinTypeMapping, alt2typeMap ) then
@@ -9346,7 +9346,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
    
    local alt2typeMap, argList = self:prepareExpCall( funcExp:get_pos(), funcTypeInfo, genericTypeList, genericsClass )
    
-   if funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_insert ) then
+   if funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_insert ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.__list_insert ) then
       if argList ~= nil then
          if argList:get_expType():get_nilable() then
             self:addErrMess( argList:get_pos(), "list can't insert nilable" )
@@ -9364,7 +9364,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
          
       end
       
-   elseif funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_remove ) then
+   elseif funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_remove ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.__list_remove ) then
       if #genericTypeList > 0 then
          if genericTypeList[1]:get_nilable() then
             self:addWarnMess( funcExp:get_pos(), "remove() is dangerous for nilable's list." )
@@ -9756,7 +9756,13 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
    do
       local _switchExp = classTypeInfo:get_kind(  )
       if _switchExp == Ast.TypeInfoKind.List then
-         classTypeInfo = Ast.builtinTypeList
+         if classTypeInfo:get_canDealGenInherit() then
+            classTypeInfo = Ast.builtinTypeList
+         else
+          
+            classTypeInfo = Ast.builtinTypeList__
+         end
+         
       elseif _switchExp == Ast.TypeInfoKind.Array then
          classTypeInfo = Ast.builtinTypeArray
       elseif _switchExp == Ast.TypeInfoKind.Set then
@@ -9959,7 +9965,13 @@ function TransUnit:dumpFieldComp( writer, isPrefixType, prefixTypeInfo, pattern,
    do
       local _switchExp = prefixTypeInfo:get_kind(  )
       if _switchExp == Ast.TypeInfoKind.List then
-         typeInfo = Ast.builtinTypeList
+         if prefixTypeInfo:get_canDealGenInherit() then
+            typeInfo = Ast.builtinTypeList
+         else
+          
+            typeInfo = Ast.builtinTypeList__
+         end
+         
       elseif _switchExp == Ast.TypeInfoKind.Array then
          typeInfo = Ast.builtinTypeArray
       elseif _switchExp == Ast.TypeInfoKind.Set then
@@ -10536,7 +10548,7 @@ function TransUnit:analyzeExpField( firstToken, fieldToken, mode, prefixExp )
    end
    
    
-   if typeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or typeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
+   if typeInfo:equals( self.processInfo, self.builtinFunc.list_unpack ) or typeInfo:equals( self.processInfo, self.builtinFunc.__list_unpack ) or typeInfo:equals( self.processInfo, self.builtinFunc.array_unpack ) then
       self.helperInfo.useUnpack = true
    elseif typeInfo:equals( self.processInfo, self.builtinFunc.str_replace ) then
       self.helperInfo.useStrReplace = true
