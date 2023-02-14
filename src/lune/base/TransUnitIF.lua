@@ -406,6 +406,15 @@ end
 function NSInfo:addCondRet( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, expOkType, exp, kind )
 
    self.condRetCount = self.condRetCount + 1
+   
+   if kind ~= Nodes.CondRetKind.Two then
+      if #exp:get_expTypeList() > 1 then
+         exp = Nodes.ExpMultiTo1Node.create( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, {exp:get_expType()}, exp )
+      end
+      
+   end
+   
+   
    local condRetNode = Nodes.CondRetNode.create( nodeManager, pos, inTestBlock, isInAnalyzeArgMode, {expOkType}, exp, kind, self.condRetCount )
    table.insert( self.condRetNodeList, condRetNode )
    return condRetNode

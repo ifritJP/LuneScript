@@ -249,9 +249,18 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
    pub fn addCondRet(
       nodeManager:Nodes.NodeManager, pos:&Types.Position,
       inTestBlock:bool, isInAnalyzeArgMode:bool, expOkType:&Ast.TypeInfo,
-      exp:&Nodes.Node, kind:Nodes.CondRetKind ) mut : Nodes.CondRetNode
+      mut exp:&Nodes.Node, kind:Nodes.CondRetKind ) mut : Nodes.CondRetNode
    {
       self.condRetCount = self.condRetCount + 1;
+
+      if kind ~= .Two {
+         if #exp.$expTypeList > 1 {
+            exp = Nodes.ExpMultiTo1Node.create(
+               nodeManager, pos, inTestBlock,
+               isInAnalyzeArgMode, [ exp.$expType ], exp);
+         }
+      }
+      
       let mut condRetNode = Nodes.CondRetNode.create(
          nodeManager, pos, inTestBlock,
          isInAnalyzeArgMode, [ expOkType ], exp, kind, self.condRetCount );
