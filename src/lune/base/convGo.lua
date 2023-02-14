@@ -4441,7 +4441,6 @@ end
 
 
 function convFilter:processDeclVar( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processDeclVar'
 
    do
       local condRetInfo = node:get_condRetInfo()
@@ -4536,9 +4535,6 @@ function convFilter:processDeclVar( node, opt )
          self:popIndent(  )
          
          self:writeln( "}" )
-      else 
-         
-            Util.err( string.format( "not support -- %s", __func__) )
       end
    end
    

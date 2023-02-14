@@ -383,9 +383,6 @@ pub override fn dumpFilter.processDeclVar(
    //       filter( _exp, self, opt.nextOpt() );
    //    }
    // }
-   if! node.$syncBlock {
-      filter( _exp, self, opt.nextOpt() );
-   }
 };
 pub override fn dumpFilter.processDeclArg(
    node: &Nodes.DeclArgNode, opt:Opt ) mut

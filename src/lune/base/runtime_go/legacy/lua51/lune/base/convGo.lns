@@ -3545,9 +3545,6 @@ pub override fn convFilter.processDeclVar(
 
          self.writeln( "}" );
       }
-      default {
-         Util.err( "not support -- %s" (__func__) ); // バグ
-      }
    }
 }
 
@@ -6004,85 +6001,69 @@ pub override fn convFilter.processExpRef(
 pub override fn convFilter.processExpRefItem(
    node: &Nodes.ExpRefItemNode, opt: Opt ) mut
 {
+
+   macro _access(lnsType:str,isPrefixStem:__exp, getBlock:__block) {
+      {}
+      let mut nilAccFin = false;
+      if node.$nilAccess {
+         if not node.$val.hasNilAccess() {
+            self.writeRaw( "%s.NilAccFin( %s.NilAccPush( " (getEnvTxt, getEnvTxt) );
+            filter( node.$val, self, node );
+            self.writeln( ") && " );
+         } else {
+            filter( node.$val, self, node );
+            self.writeln( "&&" );
+         }
+         self.writeRaw( "%s.NilAccPush( %s.NilAccPop().(%s)"
+                        (getEnvTxt,getEnvTxt, ,,lnsType));
+      } else {
+         filter( node.$val, self, node );
+         if ,,isPrefixStem {
+            self.writeRaw( ".(%s)" (,,lnsType) );
+         }
+      }
+      ,,getBlock;
+      self.outputStem2Type( node.$expType );
+      if node.$nilAccess {
+         self.writeRaw( "))" );
+         if nilAccFin {
+            self.writeRaw( ")" );
+         }
+      }
+   }
+
+   
    let getEnvTxt = self.env.getEnv();
    let prefixType = node.$val.$expType.$nonnilableType;
    switch prefixType.$kind {
       case .Ext {
-         if node.$nilAccess {
-            self.writeRaw( "%s.NilAccFin( %s.NilAccPush( " (getEnvTxt, getEnvTxt) );
-            filter( node.$val, self, node );
-            self.writeRaw( ") && " );
-            self.writeRaw(
-               "%s.NilAccPush( %s.NilAccPop().(*Lns_luaValue)"
-               (getEnvTxt, getEnvTxt ) );
-         } else {
-            filter( node.$val, self, node );
-            if prefixType.$extedType.$kind == .Stem {
-               self.writeRaw( ".(*Lns_luaValue)" );
+         _access( "*Lns_luaValue", prefixType.$extedType.$kind == .Stem, {
+            self.writeRaw( ".GetAt(" );
+            if! let index = node.$index {
+               filter( index, self, node );
+            } else {
+               self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
             }
-         }
-         self.writeRaw( ".GetAt(" );
-         if! let index = node.$index {
-            filter( index, self, node );
-         } else {
-            self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
-         }
-         self.writeRaw( ")" );
-         self.outputStem2Type( node.$expType );
+            self.writeRaw( ")" );
+         } );
       }
       case .List, .Array {
-         if node.$nilAccess {
-            if not node.$val.hasNilAccess() {
-               self.writeln( "%s.NilAccFin( %s.NilAccPush(" (getEnvTxt, getEnvTxt) );
-               filter( node.$val, self, node );
-               self.writeln( ") && " );
-            } else {
-               filter( node.$val, self, node );
-               self.writeln( "&&" );
-            }
-            self.writeRaw( "%s.NilAccPush( %s.NilAccPop().(*LnsList)"
-                           (getEnvTxt, getEnvTxt));
+         _access( "*LnsList", prefixType.$kind == .Stem, {
             self.writeRaw( ".GetAt(" );
             filter( unwrap node.$index, self, node );
             self.writeRaw( ")" );
-            self.outputStem2Type( node.$expType );
-            self.writeRaw( "))" );
-         } else {
-            filter( node.$val, self, node );
-            self.writeRaw( ".GetAt(" );
-            filter( unwrap node.$index, self, node );
-            self.writeRaw( ")" );
-            self.outputStem2Type( node.$expType );
-         }
+         } );
       }
       case .Map {
-         if node.$nilAccess {
-            if not node.$val.hasNilAccess() {
-               self.writeln( "%s.NilAccFin( %s.NilAccPush(" (getEnvTxt,getEnvTxt));
-               filter( node.$val, self, node );
-               self.writeln( ") && " );
+         _access( "*LnsMap", prefixType.$kind == .Stem, {
+            self.writeRaw( ".Get(" );
+            if! let index = node.$index {
+               filter( index, self, node );
             } else {
-               filter( node.$val, self, node );
-               self.writeln( "&&" );
+               self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
             }
-            self.writeRaw( "%s.NilAccPush( %s.NilAccPop().(*LnsMap)" (getEnvTxt,getEnvTxt));
-         } else {
-            filter( node.$val, self, node );
-            if prefixType.$kind == .Stem {
-               self.writeRaw( ".(*LnsMap)" );
-            }
-         }
-         self.writeRaw( ".Get(" );
-         if! let index = node.$index {
-            filter( index, self, node );
-         } else {
-            self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
-         }
-         self.writeRaw( ")" );
-         self.outputStem2Type( node.$expType );
-         if node.$nilAccess {
-            self.writeRaw( "))" );
-         }
+            self.writeRaw( ")" );
+         } );
       }
       case .Stem {
          self.writeRaw( "Lns_FromStemGetAt(" );

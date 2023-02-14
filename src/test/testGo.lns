@@ -2990,3 +2990,32 @@ _section();
    let hoge = func()...;
    hoge.func();
 }
+_section();
+fn func1__() : str! {
+   return "hoge";
+}
+pub let! val__ = func1__() {
+   val__ = "aaa";
+} then {
+   print( "then", val__ );
+};  
+print( "next", val__ );
+pub let! val1__ = func1__() {
+   val1__ = "aaa";
+};
+print( "next", val1__ );
+
+
+fn func2__() : str! {
+   return nil;
+}
+pub let! val2__ = func2__() {
+   val2__ = "aaa";
+} then {
+   print( "then", val2__ );
+};  
+print( "next", val2__ );
+pub let! val3__ = func2__() {
+   val3__ = "aaa";
+};
+print( "next", val3__ );

@@ -260,24 +260,24 @@ class GetTest2 {
    print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
 }
 
-{
-   let mut hoge1: int = 1;
-   let mut hoge2: int = 2;
-   let val3:int! = 3;
-   let val4:int! = 4;
-   sync! hoge1, hoge2 = val3, val4 {
-      error( "NG" );
-   }
-   then {
-      print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
-   }
-   do {
-      print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
-      hoge1 = hoge1 * 10;
-      hoge2 = hoge2 * 10;
-   };
-   print( "30 = %d, 40 = %d" ( hoge1, hoge2 ) );
-}
+// {
+//    let mut hoge1: int = 1;
+//    let mut hoge2: int = 2;
+//    let val3:int! = 3;
+//    let val4:int! = 4;
+//    sync! hoge1, hoge2 = val3, val4 {
+//       error( "NG" );
+//    }
+//    then {
+//       print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+//    }
+//    do {
+//       print( "3 = %d, 4 = %d" ( hoge1, hoge2 ) );
+//       hoge1 = hoge1 * 10;
+//       hoge2 = hoge2 * 10;
+//    };
+//    print( "30 = %d, 40 = %d" ( hoge1, hoge2 ) );
+// }
 
 
 

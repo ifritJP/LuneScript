@@ -3729,7 +3729,8 @@ fn TransUnit.analyzeExpOp2(
                   prefixExpType = prefixExpType.$nonnilableType;
                }
 
-               let mut expectType = Ast.builtinTypeNone;
+               //let mut expectType = Ast.builtinTypeNone;
+               let mut expectType = prefixExpType;
                if! prefixExpType.$srcTypeInfo@@@Ast.GenericTypeInfo {
                   expectType = _exp;
                } else {

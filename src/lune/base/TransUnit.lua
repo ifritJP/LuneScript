@@ -7143,7 +7143,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag )
+   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, Ast.MutMode.IMut, accessMode, unwrapFlag )
    
    local condRetInfo = self:checkCondRet(  )
    
@@ -7191,18 +7191,11 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local syncScope = self:get_scope()
-   if mode == Nodes.DeclVarMode.Sync then
-      syncScope = self:pushScope( Ast.ScopeKind.Other )
-   end
-   
-   
    local nsInfo = self:get_curNsInfo()
    
    local symbolInfoList = {}
    
    local varList = {}
-   local syncSymbolList = {}
    for index, letVarInfo in ipairs( letVarList ) do
       local varName = letVarInfo.varName
       local typeInfo = typeInfoList[index]
@@ -7218,19 +7211,8 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
          self:addErrMess( varName.pos, string.format( 'need type -- %s', varName.txt) )
       end
       
-      if mode == Nodes.DeclVarMode.Sync then
-         
-         do
-            local symInfo = self:get_scope():getSymbolInfo( varName.txt, self:get_scope(), true, self.scopeAccess )
-            if symInfo ~= nil then
-               table.insert( syncSymbolList, symInfo )
-            end
-         end
-         
-      end
       
-      
-      if mode == Nodes.DeclVarMode.Let or mode == Nodes.DeclVarMode.Sync then
+      if mode == Nodes.DeclVarMode.Let then
          if mode == Nodes.DeclVarMode.Let then
             self:checkShadowing( varName.pos, varName.txt, self:get_scope() )
          end
@@ -7263,7 +7245,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   if mode ~= Nodes.DeclVarMode.Sync and self.macroScope then
+   if self.macroScope then
       self.macroCtrl:registVar( symbolInfoList )
    end
    
@@ -7298,7 +7280,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       if unwrapBlock ~= nil then
          do
             local _switchExp = mode
-            if _switchExp == Nodes.DeclVarMode.Let or _switchExp == Nodes.DeclVarMode.Sync then
+            if _switchExp == Nodes.DeclVarMode.Let then
                local breakKind = unwrapBlock:getBreakKind( Nodes.CheckBreakMode.Normal )
                for __index, symbolInfo in ipairs( symbolInfoList ) do
                   
@@ -7341,17 +7323,9 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local syncBlock = nil
-   if mode == Nodes.DeclVarMode.Sync then
-      self:checkNextToken( "do" )
-      syncBlock = self:analyzeBlock( Nodes.BlockKind.LetUnwrapThenDo, TentativeMode.Simple, syncScope, nil )
-      self:popScope(  )
-   end
-   
-   
    self:checkNextToken( ";" )
    
-   local node = Nodes.DeclVarNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mode, accessMode, false, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncSymbolList, syncBlock )
+   local node = Nodes.DeclVarNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mode, accessMode, false, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock )
    
    return node
 end
@@ -12289,8 +12263,6 @@ function TransUnit:analyzeStatement( termTxt )
          
       elseif token.txt == "unwrap" then
          statement = self:analyzeUnwrap( token )
-      elseif token.txt == "sync" then
-         statement = self:analyzeDeclVar( Nodes.DeclVarMode.Sync, Ast.AccessMode.Local, token )
       elseif token.txt == "__scope" then
          statement = self:analyzeScope( token )
       elseif token.txt == "_lune_control" then

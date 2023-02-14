@@ -4187,7 +4187,7 @@ fn TransUnit.analyzeDeclVar(
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp(
          firstToken.pos, mode == .Let,
-         mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut,
+         Ast.MutMode.IMut,
          accessMode, unwrapFlag );
 
    let condRetInfo = self.checkCondRet();
@@ -4242,10 +4242,6 @@ fn TransUnit.analyzeDeclVar(
    }
 
 
-   let mut syncScope:Ast.Scope = self.$scope;
-   if mode == .Sync {
-      syncScope = self.pushScope( .Other ## );
-   }
 
 
    let mut nsInfo = self.$curNsInfo;
@@ -4253,7 +4249,6 @@ fn TransUnit.analyzeDeclVar(
    let mut symbolInfoList: List<&Ast.SymbolInfo> = [];
 
    let mut varList:List<&Nodes.VarInfo> = [];
-   let mut syncSymbolList:List<&Ast.SymbolInfo> = [];
    foreach letVarInfo, index in letVarList {
       let varName = letVarInfo.varName;
       let typeInfo = typeInfoList[ index ];
@@ -4271,16 +4266,8 @@ fn TransUnit.analyzeDeclVar(
          self.addErrMess(
             varName.pos, 'need type -- %s' ( varName.txt ) );
       }
-      if mode == .Sync {
-         // スコープに登録する前に、シンボルを検索
-         if! let symInfo = self.$scope.getSymbolInfo(
-            varName.txt, self.$scope, true, self.scopeAccess )
-         {
-            syncSymbolList.insert( symInfo );
-         }
-      }
       // スコープに変数を登録
-      if mode == .Let or mode == .Sync {
+      if mode == .Let {
          if mode == .Let {
             self.checkShadowing( varName.pos, varName.txt, self.$scope );
             // if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
@@ -4320,7 +4307,7 @@ fn TransUnit.analyzeDeclVar(
    }
 
 
-   if mode ~= .Sync and self.macroScope {
+   if self.macroScope {
       self.macroCtrl.registVar( symbolInfoList );
    }
 
@@ -4357,7 +4344,7 @@ fn TransUnit.analyzeDeclVar(
       // unwrap ブロック後には変数にデータがセットされているものとする。
       when! unwrapBlock {
          _switch mode {
-            case .Let, .Sync {
+            case .Let {
                let breakKind = unwrapBlock.getBreakKind( .Normal );
                foreach symbolInfo in symbolInfoList {
                   // let symbolInfo =
@@ -4397,13 +4384,6 @@ fn TransUnit.analyzeDeclVar(
       }
    }
 
-   let mut syncBlock: Nodes.BlockNode! = nil;
-   if mode == .Sync {
-      self.checkNextToken( "do" );
-      syncBlock = self.analyzeBlock( .LetUnwrapThenDo, .Simple, syncScope, nil );
-      self.popScope();
-   }
-
    self.checkNextToken( ";" );
 
    let mut node = Nodes.DeclVarNode.create(
@@ -4411,7 +4391,7 @@ fn TransUnit.analyzeDeclVar(
       self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], mode, accessMode, false, condRetInfo,
       varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock,
-      thenBlock, syncSymbolList, syncBlock );
+      thenBlock );
 
    return node;
 }

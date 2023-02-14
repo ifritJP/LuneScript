@@ -415,6 +415,15 @@ pub fn getReadyCode( depPath:str, tgtPath:str ): bool {
    return false;
 }
 
+pub fn readFile( path:str ) : str! {
+   let! mut fileObj = io.open( path ## ) {
+      return nil;
+   };
+   let txt = fileObj.read( "*a" );
+   fileObj.close();
+   return txt;
+}
+
 pub fn scriptPath2Module( path:str ):str {
    if path.find( "^/" ## ) {
       err( "script must be relative-path -- " .. path ); // 要対応

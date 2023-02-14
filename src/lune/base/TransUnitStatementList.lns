@@ -191,9 +191,9 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       elseif token.txt == "unwrap" {
          statement = self.analyzeUnwrap( token );
       }
-      elseif token.txt == "sync" {
-         statement = self.analyzeDeclVar( .Sync, .Local, token );
-      }
+      // elseif token.txt == "sync" {
+      //    statement = self.analyzeDeclVar( .Sync, .Local, token );
+      // }
       elseif token.txt == "__scope" {
          statement = self.analyzeScope( token );
       }

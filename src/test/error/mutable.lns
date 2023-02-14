@@ -28,19 +28,19 @@
    };
 }
 
-{
-   let val1, val2;
-   sync! val1, val2 = 1, 2 {
-      val1 = 1;
-      val2 = 2;
-   }
-   then {
-      val1 = 1;
-      val2 = 2;
-   }
-   do {
-   };
-}
+// {
+//    let val1, val2;
+//    sync! val1, val2 = 1, 2 {
+//       val1 = 1;
+//       val2 = 2;
+//    }
+//    then {
+//       val1 = 1;
+//       val2 = 2;
+//    }
+//    do {
+//    };
+// }
 
 class Test {
    pub let val:int;

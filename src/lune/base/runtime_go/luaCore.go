@@ -1,3 +1,4 @@
+//go:build cgo && !gopherlua && !azuregolua
 // +build cgo,!gopherlua,!azuregolua
 
 /*
@@ -87,6 +88,7 @@ func AddlnsSrcInfo(key string, code []byte) {
 // lua の package.preload に登録される関数。
 // lua の第一引数にロードするモジュール名が渡される。
 // 戻り値として、ロード後の値を push する。
+//
 //export LnsPreload
 func LnsPreload(vm *C.lua_State) C.int {
 	mod := lua_tolstring(vm, 1)
@@ -185,9 +187,9 @@ func lua_createtable(vm *C.lua_State) {
 	C.lua_createtable(vm, C.int(0), C.int(0))
 }
 
-// func lua_geti(vm *C.lua_State, index int, fieldPos int ) int {
-//     return int(C.lua_geti(vm, C.int(index), C.longlong(fieldPos) ))
-// }
+//	func lua_geti(vm *C.lua_State, index int, fieldPos int ) int {
+//	    return int(C.lua_geti(vm, C.int(index), C.longlong(fieldPos) ))
+//	}
 func lua_gettable(vm *C.lua_State, index int) {
 	C.lua_gettable(vm, C.int(index))
 }

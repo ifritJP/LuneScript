@@ -1794,7 +1794,6 @@ pub class VarInfo {
 
 pub enum DeclVarMode {
    Let,
-   Sync,
    Unwrap,
 }
 
@@ -1810,9 +1809,8 @@ _declNodeClass( "DeclVar", Node, false, false, true,
                   { "typeInfoList": "&List<&Ast.TypeInfo>" },
                   { "unwrapFlag": "bool" },
                   { "unwrapBlock": "&BlockNode!" },
-                  { "thenBlock": "&BlockNode!" },
-                  { "syncVarList": "&List<&Ast.SymbolInfo>" },
-                  { "syncBlock": "&BlockNode!" } ]
+                  { "thenBlock": "&BlockNode!" }
+                ]
 );
 
 pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
@@ -1825,10 +1823,6 @@ pub override fn DeclVarNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
       if! let thenBlock = self.thenBlock {
          work = thenBlock.getBreakKind( checkMode );
          _setBreakKind( work, kind, true, checkMode );
-         if! let syncBlock = self.syncBlock {
-            work = syncBlock.getBreakKind( checkMode );
-            _setBreakKind( work, kind, true, checkMode );
-         }
          return kind;
       }
       if checkMode ~= .Normal and checkMode ~= .Return {

@@ -3786,7 +3786,6 @@ end
 
 
 function convFilter:processDeclVar( node, opt )
-   local __func__ = '@lune.@base.@convPython.convFilter.processDeclVar'
 
    do
       local _switchExp = node:get_mode()
@@ -3874,9 +3873,6 @@ function convFilter:processDeclVar( node, opt )
          self:popIndent(  )
          
          self:writeln( "}" )
-      else 
-         
-            Util.err( string.format( "not support -- %s", __func__) )
       end
    end
    

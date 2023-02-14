@@ -147,7 +147,7 @@ class ModuleMgr {
 }
 
 
-class Front extend (frontInterface.frontInterface) {
+pub class Front extend (frontInterface.frontInterface) {
    let mut option:&Option.Option;
    /** import 済みのモジュールと、その LoadInfoの紐付け。 */ 
    let mut loadedMap:Map<str,LoadInfo>;
@@ -698,7 +698,7 @@ metaTime
 /**
 指定 stream 内の LuneScript をコンパイルし、 Lua コードを取得する。
 */
-local fn Front.convertLns2LuaCode(
+pub fn Front.convertLns2LuaCode(
    importModuleInfo:frontInterface.ImportModuleInfo, analyzeMode:TransUnit.AnalyzeMode,
    parserSrc:&Types.ParserSrc, baseDir:str!, stream:iStream, streamName:str ) mut : str
 {
@@ -1138,9 +1138,10 @@ pub fn Front.loadMeta(
       } else {
          if! let lnsPath = self.searchModule( mod, baseDir, nil ) {
             let mut meta:frontInterface.ModuleMeta! = nil;
+            let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
 
             if not self.targetSet.has( orgMod ) {
-               let mut luaPath:str! = string.gsub( lnsPath, "%.lns$", ".lua" );
+               luaPath = string.gsub( lnsPath, "%.lns$", ".lua" );
                if not baseDir {
                   if! let dir = self.option.outputDir {
                      luaPath = self.searchLuaFile( orgMod, nil, dir );
@@ -1191,6 +1192,15 @@ pub fn Front.loadMeta(
 
             when! meta {
 	       self.moduleMgr.addMeta( orgMod, meta );
+               if self.option.mode == .Exec {
+                  // self.regConvertedMap 時間短縮のため、 .Exec のときのみ
+                  // luaCode を登録する。
+                  when! luaPath {
+                     if! let luaCode = Util.readFile( luaPath ) {
+                        self.regConvertedMap( orgMod, luaCode, meta );
+                     }
+                  }
+               }
             }
             else {
 	       let mut metawork, luaTxt = self.loadParserToLuaCode(
@@ -1522,12 +1532,10 @@ fn Front.outputBootC( scriptPath:str )
    // convCC.outputBootcode( stream, initModule );
 }
 
-pub fn convertLnsCode2LuaCodeWithOpt(
-   option:&Option.Option, lnsCode:str, path:str, baseDir:str! ) __noasync : str
+pub fn Front.convertLnsCode2LuaCodeWithOpt(
+   option:&Option.Option, lnsCode:str, path:str, baseDir:str! ) mut : str
 {
-   let mut front = new Front( option ## );
-   
-   return front.convertLns2LuaCode(
+   return self.convertLns2LuaCode(
       new frontInterface.ImportModuleInfo(), .Compile,
       Types.ParserSrc.LnsCode( lnsCode, path, nil ), baseDir,
       new Parser.TxtStream( lnsCode ), path );
@@ -1540,7 +1548,8 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str, baseDir:str! ) __noasync :
    option.useLuneModule = Option.getRuntimeModule();
    option.useIpairs = true;
 
-   return convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir );
+   let mut front = new Front( option ## );
+   return front.convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir );
 }
 
 fn getBaseDir( path:str, userProjDir:str! ) : str, str! {
@@ -1691,20 +1700,21 @@ pub fn build( option:Option.Option, astCallback:AstCallback! ) mut {
 }
 
 
-fn Front.executeLns( path:str, baseDir:str! ) mut : Luaval<&stem>!, str {
-   // // LuneScript の runtime をロードするために runLuaOnLns() を実行。
-   // DependLuaOnLns.runLuaOnLns( "", nil, false );
+pub fn Front.setupPreloadWithImportedModules( asyncFlag:bool ) {
+   macro _setupPreload( block:__block ) {
+      {}
+      if asyncFlag {
+         __luaDepend {
+            ,,block;
+         }
+      } else {
+         __luaLock {
+            ,,block;
+         }
+      }
+   }
 
-   let mod = Util.scriptPath2ModuleFromProjDir( path, baseDir );
-
-   // 指定の path の Lns コードを Lua コードに変換する。
-   // この時に path が import している submod の lua への変換を行なう。
-   let parserSrc = Types.ParserSrc.LnsPath( baseDir, path, mod, nil );
-   let _, luaCode = self.loadParserToLuaCode(
-      new frontInterface.ImportModuleInfo(), parserSrc, path, mod, baseDir )**;
-   Log._log2( .Debug, "luacode: " .. luaCode );
-
-   __luaLock {
+   _setupPreload( {
       // import( submod ) の処理で、変換済みの submod の lua をロードするように
       // package.preload を設定する。
       let subModPreLoad = ```
@@ -1733,8 +1743,24 @@ end
          Util.err( "failed to preloadFunc" ); // バグ
       };
           (preloadFunc@@form)( self.convertedMap, Log.getLevel() >= Log.Level.Debug );
-   }
+   } );
+}
 
+fn Front.executeLns( path:str, baseDir:str! ) mut : Luaval<&stem>!, str {
+   // // LuneScript の runtime をロードするために runLuaOnLns() を実行。
+   // DependLuaOnLns.runLuaOnLns( "", nil, false );
+
+   let mod = Util.scriptPath2ModuleFromProjDir( path, baseDir );
+
+   // 指定の path の Lns コードを Lua コードに変換する。
+   // この時に path が import している submod の lua への変換を行なう。
+   let parserSrc = Types.ParserSrc.LnsPath( baseDir, path, mod, nil );
+   let _, luaCode = self.loadParserToLuaCode(
+      new frontInterface.ImportModuleInfo(), parserSrc, path, mod, baseDir )**;
+   Log._log2( .Debug, "luacode: " .. luaCode );
+
+   self.setupPreloadWithImportedModules( false );
+   
    // path の luacode を実行する。
    // preload を設定しているので 変換済みの submod の lua がロードされる。
    return loadFromLuaTxt( luaCode ), mod;

@@ -94,9 +94,6 @@ mfunc1	mfunc1
 567 = 567, 890 = 890
 3 = 3, 4 = 4
 3 = 3, 4 = 4
-3 = 3, 4 = 4
-3 = 3, 4 = 4
-30 = 30, 40 = 40
 nil
 1	not nil
 OK
@@ -1437,22 +1434,15 @@ test/error/enum.lns:65:4: warning: 'valtest' var isn't accessed
 test/error/enum.lns:77:8: warning: 'valtest' var isn't accessed
 test/error/enum.lns:112:8: warning: 'val1' var isn't accessed
 test/error/eof.lns:46:3: (test/error/eof.lns:46:3: (macro _test_letunwrap):43:4): error: has no nilable
-test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):50:4): error: has no nilable
 test/error/eof.lns:56:1: error: EOF
 test/error/eof.lns:33:3: (test/error/eof.lns:33:3: (macro _test_switch):30:4): warning: 'switch' should have 'case' blocks.
 test/error/eof.lns:46:3: (test/error/eof.lns:46:3: (macro _test_letunwrap):43:9): warning: 'val' var isn't accessed
-test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):49:8): warning: 'val' var isn't accessed
-test/error/eof.lns:55:3: (test/error/eof.lns:55:3: (macro _test_syncunwrap):50:10): warning: 'val' var isn't accessed
 test/error/mutable.lns:5:4: warning: 'val1' var isn't accessed
 test/error/mutable.lns:6:4: warning: 'val2' var isn't accessed
 test/error/mutable.lns:15:7: warning: 'val1' var isn't accessed
 test/error/mutable.lns:16:7: warning: 'val2' var isn't accessed
 test/error/mutable.lns:26:7: warning: 'val1' var isn't accessed
 test/error/mutable.lns:27:7: warning: 'val2' var isn't accessed
-test/error/mutable.lns:32:8: warning: 'val1' var isn't accessed
-test/error/mutable.lns:32:14: warning: 'val2' var isn't accessed
-test/error/mutable.lns:38:7: warning: 'val1' var isn't accessed
-test/error/mutable.lns:39:7: warning: 'val2' var isn't accessed
 test/error/mutable.lns:98:4: warning: 'val' var isn't accessed
 test/error/mutable.lns:219:7: warning: 'func' var isn't accessed
 test/error/mutable.lns:223:7: warning: 'func2' var isn't accessed
@@ -1466,11 +1456,6 @@ test/error/mutable.lns:12:12: error: this is not mutable variable. -- val2
 test/error/mutable.lns:15:12: error: this is not mutable variable. -- val1
 test/error/mutable.lns:16:12: error: this is not mutable variable. -- val2
 test/error/mutable.lns:21:4: error: has no nilable
-test/error/mutable.lns:33:4: error: has no nilable
-test/error/mutable.lns:34:12: error: this is not mutable variable. -- val1
-test/error/mutable.lns:35:12: error: this is not mutable variable. -- val2
-test/error/mutable.lns:38:12: error: this is not mutable variable. -- val1
-test/error/mutable.lns:39:12: error: this is not mutable variable. -- val2
 test/error/mutable.lns:63:18: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:66:17: error: this is not mutable variable. -- val2
 test/error/mutable.lns:67:16: error: this node can not be l-value. -- ExpRefItem
@@ -1485,13 +1470,13 @@ test/error/mutable.lns:89:6: error: can't access mutable method. -- &Test.func1
 test/error/mutable.lns:90:6: error: can't access mutable method. -- &Test.func2
 test/error/mutable.lns:93:12: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:94:10: error: this node can not be l-value. -- ExpRefItem
-test/error/mutable.lns:100:9: error: = operator: exp(1) type mismatch List<int>(1147) <- &List<int>(1052): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:100:9: error: = operator: exp(1) type mismatch List<int>(1141) <- &List<int>(1046): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/mutable.lns:104:9: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:118:17: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:124:11: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:128:4: error: unmatch value type (index:1) List<int> <- &List<int> -- 
 test/error/mutable.lns:130:11: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:136:4: error: return: exp(1) type mismatch @test.@error.@mutable.Test2!(1225) <- &@test.@error.@mutable.Test2!(1227): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:136:4: error: return: exp(1) type mismatch @test.@error.@mutable.Test2!(1219) <- &@test.@error.@mutable.Test2!(1221): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/mutable.lns:168:17: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:169:17: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:170:17: error: can't access mutable method. -- &List<int>.insert
@@ -1521,8 +1506,8 @@ test/error/mutable.lns:217:11: error: can't access mutable method. -- &List<int>
 test/error/mutable.lns:225:15: error: can't access mutable method. -- &List<int>.insert
 test/error/mutable.lns:228:12: error: can't access mutable method. -- &List<&List<int>>.insert
 test/error/mutable.lns:229:15: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@mutable.Super>(1538) <- List<@test.@error.@mutable.Sub1>(1577): index 1 -- 
-test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &List<List<@test.@error.@mutable.Super>>(1558) <- List<List<@test.@error.@mutable.Sub1>>(1592): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@mutable.Super>(1532) <- List<@test.@error.@mutable.Sub1>(1571): index 1 -- 
+test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &List<List<@test.@error.@mutable.Super>>(1552) <- List<List<@test.@error.@mutable.Sub1>>(1586): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/var.lns:2:8: warning: 'val' var isn't accessed
 test/error/var.lns:4:8: warning: 'val2' var isn't accessed
 test/error/var.lns:8:8: warning: 'val1' var isn't accessed
@@ -2504,10 +2489,6 @@ test/error/dis_mutable.lns:15:7: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:16:7: warning: 'val2' var isn't accessed
 test/error/dis_mutable.lns:26:7: warning: 'val1' var isn't accessed
 test/error/dis_mutable.lns:27:7: warning: 'val2' var isn't accessed
-test/error/dis_mutable.lns:32:8: warning: 'val1' var isn't accessed
-test/error/dis_mutable.lns:32:14: warning: 'val2' var isn't accessed
-test/error/dis_mutable.lns:38:7: warning: 'val1' var isn't accessed
-test/error/dis_mutable.lns:39:7: warning: 'val2' var isn't accessed
 test/error/dis_mutable.lns:98:4: warning: 'val' var isn't accessed
 test/error/dis_mutable.lns:219:7: warning: 'func' var isn't accessed
 test/error/dis_mutable.lns:223:7: warning: 'func2' var isn't accessed
@@ -2515,11 +2496,10 @@ test/error/dis_mutable.lns:227:7: warning: 'func3' var isn't accessed
 test/error/dis_mutable.lns:253:15: warning: 'work' var isn't accessed
 test/error/dis_mutable.lns:10:4: error: has no nilable
 test/error/dis_mutable.lns:21:4: error: has no nilable
-test/error/dis_mutable.lns:33:4: error: has no nilable
-test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1508) <- List<@test.@error.@dis_mutable.Sub1>(1547): index 1 -- 
-test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1516) <- List<@test.@error.@dis_mutable.Sub1>(1547): index 1 -- 
-test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1526) <- List<List<@test.@error.@dis_mutable.Sub1>>(1562): index 1 -- 
-test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1541) <- List<List<@test.@error.@dis_mutable.Sub1>>(1562): index 1 -- 
+test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1502) <- List<@test.@error.@dis_mutable.Sub1>(1541): index 1 -- 
+test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1510) <- List<@test.@error.@dis_mutable.Sub1>(1541): index 1 -- 
+test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1520) <- List<List<@test.@error.@dis_mutable.Sub1>>(1556): index 1 -- 
+test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1535) <- List<List<@test.@error.@dis_mutable.Sub1>>(1556): index 1 -- 
 -- not exist file access --
 --lua
 local _moduleObj = {}

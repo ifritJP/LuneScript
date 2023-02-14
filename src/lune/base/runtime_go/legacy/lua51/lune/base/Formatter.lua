@@ -896,14 +896,6 @@ function FormatterFilter:processDeclVar( node, opt )
       end
    end
    
-   do
-      local _exp = node:get_syncBlock()
-      if _exp ~= nil then
-         self:write( "do" )
-         filter( _exp, self, opt:nextOpt( node ) )
-      end
-   end
-   
    self:writeln( ";" )
 end
 

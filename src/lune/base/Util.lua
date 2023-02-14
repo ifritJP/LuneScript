@@ -676,6 +676,21 @@ local function getReadyCode( depPath, tgtPath )
 end
 _moduleObj.getReadyCode = getReadyCode
 
+local function readFile( path )
+
+   local fileObj = io.open( path )
+   if  nil == fileObj then
+      local _fileObj = fileObj
+   
+      return nil
+   end
+   
+   local txt = fileObj:read( "*a" )
+   fileObj:close(  )
+   return txt
+end
+_moduleObj.readFile = readFile
+
 local function scriptPath2Module( path )
 
    if path:find( "^/" ) then

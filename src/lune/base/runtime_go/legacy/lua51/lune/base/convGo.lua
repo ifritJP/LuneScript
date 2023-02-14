@@ -4441,7 +4441,6 @@ end
 
 
 function convFilter:processDeclVar( node, opt )
-   local __func__ = '@lune.@base.@convGo.convFilter.processDeclVar'
 
    do
       local condRetInfo = node:get_condRetInfo()
@@ -4536,9 +4535,6 @@ function convFilter:processDeclVar( node, opt )
          self:popIndent(  )
          
          self:writeln( "}" )
-      else 
-         
-            Util.err( string.format( "not support -- %s", __func__) )
       end
    end
    
@@ -7295,68 +7291,67 @@ end
 function convFilter:processExpRefItem( node, opt )
    local __func__ = '@lune.@base.@convGo.convFilter.processExpRefItem'
 
+   
+   
+   
    local getEnvTxt = self.env:getEnv(  )
    local prefixType = node:get_val():get_expType():get_nonnilableType()
    do
       local _switchExp = prefixType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Ext then
+         local nilAccFin = false
          if node:get_nilAccess() then
-            self:writeRaw( string.format( "%s.NilAccFin( %s.NilAccPush( ", getEnvTxt, getEnvTxt) )
-            filter( node:get_val(), self, node )
-            self:writeRaw( ") && " )
-            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(*Lns_luaValue)", getEnvTxt, getEnvTxt) )
+            if not node:get_val():hasNilAccess(  ) then
+               self:writeRaw( string.format( "%s.NilAccFin( %s.NilAccPush( ", getEnvTxt, getEnvTxt) )
+               filter( node:get_val(), self, node )
+               self:writeln( ") && " )
+            else
+             
+               filter( node:get_val(), self, node )
+               self:writeln( "&&" )
+            end
+            
+            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(%s)", getEnvTxt, getEnvTxt, "*Lns_luaValue") )
          else
           
             filter( node:get_val(), self, node )
             if prefixType:get_extedType():get_kind() == Ast.TypeInfoKind.Stem then
-               self:writeRaw( ".(*Lns_luaValue)" )
+               self:writeRaw( string.format( ".(%s)", "*Lns_luaValue") )
             end
             
          end
          
-         self:writeRaw( ".GetAt(" )
          do
-            local index = node:get_index()
-            if index ~= nil then
-               filter( index, self, node )
-            else
-               self:writeRaw( string.format( '"%s"', str2gostr( _lune.unwrap( node:get_symbol()) )) )
+            self:writeRaw( ".GetAt(" )
+            do
+               local index = node:get_index()
+               if index ~= nil then
+                  filter( index, self, node )
+               else
+                  self:writeRaw( string.format( '"%s"', str2gostr( _lune.unwrap( node:get_symbol()) )) )
+               end
             end
+            
+            self:writeRaw( ")" )
          end
          
-         self:writeRaw( ")" )
+         
+         
          self:outputStem2Type( node:get_expType() )
-      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
          if node:get_nilAccess() then
-            if not node:get_val():hasNilAccess(  ) then
-               self:writeln( string.format( "%s.NilAccFin( %s.NilAccPush(", getEnvTxt, getEnvTxt) )
-               filter( node:get_val(), self, node )
-               self:writeln( ") && " )
-            else
-             
-               filter( node:get_val(), self, node )
-               self:writeln( "&&" )
+            self:writeRaw( "))" )
+            if nilAccFin then
+               self:writeRaw( ")" )
             end
             
-            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(*LnsList)", getEnvTxt, getEnvTxt) )
-            self:writeRaw( ".GetAt(" )
-            filter( _lune.unwrap( node:get_index()), self, node )
-            self:writeRaw( ")" )
-            self:outputStem2Type( node:get_expType() )
-            self:writeRaw( "))" )
-         else
-          
-            filter( node:get_val(), self, node )
-            self:writeRaw( ".GetAt(" )
-            filter( _lune.unwrap( node:get_index()), self, node )
-            self:writeRaw( ")" )
-            self:outputStem2Type( node:get_expType() )
          end
          
-      elseif _switchExp == Ast.TypeInfoKind.Map then
+         
+      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+         local nilAccFin = false
          if node:get_nilAccess() then
             if not node:get_val():hasNilAccess(  ) then
-               self:writeln( string.format( "%s.NilAccFin( %s.NilAccPush(", getEnvTxt, getEnvTxt) )
+               self:writeRaw( string.format( "%s.NilAccFin( %s.NilAccPush( ", getEnvTxt, getEnvTxt) )
                filter( node:get_val(), self, node )
                self:writeln( ") && " )
             else
@@ -7365,31 +7360,82 @@ function convFilter:processExpRefItem( node, opt )
                self:writeln( "&&" )
             end
             
-            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(*LnsMap)", getEnvTxt, getEnvTxt) )
+            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(%s)", getEnvTxt, getEnvTxt, "*LnsList") )
          else
           
             filter( node:get_val(), self, node )
             if prefixType:get_kind() == Ast.TypeInfoKind.Stem then
-               self:writeRaw( ".(*LnsMap)" )
+               self:writeRaw( string.format( ".(%s)", "*LnsList") )
             end
             
          end
          
-         self:writeRaw( ".Get(" )
          do
-            local index = node:get_index()
-            if index ~= nil then
-               filter( index, self, node )
-            else
-               self:writeRaw( string.format( '"%s"', str2gostr( _lune.unwrap( node:get_symbol()) )) )
-            end
+            self:writeRaw( ".GetAt(" )
+            filter( _lune.unwrap( node:get_index()), self, node )
+            self:writeRaw( ")" )
          end
          
-         self:writeRaw( ")" )
+         
+         
          self:outputStem2Type( node:get_expType() )
          if node:get_nilAccess() then
             self:writeRaw( "))" )
+            if nilAccFin then
+               self:writeRaw( ")" )
+            end
+            
          end
+         
+         
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         local nilAccFin = false
+         if node:get_nilAccess() then
+            if not node:get_val():hasNilAccess(  ) then
+               self:writeRaw( string.format( "%s.NilAccFin( %s.NilAccPush( ", getEnvTxt, getEnvTxt) )
+               filter( node:get_val(), self, node )
+               self:writeln( ") && " )
+            else
+             
+               filter( node:get_val(), self, node )
+               self:writeln( "&&" )
+            end
+            
+            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(%s)", getEnvTxt, getEnvTxt, "*LnsMap") )
+         else
+          
+            filter( node:get_val(), self, node )
+            if prefixType:get_kind() == Ast.TypeInfoKind.Stem then
+               self:writeRaw( string.format( ".(%s)", "*LnsMap") )
+            end
+            
+         end
+         
+         do
+            self:writeRaw( ".Get(" )
+            do
+               local index = node:get_index()
+               if index ~= nil then
+                  filter( index, self, node )
+               else
+                  self:writeRaw( string.format( '"%s"', str2gostr( _lune.unwrap( node:get_symbol()) )) )
+               end
+            end
+            
+            self:writeRaw( ")" )
+         end
+         
+         
+         
+         self:outputStem2Type( node:get_expType() )
+         if node:get_nilAccess() then
+            self:writeRaw( "))" )
+            if nilAccFin then
+               self:writeRaw( ")" )
+            end
+            
+         end
+         
          
       elseif _switchExp == Ast.TypeInfoKind.Stem then
          self:writeRaw( "Lns_FromStemGetAt(" )

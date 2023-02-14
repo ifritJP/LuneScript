@@ -584,14 +584,6 @@ function dumpFilter:processDeclVar( node, opt )
       end
    end
    
-   
-   do
-      local _exp = node:get_syncBlock()
-      if _exp ~= nil then
-         filter( _exp, self, opt:nextOpt(  ) )
-      end
-   end
-   
 end
 
 
