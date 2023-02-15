@@ -4243,7 +4243,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
 end
 
 
-function TransUnit:analyzePushClass( mode, finalFlag, abstractFlag, firstToken, name, allowMultiple, requirePath, moduleLang, accessMode, altTypeList )
+function TransUnit:analyzePushClass( prototype, mode, finalFlag, abstractFlag, firstToken, name, allowMultiple, requirePath, moduleLang, accessMode, altTypeList )
 
    if Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self:get_scope() then
       self:addErrMess( firstToken.pos, "The public class must declare at top scope." )
@@ -4265,17 +4265,24 @@ function TransUnit:analyzePushClass( mode, finalFlag, abstractFlag, firstToken, 
       local _
       nextToken, baseTypeInfo, interfaceList, _, inheritInfo = self:analyzeExtend( accessMode, firstToken.pos )
       
-      if baseTypeInfo ~= nil then
-         do
-            local initTypeInfo = _lune.nilacc( baseTypeInfo:get_scope(), 'getTypeInfoChild', 'callmtd' , "__init" )
-            if initTypeInfo ~= nil then
-               if initTypeInfo:get_accessMode() == Ast.AccessMode.Pri then
-                  self:addErrMess( firstToken.pos, "The access mode of '__init' is 'pri'." )
+      if prototype then
+      else
+       
+         if baseTypeInfo ~= nil then
+            
+            do
+               local initTypeInfo = _lune.nilacc( baseTypeInfo:get_scope(), 'getTypeInfoChild', 'callmtd' , "__init" )
+               if initTypeInfo ~= nil then
+                  if initTypeInfo:get_accessMode() == Ast.AccessMode.Pri then
+                     self:addErrMess( firstToken.pos, "The access mode of '__init' is 'pri'." )
+                  end
+                  
+               else
+                  self:addErrMess( firstToken.pos, string.format( "The super class's constructor is unknown. -- %s", baseTypeInfo:getTxt(  )) )
+                  return nil
                end
-               
-            else
-               return nil
             end
+            
          end
          
       end
@@ -4406,7 +4413,7 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
       
       local nsInfo
       
-      local _cond1 = self:analyzePushClass( declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
+      local _cond1 = self:analyzePushClass( true, declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
       if _cond1 == nil then return nil end
       nextToken, nsInfo, inheritInfo = table.unpack(_cond1)
       classTypeInfo = nsInfo:get_typeInfo()
@@ -5113,7 +5120,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2022, function (  )
+         Log.log( Log.Level.Debug, __func__, 2033, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -5873,7 +5880,7 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
    
    local existSymbolInfo = self:get_scope():getSymbolTypeInfo( name.txt, self:get_scope(), self:get_scope(), self.scopeAccess )
    
-   local _cond1 = self:analyzePushClass( mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
+   local _cond1 = self:analyzePushClass( false, mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
    if _cond1 == nil then return nil end
    local nextToken, nsInfo, inheritInfo = table.unpack(_cond1)
    local classTypeInfo = nsInfo:get_typeInfo()
@@ -12197,7 +12204,7 @@ function TransUnit:analyzeStatement( termTxt )
          if  nil == accessMode then
             local _accessMode = accessMode
          
-            accessMode = Ast.AccessMode.Pri
+            self:error( "illegal statement" )
          end
          
          local staticFlag = (token.txt == "static" )
@@ -12209,12 +12216,12 @@ function TransUnit:analyzeStatement( termTxt )
          local success
          
          statement, success = self:analyzeDecl( accessMode, staticFlag, token, nextToken )
-         if not statement then
-            self:addErrMess( nextToken.pos, string.format( "This token is illegal -- %s", nextToken.txt) )
-         end
-         
          if not success then
             self:error( "illegal statement" )
+         end
+         
+         if not statement then
+            self:addErrMess( nextToken.pos, string.format( "This token is illegal -- %s", nextToken.txt) )
          end
          
       elseif token.txt == "{" then

@@ -1364,6 +1364,8 @@ test/error/class7.lns:5:14: warning: Set member -- Test2.val2
 test/error/class8.lns:7:12: error: mismatch accessMode -- AccessMode.Pro / AccessMode.Pri
 test/error/class8.lns:7:18: error: not found TypeInfo -- func2
 test/error/class9.lns:7:9: error: not found field typeInfo: @test.@error.@class9.Hoge.func -- TypeInfoKind.Class
+test/error/class10.lns:3:4: error: The super class's constructor is unknown. -- AAA
+test/error/class10.lns:3:24: error: illegal statement
 test/error/depend.lns:22:11: warning: 'hoge2' var isn't accessed
 test/error/depend.lns:18:7: error: return: exp(1) type mismatch #@test.@error.@depend.Hoge(1049) <- &@test.@error.@depend.Hoge(1010): index 1 -- mismatch MutMode.Depend, MutMode.IMut. if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/depend.lns:22:7: error: unmatch value type (index:1) #@test.@error.@depend.Hoge <- &@test.@error.@depend.Hoge -- mismatch MutMode.Depend, MutMode.IMutRe

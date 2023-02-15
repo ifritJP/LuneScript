@@ -106,7 +106,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
       }
       elseif Ast.txt2AccessMode( token.txt ) {
          let! mut accessMode = Ast.txt2AccessMode( token.txt ) {
-            accessMode = .Pri;
+            self.error( "illegal statement" ); // バグ
          };
          let staticFlag = (token.txt == "static");
          let mut nextToken = token;
@@ -116,12 +116,12 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          let success;
          statement, success = self.analyzeDecl(
             accessMode, staticFlag, token, nextToken );
+         if not success {
+            self.error( "illegal statement" ); // 要対応
+         }
          if not statement {
             self.addErrMess( nextToken.pos,
                              "This token is illegal -- %s" (nextToken.txt) );
-         }
-         if not success {
-            self.error( "illegal statement" ); // 要対応
          }
       }
       elseif token.txt == "{" {

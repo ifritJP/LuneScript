@@ -1113,7 +1113,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
 }
 
 fn TransUnit.analyzePushClass(
-   mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
+   prototype:bool, mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
    firstToken:&Parser.Token, name:&Parser.Token,
    allowMultiple:bool, requirePath:&Parser.Token!, moduleLang:Types.Lang!,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
@@ -1141,14 +1141,25 @@ fn TransUnit.analyzePushClass(
       nextToken, baseTypeInfo, interfaceList, _, inheritInfo = self.analyzeExtend(
          accessMode, firstToken.pos );
 
-      when! baseTypeInfo {
-         if! let initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
-            if initTypeInfo.$accessMode == .Pri {
+      if prototype {
+         // プロトタイプ宣言時は、 
+         // super クラスのコンストラクタが確定していない可能性があるので
+         // スキップする
+      } else {
+         when! baseTypeInfo {
+            // 継承している場合、継承元のコンストラクタのアクセス制御を確認する
+            if! let initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
+               if initTypeInfo.$accessMode == .Pri {
+                  self.addErrMess(
+                     firstToken.pos, "The access mode of '__init' is 'pri'." );
+               }
+            } else {
                self.addErrMess(
-                  firstToken.pos, "The access mode of '__init' is 'pri'." );
+                  firstToken.pos,
+                  "The super class's constructor is unknown. -- %s"
+                  (baseTypeInfo.getTxt(##)) );
+               return nil;
             }
-         } else {
-            return nil;
          }
       }
    } else {
@@ -1275,7 +1286,7 @@ fn TransUnit.analyzeDeclProto(
       let inheritInfo;
       let mut nsInfo;
       nextToken, nsInfo, inheritInfo = self.analyzePushClass(
-         declMode, finalFlag, abstractFlag,
+         true, declMode, finalFlag, abstractFlag,
          firstToken, name, false, nil, nil, accessMode, altTypeList )!...;
       classTypeInfo = nsInfo.$typeInfo;
 
@@ -2824,7 +2835,7 @@ fn TransUnit.analyzeDeclClass(
       name.txt, self.$scope, self.$scope, self.scopeAccess );
 
    let mut nextToken, mut nsInfo, inheritInfo = self.analyzePushClass(
-      mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName,
+      false, mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName,
       moduleLang or Types.Lang.Same, classAccessMode, altTypeList )!...;
    let classTypeInfo = nsInfo.$typeInfo;
    let mut typeDataAccessor = nsInfo.$typeDataAccessor;

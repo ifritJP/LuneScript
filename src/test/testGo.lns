@@ -3019,3 +3019,12 @@ pub let! val3__ = func2__() {
    val3__ = "aaa";
 };
 print( "next", val3__ );
+_section();
+{
+   proto class AAA;
+   proto class BBB extend AAA;
+   class AAA {
+   }
+   class BBB extend AAA {
+   }
+}
