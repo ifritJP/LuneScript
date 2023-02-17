@@ -3028,3 +3028,26 @@ _section();
    class BBB extend AAA {
    }
 }
+_section();
+{
+   macro _test( cond:bool, block1:__block, block2:__block ) {
+      {
+         let mut block;
+
+         if cond {
+            block = block1;
+         } else {
+            block = block2;
+         }
+      }
+      ,,block;
+   }
+   macro _hoge() {
+      print( "AAA" );
+   }
+   macro _age() {
+      _test( true, { print( "hoge" ); }, { _hoge(); } );
+      _test( false, { print( "hoge" ); }, { _hoge(); } );
+   }
+   _age();
+}
