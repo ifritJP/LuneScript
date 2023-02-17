@@ -822,7 +822,8 @@ _moduleObj.getNodeKindName = getNodeKindName
 function Filter:defaultProcess( node, opt )
 
    if self.errorOnDefault then
-      Util.err( string.format( "not implement yet -- %s", getNodeKindName( node:get_kind() )) )
+      local pos = node:get_pos():get_orgPos(  )
+      Util.err( string.format( "not implement yet -- %s:%s:%d:%d", getNodeKindName( node:get_kind() ), pos.streamName, pos.lineNo, pos.column) )
    end
    
 end

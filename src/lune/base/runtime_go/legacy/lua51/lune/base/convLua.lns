@@ -2036,6 +2036,13 @@ pub override fn ConvFilter.processDeclMember(
    // node.info.refType.filter( self, prefix .. "  ", depth + 1 )
 };
 
+pub override fn ConvFilter.processExpMacroArgExp(
+   node: &Nodes.ExpMacroArgExpNode, opt: Opt ) mut
+{
+   //self.writeRaw( node.$codeTxt );
+   filter( node.$exp, self, node );
+}
+
 pub override fn ConvFilter.processExpMacroExp(
    node: &Nodes.ExpMacroExpNode, opt: Opt ) mut
 {

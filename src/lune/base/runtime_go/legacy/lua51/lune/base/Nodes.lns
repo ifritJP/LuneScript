@@ -447,7 +447,10 @@ pub fn getNodeKindName( kind: int ): str {
 
 pro fn Filter.defaultProcess( node: &Node, opt:T ) mut {
    if self.errorOnDefault {
-      Util.err( "not implement yet -- %s" ( getNodeKindName( node.$kind ) ) ); // バグ
+      let pos = node.$pos.get_orgPos();
+      Util.err( "not implement yet -- %s:%s:%d:%d"
+                ( getNodeKindName( node.$kind ),
+                  pos.streamName, pos.lineNo, pos.column ) ); // バグ
    }
 }
 

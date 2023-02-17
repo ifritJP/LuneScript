@@ -3958,7 +3958,13 @@ end
 
 
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
+   local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
+   Log.log( Log.Level.Trace, __func__, 786, function (  )
+   
+      return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
+   end )
+   
    if self.macroCtrl:get_isDeclaringMacro() then
       
       self:error( "can't declare the macro in the macro." )
@@ -5120,7 +5126,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2033, function (  )
+         Log.log( Log.Level.Debug, __func__, 2035, function (  )
          
             return string.format( "%s", dummyRetType)
          end )

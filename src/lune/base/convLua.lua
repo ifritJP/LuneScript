@@ -2565,6 +2565,13 @@ end
 
 
 
+function ConvFilter:processExpMacroArgExp( node, opt )
+
+   
+   filter( node:get_exp(), self, node )
+end
+
+
 function ConvFilter:processExpMacroExp( node, opt )
 
    for __index, stmt in ipairs( node:get_stmtList() ) do
