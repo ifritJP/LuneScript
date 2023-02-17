@@ -802,6 +802,8 @@ fn TransUnit.analyzeDeclMacroSub(
    typeDataAccessor:Ast.TypeDataAccessor,
    workArgList: List<&Nodes.Node> ) mut : Nodes.DeclMacroNode
 {
+   Log._log2( .Trace, "start -- %s:%d:%d"
+              (firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column));
    if self.macroCtrl.$isDeclaringMacro {
       // macro 定義内に、別のマクロ定義はサポート外
       self.error( "can't declare the macro in the macro." ); // 要対応
@@ -1132,7 +1134,7 @@ Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ClassInheritInfo
 }
 
 fn TransUnit.analyzePushClass(
-   mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
+   prototype:bool, mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
    firstToken:&Parser.Token, name:&Parser.Token,
    allowMultiple:bool, requirePath:&Parser.Token!, moduleLang:Types.Lang!,
    accessMode:Ast.AccessMode, altTypeList:&List<&Ast.AlternateTypeInfo> ) mut :
@@ -1160,14 +1162,25 @@ fn TransUnit.analyzePushClass(
       nextToken, baseTypeInfo, interfaceList, _, inheritInfo = self.analyzeExtend(
          accessMode, firstToken.pos );
 
-      when! baseTypeInfo {
-         if! let initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
-            if initTypeInfo.$accessMode == .Pri {
+      if prototype {
+         // プロトタイプ宣言時は、 
+         // super クラスのコンストラクタが確定していない可能性があるので
+         // スキップする
+      } else {
+         when! baseTypeInfo {
+            // 継承している場合、継承元のコンストラクタのアクセス制御を確認する
+            if! let initTypeInfo = baseTypeInfo.$scope$.getTypeInfoChild$("__init") {
+               if initTypeInfo.$accessMode == .Pri {
+                  self.addErrMess(
+                     firstToken.pos, "The access mode of '__init' is 'pri'." );
+               }
+            } else {
                self.addErrMess(
-                  firstToken.pos, "The access mode of '__init' is 'pri'." );
+                  firstToken.pos,
+                  "The super class's constructor is unknown. -- %s"
+                  (baseTypeInfo.getTxt(##)) );
+               return nil;
             }
-         } else {
-            return nil;
          }
       }
    } else {
@@ -1294,7 +1307,7 @@ fn TransUnit.analyzeDeclProto(
       let inheritInfo;
       let mut nsInfo;
       nextToken, nsInfo, inheritInfo = self.analyzePushClass(
-         declMode, finalFlag, abstractFlag,
+         true, declMode, finalFlag, abstractFlag,
          firstToken, name, false, nil, nil, accessMode, altTypeList )!...;
       classTypeInfo = nsInfo.$typeInfo;
 
@@ -2843,7 +2856,7 @@ fn TransUnit.analyzeDeclClass(
       name.txt, self.$scope, self.$scope, self.scopeAccess );
 
    let mut nextToken, mut nsInfo, inheritInfo = self.analyzePushClass(
-      mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName,
+      false, mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName,
       moduleLang or Types.Lang.Same, classAccessMode, altTypeList )!...;
    let classTypeInfo = nsInfo.$typeInfo;
    let mut typeDataAccessor = nsInfo.$typeDataAccessor;
@@ -4206,7 +4219,7 @@ fn TransUnit.analyzeDeclVar(
    let mut typeInfoList, mut letVarList, mut orgExpTypeList, mut expList =
       self.analyzeLetAndInitExp(
          firstToken.pos, mode == .Let,
-         mode == .Sync and Ast.MutMode.Mut or Ast.MutMode.IMut,
+         Ast.MutMode.IMut,
          accessMode, unwrapFlag );
 
    let condRetInfo = self.checkCondRet();
@@ -4261,10 +4274,6 @@ fn TransUnit.analyzeDeclVar(
    }
 
 
-   let mut syncScope:Ast.Scope = self.$scope;
-   if mode == .Sync {
-      syncScope = self.pushScope( .Other ## );
-   }
 
 
    let mut nsInfo = self.$curNsInfo;
@@ -4272,7 +4281,6 @@ fn TransUnit.analyzeDeclVar(
    let mut symbolInfoList: List<&Ast.SymbolInfo> = [];
 
    let mut varList:List<&Nodes.VarInfo> = [];
-   let mut syncSymbolList:List<&Ast.SymbolInfo> = [];
    foreach letVarInfo, index in letVarList {
       let varName = letVarInfo.varName;
       let typeInfo = typeInfoList[ index ];
@@ -4290,16 +4298,8 @@ fn TransUnit.analyzeDeclVar(
          self.addErrMess(
             varName.pos, 'need type -- %s' ( varName.txt ) );
       }
-      if mode == .Sync {
-         // スコープに登録する前に、シンボルを検索
-         if! let symInfo = self.$scope.getSymbolInfo(
-            varName.txt, self.$scope, true, self.scopeAccess )
-         {
-            syncSymbolList.insert( symInfo );
-         }
-      }
       // スコープに変数を登録
-      if mode == .Let or mode == .Sync {
+      if mode == .Let {
          if mode == .Let {
             self.checkShadowing( varName.pos, varName.txt, self.$scope );
             // if self.scope.getTypeInfo( varName.txt, self.scope, true, self.scopeAccess ) {
@@ -4339,7 +4339,7 @@ fn TransUnit.analyzeDeclVar(
    }
 
 
-   if mode ~= .Sync and self.macroScope {
+   if self.macroScope {
       self.macroCtrl.registVar( symbolInfoList );
    }
 
@@ -4376,7 +4376,7 @@ fn TransUnit.analyzeDeclVar(
       // unwrap ブロック後には変数にデータがセットされているものとする。
       when! unwrapBlock {
          _switch mode {
-            case .Let, .Sync {
+            case .Let {
                let breakKind = unwrapBlock.getBreakKind( .Normal );
                foreach symbolInfo in symbolInfoList {
                   // let symbolInfo =
@@ -4416,13 +4416,6 @@ fn TransUnit.analyzeDeclVar(
       }
    }
 
-   let mut syncBlock: Nodes.BlockNode! = nil;
-   if mode == .Sync {
-      self.checkNextToken( "do" );
-      syncBlock = self.analyzeBlock( .LetUnwrapThenDo, .Simple, syncScope, nil );
-      self.popScope();
-   }
-
    self.checkNextToken( ";" );
 
    let mut node = Nodes.DeclVarNode.create(
@@ -4430,7 +4423,7 @@ fn TransUnit.analyzeDeclVar(
       self.macroCtrl.isInAnalyzeArgMode(),
       [ Ast.builtinTypeNone ], mode, accessMode, false, condRetInfo,
       varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock,
-      thenBlock, syncSymbolList, syncBlock );
+      thenBlock );
 
    return node;
 }

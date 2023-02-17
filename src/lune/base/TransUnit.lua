@@ -3980,7 +3980,13 @@ end
 
 
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
+   local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
+   Log.log( Log.Level.Trace, __func__, 805, function (  )
+   
+      return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
+   end )
+   
    if self.macroCtrl:get_isDeclaringMacro() then
       
       self:error( "can't declare the macro in the macro." )
@@ -4265,7 +4271,7 @@ function TransUnit:analyzeExtend( accessMode, firstPos )
 end
 
 
-function TransUnit:analyzePushClass( mode, finalFlag, abstractFlag, firstToken, name, allowMultiple, requirePath, moduleLang, accessMode, altTypeList )
+function TransUnit:analyzePushClass( prototype, mode, finalFlag, abstractFlag, firstToken, name, allowMultiple, requirePath, moduleLang, accessMode, altTypeList )
 
    if Ast.isPubToExternal( accessMode ) and self.moduleScope ~= self:get_scope() then
       self:addErrMess( firstToken.pos, "The public class must declare at top scope." )
@@ -4287,17 +4293,24 @@ function TransUnit:analyzePushClass( mode, finalFlag, abstractFlag, firstToken, 
       local _
       nextToken, baseTypeInfo, interfaceList, _, inheritInfo = self:analyzeExtend( accessMode, firstToken.pos )
       
-      if baseTypeInfo ~= nil then
-         do
-            local initTypeInfo = _lune.nilacc( baseTypeInfo:get_scope(), 'getTypeInfoChild', 'callmtd' , "__init" )
-            if initTypeInfo ~= nil then
-               if initTypeInfo:get_accessMode() == Ast.AccessMode.Pri then
-                  self:addErrMess( firstToken.pos, "The access mode of '__init' is 'pri'." )
+      if prototype then
+      else
+       
+         if baseTypeInfo ~= nil then
+            
+            do
+               local initTypeInfo = _lune.nilacc( baseTypeInfo:get_scope(), 'getTypeInfoChild', 'callmtd' , "__init" )
+               if initTypeInfo ~= nil then
+                  if initTypeInfo:get_accessMode() == Ast.AccessMode.Pri then
+                     self:addErrMess( firstToken.pos, "The access mode of '__init' is 'pri'." )
+                  end
+                  
+               else
+                  self:addErrMess( firstToken.pos, string.format( "The super class's constructor is unknown. -- %s", baseTypeInfo:getTxt(  )) )
+                  return nil
                end
-               
-            else
-               return nil
             end
+            
          end
          
       end
@@ -4428,7 +4441,7 @@ function TransUnit:analyzeDeclProto( accessMode, firstToken )
       
       local nsInfo
       
-      local _cond1 = self:analyzePushClass( declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
+      local _cond1 = self:analyzePushClass( true, declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList )
       if _cond1 == nil then return nil end
       nextToken, nsInfo, inheritInfo = table.unpack(_cond1)
       classTypeInfo = nsInfo:get_typeInfo()
@@ -5135,7 +5148,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2041, function (  )
+         Log.log( Log.Level.Debug, __func__, 2054, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -5895,7 +5908,7 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
    
    local existSymbolInfo = self:get_scope():getSymbolTypeInfo( name.txt, self:get_scope(), self:get_scope(), self.scopeAccess )
    
-   local _cond1 = self:analyzePushClass( mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
+   local _cond1 = self:analyzePushClass( false, mode, finalFlag, classAbstructFlag, firstToken, name, true, moduleName, moduleLang or Types.Lang.Same, classAccessMode, altTypeList )
    if _cond1 == nil then return nil end
    local nextToken, nsInfo, inheritInfo = table.unpack(_cond1)
    local classTypeInfo = nsInfo:get_typeInfo()
@@ -7165,7 +7178,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, mode == Nodes.DeclVarMode.Sync and Ast.MutMode.Mut or Ast.MutMode.IMut, accessMode, unwrapFlag )
+   local typeInfoList, letVarList, orgExpTypeList, expList = self:analyzeLetAndInitExp( firstToken.pos, mode == Nodes.DeclVarMode.Let, Ast.MutMode.IMut, accessMode, unwrapFlag )
    
    local condRetInfo = self:checkCondRet(  )
    
@@ -7213,18 +7226,11 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local syncScope = self:get_scope()
-   if mode == Nodes.DeclVarMode.Sync then
-      syncScope = self:pushScope( Ast.ScopeKind.Other )
-   end
-   
-   
    local nsInfo = self:get_curNsInfo()
    
    local symbolInfoList = {}
    
    local varList = {}
-   local syncSymbolList = {}
    for index, letVarInfo in ipairs( letVarList ) do
       local varName = letVarInfo.varName
       local typeInfo = typeInfoList[index]
@@ -7240,19 +7246,8 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
          self:addErrMess( varName.pos, string.format( 'need type -- %s', varName.txt) )
       end
       
-      if mode == Nodes.DeclVarMode.Sync then
-         
-         do
-            local symInfo = self:get_scope():getSymbolInfo( varName.txt, self:get_scope(), true, self.scopeAccess )
-            if symInfo ~= nil then
-               table.insert( syncSymbolList, symInfo )
-            end
-         end
-         
-      end
       
-      
-      if mode == Nodes.DeclVarMode.Let or mode == Nodes.DeclVarMode.Sync then
+      if mode == Nodes.DeclVarMode.Let then
          if mode == Nodes.DeclVarMode.Let then
             self:checkShadowing( varName.pos, varName.txt, self:get_scope() )
          end
@@ -7285,7 +7280,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   if mode ~= Nodes.DeclVarMode.Sync and self.macroScope then
+   if self.macroScope then
       self.macroCtrl:registVar( symbolInfoList )
    end
    
@@ -7320,7 +7315,7 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
       if unwrapBlock ~= nil then
          do
             local _switchExp = mode
-            if _switchExp == Nodes.DeclVarMode.Let or _switchExp == Nodes.DeclVarMode.Sync then
+            if _switchExp == Nodes.DeclVarMode.Let then
                local breakKind = unwrapBlock:getBreakKind( Nodes.CheckBreakMode.Normal )
                for __index, symbolInfo in ipairs( symbolInfoList ) do
                   
@@ -7363,17 +7358,9 @@ function TransUnit:analyzeDeclVar( mode, accessMode, firstToken )
    end
    
    
-   local syncBlock = nil
-   if mode == Nodes.DeclVarMode.Sync then
-      self:checkNextToken( "do" )
-      syncBlock = self:analyzeBlock( Nodes.BlockKind.LetUnwrapThenDo, TentativeMode.Simple, syncScope, nil )
-      self:popScope(  )
-   end
-   
-   
    self:checkNextToken( ";" )
    
-   local node = Nodes.DeclVarNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mode, accessMode, false, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncSymbolList, syncBlock )
+   local node = Nodes.DeclVarNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, mode, accessMode, false, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock )
    
    return node
 end
@@ -12294,7 +12281,7 @@ function TransUnit:analyzeStatement( termTxt )
          if  nil == accessMode then
             local _accessMode = accessMode
          
-            accessMode = Ast.AccessMode.Pri
+            self:error( "illegal statement" )
          end
          
          local staticFlag = (token.txt == "static" )
@@ -12306,12 +12293,12 @@ function TransUnit:analyzeStatement( termTxt )
          local success
          
          statement, success = self:analyzeDecl( accessMode, staticFlag, token, nextToken )
-         if not statement then
-            self:addErrMess( nextToken.pos, string.format( "This token is illegal -- %s", nextToken.txt) )
-         end
-         
          if not success then
             self:error( "illegal statement" )
+         end
+         
+         if not statement then
+            self:addErrMess( nextToken.pos, string.format( "This token is illegal -- %s", nextToken.txt) )
          end
          
       elseif token.txt == "{" then
@@ -12360,8 +12347,6 @@ function TransUnit:analyzeStatement( termTxt )
          
       elseif token.txt == "unwrap" then
          statement = self:analyzeUnwrap( token )
-      elseif token.txt == "sync" then
-         statement = self:analyzeDeclVar( Nodes.DeclVarMode.Sync, Ast.AccessMode.Local, token )
       elseif token.txt == "__scope" then
          statement = self:analyzeScope( token )
       elseif token.txt == "_lune_control" then

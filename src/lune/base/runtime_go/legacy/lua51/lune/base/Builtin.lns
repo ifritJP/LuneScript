@@ -409,6 +409,17 @@ _DefBuiltinFuncType( [
       },
    },
    {
+      "__List<T>": {
+         "__less": { "type": [ "formfunc" ],
+                        "arg": [ "T", "T" ], "ret":[ "bool" ] },
+         "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
+         "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
+         "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+         //"__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
+      },
+   },
+   {
       "Array<T>": {
          "__less": { "type": [ "formfunc" ],
                         "arg": [ "T", "T" ], "ret":[ "bool" ] },
@@ -897,10 +908,8 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
       self.processInfo, .Global, "_ENV", nil, mapType, .IMutRe, true );
    self.transUnit.$scope.addVar(
       self.processInfo, .Global, "_G", nil, mapType, .IMutRe, true );
-   //self.transUnit.$scope.addVar( .Global, "__mod__", nil, Ast.builtinTypeString, .IMut, true );
    self.transUnit.$scope.addVar(
       self.processInfo, .Global, "__line__", nil, Ast.builtinTypeInt, .IMut, true );
-   //self.transUnit.$scope.addVar( .Global, "__func__", nil, Ast.builtinTypeString, false, true );
 
    fn processCopyAlterList( alterList:List<&Ast.AlternateTypeInfo>,
                             typeList:&List<&Ast.TypeInfo> )
@@ -922,6 +931,11 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                name = "List";
                processCopyAlterList(
                   genTypeList, Ast.builtinTypeList.$itemTypeInfoList );
+            }
+            case "__List<T>" {
+               name = "__List";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeList__.$itemTypeInfoList );
             }
             case "Array<T>" {
                name = "Array";
@@ -945,22 +959,6 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
             }
             default {
                name = self.createGenType( className, genTypeList );
-               // if className.find( "<" ## ) {
-               //    name = "";
-               //    __luago {
-               //       apply token of className.gmatch( "[^<>,%s]+" ) {
-               //          if #name == 0 {
-               //             name = token;
-               //          }
-               //          else {
-               //             genTypeList.insert(
-               //                (self.processInfo.createAlternate(
-               //                   true, #genTypeList + 1,
-               //                   token, .Pri, Ast.headTypeInfo ## )) );
-               //          }
-               //       }
-               //    }
-               // }
             }
          }
 

@@ -735,7 +735,7 @@ fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) mut : str {
          return self.getTypeSymbol( symbolInfo.$typeInfo );
       }
       default {
-         Util.err( "not support -- %s" (symbolInfo.$kind.$_txt) ); // バグ
+         Util.err( "%s: not support -- %s" (__func__, symbolInfo.$kind.$_txt) ); // バグ
       }
    }
 }
@@ -818,7 +818,11 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          return "*Lns_luaValue";
       }
       case .List, .Array {
-         return "*LnsList";
+         if orgType.$canDealGenInherit {
+            return "*LnsList";
+         }
+         let itemType = orgType.$itemTypeInfoList[ 1 ];
+         return "*LnsList2_[%s]" (self.type2gotypeOrg( itemType, .Normal ) );
       }
       case .Set {
          return "*LnsSet";
@@ -861,6 +865,9 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
       case .Alternate {
          return self.type2gotypeOrg( typeInfo.$baseTypeInfo, mode );
       }
+   }
+   if orgType == Ast.builtinTypeNone {
+      return "LnsAny";
    }
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) ); // バグ
 }
@@ -1103,17 +1110,27 @@ fn convFilter.outputImplicitCast(
          }
       }
       case .Alternate {
-         if not castType.hasBase() {
-            if Ast.isClass( node.$expType.$nonnilableType ) {
-               self.writeRaw( "%s2Stem("
-                              (self.getTypeSymbolWithPrefix( node.$expType.$nonnilableType )) );
+         if not castType.$canDealGenInherit {
+            // if Ast.isClass( node.$expType.$nonnilableType ) {
+            //    self.writeRaw( "&" );
+            //    filter( node, self, parent );
+            //    self.writeRaw( ".%s" (self.getTypeSymbol( castType ) ) );
+            // } else {
                filter( node, self, parent );
-               self.writeRaw( ")" );
-            } else {
-               filter( node, self, parent );
-            }
+            // }
          } else {
-            self.outputImplicitCast( castType.$baseTypeInfo, node, parent );
+            if not castType.hasBase() {
+               if Ast.isClass( node.$expType.$nonnilableType ) {
+                  self.writeRaw( "%s2Stem("
+                                 (self.getTypeSymbolWithPrefix( node.$expType.$nonnilableType )) );
+                  filter( node, self, parent );
+                  self.writeRaw( ")" );
+               } else {
+                  filter( node, self, parent );
+               }
+            } else {
+               self.outputImplicitCast( castType.$baseTypeInfo, node, parent );
+            }
          }
       }
       case .Form {
@@ -2636,6 +2653,56 @@ fn convFilter.expList2Slice( subList:&Nodes.ExpListNode, toStem:bool ) mut {
    }
 }
 
+
+fn convFilter.expList2SliceRaw( itemType:&Ast.TypeInfo, subList:&Nodes.ExpListNode ) mut
+{
+   // fn processExp( exp:&Nodes.Node ) {
+   //    filter( exp, self, subList );
+   // }
+   
+   // let mRetIndex = subList.$mRetExp$.$index;
+   // if mRetIndex and mRetIndex ~= 1 {
+   //    self.writeRaw( "append( " );
+   // }
+   // let itemTypeTxt = self.type2gotype( itemType );
+   // self.writeRaw( "[]%s{" (itemTypeTxt) );
+   // foreach subExp, subIndex in subList.$expList {
+   //    if mRetIndex == subIndex {
+   //       if mRetIndex ~= 1 {
+   //          self.writeRaw( "}, " );
+   //       }
+   //       if subExp.$expType.$kind ~= .DDD {
+   //          self.writeRaw( "Lns_2DDDGen[%s](" (itemTypeTxt) );
+   //          processExp( subExp );
+   //          self.writeRaw( ")" );
+   //       }
+   //       else {
+   //          processExp( subExp );
+   //       }
+   //       self.writeRaw( "..." );
+   //       break;
+   //    }
+   //    if subIndex ~= 1 {
+   //       self.writeRaw( ', ' );
+   //    }
+   //    processExp( subExp );
+   // }
+   // if mRetIndex and mRetIndex ~= 1 {
+   //    self.writeRaw( ")" );
+   // }
+   // else {
+   //    self.writeRaw( "}" );
+   // }
+   self.writeRaw( "Lns_2DDDGen[%s](" (self.type2gotype( itemType )));
+   foreach subExp, subIndex in subList.$expList {
+      if subIndex ~= 1 {
+         self.writeRaw( "," );
+      }
+      filter( subExp, self, subList );
+   }
+   self.writeRaw( ")" );
+}
+
 /**
 expListNode の式を go で扱える型に変換する。
 
@@ -3545,9 +3612,6 @@ pub override fn convFilter.processDeclVar(
 
          self.writeln( "}" );
       }
-      default {
-         Util.err( "not support -- %s" (__func__) ); // バグ
-      }
    }
 }
 
@@ -4084,7 +4148,9 @@ pub override fn convFilter.processForeach(
    macro _keyItemSet( typeSym:sym, typeName:__exp ) {
       if ,,typeName ~= "_" {
          self.writeRaw( "%s := _%s" (,,typeName, ,,typeName) );
-         self.outputStem2Type( ,,typeSym );
+         if loopExpType.$canDealGenInherit {
+            self.outputStem2Type( ,,typeSym );
+         }
          self.writeln( "" );
       }
    }
@@ -4714,23 +4780,27 @@ let type2FromStemNameMap = {
    Ast.builtinTypeString:"Lns_ToStr",
    Ast.builtinTypeStem:"Lns_ToStem"
 };
-fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo) mut : str {
+fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo, suffix:str) mut : str {
    let workTypeInfo = getOrgTypeInfo( typeInfo );
    if! let name = type2FromStemNameMap[ workTypeInfo ] {
-      return name;
+      return name .. suffix;
    }
    switch workTypeInfo.$kind {
       case .List, .Array {
-         return "Lns_ToList";
+         if workTypeInfo.$canDealGenInherit {
+            return "Lns_ToList" .. suffix;
+         }
+         let itemType = workTypeInfo.$itemTypeInfoList[1];
+         return "Lns_ToList2%s[%s]" (suffix,self.type2gotype( itemType ) );
       }
       case .Set {
-         return "Lns_ToSet";
+         return "Lns_ToSet" .. suffix;
       }
       case .Map {
-         return "Lns_ToLnsMap";
+         return "Lns_ToLnsMap" .. suffix;
       }
       case .Class {
-         return "%s_FromMap" (self.getTypeSymbol(workTypeInfo));
+         return "%s_FromMap" (self.getTypeSymbol(workTypeInfo))  .. suffix;
       }
       default {
          Util.err( "%s: not support -- %s" (__func__, workTypeInfo.$kind.$_txt ) ); // バグ
@@ -4759,7 +4829,7 @@ fn convFilter.outputConvItemType(
       self.writeln( "Lns_ToObjParam{" );
       self.pushIndent(##);
       self.writeRaw(
-         "%sSub, %s," (self.getFromStemName( workTypeInfo ), typeInfo.$nilable ) );
+         "%s, %s," (self.getFromStemName( workTypeInfo, "Sub" ), typeInfo.$nilable ) );
       self.outputConvItemTypeList( workTypeInfo.$itemTypeInfoList, alt2type );
       self.popIndent();
       self.writeRaw( "}" );
@@ -4843,7 +4913,7 @@ fn convFilter.outputMapping( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut
    self.writeln( "}" );
 
 
-   let fromStemName = self.getFromStemName(classType);
+   let fromStemName = self.getFromStemName(classType, "");
    
    let classScope = unwrap classType.$scope;
    if not classType.$abstractFlag {
@@ -4900,8 +4970,8 @@ fn convFilter.outputMapping( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut
    
    if classType.hasBase() {
       self.writeln(
-         "if ok,_,mess := %sMain( &newObj.%s, objMap, paramList ); !ok {"
-         (self.getFromStemName(classType.$baseTypeInfo),
+         "if ok,_,mess := %s( &newObj.%s, objMap, paramList ); !ok {"
+         (self.getFromStemName(classType.$baseTypeInfo, "Main"),
            self.getTypeSymbol(classType.$baseTypeInfo )) );
       self.writeln( "    return false,nil,mess" );
       self.writeln( "}" );
@@ -4923,8 +4993,8 @@ fn convFilter.outputMapping( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut
          }
          else {
             self.writeRaw(
-               '%sSub( objMap.Items["%s"], %s, '
-               ( self.getFromStemName(memberNode.$expType),
+               '%s( objMap.Items["%s"], %s, '
+               ( self.getFromStemName(memberNode.$expType, "Sub"),
                  memberNode.$symbolInfo.$name,      
                  memberNode.$expType.$nilable ));
             self.outputConvItemTypeList( memberNode.$expType.$itemTypeInfoList, nil );
@@ -5290,6 +5360,7 @@ pub fn convFilter.outputCallPrefix(
                         else {
                            switch funcType {
                               case self.builtinFuncs.list_sort,
+                                   self.builtinFuncs.__list_sort,
                                    self.builtinFuncs.array_sort
                               {  
                                  callKind = .SortCall( prefixType.$itemTypeInfoList[ 1 ] );
@@ -6004,85 +6075,72 @@ pub override fn convFilter.processExpRef(
 pub override fn convFilter.processExpRefItem(
    node: &Nodes.ExpRefItemNode, opt: Opt ) mut
 {
+
+   macro _access(lnsType:__exp,isPrefixStem:__exp, getBlock:__block) {
+      {}
+      let mut nilAccFin = false;
+      if node.$nilAccess {
+         if not node.$val.hasNilAccess() {
+            self.writeRaw( "%s.NilAccFin( %s.NilAccPush( " (getEnvTxt, getEnvTxt) );
+            filter( node.$val, self, node );
+            self.writeln( ") && " );
+         } else {
+            filter( node.$val, self, node );
+            self.writeln( "&&" );
+         }
+         self.writeRaw( "%s.NilAccPush( %s.NilAccPop().(%s)"
+                        (getEnvTxt,getEnvTxt, ,,lnsType));
+      } else {
+         filter( node.$val, self, node );
+         if ,,isPrefixStem {
+            self.writeRaw( ".(%s)" (,,lnsType) );
+         }
+      }
+      ,,getBlock;
+      if prefixType.$canDealGenInherit {
+         self.outputStem2Type( node.$expType );
+      }
+      if node.$nilAccess {
+         self.writeRaw( "))" );
+         if nilAccFin {
+            self.writeRaw( ")" );
+         }
+      }
+   }
+
+   
    let getEnvTxt = self.env.getEnv();
    let prefixType = node.$val.$expType.$nonnilableType;
    switch prefixType.$kind {
       case .Ext {
-         if node.$nilAccess {
-            self.writeRaw( "%s.NilAccFin( %s.NilAccPush( " (getEnvTxt, getEnvTxt) );
-            filter( node.$val, self, node );
-            self.writeRaw( ") && " );
-            self.writeRaw(
-               "%s.NilAccPush( %s.NilAccPop().(*Lns_luaValue)"
-               (getEnvTxt, getEnvTxt ) );
-         } else {
-            filter( node.$val, self, node );
-            if prefixType.$extedType.$kind == .Stem {
-               self.writeRaw( ".(*Lns_luaValue)" );
+         _access( "*Lns_luaValue", prefixType.$extedType.$kind == .Stem, {
+            self.writeRaw( ".GetAt(" );
+            if! let index = node.$index {
+               filter( index, self, node );
+            } else {
+               self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
             }
-         }
-         self.writeRaw( ".GetAt(" );
-         if! let index = node.$index {
-            filter( index, self, node );
-         } else {
-            self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
-         }
-         self.writeRaw( ")" );
-         self.outputStem2Type( node.$expType );
+            self.writeRaw( ")" );
+         } );
       }
       case .List, .Array {
-         if node.$nilAccess {
-            if not node.$val.hasNilAccess() {
-               self.writeln( "%s.NilAccFin( %s.NilAccPush(" (getEnvTxt, getEnvTxt) );
-               filter( node.$val, self, node );
-               self.writeln( ") && " );
-            } else {
-               filter( node.$val, self, node );
-               self.writeln( "&&" );
-            }
-            self.writeRaw( "%s.NilAccPush( %s.NilAccPop().(*LnsList)"
-                           (getEnvTxt, getEnvTxt));
+         let lnsType = self.type2gotype( prefixType );
+         _access( lnsType, prefixType.$kind == .Stem, {
             self.writeRaw( ".GetAt(" );
             filter( unwrap node.$index, self, node );
             self.writeRaw( ")" );
-            self.outputStem2Type( node.$expType );
-            self.writeRaw( "))" );
-         } else {
-            filter( node.$val, self, node );
-            self.writeRaw( ".GetAt(" );
-            filter( unwrap node.$index, self, node );
-            self.writeRaw( ")" );
-            self.outputStem2Type( node.$expType );
-         }
+         } );
       }
       case .Map {
-         if node.$nilAccess {
-            if not node.$val.hasNilAccess() {
-               self.writeln( "%s.NilAccFin( %s.NilAccPush(" (getEnvTxt,getEnvTxt));
-               filter( node.$val, self, node );
-               self.writeln( ") && " );
+         _access( "*LnsMap", prefixType.$kind == .Stem, {
+            self.writeRaw( ".Get(" );
+            if! let index = node.$index {
+               filter( index, self, node );
             } else {
-               filter( node.$val, self, node );
-               self.writeln( "&&" );
+               self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
             }
-            self.writeRaw( "%s.NilAccPush( %s.NilAccPop().(*LnsMap)" (getEnvTxt,getEnvTxt));
-         } else {
-            filter( node.$val, self, node );
-            if prefixType.$kind == .Stem {
-               self.writeRaw( ".(*LnsMap)" );
-            }
-         }
-         self.writeRaw( ".Get(" );
-         if! let index = node.$index {
-            filter( index, self, node );
-         } else {
-            self.writeRaw( '"%s"' (str2gostr( unwrap node.$symbol)) );
-         }
-         self.writeRaw( ")" );
-         self.outputStem2Type( node.$expType );
-         if node.$nilAccess {
-            self.writeRaw( "))" );
-         }
+            self.writeRaw( ")" );
+         } );
       }
       case .Stem {
          self.writeRaw( "Lns_FromStemGetAt(" );
@@ -6330,14 +6388,26 @@ pub override fn convFilter.processTupleConst(
 pub override fn convFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt: Opt ) mut
 {
-   self.writeRaw( "NewLnsList(" );
-   if! let expList = node.$expList {
-      self.expList2Slice( expList, true );
+   if node.$expType.$canDealGenInherit {
+      self.writeRaw( "NewLnsList(" );
+      if! let expList = node.$expList {
+         self.expList2Slice( expList, true );
+      }
+      else {
+         self.writeRaw( "[]LnsAny{}" );
+      }
+      self.writeRaw( ")" );
+   } else {
+      let itemType = self.type2gotype(node.$expType.$itemTypeInfoList[1] );
+      self.writeRaw( "NewLnsList2_[%s](" (itemType ));
+      if! let expList = node.$expList {
+         self.expList2SliceRaw( node.$expType.$itemTypeInfoList[1], expList );
+      }
+      else {
+         self.writeRaw( "[]%s{}" (itemType) );
+      }
+      self.writeRaw( ")" );
    }
-   else {
-      self.writeRaw( "[]LnsAny{}" );
-   }
-   self.writeRaw( ")" );
 }
 
 pub override fn convFilter.processLiteralSet(

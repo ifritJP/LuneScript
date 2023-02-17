@@ -596,6 +596,7 @@ TEST_CASE += class6.lns
 TEST_CASE += class7.lns
 TEST_CASE += class8.lns
 TEST_CASE += class9.lns
+TEST_CASE += class10.lns
 TEST_CASE += depend.lns
 TEST_CASE += provide1.lns
 TEST_CASE += provide2.lns

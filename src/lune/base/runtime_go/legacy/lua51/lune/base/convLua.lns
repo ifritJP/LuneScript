@@ -339,8 +339,7 @@ pub override fn ConvFilter.processImport(
 {
    let info = node.$info;
    let modulePath = info.$modulePath;
-   let mut modSym = modulePath.gsub( ".*%.", "" );
-   modSym = info.$assignName;
+   let mut modSym = info.$assignName;
    self.writeRaw( "local %s = _lune." ( modSym ) );
    _switch info.$lazy {
       case .Off {
@@ -2037,6 +2036,13 @@ pub override fn ConvFilter.processDeclMember(
    // node.info.refType.filter( self, prefix .. "  ", depth + 1 )
 };
 
+pub override fn ConvFilter.processExpMacroArgExp(
+   node: &Nodes.ExpMacroArgExpNode, opt: Opt ) mut
+{
+   //self.writeRaw( node.$codeTxt );
+   filter( node.$exp, self, node );
+}
+
 pub override fn ConvFilter.processExpMacroExp(
    node: &Nodes.ExpMacroExpNode, opt: Opt ) mut
 {
@@ -2452,15 +2458,6 @@ pub override fn ConvFilter.processDeclVar(
    if! let condRetInfo = node.$condRetInfo {
       self.outputCondRetInfo( condRetInfo );
    }
-   if node.$syncBlock {
-      self.writeln( "do" );
-      self.pushIndent(##);
-      foreach varInfo in node.$symbolInfoList {
-         self.writeln( "local _sync_%s" (getSymbolTxt( varInfo )) );
-      }
-      self.writeln( "do" );
-      self.pushIndent(##);
-   }
 
    if node.$mode ~= .Unwrap and node.get_accessMode() ~= .Global {
       self.writeRaw( "local " );
@@ -2468,6 +2465,24 @@ pub override fn ConvFilter.processDeclVar(
 
    let varList = node.$symbolInfoList;
    let mut varNameList:List<str> = [];
+
+
+   fn outputPub() __trans {
+      switch node.get_accessMode() {
+         case .Pub, .Global {
+            self.writeln( "" );
+            foreach varName in varNameList {
+               let name = varName;
+               if self.needModuleObj {
+                  self.writeln( "_moduleObj.%s = %s" ( name, name ) );
+               }
+            }
+         }
+      }
+   }
+
+   
+   
    foreach var, index in varList  {
       if index > 1 {
          self.writeRaw( ", " );
@@ -2511,49 +2526,37 @@ pub override fn ConvFilter.processDeclVar(
       if! let thenBlock = node.$thenBlock {
          self.writeln( "else" );
          self.pushIndent(##);
+         outputPub();
 	 filter( thenBlock, self, node );
          self.popIndent();
-      };
+      } else {
+         switch node.get_accessMode() {
+            case .Pub, .Global {
+               self.writeln( "else" );
+               self.pushIndent(##);
+               outputPub();
+               self.popIndent();
+            }
+         }
+      }
 
       self.writeln( "end" );
+   } else {
+      outputPub();
    }
 
-   if! node.$syncBlock {
-      filter( _exp, self, node);
-
-      let mut syncVarNameList:List<str> = [];
-
-      foreach varInfo in node.$symbolInfoList {
-         let name = getSymbolTxt( varInfo );
-         syncVarNameList.insert( name );
-         self.writeln( "_sync_%s = %s" (name, name) );
-      }
-      self.popIndent();
-      self.writeln( "end" );
-
-      foreach name in syncVarNameList {
-         self.writeln( "%s = _sync_%s" (name, name) );
-      }
-      self.popIndent();
-      self.writeln( "end" );
-   }
-
-   
    switch node.get_accessMode() {
       case .Pub, .Global {
-         self.writeln( "" );
          foreach varName, index in varNameList {
             let name = varName;
-            if self.needModuleObj {
-               self.writeln( "_moduleObj.%s = %s" ( name, name ) );
-            }
             self.pubVarName2InfoMap[ name ] = new PubVerInfo(
                node.$staticFlag, node.$accessMode,
                node.$symbolInfoList[ index ].$mutable, node.$typeInfoList[ index ] );
          }
       }
    }
-
+   
+   
    if self.macroDepth > 0 {
       self.writeln( "" );
       foreach symbolInfo in node.$symbolInfoList {
@@ -2942,7 +2945,6 @@ pub override fn ConvFilter.processExpCall(
          {
             return false;
          }
-         //case self.builtinFunc.list___new,
          case self.builtinFunc.__lns_sync_createProcesser
          {
             self.writeRaw( "{}" );

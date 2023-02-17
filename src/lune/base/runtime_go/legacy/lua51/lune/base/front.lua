@@ -470,6 +470,7 @@ end
 
 local Front = {}
 setmetatable( Front, { ifList = {frontInterface.frontInterface,} } )
+_moduleObj.Front = Front
 function Front:regConvertedMap( mod, luaTxt, meta )
 
    self.moduleMgr:addMeta( mod, meta )
@@ -1671,9 +1672,10 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                local lnsPath = self:searchModule( mod, baseDir, nil )
                if lnsPath ~= nil then
                   local meta = nil
+                  local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
                   
                   if not _lune._Set_has(self.targetSet, orgMod ) then
-                     local luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
+                     luaPath = string.gsub( lnsPath, "%.lns$", ".lua" )
                      if not baseDir then
                         do
                            local dir = self.option.outputDir
@@ -1713,7 +1715,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                                  meta = self:checkUptodateMeta( lnsPath, metaPath, baseDir, self.option.outputDir )
                               else
                                
-                                 Log.log( Log.Level.Warn, __func__, 1175, function (  )
+                                 Log.log( Log.Level.Warn, __func__, 1176, function (  )
                                  
                                     return string.format( "%s not ready meta %s, %s", orgMod, lnsPath, metaPath)
                                  end )
@@ -1722,7 +1724,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                               
                            else
                             
-                              Log.log( Log.Level.Warn, __func__, 1179, function (  )
+                              Log.log( Log.Level.Warn, __func__, 1180, function (  )
                               
                                  return string.format( "%s not ready lua %s, %s", orgMod, lnsPath, luaPath)
                               end )
@@ -1731,7 +1733,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                            
                         else
                          
-                           Log.log( Log.Level.Warn, __func__, 1183, function (  )
+                           Log.log( Log.Level.Warn, __func__, 1184, function (  )
                            
                               return string.format( "force analyze -- %s", orgMod)
                            end )
@@ -1739,7 +1741,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                         end
                         
                      else
-                        Log.log( Log.Level.Warn, __func__, 1187, function (  )
+                        Log.log( Log.Level.Warn, __func__, 1188, function (  )
                         
                            return string.format( "%s not found lua in %s", orgMod, tostring( self.option.outputDir))
                         end )
@@ -1751,6 +1753,20 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                   
                   if meta ~= nil then
                      self.moduleMgr:addMeta( orgMod, meta )
+                     if self.option.mode == Option.ModeKind.Exec then
+                        
+                        if luaPath ~= nil then
+                           do
+                              local luaCode = Util.readFile( luaPath )
+                              if luaCode ~= nil then
+                                 self:regConvertedMap( orgMod, luaCode, meta )
+                              end
+                           end
+                           
+                        end
+                        
+                     end
+                     
                   else
                      local metawork, luaTxt = self:loadParserToLuaCode( importModuleInfo, _lune.newAlge( Types.ParserSrc.LnsPath, {nil,lnsPath,orgMod,nil}), lnsPath, orgMod, baseDir )
                      self:regConvertedMap( orgMod, luaTxt, metawork )
@@ -2055,13 +2071,11 @@ function Front:outputBootC( scriptPath )
 end
 
 
-local function convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
+function Front:convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
 
-   local front = Front._new(option)
-   
-   return front:convertLns2LuaCode( frontInterface.ImportModuleInfo._new(), TransUnit.AnalyzeMode.Compile, _lune.newAlge( Types.ParserSrc.LnsCode, {lnsCode,path,nil}), baseDir, Parser.TxtStream._new(lnsCode), path )
+   return self:convertLns2LuaCode( frontInterface.ImportModuleInfo._new(), TransUnit.AnalyzeMode.Compile, _lune.newAlge( Types.ParserSrc.LnsCode, {lnsCode,path,nil}), baseDir, Parser.TxtStream._new(lnsCode), path )
 end
-_moduleObj.convertLnsCode2LuaCodeWithOpt = convertLnsCode2LuaCodeWithOpt
+
 
 local function convertLnsCode2LuaCode( lnsCode, path, baseDir )
 
@@ -2070,7 +2084,8 @@ local function convertLnsCode2LuaCode( lnsCode, path, baseDir )
    option.useLuneModule = Option.getRuntimeModule(  )
    option.useIpairs = true
    
-   return convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
+   local front = Front._new(option)
+   return front:convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
 end
 _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 
@@ -2256,7 +2271,7 @@ function Front:build( buildMode, astCallback )
                if _exp ~= nil then
                   astCallback( _exp )
                else
-                  Log.log( Log.Level.Err, __func__, 1672, function (  )
+                  Log.log( Log.Level.Err, __func__, 1681, function (  )
                   
                      return string.format( "not found AST -- %s", mod)
                   end )
@@ -2290,24 +2305,15 @@ local function build( option, astCallback )
 end
 _moduleObj.build = build
 
-function Front:executeLns( path, baseDir )
-   local __func__ = '@lune.@base.@front.Front.executeLns'
+function Front:setupPreloadWithImportedModules( asyncFlag )
 
-   local _
-   
-   local mod = Util.scriptPath2ModuleFromProjDir( path, baseDir )
-   
-   local parserSrc = _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,path,mod,nil})
-   local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, baseDir )
-   Log.log( Log.Level.Debug, __func__, 1705, function (  )
-   
-      return "luacode: " .. luaCode
-   end )
    
    
-   do
-      
-      local subModPreLoad = [==[
+   if asyncFlag then
+      do
+         do
+            
+            local subModPreLoad = [==[
 return function( submod2Code, dumpCode )
    local preloadFunc = function( mod )
       code = submod2Code[ mod ]
@@ -2326,23 +2332,94 @@ return function( submod2Code, dumpCode )
    end
 end
 ]==]
-      local loaded = _lune.loadstring51( subModPreLoad )
-      if  nil == loaded then
-         local _loaded = loaded
-      
-         Util.err( "failed to subModPreLoad" )
+            local loaded = _lune.loadstring51( subModPreLoad )
+            if  nil == loaded then
+               local _loaded = loaded
+            
+               Util.err( "failed to subModPreLoad" )
+            end
+            
+            local preloadFunc = loaded(  )
+            if  nil == preloadFunc then
+               local _preloadFunc = preloadFunc
+            
+               Util.err( "failed to preloadFunc" )
+            end
+            
+            (preloadFunc )( self.convertedMap, Log.getLevel(  ) >= Log.Level.Debug )
+         end
+         
+         
+         
       end
       
-      local preloadFunc = loaded(  )
-      if  nil == preloadFunc then
-         local _preloadFunc = preloadFunc
-      
-         Util.err( "failed to preloadFunc" )
+   else
+    
+      do
+         do
+            
+            local subModPreLoad = [==[
+return function( submod2Code, dumpCode )
+   local preloadFunc = function( mod )
+      code = submod2Code[ mod ]
+      local loadFunc = loadstring or load -- lua5.1 and lua5.2
+      local loaded, mess = loadFunc( code )
+      if not loaded then
+         error( mess )
+      end
+      return loaded()
+   end
+   for mod, code in pairs( submod2Code ) do
+      if dumpCode then
+         print( string.format( "mod: %s %s", mod, code ) )
+      end
+      package.preload[ mod ] = preloadFunc
+   end
+end
+]==]
+            local loaded = _lune.loadstring51( subModPreLoad )
+            if  nil == loaded then
+               local _loaded = loaded
+            
+               Util.err( "failed to subModPreLoad" )
+            end
+            
+            local preloadFunc = loaded(  )
+            if  nil == preloadFunc then
+               local _preloadFunc = preloadFunc
+            
+               Util.err( "failed to preloadFunc" )
+            end
+            
+            (preloadFunc )( self.convertedMap, Log.getLevel(  ) >= Log.Level.Debug )
+         end
+         
+         
+         
       end
       
-      (preloadFunc )( self.convertedMap, Log.getLevel(  ) >= Log.Level.Debug )
    end
    
+   
+end
+
+
+function Front:executeLns( path, baseDir )
+   local __func__ = '@lune.@base.@front.Front.executeLns'
+
+   local _
+   
+   local mod = Util.scriptPath2ModuleFromProjDir( path, baseDir )
+   
+   local parserSrc = _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,path,mod,nil})
+   local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, baseDir )
+   Log.log( Log.Level.Debug, __func__, 1760, function (  )
+   
+      return "luacode: " .. luaCode
+   end )
+   
+   
+   self:setupPreloadWithImportedModules( false )
    
    return loadFromLuaTxt( luaCode ), mod
 end
@@ -2385,7 +2462,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1769, function (  )
+   Log.log( Log.Level.Trace, __func__, 1795, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       

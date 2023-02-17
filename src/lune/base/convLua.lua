@@ -637,8 +637,7 @@ function ConvFilter:processImport( node, opt )
 
    local info = node:get_info()
    local modulePath = info:get_modulePath()
-   local modSym = modulePath:gsub( ".*%.", "" )
-   modSym = info:get_assignName()
+   local modSym = info:get_assignName()
    self:writeRaw( string.format( "local %s = _lune.", modSym) )
    do
       local _switchExp = info:get_lazy()
@@ -1525,7 +1524,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1090, function (  )
+   Log.log( Log.Level.Log, __func__, 1089, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
    end )
@@ -2566,6 +2565,13 @@ end
 
 
 
+function ConvFilter:processExpMacroArgExp( node, opt )
+
+   
+   filter( node:get_exp(), self, node )
+end
+
+
 function ConvFilter:processExpMacroExp( node, opt )
 
    for __index, stmt in ipairs( node:get_stmtList() ) do
@@ -3042,17 +3048,6 @@ function ConvFilter:processDeclVar( node, opt )
       end
    end
    
-   if node:get_syncBlock() then
-      self:writeln( "do" )
-      self:pushIndent(  )
-      for __index, varInfo in ipairs( node:get_symbolInfoList() ) do
-         self:writeln( string.format( "local _sync_%s", getSymbolTxt( varInfo )) )
-      end
-      
-      self:writeln( "do" )
-      self:pushIndent(  )
-   end
-   
    
    if node:get_mode() ~= Nodes.DeclVarMode.Unwrap and node:get_accessMode(  ) ~= Ast.AccessMode.Global then
       self:writeRaw( "local " )
@@ -3061,6 +3056,26 @@ function ConvFilter:processDeclVar( node, opt )
    
    local varList = node:get_symbolInfoList()
    local varNameList = {}
+   
+   local function outputPub(  )
+   
+      do
+         local _switchExp = node:get_accessMode(  )
+         if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
+            self:writeln( "" )
+            for __index, varName in ipairs( varNameList ) do
+               local name = varName
+               if self.needModuleObj then
+                  self:writeln( string.format( "_moduleObj.%s = %s", name, name) )
+               end
+               
+            end
+            
+         end
+      end
+      
+   end
+   
    for index, var in ipairs( varList ) do
       if index > 1 then
          self:writeRaw( ", " )
@@ -3117,40 +3132,27 @@ function ConvFilter:processDeclVar( node, opt )
             if thenBlock ~= nil then
                self:writeln( "else" )
                self:pushIndent(  )
+               outputPub(  )
                filter( thenBlock, self, node )
                self:popIndent(  )
+            else
+               do
+                  local _switchExp = node:get_accessMode(  )
+                  if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
+                     self:writeln( "else" )
+                     self:pushIndent(  )
+                     outputPub(  )
+                     self:popIndent(  )
+                  end
+               end
+               
             end
          end
          
          
-         
          self:writeln( "end" )
-      end
-   end
-   
-   
-   do
-      local _exp = node:get_syncBlock()
-      if _exp ~= nil then
-         filter( _exp, self, node )
-         
-         local syncVarNameList = {}
-         
-         for __index, varInfo in ipairs( node:get_symbolInfoList() ) do
-            local name = getSymbolTxt( varInfo )
-            table.insert( syncVarNameList, name )
-            self:writeln( string.format( "_sync_%s = %s", name, name) )
-         end
-         
-         self:popIndent(  )
-         self:writeln( "end" )
-         
-         for __index, name in ipairs( syncVarNameList ) do
-            self:writeln( string.format( "%s = _sync_%s", name, name) )
-         end
-         
-         self:popIndent(  )
-         self:writeln( "end" )
+      else
+         outputPub(  )
       end
    end
    
@@ -3158,13 +3160,8 @@ function ConvFilter:processDeclVar( node, opt )
    do
       local _switchExp = node:get_accessMode(  )
       if _switchExp == Ast.AccessMode.Pub or _switchExp == Ast.AccessMode.Global then
-         self:writeln( "" )
          for index, varName in ipairs( varNameList ) do
             local name = varName
-            if self.needModuleObj then
-               self:writeln( string.format( "_moduleObj.%s = %s", name, name) )
-            end
-            
             self.pubVarName2InfoMap[name] = PubVerInfo._new(node:get_staticFlag(), node:get_accessMode(), node:get_symbolInfoList()[index]:get_mutable(), node:get_typeInfoList()[index])
          end
          

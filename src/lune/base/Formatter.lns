@@ -644,10 +644,6 @@ pub override fn FormatterFilter.processDeclVar(
       self.write( "then" );
       filter( _exp, self, opt.nextOpt( node ) );
    }
-   if! node.$syncBlock {
-      self.write( "do" );
-      filter( _exp, self, opt.nextOpt( node ) );
-   }
    self.writeln( ";" );
 };
 pub override fn FormatterFilter.processDeclArg(

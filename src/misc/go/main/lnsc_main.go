@@ -40,7 +40,10 @@ func main() {
 		args = append(args, arg)
 	}
 
+	// lua から lnsc のコードにアクセスするための処理。
+	// Lns_InitModOnce() よりも先に行なう。
 	lnsc.InitBinding()
+
 	Lns_InitModOnce()
 	Lns_RunMain(lnsc.Front___main)
 }

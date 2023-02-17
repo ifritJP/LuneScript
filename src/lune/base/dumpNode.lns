@@ -383,9 +383,6 @@ pub override fn dumpFilter.processDeclVar(
    //       filter( _exp, self, opt.nextOpt() );
    //    }
    // }
-   if! node.$syncBlock {
-      filter( _exp, self, opt.nextOpt() );
-   }
 };
 pub override fn dumpFilter.processDeclArg(
    node: &Nodes.DeclArgNode, opt:Opt ) mut
@@ -842,7 +839,7 @@ pub override fn dumpFilter.processTupleConst(
 pub override fn dumpFilter.processLiteralList(
    node: &Nodes.LiteralListNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "%s" (node.$expType.getTxt(##)));
+   self.dump( opt, node, node.$expType.getTxt(##) );
    if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }

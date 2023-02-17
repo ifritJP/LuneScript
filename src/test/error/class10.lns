@@ -1,0 +1,4 @@
+{
+   proto class AAA;
+   class BBB extend AAA; // error
+}

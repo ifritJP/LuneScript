@@ -3612,9 +3612,6 @@ pub override fn convFilter.processDeclVar(
 
          self.writeln( "}" );
       }
-      default {
-         Util.err( "not support -- %s" (__func__) ); // バグ
-      }
    }
 }
 

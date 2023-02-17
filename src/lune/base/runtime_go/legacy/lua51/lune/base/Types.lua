@@ -293,6 +293,7 @@ function TransCtrlInfo._new(  )
    return obj
 end
 function TransCtrlInfo:__init() 
+   self.defaultGenInherit = true
    self.useWaiter = true
    self.macroAsyncParseStmtLen = 500
    self.warningShadowing = false

@@ -818,7 +818,8 @@ _moduleObj.getNodeKindName = getNodeKindName
 function Filter:defaultProcess( node, opt )
 
    if self.errorOnDefault then
-      Util.err( string.format( "not implement yet -- %s", getNodeKindName( node:get_kind() )) )
+      local pos = node:get_pos():get_orgPos(  )
+      Util.err( string.format( "not implement yet -- %s:%s:%d:%d", getNodeKindName( node:get_kind() ), pos.streamName, pos.lineNo, pos.column) )
    end
    
 end
@@ -9120,12 +9121,9 @@ end
 DeclVarMode.Let = 0
 DeclVarMode._val2NameMap[0] = 'Let'
 DeclVarMode.__allList[1] = DeclVarMode.Let
-DeclVarMode.Sync = 1
-DeclVarMode._val2NameMap[1] = 'Sync'
-DeclVarMode.__allList[2] = DeclVarMode.Sync
-DeclVarMode.Unwrap = 2
-DeclVarMode._val2NameMap[2] = 'Unwrap'
-DeclVarMode.__allList[3] = DeclVarMode.Unwrap
+DeclVarMode.Unwrap = 1
+DeclVarMode._val2NameMap[1] = 'Unwrap'
+DeclVarMode.__allList[2] = DeclVarMode.Unwrap
 
 
 function NodeKind.get_DeclVar(  )
@@ -9169,13 +9167,13 @@ function DeclVarNode:canBeStatement(  )
 
    return true
 end
-function DeclVarNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock )
    local obj = {}
    DeclVarNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock ); end
    return obj
 end
-function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock) 
+function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock) 
    Node.__init( self,managerId, id, 54, pos, inTestBlock, macroArgFlag, typeList)
    
    
@@ -9191,14 +9189,12 @@ function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeL
    self.unwrapFlag = unwrapFlag
    self.unwrapBlock = unwrapBlock
    self.thenBlock = thenBlock
-   self.syncVarList = syncVarList
-   self.syncBlock = syncBlock
    
    
 end
-function DeclVarNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock )
+function DeclVarNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock )
 
-   local node = DeclVarNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock, syncVarList, syncBlock)
+   local node = DeclVarNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock)
    nodeMan:addNode( node )
    return node
 end
@@ -9288,34 +9284,6 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
       
    end
    
-   do
-      do
-         local child = self.syncBlock
-         if child ~= nil then
-            if not _lune._Set_has(alreadySet, child ) then
-               alreadySet[child]= true
-               do
-                  local _switchExp = visitor( child, self, 'syncBlock', depth )
-                  if _switchExp == NodeVisitMode.Child then
-                     if not child:visit( visitor, depth + 1, alreadySet ) then
-                        return false
-                     end
-                     
-                  elseif _switchExp == NodeVisitMode.End then
-                     return false
-                  elseif _switchExp == NodeVisitMode.Next then
-                  end
-               end
-               
-            end
-            
-            
-            
-         end
-      end
-      
-   end
-   
    
    
    return self:visitSub( visitor, depth + 1, alreadySet )
@@ -9363,12 +9331,6 @@ function DeclVarNode:get_unwrapBlock()
 end
 function DeclVarNode:get_thenBlock()
    return self.thenBlock
-end
-function DeclVarNode:get_syncVarList()
-   return self.syncVarList
-end
-function DeclVarNode:get_syncBlock()
-   return self.syncBlock
 end
 
 
@@ -9450,46 +9412,6 @@ function DeclVarNode:getBreakKind( checkMode )
                   
                end
                
-               
-               do
-                  local syncBlock = self.syncBlock
-                  if syncBlock ~= nil then
-                     work = syncBlock:getBreakKind( checkMode )
-                     if checkMode == CheckBreakMode.IgnoreFlowReturn then
-                        if work == BreakKind.Return then
-                           return BreakKind.Return
-                        end
-                        
-                        if work == BreakKind.NeverRet then
-                           return BreakKind.NeverRet
-                        end
-                        
-                     else
-                      
-                        do
-                           local _switchExp = work
-                           if _switchExp == BreakKind.None then
-                              if checkMode == CheckBreakMode.Normal or checkMode == CheckBreakMode.Return then
-                                 if true then
-                                    return BreakKind.None
-                                 end
-                                 
-                              end
-                              
-                           else 
-                              
-                                 if kind == BreakKind.None or kind > work then
-                                    kind = work
-                                 end
-                                 
-                           end
-                        end
-                        
-                     end
-                     
-                     
-                  end
-               end
                
                return kind
             end

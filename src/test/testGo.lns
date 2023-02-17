@@ -2994,3 +2994,64 @@ _section();
    let hoge = func()...;
    hoge.func();
 }
+_section();
+fn func1__() : str! {
+   return "hoge";
+}
+pub let! val__ = func1__() {
+   val__ = "aaa";
+} then {
+   print( "then", val__ );
+};  
+print( "next", val__ );
+pub let! val1__ = func1__() {
+   val1__ = "aaa";
+};
+print( "next", val1__ );
+
+
+fn func2__() : str! {
+   return nil;
+}
+pub let! val2__ = func2__() {
+   val2__ = "aaa";
+} then {
+   print( "then", val2__ );
+};  
+print( "next", val2__ );
+pub let! val3__ = func2__() {
+   val3__ = "aaa";
+};
+print( "next", val3__ );
+_section();
+{
+   proto class AAA;
+   proto class BBB extend AAA;
+   class AAA {
+   }
+   class BBB extend AAA {
+   }
+}
+_section();
+{
+   macro _test( cond:bool, block1:__block, block2:__block ) {
+      {
+         let mut block;
+
+         if cond {
+            block = block1;
+         } else {
+            block = block2;
+         }
+      }
+      ,,block;
+   }
+   macro _hoge() {
+      print( "AAA" );
+   }
+   macro _age() {
+      _test( true, { print( "hoge" ); }, { _hoge(); } );
+      _test( false, { print( "hoge" ); }, { _hoge(); } );
+   }
+   _age();
+}

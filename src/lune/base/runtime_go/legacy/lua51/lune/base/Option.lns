@@ -465,6 +465,9 @@ usage:
                case "--enableAsyncCtl" {
                   option.transCtrlInfo.validAsyncCtrl = true;
                }
+               case "--disableGenInherit" {
+                  option.transCtrlInfo.defaultGenInherit = false;
+               }
                case "--defaultAsync" {
                   option.transCtrlInfo.defaultAsync = true;
                }
