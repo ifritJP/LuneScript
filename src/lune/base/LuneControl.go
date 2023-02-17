@@ -83,7 +83,7 @@ func (self *LuneControl_Pragma__ignore_symbol_) GetTxt() string {
 return "Pragma.ignore_symbol_"
 }
 type LuneControl_Pragma__limit_conv_code struct{
-Val1 *LnsSet
+Val1 *LnsSet2_[string]
 }
 func (self *LuneControl_Pragma__limit_conv_code) GetTxt() string {
 return "Pragma.limit_conv_code"

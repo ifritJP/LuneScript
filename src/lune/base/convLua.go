@@ -55,39 +55,39 @@ func convLua_ExportIdKind_getTxt(arg1 LnsInt) string {
 var convLua_stepIndent LnsInt
 type convLua_outputMacroStmtBlock_13_ func (_env *LnsEnv)
 // for 4060
-func convLua_convExp0_4762(arg1 []LnsAny) LnsAny {
+func convLua_convExp0_4748(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3818
-func convLua_convExp0_3737(arg1 []LnsAny) LnsInt {
+func convLua_convExp0_3723(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
 // for 1535
-func convLua_convExp2_2210(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2208(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1536
-func convLua_convExp2_2225(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2223(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1546
-func convLua_convExp2_2287(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2285(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1554
-func convLua_convExp2_2338(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2336(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1622
-func convLua_convExp2_2708(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2705(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 1684
-func convLua_convExp2_2981(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_2978(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 2016
-func convLua_convExp2_4585(arg1 []LnsAny) (string, bool, string) {
+func convLua_convExp2_4582(arg1 []LnsAny) (string, bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ).(string)
 }
 // for 3184
@@ -99,11 +99,11 @@ func convLua_convExp4_2157(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
 // for 3983
-func convLua_convExp0_4290(arg1 []LnsAny) LnsAny {
+func convLua_convExp0_4276(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 4058
-func convLua_convExp0_4510(arg1 []LnsAny) (LnsAny, LnsAny) {
+func convLua_convExp0_4496(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
@@ -556,7 +556,7 @@ type convLua_ConvFilter struct {
     pubFuncName2InfoMap *LnsMap
     needIndent bool
     macroDepth LnsInt
-    macroVarSymSet *LnsSet
+    macroVarSymSet *LnsSet2_[*Ast_SymbolInfo]
     moduleTypeInfo *Ast_TypeInfo
     moduleSymbolKind LnsInt
     needModuleObj bool
@@ -611,7 +611,7 @@ func (self *convLua_ConvFilter) InitconvLua_ConvFilter(_env *LnsEnv, streamName 
     self.moduleType2SymbolMap = NewLnsMap( map[LnsAny]LnsAny{})
     self.processInfo = processInfo
     self.enableTest = enableTest
-    self.macroVarSymSet = NewLnsSet([]LnsAny{})
+    self.macroVarSymSet = NewLnsSet2_[*Ast_SymbolInfo]([]*Ast_SymbolInfo{})
     self.needModuleObj = true
     self.indentQueue = NewLnsList([]LnsAny{0})
     self.moduleSymbolKind = moduleSymbolKind
@@ -1351,8 +1351,8 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
         }
         return convLua_ExportIdKind__Discarded
     }
-    var wroteTypeIdSet *LnsSet
-    wroteTypeIdSet = NewLnsSet([]LnsAny{})
+    var wroteTypeIdSet *LnsSet2_[*Ast_IdInfo]
+    wroteTypeIdSet = NewLnsSet2_[*Ast_IdInfo]([]*Ast_IdInfo{})
     var convLua_outputTypeInfo func(_env *LnsEnv, typeInfo *Ast_TypeInfo)
     convLua_outputTypeInfo = func(_env *LnsEnv, typeInfo *Ast_TypeInfo) {
         if Ast_isBuiltin(_env, typeInfo.FP.Get_typeId(_env).Id){
@@ -1374,10 +1374,10 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
         }
         var typeId *Ast_IdInfo
         typeId = typeInfo.FP.Get_typeId(_env)
-        if wroteTypeIdSet.Has(Ast_IdInfo2Stem(typeId)){
+        if wroteTypeIdSet.Has(typeId){
             return 
         }
-        wroteTypeIdSet.Add(Ast_IdInfo2Stem(typeId))
+        wroteTypeIdSet.Add(typeId)
         self.FP.WriteRaw(_env, _env.GetVM().String_format("__typeInfoList[%d] = ", []LnsAny{listIndex}))
         listIndex = listIndex + 1
         var validChildren *LnsMap
@@ -1425,8 +1425,8 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
     }
     self.FP.writeln(_env, "local __dependIdMap = {}")
     self.FP.writeln(_env, "_moduleObj.__dependIdMap = __dependIdMap")
-    var exportNeedModuleTypeInfo *LnsSet
-    exportNeedModuleTypeInfo = NewLnsSet([]LnsAny{})
+    var exportNeedModuleTypeInfo *LnsSet2_[*Ast_TypeInfo]
+    exportNeedModuleTypeInfo = NewLnsSet2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
     {
         var module2TypeList *LnsMap
         module2TypeList = NewLnsMap( map[LnsAny]LnsAny{})
@@ -1461,7 +1461,7 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
                         typeInfo := __forsortCollection8.Items[ ___forsortKey8 ].(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         var moduleTypeInfo *Ast_TypeInfo
                         moduleTypeInfo = typeInfo.FP.GetModule(_env)
-                        exportNeedModuleTypeInfo.Add(Ast_TypeInfo2Stem(moduleTypeInfo))
+                        exportNeedModuleTypeInfo.Add(moduleTypeInfo)
                         var ret LnsInt
                         ret = convLua_outputDepend(_env, typeInfo, moduleTypeInfo)
                         if ret == convLua_ExportIdKind__Normal{
@@ -1473,8 +1473,8 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
         }
     }
     for _moduleTypeInfo := range( node.FP.Get_useModuleMacroSet(_env).Items ) {
-        moduleTypeInfo := _moduleTypeInfo.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
-        exportNeedModuleTypeInfo.Add(Ast_TypeInfo2Stem(moduleTypeInfo))
+        moduleTypeInfo := _moduleTypeInfo
+        exportNeedModuleTypeInfo.Add(moduleTypeInfo)
     }
     self.FP.writeln(_env, "local __dependModuleMap = {}")
     self.FP.writeln(_env, "_moduleObj.__dependModuleMap = __dependModuleMap")
@@ -1487,7 +1487,7 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
             name := _name.(string)
             var moduleTypeInfo *Ast_TypeInfo
             moduleTypeInfo = exportInfo.FP.Get_moduleTypeInfo(_env)
-            self.FP.writeln(_env, _env.GetVM().String_format("__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", []LnsAny{name, Lns_unwrap( importModuleType2Index.Get(moduleTypeInfo)).(LnsInt), exportNeedModuleTypeInfo.Has(Ast_TypeInfo2Stem(moduleTypeInfo)), (Lns_unwrap( node.FP.Get_importModule2moduleInfo(_env).Get(moduleTypeInfo)).(*FrontInterface_ExportInfo)).FP.Get_moduleId(_env).FP.Get_idStr(_env)}))
+            self.FP.writeln(_env, _env.GetVM().String_format("__dependModuleMap[ '%s' ] = { typeId = %d, use = %s, buildId = %q }", []LnsAny{name, Lns_unwrap( importModuleType2Index.Get(moduleTypeInfo)).(LnsInt), exportNeedModuleTypeInfo.Has(moduleTypeInfo), (Lns_unwrap( node.FP.Get_importModule2moduleInfo(_env).Get(moduleTypeInfo)).(*FrontInterface_ExportInfo)).FP.Get_moduleId(_env).FP.Get_idStr(_env)}))
         }
     }
     self.FP.WriteRaw(_env, "_moduleObj.__subModuleMap = {")
@@ -2147,10 +2147,10 @@ func (self *convLua_ConvFilter) ProcessDeclClass(_env *LnsEnv, node *Nodes_DeclC
     memberList = NewLnsList([]LnsAny{})
     var fieldList *LnsList
     fieldList = nodeInfo.FP.Get_fieldList(_env)
-    var outerMethodSet *LnsSet
+    var outerMethodSet *LnsSet2_[string]
     outerMethodSet = nodeInfo.FP.Get_outerMethodSet(_env)
-    var methodNameSet *LnsSet
-    methodNameSet = NewLnsSet([]LnsAny{})
+    var methodNameSet *LnsSet2_[string]
+    methodNameSet = NewLnsSet2_[string]([]string{})
     if classTypeInfo.FP.Get_kind(_env) != Ast_TypeInfoKind__IF{
         for _, _field := range( fieldList.Items ) {
             field := _field.(Nodes_NodeDownCast).ToNodes_Node()
@@ -2873,7 +2873,7 @@ func (self *convLua_ConvFilter) ProcessDeclVar(_env *LnsEnv, node *Nodes_DeclVar
             varName = convLua_getSymbolTxt_5_(_env, symbolInfo)
             self.FP.writeln(_env, _env.GetVM().String_format("table.insert( macroVar.__names, '%s' )", []LnsAny{varName}))
             self.FP.writeln(_env, _env.GetVM().String_format("macroVar.%s = %s", []LnsAny{varName, varName}))
-            self.macroVarSymSet.Add(Ast_SymbolInfo2Stem(symbolInfo))
+            self.macroVarSymSet.Add(symbolInfo)
         }
     }
 }
@@ -3685,7 +3685,7 @@ func (self *convLua_ConvFilter) ProcessExpRef(_env *LnsEnv, node *Nodes_ExpRefNo
         if node.FP.Get_expType(_env).FP.Equals(_env, self.processInfo, builtinFunc.Lns__load, nil, nil){
             self.FP.WriteRaw(_env, "_lune." + self.targetLuaVer.FP.Get_loadStrFuncName(_env))
         } else { 
-            if self.macroVarSymSet.Has(Ast_SymbolInfo2Stem(node.FP.Get_symbolInfo(_env).FP.GetOrg(_env))){
+            if self.macroVarSymSet.Has(node.FP.Get_symbolInfo(_env).FP.GetOrg(_env)){
                 self.FP.WriteRaw(_env, "macroVar.")
             } else { 
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
@@ -4028,7 +4028,7 @@ func (self *convLua_ConvFilter) ProcessLiteralString(_env *LnsEnv, node *Nodes_L
                 var matchFlag LnsInt
                 matchFlag = TransUnit_FormType__Match
                 if index <= opList.Len(){
-                    matchFlag = convLua_convExp0_3737(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index).(string), val.FP.Get_expType(_env), self.targetLuaVer)))
+                    matchFlag = convLua_convExp0_3723(Lns_2DDD(TransUnit_isMatchStringFormatType(_env, opList.GetAt(index).(string), val.FP.Get_expType(_env), self.targetLuaVer)))
                 }
                 if matchFlag == TransUnit_FormType__NeedConv{
                     self.FP.WriteRaw(_env, "tostring( ")

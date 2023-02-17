@@ -83,7 +83,7 @@ func (self *Formatter_FormatterFilter) ProcessLuneControl(_env *LnsEnv, node *No
         codeSet := _matchExp0.Val1
         self.FP.Write(_env, "limit_conv_code")
         for _code := range( codeSet.Items ) {
-            code := _code.(string)
+            code := _code
             self.FP.Write(_env, _env.GetVM().String_format(" %s", []LnsAny{code}))
         }
     case *LuneControl_Pragma__use_async:

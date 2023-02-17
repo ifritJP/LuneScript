@@ -648,35 +648,37 @@ curNsInfo が nil になる。
             }
          }
 
-         fn compareList( protoList:&List<&Ast.TypeInfo>,
-                         typeList:&List<&Ast.TypeInfo>, message:str )
-         {
-            if #protoList == #typeList {
-               foreach protoType, index in protoList {
-                  if protoType ~= typeList[ index ] {
-                     self.addErrMess(
-                        errPos,
-                        "mismatch class(%s) %s(%s) for prototype %s(%s)"
-                        ( typeInfo.getTxt(self.typeNameCtrl##), message,
-                          typeList[ index ].getTxt(self.typeNameCtrl##),
-                          message, protoType.getTxt(##)));
+         macro _compareList( protoList:__exp, typeListArg:__exp, message:str ) {
+            {}
+             {
+               let typeList = ,,typeListArg;
+               if #,,protoList == #typeList {
+                  foreach protoType, index in ,,protoList {
+                     if protoType ~= typeList[ index ] {
+                        self.addErrMess(
+                           errPos,
+                           "mismatch class(%s) %s(%s) for prototype %s(%s)"
+                           ( typeInfo.getTxt(self.typeNameCtrl##), ,,message,
+                             typeList[ index ].getTxt(self.typeNameCtrl##),
+                             ,,message, protoType.getTxt(##)));
+                     }
                   }
                }
-            }
-            else {
-               self.addErrMess(
-                  errPos,
-                  "mismatch class(%s) %s(%d) for prototype %s(%d)"
-                  ( typeInfo.getTxt(self.typeNameCtrl##), message, #typeList,
-                    message, #protoList) );
+               else {
+                  self.addErrMess(
+                     errPos,
+                     "mismatch class(%s) %s(%d) for prototype %s(%d)"
+                     ( typeInfo.getTxt(self.typeNameCtrl##), ,,message, #typeList,
+                       ,,message, #,,protoList) );
+               }
             }
          }
          
-         compareList( typeInfo.$interfaceList,
-                      unwrap interfaceList default [], "interface" );
+         _compareList( typeInfo.$interfaceList,
+                       unwrap interfaceList default [], "interface" );
          
-         compareList( typeInfo.$itemTypeInfoList,
-                      unwrap genTypeList default [], "generics" );
+         _compareList( typeInfo.$itemTypeInfoList,
+                       unwrap genTypeList default [], "generics" );
 
          
 

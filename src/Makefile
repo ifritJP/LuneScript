@@ -642,6 +642,7 @@ TEST_CASE += generics2.lns
 TEST_CASE += generics3.lns
 TEST_CASE += generics4.lns
 TEST_CASE += box.lns
+TEST_CASE += box2.lns
 TEST_CASE += form.lns
 TEST_CASE += ddd.lns
 TEST_CASE += immediate.lns

@@ -310,7 +310,7 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       return nil, mess;
    }
 
-   pub fn parse() mut : Types.Token[]!;
+   pub fn parse() mut : List<Types.Token>!;
 
    pro override fn access() mut : Async.PipeItem<AsyncItem>! {
       let! tokenList = self.parse() {
@@ -561,7 +561,7 @@ fn Parser.addVal(
 
 
 
-pub fn Parser.parse() mut : Types.Token[]! {
+pub fn Parser.parse() mut : List<Types.Token>! {
    let! mut rawLine = self.readLine() {
       return nil;
    };

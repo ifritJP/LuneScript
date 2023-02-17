@@ -398,7 +398,7 @@ _DefBuiltinFuncType( [
       },
    },
    {
-      "List<T>": {
+      "_List<T>": {
          "__less": { "type": [ "formfunc" ],
                         "arg": [ "T", "T" ], "ret":[ "bool" ] },
          "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
@@ -428,14 +428,26 @@ _DefBuiltinFuncType( [
       },
    },
    {
-      "Set<T>": {
+      "_Set<T>": {
          "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
          "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
          "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
-         "and": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
-         "or": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
-         "sub": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
-         "clone": { "type": [ "method" ], "arg": [], "ret": [ "Set<T>" ] },
+         "and": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+         "or": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+         "sub": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+         "clone": { "type": [ "method" ], "arg": [], "ret": [ "_Set<T>" ] },
+         "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
+      },
+   },
+   {
+      "__Set<T>": {
+         "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+         "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+         "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
+         "and": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
+         "or": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
+         "sub": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
+         "clone": { "type": [ "method" ], "arg": [], "ret": [ "__Set<T>" ] },
          "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
       },
    },
@@ -544,7 +556,8 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
                }
                let keyType = genTypeList[ 1 ];
                let valType = genTypeList[ 2 ];
-               return self.processInfo.createMap(
+               return self.processInfo.createMap_(
+                  typeInfo.$canDealGenInherit,
                   .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
             }
             case .Ext {
@@ -862,7 +875,7 @@ fn Builtin.createBuiltinAlge(
             self.processInfo, self.transUnit.$scope, .Class, nil## );
          let mut algeTypeInfo = self.processInfo.createAlge(
             algeScope, parentInfo, Ast.getBuiltinMut( parentInfo ),
-            false, .Pub, algeName, genTypeList );
+            false, .Pub, algeName, [ genTypeList.unpack() ] );
          Ast.addBuiltinMut( algeTypeInfo, algeScope );
          builtinFunc.registerAlge( algeTypeInfo );
 
@@ -902,8 +915,8 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
 
    let mut builtinModuleName2Scope:Map<str,Ast.Scope> = {};
 
-   let mapType = self.processInfo.createMap(
-      .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
+   let mapType = self.processInfo.createMap_(
+      true, .Pub, Ast.headTypeInfo, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
    self.transUnit.$scope.addVar(
       self.processInfo, .Global, "_ENV", nil, mapType, .IMutRe, true );
    self.transUnit.$scope.addVar(
@@ -927,10 +940,10 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
          let mut genTypeList:List<&Ast.AlternateTypeInfo> = [];
 
          switch className {
-            case "List<T>" {
-               name = "List";
+            case "_List<T>" {
+               name = "_List";
                processCopyAlterList(
-                  genTypeList, Ast.builtinTypeList.$itemTypeInfoList );
+                  genTypeList, Ast.builtinTypeList_.$itemTypeInfoList );
             }
             case "__List<T>" {
                name = "__List";
@@ -942,15 +955,25 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                processCopyAlterList(
                   genTypeList, Ast.builtinTypeArray.$itemTypeInfoList );
             }
-            case "Set<T>" {
-               name = "Set";
+            case "_Set<T>" {
+               name = "_Set";
                processCopyAlterList(
-                  genTypeList, Ast.builtinTypeSet.$itemTypeInfoList );
+                  genTypeList, Ast.builtinTypeSet_.$itemTypeInfoList );
+            }
+            case "__Set<T>" {
+               name = "__Set";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeSet__.$itemTypeInfoList );
             }
             case "Map<K,V>" {
                name = "Map";
                processCopyAlterList(
-                  genTypeList, Ast.builtinTypeMap.$itemTypeInfoList );
+                  genTypeList, Ast.builtinTypeMap_.$itemTypeInfoList );
+            }
+            case "__Map<K,V>" {
+               name = "__Map";
+               processCopyAlterList(
+                  genTypeList, Ast.builtinTypeMap__.$itemTypeInfoList );
             }
             case "Nilable<_T>" {
                name = "Nilable";
@@ -1006,8 +1029,10 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
          builtinFunc.io_open,
 
          // 以下はとりあえず ok とする
-         builtinFunc.set_has,
-         builtinFunc.set_add
+         builtinFunc._set_has,
+         builtinFunc._set_add,
+         builtinFunc.__set_has,
+         builtinFunc.__set_add
        );
    
    foreach typeInfo in builtinFunc.$allFuncTypeSet {

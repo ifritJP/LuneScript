@@ -5232,7 +5232,7 @@ local static fn NormalTypeInfo.createBuiltin(
 
    let canDealGenInherit;
    switch typeTxt {
-      case "__List" {
+      case "__List", "__Set", "__Map" {
          canDealGenInherit = false;
       }
       default {
@@ -5304,6 +5304,10 @@ pub let builtinTypeString:&TypeInfo =
    NormalTypeInfo.createBuiltin( "String", "str" , .Class, nil, [ builtinTypeMapping ] );
 pub let builtinTypeMap:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Map", "Map" , .Map## );
+pub let builtinTypeMap_:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "_Map", "_Map" , .Map## );
+pub let builtinTypeMap__:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "__Map", "__Map" , .Map## );
 pub let builtinTypeSet:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Set", "Set" , .Set## );
 pub let builtinTypeList:&TypeInfo =
@@ -5312,6 +5316,10 @@ pub let builtinTypeList_:&TypeInfo =
    NormalTypeInfo.createBuiltin( "_List", "_List" , .List## );
 pub let builtinTypeList__:&TypeInfo =
    NormalTypeInfo.createBuiltin( "__List", "__List" , .List## );
+pub let builtinTypeSet_:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "_Set", "_Set" , .Set## );
+pub let builtinTypeSet__:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "__Set", "__Set" , .Set## );
 pub let builtinTypeArray:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Array", "Array" , .Array## );
 
@@ -5626,41 +5634,74 @@ macro _createType( newType:__exp ) {
 }
 
 
-pub fn ProcessInfo.createSet(
+// pub fn ProcessInfo.createSet(
+//    accessMode: AccessMode, parentInfo: &TypeInfo,
+//    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode )  mut : &TypeInfo
+// {
+//    _createType( fn (workMutMode:MutMode) : TypeInfo {
+//       return new NormalTypeInfo(
+//          self, true, false, nil, builtinTypeSet,
+//          nil, false, false, false, AccessMode.Pub,
+//          "Set", self.$dummyParentType, self.$dummyParentType, .Set, itemTypeInfo,
+//          nil, nil, workMutMode, nil, .Async ); } );
+// }
+
+pub fn ProcessInfo.createSet_(
+   canDealGenInherit:bool,
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode )  mut : &TypeInfo
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
-      return new NormalTypeInfo(
-         self, true, false, nil, builtinTypeSet,
-         nil, false, false, false, AccessMode.Pub,
-         "Set", self.$dummyParentType, self.$dummyParentType, .Set, itemTypeInfo,
-         nil, nil, workMutMode, nil, .Async ); } );
+      let baseType;
+      if canDealGenInherit {
+         baseType = builtinTypeSet;
+      } else {
+         baseType = builtinTypeSet__;
+      }
+      let mut typeInfo = new NormalTypeInfo(
+         self, true, false, nil, baseType,
+         nil, false, false, false, AccessMode.Pub, baseType.$rawTxt,
+         self.$dummyParentType, self.$dummyParentType, .Set, itemTypeInfo,
+         nil, nil, workMutMode, nil, .Async );
+      if not canDealGenInherit {
+         typeInfo.set_canDealGenInherit( false );
+      }
+      return typeInfo;
+   } );
 }
 
-pub fn ProcessInfo.createList(
-   accessMode: AccessMode, parentInfo: &TypeInfo,
-   itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
-{
-   _createType( fn (workMutMode:MutMode) : TypeInfo {
-      return new NormalTypeInfo(
-         self, true, false, nil, builtinTypeList,
-         nil, false, false, false, AccessMode.Pub,
-         "List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
-         nil, nil, workMutMode, nil, .Async ); } );
-}
+// pub fn ProcessInfo.createList(
+//    accessMode: AccessMode, parentInfo: &TypeInfo,
+//    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
+// {
+//    _createType( fn (workMutMode:MutMode) : TypeInfo {
+//       return new NormalTypeInfo(
+//          self, true, false, nil, builtinTypeList,
+//          nil, false, false, false, AccessMode.Pub,
+//          "List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
+//          nil, nil, workMutMode, nil, .Async ); } );
+// }
 
 pub fn ProcessInfo.createList_(
+   canDealGenInherit:bool,
    accessMode: AccessMode, parentInfo: &TypeInfo,
    itemTypeInfo: &List<&TypeInfo>, mutMode:MutMode ) mut : &TypeInfo
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
+      let baseType;
+      if canDealGenInherit {
+         baseType = builtinTypeList;
+      } else {
+         baseType = builtinTypeList__;
+      }
       let mut typeInfo = new NormalTypeInfo(
-         self, true, false, nil, builtinTypeList__,
-         nil, false, false, false, AccessMode.Pub,
-         "__List", self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
+         self, true, false, nil, baseType,
+         nil, false, false, false, AccessMode.Pub, baseType.$rawTxt,
+         self.$dummyParentType, self.$dummyParentType, .List, itemTypeInfo,
          nil, nil, workMutMode, nil, .Async );
-      typeInfo.set_canDealGenInherit( false );
+      if not canDealGenInherit {
+         typeInfo.set_canDealGenInherit( false );
+      }
       return typeInfo;
    } );
 }
@@ -5678,16 +5719,27 @@ pub fn ProcessInfo.createArray(
          nil, nil, workMutMode, nil, .Async ); } );
 }
 
-pub fn ProcessInfo.createMap(
+pub fn ProcessInfo.createMap_(
+   canDealGenInherit:bool,
    accessMode: AccessMode, parentInfo: &TypeInfo, keyTypeInfo: &TypeInfo,
    valTypeInfo: &TypeInfo, mutMode:MutMode ) mut : &TypeInfo
 {
    _createType( fn (workMutMode:MutMode) : TypeInfo {
-      return new NormalTypeInfo(
+      let baseType;
+      if canDealGenInherit {
+         baseType = builtinTypeMap;
+      } else {
+         baseType = builtinTypeMap__;
+      }
+      let mut typeInfo = new NormalTypeInfo(
          self, true, false, nil, builtinTypeMap,
-         nil, false, false, false, AccessMode.Pub,
-         "Map", self.$dummyParentType, self.$dummyParentType, .Map,
+         nil, false, false, false, AccessMode.Pub, baseType.$rawTxt,
+         self.$dummyParentType, self.$dummyParentType, .Map,
          [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil, .Async );
+      if not canDealGenInherit {
+         typeInfo.set_canDealGenInherit( false );
+      }
+      return typeInfo;
    });
 }
 
@@ -6341,8 +6393,8 @@ pub static fn TypeInfo.getCommonTypeCombo(
       
       switch type1.$kind { 
          case .List {         
-            return getType( processInfo.createList(
-               .Local, headTypeInfo,
+            return getType( processInfo.createList_(
+               true, .Local, headTypeInfo,
                [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
@@ -6355,15 +6407,16 @@ pub static fn TypeInfo.getCommonTypeCombo(
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Set {          
-            return getType( processInfo.createSet(
+            return getType( processInfo.createSet_(
+               true,
                .Local, headTypeInfo,
                [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Map {          
-            return getType( processInfo.createMap(
-               .Local, headTypeInfo,
+            return getType( processInfo.createMap_(
+               true, .Local, headTypeInfo,
                getCommon(           
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ),
@@ -6913,7 +6966,7 @@ pub fn ProcessInfo.createEnum(
       [ info.$nilableTypeInfo ], .IMut );
    scope.addMethod( self, nil, fromVal, AccessMode.Pub, true );
 
-   let allListType = self.createList( .Pub, info, [ info ], .IMut );
+   let allListType = self.createList_( true, .Pub, info, [ info ], .IMut );
    let mut allList = self.createFuncAsync(
       false, true, nil, .Func, info, info,
       true, externalFlag, true, AccessMode.Pub,
@@ -8057,14 +8110,16 @@ pub override fn NormalTypeInfo.applyGeneric(
          if not needNew {        
             return self;            
          }
-         return processInfo.createSet(
+         return processInfo.createSet_(
+            self.$canDealGenInherit,
             self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode );
       }
       case .List {            
          if not needNew {        
             return self;            
          }
-         return processInfo.createList(
+         return processInfo.createList_(
+            self.$canDealGenInherit,
             self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode );
       }
       case .Array {           
@@ -8078,7 +8133,8 @@ pub override fn NormalTypeInfo.applyGeneric(
          if not needNew {        
             return self;            
          }
-         return processInfo.createMap(
+         return processInfo.createMap_(
+            self.$canDealGenInherit,
             self.accessMode, self.parentInfo,
             itemTypeInfoList[ 1 ], itemTypeInfoList[ 2 ], self.mutMode );
       }
@@ -8292,8 +8348,8 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
    while true {             
       if token.txt == '[' or token.txt == '[@' {
          if token.txt == '[' {    
-            typeInfo = self.processInfo.createList(
-               self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
+            typeInfo = self.processInfo.createList_(
+               true, self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
          }
          else {                   
             typeInfo = self.processInfo.createArray(
@@ -8327,15 +8383,15 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
                   return nil, pos, "Key or value type is unknown";
                }
                else {                   
-                  typeInfo = self.processInfo.createMap(
-                     self.accessMode, self.parentInfo,
+                  typeInfo = self.processInfo.createMap_(
+                     true, self.accessMode, self.parentInfo,
                      genericList[ 1 ], genericList[ 2 ], .Mut );
                }
             }
             case .List {             
                _checkAlternateTypeCount( 1 );
-               typeInfo = self.processInfo.createList(
-                  self.accessMode, self.parentInfo, genericList, .Mut );
+               typeInfo = self.processInfo.createList_(
+                  true, self.accessMode, self.parentInfo, genericList, .Mut );
             }
             case .Array {            
                _checkAlternateTypeCount( 1 );
@@ -8344,8 +8400,8 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             }
             case .Set {              
                _checkAlternateTypeCount( 1 );
-               typeInfo = self.processInfo.createSet(
-                  self.accessMode, self.parentInfo, genericList, .Mut );
+               typeInfo = self.processInfo.createSet_(
+                  true, self.accessMode, self.parentInfo, genericList, .Mut );
             }
             // case .Tuple {             
             //    if #genericList == 0 {   
@@ -8479,7 +8535,7 @@ __test case1(ctrl) {
     }
 
     let intListType =        
-       processInfo.createList( .Local, headTypeInfo, [ builtinTypeInt ], .Mut );
+       processInfo.createList_( true, .Local, headTypeInfo, [ builtinTypeInt ], .Mut );
     _checkTypeAnalyzer( "List<int>", intListType );
     _checkTypeAnalyzer( "List<int>!", intListType.$nilableTypeInfo );
 

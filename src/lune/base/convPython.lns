@@ -1779,7 +1779,8 @@ pro fn convFilter.setup() mut {
       self.builtinFuncs.__lns_runtime_dumpLog: "LnsDumpRunnerLog",
       self.builtinFuncs.__lns_sync_createFlag: "LnsCreateSyncFlag",
       self.builtinFuncs.__lns_sync_createProcesser: "LnsCreateProcessor",
-      self.builtinFuncs.list_insert: ".append",
+      self.builtinFuncs._list_insert: ".append",
+      self.builtinFuncs.__list_insert: ".append",
    };
    
 
@@ -1838,7 +1839,7 @@ class ConvRunner extend convFilter (__Runner) {
 }
 
 fn convFilter.processMethodAsync(
-   nodeList:&List<&Nodes.DeclClassNode> ) mut : &List<ConvRunner>
+   nodeList:&_List<&Nodes.DeclClassNode> ) mut : &List<ConvRunner>
 {
    let mut totalStmtNum = 0;
    let declMethodNodeList:List<&ProcessDeclMethodItem> = [];
@@ -4857,7 +4858,8 @@ pub fn convFilter.outputCallPrefix(
                         }
                         else {
                            switch funcType {
-                              case self.builtinFuncs.list_sort,
+                              case self.builtinFuncs._list_sort,
+                                   self.builtinFuncs.__list_sort,
                                    self.builtinFuncs.array_sort
                               {  
                                  callKind = .SortCall( prefixType.$itemTypeInfoList[ 1 ] );

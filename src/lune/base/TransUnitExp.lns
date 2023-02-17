@@ -233,17 +233,21 @@ fn TransUnit.analyzeExpList(
       if not pos {
          pos = exp.$pos;
       }
-      switch expectType {
-         case Ast.builtinTypeExp, Ast.builtinTypeMultiExp, Ast.builtinTypeBlockArg {
-            exp = Nodes.ExpMacroArgExpNode.create(
-               self.nodeManager, exp.$pos, self.inTestBlock,
-               self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
-               Macro.nodeToCodeTxt( exp, self.moduleType ), exp );
-            expTypeList.insert( unwrap expectType );
+      when! expectType {
+         switch expectType {
+            case Ast.builtinTypeExp, Ast.builtinTypeMultiExp, Ast.builtinTypeBlockArg {
+               exp = Nodes.ExpMacroArgExpNode.create(
+                  self.nodeManager, exp.$pos, self.inTestBlock,
+                  self.macroCtrl.isInAnalyzeArgMode(), exp.$expTypeList,
+                  Macro.nodeToCodeTxt( exp, self.moduleType ), exp );
+               expTypeList.insert( expectType );
+            }
+            default {
+               expTypeList.insert( exp.$expType );
+            }
          }
-         default {
-            expTypeList.insert( exp.$expType );
-         }
+      } else {
+         expTypeList.insert( exp.$expType );
       }
       expList.insert( exp );
       let mut token = self.getToken( true );
@@ -797,12 +801,14 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 
    let mut validImplicitCast = true;
    switch funcTypeInfo {
-      case self.builtinFunc.list_insert,
+      case self.builtinFunc._list_insert,
            self.builtinFunc.__list_insert,
-           self.builtinFunc.set_add, self.builtinFunc.set_del {
+           self.builtinFunc._set_add, self.builtinFunc._set_del,
+           self.builtinFunc.__set_add, self.builtinFunc.__set_del
+      {
          //argTypeList = genericTypeList;
       }
-      case self.builtinFunc.list_sort, self.builtinFunc.__list_sort  {
+      case self.builtinFunc._list_sort, self.builtinFunc.__list_sort  {
          let alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false );
          let callback = self.processInfo.createFuncAsync(
             // false, false, nil, Ast.TypeInfoKind.Func,
@@ -817,7 +823,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
          // implicitCast すると、 go の変換が出来ないので implicitCast を抑制
          validImplicitCast = false;
       }
-      case self.builtinFunc.list_remove, self.builtinFunc.__list_remove {
+      case self.builtinFunc._list_remove, self.builtinFunc.__list_remove {
       }
       case self.builtinFunc.lns___run {
          self.helperInfo.useRun = true;
@@ -877,71 +883,88 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 
 fn TransUnit.analyzeListItems(
    firstPos:&Parser.Position, nextToken:&Parser.Token, termTxt:str,
-   expectTypeList:&List<&Ast.TypeInfo>! ) mut : &Nodes.ExpListNode!, &Ast.TypeInfo
+   expectType:&Ast.TypeInfo! ) mut : &Nodes.ExpListNode!, &Ast.TypeInfo
 {
-   let mut expList:&Nodes.ExpListNode! = nil;
-   let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
+   if nextToken.txt == termTxt {
+      when! expectType {
+         return nil, expectType;
+      }
+      return nil, Ast.builtinTypeNone;
+   }
+   self.pushback();
    
-   if nextToken.txt ~= termTxt {
-      self.pushback();
-      expList = self.analyzeExpList(
-         false, false, false, false, nil, expectTypeList, expectTypeList ~= nil );
-      self.checkNextToken( termTxt );
-      let nodeList: &List<&Nodes.Node> = (unwrap expList).$expList;
-      foreach exp in nodeList {
-         itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
-            self.processInfo, itemCommonType, Ast.CommonType.Normal( exp.$expType ),
-            Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
-      }
+
+   let expectTypeList:&List<&Ast.TypeInfo>!;
+   when! expectType {
+      expectTypeList = [ expectType ];
+   } else {
+      expectTypeList = nil;
+   }
+   
+   let mut expList = self.analyzeExpList(
+      false, false, false, false, nil, expectTypeList, expectTypeList ~= nil );
+   self.checkNextToken( termTxt );
+   
+   let mut itemCommonType = Ast.CommonType.Normal( Ast.builtinTypeNone );
+   foreach exp in expList.$expList {
+      itemCommonType = Ast.TypeInfo.getCommonTypeCombo(
+         self.processInfo, itemCommonType, Ast.CommonType.Normal( exp.$expType ),
+         Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false ) );
    }
 
-   let mut itemTypeInfo;
-   match itemCommonType {
-      case .Normal( info ) {
-         fn getTypeInfo() : &Ast.TypeInfo {
-            if info == Ast.builtinTypeNone {
-               when! expectTypeList {
-                  if #expectTypeList >= 1 {
-                     return expectTypeList[ 1 ];
+   let mut itemTypeInfo = Ast.builtinTypeNone;
+   
+   when! expectType {
+      if expectType.$srcTypeInfo.$nonnilableType.$kind ~= .Alternate {
+         itemTypeInfo = expectType;
+      }
+   }
+   if itemTypeInfo == Ast.builtinTypeNone {
+      match itemCommonType {
+         case .Normal( info ) {
+            fn getTypeInfo() : &Ast.TypeInfo {
+               if info == Ast.builtinTypeNone {
+                  when! expectType {
+                     return expectType;
                   }
                }
+               return info;
             }
-            return info;
+            itemTypeInfo = getTypeInfo();
          }
-         itemTypeInfo = getTypeInfo();
+         case .Combine( info ) {
+            itemTypeInfo = info.get_typeInfo( self.processInfo );
+         }
       }
-      case .Combine( info ) {
-         itemTypeInfo = info.get_typeInfo( self.processInfo );
+
+      if itemTypeInfo.$kind == .DDD {
+         if #itemTypeInfo.$itemTypeInfoList > 0 {
+            itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
+         }
+         else {
+            itemTypeInfo = Ast.builtinTypeStem_;
+         }
       }
    }
 
-   if itemTypeInfo.$kind == .DDD {
-      if #itemTypeInfo.$itemTypeInfoList > 0 {
-         itemTypeInfo = itemTypeInfo.$itemTypeInfoList[ 1 ];
-      }
-      else {
-         itemTypeInfo = Ast.builtinTypeStem_;
-      }
-   }
 
-   if not expectTypeList {
-      // expList の itemTypeInfo への暗黙キャストを解決する
+   // expList の itemTypeInfo への暗黙キャストを解決する
+
+   // if not expectType {
       let mut expTypeList:List<&Ast.TypeInfo> = [];
-      when! expList {
-         foreach expNode, index in expList.$expList {
-            if index == #expList.$expList {
-               if expNode.$expType.$kind == .DDD {
-                  expTypeList.insert( expNode.$expType );
-               }
-               else {
-                  for _ = 1, #expNode.$expTypeList {
-                     expTypeList.insert( itemTypeInfo );
-                  }
-               }
+      foreach expNode, index in expList.$expList {
+         if index == #expList.$expList {
+            if expNode.$expType.$kind == .DDD {
+               expTypeList.insert( expNode.$expType );
             }
             else {
-               expTypeList.insert( itemTypeInfo );
+               for _ = 1, #expNode.$expTypeList {
+                  expTypeList.insert( itemTypeInfo );
+               }
             }
+         }
+         else {
+            expTypeList.insert( itemTypeInfo );
          }
       }
       let _, _, mut workExpList = self.checkMatchType(
@@ -949,59 +972,67 @@ fn TransUnit.analyzeListItems(
       when! workExpList {
          expList = workExpList;
       }
-   }
+   // }
    return expList, itemTypeInfo;
 }
 
+fn TransUnit.getCanDealGenInherit(
+   expectType:&Ast.TypeInfo!, targetType:&Ast.TypeInfo ) : bool
+{
+   let defaultSetting;
+   switch targetType {
+      // case Ast.builtinTypeSet, Ast.builtinTypeList {
+      case Ast.builtinTypeSet {
+      // case Ast.builtinTypeNone {
+         defaultSetting = false;
+      }
+      default {
+         defaultSetting = self.ctrl_info.defaultGenInherit;
+      }
+   }
+   when! expectType {
+      if expectType.$srcTypeInfo.$nonnilableType == targetType {
+         return defaultSetting;
+      } else {
+         return expectType.$canDealGenInherit;
+      }
+   }
+   return defaultSetting;
+}
 
 fn TransUnit.analyzeListConst(
    token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
    let nextToken = self.getToken(##);
 
-   let mut expectTypeList:List<&Ast.TypeInfo>! = nil;
-   if expectType$.$kind == .List {
-      if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
-         expectTypeList = [ itemTypeInfoList[ 1 ] ];
+   let mut expectItemType:&Ast.TypeInfo! = nil;
+   when! expectType {
+      if expectType.$nonnilableType.$kind == .List {
+         let itemTypeInfoList = expectType.$nonnilableType.$itemTypeInfoList;
+         expectItemType = itemTypeInfoList[ 1 ];
       }
    }
 
    let mut expList, itemTypeInfo = self.analyzeListItems(
-      token.$pos, nextToken, "]", expectTypeList );
+      token.$pos, nextToken, "]", expectItemType );
    
    
-   let mut typeInfoList;
    if token.txt == '[' {
-      let canDealGenInherit;
-      when! expectType {
-         if expectType == Ast.builtinTypeList {
-            canDealGenInherit = self.ctrl_info.defaultGenInherit;
-         } else {
-            canDealGenInherit = expectType.$canDealGenInherit;
-         }
-      } else {
-         canDealGenInherit = self.ctrl_info.defaultGenInherit;
-      }
-      let listType;
-      if canDealGenInherit {
-         listType = self.processInfo.createList(
-            .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
-      } else {
-         listType = self.processInfo.createList_(
-            .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
-      }
-      
+      let canDealGenInherit =
+         self.getCanDealGenInherit( expectType, Ast.builtinTypeList );
+      let listType = self.processInfo.createList_(
+         canDealGenInherit, .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
       
       return Nodes.LiteralListNode.create(
          self.nodeManager, token.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ listType ], expList );
    }
    else {
-      typeInfoList = [ self.processInfo.createArray( .Local, self.getCurrentClass(),
-                                                       [ itemTypeInfo ], .Mut ) ];
+      let listType = self.processInfo.createArray( .Local, self.getCurrentClass(),
+                                                   [ itemTypeInfo ], .Mut );
       return Nodes.LiteralArrayNode.create(
          self.nodeManager, token.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+         self.macroCtrl.isInAnalyzeArgMode(), [ listType ], expList );
    }
 }
 
@@ -1014,15 +1045,15 @@ fn TransUnit.analyzeSetConst(
    
    let nextToken = self.getToken(##);
 
-   let mut expectTypeList:List<&Ast.TypeInfo>! = nil;
+   let mut expectItemType:&Ast.TypeInfo! = nil;
    if expectType$.$kind == .Set {
       if! let itemTypeInfoList = expectType$.$itemTypeInfoList {
-         expectTypeList = [ itemTypeInfoList[ 1 ] ];
+         expectItemType = itemTypeInfoList[ 1 ];
       }
    }
 
    let mut expList, itemTypeInfo = self.analyzeListItems(
-      token.$pos, nextToken, ")", expectTypeList );
+      token.$pos, nextToken, ")", expectItemType );
 
    if itemTypeInfo.$nilable {
       when! expList {
@@ -1037,13 +1068,14 @@ fn TransUnit.analyzeSetConst(
       }
    }
    
+   let canDealGenInherit =
+      self.getCanDealGenInherit( expectType, Ast.builtinTypeSet );
+   let setType = self.processInfo.createSet_(
+      canDealGenInherit, .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
    
-   let mut typeInfoList;
-   typeInfoList = [ self.processInfo.createSet( .Local, self.getCurrentClass(),
-                                                  [ itemTypeInfo ], .Mut ) ];
    return Nodes.LiteralSetNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+      self.macroCtrl.isInAnalyzeArgMode(), [setType], expList );
 }
 
 
@@ -1100,7 +1132,7 @@ fn TransUnit.analyzeMapConst(
 {
    let mut nextToken = self.getToken(##);
    let mut map:Map<&Nodes.Node,&Nodes.Node> = {};
-   let mut pairList:Nodes.PairItem[] = [];
+   let mut pairList:List<Nodes.PairItem> = [];
    let mut keyTypeInfo = Ast.builtinTypeNone;
    let mut valTypeInfo = Ast.builtinTypeNone;
 
@@ -1132,7 +1164,8 @@ fn TransUnit.analyzeMapConst(
          expectValType = itemTypeInfoList[ 2 ];
       }
    }
-   
+
+   let mut hasNilable = true;
    while true {
       if nextToken.txt == "}" {
          break;
@@ -1147,6 +1180,11 @@ fn TransUnit.analyzeMapConst(
       let val = self.analyzeExpOneRVal( false, false, false, nil, expectValType);
       valTypeInfo = getMapKeyValType( val.$pos, false, valTypeInfo, val.$expType );
 
+      if not hasNilable and (key.$expType.$nilable or val.$expType.$nilable ) {
+         hasNilable = true;
+      }
+      
+
       //pairList.insert( { "key": key, "val": val } );
       pairList.insert( new Nodes.PairItem( key, val ) );
       map[ key ] = val;
@@ -1157,8 +1195,31 @@ fn TransUnit.analyzeMapConst(
       nextToken = self.getToken(##);
    }
 
-   let typeInfo = self.processInfo.createMap(
-      .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
+   when! expectKeyType, expectValType {
+      if keyTypeInfo == Ast.builtinTypeNone {
+         keyTypeInfo = expectKeyType;
+         valTypeInfo = expectValType;
+      }
+   }
+   
+
+   let canDealGenInherit =
+      self.getCanDealGenInherit( expectType, Ast.builtinTypeMap );
+   let typeInfo = self.processInfo.createMap_(
+      canDealGenInherit, .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
+
+   if not canDealGenInherit and hasNilable {
+      foreach pair in pairList {
+         if pair.$key.$expType.$nilable {
+            self.addErrMess( pair.$key.$pos,
+                             "can't use nilable -- %s" (pair.$key.$expType.getTxt(##)) );
+         }
+         if pair.$val.$expType.$nilable {
+            self.addErrMess( pair.$val.$pos,
+                             "can't use nilable -- %s" (pair.$val.$expType.getTxt(##)) );
+         }
+      }
+   }
 
    self.checkToken( nextToken, "}" );
    // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
@@ -1556,7 +1617,7 @@ fn TransUnit.getRetTypeInfo(
 mut : &List<&Ast.TypeInfo>
 {
    when! refFieldNode {
-      if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
+      if funcTypeInfo.equals( self.processInfo, self.builtinFunc._list_unpack ##) or
          funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_unpack ##) or
          funcTypeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
       {
@@ -1588,7 +1649,7 @@ mut : &List<&Ast.TypeInfo>
          workType = applyType;
       }
       else {
-         if funcTypeInfo == self.builtinFunc.list_remove or
+         if funcTypeInfo == self.builtinFunc._list_remove or
             funcTypeInfo == self.builtinFunc.__list_remove
          {
             // pending: List.remove の戻り値設定を暫定対応
@@ -1718,7 +1779,7 @@ fn TransUnit.processFunc(
          case self.builtinFunc.string_format {
             self.checkArgForStringForm( firstToken, argList );
          }
-         case self.builtinFunc.list_sort, self.builtinFunc.array_sort {
+         case self.builtinFunc._list_sort, self.builtinFunc.array_sort {
             self.checkArgForSort( firstToken, genericTypeList, argList );
          }
       }
@@ -1894,7 +1955,7 @@ fn TransUnit.analyzeExpCall(
    let mut alt2typeMap, argList = self.prepareExpCall(
       funcExp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
-   if funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_insert ##) or
+   if funcTypeInfo.equals( self.processInfo, self.builtinFunc._list_insert ##) or
       funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_insert ##)
    {
       when! argList {
@@ -1903,14 +1964,16 @@ fn TransUnit.analyzeExpCall(
          }
       }
    }
-   if funcTypeInfo.equals( self.processInfo, self.builtinFunc.set_add ##) {
+   if funcTypeInfo.equals( self.processInfo, self.builtinFunc._set_add ##) or
+      funcTypeInfo.equals( self.processInfo, self.builtinFunc.__set_add ##)
+   {
       when! argList {
          if argList.$expType.$nilable {
             self.addErrMess( argList.$pos, "set can't add nilable" );
          }
       }
    }
-   elseif funcTypeInfo.equals( self.processInfo, self.builtinFunc.list_remove ##) or
+   elseif funcTypeInfo.equals( self.processInfo, self.builtinFunc._list_remove ##) or
       funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_remove ##)
    {
       if #genericTypeList > 0 {
@@ -2313,31 +2376,45 @@ fn TransUnit.analyzeExpCont(
 }
 
 
+fn getClassTypeFor( classTypeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
+   switch classTypeInfo.get_kind() {
+      case .List {
+         if classTypeInfo.$canDealGenInherit {
+            return Ast.builtinTypeList_;
+         } else {
+            return Ast.builtinTypeList__;
+         }
+      }
+      case .Array {
+         return Ast.builtinTypeArray;
+      }
+      case .Set {
+         if classTypeInfo.$canDealGenInherit {
+            return Ast.builtinTypeSet_;
+         } else {
+            return Ast.builtinTypeSet__;
+         }
+      }
+      case .Map {
+         if classTypeInfo.$canDealGenInherit {
+            return Ast.builtinTypeMap_;
+         } else {
+            return Ast.builtinTypeMap__;
+         }
+      }
+      case .Box {
+         return Ast.builtinTypeBox;
+      }
+   }
+   return classTypeInfo;
+}
+
+
 fn TransUnit.analyzeAccessClassField(
    mut classTypeInfo: &Ast.TypeInfo, mode:ExpSymbolMode, token:&Parser.Token ) mut :
    &Ast.TypeInfo, &Ast.SymbolInfo!, bool
 {
-   switch classTypeInfo.get_kind() {
-      case .List {
-         if classTypeInfo.$canDealGenInherit {
-            classTypeInfo = Ast.builtinTypeList;
-         } else {
-            classTypeInfo = Ast.builtinTypeList__;
-         }
-      }
-      case .Array {
-         classTypeInfo = Ast.builtinTypeArray;
-      }
-      case .Set {
-         classTypeInfo = Ast.builtinTypeSet;
-      }
-      case .Map {
-         classTypeInfo = Ast.builtinTypeMap;
-      }
-      case .Box {
-         classTypeInfo = Ast.builtinTypeBox;
-      }
-   }
+   classTypeInfo = getClassTypeFor( classTypeInfo );
    let className = classTypeInfo.getTxt(##);
    let! classScope = classTypeInfo.$scope {
       self.error( "not found field: %s, %s" // バグ
@@ -2508,31 +2585,7 @@ fn TransUnit.dumpFieldComp(
    writer: Writer.Writer, isPrefixType: bool,
    prefixTypeInfo: &Ast.TypeInfo, pattern: str, getterPattern: str! )
 {
-   let typeInfo;
-   switch prefixTypeInfo.get_kind() {
-      case .List {
-         if prefixTypeInfo.$canDealGenInherit {
-            typeInfo = Ast.builtinTypeList;
-         } else {
-            typeInfo = Ast.builtinTypeList__;
-         }
-      }
-      case .Array {
-         typeInfo = Ast.builtinTypeArray;
-      }
-      case .Set {
-         typeInfo = Ast.builtinTypeSet;
-      }
-      case .Map {
-         typeInfo = Ast.builtinTypeMap;
-      }
-      case .Box {
-         typeInfo = Ast.builtinTypeBox;
-      }
-      default {
-         typeInfo = prefixTypeInfo;
-      }
-   }
+   let typeInfo = getClassTypeFor( prefixTypeInfo );
    let! scope = typeInfo.$scope {
       return;
    };
@@ -3085,7 +3138,7 @@ fn TransUnit.analyzeExpField(
       }
    }
 
-   if typeInfo.equals( self.processInfo, self.builtinFunc.list_unpack ##) or
+   if typeInfo.equals( self.processInfo, self.builtinFunc._list_unpack ##) or
       typeInfo.equals( self.processInfo, self.builtinFunc.__list_unpack ##) or
       typeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
    {
@@ -4252,13 +4305,16 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
    return self.analyzeDeclVar( .Unwrap, .Local, firstToken );
 }
 
-fn TransUnit.analyzeExpUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
+fn TransUnit.analyzeExpUnwrap(
+   firstToken: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+{
    //   let expNode = self.analyzeExp( false, opTopLevel ## );
-   let expNode = self.analyzeExpOneRVal( false, true ## );
+   let expNode = self.analyzeExpOneRVal(
+      false, true, nil, nil, expectType$.$nilableTypeInfo );
    let nextToken = self.getToken(##);
    let mut insNode: Nodes.Node! = nil;
    if nextToken.txt == "default" {
-      insNode = self.analyzeExpOneRVal( false, false ## );
+      insNode = self.analyzeExpOneRVal( false, false, nil, nil, expectType );
    }
    else {
       self.pushback();
@@ -4772,7 +4828,7 @@ fn TransUnit.analyzeExpSub(
       exp = self.analyzeExpSymbol( firstToken, token, .Fn, nil, false, false, false );
    }  
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "unwrap" {
-      exp = self.analyzeExpUnwrap( token );
+      exp = self.analyzeExpUnwrap( token, expectType );
    }
    elseif token.kind == Parser.TokenKind.Kywd and token.txt == "__request" {
       exp = self.analyzeRequest( token );

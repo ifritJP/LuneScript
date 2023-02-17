@@ -125,7 +125,6 @@ func TransUnitIF_sortMess___anonymous_0_(_env *LnsEnv, mess1 *TransUnitIF_ErrMes
     }
     return mess1.FP.Get_mess(_env) < mess2.FP.Get_mess(_env)
 }
-
 // 45: decl @lune.@base.@TransUnitIF.Modifier.createModifier
 func (self *TransUnitIF_Modifier) CreateModifier(_env *LnsEnv, typeInfo *Ast_TypeInfo,mutMode LnsInt) *Ast_TypeInfo {
     if Lns_op_not(self.validMutControl){
@@ -468,22 +467,38 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
                     self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) base class(None) for prototype base class(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), typeInfo.FP.Get_baseTypeInfo(_env).FP.GetTxt(_env, nil, nil, nil)}))
                 }
             }
-            var TransUnitIF_compareList func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string)
-            TransUnitIF_compareList = func(_env *LnsEnv, protoList *LnsList,typeList *LnsList,message string) {
-                if protoList.Len() == typeList.Len(){
-                    for _index, _protoType := range( protoList.Items ) {
+            {
+                var typeList *LnsList
+                typeList = Lns_unwrapDefault( interfaceList, NewLnsList([]LnsAny{})).(*LnsList)
+                if typeInfo.FP.Get_interfaceList(_env).Len() == typeList.Len(){
+                    for _index, _protoType := range( typeInfo.FP.Get_interfaceList(_env).Items ) {
                         index := _index + 1
                         protoType := _protoType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
                         if protoType != typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo(){
-                            self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%s) for prototype %s(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, protoType.FP.GetTxt(_env, nil, nil, nil)}))
+                            self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%s) for prototype %s(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), "interface", typeList.GetAt(index).(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), "interface", protoType.FP.GetTxt(_env, nil, nil, nil)}))
                         }
                     }
                 } else { 
-                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%d) for prototype %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), message, typeList.Len(), message, protoList.Len()}))
+                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%d) for prototype %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), "interface", typeList.Len(), "interface", typeInfo.FP.Get_interfaceList(_env).Len()}))
                 }
             }
-            TransUnitIF_compareList(_env, typeInfo.FP.Get_interfaceList(_env), Lns_unwrapDefault( interfaceList, NewLnsList([]LnsAny{})).(*LnsList), "interface")
-            TransUnitIF_compareList(_env, typeInfo.FP.Get_itemTypeInfoList(_env), Lns_unwrapDefault( genTypeList, NewLnsList([]LnsAny{})).(*LnsList), "generics")
+            
+            {
+                var typeList *LnsList
+                typeList = Lns_unwrapDefault( genTypeList, NewLnsList([]LnsAny{})).(*LnsList)
+                if typeInfo.FP.Get_itemTypeInfoList(_env).Len() == typeList.Len(){
+                    for _index, _protoType := range( typeInfo.FP.Get_itemTypeInfoList(_env).Items ) {
+                        index := _index + 1
+                        protoType := _protoType.(Ast_TypeInfoDownCast).ToAst_TypeInfo()
+                        if protoType != &typeList.GetAt(index).(Ast_AlternateTypeInfoDownCast).ToAst_AlternateTypeInfo().Ast_TypeInfo{
+                            self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%s) for prototype %s(%s)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), "generics", typeList.GetAt(index).(Ast_AlternateTypeInfoDownCast).ToAst_AlternateTypeInfo().FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), "generics", protoType.FP.GetTxt(_env, nil, nil, nil)}))
+                        }
+                    }
+                } else { 
+                    self.FP.AddErrMess(_env, errPos, _env.GetVM().String_format("mismatch class(%s) %s(%d) for prototype %s(%d)", []LnsAny{typeInfo.FP.GetTxt(_env, self.TypeNameCtrl, nil, nil), "generics", typeList.Len(), "generics", typeInfo.FP.Get_itemTypeInfoList(_env).Len()}))
+                }
+            }
+            
             {
                 _scope := self.Namespace2Scope.Get(typeInfo)
                 if !Lns_IsNil( _scope ) {
@@ -513,8 +528,8 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
             scope = self.FP.PushScope(_env, Ast_ScopeKind__Class, baseInfo, interfaceList)
             var workGenTypeList *LnsList
             if genTypeList != nil{
-                genTypeList_38 := genTypeList.(*LnsList)
-                workGenTypeList = genTypeList_38
+                genTypeList_49 := genTypeList.(*LnsList)
+                workGenTypeList = genTypeList_49
             } else {
                 workGenTypeList = NewLnsList([]LnsAny{})
             }
@@ -527,8 +542,8 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
         }
     }
     if genTypeList != nil{
-        genTypeList_42 := genTypeList.(*LnsList)
-        for _, _genType := range( genTypeList_42.Items ) {
+        genTypeList_53 := genTypeList.(*LnsList)
+        for _, _genType := range( genTypeList_53.Items ) {
             genType := _genType.(Ast_AlternateTypeInfoDownCast).ToAst_AlternateTypeInfo()
             self.scope.FP.AddAlternate(_env, processInfo, accessMode, genType.FP.Get_txt(_env), errPos, &genType.Ast_TypeInfo)
         }
@@ -547,15 +562,15 @@ func (self *TransUnitIF_TransUnitBase) PushClass(_env *LnsEnv, processInfo *Ast_
     self.curNsInfo = nsInfo
     return nsInfo
 }
-// 755: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClassLow
+// 757: decl @lune.@base.@TransUnitIF.TransUnitBase.pushClassLow
 func (self *TransUnitIF_TransUnitBase) PushClassLow(_env *LnsEnv, processInfo *Ast_ProcessInfo,errPos Types_Position,mode LnsInt,finalFlag bool,abstractFlag bool,baseInfo LnsAny,interfaceList LnsAny,genTypeList LnsAny,externalFlag bool,name string,allowMultiple bool,accessMode LnsInt,defNamespace LnsAny) *Ast_TypeInfo {
     return self.FP.PushClass(_env, processInfo, errPos, mode, finalFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace).FP.Get_typeInfo(_env)
 }
-// 769: decl @lune.@base.@TransUnitIF.TransUnitBase.popClass
+// 771: decl @lune.@base.@TransUnitIF.TransUnitBase.popClass
 func (self *TransUnitIF_TransUnitBase) PopClass(_env *LnsEnv) {
     self.FP.PopScope(_env)
 }
-// 778: decl @lune.@base.@TransUnitIF.SimpeTransUnit.errorAt
+// 780: decl @lune.@base.@TransUnitIF.SimpeTransUnit.errorAt
 func (self *TransUnitIF_SimpeTransUnit) ErrorAt(_env *LnsEnv, pos Types_Position,mess string) {
     self.FP.AddErrMess(_env, pos, mess)
     for _, _errmess := range( self.ErrMessList.Items ) {
@@ -573,7 +588,7 @@ func (self *TransUnitIF_SimpeTransUnit) ErrorAt(_env *LnsEnv, pos Types_Position
     }
     Util_err(_env, "has error")
 }
-// 792: decl @lune.@base.@TransUnitIF.SimpeTransUnit.getLatestPos
+// 794: decl @lune.@base.@TransUnitIF.SimpeTransUnit.getLatestPos
 func (self *TransUnitIF_SimpeTransUnit) GetLatestPos(_env *LnsEnv) Types_Position {
     return self.latestPos
 }

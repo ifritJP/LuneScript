@@ -1357,16 +1357,16 @@ function _TypeInfoNormal:createTypeInfo( param )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Set then
-               local workTypeInfo = param.processInfo:createSet( self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
+               local workTypeInfo = param.processInfo:createSet_( true, self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
                postProcess( workTypeInfo, nil )
             elseif _switchExp == Ast.TypeInfoKind.List then
-               local workTypeInfo = param.processInfo:createList( self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
+               local workTypeInfo = param.processInfo:createList_( true, self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
                postProcess( workTypeInfo, nil )
             elseif _switchExp == Ast.TypeInfoKind.Array then
                local workTypeInfo = param.processInfo:createArray( self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
                postProcess( workTypeInfo, nil )
             elseif _switchExp == Ast.TypeInfoKind.Map then
-               local workTypeInfo = param.processInfo:createMap( self.accessMode, parentInfo, itemTypeInfo[1], itemTypeInfo[2], self.mutMode )
+               local workTypeInfo = param.processInfo:createMap_( true, self.accessMode, parentInfo, itemTypeInfo[1], itemTypeInfo[2], self.mutMode )
                postProcess( workTypeInfo, nil )
             else 
                

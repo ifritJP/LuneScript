@@ -1357,16 +1357,16 @@ function _TypeInfoNormal:createTypeInfo( param )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Set then
-               local workTypeInfo = param.processInfo:createSet( self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
+               local workTypeInfo = param.processInfo:createSet_( Ast.builtinTypeSet_:get_rawTxt() == self.txt, self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
                postProcess( workTypeInfo, nil )
             elseif _switchExp == Ast.TypeInfoKind.List then
-               local workTypeInfo = param.processInfo:createList( self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
+               local workTypeInfo = param.processInfo:createList_( Ast.builtinTypeList_:get_rawTxt() == self.txt, self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
                postProcess( workTypeInfo, nil )
             elseif _switchExp == Ast.TypeInfoKind.Array then
                local workTypeInfo = param.processInfo:createArray( self.accessMode, parentInfo, itemTypeInfo, self.mutMode )
                postProcess( workTypeInfo, nil )
             elseif _switchExp == Ast.TypeInfoKind.Map then
-               local workTypeInfo = param.processInfo:createMap( self.accessMode, parentInfo, itemTypeInfo[1], itemTypeInfo[2], self.mutMode )
+               local workTypeInfo = param.processInfo:createMap_( Ast.builtinTypeMap_:get_rawTxt() == self.txt, self.accessMode, parentInfo, itemTypeInfo[1], itemTypeInfo[2], self.mutMode )
                postProcess( workTypeInfo, nil )
             else 
                
@@ -2027,7 +2027,7 @@ function ModuleLoader:getExportInfo(  )
    _lune.nilacc( self.syncFlag, 'wait', 'callmtd'  )
    
    if not self.result:get_exportInfo() then
-      Log.log( Log.Level.Err, __func__, 1003, function (  )
+      Log.log( Log.Level.Err, __func__, 1004, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.fullModulePath)
       end )
@@ -2050,7 +2050,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
    
    do
       metaInfo = metaInfoStem
-      Log.log( Log.Level.Info, __func__, 1021, function (  )
+      Log.log( Log.Level.Info, __func__, 1022, function (  )
       
          return string.format( "%s processing", fullModulePath)
       end )
@@ -2385,7 +2385,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
                   
                elseif _switchExp == Ast.TypeInfoKind.Module then
                   self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-                  Log.log( Log.Level.Debug, __func__, 1343, function (  )
+                  Log.log( Log.Level.Debug, __func__, 1344, function (  )
                   
                      return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
                   end )
@@ -2603,7 +2603,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1535, function (  )
+   Log.log( Log.Level.Info, __func__, 1536, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, baseDir)
    end )
@@ -2612,7 +2612,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local exportInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if exportInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1543, function (  )
+      Log.log( Log.Level.Info, __func__, 1544, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2672,7 +2672,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = exportInfo
    
-   Log.log( Log.Level.Info, __func__, 1594, function (  )
+   Log.log( Log.Level.Info, __func__, 1595, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2689,7 +2689,7 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
    
    modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
    
-   Log.log( Log.Level.Info, __func__, 1607, function (  )
+   Log.log( Log.Level.Info, __func__, 1608, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, baseDir)
    end )

@@ -64,7 +64,7 @@ pub class Filter<T>  {
    pri let mut moduleInfoManager:SimpleModuleInfoManager;
    pri let typeNameCtrl:&Ast.TypeNameCtrl {pub};
    pri let errorOnDefault:bool;
-   pri let mut optStack:List<T> {pub&};
+   pri let mut optStack:_List<T> {pub&};
 
    pro fn __init( errorOnDefault:bool,
                   moduleTypeInfo:&Ast.TypeInfo!,
@@ -399,8 +399,8 @@ pub abstract class ExpNode extend Node {
 }
 
 
-pub fn cloneNodeList<T>(list:&List<&T>) : List<&T> {
-   let newList:List<&T> = [];
+pub fn cloneNodeList<T>(list:&_List<&T>) : _List<&T> {
+   let newList:_List<&T> = [];
    foreach node in list {
       newList.insert(node);
    }
@@ -505,7 +505,7 @@ pro fn Filter.defaultProcess( node: &Node, opt:T ) mut {
 // let nodeKindLiteralSymbol = regKind( 'LiteralSymbol' );
 
 pub class NodeManager {
-   let mut nodeKind2NodeList:Map<int,List<&Node>>;
+   let mut nodeKind2NodeList:Map<int,_List<&Node>>;
    let mut idSeed:int;
    let mut managerId:int {pub,pub};
 
@@ -525,7 +525,7 @@ pub class NodeManager {
       return self.idSeed;
    }
 
-   pub fn getList(kind:int) : &List<&Node> {
+   pub fn getList(kind:int) : &_List<&Node> {
       let! list = self.nodeKind2NodeList[ kind ] {
          return [];
       };
@@ -758,8 +758,8 @@ macro _declNodeClass(
       }
       
       relateStat.insert( `{
-         pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &List<&,,className> {
-            return self.getList( ,,nodeId )@@List<&,,className>;
+         pub fn NodeManager. ,,,"get%sList" (,,,,className) () : &_List<&,,className> {
+            return self.getList( ,,nodeId )@@_List<&,,className>;
          }
       } );
 
@@ -797,7 +797,7 @@ macro _declNodeClass(
          return self.visitSub( visitor, depth + 1, alreadySet );
       }
 
-      pub static fn sortList( list:List<,,imutClassName> ) : &List<,,imutClassName> {
+      pub static fn sortList( list:_List<,,imutClassName> ) : &_List<,,imutClassName> {
          list.sort( fn ( node1:,,imutClassName, node2:,,imutClassName ): bool {
             return node1.compUsingPos( node2 ) < 0;
          });

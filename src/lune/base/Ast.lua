@@ -7199,7 +7199,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
    
    do
       local _switchExp = typeTxt
-      if _switchExp == "__List" then
+      if _switchExp == "__List" or _switchExp == "__Set" or _switchExp == "__Map" then
          canDealGenInherit = false
       else 
          
@@ -7285,6 +7285,12 @@ _moduleObj.builtinTypeString = builtinTypeString
 local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
 _moduleObj.builtinTypeMap = builtinTypeMap
 
+local builtinTypeMap_ = NormalTypeInfo.createBuiltin( "_Map", "_Map", TypeInfoKind.Map )
+_moduleObj.builtinTypeMap_ = builtinTypeMap_
+
+local builtinTypeMap__ = NormalTypeInfo.createBuiltin( "__Map", "__Map", TypeInfoKind.Map )
+_moduleObj.builtinTypeMap__ = builtinTypeMap__
+
 local builtinTypeSet = NormalTypeInfo.createBuiltin( "Set", "Set", TypeInfoKind.Set )
 _moduleObj.builtinTypeSet = builtinTypeSet
 
@@ -7296,6 +7302,12 @@ _moduleObj.builtinTypeList_ = builtinTypeList_
 
 local builtinTypeList__ = NormalTypeInfo.createBuiltin( "__List", "__List", TypeInfoKind.List )
 _moduleObj.builtinTypeList__ = builtinTypeList__
+
+local builtinTypeSet_ = NormalTypeInfo.createBuiltin( "_Set", "_Set", TypeInfoKind.Set )
+_moduleObj.builtinTypeSet_ = builtinTypeSet_
+
+local builtinTypeSet__ = NormalTypeInfo.createBuiltin( "__Set", "__Set", TypeInfoKind.Set )
+_moduleObj.builtinTypeSet__ = builtinTypeSet__
 
 local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 _moduleObj.builtinTypeArray = builtinTypeArray
@@ -7685,7 +7697,7 @@ end
 
 
 
-function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
+function ProcessInfo:createSet_( canDealGenInherit, accessMode, parentInfo, itemTypeInfo, mutMode )
 
    local tmpMutMode
    
@@ -7698,7 +7710,22 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeSet, nil, false, false, false, AccessMode.Pub, "Set", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      local baseType
+      
+      if canDealGenInherit then
+         baseType = _moduleObj.builtinTypeSet_
+      else
+       
+         baseType = _moduleObj.builtinTypeSet__
+      end
+      
+      
+      local typeInfo = NormalTypeInfo._new(self, true, false, nil, baseType, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      if not canDealGenInherit then
+         typeInfo:set_canDealGenInherit( false )
+      end
+      
+      return typeInfo
    end
    
    
@@ -7713,37 +7740,7 @@ function ProcessInfo:createSet( accessMode, parentInfo, itemTypeInfo, mutMode )
    
 end
 
-
-function ProcessInfo:createList( accessMode, parentInfo, itemTypeInfo, mutMode )
-
-   local tmpMutMode
-   
-   if isMutable( mutMode ) then
-      tmpMutMode = mutMode
-   else
-    
-      tmpMutMode = MutMode.Mut
-   end
-   
-   local function newTypeFunc( workMutMode )
-   
-      return NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeList, nil, false, false, false, AccessMode.Pub, "List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
-   end
-   
-   
-   local typeInfo = newTypeFunc( tmpMutMode )
-   self:setupImut( typeInfo )
-   
-   if isMutable( mutMode ) then
-      return typeInfo
-   end
-   
-   return self:createModifier( typeInfo, mutMode )
-   
-end
-
-
-function ProcessInfo:createList_( accessMode, parentInfo, itemTypeInfo, mutMode )
+function ProcessInfo:createList_( canDealGenInherit, accessMode, parentInfo, itemTypeInfo, mutMode )
 
    local tmpMutMode
    
@@ -7756,8 +7753,21 @@ function ProcessInfo:createList_( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    local function newTypeFunc( workMutMode )
    
-      local typeInfo = NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeList__, nil, false, false, false, AccessMode.Pub, "__List", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
-      typeInfo:set_canDealGenInherit( false )
+      local baseType
+      
+      if canDealGenInherit then
+         baseType = _moduleObj.builtinTypeList_
+      else
+       
+         baseType = _moduleObj.builtinTypeList__
+      end
+      
+      
+      local typeInfo = NormalTypeInfo._new(self, true, false, nil, baseType, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
+      if not canDealGenInherit then
+         typeInfo:set_canDealGenInherit( false )
+      end
+      
       return typeInfo
    end
    
@@ -7803,7 +7813,7 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
 end
 
 
-function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
+function ProcessInfo:createMap_( canDealGenInherit, accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
    local tmpMutMode
    
@@ -7816,7 +7826,22 @@ function ProcessInfo:createMap( accessMode, parentInfo, keyTypeInfo, valTypeInfo
    
    local function newTypeFunc( workMutMode )
    
-      return NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, "Map", self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      local baseType
+      
+      if canDealGenInherit then
+         baseType = _moduleObj.builtinTypeMap_
+      else
+       
+         baseType = _moduleObj.builtinTypeMap__
+      end
+      
+      
+      local typeInfo = NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      if not canDealGenInherit then
+         typeInfo:set_canDealGenInherit( false )
+      end
+      
+      return typeInfo
    end
    
    
@@ -7855,7 +7880,12 @@ function ProcessInfo:createClassAsync( classFlag, finalFlag, abstractFlag, scope
    end
    
    
-   local info = NormalTypeInfo._new(self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
+   local itemTypeList = {}
+   for __index, val in ipairs( genTypeList ) do
+      table.insert( itemTypeList, val )
+   end
+   
+   local info = NormalTypeInfo._new(self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, itemTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
    self:setupImut( info )
    
    for __index, genType in ipairs( genTypeList ) do
@@ -8472,8 +8502,7 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
    end
    
    
-   if type1:get_kind() == type2:get_kind() then
-      
+   if type1:get_kind() == type2:get_kind() and type1:get_canDealGenInherit() == type2:get_canDealGenInherit() then
       local function getCommon( workTypeInfo, workOther, workAlt2type )
       
          do
@@ -8494,13 +8523,13 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
       do
          local _switchExp = type1:get_kind()
          if _switchExp == TypeInfoKind.List then
-            return getType( processInfo:createList( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createList_( type1:get_canDealGenInherit(), AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Array then
             return getType( processInfo:createArray( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Set then
-            return getType( processInfo:createSet( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createSet_( type1:get_canDealGenInherit(), AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Map then
-            return getType( processInfo:createMap( AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
+            return getType( processInfo:createMap_( type1:get_canDealGenInherit(), AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
          end
       end
       
@@ -9474,7 +9503,7 @@ function ProcessInfo:createEnum( scope, parentInfo, typeDataAccessor, externalFl
    local fromVal = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "_from", Async.Async, nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, MutMode.IMut )
    scope:addMethod( self, nil, fromVal, AccessMode.Pub, true )
    
-   local allListType = self:createList( AccessMode.Pub, info, {info}, MutMode.IMut )
+   local allListType = self:createList_( true, AccessMode.Pub, info, {info}, MutMode.IMut )
    local allList = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "get__allList", Async.Async, nil, nil, {self:createModifier( allListType, MutMode.IMut )}, MutMode.IMut )
    scope:addMethod( self, nil, allList, AccessMode.Pub, true )
    
@@ -10405,7 +10434,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             local workType2 = otherSrc:get_itemTypeInfoList()[1]
             
             if not dest:get_canDealGenInherit() then
-               if not workType1:equals( processInfo, workType2 ) then
+               if not workType1:equals( processInfo, workType2, alt2type ) then
                   return false, nil
                end
                
@@ -10449,7 +10478,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                local workType2 = otherSrc:get_itemTypeInfoList()[1]
                
                if not dest:get_canDealGenInherit() then
-                  if not workType1:equals( processInfo, workType2 ) then
+                  if not workType1:equals( processInfo, workType2, alt2type ) then
                      return false
                   end
                   
@@ -10488,7 +10517,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                local workType2 = otherSrc:get_itemTypeInfoList()[2]
                
                if not dest:get_canDealGenInherit() then
-                  if not workType1:equals( processInfo, workType2 ) then
+                  if not workType1:equals( processInfo, workType2, alt2type ) then
                      return false
                   end
                   
@@ -10682,13 +10711,13 @@ function NormalTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
             return self
          end
          
-         return processInfo:createSet( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
+         return processInfo:createSet_( self:get_canDealGenInherit(), self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.List then
          if not needNew then
             return self
          end
          
-         return processInfo:createList( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
+         return processInfo:createList_( self:get_canDealGenInherit(), self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Array then
          if not needNew then
             return self
@@ -10700,7 +10729,7 @@ function NormalTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
             return self
          end
          
-         return processInfo:createMap( self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2], self.mutMode )
+         return processInfo:createMap_( self:get_canDealGenInherit(), self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2], self.mutMode )
       else 
          
             if #self.itemTypeInfoList == 0 then
@@ -10924,7 +10953,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
    while true do
       if token.txt == '[' or token.txt == '[@' then
          if token.txt == '[' then
-            typeInfo = self.processInfo:createList( self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
+            typeInfo = self.processInfo:createList_( false, self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
          else
           
             typeInfo = self.processInfo:createArray( self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
@@ -10963,7 +10992,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                   return nil, pos, "Key or value type is unknown"
                else
                 
-                  typeInfo = self.processInfo:createMap( self.accessMode, self.parentInfo, genericList[1], genericList[2], MutMode.Mut )
+                  typeInfo = self.processInfo:createMap_( typeInfo:get_canDealGenInherit(), self.accessMode, self.parentInfo, genericList[1], genericList[2], MutMode.Mut )
                end
                
             elseif _switchExp == TypeInfoKind.List then
@@ -10972,7 +11001,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
                
-               typeInfo = self.processInfo:createList( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
+               typeInfo = self.processInfo:createList_( typeInfo:get_canDealGenInherit(), self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.Array then
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
@@ -10986,7 +11015,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
                
-               typeInfo = self.processInfo:createSet( self.accessMode, self.parentInfo, genericList, MutMode.Mut )
+               typeInfo = self.processInfo:createSet_( typeInfo:get_canDealGenInherit(), self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.DDD then
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)

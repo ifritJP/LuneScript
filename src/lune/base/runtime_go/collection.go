@@ -37,6 +37,10 @@ type Lns_ToCollectionIF interface {
 	ToCollection() LnsAny
 }
 
+type Lns_toLuaCode interface {
+	ToLuaCode(self *StemToLuaConv)
+}
+
 func Lns_ToCollection(val LnsAny) LnsAny {
 	if Lns_IsNil(val) {
 		return nil
@@ -654,6 +658,131 @@ func (self *LnsSet) Len() LnsInt {
 	return len(self.Items)
 }
 
+// ======== GenSet  ========
+
+type LnsSet2_[T comparable] struct {
+	Items map[T]bool
+}
+
+func Lns_ToSet2Sub[T comparable](
+	obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	itemParam := paramList[0]
+	if val, ok := obj.(*LnsSet); ok {
+		list := make([]T, len(val.Items))
+		index := 0
+		for key := range val.Items {
+			success, conved, mess :=
+				itemParam.Func(key, itemParam.Nilable, itemParam.Child)
+			if !success {
+				return false, nil, fmt.Sprintf("%s:%s", key, mess)
+			}
+			list[index] = conved.(T)
+			index++
+		}
+		return true, NewLnsSet2_[T](list), nil
+	}
+	return false, nil, "no set"
+}
+
+func (self *LnsSet2_[T]) ToCollection() LnsAny {
+	ret := NewLnsSet([]LnsAny{})
+	for key := range self.Items {
+		ret.Add(Lns_ToCollection(key))
+	}
+	return ret
+}
+
+func (self *LnsSet2_[T]) CreateKeyListStem() *LnsList2_[T] {
+	list := make([]T, len(self.Items))
+	index := 0
+	for key := range self.Items {
+		list[index] = key
+		index++
+	}
+	return NewLnsList2_(list)
+}
+func (self *LnsSet2_[T]) CreateKeyListInt() *LnsList2_[T] {
+	list := self.CreateKeyListStem()
+	list.lnsItemKind = LnsItemKindInt
+	return list
+}
+
+func (self *LnsSet2_[T]) CreateKeyListReal() *LnsList2_[T] {
+	list := self.CreateKeyListStem()
+	list.lnsItemKind = LnsItemKindReal
+	return list
+}
+func (self *LnsSet2_[T]) CreateKeyListStr() *LnsList2_[T] {
+	list := self.CreateKeyListStem()
+	list.lnsItemKind = LnsItemKindStr
+	return list
+}
+
+func NewLnsSet2_[T comparable](list []T) *LnsSet2_[T] {
+	set := &LnsSet2_[T]{map[T]bool{}}
+	for _, val := range list {
+		set.Items[val] = true
+	}
+	return set
+}
+
+func (self *LnsSet2_[T]) Add(val T) {
+	self.Items[val] = true
+}
+func (self *LnsSet2_[T]) Del(val T) {
+	delete(self.Items, val)
+}
+func (self *LnsSet2_[T]) Has(val T) bool {
+	_, has := self.Items[val]
+	return has
+}
+func (self *LnsSet2_[T]) And(set *LnsSet2_[T]) *LnsSet2_[T] {
+	delValList := NewLnsList2_[T]([]T{})
+	for val := range self.Items {
+		if !set.Has(val) {
+			delValList.Insert(val)
+		}
+	}
+	for _, val := range delValList.Items {
+		delete(self.Items, val)
+	}
+	return self
+}
+func (self *LnsSet2_[T]) Or(set *LnsSet2_[T]) *LnsSet2_[T] {
+	for val := range set.Items {
+		self.Items[val] = true
+	}
+	return self
+}
+func (self *LnsSet2_[T]) Sub(set *LnsSet2_[T]) *LnsSet2_[T] {
+	delValList := NewLnsList2_[T]([]T{})
+	for val := range set.Items {
+		if set.Has(val) {
+			delValList.Insert(val)
+		}
+	}
+	for _, val := range delValList.Items {
+		delete(self.Items, val)
+	}
+	return self
+}
+func (self *LnsSet2_[T]) Clone() *LnsSet2_[T] {
+	set := NewLnsSet2_[T]([]T{})
+	for val := range self.Items {
+		set.Items[val] = true
+	}
+	return set
+}
+func (self *LnsSet2_[T]) Len() LnsInt {
+	return len(self.Items)
+}
+
 // ======== map ========
 
 type LnsMap struct {
@@ -772,6 +901,126 @@ func (self *LnsMap) Get(key LnsAny) LnsAny {
 }
 
 func (LnsMap *LnsMap) ToLuaCode(conv *StemToLuaConv) {
+	conv.write("{")
+	for key, val := range LnsMap.Items {
+		conv.write("[ ")
+		conv.conv(key)
+		conv.write(" ] =")
+		conv.conv(val)
+		conv.write(",")
+	}
+	conv.write("}")
+}
+
+// ======== GenMap ========
+
+type LnsMap2_[K comparable, V any] struct {
+	Items map[K]V
+}
+
+func Lns_ToLnsMap2Sub[K comparable, V any](
+	obj LnsAny, nilable bool, paramList []Lns_ToObjParam) (bool, LnsAny, LnsAny) {
+	if Lns_IsNil(obj) {
+		if nilable {
+			return true, nil, nil
+		}
+		return false, nil, "nil"
+	}
+	keyParam := paramList[0]
+	itemParam := paramList[1]
+	if lnsMap, ok := obj.(*LnsMap); ok {
+		newMap := NewLnsMap2_[K, V](map[K]V{})
+		for key, val := range lnsMap.Items {
+			successKey, convedKey, messKey :=
+				keyParam.Func(key, keyParam.Nilable, keyParam.Child)
+			if !successKey {
+				return false, nil, fmt.Sprintf(".%s:%s", key, messKey)
+			}
+			successVal, convedVal, messVal :=
+				itemParam.Func(val, itemParam.Nilable, itemParam.Child)
+			if !successVal {
+				return false, nil, fmt.Sprintf(".%s:%s", val, messVal)
+			}
+			newMap.Items[convedKey.(K)] = convedVal.(V)
+		}
+		return true, newMap, nil
+	}
+	return false, nil, "no map"
+}
+
+func (self *LnsMap2_[K, V]) ToCollection() LnsAny {
+	ret := NewLnsMap(map[LnsAny]LnsAny{})
+	for key, val := range self.Items {
+		ret.Items[key] = Lns_ToCollection(val)
+	}
+	return ret
+}
+
+func (self *LnsMap2_[K, V]) Correct() *LnsMap2_[K, V] {
+	//delete(self.Items, nil)
+	list := make([]K, len(self.Items))
+	index := 0
+	for key := range self.Items {
+		list[index] = key
+		index++
+	}
+	for _, key := range list[:index] {
+		delete(self.Items, key)
+	}
+	return self
+}
+
+func (self *LnsMap2_[K, V]) CreateKeyListStem() *LnsList2_[K] {
+	list := make([]K, len(self.Items))
+	index := 0
+	for key := range self.Items {
+		list[index] = key
+		index++
+	}
+	return NewLnsList2_(list)
+}
+func (self *LnsMap2_[K, V]) CreateKeyListInt() *LnsList2_[K] {
+	list := self.CreateKeyListStem()
+	list.lnsItemKind = LnsItemKindInt
+	return list
+}
+
+func (self *LnsMap2_[K, V]) CreateKeyListReal() *LnsList2_[K] {
+	list := self.CreateKeyListStem()
+	list.lnsItemKind = LnsItemKindReal
+	return list
+}
+func (self *LnsMap2_[K, V]) CreateKeyListStr() *LnsList2_[K] {
+	list := self.CreateKeyListStem()
+	list.lnsItemKind = LnsItemKindStr
+	return list
+}
+
+func NewLnsMap2_[K comparable, V any](arg map[K]V) *LnsMap2_[K, V] {
+	return &LnsMap2_[K, V]{arg}
+}
+
+func (self *LnsMap2_[K, V]) Set(key K, val V) {
+	if Lns_IsNil(val) {
+		delete(self.Items, key)
+	} else {
+		self.Items[key] = val
+	}
+}
+
+func (self *LnsMap2_[K, V]) Del(key K) {
+	delete(self.Items, key)
+}
+
+func (self *LnsMap2_[K, V]) Get(key K) LnsAny {
+	val, has := self.Items[key]
+	if !has {
+		return nil
+	}
+	return val
+}
+
+func (LnsMap *LnsMap2_[K, V]) ToLuaCode(conv *StemToLuaConv) {
 	conv.write("{")
 	for key, val := range LnsMap.Items {
 		conv.write("[ ")

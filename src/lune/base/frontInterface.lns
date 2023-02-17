@@ -280,7 +280,7 @@ pub class ImportModuleInfo {
       return #self.orderedSet.$list;
    }
 
-   pub fn list() : &List<str> {
+   pub fn list() : &_List<str> {
       return self.orderedSet.$list;
    }
 }

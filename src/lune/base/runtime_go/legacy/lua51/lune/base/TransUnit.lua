@@ -3509,7 +3509,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
       if token.txt == '[' or token.txt == '[@' then
          if token.txt == '[' then
             arrayMode = "list"
-            typeInfo = self.processInfo:createList( accessMode, self:getCurrentClass(  ), {typeInfo}, Ast.MutMode.Mut )
+            typeInfo = self.processInfo:createList_( true, accessMode, self:getCurrentClass(  ), {typeInfo}, Ast.MutMode.Mut )
          else
           
             arrayMode = "array"
@@ -3537,15 +3537,34 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
             return true
          end
          
+         
+         
          do
             local _switchExp = typeInfo:get_kind()
             if _switchExp == Ast.TypeInfoKind.Map then
                if #genericList ~= 2 then
                   self:addErrMess( symbolNode:get_pos(), "Key or value type is unknown" )
-                  typeInfo = self.processInfo:createMap( accessMode, self:getCurrentClass(  ), Ast.builtinTypeStem, Ast.builtinTypeStem, Ast.MutMode.Mut )
+                  typeInfo = self.processInfo:createMap_( true, accessMode, self:getCurrentClass(  ), Ast.builtinTypeStem, Ast.builtinTypeStem, Ast.MutMode.Mut )
                else
                 
-                  typeInfo = self.processInfo:createMap( accessMode, self:getCurrentClass(  ), genericList[1], genericList[2], Ast.MutMode.Mut )
+                  local canDealGenInherit
+                  
+                  do
+                     local _switchExp = symbolNode:get_expType()
+                     if _switchExp == Ast.builtinTypeMap then
+                        canDealGenInherit = self.ctrl_info.defaultGenInherit
+                     elseif _switchExp == Ast.builtinTypeMap_ then
+                        canDealGenInherit = true
+                     elseif _switchExp == Ast.builtinTypeMap__ then
+                        canDealGenInherit = false
+                     else 
+                        
+                           self:error( string.format( "illegal %s", "Map") )
+                     end
+                  end
+                  
+                  
+                  typeInfo = self.processInfo:createMap_( canDealGenInherit, accessMode, self:getCurrentClass(  ), genericList[1], genericList[2], Ast.MutMode.Mut )
                   if genericList[1]:get_nilable() or genericList[2]:get_nilable() then
                      self:addErrMess( symbolNode:get_pos(), string.format( "The key or value type must not be nilable. -- %s", typeInfo:getTxt(  )) )
                   end
@@ -3566,17 +3585,12 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                         canDealGenInherit = false
                      else 
                         
-                           self:error( "illegal list" )
+                           self:error( string.format( "illegal %s", "List") )
                      end
                   end
                   
-                  if canDealGenInherit then
-                     typeInfo = self.processInfo:createList( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
-                  else
-                   
-                     typeInfo = self.processInfo:createList_( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
-                  end
                   
+                  typeInfo = self.processInfo:createList_( canDealGenInherit, accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
                end
                
             elseif _switchExp == Ast.TypeInfoKind.Array then
@@ -3586,7 +3600,24 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                
             elseif _switchExp == Ast.TypeInfoKind.Set then
                if checkAlternateTypeCount( 1 ) then
-                  typeInfo = self.processInfo:createSet( accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
+                  local canDealGenInherit
+                  
+                  do
+                     local _switchExp = symbolNode:get_expType()
+                     if _switchExp == Ast.builtinTypeSet then
+                        canDealGenInherit = self.ctrl_info.defaultGenInherit
+                     elseif _switchExp == Ast.builtinTypeSet_ then
+                        canDealGenInherit = true
+                     elseif _switchExp == Ast.builtinTypeSet__ then
+                        canDealGenInherit = false
+                     else 
+                        
+                           self:error( string.format( "illegal %s", "Set") )
+                     end
+                  end
+                  
+                  
+                  typeInfo = self.processInfo:createSet_( canDealGenInherit, accessMode, self:getCurrentClass(  ), genericList, Ast.MutMode.Mut )
                   if genericList[1]:get_nilable() then
                      self:addErrMess( symbolNode:get_pos(), string.format( "The value type must not be nilable. -- %s", typeInfo:getTxt(  )) )
                   end
@@ -3982,7 +4013,7 @@ end
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
-   Log.log( Log.Level.Trace, __func__, 805, function (  )
+   Log.log( Log.Level.Trace, __func__, 813, function (  )
    
       return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
    end )
@@ -4055,7 +4086,7 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
       local funcType = Ast.builtinTypeLnsLoad
       macroScope:addLocalVar( self.processInfo, false, false, "_lnsLoad", nil, funcType, Ast.MutMode.IMut )
       
-      local macroLocalVarType = self.processInfo:createMap( Ast.AccessMode.Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
+      local macroLocalVarType = self.processInfo:createMap_( true, Ast.AccessMode.Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, Ast.MutMode.Mut )
       
       if not pubFlag then
          macroScope:addLocalVar( self.processInfo, false, true, "__var", nil, macroLocalVarType, Ast.MutMode.IMut )
@@ -5148,7 +5179,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2054, function (  )
+         Log.log( Log.Level.Debug, __func__, 2063, function (  )
          
             return string.format( "%s", tostring( dummyRetType))
          end )
@@ -5951,7 +5982,7 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
    
    self:checkToken( nextToken, "{" )
    
-   local mapType = self.processInfo:createMap( Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, Ast.MutMode.IMut ), Ast.MutMode.IMut )
+   local mapType = self.processInfo:createMap_( true, Ast.AccessMode.Pub, classTypeInfo, Ast.builtinTypeString, self:createModifier( Ast.builtinTypeStem, Ast.MutMode.IMut ), Ast.MutMode.IMut )
    if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeMapping, nil ) then
       self.helperInfo.hasMappingClassDef = true
       
@@ -8274,7 +8305,7 @@ function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeLis
    local validImplicitCast = true
    do
       local _switchExp = funcTypeInfo
-      if _switchExp == self.builtinFunc.list_insert or _switchExp == self.builtinFunc.__list_insert or _switchExp == self.builtinFunc.set_add or _switchExp == self.builtinFunc.set_del then
+      if _switchExp == self.builtinFunc.list_insert or _switchExp == self.builtinFunc.__list_insert or _switchExp == self.builtinFunc.set_add or _switchExp == self.builtinFunc.set_del or _switchExp == self.builtinFunc.__set_add or _switchExp == self.builtinFunc.__set_del then
       elseif _switchExp == self.builtinFunc.list_sort or _switchExp == self.builtinFunc.__list_sort then
          local alt2typeMap = Ast.CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
          local callback = self.processInfo:createFuncAsync( false, false, nil, Ast.TypeInfoKind.FormFunc, self.processInfo:get_dummyParentType(), self.processInfo:get_dummyParentType(), false, false, true, Ast.AccessMode.Pri, "sort", Ast.Async.Async, nil, {genericTypeList[1], genericTypeList[1]}, {Ast.builtinTypeBool}, Ast.MutMode.IMut )
@@ -8471,7 +8502,7 @@ function TransUnit:analyzeListConst( token, expectType )
       local canDealGenInherit
       
       if expectType ~= nil then
-         if expectType == Ast.builtinTypeList then
+         if expectType:get_srcTypeInfo():get_nonnilableType() == Ast.builtinTypeList then
             canDealGenInherit = self.ctrl_info.defaultGenInherit
          else
           
@@ -8482,15 +8513,7 @@ function TransUnit:analyzeListConst( token, expectType )
          canDealGenInherit = self.ctrl_info.defaultGenInherit
       end
       
-      local listType
-      
-      if canDealGenInherit then
-         listType = self.processInfo:createList( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )
-      else
-       
-         listType = self.processInfo:createList_( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )
-      end
-      
+      local listType = self.processInfo:createList_( canDealGenInherit, Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )
       
       return Nodes.LiteralListNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {listType}, expList )
    else
@@ -8538,10 +8561,23 @@ function TransUnit:analyzeSetConst( token, expectType )
    end
    
    
-   local typeInfoList
+   local canDealGenInherit
    
-   typeInfoList = {self.processInfo:createSet( Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )}
-   return Nodes.LiteralSetNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), typeInfoList, expList )
+   if expectType ~= nil then
+      if expectType:get_srcTypeInfo():get_nonnilableType() == Ast.builtinTypeSet then
+         canDealGenInherit = self.ctrl_info.defaultGenInherit
+      else
+       
+         canDealGenInherit = expectType:get_canDealGenInherit()
+      end
+      
+   else
+      canDealGenInherit = self.ctrl_info.defaultGenInherit
+   end
+   
+   local setType = self.processInfo:createSet_( canDealGenInherit, Ast.AccessMode.Local, self:getCurrentClass(  ), {itemTypeInfo}, Ast.MutMode.Mut )
+   
+   return Nodes.LiteralSetNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {setType}, expList )
 end
 
 
@@ -8612,6 +8648,7 @@ function TransUnit:analyzeMapConst( token, expectType )
    end
    
    
+   local hasNilable = true
    while true do
       if nextToken.txt == "}" then
          break
@@ -8627,6 +8664,11 @@ function TransUnit:analyzeMapConst( token, expectType )
       local val = self:analyzeExpOneRVal( false, false, false, nil, expectValType )
       valTypeInfo = getMapKeyValType( val:get_pos(), false, valTypeInfo, val:get_expType() )
       
+      if not hasNilable and (key:get_expType():get_nilable() or val:get_expType():get_nilable() ) then
+         hasNilable = true
+      end
+      
+      
       table.insert( pairList, Nodes.PairItem._new(key, val) )
       map[key] = val
       nextToken = self:getToken(  )
@@ -8638,7 +8680,45 @@ function TransUnit:analyzeMapConst( token, expectType )
    end
    
    
-   local typeInfo = self.processInfo:createMap( Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo, Ast.MutMode.Mut )
+   if expectKeyType ~= nil and expectValType ~= nil then
+      if keyTypeInfo == Ast.builtinTypeNone then
+         keyTypeInfo = expectKeyType
+         valTypeInfo = expectValType
+      end
+      
+   end
+   
+   
+   local canDealGenInherit
+   
+   if expectType ~= nil then
+      if expectType:get_srcTypeInfo():get_nonnilableType() == Ast.builtinTypeMap then
+         canDealGenInherit = self.ctrl_info.defaultGenInherit
+      else
+       
+         canDealGenInherit = expectType:get_canDealGenInherit()
+      end
+      
+   else
+      canDealGenInherit = self.ctrl_info.defaultGenInherit
+   end
+   
+   local typeInfo = self.processInfo:createMap_( canDealGenInherit, Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo, Ast.MutMode.Mut )
+   
+   if not canDealGenInherit and hasNilable then
+      for __index, pair in ipairs( pairList ) do
+         if pair:get_key():get_expType():get_nilable() then
+            self:addErrMess( pair:get_key():get_pos(), string.format( "can't use nilable -- %s", pair:get_key():get_expType():getTxt(  )) )
+         end
+         
+         if pair:get_val():get_expType():get_nilable() then
+            self:addErrMess( pair:get_val():get_pos(), string.format( "can't use nilable -- %s", pair:get_val():get_expType():getTxt(  )) )
+         end
+         
+      end
+      
+   end
+   
    
    self:checkToken( nextToken, "}" )
    
@@ -9753,9 +9833,21 @@ function TransUnit:analyzeAccessClassField( classTypeInfo, mode, token )
       elseif _switchExp == Ast.TypeInfoKind.Array then
          classTypeInfo = Ast.builtinTypeArray
       elseif _switchExp == Ast.TypeInfoKind.Set then
-         classTypeInfo = Ast.builtinTypeSet
+         if classTypeInfo:get_canDealGenInherit() then
+            classTypeInfo = Ast.builtinTypeSet
+         else
+          
+            classTypeInfo = Ast.builtinTypeSet__
+         end
+         
       elseif _switchExp == Ast.TypeInfoKind.Map then
-         classTypeInfo = Ast.builtinTypeMap
+         if classTypeInfo:get_canDealGenInherit() then
+            classTypeInfo = Ast.builtinTypeMap
+         else
+          
+            classTypeInfo = Ast.builtinTypeMap__
+         end
+         
       elseif _switchExp == Ast.TypeInfoKind.Box then
          classTypeInfo = Ast.builtinTypeBox
       end
@@ -9962,9 +10054,21 @@ function TransUnit:dumpFieldComp( writer, isPrefixType, prefixTypeInfo, pattern,
       elseif _switchExp == Ast.TypeInfoKind.Array then
          typeInfo = Ast.builtinTypeArray
       elseif _switchExp == Ast.TypeInfoKind.Set then
-         typeInfo = Ast.builtinTypeSet
+         if prefixTypeInfo:get_canDealGenInherit() then
+            typeInfo = Ast.builtinTypeSet
+         else
+          
+            typeInfo = Ast.builtinTypeSet__
+         end
+         
       elseif _switchExp == Ast.TypeInfoKind.Map then
-         typeInfo = Ast.builtinTypeMap
+         if prefixTypeInfo:get_canDealGenInherit() then
+            typeInfo = Ast.builtinTypeMap
+         else
+          
+            typeInfo = Ast.builtinTypeMap__
+         end
+         
       elseif _switchExp == Ast.TypeInfoKind.Box then
          typeInfo = Ast.builtinTypeBox
       else 

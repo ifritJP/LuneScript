@@ -151,7 +151,7 @@ pub class Option {
    pub let mut testing:bool;
 
    // shebang で利用する引数リスト
-   pub let mut shebangArgList:List<str>;
+   pub let mut shebangArgList:_List<str>;
 
    let mut runtimeOpt:RuntimeOpt {pub};
 

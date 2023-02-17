@@ -1219,9 +1219,20 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
          local itemType = orgType:get_itemTypeInfoList()[1]
          return string.format( "*LnsList2_[%s]", self:type2gotypeOrg( itemType, ClassAsterMode.Normal ))
       elseif _switchExp == Ast.TypeInfoKind.Set then
-         return "*LnsSet"
+         if orgType:get_canDealGenInherit() then
+            return "*LnsSet"
+         end
+         
+         local itemType = orgType:get_itemTypeInfoList()[1]
+         return string.format( "*LnsSet2_[%s]", self:type2gotypeOrg( itemType, ClassAsterMode.Normal ))
       elseif _switchExp == Ast.TypeInfoKind.Map then
-         return "*LnsMap"
+         if orgType:get_canDealGenInherit() then
+            return "*LnsMap"
+         end
+         
+         local keyType = orgType:get_itemTypeInfoList()[1]
+         local valType = orgType:get_itemTypeInfoList()[2]
+         return string.format( "*LnsMap2_[%s,%s]", self:type2gotypeOrg( keyType, ClassAsterMode.Normal ), self:type2gotypeOrg( valType, ClassAsterMode.Normal ))
       elseif _switchExp == Ast.TypeInfoKind.Tuple then
          return self:tuple2gotype( typeInfo )
       elseif _switchExp == Ast.TypeInfoKind.Form then
@@ -5198,7 +5209,7 @@ function convFilter:processForeach( node, opt )
          
          if valName ~= "_" then
             self:writeRaw( string.format( "%s := _%s", valName, valName) )
-            if loopExpType:get_canDealGenInherit() then
+            if loopExpType:get_canDealGenInherit() or itemType:get_srcTypeInfo():get_nonnilableType():get_kind() == Ast.TypeInfoKind.Alternate then
                self:outputStem2Type( itemType )
             end
             
@@ -5250,7 +5261,7 @@ function convFilter:processForeach( node, opt )
             if key ~= nil then
                if key:get_name() ~= "_" then
                   self:writeRaw( string.format( "%s := _%s", key:get_name(), key:get_name()) )
-                  if loopExpType:get_canDealGenInherit() then
+                  if loopExpType:get_canDealGenInherit() or keyType:get_srcTypeInfo():get_nonnilableType():get_kind() == Ast.TypeInfoKind.Alternate then
                      self:outputStem2Type( keyType )
                   end
                   
@@ -5263,7 +5274,7 @@ function convFilter:processForeach( node, opt )
          
          if valName ~= "_" then
             self:writeRaw( string.format( "%s := _%s", valName, valName) )
-            if loopExpType:get_canDealGenInherit() then
+            if loopExpType:get_canDealGenInherit() or itemType:get_srcTypeInfo():get_nonnilableType():get_kind() == Ast.TypeInfoKind.Alternate then
                self:outputStem2Type( itemType )
             end
             
@@ -5293,7 +5304,7 @@ function convFilter:processForeach( node, opt )
          self:pushIndent(  )
          if valName ~= "_" then
             self:writeRaw( string.format( "%s := _%s", valName, valName) )
-            if loopExpType:get_canDealGenInherit() then
+            if loopExpType:get_canDealGenInherit() or valType:get_srcTypeInfo():get_nonnilableType():get_kind() == Ast.TypeInfoKind.Alternate then
                self:outputStem2Type( valType )
             end
             
@@ -5389,7 +5400,10 @@ function convFilter:processForsort( node, opt )
    if valSym ~= nil then
       if valSym:get_posForModToRef() then
          self:writeRaw( string.format( "%s := %s.Items[ _%s ]", self:getSymbolSym( valSym ), collSym, key) )
-         self:outputStem2Type( valSym:get_typeInfo() )
+         if node:get_exp():get_expType():get_srcTypeInfo():get_canDealGenInherit() then
+            self:outputStem2Type( valSym:get_typeInfo() )
+         end
+         
          self:writeln( "" )
       end
       
@@ -5398,7 +5412,10 @@ function convFilter:processForsort( node, opt )
    if keySym ~= nil then
       if keySym:get_posForModToRef() then
          self:writeRaw( string.format( "%s := _%s", key, key) )
-         self:outputStem2Type( keySym:get_typeInfo() )
+         if node:get_exp():get_expType():get_srcTypeInfo():get_canDealGenInherit() then
+            self:outputStem2Type( keySym:get_typeInfo() )
+         end
+         
          self:writeln( "" )
       end
       
@@ -5942,9 +5959,20 @@ function convFilter:getFromStemName( typeInfo, suffix )
          local itemType = workTypeInfo:get_itemTypeInfoList()[1]
          return string.format( "Lns_ToList2%s[%s]", suffix, self:type2gotype( itemType ))
       elseif _switchExp == Ast.TypeInfoKind.Set then
-         return "Lns_ToSet" .. suffix
+         if workTypeInfo:get_canDealGenInherit() then
+            return "Lns_ToSet" .. suffix
+         end
+         
+         local itemType = workTypeInfo:get_itemTypeInfoList()[1]
+         return string.format( "Lns_ToSet2%s[%s]", suffix, self:type2gotype( itemType ))
       elseif _switchExp == Ast.TypeInfoKind.Map then
-         return "Lns_ToLnsMap" .. suffix
+         if workTypeInfo:get_canDealGenInherit() then
+            return "Lns_ToLnsMap" .. suffix
+         end
+         
+         local keyType = workTypeInfo:get_itemTypeInfoList()[1]
+         local valType = workTypeInfo:get_itemTypeInfoList()[2]
+         return string.format( "Lns_ToLnsMap2%s[%s,%s]", suffix, self:type2gotypeOrg( keyType, ClassAsterMode.Normal ), self:type2gotypeOrg( valType, ClassAsterMode.Normal ))
       elseif _switchExp == Ast.TypeInfoKind.Class then
          return string.format( "%s_FromMap", self:getTypeSymbol( workTypeInfo )) .. suffix
       else 
@@ -6547,7 +6575,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                                  else
                                     do
                                        local _switchExp = funcType
-                                       if _switchExp == self.builtinFuncs.list_sort or _switchExp == self.builtinFuncs.__list_sort or _switchExp == self.builtinFuncs.array_sort then
+                                       if _switchExp == self.builtinFuncs._list_sort or _switchExp == self.builtinFuncs.__list_sort or _switchExp == self.builtinFuncs.array_sort then
                                           callKind = _lune.newAlge( CallKind.SortCall, {prefixType:get_itemTypeInfoList()[1]})
                                        end
                                     end
@@ -7446,6 +7474,7 @@ function convFilter:processExpRefItem( node, opt )
          
          
       elseif _switchExp == Ast.TypeInfoKind.Map then
+         local lnsType = self:type2gotype( prefixType )
          local nilAccFin = false
          if node:get_nilAccess() then
             if not node:get_val():hasNilAccess(  ) then
@@ -7458,12 +7487,12 @@ function convFilter:processExpRefItem( node, opt )
                self:writeln( "&&" )
             end
             
-            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(%s)", getEnvTxt, getEnvTxt, "*LnsMap") )
+            self:writeRaw( string.format( "%s.NilAccPush( %s.NilAccPop().(%s)", getEnvTxt, getEnvTxt, lnsType) )
          else
           
             filter( node:get_val(), self, node )
             if prefixType:get_kind() == Ast.TypeInfoKind.Stem then
-               self:writeRaw( string.format( ".(%s)", "*LnsMap") )
+               self:writeRaw( string.format( ".(%s)", lnsType) )
             end
             
          end
@@ -7825,24 +7854,49 @@ end
 
 function convFilter:processLiteralSet( node, opt )
 
-   self:writeRaw( "NewLnsSet(" )
-   do
-      local expList = node:get_expList()
-      if expList ~= nil then
-         self:expList2Slice( expList, true )
-      else
-         self:writeRaw( "[]LnsAny{}" )
+   if node:get_expType():get_canDealGenInherit() then
+      self:writeRaw( "NewLnsSet(" )
+      do
+         local expList = node:get_expList()
+         if expList ~= nil then
+            self:expList2Slice( expList, true )
+         else
+            self:writeRaw( "[]LnsAny{}" )
+         end
       end
+      
+      self:writeRaw( ")" )
+   else
+    
+      local itemType = self:type2gotype( node:get_expType():get_itemTypeInfoList()[1] )
+      self:writeRaw( string.format( "NewLnsSet2_[%s](", itemType) )
+      do
+         local expList = node:get_expList()
+         if expList ~= nil then
+            self:expList2SliceRaw( node:get_expType():get_itemTypeInfoList()[1], expList )
+         else
+            self:writeRaw( string.format( "[]%s{}", itemType) )
+         end
+      end
+      
+      self:writeRaw( ")" )
    end
    
-   self:writeRaw( ")" )
 end
 
 
 function convFilter:processLiteralMap( node, opt )
 
    local hasNilable = false
-   self:writeRaw( "NewLnsMap( map[LnsAny]LnsAny{" )
+   if node:get_expType():get_canDealGenInherit() then
+      self:writeRaw( "NewLnsMap( map[LnsAny]LnsAny{" )
+   else
+    
+      local keyType = self:type2gotype( node:get_expType():get_itemTypeInfoList()[1] )
+      local valType = self:type2gotype( node:get_expType():get_itemTypeInfoList()[2] )
+      self:writeRaw( string.format( "NewLnsMap2_[%s,%s]( map[%s]%s{", keyType, valType, keyType, valType) )
+   end
+   
    for __index, pair in ipairs( node:get_pairList() ) do
       if pair:get_key():get_kind() == Nodes.NodeKind.get_LiteralNil(  ) or pair:get_val():get_kind() == Nodes.NodeKind.get_LiteralNil(  ) then
       else

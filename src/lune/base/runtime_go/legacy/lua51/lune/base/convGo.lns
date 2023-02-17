@@ -825,10 +825,20 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          return "*LnsList2_[%s]" (self.type2gotypeOrg( itemType, .Normal ) );
       }
       case .Set {
-         return "*LnsSet";
+         if orgType.$canDealGenInherit {
+            return "*LnsSet";
+         }
+         let itemType = orgType.$itemTypeInfoList[ 1 ];
+         return "*LnsSet2_[%s]" (self.type2gotypeOrg( itemType, .Normal ) );
       }
       case .Map {
-         return "*LnsMap";
+         if orgType.$canDealGenInherit {
+            return "*LnsMap";
+         }
+         let keyType = orgType.$itemTypeInfoList[ 1 ];
+         let valType = orgType.$itemTypeInfoList[ 2 ];
+         return "*LnsMap2_[%s,%s]" (self.type2gotypeOrg( keyType, .Normal ),
+                                     self.type2gotypeOrg( valType, .Normal ) );
       }
       case .Tuple {
          return self.tuple2gotype( typeInfo );
@@ -4315,14 +4325,18 @@ pub override fn convFilter.processForsort(
       if valSym.$posForModToRef {
          self.writeRaw( "%s := %s.Items[ _%s ]"
             ( self.getSymbolSym( valSym ), collSym, key ) );
-         self.outputStem2Type( valSym.$typeInfo );
+         if node.$exp.$expType.$srcTypeInfo.$canDealGenInherit {
+            self.outputStem2Type( valSym.$typeInfo );
+         }
          self.writeln( "" );
       }
    }
    when! keySym {
       if keySym.$posForModToRef {
          self.writeRaw( "%s := _%s" (key, key));
-         self.outputStem2Type( keySym.$typeInfo );
+         if node.$exp.$expType.$srcTypeInfo.$canDealGenInherit {
+            self.outputStem2Type( keySym.$typeInfo );
+         }
          self.writeln( "" );
       }
    }
@@ -4794,10 +4808,21 @@ fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo, suffix:str) mut : str {
          return "Lns_ToList2%s[%s]" (suffix,self.type2gotype( itemType ) );
       }
       case .Set {
-         return "Lns_ToSet" .. suffix;
+         if workTypeInfo.$canDealGenInherit {
+            return "Lns_ToSet" .. suffix;
+         }
+         let itemType = workTypeInfo.$itemTypeInfoList[1];
+         return "Lns_ToSet2%s[%s]" (suffix,self.type2gotype( itemType ) );
       }
       case .Map {
-         return "Lns_ToLnsMap" .. suffix;
+         if workTypeInfo.$canDealGenInherit {
+            return "Lns_ToLnsMap" .. suffix;
+         }
+         let keyType = workTypeInfo.$itemTypeInfoList[ 1 ];
+         let valType = workTypeInfo.$itemTypeInfoList[ 2 ];
+         return "Lns_ToLnsMap2%s[%s,%s]" ( suffix,
+                                           self.type2gotypeOrg( keyType, .Normal ), 
+                                           self.type2gotypeOrg( valType, .Normal ) );
       }
       case .Class {
          return "%s_FromMap" (self.getTypeSymbol(workTypeInfo))  .. suffix;
@@ -6132,7 +6157,8 @@ pub override fn convFilter.processExpRefItem(
          } );
       }
       case .Map {
-         _access( "*LnsMap", prefixType.$kind == .Stem, {
+         let lnsType = self.type2gotype( prefixType );
+         _access( lnsType, prefixType.$kind == .Stem, {
             self.writeRaw( ".Get(" );
             if! let index = node.$index {
                filter( index, self, node );
@@ -6413,14 +6439,26 @@ pub override fn convFilter.processLiteralList(
 pub override fn convFilter.processLiteralSet(
    node: &Nodes.LiteralSetNode, opt: Opt ) mut
 {
-   self.writeRaw( "NewLnsSet(" );
-   if! let expList = node.$expList {
-      self.expList2Slice( expList, true );
+   if node.$expType.$canDealGenInherit {
+      self.writeRaw( "NewLnsSet(" );
+      if! let expList = node.$expList {
+         self.expList2Slice( expList, true );
+      }
+      else {
+         self.writeRaw( "[]LnsAny{}" );
+      }
+      self.writeRaw( ")" );
+   } else {
+      let itemType = self.type2gotype(node.$expType.$itemTypeInfoList[1] );
+      self.writeRaw( "NewLnsSet2_[%s](" (itemType ));
+      if! let expList = node.$expList {
+         self.expList2SliceRaw( node.$expType.$itemTypeInfoList[1], expList );
+      }
+      else {
+         self.writeRaw( "[]%s{}" (itemType) );
+      }
+      self.writeRaw( ")" );
    }
-   else {
-      self.writeRaw( "[]LnsAny{}" );
-   }
-   self.writeRaw( ")" );
 }
 
 
@@ -6428,7 +6466,14 @@ pub override fn convFilter.processLiteralMap(
    node: &Nodes.LiteralMapNode, opt: Opt ) mut
 {
    let mut hasNilable = false;
-   self.writeRaw( "NewLnsMap( map[LnsAny]LnsAny{" );
+   if node.$expType.$canDealGenInherit {
+      self.writeRaw( "NewLnsMap( map[LnsAny]LnsAny{" );
+   } else {
+      let keyType = self.type2gotype(node.$expType.$itemTypeInfoList[1] );
+      let valType = self.type2gotype(node.$expType.$itemTypeInfoList[2] );
+      self.writeRaw( "NewLnsMap2_[%s,%s]( map[%s]%s{"
+                     (keyType, valType, keyType, valType) );
+   }
    foreach pair in node.$pairList {
       if pair.$key.$kind == Nodes.NodeKind.get_LiteralNil() or
          pair.$val.$kind == Nodes.NodeKind.get_LiteralNil()

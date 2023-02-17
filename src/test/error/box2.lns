@@ -1,0 +1,7 @@
+{
+   fn func( val:Map<Nilable<int>,Nilable<int>> ) {
+   }
+   func( { 1:0 } ); // error
+   let val:Nilable = 1;
+   func( { val:val } );
+}

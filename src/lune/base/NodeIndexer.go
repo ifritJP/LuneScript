@@ -3,7 +3,7 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_NodeIndexer bool
 var NodeIndexer__mod__ string
-var NodeIndexer_declNameSpaceNodeKindSet *LnsSet
+var NodeIndexer_declNameSpaceNodeKindSet *LnsSet2_[LnsInt]
 
 // 165: decl @lune.@base.@NodeIndexer.Indexer.dump.comp
 func NodeIndexer_Indexer_dump__comp_0_(_env *LnsEnv, node1 *Nodes_Node,node2 *Nodes_Node) bool {
@@ -56,10 +56,10 @@ func (self *NodeIndexer_Indexer) GetIndex(_env *LnsEnv, node *Nodes_Node) *NodeI
 // 118: decl @lune.@base.@NodeIndexer.Indexer.visit
 func (self *NodeIndexer_Indexer) visit(_env *LnsEnv, targetNode *Nodes_Node,dept LnsInt) {
     targetNode.FP.Visit(_env, Nodes_NodeVisitor(func(_env *LnsEnv, node *Nodes_Node,parent *Nodes_Node,relation string,depth LnsInt) LnsInt {
-        if self.targetNodeKindSet.Has(node.FP.Get_kind(_env)){
+        if self.targetNodeKindSet.Has(LnsInt(node.FP.Get_kind(_env))){
             self.node2Index.Set(node,NewNodeIndexer_Index(_env, self.nsInfo, self.nsInfo.FP.getNewId(_env, node.FP.Get_kind(_env))))
         }
-        if NodeIndexer_declNameSpaceNodeKindSet.Has(node.FP.Get_kind(_env)){
+        if NodeIndexer_declNameSpaceNodeKindSet.Has(LnsInt(node.FP.Get_kind(_env))){
             var bakNsInfo *NodeIndexer_NamespaceInfo
             bakNsInfo = self.nsInfo
             var parentNsInfo *NodeIndexer_NamespaceInfo
@@ -80,10 +80,10 @@ func (self *NodeIndexer_Indexer) visit(_env *LnsEnv, targetNode *Nodes_Node,dept
             return Nodes_NodeVisitMode__Next
         }
         return Nodes_NodeVisitMode__Child
-    }), 0, NewLnsSet([]LnsAny{}))
+    }), 0, NewLnsSet2_[*Nodes_Node]([]*Nodes_Node{}))
 }
 // 153: decl @lune.@base.@NodeIndexer.Indexer.start
-func (self *NodeIndexer_Indexer) Start(_env *LnsEnv, targetNode *Nodes_Node,targetNodeKindSet *LnsSet) {
+func (self *NodeIndexer_Indexer) Start(_env *LnsEnv, targetNode *Nodes_Node,targetNodeKindSet *LnsSet2_[LnsInt]) {
     self.targetNodeKindSet = targetNodeKindSet
     self.FP.visit(_env, targetNode, 0)
 }
@@ -222,7 +222,7 @@ type NodeIndexer_IndexerMtd interface {
     Dump(_env *LnsEnv)
     GetIndex(_env *LnsEnv, arg1 *Nodes_Node) *NodeIndexer_Index
     Get_node2Index(_env *LnsEnv) *LnsMap
-    Start(_env *LnsEnv, arg1 *Nodes_Node, arg2 *LnsSet)
+    Start(_env *LnsEnv, arg1 *Nodes_Node, arg2 *LnsSet2_[LnsInt])
     visit(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsInt)
 }
 type NodeIndexer_Indexer struct {
@@ -230,7 +230,7 @@ type NodeIndexer_Indexer struct {
     processInfo *Ast_ProcessInfo
     node2Index *LnsMap
     nsType2nsInfo *LnsMap
-    targetNodeKindSet *LnsSet
+    targetNodeKindSet *LnsSet2_[LnsInt]
     FP NodeIndexer_IndexerMtd
 }
 func NodeIndexer_Indexer2Stem( obj LnsAny ) LnsAny {
@@ -266,7 +266,7 @@ func (self *NodeIndexer_Indexer) InitNodeIndexer_Indexer(_env *LnsEnv, processIn
     self.processInfo = processInfo
     self.nsInfo = NewNodeIndexer_NamespaceInfo(_env, nil, Ast_headTypeInfo)
     self.node2Index = NewLnsMap( map[LnsAny]LnsAny{})
-    self.targetNodeKindSet = NewLnsSet([]LnsAny{})
+    self.targetNodeKindSet = NewLnsSet2_[LnsInt]([]LnsInt{})
 }
 
 
@@ -278,7 +278,7 @@ func Lns_NodeIndexer_init(_env *LnsEnv) {
     Lns_Nodes_init(_env)
     Lns_Util_init(_env)
     Lns_Ast_init(_env)
-    NodeIndexer_declNameSpaceNodeKindSet = NewLnsSet([]LnsAny{Nodes_NodeKind_get_DeclClass(_env), Nodes_NodeKind_get_DeclConstr(_env), Nodes_NodeKind_get_DeclFunc(_env), Nodes_NodeKind_get_ProtoMethod(_env), Nodes_NodeKind_get_DeclMethod(_env), Nodes_NodeKind_get_DeclEnum(_env), Nodes_NodeKind_get_DeclAlge(_env), Nodes_NodeKind_get_DeclMacro(_env)})
+    NodeIndexer_declNameSpaceNodeKindSet = NewLnsSet2_[LnsInt](Lns_2DDDGen[LnsInt](Nodes_NodeKind_get_DeclClass(_env),Nodes_NodeKind_get_DeclConstr(_env),Nodes_NodeKind_get_DeclFunc(_env),Nodes_NodeKind_get_ProtoMethod(_env),Nodes_NodeKind_get_DeclMethod(_env),Nodes_NodeKind_get_DeclEnum(_env),Nodes_NodeKind_get_DeclAlge(_env),Nodes_NodeKind_get_DeclMacro(_env)))
 }
 func init() {
     init_NodeIndexer = false

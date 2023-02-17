@@ -109,7 +109,7 @@ type LuaVer_LuaVerInfo struct {
     loadStrFuncName string
     canUseMetaGc bool
     loadKind LnsInt
-    noSupportSymMap *LnsSet
+    noSupportSymMap *LnsSet2_[string]
     FP LuaVer_LuaVerInfoMtd
 }
 func LuaVer_LuaVerInfo2Stem( obj LnsAny ) LnsAny {
@@ -132,13 +132,13 @@ func LuaVer_LuaVerInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *LuaVer_LuaVerInfo) ToLuaVer_LuaVerInfo() *LuaVer_LuaVerInfo {
     return obj
 }
-func NewLuaVer_LuaVerInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 bool, arg4 bool, arg5 bool, arg6 string, arg7 bool, arg8 LnsInt, arg9 *LnsSet) *LuaVer_LuaVerInfo {
+func NewLuaVer_LuaVerInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 bool, arg4 bool, arg5 bool, arg6 string, arg7 bool, arg8 LnsInt, arg9 *LnsSet2_[string]) *LuaVer_LuaVerInfo {
     obj := &LuaVer_LuaVerInfo{}
     obj.FP = obj
     obj.InitLuaVer_LuaVerInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
     return obj
 }
-func (self *LuaVer_LuaVerInfo) InitLuaVer_LuaVerInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 bool, arg4 bool, arg5 bool, arg6 string, arg7 bool, arg8 LnsInt, arg9 *LnsSet) {
+func (self *LuaVer_LuaVerInfo) InitLuaVer_LuaVerInfo(_env *LnsEnv, arg1 LnsInt, arg2 LnsInt, arg3 bool, arg4 bool, arg5 bool, arg6 string, arg7 bool, arg8 LnsInt, arg9 *LnsSet2_[string]) {
     self.verKind = arg1
     self.hasBitOp = arg2
     self.hasTableUnpack = arg3
@@ -163,9 +163,9 @@ func Lns_LuaVer_init(_env *LnsEnv) {
     LuaVer__mod__ = "@lune.@base.@LuaVer"
     Lns_InitMod()
     Lns_LuaMod_init(_env)
-    LuaVer_ver51 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v51, LuaVer_BitOp__Cant, false, false, false, "loadstring51", false, LuaMod_CodeKind__LoadStr51, NewLnsSet([]LnsAny{"package.searchpath"}))
-    LuaVer_ver52 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v52, LuaVer_BitOp__HasMod, true, true, true, "loadstring52", true, LuaMod_CodeKind__LoadStr52, NewLnsSet([]LnsAny{}))
-    LuaVer_ver53 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v53, LuaVer_BitOp__HasOp, true, true, true, "loadstring52", true, LuaMod_CodeKind__LoadStr52, NewLnsSet([]LnsAny{}))
+    LuaVer_ver51 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v51, LuaVer_BitOp__Cant, false, false, false, "loadstring51", false, LuaMod_CodeKind__LoadStr51, NewLnsSet2_[string](Lns_2DDDGen[string]("package.searchpath")))
+    LuaVer_ver52 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v52, LuaVer_BitOp__HasMod, true, true, true, "loadstring52", true, LuaMod_CodeKind__LoadStr52, NewLnsSet2_[string]([]string{}))
+    LuaVer_ver53 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v53, LuaVer_BitOp__HasOp, true, true, true, "loadstring52", true, LuaMod_CodeKind__LoadStr52, NewLnsSet2_[string]([]string{}))
     LuaVer_kind2verMap = NewLnsMap( map[LnsAny]LnsAny{LuaVer_VerKind__v51:LuaVer_ver51,LuaVer_VerKind__v52:LuaVer_ver52,LuaVer_VerKind__v53:LuaVer_ver53,})
     LuaVer_curVer = nil
 }

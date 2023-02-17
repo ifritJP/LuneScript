@@ -324,8 +324,8 @@ fn TransUnit.analyzeRefTypeWithSymbol(
       if token.txt == '[' or token.txt == '[@' {
          if token.txt == '[' {
             arrayMode = "list";
-            typeInfo = self.processInfo.createList(
-               accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
+            typeInfo = self.processInfo.createList_(
+               true, accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
          }
          else {
             arrayMode = "array";
@@ -354,16 +354,41 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             return true;
          }
 
+         macro _processCanDealGenInherit( typeTxt:str ) {
+            {
+               let builtinType = "Ast.builtinType%s" (typeTxt);
+               let builtinType_ = "Ast.builtinType%s_" (typeTxt);
+               let builtinType__ = "Ast.builtinType%s__" (typeTxt);
+            }
+            let canDealGenInherit;
+            switch symbolNode.$expType {
+               case ,,,builtinType {
+                  canDealGenInherit = self.ctrl_info.defaultGenInherit;
+               }
+               case ,,,builtinType_ {
+                  canDealGenInherit = true;
+               }
+               case ,,,builtinType__ {
+                  canDealGenInherit = false;
+               }
+               default {
+                  self.error( "illegal %s" (,,typeTxt) ); // バグ
+               }
+            }
+         }
+
          switch typeInfo.$kind {
             case .Map {
                if #genericList ~= 2 {
                   self.addErrMess( symbolNode.$pos, "Key or value type is unknown" );
-                  typeInfo = self.processInfo.createMap(
-                     accessMode, self.getCurrentClass(),
+                  typeInfo = self.processInfo.createMap_(
+                     true, accessMode, self.getCurrentClass(),
                      Ast.builtinTypeStem, Ast.builtinTypeStem, .Mut );
                }
                else {
-                  typeInfo = self.processInfo.createMap(
+                  _processCanDealGenInherit( "Map" );
+                  typeInfo = self.processInfo.createMap_(
+                     canDealGenInherit,
                      accessMode, self.getCurrentClass(),
                      genericList[ 1 ], genericList[ 2 ], .Mut );
                   if genericList[ 1 ].$nilable or genericList[ 2 ].$nilable {
@@ -376,28 +401,10 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .List {
                if checkAlternateTypeCount( 1 ) {
-                  let canDealGenInherit;
-                  switch symbolNode.$expType {
-                     case Ast.builtinTypeList {
-                        canDealGenInherit = self.ctrl_info.defaultGenInherit;
-                     }
-                     case Ast.builtinTypeList_ {
-                        canDealGenInherit = true;
-                     }
-                     case Ast.builtinTypeList__ {
-                        canDealGenInherit = false;
-                     }
-                     default {
-                        self.error( "illegal list" ); // バグ
-                     }
-                  }
-                  if canDealGenInherit {
-                     typeInfo = self.processInfo.createList(
-                        accessMode, self.getCurrentClass(), genericList, .Mut );
-                  } else {
-                     typeInfo = self.processInfo.createList_(
-                        accessMode, self.getCurrentClass(), genericList, .Mut );
-                  }
+                  _processCanDealGenInherit( "List" );
+                  typeInfo = self.processInfo.createList_(
+                     canDealGenInherit, accessMode,
+                     self.getCurrentClass(), genericList, .Mut );
                }
             }
             case .Array {
@@ -409,9 +416,10 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .Set {
                if checkAlternateTypeCount( 1 ) {
-                  typeInfo = self.processInfo.createSet(
-                     accessMode, self.getCurrentClass(),
-                     genericList, .Mut );
+                  _processCanDealGenInherit( "Set" );
+                  typeInfo = self.processInfo.createSet_(
+                     canDealGenInherit, 
+                     accessMode, self.getCurrentClass(), genericList, .Mut );
                   if genericList[ 1 ].$nilable {
                      self.addErrMess(
                         symbolNode.$pos,
@@ -881,8 +889,9 @@ fn TransUnit.analyzeDeclMacroSub(
       macroScope.addLocalVar(
          self.processInfo, false, false, "_lnsLoad", nil, funcType, .IMut );
 
-      let macroLocalVarType = self.processInfo.createMap(
-         .Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
+      let macroLocalVarType = self.processInfo.createMap_(
+         true, .Local, self.moduleType,
+         Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
 
       if not pubFlag {
          macroScope.addLocalVar(
@@ -2895,8 +2904,8 @@ fn TransUnit.analyzeDeclClass(
    self.checkToken( nextToken, "{" );
 
 
-   let mapType = self.processInfo.createMap(
-      .Pub, classTypeInfo, Ast.builtinTypeString,
+   let mapType = self.processInfo.createMap_(
+      true, .Pub, classTypeInfo, Ast.builtinTypeString,
       self.createModifier( Ast.builtinTypeStem, .IMut ), .IMut );
    if classTypeInfo.isInheritFrom(
       self.processInfo, Ast.builtinTypeMapping, nil ) {

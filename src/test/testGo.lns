@@ -586,6 +586,13 @@ _section();
 }
 _section();
 {
+   let list = [ "10", "9", "1", "2", "3", "4" ];
+   foreach val in list {
+      print( val .. "aa" );
+   }  
+}
+_section();
+{
    let map = {"X":1, "O":2, "A":3, "B":4, "C":5, "D":6 };
    forsort val, key in map {
       print( key .. "aa", val + 10 );
@@ -594,7 +601,9 @@ _section();
 _section();
 {
    let nilable:int! = nil;
-   let mut map = {"X":1, "O":2, "A":3, "B":4, "C":5, "D":6, "Z":nil, "ZZ":nilable };
+   let mut map:_Map<str,int> = {
+      "X":1, "O":2, "A":3, "B":4, "C":5, "D":6, "Z":nil, "ZZ":nilable
+   };
    map[ "xyz" ] = 10;
    map[ "A" ] = nil;
    forsort val, key in map {
@@ -626,7 +635,7 @@ _section();
 
    let map = hoge._toMap();
    foreach val0, key0 in map {
-      foreach test, index in val0@@_List<Map<str,stem>> {
+      foreach test, index in val0@@_List<_Map<str,stem>> {
          forsort val, key in test {
             switch key {
                case "val" {
@@ -635,12 +644,12 @@ _section();
                   }
                }
                case "val2" {
-                  forsort val2, key2 in val@@Map<int,str> {
+                  forsort val2, key2 in val@@_Map<int,str> {
                      print( key0, index, key, key2, val2 );
                   }
                }
                case "val3" {
-                  forsort val2 in val@@Set<real> {
+                  forsort val2 in val@@_Set<real> {
                      print( key0, index, key, val2 );
                   }
                }
@@ -1395,7 +1404,7 @@ _section();
             print( key, val );
          }
          if! let map2 = expandLuavalMap( map ) {
-            forsort val, key in map2@@Map<int,str> {
+            forsort val, key in map2@@_Map<int,str> {
                print( key, val );
             }
          }
@@ -1461,7 +1470,7 @@ _section();
          when! loaded {
             let map = unwrap loaded(##);
             if! let map2 = expandLuavalMap( map ) {
-               forsort _, key in map2@@Map<str,stem> {
+               forsort _, key in map2@@_Map<str,stem> {
                   print( key );
                }
             }
@@ -1772,7 +1781,7 @@ return { 1, 2, 3, 4 };
       if! let loaded = _load( code, nil ) {
          let obj = loaded( ## );
          if! let map = expandLuavalMap( obj ) {
-            forsort val, key in map@@Map<int,int> {
+            forsort val, key in map@@_Map<int,int> {
                print( key + 10, val + 20 );
             }
          }

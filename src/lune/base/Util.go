@@ -9,23 +9,23 @@ var Util_debugFlag bool
 var Util_errorCode LnsInt
 type Util_ConsoleWriter func (_env *LnsEnv, arg1 string)
 // for 443
-func Util_convExp0_1924(arg1 []LnsAny) string {
+func Util_convExp0_1921(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 460
-func Util_convExp0_2011(arg1 []LnsAny) string {
+func Util_convExp0_2008(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 419
-func Util_convExp0_1791(arg1 []LnsAny) LnsAny {
+func Util_convExp0_1788(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 431
-func Util_convExp0_1854(arg1 []LnsAny) string {
+func Util_convExp0_1851(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 471
-func Util_convExp0_2069(arg1 []LnsAny) string {
+func Util_convExp0_2066(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 46: decl @lune.@base.@Util.setConsoleOStream
@@ -158,7 +158,7 @@ func Util_readFile(_env *LnsEnv, path string) LnsAny {
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Util_convExp0_1791(Lns_2DDD(Lns_io_open(path, nil)))
+        _fileObj := Util_convExp0_1788(Lns_2DDD(Lns_io_open(path, nil)))
         if _fileObj == nil{
             return nil
         } else {
@@ -177,7 +177,7 @@ func Util_scriptPath2Module(_env *LnsEnv, path string) string {
         Util_err(_env, "script must be relative-path -- " + path)
     }
     var mod string
-    mod = Util_convExp0_1854(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
+    mod = Util_convExp0_1851(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
     return Lns_car(_env.GetVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
@@ -191,7 +191,7 @@ func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny)
         } else { 
             workpath = projDir_364
         }
-        path = Util_convExp0_1924(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
+        path = Util_convExp0_1921(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
     }
     return Util_scriptPath2Module(_env, path)
 }
@@ -210,7 +210,7 @@ func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
 // 458: decl @lune.@base.@Util.parentPath
 func Util_parentPath(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-        path = Util_convExp0_2011(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
+        path = Util_convExp0_2008(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
     }
     return Lns_car(_env.GetVM().String_gsub(path,"/[^/]+$", "")).(string)
 }
@@ -224,7 +224,7 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
             return work
         }
         var parent string
-        parent = Util_convExp0_2069(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
+        parent = Util_convExp0_2066(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
         if parent == work{
             return nil
         }

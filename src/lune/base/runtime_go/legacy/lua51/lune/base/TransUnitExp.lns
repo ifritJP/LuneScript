@@ -799,7 +799,9 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
    switch funcTypeInfo {
       case self.builtinFunc.list_insert,
            self.builtinFunc.__list_insert,
-           self.builtinFunc.set_add, self.builtinFunc.set_del {
+           self.builtinFunc.set_add, self.builtinFunc.set_del,
+           self.builtinFunc.__set_add, self.builtinFunc.__set_del
+      {
          //argTypeList = genericTypeList;
       }
       case self.builtinFunc.list_sort, self.builtinFunc.__list_sort  {
@@ -974,7 +976,7 @@ fn TransUnit.analyzeListConst(
    if token.txt == '[' {
       let canDealGenInherit;
       when! expectType {
-         if expectType == Ast.builtinTypeList {
+         if expectType.$srcTypeInfo.$nonnilableType == Ast.builtinTypeList {
             canDealGenInherit = self.ctrl_info.defaultGenInherit;
          } else {
             canDealGenInherit = expectType.$canDealGenInherit;
@@ -982,15 +984,16 @@ fn TransUnit.analyzeListConst(
       } else {
          canDealGenInherit = self.ctrl_info.defaultGenInherit;
       }
-      let listType;
-      if canDealGenInherit {
-         listType = self.processInfo.createList(
-            .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
-      } else {
-         listType = self.processInfo.createList_(
-            .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
-      }
-      
+      let listType = self.processInfo.createList_(
+         canDealGenInherit, .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
+      // if canDealGenInherit {
+      //    listType = self.processInfo.createList(
+      //       .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
+      // } else {
+      //    listType = self.processInfo.createList_(
+      //       .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
+      // }
+      //       
       
       return Nodes.LiteralListNode.create(
          self.nodeManager, token.pos, self.inTestBlock,
@@ -1037,13 +1040,22 @@ fn TransUnit.analyzeSetConst(
       }
    }
    
+   let canDealGenInherit;
+   when! expectType {
+      if expectType.$srcTypeInfo.$nonnilableType == Ast.builtinTypeSet {
+         canDealGenInherit = self.ctrl_info.defaultGenInherit;
+      } else {
+         canDealGenInherit = expectType.$canDealGenInherit;
+      }
+   } else {
+      canDealGenInherit = self.ctrl_info.defaultGenInherit;
+   }
+   let setType = self.processInfo.createSet_(
+      canDealGenInherit, .Local, self.getCurrentClass(), [ itemTypeInfo ], .Mut );
    
-   let mut typeInfoList;
-   typeInfoList = [ self.processInfo.createSet( .Local, self.getCurrentClass(),
-                                                  [ itemTypeInfo ], .Mut ) ];
    return Nodes.LiteralSetNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
-      self.macroCtrl.isInAnalyzeArgMode(), typeInfoList, expList );
+      self.macroCtrl.isInAnalyzeArgMode(), [setType], expList );
 }
 
 
@@ -1132,7 +1144,8 @@ fn TransUnit.analyzeMapConst(
          expectValType = itemTypeInfoList[ 2 ];
       }
    }
-   
+
+   let mut hasNilable = true;
    while true {
       if nextToken.txt == "}" {
          break;
@@ -1147,6 +1160,11 @@ fn TransUnit.analyzeMapConst(
       let val = self.analyzeExpOneRVal( false, false, false, nil, expectValType);
       valTypeInfo = getMapKeyValType( val.$pos, false, valTypeInfo, val.$expType );
 
+      if not hasNilable and (key.$expType.$nilable or val.$expType.$nilable ) {
+         hasNilable = true;
+      }
+      
+
       //pairList.insert( { "key": key, "val": val } );
       pairList.insert( new Nodes.PairItem( key, val ) );
       map[ key ] = val;
@@ -1157,8 +1175,39 @@ fn TransUnit.analyzeMapConst(
       nextToken = self.getToken(##);
    }
 
-   let typeInfo = self.processInfo.createMap(
-      .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
+   when! expectKeyType, expectValType {
+      if keyTypeInfo == Ast.builtinTypeNone {
+         keyTypeInfo = expectKeyType;
+         valTypeInfo = expectValType;
+      }
+   }
+   
+
+   let canDealGenInherit;
+   when! expectType {
+      if expectType.$srcTypeInfo.$nonnilableType == Ast.builtinTypeMap {
+         canDealGenInherit = self.ctrl_info.defaultGenInherit;
+      } else {
+         canDealGenInherit = expectType.$canDealGenInherit;
+      }
+   } else {
+      canDealGenInherit = self.ctrl_info.defaultGenInherit;
+   }
+   let typeInfo = self.processInfo.createMap_(
+      canDealGenInherit, .Local, self.getCurrentClass(), keyTypeInfo, valTypeInfo, .Mut );
+
+   if not canDealGenInherit and hasNilable {
+      foreach pair in pairList {
+         if pair.$key.$expType.$nilable {
+            self.addErrMess( pair.$key.$pos,
+                             "can't use nilable -- %s" (pair.$key.$expType.getTxt(##)) );
+         }
+         if pair.$val.$expType.$nilable {
+            self.addErrMess( pair.$val.$pos,
+                             "can't use nilable -- %s" (pair.$val.$expType.getTxt(##)) );
+         }
+      }
+   }
 
    self.checkToken( nextToken, "}" );
    // return self.createNode( nodeKindLiteralMap, token.pos,[ typeInfo ],
@@ -2329,10 +2378,18 @@ fn TransUnit.analyzeAccessClassField(
          classTypeInfo = Ast.builtinTypeArray;
       }
       case .Set {
-         classTypeInfo = Ast.builtinTypeSet;
+         if classTypeInfo.$canDealGenInherit {
+            classTypeInfo = Ast.builtinTypeSet;
+         } else {
+            classTypeInfo = Ast.builtinTypeSet__;
+         }
       }
       case .Map {
-         classTypeInfo = Ast.builtinTypeMap;
+         if classTypeInfo.$canDealGenInherit {
+            classTypeInfo = Ast.builtinTypeMap;
+         } else {
+            classTypeInfo = Ast.builtinTypeMap__;
+         }
       }
       case .Box {
          classTypeInfo = Ast.builtinTypeBox;
@@ -2521,10 +2578,18 @@ fn TransUnit.dumpFieldComp(
          typeInfo = Ast.builtinTypeArray;
       }
       case .Set {
-         typeInfo = Ast.builtinTypeSet;
+         if prefixTypeInfo.$canDealGenInherit {
+            typeInfo = Ast.builtinTypeSet;
+         } else {
+            typeInfo = Ast.builtinTypeSet__;
+         }
       }
       case .Map {
-         typeInfo = Ast.builtinTypeMap;
+         if prefixTypeInfo.$canDealGenInherit {
+            typeInfo = Ast.builtinTypeMap;
+         } else {
+            typeInfo = Ast.builtinTypeMap__;
+         }
       }
       case .Box {
          typeInfo = Ast.builtinTypeBox;

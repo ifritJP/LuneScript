@@ -598,14 +598,14 @@ class _TypeInfoNormal extend _TypeInfo {
                   }
                }
                case .Set {
-                  let workTypeInfo = param.processInfo.createSet(
-                     self.accessMode, parentInfo,
+                  let workTypeInfo = param.processInfo.createSet_(
+                     true, self.accessMode, parentInfo,
                      itemTypeInfo, self.mutMode );
                   postProcess( workTypeInfo, nil );
                }
                case .List {
-                  let workTypeInfo = param.processInfo.createList(
-                     self.accessMode, parentInfo,
+                  let workTypeInfo = param.processInfo.createList_(
+                     true, self.accessMode, parentInfo,
                      itemTypeInfo, self.mutMode );
                   postProcess( workTypeInfo, nil );
                }
@@ -616,8 +616,8 @@ class _TypeInfoNormal extend _TypeInfo {
                   postProcess( workTypeInfo, nil );
                }
                case .Map {
-                  let workTypeInfo = param.processInfo.createMap(
-                     self.accessMode, parentInfo,
+                  let workTypeInfo = param.processInfo.createMap_(
+                     true, self.accessMode, parentInfo,
                      itemTypeInfo[1], itemTypeInfo[2], self.mutMode );
                   postProcess( workTypeInfo, nil );
                }

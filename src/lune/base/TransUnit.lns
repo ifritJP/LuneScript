@@ -2039,7 +2039,7 @@ fn TransUnit.analyzeIf(
    }
    self.pushback();
 
-   let mut list:Nodes.IfStmtInfo[] = [];
+   let mut list:List<Nodes.IfStmtInfo> = [];
    let ifExp = self.analyzeExpOneRVal( false, false, true ## );
    let condRetInfo = self.checkCondRet();
    
@@ -2154,7 +2154,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 
    self.checkNextToken( "{" );
 
-   let mut caseList: Nodes.CaseInfo[] = [];
+   let mut caseList: List<Nodes.CaseInfo> = [];
 
    let mut condObjSet:Set<&stem> = (@);
    let mut condSymIdSet:Set<int> = (@);

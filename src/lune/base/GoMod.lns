@@ -62,8 +62,8 @@ pub class ModInfo {
       return pathList;
    }
 
-   pub fn getModPathList() : &List<str> {
-      let list:List<str> = [];
+   pub fn getModPathList() : &_List<str> {
+      let list:_List<str> = [];
       foreach ver, mod in self.moduleMap {
          if! self.replaceMap[ mod ] {
             list.insert( _exp );

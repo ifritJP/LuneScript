@@ -109,7 +109,7 @@ class ModuleMgr {
       }
    }
 
-   pub fn getModList() : &List<str> {
+   pub fn getModList() : &_List<str> {
       return self.mod2info.$keyList;
    }
    
@@ -1939,7 +1939,7 @@ pub fn setFront( bindModuleList:&List<str> ) __noasync {
    new Front( option, bindModuleList );
 }
 
-pub fn __main( argList:&List<str> ) __noasync : int {
+pub fn __main( argList:&_List<str> ) __noasync : int {
    let list:List<str> = [];
    foreach arg, index in argList {
       if index > 1 {

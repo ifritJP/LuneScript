@@ -598,15 +598,15 @@ class _TypeInfoNormal extend _TypeInfo {
                   }
                }
                case .Set {
-                  let workTypeInfo = param.processInfo.createSet(
-                     self.accessMode, parentInfo,
-                     itemTypeInfo, self.mutMode );
+                  let workTypeInfo = param.processInfo.createSet_(
+                     Ast.builtinTypeSet_.$rawTxt == self.txt,
+                     self.accessMode, parentInfo, itemTypeInfo, self.mutMode );
                   postProcess( workTypeInfo, nil );
                }
                case .List {
-                  let workTypeInfo = param.processInfo.createList(
-                     self.accessMode, parentInfo,
-                     itemTypeInfo, self.mutMode );
+                  let workTypeInfo = param.processInfo.createList_(
+                     Ast.builtinTypeList_.$rawTxt == self.txt,
+                     self.accessMode, parentInfo, itemTypeInfo, self.mutMode );
                   postProcess( workTypeInfo, nil );
                }
                case .Array {
@@ -616,7 +616,8 @@ class _TypeInfoNormal extend _TypeInfo {
                   postProcess( workTypeInfo, nil );
                }
                case .Map {
-                  let workTypeInfo = param.processInfo.createMap(
+                  let workTypeInfo = param.processInfo.createMap_(
+                     Ast.builtinTypeMap_.$rawTxt == self.txt,
                      self.accessMode, parentInfo,
                      itemTypeInfo[1], itemTypeInfo[2], self.mutMode );
                   postProcess( workTypeInfo, nil );

@@ -916,12 +916,12 @@ aa	skip:
 {
 }
 test/error/nilable1.lns:2:5: error: unmatch value type (index:1) int <- nil -- 
-test/error/nilable1.lns:6:9: error: = operator: exp(1) type mismatch int(26) <- nil(114): index 1 -- 
+test/error/nilable1.lns:6:9: error: = operator: exp(1) type mismatch int(26) <- nil(154): index 1 -- 
 test/error/nilable1.lns:10:15: error: no numeric type 'int!' or 'int'
 test/error/nilable1.lns:16:5: error: This condition never be false
 test/error/nilable1.lns:16:5: error: has no nilable
 test/error/nilable1.lns:24:5: error: unmatch value type (index:1) int <- int! -- 
-test/error/nilable1.lns:29:5: error: get: exp(1) type mismatch int(26) <- nil(114): index 1 -- 
+test/error/nilable1.lns:29:5: error: get: exp(1) type mismatch int(26) <- nil(154): index 1 -- 
 test/error/nilable1.lns:34:5: error: unmatch value type (index:1) stem <- nil -- 
 test/error/nilable1.lns:36:11: error: can't cast from nilable to not nilable  -- int!->int
 test/error/nilable1.lns:38:11: error: can't cast from nilable to not nilable  -- stem!->int
@@ -938,7 +938,7 @@ test/error/nilable1.lns:106:11: error: TestEnum does not support $.
 test/error/nilable1.lns:106:21: error: not found field -- _txt
 test/error/nilable1.lns:107:11: error: TestAlge does not support $.
 test/error/nilable1.lns:107:21: error: not found field -- _txt
-test/error/nilable1.lns:108:11: error: Set<int> does not support $.
+test/error/nilable1.lns:108:11: error: __Set<int> does not support $.
 test/error/nilable1.lns:108:26: error: can't call the type -- has!, TypeInfoKind.Nilable
 test/error/nilable1.lns:2:9: warning: 'val' var isn't accessed
 test/error/nilable1.lns:6:5: warning: 'val' var isn't accessed
@@ -957,10 +957,10 @@ test/error/nilable1.lns:80:8: warning: 'val2' var isn't accessed
 test/error/nilable1.lns:81:8: warning: 'val3' var isn't accessed
 test/error/nilable1.lns:84:8: warning: 'val' var isn't accessed
 test/error/nilable1.lns:84:19: warning: tonumber: 00000:use '##', instate of 'int!'.
-test/error/nilable1.lns:88:14: warning: This is not nilable. -- &List<int>
+test/error/nilable1.lns:88:14: warning: This is not nilable. -- &_List<int>
 test/error/nilable1.lns:90:4: warning: This is not nilable. -- form
 test/error/nilable1.lns:90:4: warning: form: 00000:use '##', instate of '...'.
-test/error/nilable1.lns:92:11: warning: This is not nilable. -- Map<str,int>
+test/error/nilable1.lns:92:11: warning: This is not nilable. -- _Map<str,int>
 test/error/access1.lns:10:14: error: = operator: exp(1) type mismatch @test.@error.@access1.Hoge.func(1016) <- @test.@error.@access1.(1028): index 1 -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func
 test/error/access1.lns:11:16: error: this node can not be r-value. -- ExpList
 test/error/access1.lns:11:21: error: This arg can't be r-value. -- RefField
@@ -1006,10 +1006,10 @@ test/error/access5.lns:71:18: error: can't access mutable method. -- &Val.func
 test/error/access5.lns:73:18: error: can't access mutable method. -- &Val.func
 test/error/list.lns:8:9: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
 test/error/list.lns:18:9: error: unmatch value type (index:1) int <- int! -- 
-test/error/list.lns:29:4: error: insert: exp(1) type mismatch int!(27) <- nil(114): index 1 -- is doesn't support nilable.
+test/error/list.lns:29:4: error: insert: exp(1) type mismatch int!(27) <- nil(154): index 1 -- is doesn't support nilable.
 test/error/list.lns:29:16: error: list can't insert nilable
 test/error/list.lns:30:4: error: insert: exp(1) type mismatch int!(27) <- str(58): index 1(TypeInfoKind.Alternate)
-test/error/list.lns:35:10: error: can't access mutable method. -- &List<int>.sort
+test/error/list.lns:35:10: error: can't access mutable method. -- &_List<int>.sort
 test/error/list.lns:37:4: error: The callback's argument(1) type must be -- 'int'
 test/error/list.lns:37:4: error: sort: exp(1) type mismatch sort!(1073) <- @test.@error.@list.(1069): index 1 -- exp(1) type mismatch int(TypeInfoKind.Prim:26) <- real(TypeInfoKind.Prim:30) -- 
 test/error/list.lns:38:4: error: The callback's argument(2) type must be -- 'int'
@@ -1018,10 +1018,10 @@ test/error/list.lns:39:4: error: The callback's return type of sort() must be bo
 test/error/list.lns:39:4: error: sort: exp(1) type mismatch sort!(1085) <- @test.@error.@list.(1081): index 1 -- exp(1) type mismatch bool(22) <- int(26): index 1 -- 
 test/error/list.lns:40:4: error: The callback's argument must have 2 arguments. -- '(int, int, int): bool'
 test/error/list.lns:40:4: error: sort: exp(1) type mismatch sort!(1091) <- @test.@error.@list.(1087): index 1 -- over exp. expect: 2: actual: 3
-test/error/list.lns:45:4: error: unmatch value type (index:1) List<int> <- List<int>! -- 
-test/error/list.lns:47:4: error: unmatch value type (index:1) List<int> <- List<int>! -- 
-test/error/list.lns:60:7: error: func: exp(1) type mismatch List<@test.@error.@list.Super>(1163) <- List<@test.@error.@list.Sub>(1154): index 1 -- 
-test/error/list.lns:66:7: error: func: exp(1) type mismatch List<&@test.@error.@list.Super>(1170) <- List<@test.@error.@list.Sub>(1154): index 1 -- 
+test/error/list.lns:45:4: error: unmatch value type (index:1) _List<int> <- _List<int>! -- 
+test/error/list.lns:47:4: error: unmatch value type (index:1) _List<int> <- _List<int>! -- 
+test/error/list.lns:60:7: error: func: exp(1) type mismatch _List<@test.@error.@list.Super>(1163) <- _List<@test.@error.@list.Sub>(1154): index 1 -- 
+test/error/list.lns:66:7: error: func: exp(1) type mismatch _List<&@test.@error.@list.Super>(1170) <- _List<@test.@error.@list.Sub>(1154): index 1 -- 
 test/error/list.lns:81:18: error: illegal type -- val
 test/error/list.lns:98:12: error: can't access mutable method. -- &Imp.func
 test/error/list.lns:101:12: error: can't access mutable method. -- &Imp.func
@@ -1032,7 +1032,7 @@ test/error/list.lns:131:12: error: can't access mutable method. -- &Imp.func
 test/error/list.lns:174:8: error: When left-value includes 'list[i]', left-value must be single.
 test/error/list.lns:178:7: error: When left-value includes 'list[i]', left-value must be single.
 test/error/list.lns:185:4: error: sort: exp(1) type mismatch sort!(1486) <- @test.@error.@list.(1482): index 1 -- exp(1) type mismatch @test.@error.@list.Hoge(TypeInfoKind.Class:1461) <- &@test.@error.@list.Hoge(TypeInfoKind.Class:1463) -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/list.lns:191:8: error: illegal type -- List<int>!, TypeInfoKind.Nilable
+test/error/list.lns:191:8: error: illegal type -- _List<int>!, TypeInfoKind.Nilable
 test/error/list.lns:3:13: warning: 'val2' var isn't accessed
 test/error/list.lns:8:13: warning: 'val2' var isn't accessed
 test/error/list.lns:13:13: warning: 'val2' var isn't accessed
@@ -1040,9 +1040,9 @@ test/error/list.lns:18:13: warning: 'val2' var isn't accessed
 test/error/list.lns:23:13: warning: 'val2' var isn't accessed
 test/error/list.lns:31:4: warning: remove() is dangerous for nilable's list.
 test/error/list.lns:44:8: warning: 'list2' var isn't accessed
-test/error/list.lns:44:26: warning: this value never be 'false' -- List<int>
+test/error/list.lns:44:26: warning: this value never be 'false' -- _List<int>
 test/error/list.lns:45:8: warning: 'list3' var isn't accessed
-test/error/list.lns:45:26: warning: this value never be 'false' -- List<int>
+test/error/list.lns:45:26: warning: this value never be 'false' -- _List<int>
 test/error/list.lns:46:8: warning: 'list4' var isn't accessed
 test/error/list.lns:47:8: warning: 'list5' var isn't accessed
 test/error/list.lns:81:8: warning: 'list' var isn't accessed
@@ -1083,31 +1083,31 @@ test/error/map.lns:56:13: warning: 'key2' var isn't accessed
 test/error/map.lns:80:8: warning: 'map' var isn't accessed
 test/error/set.lns:2:26: error: 'Set' object can't store nilable. -- nil
 test/error/set.lns:7:7: error: unmatch value type (index:1) int <- str -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
-test/error/set.lns:12:11: error: could not access with []. -- &Set<str>
+test/error/set.lns:12:11: error: could not access with []. -- &__Set<str>
 test/error/set.lns:12:16: error: unmatch index type -- int, str
 test/error/set.lns:16:4: error: has no nilable
 test/error/set.lns:17:18: error: no string type 'bool' or 'str'
 test/error/set.lns:19:4: error: add: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/set.lns:20:4: error: del: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
-test/error/set.lns:26:4: error: func: exp(1) type mismatch Set<int>(1043) <- Set<stem>(1051): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
+test/error/set.lns:26:10: error: List constructor: exp(4) type mismatch int(26) <- str(58): index 4 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/set.lns:29:17: error: generic type count is unmatch. -- 2
 test/error/set.lns:29:17: error: it's mismatch the number of generics type param -- Set<T>: 1, 2
-test/error/set.lns:30:14: error: has: exp(1) type mismatch T(74) <- int(26): index 1(TypeInfoKind.Alternate)
-test/error/set.lns:35:8: error: can't access mutable method. -- &Set<int>.or
-test/error/set.lns:36:8: error: can't access mutable method. -- &Set<int>.and
-test/error/set.lns:37:8: error: can't access mutable method. -- &Set<int>.sub
+test/error/set.lns:30:14: error: has: exp(1) type mismatch T(130) <- int(26): index 1(TypeInfoKind.Alternate)
+test/error/set.lns:35:8: error: can't access mutable method. -- &__Set<int>.or
+test/error/set.lns:36:8: error: can't access mutable method. -- &__Set<int>.and
+test/error/set.lns:37:8: error: can't access mutable method. -- &__Set<int>.sub
 test/error/set.lns:44:4: error: add: exp(1) type mismatch int(26) <- int!(27): index 1 -- is doesn't support nilable.
 test/error/set.lns:44:13: error: set can't add nilable
-test/error/set.lns:46:4: error: or: exp(1) type mismatch &Set<str>(80) <- Set<int>(1092): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/set.lns:47:4: error: and: exp(1) type mismatch &Set<str>(80) <- Set<int>(1092): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/set.lns:48:4: error: sub: exp(1) type mismatch &Set<str>(80) <- Set<int>(1092): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/set.lns:46:4: error: or: exp(1) type mismatch &__Set<str>(144) <- __Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/set.lns:47:4: error: and: exp(1) type mismatch &__Set<str>(144) <- __Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/set.lns:48:4: error: sub: exp(1) type mismatch &__Set<str>(144) <- __Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/set.lns:65:12: error: can't access mutable method. -- &Imp.func
 test/error/set.lns:68:12: error: can't access mutable method. -- &Imp.func
 test/error/set.lns:71:12: error: can't access mutable method. -- &Imp.func
 test/error/set.lns:92:12: error: can't access mutable method. -- &Imp.func
 test/error/set.lns:95:12: error: can't access mutable method. -- &Imp.func
 test/error/set.lns:98:12: error: can't access mutable method. -- &Imp.func
-test/error/set.lns:131:7: error: Set<int> does not support $.
+test/error/set.lns:131:7: error: __Set<int> does not support $.
 test/error/set.lns:131:19: error: can't call the type -- has!, TypeInfoKind.Nilable
 test/error/set.lns:2:8: warning: 'set' var isn't accessed
 test/error/set.lns:7:11: warning: 'val1' var isn't accessed
@@ -1134,7 +1134,7 @@ test/error/func.lns:105:4: error: unmatch value type (index:1) @test.@error.@fun
 test/error/func.lns:109:18: error: Argument exists after '...'.
 test/error/func.lns:112:7: error: shadowing symbol of 66:14 -- func2
 test/error/func.lns:112:26: error: Type exists after '...'.
-test/error/func.lns:123:4: error: func: exp(1) type mismatch @test.@error.@func.TestFunc(1103) <- @test.@error.@func.(1111): index 1 -- exp(1) type mismatch List<int>(1099) <- &List<int>(1109): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/func.lns:123:4: error: func: exp(1) type mismatch @test.@error.@func.TestFunc(1103) <- @test.@error.@func.(1111): index 1 -- exp(1) type mismatch _List<int>(1099) <- &_List<int>(1109): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/func.lns:128:9: error: = operator: exp(1) type mismatch ::(10) <- @test.@error.@func.(1114): index 1 -- 
 test/error/func.lns:129:8: error: shadowing symbol of 66:14 -- func2
 test/error/func.lns:130:4: error: must set the type of variable for function. -- func3
@@ -1256,9 +1256,9 @@ test/error/class.lns:122:23: error: Sub2__a.func3: mismatch method type -- : fun
 test/error/class.lns:122:23: error: Sub2__a.func3: mismatch mutable -- func3: func3(): int -- func3(): int
 test/error/class.lns:129:20: error: no abstract class does not have abstract method
 test/error/class.lns:137:14: error: abstract class can't new
-test/error/class.lns:147:4: error: member type is not Mapping -- Map<TestMap0,int>
-test/error/class.lns:148:4: error: member type is not Mapping -- Map<Super3,int>
-test/error/class.lns:149:4: error: member type is not Mapping -- Map<int,Super3>
+test/error/class.lns:147:4: error: member type is not Mapping -- _Map<TestMap0,int>
+test/error/class.lns:148:4: error: member type is not Mapping -- _Map<Super3,int>
+test/error/class.lns:149:4: error: member type is not Mapping -- _Map<int,Super3>
 test/error/class.lns:155:8: error: this node can not be l-value. -- ExpRefItem
 test/error/class.lns:162:1: error: must extend Mapping at SuperMap
 test/error/class.lns:169:19: error: This type must be public. -- PriClass
@@ -1315,19 +1315,19 @@ test/error/class.lns:433:16: error: This class(Hoge) is used by advertise. You m
 test/error/class.lns:440:4: error: not implements method -- Hoge.func at Test
 test/error/class.lns:449:4: error: not implements method -- Hoge.func at Sub
 test/error/class.lns:449:4: error: not implements method -- Test.func at Sub
-test/error/class.lns:470:4: error: func: exp(1) type mismatch List<@test.@error.@class.Super>(2048) <- List<@test.@error.@class.Sub1>(2056): index 1 -- 
+test/error/class.lns:470:4: error: func: exp(1) type mismatch _List<@test.@error.@class.Super>(2048) <- _List<@test.@error.@class.Sub1>(2056): index 1 -- 
 test/error/class.lns:483:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
 test/error/class.lns:483:4: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
 test/error/class.lns:484:23: error: Sub.func: mismatch method type -- unmatch arg(1) type -- &Val, Val: func(Val) -- func(Val)
 test/error/class.lns:491:22: error: __absimmut can't extend the class -- Super
-test/error/class.lns:492:16: error: __absimmut can't have member of mutable type. -- List<&List<int>>
+test/error/class.lns:492:16: error: __absimmut can't have member of mutable type. -- _List<&_List<int>>
 test/error/class.lns:493:15: error: __absimmut can't have mutable member. -- val2
-test/error/class.lns:493:20: error: __absimmut can't have member of mutable type. -- List<int>
+test/error/class.lns:493:20: error: __absimmut can't have member of mutable type. -- _List<int>
 test/error/class.lns:494:18: error: __absimmut can't have mutable member. -- val3
 test/error/class.lns:497:21: error: can't extend the __absimmut. (Hoge)
-test/error/class.lns:498:16: error: __absimmut can't have member of mutable type. -- List<&List<int>>
+test/error/class.lns:498:16: error: __absimmut can't have member of mutable type. -- _List<&_List<int>>
 test/error/class.lns:499:15: error: __absimmut can't have mutable member. -- val2
-test/error/class.lns:499:20: error: __absimmut can't have member of mutable type. -- List<int>
+test/error/class.lns:499:20: error: __absimmut can't have member of mutable type. -- _List<int>
 test/error/class.lns:500:18: error: __absimmut can't have mutable member. -- val3
 test/error/class.lns:507:22: error: This arg can't be r-value. -- RefField
 test/error/class.lns:507:22: error: this node can't be r-value. -- RefField
@@ -1417,7 +1417,7 @@ test/error/enum.lns:41:1: error: this node can not be l-value. -- RefField
 test/error/enum.lns:41:16: error: = operator: exp(1) type mismatch testEnum4(1051) <- int(26): index 1 -- 1051 != 26
 test/error/enum.lns:42:1: error: this node can not be l-value. -- RefField
 test/error/enum.lns:44:4: error: This can't evaluate for '==' -- RefType
-test/error/enum.lns:70:9: error: can't access mutable method. -- &List<testEnum4>.insert
+test/error/enum.lns:70:9: error: can't access mutable method. -- &_List<testEnum4>.insert
 test/error/enum.lns:77:28: error: not found field -- val4
 test/error/enum.lns:83:20: error: can't access field -- val2
 test/error/enum.lns:84:12: error: = operator: exp(1) type mismatch testEnum4!(1052) <- int(26): index 1 -- 1051 != 26
@@ -1460,10 +1460,10 @@ test/error/mutable.lns:12:12: error: this is not mutable variable. -- val2
 test/error/mutable.lns:15:12: error: this is not mutable variable. -- val1
 test/error/mutable.lns:16:12: error: this is not mutable variable. -- val2
 test/error/mutable.lns:21:4: error: has no nilable
-test/error/mutable.lns:63:18: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:63:18: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:66:17: error: this is not mutable variable. -- val2
 test/error/mutable.lns:67:16: error: this node can not be l-value. -- ExpRefItem
-test/error/mutable.lns:68:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:68:17: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:69:15: error: this node can not be l-value. -- ExpRefItem
 test/error/mutable.lns:81:11: error: this is not mutable variable. -- val4
 test/error/mutable.lns:85:6: error: this is not mutable variable. -- test
@@ -1472,46 +1472,46 @@ test/error/mutable.lns:87:11: error: this is not mutable variable. -- val2
 test/error/mutable.lns:88:6: error: can't access mutable method. -- &Test.set_val3
 test/error/mutable.lns:89:6: error: can't access mutable method. -- &Test.func1
 test/error/mutable.lns:90:6: error: can't access mutable method. -- &Test.func2
-test/error/mutable.lns:93:12: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:93:12: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:94:10: error: this node can not be l-value. -- ExpRefItem
-test/error/mutable.lns:100:9: error: = operator: exp(1) type mismatch List<int>(1141) <- &List<int>(1046): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/mutable.lns:104:9: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:118:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:124:11: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:128:4: error: unmatch value type (index:1) List<int> <- &List<int> -- 
-test/error/mutable.lns:130:11: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:136:4: error: return: exp(1) type mismatch @test.@error.@mutable.Test2!(1219) <- &@test.@error.@mutable.Test2!(1221): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/mutable.lns:168:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:169:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:170:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:171:17: error: can't access mutable method. -- &List<int>.insert
+test/error/mutable.lns:100:9: error: = operator: exp(1) type mismatch _List<int>(1141) <- &_List<int>(1046): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:104:9: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:118:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:124:11: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:128:4: error: unmatch value type (index:1) _List<int> <- &_List<int> -- 
+test/error/mutable.lns:130:11: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:136:4: error: return: exp(1) type mismatch @test.@error.@mutable.Test2!(1221) <- &@test.@error.@mutable.Test2!(1223): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:168:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:169:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:170:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:171:17: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:177:12: error: can't access allmut type's field(val9) in async function.
 test/error/mutable.lns:178:12: error: can't access allmut type's field(val11) in async function.
-test/error/mutable.lns:185:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:186:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:187:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:188:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:189:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:190:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:191:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:192:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:194:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:196:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:202:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:204:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:205:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:206:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:207:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:208:16: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:210:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:212:17: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:216:8: error: can't access mutable method. -- &List<List<int>>.insert
-test/error/mutable.lns:217:11: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:225:15: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:228:12: error: can't access mutable method. -- &List<&List<int>>.insert
-test/error/mutable.lns:229:15: error: can't access mutable method. -- &List<int>.insert
-test/error/mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@mutable.Super>(1532) <- List<@test.@error.@mutable.Sub1>(1571): index 1 -- 
-test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &List<List<@test.@error.@mutable.Super>>(1552) <- List<List<@test.@error.@mutable.Sub1>>(1586): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:185:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:186:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:187:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:188:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:189:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:190:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:191:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:192:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:194:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:196:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:202:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:204:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:205:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:206:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:207:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:208:16: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:210:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:212:17: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:216:8: error: can't access mutable method. -- &_List<_List<int>>.insert
+test/error/mutable.lns:217:11: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:225:15: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:228:12: error: can't access mutable method. -- &_List<&_List<int>>.insert
+test/error/mutable.lns:229:15: error: can't access mutable method. -- &_List<int>.insert
+test/error/mutable.lns:258:4: error: func: exp(1) type mismatch _List<@test.@error.@mutable.Super>(1534) <- _List<@test.@error.@mutable.Sub1>(1573): index 1 -- 
+test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &_List<_List<@test.@error.@mutable.Super>>(1554) <- _List<_List<@test.@error.@mutable.Sub1>>(1588): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/var.lns:2:8: warning: 'val' var isn't accessed
 test/error/var.lns:4:8: warning: 'val2' var isn't accessed
 test/error/var.lns:8:8: warning: 'val1' var isn't accessed
@@ -1527,25 +1527,25 @@ test/error/var.lns:42:7: warning: 'val' var isn't accessed
 test/error/var.lns:57:8: warning: 'map' var isn't accessed
 test/error/var.lns:58:8: warning: 'set' var isn't accessed
 test/error/var.lns:2:12: error: Key or value type is unknown
-test/error/var.lns:2:12: error: it's mismatch the number of generics type param -- Map<stem,stem>: 2, 1
+test/error/var.lns:2:12: error: it's mismatch the number of generics type param -- _Map<stem,stem>: 2, 1
 test/error/var.lns:3:8: error: This symbol is shadowed from 4:8 -- val2
 test/error/var.lns:3:13: error: generic type count is unmatch. -- 2
 test/error/var.lns:3:13: error: it's mismatch the number of generics type param -- Array<T>: 1, 2
 test/error/var.lns:4:8: error: shadowing symbol of 3:8 -- val2
 test/error/var.lns:4:13: error: generic type count is unmatch. -- 2
 test/error/var.lns:4:13: error: it's mismatch the number of generics type param -- List<T>: 1, 2
-test/error/var.lns:8:8: error: must set the item type of Collection. -- val1:List<>
-test/error/var.lns:9:8: error: must set the item type of Collection. -- val2:Set<>
+test/error/var.lns:8:8: error: must set the item type of Collection. -- val1:_List<>
+test/error/var.lns:9:8: error: must set the item type of Collection. -- val2:__Set<>
 test/error/var.lns:10:8: error: must set the item type of Collection. -- val3:Array<>
-test/error/var.lns:11:8: error: must set the item type of Collection. -- val4:Map<,>
-test/error/var.lns:15:11: error: must set the item type of Collection. -- val1:List<>
-test/error/var.lns:17:11: error: must set the item type of Collection. -- val2:Set<>
+test/error/var.lns:11:8: error: must set the item type of Collection. -- val4:_Map<,>
+test/error/var.lns:15:11: error: must set the item type of Collection. -- val1:_List<>
+test/error/var.lns:17:11: error: must set the item type of Collection. -- val2:_Set<>
 test/error/var.lns:19:11: error: must set the item type of Collection. -- val3:Array<>
-test/error/var.lns:21:11: error: must set the item type of Collection. -- val4:Map<,>
+test/error/var.lns:21:11: error: must set the item type of Collection. -- val4:_Map<,>
 test/error/var.lns:25:11: error: It can't access the symbol '_'.
 test/error/var.lns:26:15: error: It can't access the symbol '_'.
-test/error/var.lns:57:12: error: The key or value type must not be nilable. -- Map<stem!,stem!>
-test/error/var.lns:58:12: error: The value type must not be nilable. -- Set<stem!>
+test/error/var.lns:57:12: error: The key or value type must not be nilable. -- _Map<stem!,stem!>
+test/error/var.lns:58:12: error: The value type must not be nilable. -- __Set<stem!>
 test/error/var.lns:63:4: error: 'pub' variable must exist top scope.
 test/error/var2.lns:2:4: error: 'let!' needs initial values. need 1 but 0.
 test/error/var3.lns:2:4: error: 'let!' needs initial values. need 2 but 1.
@@ -1735,7 +1735,7 @@ test/error/operand.lns:71:11: warning: 'val3' var isn't accessed
 test/error/operand.lns:2:14: error: this 'not' operand never be false
 test/error/operand.lns:5:4: error: This symbol is shadowed from 68:7 -- func
 test/error/operand.lns:17:19: error: this value never be 'true'
-test/error/operand.lns:22:15: error: unmatch type for "#" -- Map<int,int>
+test/error/operand.lns:22:15: error: unmatch type for "#" -- _Map<int,int>
 test/error/operand.lns:29:12: error: no numeric type 'str' or 'real'
 test/error/operand.lns:30:10: error: no numeric type 'int' or 'str'
 test/error/operand.lns:68:7: error: shadowing symbol of 5:4 -- func
@@ -1772,7 +1772,7 @@ test/error/loop.lns:23:7: error: This statement is not reached -- BreakKind.Retu
 test/error/loop.lns:30:10: error: 'switch' must have 'case' blocks when have 'default' block.
 test/error/loop.lns:52:7: error: This statement is not reached -- BreakKind.Return
 test/error/loop.lns:82:7: error: This statement is not reached -- BreakKind.Return
-test/error/loop.lns:87:15: error: can't access mutable method. -- &List<int>.insert
+test/error/loop.lns:87:15: error: can't access mutable method. -- &_List<int>.insert
 test/error/loop.lns:88:10: error: this node can not be l-value. -- ExpRef
 test/error/loop.lns:88:15: error: this is not mutable variable. -- list
 test/error/loop.lns:95:4: error: This funcion doesn't have return.
@@ -1863,8 +1863,8 @@ test/error/flow.lns:58:4: error: This funcion must be never return. -- BreakKind
 test/error/flow.lns:81:7: error: This exp never be false -- int
 test/error/flow.lns:83:7: error: This exp never be false -- real
 test/error/flow.lns:85:7: error: This exp never be false -- str
-test/error/flow.lns:87:7: error: This exp never be false -- List<>
-test/error/flow.lns:89:7: error: This exp never be false -- Map<,>
+test/error/flow.lns:87:7: error: This exp never be false -- _List<>
+test/error/flow.lns:89:7: error: This exp never be false -- _Map<,>
 test/error/flow.lns:115:10: error: This statement is not reached -- BreakKind.Break
 test/error/flow.lns:126:7: error: This statement is not reached -- BreakKind.Return
 test/error/flow.lns:145:10: error: This statement is not reached -- BreakKind.Break
@@ -1941,40 +1941,40 @@ test/error/import5.lns:7:11: error: not found field typeInfo: @test.@error.@Sub5
 test/error/import6.lns:4:13: error: not found field typeInfo: @test.@error.@Sub6.Test.val -- TypeInfoKind.Class
 test/error/import7.lns:10:16: error: not found type -- Sub5
 test/error/strformat.lns:16:1: warning: format: 00000:use '##', instate of '&...'.
-test/error/strformat.lns:1:1: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:2:1: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:3:1: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:4:1: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:5:1: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:6:1: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:7:1: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:8:1: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:9:1: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:10:1: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:11:1: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:12:1: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:13:1: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:14:1: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:1:1: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:2:1: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:3:1: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:4:1: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:5:1: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:6:1: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:7:1: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:8:1: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:9:1: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:10:1: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:11:1: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:12:1: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:13:1: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:14:1: error: argument(2) type must be int -- _Map<,>
 test/error/strformat.lns:16:1: error: argument number is mismatch -- 1 != 0 (%s)
-test/error/strformat.lns:35:1: error: argument(1) type must be str -- Map<,>
-test/error/strformat.lns:38:8: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:39:8: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:40:8: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:41:8: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:42:8: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:43:8: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:44:8: error: argument(2) type must be real -- Map<,>
-test/error/strformat.lns:45:8: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:46:8: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:47:8: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:48:8: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:49:8: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:50:8: error: argument(2) type must be int -- Map<,>
-test/error/strformat.lns:51:8: error: argument(2) type must be int -- Map<,>
+test/error/strformat.lns:35:1: error: argument(1) type must be str -- _Map<,>
+test/error/strformat.lns:38:8: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:39:8: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:40:8: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:41:8: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:42:8: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:43:8: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:44:8: error: argument(2) type must be real -- _Map<,>
+test/error/strformat.lns:45:8: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:46:8: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:47:8: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:48:8: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:49:8: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:50:8: error: argument(2) type must be int -- _Map<,>
+test/error/strformat.lns:51:8: error: argument(2) type must be int -- _Map<,>
 test/error/strformat.lns:57:8: error: argument number is mismatch -- 1 != 2 ("%d")
 test/error/strformat.lns:61:17: error: no string type 'str' or 'str!'
 test/error/strformat.lns:61:29: error: no string type 'str!' or 'str'
-test/error/Alge.lns:22:17: error: can't access mutable method. -- &List<int>.insert
+test/error/Alge.lns:22:17: error: can't access mutable method. -- &_List<int>.insert
 test/error/Alge.lns:30:12: error: can't use the prototype class -- Hoge
 test/error/Alge.lns:36:4: error: need to import module -- @Sub5.Sub5alge (Sub5alge)
 test/error/Alge.lns:48:29: error: not found -- ';'. actually '('
@@ -2184,7 +2184,7 @@ test/error/static.lns:4:12: error: It can't call prototype function from static 
 test/error/static.lns:8:9: error: mismatch functype -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func
 test/error/static.lns:8:14: error: not found TypeInfo -- func
 test/error/generics.lns:3:7: error: return: exp(1) type mismatch T!(1009) <- int(26): index 1(TypeInfoKind.Nilable)
-test/error/generics.lns:8:7: error: return: exp(1) type mismatch T(1019) <- Map<int,T>(1023): index 1(TypeInfoKind.Alternate)
+test/error/generics.lns:8:7: error: return: exp(1) type mismatch T(1019) <- _Map<int,T>(1023): index 1(TypeInfoKind.Alternate)
 test/error/generics.lns:13:7: error: return: exp(1) type mismatch T(1030) <- T!(1031): index 1 -- is doesn't support nilable.
 test/error/generics.lns:27:7: error: return: exp(1) type mismatch T1(1063) <- &T1(1077): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics.lns:30:4: error: func<T1,T2>: exp(2) type mismatch T2 <- [##]: dst 2 -- is doesn't support nilable.
@@ -2230,12 +2230,12 @@ test/error/generics2.lns:170:23: error: This type must be public. -- HogeHoge<T>
 test/error/generics2.lns:174:7: error: member type is not Mapping -- HogeHoge<T>: The generics Alge isn't support mapping yet -- HogeHoge<T>
 test/error/generics2.lns:184:19: error: 'T' of Hoge<T> doesn't inherit 'IF1'
 test/error/generics2.lns:197:17: error: not compatible type '&@test.@error.@generics2.Test3<T>!' or '@test.@error.@generics2.Test3<T>'
-test/error/generics2.lns:215:19: error: return: exp(1) type mismatch List<@test.@error.@generics2.Val>!(1576) <- List<&@test.@error.@generics2.Val>(1603): index 1(TypeInfoKind.Nilable)
-test/error/generics2.lns:219:19: error: return: exp(1) type mismatch List<@test.@error.@generics2.Val>!(1576) <- &List<@test.@error.@generics2.Val>(1615): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:240:19: error: return: exp(1) type mismatch List<&@test.@error.@generics2.Val>!(1635) <- &List<@test.@error.@generics2.Val>(1674): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:257:19: error: return: exp(1) type mismatch &List<@test.@error.@generics2.Val>!(1694) <- List<&@test.@error.@generics2.Val>(1721): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:215:19: error: return: exp(1) type mismatch _List<@test.@error.@generics2.Val>!(1578) <- _List<&@test.@error.@generics2.Val>(1605): index 1(TypeInfoKind.Nilable)
+test/error/generics2.lns:219:19: error: return: exp(1) type mismatch _List<@test.@error.@generics2.Val>!(1578) <- &_List<@test.@error.@generics2.Val>(1617): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:240:19: error: return: exp(1) type mismatch _List<&@test.@error.@generics2.Val>!(1637) <- &_List<@test.@error.@generics2.Val>(1676): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:257:19: error: return: exp(1) type mismatch &_List<@test.@error.@generics2.Val>!(1696) <- _List<&@test.@error.@generics2.Val>(1723): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics3.lns:50:8: warning: 'test3' var isn't accessed
-test/error/generics3.lns:13:21: error: can't access mutable method. -- &Set<int>.add
+test/error/generics3.lns:13:21: error: can't access mutable method. -- &__Set<int>.add
 test/error/generics3.lns:42:4: error: sub2: exp(1) type mismatch &@test.@error.@generics3.IF2<T2>(1115) <- @test.@error.@generics3.Test2<T>(1136): index 1(TypeInfoKind.IF). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics3.lns:50:16: error: Can't new generic class. -- Test3<T1,T2>
 test/error/generics4.lns:28:19: error: can't use this type without <T>. please use Test<T>.
@@ -2255,18 +2255,17 @@ test/error/generics4.lns:51:15: error: __init: exp(1) type mismatch T(1103) <- @
 test/error/generics4.lns:53:11: error: Can't new generic class. -- Test2<T>
 test/error/generics4.lns:53:15: error: __init: exp(1) type mismatch T(1103) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:69:13: error: = operator: exp(1) type mismatch &@test.@error.@generics4.Test3<T>!(1173) <- @test.@error.@generics4.Test3<T>(1204): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics4.lns:92:4: error: func: exp(1) type mismatch List<@test.@error.@generics4.Super>(1247) <- List<@test.@error.@generics4.Sub1>(1261): index 1 -- 
+test/error/generics4.lns:92:4: error: func: exp(1) type mismatch _List<@test.@error.@generics4.Super>(1247) <- _List<@test.@error.@generics4.Sub1>(1261): index 1 -- 
 test/error/box.lns:6:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- real(30): index 1(TypeInfoKind.Box)
 test/error/box.lns:7:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- str(58): index 1(TypeInfoKind.Box)
-test/error/box.lns:12:4: error: not support auto boxing
-test/error/box.lns:19:4: error: not support auto boxing
+test/error/box2.lns:4:4: error: not support auto boxing
 test/error/form.lns:32:4: warning: 'func' var isn't accessed
 test/error/form.lns:2:4: error: You must declare this form at the outside scope. -- func
-test/error/form.lns:9:4: error: func: exp(1) type mismatch form(123) <- @test.@error.@form.(1013): index 1 -- 
-test/error/form.lns:12:4: error: func: exp(1) type mismatch form(123) <- @test.@error.@form.(1017): index 1 -- 
-test/error/form.lns:15:4: error: func: exp(1) type mismatch form(123) <- @test.@error.@form.(1021): index 1 -- 
-test/error/form.lns:24:9: error: = operator: exp(1) type mismatch form(123) <- @test.@error.@form.(1029): index 1 -- 
-test/error/form.lns:32:9: error: = operator: exp(1) type mismatch form(123) <- @test.@error.@form.(1041): index 1 -- 
+test/error/form.lns:9:4: error: func: exp(1) type mismatch form(163) <- @test.@error.@form.(1013): index 1 -- 
+test/error/form.lns:12:4: error: func: exp(1) type mismatch form(163) <- @test.@error.@form.(1017): index 1 -- 
+test/error/form.lns:15:4: error: func: exp(1) type mismatch form(163) <- @test.@error.@form.(1021): index 1 -- 
+test/error/form.lns:24:9: error: = operator: exp(1) type mismatch form(163) <- @test.@error.@form.(1029): index 1 -- 
+test/error/form.lns:32:9: error: = operator: exp(1) type mismatch form(163) <- @test.@error.@form.(1041): index 1 -- 
 test/error/form.lns:38:4: error: can't call any Type. -- Test
 test/error/form.lns:39:4: error: can't call any Type. -- Test
 test/error/form.lns:39:5: error: can't be r-value in paren. -- RefType
@@ -2275,9 +2274,9 @@ test/error/ddd.lns:6:7: warning: 'func' var isn't accessed
 test/error/ddd.lns:10:10: error: func3: exp(1) type mismatch int(26) <- int!(27): index 1 -- 
 test/error/ddd.lns:13:10: error: func3: exp(1) type mismatch int(26) <- int!(27): index 1 -- 
 test/error/ddd.lns:21:4: error: func: exp(1) type mismatch ...<int> <- nil: short
-test/error/ddd.lns:29:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1031) <- @test.@error.@ddd.(1035): index 1 -- exp(1) type mismatch int(26) <- ...<int>(1016): index 1 -- 
-test/error/ddd.lns:32:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1031) <- @test.@error.@ddd.(1039): index 1 -- exp(1) type mismatch int <- int!: src: 1 -- 
-test/error/ddd.lns:35:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1031) <- @test.@error.@ddd.(1043): index 1 -- exp(1) type mismatch int <- int!: src: 1 -- 
+test/error/ddd.lns:29:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1032) <- @test.@error.@ddd.(1036): index 1 -- exp(1) type mismatch int(26) <- ...<int>(1016): index 1 -- 
+test/error/ddd.lns:32:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1032) <- @test.@error.@ddd.(1040): index 1 -- exp(1) type mismatch int <- int!: src: 1 -- 
+test/error/ddd.lns:35:4: error: func: exp(1) type mismatch @test.@error.@ddd.Test(1032) <- @test.@error.@ddd.(1044): index 1 -- exp(1) type mismatch int <- int!: src: 1 -- 
 test/error/ddd.lns:51:4: error: func: exp(1) type mismatch int <- int!: dst 1 -- 
 test/error/ddd.lns:52:4: error: func: exp(1) type mismatch int <- int!: dst 1 -- 
 test/error/immediate.lns:3:8: warning: 'val2' var isn't accessed
@@ -2321,9 +2320,9 @@ test/error/immediate.lns:155:11: warning: 'val2' var isn't accessed
 test/error/immediate.lns:94:7: error: unmatch value type (index:1) int <- stem -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Stem
 test/error/immediate.lns:95:7: error: unmatch value type (index:1) str <- stem -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Stem
 test/error/immediate.lns:106:7: error: unmatch value type (index:1) str <- int -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
-test/error/immediate.lns:117:7: error: List constructor: exp(2) type mismatch Map<str,@test.@error.@immediate.Test>(TypeInfoKind.Map:1477) <- Map<str,@test.@error.@immediate.Sub>(TypeInfoKind.Map:1468) -- 
+test/error/immediate.lns:117:7: error: List constructor: exp(2) type mismatch _Map<str,@test.@error.@immediate.Test>(TypeInfoKind.Map:1464) <- _Map<str,@test.@error.@immediate.Sub>(TypeInfoKind.Map:1455) -- 
 test/error/immediate.lns:122:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
-test/error/immediate.lns:134:7: error: List constructor: exp(1) type mismatch Map<str,@test.@error.@immediate.Test>(TypeInfoKind.Map:1534) <- Map<str,@test.@error.@immediate.SubSub>(TypeInfoKind.Map:1525) -- 
+test/error/immediate.lns:134:7: error: List constructor: exp(1) type mismatch _Map<str,@test.@error.@immediate.Test>(TypeInfoKind.Map:1522) <- _Map<str,@test.@error.@immediate.SubSub>(TypeInfoKind.Map:1513) -- 
 test/error/immediate.lns:138:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/immediate.lns:143:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/immediate.lns:148:4: error: unmatch value type (index:1) int <- @test.@error.@immediate.Test -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
@@ -2391,7 +2390,7 @@ test/error/switch.lns:54:15: error: case exp unmatch type -- Hoge <- int
 test/error/switch.lns:69:15: error: multiple case exp -- 1
 test/error/switch.lns:71:18: error: multiple case exp -- 2
 test/error/switch.lns:73:15: error: multiple case exp -- 1
-test/error/lua.lns:9:4: warning: func: exp(1) luaval mismatch &List<str> <- Luaval<&List<str>>
+test/error/lua.lns:9:4: warning: func: exp(1) luaval mismatch &_List<str> <- Luaval<&_List<str>>
 test/error/lua.lns:1:1: error: unmatch value type (index:1) Luaval<&stem> <- nil
 test/error/async3.lns:115:7: warning: 'func' var isn't accessed
 test/error/async3.lns:129:7: warning: 'func' var isn't accessed
@@ -2427,21 +2426,21 @@ test/error/async3.lns:140:19: error: can't use 'return' in the __asyncLock.
 test/error/async3.lns:144:13: error: no loop syntax.
 test/error/async3.lns:157:22: error: can't access noasync function in async. -- get_val on __init
 test/error/async3.lns:161:20: error: __Runner can't have the mutable argument with public method. -- 1: Foo
-test/error/async3.lns:163:21: error: __Runner can't have the mutable argument with public method. -- 1: List<Foo>
-test/error/async3.lns:165:21: error: __Runner can't have the mutable argument with public method. -- 1: &List<Foo>
-test/error/async3.lns:169:21: error: __Runner can't have the mutable argument with public method. -- 1: List<List<Foo>>
-test/error/async3.lns:171:21: error: __Runner can't have the mutable argument with public method. -- 1: &List<List<Foo>>
-test/error/async3.lns:173:21: error: __Runner can't have the mutable argument with public method. -- 1: &List<&List<Foo>>
+test/error/async3.lns:163:21: error: __Runner can't have the mutable argument with public method. -- 1: _List<Foo>
+test/error/async3.lns:165:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<Foo>
+test/error/async3.lns:169:21: error: __Runner can't have the mutable argument with public method. -- 1: _List<_List<Foo>>
+test/error/async3.lns:171:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<_List<Foo>>
+test/error/async3.lns:173:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<&_List<Foo>>
 test/error/async3.lns:188:17: error: can't access the mutable type's symbol(val1) from async (func).
 test/error/async3.lns:190:17: error: can't access the mutable type's symbol(val3) from async (func).
 test/error/async3.lns:191:17: error: can't access the mutable type's symbol(val4) from async (func).
-test/error/async3.lns:202:20: error: can't access the Luaval with '#' without __luago. -- Luaval<&List<int>>
-test/error/async3.lns:203:33: error: can't access the luaval without __luago. -- Luaval<&List<int>> in func
+test/error/async3.lns:202:20: error: can't access the Luaval with '#' without __luago. -- Luaval<&_List<int>>
+test/error/async3.lns:203:33: error: can't access the luaval without __luago. -- Luaval<&_List<int>> in func
 test/error/async3.lns:206:33: error: 'TypeInfoKind.List' doesn't support forsort.
-test/error/async3.lns:206:33: error: can't access the luaval without __luago. -- Luaval<&List<int>> in func
-test/error/async3.lns:209:24: error: can't access Luaval without __luago. -- Luaval<&List<int>>
-test/error/async3.lns:213:20: error: can't access Luaval without __luago. -- Luaval<&Map<str,int>>
-test/error/async3.lns:214:23: error: can't access Luaval without __luago. -- Luaval<&Map<str,int>>
+test/error/async3.lns:206:33: error: can't access the luaval without __luago. -- Luaval<&_List<int>> in func
+test/error/async3.lns:209:24: error: can't access Luaval without __luago. -- Luaval<&_List<int>>
+test/error/async3.lns:213:20: error: can't access Luaval without __luago. -- Luaval<&_Map<str,int>>
+test/error/async3.lns:214:23: error: can't access Luaval without __luago. -- Luaval<&_Map<str,int>>
 test/error/async3.lns:218:13: error: can't access Luaval function without __luago. -- Luaval<form> on func
 test/error/async3.lns:232:15: error: can't access noasync function in async. -- func on sub
 test/error/async3.lns:242:15: error: can't access the mutable symbol(list) from async (func).
@@ -2500,10 +2499,10 @@ test/error/dis_mutable.lns:227:7: warning: 'func3' var isn't accessed
 test/error/dis_mutable.lns:253:15: warning: 'work' var isn't accessed
 test/error/dis_mutable.lns:10:4: error: has no nilable
 test/error/dis_mutable.lns:21:4: error: has no nilable
-test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1502) <- List<@test.@error.@dis_mutable.Sub1>(1541): index 1 -- 
-test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch List<@test.@error.@dis_mutable.Super>(1510) <- List<@test.@error.@dis_mutable.Sub1>(1541): index 1 -- 
-test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1520) <- List<List<@test.@error.@dis_mutable.Sub1>>(1556): index 1 -- 
-test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch List<List<@test.@error.@dis_mutable.Super>>(1535) <- List<List<@test.@error.@dis_mutable.Sub1>>(1556): index 1 -- 
+test/error/dis_mutable.lns:258:4: error: func: exp(1) type mismatch _List<@test.@error.@dis_mutable.Super>(1504) <- _List<@test.@error.@dis_mutable.Sub1>(1543): index 1 -- 
+test/error/dis_mutable.lns:259:4: error: func2: exp(1) type mismatch _List<@test.@error.@dis_mutable.Super>(1512) <- _List<@test.@error.@dis_mutable.Sub1>(1543): index 1 -- 
+test/error/dis_mutable.lns:262:4: error: func3: exp(1) type mismatch _List<_List<@test.@error.@dis_mutable.Super>>(1522) <- _List<_List<@test.@error.@dis_mutable.Sub1>>(1558): index 1 -- 
+test/error/dis_mutable.lns:263:4: error: func4: exp(1) type mismatch _List<_List<@test.@error.@dis_mutable.Super>>(1537) <- _List<_List<@test.@error.@dis_mutable.Sub1>>(1558): index 1 -- 
 -- not exist file access --
 --lua
 local _moduleObj = {}

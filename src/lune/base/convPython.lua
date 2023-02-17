@@ -2279,7 +2279,7 @@ function convFilter:setup(  )
    
    self.builtin2runtime = builtin2runtime
    
-   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor", [self.builtinFuncs.list_insert] = ".append"}
+   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor", [self.builtinFuncs._list_insert] = ".append", [self.builtinFuncs.__list_insert] = ".append"}
    
    self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [Ast.builtinTypeProcessor] = "*LnsProcessor", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream"}
 end
@@ -5722,7 +5722,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                                  else
                                     do
                                        local _switchExp = funcType
-                                       if _switchExp == self.builtinFuncs.list_sort or _switchExp == self.builtinFuncs.array_sort then
+                                       if _switchExp == self.builtinFuncs._list_sort or _switchExp == self.builtinFuncs.__list_sort or _switchExp == self.builtinFuncs.array_sort then
                                           callKind = _lune.newAlge( CallKind.SortCall, {prefixType:get_itemTypeInfoList()[1]})
                                        end
                                     end

@@ -47,8 +47,8 @@ pub fn endsWith( txt:str, ptn:str ) : bool {
 /**
 txt を行ごとに分割したリストを返す
 */
-pub fn getLineList( txt:str ) : List<str> {
-   let mut list:List<str> = [];
+pub fn getLineList( txt:str ) : _List<str> {
+   let mut list:_List<str> = [];
 
    __luaDepend {
       // 改行までの文字列

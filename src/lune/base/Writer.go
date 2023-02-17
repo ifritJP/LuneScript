@@ -90,7 +90,7 @@ func (self *Writer_XML) Fin(_env *LnsEnv) {
 // 114: decl @lune.@base.@Writer.JSON.startLayer
 func (self *Writer_JSON) startLayer(_env *LnsEnv, arrayFlag bool,madeByArrayFlag bool) {
     var info *Writer_JsonLayer
-    info = NewWriter_JsonLayer(_env, "none", arrayFlag, self.prevName, madeByArrayFlag, NewLnsSet([]LnsAny{}), true, false)
+    info = NewWriter_JsonLayer(_env, "none", arrayFlag, self.prevName, madeByArrayFlag, NewLnsSet2_[string]([]string{}), true, false)
     self.layerQueue.Insert(Writer_JsonLayer2Stem(info))
     self.stream.Write(_env, _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( arrayFlag) &&
@@ -149,7 +149,7 @@ func (self *Writer_JSON) GetLayerName(_env *LnsEnv) string {
 func (self *Writer_JSON) AddElementName(_env *LnsEnv, name string) {
     var info *Writer_JsonLayer
     info = Lns_unwrap( self.FP.getLayerInfo(_env)).(*Writer_JsonLayer)
-    var nameSet *LnsSet
+    var nameSet *LnsSet2_[string]
     nameSet = info.ElementNameSet
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( Lns_op_not(info.ArrayFlag)) &&
@@ -340,7 +340,7 @@ type Writer_JsonLayer struct {
     ArrayFlag bool
     Name string
     MadeByArrayFlag bool
-    ElementNameSet *LnsSet
+    ElementNameSet *LnsSet2_[string]
     ParentFlag bool
     OpenElement bool
     FP Writer_JsonLayerMtd
@@ -365,13 +365,13 @@ func Writer_JsonLayerDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Writer_JsonLayer) ToWriter_JsonLayer() *Writer_JsonLayer {
     return obj
 }
-func NewWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet, arg6 bool, arg7 bool) *Writer_JsonLayer {
+func NewWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet2_[string], arg6 bool, arg7 bool) *Writer_JsonLayer {
     obj := &Writer_JsonLayer{}
     obj.FP = obj
     obj.InitWriter_JsonLayer(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7)
     return obj
 }
-func (self *Writer_JsonLayer) InitWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet, arg6 bool, arg7 bool) {
+func (self *Writer_JsonLayer) InitWriter_JsonLayer(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 bool, arg5 *LnsSet2_[string], arg6 bool, arg7 bool) {
     self.State = arg1
     self.ArrayFlag = arg2
     self.Name = arg3

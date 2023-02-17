@@ -4,15 +4,15 @@ import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Json bool
 var Json__mod__ string
 // for 45
-func Json_convExp0_198(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_196(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 69
-func Json_convExp0_295(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_293(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 126
-func Json_convExp0_513(arg1 []LnsAny) (LnsAny, bool) {
+func Json_convExp0_511(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // 6: decl @lune.@base.@Json.getRawTxt

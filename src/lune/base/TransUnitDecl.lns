@@ -324,8 +324,8 @@ fn TransUnit.analyzeRefTypeWithSymbol(
       if token.txt == '[' or token.txt == '[@' {
          if token.txt == '[' {
             arrayMode = "list";
-            typeInfo = self.processInfo.createList(
-               accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
+            typeInfo = self.processInfo.createList_(
+               true, accessMode, self.getCurrentClass(), [ typeInfo ], .Mut );
          }
          else {
             arrayMode = "array";
@@ -354,16 +354,52 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             return true;
          }
 
+         macro _processCanDealGenInherit( typeTxt:str ) {
+            {
+               let builtinType = "Ast.builtinType%s" (typeTxt);
+               let builtinType_ = "Ast.builtinType%s_" (typeTxt);
+               let builtinType__ = "Ast.builtinType%s__" (typeTxt);
+               let defaultVal;
+               switch typeTxt {
+                  // case "Set", "List" {       
+                  case "Set" {       
+                  // case "" {       
+                     defaultVal = `{false};
+                  }
+                  default {
+                     defaultVal = `{self.ctrl_info.defaultGenInherit};
+                  }
+               }
+            }
+            let canDealGenInherit;
+            switch symbolNode.$expType {
+               case ,,,builtinType {
+                  canDealGenInherit = ,,defaultVal;
+               }
+               case ,,,builtinType_ {
+                  canDealGenInherit = true;
+               }
+               case ,,,builtinType__ {
+                  canDealGenInherit = false;
+               }
+               default {
+                  self.error( "illegal %s" (,,typeTxt) ); // バグ
+               }
+            }
+         }
+
          switch typeInfo.$kind {
             case .Map {
+               _processCanDealGenInherit( "Map" );
                if #genericList ~= 2 {
                   self.addErrMess( symbolNode.$pos, "Key or value type is unknown" );
-                  typeInfo = self.processInfo.createMap(
-                     accessMode, self.getCurrentClass(),
+                  typeInfo = self.processInfo.createMap_(
+                     canDealGenInherit, accessMode, self.getCurrentClass(),
                      Ast.builtinTypeStem, Ast.builtinTypeStem, .Mut );
                }
                else {
-                  typeInfo = self.processInfo.createMap(
+                  typeInfo = self.processInfo.createMap_(
+                     canDealGenInherit,
                      accessMode, self.getCurrentClass(),
                      genericList[ 1 ], genericList[ 2 ], .Mut );
                   if genericList[ 1 ].$nilable or genericList[ 2 ].$nilable {
@@ -376,28 +412,10 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .List {
                if checkAlternateTypeCount( 1 ) {
-                  let canDealGenInherit;
-                  switch symbolNode.$expType {
-                     case Ast.builtinTypeList {
-                        canDealGenInherit = self.ctrl_info.defaultGenInherit;
-                     }
-                     case Ast.builtinTypeList_ {
-                        canDealGenInherit = true;
-                     }
-                     case Ast.builtinTypeList__ {
-                        canDealGenInherit = false;
-                     }
-                     default {
-                        self.error( "illegal list" ); // バグ
-                     }
-                  }
-                  if canDealGenInherit {
-                     typeInfo = self.processInfo.createList(
-                        accessMode, self.getCurrentClass(), genericList, .Mut );
-                  } else {
-                     typeInfo = self.processInfo.createList_(
-                        accessMode, self.getCurrentClass(), genericList, .Mut );
-                  }
+                  _processCanDealGenInherit( "List" );
+                  typeInfo = self.processInfo.createList_(
+                     canDealGenInherit, accessMode,
+                     self.getCurrentClass(), genericList, .Mut );
                }
             }
             case .Array {
@@ -409,9 +427,10 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             }
             case .Set {
                if checkAlternateTypeCount( 1 ) {
-                  typeInfo = self.processInfo.createSet(
-                     accessMode, self.getCurrentClass(),
-                     genericList, .Mut );
+                  _processCanDealGenInherit( "Set" );
+                  typeInfo = self.processInfo.createSet_(
+                     canDealGenInherit, 
+                     accessMode, self.getCurrentClass(), genericList, .Mut );
                   if genericList[ 1 ].$nilable {
                      self.addErrMess(
                         symbolNode.$pos,
@@ -457,6 +476,18 @@ fn TransUnit.analyzeRefTypeWithSymbol(
       }
       token = self.getToken(##);
    }
+   if not typeInfo.$canDealGenInherit {
+      foreach itemNode in itemNodeList {
+         if itemNode.$expType.$srcTypeInfo.$kind == .Alternate {
+            // canDealGenInherit でない型で generics を使うには、
+            // ユーザ定義のクラスの generics で、
+            // go の generics に対応する必要がある。
+            self.addErrMess( itemNode.$pos,
+                             "can't support Alternate type for %s" (typeInfo.$rawTxt) );
+         }
+      }
+   }
+   
    if token.txt == "!" {
       typeInfo = typeInfo.get_nilableTypeInfo();
       self.getToken(##);
@@ -881,8 +912,9 @@ fn TransUnit.analyzeDeclMacroSub(
       macroScope.addLocalVar(
          self.processInfo, false, false, "_lnsLoad", nil, funcType, .IMut );
 
-      let macroLocalVarType = self.processInfo.createMap(
-         .Local, self.moduleType, Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
+      let macroLocalVarType = self.processInfo.createMap_(
+         true, .Local, self.moduleType,
+         Ast.builtinTypeString, Ast.builtinTypeStem, .Mut );
 
       if not pubFlag {
          macroScope.addLocalVar(
@@ -1498,7 +1530,7 @@ fn TransUnit.analyzeDeclAlge(
    
    let mut algeTypeInfo = self.processInfo.createAlge(
       algeScope, parentNsInfo.$typeInfo, parentNsInfo.$typeDataAccessor,
-      false, accessMode, name.txt, altTypeList );
+      false, accessMode, name.txt, [ altTypeList.unpack() ] );
    let _, shadowing = scope.addAlge(
       self.processInfo, accessMode, name.txt, name.pos, algeTypeInfo );
    self.newNSInfo( algeTypeInfo, name.pos );
@@ -1784,7 +1816,7 @@ mut : Nodes.DeclFormNode
       false, false,
       true, accessMode, name.txt,
       self.getDefaultAsync( .FormFunc, self.getCurrentClass(), asyncMode ),
-      altTypeList, argTypeInfoList, retTypeList, .IMut );
+      [ altTypeList.unpack() ], argTypeInfoList, retTypeList, .IMut );
 
    let formSymbol, shadowing = self.$scope.addForm(
       self.processInfo, name.pos, formType, accessMode );
@@ -2383,7 +2415,7 @@ fn TransUnit.analyzeClassBody(
    let mut methodNameSet: Set<str> = (@);
    //let mut initStmtList:List<&Nodes.Node> = [];
    let mut initBlockInfo = new Nodes.ClassInitBlockInfo(##);
-   let mut advertiseList:Nodes.AdvertiseInfo[] = [];
+   let mut advertiseList:List<Nodes.AdvertiseInfo> = [];
    let mut trustList:List<&Ast.TypeInfo> = [];
    let mut uninitMemberList:List<&Ast.SymbolInfo> = [];
    let mut node = Nodes.DeclClassNode.create(
@@ -2895,8 +2927,8 @@ fn TransUnit.analyzeDeclClass(
    self.checkToken( nextToken, "{" );
 
 
-   let mapType = self.processInfo.createMap(
-      .Pub, classTypeInfo, Ast.builtinTypeString,
+   let mapType = self.processInfo.createMap_(
+      true, .Pub, classTypeInfo, Ast.builtinTypeString,
       self.createModifier( Ast.builtinTypeStem, .IMut ), .IMut );
    if classTypeInfo.isInheritFrom(
       self.processInfo, Ast.builtinTypeMapping, nil ) {
@@ -3331,7 +3363,7 @@ fn TransUnit.analyzeDeclFunc(
    }
 
    
-   let mut altTypeList:&List<&Ast.TypeInfo> = [];
+   let mut altTypeList:&List<&Ast.AlternateTypeInfo> = [];
    // generic 宣言
    if token.txt == "<" {
       token, altTypeList = self.analyzeDeclAlternateType( false, token, accessMode );
@@ -3463,7 +3495,7 @@ fn TransUnit.analyzeDeclFunc(
          funcName,
          self.getDefaultAsync(
             typeKind, classTypeInfo or self.getCurrentClass(), asyncMode ),
-         altTypeList, argTypeList, retTypeInfoList, mutMode );
+         [ altTypeList.unpack() ], argTypeList, retTypeInfoList, mutMode );
 
       when! name {
          let workSym;

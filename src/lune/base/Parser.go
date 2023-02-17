@@ -6,7 +6,7 @@ var Parser__mod__ string
 var Parser_noneToken *Types_Token
 var Parser_eofToken *Types_Token
 // for 86
-func Parser_convExp0_828(arg1 []LnsAny) LnsAny {
+func Parser_convExp0_826(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 181
@@ -47,7 +47,7 @@ func Parser_convFromRawToStr(_env *LnsEnv, txt string) string {
         var endIndex LnsInt
         
         {
-            _endIndex := Parser_convExp0_828(Lns_2DDD(_env.GetVM().String_find(workTxt, workPattern, workIndex, nil)))
+            _endIndex := Parser_convExp0_826(Lns_2DDD(_env.GetVM().String_find(workTxt, workPattern, workIndex, nil)))
             if _endIndex == nil{
                 Util_err(_env, _env.GetVM().String_format("error: illegal string -- %s", []LnsAny{workTxt}))
             } else {
@@ -361,8 +361,8 @@ func (self *Parser_CommentLayer) AddDirect(_env *LnsEnv, commentList *LnsList) {
 }
 // 407: decl @lune.@base.@Parser.CommentLayer.add
 func (self *Parser_CommentLayer) Add(_env *LnsEnv, token *Types_Token) {
-    if Lns_op_not(self.tokenSet.Has(Types_Token2Stem(token))){
-        self.tokenSet.Add(Types_Token2Stem(token))
+    if Lns_op_not(self.tokenSet.Has(token)){
+        self.tokenSet.Add(token)
         self.tokenList.Insert(Types_Token2Stem(token))
         self.FP.AddDirect(_env, token.FP.Get_commentList(_env))
     }
@@ -371,7 +371,7 @@ func (self *Parser_CommentLayer) Add(_env *LnsEnv, token *Types_Token) {
 func (self *Parser_CommentLayer) Clear(_env *LnsEnv) {
     if self.commentList.Len() != 0{
         self.commentList = NewLnsList([]LnsAny{})
-        self.tokenSet = NewLnsSet([]LnsAny{})
+        self.tokenSet = NewLnsSet2_[*Types_Token]([]*Types_Token{})
         self.tokenList = NewLnsList([]LnsAny{})
     }
 }
@@ -676,7 +676,7 @@ type Parser_CommentLayerMtd interface {
 }
 type Parser_CommentLayer struct {
     commentList *LnsList
-    tokenSet *LnsSet
+    tokenSet *LnsSet2_[*Types_Token]
     tokenList *LnsList
     FP Parser_CommentLayerMtd
 }
@@ -710,7 +710,7 @@ func (self *Parser_CommentLayer) Get_commentList(_env *LnsEnv) *LnsList{ return 
 // 395: DeclConstr
 func (self *Parser_CommentLayer) InitParser_CommentLayer(_env *LnsEnv) {
     self.commentList = NewLnsList([]LnsAny{})
-    self.tokenSet = NewLnsSet([]LnsAny{})
+    self.tokenSet = NewLnsSet2_[*Types_Token]([]*Types_Token{})
     self.tokenList = NewLnsList([]LnsAny{})
 }
 

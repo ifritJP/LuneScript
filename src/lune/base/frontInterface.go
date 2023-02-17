@@ -26,7 +26,7 @@ func (self *FrontInterface_MetaOrModule__Module) GetTxt() string {
 return "MetaOrModule.Module"
 }
 // for 343
-func frontInterface_convExp0_1470(arg1 []LnsAny) LnsAny {
+func frontInterface_convExp0_1466(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 140: decl @lune.@base.@frontInterface.getRootDependModId
@@ -41,7 +41,7 @@ func FrontInterface_dummyLoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInte
     Lns_LockEnvSync( _env, 341, func () {
         var emptyTable LnsAny
         var loaded LnsAny
-        loaded = frontInterface_convExp0_1470(Lns_2DDD(_env.GetVM().Load("return {}", nil)))
+        loaded = frontInterface_convExp0_1466(Lns_2DDD(_env.GetVM().Load("return {}", nil)))
         if loaded != nil{
             loaded_318 := loaded.(*Lns_luaValue)
             emptyTable = Lns_unwrap( Lns_car(_env.GetVM().RunLoadedfunc(loaded_318,Lns_2DDD([]LnsAny{}))))
@@ -371,7 +371,7 @@ type FrontInterface_LuneHelperInfo struct {
     UseAlge bool
     UseSet bool
     CallAnonymous bool
-    PragmaSet *LnsSet
+    PragmaSet *LnsSet2_[LnsAny]
     UseLazyLoad bool
     UseLazyRequire bool
     UseRun bool
@@ -417,7 +417,7 @@ func (self *FrontInterface_LuneHelperInfo) InitFrontInterface_LuneHelperInfo(_en
     self.UseAlge = false
     self.UseSet = false
     self.CallAnonymous = false
-    self.PragmaSet = NewLnsSet([]LnsAny{})
+    self.PragmaSet = NewLnsSet2_[LnsAny]([]LnsAny{})
     self.UseLazyLoad = false
     self.UseLazyRequire = false
     self.UseRun = false

@@ -1,3 +1,6 @@
+//go:build cgo
+// +build cgo
+
 /*
 MIT License
 
@@ -21,8 +24,6 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-
-// +build cgo
 
 package runtimelns
 
@@ -48,22 +49,22 @@ var lns_luvValueCoreFreeListMutex sync.Mutex
 var lns_createVMMutex sync.Mutex
 var lns_freeVMMap map[*Lns_luaVM]bool = map[*Lns_luaVM]bool{}
 
-// - lua vm 内の値で、 go のデータに変換出来ない値を扱う時に、
-//   Go の構造体 Lns_luaValue を定義して管理している。
-// - この Lns_luaValue で管理する Lua の値が lua VM 内で開放されないように
-//   参照を保持するため Lua VM 内の lns_globalValMap という object に値をセットしている。
-// - この値をセットする際の object の key として C 文字列を生成している。
-// - この C 文字列は、 Go の GC 対象外なので自前で開放する必要がある。
-// - その開放制御を lns_luaValChanProc() で行なっている。
-// - lns_luaValChanProc() は、 init() 時に go-routine で起動している。
-// - lns_luaValChanProc() は、 *Lns_luaValueCore 型の channel を受信しつづけ、
-//   受信した core 情報をリストに保持する。
-// - そのリストが一定数(lns_luaValueCoreNum)溜ったら、
-//    lns_hasLuvValueCoreFree に true をセットし、
-//    lns_luvValueCoreFreeList に append する。
-// - lns_luvValueCoreFreeList に格納された core は、
-//   Lns_processFreeList() 実行時に開放される。
-// - lns_freeVMMap へのアクセスは、 mutex で排他する。
+//   - lua vm 内の値で、 go のデータに変換出来ない値を扱う時に、
+//     Go の構造体 Lns_luaValue を定義して管理している。
+//   - この Lns_luaValue で管理する Lua の値が lua VM 内で開放されないように
+//     参照を保持するため Lua VM 内の lns_globalValMap という object に値をセットしている。
+//   - この値をセットする際の object の key として C 文字列を生成している。
+//   - この C 文字列は、 Go の GC 対象外なので自前で開放する必要がある。
+//   - その開放制御を lns_luaValChanProc() で行なっている。
+//   - lns_luaValChanProc() は、 init() 時に go-routine で起動している。
+//   - lns_luaValChanProc() は、 *Lns_luaValueCore 型の channel を受信しつづけ、
+//     受信した core 情報をリストに保持する。
+//   - そのリストが一定数(lns_luaValueCoreNum)溜ったら、
+//     lns_hasLuvValueCoreFree に true をセットし、
+//     lns_luvValueCoreFreeList に append する。
+//   - lns_luvValueCoreFreeList に格納された core は、
+//     Lns_processFreeList() 実行時に開放される。
+//   - lns_freeVMMap へのアクセスは、 mutex で排他する。
 type Lns_luaValueCore struct {
 	// lns_globalValMap に格納しているシンボル名
 	sym lua_rawstr
@@ -87,14 +88,16 @@ var lns_luaValChan chan *Lns_luaValueCore
 var lns_luaValProcEndChan chan bool
 var lns_lnsLuaVMChan chan *Lns_luaVM
 
-/**
+/*
+*
 symbol を globalVal から除外する
 */
 func (luaValue *Lns_luaValue) free() {
 	lns_luaValChan <- luaValue.core
 }
 
-/**
+/*
+*
 symbol を globalVal から除外する
 */
 func (core *Lns_luaValueCore) free() {
@@ -322,7 +325,6 @@ func (self *Lns_luaVM) closeVM() {
 //
 // これを実行した後は、 newLuaVM() を実行してはならない。
 // もし newLuaVM() を実行したい場合は、
-//
 func Lns_shutdownAllVM() {
 	// vm.funcForReverting を開放するために nil をセットする
 	for vm := range lns_freeVMMap {
@@ -447,10 +449,8 @@ func (self *StemToLuaConv) conv(val LnsAny) {
 		case string:
 			self.builder.WriteString(
 				self.luaVM.String_format("%q", Lns_2DDD(val)))
-		case *LnsList:
-			val.(*LnsList).ToLuaCode(self)
-		case *LnsMap:
-			val.(*LnsMap).ToLuaCode(self)
+		case Lns_toLuaCode:
+			val.(Lns_toLuaCode).ToLuaCode(self)
 		case *Lns_luaValue:
 			luaVal := val.(*Lns_luaValue)
 			self.builder.WriteString(
@@ -508,13 +508,15 @@ func (luaVM *Lns_luaVM) newLuaValue(index int, typeId int) *Lns_luaValue {
 	return val
 }
 
-/**
+/*
+*
 スタックの指定 index の値を取得する
 
 @param index スタック位置
 @param passTable 指定位置の値がテーブルの場合の処理方法の指定。
-   true の場合、 Go の値に変換せずにそのまま Lns_luaVal として返す。
-   false の場合、 LnsMap に変換して返す。
+
+	true の場合、 Go の値に変換せずにそのまま Lns_luaVal として返す。
+	false の場合、 LnsMap に変換して返す。
 */
 func (luaVM *Lns_luaVM) setupFromStack(index int, passTable bool) LnsAny {
 	vm := luaVM.vm
@@ -615,7 +617,8 @@ func (luaValue *Lns_luaValue) Call(argList []LnsAny) []LnsAny {
 	return luaVM.lua_call(top, len(argList), cLUA_MULTRET)
 }
 
-/**
+/*
+*
 index 指定のスタックの値を globalVal[ symbol ] にセットする
 */
 func (core *Lns_luaValueCore) setValToGlobalValMap(index int) {
@@ -635,7 +638,8 @@ func (core *Lns_luaValueCore) setValToGlobalValMap(index int) {
 	lua_setfield(vm, -2, core.sym)
 }
 
-/**
+/*
+*
 globalVal[ symbol ] をスタックトックに push する
 */
 func (core *Lns_luaValueCore) pushValFromGlobalValMap() {
@@ -657,7 +661,8 @@ func (core *Lns_luaValueCore) pushValFromGlobalValMap() {
 	}
 }
 
-/**
+/*
+*
 Lua の関数を実行する。
 
 @param packName Lua のパッケージ名。 string.format() を実行する場合 "string"。
