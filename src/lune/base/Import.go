@@ -1544,6 +1544,14 @@ func Import__TypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import__TypeInfo).FP
 }
+      
+func Import__TypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoDownCast).ToImport__TypeInfo().FP.(T)
+   }
+   return ret
+}
 type Import__TypeInfoDownCast interface {
     ToImport__TypeInfo() *Import__TypeInfo
 }
@@ -1601,6 +1609,14 @@ func Import__IdInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__IdInfo).FP
+}
+      
+func Import__IdInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__IdInfoDownCast).ToImport__IdInfo().FP.(T)
+   }
+   return ret
 }
 type Import__IdInfoDownCast interface {
     ToImport__IdInfo() *Import__IdInfo
@@ -1686,6 +1702,22 @@ func Import__TypeInfoNilable2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import__TypeInfoNilable).FP
 }
+      
+func Import__TypeInfoNilable_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoNilableDownCast).ToImport__TypeInfoNilable().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoNilable_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoNilableDownCast).ToImport__TypeInfoNilable().FP.(T)
+   }
+   return ret
+}
 type Import__TypeInfoNilableDownCast interface {
     ToImport__TypeInfoNilable() *Import__TypeInfoNilable
 }
@@ -1770,6 +1802,22 @@ func Import__TypeInfoAlias2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoAlias).FP
+}
+      
+func Import__TypeInfoAlias_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoAliasDownCast).ToImport__TypeInfoAlias().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoAlias_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoAliasDownCast).ToImport__TypeInfoAlias().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoAliasDownCast interface {
     ToImport__TypeInfoAlias() *Import__TypeInfoAlias
@@ -1869,6 +1917,22 @@ func Import__TypeInfoDDD2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoDDD).FP
+}
+      
+func Import__TypeInfoDDD_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoDDDDownCast).ToImport__TypeInfoDDD().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoDDD_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoDDDDownCast).ToImport__TypeInfoDDD().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoDDDDownCast interface {
     ToImport__TypeInfoDDD() *Import__TypeInfoDDD
@@ -1972,6 +2036,22 @@ func Import__TypeInfoAlternate2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoAlternate).FP
+}
+      
+func Import__TypeInfoAlternate_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoAlternateDownCast).ToImport__TypeInfoAlternate().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoAlternate_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoAlternateDownCast).ToImport__TypeInfoAlternate().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoAlternateDownCast interface {
     ToImport__TypeInfoAlternate() *Import__TypeInfoAlternate
@@ -2100,6 +2180,22 @@ func Import__TypeInfoGeneric2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import__TypeInfoGeneric).FP
 }
+      
+func Import__TypeInfoGeneric_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoGenericDownCast).ToImport__TypeInfoGeneric().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoGeneric_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoGenericDownCast).ToImport__TypeInfoGeneric().FP.(T)
+   }
+   return ret
+}
 type Import__TypeInfoGenericDownCast interface {
     ToImport__TypeInfoGeneric() *Import__TypeInfoGeneric
 }
@@ -2192,6 +2288,22 @@ func Import__TypeInfoBox2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import__TypeInfoBox).FP
 }
+      
+func Import__TypeInfoBox_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoBoxDownCast).ToImport__TypeInfoBox().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoBox_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoBoxDownCast).ToImport__TypeInfoBox().FP.(T)
+   }
+   return ret
+}
 type Import__TypeInfoBoxDownCast interface {
     ToImport__TypeInfoBox() *Import__TypeInfoBox
 }
@@ -2282,6 +2394,22 @@ func Import__TypeInfoExt2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import__TypeInfoExt).FP
 }
+      
+func Import__TypeInfoExt_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoExtDownCast).ToImport__TypeInfoExt().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoExt_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoExtDownCast).ToImport__TypeInfoExt().FP.(T)
+   }
+   return ret
+}
 type Import__TypeInfoExtDownCast interface {
     ToImport__TypeInfoExt() *Import__TypeInfoExt
 }
@@ -2365,6 +2493,22 @@ func Import__TypeInfoModifier2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoModifier).FP
+}
+      
+func Import__TypeInfoModifier_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoModifierDownCast).ToImport__TypeInfoModifier().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoModifier_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoModifierDownCast).ToImport__TypeInfoModifier().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoModifierDownCast interface {
     ToImport__TypeInfoModifier() *Import__TypeInfoModifier
@@ -2456,6 +2600,22 @@ func Import__TypeInfoModule2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoModule).FP
+}
+      
+func Import__TypeInfoModule_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoModuleDownCast).ToImport__TypeInfoModule().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoModule_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoModuleDownCast).ToImport__TypeInfoModule().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoModuleDownCast interface {
     ToImport__TypeInfoModule() *Import__TypeInfoModule
@@ -2562,6 +2722,22 @@ func Import__TypeInfoNormal2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoNormal).FP
+}
+      
+func Import__TypeInfoNormal_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoNormalDownCast).ToImport__TypeInfoNormal().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoNormal_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoNormalDownCast).ToImport__TypeInfoNormal().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoNormalDownCast interface {
     ToImport__TypeInfoNormal() *Import__TypeInfoNormal
@@ -2767,6 +2943,22 @@ func Import__TypeInfoEnum2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import__TypeInfoEnum).FP
 }
+      
+func Import__TypeInfoEnum_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoEnumDownCast).ToImport__TypeInfoEnum().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoEnum_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoEnumDownCast).ToImport__TypeInfoEnum().FP.(T)
+   }
+   return ret
+}
 type Import__TypeInfoEnumDownCast interface {
     ToImport__TypeInfoEnum() *Import__TypeInfoEnum
 }
@@ -2878,6 +3070,14 @@ func Import__TypeInfoAlgeVal2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import__TypeInfoAlgeVal).FP
 }
+      
+func Import__TypeInfoAlgeVal_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoAlgeValDownCast).ToImport__TypeInfoAlgeVal().FP.(T)
+   }
+   return ret
+}
 type Import__TypeInfoAlgeValDownCast interface {
     ToImport__TypeInfoAlgeVal() *Import__TypeInfoAlgeVal
 }
@@ -2966,6 +3166,22 @@ func Import__TypeInfoAlge2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoAlge).FP
+}
+      
+func Import__TypeInfoAlge_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoAlgeDownCast).ToImport__TypeInfoAlge().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoAlge_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoAlgeDownCast).ToImport__TypeInfoAlge().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoAlgeDownCast interface {
     ToImport__TypeInfoAlge() *Import__TypeInfoAlge
@@ -3081,6 +3297,22 @@ func Import__TypeInfoTuple2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import__TypeInfoTuple).FP
+}
+      
+func Import__TypeInfoTuple_toSlice_Import__TypeInfo(slice []LnsAny) []*Import__TypeInfo {
+   ret := make([]*Import__TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import__TypeInfoTupleDownCast).ToImport__TypeInfoTuple().Import__TypeInfo
+   }
+   return ret
+}
+      
+func Import__TypeInfoTuple_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import__TypeInfoTupleDownCast).ToImport__TypeInfoTuple().FP.(T)
+   }
+   return ret
 }
 type Import__TypeInfoTupleDownCast interface {
     ToImport__TypeInfoTuple() *Import__TypeInfoTuple
@@ -3353,6 +3585,22 @@ func Import_ModuleLoader2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Import_ModuleLoader).FP
 }
+      
+func Import_ModuleLoader_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
+   ret := make([]*Runner_Runner, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Import_ModuleLoaderDownCast).ToImport_ModuleLoader().Runner_Runner
+   }
+   return ret
+}
+      
+func Import_ModuleLoader_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import_ModuleLoaderDownCast).ToImport_ModuleLoader().FP.(T)
+   }
+   return ret
+}
 type Import_ModuleLoaderDownCast interface {
     ToImport_ModuleLoader() *Import_ModuleLoader
 }
@@ -3501,6 +3749,14 @@ func Import_VarNameInfo14682Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Import_VarNameInfo1468).FP
+}
+      
+func Import_VarNameInfo1468_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Import_VarNameInfo1468DownCast).ToImport_VarNameInfo1468().FP.(T)
+   }
+   return ret
 }
 type Import_VarNameInfo1468DownCast interface {
     ToImport_VarNameInfo1468() *Import_VarNameInfo1468

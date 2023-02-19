@@ -221,6 +221,14 @@ func OutputDepend_convFilter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*OutputDepend_convFilter).FP
 }
+      
+func OutputDepend_convFilter_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
+   ret := make([]*Nodes_Filter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(OutputDepend_convFilterDownCast).ToOutputDepend_convFilter().Nodes_Filter
+   }
+   return ret
+}
 type OutputDepend_convFilterDownCast interface {
     ToOutputDepend_convFilter() *OutputDepend_convFilter
 }

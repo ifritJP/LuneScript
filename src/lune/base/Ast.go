@@ -1428,6 +1428,14 @@ func Ast_SimpleModuleInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_SimpleModuleInfo).FP
 }
+      
+func Ast_SimpleModuleInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_SimpleModuleInfoDownCast).ToAst_SimpleModuleInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_SimpleModuleInfoDownCast interface {
     ToAst_SimpleModuleInfo() *Ast_SimpleModuleInfo
 }
@@ -1531,6 +1539,14 @@ func Ast_SimpleTypeDataAccessor2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_SimpleTypeDataAccessor).FP
+}
+      
+func Ast_SimpleTypeDataAccessor_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_SimpleTypeDataAccessorDownCast).ToAst_SimpleTypeDataAccessor().FP.(T)
+   }
+   return ret
 }
 type Ast_SimpleTypeDataAccessorDownCast interface {
     ToAst_SimpleTypeDataAccessor() *Ast_SimpleTypeDataAccessor
@@ -1751,6 +1767,14 @@ func Ast_DummyModuleInfoManager2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_DummyModuleInfoManager).FP
 }
+      
+func Ast_DummyModuleInfoManager_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_DummyModuleInfoManagerDownCast).ToAst_DummyModuleInfoManager().FP.(T)
+   }
+   return ret
+}
 type Ast_DummyModuleInfoManagerDownCast interface {
     ToAst_DummyModuleInfoManager() *Ast_DummyModuleInfoManager
 }
@@ -1932,6 +1956,14 @@ func Ast_SymbolInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_SymbolInfo).FP
+}
+      
+func Ast_SymbolInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_SymbolInfoDownCast).ToAst_SymbolInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_SymbolInfoDownCast interface {
     ToAst_SymbolInfo() *Ast_SymbolInfo
@@ -2200,6 +2232,14 @@ func Ast_Scope2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_Scope).FP
 }
+      
+func Ast_Scope_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_ScopeDownCast).ToAst_Scope().FP.(T)
+   }
+   return ret
+}
 type Ast_ScopeDownCast interface {
     ToAst_Scope() *Ast_Scope
 }
@@ -2326,6 +2366,22 @@ func Ast_ScopeWithRef2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_ScopeWithRef).FP
+}
+      
+func Ast_ScopeWithRef_toSlice_Ast_Scope(slice []LnsAny) []*Ast_Scope {
+   ret := make([]*Ast_Scope, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_ScopeWithRefDownCast).ToAst_ScopeWithRef().Ast_Scope
+   }
+   return ret
+}
+      
+func Ast_ScopeWithRef_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_ScopeWithRefDownCast).ToAst_ScopeWithRef().FP.(T)
+   }
+   return ret
 }
 type Ast_ScopeWithRefDownCast interface {
     ToAst_ScopeWithRef() *Ast_ScopeWithRef
@@ -2472,6 +2528,14 @@ func Ast_TypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_TypeInfo).FP
 }
+      
+func Ast_TypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_TypeInfoDownCast).ToAst_TypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_TypeInfoDownCast interface {
     ToAst_TypeInfo() *Ast_TypeInfo
 }
@@ -2587,6 +2651,22 @@ func Ast_RootTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_RootTypeInfo).FP
 }
+      
+func Ast_RootTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_RootTypeInfoDownCast).ToAst_RootTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_RootTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_RootTypeInfoDownCast).ToAst_RootTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_RootTypeInfoDownCast interface {
     ToAst_RootTypeInfo() *Ast_RootTypeInfo
 }
@@ -2678,6 +2758,22 @@ func Ast_NormalSymbolInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_NormalSymbolInfo).FP
+}
+      
+func Ast_NormalSymbolInfo_toSlice_Ast_SymbolInfo(slice []LnsAny) []*Ast_SymbolInfo {
+   ret := make([]*Ast_SymbolInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_NormalSymbolInfoDownCast).ToAst_NormalSymbolInfo().Ast_SymbolInfo
+   }
+   return ret
+}
+      
+func Ast_NormalSymbolInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_NormalSymbolInfoDownCast).ToAst_NormalSymbolInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_NormalSymbolInfoDownCast interface {
     ToAst_NormalSymbolInfo() *Ast_NormalSymbolInfo
@@ -2824,6 +2920,22 @@ func Ast_ModifierTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_ModifierTypeInfo).FP
+}
+      
+func Ast_ModifierTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_ModifierTypeInfoDownCast).ToAst_ModifierTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_ModifierTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_ModifierTypeInfoDownCast).ToAst_ModifierTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_ModifierTypeInfoDownCast interface {
     ToAst_ModifierTypeInfo() *Ast_ModifierTypeInfo
@@ -3180,6 +3292,22 @@ func Ast_AutoBoxingInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_AutoBoxingInfo).FP
 }
+      
+func Ast_AutoBoxingInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AutoBoxingInfoDownCast).ToAst_AutoBoxingInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_AutoBoxingInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AutoBoxingInfoDownCast).ToAst_AutoBoxingInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_AutoBoxingInfoDownCast interface {
     ToAst_AutoBoxingInfo() *Ast_AutoBoxingInfo
 }
@@ -3296,6 +3424,22 @@ func Ast_CanEvalCtrlTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_CanEvalCtrlTypeInfo).FP
 }
+      
+func Ast_CanEvalCtrlTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_CanEvalCtrlTypeInfoDownCast).ToAst_CanEvalCtrlTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_CanEvalCtrlTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_CanEvalCtrlTypeInfoDownCast).ToAst_CanEvalCtrlTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_CanEvalCtrlTypeInfoDownCast interface {
     ToAst_CanEvalCtrlTypeInfo() *Ast_CanEvalCtrlTypeInfo
 }
@@ -3396,6 +3540,22 @@ func Ast_NilableTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_NilableTypeInfo).FP
+}
+      
+func Ast_NilableTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_NilableTypeInfoDownCast).ToAst_NilableTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_NilableTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_NilableTypeInfoDownCast).ToAst_NilableTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_NilableTypeInfoDownCast interface {
     ToAst_NilableTypeInfo() *Ast_NilableTypeInfo
@@ -3675,6 +3835,22 @@ func Ast_AliasTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_AliasTypeInfo).FP
 }
+      
+func Ast_AliasTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AliasTypeInfoDownCast).ToAst_AliasTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_AliasTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AliasTypeInfoDownCast).ToAst_AliasTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_AliasTypeInfoDownCast interface {
     ToAst_AliasTypeInfo() *Ast_AliasTypeInfo
 }
@@ -3927,6 +4103,22 @@ func Ast_NilTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_NilTypeInfo).FP
 }
+      
+func Ast_NilTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_NilTypeInfoDownCast).ToAst_NilTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_NilTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_NilTypeInfoDownCast).ToAst_NilTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_NilTypeInfoDownCast interface {
     ToAst_NilTypeInfo() *Ast_NilTypeInfo
 }
@@ -4005,6 +4197,22 @@ func Ast_AccessSymbolInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_AccessSymbolInfo).FP
+}
+      
+func Ast_AccessSymbolInfo_toSlice_Ast_SymbolInfo(slice []LnsAny) []*Ast_SymbolInfo {
+   ret := make([]*Ast_SymbolInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AccessSymbolInfoDownCast).ToAst_AccessSymbolInfo().Ast_SymbolInfo
+   }
+   return ret
+}
+      
+func Ast_AccessSymbolInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AccessSymbolInfoDownCast).ToAst_AccessSymbolInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_AccessSymbolInfoDownCast interface {
     ToAst_AccessSymbolInfo() *Ast_AccessSymbolInfo
@@ -4219,6 +4427,22 @@ func Ast_AnonymousSymbolInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_AnonymousSymbolInfo).FP
+}
+      
+func Ast_AnonymousSymbolInfo_toSlice_Ast_SymbolInfo(slice []LnsAny) []*Ast_SymbolInfo {
+   ret := make([]*Ast_SymbolInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AnonymousSymbolInfoDownCast).ToAst_AnonymousSymbolInfo().Ast_SymbolInfo
+   }
+   return ret
+}
+      
+func Ast_AnonymousSymbolInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AnonymousSymbolInfoDownCast).ToAst_AnonymousSymbolInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_AnonymousSymbolInfoDownCast interface {
     ToAst_AnonymousSymbolInfo() *Ast_AnonymousSymbolInfo
@@ -4467,6 +4691,22 @@ func Ast_AlternateTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_AlternateTypeInfo).FP
 }
+      
+func Ast_AlternateTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AlternateTypeInfoDownCast).ToAst_AlternateTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_AlternateTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AlternateTypeInfoDownCast).ToAst_AlternateTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_AlternateTypeInfoDownCast interface {
     ToAst_AlternateTypeInfo() *Ast_AlternateTypeInfo
 }
@@ -4597,6 +4837,22 @@ func Ast_BoxTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_BoxTypeInfo).FP
+}
+      
+func Ast_BoxTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_BoxTypeInfoDownCast).ToAst_BoxTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_BoxTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_BoxTypeInfoDownCast).ToAst_BoxTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_BoxTypeInfoDownCast interface {
     ToAst_BoxTypeInfo() *Ast_BoxTypeInfo
@@ -4763,7 +5019,7 @@ func (self *Ast_BoxTypeInfo) InitAst_BoxTypeInfo(_env *LnsEnv, processInfo *Ast_
     self.InitAst_TypeInfo(_env, scope, processInfo)
     self.boxingType = boxingType
     self.typeId = processInfo.FP.newId(_env, &self.Ast_TypeInfo)
-    self.itemTypeInfoList = NewLnsList([]LnsAny{Ast_TypeInfo2Stem(boxingType)})
+    self.itemTypeInfoList = NewLnsList(Lns_2DDD(boxingType))
     self.accessMode = accessMode
     self.nilableTypeInfo = NewAst_NilableTypeInfo(_env, processInfo, &self.Ast_TypeInfo)
     self.imutType = Ast_headTypeInfo
@@ -4848,6 +5104,22 @@ func Ast_GenericTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_GenericTypeInfo).FP
+}
+      
+func Ast_GenericTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_GenericTypeInfoDownCast).ToAst_GenericTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_GenericTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_GenericTypeInfoDownCast).ToAst_GenericTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_GenericTypeInfoDownCast interface {
     ToAst_GenericTypeInfo() *Ast_GenericTypeInfo
@@ -5135,6 +5407,22 @@ func Ast_ModuleTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_ModuleTypeInfo).FP
 }
+      
+func Ast_ModuleTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_ModuleTypeInfoDownCast).ToAst_ModuleTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_ModuleTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_ModuleTypeInfoDownCast).ToAst_ModuleTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_ModuleTypeInfoDownCast interface {
     ToAst_ModuleTypeInfo() *Ast_ModuleTypeInfo
 }
@@ -5311,6 +5599,22 @@ func Ast_EnumTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_EnumTypeInfo).FP
 }
+      
+func Ast_EnumTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_EnumTypeInfoDownCast).ToAst_EnumTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_EnumTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_EnumTypeInfoDownCast).ToAst_EnumTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_EnumTypeInfoDownCast interface {
     ToAst_EnumTypeInfo() *Ast_EnumTypeInfo
 }
@@ -5445,6 +5749,22 @@ func Ast_AlgeTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_AlgeTypeInfo).FP
+}
+      
+func Ast_AlgeTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AlgeTypeInfoDownCast).ToAst_AlgeTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_AlgeTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AlgeTypeInfoDownCast).ToAst_AlgeTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_AlgeTypeInfoDownCast interface {
     ToAst_AlgeTypeInfo() *Ast_AlgeTypeInfo
@@ -5629,6 +5949,22 @@ func Ast_TupleTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_TupleTypeInfo).FP
 }
+      
+func Ast_TupleTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_TupleTypeInfoDownCast).ToAst_TupleTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_TupleTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_TupleTypeInfoDownCast).ToAst_TupleTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_TupleTypeInfoDownCast interface {
     ToAst_TupleTypeInfo() *Ast_TupleTypeInfo
 }
@@ -5772,6 +6108,22 @@ func Ast_NormalTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_NormalTypeInfo).FP
+}
+      
+func Ast_NormalTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_NormalTypeInfoDownCast).ToAst_NormalTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_NormalTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_NormalTypeInfoDownCast).ToAst_NormalTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_NormalTypeInfoDownCast interface {
     ToAst_NormalTypeInfo() *Ast_NormalTypeInfo
@@ -5994,6 +6346,22 @@ func Ast_DDDTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_DDDTypeInfo).FP
 }
+      
+func Ast_DDDTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_DDDTypeInfoDownCast).ToAst_DDDTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_DDDTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_DDDTypeInfoDownCast).ToAst_DDDTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_DDDTypeInfoDownCast interface {
     ToAst_DDDTypeInfo() *Ast_DDDTypeInfo
 }
@@ -6029,7 +6397,7 @@ func (self *Ast_DDDTypeInfo) InitAst_DDDTypeInfo(_env *LnsEnv, processInfo *Ast_
     self.typeId = processInfo.FP.newId(_env, &self.Ast_TypeInfo)
     self.typeInfo = typeInfo
     self.externalFlag = externalFlag
-    self.itemTypeInfoList = NewLnsList([]LnsAny{Ast_TypeInfo2Stem(self.typeInfo)})
+    self.itemTypeInfoList = NewLnsList(Lns_2DDD(self.typeInfo))
     var extOrgType *Ast_DDDTypeInfo
     if extOrgDDType != nil{
         extOrgDDType_3296 := extOrgDDType.(*Ast_DDDTypeInfo)
@@ -6168,6 +6536,22 @@ func Ast_AbbrTypeInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Ast_AbbrTypeInfo).FP
 }
+      
+func Ast_AbbrTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AbbrTypeInfoDownCast).ToAst_AbbrTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_AbbrTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AbbrTypeInfoDownCast).ToAst_AbbrTypeInfo().FP.(T)
+   }
+   return ret
+}
 type Ast_AbbrTypeInfoDownCast interface {
     ToAst_AbbrTypeInfo() *Ast_AbbrTypeInfo
 }
@@ -6273,6 +6657,22 @@ func Ast_ExtTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_ExtTypeInfo).FP
+}
+      
+func Ast_ExtTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_ExtTypeInfoDownCast).ToAst_ExtTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_ExtTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_ExtTypeInfoDownCast).ToAst_ExtTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_ExtTypeInfoDownCast interface {
     ToAst_ExtTypeInfo() *Ast_ExtTypeInfo
@@ -6534,6 +6934,22 @@ func Ast_AndExpTypeInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Ast_AndExpTypeInfo).FP
+}
+      
+func Ast_AndExpTypeInfo_toSlice_Ast_TypeInfo(slice []LnsAny) []*Ast_TypeInfo {
+   ret := make([]*Ast_TypeInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Ast_AndExpTypeInfoDownCast).ToAst_AndExpTypeInfo().Ast_TypeInfo
+   }
+   return ret
+}
+      
+func Ast_AndExpTypeInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Ast_AndExpTypeInfoDownCast).ToAst_AndExpTypeInfo().FP.(T)
+   }
+   return ret
 }
 type Ast_AndExpTypeInfoDownCast interface {
     ToAst_AndExpTypeInfo() *Ast_AndExpTypeInfo
@@ -6964,10 +7380,10 @@ func Lns_Ast_init(_env *LnsEnv) {
     Ast_builtinTypeChar = Ast_NormalTypeInfo_createBuiltin_42_(_env, "char", "__char", Ast_TypeInfoKind__Prim, nil, nil)
     Ast_builtinTypeMapping = Ast_NormalTypeInfo_createBuiltin_42_(_env, "Mapping", "Mapping", Ast_TypeInfoKind__IF, nil, nil)
     Ast_builtinTypeRunner = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__Runner", "__Runner", Ast_TypeInfoKind__IF, nil, nil)
-    Ast_builtinTypeProcessor = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__Processor", "__Processor", Ast_TypeInfoKind__IF, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeRunner)}))
+    Ast_builtinTypeProcessor = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__Processor", "__Processor", Ast_TypeInfoKind__IF, nil, NewLnsList(Lns_2DDD(Ast_builtinTypeRunner)))
     Ast_builtinTypeAsyncItem = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__AsyncItem", "__AsyncItem", Ast_TypeInfoKind__IF, nil, nil)
     Ast_builtinTypeAbsImmut = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__absimmut", "__absimmut", Ast_TypeInfoKind__IF, nil, nil)
-    Ast_builtinTypeString = Ast_NormalTypeInfo_createBuiltin_42_(_env, "String", "str", Ast_TypeInfoKind__Class, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeMapping)}))
+    Ast_builtinTypeString = Ast_NormalTypeInfo_createBuiltin_42_(_env, "String", "str", Ast_TypeInfoKind__Class, nil, NewLnsList(Lns_2DDD(Ast_builtinTypeMapping)))
     Ast_builtinTypeMap = Ast_NormalTypeInfo_createBuiltin_42_(_env, "Map", "Map", Ast_TypeInfoKind__Map, nil, nil)
     Ast_builtinTypeMap_ = Ast_NormalTypeInfo_createBuiltin_42_(_env, "_Map", "_Map", Ast_TypeInfoKind__Map, nil, nil)
     Ast_builtinTypeMap__ = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__Map", "__Map", Ast_TypeInfoKind__Map, nil, nil)
@@ -6993,7 +7409,7 @@ func Lns_Ast_init(_env *LnsEnv) {
         Ast_registBuiltin_80_(_env, "Nilable", "Nilable", Ast_TypeInfoKind__Box, &work.Ast_TypeInfo, &work.Ast_TypeInfo, Ast_headTypeInfo, boxRootScope)
         Ast_builtinTypeBox = work
     }
-    Ast_builtinTypeLnsLoad = &Ast_rootProcessInfo.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Func, Ast_headTypeInfoMut, Ast_headTypeInfoMut.FP, false, true, true, Ast_AccessMode__Pub, "_lnsLoad", Ast_Async__Async, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeString), Ast_TypeInfo2Stem(Ast_builtinTypeString)}), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeStem)}), Ast_MutMode__IMut).Ast_TypeInfo
+    Ast_builtinTypeLnsLoad = &Ast_rootProcessInfo.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Func, Ast_headTypeInfoMut, Ast_headTypeInfoMut.FP, false, true, true, Ast_AccessMode__Pub, "_lnsLoad", Ast_Async__Async, nil, NewLnsList(Lns_2DDD(Ast_builtinTypeString, Ast_builtinTypeString)), NewLnsList(Lns_2DDD(Ast_builtinTypeStem)), Ast_MutMode__IMut).Ast_TypeInfo
     Ast_builtinTypeDDD = Ast_registBuiltin_80_(_env, "DDD", "...", Ast_TypeInfoKind__DDD, &Ast_rootProcessInfo.FP.CreateDDD(_env, Ast_builtinTypeStem_, true, false).Ast_TypeInfo, nil, Ast_headTypeInfo, nil)
     Ast_builtinTypeForm = Ast_NormalTypeInfo_createBuiltin_42_(_env, "Form", "form", Ast_TypeInfoKind__Form, Ast_builtinTypeDDD, nil)
     Ast_immutableTypeSetWork.Add(Ast_builtinTypeForm)
@@ -7351,7 +7767,7 @@ func (self *Ast_ProcessInfo) CreateMap_(_env *LnsEnv, canDealGenInherit bool,acc
             baseType = Ast_builtinTypeMap__
         }
         var typeInfo *Ast_NormalTypeInfo
-        typeInfo = NewAst_NormalTypeInfo(_env, self, true, false, nil, Ast_builtinTypeMap, nil, false, false, false, Ast_AccessMode__Pub, baseType.FP.Get_rawTxt(_env), self.FP.Get_dummyParentType(_env), self.FP.Get_dummyParentType(_env).FP, Ast_TypeInfoKind__Map, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(keyTypeInfo), Ast_TypeInfo2Stem(valTypeInfo)}), nil, nil, workMutMode, nil, Ast_Async__Async)
+        typeInfo = NewAst_NormalTypeInfo(_env, self, true, false, nil, Ast_builtinTypeMap, nil, false, false, false, Ast_AccessMode__Pub, baseType.FP.Get_rawTxt(_env), self.FP.Get_dummyParentType(_env), self.FP.Get_dummyParentType(_env).FP, Ast_TypeInfoKind__Map, NewLnsList(Lns_2DDD(keyTypeInfo, valTypeInfo)), nil, nil, workMutMode, nil, Ast_Async__Async)
         if Lns_op_not(canDealGenInherit){
             typeInfo.FP.set_canDealGenInherit(_env, false)
         }
@@ -7603,15 +8019,15 @@ func (self *Ast_ProcessInfo) CreateEnum(_env *LnsEnv, scope *Ast_Scope,parentInf
     info = NewAst_EnumTypeInfo(_env, self, scope, externalFlag, accessMode, enumName, parentInfo, typeDataAccessor, valTypeInfo)
     self.FP.setupImut(_env, &info.Ast_TypeInfo)
     var getEnumName *Ast_NormalTypeInfo
-    getEnumName = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Method, &info.Ast_TypeInfo, info.FP, true, externalFlag, false, Ast_AccessMode__Pub, "get__txt", Ast_Async__Async, nil, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeString)}), Ast_MutMode__IMut)
+    getEnumName = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Method, &info.Ast_TypeInfo, info.FP, true, externalFlag, false, Ast_AccessMode__Pub, "get__txt", Ast_Async__Async, nil, nil, NewLnsList(Lns_2DDD(Ast_builtinTypeString)), Ast_MutMode__IMut)
     scope.FP.AddMethod(_env, self, nil, &getEnumName.Ast_TypeInfo, Ast_AccessMode__Pub, false)
     var fromVal *Ast_NormalTypeInfo
-    fromVal = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Func, &info.Ast_TypeInfo, info.FP, true, externalFlag, true, Ast_AccessMode__Pub, "_from", Ast_Async__Async, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(self.FP.CreateModifier(_env, valTypeInfo, Ast_MutMode__IMut))}), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(info.FP.Get_nilableTypeInfo(_env))}), Ast_MutMode__IMut)
+    fromVal = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Func, &info.Ast_TypeInfo, info.FP, true, externalFlag, true, Ast_AccessMode__Pub, "_from", Ast_Async__Async, nil, NewLnsList(Lns_2DDD(self.FP.CreateModifier(_env, valTypeInfo, Ast_MutMode__IMut))), NewLnsList(Lns_2DDD(info.FP.Get_nilableTypeInfo(_env))), Ast_MutMode__IMut)
     scope.FP.AddMethod(_env, self, nil, &fromVal.Ast_TypeInfo, Ast_AccessMode__Pub, true)
     var allListType *Ast_TypeInfo
-    allListType = self.FP.CreateList_(_env, true, Ast_AccessMode__Pub, &info.Ast_TypeInfo, NewLnsList([]LnsAny{Ast_EnumTypeInfo2Stem(info)}), Ast_MutMode__IMut)
+    allListType = self.FP.CreateList_(_env, true, Ast_AccessMode__Pub, &info.Ast_TypeInfo, NewLnsList(Lns_2DDD(&info.Ast_TypeInfo)), Ast_MutMode__IMut)
     var allList *Ast_NormalTypeInfo
-    allList = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Func, &info.Ast_TypeInfo, info.FP, true, externalFlag, true, Ast_AccessMode__Pub, "get__allList", Ast_Async__Async, nil, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(self.FP.CreateModifier(_env, allListType, Ast_MutMode__IMut))}), Ast_MutMode__IMut)
+    allList = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Func, &info.Ast_TypeInfo, info.FP, true, externalFlag, true, Ast_AccessMode__Pub, "get__allList", Ast_Async__Async, nil, nil, NewLnsList(Lns_2DDD(self.FP.CreateModifier(_env, allListType, Ast_MutMode__IMut))), Ast_MutMode__IMut)
     scope.FP.AddMethod(_env, self, nil, &allList.Ast_TypeInfo, Ast_AccessMode__Pub, true)
     return info
 }
@@ -7624,7 +8040,7 @@ func (self *Ast_ProcessInfo) CreateAlge(_env *LnsEnv, scope *Ast_Scope,parentInf
     info = Ast_AlgeTypeInfo_create_24_(_env, self, scope, parentInfo, typeDataAccessor, externalFlag, accessMode, algeName, itemTypeInfoList)
     self.FP.setupImut(_env, &info.Ast_TypeInfo)
     var getAlgeName *Ast_NormalTypeInfo
-    getAlgeName = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Method, &info.Ast_TypeInfo, info.FP, true, externalFlag, false, Ast_AccessMode__Pub, "get__txt", Ast_Async__Async, nil, nil, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeString)}), Ast_MutMode__IMut)
+    getAlgeName = self.FP.CreateFuncAsync(_env, false, true, nil, Ast_TypeInfoKind__Method, &info.Ast_TypeInfo, info.FP, true, externalFlag, false, Ast_AccessMode__Pub, "get__txt", Ast_Async__Async, nil, nil, NewLnsList(Lns_2DDD(Ast_builtinTypeString)), Ast_MutMode__IMut)
     scope.FP.AddMethod(_env, self, nil, &getAlgeName.Ast_TypeInfo, Ast_AccessMode__Pub, false)
     return info
 }
@@ -8914,11 +9330,11 @@ func Ast_TypeInfo_getCommonTypeCombo(_env *LnsEnv, processInfo *Ast_ProcessInfo,
             return nil
         }
         if _switch0 := type1.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__List {
-            return Ast_getType(_env, processInfo.FP.CreateList_(_env, type1.FP.Get_canDealGenInherit(_env), Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))}), mutMode))
+            return Ast_getType(_env, processInfo.FP.CreateList_(_env, type1.FP.Get_canDealGenInherit(_env), Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList(Lns_2DDD(Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))), mutMode))
         } else if _switch0 == Ast_TypeInfoKind__Array {
-            return Ast_getType(_env, processInfo.FP.CreateArray(_env, Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))}), mutMode))
+            return Ast_getType(_env, processInfo.FP.CreateArray(_env, Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList(Lns_2DDD(Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))), mutMode))
         } else if _switch0 == Ast_TypeInfoKind__Set {
-            return Ast_getType(_env, processInfo.FP.CreateSet_(_env, type1.FP.Get_canDealGenInherit(_env), Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))}), mutMode))
+            return Ast_getType(_env, processInfo.FP.CreateSet_(_env, type1.FP.Get_canDealGenInherit(_env), Ast_AccessMode__Local, Ast_headTypeInfo, NewLnsList(Lns_2DDD(Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type))), mutMode))
         } else if _switch0 == Ast_TypeInfoKind__Map {
             return Ast_getType(_env, processInfo.FP.CreateMap_(_env, type1.FP.Get_canDealGenInherit(_env), Ast_AccessMode__Local, Ast_headTypeInfo, Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type), Ast_getCommon(_env, type1.FP.Get_itemTypeInfoList(_env).GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), type2.FP.Get_itemTypeInfoList(_env).GetAt(2).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), alt2type), mutMode))
         }
@@ -11572,8 +11988,8 @@ func Ast_NormalTypeInfo_createBuiltin_42_(_env *LnsEnv, idName string,typeTxt st
             __exp := typeDDD
             if !Lns_IsNil( __exp ) {
                 _exp := __exp.(*Ast_TypeInfo)
-                argTypeList = NewLnsList([]LnsAny{Ast_TypeInfo2Stem(_exp)})
-                retTypeList = NewLnsList([]LnsAny{Ast_TypeInfo2Stem(_exp)})
+                argTypeList = NewLnsList(Lns_2DDD(_exp))
+                retTypeList = NewLnsList(Lns_2DDD(_exp))
             }
         }
     }
@@ -12210,9 +12626,9 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
             _env.SetStackVal( token.Txt == "[") ||
             _env.SetStackVal( token.Txt == "[@") ).(bool){
             if token.Txt == "["{
-                typeInfo = self.processInfo.FP.CreateList_(_env, false, self.accessMode, self.parentInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), Ast_MutMode__Mut)
+                typeInfo = self.processInfo.FP.CreateList_(_env, false, self.accessMode, self.parentInfo, NewLnsList(Lns_2DDD(typeInfo)), Ast_MutMode__Mut)
             } else { 
-                typeInfo = self.processInfo.FP.CreateArray(_env, self.accessMode, self.parentInfo, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(typeInfo)}), Ast_MutMode__Mut)
+                typeInfo = self.processInfo.FP.CreateArray(_env, self.accessMode, self.parentInfo, NewLnsList(Lns_2DDD(typeInfo)), Ast_MutMode__Mut)
             }
             token = self.parser.GetTokenNoErr(_env, nil)
             if token.Txt != "]"{

@@ -162,7 +162,7 @@ func (self *GoMod_ModInfo) getGoModPath(_env *LnsEnv, ver string,mod string) *Ln
             pathList.Insert(Util_pathJoin(_env, gopath, _env.GetVM().String_format("src/%s", []LnsAny{mod})))
             var gomod string
             gomod = ""
-            for _, _aChar := range( NewLnsList(_env.GetVM().String_byte(mod,1, len(mod))).Items ) {
+            for _, _aChar := range( NewLnsList(Lns_2DDD(_env.GetVM().String_byte(mod,1, len(mod)))).Items ) {
                 aChar := _aChar
                 if aChar != nil{
                     aChar_107 := aChar.(LnsInt)
@@ -236,7 +236,7 @@ func (self *GoMod_ModInfo) getLocalModulePathList(_env *LnsEnv, path string) *Ln
                     pathList.Insert(Util_pathJoin(_env, gopath, _env.GetVM().String_format("src/%s", []LnsAny{path})))
                     var gomod string
                     gomod = ""
-                    for _, _aChar := range( NewLnsList(_env.GetVM().String_byte(mod,1, len(mod))).Items ) {
+                    for _, _aChar := range( NewLnsList(Lns_2DDD(_env.GetVM().String_byte(mod,1, len(mod)))).Items ) {
                         aChar := _aChar
                         if aChar != nil{
                             aChar_137 := aChar.(LnsInt)

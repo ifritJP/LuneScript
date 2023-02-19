@@ -587,3 +587,8 @@ class Sub extend Hoge { // error
       val.func();
    }
 }
+{
+   class Hoge2<T> {
+      let list:&__List<T> {pub}; // error
+   }
+}

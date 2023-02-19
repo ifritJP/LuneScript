@@ -1147,6 +1147,14 @@ func dumpNode_dumpFilter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*dumpNode_dumpFilter).FP
 }
+      
+func dumpNode_dumpFilter_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
+   ret := make([]*Nodes_Filter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(dumpNode_dumpFilterDownCast).TodumpNode_dumpFilter().Nodes_Filter
+   }
+   return ret
+}
 type dumpNode_dumpFilterDownCast interface {
     TodumpNode_dumpFilter() *dumpNode_dumpFilter
 }

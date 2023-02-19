@@ -948,6 +948,14 @@ func convPython_convFilter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*convPython_convFilter).FP
 }
+      
+func convPython_convFilter_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
+   ret := make([]*Nodes_Filter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(convPython_convFilterDownCast).ToconvPython_convFilter().Nodes_Filter
+   }
+   return ret
+}
 type convPython_convFilterDownCast interface {
     ToconvPython_convFilter() *convPython_convFilter
 }
@@ -1033,7 +1041,7 @@ func (self *convPython_convFilter) InitconvPython_convFilter(_env *LnsEnv, enabl
     var modDir string
     modDir = self.moduleTypeInfo.FP.GetParentFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), false)
     self.modDir = convPython_convExp0_573(Lns_2DDD(_env.GetVM().String_gsub(Str_replace(_env, modDir, "@", ""),"%.$", "")))
-    self.noneNode = Nodes_NoneNode_create(_env, self.nodeManager, Parser_noneToken.Pos, false, false, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeNone)}))
+    self.noneNode = Nodes_NoneNode_create(_env, self.nodeManager, Parser_noneToken.Pos, false, false, NewLnsList(Lns_2DDD(Ast_builtinTypeNone)))
     self.builtin2code = NewLnsMap( map[LnsAny]LnsAny{self.builtinFuncs.G__lns_runmode_Sync_sym:_env.GetVM().String_format("%d", []LnsAny{0}),self.builtinFuncs.G__lns_runmode_Queue_sym:_env.GetVM().String_format("%d", []LnsAny{1}),self.builtinFuncs.G__lns_runmode_Skip_sym:_env.GetVM().String_format("%d", []LnsAny{2}),self.builtinFuncs.G__lns_capability_async_sym:"true",self.builtinFuncs.Io_stdout_sym:"sys.stdout",})
 }
 
@@ -1266,6 +1274,30 @@ func convPython_ConvRunner2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*convPython_ConvRunner).FP
+}
+      
+func convPython_ConvRunner_toSlice_convPython_convFilter(slice []LnsAny) []*convPython_convFilter {
+   ret := make([]*convPython_convFilter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(convPython_ConvRunnerDownCast).ToconvPython_ConvRunner().convPython_convFilter
+   }
+   return ret
+}
+      
+func convPython_ConvRunner_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
+   ret := make([]*Nodes_Filter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(convPython_ConvRunnerDownCast).ToconvPython_ConvRunner().Nodes_Filter
+   }
+   return ret
+}
+      
+func convPython_ConvRunner_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(convPython_ConvRunnerDownCast).ToconvPython_ConvRunner().FP.(T)
+   }
+   return ret
 }
 type convPython_ConvRunnerDownCast interface {
     ToconvPython_ConvRunner() *convPython_ConvRunner
@@ -2042,7 +2074,7 @@ func (self *convPython_convFilter) processConvExp(_env *LnsEnv, node *Nodes_Node
                                 srcTxt = _env.GetVM().String_format("%s.(%s)", []LnsAny{valTxt, self.FP.type2gotype(_env, castNode.FP.Get_exp(_env).FP.Get_expType(_env))})
                             }
                             var statNode *Nodes_ConvStatNode
-                            statNode = Nodes_ConvStatNode_create(_env, self.nodeManager, exp.FP.Get_pos(_env), false, false, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(exp.FP.Get_expType(_env))}), srcTxt)
+                            statNode = Nodes_ConvStatNode_create(_env, self.nodeManager, exp.FP.Get_pos(_env), false, false, NewLnsList(Lns_2DDD(exp.FP.Get_expType(_env))), srcTxt)
                             self.FP.outputImplicitCast(_env, castNode.FP.Get_castType(_env), &statNode.Nodes_Node, castNode)
                             wrote = true
                         }
@@ -3627,7 +3659,7 @@ func (self *convPython_convFilter) outputLetVar(_env *LnsEnv, node *Nodes_DeclVa
                     symbolInfo = node.FP.Get_symbolInfoList(_env).GetAt(1).(Ast_SymbolInfoDownCast).ToAst_SymbolInfo()
                     self.FP.WriteRaw(_env, symbolInfo.FP.Get_name(_env))
                     self.FP.WriteRaw(_env, " = ")
-                    self.FP.processSetFromExpList(_env, self.FP.getConvExpName(_env, &node.Nodes_Node, expList), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(symbolInfo.FP.Get_typeInfo(_env))}), expList, false)
+                    self.FP.processSetFromExpList(_env, self.FP.getConvExpName(_env, &node.Nodes_Node, expList), NewLnsList(Lns_2DDD(symbolInfo.FP.Get_typeInfo(_env))), expList, false)
                     self.FP.Writeln(_env, "")
                 } else { 
                     convPython_declVar(_env)

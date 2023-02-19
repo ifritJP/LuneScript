@@ -657,7 +657,7 @@ func Front_exec(_env *LnsEnv, args *LnsList) {
 // 1937: decl @lune.@base.@front.setFront
 func Front_setFront(_env *LnsEnv, bindModuleList *LnsList) {
     var option *Option_Option
-    option = Option_createDefaultOption(_env, NewLnsList([]LnsAny{"dummy.lns"}), nil)
+    option = Option_createDefaultOption(_env, NewLnsList(Lns_2DDD("dummy.lns")), nil)
     NewFront_Front(_env, option, bindModuleList)
 }
 
@@ -2318,6 +2318,14 @@ func Front_Front2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Front_Front).FP
 }
+      
+func Front_Front_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Front_FrontDownCast).ToFront_Front().FP.(T)
+   }
+   return ret
+}
 type Front_FrontDownCast interface {
     ToFront_Front() *Front_Front
 }
@@ -2411,6 +2419,14 @@ func front_DependMetaInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*front_DependMetaInfo).FP
 }
+      
+func front_DependMetaInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(front_DependMetaInfoDownCast).Tofront_DependMetaInfo().FP.(T)
+   }
+   return ret
+}
 type front_DependMetaInfoDownCast interface {
     Tofront_DependMetaInfo() *front_DependMetaInfo
 }
@@ -2495,6 +2511,14 @@ func front_MetaForBuildId2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*front_MetaForBuildId).FP
+}
+      
+func front_MetaForBuildId_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(front_MetaForBuildIdDownCast).Tofront_MetaForBuildId().FP.(T)
+   }
+   return ret
 }
 type front_MetaForBuildIdDownCast interface {
     Tofront_MetaForBuildId() *front_MetaForBuildId

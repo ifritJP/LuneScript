@@ -304,6 +304,14 @@ func Writer_XML2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Writer_XML).FP
 }
+      
+func Writer_XML_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Writer_XMLDownCast).ToWriter_XML().FP.(T)
+   }
+   return ret
+}
 type Writer_XMLDownCast interface {
     ToWriter_XML() *Writer_XML
 }
@@ -409,6 +417,14 @@ func Writer_JSON2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Writer_JSON).FP
+}
+      
+func Writer_JSON_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Writer_JSONDownCast).ToWriter_JSON().FP.(T)
+   }
+   return ret
 }
 type Writer_JSONDownCast interface {
     ToWriter_JSON() *Writer_JSON

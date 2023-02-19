@@ -1053,7 +1053,7 @@ func Nodes_getBreakKindForStmtList_47_(_env *LnsEnv, checkMode LnsInt,stmtList *
 // 2390: decl @lune.@base.@Nodes.Node.getSymbolInfo.processExpNode
 func Nodes_Node_getSymbolInfo__processExpNode_0_(_env *LnsEnv, node *Nodes_Node) *LnsList {
     if _switch0 := (node.FP.Get_kind(_env)); _switch0 == Nodes_NodeKind_get_ExpRef(_env) {
-        return NewLnsList([]LnsAny{Ast_SymbolInfo2Stem((Lns_unwrap( (Nodes_ExpRefNodeDownCastF(node.FP))).(*Nodes_ExpRefNode)).FP.Get_symbolInfo(_env))})
+        return NewLnsList(Lns_2DDD((Lns_unwrap( (Nodes_ExpRefNodeDownCastF(node.FP))).(*Nodes_ExpRefNode)).FP.Get_symbolInfo(_env)))
     } else if _switch0 == Nodes_NodeKind_get_RefField(_env) {
         {
             _refFieldNode := Nodes_RefFieldNodeDownCastF(node.FP)
@@ -1066,7 +1066,7 @@ func Nodes_Node_getSymbolInfo__processExpNode_0_(_env *LnsEnv, node *Nodes_Node)
                     __exp := refFieldNode.FP.Get_symbolInfo(_env)
                     if !Lns_IsNil( __exp ) {
                         _exp := __exp.(*Ast_SymbolInfo)
-                        return NewLnsList([]LnsAny{Ast_SymbolInfo2Stem(_exp)})
+                        return NewLnsList(Lns_2DDD(_exp))
                     }
                 }
             }
@@ -1466,6 +1466,14 @@ func Nodes_SimpleModuleInfoManager2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_SimpleModuleInfoManager).FP
 }
+      
+func Nodes_SimpleModuleInfoManager_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Nodes_SimpleModuleInfoManagerDownCast).ToNodes_SimpleModuleInfoManager().FP.(T)
+   }
+   return ret
+}
 type Nodes_SimpleModuleInfoManagerDownCast interface {
     ToNodes_SimpleModuleInfoManager() *Nodes_SimpleModuleInfoManager
 }
@@ -1798,6 +1806,14 @@ func Nodes_ExpNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpNode).FP
+}
+      
+func Nodes_ExpNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpNodeDownCast).ToNodes_ExpNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpNodeDownCast interface {
     ToNodes_ExpNode() *Nodes_ExpNode
@@ -2149,6 +2165,14 @@ func Nodes_NoneNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_NoneNode).FP
 }
+      
+func Nodes_NoneNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_NoneNodeDownCast).ToNodes_NoneNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_NoneNodeDownCast interface {
     ToNodes_NoneNode() *Nodes_NoneNode
 }
@@ -2221,6 +2245,14 @@ func Nodes_ShebangNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ShebangNode).FP
+}
+      
+func Nodes_ShebangNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ShebangNodeDownCast).ToNodes_ShebangNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ShebangNodeDownCast interface {
     ToNodes_ShebangNode() *Nodes_ShebangNode
@@ -2297,6 +2329,14 @@ func Nodes_ConvStatNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ConvStatNode).FP
 }
+      
+func Nodes_ConvStatNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ConvStatNodeDownCast).ToNodes_ConvStatNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ConvStatNodeDownCast interface {
     ToNodes_ConvStatNode() *Nodes_ConvStatNode
 }
@@ -2372,6 +2412,14 @@ func Nodes_BlankLineNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_BlankLineNode).FP
 }
+      
+func Nodes_BlankLineNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_BlankLineNodeDownCast).ToNodes_BlankLineNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_BlankLineNodeDownCast interface {
     ToNodes_BlankLineNode() *Nodes_BlankLineNode
 }
@@ -2446,6 +2494,14 @@ func Nodes_SubfileNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_SubfileNode).FP
+}
+      
+func Nodes_SubfileNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_SubfileNodeDownCast).ToNodes_SubfileNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_SubfileNodeDownCast interface {
     ToNodes_SubfileNode() *Nodes_SubfileNode
@@ -2584,6 +2640,14 @@ func Nodes_ImportNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ImportNode).FP
+}
+      
+func Nodes_ImportNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ImportNodeDownCast).ToNodes_ImportNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ImportNodeDownCast interface {
     ToNodes_ImportNode() *Nodes_ImportNode
@@ -2814,6 +2878,14 @@ func Nodes_RootNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_RootNode).FP
 }
+      
+func Nodes_RootNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_RootNodeDownCast).ToNodes_RootNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_RootNodeDownCast interface {
     ToNodes_RootNode() *Nodes_RootNode
 }
@@ -2921,6 +2993,14 @@ func Nodes_RefTypeNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_RefTypeNode).FP
+}
+      
+func Nodes_RefTypeNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_RefTypeNodeDownCast).ToNodes_RefTypeNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_RefTypeNodeDownCast interface {
     ToNodes_RefTypeNode() *Nodes_RefTypeNode
@@ -3048,6 +3128,14 @@ func Nodes_DeclTupleNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclTupleNode).FP
 }
+      
+func Nodes_DeclTupleNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclTupleNodeDownCast).ToNodes_DeclTupleNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclTupleNodeDownCast interface {
     ToNodes_DeclTupleNode() *Nodes_DeclTupleNode
 }
@@ -3126,6 +3214,14 @@ func Nodes_BlockNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_BlockNode).FP
+}
+      
+func Nodes_BlockNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_BlockNodeDownCast).ToNodes_BlockNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_BlockNodeDownCast interface {
     ToNodes_BlockNode() *Nodes_BlockNode
@@ -3212,6 +3308,14 @@ func Nodes_ScopeNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ScopeNode).FP
 }
+      
+func Nodes_ScopeNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ScopeNodeDownCast).ToNodes_ScopeNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ScopeNodeDownCast interface {
     ToNodes_ScopeNode() *Nodes_ScopeNode
 }
@@ -3296,6 +3400,22 @@ func Nodes_CondRetNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_CondRetNode).FP
+}
+      
+func Nodes_CondRetNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_CondRetNodeDownCast).ToNodes_CondRetNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_CondRetNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_CondRetNodeDownCast).ToNodes_CondRetNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_CondRetNodeDownCast interface {
     ToNodes_CondRetNode() *Nodes_CondRetNode
@@ -3417,6 +3537,22 @@ func Nodes_CondRetListNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_CondRetListNode).FP
+}
+      
+func Nodes_CondRetListNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_CondRetListNodeDownCast).ToNodes_CondRetListNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_CondRetListNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_CondRetListNodeDownCast).ToNodes_CondRetListNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_CondRetListNodeDownCast interface {
     ToNodes_CondRetListNode() *Nodes_CondRetListNode
@@ -3547,6 +3683,14 @@ func Nodes_IfNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_IfNode).FP
 }
+      
+func Nodes_IfNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_IfNodeDownCast).ToNodes_IfNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_IfNodeDownCast interface {
     ToNodes_IfNode() *Nodes_IfNode
 }
@@ -3670,6 +3814,22 @@ func Nodes_ExpListNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpListNode).FP
+}
+      
+func Nodes_ExpListNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpListNodeDownCast).ToNodes_ExpListNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpListNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpListNodeDownCast).ToNodes_ExpListNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpListNodeDownCast interface {
     ToNodes_ExpListNode() *Nodes_ExpListNode
@@ -3806,6 +3966,14 @@ func Nodes_SwitchNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_SwitchNode).FP
 }
+      
+func Nodes_SwitchNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_SwitchNodeDownCast).ToNodes_SwitchNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_SwitchNodeDownCast interface {
     ToNodes_SwitchNode() *Nodes_SwitchNode
 }
@@ -3897,6 +4065,14 @@ func Nodes_WhileNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_WhileNode).FP
 }
+      
+func Nodes_WhileNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_WhileNodeDownCast).ToNodes_WhileNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_WhileNodeDownCast interface {
     ToNodes_WhileNode() *Nodes_WhileNode
 }
@@ -3977,6 +4153,14 @@ func Nodes_RepeatNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_RepeatNode).FP
+}
+      
+func Nodes_RepeatNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_RepeatNodeDownCast).ToNodes_RepeatNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_RepeatNodeDownCast interface {
     ToNodes_RepeatNode() *Nodes_RepeatNode
@@ -4064,6 +4248,14 @@ func Nodes_ForNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ForNode).FP
+}
+      
+func Nodes_ForNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ForNodeDownCast).ToNodes_ForNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ForNodeDownCast interface {
     ToNodes_ForNode() *Nodes_ForNode
@@ -4156,6 +4348,14 @@ func Nodes_ApplyNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ApplyNode).FP
 }
+      
+func Nodes_ApplyNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ApplyNodeDownCast).ToNodes_ApplyNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ApplyNodeDownCast interface {
     ToNodes_ApplyNode() *Nodes_ApplyNode
 }
@@ -4244,6 +4444,14 @@ func Nodes_ForeachNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ForeachNode).FP
+}
+      
+func Nodes_ForeachNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ForeachNodeDownCast).ToNodes_ForeachNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ForeachNodeDownCast interface {
     ToNodes_ForeachNode() *Nodes_ForeachNode
@@ -4338,6 +4546,14 @@ func Nodes_ForsortNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ForsortNode).FP
 }
+      
+func Nodes_ForsortNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ForsortNodeDownCast).ToNodes_ForsortNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ForsortNodeDownCast interface {
     ToNodes_ForsortNode() *Nodes_ForsortNode
 }
@@ -4423,6 +4639,14 @@ func Nodes_ReturnNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ReturnNode).FP
 }
+      
+func Nodes_ReturnNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ReturnNodeDownCast).ToNodes_ReturnNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ReturnNodeDownCast interface {
     ToNodes_ReturnNode() *Nodes_ReturnNode
 }
@@ -4496,6 +4720,14 @@ func Nodes_BreakNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_BreakNode).FP
 }
+      
+func Nodes_BreakNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_BreakNodeDownCast).ToNodes_BreakNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_BreakNodeDownCast interface {
     ToNodes_BreakNode() *Nodes_BreakNode
 }
@@ -4568,6 +4800,14 @@ func Nodes_ProvideNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ProvideNode).FP
+}
+      
+func Nodes_ProvideNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ProvideNodeDownCast).ToNodes_ProvideNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ProvideNodeDownCast interface {
     ToNodes_ProvideNode() *Nodes_ProvideNode
@@ -4647,6 +4887,22 @@ func Nodes_ExpNewNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpNewNode).FP
+}
+      
+func Nodes_ExpNewNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpNewNodeDownCast).ToNodes_ExpNewNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpNewNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpNewNodeDownCast).ToNodes_ExpNewNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpNewNodeDownCast interface {
     ToNodes_ExpNewNode() *Nodes_ExpNewNode
@@ -4730,6 +4986,22 @@ func Nodes_ExpUnwrapNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpUnwrapNode).FP
 }
+      
+func Nodes_ExpUnwrapNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpUnwrapNodeDownCast).ToNodes_ExpUnwrapNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpUnwrapNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpUnwrapNodeDownCast).ToNodes_ExpUnwrapNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpUnwrapNodeDownCast interface {
     ToNodes_ExpUnwrapNode() *Nodes_ExpUnwrapNode
 }
@@ -4807,6 +5079,22 @@ func Nodes_ExpRefNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpRefNode).FP
+}
+      
+func Nodes_ExpRefNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpRefNodeDownCast).ToNodes_ExpRefNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpRefNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpRefNodeDownCast).ToNodes_ExpRefNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpRefNodeDownCast interface {
     ToNodes_ExpRefNode() *Nodes_ExpRefNode
@@ -4891,6 +5179,14 @@ func Nodes_ExpSetValNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpSetValNode).FP
+}
+      
+func Nodes_ExpSetValNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpSetValNodeDownCast).ToNodes_ExpSetValNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpSetValNodeDownCast interface {
     ToNodes_ExpSetValNode() *Nodes_ExpSetValNode
@@ -4981,6 +5277,14 @@ func Nodes_ExpSetItemNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpSetItemNode).FP
 }
+      
+func Nodes_ExpSetItemNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpSetItemNodeDownCast).ToNodes_ExpSetItemNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpSetItemNodeDownCast interface {
     ToNodes_ExpSetItemNode() *Nodes_ExpSetItemNode
 }
@@ -5067,6 +5371,22 @@ func Nodes_ExpOp2Node2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpOp2Node).FP
 }
+      
+func Nodes_ExpOp2Node_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpOp2NodeDownCast).ToNodes_ExpOp2Node().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpOp2Node_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpOp2NodeDownCast).ToNodes_ExpOp2Node().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpOp2NodeDownCast interface {
     ToNodes_ExpOp2Node() *Nodes_ExpOp2Node
 }
@@ -5150,6 +5470,14 @@ func Nodes_UnwrapSetNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_UnwrapSetNode).FP
+}
+      
+func Nodes_UnwrapSetNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_UnwrapSetNodeDownCast).ToNodes_UnwrapSetNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_UnwrapSetNodeDownCast interface {
     ToNodes_UnwrapSetNode() *Nodes_UnwrapSetNode
@@ -5237,6 +5565,14 @@ func Nodes_IfUnwrapNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_IfUnwrapNode).FP
+}
+      
+func Nodes_IfUnwrapNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_IfUnwrapNodeDownCast).ToNodes_IfUnwrapNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_IfUnwrapNodeDownCast interface {
     ToNodes_IfUnwrapNode() *Nodes_IfUnwrapNode
@@ -5368,6 +5704,14 @@ func Nodes_WhenNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_WhenNode).FP
 }
+      
+func Nodes_WhenNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_WhenNodeDownCast).ToNodes_WhenNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_WhenNodeDownCast interface {
     ToNodes_WhenNode() *Nodes_WhenNode
 }
@@ -5455,6 +5799,22 @@ func Nodes_ExpCastNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpCastNode).FP
 }
+      
+func Nodes_ExpCastNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCastNodeDownCast).ToNodes_ExpCastNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpCastNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCastNodeDownCast).ToNodes_ExpCastNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpCastNodeDownCast interface {
     ToNodes_ExpCastNode() *Nodes_ExpCastNode
 }
@@ -5539,6 +5899,22 @@ func Nodes_ExpToDDDNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpToDDDNode).FP
 }
+      
+func Nodes_ExpToDDDNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpToDDDNodeDownCast).ToNodes_ExpToDDDNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpToDDDNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpToDDDNodeDownCast).ToNodes_ExpToDDDNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpToDDDNodeDownCast interface {
     ToNodes_ExpToDDDNode() *Nodes_ExpToDDDNode
 }
@@ -5616,6 +5992,22 @@ func Nodes_ExpSubDDDNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpSubDDDNode).FP
+}
+      
+func Nodes_ExpSubDDDNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpSubDDDNodeDownCast).ToNodes_ExpSubDDDNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpSubDDDNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpSubDDDNodeDownCast).ToNodes_ExpSubDDDNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpSubDDDNodeDownCast interface {
     ToNodes_ExpSubDDDNode() *Nodes_ExpSubDDDNode
@@ -5698,6 +6090,22 @@ func Nodes_ExpOp1Node2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpOp1Node).FP
+}
+      
+func Nodes_ExpOp1Node_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpOp1NodeDownCast).ToNodes_ExpOp1Node().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpOp1Node_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpOp1NodeDownCast).ToNodes_ExpOp1Node().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpOp1NodeDownCast interface {
     ToNodes_ExpOp1Node() *Nodes_ExpOp1Node
@@ -5784,6 +6192,22 @@ func Nodes_ExpRefItemNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpRefItemNode).FP
+}
+      
+func Nodes_ExpRefItemNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpRefItemNodeDownCast).ToNodes_ExpRefItemNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpRefItemNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpRefItemNodeDownCast).ToNodes_ExpRefItemNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpRefItemNodeDownCast interface {
     ToNodes_ExpRefItemNode() *Nodes_ExpRefItemNode
@@ -5873,6 +6297,22 @@ func Nodes_ExpCallNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpCallNode).FP
 }
+      
+func Nodes_ExpCallNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCallNodeDownCast).ToNodes_ExpCallNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpCallNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCallNodeDownCast).ToNodes_ExpCallNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpCallNodeDownCast interface {
     ToNodes_ExpCallNode() *Nodes_ExpCallNode
 }
@@ -5955,6 +6395,22 @@ func Nodes_ExpMRetNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpMRetNode).FP
 }
+      
+func Nodes_ExpMRetNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMRetNodeDownCast).ToNodes_ExpMRetNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpMRetNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMRetNodeDownCast).ToNodes_ExpMRetNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpMRetNodeDownCast interface {
     ToNodes_ExpMRetNode() *Nodes_ExpMRetNode
 }
@@ -6032,6 +6488,22 @@ func Nodes_ExpAccessMRetNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpAccessMRetNode).FP
+}
+      
+func Nodes_ExpAccessMRetNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpAccessMRetNodeDownCast).ToNodes_ExpAccessMRetNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpAccessMRetNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpAccessMRetNodeDownCast).ToNodes_ExpAccessMRetNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpAccessMRetNodeDownCast interface {
     ToNodes_ExpAccessMRetNode() *Nodes_ExpAccessMRetNode
@@ -6111,6 +6583,22 @@ func Nodes_ExpMultiTo1Node2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpMultiTo1Node).FP
 }
+      
+func Nodes_ExpMultiTo1Node_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMultiTo1NodeDownCast).ToNodes_ExpMultiTo1Node().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpMultiTo1Node_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMultiTo1NodeDownCast).ToNodes_ExpMultiTo1Node().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpMultiTo1NodeDownCast interface {
     ToNodes_ExpMultiTo1Node() *Nodes_ExpMultiTo1Node
 }
@@ -6186,6 +6674,22 @@ func Nodes_ExpParenNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpParenNode).FP
+}
+      
+func Nodes_ExpParenNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpParenNodeDownCast).ToNodes_ExpParenNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpParenNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpParenNodeDownCast).ToNodes_ExpParenNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpParenNodeDownCast interface {
     ToNodes_ExpParenNode() *Nodes_ExpParenNode
@@ -6269,6 +6773,14 @@ func Nodes_ExpMacroExpNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpMacroExpNode).FP
 }
+      
+func Nodes_ExpMacroExpNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMacroExpNodeDownCast).ToNodes_ExpMacroExpNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpMacroExpNodeDownCast interface {
     ToNodes_ExpMacroExpNode() *Nodes_ExpMacroExpNode
 }
@@ -6350,6 +6862,14 @@ func Nodes_ExpMacroStatNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpMacroStatNode).FP
 }
+      
+func Nodes_ExpMacroStatNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMacroStatNodeDownCast).ToNodes_ExpMacroStatNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpMacroStatNodeDownCast interface {
     ToNodes_ExpMacroStatNode() *Nodes_ExpMacroStatNode
 }
@@ -6426,6 +6946,14 @@ func Nodes_ExpMacroArgExpNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpMacroArgExpNode).FP
+}
+      
+func Nodes_ExpMacroArgExpNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMacroArgExpNodeDownCast).ToNodes_ExpMacroArgExpNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpMacroArgExpNodeDownCast interface {
     ToNodes_ExpMacroArgExpNode() *Nodes_ExpMacroArgExpNode
@@ -6504,6 +7032,22 @@ func Nodes_StmtExpNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_StmtExpNode).FP
 }
+      
+func Nodes_StmtExpNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_StmtExpNodeDownCast).ToNodes_StmtExpNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_StmtExpNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_StmtExpNodeDownCast).ToNodes_StmtExpNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_StmtExpNodeDownCast interface {
     ToNodes_StmtExpNode() *Nodes_StmtExpNode
 }
@@ -6579,6 +7123,14 @@ func Nodes_ExpMacroStatListNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpMacroStatListNode).FP
+}
+      
+func Nodes_ExpMacroStatListNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpMacroStatListNodeDownCast).ToNodes_ExpMacroStatListNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpMacroStatListNodeDownCast interface {
     ToNodes_ExpMacroStatListNode() *Nodes_ExpMacroStatListNode
@@ -6660,6 +7212,22 @@ func Nodes_ExpOmitEnumNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpOmitEnumNode).FP
+}
+      
+func Nodes_ExpOmitEnumNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpOmitEnumNodeDownCast).ToNodes_ExpOmitEnumNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpOmitEnumNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpOmitEnumNodeDownCast).ToNodes_ExpOmitEnumNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpOmitEnumNodeDownCast interface {
     ToNodes_ExpOmitEnumNode() *Nodes_ExpOmitEnumNode
@@ -6748,6 +7316,22 @@ func Nodes_RefFieldNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_RefFieldNode).FP
+}
+      
+func Nodes_RefFieldNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_RefFieldNodeDownCast).ToNodes_RefFieldNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_RefFieldNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_RefFieldNodeDownCast).ToNodes_RefFieldNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_RefFieldNodeDownCast interface {
     ToNodes_RefFieldNode() *Nodes_RefFieldNode
@@ -6839,6 +7423,22 @@ func Nodes_GetFieldNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_GetFieldNode).FP
 }
+      
+func Nodes_GetFieldNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_GetFieldNodeDownCast).ToNodes_GetFieldNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_GetFieldNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_GetFieldNodeDownCast).ToNodes_GetFieldNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_GetFieldNodeDownCast interface {
     ToNodes_GetFieldNode() *Nodes_GetFieldNode
 }
@@ -6927,6 +7527,22 @@ func Nodes_AliasNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_AliasNode).FP
 }
+      
+func Nodes_AliasNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_AliasNodeDownCast).ToNodes_AliasNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_AliasNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_AliasNodeDownCast).ToNodes_AliasNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_AliasNodeDownCast interface {
     ToNodes_AliasNode() *Nodes_AliasNode
 }
@@ -7006,6 +7622,22 @@ func Nodes_ExpExpandTupleNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpExpandTupleNode).FP
+}
+      
+func Nodes_ExpExpandTupleNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpExpandTupleNodeDownCast).ToNodes_ExpExpandTupleNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpExpandTupleNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpExpandTupleNodeDownCast).ToNodes_ExpExpandTupleNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpExpandTupleNodeDownCast interface {
     ToNodes_ExpExpandTupleNode() *Nodes_ExpExpandTupleNode
@@ -7149,6 +7781,14 @@ func Nodes_DeclVarNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_DeclVarNode).FP
+}
+      
+func Nodes_DeclVarNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclVarNodeDownCast).ToNodes_DeclVarNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_DeclVarNodeDownCast interface {
     ToNodes_DeclVarNode() *Nodes_DeclVarNode
@@ -7350,6 +7990,14 @@ func Nodes_DeclFormNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclFormNode).FP
 }
+      
+func Nodes_DeclFormNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclFormNodeDownCast).ToNodes_DeclFormNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclFormNodeDownCast interface {
     ToNodes_DeclFormNode() *Nodes_DeclFormNode
 }
@@ -7424,6 +8072,14 @@ func Nodes_DeclFuncNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_DeclFuncNode).FP
+}
+      
+func Nodes_DeclFuncNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclFuncNodeDownCast).ToNodes_DeclFuncNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_DeclFuncNodeDownCast interface {
     ToNodes_DeclFuncNode() *Nodes_DeclFuncNode
@@ -7500,6 +8156,14 @@ func Nodes_DeclMethodNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclMethodNode).FP
 }
+      
+func Nodes_DeclMethodNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclMethodNodeDownCast).ToNodes_DeclMethodNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclMethodNodeDownCast interface {
     ToNodes_DeclMethodNode() *Nodes_DeclMethodNode
 }
@@ -7574,6 +8238,14 @@ func Nodes_ProtoMethodNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ProtoMethodNode).FP
+}
+      
+func Nodes_ProtoMethodNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ProtoMethodNodeDownCast).ToNodes_ProtoMethodNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ProtoMethodNodeDownCast interface {
     ToNodes_ProtoMethodNode() *Nodes_ProtoMethodNode
@@ -7650,6 +8322,14 @@ func Nodes_DeclConstrNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclConstrNode).FP
 }
+      
+func Nodes_DeclConstrNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclConstrNodeDownCast).ToNodes_DeclConstrNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclConstrNodeDownCast interface {
     ToNodes_DeclConstrNode() *Nodes_DeclConstrNode
 }
@@ -7724,6 +8404,14 @@ func Nodes_DeclDestrNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_DeclDestrNode).FP
+}
+      
+func Nodes_DeclDestrNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclDestrNodeDownCast).ToNodes_DeclDestrNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_DeclDestrNodeDownCast interface {
     ToNodes_DeclDestrNode() *Nodes_DeclDestrNode
@@ -7803,6 +8491,22 @@ func Nodes_ExpCallSuperCtorNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExpCallSuperCtorNode).FP
+}
+      
+func Nodes_ExpCallSuperCtorNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCallSuperCtorNodeDownCast).ToNodes_ExpCallSuperCtorNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpCallSuperCtorNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCallSuperCtorNodeDownCast).ToNodes_ExpCallSuperCtorNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ExpCallSuperCtorNodeDownCast interface {
     ToNodes_ExpCallSuperCtorNode() *Nodes_ExpCallSuperCtorNode
@@ -7888,6 +8592,22 @@ func Nodes_ExpCallSuperNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_ExpCallSuperNode).FP
 }
+      
+func Nodes_ExpCallSuperNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCallSuperNodeDownCast).ToNodes_ExpCallSuperNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_ExpCallSuperNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExpCallSuperNodeDownCast).ToNodes_ExpCallSuperNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_ExpCallSuperNodeDownCast interface {
     ToNodes_ExpCallSuperNode() *Nodes_ExpCallSuperNode
 }
@@ -7970,6 +8690,14 @@ func Nodes_AsyncLockNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_AsyncLockNode).FP
 }
+      
+func Nodes_AsyncLockNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_AsyncLockNodeDownCast).ToNodes_AsyncLockNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_AsyncLockNodeDownCast interface {
     ToNodes_AsyncLockNode() *Nodes_AsyncLockNode
 }
@@ -8048,6 +8776,14 @@ func Nodes_RequestNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_RequestNode).FP
+}
+      
+func Nodes_RequestNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_RequestNodeDownCast).ToNodes_RequestNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_RequestNodeDownCast interface {
     ToNodes_RequestNode() *Nodes_RequestNode
@@ -8150,6 +8886,14 @@ func Nodes_DeclMemberNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclMemberNode).FP
 }
+      
+func Nodes_DeclMemberNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclMemberNodeDownCast).ToNodes_DeclMemberNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclMemberNodeDownCast interface {
     ToNodes_DeclMemberNode() *Nodes_DeclMemberNode
 }
@@ -8251,6 +8995,14 @@ func Nodes_DeclArgNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclArgNode).FP
 }
+      
+func Nodes_DeclArgNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclArgNodeDownCast).ToNodes_DeclArgNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclArgNodeDownCast interface {
     ToNodes_DeclArgNode() *Nodes_DeclArgNode
 }
@@ -8327,6 +9079,14 @@ func Nodes_DeclArgDDDNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_DeclArgDDDNode).FP
+}
+      
+func Nodes_DeclArgDDDNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclArgDDDNodeDownCast).ToNodes_DeclArgDDDNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_DeclArgDDDNodeDownCast interface {
     ToNodes_DeclArgDDDNode() *Nodes_DeclArgDDDNode
@@ -8448,6 +9208,14 @@ func Nodes_DeclAdvertiseNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclAdvertiseNode).FP
 }
+      
+func Nodes_DeclAdvertiseNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclAdvertiseNodeDownCast).ToNodes_DeclAdvertiseNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclAdvertiseNodeDownCast interface {
     ToNodes_DeclAdvertiseNode() *Nodes_DeclAdvertiseNode
 }
@@ -8568,6 +9336,14 @@ func Nodes_ProtoClassNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ProtoClassNode).FP
+}
+      
+func Nodes_ProtoClassNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ProtoClassNodeDownCast).ToNodes_ProtoClassNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_ProtoClassNodeDownCast interface {
     ToNodes_ProtoClassNode() *Nodes_ProtoClassNode
@@ -8727,6 +9503,14 @@ func Nodes_DeclClassNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclClassNode).FP
 }
+      
+func Nodes_DeclClassNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclClassNodeDownCast).ToNodes_DeclClassNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclClassNodeDownCast interface {
     ToNodes_DeclClassNode() *Nodes_DeclClassNode
 }
@@ -8845,6 +9629,14 @@ func Nodes_DeclEnumNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_DeclEnumNode).FP
+}
+      
+func Nodes_DeclEnumNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclEnumNodeDownCast).ToNodes_DeclEnumNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_DeclEnumNodeDownCast interface {
     ToNodes_DeclEnumNode() *Nodes_DeclEnumNode
@@ -9023,6 +9815,14 @@ func Nodes_DeclAlgeNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_DeclAlgeNode).FP
 }
+      
+func Nodes_DeclAlgeNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclAlgeNodeDownCast).ToNodes_DeclAlgeNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_DeclAlgeNodeDownCast interface {
     ToNodes_DeclAlgeNode() *Nodes_DeclAlgeNode
 }
@@ -9115,6 +9915,22 @@ func Nodes_NewAlgeValNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_NewAlgeValNode).FP
 }
+      
+func Nodes_NewAlgeValNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_NewAlgeValNodeDownCast).ToNodes_NewAlgeValNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_NewAlgeValNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_NewAlgeValNodeDownCast).ToNodes_NewAlgeValNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_NewAlgeValNodeDownCast interface {
     ToNodes_NewAlgeValNode() *Nodes_NewAlgeValNode
 }
@@ -9198,6 +10014,14 @@ func Nodes_LuneControlNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_LuneControlNode).FP
+}
+      
+func Nodes_LuneControlNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LuneControlNodeDownCast).ToNodes_LuneControlNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_LuneControlNodeDownCast interface {
     ToNodes_LuneControlNode() *Nodes_LuneControlNode
@@ -9340,6 +10164,14 @@ func Nodes_MatchNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_MatchNode).FP
 }
+      
+func Nodes_MatchNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_MatchNodeDownCast).ToNodes_MatchNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_MatchNodeDownCast interface {
     ToNodes_MatchNode() *Nodes_MatchNode
 }
@@ -9429,6 +10261,22 @@ func Nodes_LuneKindNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LuneKindNode).FP
 }
+      
+func Nodes_LuneKindNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LuneKindNodeDownCast).ToNodes_LuneKindNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LuneKindNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LuneKindNodeDownCast).ToNodes_LuneKindNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LuneKindNodeDownCast interface {
     ToNodes_LuneKindNode() *Nodes_LuneKindNode
 }
@@ -9504,6 +10352,14 @@ func Nodes_DeclMacroNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_DeclMacroNode).FP
+}
+      
+func Nodes_DeclMacroNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DeclMacroNodeDownCast).ToNodes_DeclMacroNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_DeclMacroNodeDownCast interface {
     ToNodes_DeclMacroNode() *Nodes_DeclMacroNode
@@ -9619,6 +10475,14 @@ func Nodes_TestCaseNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_TestCaseNode).FP
 }
+      
+func Nodes_TestCaseNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_TestCaseNodeDownCast).ToNodes_TestCaseNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_TestCaseNodeDownCast interface {
     ToNodes_TestCaseNode() *Nodes_TestCaseNode
 }
@@ -9701,6 +10565,14 @@ func Nodes_TestBlockNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_TestBlockNode).FP
 }
+      
+func Nodes_TestBlockNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_TestBlockNodeDownCast).ToNodes_TestBlockNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_TestBlockNodeDownCast interface {
     ToNodes_TestBlockNode() *Nodes_TestBlockNode
 }
@@ -9774,6 +10646,14 @@ func Nodes_AbbrNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_AbbrNode).FP
 }
+      
+func Nodes_AbbrNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_AbbrNodeDownCast).ToNodes_AbbrNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_AbbrNodeDownCast interface {
     ToNodes_AbbrNode() *Nodes_AbbrNode
 }
@@ -9846,6 +10726,22 @@ func Nodes_BoxingNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_BoxingNode).FP
+}
+      
+func Nodes_BoxingNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_BoxingNodeDownCast).ToNodes_BoxingNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_BoxingNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_BoxingNodeDownCast).ToNodes_BoxingNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_BoxingNodeDownCast interface {
     ToNodes_BoxingNode() *Nodes_BoxingNode
@@ -9923,6 +10819,22 @@ func Nodes_UnboxingNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_UnboxingNode).FP
 }
+      
+func Nodes_UnboxingNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_UnboxingNodeDownCast).ToNodes_UnboxingNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_UnboxingNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_UnboxingNodeDownCast).ToNodes_UnboxingNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_UnboxingNodeDownCast interface {
     ToNodes_UnboxingNode() *Nodes_UnboxingNode
 }
@@ -9996,6 +10908,22 @@ func Nodes_LiteralNilNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_LiteralNilNode).FP
+}
+      
+func Nodes_LiteralNilNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralNilNodeDownCast).ToNodes_LiteralNilNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralNilNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralNilNodeDownCast).ToNodes_LiteralNilNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_LiteralNilNodeDownCast interface {
     ToNodes_LiteralNilNode() *Nodes_LiteralNilNode
@@ -10072,6 +11000,22 @@ func Nodes_LiteralCharNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_LiteralCharNode).FP
+}
+      
+func Nodes_LiteralCharNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralCharNodeDownCast).ToNodes_LiteralCharNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralCharNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralCharNodeDownCast).ToNodes_LiteralCharNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_LiteralCharNodeDownCast interface {
     ToNodes_LiteralCharNode() *Nodes_LiteralCharNode
@@ -10153,6 +11097,22 @@ func Nodes_LiteralIntNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralIntNode).FP
 }
+      
+func Nodes_LiteralIntNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralIntNodeDownCast).ToNodes_LiteralIntNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralIntNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralIntNodeDownCast).ToNodes_LiteralIntNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralIntNodeDownCast interface {
     ToNodes_LiteralIntNode() *Nodes_LiteralIntNode
 }
@@ -10233,6 +11193,22 @@ func Nodes_LiteralRealNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralRealNode).FP
 }
+      
+func Nodes_LiteralRealNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralRealNodeDownCast).ToNodes_LiteralRealNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralRealNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralRealNodeDownCast).ToNodes_LiteralRealNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralRealNodeDownCast interface {
     ToNodes_LiteralRealNode() *Nodes_LiteralRealNode
 }
@@ -10311,6 +11287,22 @@ func Nodes_LiteralArrayNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralArrayNode).FP
 }
+      
+func Nodes_LiteralArrayNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralArrayNodeDownCast).ToNodes_LiteralArrayNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralArrayNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralArrayNodeDownCast).ToNodes_LiteralArrayNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralArrayNodeDownCast interface {
     ToNodes_LiteralArrayNode() *Nodes_LiteralArrayNode
 }
@@ -10387,6 +11379,22 @@ func Nodes_LiteralListNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralListNode).FP
 }
+      
+func Nodes_LiteralListNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralListNodeDownCast).ToNodes_LiteralListNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralListNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralListNodeDownCast).ToNodes_LiteralListNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralListNodeDownCast interface {
     ToNodes_LiteralListNode() *Nodes_LiteralListNode
 }
@@ -10462,6 +11470,22 @@ func Nodes_LiteralSetNode2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_LiteralSetNode).FP
+}
+      
+func Nodes_LiteralSetNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralSetNodeDownCast).ToNodes_LiteralSetNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralSetNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralSetNodeDownCast).ToNodes_LiteralSetNode().Nodes_Node
+   }
+   return ret
 }
 type Nodes_LiteralSetNodeDownCast interface {
     ToNodes_LiteralSetNode() *Nodes_LiteralSetNode
@@ -10584,6 +11608,22 @@ func Nodes_LiteralMapNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralMapNode).FP
 }
+      
+func Nodes_LiteralMapNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralMapNodeDownCast).ToNodes_LiteralMapNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralMapNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralMapNodeDownCast).ToNodes_LiteralMapNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralMapNodeDownCast interface {
     ToNodes_LiteralMapNode() *Nodes_LiteralMapNode
 }
@@ -10666,6 +11706,22 @@ func Nodes_LiteralStringNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralStringNode).FP
 }
+      
+func Nodes_LiteralStringNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralStringNodeDownCast).ToNodes_LiteralStringNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralStringNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralStringNodeDownCast).ToNodes_LiteralStringNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralStringNodeDownCast interface {
     ToNodes_LiteralStringNode() *Nodes_LiteralStringNode
 }
@@ -10746,6 +11802,22 @@ func Nodes_LiteralBoolNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralBoolNode).FP
 }
+      
+func Nodes_LiteralBoolNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralBoolNodeDownCast).ToNodes_LiteralBoolNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_LiteralBoolNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralBoolNodeDownCast).ToNodes_LiteralBoolNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralBoolNodeDownCast interface {
     ToNodes_LiteralBoolNode() *Nodes_LiteralBoolNode
 }
@@ -10822,6 +11894,14 @@ func Nodes_LiteralSymbolNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_LiteralSymbolNode).FP
 }
+      
+func Nodes_LiteralSymbolNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_LiteralSymbolNodeDownCast).ToNodes_LiteralSymbolNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_LiteralSymbolNodeDownCast interface {
     ToNodes_LiteralSymbolNode() *Nodes_LiteralSymbolNode
 }
@@ -10897,6 +11977,22 @@ func Nodes_TupleConstNode2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Nodes_TupleConstNode).FP
 }
+      
+func Nodes_TupleConstNode_toSlice_Nodes_ExpNode(slice []LnsAny) []*Nodes_ExpNode {
+   ret := make([]*Nodes_ExpNode, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_TupleConstNodeDownCast).ToNodes_TupleConstNode().Nodes_ExpNode
+   }
+   return ret
+}
+      
+func Nodes_TupleConstNode_toSlice_Nodes_Node(slice []LnsAny) []*Nodes_Node {
+   ret := make([]*Nodes_Node, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_TupleConstNodeDownCast).ToNodes_TupleConstNode().Nodes_Node
+   }
+   return ret
+}
 type Nodes_TupleConstNodeDownCast interface {
     ToNodes_TupleConstNode() *Nodes_TupleConstNode
 }
@@ -10947,6 +12043,14 @@ func Nodes_DefMacroInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_DefMacroInfo).FP
+}
+      
+func Nodes_DefMacroInfo_toSlice_Nodes_MacroInfo(slice []LnsAny) []*Nodes_MacroInfo {
+   ret := make([]*Nodes_MacroInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_DefMacroInfoDownCast).ToNodes_DefMacroInfo().Nodes_MacroInfo
+   }
+   return ret
 }
 type Nodes_DefMacroInfoDownCast interface {
     ToNodes_DefMacroInfo() *Nodes_DefMacroInfo
@@ -11015,6 +12119,22 @@ func Nodes_ExportInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Nodes_ExportInfo).FP
+}
+      
+func Nodes_ExportInfo_toSlice_FrontInterface_ExportInfo(slice []LnsAny) []*FrontInterface_ExportInfo {
+   ret := make([]*FrontInterface_ExportInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Nodes_ExportInfoDownCast).ToNodes_ExportInfo().FrontInterface_ExportInfo
+   }
+   return ret
+}
+      
+func Nodes_ExportInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Nodes_ExportInfoDownCast).ToNodes_ExportInfo().FP.(T)
+   }
+   return ret
 }
 type Nodes_ExportInfoDownCast interface {
     ToNodes_ExportInfo() *Nodes_ExportInfo
@@ -12593,7 +13713,7 @@ func (self *Nodes_NodeManager) MultiTo1(_env *LnsEnv, node *Nodes_Node) *Nodes_N
     var expType *Ast_TypeInfo
     expType = node.FP.Get_expType(_env)
     if node.FP.Get_expTypeList(_env).Len() > 1{
-        return &Nodes_ExpMultiTo1Node_create(_env, self, node.FP.Get_pos(_env), node.FP.Get_inTestBlock(_env), node.FP.Get_macroArgFlag(_env), NewLnsList([]LnsAny{Ast_TypeInfo2Stem(expType)}), node).Nodes_Node
+        return &Nodes_ExpMultiTo1Node_create(_env, self, node.FP.Get_pos(_env), node.FP.Get_inTestBlock(_env), node.FP.Get_macroArgFlag(_env), NewLnsList(Lns_2DDD(expType)), node).Nodes_Node
     } else if expType.FP.Get_kind(_env) == Ast_TypeInfoKind__DDD{
         return &Nodes_ExpMultiTo1Node_create(_env, self, node.FP.Get_pos(_env), node.FP.Get_inTestBlock(_env), node.FP.Get_macroArgFlag(_env), expType.FP.Get_itemTypeInfoList(_env), node).Nodes_Node
     }

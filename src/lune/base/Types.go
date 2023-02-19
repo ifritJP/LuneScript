@@ -483,6 +483,14 @@ func Types_Token2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Types_Token).FP
 }
+      
+func Types_Token_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Types_TokenDownCast).ToTypes_Token().FP.(T)
+   }
+   return ret
+}
 type Types_TokenDownCast interface {
     ToTypes_Token() *Types_Token
 }

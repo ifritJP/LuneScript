@@ -462,6 +462,14 @@ func FrontInterface_ExportInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*FrontInterface_ExportInfo).FP
 }
+      
+func FrontInterface_ExportInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(FrontInterface_ExportInfoDownCast).ToFrontInterface_ExportInfo().FP.(T)
+   }
+   return ret
+}
 type FrontInterface_ExportInfoDownCast interface {
     ToFrontInterface_ExportInfo() *FrontInterface_ExportInfo
 }
@@ -758,6 +766,14 @@ func frontInterface_dummyFront2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*frontInterface_dummyFront).FP
+}
+      
+func frontInterface_dummyFront_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(frontInterface_dummyFrontDownCast).TofrontInterface_dummyFront().FP.(T)
+   }
+   return ret
 }
 type frontInterface_dummyFrontDownCast interface {
     TofrontInterface_dummyFront() *frontInterface_dummyFront

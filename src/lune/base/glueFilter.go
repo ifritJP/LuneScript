@@ -590,6 +590,14 @@ func glueFilter_glueFilter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*glueFilter_glueFilter).FP
 }
+      
+func glueFilter_glueFilter_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
+   ret := make([]*Nodes_Filter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(glueFilter_glueFilterDownCast).ToglueFilter_glueFilter().Nodes_Filter
+   }
+   return ret
+}
 type glueFilter_glueFilterDownCast interface {
     ToglueFilter_glueFilter() *glueFilter_glueFilter
 }

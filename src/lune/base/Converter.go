@@ -439,6 +439,22 @@ func Converter_AstCreater2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Converter_AstCreater).FP
 }
+      
+func Converter_AstCreater_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
+   ret := make([]*Runner_Runner, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Converter_AstCreaterDownCast).ToConverter_AstCreater().Runner_Runner
+   }
+   return ret
+}
+      
+func Converter_AstCreater_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Converter_AstCreaterDownCast).ToConverter_AstCreater().FP.(T)
+   }
+   return ret
+}
 type Converter_AstCreaterDownCast interface {
     ToConverter_AstCreater() *Converter_AstCreater
 }
@@ -530,6 +546,22 @@ func Converter_LuaConverter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Converter_LuaConverter).FP
 }
+      
+func Converter_LuaConverter_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
+   ret := make([]*Runner_Runner, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Converter_LuaConverterDownCast).ToConverter_LuaConverter().Runner_Runner
+   }
+   return ret
+}
+      
+func Converter_LuaConverter_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Converter_LuaConverterDownCast).ToConverter_LuaConverter().FP.(T)
+   }
+   return ret
+}
 type Converter_LuaConverterDownCast interface {
     ToConverter_LuaConverter() *Converter_LuaConverter
 }
@@ -616,6 +648,22 @@ func Converter_GoConverter2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Converter_GoConverter).FP
+}
+      
+func Converter_GoConverter_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
+   ret := make([]*Runner_Runner, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Converter_GoConverterDownCast).ToConverter_GoConverter().Runner_Runner
+   }
+   return ret
+}
+      
+func Converter_GoConverter_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Converter_GoConverterDownCast).ToConverter_GoConverter().FP.(T)
+   }
+   return ret
 }
 type Converter_GoConverterDownCast interface {
     ToConverter_GoConverter() *Converter_GoConverter
@@ -706,6 +754,22 @@ func Converter_PythonConverter2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Converter_PythonConverter).FP
+}
+      
+func Converter_PythonConverter_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
+   ret := make([]*Runner_Runner, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Converter_PythonConverterDownCast).ToConverter_PythonConverter().Runner_Runner
+   }
+   return ret
+}
+      
+func Converter_PythonConverter_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Converter_PythonConverterDownCast).ToConverter_PythonConverter().FP.(T)
+   }
+   return ret
 }
 type Converter_PythonConverterDownCast interface {
     ToConverter_PythonConverter() *Converter_PythonConverter

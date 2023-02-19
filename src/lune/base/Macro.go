@@ -138,7 +138,7 @@ func Macro_getLiteralMacroVal_8_(_env *LnsEnv, obj LnsAny) LnsAny {
         return val
     case *Nodes_Literal__Symbol:
         val := _matchExp0.Val1
-        return NewLnsList([]LnsAny{val})
+        return NewLnsList(Lns_2DDD(val))
     case *Nodes_Literal__Field:
         val := _matchExp0.Val1
         return val
@@ -1168,7 +1168,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
             }
         } else if tokenTxt == ",,,"{
             if Macro_equalsType_14_(_env, macroVal.TypeInfo, Ast_builtinTypeString){
-                Macro_pushbackTxt_16_(_env, parser, NewLnsList([]LnsAny{(Lns_unwrap( macroVal.Val)).(string)}), nextToken.Txt, nextToken.Pos)
+                Macro_pushbackTxt_16_(_env, parser, NewLnsList(Lns_2DDD((Lns_unwrap( macroVal.Val)).(string))), nextToken.Txt, nextToken.Pos)
             } else { 
                 Util_err(_env, _env.GetVM().String_format("',,,' does not support this type -- %s", []LnsAny{macroVal.TypeInfo.FP.GetTxt(_env, nil, nil, nil)}))
             }
@@ -1245,7 +1245,7 @@ func (self *Macro_MacroCtrl) ExpandSymbol(_env *LnsEnv, parser Parser_PushbackPa
                         _env.SetStackVal( valType.FP.Get_kind(_env) == Ast_TypeInfoKind__List) &&
                         _env.SetStackVal( Macro_equalsType_14_(_env, valType.FP.Get_itemTypeInfoList(_env).GetAt(1).(Ast_TypeInfoDownCast).ToAst_TypeInfo(), Ast_builtinTypeStat)) ).(bool)){
                         format = "' %s '"
-                        exp = &Nodes_ExpMacroStatListNode_create(_env, nodeManager, prefixToken.Pos, inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeString)}), exp).Nodes_Node
+                        exp = &Nodes_ExpMacroStatListNode_create(_env, nodeManager, prefixToken.Pos, inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, NewLnsList(Lns_2DDD(Ast_builtinTypeString)), exp).Nodes_Node
                     } else if Macro_equalsType_14_(_env, Ast_builtinTypeString, valType){
                     } else if _env.PopVal( _env.IncStack() ||
                         _env.SetStackVal( Macro_equalsType_14_(_env, valType, Ast_builtinTypeInt)) ||
@@ -1274,11 +1274,11 @@ func (self *Macro_MacroCtrl) ExpandSymbol(_env *LnsEnv, parser Parser_PushbackPa
     var newToken *Types_Token
     newToken = NewTypes_Token(_env, Types_TokenKind__Str, format, prefixToken.Pos, prefixToken.Consecutive, nil)
     var expListNode *Nodes_ExpListNode
-    expListNode = Nodes_ExpListNode_create(_env, nodeManager, exp.FP.Get_pos(_env), inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, exp.FP.Get_expTypeList(_env), NewLnsList([]LnsAny{Nodes_Node2Stem(exp)}), nil, false)
+    expListNode = Nodes_ExpListNode_create(_env, nodeManager, exp.FP.Get_pos(_env), inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, exp.FP.Get_expTypeList(_env), NewLnsList(Lns_2DDD(exp)), nil, false)
     var dddNode *Nodes_ExpToDDDNode
     dddNode = Nodes_ExpToDDDNode_create(_env, nodeManager, exp.FP.Get_pos(_env), inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, exp.FP.Get_expTypeList(_env), expListNode)
     var literalStr *Nodes_LiteralStringNode
-    literalStr = Nodes_LiteralStringNode_create(_env, nodeManager, prefixToken.Pos, inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(Ast_builtinTypeString)}), newToken, expListNode, Nodes_ExpListNode_create(_env, nodeManager, exp.FP.Get_pos(_env), inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, exp.FP.Get_expTypeList(_env), NewLnsList([]LnsAny{Nodes_ExpToDDDNode2Stem(dddNode)}), nil, false))
+    literalStr = Nodes_LiteralStringNode_create(_env, nodeManager, prefixToken.Pos, inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, NewLnsList(Lns_2DDD(Ast_builtinTypeString)), newToken, expListNode, Nodes_ExpListNode_create(_env, nodeManager, exp.FP.Get_pos(_env), inTestBlock, self.analyzeInfo.FP.Get_mode(_env) == Nodes_MacroMode__AnalyzeArg, exp.FP.Get_expTypeList(_env), NewLnsList(Lns_2DDD(&dddNode.Nodes_Node)), nil, false))
     return literalStr
 }
 // 1248: decl @lune.@base.@Macro.MacroCtrl.registVar
@@ -1359,6 +1359,14 @@ func Macro_MacroMetaArgInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Macro_MacroMetaArgInfo).FP
+}
+      
+func Macro_MacroMetaArgInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Macro_MacroMetaArgInfoDownCast).ToMacro_MacroMetaArgInfo().FP.(T)
+   }
+   return ret
 }
 type Macro_MacroMetaArgInfoDownCast interface {
     ToMacro_MacroMetaArgInfo() *Macro_MacroMetaArgInfo
@@ -1445,6 +1453,14 @@ func Macro_MacroMetaInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Macro_MacroMetaInfo).FP
+}
+      
+func Macro_MacroMetaInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Macro_MacroMetaInfoDownCast).ToMacro_MacroMetaInfo().FP.(T)
+   }
+   return ret
 }
 type Macro_MacroMetaInfoDownCast interface {
     ToMacro_MacroMetaInfo() *Macro_MacroMetaInfo
@@ -1566,6 +1582,14 @@ func Macro_MacroParser2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Macro_MacroParser).FP
 }
+      
+func Macro_MacroParser_toSlice_Parser_Parser(slice []LnsAny) []*Parser_Parser {
+   ret := make([]*Parser_Parser, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Macro_MacroParserDownCast).ToMacro_MacroParser().Parser_Parser
+   }
+   return ret
+}
 type Macro_MacroParserDownCast interface {
     ToMacro_MacroParser() *Macro_MacroParser
 }
@@ -1621,6 +1645,14 @@ func Macro_ExtMacroInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Macro_ExtMacroInfo).FP
+}
+      
+func Macro_ExtMacroInfo_toSlice_Nodes_MacroInfo(slice []LnsAny) []*Nodes_MacroInfo {
+   ret := make([]*Nodes_MacroInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Macro_ExtMacroInfoDownCast).ToMacro_ExtMacroInfo().Nodes_MacroInfo
+   }
+   return ret
 }
 type Macro_ExtMacroInfoDownCast interface {
     ToMacro_ExtMacroInfo() *Macro_ExtMacroInfo
@@ -1787,6 +1819,22 @@ func Macro_DefMacroInfoWithSrc2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Macro_DefMacroInfoWithSrc).FP
 }
+      
+func Macro_DefMacroInfoWithSrc_toSlice_Nodes_DefMacroInfo(slice []LnsAny) []*Nodes_DefMacroInfo {
+   ret := make([]*Nodes_DefMacroInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Macro_DefMacroInfoWithSrcDownCast).ToMacro_DefMacroInfoWithSrc().Nodes_DefMacroInfo
+   }
+   return ret
+}
+      
+func Macro_DefMacroInfoWithSrc_toSlice_Nodes_MacroInfo(slice []LnsAny) []*Nodes_MacroInfo {
+   ret := make([]*Nodes_MacroInfo, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Macro_DefMacroInfoWithSrcDownCast).ToMacro_DefMacroInfoWithSrc().Nodes_MacroInfo
+   }
+   return ret
+}
 type Macro_DefMacroInfoWithSrcDownCast interface {
     ToMacro_DefMacroInfoWithSrc() *Macro_DefMacroInfoWithSrc
 }
@@ -1923,7 +1971,7 @@ func (self *Macro_MacroCtrl) InitMacro_MacroCtrl(_env *LnsEnv, macroEval *Nodes_
     self.macroEval = macroEval
     self.analyzeInfo = NewMacro_MacroAnalyzeInfo(_env, Ast_builtinTypeNone, Nodes_MacroMode__None)
     self.macroCallLineNo = nil
-    self.macroAnalyzeInfoStack = NewLnsList([]LnsAny{Macro_MacroAnalyzeInfo2Stem(self.analyzeInfo)})
+    self.macroAnalyzeInfoStack = NewLnsList(Lns_2DDD(self.analyzeInfo))
     self.macroLocalVarMap = nil
 }
 

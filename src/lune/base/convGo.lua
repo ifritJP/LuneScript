@@ -3500,16 +3500,42 @@ function convFilter:expList2Slice( subList, toStem )
 end
 
 
+function convFilter:getSliceUpcastName( subClass, superClass )
+
+   if superClass:get_kind() == Ast.TypeInfoKind.IF then
+      return string.format( "%s_toSlice__IF[%s]", self:getTypeSymbol( subClass ), self:getTypeSymbol( superClass ))
+   end
+   
+   
+   return string.format( "%s_toSlice_%s", self:getTypeSymbol( subClass ), self:getTypeSymbol( superClass ))
+end
+
+
 function convFilter:expList2SliceRaw( itemType, subList )
 
-   
    self:writeRaw( string.format( "Lns_2DDDGen[%s](", self:type2gotype( itemType )) )
    for subIndex, subExp in ipairs( subList:get_expList() ) do
       if subIndex ~= 1 then
          self:writeRaw( "," )
       end
       
-      filter( subExp, self, subList )
+      if subExp:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
+         local dddType = subExp:get_expType():get_itemTypeInfoList()[1]
+         if dddType == itemType:get_srcTypeInfo() then
+            filter( subExp, self, subList )
+         else
+          
+            self:writeRaw( self:getSliceUpcastName( dddType, itemType ) )
+            self:writeRaw( "(" )
+            filter( subExp, self, subList )
+            self:writeRaw( ")" )
+         end
+         
+      else
+       
+         filter( subExp, self, subList )
+      end
+      
    end
    
    self:writeRaw( ")" )
@@ -5657,6 +5683,56 @@ function convFilter:outputToStem( node, absImmutFlag )
 end
 
 
+function convFilter:outputSliceUpcast( node, absImmutFlag )
+
+   local classType = node:get_expType()
+   local superType = classType
+   local symbol = self:getTypeSymbol( classType )
+   
+   local ifType = nil
+   if #superType:get_interfaceList() > 0 then
+      ifType = superType:get_interfaceList()[1]
+   end
+   
+   
+   while superType:hasBase(  ) do
+      superType = superType:get_baseTypeInfo()
+      if not ifType then
+         if #superType:get_interfaceList() > 0 then
+            ifType = superType:get_interfaceList()[1]
+         end
+         
+      end
+      
+      
+      local superSymbol = self:getTypeSymbol( superType )
+      local code = string.format( [==[      
+func %s(slice []LnsAny) []*%s {
+   ret := make([]*%s, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(%sDownCast).To%s().%s
+   }
+   return ret
+}]==], self:getSliceUpcastName( classType, superType ), superSymbol, superSymbol, symbol, symbol, superSymbol)
+      self:writeln( code )
+   end
+   
+   if not absImmutFlag and ifType then
+      local funcSym = string.format( "%s_toSlice__IF", self:getTypeSymbol( classType ))
+      local code = string.format( [==[      
+func %s[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(%sDownCast).To%s().FP.(T)
+   }
+   return ret
+}]==], funcSym, symbol, symbol)
+      self:writeln( code )
+   end
+   
+end
+
+
 function convFilter:outputDownCast( node )
 
    local symbol = self:getTypeSymbol( node:get_expType() )
@@ -6323,6 +6399,7 @@ function convFilter:processDeclClass( node, opt )
             self:outputMethodIF( node )
             self:outputClassType( node, absImmutFlag )
             self:outputToStem( node, absImmutFlag )
+            self:outputSliceUpcast( node, absImmutFlag )
             self:outputDownCast( node )
             self:outputCastReceiver( node )
             self:outputConstructor( node, absImmutFlag )
@@ -7826,7 +7903,9 @@ function convFilter:processLiteralList( node, opt )
       do
          local expList = node:get_expList()
          if expList ~= nil then
-            self:expList2Slice( expList, true )
+            self:writeRaw( "Lns_2DDD(" )
+            filter( expList, self, node )
+            self:writeRaw( ")" )
          else
             self:writeRaw( "[]LnsAny{}" )
          end
@@ -7859,7 +7938,9 @@ function convFilter:processLiteralSet( node, opt )
       do
          local expList = node:get_expList()
          if expList ~= nil then
-            self:expList2Slice( expList, true )
+            self:writeRaw( "Lns_2DDD(" )
+            filter( expList, self, node )
+            self:writeRaw( ")" )
          else
             self:writeRaw( "[]LnsAny{}" )
          end

@@ -3064,3 +3064,44 @@ _section();
    }
    _age();
 }
+_section();
+{
+   interface IF {
+      pub fn get_val() __async :int;
+   }
+
+   class SuperSuper extend (IF) {
+      let val:int{pub};
+   }
+
+   class Super extend SuperSuper {
+   }
+   class Sub extend Super {
+   }
+
+   fn func0( list:&List<&IF> ) {
+      foreach val in list {
+         print( val.$val );
+      }
+   }
+   fn func1( list:&List<&Super> ) {
+      foreach val in list {
+         print( val.$val );
+      }
+   }
+   fn func2( list:&List<&SuperSuper> ) {
+      foreach val in list {
+         print( val.$val );
+      }
+   }
+
+   let list = [ new Sub(1), new Sub(2) ];
+   {
+      let obj:&IF = new Sub(1);
+      print( obj.$val );
+   }
+
+   func0( [ new Super(0), new Sub(0), list.unpack() ] );
+   func1( [ new Super(0), new Sub(0), list.unpack() ] );
+   func2( [ new Super(0), new Sub(0), list.unpack() ] );
+}

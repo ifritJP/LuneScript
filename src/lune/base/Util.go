@@ -44,7 +44,7 @@ func Util_setConsoleOStreamWithWriter(_env *LnsEnv, writer Util_ConsoleWriter,er
 // 60: decl @lune.@base.@Util.println
 func Util_println(_env *LnsEnv, ddd []LnsAny) {
     var list *LnsList
-    list = NewLnsList(ddd)
+    list = NewLnsList(Lns_2DDD(ddd))
     Lns_LockEnvSync( _env, 62, func () {
         for _index, _arg := range( list.Items ) {
             index := _index + 1
@@ -450,6 +450,14 @@ func Util_ConsoleAdapter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_ConsoleAdapter).FP
 }
+      
+func Util_ConsoleAdapter_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Util_ConsoleAdapterDownCast).ToUtil_ConsoleAdapter().FP.(T)
+   }
+   return ret
+}
 type Util_ConsoleAdapterDownCast interface {
     ToUtil_ConsoleAdapter() *Util_ConsoleAdapter
 }
@@ -585,6 +593,14 @@ func Util_memStream2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_memStream).FP
 }
+      
+func Util_memStream_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Util_memStreamDownCast).ToUtil_memStream().FP.(T)
+   }
+   return ret
+}
 type Util_memStreamDownCast interface {
     ToUtil_memStream() *Util_memStream
 }
@@ -633,6 +649,14 @@ func Util_TxtStream2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_TxtStream).FP
 }
+      
+func Util_TxtStream_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Util_TxtStreamDownCast).ToUtil_TxtStream().FP.(T)
+   }
+   return ret
+}
 type Util_TxtStreamDownCast interface {
     ToUtil_TxtStream() *Util_TxtStream
 }
@@ -679,6 +703,14 @@ func Util_NullOStream2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Util_NullOStream).FP
+}
+      
+func Util_NullOStream_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Util_NullOStreamDownCast).ToUtil_NullOStream().FP.(T)
+   }
+   return ret
 }
 type Util_NullOStreamDownCast interface {
     ToUtil_NullOStream() *Util_NullOStream
@@ -766,6 +798,14 @@ func Util_SimpleSourceOStream2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_SimpleSourceOStream).FP
 }
+      
+func Util_SimpleSourceOStream_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Util_SimpleSourceOStreamDownCast).ToUtil_SimpleSourceOStream().FP.(T)
+   }
+   return ret
+}
 type Util_SimpleSourceOStreamDownCast interface {
     ToUtil_SimpleSourceOStream() *Util_SimpleSourceOStream
 }
@@ -795,7 +835,7 @@ func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv,
     self.needIndent = true
     self.curLineNo = 0
     self.stepIndent = stepIndent
-    self.indentQueue = NewLnsList([]LnsAny{0})
+    self.indentQueue = NewLnsList(Lns_2DDD(0))
     self.indentSpace = ""
 }
 

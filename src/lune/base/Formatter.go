@@ -1480,6 +1480,14 @@ func Formatter_FormatterFilter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Formatter_FormatterFilter).FP
 }
+      
+func Formatter_FormatterFilter_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
+   ret := make([]*Nodes_Filter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Formatter_FormatterFilterDownCast).ToFormatter_FormatterFilter().Nodes_Filter
+   }
+   return ret
+}
 type Formatter_FormatterFilterDownCast interface {
     ToFormatter_FormatterFilter() *Formatter_FormatterFilter
 }

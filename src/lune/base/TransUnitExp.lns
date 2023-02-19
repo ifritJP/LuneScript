@@ -579,7 +579,8 @@ fn TransUnit.checkImplicitCast(
 
    let mut newMRetExp:&Nodes.MRetExp! = nil;
    if! let mRetExp = expListNode.$mRetExp {
-      if mRetExp.$index <= #dstTypeList and dstTypeList[ mRetExp.$index ].$kind ~= .DDD
+      if ( mRetExp.$index <= #dstTypeList and
+           dstTypeList[ mRetExp.$index ].$kind ~= .DDD )
       {
          // 代入元の多値の先頭位置と、代入先の ... の位置が異なる場合、
          // 代入元の多値位置情報を記録する。

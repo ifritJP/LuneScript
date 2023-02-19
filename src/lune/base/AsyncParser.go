@@ -539,7 +539,7 @@ func (self *AsyncParser_Parser) Parse(_env *LnsEnv) LnsAny {
         if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(rawLine,"^#!", nil, nil))){
             var token *Types_Token
             token = NewTypes_Token(_env, Types_TokenKind__Sheb, rawLine, NewTypes_Position(_env, self.lineNo, 1, self.streamName, nil), false, NewLnsList([]LnsAny{}))
-            return NewLnsList([]LnsAny{Types_Token2Stem(token)})
+            return NewLnsList(Lns_2DDD(token))
         }
     }
     var AsyncParser_multiComment func(_env *LnsEnv, comIndex LnsInt,termStr string)(string, LnsInt)
@@ -722,6 +722,14 @@ func AsyncParser_AsyncItem2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*AsyncParser_AsyncItem).FP
 }
+      
+func AsyncParser_AsyncItem_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(AsyncParser_AsyncItemDownCast).ToAsyncParser_AsyncItem().FP.(T)
+   }
+   return ret
+}
 type AsyncParser_AsyncItemDownCast interface {
     ToAsyncParser_AsyncItem() *AsyncParser_AsyncItem
 }
@@ -819,6 +827,14 @@ func AsyncParser_Parser2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*AsyncParser_Parser).FP
 }
+      
+func AsyncParser_Parser_toSlice_Async_Pipe(slice []LnsAny) []*Async_Pipe {
+   ret := make([]*Async_Pipe, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(AsyncParser_ParserDownCast).ToAsyncParser_Parser().Async_Pipe
+   }
+   return ret
+}
 type AsyncParser_ParserDownCast interface {
     ToAsyncParser_Parser() *AsyncParser_Parser
 }
@@ -882,6 +898,14 @@ func AsyncParser_Runner2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*AsyncParser_Runner).FP
+}
+      
+func AsyncParser_Runner_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(AsyncParser_RunnerDownCast).ToAsyncParser_Runner().FP.(T)
+   }
+   return ret
 }
 type AsyncParser_RunnerDownCast interface {
     ToAsyncParser_Runner() *AsyncParser_Runner

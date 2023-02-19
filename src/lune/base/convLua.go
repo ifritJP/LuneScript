@@ -265,6 +265,14 @@ func convLua_ModuleInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*convLua_ModuleInfo).FP
 }
+      
+func convLua_ModuleInfo_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(convLua_ModuleInfoDownCast).ToconvLua_ModuleInfo().FP.(T)
+   }
+   return ret
+}
 type convLua_ModuleInfoDownCast interface {
     ToconvLua_ModuleInfo() *convLua_ModuleInfo
 }
@@ -578,6 +586,22 @@ func convLua_ConvFilter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*convLua_ConvFilter).FP
 }
+      
+func convLua_ConvFilter_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
+   ret := make([]*Nodes_Filter, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(convLua_ConvFilterDownCast).ToconvLua_ConvFilter().Nodes_Filter
+   }
+   return ret
+}
+      
+func convLua_ConvFilter_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(convLua_ConvFilterDownCast).ToconvLua_ConvFilter().FP.(T)
+   }
+   return ret
+}
 type convLua_ConvFilterDownCast interface {
     ToconvLua_ConvFilter() *convLua_ConvFilter
 }
@@ -613,7 +637,7 @@ func (self *convLua_ConvFilter) InitconvLua_ConvFilter(_env *LnsEnv, streamName 
     self.enableTest = enableTest
     self.macroVarSymSet = NewLnsSet2_[*Ast_SymbolInfo]([]*Ast_SymbolInfo{})
     self.needModuleObj = true
-    self.indentQueue = NewLnsList([]LnsAny{0})
+    self.indentQueue = NewLnsList(Lns_2DDD(0))
     self.moduleSymbolKind = moduleSymbolKind
     self.macroDepth = 0
     self.streamName = streamName
@@ -696,6 +720,14 @@ func ConvLua_MacroEvalImp2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*ConvLua_MacroEvalImp).FP
+}
+      
+func ConvLua_MacroEvalImp_toSlice_Nodes_MacroEval(slice []LnsAny) []*Nodes_MacroEval {
+   ret := make([]*Nodes_MacroEval, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(ConvLua_MacroEvalImpDownCast).ToConvLua_MacroEvalImp().Nodes_MacroEval
+   }
+   return ret
 }
 type ConvLua_MacroEvalImpDownCast interface {
     ToConvLua_MacroEvalImp() *ConvLua_MacroEvalImp

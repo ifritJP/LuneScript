@@ -630,7 +630,7 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList,projDir LnsAny) 
 
 // 54: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 13592
+    return 13607
 }
 
 
@@ -842,6 +842,14 @@ func Option_ProjInfo12082Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Option_ProjInfo1208).FP
+}
+      
+func Option_ProjInfo1208_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Option_ProjInfo1208DownCast).ToOption_ProjInfo1208().FP.(T)
+   }
+   return ret
 }
 type Option_ProjInfo1208DownCast interface {
     ToOption_ProjInfo1208() *Option_ProjInfo1208

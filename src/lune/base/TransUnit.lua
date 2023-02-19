@@ -8134,7 +8134,7 @@ function TransUnit:checkImplicitCast( alt2typeMap, validCastToGen, dstTypeList, 
    do
       local mRetExp = expListNode:get_mRetExp()
       if mRetExp ~= nil then
-         if mRetExp:get_index() <= #dstTypeList and dstTypeList[mRetExp:get_index()]:get_kind() ~= Ast.TypeInfoKind.DDD then
+         if (mRetExp:get_index() <= #dstTypeList and dstTypeList[mRetExp:get_index()]:get_kind() ~= Ast.TypeInfoKind.DDD ) then
             
             newMRetExp = mRetExp
          end

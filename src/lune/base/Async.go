@@ -228,6 +228,14 @@ func Async_RunnerBase2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Async_RunnerBase).FP
 }
+      
+func Async_RunnerBase_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Async_RunnerBaseDownCast).ToAsync_RunnerBase().FP.(T)
+   }
+   return ret
+}
 type Async_RunnerBaseDownCast interface {
     ToAsync_RunnerBase() *Async_RunnerBase
 }

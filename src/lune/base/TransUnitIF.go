@@ -230,11 +230,11 @@ func (self *TransUnitIF_NSInfo) AddCondRet(_env *LnsEnv, nodeManager *Nodes_Node
     self.condRetCount = self.condRetCount + 1
     if kind != Nodes_CondRetKind__Two{
         if exp.FP.Get_expTypeList(_env).Len() > 1{
-            exp = &Nodes_ExpMultiTo1Node_create(_env, nodeManager, pos, inTestBlock, isInAnalyzeArgMode, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(exp.FP.Get_expType(_env))}), exp).Nodes_Node
+            exp = &Nodes_ExpMultiTo1Node_create(_env, nodeManager, pos, inTestBlock, isInAnalyzeArgMode, NewLnsList(Lns_2DDD(exp.FP.Get_expType(_env))), exp).Nodes_Node
         }
     }
     var condRetNode *Nodes_CondRetNode
-    condRetNode = Nodes_CondRetNode_create(_env, nodeManager, pos, inTestBlock, isInAnalyzeArgMode, NewLnsList([]LnsAny{Ast_TypeInfo2Stem(expOkType)}), exp, kind, self.condRetCount)
+    condRetNode = Nodes_CondRetNode_create(_env, nodeManager, pos, inTestBlock, isInAnalyzeArgMode, NewLnsList(Lns_2DDD(expOkType)), exp, kind, self.condRetCount)
     self.condRetNodeList.Insert(Nodes_CondRetNode2Stem(condRetNode))
     return condRetNode
 }
@@ -921,6 +921,14 @@ func TransUnitIF_TransUnitBase2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*TransUnitIF_TransUnitBase).FP
 }
+      
+func TransUnitIF_TransUnitBase_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(TransUnitIF_TransUnitBaseDownCast).ToTransUnitIF_TransUnitBase().FP.(T)
+   }
+   return ret
+}
 type TransUnitIF_TransUnitBaseDownCast interface {
     ToTransUnitIF_TransUnitBase() *TransUnitIF_TransUnitBase
 }
@@ -998,6 +1006,22 @@ func TransUnitIF_SimpeTransUnit2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*TransUnitIF_SimpeTransUnit).FP
+}
+      
+func TransUnitIF_SimpeTransUnit_toSlice_TransUnitIF_TransUnitBase(slice []LnsAny) []*TransUnitIF_TransUnitBase {
+   ret := make([]*TransUnitIF_TransUnitBase, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(TransUnitIF_SimpeTransUnitDownCast).ToTransUnitIF_SimpeTransUnit().TransUnitIF_TransUnitBase
+   }
+   return ret
+}
+      
+func TransUnitIF_SimpeTransUnit_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(TransUnitIF_SimpeTransUnitDownCast).ToTransUnitIF_SimpeTransUnit().FP.(T)
+   }
+   return ret
 }
 type TransUnitIF_SimpeTransUnitDownCast interface {
     ToTransUnitIF_SimpeTransUnit() *TransUnitIF_SimpeTransUnit

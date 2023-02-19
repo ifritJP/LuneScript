@@ -463,6 +463,14 @@ func Parser_TokenListParser2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Parser_TokenListParser).FP
 }
+      
+func Parser_TokenListParser_toSlice_Parser_Parser(slice []LnsAny) []*Parser_Parser {
+   ret := make([]*Parser_Parser, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Parser_TokenListParserDownCast).ToParser_TokenListParser().Parser_Parser
+   }
+   return ret
+}
 type Parser_TokenListParserDownCast interface {
     ToParser_TokenListParser() *Parser_TokenListParser
 }
@@ -524,6 +532,14 @@ func Parser_StreamParser2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Parser_StreamParser).FP
+}
+      
+func Parser_StreamParser_toSlice_Parser_Parser(slice []LnsAny) []*Parser_Parser {
+   ret := make([]*Parser_Parser, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Parser_StreamParserDownCast).ToParser_StreamParser().Parser_Parser
+   }
+   return ret
 }
 type Parser_StreamParserDownCast interface {
     ToParser_StreamParser() *Parser_StreamParser
@@ -595,6 +611,14 @@ func Parser_DefaultPushbackParser2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Parser_DefaultPushbackParser).FP
 }
+      
+func Parser_DefaultPushbackParser_toSlice__IF[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(Parser_DefaultPushbackParserDownCast).ToParser_DefaultPushbackParser().FP.(T)
+   }
+   return ret
+}
 type Parser_DefaultPushbackParserDownCast interface {
     ToParser_DefaultPushbackParser() *Parser_DefaultPushbackParser
 }
@@ -640,6 +664,14 @@ func Parser_DummyParser2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Parser_DummyParser).FP
+}
+      
+func Parser_DummyParser_toSlice_Parser_Parser(slice []LnsAny) []*Parser_Parser {
+   ret := make([]*Parser_Parser, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(Parser_DummyParserDownCast).ToParser_DummyParser().Parser_Parser
+   }
+   return ret
 }
 type Parser_DummyParserDownCast interface {
     ToParser_DummyParser() *Parser_DummyParser
@@ -779,7 +811,7 @@ func (self *Parser_CommentCtrl) HasInvalidComment(_env *LnsEnv) LnsAny {
 // 441: DeclConstr
 func (self *Parser_CommentCtrl) InitParser_CommentCtrl(_env *LnsEnv) {
     self.layer = NewParser_CommentLayer(_env)
-    self.layerStack = NewLnsList([]LnsAny{Parser_CommentLayer2Stem(self.layer)})
+    self.layerStack = NewLnsList(Lns_2DDD(self.layer))
 }
 
 

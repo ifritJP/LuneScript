@@ -2663,52 +2663,38 @@ fn convFilter.expList2Slice( subList:&Nodes.ExpListNode, toStem:bool ) mut {
    }
 }
 
+fn convFilter.getSliceUpcastName(
+   subClass:&Ast.TypeInfo, superClass:&Ast.TypeInfo ) mut : str
+{
+   if superClass.$kind == .IF {
+      return "%s_toSlice__IF[%s]" ( self.getTypeSymbol( subClass ),
+                                    self.getTypeSymbol( superClass ) );
+   }
+   
+   return "%s_toSlice_%s" ( self.getTypeSymbol( subClass ),
+                            self.getTypeSymbol( superClass ) );             
+}
 
 fn convFilter.expList2SliceRaw( itemType:&Ast.TypeInfo, subList:&Nodes.ExpListNode ) mut
 {
-   // fn processExp( exp:&Nodes.Node ) {
-   //    filter( exp, self, subList );
-   // }
-   
-   // let mRetIndex = subList.$mRetExp$.$index;
-   // if mRetIndex and mRetIndex ~= 1 {
-   //    self.writeRaw( "append( " );
-   // }
-   // let itemTypeTxt = self.type2gotype( itemType );
-   // self.writeRaw( "[]%s{" (itemTypeTxt) );
-   // foreach subExp, subIndex in subList.$expList {
-   //    if mRetIndex == subIndex {
-   //       if mRetIndex ~= 1 {
-   //          self.writeRaw( "}, " );
-   //       }
-   //       if subExp.$expType.$kind ~= .DDD {
-   //          self.writeRaw( "Lns_2DDDGen[%s](" (itemTypeTxt) );
-   //          processExp( subExp );
-   //          self.writeRaw( ")" );
-   //       }
-   //       else {
-   //          processExp( subExp );
-   //       }
-   //       self.writeRaw( "..." );
-   //       break;
-   //    }
-   //    if subIndex ~= 1 {
-   //       self.writeRaw( ', ' );
-   //    }
-   //    processExp( subExp );
-   // }
-   // if mRetIndex and mRetIndex ~= 1 {
-   //    self.writeRaw( ")" );
-   // }
-   // else {
-   //    self.writeRaw( "}" );
-   // }
    self.writeRaw( "Lns_2DDDGen[%s](" (self.type2gotype( itemType )));
    foreach subExp, subIndex in subList.$expList {
       if subIndex ~= 1 {
          self.writeRaw( "," );
       }
-      filter( subExp, self, subList );
+      if subExp.$expType.$kind == .DDD {
+         let dddType = subExp.$expType.$itemTypeInfoList[1];
+         if dddType == itemType.$srcTypeInfo {
+            filter( subExp, self, subList );
+         } else {
+            self.writeRaw( self.getSliceUpcastName( dddType, itemType ) );
+            self.writeRaw( "(" );
+            filter( subExp, self, subList );
+            self.writeRaw( ")" );
+         }
+      } else {
+         filter( subExp, self, subList );
+      }
    }
    self.writeRaw( ")" );
 }
@@ -4537,6 +4523,49 @@ fn convFilter.outputToStem( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut 
    self.writeln( "}" );
 }
 
+fn convFilter.outputSliceUpcast( node: &Nodes.DeclClassNode, absImmutFlag: bool ) mut {
+   let classType = node.$expType;
+   let mut superType = classType;
+   let symbol = self.getTypeSymbol( classType );
+
+   let mut ifType:&Ast.TypeInfo! = nil;
+   if #superType.$interfaceList > 0 {
+      ifType = superType.$interfaceList[ 1 ];
+   }
+
+   while superType.hasBase() {
+      superType = superType.$baseTypeInfo;
+      if not ifType {
+         if #superType.$interfaceList > 0 {
+            ifType = superType.$interfaceList[ 1 ];
+         }
+      }
+      
+      let superSymbol = self.getTypeSymbol( superType );
+      let code = ```      
+func %s(slice []LnsAny) []*%s {
+   ret := make([]*%s, len(slice))
+   for index, val := range slice {
+      ret[index] = &val.(%sDownCast).To%s().%s
+   }
+   return ret
+}``` (self.getSliceUpcastName( classType, superType ),
+       superSymbol, superSymbol, symbol, symbol, superSymbol);
+      self.writeln( code );
+   }
+   if not absImmutFlag and ifType {
+      let funcSym = "%s_toSlice__IF" ( self.getTypeSymbol( classType ) );
+      let code = ```      
+func %s[T any](slice []LnsAny) []T {
+   ret := make([]T, len(slice))
+   for index, val := range slice {
+      ret[index] = val.(%sDownCast).To%s().FP.(T)
+   }
+   return ret
+}``` ( funcSym, symbol, symbol );
+      self.writeln( code );
+   }
+}
 
 fn convFilter.outputDownCast( node: &Nodes.DeclClassNode ) mut {
    let symbol = self.getTypeSymbol( node.$expType );
@@ -5160,6 +5189,7 @@ pub override fn convFilter.processDeclClass(
             self.outputMethodIF( node );
             self.outputClassType( node, absImmutFlag );
             self.outputToStem( node, absImmutFlag );
+            self.outputSliceUpcast( node, absImmutFlag );
             self.outputDownCast( node );
             self.outputCastReceiver( node );
             self.outputConstructor( node, absImmutFlag );
@@ -6419,7 +6449,9 @@ pub override fn convFilter.processLiteralList(
    if node.$expType.$canDealGenInherit {
       self.writeRaw( "NewLnsList(" );
       if! let expList = node.$expList {
-         self.expList2Slice( expList, true );
+         self.writeRaw( "Lns_2DDD(" );
+         filter( expList, self, node );
+         self.writeRaw( ")" );
       }
       else {
          self.writeRaw( "[]LnsAny{}" );
@@ -6444,7 +6476,9 @@ pub override fn convFilter.processLiteralSet(
    if node.$expType.$canDealGenInherit {
       self.writeRaw( "NewLnsSet(" );
       if! let expList = node.$expList {
-         self.expList2Slice( expList, true );
+         self.writeRaw( "Lns_2DDD(" );
+         filter( expList, self, node );
+         self.writeRaw( ")" );
       }
       else {
          self.writeRaw( "[]LnsAny{}" );
