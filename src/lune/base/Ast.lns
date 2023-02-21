@@ -5860,7 +5860,6 @@ pub let builtinTypeLnsLoad:&TypeInfo = rootProcessInfo.createFuncAsync(
    true, .Pub, "_lnsLoad", .Async, nil, [ builtinTypeString, builtinTypeString ],
    [ builtinTypeStem ], .IMut );
 
-
 pub fn ProcessInfo.createTuple(
    externalFlag: bool,
    accessMode: AccessMode, itemTypeInfoList:&List<&TypeInfo> ) mut : TupleTypeInfo
@@ -6139,19 +6138,13 @@ pub fn ProcessInfo.createDDD(
    return dddType;   
 }
 
-
-
 // pub let builtinTypeNil:&TypeInfo = registBuiltin(
 //    "Nil", "nil", .Prim, nil, new NilTypeInfo( rootProcessInfo ), headTypeInfo, nil );
-
-
 
 
 pub let builtinTypeDDD:&TypeInfo = registBuiltin(
    "DDD", "...", .DDD,
    rootProcessInfo.createDDD( builtinTypeStem_, true, false ), nil, headTypeInfo, nil );
-
-
 
 
 pub let builtinTypeForm:&TypeInfo =

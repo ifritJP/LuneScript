@@ -8226,7 +8226,6 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
    return dddType
 end
 
-
 local builtinTypeDDD = registBuiltin( "DDD", "...", TypeInfoKind.DDD, rootProcessInfo:createDDD( _moduleObj.builtinTypeStem_, true, false ), nil, _moduleObj.headTypeInfo, nil )
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 

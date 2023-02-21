@@ -1114,7 +1114,7 @@ alias で置き換えている元の Type → alias の型
       firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
       expList: &Nodes.ExpListNode!, evalMacroCallback:Macro.EvalMacroCallback ) mut;
    fn prepareExpCall(
-      position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
+      termTxt:str, position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
       genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut:
       Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!;
 

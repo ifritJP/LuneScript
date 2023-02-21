@@ -5763,7 +5763,7 @@ function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode
                      
                      self:checkNextToken( "(" )
                      
-                     local alt2typeMap, argList = self:prepareExpCall( token.pos, symbolInfo:get_typeInfo(), {}, Ast.headTypeInfo )
+                     local alt2typeMap, argList = self:prepareExpCall( ")", token.pos, symbolInfo:get_typeInfo(), {}, Ast.headTypeInfo )
                      
                      self:evalMacroOp( token, symbolInfo:get_typeInfo(), argList, function (  )
                      
@@ -8952,7 +8952,7 @@ function TransUnit:checkStringFormat( pos, formatTxt, argTypeList )
    
 end
 
-function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, genericsClass )
+function TransUnit:prepareExpCall( termTxt, position, funcTypeInfo, genericTypeList, genericsClass )
 
    
    if funcTypeInfo:get_kind() == Ast.TypeInfoKind.Macro then
@@ -8966,10 +8966,10 @@ function TransUnit:prepareExpCall( position, funcTypeInfo, genericTypeList, gene
    
    local work = self:getToken(  )
    local argList = nil
-   if work.txt ~= ")" then
+   if work.txt ~= termTxt then
       self:pushback(  )
       argList = self:analyzeExpList( false, false, false, false, nil, funcTypeInfo:get_argTypeInfoList() )
-      self:checkNextToken( ")" )
+      self:checkNextToken( termTxt )
       
       if argList ~= nil then
          for __index, argNode in ipairs( argList:get_expList() ) do
@@ -9411,7 +9411,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
    end
    
    
-   local alt2typeMap, argList = self:prepareExpCall( funcExp:get_pos(), funcTypeInfo, genericTypeList, genericsClass )
+   local alt2typeMap, argList = self:prepareExpCall( ")", funcExp:get_pos(), funcTypeInfo, genericTypeList, genericsClass )
    
    if funcTypeInfo:equals( self.processInfo, self.builtinFunc.list_insert ) or funcTypeInfo:equals( self.processInfo, self.builtinFunc.__list_insert ) then
       if argList ~= nil then

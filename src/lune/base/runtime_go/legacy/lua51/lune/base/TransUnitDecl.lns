@@ -2705,7 +2705,7 @@ nil の場合、メンバの宣言位置。
                   self.checkNextToken( "(" );
 
                   let mut alt2typeMap, argList = self.prepareExpCall(
-                     token.pos, symbolInfo.$typeInfo, [], Ast.headTypeInfo );
+                     ")", token.pos, symbolInfo.$typeInfo, [], Ast.headTypeInfo );
 
 
                   self.evalMacroOp(

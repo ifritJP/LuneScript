@@ -1016,8 +1016,7 @@ fn TransUnit.analyzeListConst(
 
    let mut expList, itemTypeInfo = self.analyzeListItems(
       token.$pos, nextToken, "]", expectItemType );
-   
-   
+
    if token.txt == '[' {
       let canDealGenInherit =
          self.getCanDealGenInherit( expectType, Ast.builtinTypeList );
@@ -1461,7 +1460,7 @@ fn TransUnit.checkStringFormat(
 "(" を読み済みの状態。次のトークンは引数のトークンになっている状態にする。
 この関数を抜けると、 ")" を読み込み済みの状態。
 
-
+@param termTxt 終端文字。 通常は ")"。
 @param position 関数の定義位置
 @param funcTypeInfo 関数の型情報
 @param genericTypeList Genericsの実型パラメータ
@@ -1469,7 +1468,7 @@ fn TransUnit.checkStringFormat(
          funcTypeInfo がメソッドでなければ headTypeInfo.
 */
 fn TransUnit.prepareExpCall(
-   position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
+   termTxt:str, position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
    genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut :
    Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
@@ -1487,11 +1486,11 @@ fn TransUnit.prepareExpCall(
 
    let work = self.getToken(##);
    let mut argList: &Nodes.ExpListNode! = nil;
-   if work.txt ~= ")" {
+   if work.txt ~= termTxt {
       self.pushback();
       argList = self.analyzeExpList(
          false, false, false, false, nil, funcTypeInfo.$argTypeInfoList ## );
-      self.checkNextToken( ")" );
+      self.checkNextToken( termTxt );
 
       when! argList {
          foreach argNode in argList.$expList {
@@ -1954,7 +1953,7 @@ fn TransUnit.analyzeExpCall(
 
 
    let mut alt2typeMap, argList = self.prepareExpCall(
-      funcExp.$pos, funcTypeInfo, genericTypeList, genericsClass );
+      ")", funcExp.$pos, funcTypeInfo, genericTypeList, genericsClass );
 
    if funcTypeInfo.equals( self.processInfo, self.builtinFunc._list_insert ##) or
       funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_insert ##)
