@@ -29,13 +29,12 @@ func Runner_Runner2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Runner_Runner).FP
 }
-      
-func Runner_Runner_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Runner_RunnerDownCast).ToRunner_Runner().FP.(T)
-   }
-   return ret
+func Runner_Runner_toSlice(slice []LnsAny) []*Runner_Runner {
+    ret := make([]*Runner_Runner, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Runner_RunnerDownCast).ToRunner_Runner()
+    }
+    return ret
 }
 type Runner_RunnerDownCast interface {
     ToRunner_Runner() *Runner_Runner

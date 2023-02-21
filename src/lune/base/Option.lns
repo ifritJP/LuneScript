@@ -357,9 +357,9 @@ usage:
       class ProjInfo extend (Mapping) {
          pub let cmd_option:&List<str>;
       }
-      if! let projInfo = ProjInfo._fromStem(
-         (Json.fromStr( file.read( "*a" ) or "" )) )
-      {
+      let projInfo, mess = ProjInfo._fromStem(
+         (Json.fromStr( file.read( "*a" ) or "" )) );
+      when! projInfo {
          let mut workArgList:List<str> = [];
          foreach arg in projInfo.cmd_option {
             workArgList.insert( arg );
@@ -368,6 +368,8 @@ usage:
             workArgList.insert( arg );
          }
          argList = workArgList;
+      } else {
+         print( "failed to load -- lune.js", mess );
       }
       file.close();
    }
@@ -504,7 +506,10 @@ usage:
                   let builtinFunc = builtin.registBuiltInScope();
                   
                   forsort builtinTypeInfo, typeId in Ast.getBuiltInTypeIdMap() {
-                     Util.println( typeId, builtinTypeInfo.$typeInfo.getTxt( ## ) );
+                     let parentName = builtinTypeInfo.$typeInfo.getParentFullName(
+                        Ast.defaultTypeNameCtrl ## );
+                     let dispName = builtinTypeInfo.$typeInfo.$display_stirng;
+                     Util.println( typeId, "%s%s" ( parentName, dispName ) );
                   }
                   os.exit( 0 );
                }

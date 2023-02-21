@@ -361,8 +361,8 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                let builtinType__ = "Ast.builtinType%s__" (typeTxt);
                let defaultVal;
                switch typeTxt {
-                  // case "Set", "List" {       
-                  case "Set" {       
+                  case "Set", "List" {       
+                  // case "Set" {       
                   // case "" {       
                      defaultVal = `{false};
                   }

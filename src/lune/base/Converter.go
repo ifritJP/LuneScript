@@ -166,7 +166,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
                 }
                 if Lns_op_not(cont){
                     Log_log(_env, Log_Level__Debug, __func__, 287, Log_CreateMessage(func(_env *LnsEnv) string {
-                        return _env.GetVM().String_format("<%s>, <%s>", []LnsAny{oldLine, newLine})
+                        return _env.GetVM().String_format("<%s>, <%s>", Lns_2DDD(oldLine, newLine))
                     }))
                     
                     return false, ""
@@ -186,9 +186,9 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
                     var worlBuildId *FrontInterface_ModuleId
                     worlBuildId = FrontInterface_ModuleId_createId(_env, newBuildId.FP.Get_modTime(_env), oldBuildId.FP.Get_buildCount(_env))
                     var buildIdLine string
-                    buildIdLine = _env.GetVM().String_format("_moduleObj.__buildId = %q", []LnsAny{worlBuildId.FP.Get_idStr(_env)})
+                    buildIdLine = _env.GetVM().String_format("_moduleObj.__buildId = %q", Lns_2DDD(worlBuildId.FP.Get_idStr(_env)))
                     var txt string
-                    txt = _env.GetVM().String_format("%s%s\n%s", []LnsAny{newStream.FP.GetSubstring(_env, 1, headEndPos), buildIdLine, newStream.FP.GetSubstring(_env, tailBeginPos, nil)})
+                    txt = _env.GetVM().String_format("%s%s\n%s", Lns_2DDD(newStream.FP.GetSubstring(_env, 1, headEndPos), buildIdLine, newStream.FP.GetSubstring(_env, tailBeginPos, nil)))
                     return true, txt
                 }
             }
@@ -231,7 +231,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
                         fileObj.Write(_env, meta)
                         fileObj.Close(_env)
                     } else {
-                        Util_err(_env, _env.GetVM().String_format("failed to open -- %s", []LnsAny{metaPath}))
+                        Util_err(_env, _env.GetVM().String_format("failed to open -- %s", Lns_2DDD(metaPath)))
                     }
                 }
             }
@@ -288,7 +288,7 @@ func (self *Converter_AstCreater) GetAst(_env *LnsEnv)(*AstInfo_ASTInfo, *FrontI
     {
         _exportInfo := self.exportInfo
         if _exportInfo == nil{
-            Util_err(_env, _env.GetVM().String_format("exportInfo is nil -- %s", []LnsAny{self.mod}))
+            Util_err(_env, _env.GetVM().String_format("exportInfo is nil -- %s", Lns_2DDD(self.mod)))
         } else {
             exportInfo = _exportInfo.(*FrontInterface_ExportInfo)
         }
@@ -309,7 +309,7 @@ func (self *Converter_AstCreater) GetExportInfo(_env *LnsEnv) LnsAny {
     }
     if Lns_op_not(self.exportInfo){
         Log_log(_env, Log_Level__Err, __func__, 191, Log_CreateMessage(func(_env *LnsEnv) string {
-            return _env.GetVM().String_format("exportInfo is nil -- %s", []LnsAny{self.mod})
+            return _env.GetVM().String_format("exportInfo is nil -- %s", Lns_2DDD(self.mod))
         }))
         
     }
@@ -347,7 +347,7 @@ func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     {
         _streamDst := Converter_convExp0_2561(Lns_2DDD(Lns_io_open(self.luaPath, "w")))
         if _streamDst == nil{
-            Util_err(_env, _env.GetVM().String_format("write open error -- %s", []LnsAny{self.luaPath}))
+            Util_err(_env, _env.GetVM().String_format("write open error -- %s", Lns_2DDD(self.luaPath)))
         } else {
             streamDst = _streamDst.(Lns_luaStream)
         }
@@ -379,7 +379,7 @@ func (self *Converter_GoConverter) SaveGo(_env *LnsEnv) {
     {
         _file := Converter_convExp0_2691(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
-            Util_err(_env, _env.GetVM().String_format("can't open file -- %s", []LnsAny{self.path}))
+            Util_err(_env, _env.GetVM().String_format("can't open file -- %s", Lns_2DDD(self.path)))
         } else {
             file = _file.(Lns_luaStream)
         }
@@ -402,7 +402,7 @@ func (self *Converter_PythonConverter) SavePython(_env *LnsEnv) {
     {
         _file := Converter_convExp0_2764(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
-            Util_err(_env, _env.GetVM().String_format("can't open file -- %s", []LnsAny{self.path}))
+            Util_err(_env, _env.GetVM().String_format("can't open file -- %s", Lns_2DDD(self.path)))
         } else {
             file = _file.(Lns_luaStream)
         }
@@ -439,21 +439,12 @@ func Converter_AstCreater2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Converter_AstCreater).FP
 }
-      
-func Converter_AstCreater_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
-   ret := make([]*Runner_Runner, len(slice))
-   for index, val := range slice {
-      ret[index] = &val.(Converter_AstCreaterDownCast).ToConverter_AstCreater().Runner_Runner
-   }
-   return ret
-}
-      
-func Converter_AstCreater_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Converter_AstCreaterDownCast).ToConverter_AstCreater().FP.(T)
-   }
-   return ret
+func Converter_AstCreater_toSlice(slice []LnsAny) []*Converter_AstCreater {
+    ret := make([]*Converter_AstCreater, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Converter_AstCreaterDownCast).ToConverter_AstCreater()
+    }
+    return ret
 }
 type Converter_AstCreaterDownCast interface {
     ToConverter_AstCreater() *Converter_AstCreater
@@ -494,7 +485,7 @@ func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, importM
         self.ast = ast
         self.moduleInfo = Converter_createModuleInfo_0_(_env, ast, self.mod, self.moduleId)
         Log_log(_env, Log_Level__Log, __func__, 149, Log_CreateMessage(func(_env *LnsEnv) string {
-            return _env.GetVM().String_format("generated AST -- %s", []LnsAny{mod})
+            return _env.GetVM().String_format("generated AST -- %s", Lns_2DDD(mod))
         }))
         
     })
@@ -510,7 +501,7 @@ func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, importM
         path := _matchExp0.Val1
         lnsPath = path
     }
-    self.FP.Start(_env, 0, _env.GetVM().String_format("createAst - %s", []LnsAny{lnsPath}))
+    self.FP.Start(_env, 0, _env.GetVM().String_format("createAst - %s", Lns_2DDD(lnsPath)))
 }
 
 
@@ -546,21 +537,12 @@ func Converter_LuaConverter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Converter_LuaConverter).FP
 }
-      
-func Converter_LuaConverter_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
-   ret := make([]*Runner_Runner, len(slice))
-   for index, val := range slice {
-      ret[index] = &val.(Converter_LuaConverterDownCast).ToConverter_LuaConverter().Runner_Runner
-   }
-   return ret
-}
-      
-func Converter_LuaConverter_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Converter_LuaConverterDownCast).ToConverter_LuaConverter().FP.(T)
-   }
-   return ret
+func Converter_LuaConverter_toSlice(slice []LnsAny) []*Converter_LuaConverter {
+    ret := make([]*Converter_LuaConverter, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Converter_LuaConverterDownCast).ToConverter_LuaConverter()
+    }
+    return ret
 }
 type Converter_LuaConverterDownCast interface {
     ToConverter_LuaConverter() *Converter_LuaConverter
@@ -623,7 +605,7 @@ func (self *Converter_LuaConverter) InitConverter_LuaConverter(_env *LnsEnv, lua
         self.filterInfo = filterInfo
         filterInfo.FP.OutputLua(_env, Lns_unwrap( Nodes_RootNodeDownCastF(ast.FP.Get_node(_env).FP)).(*Nodes_RootNode))
     })
-    self.FP.Start(_env, 1, _env.GetVM().String_format("convlua -- %s", []LnsAny{path}))
+    self.FP.Start(_env, 1, _env.GetVM().String_format("convlua -- %s", Lns_2DDD(path)))
 }
 
 
@@ -649,21 +631,12 @@ func Converter_GoConverter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Converter_GoConverter).FP
 }
-      
-func Converter_GoConverter_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
-   ret := make([]*Runner_Runner, len(slice))
-   for index, val := range slice {
-      ret[index] = &val.(Converter_GoConverterDownCast).ToConverter_GoConverter().Runner_Runner
-   }
-   return ret
-}
-      
-func Converter_GoConverter_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Converter_GoConverterDownCast).ToConverter_GoConverter().FP.(T)
-   }
-   return ret
+func Converter_GoConverter_toSlice(slice []LnsAny) []*Converter_GoConverter {
+    ret := make([]*Converter_GoConverter, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Converter_GoConverterDownCast).ToConverter_GoConverter()
+    }
+    return ret
 }
 type Converter_GoConverterDownCast interface {
     ToConverter_GoConverter() *Converter_GoConverter
@@ -696,7 +669,7 @@ func (self *Converter_GoConverter) InitConverter_GoConverter(_env *LnsEnv, scrip
         _dir := option.OutputDir
         if !Lns_IsNil( _dir ) {
             dir := _dir.(string)
-            path = _env.GetVM().String_format("%s/%s", []LnsAny{dir, path})
+            path = _env.GetVM().String_format("%s/%s", Lns_2DDD(dir, path))
         }
     }
     self.path = path
@@ -729,7 +702,7 @@ func (self *Converter_GoConverter) InitConverter_GoConverter(_env *LnsEnv, scrip
         conv = ConvGo_createFilter(_env, option.Testing, scriptPath, self.memStream.FP, ast, goOpt)
         ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, ConvGo_Opt2Stem(NewConvGo_Opt(_env, ast.FP.Get_node(_env))))
     })
-    self.FP.Start(_env, 1, _env.GetVM().String_format("convgo -- %s", []LnsAny{scriptPath}))
+    self.FP.Start(_env, 1, _env.GetVM().String_format("convgo -- %s", Lns_2DDD(scriptPath)))
 }
 
 
@@ -755,21 +728,12 @@ func Converter_PythonConverter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Converter_PythonConverter).FP
 }
-      
-func Converter_PythonConverter_toSlice_Runner_Runner(slice []LnsAny) []*Runner_Runner {
-   ret := make([]*Runner_Runner, len(slice))
-   for index, val := range slice {
-      ret[index] = &val.(Converter_PythonConverterDownCast).ToConverter_PythonConverter().Runner_Runner
-   }
-   return ret
-}
-      
-func Converter_PythonConverter_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Converter_PythonConverterDownCast).ToConverter_PythonConverter().FP.(T)
-   }
-   return ret
+func Converter_PythonConverter_toSlice(slice []LnsAny) []*Converter_PythonConverter {
+    ret := make([]*Converter_PythonConverter, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Converter_PythonConverterDownCast).ToConverter_PythonConverter()
+    }
+    return ret
 }
 type Converter_PythonConverterDownCast interface {
     ToConverter_PythonConverter() *Converter_PythonConverter
@@ -802,7 +766,7 @@ func (self *Converter_PythonConverter) InitConverter_PythonConverter(_env *LnsEn
         _dir := option.OutputDir
         if !Lns_IsNil( _dir ) {
             dir := _dir.(string)
-            path = _env.GetVM().String_format("%s/%s", []LnsAny{dir, path})
+            path = _env.GetVM().String_format("%s/%s", Lns_2DDD(dir, path))
         }
     }
     self.path = path
@@ -835,7 +799,7 @@ func (self *Converter_PythonConverter) InitConverter_PythonConverter(_env *LnsEn
         conv = ConvPython_createFilter(_env, option.Testing, scriptPath, self.memStream.FP, ast, pythonOpt)
         ast.FP.Get_node(_env).FP.ProcessFilter(_env, conv, ConvPython_Opt2Stem(NewConvPython_Opt(_env, ast.FP.Get_node(_env))))
     })
-    self.FP.Start(_env, 1, _env.GetVM().String_format("convpython -- %s", []LnsAny{scriptPath}))
+    self.FP.Start(_env, 1, _env.GetVM().String_format("convpython -- %s", Lns_2DDD(scriptPath)))
 }
 
 

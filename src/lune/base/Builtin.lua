@@ -1693,7 +1693,7 @@ function Builtin:processField( prefixName, orgName, fieldName, info, parentInfo 
                local argTypeList = {}
                local retTypeList = {}
                
-               local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, parentInfo, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, fieldGenTypeList, argTypeList, retTypeList, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut )
+               local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, parentInfo, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, {table.unpack( fieldGenTypeList )}, argTypeList, retTypeList, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut )
                
                self:createGenType( orgName, fieldGenTypeList, typeInfo )
                for __index, altType in ipairs( fieldGenTypeList ) do

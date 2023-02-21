@@ -34,9 +34,9 @@ func (self *NodeIndexer_NamespaceInfo) GetIdTxt(_env *LnsEnv) string {
         if !Lns_IsNil( _parent ) {
             parent := _parent.(*NodeIndexer_NamespaceInfo)
             if self.depth < 4{
-                return _env.GetVM().String_format("%s_%s", []LnsAny{parent.FP.GetIdTxt(_env), self.FP.Get_nsType(_env).FP.Get_rawTxt(_env)})
+                return _env.GetVM().String_format("%s_%s", Lns_2DDD(parent.FP.GetIdTxt(_env), self.FP.Get_nsType(_env).FP.Get_rawTxt(_env)))
             } else { 
-                return _env.GetVM().String_format("%s%s", []LnsAny{parent.FP.GetIdTxt(_env), _env.GetVM().String_format("_%d", []LnsAny{self.subId})})
+                return _env.GetVM().String_format("%s%s", Lns_2DDD(parent.FP.GetIdTxt(_env), _env.GetVM().String_format("_%d", Lns_2DDD(self.subId))))
             }
         } else {
             return ""
@@ -47,7 +47,7 @@ func (self *NodeIndexer_NamespaceInfo) GetIdTxt(_env *LnsEnv) string {
 }
 // 84: decl @lune.@base.@NodeIndexer.Index.getIdTxt
 func (self *NodeIndexer_Index) GetIdTxt(_env *LnsEnv) string {
-    return _env.GetVM().String_format("%s_%d", []LnsAny{self.nsInfo.FP.GetIdTxt(_env), self.index})
+    return _env.GetVM().String_format("%s_%d", Lns_2DDD(self.nsInfo.FP.GetIdTxt(_env), self.index))
 }
 // 114: decl @lune.@base.@NodeIndexer.Indexer.getIndex
 func (self *NodeIndexer_Indexer) GetIndex(_env *LnsEnv, node *Nodes_Node) *NodeIndexer_Index {
@@ -89,18 +89,18 @@ func (self *NodeIndexer_Indexer) Start(_env *LnsEnv, targetNode *Nodes_Node,targ
 }
 // 160: decl @lune.@base.@NodeIndexer.Indexer.dump
 func (self *NodeIndexer_Indexer) Dump(_env *LnsEnv) {
-    var list *LnsList
-    list = NewLnsList([]LnsAny{})
+    var list *LnsList2_[*Nodes_Node]
+    list = NewLnsList2_[*Nodes_Node]([]*Nodes_Node{})
     for _node, _ := range( self.node2Index.Items ) {
         node := _node.(Nodes_NodeDownCast).ToNodes_Node()
-        list.Insert(Nodes_Node2Stem(node))
+        list.Insert(node)
     }
     list.Sort(_env, LnsItemKindStem, LnsComp(func ( _env *LnsEnv, val1, val2 LnsAny ) bool {return NodeIndexer_Indexer_dump__comp_0_( _env, val1.(Nodes_NodeDownCast).ToNodes_Node(), val2.(Nodes_NodeDownCast).ToNodes_Node())}))
     for _, _node := range( list.Items ) {
-        node := _node.(Nodes_NodeDownCast).ToNodes_Node()
+        node := _node
         var index *NodeIndexer_Index
         index = Lns_unwrap( self.node2Index.Get(node)).(*NodeIndexer_Index)
-        Util_println(_env, []LnsAny{_env.GetVM().String_format("%d:%d:", []LnsAny{node.FP.Get_pos(_env).LineNo, node.FP.Get_pos(_env).Column}), index.FP.GetIdTxt(_env), Nodes_getNodeKindName(_env, node.FP.Get_kind(_env))})
+        Util_println(_env, Lns_2DDD(_env.GetVM().String_format("%d:%d:", Lns_2DDD(node.FP.Get_pos(_env).LineNo, node.FP.Get_pos(_env).Column)), index.FP.GetIdTxt(_env), Nodes_getNodeKindName(_env, node.FP.Get_kind(_env))))
     }
 }
 // declaration Class -- NamespaceInfo
@@ -125,6 +125,13 @@ func NodeIndexer_NamespaceInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*NodeIndexer_NamespaceInfo).FP
+}
+func NodeIndexer_NamespaceInfo_toSlice(slice []LnsAny) []*NodeIndexer_NamespaceInfo {
+    ret := make([]*NodeIndexer_NamespaceInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(NodeIndexer_NamespaceInfoDownCast).ToNodeIndexer_NamespaceInfo()
+    }
+    return ret
 }
 type NodeIndexer_NamespaceInfoDownCast interface {
     ToNodeIndexer_NamespaceInfo() *NodeIndexer_NamespaceInfo
@@ -188,6 +195,13 @@ func NodeIndexer_Index2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*NodeIndexer_Index).FP
 }
+func NodeIndexer_Index_toSlice(slice []LnsAny) []*NodeIndexer_Index {
+    ret := make([]*NodeIndexer_Index, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(NodeIndexer_IndexDownCast).ToNodeIndexer_Index()
+    }
+    return ret
+}
 type NodeIndexer_IndexDownCast interface {
     ToNodeIndexer_Index() *NodeIndexer_Index
 }
@@ -239,6 +253,13 @@ func NodeIndexer_Indexer2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*NodeIndexer_Indexer).FP
 }
+func NodeIndexer_Indexer_toSlice(slice []LnsAny) []*NodeIndexer_Indexer {
+    ret := make([]*NodeIndexer_Indexer, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(NodeIndexer_IndexerDownCast).ToNodeIndexer_Indexer()
+    }
+    return ret
+}
 type NodeIndexer_IndexerDownCast interface {
     ToNodeIndexer_Indexer() *NodeIndexer_Indexer
 }
@@ -278,7 +299,7 @@ func Lns_NodeIndexer_init(_env *LnsEnv) {
     Lns_Nodes_init(_env)
     Lns_Util_init(_env)
     Lns_Ast_init(_env)
-    NodeIndexer_declNameSpaceNodeKindSet = NewLnsSet2_[LnsInt](Lns_2DDDGen[LnsInt](Nodes_NodeKind_get_DeclClass(_env),Nodes_NodeKind_get_DeclConstr(_env),Nodes_NodeKind_get_DeclFunc(_env),Nodes_NodeKind_get_ProtoMethod(_env),Nodes_NodeKind_get_DeclMethod(_env),Nodes_NodeKind_get_DeclEnum(_env),Nodes_NodeKind_get_DeclAlge(_env),Nodes_NodeKind_get_DeclMacro(_env)))
+    NodeIndexer_declNameSpaceNodeKindSet = NewLnsSet2_[LnsInt](Lns_2DDDGen[LnsInt](Nodes_NodeKind_get_DeclClass(_env), Nodes_NodeKind_get_DeclConstr(_env), Nodes_NodeKind_get_DeclFunc(_env), Nodes_NodeKind_get_ProtoMethod(_env), Nodes_NodeKind_get_DeclMethod(_env), Nodes_NodeKind_get_DeclEnum(_env), Nodes_NodeKind_get_DeclAlge(_env), Nodes_NodeKind_get_DeclMacro(_env)))
 }
 func init() {
     init_NodeIndexer = false

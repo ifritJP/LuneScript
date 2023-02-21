@@ -102,6 +102,14 @@ pub fn err( message:str ): __ {
    os.exit( errorCode );
 }
 
+// pub fn clone2List<T>( srcList:&__List<T> ) : _List<T> {
+//    let list:List<T> = [];
+//    foreach val in srcList {
+//       list.insert( val );
+//    }
+//    return list;
+// }
+
 /**
 txt 文字列から、 pattern で構成される文字列を抜き出してリストを返す。
 */

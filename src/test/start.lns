@@ -625,7 +625,7 @@ class SubIF extend SUB2.IF {
 Macro._section();
 macro _test3() {
    {
-      let mut val3:stat[] = [];
+      let mut val3:_List<stat> = [];
       let mut fileObj = unwrap io.open( "test/data.lua" );
       let txt = unwrap fileObj.read( "*a" );
       __luago {
@@ -1313,7 +1313,7 @@ print( '\\""\"\'\\.\\' );
    Macro._section();
 
    class Test_c<T> {
-      let list:List<T> {pub};
+      let list:_List<T> {pub};
    }
 
    let test = new Test_c( [ 1, 2, 3, "abc" ] );

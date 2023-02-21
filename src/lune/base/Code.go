@@ -25,13 +25,13 @@ func Code_ID_getTxt(arg1 LnsInt) string {
 }
 // 31: decl @lune.@base.@Code.format
 func Code_format(_env *LnsEnv, id LnsInt,mess string) string {
-    return _env.GetVM().String_format("%05d:%s", []LnsAny{id, mess})
+    return _env.GetVM().String_format("%05d:%s", Lns_2DDD(id, mess))
 }
 
 // 35: decl @lune.@base.@Code.isMessageOf
 func Code_isMessageOf(_env *LnsEnv, id LnsInt,mess string) bool {
     var pat string
-    pat = _env.GetVM().String_format("^%05d:", []LnsAny{id})
+    pat = _env.GetVM().String_format("^%05d:", Lns_2DDD(id))
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(mess,pat, nil, nil))){
         return true
     }

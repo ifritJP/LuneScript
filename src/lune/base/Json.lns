@@ -52,7 +52,7 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                }
             }
             case "[" {
-               let mut list:List<stem!> = [];
+               let mut list:_List<stem!> = [];
                let mut count = 1;
                while true {
                   let nextToken = parser.getTokenNoErr(##);
@@ -192,7 +192,7 @@ __test case1(ctrl) {
             if item {
                __t._eq( ctrl, type(val[index]),type(item));
                if type( item ) == "table" {
-                  __t._eq( ctrl, ((unwrap val[ index ])@@List<stem>)[1], 10 );
+                  __t._eq( ctrl, ((unwrap val[ index ])@@_List<stem>)[1], 10 );
                } else {
                   __t._eq( ctrl, val[ index ], item );
                }

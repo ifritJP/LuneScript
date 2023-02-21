@@ -1051,7 +1051,7 @@ _section();
          let loaded = _load( txt ## );
          when! loaded {
             if! let obj = loaded(##) {
-               foreach val, index in obj@@List<&stem> {
+               foreach val, index in obj@@_List<&stem> {
                   if type( val ) == "table" {
                      forsort val2, key2 in val@@&Map<stem,stem> {
                         print( key2, val2, type( key2 ), type( val2 ) );
@@ -1260,7 +1260,7 @@ _section();
    class Test {
    }
    class Sub<T:Test> {
-      let mut stack:List<T>;
+      let mut stack:_List<T>;
 
       pub fn __init() {
          self.stack = [];
@@ -1339,7 +1339,7 @@ _section();
          let loaded, mess = loadfile( path );
          when! loaded {
             if! let obj = loaded(##) {
-               foreach val in obj@@List<stem> {
+               foreach val in obj@@_List<stem> {
                   print( expandLuavalMap( val ) );
                }
             } else {
@@ -1448,7 +1448,7 @@ _section();
       when! loaded {
          let obj = unwrap loaded(##);
          class Test extend (Mapping) {
-            pub let list:&List<int>;
+            pub let list:&_List<int>;
          }
          if! let test = Test._fromStem( expandLuavalMap( obj ) ) {
             foreach val, key in test.list {
@@ -1920,7 +1920,7 @@ _section();
       }
       return ret;
    }
-   form toListEmptyLua() : &List<&stem>;
+   form toListEmptyLua() : &_List<&stem>;
    let luaFunc = unwrap loadCode( "return function() return { 'a', 'b', 'c' } end" );
    let toListEmpty = luaFunc@@toListEmptyLua;
    __luago {
@@ -3105,3 +3105,72 @@ _section();
    func1( [ new Super(0), new Sub(0), list.unpack() ] );
    func2( [ new Super(0), new Sub(0), list.unpack() ] );
 }
+_section();
+{
+   interface IF {
+      pub fn get_val() __async :int;
+   }
+   class Super extend(IF) {
+      let val:int {pub};
+   }
+   class Sub extend Super {
+   }
+   fn func() :  &Super, &Super {
+      return new Sub(0), new Sub(1);
+   }
+   fn func3(...<&Super>) {
+      foreach val in [ ... ] {
+         print( val.$val );
+      }
+   }
+   fn func2(list:__List<&Super>) {
+      print( "-------" );
+      func3( list.unpack() );
+   }
+   {
+      func2( [ func(), func()** ] );
+      func2( [ func() ] );
+   }
+   {
+      let list:List<&Sub> = [ new Sub(0), new Sub(1), new Sub(2) ];
+      let list2:List<&Super> = [ list.unpack() ];
+      func3( list2.unpack() );
+   }
+   {
+      fn sub( obj:&Super!, obj2:&Super! ) {
+         print( obj$.$val, obj2$.$val );
+      }
+      let list:__List<&Sub> = [ new Sub(0), new Sub(1) ];
+      let list2:__List<&Sub> = [ list.unpack() ];
+      func3( list.unpack() );
+      func3( list2.unpack() );
+      sub( list.unpack() );
+   }
+   fn func4(...<&IF>) {
+      foreach val in [ ... ] {
+         print( val.$val );
+      }
+   }
+   {
+      let list:List<&Sub> = [ new Sub(0), new Sub(1), new Sub(2) ];
+      let list2:List<&IF> = [ list.unpack() ];
+      func4( list2.unpack() );
+   }
+}   
+// _section();
+// {
+//    class Super {
+//       let val:int {pub};
+//    }
+//    class Sub extend Super {
+//    }
+//    {
+//       let list:List<&Sub> = [ new Sub(0), new Sub(1), new Sub(2) ];
+//       let set:Set<&Super> = (@ list.unpack() );
+//       foreach val in list {
+//          if set.has( val ) {
+//             print( val.$val );
+//          }
+//       }
+//    }
+// }   

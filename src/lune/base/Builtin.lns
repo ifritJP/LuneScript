@@ -774,7 +774,8 @@ fn Builtin.processField( prefixName:str, orgName:str, fieldName:str,
                abstractFlag, true, scope, kind,
                parentInfo, Ast.getBuiltinMut( parentInfo),
                false, true, staticFlag, accessMode,
-               fieldName, asyncMode, fieldGenTypeList, argTypeList, retTypeList,
+               fieldName, asyncMode, [ fieldGenTypeList.unpack() ] ,
+               argTypeList, retTypeList,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
 
             self.createGenType( orgName, fieldGenTypeList, typeInfo );

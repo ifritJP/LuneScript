@@ -788,6 +788,8 @@ pub enum CanEvalType {
    SetOp,
    /** 代入(アップキャスト可能な型でも、同一の型でない場合は NG とする) */
    SetEq,
+   /** 代入(アップキャスト可能な型でも、完全に同一の型でない場合は NG とする) */
+   SetEqEq,
    /** 値の等号を見る */
    Equal,
    /** 算術演算 */
@@ -1671,7 +1673,7 @@ pub class ModifierTypeInfo extend TypeInfo {
       let evalType;
       if #self.srcTypeInfo.$itemTypeInfoList >= 1 {
          switch canEvalType {
-            case .SetEq, .SetOp {
+            case .SetEq, .SetEqEq, .SetOp {
                // &List<Super> <-- List<Sub> などで、 型パラメータの継承を代入可能にする
                evalType = CanEvalType.SetOpIMut;
             }
@@ -3880,7 +3882,13 @@ pub class GenericTypeInfo extend TypeInfo {
 
 
          // ここの .SetOp と .SetEq を制御する
-         if not otherGenType.canEvalWith( processInfo, genType, .SetEq, workAlt2type ) {
+         let mode:CanEvalType;
+         if self.genSrcTypeInfo.$canDealGenInherit {
+            mode = .SetEq;
+         } else {
+            mode = .SetEqEq;
+         }
+         if not otherGenType.canEvalWith( processInfo, genType, mode, workAlt2type ) {
             return false;
          }
       }
@@ -3950,9 +3958,13 @@ pub class GenericTypeInfo extend TypeInfo {
       // 一致する場合、汎化の型も同じか調べる
       if! let otherGen = work@@@GenericTypeInfo {
 
-         let evalType;
+         let evalType:CanEvalType;
          if canEvalType == .SetOp {
-            evalType = CanEvalType.SetEq;
+            if self.genSrcTypeInfo.$canDealGenInherit {
+               evalType = .SetEq;
+            } else {
+               evalType = .SetEqEq;
+            }
          }
          else {
             evalType = canEvalType;
@@ -7065,7 +7077,7 @@ pub override fn BoxTypeInfo.canEvalWith(
       return true, nil;       
    }
    switch canEvalType {    
-      case .SetOp, .SetOpIMut, .SetEq {
+      case .SetOp, .SetOpIMut, .SetEq, .SetEqEq {
       }
       default {               
          return false, nil;      
@@ -7155,21 +7167,33 @@ macro _checkEqualsItemType(
       let workType2 = ,,type2.$itemTypeInfoList[ ,,index ];
       
       // ここの .SetEq を制御する
+      // if not ,,type1.$canDealGenInherit {
+      //    if not workType1.equals( processInfo, workType2, ,,alt2type, true ) {
+      //       ,,retStat2;
+      //    }
+      // } else {
+      //    let evalMode;
+      //    if ,,destMut {
+      //       evalMode = CanEvalType.SetEq;
+      //    } else {
+      //       evalMode = CanEvalType.SetOpIMut;
+      //    }
+      //    ,,evalStat;
+      //    if not ret {            
+      //       ,,retStat1;             
+      //    }
+      // }
+      let evalMode;
       if not ,,type1.$canDealGenInherit {
-         if not workType1.equals( processInfo, workType2, ,,alt2type ## ) {
-            ,,retStat2;
-         }
+         evalMode = CanEvalType.SetEqEq;
+      } elseif ,,destMut {
+         evalMode = CanEvalType.SetEq;
       } else {
-         let evalMode;
-         if ,,destMut {
-            evalMode = CanEvalType.SetEq;
-         } else {
-            evalMode = CanEvalType.SetOpIMut;
-         }
-         ,,evalStat;
-         if not ret {            
-            ,,retStat1;             
-         }
+         evalMode = CanEvalType.SetOpIMut;
+      }
+      ,,evalStat;
+      if not ret {            
+         ,,retStat1;             
       }
    }
    else {                  
@@ -7644,7 +7668,7 @@ pro static fn TypeInfo.canEvalWithBase(
    }
 
    switch canEvalType {    
-      case .SetEq, .SetOp, .SetOpIMut {
+      case .SetEqEq, .SetEq, .SetOp, .SetOpIMut {
          if dest == builtinTypeEmpty {
             // 代入先の型が確定していない状態
             switch otherSrc {       
@@ -7707,7 +7731,9 @@ pro static fn TypeInfo.canEvalWithBase(
    
 
    if dest == builtinTypeStem_ {
-      return true, nil;       
+      if canEvalType ~= .SetEqEq {
+         return true, nil;
+      }
    }
 
    if dest.$srcTypeInfo.$kind == .DDD {
@@ -7715,7 +7741,7 @@ pro static fn TypeInfo.canEvalWithBase(
          return dest.$itemTypeInfoList[ 1 ].canEvalWith(
             processInfo, other, canEvalType, alt2type )**;
       }
-      return true, nil;       
+      return true, nil;
    }
    if not dest.$nilable and otherSrc.$nilable {
       if canEvalType ~= .Equal {
@@ -7730,7 +7756,9 @@ pro static fn TypeInfo.canEvalWithBase(
       }
    }
    if dest == builtinTypeStem and not otherSrc.$nilable {
-      return true, nil;       
+      if canEvalType ~= .SetEqEq {
+         return true, nil;
+      }
    }
    if dest == builtinTypeForm and
        ( otherSrc.$kind == .Func or
@@ -7756,7 +7784,7 @@ pro static fn TypeInfo.canEvalWithBase(
          processInfo, otherSrc, canEvalType, alt2type )**;
    }
    if! let extTypeInfo = otherSrc@@@ExtTypeInfo {
-      if canEvalType ~= .SetEq and
+      if canEvalType ~= .SetEq and canEvalType ~= .SetEqEq and
          not failCreateLuavalWith( extTypeInfo.$extedType, .ToLua, false )
       {
          otherSrc = extTypeInfo.$extedType;

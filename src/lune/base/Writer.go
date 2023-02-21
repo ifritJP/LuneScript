@@ -41,10 +41,10 @@ func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
         return ""
     }
     if Lns_type(val) == "number"{
-        return _env.GetVM().String_format("%g", []LnsAny{Lns_forceCastReal(val)})
+        return _env.GetVM().String_format("%g", Lns_2DDD(Lns_forceCastReal(val)))
     }
     var txt string
-    txt = _env.GetVM().String_format("%s", []LnsAny{val})
+    txt = _env.GetVM().String_format("%s", Lns_2DDD(val))
     txt = Writer_convExp0_342(Lns_2DDD(_env.GetVM().String_gsub(txt, "&", "&amp;")))
     txt = Writer_convExp0_360(Lns_2DDD(_env.GetVM().String_gsub(txt, ">", "&gt;")))
     txt = Writer_convExp0_378(Lns_2DDD(_env.GetVM().String_gsub(txt, "<", "&lt;")))
@@ -55,7 +55,7 @@ func Writer_XML_convertXmlTxt_1_(_env *LnsEnv, val LnsAny) string {
 // 66: decl @lune.@base.@Writer.XML.startElement
 func (self *Writer_XML) StartElement(_env *LnsEnv, name string) {
     self.elementList.Insert(name)
-    self.stream.Write(_env, _env.GetVM().String_format("<%s>", []LnsAny{name}))
+    self.stream.Write(_env, _env.GetVM().String_format("<%s>", Lns_2DDD(name)))
     self.depth = self.depth + 1
 }
 // 72: decl @lune.@base.@Writer.XML.startParent
@@ -66,7 +66,7 @@ func (self *Writer_XML) StartParent(_env *LnsEnv, name string,arrayFlag bool) {
 func (self *Writer_XML) EndElement(_env *LnsEnv) {
     var name LnsAny
     name = self.elementList.Remove(nil)
-    self.stream.Write(_env, _env.GetVM().String_format("</%s>", []LnsAny{name}))
+    self.stream.Write(_env, _env.GetVM().String_format("</%s>", Lns_2DDD(name)))
     self.depth = self.depth - 1
     if self.depth == 0{
         self.stream.Write(_env, "\n")
@@ -91,7 +91,7 @@ func (self *Writer_XML) Fin(_env *LnsEnv) {
 func (self *Writer_JSON) startLayer(_env *LnsEnv, arrayFlag bool,madeByArrayFlag bool) {
     var info *Writer_JsonLayer
     info = NewWriter_JsonLayer(_env, "none", arrayFlag, self.prevName, madeByArrayFlag, NewLnsSet2_[string]([]string{}), true, false)
-    self.layerQueue.Insert(Writer_JsonLayer2Stem(info))
+    self.layerQueue.Insert(info)
     self.stream.Write(_env, _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( arrayFlag) &&
         _env.SetStackVal( "[") ||
@@ -102,7 +102,7 @@ func (self *Writer_JSON) getLayerInfo(_env *LnsEnv) LnsAny {
     if self.layerQueue.Len() == 0{
         return nil
     }
-    return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer()
+    return self.layerQueue.GetAt(self.layerQueue.Len())
 }
 // 142: decl @lune.@base.@Writer.JSON.endLayer
 func (self *Writer_JSON) EndLayer(_env *LnsEnv) {
@@ -131,19 +131,19 @@ func (self *Writer_JSON) EndLayer(_env *LnsEnv) {
 }
 // 166: decl @lune.@base.@Writer.JSON.equalLayerState
 func (self *Writer_JSON) EqualLayerState(_env *LnsEnv, state string) bool {
-    return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().State == state
+    return self.layerQueue.GetAt(self.layerQueue.Len()).State == state
 }
 // 170: decl @lune.@base.@Writer.JSON.isArrayLayer
 func (self *Writer_JSON) IsArrayLayer(_env *LnsEnv) bool {
-    return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().ArrayFlag
+    return self.layerQueue.GetAt(self.layerQueue.Len()).ArrayFlag
 }
 // 174: decl @lune.@base.@Writer.JSON.setLayerState
 func (self *Writer_JSON) SetLayerState(_env *LnsEnv, state string) {
-    self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().State = state
+    self.layerQueue.GetAt(self.layerQueue.Len()).State = state
 }
 // 178: decl @lune.@base.@Writer.JSON.getLayerName
 func (self *Writer_JSON) GetLayerName(_env *LnsEnv) string {
-    return self.layerQueue.GetAt(self.layerQueue.Len()).(Writer_JsonLayerDownCast).ToWriter_JsonLayer().Name
+    return self.layerQueue.GetAt(self.layerQueue.Len()).Name
 }
 // 182: decl @lune.@base.@Writer.JSON.addElementName
 func (self *Writer_JSON) AddElementName(_env *LnsEnv, name string) {
@@ -176,7 +176,7 @@ func (self *Writer_JSON) StartParent(_env *LnsEnv, name string,arrayFlag bool) {
         _env.NilAccPush(_env.NilAccPop().(*Writer_JsonLayer).ArrayFlag))) )){
         self.FP.startLayer(_env, false, true)
     }
-    self.stream.Write(_env, _env.GetVM().String_format("\"%s\": ", []LnsAny{name}))
+    self.stream.Write(_env, _env.GetVM().String_format("\"%s\": ", Lns_2DDD(name)))
     self.FP.startLayer(_env, arrayFlag, false)
     self.prevName = name
 }
@@ -198,7 +198,7 @@ func (self *Writer_JSON) StartElement(_env *LnsEnv, name string) {
         Util_err(_env, "illegal openElement")
     }
     info.OpenElement = true
-    self.stream.Write(_env, _env.GetVM().String_format("\"%s\": ", []LnsAny{name}))
+    self.stream.Write(_env, _env.GetVM().String_format("\"%s\": ", Lns_2DDD(name)))
     self.FP.SetLayerState(_env, "named")
     self.prevName = name
 }
@@ -219,7 +219,7 @@ func (self *Writer_JSON) EndElement(_env *LnsEnv) {
             self.FP.EndLayer(_env)
         }
     } else { 
-        Util_err(_env, _env.GetVM().String_format("illegal layer state %s", []LnsAny{self.FP.GetLayerName(_env)}))
+        Util_err(_env, _env.GetVM().String_format("illegal layer state %s", Lns_2DDD(self.FP.GetLayerName(_env))))
     }
     self.FP.SetLayerState(_env, "termed")
 }
@@ -240,14 +240,14 @@ func (self *Writer_JSON) WriteValue(_env *LnsEnv, val LnsAny) {
     var typeId string
     typeId = Lns_type(val)
     if typeId == "number"{
-        txt = _env.GetVM().String_format("%g", []LnsAny{Lns_forceCastReal(val)})
+        txt = _env.GetVM().String_format("%g", Lns_2DDD(Lns_forceCastReal(val)))
     } else if typeId == "boolean"{
         txt = _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( val) &&
             _env.SetStackVal( "true") ||
             _env.SetStackVal( "false") ).(string)
     } else { 
-        txt = _env.GetVM().String_format("\"%s\"", []LnsAny{Writer_JSON_convertJsonTxt_12_(_env, _env.GetVM().String_format("%s", []LnsAny{val}))})
+        txt = _env.GetVM().String_format("\"%s\"", Lns_2DDD(Writer_JSON_convertJsonTxt_12_(_env, _env.GetVM().String_format("%s", Lns_2DDD(val)))))
     }
     self.stream.Write(_env, txt)
     self.FP.SetLayerState(_env, "valued")
@@ -294,7 +294,7 @@ type Writer_XMLMtd interface {
 }
 type Writer_XML struct {
     stream Lns_oStream
-    elementList *LnsList
+    elementList *LnsList2_[string]
     depth LnsInt
     FP Writer_XMLMtd
 }
@@ -304,13 +304,12 @@ func Writer_XML2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Writer_XML).FP
 }
-      
-func Writer_XML_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Writer_XMLDownCast).ToWriter_XML().FP.(T)
-   }
-   return ret
+func Writer_XML_toSlice(slice []LnsAny) []*Writer_XML {
+    ret := make([]*Writer_XML, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Writer_XMLDownCast).ToWriter_XML()
+    }
+    return ret
 }
 type Writer_XMLDownCast interface {
     ToWriter_XML() *Writer_XML
@@ -335,7 +334,7 @@ func NewWriter_XML(_env *LnsEnv, arg1 Lns_oStream) *Writer_XML {
 // 43: DeclConstr
 func (self *Writer_XML) InitWriter_XML(_env *LnsEnv, stream Lns_oStream) {
     self.stream = stream
-    self.elementList = NewLnsList([]LnsAny{})
+    self.elementList = NewLnsList2_[string]([]string{})
     self.depth = 0
 }
 
@@ -358,6 +357,13 @@ func Writer_JsonLayer2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Writer_JsonLayer).FP
+}
+func Writer_JsonLayer_toSlice(slice []LnsAny) []*Writer_JsonLayer {
+    ret := make([]*Writer_JsonLayer, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Writer_JsonLayerDownCast).ToWriter_JsonLayer()
+    }
+    return ret
 }
 type Writer_JsonLayerDownCast interface {
     ToWriter_JsonLayer() *Writer_JsonLayer
@@ -408,7 +414,7 @@ type Writer_JSONMtd interface {
 }
 type Writer_JSON struct {
     stream Lns_oStream
-    layerQueue *LnsList
+    layerQueue *LnsList2_[*Writer_JsonLayer]
     prevName string
     FP Writer_JSONMtd
 }
@@ -418,13 +424,12 @@ func Writer_JSON2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Writer_JSON).FP
 }
-      
-func Writer_JSON_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Writer_JSONDownCast).ToWriter_JSON().FP.(T)
-   }
-   return ret
+func Writer_JSON_toSlice(slice []LnsAny) []*Writer_JSON {
+    ret := make([]*Writer_JSON, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Writer_JSONDownCast).ToWriter_JSON()
+    }
+    return ret
 }
 type Writer_JSONDownCast interface {
     ToWriter_JSON() *Writer_JSON
@@ -449,7 +454,7 @@ func NewWriter_JSON(_env *LnsEnv, arg1 Lns_oStream) *Writer_JSON {
 // 128: DeclConstr
 func (self *Writer_JSON) InitWriter_JSON(_env *LnsEnv, stream Lns_oStream) {
     self.stream = stream
-    self.layerQueue = NewLnsList([]LnsAny{})
+    self.layerQueue = NewLnsList2_[*Writer_JsonLayer]([]*Writer_JsonLayer{})
     self.prevName = ""
     self.FP.startLayer(_env, false, false)
 }

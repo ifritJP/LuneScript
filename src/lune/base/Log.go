@@ -80,7 +80,7 @@ func (self *Log_Control) log(_env *LnsEnv, level LnsInt,funcName string,lineNo L
     if level <= self.level{
         var nowClock LnsReal
         nowClock = _env.GetVM().OS_clock()
-        logStream.Write(_env, _env.GetVM().String_format("%6d:%s:%s:%d:", []LnsAny{(LnsInt)((nowClock * LnsReal(1000))), Log_Level_getTxt( level), funcName, lineNo}))
+        logStream.Write(_env, _env.GetVM().String_format("%6d:%s:%s:%d:", Lns_2DDD((LnsInt)((nowClock * LnsReal(1000))), Log_Level_getTxt( level), funcName, lineNo)))
         logStream.Write(_env, callback(_env))
         logStream.Write(_env, "\n")
     }
@@ -106,6 +106,13 @@ func Log_Control2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Log_Control).FP
+}
+func Log_Control_toSlice(slice []LnsAny) []*Log_Control {
+    ret := make([]*Log_Control, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Log_ControlDownCast).ToLog_Control()
+    }
+    return ret
 }
 type Log_ControlDownCast interface {
     ToLog_Control() *Log_Control

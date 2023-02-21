@@ -31,6 +31,13 @@ func Meta__MetaInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Meta__MetaInfo).FP
 }
+func Meta__MetaInfo_toSlice(slice []LnsAny) []*Meta__MetaInfo {
+    ret := make([]*Meta__MetaInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Meta__MetaInfoDownCast).ToMeta__MetaInfo()
+    }
+    return ret
+}
 type Meta__MetaInfoDownCast interface {
     ToMeta__MetaInfo() *Meta__MetaInfo
 }

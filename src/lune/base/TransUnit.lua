@@ -3578,7 +3578,7 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                   do
                      local _switchExp = symbolNode:get_expType()
                      if _switchExp == Ast.builtinTypeList then
-                        canDealGenInherit = self.ctrl_info.defaultGenInherit
+                        canDealGenInherit = false
                      elseif _switchExp == Ast.builtinTypeList_ then
                         canDealGenInherit = true
                      elseif _switchExp == Ast.builtinTypeList__ then
@@ -8515,7 +8515,7 @@ function TransUnit:getCanDealGenInherit( expectType, targetType )
    
    do
       local _switchExp = targetType
-      if _switchExp == Ast.builtinTypeSet then
+      if _switchExp == Ast.builtinTypeSet or _switchExp == Ast.builtinTypeList then
          
          defaultSetting = false
       else 
@@ -8985,7 +8985,22 @@ function TransUnit:prepareExpCall( termTxt, position, funcTypeInfo, genericTypeL
    local argList = nil
    if work.txt ~= termTxt then
       self:pushback(  )
-      argList = self:analyzeExpList( false, false, false, false, nil, funcTypeInfo:get_argTypeInfoList() )
+      local argTypeInfoList
+      
+      if #genericsClass:get_itemTypeInfoList() > 0 then
+         local alt2typeMap = genericsClass:createAlt2typeMap( false )
+         local workTypeInfoList = {}
+         for __index, typeInfo in ipairs( funcTypeInfo:get_argTypeInfoList() ) do
+            table.insert( workTypeInfoList, Ast.AlternateTypeInfo.getAssign( typeInfo, alt2typeMap ) )
+         end
+         
+         argTypeInfoList = workTypeInfoList
+      else
+       
+         argTypeInfoList = funcTypeInfo:get_argTypeInfoList()
+      end
+      
+      argList = self:analyzeExpList( false, false, false, false, nil, argTypeInfoList )
       self:checkNextToken( termTxt )
       
       if argList ~= nil then
@@ -11751,7 +11766,7 @@ function TransUnit:analyzeExpUnwrap( firstToken, expectType )
    local nextToken = self:getToken(  )
    local insNode = nil
    if nextToken.txt == "default" then
-      insNode = self:analyzeExpOneRVal( false, false, nil, nil, expectType )
+      insNode = self:analyzeExpOneRVal( false, false, nil, nil, expectType or expNode:get_expType():get_nonnilableType() )
    else
     
       self:pushback(  )

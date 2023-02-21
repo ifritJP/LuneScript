@@ -199,7 +199,7 @@ func (self *FrontInterface_ImportModuleInfo) GetFull(_env *LnsEnv) string {
     txt = ""
     for _, _modulePath := range( self.orderedSet.FP.Get_list(_env).Items ) {
         modulePath := _modulePath.(string)
-        txt = _env.GetVM().String_format("%s -> %s", []LnsAny{txt, modulePath})
+        txt = _env.GetVM().String_format("%s -> %s", Lns_2DDD(txt, modulePath))
     }
     return txt
 }
@@ -228,14 +228,14 @@ func (self *frontInterface_dummyFront) LoadModule(_env *LnsEnv, mod string)(LnsA
 // 360: decl @lune.@base.@frontInterface.dummyFront.loadMeta
 func (self *frontInterface_dummyFront) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,mod string,orgMod string,baseDir LnsAny,loader FrontInterface_ModuleLoader) LnsAny {
     __func__ := "@lune.@base.@frontInterface.dummyFront.loadMeta"
-    Util_err(_env, _env.GetVM().String_format("not implements: %s", []LnsAny{__func__}))
+    Util_err(_env, _env.GetVM().String_format("not implements: %s", Lns_2DDD(__func__)))
 // insert a dummy
     return nil
 }
 // 365: decl @lune.@base.@frontInterface.dummyFront.loadFromLnsTxt
 func (self *frontInterface_dummyFront) LoadFromLnsTxt(_env *LnsEnv, importModuleInfo *FrontInterface_ImportModuleInfo,baseDir LnsAny,name string,txt string) LnsAny {
     __func__ := "@lune.@base.@frontInterface.dummyFront.loadFromLnsTxt"
-    Util_err(_env, _env.GetVM().String_format("not implements: %s", []LnsAny{__func__}))
+    Util_err(_env, _env.GetVM().String_format("not implements: %s", Lns_2DDD(__func__)))
 // insert a dummy
     return nil
 }
@@ -246,7 +246,7 @@ func (self *frontInterface_dummyFront) GetLuaModulePath(_env *LnsEnv, mod string
 // 375: decl @lune.@base.@frontInterface.dummyFront.searchModule
 func (self *frontInterface_dummyFront) SearchModule(_env *LnsEnv, mod string,baseDir LnsAny,addSearchPath LnsAny) LnsAny {
     __func__ := "@lune.@base.@frontInterface.dummyFront.searchModule"
-    Util_err(_env, _env.GetVM().String_format("not implements: %s", []LnsAny{__func__}))
+    Util_err(_env, _env.GetVM().String_format("not implements: %s", Lns_2DDD(__func__)))
 // insert a dummy
     return nil
 }
@@ -280,6 +280,13 @@ func FrontInterface_ModuleId2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*FrontInterface_ModuleId).FP
 }
+func FrontInterface_ModuleId_toSlice(slice []LnsAny) []*FrontInterface_ModuleId {
+    ret := make([]*FrontInterface_ModuleId, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(FrontInterface_ModuleIdDownCast).ToFrontInterface_ModuleId()
+    }
+    return ret
+}
 type FrontInterface_ModuleIdDownCast interface {
     ToFrontInterface_ModuleId() *FrontInterface_ModuleId
 }
@@ -307,7 +314,7 @@ func (self *FrontInterface_ModuleId) Get_idStr(_env *LnsEnv) string{ return self
 func (self *FrontInterface_ModuleId) InitFrontInterface_ModuleId(_env *LnsEnv, modTime LnsReal,buildCount LnsInt) {
     self.modTime = modTime
     self.buildCount = buildCount
-    self.idStr = _env.GetVM().String_format("%f:%d", []LnsAny{modTime, buildCount})
+    self.idStr = _env.GetVM().String_format("%f:%d", Lns_2DDD(modTime, buildCount))
 }
 
 
@@ -328,6 +335,13 @@ func FrontInterface_ModuleProvideInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*FrontInterface_ModuleProvideInfo).FP
+}
+func FrontInterface_ModuleProvideInfo_toSlice(slice []LnsAny) []*FrontInterface_ModuleProvideInfo {
+    ret := make([]*FrontInterface_ModuleProvideInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(FrontInterface_ModuleProvideInfoDownCast).ToFrontInterface_ModuleProvideInfo()
+    }
+    return ret
 }
 type FrontInterface_ModuleProvideInfoDownCast interface {
     ToFrontInterface_ModuleProvideInfo() *FrontInterface_ModuleProvideInfo
@@ -386,6 +400,13 @@ func FrontInterface_LuneHelperInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*FrontInterface_LuneHelperInfo).FP
 }
+func FrontInterface_LuneHelperInfo_toSlice(slice []LnsAny) []*FrontInterface_LuneHelperInfo {
+    ret := make([]*FrontInterface_LuneHelperInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(FrontInterface_LuneHelperInfoDownCast).ToFrontInterface_LuneHelperInfo()
+    }
+    return ret
+}
 type FrontInterface_LuneHelperInfoDownCast interface {
     ToFrontInterface_LuneHelperInfo() *FrontInterface_LuneHelperInfo
 }
@@ -432,7 +453,7 @@ type FrontInterface_ExportInfoMtd interface {
     GetTypeInfo(_env *LnsEnv, arg1 LnsInt) LnsAny
     Get_assignName(_env *LnsEnv) string
     Get_fullName(_env *LnsEnv) string
-    Get_globalSymbolList(_env *LnsEnv) *LnsList
+    Get_globalSymbolList(_env *LnsEnv) *LnsList2_[*Ast_SymbolInfo]
     Get_importId2localTypeInfoMap(_env *LnsEnv) *LnsMap
     Get_importedAliasMap(_env *LnsEnv) *LnsMap
     Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
@@ -447,7 +468,7 @@ type FrontInterface_ExportInfo struct {
     moduleTypeInfo *Ast_TypeInfo
     provideInfo *FrontInterface_ModuleProvideInfo
     processInfo *Ast_ProcessInfo
-    globalSymbolList *LnsList
+    globalSymbolList *LnsList2_[*Ast_SymbolInfo]
     importedAliasMap *LnsMap
     moduleId *FrontInterface_ModuleId
     fullName string
@@ -462,13 +483,12 @@ func FrontInterface_ExportInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*FrontInterface_ExportInfo).FP
 }
-      
-func FrontInterface_ExportInfo_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(FrontInterface_ExportInfoDownCast).ToFrontInterface_ExportInfo().FP.(T)
-   }
-   return ret
+func FrontInterface_ExportInfo_toSlice(slice []LnsAny) []*FrontInterface_ExportInfo {
+    ret := make([]*FrontInterface_ExportInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(FrontInterface_ExportInfoDownCast).ToFrontInterface_ExportInfo()
+    }
+    return ret
 }
 type FrontInterface_ExportInfoDownCast interface {
     ToFrontInterface_ExportInfo() *FrontInterface_ExportInfo
@@ -484,7 +504,7 @@ func FrontInterface_ExportInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *FrontInterface_ExportInfo) ToFrontInterface_ExportInfo() *FrontInterface_ExportInfo {
     return obj
 }
-func NewFrontInterface_ExportInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *FrontInterface_ModuleProvideInfo, arg3 *Ast_ProcessInfo, arg4 *LnsList, arg5 *LnsMap, arg6 *FrontInterface_ModuleId, arg7 string, arg8 string, arg9 string, arg10 *LnsMap) *FrontInterface_ExportInfo {
+func NewFrontInterface_ExportInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *FrontInterface_ModuleProvideInfo, arg3 *Ast_ProcessInfo, arg4 *LnsList2_[*Ast_SymbolInfo], arg5 *LnsMap, arg6 *FrontInterface_ModuleId, arg7 string, arg8 string, arg9 string, arg10 *LnsMap) *FrontInterface_ExportInfo {
     obj := &FrontInterface_ExportInfo{}
     obj.FP = obj
     obj.InitFrontInterface_ExportInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10)
@@ -493,7 +513,7 @@ func NewFrontInterface_ExportInfo(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *FrontI
 func (self *FrontInterface_ExportInfo) Get_moduleTypeInfo(_env *LnsEnv) *Ast_TypeInfo{ return self.moduleTypeInfo }
 func (self *FrontInterface_ExportInfo) Get_provideInfo(_env *LnsEnv) *FrontInterface_ModuleProvideInfo{ return self.provideInfo }
 func (self *FrontInterface_ExportInfo) Get_processInfo(_env *LnsEnv) *Ast_ProcessInfo{ return self.processInfo }
-func (self *FrontInterface_ExportInfo) Get_globalSymbolList(_env *LnsEnv) *LnsList{ return self.globalSymbolList }
+func (self *FrontInterface_ExportInfo) Get_globalSymbolList(_env *LnsEnv) *LnsList2_[*Ast_SymbolInfo]{ return self.globalSymbolList }
 func (self *FrontInterface_ExportInfo) Get_importedAliasMap(_env *LnsEnv) *LnsMap{ return self.importedAliasMap }
 func (self *FrontInterface_ExportInfo) Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId{ return self.moduleId }
 func (self *FrontInterface_ExportInfo) Get_fullName(_env *LnsEnv) string{ return self.fullName }
@@ -502,7 +522,7 @@ func (self *FrontInterface_ExportInfo) Get_streamName(_env *LnsEnv) string{ retu
 func (self *FrontInterface_ExportInfo) Get_importId2localTypeInfoMap(_env *LnsEnv) *LnsMap{ return self.importId2localTypeInfoMap }
 func (self *FrontInterface_ExportInfo) Set_importId2localTypeInfoMap(_env *LnsEnv, arg1 *LnsMap){ self.importId2localTypeInfoMap = arg1 }
 // 170: DeclConstr
-func (self *FrontInterface_ExportInfo) InitFrontInterface_ExportInfo(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,provideInfo *FrontInterface_ModuleProvideInfo,processInfo *Ast_ProcessInfo,globalSymbolList *LnsList,importedAliasMap *LnsMap,moduleId *FrontInterface_ModuleId,fullName string,assignName string,streamName string,idMap *LnsMap) {
+func (self *FrontInterface_ExportInfo) InitFrontInterface_ExportInfo(_env *LnsEnv, moduleTypeInfo *Ast_TypeInfo,provideInfo *FrontInterface_ModuleProvideInfo,processInfo *Ast_ProcessInfo,globalSymbolList *LnsList2_[*Ast_SymbolInfo],importedAliasMap *LnsMap,moduleId *FrontInterface_ModuleId,fullName string,assignName string,streamName string,idMap *LnsMap) {
     self.moduleTypeInfo = moduleTypeInfo
     self.provideInfo = provideInfo
     self.processInfo = processInfo
@@ -530,7 +550,7 @@ type FrontInterface_ModuleInfoMtd interface {
     Get_assignName(_env *LnsEnv) string
     Get_exportInfo(_env *LnsEnv) *FrontInterface_ExportInfo
     Get_fullName(_env *LnsEnv) string
-    Get_globalSymbolList(_env *LnsEnv) *LnsList
+    Get_globalSymbolList(_env *LnsEnv) *LnsList2_[*Ast_SymbolInfo]
     Get_importId2localTypeInfoMap(_env *LnsEnv) *LnsMap
     Get_importedAliasMap(_env *LnsEnv) *LnsMap
     Get_moduleId(_env *LnsEnv) *FrontInterface_ModuleId
@@ -550,6 +570,13 @@ func FrontInterface_ModuleInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*FrontInterface_ModuleInfo).FP
+}
+func FrontInterface_ModuleInfo_toSlice(slice []LnsAny) []*FrontInterface_ModuleInfo {
+    ret := make([]*FrontInterface_ModuleInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(FrontInterface_ModuleInfoDownCast).ToFrontInterface_ModuleInfo()
+    }
+    return ret
 }
 type FrontInterface_ModuleInfoDownCast interface {
     ToFrontInterface_ModuleInfo() *FrontInterface_ModuleInfo
@@ -589,7 +616,7 @@ func (self *FrontInterface_ModuleInfo) Get_fullName(_env *LnsEnv) string {
     return self.exportInfo. FP.Get_fullName( _env)
 }
 // advertise -- 222
-func (self *FrontInterface_ModuleInfo) Get_globalSymbolList(_env *LnsEnv) *LnsList {
+func (self *FrontInterface_ModuleInfo) Get_globalSymbolList(_env *LnsEnv) *LnsList2_[*Ast_SymbolInfo] {
     return self.exportInfo. FP.Get_globalSymbolList( _env)
 }
 // advertise -- 222
@@ -651,6 +678,13 @@ func FrontInterface_ModuleMeta2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*FrontInterface_ModuleMeta).FP
 }
+func FrontInterface_ModuleMeta_toSlice(slice []LnsAny) []*FrontInterface_ModuleMeta {
+    ret := make([]*FrontInterface_ModuleMeta, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(FrontInterface_ModuleMetaDownCast).ToFrontInterface_ModuleMeta()
+    }
+    return ret
+}
 type FrontInterface_ModuleMetaDownCast interface {
     ToFrontInterface_ModuleMeta() *FrontInterface_ModuleMeta
 }
@@ -697,6 +731,13 @@ func FrontInterface_ImportModuleInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*FrontInterface_ImportModuleInfo).FP
+}
+func FrontInterface_ImportModuleInfo_toSlice(slice []LnsAny) []*FrontInterface_ImportModuleInfo {
+    ret := make([]*FrontInterface_ImportModuleInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(FrontInterface_ImportModuleInfoDownCast).ToFrontInterface_ImportModuleInfo()
+    }
+    return ret
 }
 type FrontInterface_ImportModuleInfoDownCast interface {
     ToFrontInterface_ImportModuleInfo() *FrontInterface_ImportModuleInfo
@@ -767,13 +808,12 @@ func frontInterface_dummyFront2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*frontInterface_dummyFront).FP
 }
-      
-func frontInterface_dummyFront_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(frontInterface_dummyFrontDownCast).TofrontInterface_dummyFront().FP.(T)
-   }
-   return ret
+func frontInterface_dummyFront_toSlice(slice []LnsAny) []*frontInterface_dummyFront {
+    ret := make([]*frontInterface_dummyFront, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(frontInterface_dummyFrontDownCast).TofrontInterface_dummyFront()
+    }
+    return ret
 }
 type frontInterface_dummyFrontDownCast interface {
     TofrontInterface_dummyFront() *frontInterface_dummyFront

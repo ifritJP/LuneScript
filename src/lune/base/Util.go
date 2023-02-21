@@ -8,25 +8,29 @@ var Util_errStream Lns_oStream
 var Util_debugFlag bool
 var Util_errorCode LnsInt
 type Util_ConsoleWriter func (_env *LnsEnv, arg1 string)
-// for 443
+// for 451
 func Util_convExp0_1921(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 460
+// for 468
 func Util_convExp0_2008(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 419
+// for 427
 func Util_convExp0_1788(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 431
+// for 439
 func Util_convExp0_1851(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 471
+// for 479
 func Util_convExp0_2066(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
+}
+// for 61
+func Util_convExp0_736(arg1 []LnsAny) []LnsAny {
+    return Lns_2DDD( arg1[0:])
 }
 // 46: decl @lune.@base.@Util.setConsoleOStream
 func Util_setConsoleOStream(_env *LnsEnv, stream Lns_oStream,streamErr Lns_oStream) {
@@ -43,13 +47,13 @@ func Util_setConsoleOStreamWithWriter(_env *LnsEnv, writer Util_ConsoleWriter,er
 
 // 60: decl @lune.@base.@Util.println
 func Util_println(_env *LnsEnv, ddd []LnsAny) {
-    var list *LnsList
-    list = NewLnsList(Lns_2DDD(ddd))
+    var list *LnsList2_[LnsAny]
+    list = NewLnsList2_[LnsAny](Lns_2Slice[LnsAny]( Lns_2DDD(ddd)))
     Lns_LockEnvSync( _env, 62, func () {
         for _index, _arg := range( list.Items ) {
             index := _index + 1
             arg := _arg
-            Util_consoleOStream.Write(_env, _env.GetVM().String_format("%s", []LnsAny{arg}))
+            Util_consoleOStream.Write(_env, _env.GetVM().String_format("%s", Lns_2DDD(arg)))
             if index != list.Len(){
                 Util_consoleOStream.Write(_env, "\t")
             } else { 
@@ -94,10 +98,10 @@ func Util_err(_env *LnsEnv, message string) {
     _env.GetVM().OS_exit(Util_errorCode)
 }
 
-// 108: decl @lune.@base.@Util.splitStr
-func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList {
-    var list *LnsList
-    list = NewLnsList([]LnsAny{})
+// 116: decl @lune.@base.@Util.splitStr
+func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList2_[string] {
+    var list *LnsList2_[string]
+    list = NewLnsList2_[string]([]string{})
         {
             _applyForm0, _applyParam0, _applyPrev0 := _env.GetVM().String_gmatch(txt, pattern)
             for {
@@ -111,24 +115,24 @@ func Util_splitStr(_env *LnsEnv, txt string,pattern string) *LnsList {
     return list
 }
 
-// 118: decl @lune.@base.@Util.splitModule
-func Util_splitModule(_env *LnsEnv, modPath string) *LnsList {
+// 126: decl @lune.@base.@Util.splitModule
+func Util_splitModule(_env *LnsEnv, modPath string) *LnsList2_[string] {
     return Util_splitStr(_env, modPath, "[^%./:]+")
 }
 
-// 387: decl @lune.@base.@Util.log
+// 395: decl @lune.@base.@Util.log
 func Util_log(_env *LnsEnv, message string) {
     if Util_debugFlag{
         Util_errorLog(_env, message)
     }
 }
 
-// 393: decl @lune.@base.@Util.printStackTrace
+// 401: decl @lune.@base.@Util.printStackTrace
 func Util_printStackTrace(_env *LnsEnv) {
     Util_errorLog(_env, Depend_getStackTrace(_env))
 }
 
-// 402: decl @lune.@base.@Util.getReadyCode
+// 410: decl @lune.@base.@Util.getReadyCode
 func Util_getReadyCode(_env *LnsEnv, depPath string,tgtPath string) bool {
     __func__ := "@lune.@base.@Util.getReadyCode"
     var tgtTime LnsReal
@@ -146,14 +150,14 @@ func Util_getReadyCode(_env *LnsEnv, depPath string,tgtPath string) bool {
     if tgtTime >= depTime{
         return true
     }
-    Log_log(_env, Log_Level__Warn, __func__, 413, Log_CreateMessage(func(_env *LnsEnv) string {
-        return _env.GetVM().String_format("not ready %g < %g : %s, %s", []LnsAny{tgtTime, depTime, tgtPath, depPath})
+    Log_log(_env, Log_Level__Warn, __func__, 421, Log_CreateMessage(func(_env *LnsEnv) string {
+        return _env.GetVM().String_format("not ready %g < %g : %s, %s", Lns_2DDD(tgtTime, depTime, tgtPath, depPath))
     }))
     
     return false
 }
 
-// 418: decl @lune.@base.@Util.readFile
+// 426: decl @lune.@base.@Util.readFile
 func Util_readFile(_env *LnsEnv, path string) LnsAny {
     var fileObj Lns_luaStream
     
@@ -171,7 +175,7 @@ func Util_readFile(_env *LnsEnv, path string) LnsAny {
     return txt
 }
 
-// 427: decl @lune.@base.@Util.scriptPath2Module
+// 435: decl @lune.@base.@Util.scriptPath2Module
 func Util_scriptPath2Module(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"^/", nil, nil))){
         Util_err(_env, "script must be relative-path -- " + path)
@@ -181,7 +185,7 @@ func Util_scriptPath2Module(_env *LnsEnv, path string) string {
     return Lns_car(_env.GetVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
-// 435: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
+// 443: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
 func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny) string {
     if projDir != nil{
         projDir_364 := projDir.(string)
@@ -196,18 +200,18 @@ func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny)
     return Util_scriptPath2Module(_env, path)
 }
 
-// 448: decl @lune.@base.@Util.pathJoin
+// 456: decl @lune.@base.@Util.pathJoin
 func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"^/", nil, nil))){
         return path
     }
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(dir,"/$", nil, nil))){
-        return _env.GetVM().String_format("%s%s", []LnsAny{dir, path})
+        return _env.GetVM().String_format("%s%s", Lns_2DDD(dir, path))
     }
-    return _env.GetVM().String_format("%s/%s", []LnsAny{dir, path})
+    return _env.GetVM().String_format("%s/%s", Lns_2DDD(dir, path))
 }
 
-// 458: decl @lune.@base.@Util.parentPath
+// 466: decl @lune.@base.@Util.parentPath
 func Util_parentPath(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
         path = Util_convExp0_2008(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
@@ -215,7 +219,7 @@ func Util_parentPath(_env *LnsEnv, path string) string {
     return Lns_car(_env.GetVM().String_gsub(path,"/[^/]+$", "")).(string)
 }
 
-// 465: decl @lune.@base.@Util.searchProjDir
+// 473: decl @lune.@base.@Util.searchProjDir
 func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
     var work string
     work = dir
@@ -245,7 +249,7 @@ func (self *Util_ConsoleAdapter) Flush(_env *LnsEnv) {
 // 42: decl @lune.@base.@Util.ConsoleAdapter.close
 func (self *Util_ConsoleAdapter) Close(_env *LnsEnv) {
 }
-// 131: decl @lune.@base.@Util.OrderedSet.add
+// 139: decl @lune.@base.@Util.OrderedSet.add
 func (self *Util_OrderedSet) Add(_env *LnsEnv, _val LnsAny) bool {
     val := _val
     if Lns_op_not(self.set.Has(val)){
@@ -255,7 +259,7 @@ func (self *Util_OrderedSet) Add(_env *LnsEnv, _val LnsAny) bool {
     }
     return false
 }
-// 140: decl @lune.@base.@Util.OrderedSet.clone
+// 148: decl @lune.@base.@Util.OrderedSet.clone
 func (self *Util_OrderedSet) Clone(_env *LnsEnv) *Util_OrderedSet {
     var obj *Util_OrderedSet
     obj = NewUtil_OrderedSet(_env)
@@ -266,12 +270,12 @@ func (self *Util_OrderedSet) Clone(_env *LnsEnv) *Util_OrderedSet {
     }
     return obj
 }
-// 149: decl @lune.@base.@Util.OrderedSet.has
+// 157: decl @lune.@base.@Util.OrderedSet.has
 func (self *Util_OrderedSet) Has(_env *LnsEnv, _val LnsAny) bool {
     val := _val
     return self.set.Has(val)
 }
-// 153: decl @lune.@base.@Util.OrderedSet.removeLast
+// 161: decl @lune.@base.@Util.OrderedSet.removeLast
 func (self *Util_OrderedSet) RemoveLast(_env *LnsEnv) {
     if self.list.Len() == 0{
         Util_err(_env, "empty")
@@ -279,12 +283,12 @@ func (self *Util_OrderedSet) RemoveLast(_env *LnsEnv) {
     self.set.Del(self.list.GetAt(self.list.Len()))
     self.list.Remove(nil)
 }
-// 171: decl @lune.@base.@Util.OrderdMap.clear
+// 179: decl @lune.@base.@Util.OrderdMap.clear
 func (self *Util_OrderdMap) Clear(_env *LnsEnv) {
     self._map = NewLnsMap( map[LnsAny]LnsAny{})
     self.keyList = NewLnsList([]LnsAny{})
 }
-// 176: decl @lune.@base.@Util.OrderdMap.add
+// 184: decl @lune.@base.@Util.OrderdMap.add
 func (self *Util_OrderdMap) Add(_env *LnsEnv, _key LnsAny,_val LnsAny,overwrite bool) {
     key := _key
     val := _val
@@ -297,25 +301,25 @@ func (self *Util_OrderdMap) Add(_env *LnsEnv, _key LnsAny,_val LnsAny,overwrite 
     self._map.Set(key,val)
     self.keyList.Insert(key)
 }
-// 193: decl @lune.@base.@Util.memStream.get_txt
+// 201: decl @lune.@base.@Util.memStream.get_txt
 func (self *Util_memStream) Get_txt(_env *LnsEnv) string {
     self.txt.FP.Flush(_env)
     return self.txt.FP.Get_txt(_env)
 }
-// 197: decl @lune.@base.@Util.memStream.write
+// 205: decl @lune.@base.@Util.memStream.write
 func (self *Util_memStream) Write(_env *LnsEnv, val string)(LnsAny, LnsAny) {
     self.txt.FP.Add(_env, val)
     return self.FP, nil
 }
-// 201: decl @lune.@base.@Util.memStream.close
+// 209: decl @lune.@base.@Util.memStream.close
 func (self *Util_memStream) Close(_env *LnsEnv) {
     self.txt.FP.Flush(_env)
 }
-// 204: decl @lune.@base.@Util.memStream.flush
+// 212: decl @lune.@base.@Util.memStream.flush
 func (self *Util_memStream) Flush(_env *LnsEnv) {
     self.txt.FP.Flush(_env)
 }
-// 234: decl @lune.@base.@Util.TxtStream.getSubstring
+// 242: decl @lune.@base.@Util.TxtStream.getSubstring
 func (self *Util_TxtStream) GetSubstring(_env *LnsEnv, fromLineNo LnsInt,toLineNo LnsAny) string {
     var txt string
     txt = ""
@@ -331,15 +335,15 @@ func (self *Util_TxtStream) GetSubstring(_env *LnsEnv, fromLineNo LnsInt,toLineN
                 _env.SetStackVal( index > self.lineList.Len()) ).(bool){
                 break
             }
-            txt = _env.GetVM().String_format("%s%s", []LnsAny{txt, self.lineList.GetAt(index).(string)})
+            txt = _env.GetVM().String_format("%s%s", Lns_2DDD(txt, self.lineList.GetAt(index).(string)))
         }
     }
     return txt
 }
-// 246: decl @lune.@base.@Util.TxtStream.read
+// 254: decl @lune.@base.@Util.TxtStream.read
 func (self *Util_TxtStream) Read(_env *LnsEnv, mode LnsAny) LnsAny {
     if mode != "*l"{
-        Util_err(_env, _env.GetVM().String_format("not support -- %s", []LnsAny{mode}))
+        Util_err(_env, _env.GetVM().String_format("not support -- %s", Lns_2DDD(mode)))
     }
     if self.lineNo > self.lineList.Len(){
         return nil
@@ -352,27 +356,27 @@ func (self *Util_TxtStream) Read(_env *LnsEnv, mode LnsAny) LnsAny {
     }
     return line
 }
-// 260: decl @lune.@base.@Util.TxtStream.close
+// 268: decl @lune.@base.@Util.TxtStream.close
 func (self *Util_TxtStream) Close(_env *LnsEnv) {
 }
-// 267: decl @lune.@base.@Util.NullOStream.write
+// 275: decl @lune.@base.@Util.NullOStream.write
 func (self *Util_NullOStream) Write(_env *LnsEnv, val string)(LnsAny, LnsAny) {
     return self.FP, nil
 }
-// 270: decl @lune.@base.@Util.NullOStream.close
+// 278: decl @lune.@base.@Util.NullOStream.close
 func (self *Util_NullOStream) Close(_env *LnsEnv) {
 }
-// 272: decl @lune.@base.@Util.NullOStream.flush
+// 280: decl @lune.@base.@Util.NullOStream.flush
 func (self *Util_NullOStream) Flush(_env *LnsEnv) {
 }
-// 320: decl @lune.@base.@Util.SimpleSourceOStream.get_indent
+// 328: decl @lune.@base.@Util.SimpleSourceOStream.get_indent
 func (self *Util_SimpleSourceOStream) get_indent(_env *LnsEnv) LnsInt {
     if self.indentQueue.Len() > 0{
-        return self.indentQueue.GetAt(self.indentQueue.Len()).(LnsInt)
+        return self.indentQueue.GetAt(self.indentQueue.Len())
     }
     return 0
 }
-// 327: decl @lune.@base.@Util.SimpleSourceOStream.writeRaw
+// 335: decl @lune.@base.@Util.SimpleSourceOStream.writeRaw
 func (self *Util_SimpleSourceOStream) WriteRaw(_env *LnsEnv, txt string) {
     if self.needIndent{
         self.nowStream.Write(_env, self.indentSpace)
@@ -380,7 +384,7 @@ func (self *Util_SimpleSourceOStream) WriteRaw(_env *LnsEnv, txt string) {
     }
     self.nowStream.Write(_env, txt)
 }
-// 336: decl @lune.@base.@Util.SimpleSourceOStream.write
+// 344: decl @lune.@base.@Util.SimpleSourceOStream.write
 func (self *Util_SimpleSourceOStream) Write(_env *LnsEnv, txt string) {
     if Lns_op_not(Lns_car(_env.GetVM().String_find(txt,"\n", 1, true))){
         self.FP.WriteRaw(_env, txt)
@@ -402,35 +406,35 @@ func (self *Util_SimpleSourceOStream) Write(_env *LnsEnv, txt string) {
         stream.Write(_env, line)
     }
 }
-// 356: decl @lune.@base.@Util.SimpleSourceOStream.writeln
+// 364: decl @lune.@base.@Util.SimpleSourceOStream.writeln
 func (self *Util_SimpleSourceOStream) Writeln(_env *LnsEnv, txt string) {
     self.FP.Write(_env, txt)
     self.FP.Write(_env, "\n")
     self.needIndent = true
 }
-// 362: decl @lune.@base.@Util.SimpleSourceOStream.pushIndent
+// 370: decl @lune.@base.@Util.SimpleSourceOStream.pushIndent
 func (self *Util_SimpleSourceOStream) PushIndent(_env *LnsEnv, newIndent LnsAny) {
     var indent LnsInt
     indent = Lns_unwrapDefault( newIndent, self.FP.get_indent(_env) + self.stepIndent).(LnsInt)
-    self.indentQueue.Insert(indent)
+    self.indentQueue.Insert(LnsInt(indent))
     if indent > Util_SimpleSourceOStream__indentSpaceList.Len(){
-        Util_err(_env, _env.GetVM().String_format("overflow indent -- %d", []LnsAny{indent}))
+        Util_err(_env, _env.GetVM().String_format("overflow indent -- %d", Lns_2DDD(indent)))
     }
-    self.indentSpace = Util_SimpleSourceOStream__indentSpaceList.GetAt(indent + 1).(string)
+    self.indentSpace = Util_SimpleSourceOStream__indentSpaceList.GetAt(indent + 1)
 }
-// 371: decl @lune.@base.@Util.SimpleSourceOStream.popIndent
+// 379: decl @lune.@base.@Util.SimpleSourceOStream.popIndent
 func (self *Util_SimpleSourceOStream) PopIndent(_env *LnsEnv) {
     if self.indentQueue.Len() == 0{
         Util_err(_env, "self.indentQueue == 0")
     }
     self.indentQueue.Remove(nil)
-    self.indentSpace = Util_SimpleSourceOStream__indentSpaceList.GetAt(self.FP.get_indent(_env) + 1).(string)
+    self.indentSpace = Util_SimpleSourceOStream__indentSpaceList.GetAt(self.FP.get_indent(_env) + 1)
 }
-// 379: decl @lune.@base.@Util.SimpleSourceOStream.switchToHeader
+// 387: decl @lune.@base.@Util.SimpleSourceOStream.switchToHeader
 func (self *Util_SimpleSourceOStream) SwitchToHeader(_env *LnsEnv) {
     self.nowStream = self.headStream
 }
-// 382: decl @lune.@base.@Util.SimpleSourceOStream.returnToSource
+// 390: decl @lune.@base.@Util.SimpleSourceOStream.returnToSource
 func (self *Util_SimpleSourceOStream) ReturnToSource(_env *LnsEnv) {
     self.nowStream = self.srcStream
 }
@@ -450,13 +454,12 @@ func Util_ConsoleAdapter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_ConsoleAdapter).FP
 }
-      
-func Util_ConsoleAdapter_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Util_ConsoleAdapterDownCast).ToUtil_ConsoleAdapter().FP.(T)
-   }
-   return ret
+func Util_ConsoleAdapter_toSlice(slice []LnsAny) []*Util_ConsoleAdapter {
+    ret := make([]*Util_ConsoleAdapter, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_ConsoleAdapterDownCast).ToUtil_ConsoleAdapter()
+    }
+    return ret
 }
 type Util_ConsoleAdapterDownCast interface {
     ToUtil_ConsoleAdapter() *Util_ConsoleAdapter
@@ -501,6 +504,13 @@ func Util_OrderedSet2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_OrderedSet).FP
 }
+func Util_OrderedSet_toSlice(slice []LnsAny) []*Util_OrderedSet {
+    ret := make([]*Util_OrderedSet, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_OrderedSetDownCast).ToUtil_OrderedSet()
+    }
+    return ret
+}
 type Util_OrderedSetDownCast interface {
     ToUtil_OrderedSet() *Util_OrderedSet
 }
@@ -522,7 +532,7 @@ func NewUtil_OrderedSet(_env *LnsEnv) *Util_OrderedSet {
     return obj
 }
 func (self *Util_OrderedSet) Get_list(_env *LnsEnv) *LnsList{ return self.list }
-// 126: DeclConstr
+// 134: DeclConstr
 func (self *Util_OrderedSet) InitUtil_OrderedSet(_env *LnsEnv) {
     self.set = NewLnsSet([]LnsAny{})
     self.list = NewLnsList([]LnsAny{})
@@ -547,6 +557,13 @@ func Util_OrderdMap2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_OrderdMap).FP
 }
+func Util_OrderdMap_toSlice(slice []LnsAny) []*Util_OrderdMap {
+    ret := make([]*Util_OrderdMap, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_OrderdMapDownCast).ToUtil_OrderdMap()
+    }
+    return ret
+}
 type Util_OrderdMapDownCast interface {
     ToUtil_OrderdMap() *Util_OrderdMap
 }
@@ -569,7 +586,7 @@ func NewUtil_OrderdMap(_env *LnsEnv) *Util_OrderdMap {
 }
 func (self *Util_OrderdMap) Get_map(_env *LnsEnv) *LnsMap{ return self._map }
 func (self *Util_OrderdMap) Get_keyList(_env *LnsEnv) *LnsList{ return self.keyList }
-// 166: DeclConstr
+// 174: DeclConstr
 func (self *Util_OrderdMap) InitUtil_OrderdMap(_env *LnsEnv) {
     self._map = NewLnsMap( map[LnsAny]LnsAny{})
     self.keyList = NewLnsList([]LnsAny{})
@@ -593,13 +610,12 @@ func Util_memStream2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_memStream).FP
 }
-      
-func Util_memStream_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Util_memStreamDownCast).ToUtil_memStream().FP.(T)
-   }
-   return ret
+func Util_memStream_toSlice(slice []LnsAny) []*Util_memStream {
+    ret := make([]*Util_memStream, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_memStreamDownCast).ToUtil_memStream()
+    }
+    return ret
 }
 type Util_memStreamDownCast interface {
     ToUtil_memStream() *Util_memStream
@@ -621,7 +637,7 @@ func NewUtil_memStream(_env *LnsEnv) *Util_memStream {
     obj.InitUtil_memStream(_env)
     return obj
 }
-// 190: DeclConstr
+// 198: DeclConstr
 func (self *Util_memStream) InitUtil_memStream(_env *LnsEnv) {
     self.txt = NewStr_Builder(_env)
 }
@@ -649,13 +665,12 @@ func Util_TxtStream2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_TxtStream).FP
 }
-      
-func Util_TxtStream_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Util_TxtStreamDownCast).ToUtil_TxtStream().FP.(T)
-   }
-   return ret
+func Util_TxtStream_toSlice(slice []LnsAny) []*Util_TxtStream {
+    ret := make([]*Util_TxtStream, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_TxtStreamDownCast).ToUtil_TxtStream()
+    }
+    return ret
 }
 type Util_TxtStreamDownCast interface {
     ToUtil_TxtStream() *Util_TxtStream
@@ -679,7 +694,7 @@ func NewUtil_TxtStream(_env *LnsEnv, arg1 string) *Util_TxtStream {
 }
 func (self *Util_TxtStream) Get_txt(_env *LnsEnv) string{ return self.txt }
 func (self *Util_TxtStream) Get_lineNo(_env *LnsEnv) LnsInt{ return self.lineNo }
-// 215: DeclConstr
+// 223: DeclConstr
 func (self *Util_TxtStream) InitUtil_TxtStream(_env *LnsEnv, txt string) {
     self.txt = txt
     self.start = 1
@@ -704,13 +719,12 @@ func Util_NullOStream2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_NullOStream).FP
 }
-      
-func Util_NullOStream_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Util_NullOStreamDownCast).ToUtil_NullOStream().FP.(T)
-   }
-   return ret
+func Util_NullOStream_toSlice(slice []LnsAny) []*Util_NullOStream {
+    ret := make([]*Util_NullOStream, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_NullOStreamDownCast).ToUtil_NullOStream()
+    }
+    return ret
 }
 type Util_NullOStreamDownCast interface {
     ToUtil_NullOStream() *Util_NullOStream
@@ -751,11 +765,11 @@ func Lns_cast2Util_SourceStream( obj LnsAny ) LnsAny {
 }
 
 // declaration Class -- SimpleSourceOStream
-var Util_SimpleSourceOStream__indentSpaceList *LnsList
-// 286: decl @lune.@base.@Util.SimpleSourceOStream.___init
+var Util_SimpleSourceOStream__indentSpaceList *LnsList2_[string]
+// 294: decl @lune.@base.@Util.SimpleSourceOStream.___init
 func Util_SimpleSourceOStream____init_1_(_env *LnsEnv) {
-    var list *LnsList
-    list = NewLnsList([]LnsAny{})
+    var list *LnsList2_[string]
+    list = NewLnsList2_[string]([]string{})
     var txt string
     txt = ""
     {
@@ -787,9 +801,9 @@ type Util_SimpleSourceOStream struct {
     needIndent bool
     stepIndent LnsInt
     curLineNo LnsInt
-    indentQueue *LnsList
+    indentQueue *LnsList2_[LnsInt]
     indentSpace string
-    indentSpaceList *LnsList
+    indentSpaceList *LnsList2_[string]
     FP Util_SimpleSourceOStreamMtd
 }
 func Util_SimpleSourceOStream2Stem( obj LnsAny ) LnsAny {
@@ -798,13 +812,12 @@ func Util_SimpleSourceOStream2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Util_SimpleSourceOStream).FP
 }
-      
-func Util_SimpleSourceOStream_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Util_SimpleSourceOStreamDownCast).ToUtil_SimpleSourceOStream().FP.(T)
-   }
-   return ret
+func Util_SimpleSourceOStream_toSlice(slice []LnsAny) []*Util_SimpleSourceOStream {
+    ret := make([]*Util_SimpleSourceOStream, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_SimpleSourceOStreamDownCast).ToUtil_SimpleSourceOStream()
+    }
+    return ret
 }
 type Util_SimpleSourceOStreamDownCast interface {
     ToUtil_SimpleSourceOStream() *Util_SimpleSourceOStream
@@ -827,7 +840,7 @@ func NewUtil_SimpleSourceOStream(_env *LnsEnv, arg1 Lns_oStream, arg2 LnsAny, ar
     return obj
 }
 func (self *Util_SimpleSourceOStream) Get_stepIndent(_env *LnsEnv) LnsInt{ return self.stepIndent }
-// 309: DeclConstr
+// 317: DeclConstr
 func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv, stream Lns_oStream,headStream LnsAny,stepIndent LnsInt) {
     self.srcStream = stream
     self.nowStream = stream
@@ -835,7 +848,7 @@ func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv,
     self.needIndent = true
     self.curLineNo = 0
     self.stepIndent = stepIndent
-    self.indentQueue = NewLnsList(Lns_2DDD(0))
+    self.indentQueue = NewLnsList2_[LnsInt](Lns_2DDDGen[LnsInt](0))
     self.indentSpace = ""
 }
 

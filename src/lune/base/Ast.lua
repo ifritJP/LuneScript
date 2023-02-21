@@ -1497,18 +1497,21 @@ CanEvalType.__allList[2] = CanEvalType.SetOp
 CanEvalType.SetEq = 2
 CanEvalType._val2NameMap[2] = 'SetEq'
 CanEvalType.__allList[3] = CanEvalType.SetEq
-CanEvalType.Equal = 3
-CanEvalType._val2NameMap[3] = 'Equal'
-CanEvalType.__allList[4] = CanEvalType.Equal
-CanEvalType.Math = 4
-CanEvalType._val2NameMap[4] = 'Math'
-CanEvalType.__allList[5] = CanEvalType.Math
-CanEvalType.Comp = 5
-CanEvalType._val2NameMap[5] = 'Comp'
-CanEvalType.__allList[6] = CanEvalType.Comp
-CanEvalType.Logical = 6
-CanEvalType._val2NameMap[6] = 'Logical'
-CanEvalType.__allList[7] = CanEvalType.Logical
+CanEvalType.SetEqEq = 3
+CanEvalType._val2NameMap[3] = 'SetEqEq'
+CanEvalType.__allList[4] = CanEvalType.SetEqEq
+CanEvalType.Equal = 4
+CanEvalType._val2NameMap[4] = 'Equal'
+CanEvalType.__allList[5] = CanEvalType.Equal
+CanEvalType.Math = 5
+CanEvalType._val2NameMap[5] = 'Math'
+CanEvalType.__allList[6] = CanEvalType.Math
+CanEvalType.Comp = 6
+CanEvalType._val2NameMap[6] = 'Comp'
+CanEvalType.__allList[7] = CanEvalType.Comp
+CanEvalType.Logical = 7
+CanEvalType._val2NameMap[7] = 'Logical'
+CanEvalType.__allList[8] = CanEvalType.Logical
 
 
 local SerializeInfo = {}
@@ -2456,7 +2459,7 @@ function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type
    if #self.srcTypeInfo:get_itemTypeInfoList() >= 1 then
       do
          local _switchExp = canEvalType
-         if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp then
+         if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetEqEq or _switchExp == CanEvalType.SetOp then
             
             evalType = CanEvalType.SetOpIMut
          else 
@@ -5580,7 +5583,16 @@ function GenericTypeInfo:isInheritFrom( processInfo, other, alt2type )
       
       local otherGenType = _lune.unwrap( genOther.alt2typeMap[altType])
       
-      if not otherGenType:canEvalWith( processInfo, genType, CanEvalType.SetEq, workAlt2type ) then
+      local mode
+      
+      if self.genSrcTypeInfo:get_canDealGenInherit() then
+         mode = CanEvalType.SetEq
+      else
+       
+         mode = CanEvalType.SetEqEq
+      end
+      
+      if not otherGenType:canEvalWith( processInfo, genType, mode, workAlt2type ) then
          return false
       end
       
@@ -5663,7 +5675,13 @@ function GenericTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type 
          local evalType
          
          if canEvalType == CanEvalType.SetOp then
-            evalType = CanEvalType.SetEq
+            if self.genSrcTypeInfo:get_canDealGenInherit() then
+               evalType = CanEvalType.SetEq
+            else
+             
+               evalType = CanEvalType.SetEqEq
+            end
+            
          else
           
             evalType = canEvalType
@@ -9613,7 +9631,7 @@ function BoxTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    
    do
       local _switchExp = canEvalType
-      if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut or _switchExp == CanEvalType.SetEq then
+      if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut or _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetEqEq then
       else 
          
             return false, nil
@@ -10141,7 +10159,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    
    do
       local _switchExp = canEvalType
-      if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut then
+      if _switchExp == CanEvalType.SetEqEq or _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut then
          if dest == _moduleObj.builtinTypeEmpty then
             
             do
@@ -10201,7 +10219,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    
    
    if dest == _moduleObj.builtinTypeStem_ then
-      return true, nil
+      if canEvalType ~= CanEvalType.SetEqEq then
+         return true, nil
+      end
+      
    end
    
    
@@ -10229,7 +10250,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    end
    
    if dest == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then
-      return true, nil
+      if canEvalType ~= CanEvalType.SetEqEq then
+         return true, nil
+      end
+      
    end
    
    if dest == _moduleObj.builtinTypeForm and (otherSrc:get_kind() == TypeInfoKind.Func or otherSrc:get_kind() == TypeInfoKind.Form or otherSrc:get_kind() == TypeInfoKind.FormFunc ) then
@@ -10262,7 +10286,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    do
       local extTypeInfo = _lune.__Cast( otherSrc, 3, ExtTypeInfo )
       if extTypeInfo ~= nil then
-         if canEvalType ~= CanEvalType.SetEq and not failCreateLuavalWith( extTypeInfo:get_extedType(), LuavalConvKind.ToLua, false ) then
+         if canEvalType ~= CanEvalType.SetEq and canEvalType ~= CanEvalType.SetEqEq and not failCreateLuavalWith( extTypeInfo:get_extedType(), LuavalConvKind.ToLua, false ) then
             otherSrc = extTypeInfo:get_extedType()
          end
          
@@ -10432,29 +10456,22 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             local workType1 = dest:get_itemTypeInfoList()[1]
             local workType2 = otherSrc:get_itemTypeInfoList()[1]
             
+            local evalMode
+            
             if not dest:get_canDealGenInherit() then
-               if not workType1:equals( processInfo, workType2, alt2type ) then
-                  return false, nil
-               end
-               
+               evalMode = CanEvalType.SetEqEq
+            elseif destMut then
+               evalMode = CanEvalType.SetEq
             else
              
-               local evalMode
-               
-               if destMut then
-                  evalMode = CanEvalType.SetEq
-               else
-                
-                  evalMode = CanEvalType.SetOpIMut
-               end
-               
-               local ret, mess = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-               
-               
-               if not ret then
-                  return false, mess
-               end
-               
+               evalMode = CanEvalType.SetOpIMut
+            end
+            
+            local ret, mess = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+            
+            
+            if not ret then
+               return false, mess
             end
             
          else
@@ -10476,29 +10493,22 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                local workType1 = dest:get_itemTypeInfoList()[1]
                local workType2 = otherSrc:get_itemTypeInfoList()[1]
                
+               local evalMode
+               
                if not dest:get_canDealGenInherit() then
-                  if not workType1:equals( processInfo, workType2, alt2type ) then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetEqEq
+               elseif destMut then
+                  evalMode = CanEvalType.SetEq
                else
                 
-                  local evalMode
-                  
-                  if destMut then
-                     evalMode = CanEvalType.SetEq
-                  else
-                   
-                     evalMode = CanEvalType.SetOpIMut
-                  end
-                  
-                  local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-                  
-                  
-                  if not ret then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetOpIMut
+               end
+               
+               local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+               
+               
+               if not ret then
+                  return false
                end
                
             else
@@ -10515,29 +10525,22 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                local workType1 = dest:get_itemTypeInfoList()[2]
                local workType2 = otherSrc:get_itemTypeInfoList()[2]
                
+               local evalMode
+               
                if not dest:get_canDealGenInherit() then
-                  if not workType1:equals( processInfo, workType2, alt2type ) then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetEqEq
+               elseif destMut then
+                  evalMode = CanEvalType.SetEq
                else
                 
-                  local evalMode
-                  
-                  if destMut then
-                     evalMode = CanEvalType.SetEq
-                  else
-                   
-                     evalMode = CanEvalType.SetOpIMut
-                  end
-                  
-                  local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-                  
-                  
-                  if not ret then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetOpIMut
+               end
+               
+               local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+               
+               
+               if not ret then
+                  return false
                end
                
             else

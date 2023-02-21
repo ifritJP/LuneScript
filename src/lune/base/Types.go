@@ -171,13 +171,13 @@ func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName 
 // 189: decl @lune.@base.@Types.Position.getDisplayTxt
 func (self Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     var txt string
-    txt = _env.GetVM().String_format("%s:%d:%d", []LnsAny{self.StreamName, self.LineNo, self.Column})
+    txt = _env.GetVM().String_format("%s:%d:%d", Lns_2DDD(self.StreamName, self.LineNo, self.Column))
     var orgPos Types_Position
     orgPos = self.Get_orgPos(_env)
     if self != orgPos{
         var txt2 string
-        txt2 = _env.GetVM().String_format("%s:%d:%d", []LnsAny{orgPos.StreamName, orgPos.LineNo, orgPos.Column})
-        return _env.GetVM().String_format("%s: (%s)", []LnsAny{txt2, txt})
+        txt2 = _env.GetVM().String_format("%s:%d:%d", Lns_2DDD(orgPos.StreamName, orgPos.LineNo, orgPos.Column))
+        return _env.GetVM().String_format("%s: (%s)", Lns_2DDD(txt2, txt))
     }
     return txt
 }
@@ -225,7 +225,7 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     } else if _switch0 == 96 {
         return _env.GetVM().String_sub(self.Txt,1 + 3, len(self.Txt) - 3)
     }
-    Util_err(_env, _env.GetVM().String_format("illegal delimit -- %s", []LnsAny{self.Txt}))
+    Util_err(_env, _env.GetVM().String_format("illegal delimit -- %s", Lns_2DDD(self.Txt)))
 // insert a dummy
     return ""
 }
@@ -257,6 +257,13 @@ func Types_AltBase2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Types_AltBase).FP
+}
+func Types_AltBase_toSlice(slice []LnsAny) []*Types_AltBase {
+    ret := make([]*Types_AltBase, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Types_AltBaseDownCast).ToTypes_AltBase()
+    }
+    return ret
 }
 type Types_AltBaseDownCast interface {
     ToTypes_AltBase() *Types_AltBase
@@ -313,6 +320,13 @@ func Types_TransCtrlInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Types_TransCtrlInfo).FP
+}
+func Types_TransCtrlInfo_toSlice(slice []LnsAny) []*Types_TransCtrlInfo {
+    ret := make([]*Types_TransCtrlInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Types_TransCtrlInfoDownCast).ToTypes_TransCtrlInfo()
+    }
+    return ret
 }
 type Types_TransCtrlInfoDownCast interface {
     ToTypes_TransCtrlInfo() *Types_TransCtrlInfo
@@ -380,6 +394,13 @@ func Types_Position2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(Types_Position)
+}
+func Types_Position_toSlice(slice []LnsAny) []Types_Position {
+    ret := make([]Types_Position, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Types_PositionDownCast).ToTypes_Position()
+    }
+    return ret
 }
 type Types_PositionDownCast interface {
     ToTypes_Position() Types_Position
@@ -467,14 +488,14 @@ type Types_TokenMtd interface {
     ToMap() *LnsMap
     GetExcludedDelimitTxt(_env *LnsEnv) string
     GetLineCount(_env *LnsEnv) LnsInt
-    Get_commentList(_env *LnsEnv) *LnsList
+    Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token]
 }
 type Types_Token struct {
     Kind LnsInt
     Txt string
     Pos Types_Position
     Consecutive bool
-    commentList *LnsList
+    commentList *LnsList2_[*Types_Token]
     FP Types_TokenMtd
 }
 func Types_Token2Stem( obj LnsAny ) LnsAny {
@@ -483,13 +504,12 @@ func Types_Token2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Types_Token).FP
 }
-      
-func Types_Token_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Types_TokenDownCast).ToTypes_Token().FP.(T)
-   }
-   return ret
+func Types_Token_toSlice(slice []LnsAny) []*Types_Token {
+    ret := make([]*Types_Token, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Types_TokenDownCast).ToTypes_Token()
+    }
+    return ret
 }
 type Types_TokenDownCast interface {
     ToTypes_Token() *Types_Token
@@ -511,7 +531,7 @@ func NewTypes_Token(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 Types_Position,
     obj.InitTypes_Token(_env, arg1, arg2, arg3, arg4, arg5)
     return obj
 }
-func (self *Types_Token) Get_commentList(_env *LnsEnv) *LnsList{ return self.commentList }
+func (self *Types_Token) Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token]{ return self.commentList }
 func (self *Types_Token) ToMapSetup( obj *LnsMap ) *LnsMap {
     obj.Items["kind"] = Lns_ToCollection( self.Kind )
     obj.Items["txt"] = Lns_ToCollection( self.Txt )
@@ -565,11 +585,11 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     } else {
        newObj.Consecutive = conv.(bool)
     }
-    if ok,conv,mess := Lns_ToListSub( objMap.Items["commentList"], false, []Lns_ToObjParam{Lns_ToObjParam{
+    if ok,conv,mess := Lns_ToList2Sub[*Types_Token]( objMap.Items["commentList"], false, []Lns_ToObjParam{Lns_ToObjParam{
             Types_Token_FromMapSub, false,nil}}); !ok {
        return false,nil,"commentList:" + mess.(string)
     } else {
-       newObj.commentList = conv.(*LnsList)
+       newObj.commentList = conv.(*LnsList2_[*Types_Token])
     }
     return true, newObj, nil
 }
@@ -579,7 +599,7 @@ func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,po
     self.Txt = txt
     self.Pos = pos
     self.Consecutive = consecutive
-    self.commentList = Lns_unwrapDefault( commentList, NewLnsList([]LnsAny{})).(*LnsList)
+    self.commentList = Lns_unwrapDefault( commentList, NewLnsList2_[*Types_Token]([]*Types_Token{})).(*LnsList2_[*Types_Token])
 }
 
 
@@ -598,6 +618,13 @@ func Types_StdinFile2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Types_StdinFile).FP
+}
+func Types_StdinFile_toSlice(slice []LnsAny) []*Types_StdinFile {
+    ret := make([]*Types_StdinFile, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Types_StdinFileDownCast).ToTypes_StdinFile()
+    }
+    return ret
 }
 type Types_StdinFileDownCast interface {
     ToTypes_StdinFile() *Types_StdinFile
@@ -633,7 +660,7 @@ func Lns_Types_init(_env *LnsEnv) {
     Lns_InitMod()
     Lns_Util_init(_env)
     Types_nonePos = NewTypes_Position(_env, 0, -1, "eof", nil)
-    Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", Types_nonePos, false, NewLnsList([]LnsAny{}))
+    Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", Types_nonePos, false, NewLnsList2_[*Types_Token]([]*Types_Token{}))
     Types_defaultParserPipeSize = 100
 }
 func init() {

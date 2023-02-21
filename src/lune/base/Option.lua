@@ -216,7 +216,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 13608
+   return 13697
 end
 
 
@@ -644,20 +644,20 @@ end
    return obj
 end
          
-         do
-            local projInfo = ProjInfo._fromStem( (Json.fromStr( file:read( "*a" ) or "" ) ) )
-            if projInfo ~= nil then
-               local workArgList = {}
-               for __index, arg in ipairs( projInfo.cmd_option ) do
-                  table.insert( workArgList, arg )
-               end
-               
-               for __index, arg in ipairs( argList ) do
-                  table.insert( workArgList, arg )
-               end
-               
-               argList = workArgList
+         local projInfo, mess = ProjInfo._fromStem( (Json.fromStr( file:read( "*a" ) or "" ) ) )
+         if projInfo ~= nil then
+            local workArgList = {}
+            for __index, arg in ipairs( projInfo.cmd_option ) do
+               table.insert( workArgList, arg )
             end
+            
+            for __index, arg in ipairs( argList ) do
+               table.insert( workArgList, arg )
+            end
+            
+            argList = workArgList
+         else
+            print( "failed to load -- lune.js", mess )
          end
          
          file:close(  )
@@ -800,7 +800,9 @@ end
                      for __index, typeId in ipairs( __sorted ) do
                         local builtinTypeInfo = __map[ typeId ]
                         do
-                           Util.println( typeId, builtinTypeInfo:get_typeInfo():getTxt(  ) )
+                           local parentName = builtinTypeInfo:get_typeInfo():getParentFullName( Ast.defaultTypeNameCtrl )
+                           local dispName = builtinTypeInfo:get_typeInfo():get_display_stirng()
+                           Util.println( typeId, string.format( "%s%s", parentName, dispName) )
                         end
                      end
                   end
@@ -1088,7 +1090,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 773, function (  )
+   Log.log( Log.Level.Log, __func__, 778, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

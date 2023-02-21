@@ -134,11 +134,11 @@ pub alge Literal {
    Str( val:str ),
    Bool( val:bool ),
    Symbol( val:str ),
-   Field( val:&List<str> ),
-   LIST( val:&List<&Literal> ),
-   ARRAY( val:&List<&Literal> ),
-   SET( val:&List<&Literal> ),
-   MAP( val:&Map<&Literal,&Literal> ),
+   Field( val:&_List<str> ),
+   LIST( val:&_List<&Literal> ),
+   ARRAY( val:&_List<&Literal> ),
+   SET( val:&_List<&Literal> ),
+   MAP( val:&_Map<&Literal,&Literal> ),
 }
 
 pub fn getLiteralObj( obj:&Literal ):stem! {
@@ -1159,9 +1159,10 @@ pub override fn IfNode.visitSub(
    return true;
 }
  
-pub class MRetExp {
+pub class MRetExp
+ {
    /** 多値のノード */
-   let exp:&Node {pub};
+    let exp:&Node {pub};
    /** ExpListNode 中の exp のインデックス */
    let index:int {pub};
 }
@@ -1194,6 +1195,24 @@ pub override fn ExpListNode.setLValue() mut {
    foreach expNode in self.$expList {
       expNode.isLValue = true;
    }
+}
+pub fn ExpListNode.getDDD() : &Node! {
+   let len = #self.$expList;
+   switch self.$expList[ len ].$expType.$kind {
+      case .DDD {
+         return self.$expList[ len ];
+      }
+      case .Abbr {
+         if len == 1{
+            return nil;
+         }
+         if self.$expList[ len - 1 ].$expType.$kind == .DDD {
+            return self.$expList[ len - 1 ];
+         }
+         return nil;
+      }
+   }
+   return nil;
 }
 
 
@@ -2537,7 +2556,7 @@ pub override fn LiteralRealNode.setupLiteralTokenList( list: List<&Parser.Token>
 }
 
 pub override fn LiteralArrayNode.getLiteral(): Literal!, str! {
-   let mut literalList:List<Literal> = [];
+   let mut literalList:_List<Literal> = [];
    if! self.expList {
       foreach node in _exp.get_expList() {
          let literal, mess = node.getLiteral();
@@ -2570,7 +2589,7 @@ pub override fn LiteralArrayNode.setupLiteralTokenList( list: List<&Parser.Token
 }
 
 pub override fn LiteralListNode.getLiteral(): Literal!, str! {
-   let mut literalList:List<Literal> = [];
+   let mut literalList:_List<Literal> = [];
    if! self.expList {
       foreach node in _exp.get_expList() {
          let literal, mess = node.getLiteral();
@@ -2604,7 +2623,7 @@ pub override fn LiteralListNode.setupLiteralTokenList( list: List<&Parser.Token>
 
 
 pub override fn LiteralSetNode.getLiteral(): Literal!, str! {
-   let mut literalList:List<Literal> = [];
+   let mut literalList:_List<Literal> = [];
    if! self.expList {
       foreach node in _exp.get_expList() {
          let literal, mess = node.getLiteral();
@@ -2637,7 +2656,7 @@ pub override fn LiteralSetNode.setupLiteralTokenList( list: List<&Parser.Token> 
 }
 
 pub override fn LiteralMapNode.getLiteral(): Literal!, str! {
-   let mut litMap:Map<&Literal,&Literal> = {};
+   let mut litMap:_Map<&Literal,&Literal> = {};
    foreach val, key in self.map {
       let keyLiteral, keyMess = key.getLiteral();
       let valLiteral, valMess = val.getLiteral();
@@ -2787,7 +2806,7 @@ pub override fn RefFieldNode.getLiteral(): Literal!, str! {
       }
    }
    
-   let mut tokenList:List<str> = [];
+   let mut tokenList:_List<str> = [];
    let literal, mess = self.prefix.getLiteral();
    when! literal {
       match literal {

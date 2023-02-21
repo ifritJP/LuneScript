@@ -370,12 +370,24 @@ func Lns_ToList2Sub[T any](
 		}
 		return false, nil, "nil"
 	}
+
 	itemParam := paramList[0]
 	if val, ok := obj.(*LnsList); ok {
 		list := make([]T, len(val.Items))
-		for index, val := range val.Items {
+		for index, obj := range val.Items {
 			success, conved, mess :=
-				itemParam.Func(val, itemParam.Nilable, itemParam.Child)
+				itemParam.Func(obj, itemParam.Nilable, itemParam.Child)
+			if !success {
+				return false, nil, fmt.Sprintf("%d:%s", index+1, mess)
+			}
+			list[index] = conved.(T)
+		}
+		return true, NewLnsList2_[T](list), nil
+	} else if val, ok := obj.(*LnsList2_[T]); ok {
+		list := make([]T, len(val.Items))
+		for index, obj := range val.Items {
+			success, conved, mess :=
+				itemParam.Func(obj, itemParam.Nilable, itemParam.Child)
 			if !success {
 				return false, nil, fmt.Sprintf("%d:%s", index+1, mess)
 			}
@@ -516,8 +528,8 @@ func (lnsList *LnsList2_[T]) Set(index int, val T) {
 		}
 	}
 }
-func (lnsList *LnsList2_[T]) Unpack() []T {
-	ret := make([]T, len(lnsList.Items))
+func (lnsList *LnsList2_[T]) Unpack() []LnsAny {
+	ret := make([]LnsAny, len(lnsList.Items))
 	for index := 0; index < len(ret); index++ {
 		ret[index] = lnsList.Items[index]
 	}
@@ -674,6 +686,19 @@ func Lns_ToSet2Sub[T comparable](
 	}
 	itemParam := paramList[0]
 	if val, ok := obj.(*LnsSet); ok {
+		list := make([]T, len(val.Items))
+		index := 0
+		for key := range val.Items {
+			success, conved, mess :=
+				itemParam.Func(key, itemParam.Nilable, itemParam.Child)
+			if !success {
+				return false, nil, fmt.Sprintf("%s:%s", key, mess)
+			}
+			list[index] = conved.(T)
+			index++
+		}
+		return true, NewLnsSet2_[T](list), nil
+	} else if val, ok := obj.(*LnsSet2_[T]); ok {
 		list := make([]T, len(val.Items))
 		index := 0
 		for key := range val.Items {

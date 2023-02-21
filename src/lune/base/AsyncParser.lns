@@ -276,7 +276,7 @@ pub class Parser extend Async.Pipe<AsyncItem> {
          if! io.open( path, "r" ) {
             return _exp, "";
          }
-         return nil, "failed to open -- %s" (path);
+         return nil, "%s: failed to open -- %s" (__func__, path);
       }
       fn createStreamWithBaseDir(mod:str,baseDir:str!, path:str) __trans : iStream!, str {
          when! baseDir {

@@ -23,6 +23,13 @@ func AstInfo_ASTInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*AstInfo_ASTInfo).FP
 }
+func AstInfo_ASTInfo_toSlice(slice []LnsAny) []*AstInfo_ASTInfo {
+    ret := make([]*AstInfo_ASTInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(AstInfo_ASTInfoDownCast).ToAstInfo_ASTInfo()
+    }
+    return ret
+}
 type AstInfo_ASTInfoDownCast interface {
     ToAstInfo_ASTInfo() *AstInfo_ASTInfo
 }

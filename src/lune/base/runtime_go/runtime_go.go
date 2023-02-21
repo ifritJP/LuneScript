@@ -553,6 +553,14 @@ func Lns_2DDDGen[T any](multi ...LnsAny) []T {
 	return append(newMulti, multi[len(multi)-1].(T))
 }
 
+func Lns_2Slice[T any](slice []LnsAny) []T {
+	ret := make([]T, len(slice))
+	for index, val := range slice {
+		ret[index] = val.(T)
+	}
+	return ret
+}
+
 func Lns_ToString(val LnsAny) string {
 	if Lns_IsNil(val) {
 		return "nil"

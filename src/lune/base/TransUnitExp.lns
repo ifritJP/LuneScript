@@ -982,8 +982,8 @@ fn TransUnit.getCanDealGenInherit(
 {
    let defaultSetting;
    switch targetType {
-      // case Ast.builtinTypeSet, Ast.builtinTypeList {
-      case Ast.builtinTypeSet {
+      case Ast.builtinTypeSet, Ast.builtinTypeList {
+      // case Ast.builtinTypeSet {
       // case Ast.builtinTypeNone {
          defaultSetting = false;
       }
@@ -1488,8 +1488,20 @@ fn TransUnit.prepareExpCall(
    let mut argList: &Nodes.ExpListNode! = nil;
    if work.txt ~= termTxt {
       self.pushback();
+      let argTypeInfoList:&List<&Ast.TypeInfo>;
+      if #genericsClass.$itemTypeInfoList > 0 {
+         let alt2typeMap = genericsClass.createAlt2typeMap( false );
+         let workTypeInfoList:List<&Ast.TypeInfo> = [];
+         foreach typeInfo in funcTypeInfo.$argTypeInfoList {
+            workTypeInfoList.insert(
+               Ast.AlternateTypeInfo.getAssign( typeInfo, alt2typeMap ) );
+         }
+         argTypeInfoList = workTypeInfoList;
+      } else {
+         argTypeInfoList = funcTypeInfo.$argTypeInfoList;
+      }
       argList = self.analyzeExpList(
-         false, false, false, false, nil, funcTypeInfo.$argTypeInfoList ## );
+         false, false, false, false, nil, argTypeInfoList ## );
       self.checkNextToken( termTxt );
 
       when! argList {
@@ -1621,6 +1633,11 @@ mut : &List<&Ast.TypeInfo>
          funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_unpack ##) or
          funcTypeInfo.equals( self.processInfo, self.builtinFunc.array_unpack ##)
       {
+         // if funcTypeInfo.equals( self.processInfo, self.builtinFunc.__list_unpack ##) {
+         //    self.addErrMess( firstToken.pos,
+         //                     "not support -- %s" (funcTypeInfo.getTxt(##)) );
+         // }
+         
          // unpack の型を list の要素の DDD 型にする
          let prefixType = refFieldNode.$prefix.$expType;
          if #prefixType.$itemTypeInfoList > 0 {
@@ -4314,7 +4331,8 @@ fn TransUnit.analyzeExpUnwrap(
    let nextToken = self.getToken(##);
    let mut insNode: Nodes.Node! = nil;
    if nextToken.txt == "default" {
-      insNode = self.analyzeExpOneRVal( false, false, nil, nil, expectType );
+      insNode = self.analyzeExpOneRVal(
+         false, false, nil, nil, expectType or expNode.$expType.$nonnilableType );
    }
    else {
       self.pushback();

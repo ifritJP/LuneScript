@@ -27,15 +27,15 @@ func (self *OutputDepend_DependInfo) AddSubMod(_env *LnsEnv, path string) {
 }
 // 52: decl @lune.@base.@OutputDepend.DependInfo.output
 func (self *OutputDepend_DependInfo) Output(_env *LnsEnv, stream Lns_oStream) {
-    stream.Write(_env, _env.GetVM().String_format("%s.meta: \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
-    stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string)}))
+    stream.Write(_env, _env.GetVM().String_format("%s.meta: \\\n", Lns_2DDD(Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string))))
+    stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", Lns_2DDD(Lns_car(_env.GetVM().String_gsub(self.targetModule,"%.", "/")).(string))))
     for _, _mod := range( self.importModuleList.Items ) {
-        mod := _mod.(string)
-        stream.Write(_env, _env.GetVM().String_format("  %s.meta \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string)}))
+        mod := _mod
+        stream.Write(_env, _env.GetVM().String_format("  %s.meta \\\n", Lns_2DDD(Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string))))
     }
     for _, _path := range( self.subModList.Items ) {
-        path := _path.(string)
-        stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", []LnsAny{Lns_car(_env.GetVM().String_gsub(path,"%.", "/")).(string)}))
+        path := _path
+        stream.Write(_env, _env.GetVM().String_format("  %s.lns \\\n", Lns_2DDD(Lns_car(_env.GetVM().String_gsub(path,"%.", "/")).(string))))
     }
 }
 // 76: decl @lune.@base.@OutputDepend.convFilter.processRoot
@@ -68,8 +68,8 @@ type OutputDepend_DependInfoMtd interface {
 }
 type OutputDepend_DependInfo struct {
     targetModule string
-    importModuleList *LnsList
-    subModList *LnsList
+    importModuleList *LnsList2_[string]
+    subModList *LnsList2_[string]
     FP OutputDepend_DependInfoMtd
 }
 func OutputDepend_DependInfo2Stem( obj LnsAny ) LnsAny {
@@ -77,6 +77,13 @@ func OutputDepend_DependInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*OutputDepend_DependInfo).FP
+}
+func OutputDepend_DependInfo_toSlice(slice []LnsAny) []*OutputDepend_DependInfo {
+    ret := make([]*OutputDepend_DependInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(OutputDepend_DependInfoDownCast).ToOutputDepend_DependInfo()
+    }
+    return ret
 }
 type OutputDepend_DependInfoDownCast interface {
     ToOutputDepend_DependInfo() *OutputDepend_DependInfo
@@ -101,8 +108,8 @@ func NewOutputDepend_DependInfo(_env *LnsEnv, arg1 string) *OutputDepend_DependI
 // 38: DeclConstr
 func (self *OutputDepend_DependInfo) InitOutputDepend_DependInfo(_env *LnsEnv, targetModule string) {
     self.targetModule = Ast_TypeInfo_getModulePath(_env, targetModule)
-    self.importModuleList = NewLnsList([]LnsAny{})
-    self.subModList = NewLnsList([]LnsAny{})
+    self.importModuleList = NewLnsList2_[string]([]string{})
+    self.subModList = NewLnsList2_[string]([]string{})
 }
 
 
@@ -221,13 +228,12 @@ func OutputDepend_convFilter2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*OutputDepend_convFilter).FP
 }
-      
-func OutputDepend_convFilter_toSlice_Nodes_Filter(slice []LnsAny) []*Nodes_Filter {
-   ret := make([]*Nodes_Filter, len(slice))
-   for index, val := range slice {
-      ret[index] = &val.(OutputDepend_convFilterDownCast).ToOutputDepend_convFilter().Nodes_Filter
-   }
-   return ret
+func OutputDepend_convFilter_toSlice(slice []LnsAny) []*OutputDepend_convFilter {
+    ret := make([]*OutputDepend_convFilter, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(OutputDepend_convFilterDownCast).ToOutputDepend_convFilter()
+    }
+    return ret
 }
 type OutputDepend_convFilterDownCast interface {
     ToOutputDepend_convFilter() *OutputDepend_convFilter

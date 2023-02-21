@@ -67,12 +67,12 @@ func Testing_outputAllResult(_env *LnsEnv, stream Lns_oStream) {
 
 // 33: decl @lune.@base.@Testing.Result.outputResult
 func (self *Testing_Result) OutputResult(_env *LnsEnv, stream Lns_oStream) {
-    stream.Write(_env, _env.GetVM().String_format("test total: %s %d (OK:%d, NG:%d)\n", []LnsAny{self.name, self.okNum + self.ngNum, self.okNum, self.ngNum}))
+    stream.Write(_env, _env.GetVM().String_format("test total: %s %d (OK:%d, NG:%d)\n", Lns_2DDD(self.name, self.okNum + self.ngNum, self.okNum, self.ngNum)))
 }
 // 39: decl @lune.@base.@Testing.Result.err
 func (self *Testing_Result) Err(_env *LnsEnv, mess string,mod string,lineNo LnsInt) {
     self.ngNum = self.ngNum + 1
-    Lns_io_stderr.Write(_env, _env.GetVM().String_format("error: %s:%d: %s\n", []LnsAny{mod, lineNo, mess}))
+    Lns_io_stderr.Write(_env, _env.GetVM().String_format("error: %s:%d: %s\n", Lns_2DDD(mod, lineNo, mess)))
 }
 // 44: decl @lune.@base.@Testing.Result.isTrue
 func (self *Testing_Result) IsTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg LnsAny,mod string,lineNo LnsInt) bool {
@@ -80,9 +80,9 @@ func (self *Testing_Result) IsTrue(_env *LnsEnv, val1 LnsAny,val1txt string,msg 
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.GetVM().String_format("not true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("not true -- %s:%s:[%s]\n", Lns_2DDD(_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+        _env.SetStackVal( "") ).(string), val1txt, val1)), mod, lineNo)
     return false
 }
 // 54: decl @lune.@base.@Testing.Result.isNotTrue
@@ -91,9 +91,9 @@ func (self *Testing_Result) IsNotTrue(_env *LnsEnv, val1 LnsAny,val1txt string,m
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.GetVM().String_format("is true -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("is true -- %s:%s:[%s]\n", Lns_2DDD(_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+        _env.SetStackVal( "") ).(string), val1txt, val1)), mod, lineNo)
     return false
 }
 // 64: decl @lune.@base.@Testing.Result.isNil
@@ -102,9 +102,9 @@ func (self *Testing_Result) IsNil(_env *LnsEnv, val1 LnsAny,val1txt string,msg L
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.GetVM().String_format("is not nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("is not nil -- %s:%s:[%s]\n", Lns_2DDD(_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+        _env.SetStackVal( "") ).(string), val1txt, val1)), mod, lineNo)
     return false
 }
 // 74: decl @lune.@base.@Testing.Result.isNotNil
@@ -113,9 +113,9 @@ func (self *Testing_Result) IsNotNil(_env *LnsEnv, val1 LnsAny,val1txt string,ms
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.GetVM().String_format("is nil -- %s:%s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("is nil -- %s:%s:[%s]\n", Lns_2DDD(_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1}), mod, lineNo)
+        _env.SetStackVal( "") ).(string), val1txt, val1)), mod, lineNo)
     return false
 }
 // 84: decl @lune.@base.@Testing.Result.checkEq
@@ -124,9 +124,9 @@ func (self *Testing_Result) CheckEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val1tx
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.GetVM().String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("not equal -- %s:%s:[%s] != %s:[%s]\n", Lns_2DDD(_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
+        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2)), mod, lineNo)
     return false
 }
 // 97: decl @lune.@base.@Testing.Result.checkNotEq
@@ -135,9 +135,9 @@ func (self *Testing_Result) CheckNotEq(_env *LnsEnv, val1 LnsAny,val2 LnsAny,val
         self.okNum = self.okNum + 1
         return true
     }
-    self.FP.Err(_env, _env.GetVM().String_format("equal -- %s:%s:[%s] == %s:[%s]\n", []LnsAny{_env.PopVal( _env.IncStack() ||
+    self.FP.Err(_env, _env.GetVM().String_format("equal -- %s:%s:[%s] == %s:[%s]\n", Lns_2DDD(_env.PopVal( _env.IncStack() ||
         _env.SetStackVal( msg) ||
-        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2}), mod, lineNo)
+        _env.SetStackVal( "") ).(string), val1txt, val1, val2txt, val2)), mod, lineNo)
     return false
 }
 // 142: decl @lune.@base.@Testing.TestModuleInfo.addCase
@@ -147,7 +147,7 @@ func (self *Testing_TestModuleInfo) AddCase(_env *LnsEnv, name string,testCase *
 // 146: decl @lune.@base.@Testing.TestModuleInfo.run
 func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
     self.runned = true
-    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
+    Lns_print(Lns_2DDD(_env.GetVM().String_format("module: %s %s", Lns_2DDD(self.name, _env.GetVM().String_rep("=", 30)))))
     {
         __forsortCollection0 := self.testcaseMap
         __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
@@ -155,7 +155,7 @@ func (self *Testing_TestModuleInfo) Run(_env *LnsEnv) {
         for _, _name := range( __forsortSorted0.Items ) {
             testcase := __forsortCollection0.Items[ _name ].(Testing_TestCaseDownCast).ToTesting_TestCase()
             name := _name.(string)
-            Lns_print([]LnsAny{_env.GetVM().String_format("%s: %s", []LnsAny{name, _env.GetVM().String_rep("-", 15)})})
+            Lns_print(Lns_2DDD(_env.GetVM().String_format("%s: %s", Lns_2DDD(name, _env.GetVM().String_rep("-", 15)))))
             testcase.FP.Get_func(_env)(_env, NewTesting_Ctrl(_env, testcase.FP.Get_result(_env)))
         }
     }
@@ -165,7 +165,7 @@ func (self *Testing_TestModuleInfo) OutputResult(_env *LnsEnv, stream Lns_oStrea
     if Lns_op_not(self.runned){
         return 
     }
-    Lns_print([]LnsAny{_env.GetVM().String_format("module: %s %s", []LnsAny{self.name, _env.GetVM().String_rep("=", 30)})})
+    Lns_print(Lns_2DDD(_env.GetVM().String_format("module: %s %s", Lns_2DDD(self.name, _env.GetVM().String_rep("=", 30)))))
     {
         __forsortCollection0 := self.testcaseMap
         __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
@@ -198,6 +198,13 @@ func Testing_Result2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Testing_Result).FP
+}
+func Testing_Result_toSlice(slice []LnsAny) []*Testing_Result {
+    ret := make([]*Testing_Result, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Testing_ResultDownCast).ToTesting_Result()
+    }
+    return ret
 }
 type Testing_ResultDownCast interface {
     ToTesting_Result() *Testing_Result
@@ -246,6 +253,13 @@ func Testing_Ctrl2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Testing_Ctrl).FP
+}
+func Testing_Ctrl_toSlice(slice []LnsAny) []*Testing_Ctrl {
+    ret := make([]*Testing_Ctrl, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Testing_CtrlDownCast).ToTesting_Ctrl()
+    }
+    return ret
 }
 type Testing_CtrlDownCast interface {
     ToTesting_Ctrl() *Testing_Ctrl
@@ -320,6 +334,13 @@ func Testing_TestCase2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Testing_TestCase).FP
 }
+func Testing_TestCase_toSlice(slice []LnsAny) []*Testing_TestCase {
+    ret := make([]*Testing_TestCase, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Testing_TestCaseDownCast).ToTesting_TestCase()
+    }
+    return ret
+}
 type Testing_TestCaseDownCast interface {
     ToTesting_TestCase() *Testing_TestCase
 }
@@ -367,6 +388,13 @@ func Testing_TestModuleInfo2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Testing_TestModuleInfo).FP
+}
+func Testing_TestModuleInfo_toSlice(slice []LnsAny) []*Testing_TestModuleInfo {
+    ret := make([]*Testing_TestModuleInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Testing_TestModuleInfoDownCast).ToTesting_TestModuleInfo()
+    }
+    return ret
 }
 type Testing_TestModuleInfoDownCast interface {
     ToTesting_TestModuleInfo() *Testing_TestModuleInfo

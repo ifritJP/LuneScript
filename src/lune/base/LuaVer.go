@@ -118,6 +118,13 @@ func LuaVer_LuaVerInfo2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*LuaVer_LuaVerInfo).FP
 }
+func LuaVer_LuaVerInfo_toSlice(slice []LnsAny) []*LuaVer_LuaVerInfo {
+    ret := make([]*LuaVer_LuaVerInfo, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(LuaVer_LuaVerInfoDownCast).ToLuaVer_LuaVerInfo()
+    }
+    return ret
+}
 type LuaVer_LuaVerInfoDownCast interface {
     ToLuaVer_LuaVerInfo() *LuaVer_LuaVerInfo
 }

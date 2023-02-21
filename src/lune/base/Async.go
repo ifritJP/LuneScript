@@ -88,14 +88,14 @@ func (self *Async_Waiter) StartRunner(_env *LnsEnv, runner *Async_RunnerBase,mod
         _env.SetStackVal( Lns_op_not(self.pipe)) ||
         _env.SetStackVal( Lns_op_not(result)) ).(bool){
         self.asyncNum = self.asyncNum - 1
-        self.finRunnerList.Insert(Async_RunnerBase2Stem(runner))
+        self.finRunnerList.Insert(runner)
     }
     return result
 }
 // 183: decl @lune.@base.@Async.Waiter.wait
 func (self *Async_Waiter) Wait(_env *LnsEnv, _func Async_EndProcessFunc) {
     for _, _runner := range( self.finRunnerList.Items ) {
-        runner := _runner.(Async_RunnerBaseDownCast).ToAsync_RunnerBase()
+        runner := _runner
         _func(_env, runner)
     }
     {
@@ -135,6 +135,13 @@ func Async_PipeItem2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Async_PipeItem).FP
+}
+func Async_PipeItem_toSlice(slice []LnsAny) []*Async_PipeItem {
+    ret := make([]*Async_PipeItem, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Async_PipeItemDownCast).ToAsync_PipeItem()
+    }
+    return ret
 }
 type Async_PipeItemDownCast interface {
     ToAsync_PipeItem() *Async_PipeItem
@@ -182,6 +189,13 @@ func Async_Pipe2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Async_Pipe).FP
 }
+func Async_Pipe_toSlice(slice []LnsAny) []*Async_Pipe {
+    ret := make([]*Async_Pipe, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Async_PipeDownCast).ToAsync_Pipe()
+    }
+    return ret
+}
 type Async_PipeDownCast interface {
     ToAsync_Pipe() *Async_Pipe
 }
@@ -228,13 +242,12 @@ func Async_RunnerBase2Stem( obj LnsAny ) LnsAny {
     }
     return obj.(*Async_RunnerBase).FP
 }
-      
-func Async_RunnerBase_toSlice__IF[T any](slice []LnsAny) []T {
-   ret := make([]T, len(slice))
-   for index, val := range slice {
-      ret[index] = val.(Async_RunnerBaseDownCast).ToAsync_RunnerBase().FP.(T)
-   }
-   return ret
+func Async_RunnerBase_toSlice(slice []LnsAny) []*Async_RunnerBase {
+    ret := make([]*Async_RunnerBase, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Async_RunnerBaseDownCast).ToAsync_RunnerBase()
+    }
+    return ret
 }
 type Async_RunnerBaseDownCast interface {
     ToAsync_RunnerBase() *Async_RunnerBase
@@ -271,7 +284,7 @@ type Async_WaiterMtd interface {
 type Async_Waiter struct {
     pipe LnsAny
     asyncNum LnsInt
-    finRunnerList *LnsList
+    finRunnerList *LnsList2_[*Async_RunnerBase]
     FP Async_WaiterMtd
 }
 func Async_Waiter2Stem( obj LnsAny ) LnsAny {
@@ -279,6 +292,13 @@ func Async_Waiter2Stem( obj LnsAny ) LnsAny {
         return nil
     }
     return obj.(*Async_Waiter).FP
+}
+func Async_Waiter_toSlice(slice []LnsAny) []*Async_Waiter {
+    ret := make([]*Async_Waiter, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Async_WaiterDownCast).ToAsync_Waiter()
+    }
+    return ret
 }
 type Async_WaiterDownCast interface {
     ToAsync_Waiter() *Async_Waiter
@@ -305,7 +325,7 @@ func (self *Async_Waiter) Get_pipe(_env *LnsEnv) LnsAny{ return self.pipe }
 func (self *Async_Waiter) InitAsync_Waiter(_env *LnsEnv, pipeItemCount LnsInt) {
     self.pipe = LnsAny(NewLnspipe( pipeItemCount))
     self.asyncNum = 0
-    self.finRunnerList = NewLnsList([]LnsAny{})
+    self.finRunnerList = NewLnsList2_[*Async_RunnerBase]([]*Async_RunnerBase{})
 }
 
 
