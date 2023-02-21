@@ -1270,10 +1270,9 @@ function BuiltinFuncType:isStrFormFunc( typeInfo )
 end
 
 
-function Builtin:getTypeInfo( typeName )
+function Builtin:getTypeInfo( typeName, targetScope )
 
    local _
-   
    do
       local _switchExp = typeName
       if _switchExp == "_T" then
@@ -1413,7 +1412,7 @@ function Builtin:getTypeInfo( typeName )
          do
             local tailIndex = genTypeName:find( "[,>]" )
             if tailIndex ~= nil then
-               local genType = self:getTypeInfo( genTypeName:sub( 1, tailIndex - 1 ) )
+               local genType = self:getTypeInfo( genTypeName:sub( 1, tailIndex - 1 ), targetScope )
                table.insert( genTypeList, genType )
                genTypeName = genTypeName:sub( tailIndex + 1 )
             else
@@ -1429,29 +1428,43 @@ function Builtin:getTypeInfo( typeName )
    
    
    local typeInfo = Ast.headTypeInfo
+   local nilable
+   
+   local orgTypeName
+   
    if typeName:find( "!$" ) then
-      local orgTypeName = typeName:gsub( "!$", "" )
-      do
-         local _exp = getTypeInfoFromScope( self.transUnit:get_scope(), orgTypeName, genTypeList )
-         if _exp ~= nil then
-            typeInfo = _exp
-         else
-            Util.err( string.format( "not found builtin -- %s", orgTypeName) )
-         end
-      end
-      
-      typeInfo = typeInfo:get_nilableTypeInfo()
+      nilable = true
+      orgTypeName = typeName:gsub( "!$", "" )
    else
     
-      do
-         local _exp = getTypeInfoFromScope( self.transUnit:get_scope(), typeName, genTypeList )
-         if _exp ~= nil then
-            typeInfo = _exp
-         else
-            Util.err( string.format( "not found builtin -- %s", typeName) )
+      nilable = false
+      orgTypeName = typeName
+   end
+   
+   do
+      local _exp = getTypeInfoFromScope( self.transUnit:get_scope(), orgTypeName, genTypeList )
+      if _exp ~= nil then
+         typeInfo = _exp
+      else
+         if targetScope ~= nil then
+            do
+               local _exp = getTypeInfoFromScope( targetScope, orgTypeName, genTypeList )
+               if _exp ~= nil then
+                  typeInfo = _exp
+               end
+            end
+            
          end
+         
       end
-      
+   end
+   
+   if typeInfo == Ast.headTypeInfo then
+      Util.err( string.format( "not found builtin -- %s", orgTypeName) )
+   end
+   
+   if nilable then
+      typeInfo = typeInfo:get_nilableTypeInfo()
    end
    
    if mutable then
@@ -1463,31 +1476,44 @@ function Builtin:getTypeInfo( typeName )
 end
 
 
-function Builtin:processField( name, fieldName, info, parentInfo )
+function Builtin:createGenType( typeName, genTypeList, workParentInfo )
+
+   local parentInfo = workParentInfo or Ast.headTypeInfo
+   
+   local name = typeName
+   if typeName:find( "<" ) then
+      name = ""
+      do
+         for token in typeName:gmatch( "[^<>,%s]+" ) do
+            if #name == 0 then
+               name = token
+            else
+             
+               table.insert( genTypeList, (self.processInfo:createAlternate( true, #genTypeList + 1, token, Ast.AccessMode.Pri, parentInfo ) ) )
+            end
+            
+         end
+         
+      end
+      
+   end
+   
+   return name
+end
+
+
+function Builtin:processField( prefixName, orgName, fieldName, info, parentInfo )
 
    self.hasLuaval = false
-   if self.targetLuaVer:isSupport( string.format( "%s.%s", name, fieldName) ) then
+   if self.targetLuaVer:isSupport( string.format( "%s.%s", prefixName, fieldName) ) then
       do
          local _switchExp = _lune.nilacc( info['type'], nil, 'item', 1)
          if _switchExp == "var" then
             local symbol = _lune.unwrap( self.transUnit:get_scope():add( self.processInfo, Ast.SymbolKind.Var, false, true, fieldName, nil, self:getTypeInfo( _lune.unwrap( _lune.nilacc( info['typeInfo'], nil, 'item', 1)) ), Ast.AccessMode.Pub, true, Ast.MutMode.Mut, true, false ))
             
-            setupBuiltinTypeInfo( name, fieldName, symbol )
+            setupBuiltinTypeInfo( prefixName, fieldName, symbol )
          else 
             
-               local argTypeList = {}
-               for __index, argType in ipairs( _lune.unwrap( info["arg"]) ) do
-                  table.insert( argTypeList, self:getTypeInfo( argType ) )
-               end
-               
-               
-               local retTypeList = {}
-               for __index, retType in ipairs( _lune.unwrap( info["ret"]) ) do
-                  local retTypeInfo = self:getTypeInfo( retType )
-                  table.insert( retTypeList, retTypeInfo )
-               end
-               
-               
                local funcType = _lune.nilacc( info['type'], nil, 'item', 1)
                local mutable
                
@@ -1511,6 +1537,13 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                      abstractFlag = false
                      accessMode = Ast.AccessMode.Pub
                      mutable = funcType == "mut"
+                  elseif _switchExp == "STATIC" then
+                     staticFlag = true
+                     kind = Ast.TypeInfoKind.Func
+                     symbolKind = Ast.SymbolKind.Fun
+                     abstractFlag = false
+                     accessMode = Ast.AccessMode.Pri
+                     mutable = false
                   elseif _switchExp == "abstract" then
                      staticFlag = false
                      kind = Ast.TypeInfoKind.Method
@@ -1552,7 +1585,27 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                
                asyncMode = Ast.Async.Async
                
-               local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, parentInfo, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, nil, argTypeList, retTypeList, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut )
+               local fieldGenTypeList = {}
+               local argTypeList = {}
+               local retTypeList = {}
+               
+               local typeInfo = self.processInfo:createFuncAsync( abstractFlag, true, scope, kind, parentInfo, Ast.getBuiltinMut( parentInfo ), false, true, staticFlag, accessMode, fieldName, asyncMode, fieldGenTypeList, argTypeList, retTypeList, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut )
+               
+               self:createGenType( orgName, fieldGenTypeList, typeInfo )
+               for __index, altType in ipairs( fieldGenTypeList ) do
+                  scope:addAlternate( self.processInfo, accessMode, altType:get_rawTxt(), Types.nonePos, altType )
+               end
+               
+               for __index, argType in ipairs( _lune.unwrap( info["arg"]) ) do
+                  table.insert( argTypeList, self:getTypeInfo( argType, scope ) )
+               end
+               
+               for __index, retType in ipairs( _lune.unwrap( info["ret"]) ) do
+                  local retTypeInfo = self:getTypeInfo( retType, scope )
+                  table.insert( retTypeList, retTypeInfo )
+               end
+               
+               
                if self.hasLuaval then
                   builtinFunc:addLuavalFunc( typeInfo )
                end
@@ -1565,7 +1618,7 @@ function Builtin:processField( name, fieldName, info, parentInfo )
                Ast.addBuiltinMut( typeInfo, scope )
                local symInfo = _lune.unwrap( self.transUnit:get_scope():add( self.processInfo, symbolKind, false, kind == Ast.TypeInfoKind.Func, fieldName, nil, typeInfo, accessMode, staticFlag, mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false ))
                
-               setupBuiltinTypeInfo( name, fieldName, symInfo )
+               setupBuiltinTypeInfo( prefixName, fieldName, symInfo )
          end
       end
       
@@ -1655,30 +1708,6 @@ function Builtin:registClass( nameList, name2FieldInfo, pos, genTypeList )
    end
    
    return parentInfo
-end
-
-
-function Builtin:createGenType( typeName, genTypeList )
-
-   local name = typeName
-   if typeName:find( "<" ) then
-      name = ""
-      do
-         for token in typeName:gmatch( "[^<>,%s]+" ) do
-            if #name == 0 then
-               name = token
-            else
-             
-               table.insert( genTypeList, (self.processInfo:createAlternate( true, #genTypeList + 1, token, Ast.AccessMode.Pri, Ast.headTypeInfo ) ) )
-            end
-            
-         end
-         
-      end
-      
-   end
-   
-   return name
 end
 
 
@@ -1804,15 +1833,16 @@ function Builtin:registBuiltInScope(  )
                   table.insert( __sorted, __key )
                end
                table.sort( __sorted )
-               for __index, fieldName in ipairs( __sorted ) do
-                  local info = __map[ fieldName ]
+               for __index, orgFieldName in ipairs( __sorted ) do
+                  local info = __map[ orgFieldName ]
                   do
+                     local fieldName = orgFieldName:gsub( "<.*", "" )
                      do
                         local _switchExp = fieldName
                         if _switchExp == "__attrib" then
                         else 
                            
-                              self:processField( name:gsub( "%.", "_" ), fieldName, info, parentInfo )
+                              self:processField( name:gsub( "%.", "_" ), orgFieldName, fieldName, info, parentInfo )
                         end
                      end
                      

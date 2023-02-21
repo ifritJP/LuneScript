@@ -87,7 +87,8 @@ macro _DefBuiltinFuncType(
             });
             
             
-            forsort _, memberName in symbolMap {
+            forsort _, workMemberName in symbolMap {
+               let memberName = workMemberName.gsub( "<.*", "" );
                if memberName ~= "__attrib" {
                   let typeName =
                      "%s_%s" ( className ~= "" and className.lower() or "lns",
@@ -405,7 +406,7 @@ _DefBuiltinFuncType( [
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
-         //"__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
+         //"create<M>": { "type": [ "STATIC" ] , "arg": [ "...<M>" ], "ret": [] },
       },
    },
    {
@@ -471,8 +472,7 @@ pub fn BuiltinFuncType.isStrFormFunc( typeInfo:&Ast.TypeInfo ) __async :bool {
    return false;
 }
 
-fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
-
+fn Builtin.getTypeInfo( mut typeName:str, targetScope:&Ast.Scope! ) mut : &Ast.TypeInfo {
    switch typeName {
       case "_T" {
          return Ast.builtinTypeBox.$boxingType;
@@ -585,7 +585,8 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
       let mut genTypeName = typeName.sub( endIndex + 1## );
       while true {
          if! let tailIndex = genTypeName.find( "[,>]" ## ) {
-            let genType = self.getTypeInfo( genTypeName.sub( 1, tailIndex - 1 ) );
+            let genType = self.getTypeInfo(
+               genTypeName.sub( 1, tailIndex - 1 ), targetScope );
             genTypeList.insert( genType );
             genTypeName = genTypeName.sub( tailIndex + 1## );
          }
@@ -599,23 +600,30 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
 
 
    let mut typeInfo:&Ast.TypeInfo = Ast.headTypeInfo;
+   let nilable;
+   let orgTypeName;
    if typeName.find( "!$" ## ) {
-      let orgTypeName = typeName.gsub( "!$", "" );
-      if! getTypeInfoFromScope( self.transUnit.$scope, orgTypeName, genTypeList ) {
-         typeInfo = _exp;
-      }
-      else {
-         Util.err( "not found builtin -- %s" (orgTypeName) ); // バグ
-      }
-      typeInfo = typeInfo.$nilableTypeInfo;
+      nilable = true;
+      orgTypeName = typeName.gsub( "!$", "" );
+   } else {
+      nilable = false;
+      orgTypeName = typeName;
+   }
+   if! getTypeInfoFromScope( self.transUnit.$scope, orgTypeName, genTypeList ) {
+      typeInfo = _exp;
    }
    else {
-      if! getTypeInfoFromScope( self.transUnit.$scope, typeName, genTypeList ) {
-         typeInfo = _exp;
+      when! targetScope {
+         if! getTypeInfoFromScope( targetScope, orgTypeName, genTypeList ) {
+            typeInfo = _exp;
+         }
       }
-      else {
-         Util.err( "not found builtin -- %s" (typeName) ); // バグ
-      }
+   }
+   if typeInfo == Ast.headTypeInfo {
+      Util.err( "not found builtin -- %s" (orgTypeName) ); // バグ
+   }
+   if nilable {
+      typeInfo = typeInfo.$nilableTypeInfo;
    }
    if mutable {
       return typeInfo;
@@ -624,32 +632,46 @@ fn Builtin.getTypeInfo( mut typeName:str ) mut : &Ast.TypeInfo {
    return typeInfo;
 }
 
-fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
-                         parentInfo:&Ast.TypeInfo ) mut
+fn Builtin.createGenType(
+   typeName:str, genTypeList:List<&Ast.AlternateTypeInfo>,
+   mut workParentInfo:&Ast.TypeInfo!) mut : str
+{
+   let parentInfo = workParentInfo or Ast.headTypeInfo;
+
+   let mut name = typeName;
+   if typeName.find( "<" ## ) {
+      name = "";
+      __luago {
+         apply token of typeName.gmatch( "[^<>,%s]+" ) {
+            if #name == 0 {
+               name = token;
+            }
+            else {
+               genTypeList.insert(
+                  (self.processInfo.createAlternate(
+                     true, #genTypeList + 1, token, .Pri, parentInfo ## )) );
+            }
+         }
+      }
+   }
+   return name;
+}
+
+fn Builtin.processField( prefixName:str, orgName:str, fieldName:str,
+                         info:&Map<str,&List<str>>, parentInfo:&Ast.TypeInfo ) mut
 {
    self.hasLuaval = false;
-   if self.targetLuaVer.isSupport( "%s.%s" (name, fieldName) ) {
+   if self.targetLuaVer.isSupport( "%s.%s" (prefixName, fieldName) ) {
       switch info.type$[1] {
          case "var" {
             let symbol = unwrap self.transUnit.$scope.add(
                self.processInfo, .Var, false, true, fieldName, nil,
-               self.getTypeInfo( unwrap info.typeInfo$[1] ), .Pub,
+               self.getTypeInfo( unwrap info.typeInfo$[1] ## ), .Pub,
                true, .Mut, true, false );
             //builtinFunc.register( symbol );
-            setupBuiltinTypeInfo( name, fieldName, symbol );
+            setupBuiltinTypeInfo( prefixName, fieldName, symbol );
          }
          default {
-            let mut argTypeList: List<&Ast.TypeInfo> = [];
-            foreach argType in unwrap info[ "arg" ] {
-               argTypeList.insert( self.getTypeInfo( argType ) );
-            }
-
-            let mut retTypeList: List<&Ast.TypeInfo> = [];
-            foreach retType in unwrap info[ "ret" ] {
-               let retTypeInfo = self.getTypeInfo( retType );
-               retTypeList.insert( retTypeInfo );
-            }
-
             let funcType = info.type$[1];
             let mutable;
 
@@ -666,6 +688,14 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
                   abstractFlag = false;
                   accessMode = .Pub;
                   mutable = funcType == "mut";
+               }
+               case "STATIC" {
+                  staticFlag = true;
+                  kind = .Func;
+                  symbolKind = .Fun;
+                  abstractFlag = false;
+                  accessMode = .Pri; // システム内部で利用するため private とする
+                  mutable = false;
                }
                case "abstract" {
                   staticFlag = false;
@@ -712,12 +742,31 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
             // }
             asyncMode = .Async;
             
+            let fieldGenTypeList:List<&Ast.AlternateTypeInfo> = [];
+            let mut argTypeList: List<&Ast.TypeInfo> = [];
+            let mut retTypeList: List<&Ast.TypeInfo> = [];
+            
             let mut typeInfo = self.processInfo.createFuncAsync(
                abstractFlag, true, scope, kind,
                parentInfo, Ast.getBuiltinMut( parentInfo),
                false, true, staticFlag, accessMode,
-               fieldName, asyncMode, nil, argTypeList, retTypeList,
-               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );     
+               fieldName, asyncMode, fieldGenTypeList, argTypeList, retTypeList,
+               mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
+
+            self.createGenType( orgName, fieldGenTypeList, typeInfo );
+            foreach altType in fieldGenTypeList {
+               scope.addAlternate(
+                  self.processInfo, accessMode, altType.$rawTxt, Types.nonePos, altType );
+            }
+            foreach argType in unwrap info[ "arg" ] {
+               argTypeList.insert( self.getTypeInfo( argType, scope ) );
+            }
+            foreach retType in unwrap info[ "ret" ] {
+               let retTypeInfo = self.getTypeInfo( retType, scope );
+               retTypeList.insert( retTypeInfo );
+            }
+
+            
             if self.hasLuaval {
                builtinFunc.addLuavalFunc( typeInfo );
             }
@@ -733,7 +782,7 @@ fn Builtin.processField( name:str, fieldName:str, info:&Map<str,&List<str>>,
                fieldName, nil, typeInfo, accessMode, staticFlag,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut, true, false );
 
-            setupBuiltinTypeInfo( name, fieldName, symInfo );
+            setupBuiltinTypeInfo( prefixName, fieldName, symInfo );
          }
       }
    }
@@ -759,7 +808,7 @@ fn Builtin.registClass(
    let mut interfaceList:List<&Ast.TypeInfo> = [];
    if! name2FieldInfo.__attrib$.implements {
       foreach ifname in _exp {
-         let ifType = self.getTypeInfo( ifname );
+         let ifType = self.getTypeInfo( ifname ## );
          interfaceList.insert( ifType );
       }
    }
@@ -809,29 +858,6 @@ fn Builtin.registClass(
    return parentInfo;
 }
 
-fn Builtin.createGenType(
-   typeName:str, genTypeList:List<&Ast.AlternateTypeInfo>) mut : str
-{
-   let mut name = typeName;
-   if typeName.find( "<" ## ) {
-      name = "";
-      __luago {
-         apply token of typeName.gmatch( "[^<>,%s]+" ) {
-            if #name == 0 {
-               name = token;
-            }
-            else {
-               genTypeList.insert(
-                  (self.processInfo.createAlternate(
-                     true, #genTypeList + 1,
-                     token, .Pri, Ast.headTypeInfo ## )) );
-            }
-         }
-      }
-   }
-   return name;
-}
-
 fn Builtin.createBuiltinAlge(
    algesymList:List<Map<str,List<Map<str,List<str>>>>> ) __noasync mut
 {
@@ -840,7 +866,7 @@ fn Builtin.createBuiltinAlge(
    foreach algeMap in algesymList {
       foreach valMapList, genAlgeName in algeMap {
          let mut genTypeList:List<&Ast.AlternateTypeInfo> = [];
-         let algeName = self.createGenType( genAlgeName, genTypeList );
+         let algeName = self.createGenType( genAlgeName, genTypeList ## );
 
          let typename2typeInfo:Map<str,&Ast.TypeInfo> = {};
          foreach genType in genTypeList {
@@ -865,7 +891,7 @@ fn Builtin.createBuiltinAlge(
                let valTypeList:List<&Ast.TypeInfo> = [];
                foreach typeName in valTypeNameList {
                   valTypeList.insert(
-                     typename2typeInfo[ typeName ] or self.getTypeInfo( typeName ) );
+                     typename2typeInfo[ typeName ] or self.getTypeInfo( typeName## ) );
                }
                let algeValInfo = new Ast.AlgeValInfo(
                   algeValSym.$name, valTypeList, algeTypeInfo, algeValSym );
@@ -944,7 +970,7 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                   genTypeList, Ast.builtinTypeBox.$itemTypeInfoList );
             }
             default {
-               name = self.createGenType( className, genTypeList );
+               name = self.createGenType( className, genTypeList ## );
                // if className.find( "<" ## ) {
                //    name = "";
                //    __luago {
@@ -977,13 +1003,14 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
             }
 
             // typeid が一定になるようにソートする
-            forsort info, fieldName in name2FieldInfo {
+            forsort info, orgFieldName in name2FieldInfo {
+               let fieldName = orgFieldName.gsub( "<.*", "" );
                switch fieldName {
                   case "__attrib" {
                   }
                   default {
-                     self.processField(
-                        name.gsub( "%.", "_"), fieldName, info, parentInfo );         
+                     self.processField( name.gsub( "%.", "_"), orgFieldName,
+                                        fieldName, info, parentInfo );         
                   }
                }
             }
