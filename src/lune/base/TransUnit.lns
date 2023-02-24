@@ -1362,11 +1362,15 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
 {
    let mut token;
 
-   let mut commentList:List<&Parser.Token> = [];
+   let mut commentList:List<&Parser.Token>! = nil;
    let mut workToken = self.parser.getTokenNoErr(##);
-   while workToken.kind == Parser.TokenKind.Cmnt {
-      commentList.insert( workToken );
-      workToken = self.parser.getTokenNoErr(##);
+   if workToken.kind == Parser.TokenKind.Cmnt {
+      let workCommentList:List<&Parser.Token> = [];
+      while workToken.kind == Parser.TokenKind.Cmnt {
+         workCommentList.insert( workToken );
+         workToken = self.parser.getTokenNoErr(##);
+      }
+      commentList = workCommentList;
    }
    if workToken.$kind ~= .Eof {
       token = workToken;
@@ -1378,12 +1382,16 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
             self.typeNameCtrl, self.$scope, self, token );
       }
       if not self.ctrl_info.compatComment {
-         self.commentCtrl.addDirect( commentList );
+         when! commentList {
+            self.commentCtrl.addDirect( commentList );
+         }
       }
    }
    else {
       token = Parser.getEofToken();
-      self.commentCtrl.addDirect( commentList );
+      when! commentList {
+         self.commentCtrl.addDirect( commentList );
+      }
    }
 
    if #token.$commentList > 0 {

@@ -1771,11 +1771,16 @@ function TransUnit:getTokenNoErr( skipFlag )
    local token
    
    
-   local commentList = {}
+   local commentList = nil
    local workToken = self.parser:getTokenNoErr(  )
-   while workToken.kind == Parser.TokenKind.Cmnt do
-      table.insert( commentList, workToken )
-      workToken = self.parser:getTokenNoErr(  )
+   if workToken.kind == Parser.TokenKind.Cmnt then
+      local workCommentList = {}
+      while workToken.kind == Parser.TokenKind.Cmnt do
+         table.insert( workCommentList, workToken )
+         workToken = self.parser:getTokenNoErr(  )
+      end
+      
+      commentList = workCommentList
    end
    
    if workToken.kind ~= Parser.TokenKind.Eof then
@@ -1786,13 +1791,19 @@ function TransUnit:getTokenNoErr( skipFlag )
       end
       
       if not self.ctrl_info.compatComment then
-         self.commentCtrl:addDirect( commentList )
+         if commentList ~= nil then
+            self.commentCtrl:addDirect( commentList )
+         end
+         
       end
       
    else
     
       token = Parser.getEofToken(  )
-      self.commentCtrl:addDirect( commentList )
+      if commentList ~= nil then
+         self.commentCtrl:addDirect( commentList )
+      end
+      
    end
    
    
