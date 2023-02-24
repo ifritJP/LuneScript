@@ -215,7 +215,7 @@ func (self Types_Position) Comp(_env *LnsEnv, other Types_Position) LnsInt {
     }
     return orgPos.Comp(_env, otherOrgPos)
 }
-// 270: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 276: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -229,7 +229,7 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 290: decl @lune.@base.@Types.Token.getLineCount
+// 296: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
@@ -484,6 +484,12 @@ func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,colum
 
 
 // declaration Class -- Token
+var Types_Token__noneCommentList *LnsList2_[*Types_Token]
+// 252: decl @lune.@base.@Types.Token.___init
+func Types_Token____init_2_(_env *LnsEnv) {
+    Types_Token__noneCommentList = NewLnsList2_[*Types_Token]([]*Types_Token{})
+}
+
 type Types_TokenMtd interface {
     ToMap() *LnsMap
     GetExcludedDelimitTxt(_env *LnsEnv) string
@@ -496,6 +502,7 @@ type Types_Token struct {
     Pos Types_Position
     Consecutive bool
     commentList *LnsList2_[*Types_Token]
+    noneCommentList *LnsList2_[*Types_Token]
     FP Types_TokenMtd
 }
 func Types_Token2Stem( obj LnsAny ) LnsAny {
@@ -593,13 +600,13 @@ func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []L
     }
     return true, newObj, nil
 }
-// 260: DeclConstr
+// 266: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     self.Txt = txt
     self.Pos = pos
     self.Consecutive = consecutive
-    self.commentList = Lns_unwrapDefault( commentList, NewLnsList2_[*Types_Token]([]*Types_Token{})).(*LnsList2_[*Types_Token])
+    self.commentList = Lns_unwrapDefault( commentList, Types_Token__noneCommentList).(*LnsList2_[*Types_Token])
 }
 
 
@@ -659,6 +666,7 @@ func Lns_Types_init(_env *LnsEnv) {
     Types__mod__ = "@lune.@base.@Types"
     Lns_InitMod()
     Lns_Util_init(_env)
+    Types_Token____init_2_(_env)
     Types_nonePos = NewTypes_Position(_env, 0, -1, "eof", nil)
     Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", Types_nonePos, false, NewLnsList2_[*Types_Token]([]*Types_Token{}))
     Types_defaultParserPipeSize = 100

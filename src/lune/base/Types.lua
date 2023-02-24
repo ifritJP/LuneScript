@@ -460,7 +460,7 @@ function Token:__init(kind, txt, pos, consecutive, commentList)
    self.txt = txt
    self.pos = pos
    self.consecutive = consecutive
-   self.commentList = _lune.unwrapDefault( commentList, {})
+   self.commentList = _lune.unwrapDefault( commentList, Token.noneCommentList)
 end
 function Token:getExcludedDelimitTxt(  )
 
@@ -498,6 +498,9 @@ end
 function Token:get_commentList()
    return self.commentList
 end
+do
+   Token.noneCommentList = {}
+end
 function Token:_toMap()
   return self
 end
@@ -519,6 +522,7 @@ function Token._fromMapSub( obj, val )
    table.insert( memInfo, { name = "pos", func = Position._fromMap, nilable = false, child = {} } )
    table.insert( memInfo, { name = "consecutive", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "commentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "noneCommentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
