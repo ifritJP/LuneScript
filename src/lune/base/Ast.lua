@@ -10432,6 +10432,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    end
    
    
+   if dest:get_canDealGenInherit() ~= otherSrc:get_canDealGenInherit() then
+      return false, string.format( "unmatch type generic -- %s, %s", dest:getTxt(  ), otherSrc:getTxt(  ))
+   end
+   
    do
       local _switchExp = dest:get_kind()
       if _switchExp == TypeInfoKind.Prim then

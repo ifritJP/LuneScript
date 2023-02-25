@@ -7934,6 +7934,10 @@ pro static fn TypeInfo.canEvalWithBase(
       return false, "illegal type -- %s, %s" (dest.$kind.$_txt, otherSrc.$kind.$_txt);
    }
    // TypeInfoKind が等しい
+   if dest.$canDealGenInherit ~= otherSrc.$canDealGenInherit {
+      return false, "unmatch type generic -- %s, %s" (dest.getTxt(##),
+                                                       otherSrc.getTxt(##));
+   }
    switch dest.$kind {     
       case .Prim {            
          if dest == builtinTypeInt and otherSrc == builtinTypeChar or
