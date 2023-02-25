@@ -70,6 +70,12 @@ var LuneControl_Pragma__default_noasync_this_class_Obj = &LuneControl_Pragma__de
 func (self *LuneControl_Pragma__default_noasync_this_class) GetTxt() string {
 return "Pragma.default_noasync_this_class"
 }
+type LuneControl_Pragma__default_strict_generics struct{
+}
+var LuneControl_Pragma__default_strict_generics_Obj = &LuneControl_Pragma__default_strict_generics{}
+func (self *LuneControl_Pragma__default_strict_generics) GetTxt() string {
+return "Pragma.default_strict_generics"
+}
 type LuneControl_Pragma__disable_mut_control struct{
 }
 var LuneControl_Pragma__disable_mut_control_Obj = &LuneControl_Pragma__disable_mut_control{}

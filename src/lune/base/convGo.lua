@@ -237,6 +237,7 @@ if not _lune8 then
 end
 
 
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -8167,6 +8168,8 @@ function convFilter:processLuneControl( node, opt )
       elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
       
       elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
+      
+      elseif _matchExp[1] == LuneControl.Pragma.default_strict_generics[1] then
       
       end
    end

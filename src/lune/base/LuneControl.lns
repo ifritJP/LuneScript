@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 pub enum Code {
    Lua = "lua",
@@ -46,4 +47,5 @@ pub alge Pragma {
    default_noasync_this_class,
    use_macro_special_var,
    single_phase_ast,
+   default_strict_generics,
 }

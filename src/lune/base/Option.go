@@ -106,28 +106,28 @@ func Option_Int2strMode__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
 func Option_Int2strMode_getTxt(arg1 LnsInt) string {
     return Option_Int2strModeMap_[arg1];
 }
-// for 43
-func Option_convExp0_69(arg1 []LnsAny) LnsAny {
+// for 44
+func Option_convExp0_70(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 355
-func Option_convExp0_962(arg1 []LnsAny) LnsAny {
+// for 356
+func Option_convExp0_963(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 242
-func Option_convExp0_748(arg1 []LnsAny) LnsAny {
+// for 243
+func Option_convExp0_749(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 360
-func Option_convExp0_893(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 361
+func Option_convExp0_894(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// 84: decl @lune.@base.@Option.getRuntimeModule
+// 85: decl @lune.@base.@Option.getRuntimeModule
 func Option_getRuntimeModule(_env *LnsEnv) string {
     return _env.GetVM().String_format("lune.base.runtime%d", Lns_2DDD(Ver_luaModVersion))
 }
 
-// 235: decl @lune.@base.@Option.outputLuneMod
+// 236: decl @lune.@base.@Option.outputLuneMod
 func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     var lune_path string
     lune_path = "runtime.lua"
@@ -140,7 +140,7 @@ func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Option_convExp0_748(Lns_2DDD(Lns_io_open(lune_path, "w")))
+        _fileObj := Option_convExp0_749(Lns_2DDD(Lns_io_open(lune_path, "w")))
         if _fileObj == nil{
             return _env.GetVM().String_format("failed to open -- %s", Lns_2DDD(lune_path))
         } else {
@@ -156,7 +156,7 @@ func Option_outputLuneMod(_env *LnsEnv, path LnsAny) LnsAny {
     return nil
 }
 
-// 280: decl @lune.@base.@Option.analyze
+// 281: decl @lune.@base.@Option.analyze
 func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
     __func__ := "@lune.@base.@Option.analyze"
     var option *Option_Option
@@ -170,7 +170,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
     var index LnsInt
     index = 1
     {
-        _file := Option_convExp0_962(Lns_2DDD(Lns_io_open("lune.js", "r")))
+        _file := Option_convExp0_963(Lns_2DDD(Lns_io_open("lune.js", "r")))
         if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             var projInfo LnsAny
@@ -329,8 +329,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
                         __forsortSorted0 := __forsortCollection0.CreateKeyListInt()
                         __forsortSorted0.Sort( _env, LnsItemKindInt, nil )
                         for _, _typeId := range( __forsortSorted0.Items ) {
-                            builtinTypeInfo := __forsortCollection0.Items[ _typeId ].(Ast_BuiltinTypeInfoDownCast).ToAst_BuiltinTypeInfo()
-                            typeId := _typeId.(LnsInt)
+                            builtinTypeInfo := __forsortCollection0.Items[ _typeId ]
+                            typeId := _typeId
                             var parentName string
                             parentName = builtinTypeInfo.FP.Get_typeInfo(_env).FP.GetParentFullName(_env, Ast_defaultTypeNameCtrl, nil, nil)
                             var dispName string
@@ -590,14 +590,14 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 778, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 779, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("mode is '%s'", Lns_2DDD(Option_ModeKind_getTxt( option.Mode)))
     }))
     
     return option
 }
 
-// 282: decl @lune.@base.@Option.analyze.printUsage
+// 283: decl @lune.@base.@Option.analyze.printUsage
 func Option_analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
     Util_println(_env, Lns_2DDD("usage:\n  <type1> [-prof] [-r] src.lns mode [mode-option]\n  <type2> -mklunemod path\n  <type3> -shebang path\n  <type4> --version\n\n* type1\n  - src.lns [common_op] ast\n  - src.lns [common_op] comp [-i] module line column\n  - src.lns [common_op] inq [-i] module line column\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] <lua|LUA>\n  - src.lns [common_op] [-ol ver] [-ob<0|1>] [-dmr] [--depends dependfile] <save|SAVE> output-dir\n  - src.lns [common_op] exe\n\n  -r: use 'require( \"lune.base.runtime\" )'\n  -ol: output lua version. ver = 51 or 52 or 53.\n  -ob: output bytecompiled-code.\n      -ob0 is without debug information.\n      -ob1 is with debug information.\n  -langC: transcompile to c-lang.\n  -langGo: transcompile to golang.\n  -langPython: transcompile to python.\n  -noLua: no transcompile to lua.\n  -oc: output path of the source code transcompiled to c-lang .\n  --depends: output dependfile\n  --int2str mode: mode of int to str.\n     - depend: depends the lua version.\n     - need0: with '.0'.\n     - unneed0: without '.0'.\n\n  common_op:\n    --testing: enable test.\n    --projDir <dir>: set the project dir.\n    -u: update meta and lua on load.\n    -Werror: error by warrning.\n    --log <mode>: set log level.\n         mode: fatal, error, warn, log, info, debug, trace\n    --warning-shadowing: shadowing error convert to warning.\n    --compat-comment: backward compatibility to process the comment.\n    --disable-checking-define-abbr: disable checking for ##.\n    --uptodate <mode>: checking uptodate mode.\n            force: skip check for target lns file.\n            forceAll: skip check for all.\n            none: skip process when file is uptodate.\n            touch: touch meta file when file is uptodate.  (default)\n    --use-ipairs: use ipairs for foreach with List value.\n    --default-lazy: set lazy-loading at default.\n    --valid-luaval: enable luaval when transcompie to lua.\n    --package <name>: set the package name for the go-lang.\n    --app <name>: set the application name for the go-lang.\n    --debug-dump-ast: dump ast for debuging.\n\n    compati_op:\n      --legacyNewName: use the legacy new method name for lua.\n\n\n\n* type2\n  path: output file path.\n"))
     _env.GetVM().OS_exit(code)
@@ -606,7 +606,7 @@ func Option_analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
 
 
 
-// 783: decl @lune.@base.@Option.createDefaultOption
+// 784: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -634,13 +634,13 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
     return option
 }
 
-// 54: decl @lune.@base.@Option.getBuildCount
+// 55: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 13700
+    return 13791
 }
 
 
-// 214: decl @lune.@base.@Option.Option.openDepend
+// 215: decl @lune.@base.@Option.Option.openDepend
 func (self *Option_Option) OpenDepend(_env *LnsEnv, relPath LnsAny) LnsAny {
     {
         _path := self.DependsPath
@@ -711,7 +711,7 @@ func NewOption_RuntimeOpt(_env *LnsEnv) *Option_RuntimeOpt {
     return obj
 }
 func (self *Option_RuntimeOpt) Get_int2strMode(_env *LnsEnv) LnsInt{ return self.int2strMode }
-// 101: DeclConstr
+// 102: DeclConstr
 func (self *Option_RuntimeOpt) InitOption_RuntimeOpt(_env *LnsEnv) {
     self.int2strMode = Option_Int2strMode__Int2strModeDepend
 }
@@ -808,7 +808,7 @@ func (self *Option_Option) Get_stdinFile(_env *LnsEnv) LnsAny{ return self.stdin
 func (self *Option_Option) Set_stdinFile(_env *LnsEnv, arg1 LnsAny){ self.stdinFile = arg1 }
 func (self *Option_Option) Get_legacyNewName(_env *LnsEnv) bool{ return self.legacyNewName }
 func (self *Option_Option) Get_sortGenerateCode(_env *LnsEnv) bool{ return self.sortGenerateCode }
-// 178: DeclConstr
+// 179: DeclConstr
 func (self *Option_Option) InitOption_Option(_env *LnsEnv) {
     self.sortGenerateCode = true
     self.DumpDebugAst = false

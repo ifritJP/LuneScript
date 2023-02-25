@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
+
 
 subfile use lune.base.TransUnitDecl;
 subfile use lune.base.TransUnitExp;
@@ -52,6 +54,7 @@ import lune.base.Async;
 
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
 
 macro _cloneMap( dst:__exp, src:__exp ) {
    {}
@@ -1728,6 +1731,12 @@ pro fn TransUnit.analyzeLuneControlToken(
    return nil;
 }
 
+/**
+_lune_control の解析
+
+
+@return Nodes.LuneControlNode! 解析失敗した場合 nil
+*/
 fn TransUnit.analyzeLuneControl(
    firstToken: &Parser.Token ) mut : Nodes.LuneControlNode!
 {
@@ -1795,6 +1804,9 @@ fn TransUnit.analyzeLuneControl(
                   "this option only use in method of the class have loop method." );
                return nil;
             }
+         }
+         case "default_strict_generics" {
+            pragma = LuneControl.Pragma.default_strict_generics;
          }
          // case "default_async_func" {
          //    pragma = LuneControl.Pragma.default_async_func;

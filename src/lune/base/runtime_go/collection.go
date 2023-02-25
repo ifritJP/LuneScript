@@ -969,6 +969,22 @@ func Lns_ToLnsMap2Sub[K comparable, V any](
 			newMap.Items[convedKey.(K)] = convedVal.(V)
 		}
 		return true, newMap, nil
+	} else if lnsMap, ok := obj.(*LnsMap2_[K, V]); ok {
+		newMap := NewLnsMap2_[K, V](map[K]V{})
+		for key, val := range lnsMap.Items {
+			successKey, convedKey, messKey :=
+				keyParam.Func(key, keyParam.Nilable, keyParam.Child)
+			if !successKey {
+				return false, nil, fmt.Sprintf(".%s:%s", key, messKey)
+			}
+			successVal, convedVal, messVal :=
+				itemParam.Func(val, itemParam.Nilable, itemParam.Child)
+			if !successVal {
+				return false, nil, fmt.Sprintf(".%s:%s", val, messVal)
+			}
+			newMap.Items[convedKey.(K)] = convedVal.(V)
+		}
+		return true, newMap, nil
 	}
 	return false, nil, "no map"
 }
@@ -1025,11 +1041,11 @@ func NewLnsMap2_[K comparable, V any](arg map[K]V) *LnsMap2_[K, V] {
 	return &LnsMap2_[K, V]{arg}
 }
 
-func (self *LnsMap2_[K, V]) Set(key K, val V) {
+func (self *LnsMap2_[K, V]) Set(key K, val LnsAny) {
 	if Lns_IsNil(val) {
 		delete(self.Items, key)
 	} else {
-		self.Items[key] = val
+		self.Items[key] = val.(V)
 	}
 }
 

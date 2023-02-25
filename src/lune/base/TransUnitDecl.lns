@@ -258,6 +258,35 @@ fn TransUnit.analyzeTypeParamArg(
    return genericList;
 }
 
+fn TransUnit.getCanDealGenInherit(
+   expectType:&Ast.TypeInfo!, targetType:&Ast.TypeInfo ) : bool
+{
+   let defaultSetting;
+   if self.helperInfo.pragmaSet.has( LuneControl.Pragma.default_strict_generics ) {
+      defaultSetting = false;
+   } else {
+      switch targetType {
+         // case Ast.builtinTypeSet, Ast.builtinTypeList, Ast.builtinTypeMap {
+         // case Ast.builtinTypeSet, Ast.builtinTypeList {
+         // case Ast.builtinTypeSet {
+         case Ast.builtinTypeNone {
+            defaultSetting = false;
+         }
+         default {
+            defaultSetting = self.ctrl_info.defaultGenInherit;
+         }
+      }
+   }
+   when! expectType {
+      if expectType.$srcTypeInfo.$nonnilableType == targetType {
+         return defaultSetting;
+      } else {
+         return expectType.$canDealGenInherit;
+      }
+   }
+   return defaultSetting;
+}
+
 fn TransUnit.analyzeRefTypeWithSymbol(
    accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
    symbolNode:&Nodes.Node, parentPub:bool, allowToSetAlt:bool ) mut:
@@ -361,9 +390,10 @@ fn TransUnit.analyzeRefTypeWithSymbol(
                let builtinType__ = "Ast.builtinType%s__" (typeTxt);
                let defaultVal;
                switch typeTxt {
-                  case "Set", "List" {       
-                  // case "Set" {       
-                  // case "" {       
+                  // case "Set", "List", "Map" {
+                  // case "Set", "List" {
+                  // case "Set" {
+                  case "" {
                      defaultVal = `{false};
                   }
                   default {
@@ -374,7 +404,13 @@ fn TransUnit.analyzeRefTypeWithSymbol(
             let canDealGenInherit;
             switch symbolNode.$expType {
                case ,,,builtinType {
-                  canDealGenInherit = ,,defaultVal;
+                  if self.helperInfo.pragmaSet.has(
+                     LuneControl.Pragma.default_strict_generics )
+                  {
+                     canDealGenInherit = false;
+                  } else {
+                     canDealGenInherit = ,,defaultVal;
+                  }
                }
                case ,,,builtinType_ {
                   canDealGenInherit = true;

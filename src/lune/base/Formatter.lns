@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Ast;
 import lune.base.Nodes;
@@ -171,6 +172,9 @@ pub override fn FormatterFilter.processLuneControl(
       }
       case .single_phase_ast {
          self.write( "single_phase_ast" );
+      }
+      case .default_strict_generics {
+         self.write( "default_strict_generics" );
       }
    }
    self.writeln( ";" );

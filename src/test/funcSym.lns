@@ -112,7 +112,7 @@ class Test6<T> {
 
 class Test7<T> {
    let val:T;
-   pub fn func<T2>(val:T2) : Map<T,T2> {
+   pub fn func<T2>(val:T2) : _Map<T,T2> {
       return { self.val: val };
    }
 }

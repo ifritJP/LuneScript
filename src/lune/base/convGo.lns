@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Ver;
 import lune.base.Ast;
@@ -6669,6 +6670,8 @@ pub override fn convFilter.processLuneControl(
       case .use_macro_special_var {
       }
       case .single_phase_ast {
+      }
+      case .default_strict_generics {
       }
    }
 }

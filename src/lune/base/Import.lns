@@ -36,6 +36,7 @@ import lune.base.Runner;
 import lune.base.TransUnitIF;
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
 
 
 pub proto class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader);
@@ -1110,7 +1111,7 @@ fn ModuleLoader.processImportFromFile(
          let! workAtomInfo = expandLuavalMap( atomInfoLua ) { 
             self.transUnitIF.error( "illegal atomInfo" ); // バグ
          };
-         let atomInfo = workAtomInfo@@Map<str,&stem>;
+         let atomInfo = workAtomInfo@@_Map<str,&stem>;
          if! let skind = atomInfo.skind {
             let mut actInfo:_TypeInfo! = nil;
             let mut mess:str! = nil;
@@ -1312,7 +1313,7 @@ fn ModuleLoader.processImportFromFile(
                      let! classInfo = expandLuavalMap( _exp ) {
                         self.transUnitIF.error( "illegal val" ); // バグ
                      };
-                     foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
+                     foreach fieldInfo, fieldName in classInfo@@_Map<str,_Map<str,stem>> {
                         if! let typeId = _IdInfo._fromStem(
                            expandLuavalMap( fieldInfo.typeId ) )
                         {

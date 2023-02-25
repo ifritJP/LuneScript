@@ -3,24 +3,24 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Json bool
 var Json__mod__ string
-// for 45
-func Json_convExp0_196(arg1 []LnsAny) (LnsAny, bool) {
+// for 70
+func Json_convExp0_197(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 69
-func Json_convExp0_293(arg1 []LnsAny) (LnsAny, bool) {
+// for 94
+func Json_convExp0_294(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// for 126
-func Json_convExp0_511(arg1 []LnsAny) (LnsAny, bool) {
+// for 151
+func Json_convExp0_512(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
-// 6: decl @lune.@base.@Json.getRawTxt
+// 31: decl @lune.@base.@Json.getRawTxt
 func Json_getRawTxt_0_(_env *LnsEnv, token *Types_Token) string {
     return _env.GetVM().String_sub(token.Txt,2, -2)
 }
 
-// 10: decl @lune.@base.@Json.getVal
+// 35: decl @lune.@base.@Json.getVal
 func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
     var token *Types_Token
     token = parser.FP.GetTokenNoErr(_env, nil)
@@ -124,7 +124,7 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
     return nil, false
 }
 
-// 121: decl @lune.@base.@Json.fromStr
+// 146: decl @lune.@base.@Json.fromStr
 func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
     var parser *Parser_DefaultPushbackParser
     parser = NewParser_DefaultPushbackParser(_env, &Parser_StreamParser_create(_env, &Types_ParserSrc__LnsCode{txt, "json", nil}, false, nil, nil).Parser_Parser)

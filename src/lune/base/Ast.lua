@@ -248,6 +248,7 @@ if not _lune8 then
 end
 
 
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
@@ -624,7 +625,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 225, function (  )
+   Log.log( Log.Level.Trace, __func__, 226, function (  )
    
       return "start"
    end )
@@ -2409,6 +2410,10 @@ function ModifierTypeInfo:addModifierTxt( txt )
    
    return txt
 end
+function ModifierTypeInfo:get_canDealGenInherit(  )
+
+   return self.srcTypeInfo:get_canDealGenInherit()
+end
 function ModifierTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
@@ -2554,10 +2559,6 @@ end
 
 function ModifierTypeInfo:get_baseTypeInfo( ... )
    return self.srcTypeInfo:get_baseTypeInfo( ... )
-end
-
-function ModifierTypeInfo:get_canDealGenInherit( ... )
-   return self.srcTypeInfo:get_canDealGenInherit( ... )
 end
 
 function ModifierTypeInfo:get_childId( ... )
@@ -7854,7 +7855,7 @@ function ProcessInfo:createMap_( canDealGenInherit, accessMode, parentInfo, keyT
       end
       
       
-      local typeInfo = NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      local typeInfo = NormalTypeInfo._new(self, true, false, nil, baseType, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
       if not canDealGenInherit then
          typeInfo:set_canDealGenInherit( false )
       end

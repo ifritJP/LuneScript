@@ -10,19 +10,19 @@ type Meta__MetaInfo struct {
     G__formatVersion string
     G__enableTest bool
     G__buildId string
-    G__lazyModuleList *LnsMap
-    G__typeId2ClassInfoMap *LnsMap
-    G__typeInfoList *LnsMap
-    G__varName2InfoMap *LnsMap
+    G__lazyModuleList *LnsMap2_[LnsInt,LnsInt]
+    G__typeId2ClassInfoMap *LnsMap2_[LnsInt,*LnsMap2_[string,LnsAny]]
+    G__typeInfoList *LnsMap2_[LnsInt,*LnsMap2_[string,LnsAny]]
+    G__varName2InfoMap *LnsMap2_[string,LnsAny]
     G__moduleTypeId LnsInt
     G__moduleSymbolKind LnsInt
     G__moduleMutable bool
-    G__dependModuleMap *LnsMap
-    G__dependIdMap *LnsMap
-    G__macroName2InfoMap *LnsMap
+    G__dependModuleMap *LnsMap2_[string,*LnsMap2_[string,LnsAny]]
+    G__dependIdMap *LnsMap2_[LnsInt,*LnsMap2_[LnsInt,LnsInt]]
+    G__macroName2InfoMap *LnsMap2_[LnsInt,LnsAny]
     G__hasTest bool
-    G__subModuleMap *LnsMap
-    G__moduleHierarchy *LnsMap
+    G__subModuleMap *LnsMap2_[LnsInt,string]
+    G__moduleHierarchy *LnsMap2_[LnsInt,LnsInt]
     FP Meta__MetaInfoMtd
 }
 func Meta__MetaInfo2Stem( obj LnsAny ) LnsAny {
@@ -52,13 +52,13 @@ func Meta__MetaInfoDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Meta__MetaInfo) ToMeta__MetaInfo() *Meta__MetaInfo {
     return obj
 }
-func NewMeta__MetaInfo(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap, arg12 *LnsMap, arg13 *LnsMap, arg14 bool, arg15 *LnsMap, arg16 *LnsMap) *Meta__MetaInfo {
+func NewMeta__MetaInfo(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 *LnsMap2_[LnsInt,LnsInt], arg5 *LnsMap2_[LnsInt,*LnsMap2_[string,LnsAny]], arg6 *LnsMap2_[LnsInt,*LnsMap2_[string,LnsAny]], arg7 *LnsMap2_[string,LnsAny], arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap2_[string,*LnsMap2_[string,LnsAny]], arg12 *LnsMap2_[LnsInt,*LnsMap2_[LnsInt,LnsInt]], arg13 *LnsMap2_[LnsInt,LnsAny], arg14 bool, arg15 *LnsMap2_[LnsInt,string], arg16 *LnsMap2_[LnsInt,LnsInt]) *Meta__MetaInfo {
     obj := &Meta__MetaInfo{}
     obj.FP = obj
     obj.InitMeta__MetaInfo(_env, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16)
     return obj
 }
-func (self *Meta__MetaInfo) InitMeta__MetaInfo(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 *LnsMap, arg5 *LnsMap, arg6 *LnsMap, arg7 *LnsMap, arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap, arg12 *LnsMap, arg13 *LnsMap, arg14 bool, arg15 *LnsMap, arg16 *LnsMap) {
+func (self *Meta__MetaInfo) InitMeta__MetaInfo(_env *LnsEnv, arg1 string, arg2 bool, arg3 string, arg4 *LnsMap2_[LnsInt,LnsInt], arg5 *LnsMap2_[LnsInt,*LnsMap2_[string,LnsAny]], arg6 *LnsMap2_[LnsInt,*LnsMap2_[string,LnsAny]], arg7 *LnsMap2_[string,LnsAny], arg8 LnsInt, arg9 LnsInt, arg10 bool, arg11 *LnsMap2_[string,*LnsMap2_[string,LnsAny]], arg12 *LnsMap2_[LnsInt,*LnsMap2_[LnsInt,LnsInt]], arg13 *LnsMap2_[LnsInt,LnsAny], arg14 bool, arg15 *LnsMap2_[LnsInt,string], arg16 *LnsMap2_[LnsInt,LnsInt]) {
     self.G__formatVersion = arg1
     self.G__enableTest = arg2
     self.G__buildId = arg3

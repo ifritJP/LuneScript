@@ -254,6 +254,7 @@ end
 
 
 
+
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Meta = _lune.loadModule( 'lune.base.Meta' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -273,6 +274,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local Import = _lune.loadModule( 'lune.base.Import' )
 local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 local Async = _lune.loadModule( 'lune.base.Async' )
+
 
 
 
@@ -2168,7 +2170,6 @@ function TransUnit:analyzeLuneControlToken( firstToken, controlToken )
    return nil
 end
 
-
 function TransUnit:analyzeLuneControl( firstToken )
 
    local node = nil
@@ -2216,6 +2217,8 @@ function TransUnit:analyzeLuneControl( firstToken )
                   return nil
                end
                
+            elseif _switchExp == "default_strict_generics" then
+               pragma = _lune.newAlge( LuneControl.Pragma.default_strict_generics)
             else 
                
                   self:addErrMess( nextToken.pos, string.format( "unknown option -- %s", nextToken.txt) )
@@ -3468,6 +3471,40 @@ function TransUnit:analyzeTypeParamArg( accessMode, parentPub, itemNodeList, ite
 end
 
 
+function TransUnit:getCanDealGenInherit( expectType, targetType )
+
+   local defaultSetting
+   
+   if _lune._Set_has(self.helperInfo.pragmaSet, _lune.newAlge( LuneControl.Pragma.default_strict_generics) ) then
+      defaultSetting = false
+   else
+    
+      do
+         local _switchExp = targetType
+         if _switchExp == Ast.builtinTypeNone then
+            defaultSetting = false
+         else 
+            
+               defaultSetting = self.ctrl_info.defaultGenInherit
+         end
+      end
+      
+   end
+   
+   if expectType ~= nil then
+      if expectType:get_srcTypeInfo():get_nonnilableType() == targetType then
+         return defaultSetting
+      else
+       
+         return expectType:get_canDealGenInherit()
+      end
+      
+   end
+   
+   return defaultSetting
+end
+
+
 function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symbolNode, parentPub, allowToSetAlt )
 
    local typeInfo = symbolNode:get_expType()
@@ -3558,7 +3595,13 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                do
                   local _switchExp = symbolNode:get_expType()
                   if _switchExp == Ast.builtinTypeMap then
-                     canDealGenInherit = self.ctrl_info.defaultGenInherit
+                     if _lune._Set_has(self.helperInfo.pragmaSet, _lune.newAlge( LuneControl.Pragma.default_strict_generics) ) then
+                        canDealGenInherit = false
+                     else
+                      
+                        canDealGenInherit = self.ctrl_info.defaultGenInherit
+                     end
+                     
                   elseif _switchExp == Ast.builtinTypeMap_ then
                      canDealGenInherit = true
                   elseif _switchExp == Ast.builtinTypeMap__ then
@@ -3589,7 +3632,13 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                   do
                      local _switchExp = symbolNode:get_expType()
                      if _switchExp == Ast.builtinTypeList then
-                        canDealGenInherit = false
+                        if _lune._Set_has(self.helperInfo.pragmaSet, _lune.newAlge( LuneControl.Pragma.default_strict_generics) ) then
+                           canDealGenInherit = false
+                        else
+                         
+                           canDealGenInherit = self.ctrl_info.defaultGenInherit
+                        end
+                        
                      elseif _switchExp == Ast.builtinTypeList_ then
                         canDealGenInherit = true
                      elseif _switchExp == Ast.builtinTypeList__ then
@@ -3616,7 +3665,13 @@ function TransUnit:analyzeRefTypeWithSymbol( accessMode, allowDDD, mutMode, symb
                   do
                      local _switchExp = symbolNode:get_expType()
                      if _switchExp == Ast.builtinTypeSet then
-                        canDealGenInherit = false
+                        if _lune._Set_has(self.helperInfo.pragmaSet, _lune.newAlge( LuneControl.Pragma.default_strict_generics) ) then
+                           canDealGenInherit = false
+                        else
+                         
+                           canDealGenInherit = self.ctrl_info.defaultGenInherit
+                        end
+                        
                      elseif _switchExp == Ast.builtinTypeSet_ then
                         canDealGenInherit = true
                      elseif _switchExp == Ast.builtinTypeSet__ then
@@ -4036,7 +4091,7 @@ end
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
-   Log.log( Log.Level.Trace, __func__, 836, function (  )
+   Log.log( Log.Level.Trace, __func__, 872, function (  )
    
       return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
    end )
@@ -5202,7 +5257,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          end
          
          
-         Log.log( Log.Level.Debug, __func__, 2086, function (  )
+         Log.log( Log.Level.Debug, __func__, 2122, function (  )
          
             return string.format( "%s", dummyRetType)
          end )
@@ -8520,35 +8575,6 @@ function TransUnit:analyzeListItems( firstPos, nextToken, termTxt, expectType )
 end
 
 
-function TransUnit:getCanDealGenInherit( expectType, targetType )
-
-   local defaultSetting
-   
-   do
-      local _switchExp = targetType
-      if _switchExp == Ast.builtinTypeSet or _switchExp == Ast.builtinTypeList then
-         
-         defaultSetting = false
-      else 
-         
-            defaultSetting = self.ctrl_info.defaultGenInherit
-      end
-   end
-   
-   if expectType ~= nil then
-      if expectType:get_srcTypeInfo():get_nonnilableType() == targetType then
-         return defaultSetting
-      else
-       
-         return expectType:get_canDealGenInherit()
-      end
-      
-   end
-   
-   return defaultSetting
-end
-
-
 function TransUnit:analyzeListConst( token, expectType )
 
    local nextToken = self:getToken(  )
@@ -8677,19 +8703,39 @@ function TransUnit:analyzeMapConst( token, expectType )
    
    local expectKeyType = nil
    local expectValType = nil
-   if _lune.nilacc( expectType, 'get_kind', 'callmtd' ) == Ast.TypeInfoKind.Map then
-      do
-         local itemTypeInfoList = _lune.nilacc( expectType, 'get_itemTypeInfoList', 'callmtd' )
-         if itemTypeInfoList ~= nil then
-            expectKeyType = itemTypeInfoList[1]
-            expectValType = itemTypeInfoList[2]
+   if expectType ~= nil then
+      if expectType:get_nonnilableType():get_kind() == Ast.TypeInfoKind.Map then
+         local itemTypeInfoList = expectType:get_nonnilableType():get_itemTypeInfoList()
+         
+         
+         do
+            local orgTypeInfo = itemTypeInfoList[1]:get_nonnilableType():get_srcTypeInfo()
+            if orgTypeInfo:get_kind() ~= Ast.TypeInfoKind.Alternate and orgTypeInfo:get_kind() ~= Ast.TypeInfoKind.Box then
+               keyTypeInfo = itemTypeInfoList[1]
+            end
+            
          end
+         
+         
+         do
+            local orgTypeInfo = itemTypeInfoList[2]:get_nonnilableType():get_srcTypeInfo()
+            if orgTypeInfo:get_kind() ~= Ast.TypeInfoKind.Alternate and orgTypeInfo:get_kind() ~= Ast.TypeInfoKind.Box then
+               valTypeInfo = itemTypeInfoList[2]
+            end
+            
+         end
+         
+         
+         
+         expectKeyType = itemTypeInfoList[1]
+         expectValType = itemTypeInfoList[2]
       end
       
    end
    
    
-   local hasNilable = true
+   local hasNilable = false
+   local hasImplicitCast = false
    while true do
       if nextToken.txt == "}" then
          break
@@ -8698,12 +8744,28 @@ function TransUnit:analyzeMapConst( token, expectType )
       self:pushback(  )
       
       local key = self:analyzeExpOneRVal( false, false, false, nil, expectKeyType )
-      keyTypeInfo = getMapKeyValType( key:get_pos(), true, keyTypeInfo, key:get_expType() )
+      local workTypeInfo = getMapKeyValType( key:get_pos(), true, keyTypeInfo, key:get_expType() )
+      if workTypeInfo ~= keyTypeInfo then
+         if keyTypeInfo ~= Ast.builtinTypeNone then
+            hasImplicitCast = true
+         end
+         
+         keyTypeInfo = workTypeInfo
+      end
+      
       
       self:checkNextToken( ":" )
       
       local val = self:analyzeExpOneRVal( false, false, false, nil, expectValType )
-      valTypeInfo = getMapKeyValType( val:get_pos(), false, valTypeInfo, val:get_expType() )
+      workTypeInfo = getMapKeyValType( val:get_pos(), false, valTypeInfo, val:get_expType() )
+      if workTypeInfo ~= valTypeInfo then
+         if valTypeInfo ~= Ast.builtinTypeNone then
+            hasImplicitCast = true
+         end
+         
+         valTypeInfo = workTypeInfo
+      end
+      
       
       if not hasNilable and (key:get_expType():get_nilable() or val:get_expType():get_nilable() ) then
          hasNilable = true
@@ -8731,26 +8793,65 @@ function TransUnit:analyzeMapConst( token, expectType )
    
    
    local canDealGenInherit = self:getCanDealGenInherit( expectType, Ast.builtinTypeMap )
-   local typeInfo = self.processInfo:createMap_( canDealGenInherit, Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo, Ast.MutMode.Mut )
+   local mapTypeInfo = self.processInfo:createMap_( canDealGenInherit, Ast.AccessMode.Local, self:getCurrentClass(  ), keyTypeInfo, valTypeInfo, Ast.MutMode.Mut )
    
-   if not canDealGenInherit and hasNilable then
-      for __index, pair in ipairs( pairList ) do
-         if pair:get_key():get_expType():get_nilable() then
-            self:addErrMess( pair:get_key():get_pos(), string.format( "can't use nilable -- %s", pair:get_key():get_expType():getTxt(  )) )
+   if not canDealGenInherit then
+      if hasNilable then
+         for __index, pair in ipairs( pairList ) do
+            if pair:get_key():get_expType():get_nilable() then
+               self:addErrMess( pair:get_key():get_pos(), string.format( "can't use nilable -- %s", pair:get_key():get_expType():getTxt(  )) )
+            end
+            
+            if pair:get_val():get_expType():get_nilable() then
+               self:addErrMess( pair:get_val():get_pos(), string.format( "can't use nilable -- %s", pair:get_val():get_expType():getTxt(  )) )
+            end
+            
          end
          
-         if pair:get_val():get_expType():get_nilable() then
-            self:addErrMess( pair:get_val():get_pos(), string.format( "can't use nilable -- %s", pair:get_val():get_expType():getTxt(  )) )
+      end
+      
+      if hasImplicitCast then
+         
+         local function getCastExp( orgExp, typeInfo )
+         
+            local orgTypeInfo = typeInfo:get_nonnilableType():get_srcTypeInfo()
+            if not Ast.isClass( typeInfo ) and orgTypeInfo:get_kind() ~= Ast.TypeInfoKind.IF and orgTypeInfo:get_kind() ~= Ast.TypeInfoKind.Stem then
+               return orgExp
+            end
+            
+            local exp
+            
+            do
+               local castNode = _lune.__Cast( orgExp, 3, Nodes.ExpCastNode )
+               if castNode ~= nil then
+                  exp = castNode:get_exp()
+               else
+                  exp = orgExp
+               end
+            end
+            
+            if exp:get_expType():get_nonnilableType():get_srcTypeInfo() ~= typeInfo:get_nonnilableType():get_srcTypeInfo() then
+               return Nodes.ExpCastNode.create( self.nodeManager, exp:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, exp, typeInfo, nil, "", Nodes.CastKind.Implicit )
+            end
+            
+            return orgExp
          end
          
+         local newPairList = {}
+         for __index, pair in ipairs( pairList ) do
+            local keyExp = getCastExp( pair:get_key(), keyTypeInfo )
+            local valExp = getCastExp( pair:get_val(), valTypeInfo )
+            table.insert( newPairList, Nodes.PairItem._new(keyExp, valExp) )
+         end
+         
+         pairList = newPairList
       end
       
    end
    
    
    self:checkToken( nextToken, "}" )
-   
-   return Nodes.LiteralMapNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, map, pairList )
+   return Nodes.LiteralMapNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {mapTypeInfo}, map, pairList )
 end
 
 
@@ -11302,7 +11403,7 @@ function TransUnit:analyzeExpOpEquals( pos, opToken, exp1, exp2 )
 end
 
 
-function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
+function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel, expectType )
 
    while true do
       local opToken = self:getTokenNoErr(  )
@@ -11343,30 +11444,30 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
                end
                
                
-               local expectType = prefixExpType
+               local workExpectType = prefixExpType
                do
                   local _exp = _lune.__Cast( prefixExpType:get_srcTypeInfo(), 3, Ast.GenericTypeInfo )
                   if _exp ~= nil then
-                     expectType = _exp
+                     workExpectType = _exp
                   else
                      do
                         local _exp = _lune.__Cast( prefixExpType:get_srcTypeInfo():get_aliasSrc(), 3, Ast.EnumTypeInfo )
                         if _exp ~= nil then
-                           expectType = _exp
+                           workExpectType = _exp
                         end
                      end
                      
                      do
                         local _exp = _lune.__Cast( prefixExpType:get_srcTypeInfo(), 3, Ast.AlgeTypeInfo )
                         if _exp ~= nil then
-                           expectType = _exp
+                           workExpectType = _exp
                         end
                      end
                      
                   end
                end
                
-               table.insert( expectTypeList, expectType )
+               table.insert( expectTypeList, workExpectType )
             end
             
             if #expectTypeList == 0 then
@@ -11382,7 +11483,47 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel )
             
             exp = self:MultiTo1( exp )
             
-            local exp2 = self:analyzeExp( false, false, false, false, opLevel, expectTypeList[1] )
+            local exp2ExpectType
+            
+            do
+               local _switchExp = opTxt
+               if _switchExp == "or" then
+                  if expectType ~= nil then
+                     exp2ExpectType = expectType
+                  else
+                     exp2ExpectType = exp:get_expType()
+                  end
+                  
+               elseif _switchExp == "and" then
+                  if expectType ~= nil then
+                     if exp:get_expType():get_nonnilableType() == Ast.builtinTypeBool then
+                        exp2ExpectType = expectType
+                     else
+                      
+                        exp2ExpectType = exp:get_expType()
+                     end
+                     
+                  else
+                     exp2ExpectType = exp:get_expType()
+                  end
+                  
+               elseif _switchExp == "<" or _switchExp == ">" or _switchExp == "<=" or _switchExp == ">=" then
+                  exp2ExpectType = exp:get_expType()
+               elseif _switchExp == "~=" or _switchExp == "==" then
+                  exp2ExpectType = exp:get_expType()
+               elseif _switchExp == "^" or _switchExp == "|" or _switchExp == "~" or _switchExp == "&" or _switchExp == "|<<" or _switchExp == "|>>" then
+                  exp2ExpectType = exp:get_expType()
+               elseif _switchExp == ".." then
+                  exp2ExpectType = exp:get_expType()
+               elseif _switchExp == "+" or _switchExp == "-" or _switchExp == "*" or _switchExp == "/" or _switchExp == "%" then
+                  exp2ExpectType = exp:get_expType()
+               else 
+                  
+                     exp2ExpectType = exp:get_expType()
+               end
+            end
+            
+            local exp2 = self:analyzeExp( false, false, false, false, opLevel, exp2ExpectType )
             exp2 = self:MultiTo1( exp2 )
             
             if not exp2:canBeRight( self.processInfo ) then
@@ -12163,7 +12304,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
       
       
       exp = Nodes.ExpOp1Node.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, token, self.macroCtrl:get_analyzeInfo():get_mode(), self.nodeManager:MultiTo1( exp ) )
-      return self:analyzeExpOp2( firstToken, exp, prevOpLevel ), true
+      return self:analyzeExpOp2( firstToken, exp, prevOpLevel, expectType ), true
    end
    
    local token = firstToken
@@ -12303,7 +12444,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
    end
    
    
-   return self:analyzeExpOp2( firstToken, exp, prevOpLevel )
+   return self:analyzeExpOp2( firstToken, exp, prevOpLevel, expectType )
 end
 
 function TransUnit:analyzeReturn( token )
@@ -12499,7 +12640,7 @@ function TransUnit:analyzeStatement( termTxt )
             local nextToken = self:getToken(  )
             if nextToken.txt == "," then
                local expList = self:analyzeExpList( true, true, true, false, exp )
-               exp = self:analyzeExpOp2( token, expList, nil )
+               exp = self:analyzeExpOp2( token, expList, nil, nil )
                nextToken = self:getToken(  )
             end
             

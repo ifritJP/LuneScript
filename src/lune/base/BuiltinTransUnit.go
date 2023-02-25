@@ -3,32 +3,32 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_BuiltinTransUnit bool
 var BuiltinTransUnit__mod__ string
-// for 101
-func BuiltinTransUnit_convExp0_442(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 103
+func BuiltinTransUnit_convExp0_444(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
-// 38: decl @lune.@base.@BuiltinTransUnit.TransUnit.get_scope
+// 40: decl @lune.@base.@BuiltinTransUnit.TransUnit.get_scope
 func (self *BuiltinTransUnit_TransUnit) Get_scope(_env *LnsEnv) *Ast_Scope {
     return self.scope
 }
-// 49: decl @lune.@base.@BuiltinTransUnit.TransUnit.error
+// 51: decl @lune.@base.@BuiltinTransUnit.TransUnit.error
 func (self *BuiltinTransUnit_TransUnit) Error(_env *LnsEnv, mess string) {
     Util_err(_env, mess)
 }
-// 53: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushScope
+// 55: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushScope
 func (self *BuiltinTransUnit_TransUnit) PushScope(_env *LnsEnv, scopeKind LnsInt,baseInfo LnsAny,interfaceList LnsAny) *Ast_Scope {
     self.scope = Ast_TypeInfo_createScope(_env, self.processInfo, self.scope, scopeKind, baseInfo, interfaceList)
     return self.scope
 }
-// 61: decl @lune.@base.@BuiltinTransUnit.TransUnit.popScope
+// 63: decl @lune.@base.@BuiltinTransUnit.TransUnit.popScope
 func (self *BuiltinTransUnit_TransUnit) PopScope(_env *LnsEnv) {
     self.scope = self.scope.FP.Get_outerScope(_env)
 }
-// 65: decl @lune.@base.@BuiltinTransUnit.TransUnit.getCurrentNamespaceTypeInfo
+// 67: decl @lune.@base.@BuiltinTransUnit.TransUnit.getCurrentNamespaceTypeInfo
 func (self *BuiltinTransUnit_TransUnit) getCurrentNamespaceTypeInfo(_env *LnsEnv) *Ast_TypeInfo {
     return Ast_getBuiltinMut(_env, self.scope.FP.GetNamespaceTypeInfo(_env))
 }
-// 69: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushModuleLow
+// 71: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushModuleLow
 func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo *Ast_ProcessInfo,externalFlag bool,name string,mutable bool) *Ast_TypeInfo {
     var typeInfo *Ast_TypeInfo
     typeInfo = Ast_headTypeInfo
@@ -74,11 +74,11 @@ func (self *BuiltinTransUnit_TransUnit) PushModuleLow(_env *LnsEnv, processInfo 
     }
     return typeInfo
 }
-// 112: decl @lune.@base.@BuiltinTransUnit.TransUnit.popModule
+// 114: decl @lune.@base.@BuiltinTransUnit.TransUnit.popModule
 func (self *BuiltinTransUnit_TransUnit) PopModule(_env *LnsEnv) {
     self.FP.PopScope(_env)
 }
-// 119: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushClassScope
+// 121: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushClassScope
 func (self *BuiltinTransUnit_TransUnit) PushClassScope(_env *LnsEnv, errPos Types_Position,classTypeInfo *Ast_TypeInfo,scope *Ast_Scope) {
     if self.scope != _env.NilAccFin(_env.NilAccPush(classTypeInfo.FP.Get_scope(_env)) && 
     Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_Scope).FP.Get_parent(_env)})){
@@ -98,7 +98,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassScope(_env *LnsEnv, errPos Type
             }
         }
         self.FP.Error(_env, _env.GetVM().String_format("This class does not exist in this scope. -- %s -- %s(%d), %s(%d)", Lns_2DDD(classTypeInfo.FP.GetTxt(_env, nil, nil, nil), _env.NilAccFin(_env.NilAccPush(self.scope.FP.Get_ownerTypeInfo(_env)) && 
-        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetTxt(_env, nil, nil, nil)})/* 135:15 */), _env.PopVal( _env.IncStack() ||
+        Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.GetTxt(_env, nil, nil, nil)})/* 137:15 */), _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( _env.NilAccFin(_env.NilAccPush(self.scope.FP.Get_ownerTypeInfo(_env)) && 
             Lns_NilAccCall1( _env, func () LnsAny { return _env.NilAccPop().(*Ast_TypeInfo).FP.Get_typeId(_env)})&&
             _env.NilAccPush(_env.NilAccPop().(*Ast_IdInfo).Id))) ||
@@ -106,7 +106,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassScope(_env *LnsEnv, errPos Type
     }
     self.scope = scope
 }
-// 147: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushClassLow
+// 149: decl @lune.@base.@BuiltinTransUnit.TransUnit.pushClassLow
 func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *Ast_ProcessInfo,errPos Types_Position,mode LnsInt,finalFlag bool,abstractFlag bool,baseInfo LnsAny,interfaceList LnsAny,genTypeList LnsAny,externalFlag bool,name string,allowMultiple bool,accessMode LnsInt,defNamespace LnsAny) *Ast_TypeInfo {
     var typeInfo *Ast_TypeInfo
     {
@@ -222,7 +222,7 @@ func (self *BuiltinTransUnit_TransUnit) PushClassLow(_env *LnsEnv, processInfo *
     }
     return typeInfo
 }
-// 280: decl @lune.@base.@BuiltinTransUnit.TransUnit.popClass
+// 282: decl @lune.@base.@BuiltinTransUnit.TransUnit.popClass
 func (self *BuiltinTransUnit_TransUnit) PopClass(_env *LnsEnv) {
     self.FP.PopScope(_env)
 }
@@ -242,7 +242,7 @@ type BuiltinTransUnit_TransUnitMtd interface {
 type BuiltinTransUnit_TransUnit struct {
     processInfo *Ast_ProcessInfo
     scope *Ast_Scope
-    namespace2Scope *LnsMap
+    namespace2Scope *LnsMap2_[*Ast_TypeInfo,*Ast_Scope]
     FP BuiltinTransUnit_TransUnitMtd
 }
 func BuiltinTransUnit_TransUnit2Stem( obj LnsAny ) LnsAny {
@@ -278,9 +278,9 @@ func NewBuiltinTransUnit_TransUnit(_env *LnsEnv, arg1 *Types_TransCtrlInfo, arg2
     obj.InitBuiltinTransUnit_TransUnit(_env, arg1, arg2)
     return obj
 }
-// 42: DeclConstr
+// 44: DeclConstr
 func (self *BuiltinTransUnit_TransUnit) InitBuiltinTransUnit_TransUnit(_env *LnsEnv, ctrl_info *Types_TransCtrlInfo,processInfo *Ast_ProcessInfo) {
-    self.namespace2Scope = NewLnsMap( map[LnsAny]LnsAny{})
+    self.namespace2Scope = NewLnsMap2_[*Ast_TypeInfo,*Ast_Scope]( map[*Ast_TypeInfo]*Ast_Scope{})
     self.processInfo = processInfo
     self.scope = processInfo.FP.Get_topScope(_env)
 }

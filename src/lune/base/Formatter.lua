@@ -122,6 +122,7 @@ if not _lune8 then
 end
 
 
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
@@ -330,6 +331,9 @@ function FormatterFilter:processLuneControl( node, opt )
       elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
       
          self:write( "single_phase_ast" )
+      elseif _matchExp[1] == LuneControl.Pragma.default_strict_generics[1] then
+      
+         self:write( "default_strict_generics" )
       end
    end
    

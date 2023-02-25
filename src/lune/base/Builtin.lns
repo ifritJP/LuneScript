@@ -33,6 +33,8 @@ import lune.base.TransUnitIF;
 import lune.base.BuiltinTransUnit;
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
+
 
 pub class Builtin {
    let transUnit:BuiltinTransUnit.TransUnit;

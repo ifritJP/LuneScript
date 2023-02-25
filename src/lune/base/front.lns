@@ -24,6 +24,7 @@ SOFTWARE.
 
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Types;
 import lune.base.frontInterface;
@@ -55,6 +56,7 @@ import lune.base.NodeIndexer;
 import lune.base.Converter;
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
 
 
 Depend.setup( fn(ver:int) {

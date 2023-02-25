@@ -237,6 +237,7 @@ if not _lune8 then
 end
 
 
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -7015,41 +7016,6 @@ end
 
 function convFilter:processLuneControl( node, opt )
 
-   do
-      local _matchExp = node:get_pragma()
-      if _matchExp[1] == LuneControl.Pragma.default__init[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default__init_old[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.disable_mut_control[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.ignore_symbol_[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.limit_conv_code[1] then
-         local _ = _matchExp[2][1]
-      
-      elseif _matchExp[1] == LuneControl.Pragma.use_async[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.run_async_pipe[1] then
-      
-         self:writeln( "go self.LoopMain()" )
-      elseif _matchExp[1] == LuneControl.Pragma.default_async_func[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default_async_all[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default_async_this_class[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
-      
-      end
-   end
-   
 end
 
 

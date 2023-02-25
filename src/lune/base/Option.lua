@@ -199,6 +199,7 @@ if not _lune8 then
 end
 
 
+
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local AsyncParser = _lune.loadModule( 'lune.base.AsyncParser' )
@@ -216,7 +217,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 13700
+   return 13791
 end
 
 
@@ -1090,7 +1091,7 @@ end
    end
    
    
-   Log.log( Log.Level.Log, __func__, 778, function (  )
+   Log.log( Log.Level.Log, __func__, 779, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

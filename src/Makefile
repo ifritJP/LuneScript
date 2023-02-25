@@ -68,12 +68,47 @@ endif
 INSTALL=/usr/bin/install -c
 
 
-LNSC_OP=
-
 # $(PWD) だと make -C dir で実行した時に、
 # $(PWD) した結果は dir ではなく、 make を実行したディレクトリになるので
 # $(shell pwd) で取得する。
 CUR_DIR:=$(shell pwd)
+
+LNSC_OP=
+
+CONVGO_OP=
+COMMON_OP=
+EXE_OPT := --valid-luaval
+COM_OPT := --use-ipairs -Werror --valid-luaval $(LNSC_OP)
+ifeq ($(WITH_GO),y)
+COM_OPT += -langGo
+endif
+
+# 標準動作だと diff が出てしまうので、 diff が出ないようにオプションを指定する
+TEST_OPT=--threadPerUnitThread 0 --convGoRunnerNum 4
+
+
+
+ifdef depend_on
+DEPENDS := $(shell find lune -iname '*.d')
+DEPENDS_META := $(patsubst %.d,%.meta,$(DEPENDS))
+
+include $(DEPENDS)
+
+$(DEPENDS_META):
+
+%.meta: %.lns
+	(cd $(FROM_DIR); $(LNSC) $< SAVE $(TO_DIR) \
+			$(BYTECOMP) $(COM_OPT) $(LOG_OPT) $(LNS_OPT))
+
+build_from_d: $(DEPENDS_META)
+ifeq ($(WITH_GO),y)
+	$(call binding-lns-go,.)
+ifndef SKIP_GO_BUILD
+	$(call go-build-lns,.)
+endif
+endif
+
+endif
 
 
 ifneq "$(wildcard Makefile.local)" ""
@@ -127,40 +162,6 @@ exec:
 	$(LUA) lune/base/base.lua test/test.lns ast
 	$(LUA) lune/base/base.lua test/test.lns LUA
 
-CONVGO_OP=
-LNSC_OP=
-EXE_OPT := --valid-luaval 
-COM_OPT := --use-ipairs -Werror --valid-luaval $(LNSC_OP)
-ifeq ($(WITH_GO),y)
-COM_OPT += -langGo
-endif
-
-# 標準動作だと diff が出てしまうので、 diff が出ないようにオプションを指定する
-TEST_OPT=--threadPerUnitThread 0 --convGoRunnerNum 4
-
-
-
-ifdef depend_on
-DEPENDS := $(shell find lune -iname '*.d')
-DEPENDS_META := $(patsubst %.d,%.meta,$(DEPENDS))
-
-include $(DEPENDS)
-
-$(DEPENDS_META):
-
-%.meta: %.lns
-	(cd $(FROM_DIR); $(LNSC) $< SAVE $(TO_DIR) \
-			$(BYTECOMP) $(COM_OPT) $(LOG_OPT) $(LNS_OPT))
-
-build_from_d: $(DEPENDS_META)
-ifeq ($(WITH_GO),y)
-	$(call binding-lns-go,.)
-ifndef SKIP_GO_BUILD
-	$(call go-build-lns,.)
-endif
-endif
-
-endif
 
 
 ifeq ($(WITH_GO),y)
@@ -184,7 +185,7 @@ endef
 
 
 define exeLune
-	(cd $2; $1 $3 $4 $5)
+	(cd $2; $1 $(COMMON_OP) $3 $4 $5)
 endef
 
 define exeFront
@@ -788,6 +789,9 @@ test-org:
 
 	$(MAKE) -s TEST_DIR=. LOG_DIR=work/0/log test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test1.result
+	$(MAKE) -s TEST_DIR=. LOG_DIR=work/0/log test-error \
+		COMMON_OP=--disableGenInherit | \
+		grep -e 'error:' -e 'warning:' > work/org-error.result
 	LANG= $(MAKE) TEST_DIR=. test-etc |		\
 		grep -v 'Entering directory' |		\
 		grep -v 'Leaving directory' >> work/test1.result
@@ -848,6 +852,9 @@ test-new:
 
 	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error | \
 		grep -e 'error:' -e 'warning:' >> work/test2.result
+	$(MAKE) -s TEST_DIR=work/3 LOG_DIR=work/3/log  test-error \
+		COMMON_OP=--disableGenInherit | \
+		grep -e 'error:' -e 'warning:' > work/new-error.result
 	LANG= $(MAKE) TEST_DIR=work/3 test-etc |	\
 		grep -v 'Entering directory' |		\
 		grep -v 'Leaving directory' >> work/test2.result
@@ -892,8 +899,8 @@ test-new2:
 	(cd work/3_2; $(LUA) test/start.lua) > work/test4.result
 
 # 使用するランタイム名指定してテスト
-	$(call exeLune,$(LNSC),work/3_2,-mklunemod,runtime.lua) > /dev/null
-	$(call build-testcode,$(LNSC),work/3_2,--runtime runtime )
+	$(call exeLune,$(LNSC),work/3_2,-mklunemod test_runtime.lua) > /dev/null
+	$(call build-testcode,$(LNSC),work/3_2,--runtime test_runtime )
 # ランタイムを使用していることを確認するため runtime.lua を移動しておく
 	mkdir -p work/backup
 	mv work/3_2/lune/base/runtime*.lua work/backup
@@ -958,8 +965,10 @@ endif
 
 
 test-parallel: test-org test-org-proj \
+			test-comp-go-new-2 test-comp-go-org-2 \
 			test-new test-new-proj test-new2 \
 			test-comp-go-new test-comp-go-org
+
 
 # 元の lnsc で test-go を実行
 test-comp-go-org:
@@ -967,11 +976,20 @@ ifeq ($(WITH_GO),y)
 	(cd .; $(MAKE) test-go LNSC=$(CUR_DIR)/lnsc)
 endif
 
+test-comp-go-org-2:
+	$(MAKE) -C work/err_org test-comp-go-org COMMON_OP=--disableGenInherit
+
+
+
 # 新しい lnsc で test-go を実行
 test-comp-go-new:
 ifeq ($(WITH_GO),y)
 	(cd work/3; $(MAKE) test-go LNSC=$(CUR_DIR)/work/3/lnsc NO_LUA_DIFF=y)
 endif
+
+test-comp-go-new-2:
+	$(MAKE) -C work/err_new test-comp-go-org COMMON_OP=--disableGenInherit
+
 
 
 test-comp2:
@@ -1038,7 +1056,7 @@ endif
 
 
 	cp -a test work/3
-#	$(call exeLune,work/3,-mklunemod,lune/base)
+#	$(call exeLune,work/3,-mklunemod lune/base)
 
 #	$(MAKE) test-new
 
@@ -1050,6 +1068,13 @@ endif
 
 	mkdir -p work/0/log
 	mkdir -p work/3/log
+
+	cp -a work/3 work/err_org
+ifeq ($(WITH_GO),y)
+	cp ./lnsc work/err_org
+endif
+	cp -a work/3 work/err_new
+
 
 	$(MAKE) test-parallel
 ifndef SKIP_PROJ_TEST
@@ -1108,6 +1133,7 @@ ifeq ($(WITH_GO),y)
 	diff test/result/test1.result work/test2.result
 endif
 	diff work/test1.result work/test2.result
+	diff work/org-error.result work/new-error.result
 	diff work/ast1.result work/ast2.result
 	diff work/lua1.result work/lua2.result -I " _lune"
 	diff work/test.result work/test3.result
@@ -1124,6 +1150,8 @@ endif
 ifeq ($(WITH_GO),y)
 	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
 		work/result-testGo.txt work/3/work/result-testGo.txt
+	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
+		work/err_org/work/result-testGo.txt work/err_new/work/result-testGo.txt
 endif
 
 
@@ -1140,7 +1168,7 @@ define setup-lua51-test-cross
 endef
 
 test-lua51-mkruntime:
-	$(call exeLune,$(LNSC_LUA51),work/5,-mklunemod,lune/base/runtime.lua)
+	$(call exeLune,$(LNSC_LUA51),work/5,-mklunemod lune/base/runtime.lua)
 
 test-lua51:
 # LuneScript を Lua 5.1 にクロスコンパイルして実行
@@ -1181,7 +1209,7 @@ test-lua51-sub:
 	$(MAKE) -C work/6 binding-lns-go-tgt
 #	$(call selfhost_build,work/5,../6)
 	$(call setup-lua51-test,work/6)
-	$(call exeLune,$(LNSC),work/6,-mklunemod,lune/base/runtime.lua)
+	$(call exeLune,$(LNSC),work/6,-mklunemod lune/base/runtime.lua)
 	$(call exeLune,$(LNSC),work/6,test/start.lns,exe,$(EXE_OPT)) | sed 's/\.0//g' > work/test7.result
 
 	cp -a work/6 work/6_2

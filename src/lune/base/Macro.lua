@@ -318,6 +318,7 @@ if not _lune8 then
 end
 
 
+
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -1566,7 +1567,7 @@ end
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
    local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
 
-   Log.log( Log.Level.Trace, __func__, 965, function (  )
+   Log.log( Log.Level.Trace, __func__, 966, function (  )
    
       return string.format( "start -- %s:%d:%s", token.pos:get_orgPos().streamName, token.pos:get_orgPos().lineNo, token.txt)
    end )

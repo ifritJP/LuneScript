@@ -58,9 +58,9 @@ func LuaVer_VerKind_getTxt(arg1 LnsInt) string {
 var LuaVer_ver51 *LuaVer_LuaVerInfo
 var LuaVer_ver52 *LuaVer_LuaVerInfo
 var LuaVer_ver53 *LuaVer_LuaVerInfo
-var LuaVer_kind2verMap *LnsMap
+var LuaVer_kind2verMap *LnsMap2_[LnsInt,*LuaVer_LuaVerInfo]
 var LuaVer_curVer LnsAny
-// 79: decl @lune.@base.@LuaVer.setCurVer
+// 80: decl @lune.@base.@LuaVer.setCurVer
 func LuaVer_setCurVer(_env *LnsEnv, ver LnsInt) {
     var verKind LnsInt
     
@@ -75,16 +75,16 @@ func LuaVer_setCurVer(_env *LnsEnv, ver LnsInt) {
     LuaVer_curVer = Lns_unwrap( LuaVer_kind2verMap.Get(verKind)).(*LuaVer_LuaVerInfo)
 }
 
-// 85: decl @lune.@base.@LuaVer.getCurVer
+// 86: decl @lune.@base.@LuaVer.getCurVer
 func LuaVer_getCurVer(_env *LnsEnv) *LuaVer_LuaVerInfo {
     return Lns_unwrap( LuaVer_curVer).(*LuaVer_LuaVerInfo)
 }
 
-// 55: decl @lune.@base.@LuaVer.LuaVerInfo.isSupport
+// 56: decl @lune.@base.@LuaVer.LuaVerInfo.isSupport
 func (self *LuaVer_LuaVerInfo) IsSupport(_env *LnsEnv, symbol string) bool {
     return Lns_op_not(self.noSupportSymMap.Has(symbol))
 }
-// 59: decl @lune.@base.@LuaVer.LuaVerInfo.getLoadCode
+// 60: decl @lune.@base.@LuaVer.LuaVerInfo.getLoadCode
 func (self *LuaVer_LuaVerInfo) GetLoadCode(_env *LnsEnv) string {
     return LuaMod_getCode(_env, self.loadKind)
 }
@@ -173,7 +173,7 @@ func Lns_LuaVer_init(_env *LnsEnv) {
     LuaVer_ver51 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v51, LuaVer_BitOp__Cant, false, false, false, "loadstring51", false, LuaMod_CodeKind__LoadStr51, NewLnsSet2_[string](Lns_2DDDGen[string]("package.searchpath")))
     LuaVer_ver52 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v52, LuaVer_BitOp__HasMod, true, true, true, "loadstring52", true, LuaMod_CodeKind__LoadStr52, NewLnsSet2_[string]([]string{}))
     LuaVer_ver53 = NewLuaVer_LuaVerInfo(_env, LuaVer_VerKind__v53, LuaVer_BitOp__HasOp, true, true, true, "loadstring52", true, LuaMod_CodeKind__LoadStr52, NewLnsSet2_[string]([]string{}))
-    LuaVer_kind2verMap = NewLnsMap( map[LnsAny]LnsAny{LuaVer_VerKind__v51:LuaVer_ver51,LuaVer_VerKind__v52:LuaVer_ver52,LuaVer_VerKind__v53:LuaVer_ver53,})
+    LuaVer_kind2verMap = NewLnsMap2_[LnsInt,*LuaVer_LuaVerInfo]( map[LnsInt]*LuaVer_LuaVerInfo{LuaVer_VerKind__v51:LuaVer_ver51,LuaVer_VerKind__v52:LuaVer_ver52,LuaVer_VerKind__v53:LuaVer_ver53,})
     LuaVer_curVer = nil
 }
 func init() {

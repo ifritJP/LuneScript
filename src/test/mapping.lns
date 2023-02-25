@@ -67,7 +67,7 @@ pub fn test() {
       hoge2.func();
    }
 
-   let val = {
+   let val:&Map<str,&List<&List<&Map<str,&stem>>>> = {
       "val": [ [ { "hoge": 1 }, { "foo": "a" } ] ]
    }; 
    let obj, mess = MapTest._fromMap( val );

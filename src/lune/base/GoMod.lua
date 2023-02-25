@@ -146,6 +146,7 @@ if not _lune8 then
 end
 
 
+
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Depend = _lune.loadModule( 'lune.base.Depend' )
@@ -399,7 +400,7 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          end
          
          if not goModDir then
-            Log.log( Log.Level.Log, __func__, 195, function (  )
+            Log.log( Log.Level.Log, __func__, 220, function (  )
             
                return string.format( "not found baseDir -- %s", baseDir)
             end )
@@ -443,7 +444,7 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          return _lune.newAlge( GoModResult.Found, {projInfo})
       else
        
-         Log.log( Log.Level.Log, __func__, 229, function (  )
+         Log.log( Log.Level.Log, __func__, 254, function (  )
          
             return string.format( "not found %s", path)
          end )

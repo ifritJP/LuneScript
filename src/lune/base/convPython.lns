@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Ver;
 import lune.base.Ast;
@@ -5989,37 +5990,37 @@ pub override fn convFilter.processLiteralSymbol(
 pub override fn convFilter.processLuneControl(
    node: &Nodes.LuneControlNode, opt: Opt ) mut
 {
-   _match node.$pragma {
-      case .default__init {
-      }
-      case .default__init_old {
-      }
-      case .disable_mut_control {
-      }
-      case .ignore_symbol_ {
-      }
-      case .load__lune_module {
-      }
-      case .limit_conv_code( _ ) {
-      }
-      case .use_async {
-      }
-      case .run_async_pipe {
-         self.writeln( "go self.LoopMain()" );
-      }
-      case .default_async_func {
-      }
-      case .default_async_all {
-      }
-      case .default_async_this_class {
-      }
-      case .default_noasync_this_class {
-      }
-      case .use_macro_special_var {
-      }
-      case .single_phase_ast {
-      }
-   }
+   // _match node.$pragma {
+   //    case .default__init {
+   //    }
+   //    case .default__init_old {
+   //    }
+   //    case .disable_mut_control {
+   //    }
+   //    case .ignore_symbol_ {
+   //    }
+   //    case .load__lune_module {
+   //    }
+   //    case .limit_conv_code( _ ) {
+   //    }
+   //    case .use_async {
+   //    }
+   //    case .run_async_pipe {
+   //       self.writeln( "go self.LoopMain()" );
+   //    }
+   //    case .default_async_func {
+   //    }
+   //    case .default_async_all {
+   //    }
+   //    case .default_async_this_class {
+   //    }
+   //    case .default_noasync_this_class {
+   //    }
+   //    case .use_macro_special_var {
+   //    }
+   //    case .single_phase_ast {
+   //    }
+   // }
 }
 
 pub override fn convFilter.processAbbr(

@@ -58,6 +58,8 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+
+
 local Result = {}
 _moduleObj.Result = Result
 function Result:outputResult( stream )

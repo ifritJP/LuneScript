@@ -112,8 +112,8 @@ func LuaMod_CastKind__from(_env *LnsEnv, arg1 LnsInt) LnsAny{
 func LuaMod_CastKind_getTxt(arg1 LnsInt) string {
     return LuaMod_CastKindMap_[arg1];
 }
-var LuaMod_codeMap *LnsMap
-// 531: decl @lune.@base.@LuaMod.getCode
+var LuaMod_codeMap *LnsMap2_[LnsInt,string]
+// 532: decl @lune.@base.@LuaMod.getCode
 func LuaMod_getCode(_env *LnsEnv, kind LnsInt) string {
     return Lns_unwrap( LuaMod_codeMap.Get(kind)).(string)
 }
@@ -124,8 +124,8 @@ func Lns_LuaMod_init(_env *LnsEnv) {
     LuaMod__mod__ = "@lune.@base.@LuaMod"
     Lns_InitMod()
     {
-        var work *LnsMap
-        work = NewLnsMap( map[LnsAny]LnsAny{})
+        var work *LnsMap2_[LnsInt,string]
+        work = NewLnsMap2_[LnsInt,string]( map[LnsInt]string{})
         work.Set(LuaMod_CodeKind__Init,"local _lune = {}\n")
         work.Set(LuaMod_CodeKind__Unpack,"if not table.unpack then\n   table.unpack = unpack\nend\n")
         work.Set(LuaMod_CodeKind__NilAcc,"function _lune.nilacc( val, fieldName, access, ... )\n   if not val then\n      return nil\n   end\n   if fieldName then\n      local field = val[ fieldName ]\n      if not field then\n         return nil\n      end\n      if access == \"item\" then\n         local typeId = type( field )\n         if typeId == \"table\" then\n            return field[ ... ]\n         elseif typeId == \"string\" then\n            return string.byte( field, ... )\n         end\n      elseif access == \"call\" then\n         return field( ... )\n      elseif access == \"callmtd\" then\n         return field( val, ... )\n      end\n      return field\n   end\n   if access == \"item\" then\n      local typeId = type( val )\n      if typeId == \"table\" then\n         return val[ ... ]\n      elseif typeId == \"string\" then\n         return string.byte( val, ... )\n      end\n   elseif access == \"call\" then\n      return val( ... )\n   elseif access == \"list\" then\n      local list, arg = ...\n      if not list then\n         return nil\n      end\n      return val( list, arg )\n   end\n   error( string.format( \"illegal access -- %s\", access ) )\nend\n")

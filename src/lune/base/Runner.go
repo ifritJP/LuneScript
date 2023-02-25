@@ -3,11 +3,11 @@ package lnsc
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
 var init_Runner bool
 var Runner__mod__ string
-// 34: decl @lune.@base.@Runner.Runner.run
+// 35: decl @lune.@base.@Runner.Runner.run
 func (self *Runner_Runner) Run(_env *LnsEnv) {
     self.FP.RunMain(_env)
 }
-// 39: decl @lune.@base.@Runner.Runner.start
+// 40: decl @lune.@base.@Runner.Runner.start
 func (self *Runner_Runner) Start(_env *LnsEnv, mode LnsInt,name LnsAny) bool {
     return LnsRun(_env, self.FP, mode, name)
 }
@@ -50,7 +50,7 @@ func Runner_RunnerDownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Runner_Runner) ToRunner_Runner() *Runner_Runner {
     return obj
 }
-// 29: DeclConstr
+// 30: DeclConstr
 func (self *Runner_Runner) InitRunner_Runner(_env *LnsEnv) {
     self._syncFlag = &Lns_syncFlag{}
 }

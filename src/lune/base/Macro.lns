@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Util;
 import lune.base.Nodes;
@@ -666,7 +667,7 @@ pub fn MacroCtrl.evalMacroOp(
                // macroVars.__names には、
                // macro-statment で定義された変数シンボル名が入る。
                // これは convLua の processDeclVar() でセットしている。
-               foreach name in (unwrap macroVars.__names)@@Map<int,str> {
+               foreach name in (unwrap macroVars.__names)@@_Map<int,str> {
                   let! valInfo = macroInfo.$symbol2MacroValInfoMap[ name ] {
                      Util.err( "not found macro symbol -- %s" (name) ); // バグ
                   };
@@ -986,7 +987,7 @@ pub fn MacroCtrl.expandMacroVal(
          return val@@_List<str>;
       }
       let list:_List<str> = [];
-      forsort item in val@@Map<int,str> {
+      forsort item in val@@_Map<int,str> {
          list.insert( item );
       }
       return list;

@@ -3174,3 +3174,16 @@ _section();
 //       }
 //    }
 // }   
+   // _section();
+   // {
+   //    class Super {
+   //       let val:int {pub};
+   //    }
+   //    class Hoge extend Super {
+   //    }
+   //    let flag = true;
+   //    let mut work:__Map<str,&Super> = flag and {} or {};
+   //    foreach val, key in work {
+   //       print( key, val.$val );
+   //    }
+   // }
