@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control limit_conv_code lua;
+_lune_control default_strict_generics;
 
 
 import lune.base.frontInterface;
@@ -115,7 +116,7 @@ go/gihub:com.***.****.**** で import/module 宣言した lua モジュールの
 package.path に追加する。
 これをしないと、lua 版 LuneScript で実行できない。
 */
-pub fn addGoModPath( list:&List<str> ) __async {
+pub fn addGoModPath( list:&_List<str> ) __async {
    __luaLock {
       let loaded, mess = _load( ```
 return function( pathList )

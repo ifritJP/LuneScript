@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Ver;
 import lune.base.Ast;
@@ -1375,7 +1376,16 @@ fn convFilter.processConvExp( node:&Nodes.Node, dstTypeList:&List<&Ast.TypeInfo>
       self.writeln( ") {" );
    }
    elseif #retTypeList == 1 {
-      self.writeRaw( self.type2gotype( getRetType( retTypeList[ 1 ], 1 ) ) );
+      let retTxt = self.type2gotype( getRetType( retTypeList[ 1 ], 1 ) );
+      if hasRetEnv and self.option.$addEnvArg {
+         self.writeRaw( "(" );
+         self.writeRaw( "*LnsEnv, " );
+         needRetEnv = true;
+         self.writeRaw( retTxt );
+         self.writeRaw( ") " );
+      } else {
+         self.writeRaw( retTxt );
+      }
       self.writeln( " {" );
    }
    else {
@@ -2124,7 +2134,7 @@ class ConvRunner extend convFilter (__Runner) {
 }
 
 fn convFilter.processMethodAsync(
-   nodeList:&List<&Nodes.DeclClassNode> ) mut : &List<ConvRunner>
+   nodeList:&_List<&Nodes.DeclClassNode> ) mut : &List<ConvRunner>
 {
    let mut totalStmtNum = 0;
    let declMethodNodeList:List<&ProcessDeclMethodItem> = [];
@@ -2406,7 +2416,31 @@ pub override fn convFilter.processRoot(
                              ( self.getSymbolSym( workNode.$newSymbol ),
                                self.getTypeSymbol( workNode.$typeInfo.$aliasSrc ) ) );
             } );
-
+   _filter( _sortNode( LiteralListNode ),
+            fn ( workNode:&Nodes.LiteralListNode ) {
+               if not workNode.$expType.$canDealGenInherit {
+                  if! let expList = workNode.$expList {
+                     self.processConvExp(
+                        workNode, expList.$expTypeList, expList, false );
+                  }
+            } } );
+   _filter( _sortNode( LiteralArrayNode ),
+            fn ( workNode:&Nodes.LiteralArrayNode ) {
+               if not workNode.$expType.$canDealGenInherit {
+                  if! let expList = workNode.$expList {
+                     self.processConvExp(
+                        workNode, expList.$expTypeList, expList, false );
+                  }
+            } } );
+   _filter( _sortNode( LiteralSetNode ),
+            fn ( workNode:&Nodes.LiteralSetNode ) {
+               if not workNode.$expType.$canDealGenInherit {
+                  if! let expList = workNode.$expList {
+                     self.processConvExp(
+                        workNode, expList.$expTypeList, expList, false );
+                  }
+            } } );
+   
    // __lns.runtime.log( "NodeIndexer.need" );
    
    self.pushProcessMode( .NonClosureFuncDecl );
@@ -2632,11 +2666,14 @@ fn convFilter.expList2Slice( subList:&Nodes.ExpListNode, toStem:bool ) mut {
       if mRetIndex and mRetIndex ~= 1 {
          self.writeRaw( "append( " );
       }
-      self.writeRaw( "[]LnsAny{" );
+      //self.writeRaw( "[]LnsAny{" );
+      self.writeRaw( "Lns_2DDD(" );
+
       foreach subExp, subIndex in subList.$expList {
          if mRetIndex == subIndex {
             if mRetIndex ~= 1 {
-               self.writeRaw( "}, " );
+               //self.writeRaw( "}, " );
+               self.writeRaw( "), " );
             }
             if subExp.$expType.$kind ~= .DDD {
                self.writeRaw( "Lns_2DDD(" );
@@ -2658,60 +2695,36 @@ fn convFilter.expList2Slice( subList:&Nodes.ExpListNode, toStem:bool ) mut {
          self.writeRaw( ")" );
       }
       else {
-         self.writeRaw( "}" );
+         //self.writeRaw( "}" );
+         self.writeRaw( ")" );
       }
    }
 }
 
-
-fn convFilter.expList2SliceRaw( itemType:&Ast.TypeInfo, subList:&Nodes.ExpListNode ) mut
-{
-   // fn processExp( exp:&Nodes.Node ) {
-   //    filter( exp, self, subList );
-   // }
+// fn convFilter.getSliceUpcastName(
+//    subClass:&Ast.TypeInfo, superClass:&Ast.TypeInfo ) mut : str
+// {
+//    if superClass.$kind == .IF {
+//       return "%s_toSlice__IF[%s]" ( self.getTypeSymbol( subClass ),
+//                                     self.getTypeSymbol( superClass ) );
+//    }
    
-   // let mRetIndex = subList.$mRetExp$.$index;
-   // if mRetIndex and mRetIndex ~= 1 {
-   //    self.writeRaw( "append( " );
-   // }
-   // let itemTypeTxt = self.type2gotype( itemType );
-   // self.writeRaw( "[]%s{" (itemTypeTxt) );
-   // foreach subExp, subIndex in subList.$expList {
-   //    if mRetIndex == subIndex {
-   //       if mRetIndex ~= 1 {
-   //          self.writeRaw( "}, " );
-   //       }
-   //       if subExp.$expType.$kind ~= .DDD {
-   //          self.writeRaw( "Lns_2DDDGen[%s](" (itemTypeTxt) );
-   //          processExp( subExp );
-   //          self.writeRaw( ")" );
-   //       }
-   //       else {
-   //          processExp( subExp );
-   //       }
-   //       self.writeRaw( "..." );
-   //       break;
-   //    }
-   //    if subIndex ~= 1 {
-   //       self.writeRaw( ', ' );
-   //    }
-   //    processExp( subExp );
-   // }
-   // if mRetIndex and mRetIndex ~= 1 {
-   //    self.writeRaw( ")" );
-   // }
-   // else {
-   //    self.writeRaw( "}" );
-   // }
-   self.writeRaw( "Lns_2DDDGen[%s](" (self.type2gotype( itemType )));
-   foreach subExp, subIndex in subList.$expList {
-      if subIndex ~= 1 {
-         self.writeRaw( "," );
+//    return "%s_toSlice_%s" ( self.getTypeSymbol( subClass ),
+//                             self.getTypeSymbol( superClass ) );             
+// }
+
+fn convFilter.getSliceUpcastName( typeInfo:&Ast.TypeInfo ) mut : str
+{
+   switch typeInfo.$kind {
+      case .Class {
+         return "%s_toSlice" ( self.getTypeSymbol( typeInfo ) );
       }
-      filter( subExp, self, subList );
+      default {
+         return "Lns_2Slice[%s]" ( self.type2gotype( typeInfo ) );
+      }
    }
-   self.writeRaw( ")" );
 }
+
 
 /**
 expListNode の式を go で扱える型に変換する。
@@ -2826,6 +2839,30 @@ fn convFilter.processSetFromExpList(
    }
    return expListKind;
 }
+
+fn convFilter.expList2SliceRaw(
+   itemType:&Ast.TypeInfo, node:&Nodes.Node, expList:&Nodes.ExpListNode! ) mut
+{
+   let itemTypeTxt = self.type2gotype( itemType );
+   when! expList {
+      if expList.getDDD() {
+         self.writeRaw( self.getSliceUpcastName( itemType ) );
+         self.writeRaw( "( Lns_2DDD(" );
+         filter( expList, self, node );
+         self.writeRaw( "))" );
+      } else {
+         self.writeRaw( "Lns_2DDDGen[%s](" (itemTypeTxt) );
+         self.processSetFromExpList(
+            self.getConvExpName( node, expList ),
+            expList.$expTypeList, expList, false );
+         self.writeRaw( ")" );
+      }
+   }
+   else {
+      self.writeRaw( "[]%s{}" (itemTypeTxt) );
+   }
+}
+
 
 pub override fn convFilter.processCondRet(
    node: &Nodes.CondRetNode, opt: Opt ) mut
@@ -4158,7 +4195,9 @@ pub override fn convFilter.processForeach(
    macro _keyItemSet( typeSym:sym, typeName:__exp ) {
       if ,,typeName ~= "_" {
          self.writeRaw( "%s := _%s" (,,typeName, ,,typeName) );
-         if loopExpType.$canDealGenInherit {
+         if loopExpType.$canDealGenInherit or
+            ,,typeSym.$srcTypeInfo.$nonnilableType.$kind == .Alternate
+         {
             self.outputStem2Type( ,,typeSym );
          }
          self.writeln( "" );
@@ -4535,6 +4574,40 @@ fn convFilter.outputToStem( node: &Nodes.DeclClassNode, absImmutFlag:bool ) mut 
    self.writeln( "}" );
 }
 
+/**
+[]LnsAny から node で定義するクラスのスライスに変換する関数を定義する。
+*/
+fn convFilter.outputSliceUpcast( node: &Nodes.DeclClassNode ) mut {
+   let classType = node.$expType;
+
+   let symbol = self.getTypeSymbol( classType );
+   let goType = self.type2gotype( classType );
+
+
+   self.writeln( "func %s(slice []LnsAny) []%s {"
+      (self.getSliceUpcastName( classType ), goType));
+
+   self.pushIndent(##);
+
+   self.writeln( "ret := make([]%s, len(slice))" (goType));
+   self.writeln( "for index, val := range slice {" );
+
+   self.pushIndent(##);
+   
+   switch classType.$kind {
+      case .Class {
+         self.writeln( "ret[index] = val.(%sDownCast).To%s()" ( symbol, symbol ) );
+      }
+      default {
+         Util.err( "not support -- %s" (symbol) ); 
+      }
+   }
+   self.popIndent();
+   self.writeln( "}" );
+   self.writeln( "return ret" );
+   self.popIndent();
+   self.writeln( "}" );
+}
 
 fn convFilter.outputDownCast( node: &Nodes.DeclClassNode ) mut {
    let symbol = self.getTypeSymbol( node.$expType );
@@ -5158,6 +5231,7 @@ pub override fn convFilter.processDeclClass(
             self.outputMethodIF( node );
             self.outputClassType( node, absImmutFlag );
             self.outputToStem( node, absImmutFlag );
+            self.outputSliceUpcast( node );
             self.outputDownCast( node );
             self.outputCastReceiver( node );
             self.outputConstructor( node, absImmutFlag );
@@ -5166,37 +5240,40 @@ pub override fn convFilter.processDeclClass(
             self.outputAdvertise( node );
 
             if node.$expType.isInheritFrom(
-               self.processInfo, Ast.builtinTypeMapping, nil ) {
-                  self.outputMapping( node, absImmutFlag );
-               }
+               self.processInfo, Ast.builtinTypeMapping, nil )
+            {
+               self.outputMapping( node, absImmutFlag );
+            }
 
-               if node.$expType.isInheritFrom(
-                  self.processInfo, Ast.builtinTypeAsyncItem, nil ) {
-                     self.outputAsyncItem( node );
-                  }
+            if node.$expType.isInheritFrom(
+               self.processInfo, Ast.builtinTypeAsyncItem, nil )
+            {
+               self.outputAsyncItem( node );
+            }
 
-                  foreach fieldNode in node.$fieldList {
-                     switch fieldNode.$kind {
-                        case Nodes.NodeKind.$DeclMember, Nodes.NodeKind.$DeclMethod
-                        {
-                           // ここでは処理しない
-                        }
-                        default {
-                           filter( fieldNode, self, node );
-                           self.writeln( "" );
-                        }
-                     }
+            foreach fieldNode in node.$fieldList {
+               switch fieldNode.$kind {
+                  case Nodes.NodeKind.$DeclMember, Nodes.NodeKind.$DeclMethod
+                  {
+                     // ここでは処理しない
                   }
-               }
-               case .IF {
-                  self.outputInterfaceType( node );
-               }
-               default {
-                  Util.err(  // バグ
-                     "%s: not support -- %s:%d" 
-                     (__func__, node.$expType.$kind.$_txt, node.$pos.lineNo ) );
+                  default {
+                     filter( fieldNode, self, node );
+                     self.writeln( "" );
+                  }
                }
             }
+         }
+         case .IF {
+            self.outputInterfaceType( node );
+            // self.outputSliceUpcast( node );
+         }
+         default {
+            Util.err(  // バグ
+                      "%s: not support -- %s:%d" 
+                      (__func__, node.$expType.$kind.$_txt, node.$pos.lineNo ) );
+         }
+      }
    }
    else {
       self.outputStaticMember( node );
@@ -5384,7 +5461,7 @@ pub fn convFilter.outputCallPrefix(
                         }
                         else {
                            switch funcType {
-                              case self.builtinFuncs.list_sort,
+                              case self.builtinFuncs._list_sort,
                                    self.builtinFuncs.__list_sort,
                                    self.builtinFuncs.array_sort
                               {  
@@ -5874,7 +5951,8 @@ pub override fn convFilter.processExpCast(
 pub override fn convFilter.processExpParen(
    node: &Nodes.ExpParenNode, opt: Opt ) mut
 {
-   if #node.$exp.$expTypeList >= 2 {
+   
+   if Nodes.hasMultiValNode( node.$exp ) {
       self.writeRaw( "Lns_car(" );
       filter( node.$exp, self, node );
       self.writeRaw( ")" );
@@ -6424,14 +6502,9 @@ pub override fn convFilter.processLiteralList(
       }
       self.writeRaw( ")" );
    } else {
-      let itemType = self.type2gotype(node.$expType.$itemTypeInfoList[1] );
-      self.writeRaw( "NewLnsList2_[%s](" (itemType ));
-      if! let expList = node.$expList {
-         self.expList2SliceRaw( node.$expType.$itemTypeInfoList[1], expList );
-      }
-      else {
-         self.writeRaw( "[]%s{}" (itemType) );
-      }
+      let itemType = node.$expType.$itemTypeInfoList[1];
+      self.writeRaw( "NewLnsList2_[%s](" (self.type2gotype(itemType) ));
+      self.expList2SliceRaw( itemType, node, node.$expList );
       self.writeRaw( ")" );
    }
 }
@@ -6449,14 +6522,9 @@ pub override fn convFilter.processLiteralSet(
       }
       self.writeRaw( ")" );
    } else {
-      let itemType = self.type2gotype(node.$expType.$itemTypeInfoList[1] );
-      self.writeRaw( "NewLnsSet2_[%s](" (itemType ));
-      if! let expList = node.$expList {
-         self.expList2SliceRaw( node.$expType.$itemTypeInfoList[1], expList );
-      }
-      else {
-         self.writeRaw( "[]%s{}" (itemType) );
-      }
+      let itemType = node.$expType.$itemTypeInfoList[1];
+      self.writeRaw( "NewLnsSet2_[%s](" (self.type2gotype( itemType ) ));
+      self.expList2SliceRaw( itemType, node, node.$expList );
       self.writeRaw( ")" );
    }
 }
@@ -6602,6 +6670,8 @@ pub override fn convFilter.processLuneControl(
       case .use_macro_special_var {
       }
       case .single_phase_ast {
+      }
+      case .default_strict_generics {
       }
    }
 }

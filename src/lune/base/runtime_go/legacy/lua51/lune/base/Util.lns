@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Depend;
 import lune.base.Log;
@@ -102,6 +103,14 @@ pub fn err( message:str ): __ {
    os.exit( errorCode );
 }
 
+// pub fn clone2List<T>( srcList:&__List<T> ) : _List<T> {
+//    let list:List<T> = [];
+//    foreach val in srcList {
+//       list.insert( val );
+//    }
+//    return list;
+// }
+
 /**
 txt 文字列から、 pattern で構成される文字列を抜き出してリストを返す。
 */
@@ -120,8 +129,8 @@ pub fn splitModule( modPath:str ) : List<str> {
 }
 
 pub class OrderedSet<T> {
-   pri let mut set:Set<&T>;
-   pri let mut list:List<&T> {pub&};
+   pri let mut set:_Set<&T>;
+   pri let mut list:_List<&T> {pub&};
 
    pub fn __init() {
       self.set = (@);
@@ -160,8 +169,8 @@ pub class OrderedSet<T> {
 }
 
 pub class OrderdMap<KEY,VAL> {
-   let mut map:Map<KEY,VAL> {pub&};
-   let mut keyList:List<KEY> {pub&};
+   let mut map:_Map<KEY,VAL> {pub&};
+   let mut keyList:_List<KEY> {pub&};
 
    pub fn __init() {
       self.map = {};
@@ -208,7 +217,7 @@ pub class memStream extend (oStream) {
 
 pub class TxtStream extend (iStream) {
    let txt: str {pub};
-   let lineList:&List<str>;
+   let lineList:&_List<str>;
    let mut start: int;
    let mut eof: bool;
    let mut lineNo: int {pub};

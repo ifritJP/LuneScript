@@ -24,6 +24,7 @@ SOFTWARE.
 
 _lune_control default_async_all;
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
 
 pub class _MetaInfo {
    pub let __formatVersion:str;

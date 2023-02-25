@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Ver;
 import lune.base.Ast;
@@ -1779,7 +1780,8 @@ pro fn convFilter.setup() mut {
       self.builtinFuncs.__lns_runtime_dumpLog: "LnsDumpRunnerLog",
       self.builtinFuncs.__lns_sync_createFlag: "LnsCreateSyncFlag",
       self.builtinFuncs.__lns_sync_createProcesser: "LnsCreateProcessor",
-      self.builtinFuncs.list_insert: ".append",
+      self.builtinFuncs._list_insert: ".append",
+      self.builtinFuncs.__list_insert: ".append",
    };
    
 
@@ -1838,7 +1840,7 @@ class ConvRunner extend convFilter (__Runner) {
 }
 
 fn convFilter.processMethodAsync(
-   nodeList:&List<&Nodes.DeclClassNode> ) mut : &List<ConvRunner>
+   nodeList:&_List<&Nodes.DeclClassNode> ) mut : &List<ConvRunner>
 {
    let mut totalStmtNum = 0;
    let declMethodNodeList:List<&ProcessDeclMethodItem> = [];
@@ -4857,7 +4859,8 @@ pub fn convFilter.outputCallPrefix(
                         }
                         else {
                            switch funcType {
-                              case self.builtinFuncs.list_sort,
+                              case self.builtinFuncs._list_sort,
+                                   self.builtinFuncs.__list_sort,
                                    self.builtinFuncs.array_sort
                               {  
                                  callKind = .SortCall( prefixType.$itemTypeInfoList[ 1 ] );
@@ -5987,37 +5990,37 @@ pub override fn convFilter.processLiteralSymbol(
 pub override fn convFilter.processLuneControl(
    node: &Nodes.LuneControlNode, opt: Opt ) mut
 {
-   _match node.$pragma {
-      case .default__init {
-      }
-      case .default__init_old {
-      }
-      case .disable_mut_control {
-      }
-      case .ignore_symbol_ {
-      }
-      case .load__lune_module {
-      }
-      case .limit_conv_code( _ ) {
-      }
-      case .use_async {
-      }
-      case .run_async_pipe {
-         self.writeln( "go self.LoopMain()" );
-      }
-      case .default_async_func {
-      }
-      case .default_async_all {
-      }
-      case .default_async_this_class {
-      }
-      case .default_noasync_this_class {
-      }
-      case .use_macro_special_var {
-      }
-      case .single_phase_ast {
-      }
-   }
+   // _match node.$pragma {
+   //    case .default__init {
+   //    }
+   //    case .default__init_old {
+   //    }
+   //    case .disable_mut_control {
+   //    }
+   //    case .ignore_symbol_ {
+   //    }
+   //    case .load__lune_module {
+   //    }
+   //    case .limit_conv_code( _ ) {
+   //    }
+   //    case .use_async {
+   //    }
+   //    case .run_async_pipe {
+   //       self.writeln( "go self.LoopMain()" );
+   //    }
+   //    case .default_async_func {
+   //    }
+   //    case .default_async_all {
+   //    }
+   //    case .default_async_this_class {
+   //    }
+   //    case .default_noasync_this_class {
+   //    }
+   //    case .use_macro_special_var {
+   //    }
+   //    case .single_phase_ast {
+   //    }
+   // }
 }
 
 pub override fn convFilter.processAbbr(

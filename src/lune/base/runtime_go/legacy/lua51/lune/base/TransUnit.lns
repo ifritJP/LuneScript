@@ -23,6 +23,8 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
+
 
 subfile use lune.base.TransUnitDecl;
 subfile use lune.base.TransUnitExp;
@@ -52,6 +54,7 @@ import lune.base.Async;
 
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
 
 macro _cloneMap( dst:__exp, src:__exp ) {
    {}
@@ -1362,11 +1365,15 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
 {
    let mut token;
 
-   let mut commentList:List<&Parser.Token> = [];
+   let mut commentList:List<&Parser.Token>! = nil;
    let mut workToken = self.parser.getTokenNoErr(##);
-   while workToken.kind == Parser.TokenKind.Cmnt {
-      commentList.insert( workToken );
-      workToken = self.parser.getTokenNoErr(##);
+   if workToken.kind == Parser.TokenKind.Cmnt {
+      let workCommentList:List<&Parser.Token> = [];
+      while workToken.kind == Parser.TokenKind.Cmnt {
+         workCommentList.insert( workToken );
+         workToken = self.parser.getTokenNoErr(##);
+      }
+      commentList = workCommentList;
    }
    if workToken.$kind ~= .Eof {
       token = workToken;
@@ -1378,12 +1385,16 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
             self.typeNameCtrl, self.$scope, self, token );
       }
       if not self.ctrl_info.compatComment {
-         self.commentCtrl.addDirect( commentList );
+         when! commentList {
+            self.commentCtrl.addDirect( commentList );
+         }
       }
    }
    else {
       token = Parser.getEofToken();
-      self.commentCtrl.addDirect( commentList );
+      when! commentList {
+         self.commentCtrl.addDirect( commentList );
+      }
    }
 
    if #token.$commentList > 0 {
@@ -1720,6 +1731,12 @@ pro fn TransUnit.analyzeLuneControlToken(
    return nil;
 }
 
+/**
+_lune_control の解析
+
+
+@return Nodes.LuneControlNode! 解析失敗した場合 nil
+*/
 fn TransUnit.analyzeLuneControl(
    firstToken: &Parser.Token ) mut : Nodes.LuneControlNode!
 {
@@ -1787,6 +1804,9 @@ fn TransUnit.analyzeLuneControl(
                   "this option only use in method of the class have loop method." );
                return nil;
             }
+         }
+         case "default_strict_generics" {
+            pragma = LuneControl.Pragma.default_strict_generics;
          }
          // case "default_async_func" {
          //    pragma = LuneControl.Pragma.default_async_func;
@@ -2039,7 +2059,7 @@ fn TransUnit.analyzeIf(
    }
    self.pushback();
 
-   let mut list:Nodes.IfStmtInfo[] = [];
+   let mut list:List<Nodes.IfStmtInfo> = [];
    let ifExp = self.analyzeExpOneRVal( false, false, true ## );
    let condRetInfo = self.checkCondRet();
    
@@ -2154,7 +2174,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 
    self.checkNextToken( "{" );
 
-   let mut caseList: Nodes.CaseInfo[] = [];
+   let mut caseList: List<Nodes.CaseInfo> = [];
 
    let mut condObjSet:Set<&stem> = (@);
    let mut condSymIdSet:Set<int> = (@);

@@ -319,6 +319,7 @@ if not _lune8 then
 end
 
 
+
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -327,6 +328,7 @@ local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
+local Log = _lune.loadModule( 'lune.base.Log' )
 local function loadCode( code )
 
    local ret
@@ -566,7 +568,9 @@ local function getLiteralMacroVal( obj )
       elseif _matchExp[1] == Nodes.Literal.Symbol[1] then
          local val = _matchExp[2][1]
       
-         return {val}
+         
+         local list = {val}
+         return list
       elseif _matchExp[1] == Nodes.Literal.Field[1] then
          local val = _matchExp[2][1]
       
@@ -1562,7 +1566,14 @@ local function pushbackTxt( pushbackParser, txtList, streamName, pos )
 end
 
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
+   local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
 
+   Log.log( Log.Level.Trace, __func__, 966, function (  )
+   
+      return string.format( "start -- %s:%d:%s", token.pos:get_orgPos().streamName, token.pos:get_orgPos().lineNo, token.txt)
+   end )
+   
+   
    if self.tokenExpanding then
       return token
    end

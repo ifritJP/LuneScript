@@ -29,6 +29,7 @@ import lune.base.Runner;
 
 _lune_control ignore_symbol_;
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 
 /**
@@ -280,7 +281,7 @@ pub class ImportModuleInfo {
       return #self.orderedSet.$list;
    }
 
-   pub fn list() : &List<str> {
+   pub fn list() : &_List<str> {
       return self.orderedSet.$list;
    }
 }

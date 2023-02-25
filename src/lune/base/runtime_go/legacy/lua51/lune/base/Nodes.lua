@@ -232,6 +232,7 @@ if not _lune8 then
    _lune8 = _lune
 end
 
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
@@ -3226,6 +3227,29 @@ function ExpListNode:setLValue(  )
       expNode.isLValue = true
    end
    
+end
+
+function ExpListNode:getDDD(  )
+
+   local len = #self:get_expList()
+   do
+      local _switchExp = self:get_expList()[len]:get_expType():get_kind()
+      if _switchExp == Ast.TypeInfoKind.DDD then
+         return self:get_expList()[len]
+      elseif _switchExp == Ast.TypeInfoKind.Abbr then
+         if len == 1 then
+            return nil
+         end
+         
+         if self:get_expList()[len - 1]:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
+            return self:get_expList()[len - 1]
+         end
+         
+         return nil
+      end
+   end
+   
+   return nil
 end
 
 

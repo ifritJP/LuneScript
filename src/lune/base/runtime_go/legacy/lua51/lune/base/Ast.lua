@@ -248,6 +248,7 @@ if not _lune8 then
 end
 
 
+
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
@@ -624,7 +625,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 225, function (  )
+   Log.log( Log.Level.Trace, __func__, 226, function (  )
    
       return "start"
    end )
@@ -1497,18 +1498,21 @@ CanEvalType.__allList[2] = CanEvalType.SetOp
 CanEvalType.SetEq = 2
 CanEvalType._val2NameMap[2] = 'SetEq'
 CanEvalType.__allList[3] = CanEvalType.SetEq
-CanEvalType.Equal = 3
-CanEvalType._val2NameMap[3] = 'Equal'
-CanEvalType.__allList[4] = CanEvalType.Equal
-CanEvalType.Math = 4
-CanEvalType._val2NameMap[4] = 'Math'
-CanEvalType.__allList[5] = CanEvalType.Math
-CanEvalType.Comp = 5
-CanEvalType._val2NameMap[5] = 'Comp'
-CanEvalType.__allList[6] = CanEvalType.Comp
-CanEvalType.Logical = 6
-CanEvalType._val2NameMap[6] = 'Logical'
-CanEvalType.__allList[7] = CanEvalType.Logical
+CanEvalType.SetEqEq = 3
+CanEvalType._val2NameMap[3] = 'SetEqEq'
+CanEvalType.__allList[4] = CanEvalType.SetEqEq
+CanEvalType.Equal = 4
+CanEvalType._val2NameMap[4] = 'Equal'
+CanEvalType.__allList[5] = CanEvalType.Equal
+CanEvalType.Math = 5
+CanEvalType._val2NameMap[5] = 'Math'
+CanEvalType.__allList[6] = CanEvalType.Math
+CanEvalType.Comp = 6
+CanEvalType._val2NameMap[6] = 'Comp'
+CanEvalType.__allList[7] = CanEvalType.Comp
+CanEvalType.Logical = 7
+CanEvalType._val2NameMap[7] = 'Logical'
+CanEvalType.__allList[8] = CanEvalType.Logical
 
 
 local SerializeInfo = {}
@@ -2406,6 +2410,10 @@ function ModifierTypeInfo:addModifierTxt( txt )
    
    return txt
 end
+function ModifierTypeInfo:get_canDealGenInherit(  )
+
+   return self.srcTypeInfo:get_canDealGenInherit()
+end
 function ModifierTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 
    return self:getTxtWithRaw( self:get_rawTxt(), typeNameCtrl, importInfo, localFlag )
@@ -2456,7 +2464,7 @@ function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type
    if #self.srcTypeInfo:get_itemTypeInfoList() >= 1 then
       do
          local _switchExp = canEvalType
-         if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp then
+         if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetEqEq or _switchExp == CanEvalType.SetOp then
             
             evalType = CanEvalType.SetOpIMut
          else 
@@ -2551,10 +2559,6 @@ end
 
 function ModifierTypeInfo:get_baseTypeInfo( ... )
    return self.srcTypeInfo:get_baseTypeInfo( ... )
-end
-
-function ModifierTypeInfo:get_canDealGenInherit( ... )
-   return self.srcTypeInfo:get_canDealGenInherit( ... )
 end
 
 function ModifierTypeInfo:get_childId( ... )
@@ -5580,7 +5584,16 @@ function GenericTypeInfo:isInheritFrom( processInfo, other, alt2type )
       
       local otherGenType = _lune.unwrap( genOther.alt2typeMap[altType])
       
-      if not otherGenType:canEvalWith( processInfo, genType, CanEvalType.SetEq, workAlt2type ) then
+      local mode
+      
+      if self.genSrcTypeInfo:get_canDealGenInherit() then
+         mode = CanEvalType.SetEq
+      else
+       
+         mode = CanEvalType.SetEqEq
+      end
+      
+      if not otherGenType:canEvalWith( processInfo, genType, mode, workAlt2type ) then
          return false
       end
       
@@ -5663,7 +5676,13 @@ function GenericTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type 
          local evalType
          
          if canEvalType == CanEvalType.SetOp then
-            evalType = CanEvalType.SetEq
+            if self.genSrcTypeInfo:get_canDealGenInherit() then
+               evalType = CanEvalType.SetEq
+            else
+             
+               evalType = CanEvalType.SetEqEq
+            end
+            
          else
           
             evalType = canEvalType
@@ -7713,7 +7732,7 @@ function ProcessInfo:createSet_( canDealGenInherit, accessMode, parentInfo, item
       local baseType
       
       if canDealGenInherit then
-         baseType = _moduleObj.builtinTypeSet
+         baseType = _moduleObj.builtinTypeSet_
       else
        
          baseType = _moduleObj.builtinTypeSet__
@@ -7756,7 +7775,7 @@ function ProcessInfo:createList_( canDealGenInherit, accessMode, parentInfo, ite
       local baseType
       
       if canDealGenInherit then
-         baseType = _moduleObj.builtinTypeList
+         baseType = _moduleObj.builtinTypeList_
       else
        
          baseType = _moduleObj.builtinTypeList__
@@ -7829,14 +7848,14 @@ function ProcessInfo:createMap_( canDealGenInherit, accessMode, parentInfo, keyT
       local baseType
       
       if canDealGenInherit then
-         baseType = _moduleObj.builtinTypeMap
+         baseType = _moduleObj.builtinTypeMap_
       else
        
          baseType = _moduleObj.builtinTypeMap__
       end
       
       
-      local typeInfo = NormalTypeInfo._new(self, true, false, nil, _moduleObj.builtinTypeMap, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
+      local typeInfo = NormalTypeInfo._new(self, true, false, nil, baseType, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
       if not canDealGenInherit then
          typeInfo:set_canDealGenInherit( false )
       end
@@ -7880,7 +7899,12 @@ function ProcessInfo:createClassAsync( classFlag, finalFlag, abstractFlag, scope
    end
    
    
-   local info = NormalTypeInfo._new(self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, genTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
+   local itemTypeList = {}
+   for __index, val in ipairs( genTypeList ) do
+      table.insert( itemTypeList, val )
+   end
+   
+   local info = NormalTypeInfo._new(self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, itemTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
    self:setupImut( info )
    
    for __index, genType in ipairs( genTypeList ) do
@@ -8496,8 +8520,7 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
    end
    
    
-   if type1:get_kind() == type2:get_kind() then
-      
+   if type1:get_kind() == type2:get_kind() and type1:get_canDealGenInherit() == type2:get_canDealGenInherit() then
       local function getCommon( workTypeInfo, workOther, workAlt2type )
       
          do
@@ -8518,13 +8541,13 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
       do
          local _switchExp = type1:get_kind()
          if _switchExp == TypeInfoKind.List then
-            return getType( processInfo:createList_( true, AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createList_( type1:get_canDealGenInherit(), AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Array then
             return getType( processInfo:createArray( AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Set then
-            return getType( processInfo:createSet_( true, AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
+            return getType( processInfo:createSet_( type1:get_canDealGenInherit(), AccessMode.Local, _moduleObj.headTypeInfo, {getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type )}, mutMode ) )
          elseif _switchExp == TypeInfoKind.Map then
-            return getType( processInfo:createMap_( true, AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
+            return getType( processInfo:createMap_( type1:get_canDealGenInherit(), AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
          end
       end
       
@@ -9609,7 +9632,7 @@ function BoxTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    
    do
       local _switchExp = canEvalType
-      if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut or _switchExp == CanEvalType.SetEq then
+      if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut or _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetEqEq then
       else 
          
             return false, nil
@@ -10137,7 +10160,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    
    do
       local _switchExp = canEvalType
-      if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut then
+      if _switchExp == CanEvalType.SetEqEq or _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut then
          if dest == _moduleObj.builtinTypeEmpty then
             
             do
@@ -10197,7 +10220,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    
    
    if dest == _moduleObj.builtinTypeStem_ then
-      return true, nil
+      if canEvalType ~= CanEvalType.SetEqEq then
+         return true, nil
+      end
+      
    end
    
    
@@ -10225,7 +10251,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    end
    
    if dest == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then
-      return true, nil
+      if canEvalType ~= CanEvalType.SetEqEq then
+         return true, nil
+      end
+      
    end
    
    if dest == _moduleObj.builtinTypeForm and (otherSrc:get_kind() == TypeInfoKind.Func or otherSrc:get_kind() == TypeInfoKind.Form or otherSrc:get_kind() == TypeInfoKind.FormFunc ) then
@@ -10258,7 +10287,7 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
    do
       local extTypeInfo = _lune.__Cast( otherSrc, 3, ExtTypeInfo )
       if extTypeInfo ~= nil then
-         if canEvalType ~= CanEvalType.SetEq and not failCreateLuavalWith( extTypeInfo:get_extedType(), LuavalConvKind.ToLua, false ) then
+         if canEvalType ~= CanEvalType.SetEq and canEvalType ~= CanEvalType.SetEqEq and not failCreateLuavalWith( extTypeInfo:get_extedType(), LuavalConvKind.ToLua, false ) then
             otherSrc = extTypeInfo:get_extedType()
          end
          
@@ -10428,29 +10457,22 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             local workType1 = dest:get_itemTypeInfoList()[1]
             local workType2 = otherSrc:get_itemTypeInfoList()[1]
             
+            local evalMode
+            
             if not dest:get_canDealGenInherit() then
-               if not workType1:equals( processInfo, workType2 ) then
-                  return false, nil
-               end
-               
+               evalMode = CanEvalType.SetEqEq
+            elseif destMut then
+               evalMode = CanEvalType.SetEq
             else
              
-               local evalMode
-               
-               if destMut then
-                  evalMode = CanEvalType.SetEq
-               else
-                
-                  evalMode = CanEvalType.SetOpIMut
-               end
-               
-               local ret, mess = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-               
-               
-               if not ret then
-                  return false, mess
-               end
-               
+               evalMode = CanEvalType.SetOpIMut
+            end
+            
+            local ret, mess = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+            
+            
+            if not ret then
+               return false, mess
             end
             
          else
@@ -10472,29 +10494,22 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                local workType1 = dest:get_itemTypeInfoList()[1]
                local workType2 = otherSrc:get_itemTypeInfoList()[1]
                
+               local evalMode
+               
                if not dest:get_canDealGenInherit() then
-                  if not workType1:equals( processInfo, workType2 ) then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetEqEq
+               elseif destMut then
+                  evalMode = CanEvalType.SetEq
                else
                 
-                  local evalMode
-                  
-                  if destMut then
-                     evalMode = CanEvalType.SetEq
-                  else
-                   
-                     evalMode = CanEvalType.SetOpIMut
-                  end
-                  
-                  local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-                  
-                  
-                  if not ret then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetOpIMut
+               end
+               
+               local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+               
+               
+               if not ret then
+                  return false
                end
                
             else
@@ -10511,29 +10526,22 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                local workType1 = dest:get_itemTypeInfoList()[2]
                local workType2 = otherSrc:get_itemTypeInfoList()[2]
                
+               local evalMode
+               
                if not dest:get_canDealGenInherit() then
-                  if not workType1:equals( processInfo, workType2 ) then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetEqEq
+               elseif destMut then
+                  evalMode = CanEvalType.SetEq
                else
                 
-                  local evalMode
-                  
-                  if destMut then
-                     evalMode = CanEvalType.SetEq
-                  else
-                   
-                     evalMode = CanEvalType.SetOpIMut
-                  end
-                  
-                  local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-                  
-                  
-                  if not ret then
-                     return false
-                  end
-                  
+                  evalMode = CanEvalType.SetOpIMut
+               end
+               
+               local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
+               
+               
+               if not ret then
+                  return false
                end
                
             else
@@ -10948,7 +10956,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
    while true do
       if token.txt == '[' or token.txt == '[@' then
          if token.txt == '[' then
-            typeInfo = self.processInfo:createList_( true, self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
+            typeInfo = self.processInfo:createList_( false, self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
          else
           
             typeInfo = self.processInfo:createArray( self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
@@ -10987,7 +10995,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                   return nil, pos, "Key or value type is unknown"
                else
                 
-                  typeInfo = self.processInfo:createMap_( true, self.accessMode, self.parentInfo, genericList[1], genericList[2], MutMode.Mut )
+                  typeInfo = self.processInfo:createMap_( typeInfo:get_canDealGenInherit(), self.accessMode, self.parentInfo, genericList[1], genericList[2], MutMode.Mut )
                end
                
             elseif _switchExp == TypeInfoKind.List then
@@ -10996,7 +11004,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
                
-               typeInfo = self.processInfo:createList_( true, self.accessMode, self.parentInfo, genericList, MutMode.Mut )
+               typeInfo = self.processInfo:createList_( typeInfo:get_canDealGenInherit(), self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.Array then
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
@@ -11010,7 +11018,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                end
                
                
-               typeInfo = self.processInfo:createSet_( true, self.accessMode, self.parentInfo, genericList, MutMode.Mut )
+               typeInfo = self.processInfo:createSet_( typeInfo:get_canDealGenInherit(), self.accessMode, self.parentInfo, genericList, MutMode.Mut )
             elseif _switchExp == TypeInfoKind.DDD then
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)

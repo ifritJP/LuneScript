@@ -36,6 +36,7 @@ import lune.base.Runner;
 import lune.base.TransUnitIF;
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
 
 
 pub proto class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader);
@@ -599,14 +600,14 @@ class _TypeInfoNormal extend _TypeInfo {
                }
                case .Set {
                   let workTypeInfo = param.processInfo.createSet_(
-                     true, self.accessMode, parentInfo,
-                     itemTypeInfo, self.mutMode );
+                     Ast.builtinTypeSet_.$rawTxt == self.txt,
+                     self.accessMode, parentInfo, itemTypeInfo, self.mutMode );
                   postProcess( workTypeInfo, nil );
                }
                case .List {
                   let workTypeInfo = param.processInfo.createList_(
-                     true, self.accessMode, parentInfo,
-                     itemTypeInfo, self.mutMode );
+                     Ast.builtinTypeList_.$rawTxt == self.txt,
+                     self.accessMode, parentInfo, itemTypeInfo, self.mutMode );
                   postProcess( workTypeInfo, nil );
                }
                case .Array {
@@ -617,7 +618,8 @@ class _TypeInfoNormal extend _TypeInfo {
                }
                case .Map {
                   let workTypeInfo = param.processInfo.createMap_(
-                     true, self.accessMode, parentInfo,
+                     Ast.builtinTypeMap_.$rawTxt == self.txt,
+                     self.accessMode, parentInfo,
                      itemTypeInfo[1], itemTypeInfo[2], self.mutMode );
                   postProcess( workTypeInfo, nil );
                }
@@ -1109,7 +1111,7 @@ fn ModuleLoader.processImportFromFile(
          let! workAtomInfo = expandLuavalMap( atomInfoLua ) { 
             self.transUnitIF.error( "illegal atomInfo" ); // バグ
          };
-         let atomInfo = workAtomInfo@@Map<str,&stem>;
+         let atomInfo = workAtomInfo@@_Map<str,&stem>;
          if! let skind = atomInfo.skind {
             let mut actInfo:_TypeInfo! = nil;
             let mut mess:str! = nil;
@@ -1311,7 +1313,7 @@ fn ModuleLoader.processImportFromFile(
                      let! classInfo = expandLuavalMap( _exp ) {
                         self.transUnitIF.error( "illegal val" ); // バグ
                      };
-                     foreach fieldInfo, fieldName in classInfo@@Map<str,Map<str,stem>> {
+                     foreach fieldInfo, fieldName in classInfo@@_Map<str,_Map<str,stem>> {
                         if! let typeId = _IdInfo._fromStem(
                            expandLuavalMap( fieldInfo.typeId ) )
                         {

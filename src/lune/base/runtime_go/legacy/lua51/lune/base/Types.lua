@@ -144,59 +144,10 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 
-function _lune.__isInstanceOf( obj, class )
-   while obj do
-      local meta = getmetatable( obj )
-      if not meta then
-	 return false
-      end
-      local indexTbl = meta.__index
-      if indexTbl == class then
-	 return true
-      end
-      if meta.ifList then
-         for index, ifType in ipairs( meta.ifList ) do
-            if ifType == class then
-               return true
-            end
-            if _lune.__isInstanceOf( ifType, class ) then
-               return true
-            end
-         end
-      end
-      obj = indexTbl
-   end
-   return false
-end
-
-function _lune.__Cast( obj, kind, class )
-   if kind == 0 then -- int
-      if type( obj ) ~= "number" then
-         return nil
-      end
-      if math.floor( obj ) ~= obj then
-         return nil
-      end
-      return obj
-   elseif kind == 1 then -- real
-      if type( obj ) ~= "number" then
-         return nil
-      end
-      return obj
-   elseif kind == 2 then -- str
-      if type( obj ) ~= "string" then
-         return nil
-      end
-      return obj
-   elseif kind == 3 then -- class
-      return _lune.__isInstanceOf( obj, class ) and obj or nil
-   end
-   return nil
-end
-
 if not _lune8 then
    _lune8 = _lune
 end
+
 
 
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -510,7 +461,7 @@ function Token:__init(kind, txt, pos, consecutive, commentList)
    self.txt = txt
    self.pos = pos
    self.consecutive = consecutive
-   self.commentList = _lune.unwrapDefault( commentList, {})
+   self.commentList = _lune.unwrapDefault( commentList, Token.noneCommentList)
 end
 function Token:getExcludedDelimitTxt(  )
 
@@ -548,6 +499,9 @@ end
 function Token:get_commentList()
    return self.commentList
 end
+do
+   Token.noneCommentList = {}
+end
 function Token:_toMap()
   return self
 end
@@ -569,6 +523,7 @@ function Token._fromMapSub( obj, val )
    table.insert( memInfo, { name = "pos", func = Position._fromMap, nilable = false, child = {} } )
    table.insert( memInfo, { name = "consecutive", func = _lune._toBool, nilable = false, child = {} } )
    table.insert( memInfo, { name = "commentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
+   table.insert( memInfo, { name = "noneCommentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
    local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Parser;
 import lune.base.Util;
@@ -788,6 +789,8 @@ pub enum CanEvalType {
    SetOp,
    /** 代入(アップキャスト可能な型でも、同一の型でない場合は NG とする) */
    SetEq,
+   /** 代入(アップキャスト可能な型でも、完全に同一の型でない場合は NG とする) */
+   SetEqEq,
    /** 値の等号を見る */
    Equal,
    /** 算術演算 */
@@ -1611,6 +1614,10 @@ pub class ModifierTypeInfo extend TypeInfo {
       }
       return txt;
    }
+
+   pub override fn get_canDealGenInherit() : bool {
+      return self.srcTypeInfo.$canDealGenInherit;
+   }
    
    /** この型の名前を取得する。 */
    pub override fn getTxt(
@@ -1671,7 +1678,7 @@ pub class ModifierTypeInfo extend TypeInfo {
       let evalType;
       if #self.srcTypeInfo.$itemTypeInfoList >= 1 {
          switch canEvalType {
-            case .SetEq, .SetOp {
+            case .SetEq, .SetEqEq, .SetOp {
                // &List<Super> <-- List<Sub> などで、 型パラメータの継承を代入可能にする
                evalType = CanEvalType.SetOpIMut;
             }
@@ -3880,7 +3887,13 @@ pub class GenericTypeInfo extend TypeInfo {
 
 
          // ここの .SetOp と .SetEq を制御する
-         if not otherGenType.canEvalWith( processInfo, genType, .SetEq, workAlt2type ) {
+         let mode:CanEvalType;
+         if self.genSrcTypeInfo.$canDealGenInherit {
+            mode = .SetEq;
+         } else {
+            mode = .SetEqEq;
+         }
+         if not otherGenType.canEvalWith( processInfo, genType, mode, workAlt2type ) {
             return false;
          }
       }
@@ -3950,9 +3963,13 @@ pub class GenericTypeInfo extend TypeInfo {
       // 一致する場合、汎化の型も同じか調べる
       if! let otherGen = work@@@GenericTypeInfo {
 
-         let evalType;
+         let evalType:CanEvalType;
          if canEvalType == .SetOp {
-            evalType = CanEvalType.SetEq;
+            if self.genSrcTypeInfo.$canDealGenInherit {
+               evalType = .SetEq;
+            } else {
+               evalType = .SetEqEq;
+            }
          }
          else {
             evalType = canEvalType;
@@ -5654,7 +5671,7 @@ pub fn ProcessInfo.createSet_(
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       let baseType;
       if canDealGenInherit {
-         baseType = builtinTypeSet;
+         baseType = builtinTypeSet_;
       } else {
          baseType = builtinTypeSet__;
       }
@@ -5690,7 +5707,7 @@ pub fn ProcessInfo.createList_(
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       let baseType;
       if canDealGenInherit {
-         baseType = builtinTypeList;
+         baseType = builtinTypeList_;
       } else {
          baseType = builtinTypeList__;
       }
@@ -5727,12 +5744,12 @@ pub fn ProcessInfo.createMap_(
    _createType( fn (workMutMode:MutMode) : TypeInfo {
       let baseType;
       if canDealGenInherit {
-         baseType = builtinTypeMap;
+         baseType = builtinTypeMap_;
       } else {
          baseType = builtinTypeMap__;
       }
       let mut typeInfo = new NormalTypeInfo(
-         self, true, false, nil, builtinTypeMap,
+         self, true, false, nil, baseType,
          nil, false, false, false, AccessMode.Pub, baseType.$rawTxt,
          self.$dummyParentType, self.$dummyParentType, .Map,
          [ keyTypeInfo, valTypeInfo ], nil, nil, workMutMode, nil, .Async );
@@ -5777,12 +5794,16 @@ pub fn ProcessInfo.createClassAsync(
                 (className) );
    }
 
+   let itemTypeList:List<&TypeInfo> = [];
+   foreach val in genTypeList {
+      itemTypeList.insert( val );
+   }
    let mut info = new NormalTypeInfo(
       self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false,
       externalFlag, false, accessMode,
       className, parentInfo, typeDataAccessor,
       classFlag and TypeInfoKind.Class or TypeInfoKind.IF,
-      genTypeList, nil, nil, .Mut, nil, .Async );
+      itemTypeList, nil, nil, .Mut, nil, .Async );
    self.setupImut( info );
 
    foreach genType in genTypeList {
@@ -6366,8 +6387,9 @@ pub static fn TypeInfo.getCommonTypeCombo(
       mutMode = MutMode.IMut;
    }
    
-   if type1.$kind == type2.$kind {
-
+   if type1.$kind == type2.$kind and
+      type1.$canDealGenInherit == type2.$canDealGenInherit
+   {
       fn getCommon( workTypeInfo:&TypeInfo, workOther:&TypeInfo,
                     workAlt2type:Map<&TypeInfo,&TypeInfo> ) __trans : &TypeInfo
       {
@@ -6387,7 +6409,7 @@ pub static fn TypeInfo.getCommonTypeCombo(
       switch type1.$kind { 
          case .List {         
             return getType( processInfo.createList_(
-               true, .Local, headTypeInfo,
+               type1.$canDealGenInherit, .Local, headTypeInfo,
                [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
@@ -6401,15 +6423,14 @@ pub static fn TypeInfo.getCommonTypeCombo(
          }
          case .Set {          
             return getType( processInfo.createSet_(
-               true,
-               .Local, headTypeInfo,
+               type1.$canDealGenInherit, .Local, headTypeInfo,
                [ getCommon(
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ) ], mutMode ) );
          }
          case .Map {          
             return getType( processInfo.createMap_(
-               true, .Local, headTypeInfo,
+               type1.$canDealGenInherit, .Local, headTypeInfo,
                getCommon(           
                   type1.$itemTypeInfoList[ 1 ],
                   type2.$itemTypeInfoList[ 1 ], alt2type ),
@@ -7061,7 +7082,7 @@ pub override fn BoxTypeInfo.canEvalWith(
       return true, nil;       
    }
    switch canEvalType {    
-      case .SetOp, .SetOpIMut, .SetEq {
+      case .SetOp, .SetOpIMut, .SetEq, .SetEqEq {
       }
       default {               
          return false, nil;      
@@ -7151,21 +7172,33 @@ macro _checkEqualsItemType(
       let workType2 = ,,type2.$itemTypeInfoList[ ,,index ];
       
       // ここの .SetEq を制御する
+      // if not ,,type1.$canDealGenInherit {
+      //    if not workType1.equals( processInfo, workType2, ,,alt2type, true ) {
+      //       ,,retStat2;
+      //    }
+      // } else {
+      //    let evalMode;
+      //    if ,,destMut {
+      //       evalMode = CanEvalType.SetEq;
+      //    } else {
+      //       evalMode = CanEvalType.SetOpIMut;
+      //    }
+      //    ,,evalStat;
+      //    if not ret {            
+      //       ,,retStat1;             
+      //    }
+      // }
+      let evalMode;
       if not ,,type1.$canDealGenInherit {
-         if not workType1.equals( processInfo, workType2 ## ) {
-            ,,retStat2;
-         }
+         evalMode = CanEvalType.SetEqEq;
+      } elseif ,,destMut {
+         evalMode = CanEvalType.SetEq;
       } else {
-         let evalMode;
-         if ,,destMut {
-            evalMode = CanEvalType.SetEq;
-         } else {
-            evalMode = CanEvalType.SetOpIMut;
-         }
-         ,,evalStat;
-         if not ret {            
-            ,,retStat1;             
-         }
+         evalMode = CanEvalType.SetOpIMut;
+      }
+      ,,evalStat;
+      if not ret {            
+         ,,retStat1;             
       }
    }
    else {                  
@@ -7640,7 +7673,7 @@ pro static fn TypeInfo.canEvalWithBase(
    }
 
    switch canEvalType {    
-      case .SetEq, .SetOp, .SetOpIMut {
+      case .SetEqEq, .SetEq, .SetOp, .SetOpIMut {
          if dest == builtinTypeEmpty {
             // 代入先の型が確定していない状態
             switch otherSrc {       
@@ -7703,7 +7736,9 @@ pro static fn TypeInfo.canEvalWithBase(
    
 
    if dest == builtinTypeStem_ {
-      return true, nil;       
+      if canEvalType ~= .SetEqEq {
+         return true, nil;
+      }
    }
 
    if dest.$srcTypeInfo.$kind == .DDD {
@@ -7711,7 +7746,7 @@ pro static fn TypeInfo.canEvalWithBase(
          return dest.$itemTypeInfoList[ 1 ].canEvalWith(
             processInfo, other, canEvalType, alt2type )**;
       }
-      return true, nil;       
+      return true, nil;
    }
    if not dest.$nilable and otherSrc.$nilable {
       if canEvalType ~= .Equal {
@@ -7726,7 +7761,9 @@ pro static fn TypeInfo.canEvalWithBase(
       }
    }
    if dest == builtinTypeStem and not otherSrc.$nilable {
-      return true, nil;       
+      if canEvalType ~= .SetEqEq {
+         return true, nil;
+      }
    }
    if dest == builtinTypeForm and
        ( otherSrc.$kind == .Func or
@@ -7752,7 +7789,7 @@ pro static fn TypeInfo.canEvalWithBase(
          processInfo, otherSrc, canEvalType, alt2type )**;
    }
    if! let extTypeInfo = otherSrc@@@ExtTypeInfo {
-      if canEvalType ~= .SetEq and
+      if canEvalType ~= .SetEq and canEvalType ~= .SetEqEq and
          not failCreateLuavalWith( extTypeInfo.$extedType, .ToLua, false )
       {
          otherSrc = extTypeInfo.$extedType;
@@ -8342,7 +8379,7 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
       if token.txt == '[' or token.txt == '[@' {
          if token.txt == '[' {    
             typeInfo = self.processInfo.createList_(
-               true, self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
+               false, self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
          }
          else {                   
             typeInfo = self.processInfo.createArray(
@@ -8377,14 +8414,15 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
                }
                else {                   
                   typeInfo = self.processInfo.createMap_(
-                     true, self.accessMode, self.parentInfo,
+                     typeInfo.$canDealGenInherit, self.accessMode, self.parentInfo,
                      genericList[ 1 ], genericList[ 2 ], .Mut );
                }
             }
             case .List {             
                _checkAlternateTypeCount( 1 );
                typeInfo = self.processInfo.createList_(
-                  true, self.accessMode, self.parentInfo, genericList, .Mut );
+                  typeInfo.$canDealGenInherit,
+                  self.accessMode, self.parentInfo, genericList, .Mut );
             }
             case .Array {            
                _checkAlternateTypeCount( 1 );
@@ -8394,7 +8432,8 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             case .Set {              
                _checkAlternateTypeCount( 1 );
                typeInfo = self.processInfo.createSet_(
-                  true, self.accessMode, self.parentInfo, genericList, .Mut );
+                  typeInfo.$canDealGenInherit,
+                  self.accessMode, self.parentInfo, genericList, .Mut );
             }
             // case .Tuple {             
             //    if #genericList == 0 {   

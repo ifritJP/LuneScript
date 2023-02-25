@@ -24,6 +24,7 @@ SOFTWARE.
 
 _lune_control limit_conv_code lua;
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.LuaVer;
 
@@ -180,10 +181,10 @@ pub fn canUseAsync() : bool {
    return false;
 }
 
-pub fn runMain( mainFunc: &Luaval<stem>!, argList:&List<str> ) __noasync : int {
+pub fn runMain( mainFunc: &Luaval<stem>!, argList:&_List<str> ) __noasync : int {
    let ret;
    __luago {
-      form MainFunc( list:&List<str> ) : int;
+      form MainFunc( list:&_List<str> ) : int;
       when! mainFunc {
          ret = (mainFunc@@MainFunc)( argList );
       } else {

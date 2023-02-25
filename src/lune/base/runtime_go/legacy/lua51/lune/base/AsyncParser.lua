@@ -240,6 +240,7 @@ if not _lune8 then
 end
 
 
+
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Async = _lune.loadModule( 'lune.base.Async' )
@@ -447,6 +448,7 @@ end
 function Parser.create( parserSrc, stdinFile, overridePos )
 
    local function createStream( mod, path )
+      local __func__ = '@lune.@base.@AsyncParser.Parser.create.createStream'
    
       if stdinFile ~= nil then
          if stdinFile:get_mod() == mod then
@@ -462,7 +464,7 @@ function Parser.create( parserSrc, stdinFile, overridePos )
          end
       end
       
-      return nil, string.format( "failed to open -- %s", path)
+      return nil, string.format( "%s: failed to open -- %s", __func__, path)
    end
    local function createStreamWithBaseDir( mod, baseDir, path )
    

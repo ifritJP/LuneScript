@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Util;
 
@@ -257,6 +258,12 @@ pub class Token extend (Mapping) {
    pub let consecutive: bool;
    pri let allmut commentList: &List<&Token> { pub };
 
+   static let noneCommentList:&List<&Token>;
+
+   __init {
+      Token.noneCommentList = [];
+   }
+
    pub fn __init( kind: TokenKind, txt: str, pos: &Position,
                   consecutive:bool, commentList: &List<&Token>! )
    {
@@ -264,7 +271,7 @@ pub class Token extend (Mapping) {
       self.txt = txt;
       self.pos = pos;
       self.consecutive = consecutive;
-      self.commentList = unwrap commentList default [];
+      self.commentList = unwrap commentList default Token.noneCommentList;
    }
 
    pub fn getExcludedDelimitTxt() : str {

@@ -120,6 +120,8 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+
+
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Parser = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
@@ -272,26 +274,45 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
          end
          
          
-         local function compareList( protoList, typeList, message )
          
-            if #protoList == #typeList then
-               for index, protoType in ipairs( protoList ) do
+         
+         do
+            local typeList = _lune.unwrapDefault( interfaceList, {})
+            if #typeInfo:get_interfaceList() == #typeList then
+               for index, protoType in ipairs( typeInfo:get_interfaceList() ) do
                   if protoType ~= typeList[index] then
-                     self:error( string.format( "mismatch class(%s) %s(%s) for prototype %s(%s)", typeInfo:getTxt(  ), message, typeList[index]:getTxt(  ), message, protoType:getTxt(  )) )
+                     self:error( string.format( "mismatch class(%s) %s(%s) for prototype %s(%s)", typeInfo:getTxt(  ), "interface", typeList[index]:getTxt(  ), "interface", protoType:getTxt(  )) )
                   end
                   
                end
                
             else
              
-               self:error( string.format( "mismatch class(%s) %s(%d) for prototype %s(%d)", typeInfo:getTxt(  ), message, #typeList, message, #protoList) )
+               self:error( string.format( "mismatch class(%s) %s(%d) for prototype %s(%d)", typeInfo:getTxt(  ), "interface", #typeList, "interface", #typeInfo:get_interfaceList()) )
             end
             
          end
          
-         compareList( typeInfo:get_interfaceList(), _lune.unwrapDefault( interfaceList, {}), "interface" )
          
-         compareList( typeInfo:get_itemTypeInfoList(), _lune.unwrapDefault( genTypeList, {}), "generics" )
+         
+         do
+            local typeList = _lune.unwrapDefault( genTypeList, {})
+            if #typeInfo:get_itemTypeInfoList() == #typeList then
+               for index, protoType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+                  if protoType ~= typeList[index] then
+                     self:error( string.format( "mismatch class(%s) %s(%s) for prototype %s(%s)", typeInfo:getTxt(  ), "generics", typeList[index]:getTxt(  ), "generics", protoType:getTxt(  )) )
+                  end
+                  
+               end
+               
+            else
+             
+               self:error( string.format( "mismatch class(%s) %s(%d) for prototype %s(%d)", typeInfo:getTxt(  ), "generics", #typeList, "generics", #typeInfo:get_itemTypeInfoList()) )
+            end
+            
+         end
+         
+         
          
          do
             local scope = self.namespace2Scope[typeInfo]

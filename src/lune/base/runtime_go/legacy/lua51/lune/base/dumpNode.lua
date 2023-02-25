@@ -122,6 +122,7 @@ if not _lune8 then
 end
 
 
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
@@ -1149,7 +1150,7 @@ end
 
 function dumpFilter:processLiteralSet( node, opt )
 
-   self:dump( opt, node, "(@)" )
+   self:dump( opt, node, node:get_expType():getTxt(  ) )
    do
       local _exp = node:get_expList()
       if _exp ~= nil then
@@ -1162,7 +1163,7 @@ end
 
 function dumpFilter:processLiteralMap( node, opt )
 
-   self:dump( opt, node, "{}" )
+   self:dump( opt, node, node:get_expType():getTxt(  ) )
    local pairList = node:get_pairList(  )
    for __index, pair in ipairs( pairList ) do
       filter( pair:get_key(  ), self, opt:nextOpt(  ) )

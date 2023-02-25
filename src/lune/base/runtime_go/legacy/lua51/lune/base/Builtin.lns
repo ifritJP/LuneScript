@@ -33,6 +33,8 @@ import lune.base.TransUnitIF;
 import lune.base.BuiltinTransUnit;
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
+
 
 pub class Builtin {
    let transUnit:BuiltinTransUnit.TransUnit;
@@ -399,14 +401,14 @@ _DefBuiltinFuncType( [
       },
    },
    {
-      "List<T>": {
+      "_List<T>": {
          "__less": { "type": [ "formfunc" ],
                         "arg": [ "T", "T" ], "ret":[ "bool" ] },
          "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
-         //"create<M>": { "type": [ "STATIC" ] , "arg": [ "...<M>" ], "ret": [] },
+         //"__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
       },
    },
    {
@@ -417,7 +419,7 @@ _DefBuiltinFuncType( [
          "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
          "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
          "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
-         //"__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
+         //"create<M>": { "type": [ "STATIC" ] , "arg": [ "...<M>" ], "ret": [] },
       },
    },
    {
@@ -429,14 +431,14 @@ _DefBuiltinFuncType( [
       },
    },
    {
-      "Set<T>": {
+      "_Set<T>": {
          "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
          "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
          "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
-         "and": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
-         "or": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
-         "sub": { "type": [ "mut" ], "arg": [ "&Set<T>" ], "ret": [ "Set<T>" ] },
-         "clone": { "type": [ "method" ], "arg": [], "ret": [ "Set<T>" ] },
+         "and": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+         "or": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+         "sub": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+         "clone": { "type": [ "method" ], "arg": [], "ret": [ "_Set<T>" ] },
          "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
       },
    },
@@ -557,7 +559,8 @@ fn Builtin.getTypeInfo( mut typeName:str, targetScope:&Ast.Scope! ) mut : &Ast.T
                let keyType = genTypeList[ 1 ];
                let valType = genTypeList[ 2 ];
                return self.processInfo.createMap_(
-                  true, .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
+                  typeInfo.$canDealGenInherit,
+                  .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
             }
             case .Ext {
                self.hasLuaval = true;
@@ -773,7 +776,8 @@ fn Builtin.processField( prefixName:str, orgName:str, fieldName:str,
                abstractFlag, true, scope, kind,
                parentInfo, Ast.getBuiltinMut( parentInfo),
                false, true, staticFlag, accessMode,
-               fieldName, asyncMode, fieldGenTypeList, argTypeList, retTypeList,
+               fieldName, asyncMode, [ fieldGenTypeList.unpack() ] ,
+               argTypeList, retTypeList,
                mutable and Ast.MutMode.Mut or Ast.MutMode.IMut );
 
             self.createGenType( orgName, fieldGenTypeList, typeInfo );
@@ -900,7 +904,7 @@ fn Builtin.createBuiltinAlge(
             self.processInfo, self.transUnit.$scope, .Class, nil## );
          let mut algeTypeInfo = self.processInfo.createAlge(
             algeScope, parentInfo, Ast.getBuiltinMut( parentInfo ),
-            false, .Pub, algeName, genTypeList );
+            false, .Pub, algeName, [ genTypeList.unpack() ] );
          Ast.addBuiltinMut( algeTypeInfo, algeScope );
          builtinFunc.registerAlge( algeTypeInfo );
 
@@ -965,10 +969,10 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
          let mut genTypeList:List<&Ast.AlternateTypeInfo> = [];
 
          switch className {
-            case "List<T>" {
-               name = "List";
+            case "_List<T>" {
+               name = "_List";
                processCopyAlterList(
-                  genTypeList, Ast.builtinTypeList.$itemTypeInfoList );
+                  genTypeList, Ast.builtinTypeList_.$itemTypeInfoList );
             }
             case "__List<T>" {
                name = "__List";
@@ -980,10 +984,10 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
                processCopyAlterList(
                   genTypeList, Ast.builtinTypeArray.$itemTypeInfoList );
             }
-            case "Set<T>" {
-               name = "Set";
+            case "_Set<T>" {
+               name = "_Set";
                processCopyAlterList(
-                  genTypeList, Ast.builtinTypeSet.$itemTypeInfoList );
+                  genTypeList, Ast.builtinTypeSet_.$itemTypeInfoList );
             }
             case "__Set<T>" {
                name = "__Set";
@@ -993,12 +997,12 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
             case "Map<K,V>" {
                name = "Map";
                processCopyAlterList(
-                  genTypeList, Ast.builtinTypeMap.$itemTypeInfoList );
+                  genTypeList, Ast.builtinTypeMap_.$itemTypeInfoList );
             }
             case "__Map<K,V>" {
                name = "__Map";
                processCopyAlterList(
-                  genTypeList, Ast.builtinTypeMap.$itemTypeInfoList );
+                  genTypeList, Ast.builtinTypeMap__.$itemTypeInfoList );
             }
             case "Nilable<_T>" {
                name = "Nilable";
@@ -1071,8 +1075,8 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
          builtinFunc.io_open,
 
          // 以下はとりあえず ok とする
-         builtinFunc.set_has,
-         builtinFunc.set_add,
+         builtinFunc._set_has,
+         builtinFunc._set_add,
          builtinFunc.__set_has,
          builtinFunc.__set_add
        );

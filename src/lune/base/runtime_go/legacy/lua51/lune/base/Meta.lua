@@ -11,6 +11,7 @@ end
 
 
 
+
 local _MetaInfo = {}
 _moduleObj._MetaInfo = _MetaInfo
 function _MetaInfo._setmeta( obj )

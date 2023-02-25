@@ -61,6 +61,7 @@ end
 
 
 
+
 local function startsWith( txt, ptn )
 
    return txt:find( ptn, 1, true ) ~= nil

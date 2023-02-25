@@ -24,6 +24,7 @@ SOFTWARE.
 
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Types;
 import lune.base.frontInterface;
@@ -55,6 +56,7 @@ import lune.base.NodeIndexer;
 import lune.base.Converter;
 
 _lune_control ignore_symbol_;
+_lune_control default_strict_generics;
 
 
 Depend.setup( fn(ver:int) {
@@ -109,7 +111,7 @@ class ModuleMgr {
       }
    }
 
-   pub fn getModList() : &List<str> {
+   pub fn getModList() : &_List<str> {
       return self.mod2info.$keyList;
    }
    
@@ -1939,7 +1941,7 @@ pub fn setFront( bindModuleList:&List<str> ) __noasync {
    new Front( option, bindModuleList );
 }
 
-pub fn __main( argList:&List<str> ) __noasync : int {
+pub fn __main( argList:&_List<str> ) __noasync : int {
    let list:List<str> = [];
    foreach arg, index in argList {
       if index > 1 {

@@ -237,6 +237,7 @@ if not _lune8 then
 end
 
 
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -1525,7 +1526,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1089, function (  )
+   Log.log( Log.Level.Log, __func__, 1090, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, tostring( self.enableTest))
    end )

@@ -167,6 +167,7 @@ if not _lune8 then
 end
 
 
+
 local Runner = _lune.loadModule( 'lune.base.Runner' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
@@ -264,7 +265,7 @@ function AstCreater:__init(importModuleInfo, parserSrc, mod, baseDir, moduleId, 
       local ast = self:createAst( importModuleInfo, parserSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
       self.ast = ast
       self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId )
-      Log.log( Log.Level.Log, __func__, 149, function (  )
+      Log.log( Log.Level.Log, __func__, 150, function (  )
       
          return string.format( "generated AST -- %s", mod)
       end )
@@ -330,7 +331,7 @@ function AstCreater:getExportInfo(  )
    end
    
    if not self.exportInfo then
-      Log.log( Log.Level.Err, __func__, 191, function (  )
+      Log.log( Log.Level.Err, __func__, 192, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.mod)
       end )
@@ -451,7 +452,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 287, function (  )
+               Log.log( Log.Level.Debug, __func__, 288, function (  )
                
                   return string.format( "<%s>, <%s>", tostring( oldLine), tostring( newLine))
                end )

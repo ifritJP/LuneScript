@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 
 import lune.base.Ast;
@@ -847,7 +848,7 @@ pub override fn dumpFilter.processLiteralList(
 pub override fn dumpFilter.processLiteralSet(
    node: &Nodes.LiteralSetNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "(@)" );
+   self.dump( opt, node, node.$expType.getTxt(##) );
    if! node.$expList {
       filter( _exp, self, opt.nextOpt() );
    }
@@ -856,7 +857,7 @@ pub override fn dumpFilter.processLiteralMap(
    node: &Nodes.LiteralMapNode, opt:Opt ) mut
 
 {
-   self.dump( opt, node, "{}" );
+   self.dump( opt, node, node.$expType.getTxt(##) );
    let pairList = node.get_pairList();
    foreach pair in pairList {
       filter( pair.get_key(), self, opt.nextOpt() );

@@ -23,6 +23,7 @@ SOFTWARE.
 */
 
 _lune_control default_async_all;
+_lune_control default_strict_generics;
 
 import lune.base.Util;
 import lune.base.Nodes;
@@ -32,6 +33,7 @@ import lune.base.Types;
 import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
 import lune.base.Builtin;
+import lune.base.Log;
 
 /**
 code に格納されている lua code をロード・実行する。
@@ -175,27 +177,29 @@ fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
          return val;
       }
       case .Symbol( val ) {
-         return [ val ];
+         // _List<stem!> 型に確定させるために一度変数に入れる。 
+         let list:_List<stem!> = [ val ];
+         return list;
       }
       case .Field( val ) {
          return val;
       }
       case .LIST( list ) {
-         let mut newList:List<stem!> = [];
+         let mut newList:_List<stem!> = [];
          foreach item, index in list {
             newList[ index ] = getLiteralMacroVal( item );
          }
          return newList;
       }
       case .ARRAY( list ) {
-         let mut newList:List<stem!> = [];
+         let mut newList:_List<stem!> = [];
          foreach item, index in list {
             newList[ index ] = getLiteralMacroVal( item );
          }
          return newList;
       }
       case .SET( list ) {
-         let mut newSet:Set<stem> = (@);
+         let mut newSet:_Set<stem> = (@);
          foreach item in list {
             if! getLiteralMacroVal( item ) {
                newSet.add( _exp );
@@ -204,7 +208,7 @@ fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
          return newSet;
       }
       case .MAP( map ) {
-         let mut newMap:Map<&stem,&stem> = {};
+         let mut newMap:_Map<&stem,&stem> = {};
          foreach val, key in map {
             let keyObj = getLiteralMacroVal( key );
             let valObj = getLiteralMacroVal( val );
@@ -663,7 +667,7 @@ pub fn MacroCtrl.evalMacroOp(
                // macroVars.__names には、
                // macro-statment で定義された変数シンボル名が入る。
                // これは convLua の processDeclVar() でセットしている。
-               foreach name in (unwrap macroVars.__names)@@Map<int,str> {
+               foreach name in (unwrap macroVars.__names)@@_Map<int,str> {
                   let! valInfo = macroInfo.$symbol2MacroValInfoMap[ name ] {
                      Util.err( "not found macro symbol -- %s" (name) ); // バグ
                   };
@@ -959,6 +963,10 @@ pub fn MacroCtrl.expandMacroVal(
    typeNameCtrl:&Ast.TypeNameCtrl, scope:&Ast.Scope,
    parser:Parser.PushbackParser, mut token:&Parser.Token ) mut : &Parser.Token
 {
+   Log._log2( .Trace,
+              "start -- %s:%d:%s"
+              (token.$pos.$orgPos.streamName, token.$pos.$orgPos.lineNo, token.txt) );
+   
    if self.tokenExpanding {
       return token;
    }
@@ -970,16 +978,16 @@ pub fn MacroCtrl.expandMacroVal(
       return work;
    }
    
-   fn macroVal2strList( name:str, macroVal: &Nodes.MacroValInfo ) : &List<str> {
+   fn macroVal2strList( name:str, macroVal: &Nodes.MacroValInfo ) : &_List<str> {
       let! val = macroVal.val {
          Util.err( "macroVal is nil -- %s" (name) ); // バグ
       };
       if macroVal.argNode {
          // マクロ引数の場合、そのまま List<str> にキャスト
-         return val@@List<str>;
+         return val@@_List<str>;
       }
-      let list:List<str> = [];
-      forsort item in val@@Map<int,str> {
+      let list:_List<str> = [];
+      forsort item in val@@_Map<int,str> {
          list.insert( item );
       }
       return list;
@@ -1098,7 +1106,7 @@ pub fn MacroCtrl.expandMacroVal(
       }
       elseif tokenTxt == ',,,,' {
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
-            let txtList = (unwrap macroVal.val)@@str[];
+            let txtList = (unwrap macroVal.val)@@&List<str>;
             let mut newToken = "";
             foreach txt in txtList {
                newToken = "%s%s" (newToken, txt);

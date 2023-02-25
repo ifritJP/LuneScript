@@ -237,6 +237,7 @@ if not _lune8 then
 end
 
 
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -2279,7 +2280,7 @@ function convFilter:setup(  )
    
    self.builtin2runtime = builtin2runtime
    
-   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor", [self.builtinFuncs.list_insert] = ".append"}
+   self.builtin2runtimeEnv = {[self.builtinFuncs.__lns_runtime_log] = "LnsLog", [self.builtinFuncs.__lns_runtime_enableLog] = "LnsStartRunnerLog", [self.builtinFuncs.__lns_runtime_dumpLog] = "LnsDumpRunnerLog", [self.builtinFuncs.__lns_sync_createFlag] = "LnsCreateSyncFlag", [self.builtinFuncs.__lns_sync_createProcesser] = "LnsCreateProcessor", [self.builtinFuncs._list_insert] = ".append", [self.builtinFuncs.__list_insert] = ".append"}
    
    self.type2gotypeMap = {[Ast.builtinTypeInt] = "LnsInt", [Ast.builtinTypeReal] = "LnsReal", [Ast.builtinTypeStem] = "LnsAny", [Ast.builtinTypeString] = "string", [Ast.builtinTypeBool] = "bool", [Ast.builtinTypeProcessor] = "*LnsProcessor", [self.builtinFuncs.ostream_] = "Lns_oStream", [self.builtinFuncs.istream_] = "Lns_iStream", [self.builtinFuncs.luastream_] = "Lns_luaStream"}
 end
@@ -5722,7 +5723,7 @@ function convFilter:outputCallPrefix( callId, node, prefixNode, funcSymbol )
                                  else
                                     do
                                        local _switchExp = funcType
-                                       if _switchExp == self.builtinFuncs.list_sort or _switchExp == self.builtinFuncs.array_sort then
+                                       if _switchExp == self.builtinFuncs._list_sort or _switchExp == self.builtinFuncs.__list_sort or _switchExp == self.builtinFuncs.array_sort then
                                           callKind = _lune.newAlge( CallKind.SortCall, {prefixType:get_itemTypeInfoList()[1]})
                                        end
                                     end
@@ -7015,41 +7016,6 @@ end
 
 function convFilter:processLuneControl( node, opt )
 
-   do
-      local _matchExp = node:get_pragma()
-      if _matchExp[1] == LuneControl.Pragma.default__init[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default__init_old[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.disable_mut_control[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.ignore_symbol_[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.load__lune_module[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.limit_conv_code[1] then
-         local _ = _matchExp[2][1]
-      
-      elseif _matchExp[1] == LuneControl.Pragma.use_async[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.run_async_pipe[1] then
-      
-         self:writeln( "go self.LoopMain()" )
-      elseif _matchExp[1] == LuneControl.Pragma.default_async_func[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default_async_all[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default_async_this_class[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.default_noasync_this_class[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.use_macro_special_var[1] then
-      
-      elseif _matchExp[1] == LuneControl.Pragma.single_phase_ast[1] then
-      
-      end
-   end
-   
 end
 
 
