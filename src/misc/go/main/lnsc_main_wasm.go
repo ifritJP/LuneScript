@@ -44,10 +44,11 @@ func lns2lua(this js.Value, args []js.Value) interface{} {
 
 	luaCode := ""
 	Lns_LockEnvSync(env, 0, func() {
-		option := lnsc.Option_createDefaultOption(env, NewLnsList([]LnsAny{path}), nil)
+		option := lnsc.Option_createDefaultOption(env, NewLnsList2_[string]([]string{path}), nil)
+		front := lnsc.NewFront_Front(env, option, nil)
 
-		luaCode = lnsc.Front_convertLnsCode2LuaCodeWithOpt(
-			env, option, lnsCode, path, nil)
+		luaCode = front.ConvertLnsCode2LuaCodeWithOpt(
+			env, lnsCode, path, nil)
 	})
 
 	return luaCode
