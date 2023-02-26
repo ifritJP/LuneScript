@@ -1,5 +1,5 @@
 import lune.base.Parser;
-import lune.base.front;
+import lune.base.front as LnsFront;
 import lune.base.Depend;
 import lune.base.Util;
 import lune.base.Option;
@@ -72,7 +72,8 @@ fn Test.exeBlock( block:str, expect:Expect ): TestResult {
       option.useLuneModule = Option.getRuntimeModule();
       option.transCtrlInfo.validMultiPhaseTransUnit = false;
       option.useIpairs = true;
-      front.convertLnsCode2LuaCodeWithOpt( option, block, "sample.lns"## );
+      let mut front = new LnsFront.Front( option## );
+      front.convertLnsCode2LuaCodeWithOpt( block, "sample.lns"## );
    })
    {
       mess = "";

@@ -1535,7 +1535,7 @@ fn Front.outputBootC( scriptPath:str )
 }
 
 pub fn Front.convertLnsCode2LuaCodeWithOpt(
-   option:&Option.Option, lnsCode:str, path:str, baseDir:str! ) mut : str
+   lnsCode:str, path:str, baseDir:str! ) mut : str
 {
    return self.convertLns2LuaCode(
       new frontInterface.ImportModuleInfo(), .Compile,
@@ -1551,7 +1551,7 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str, baseDir:str! ) __noasync :
    option.useIpairs = true;
 
    let mut front = new Front( option ## );
-   return front.convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir );
+   return front.convertLnsCode2LuaCodeWithOpt( lnsCode, path, baseDir );
 }
 
 fn getBaseDir( path:str, userProjDir:str! ) : str, str! {

@@ -1060,8 +1060,9 @@ test/error/map.lns:64:14: error: = operator: exp(1) type mismatch int!(27) <- re
 test/error/map.lns:65:14: error: = operator: exp(1) type mismatch int!(27) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/map.lns:87:9: error: This node can't use index
 test/error/map.lns:87:9: error: unmatch index type -- str, 
-test/error/map.lns:92:22: error: this node can not be l-value. -- ExpRefItem
-test/error/map.lns:93:13: error: illegal type -- stem!, TypeInfoKind.Nilable
+test/error/map.lns:96:7: error: return: exp(1) type mismatch &__Map<int,int>(1141) <- &_Map<int,int>(1121): index 1 -- unmatch type generic -- __Map<int,int>, _Map<int,int>. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/map.lns:101:22: error: this node can not be l-value. -- ExpRefItem
+test/error/map.lns:102:13: error: illegal type -- stem!, TypeInfoKind.Nilable
 test/error/map.lns:3:13: warning: 'val2' var isn't accessed
 test/error/map.lns:4:13: warning: 'key2' var isn't accessed
 test/error/map.lns:9:13: warning: 'val2' var isn't accessed
@@ -1081,6 +1082,7 @@ test/error/map.lns:49:13: warning: 'key2' var isn't accessed
 test/error/map.lns:55:13: warning: 'val2' var isn't accessed
 test/error/map.lns:56:13: warning: 'key2' var isn't accessed
 test/error/map.lns:80:8: warning: 'map' var isn't accessed
+test/error/map.lns:93:7: warning: 'func2' var isn't accessed
 test/error/set.lns:2:26: error: 'Set' object can't store nilable. -- nil
 test/error/set.lns:7:7: error: unmatch value type (index:1) int <- str -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/set.lns:12:11: error: could not access with []. -- &_Set<str>

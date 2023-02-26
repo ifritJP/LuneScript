@@ -2072,7 +2072,7 @@ function Front:outputBootC( scriptPath )
 end
 
 
-function Front:convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
+function Front:convertLnsCode2LuaCodeWithOpt( lnsCode, path, baseDir )
 
    return self:convertLns2LuaCode( frontInterface.ImportModuleInfo._new(), TransUnit.AnalyzeMode.Compile, _lune.newAlge( Types.ParserSrc.LnsCode, {lnsCode,path,nil}), baseDir, Parser.TxtStream._new(lnsCode), path )
 end
@@ -2086,7 +2086,7 @@ local function convertLnsCode2LuaCode( lnsCode, path, baseDir )
    option.useIpairs = true
    
    local front = Front._new(option)
-   return front:convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir )
+   return front:convertLnsCode2LuaCodeWithOpt( lnsCode, path, baseDir )
 end
 _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 
