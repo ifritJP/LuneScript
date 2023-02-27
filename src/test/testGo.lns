@@ -3156,7 +3156,7 @@ _section();
       let list2:List<&IF> = [ list.unpack() ];
       func4( list2.unpack() );
    }
-}   
+}
 // _section();
 // {
 //    class Super {

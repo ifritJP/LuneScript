@@ -1182,12 +1182,12 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
             }
         } else if tokenTxt == ",,,,"{
             if Macro_equalsType_14_(_env, macroVal.TypeInfo, Ast_builtinTypeSymbol){
-                var txtList *LnsList2_[string]
-                txtList = (Lns_unwrap( macroVal.Val)).(*LnsList2_[string])
+                var txtList *LnsList
+                txtList = (Lns_unwrap( macroVal.Val)).(*LnsList)
                 var newToken string
                 newToken = ""
                 for _, _txt := range( txtList.Items ) {
-                    txt := _txt
+                    txt := _txt.(string)
                     newToken = _env.GetVM().String_format("%s%s", Lns_2DDD(newToken, txt))
                 }
                 nextToken = NewTypes_Token(_env, Types_TokenKind__Str, _env.GetVM().String_format("'%s'", Lns_2DDD(newToken)), nextToken.Pos, false, nil)

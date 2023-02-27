@@ -2135,3 +2135,11 @@ __test {
    _hoge2( false );
    _hoge2( true );
 }
+{
+   Macro._section();
+   macro _hoge(aaa:sym) {
+      {}
+      print( "%s" (,,,,aaa) );
+   }
+   _hoge( a.b );
+}

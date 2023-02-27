@@ -1106,7 +1106,7 @@ pub fn MacroCtrl.expandMacroVal(
       }
       elseif tokenTxt == ',,,,' {
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
-            let txtList = (unwrap macroVal.val)@@&List<str>;
+            let txtList = (unwrap macroVal.val)@@&_List<str>;
             let mut newToken = "";
             foreach txt in txtList {
                newToken = "%s%s" (newToken, txt);
