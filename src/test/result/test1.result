@@ -2530,6 +2530,22 @@ print( 1 + 10 )
 
 return _moduleObj
 
+test ./test/Shebang2
+hoge:
+a
+b
+c
+OK
+hoge:
+a
+b
+c
+OK
+test ./test/Shebang2
+hoge:
+__ok
+hoge:
+__ok
 test -- testing.lns
 hoge
 module: test.testing ==============================
@@ -2552,6 +2568,15 @@ case1: ---------------
 module: test.TestMini ==============================
 test total: case1 0 (OK:0, NG:0)
 end -- testing
+hoge
+module: test.testing ==============================
+case1: ---------------
+case1
+case2: ---------------
+case2
+module: test.testing ==============================
+test total: case1 0 (OK:0, NG:0)
+test total: case2 0 (OK:0, NG:0)
 mkdir -p depends
 Mod4.lns -> Mod4.meta
 Mod3.lns -> Mod3.meta
