@@ -1945,16 +1945,17 @@ function ModuleLoader:craeteModuleInfo( moduleMeta )
    end
    
 end
-function ModuleLoader._new( enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth )
+function ModuleLoader._new( frontAccessor, enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth )
    local obj = {}
    ModuleLoader._setmeta( obj )
-   if obj.__init then obj:__init( enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth ); end
+   if obj.__init then obj:__init( frontAccessor, enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth ); end
    return obj
 end
-function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth) 
+function ModuleLoader:__init(frontAccessor, enableAsync, exportInfo, workImportModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth) 
    Runner.Runner.__init( self)
    
    
+   self.frontAccessor = frontAccessor
    self.syncFlag = nil
    self.moduleLoaderParam = moduleLoaderParam
    self.result = ModuleLoaderResult._new(exportInfo, modulePath, fullModulePath, baseDir, "", depth, {})
@@ -1962,7 +1963,7 @@ function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modu
    self.moduleMeta = nil
    self.validMutControl = moduleLoaderParam:get_validMutControl()
    self.curPos = moduleLoaderParam:get_latestPos()
-   self.macroCtrl = Macro.MacroCtrl._new(moduleLoaderParam:get_macroEval(), moduleLoaderParam:get_ctrl_info().validMacroAsync)
+   self.macroCtrl = Macro.MacroCtrl._new(moduleLoaderParam:get_macroEval(), moduleLoaderParam:get_ctrl_info().validMacroAsync, frontAccessor)
    self.importModuleInfo = workImportModuleInfo:clone(  )
    self.fullModulePath = fullModulePath
    
@@ -1982,7 +1983,7 @@ function ModuleLoader:__init(enableAsync, exportInfo, workImportModuleInfo, modu
           
             do
                do
-                  local _exp = frontInterface.loadMeta( self.importModuleInfo:clone(  ), modulePath, fullModulePath, baseDir, self )
+                  local _exp = self.frontAccessor:loadMeta( self.importModuleInfo:clone(  ), modulePath, fullModulePath, baseDir, self )
                   if _exp ~= nil then
                      local moduleMeta = _exp
                      self.result.exportInfo, self.result.err = self:craeteModuleInfo( moduleMeta )
@@ -2028,7 +2029,7 @@ function ModuleLoader:getExportInfo(  )
    _lune.nilacc( self.syncFlag, 'wait', 'callmtd'  )
    
    if not self.result:get_exportInfo() then
-      Log.log( Log.Level.Err, __func__, 1005, function (  )
+      Log.log( Log.Level.Err, __func__, 1010, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.fullModulePath)
       end )
@@ -2051,7 +2052,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
    
    do
       metaInfo = metaInfoStem
-      Log.log( Log.Level.Info, __func__, 1023, function (  )
+      Log.log( Log.Level.Info, __func__, 1028, function (  )
       
          return string.format( "%s processing", fullModulePath)
       end )
@@ -2386,7 +2387,7 @@ function ModuleLoader:processImportFromFile( processInfo, lnsPath, metaInfoStem,
                   
                elseif _switchExp == Ast.TypeInfoKind.Module then
                   self.transUnitIF:pushModuleLow( processInfo, true, classTypeInfo:getTxt(  ), Ast.TypeInfo.isMut( classTypeInfo ) )
-                  Log.log( Log.Level.Debug, __func__, 1345, function (  )
+                  Log.log( Log.Level.Debug, __func__, 1350, function (  )
                   
                      return string.format( "push module -- %s, %s, %d, %d, %d", classTypeInfo:getTxt(  ), _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'getFullName', 'callmtd' , Ast.defaultTypeNameCtrl, self.transUnitIF:get_scope(), false ) or "nil", _lune.nilacc( _lune.nilacc( self.transUnitIF:get_scope():get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classTypeInfo:get_typeId().id, self.transUnitIF:get_scope():get_parent():get_scopeId())
                   end )
@@ -2568,13 +2569,14 @@ end
 
 local Import = {}
 _moduleObj.Import = Import
-function Import._new( curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl )
+function Import._new( frontAccessor, curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl )
    local obj = {}
    Import._setmeta( obj )
-   if obj.__init then obj:__init( curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl ); end
+   if obj.__init then obj:__init( frontAccessor, curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl ); end
    return obj
 end
-function Import:__init(curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl) 
+function Import:__init(frontAccessor, curPos, importModuleInfo, moduleType, macroCtrl, typeNameCtrl, importedAliasMap, baseDir, validMutControl) 
+   self.frontAccessor = frontAccessor
    self.baseDir = baseDir
    self.importModuleInfo = importModuleInfo
    self.moduleType = moduleType
@@ -2593,18 +2595,19 @@ function Import:get_importModule2ExportInfo()
 end
 
 
-function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, depth )
+function Import:createModuleLoader( frontAccessor, baseDir, modulePath, moduleLoaderParam, depth )
    local __func__ = '@lune.@base.@Import.Import.createModuleLoader'
 
    local fullModulePath
    
    
    do
-      modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
+      
+      modulePath, baseDir, fullModulePath = self.frontAccessor:getLuaModulePath( modulePath, baseDir )
    end
    
    
-   Log.log( Log.Level.Info, __func__, 1537, function (  )
+   Log.log( Log.Level.Info, __func__, 1547, function (  )
    
       return string.format( "%s -> %s start on %s", self.moduleType:getTxt( self.typeNameCtrl ), fullModulePath, baseDir)
    end )
@@ -2613,7 +2616,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    local exportInfo = self.importModuleName2ModuleInfo[fullModulePath]
    
    if exportInfo ~= nil then
-      Log.log( Log.Level.Info, __func__, 1545, function (  )
+      Log.log( Log.Level.Info, __func__, 1555, function (  )
       
          return string.format( "%s already", fullModulePath)
       end )
@@ -2631,7 +2634,7 @@ function Import:createModuleLoader( baseDir, modulePath, moduleLoaderParam, dept
    end
    
    
-   return ModuleLoader._new(false, exportInfo, self.importModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth)
+   return ModuleLoader._new(frontAccessor, false, exportInfo, self.importModuleInfo, modulePath, fullModulePath, baseDir, moduleLoaderParam, depth)
 end
 
 
@@ -2673,7 +2676,7 @@ function Import:loadModuleInfo( moduleLoader )
    
    self.importModuleName2ModuleInfo[fullModulePath] = exportInfo
    
-   Log.log( Log.Level.Info, __func__, 1596, function (  )
+   Log.log( Log.Level.Info, __func__, 1606, function (  )
    
       return string.format( "%s complete", fullModulePath)
    end )
@@ -2688,22 +2691,22 @@ function ModuleLoader:processImportMain( processInfo, baseDir, modulePath, depth
 
    local fullModulePath
    
-   modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir )
+   modulePath, baseDir, fullModulePath = self.frontAccessor:getLuaModulePath( modulePath, baseDir )
    
-   Log.log( Log.Level.Info, __func__, 1609, function (  )
+   Log.log( Log.Level.Info, __func__, 1620, function (  )
    
       return string.format( "%s -> %s start on %s", self.result.fullModulePath, fullModulePath, baseDir)
    end )
    
    
-   local moduleLoader = ModuleLoader._new(false, nil, self.importModuleInfo, modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth)
+   local moduleLoader = ModuleLoader._new(self.frontAccessor, false, nil, self.importModuleInfo, modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth)
    return moduleLoader
 end
 
 
 function Import:processImport( modulePath, moduleLoaderParam )
 
-   local moduleLoader = self:createModuleLoader( self.baseDir, modulePath, moduleLoaderParam, 1 )
+   local moduleLoader = self:createModuleLoader( self.frontAccessor, self.baseDir, modulePath, moduleLoaderParam, 1 )
    
    return moduleLoader
 end

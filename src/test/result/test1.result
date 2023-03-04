@@ -2397,6 +2397,16 @@ test/error/switch.lns:71:18: error: multiple case exp -- 2
 test/error/switch.lns:73:15: error: multiple case exp -- 1
 test/error/lua.lns:9:4: warning: func: exp(1) luaval mismatch &_List<str> <- Luaval<&_List<str>>
 test/error/lua.lns:1:1: error: unmatch value type (index:1) Luaval<&stem> <- nil
+test/error/async1.lns:8:4: error: not implements method -- __Runner.run at Hoge
+test/error/async1.lns:9:21: error: __Runner can't have the mutable argument with public method. -- 1: Test, not use non final class -- Test
+test/error/async1.lns:19:4: error: not implements method -- __Runner.run at Hoge
+test/error/async1.lns:20:21: error: __Runner can't have the mutable argument with public method. -- 1: Test, can''t have non __noasync method -- func
+test/error/async1.lns:30:4: error: not implements method -- __Runner.run at Hoge
+test/error/async1.lns:31:21: error: __Runner can't have the mutable argument with public method. -- 1: Test, can''t have non private member -- val
+test/error/async1.lns:39:4: error: not implements method -- __Runner.run at Hoge
+test/error/async1.lns:40:21: error: __Runner can't have the mutable argument with public method. -- 1: Test, can''t have non private member -- val2
+test/error/async1.lns:49:4: error: not implements method -- __Runner.run at Hoge
+test/error/async1.lns:50:21: error: __Runner can't have the mutable argument with public method. -- 1: Test, can''t have non __noasync method -- func2
 test/error/async3.lns:115:7: warning: 'func' var isn't accessed
 test/error/async3.lns:129:7: warning: 'func' var isn't accessed
 test/error/async3.lns:134:7: warning: 'func' var isn't accessed
@@ -2430,12 +2440,12 @@ test/error/async3.lns:137:10: error: can't use __asyncLock on __noasync. -- func
 test/error/async3.lns:140:19: error: can't use 'return' in the __asyncLock.
 test/error/async3.lns:144:13: error: no loop syntax.
 test/error/async3.lns:157:22: error: can't access noasync function in async. -- get_val on __init
-test/error/async3.lns:161:20: error: __Runner can't have the mutable argument with public method. -- 1: Foo
-test/error/async3.lns:163:21: error: __Runner can't have the mutable argument with public method. -- 1: _List<Foo>
-test/error/async3.lns:165:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<Foo>
-test/error/async3.lns:169:21: error: __Runner can't have the mutable argument with public method. -- 1: _List<_List<Foo>>
-test/error/async3.lns:171:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<_List<Foo>>
-test/error/async3.lns:173:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<&_List<Foo>>
+test/error/async3.lns:161:20: error: __Runner can't have the mutable argument with public method. -- 1: Foo, not use non final class -- Foo
+test/error/async3.lns:163:21: error: __Runner can't have the mutable argument with public method. -- 1: _List<Foo>, 
+test/error/async3.lns:165:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<Foo>, not use non final class -- Foo
+test/error/async3.lns:169:21: error: __Runner can't have the mutable argument with public method. -- 1: _List<_List<Foo>>, 
+test/error/async3.lns:171:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<_List<Foo>>, 
+test/error/async3.lns:173:21: error: __Runner can't have the mutable argument with public method. -- 1: &_List<&_List<Foo>>, not use non final class -- Foo
 test/error/async3.lns:188:17: error: can't access the mutable type's symbol(val1) from async (func).
 test/error/async3.lns:190:17: error: can't access the mutable type's symbol(val3) from async (func).
 test/error/async3.lns:191:17: error: can't access the mutable type's symbol(val4) from async (func).
@@ -2520,22 +2530,7 @@ print( 1 + 10 )
 
 return _moduleObj
 
-test ./test/Shebang2
-hoge:
-a
-b
-c
-OK
-hoge:
-a
-b
-c
-OK
-test ./test/Shebang2
-hoge:
-__ok
-hoge:
-__ok
+test -- testing.lns
 hoge
 module: test.testing ==============================
 case1: ---------------
@@ -2543,6 +2538,9 @@ case1
 case2: ---------------
 case2
 module: test.testing ==============================
+test total: case1 0 (OK:0, NG:0)
+test total: case2 0 (OK:0, NG:0)
+test -- TestMini.lns
 @test.@TestSub2
 @test.@TestSub2	test
 @test.@TestSub1
@@ -2552,13 +2550,8 @@ module: test.TestMini ==============================
 case1: ---------------
 @test.@TestSub1.func
 module: test.TestMini ==============================
-hoge
-module: test.testing ==============================
-case1: ---------------
-case1
-case2: ---------------
-case2
-module: test.testing ==============================
+test total: case1 0 (OK:0, NG:0)
+end -- testing
 mkdir -p depends
 Mod4.lns -> Mod4.meta
 Mod3.lns -> Mod3.meta

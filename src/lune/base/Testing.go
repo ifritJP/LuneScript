@@ -63,6 +63,7 @@ func Testing_outputAllResult(_env *LnsEnv, stream Lns_oStream) {
             info.FP.OutputResult(_env, stream)
         }
     }
+    stream.Flush(_env)
 }
 
 // 35: decl @lune.@base.@Testing.Result.outputResult

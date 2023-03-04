@@ -222,9 +222,9 @@ _moduleObj.byteCompileFromLuaTxt = byteCompileFromLuaTxt
 local AstCreater = {}
 setmetatable( AstCreater, { __index = Runner.Runner } )
 _moduleObj.AstCreater = AstCreater
-function AstCreater:createAst( importModuleInfo, parserSrc, baseDir, stdinFile, analyzeModule, analyzeMode, pos )
+function AstCreater:createAst( frontAccessor, importModuleInfo, parserSrc, baseDir, stdinFile, analyzeModule, analyzeMode, pos )
 
-   local transUnit = TransUnit.TransUnitCtrl._new(self.moduleId, importModuleInfo, convLua.MacroEvalImp._new(self.builtinFunc), true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
+   local transUnit = TransUnit.TransUnitCtrl._new(frontAccessor, self.moduleId, importModuleInfo, convLua.MacroEvalImp._new(self.builtinFunc), true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
    
    return transUnit:createAST( parserSrc, true, baseDir, stdinFile, false, self.mod, function ( exportInfo )
    
@@ -239,13 +239,13 @@ function AstCreater:createAst( importModuleInfo, parserSrc, baseDir, stdinFile, 
       
    end )
 end
-function AstCreater._new( importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option )
+function AstCreater._new( frontAccessor, importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option )
    local obj = {}
    AstCreater._setmeta( obj )
-   if obj.__init then obj:__init( importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option ); end
+   if obj.__init then obj:__init( frontAccessor, importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option ); end
    return obj
 end
-function AstCreater:__init(importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option) 
+function AstCreater:__init(frontAccessor, importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option) 
    Runner.Runner.__init( self)
    
    
@@ -261,10 +261,10 @@ function AstCreater:__init(importModuleInfo, parserSrc, mod, baseDir, moduleId, 
    self.converter = function (  )
       local __func__ = '@lune.@base.@Converter.AstCreater.__init.<anonymous>'
    
-      local ast = self:createAst( importModuleInfo, parserSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
+      local ast = self:createAst( frontAccessor, importModuleInfo, parserSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
       self.ast = ast
       self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId )
-      Log.log( Log.Level.Log, __func__, 150, function (  )
+      Log.log( Log.Level.Log, __func__, 153, function (  )
       
          return string.format( "generated AST -- %s", mod)
       end )
@@ -330,7 +330,7 @@ function AstCreater:getExportInfo(  )
    end
    
    if not self.exportInfo then
-      Log.log( Log.Level.Err, __func__, 192, function (  )
+      Log.log( Log.Level.Err, __func__, 195, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.mod)
       end )
@@ -451,7 +451,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             end
             
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 288, function (  )
+               Log.log( Log.Level.Debug, __func__, 291, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end )

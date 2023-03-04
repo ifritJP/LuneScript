@@ -45,6 +45,7 @@ lua コードを LuneScript コンパイラ上で動かす。
 @return エラー内容を示す文字列
 */
 pub fn runLuaOnLns(
+   frontAccessor:frontInterface.FrontAccessor,
    luaCode:str, baseDir:str!, async:bool ) __async : Luaval<LoadFunc>!, str {
    let mut newEnv:Map<str,stem> = {};
    foreach val, key in _G {
@@ -52,7 +53,8 @@ pub fn runLuaOnLns(
    }
    newEnv[ "_lnsLoad" ] = fn ( name:str, txt:str ): Luaval<&stem> {
       let mut importModuleInfo = new frontInterface.ImportModuleInfo();
-      let mut val = frontInterface.loadFromLnsTxt( importModuleInfo, baseDir, name, txt );
+      //let mut val = frontInterface.loadFromLnsTxt( importModuleInfo, baseDir, name, txt );
+      let mut val = frontAccessor.loadFromLnsTxt( importModuleInfo, baseDir, name, txt );
       return val;
    };
 

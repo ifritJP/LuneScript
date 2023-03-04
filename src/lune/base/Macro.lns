@@ -34,6 +34,7 @@ import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
 import lune.base.Builtin;
 import lune.base.Log;
+import lune.base.frontInterface;
 
 /**
 code に格納されている lua code をロード・実行する。
@@ -60,8 +61,11 @@ fn loadCode( code:str ) : Luaval<&stem> {
    return ret;
 }
 
-fn runLuaOnLns( code:str, baseDir:str!, async:bool ) : Luaval<&stem>!, str {
-   let loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir, async );
+fn runLuaOnLns(
+   frontAccessor:frontInterface.FrontAccessor,
+   code:str, baseDir:str!, async:bool ) : Luaval<&stem>!, str
+{
+   let loadFunc, err = DependLuaOnLns.runLuaOnLns( frontAccessor, code, baseDir, async );
    when! loadFunc {
       let mut mod:Luaval<&stem>! = nil;
       if async {
@@ -82,9 +86,10 @@ fn runLuaOnLns( code:str, baseDir:str!, async:bool ) : Luaval<&stem>!, str {
 }
 
 fn runLuaOnLnsToMacroProc(
+   frontAccessor:frontInterface.FrontAccessor,
    code:str, baseDir:str!, async:bool ) : Luaval<Nodes.macroStatmentProc>!, str
 {
-   let luaObj, err = runLuaOnLns( code, baseDir, async );
+   let luaObj, err = runLuaOnLns( frontAccessor, code, baseDir, async );
    when! luaObj {
       return luaObj@@Luaval<Nodes.macroStatmentProc>, "";
    }
@@ -346,6 +351,7 @@ pub class MacroCtrl
    /** マクロ定義中の場合 true */
    pri let mut declaringType:&Ast.TypeInfo! {pub};
 
+
    pub fn get_isDeclaringMacro():bool {
       return self.declaringType ~= nil;
    }
@@ -378,8 +384,11 @@ pub class MacroCtrl
    // マクロ処理を非同期に行なう場合 true
    let validAsyncMacro:bool;
 
+   let frontAccessor:frontInterface.FrontAccessor;
 
-   pub fn __init( macroEval: &Nodes.MacroEval, validAsyncMacro:bool )
+
+   pub fn __init( macroEval: &Nodes.MacroEval, validAsyncMacro:bool,
+                  frontAccessor:frontInterface.FrontAccessor )
    {
       self.id2use___var = {};
 
@@ -392,7 +401,8 @@ pub class MacroCtrl
          }
       }
       
-      
+
+      self.frontAccessor = frontAccessor;
       self.validAsyncMacro = validAsyncMacro;
       self.toLuavalLuaAsync = nil;
       self.useLnsLoad = false;
@@ -412,8 +422,9 @@ pub class MacroCtrl
       self.macroLocalVarMap = nil;
    }
 
-   pub fn clone() : MacroCtrl {
-      let mut obj = new MacroCtrl( self.macroEval, self.validAsyncMacro );
+   pub fn clone( frontAccessor:frontInterface.FrontAccessor ) : MacroCtrl {
+      let mut obj = new MacroCtrl(
+         self.macroEval, self.validAsyncMacro, frontAccessor );
 
       if not self.validAsyncMacro {
          obj.toLuavalLuaAsync = self.toLuavalLuaAsync;
@@ -546,7 +557,7 @@ pub fn MacroCtrl.evalMacroOp(
             if! let luaCode = srcInfo.$luaCode {
                // func が nil で、 luaCode が非 nil の場合、func を生成する。
                let stmtFunc = unwrap runLuaOnLnsToMacroProc(
-                  luaCode, srcInfo.$baseDir, srcInfo.$asyncFlag );
+                  self.frontAccessor, luaCode, srcInfo.$baseDir, srcInfo.$asyncFlag );
                defInfo.set_func( stmtFunc );
             }
          }
@@ -793,7 +804,8 @@ pub fn MacroCtrl.importMacro(
       let luaCode = self.macroEval.evalFromCodeToLuaCode(
          processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock );
       let stmtFunc;
-      stmtFunc, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false );
+      stmtFunc, err = runLuaOnLnsToMacroProc(
+         self.frontAccessor, luaCode, baseDir, false );
       when! stmtFunc {
          let mut extMacroInfo = new ExtMacroInfo(
             macroInfo.name, stmtFunc,
@@ -829,7 +841,8 @@ pub fn MacroCtrl.regist(
    if node.$declInfo.$stmtBlock {
       let workCode = self.macroEval.evalToLuaCode( processInfo, node );
       luaCode = workCode;
-      stmtFunc, err = runLuaOnLnsToMacroProc( workCode, baseDir, asyncFlag );
+      stmtFunc, err = runLuaOnLnsToMacroProc(
+         self.frontAccessor, workCode, baseDir, asyncFlag );
       if stmtFunc {
          ok = true;
          err = nil;

@@ -474,6 +474,7 @@ define cp_src_set
 
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
 	cp -au $2/lune/base/binding_dummy.go $1/lune/base
+	cp -au $2/lune/base/DependLuaOnLns.go $1/lune/base
 	cp -au $2/misc $1/misc
 
 	$(call dump-lns-lua-ver,$(LNSC_GO),$1/ver_lns_lua)
@@ -661,6 +662,7 @@ TEST_CASE += multiple-if.lns
 TEST_CASE += multiple.lns
 TEST_CASE += switch.lns
 TEST_CASE += lua.lns
+TEST_CASE += async1.lns
 TEST_CASE += async3.lns
 TEST_CASE += async4.lns
 TEST_CASE += async5.lns
@@ -802,8 +804,11 @@ ifeq ($(WITH_GO),y)
 endif
 ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
+	echo "test -- testing.lns" >> work/test1.result
 	$(call exeLune,$(LNSC),.,test/testing.lns,exe, --testing $(EXE_OPT) 2>&1) >> work/test1.result
+	echo "test -- TestMini.lns" >> work/test1.result
 	$(call exeLune,$(LNSC),.,test/TestMini.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test1.result
+	echo "end -- testing" >> work/test1.result
 endif
 	$(call check_singleBin,lnsc,work/test1.result,testpack1)
 
@@ -866,8 +871,11 @@ endif
 
 ifndef SKIP_CHECKING_TESTING
 # 現状、CI 環境では --testing が正常が動かないので、ここは skip する
+	echo "test -- testing.lns" >> work/test2.result
 	$(call exeLune,$(LNSC),work/3,test/testing.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test2.result
+	echo "test -- TestMini.lns" >> work/test2.result
 	$(call exeLune,$(LNSC),work/3,test/TestMini.lns,exe,--testing $(EXE_OPT) 2>&1) >> work/test2.result
+	echo "end -- testing" >> work/test2.result
 endif
 	$(call check_singleBin,work/3/lnsc,work/test2.result,testpack2)
 

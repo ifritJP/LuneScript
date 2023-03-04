@@ -54,8 +54,8 @@ func convLua_ExportIdKind_getTxt(arg1 LnsInt) string {
 }
 var convLua_stepIndent LnsInt
 type convLua_outputMacroStmtBlock_13_ func (_env *LnsEnv)
-// for 4061
-func convLua_convExp0_4749(arg1 []LnsAny) LnsAny {
+// for 4062
+func convLua_convExp0_4758(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3819
@@ -98,12 +98,12 @@ func convLua_convExp4_2081(arg1 []LnsAny) LnsAny {
 func convLua_convExp4_2157(arg1 []LnsAny) LnsInt {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt)
 }
-// for 3984
-func convLua_convExp0_4277(arg1 []LnsAny) LnsAny {
+// for 3985
+func convLua_convExp0_4286(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 4059
-func convLua_convExp0_4497(arg1 []LnsAny) (LnsAny, LnsAny) {
+// for 4060
+func convLua_convExp0_4506(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 
@@ -4152,8 +4152,8 @@ func (self *ConvLua_MacroEvalImp) EvalFromCodeToLuaCode(_env *LnsEnv, processInf
     conv = NewconvLua_ConvFilter(_env, "macro", stream.FP, NewUtil_NullOStream(_env).FP, ConvLua_ConvMode__ConvMeta, true, Ast_headTypeInfo, processInfo, Ast_SymbolKind__Typ, self.builtinFunc, nil, LuaVer_getCurVer(_env), false, true, NewConvLua_Option(_env, "", false))
     conv.FP.OutputDeclMacro(_env, name, argNameList, convLua_outputMacroStmtBlock_13_(func(_env *LnsEnv) {
         if code != nil{
-            code_916 := code.(string)
-            conv.FP.Write(_env, code_916)
+            code_915 := code.(string)
+            conv.FP.Write(_env, code_915)
         }
     }))
     return stream.FP.Get_txt(_env)

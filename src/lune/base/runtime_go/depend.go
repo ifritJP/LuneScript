@@ -38,7 +38,8 @@ var lns_traceOn = false
 // func Lns_Depend_init() {
 // }
 
-/**
+/*
+*
 path の最終更新日時を取得する。
 
 @param path ファイルパス
@@ -178,6 +179,12 @@ local Depend = require( 'lune.base.Depend' )
 local bindModuleList = {}
 %s
 
+local function newFront()
+   local Front = require( 'lune.base.front' )
+   local Option = require( 'lune.base.Option' )
+   local option = Option.createDefaultOption( {"dummy.lns"}, nil )
+   return Front.Front._new(option, bindModuleList)
+end
 
 -- 高速性最重視のため、 __luneScript に直接アクセスする
 local WrapFront = {}
@@ -190,8 +197,8 @@ function WrapFront:setupFront()
    -- __luneScript を nil でクリアしておく
    __luneScript = nil
    self.readyFront = true
-   local Front = require( 'lune.base.front' )
-   Front.setFront( bindModuleList )
+
+   __luneScript = newFront()
 end
 function WrapFront:loadModule( mod )
    self:setupFront()
@@ -222,13 +229,14 @@ function WrapFront.new(  )
    return obj
 end
 
-__luneScript = WrapFront.new()
+local wrapFront = WrapFront.new()
+__luneScript = wrapFront
 
 _lnsLoad = function( name, code )
    __luneScript = nil
    local frontInterface = require( 'lune.base.frontInterface' )
-   local Front = require( 'lune.base.front' )
-   Front.setFront( bindModuleList )
+   __luneScript = newFront()
+
    local importModuleInfo = frontInterface.ImportModuleInfo.new();
    return frontInterface.loadFromLnsTxt( importModuleInfo, name, code )
 end
@@ -237,7 +245,7 @@ local txt=[===[
 %s
 ]===]
 
-return DependLuaOnLns.runLuaOnLns( txt )
+return DependLuaOnLns.runLuaOnLns( wrapFront, txt )
     `, setBindListStr, luaCode)
 
 	var loaded LnsAny

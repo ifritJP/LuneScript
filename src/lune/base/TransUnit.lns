@@ -618,7 +618,7 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackPa
 
    local let builtinFunc:&Builtin.BuiltinFuncType;
 
-   local let frontIF:frontInterface.frontInterface;
+   local let frontAccessor:frontInterface.FrontAccessor;
    
    //===== 解析開始時に設定 ===
    
@@ -755,7 +755,7 @@ alias で置き換えている元の Type → alias の型
 
       self.typeNameCtrl = new Ast.TypeNameCtrl( self.moduleType );
       
-      self.macroCtrl = src.macroCtrl.clone();
+      self.macroCtrl = src.macroCtrl.clone( self.frontAccessor );
       self.advertisedTypeSet.or(src.advertisedTypeSet );
       self.accessSymbolSetQueue.setupFrom( src.accessSymbolSetQueue );
       self.helperInfo.pragmaSet.or( src.helperInfo.pragmaSet );
@@ -835,7 +835,7 @@ alias で置き換えている元の Type → alias の型
       return ctrl_info, processInfo;
    }
    
-   pro fn __init( frontIF:frontInterface.frontInterface,
+   pro fn __init( frontAccessor:frontInterface.FrontAccessor,
                   moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
@@ -846,7 +846,7 @@ alias で置き換えている元の Type → alias の型
    {
       super( TransUnit.getSuperParam( ctrl_info )** );
 
-      self.frontIF = frontIF;
+      self.frontAccessor = frontAccessor;
 
       self.funcBlockInfoLinkNo = nil;
       // self.funcBlockInfoList = [];
@@ -879,7 +879,8 @@ alias で置き換えている元の Type → alias の型
       self.closureFunList = [];
       self.scopeAccess = .Normal;
       self.macroEval = macroEval;
-      self.macroCtrl = new Macro.MacroCtrl( macroEval, ctrl_info.validMacroAsync );
+      self.macroCtrl = new Macro.MacroCtrl(
+         macroEval, ctrl_info.validMacroAsync, frontAccessor );
       self.analyzingStateQueue = [];
       //self.ctrl_info = ctrl_info;
       self.ignoreToCheckSymbol_ = false;
@@ -1227,15 +1228,16 @@ alias で置き換えている元の Type → alias の型
    }
 }
 
-fn TransUnit.canBeAsyncParam( typeInfo:&Ast.TypeInfo ) : bool {
+fn TransUnit.canBeAsyncParam(
+   fromScope:&Ast.Scope, typeInfo:&Ast.TypeInfo ) : bool, str {
    switch typeInfo.$nilableTypeInfo.$srcTypeInfo.$genSrcTypeInfo {
       case self.builtinFunc.__pipe_,
            self.builtinFunc.__lns_sync_flag_
       {
-         return true;
+         return true, "";
       }
    }
-   return Ast.TypeInfo.canBeAsyncParam( typeInfo );
+   return Ast.TypeInfo.canBeAsyncParam( fromScope, typeInfo )**;
 }
 
 
