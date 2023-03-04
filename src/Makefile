@@ -661,6 +661,7 @@ TEST_CASE += multiple-if.lns
 TEST_CASE += multiple.lns
 TEST_CASE += switch.lns
 TEST_CASE += lua.lns
+TEST_CASE += async1.lns
 TEST_CASE += async3.lns
 TEST_CASE += async4.lns
 TEST_CASE += async5.lns

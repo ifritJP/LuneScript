@@ -1,6 +1,53 @@
 _lune_control use_async;
 
-class Test extend LnsThread {
-   pro override fn loop() mut {
+{
+   class Test {
+      pub fn func2() __async {
+      }
+   }
+   class Hoge extend (__Runner) {
+      pub fn __init(test:Test) __async {  // error
+      }
+   }
+}{
+   class Super {
+      pub fn func() __async {
+      }
+   }
+   final class Test extend Super {
+   }
+   class Hoge extend (__Runner) {
+      pub fn __init(test:Test) __async {  // error
+      }
+   }
+}
+{
+   class Super {
+      pub let val:int;
+   }
+   final class Test extend Super {
+   }
+   class Hoge extend (__Runner) {
+      pub fn __init(test:Test) __async {  // error
+      }
+   }
+}
+{
+   final class Test {
+      pub let val2:int;
+   }
+   class Hoge extend (__Runner) {
+      pub fn __init(test:Test) __async {  // error
+      }
+   }
+}
+{
+   final class Test {
+      pub fn func2() __async {
+      }
+   }
+   class Hoge extend (__Runner) {
+      pub fn __init(test:Test) __async {  // error
+      }
    }
 }

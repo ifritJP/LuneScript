@@ -2816,23 +2816,6 @@ function TypeInfo.isMutableType( typeInfo )
 end
 
 
-function TypeInfo.canBeAsyncParam( typeInfo )
-
-   if TypeInfo.isMutableType( typeInfo ) then
-      return false
-   end
-   
-   for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
-      if not TypeInfo.canBeAsyncParam( itemType ) then
-         return false
-      end
-      
-   end
-   
-   return true
-end
-
-
 function TypeInfo.canBeAbsImmutMember( typeInfo )
 
    if TypeInfo.isMutableType( typeInfo ) then
@@ -7343,6 +7326,74 @@ local function isClass( typeInfo )
    return typeInfo:get_kind() == TypeInfoKind.Class and typeInfo ~= _moduleObj.builtinTypeString
 end
 _moduleObj.isClass = isClass
+
+function TypeInfo.canBeAsyncParam( fromScope, typeInfo )
+
+   if TypeInfo.isMutableType( typeInfo ) then
+      local srcType = typeInfo:get_srcTypeInfo():get_nonnilableType():get_aliasSrc()
+      if isClass( srcType ) then
+         if not srcType:get_finalFlag() then
+            return false, string.format( "not use non final class -- %s", srcType:getTxt(  ))
+         end
+         
+         local classTypeInfo = fromScope:getNamespaceTypeInfo(  )
+         while classTypeInfo:get_kind() ~= TypeInfoKind.Class do
+            classTypeInfo = classTypeInfo:get_parentInfo()
+         end
+         
+         if classTypeInfo:get_typeId():equals( srcType:get_typeId() ) then
+            
+            return false, string.format( "not use same class -- %s", classTypeInfo:getTxt(  ))
+         end
+         
+         do
+            local scope = srcType:get_scope()
+            if scope ~= nil then
+               local cantBeAsync = nil
+               scope:filterTypeInfoField( true, fromScope, ScopeAccess.Normal, function ( symbolInfo )
+               
+                  do
+                     local _switchExp = symbolInfo:get_kind()
+                     if _switchExp == SymbolKind.Mbr then
+                        
+                        cantBeAsync = string.format( "can''t have non private member -- %s", symbolInfo:get_name())
+                        return false
+                     elseif _switchExp == SymbolKind.Mtd then
+                        if symbolInfo:get_name() ~= "__init" and symbolInfo:get_typeInfo():get_asyncMode() ~= Async.Noasync then
+                           
+                           cantBeAsync = string.format( "can''t have non __noasync method -- %s", symbolInfo:get_typeInfo():getTxt(  ))
+                           return false
+                        end
+                        
+                     end
+                  end
+                  
+                  return true
+               end )
+               if cantBeAsync ~= nil then
+                  return false, cantBeAsync
+               end
+               
+               return true, ""
+            end
+         end
+         
+      end
+      
+      return false, ""
+   end
+   
+   for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+      local result, mess = TypeInfo.canBeAsyncParam( fromScope, itemType )
+      if not result then
+         return false, mess
+      end
+      
+   end
+   
+   return true, ""
+end
+
 
 function Scope:addIgnoredVar( processInfo )
 

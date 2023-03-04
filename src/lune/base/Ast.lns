@@ -1814,18 +1814,6 @@ pub static fn TypeInfo.isMutableType( mut typeInfo:&TypeInfo ) : bool {
    return isMutable( typeInfo.$mutMode );
 }
 
-pub static fn TypeInfo.canBeAsyncParam(typeInfo:&TypeInfo): bool {
-   if TypeInfo.isMutableType( typeInfo ) {
-      return false;
-   }
-   foreach itemType in typeInfo.$itemTypeInfoList {
-      if not TypeInfo.canBeAsyncParam( itemType ) {
-         return false;
-      }
-   }
-   return true;
-}
-
 pub static fn TypeInfo.canBeAbsImmutMember(typeInfo:&TypeInfo): bool {
    if TypeInfo.isMutableType( typeInfo ) {
       return false;
@@ -5349,6 +5337,66 @@ immutableTypeSetWork.add( builtinTypeString );
 pub fn isClass( typeInfo:&TypeInfo ) : bool {
    return typeInfo.$kind == .Class and typeInfo ~= builtinTypeString;
 }
+
+pub static fn TypeInfo.canBeAsyncParam(
+   fromScope:&Scope, typeInfo:&TypeInfo): bool, str
+{
+   if TypeInfo.isMutableType( typeInfo ) {
+      let srcType = typeInfo.$srcTypeInfo.$nonnilableType.$aliasSrc;
+      if isClass( srcType ) {
+         if not srcType.$finalFlag {
+            return false, "not use non final class -- %s" (srcType.getTxt(##));
+         }
+         let mut classTypeInfo = fromScope.getNamespaceTypeInfo();
+         while classTypeInfo.$kind ~= .Class {
+            classTypeInfo = classTypeInfo.$parentInfo;
+         }
+         if classTypeInfo.$typeId.equals( srcType.$typeId ) {
+            // 同一クラスの Mutable オブジェクトは、
+            // 内容を変更可能なので Async のパラメータには許可しない
+            return false, "not use same class -- %s" (classTypeInfo.getTxt(##));
+         }
+         if! let scope = srcType.$scope {
+            let mut cantBeAsync:str! = nil;
+            scope.filterTypeInfoField(
+               true, fromScope, .Normal,
+               fn ( symbolInfo:&SymbolInfo ): bool {
+                  switch symbolInfo.$kind {
+                     case .Mbr {
+                        // 直にアクセ可能なスメンバーがある場合は、許可しない
+                        cantBeAsync = "can''t have non private member -- %s"( symbolInfo.$name );
+                        return false;
+                     }
+                     case .Mtd {
+                        if symbolInfo.$name ~= "__init" and
+                           symbolInfo.$typeInfo.$asyncMode ~= .Noasync
+                        {
+                           // noasync 以外のメソッドがある場合は、許可しない
+                           cantBeAsync = "can''t have non __noasync method -- %s" ( symbolInfo.$typeInfo.getTxt(##) );
+                           return false;
+                        }
+                     }
+                  }
+                  return true;
+               } );
+            when! cantBeAsync {
+               return false, cantBeAsync;
+            }
+            return true, "";
+         }
+      }
+      return false, "";
+   }
+   foreach itemType in typeInfo.$itemTypeInfoList {
+      let result, mess = TypeInfo.canBeAsyncParam( fromScope, itemType );
+      if not result {
+         return false, mess;
+      }
+   }
+   return true, "";
+}
+
+
 
 pub fn Scope.addIgnoredVar( processInfo:ProcessInfo ) mut {
    self.addLocalVar( processInfo, false, true, "_", nil, builtinTypeEmpty, .Mut );

@@ -1222,15 +1222,16 @@ alias で置き換えている元の Type → alias の型
    }
 }
 
-fn TransUnit.canBeAsyncParam( typeInfo:&Ast.TypeInfo ) : bool {
+fn TransUnit.canBeAsyncParam(
+   fromScope:&Ast.Scope, typeInfo:&Ast.TypeInfo ) : bool, str {
    switch typeInfo.$nilableTypeInfo.$srcTypeInfo.$genSrcTypeInfo {
       case self.builtinFunc.__pipe_,
            self.builtinFunc.__lns_sync_flag_
       {
-         return true;
+         return true, "";
       }
    }
-   return Ast.TypeInfo.canBeAsyncParam( typeInfo );
+   return Ast.TypeInfo.canBeAsyncParam( fromScope, typeInfo )**;
 }
 
 

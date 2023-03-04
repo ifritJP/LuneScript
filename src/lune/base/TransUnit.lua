@@ -1617,16 +1617,16 @@ function TransUnit:get_importedAliasMap()
 end
 
 
-function TransUnit:canBeAsyncParam( typeInfo )
+function TransUnit:canBeAsyncParam( fromScope, typeInfo )
 
    do
       local _switchExp = typeInfo:get_nilableTypeInfo():get_srcTypeInfo():get_genSrcTypeInfo()
       if _switchExp == self.builtinFunc.__pipe_ or _switchExp == self.builtinFunc.__lns_sync_flag_ then
-         return true
+         return true, ""
       end
    end
    
-   return Ast.TypeInfo.canBeAsyncParam( typeInfo )
+   return Ast.TypeInfo.canBeAsyncParam( fromScope, typeInfo )
 end
 
 
@@ -6532,8 +6532,9 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner ) and Ast.isPubToExternal( accessMode ) then
          
          for index, argNode in ipairs( argList ) do
-            if not self:canBeAsyncParam( argNode:get_expType() ) then
-               self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument with public method. -- %d: %s", index, argNode:get_expType():getTxt(  )) )
+            local result, mess = self:canBeAsyncParam( funcBodyScope, argNode:get_expType() )
+            if not result then
+               self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument with public method. -- %d: %s, %s", index, argNode:get_expType():getTxt(  ), mess) )
             end
             
          end
@@ -10388,7 +10389,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
          local _switchExp = curNs:get_kind()
          if _switchExp == Ast.TypeInfoKind.Func then
             if not nsInfo:canAccessNoasync(  ) and curNs:get_asyncMode() ~= Ast.Async.Transient then
-               if not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
+               if not self:canBeAsyncParam( _lune.unwrap( curNs:get_scope()), symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), nsInfo:get_typeInfo():getTxt(  )) )
                end
                
@@ -10396,7 +10397,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
             
          elseif _switchExp == Ast.TypeInfoKind.Method then
             if not nsInfo:canAccessNoasync(  ) or (symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) then
-               if not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
+               if not self:canBeAsyncParam( _lune.unwrap( curNs:get_scope()), symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), nsInfo:get_typeInfo():getTxt(  )) )
                end
                
@@ -10423,7 +10424,7 @@ function TransUnit:checkAsyncField( symbolInfo, pos )
    end
    
    if warn then
-      if ((symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) or symbolInfo:get_kind() == Ast.SymbolKind.Var ) and not _lune._Set_has(self.builtinFunc:get_allSymbolSet(), symbolInfo:getOrg(  ) ) and not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
+      if ((symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) or symbolInfo:get_kind() == Ast.SymbolKind.Var ) and not _lune._Set_has(self.builtinFunc:get_allSymbolSet(), symbolInfo:getOrg(  ) ) and not self:canBeAsyncParam( _lune.unwrap( curNs:get_scope()), symbolInfo:get_typeInfo() ) then
          
          self:addErrMess( pos, string.format( "can't access the mutable symbol(%s) from async (%s).", symbolInfo:get_name(), curNs:getTxt(  )) )
       end
