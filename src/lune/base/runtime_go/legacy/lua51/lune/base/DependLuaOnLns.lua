@@ -81,7 +81,7 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 
 
 
-local function runLuaOnLns( luaCode, baseDir, async )
+local function runLuaOnLns( frontAccessor, luaCode, baseDir, async )
 
    local newEnv = {}
    for key, val in pairs( _G ) do
@@ -91,7 +91,8 @@ local function runLuaOnLns( luaCode, baseDir, async )
    newEnv["_lnsLoad"] = function ( name, txt )
    
       local importModuleInfo = frontInterface.ImportModuleInfo._new()
-      local val = frontInterface.loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
+      
+      local val = frontAccessor:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
       return val
    end
    

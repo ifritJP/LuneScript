@@ -11,7 +11,8 @@ class TransUnitForRunner extend TransUnit {
    let mut resultMap:&Map<&FuncBlockInfo,FuncBlockResult> {local};
    let funcBlockCtl:FuncBlockCtlIF;
 
-   local fn __init( moduleId:&frontInterface.ModuleId,
+   local fn __init( frontAccessor:frontInterface.FrontAccessor,
+                    moduleId:&frontInterface.ModuleId,
                     importModuleInfo:&frontInterface.ImportModuleInfo,
                     macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                     analyzeModule:str!, mode:AnalyzeMode!,
@@ -20,7 +21,7 @@ class TransUnitForRunner extend TransUnit {
                     builtinFunc:&Builtin.BuiltinFuncType,
                     list:&List<&FuncBlockInfo>, managerId:int)      
    {
-      super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
+      super( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase,
              analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
 
       self.funcBlockCtl = new ListFuncBlockCtl( list );
@@ -54,6 +55,7 @@ class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockRes
    
    pub fn __init(
       pipe:__pipe<Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>>!,
+      frontAccessor:frontInterface.FrontAccessor,
       srcTranUnit:&TransUnit,
       moduleId:&frontInterface.ModuleId,
       importModuleInfo:&frontInterface.ImportModuleInfo,
@@ -68,7 +70,7 @@ class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockRes
       super(pipe);
       
       self.transUnit = new TransUnitForRunner(
-         moduleId, importModuleInfo, macroEval, enableMultiPhase,
+         frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase,
          analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc,
          list, managerId );
 
@@ -135,7 +137,8 @@ pub class TransUnitCtrl extend TransUnit {
    let mut provideNode: Nodes.ProvideNode!;
    
 
-   pub fn __init( moduleId:&frontInterface.ModuleId,
+   pub fn __init( frontAccessor:frontInterface.FrontAccessor,
+                  moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                   analyzeModule:str!, mode:AnalyzeMode!,
@@ -143,7 +146,7 @@ pub class TransUnitCtrl extend TransUnit {
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType )
    {
-      super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
+      super( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase,
              analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
 
       self.totalFuncBlockTokenNum = 0;
@@ -245,6 +248,7 @@ fn TransUnitCtrl.analyzeImportFor(
 
    let! mut importObj = self.importCtrl {
       importObj = new Import.Import(
+         self.frontAccessor,
          self.getLatestPos(),
          self.importModuleInfo,
          self.moduleType,
@@ -511,7 +515,8 @@ fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Su
    else {
       if mode.txt == "use" {
          usePath = moduleName;
-         if frontInterface.searchModule( moduleName, self.baseDir, nil ) {
+         // if frontInterface.searchModule( moduleName, self.baseDir, nil ) {
+         if self.frontAccessor.searchModule( moduleName, self.baseDir, nil ) {
             self.subfileList.insert( moduleName );
          }
          else {
@@ -520,7 +525,8 @@ fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Su
          }
       }
       elseif mode.txt == "owner" {
-         if frontInterface.getLuaModulePath(
+//         if frontInterface.getLuaModulePath(
+         if self.frontAccessor.getLuaModulePath(
             self.moduleName, self.baseDir ) ~= moduleName
          {
             self.addErrMess(
@@ -663,6 +669,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
                }
                let mut runner = new TransUnitRunner(
                   waiter.$pipe,
+                  self.frontAccessor,
                   self,
                   self.moduleId,
                   self.importModuleInfo,
@@ -798,7 +805,7 @@ pub fn TransUnitCtrl.createAST(
       __luago {
          when! moduleName {
             apply txt of string.gmatch(
-               frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' )
+               self.frontAccessor.getLuaModulePath( moduleName, baseDir ), '[^%.]+' )
             {
                moduleTypeInfo = self.pushModule(
                   self.processInfo, false, txt, true ).$typeInfo;
@@ -896,7 +903,8 @@ pub fn TransUnitCtrl.createAST(
       foreach subModule in self.subfileList {
          let file;
          __asyncLock {
-            if! frontInterface.searchModule( subModule, self.baseDir, nil ) {
+            // if! frontInterface.searchModule( subModule, self.baseDir, nil ) {
+            if! self.frontAccessor.searchModule( subModule, self.baseDir, nil ) {
                file = _exp;
             } else {
                self.error( "not found subfile -- %s" ( subModule ) ); // 要対応

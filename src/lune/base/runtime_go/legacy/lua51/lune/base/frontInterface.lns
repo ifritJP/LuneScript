@@ -336,6 +336,37 @@ go/github:com.ifritJP. 等の go 用のパスを、
    pub fn error( message:str ) ;
 }
 
+pub final class FrontAccessor {
+   let frontIF:frontInterface;
+   
+   pub fn loadModule( mod:str ) __noasync mut: Luaval<&stem>!, ModuleMeta {
+      return self.frontIF.loadModule( mod )**;
+   }
+
+   pub fn loadMeta(
+      importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
+      baseDir:str!, loader:ModuleLoader ) __noasync mut: ModuleMeta!
+   {
+      return self.frontIF.loadMeta( importModuleInfo, mod, orgMod, baseDir, loader );
+   }
+   pub fn loadFromLnsTxt(
+      importModuleInfo:ImportModuleInfo,
+      baseDir:str!, name:str, txt:str ) __noasync mut : Luaval<&stem>
+   {
+      return self.frontIF.loadFromLnsTxt( importModuleInfo, baseDir, name, txt );
+   }
+
+   pub fn getLuaModulePath( mod:str, baseDir:str! ) __noasync mut : str,str!, str {
+      return self.frontIF.getLuaModulePath( mod, baseDir )**;
+   }
+   pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! ) __noasync  mut: str! {
+      return self.frontIF.searchModule( mod, baseDir, addSearchPath );
+   }
+   pub fn error( message:str ) __noasync {
+      self.frontIF.error( message );
+   }
+}
+
 pub fn dummyLoadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
    // error( "not implements" );
    let modVal, mut moduleMeta;
@@ -354,7 +385,7 @@ pub fn dummyLoadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
    return modVal, moduleMeta;
 }
 
-class dummyFront extend (frontInterface) {
+class DummyFront extend (frontInterface) {
    pub fn loadModule( mod:str )  mut: Luaval<&stem>!, ModuleMeta {
       return dummyLoadModule( mod )**;
    }
@@ -381,33 +412,4 @@ class dummyFront extend (frontInterface) {
    }
 }
 
-global let mut __luneScript:frontInterface = new dummyFront();
-
-pub fn setFront( newFront:frontInterface ) __noasync {
-   __luneScript = newFront;
-}
-
-pub fn loadModule( mod:str )  __noasync : Luaval<&stem>!, ModuleMeta {
-   return __luneScript.loadModule( mod )**;
-}
-
-pub fn loadFromLnsTxt(
-   importModuleInfo:ImportModuleInfo,
-   baseDir:str!, name:str, txt:str )  __noasync : Luaval<&stem>
-{
-   return __luneScript.loadFromLnsTxt( importModuleInfo, baseDir, name, txt );
-}
-
-pub fn loadMeta( importModuleInfo:ImportModuleInfo, mod:str, orgMod:str,
-                 baseDir:str!, loader:ModuleLoader ) __noasync : ModuleMeta!
-{
-   return __luneScript.loadMeta( importModuleInfo, mod, orgMod, baseDir, loader );
-}
-
-pub fn searchModule( mod:str, baseDir:str!, addSearchPath:str! ) __noasync: str! {
-   return __luneScript.searchModule( mod, baseDir, addSearchPath );
-}
-
-pub fn getLuaModulePath( mod:str, baseDir:str! ) __noasync: str, str!, str {
-   return __luneScript.getLuaModulePath( mod, baseDir )**;
-}
+pub let dummyFront:frontInterface = new DummyFront();

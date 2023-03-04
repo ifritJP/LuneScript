@@ -3972,6 +3972,7 @@ __test {
       
       let mod = Util.scriptPath2Module( scriptPath );
       let mut transUnit = new TransUnit.TransUnitCtrl(
+         new frontInterface.FrontAccessor( frontInterface.dummyFront ),
          moduleId, moduleInfo, new MacroEvalImp(builtinFunc), false,
          nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );

@@ -379,6 +379,7 @@ local function outputAllResult( stream )
       end
    end
    
+   stream:flush(  )
 end
 _moduleObj.outputAllResult = outputAllResult
 

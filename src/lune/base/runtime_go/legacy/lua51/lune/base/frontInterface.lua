@@ -650,6 +650,49 @@ function frontInterface:__init(  )
 end
 
 
+local FrontAccessor = {}
+_moduleObj.FrontAccessor = FrontAccessor
+function FrontAccessor:loadModule( mod )
+
+   return self.frontIF:loadModule( mod )
+end
+function FrontAccessor:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
+
+   return self.frontIF:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
+end
+function FrontAccessor:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
+
+   return self.frontIF:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
+end
+function FrontAccessor:getLuaModulePath( mod, baseDir )
+
+   return self.frontIF:getLuaModulePath( mod, baseDir )
+end
+function FrontAccessor:searchModule( mod, baseDir, addSearchPath )
+
+   return self.frontIF:searchModule( mod, baseDir, addSearchPath )
+end
+function FrontAccessor:error( message )
+
+   self.frontIF:error( message )
+end
+function FrontAccessor._setmeta( obj )
+  setmetatable( obj, { __index = FrontAccessor  } )
+end
+function FrontAccessor._new( frontIF )
+   local obj = {}
+   FrontAccessor._setmeta( obj )
+   if obj.__init then
+      obj:__init( frontIF )
+   end
+   return obj
+end
+function FrontAccessor:__init( frontIF )
+
+   self.frontIF = frontIF
+end
+
+
 local function dummyLoadModule( mod )
 
    
@@ -673,89 +716,53 @@ local function dummyLoadModule( mod )
 end
 _moduleObj.dummyLoadModule = dummyLoadModule
 
-local dummyFront = {}
-setmetatable( dummyFront, { ifList = {frontInterface,} } )
-function dummyFront:loadModule( mod )
+local DummyFront = {}
+setmetatable( DummyFront, { ifList = {frontInterface,} } )
+function DummyFront:loadModule( mod )
 
    return dummyLoadModule( mod )
 end
-function dummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
-   local __func__ = '@lune.@base.@frontInterface.dummyFront.loadMeta'
+function DummyFront:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
+   local __func__ = '@lune.@base.@frontInterface.DummyFront.loadMeta'
 
    Util.err( string.format( "not implements: %s", __func__) )
 end
-function dummyFront:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
-   local __func__ = '@lune.@base.@frontInterface.dummyFront.loadFromLnsTxt'
+function DummyFront:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
+   local __func__ = '@lune.@base.@frontInterface.DummyFront.loadFromLnsTxt'
 
    Util.err( string.format( "not implements: %s", __func__) )
 end
-function dummyFront:getLuaModulePath( mod, baseDir )
+function DummyFront:getLuaModulePath( mod, baseDir )
 
    return mod, nil, mod
 end
-function dummyFront:searchModule( mod, baseDir, addSearchPath )
-   local __func__ = '@lune.@base.@frontInterface.dummyFront.searchModule'
+function DummyFront:searchModule( mod, baseDir, addSearchPath )
+   local __func__ = '@lune.@base.@frontInterface.DummyFront.searchModule'
 
    Util.err( string.format( "not implements: %s", __func__) )
 end
-function dummyFront:error( message )
+function DummyFront:error( message )
 
    Util.err( message )
 end
-function dummyFront._setmeta( obj )
-  setmetatable( obj, { __index = dummyFront  } )
+function DummyFront._setmeta( obj )
+  setmetatable( obj, { __index = DummyFront  } )
 end
-function dummyFront._new(  )
+function DummyFront._new(  )
    local obj = {}
-   dummyFront._setmeta( obj )
+   DummyFront._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
    return obj
 end
-function dummyFront:__init(  )
+function DummyFront:__init(  )
 
 end
 
 
-__luneScript = dummyFront._new()
-_moduleObj.__luneScript = __luneScript
+local dummyFront = DummyFront._new()
+_moduleObj.dummyFront = dummyFront
 
-
-local function setFront( newFront )
-
-   __luneScript = newFront
-end
-_moduleObj.setFront = setFront
-
-local function loadModule( mod )
-
-   return __luneScript:loadModule( mod )
-end
-_moduleObj.loadModule = loadModule
-
-local function loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
-
-   return __luneScript:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
-end
-_moduleObj.loadFromLnsTxt = loadFromLnsTxt
-
-local function loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
-
-   return __luneScript:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
-end
-_moduleObj.loadMeta = loadMeta
-
-local function searchModule( mod, baseDir, addSearchPath )
-
-   return __luneScript:searchModule( mod, baseDir, addSearchPath )
-end
-_moduleObj.searchModule = searchModule
-
-local function getLuaModulePath( mod, baseDir )
-
-   return __luneScript:getLuaModulePath( mod, baseDir )
-end
-_moduleObj.getLuaModulePath = getLuaModulePath
 
 return _moduleObj

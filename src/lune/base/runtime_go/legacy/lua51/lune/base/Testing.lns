@@ -192,6 +192,7 @@ pub fn outputAllResult( stream:oStream ) {
    forsort info in testModuleMap {
       info.outputResult( stream );
    }
+   stream.flush();
 }
 
 pub macro _eq( ctrl:sym, val1:__exp, val2:__exp ): bool {

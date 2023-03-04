@@ -329,6 +329,7 @@ local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local Log = _lune.loadModule( 'lune.base.Log' )
+local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local function loadCode( code )
 
    local ret
@@ -356,9 +357,9 @@ local function loadCode( code )
    return ret
 end
 
-local function runLuaOnLns( code, baseDir, async )
+local function runLuaOnLns( frontAccessor, code, baseDir, async )
 
-   local loadFunc, err = DependLuaOnLns.runLuaOnLns( code, baseDir, async )
+   local loadFunc, err = DependLuaOnLns.runLuaOnLns( frontAccessor, code, baseDir, async )
    if loadFunc ~= nil then
       local mod = nil
       if async then
@@ -384,9 +385,9 @@ local function runLuaOnLns( code, baseDir, async )
    return nil, err
 end
 
-local function runLuaOnLnsToMacroProc( code, baseDir, async )
+local function runLuaOnLnsToMacroProc( frontAccessor, code, baseDir, async )
 
-   local luaObj, err = runLuaOnLns( code, baseDir, async )
+   local luaObj, err = runLuaOnLns( frontAccessor, code, baseDir, async )
    if luaObj ~= nil then
       return luaObj, ""
    end
@@ -813,13 +814,13 @@ function MacroCtrl:setUsing__var(  )
    end
    
 end
-function MacroCtrl._new( macroEval, validAsyncMacro )
+function MacroCtrl._new( macroEval, validAsyncMacro, frontAccessor )
    local obj = {}
    MacroCtrl._setmeta( obj )
-   if obj.__init then obj:__init( macroEval, validAsyncMacro ); end
+   if obj.__init then obj:__init( macroEval, validAsyncMacro, frontAccessor ); end
    return obj
 end
-function MacroCtrl:__init(macroEval, validAsyncMacro) 
+function MacroCtrl:__init(macroEval, validAsyncMacro, frontAccessor) 
    self.id2use___var = {}
    
    do
@@ -833,6 +834,7 @@ function MacroCtrl:__init(macroEval, validAsyncMacro)
    end
    
    
+   self.frontAccessor = frontAccessor
    self.validAsyncMacro = validAsyncMacro
    self.toLuavalLuaAsync = nil
    self.useLnsLoad = false
@@ -850,9 +852,9 @@ function MacroCtrl:__init(macroEval, validAsyncMacro)
    
    self.macroLocalVarMap = nil
 end
-function MacroCtrl:clone(  )
+function MacroCtrl:clone( frontAccessor )
 
-   local obj = MacroCtrl._new(self.macroEval, self.validAsyncMacro)
+   local obj = MacroCtrl._new(self.macroEval, self.validAsyncMacro, frontAccessor)
    
    if not self.validAsyncMacro then
       obj.toLuavalLuaAsync = self.toLuavalLuaAsync
@@ -1009,7 +1011,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                      local luaCode = srcInfo:get_luaCode()
                      if luaCode ~= nil then
                         
-                        local stmtFunc = _lune.unwrap( runLuaOnLnsToMacroProc( luaCode, srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
+                        local stmtFunc = _lune.unwrap( runLuaOnLnsToMacroProc( self.frontAccessor, luaCode, srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
                         defInfo:set_func( stmtFunc )
                      end
                   end
@@ -1413,7 +1415,7 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
       local luaCode = self.macroEval:evalFromCodeToLuaCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock )
       local stmtFunc
       
-      stmtFunc, err = runLuaOnLnsToMacroProc( luaCode, baseDir, false )
+      stmtFunc, err = runLuaOnLnsToMacroProc( self.frontAccessor, luaCode, baseDir, false )
       if stmtFunc ~= nil then
          local extMacroInfo = ExtMacroInfo._new(macroInfo.name, stmtFunc, symbol2MacroValInfoMap, argList, tokenList, baseDir)
          
@@ -1449,7 +1451,7 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
    if node:get_declInfo():get_stmtBlock() then
       local workCode = self.macroEval:evalToLuaCode( processInfo, node )
       luaCode = workCode
-      stmtFunc, err = runLuaOnLnsToMacroProc( workCode, baseDir, asyncFlag )
+      stmtFunc, err = runLuaOnLnsToMacroProc( self.frontAccessor, workCode, baseDir, asyncFlag )
       if stmtFunc then
          ok = true
          err = nil
@@ -1568,7 +1570,7 @@ end
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
    local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
 
-   Log.log( Log.Level.Trace, __func__, 966, function (  )
+   Log.log( Log.Level.Trace, __func__, 979, function (  )
    
       return string.format( "start -- %s:%d:%s", token.pos:get_orgPos().streamName, token.pos:get_orgPos().lineNo, token.txt)
    end )

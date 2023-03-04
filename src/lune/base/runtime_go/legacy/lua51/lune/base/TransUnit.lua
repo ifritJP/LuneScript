@@ -1179,7 +1179,7 @@ function TransUnit:setup( src )
    
    self.typeNameCtrl = Ast.TypeNameCtrl._new(self.moduleType)
    
-   self.macroCtrl = src.macroCtrl:clone(  )
+   self.macroCtrl = src.macroCtrl:clone( self.frontAccessor )
    _lune._Set_or(self.advertisedTypeSet, src.advertisedTypeSet )
    self.accessSymbolSetQueue:setupFrom( src.accessSymbolSetQueue )
    _lune._Set_or(self.helperInfo.pragmaSet, src.helperInfo.pragmaSet )
@@ -1269,15 +1269,17 @@ function TransUnit.getSuperParam( ctrl_info )
    local processInfo = Ast.createProcessInfo( ctrl_info.validCheckingMutable, ctrl_info.validLuaval, ctrl_info.validAstDetailError )
    return ctrl_info, processInfo
 end
-function TransUnit._new( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc )
+function TransUnit._new( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc )
    local obj = {}
    TransUnit._setmeta( obj )
-   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc ); end
+   if obj.__init then obj:__init( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc ); end
    return obj
 end
-function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc) 
+function TransUnit:__init(frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc) 
    TransUnitIF.TransUnitBase.__init( self,TransUnit.getSuperParam( ctrl_info ))
    
+   
+   self.frontAccessor = frontAccessor
    
    self.funcBlockInfoLinkNo = nil
    local phase
@@ -1312,7 +1314,7 @@ function TransUnit:__init(moduleId, importModuleInfo, macroEval, enableMultiPhas
    self.closureFunList = {}
    self.scopeAccess = Ast.ScopeAccess.Normal
    self.macroEval = macroEval
-   self.macroCtrl = Macro.MacroCtrl._new(macroEval, ctrl_info.validMacroAsync)
+   self.macroCtrl = Macro.MacroCtrl._new(macroEval, ctrl_info.validMacroAsync, frontAccessor)
    self.analyzingStateQueue = {}
    self.ignoreToCheckSymbol_ = false
    self.moduleId = moduleId
@@ -1621,16 +1623,16 @@ function TransUnit:get_importedAliasMap()
 end
 
 
-function TransUnit:canBeAsyncParam( typeInfo )
+function TransUnit:canBeAsyncParam( fromScope, typeInfo )
 
    do
       local _switchExp = typeInfo:get_nilableTypeInfo():get_srcTypeInfo():get_genSrcTypeInfo()
       if _switchExp == self.builtinFunc.__pipe_ or _switchExp == self.builtinFunc.__lns_sync_flag_ then
-         return true
+         return true, ""
       end
    end
    
-   return Ast.TypeInfo.canBeAsyncParam( typeInfo )
+   return Ast.TypeInfo.canBeAsyncParam( fromScope, typeInfo )
 end
 
 
@@ -6536,8 +6538,9 @@ function TransUnit:analyzeDeclFunc( declFuncMode, asyncLocked, abstractFlag, ove
       if classTypeInfo:isInheritFrom( self.processInfo, Ast.builtinTypeRunner ) and Ast.isPubToExternal( accessMode ) then
          
          for index, argNode in ipairs( argList ) do
-            if not self:canBeAsyncParam( argNode:get_expType() ) then
-               self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument with public method. -- %d: %s", index, argNode:get_expType():getTxt(  )) )
+            local result, mess = self:canBeAsyncParam( funcBodyScope, argNode:get_expType() )
+            if not result then
+               self:addErrMess( argNode:get_pos(), string.format( "__Runner can't have the mutable argument with public method. -- %d: %s, %s", index, argNode:get_expType():getTxt(  ), mess) )
             end
             
          end
@@ -10392,7 +10395,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
          local _switchExp = curNs:get_kind()
          if _switchExp == Ast.TypeInfoKind.Func then
             if not nsInfo:canAccessNoasync(  ) and curNs:get_asyncMode() ~= Ast.Async.Transient then
-               if not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
+               if not self:canBeAsyncParam( _lune.unwrap( curNs:get_scope()), symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), nsInfo:get_typeInfo():getTxt(  )) )
                end
                
@@ -10400,7 +10403,7 @@ function TransUnit:checkAsyncSymbol( symbolInfo, pos )
             
          elseif _switchExp == Ast.TypeInfoKind.Method then
             if not nsInfo:canAccessNoasync(  ) or (symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) then
-               if not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
+               if not self:canBeAsyncParam( _lune.unwrap( curNs:get_scope()), symbolInfo:get_typeInfo() ) then
                   self:addErrMess( pos, string.format( "can't access the mutable type's symbol(%s) from async (%s).", symbolInfo:get_name(), nsInfo:get_typeInfo():getTxt(  )) )
                end
                
@@ -10427,7 +10430,7 @@ function TransUnit:checkAsyncField( symbolInfo, pos )
    end
    
    if warn then
-      if ((symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) or symbolInfo:get_kind() == Ast.SymbolKind.Var ) and not _lune._Set_has(self.builtinFunc:get_allSymbolSet(), symbolInfo:getOrg(  ) ) and not self:canBeAsyncParam( symbolInfo:get_typeInfo() ) then
+      if ((symbolInfo:get_staticFlag() and symbolInfo:get_kind() == Ast.SymbolKind.Mbr ) or symbolInfo:get_kind() == Ast.SymbolKind.Var ) and not _lune._Set_has(self.builtinFunc:get_allSymbolSet(), symbolInfo:getOrg(  ) ) and not self:canBeAsyncParam( _lune.unwrap( curNs:get_scope()), symbolInfo:get_typeInfo() ) then
          
          self:addErrMess( pos, string.format( "can't access the mutable symbol(%s) from async (%s).", symbolInfo:get_name(), curNs:getTxt(  )) )
       end
@@ -12697,14 +12700,14 @@ local unsupportStatement = {["import"] = true, ["subfile"] = true, ["provide"] =
 
 local TransUnitForRunner = {}
 setmetatable( TransUnitForRunner, { __index = TransUnit } )
-function TransUnitForRunner._new( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
+function TransUnitForRunner._new( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
    local obj = {}
    TransUnitForRunner._setmeta( obj )
-   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
+   if obj.__init then obj:__init( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
    return obj
 end
-function TransUnitForRunner:__init(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
-   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+function TransUnitForRunner:__init(frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
+   TransUnit.__init( self,frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
    
    
    self.funcBlockCtl = ListFuncBlockCtl._new(list)
@@ -12732,17 +12735,17 @@ end
 
 local TransUnitRunner = {}
 setmetatable( TransUnitRunner, { __index = Async.RunnerBase } )
-function TransUnitRunner._new( pipe, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
+function TransUnitRunner._new( pipe, frontAccessor, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId )
    local obj = {}
    TransUnitRunner._setmeta( obj )
-   if obj.__init then obj:__init( pipe, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
+   if obj.__init then obj:__init( pipe, frontAccessor, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId ); end
    return obj
 end
-function TransUnitRunner:__init(pipe, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
+function TransUnitRunner:__init(pipe, frontAccessor, srcTranUnit, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId) 
    Async.RunnerBase.__init( self,pipe)
    
    
-   self.transUnit = TransUnitForRunner._new(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId)
+   self.transUnit = TransUnitForRunner._new(frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc, list, managerId)
    
    self.srcTranUnit = srcTranUnit
    self.alreadyToSetup = nil
@@ -12792,14 +12795,14 @@ end
 local TransUnitCtrl = {}
 setmetatable( TransUnitCtrl, { __index = TransUnit } )
 _moduleObj.TransUnitCtrl = TransUnitCtrl
-function TransUnitCtrl._new( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc )
+function TransUnitCtrl._new( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc )
    local obj = {}
    TransUnitCtrl._setmeta( obj )
-   if obj.__init then obj:__init( moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc ); end
+   if obj.__init then obj:__init( frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc ); end
    return obj
 end
-function TransUnitCtrl:__init(moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc) 
-   TransUnit.__init( self,moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
+function TransUnitCtrl:__init(frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc) 
+   TransUnit.__init( self,frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase, analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc)
    
    
    self.totalFuncBlockTokenNum = 0
@@ -12900,7 +12903,7 @@ function TransUnitCtrl:analyzeImportFor( pos, modulePath, assignName, assigned, 
    if  nil == importObj then
       local _importObj = importObj
    
-      importObj = Import.Import._new(self:getLatestPos(  ), self.importModuleInfo, self.moduleType, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.baseDir, self.validMutControl)
+      importObj = Import.Import._new(self.frontAccessor, self:getLatestPos(  ), self.importModuleInfo, self.moduleType, self.macroCtrl, self.typeNameCtrl, self.importedAliasMap, self.baseDir, self.validMutControl)
       self.importCtrl = importObj
    end
    
@@ -13169,7 +13172,8 @@ function TransUnitCtrl:analyzeSubfile( token )
     
       if mode.txt == "use" then
          usePath = moduleName
-         if frontInterface.searchModule( moduleName, self.baseDir, nil ) then
+         
+         if self.frontAccessor:searchModule( moduleName, self.baseDir, nil ) then
             table.insert( self.subfileList, moduleName )
          else
           
@@ -13177,7 +13181,8 @@ function TransUnitCtrl:analyzeSubfile( token )
          end
          
       elseif mode.txt == "owner" then
-         if frontInterface.getLuaModulePath( self.moduleName, self.baseDir ) ~= moduleName then
+         
+         if self.frontAccessor:getLuaModulePath( self.moduleName, self.baseDir ) ~= moduleName then
             self:addErrMess( token.pos, string.format( "illegal owner module -- %s, %s", moduleName, self.moduleName) )
          end
          
@@ -13317,7 +13322,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
                   
                end
                
-               local runner = TransUnitRunner._new(waiter:get_pipe(), self, self.moduleId, self.importModuleInfo, self.macroEval, false, self.moduleName, AnalyzeMode.Compile, nil, self.targetLuaVer, self.ctrl_info, self.builtinFunc, list, managerId)
+               local runner = TransUnitRunner._new(waiter:get_pipe(), self.frontAccessor, self, self.moduleId, self.importModuleInfo, self.macroEval, false, self.moduleName, AnalyzeMode.Compile, nil, self.targetLuaVer, self.ctrl_info, self.builtinFunc, list, managerId)
                
                local startFlag
                
@@ -13438,7 +13443,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    self.stdinFile = stdinFile
    self.baseDir = baseDir
    
-   Log.log( Log.Level.Log, __func__, 781, function (  )
+   Log.log( Log.Level.Log, __func__, 788, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, parser:getStreamName(  ), tostring( baseDir), tostring( macroFlag), AnalyzePhase:_getTxt( self.analyzePhase)
@@ -13462,7 +13467,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    do
       do
          if moduleName ~= nil then
-            for txt in string.gmatch( frontInterface.getLuaModulePath( moduleName, baseDir ), '[^%.]+' ) do
+            for txt in string.gmatch( self.frontAccessor:getLuaModulePath( moduleName, baseDir ), '[^%.]+' ) do
                moduleTypeInfo = self:pushModule( self.processInfo, false, txt, true ):get_typeInfo()
             end
             
@@ -13516,7 +13521,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       local workExportInfo = Nodes.ExportInfo._new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 857, function (  )
+      Log.log( Log.Level.Log, __func__, 864, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), tostring( moduleTypeInfo), tostring( moduleTypeInfo:get_scope()))
       end )
@@ -13557,8 +13562,9 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
          local file
          
          do
+            
             do
-               local _exp = frontInterface.searchModule( subModule, self.baseDir, nil )
+               local _exp = self.frontAccessor:searchModule( subModule, self.baseDir, nil )
                if _exp ~= nil then
                   file = _exp
                else

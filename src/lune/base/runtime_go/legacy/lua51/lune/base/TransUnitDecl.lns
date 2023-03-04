@@ -3483,11 +3483,12 @@ fn TransUnit.analyzeDeclFunc(
          // 競合防止のため。
          // protected などは、同じスレッドになるので許可する。
          foreach argNode, index in argList {
-            if not self.canBeAsyncParam( argNode.$expType ) {
+            let result, mess = self.canBeAsyncParam( funcBodyScope, argNode.$expType );
+            if not result {
                self.addErrMess(
                   argNode.$pos,
-                  "__Runner can't have the mutable argument with public method. -- %d: %s"
-                  (index, argNode.$expType.getTxt(##) ) );
+                  "__Runner can't have the mutable argument with public method. -- %d: %s, %s"
+                  (index, argNode.$expType.getTxt(##), mess ) );
             }
          }
       }

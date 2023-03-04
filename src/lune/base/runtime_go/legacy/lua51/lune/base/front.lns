@@ -215,7 +215,6 @@ loadedMap で管理する前にシステムにロードされているため、
       }
       
 
-      frontInterface.setFront( self );
 
       let mut loadedMap:Map<str,Luaval<&stem>> = {};
       __luago {
@@ -328,6 +327,7 @@ fn Front.createAstSub(
    }
 
    let mut astCreater = new Converter.AstCreater(
+      new frontInterface.FrontAccessor( self ),
       importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule,
       analyzeMode, pos, self.builtinFunc, self.option );
    self.mod2astCreate[ mod ] = astCreater;
@@ -434,6 +434,7 @@ pub fn Front.loadFromLnsTxt(
    baseDir:str!, name:str, txt:str ) mut : Luaval<&stem>
 {
    let mut transUnit = new TransUnit.TransUnitCtrl(
+      new frontInterface.FrontAccessor( self ),
       frontInterface.ModuleId.tempId,
       importModuleInfo, new convLua.MacroEvalImp( self.builtinFunc ),
       false, nil, nil, nil,
@@ -1535,7 +1536,7 @@ fn Front.outputBootC( scriptPath:str )
 }
 
 pub fn Front.convertLnsCode2LuaCodeWithOpt(
-   option:&Option.Option, lnsCode:str, path:str, baseDir:str! ) mut : str
+   lnsCode:str, path:str, baseDir:str! ) mut : str
 {
    return self.convertLns2LuaCode(
       new frontInterface.ImportModuleInfo(), .Compile,
@@ -1551,7 +1552,7 @@ pub fn convertLnsCode2LuaCode( lnsCode:str, path:str, baseDir:str! ) __noasync :
    option.useIpairs = true;
 
    let mut front = new Front( option ## );
-   return front.convertLnsCode2LuaCodeWithOpt( option, lnsCode, path, baseDir );
+   return front.convertLnsCode2LuaCodeWithOpt( lnsCode, path, baseDir );
 }
 
 fn getBaseDir( path:str, userProjDir:str! ) : str, str! {
@@ -1934,12 +1935,12 @@ pub fn exec( args: &List<str> ) __noasync {
    front.exec();
 }
 
-// frontInterface.setFront( self ); で front を確定させるため
-// go の runtime_go/depend.go から、初期化処理として呼ぶ。
-pub fn setFront( bindModuleList:&List<str> ) __noasync {
-   let mut option = Option.createDefaultOption( ["dummy.lns"], nil );
-   new Front( option, bindModuleList );
-}
+// // frontInterface.setFront( self ); で front を確定させるため
+// // go の runtime_go/depend.go から、初期化処理として呼ぶ。
+// pub fn setFront( bindModuleList:&List<str> ) __noasync {
+//    let mut option = Option.createDefaultOption( ["dummy.lns"], nil );
+//    new Front( option, bindModuleList );
+// }
 
 pub fn __main( argList:&_List<str> ) __noasync : int {
    let list:List<str> = [];

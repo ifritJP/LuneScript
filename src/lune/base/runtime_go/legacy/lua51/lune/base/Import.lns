@@ -853,6 +853,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    let loaderFunc:LoaderFunc;
    let importProcessInfo:Ast.ProcessInfo;
    let mut syncFlag:__lns.Sync.Flag!;
+   let frontAccessor:frontInterface.FrontAccessor;
 
    fn processImportFromFile(
       processInfo:Ast.ProcessInfo, lnsPath:str, metaInfoStem:Luaval<&stem>,
@@ -909,14 +910,17 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
    }
 
    
-   pub fn __init( enableAsync:bool, exportInfo:&frontInterface.ExportInfo!,
-                  workImportModuleInfo: &frontInterface.ImportModuleInfo,
-                  modulePath:str, fullModulePath:str, baseDir:str!,
-                  moduleLoaderParam:&ModuleLoaderParam,
-                  depth:int ) __async
+   pub fn __init(
+      frontAccessor:frontInterface.FrontAccessor,
+      enableAsync:bool, exportInfo:&frontInterface.ExportInfo!,
+      workImportModuleInfo: &frontInterface.ImportModuleInfo,
+      modulePath:str, fullModulePath:str, baseDir:str!,
+      moduleLoaderParam:&ModuleLoaderParam,
+      depth:int ) __async
    {
       super();
 
+      self.frontAccessor = frontAccessor;
       self.syncFlag = nil;
       self.moduleLoaderParam = moduleLoaderParam;
       self.result = new ModuleLoaderResult( 
@@ -932,7 +936,8 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
       self.validMutControl = moduleLoaderParam.$validMutControl;
       self.curPos = moduleLoaderParam.$latestPos;
       self.macroCtrl = new Macro.MacroCtrl(
-         moduleLoaderParam.$macroEval, moduleLoaderParam.$ctrl_info.validMacroAsync );
+         moduleLoaderParam.$macroEval,
+         moduleLoaderParam.$ctrl_info.validMacroAsync, frontAccessor );
       self.importModuleInfo = workImportModuleInfo.clone();
       self.fullModulePath = fullModulePath;
 
@@ -954,7 +959,7 @@ pub class ModuleLoader extend Runner.Runner(frontInterface.ModuleLoader) {
                ( self.importModuleInfo.getFull(), fullModulePath );
             } else {
                __asyncLock {
-                  if! frontInterface.loadMeta(
+                  if! self.frontAccessor.loadMeta(
                      self.importModuleInfo.clone(), modulePath,
                      fullModulePath, baseDir, self )
                   {
@@ -1500,8 +1505,10 @@ alias で置き換えている元の Type → alias の型
 
    //let curPos:&Parser.Position;
    let baseDir:str!;
+   let frontAccessor:frontInterface.FrontAccessor;
    
-   pub fn __init( curPos:&Parser.Position,
+   pub fn __init( frontAccessor:frontInterface.FrontAccessor,
+                  curPos:&Parser.Position,
                   //transUnitIF:TransUnitIF.TransUnitBase,
                   importModuleInfo: frontInterface.ImportModuleInfo,
                   moduleType: &Ast.TypeInfo,
@@ -1512,6 +1519,7 @@ alias で置き換えている元の Type → alias の型
                   
                   validMutControl:bool ) __async
    {
+      self.frontAccessor = frontAccessor;
       self.baseDir = baseDir;
       self.importModuleInfo = importModuleInfo;
       self.moduleType = moduleType;
@@ -1525,13 +1533,15 @@ alias で置き換えている元の Type → alias の型
 }
 
 pub fn Import.createModuleLoader(
+   frontAccessor:frontInterface.FrontAccessor,
    mut baseDir:str!, mut modulePath:str,
    moduleLoaderParam:&ModuleLoaderParam, depth:int ) __async mut : ModuleLoader
 {
    let fullModulePath;
 
    __asyncLock {
-      modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir );
+      //modulePath, baseDir, fullModulePath = frontInterface.getLuaModulePath( modulePath, baseDir );
+      modulePath, baseDir, fullModulePath = self.frontAccessor.getLuaModulePath( modulePath, baseDir );
    }
    
    Log._log( .Info, `{ return "%s -> %s start on %s"
@@ -1555,7 +1565,7 @@ pub fn Import.createModuleLoader(
 
 
    return new ModuleLoader(
-      false, exportInfo, self.importModuleInfo,
+      frontAccessor, false, exportInfo, self.importModuleInfo,
       modulePath, fullModulePath, baseDir, moduleLoaderParam, depth );
 }
 
@@ -1604,14 +1614,15 @@ fn ModuleLoader.processImportMain(
 {
    let fullModulePath;
    modulePath, baseDir, fullModulePath =
-      frontInterface.getLuaModulePath( modulePath, baseDir );
+      self.frontAccessor.getLuaModulePath( modulePath, baseDir );
+      //frontInterface.getLuaModulePath( modulePath, baseDir );
    
    Log._log( .Info, `{ return "%s -> %s start on %s"
                        ( self.result.fullModulePath, fullModulePath, baseDir); } );
 
 
    let mut moduleLoader = new ModuleLoader(
-      false, nil, self.importModuleInfo,
+      self.frontAccessor, false, nil, self.importModuleInfo,
       modulePath, fullModulePath, baseDir, self.moduleLoaderParam, depth );
    return moduleLoader;
 }
@@ -1620,7 +1631,7 @@ pub fn Import.processImport(
    modulePath:str, moduleLoaderParam:&ModuleLoaderParam ) __async mut : ModuleLoader
 {
    let mut moduleLoader = self.createModuleLoader(
-      self.baseDir, modulePath, moduleLoaderParam, 1 );
+      self.frontAccessor, self.baseDir, modulePath, moduleLoaderParam, 1 );
 
    return moduleLoader;
 }
