@@ -617,6 +617,8 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackPa
    pri let macroEval: &Nodes.MacroEval;
 
    local let builtinFunc:&Builtin.BuiltinFuncType;
+
+   local let frontIF:frontInterface.frontInterface;
    
    //===== 解析開始時に設定 ===
    
@@ -833,7 +835,8 @@ alias で置き換えている元の Type → alias の型
       return ctrl_info, processInfo;
    }
    
-   pro fn __init( moduleId:&frontInterface.ModuleId,
+   pro fn __init( frontIF:frontInterface.frontInterface,
+                  moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                   analyzeModule:str!, mode:AnalyzeMode!,
@@ -842,6 +845,8 @@ alias で置き換えている元の Type → alias の型
                   builtinFunc:&Builtin.BuiltinFuncType) 
    {
       super( TransUnit.getSuperParam( ctrl_info )** );
+
+      self.frontIF = frontIF;
 
       self.funcBlockInfoLinkNo = nil;
       // self.funcBlockInfoList = [];

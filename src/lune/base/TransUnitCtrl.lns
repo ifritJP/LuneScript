@@ -11,7 +11,8 @@ class TransUnitForRunner extend TransUnit {
    let mut resultMap:&Map<&FuncBlockInfo,FuncBlockResult> {local};
    let funcBlockCtl:FuncBlockCtlIF;
 
-   local fn __init( moduleId:&frontInterface.ModuleId,
+   local fn __init( frontIF:frontInterface.frontInterface,
+                    moduleId:&frontInterface.ModuleId,
                     importModuleInfo:&frontInterface.ImportModuleInfo,
                     macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                     analyzeModule:str!, mode:AnalyzeMode!,
@@ -20,7 +21,7 @@ class TransUnitForRunner extend TransUnit {
                     builtinFunc:&Builtin.BuiltinFuncType,
                     list:&List<&FuncBlockInfo>, managerId:int)      
    {
-      super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
+      super( frontIF, moduleId, importModuleInfo, macroEval, enableMultiPhase,
              analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
 
       self.funcBlockCtl = new ListFuncBlockCtl( list );
@@ -68,7 +69,7 @@ class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockRes
       super(pipe);
       
       self.transUnit = new TransUnitForRunner(
-         moduleId, importModuleInfo, macroEval, enableMultiPhase,
+         frontIF, moduleId, importModuleInfo, macroEval, enableMultiPhase,
          analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc,
          list, managerId );
 
@@ -135,7 +136,8 @@ pub class TransUnitCtrl extend TransUnit {
    let mut provideNode: Nodes.ProvideNode!;
    
 
-   pub fn __init( moduleId:&frontInterface.ModuleId,
+   pub fn __init( frontIF:frontInterface.frontInterface,
+                  moduleId:&frontInterface.ModuleId,
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                   analyzeModule:str!, mode:AnalyzeMode!,
@@ -143,7 +145,7 @@ pub class TransUnitCtrl extend TransUnit {
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType )
    {
-      super( moduleId, importModuleInfo, macroEval, enableMultiPhase,
+      super( frontIF, moduleId, importModuleInfo, macroEval, enableMultiPhase,
              analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc );
 
       self.totalFuncBlockTokenNum = 0;
