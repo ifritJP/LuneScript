@@ -105,7 +105,7 @@ end
 
 
 
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 
 local function getRawTxt( token )
@@ -113,29 +113,29 @@ local function getRawTxt( token )
    return token.txt:sub( 2, -2 )
 end
 
-local function getVal( parser )
+local function getVal( tokenizer )
 
-   local token = parser:getTokenNoErr(  )
+   local token = tokenizer:getTokenNoErr(  )
    do
       local _switchExp = token.kind
-      if _switchExp == Parser.TokenKind.Dlmt then
+      if _switchExp == Tokenizer.TokenKind.Dlmt then
          do
             local _switchExp = token.txt
             if _switchExp == "{" then
                local map = {}
                while true do
-                  local key = parser:getTokenNoErr(  )
+                  local key = tokenizer:getTokenNoErr(  )
                   do
                      local _switchExp = key.kind
-                     if _switchExp == Parser.TokenKind.Str then
-                     elseif _switchExp == Parser.TokenKind.Dlmt then
+                     if _switchExp == Tokenizer.TokenKind.Str then
+                     elseif _switchExp == Tokenizer.TokenKind.Dlmt then
                         do
                            local _switchExp = key.txt
                            if _switchExp == "}" then
                               return map, true
                            elseif _switchExp == "," then
-                              key = parser:getTokenNoErr(  )
-                              if key.kind ~= Parser.TokenKind.Str then
+                              key = tokenizer:getTokenNoErr(  )
+                              if key.kind ~= Tokenizer.TokenKind.Str then
                                  return nil, false
                               end
                               
@@ -151,11 +151,11 @@ local function getVal( parser )
                      end
                   end
                   
-                  if parser:getTokenNoErr(  ).txt ~= ":" then
+                  if tokenizer:getTokenNoErr(  ).txt ~= ":" then
                      return nil, false
                   end
                   
-                  local val, ok = getVal( parser )
+                  local val, ok = getVal( tokenizer )
                   if not ok then
                      return nil, false
                   end
@@ -170,7 +170,7 @@ local function getVal( parser )
                local list = {}
                local count = 1
                while true do
-                  local nextToken = parser:getTokenNoErr(  )
+                  local nextToken = tokenizer:getTokenNoErr(  )
                   do
                      local _switchExp = nextToken.txt
                      if _switchExp == "]" then
@@ -178,11 +178,11 @@ local function getVal( parser )
                      elseif _switchExp == "," then
                      else 
                         
-                           parser:pushback(  )
+                           tokenizer:pushback(  )
                      end
                   end
                   
-                  local val, ok = getVal( parser )
+                  local val, ok = getVal( tokenizer )
                   if not ok then
                      return nil, false
                   end
@@ -195,7 +195,7 @@ local function getVal( parser )
          end
          
          return nil, false
-      elseif _switchExp == Parser.TokenKind.Int then
+      elseif _switchExp == Tokenizer.TokenKind.Int then
          local num = tonumber( token.txt )
          if  nil == num then
             local _num = num
@@ -204,7 +204,7 @@ local function getVal( parser )
          end
          
          return math.floor(num), true
-      elseif _switchExp == Parser.TokenKind.Real then
+      elseif _switchExp == Tokenizer.TokenKind.Real then
          local num = tonumber( token.txt )
          if  nil == num then
             local _num = num
@@ -213,9 +213,9 @@ local function getVal( parser )
          end
          
          return num, true
-      elseif _switchExp == Parser.TokenKind.Str then
+      elseif _switchExp == Tokenizer.TokenKind.Str then
          return getRawTxt( token ), true
-      elseif _switchExp == Parser.TokenKind.Kywd then
+      elseif _switchExp == Tokenizer.TokenKind.Kywd then
          do
             local _switchExp = token.txt
             if _switchExp == "true" then
@@ -236,10 +236,10 @@ end
 
 local function fromStr( txt )
 
-   local parser = Parser.DefaultPushbackParser._new(Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,"json",nil}), false ))
-   local val, ok = getVal( parser )
+   local tokenizer = Tokenizer.DefaultPushbackTokenizer._new(Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,"json",nil}), false ))
+   local val, ok = getVal( tokenizer )
    if not ok then
-      return nil, parser:getLastPos(  )
+      return nil, tokenizer:getLastPos(  )
    end
    
    return val, nil

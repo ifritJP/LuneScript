@@ -399,16 +399,16 @@ local function setDefaultPipeSize( size )
 end
 _moduleObj.setDefaultPipeSize = setDefaultPipeSize
 
-local Parser = {}
-setmetatable( Parser, { __index = Async.Pipe } )
-_moduleObj.Parser = Parser
-function Parser._new( streamName, stream, luaMode, overridePos, pipeSize )
+local Tokenizer = {}
+setmetatable( Tokenizer, { __index = Async.Pipe } )
+_moduleObj.Tokenizer = Tokenizer
+function Tokenizer._new( streamName, stream, luaMode, overridePos, pipeSize )
    local obj = {}
-   Parser._setmeta( obj )
+   Tokenizer._setmeta( obj )
    if obj.__init then obj:__init( streamName, stream, luaMode, overridePos, pipeSize ); end
    return obj
 end
-function Parser:__init(streamName, stream, luaMode, overridePos, pipeSize) 
+function Tokenizer:__init(streamName, stream, luaMode, overridePos, pipeSize) 
    local _
    Async.Pipe.__init( self,nil)
    
@@ -428,7 +428,7 @@ function Parser:__init(streamName, stream, luaMode, overridePos, pipeSize)
    self.typeSet = typeSet
    self.multiCharDelimitMap = multiCharDelimitMap
 end
-function Parser:setup(  )
+function Tokenizer:setup(  )
 
    local lineList = {}
    while true do
@@ -445,10 +445,10 @@ function Parser:setup(  )
    self.lineList = lineList
    self.stream:close(  )
 end
-function Parser.create( parserSrc, stdinFile, overridePos )
+function Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
 
    local function createStream( mod, path )
-      local __func__ = '@lune.@base.@AsyncParser.Parser.create.createStream'
+      local __func__ = '@lune.@base.@AsyncParser.Tokenizer.create.createStream'
    
       if stdinFile ~= nil then
          if stdinFile:get_mod() == mod then
@@ -479,14 +479,14 @@ function Parser.create( parserSrc, stdinFile, overridePos )
    local function createStreamFrom(  )
    
       do
-         local _matchExp = parserSrc
-         if _matchExp[1] == Types.ParserSrc.LnsCode[1] then
+         local _matchExp = tokenizerSrc
+         if _matchExp[1] == Types.TokenizerSrc.LnsCode[1] then
             local txt = _matchExp[2][1]
             local path = _matchExp[2][2]
             local pipeSize = _matchExp[2][3]
          
             return path, false, Util.TxtStream._new(txt), "", pipeSize
-         elseif _matchExp[1] == Types.ParserSrc.LnsPath[1] then
+         elseif _matchExp[1] == Types.TokenizerSrc.LnsPath[1] then
             local baseDir = _matchExp[2][1]
             local path = _matchExp[2][2]
             local mod = _matchExp[2][3]
@@ -494,7 +494,7 @@ function Parser.create( parserSrc, stdinFile, overridePos )
          
             local stream, mess = createStreamWithBaseDir( mod, baseDir, path )
             return path, false, stream, mess, pipeSize
-         elseif _matchExp[1] == Types.ParserSrc.Parser[1] then
+         elseif _matchExp[1] == Types.TokenizerSrc.Tokenizer[1] then
             local path = _matchExp[2][1]
             local luaMode = _matchExp[2][2]
             local mod = _matchExp[2][3]
@@ -509,12 +509,12 @@ function Parser.create( parserSrc, stdinFile, overridePos )
    
    local streamName, luaMode, stream, mess, pipeSize = createStreamFrom(  )
    if stream ~= nil then
-      return Parser._new(streamName, stream, luaMode, overridePos, pipeSize), ""
+      return Tokenizer._new(streamName, stream, luaMode, overridePos, pipeSize), ""
    end
    
    return nil, mess
 end
-function Parser:access(  )
+function Tokenizer:access(  )
 
    local tokenList = self:parse(  )
    if  nil == tokenList then
@@ -525,30 +525,30 @@ function Parser:access(  )
    
    return Async.PipeItem._new(AsyncItem._new(tokenList))
 end
-function Parser._setmeta( obj )
-  setmetatable( obj, { __index = Parser  } )
+function Tokenizer._setmeta( obj )
+  setmetatable( obj, { __index = Tokenizer  } )
 end
-function Parser:get_streamName()
+function Tokenizer:get_streamName()
    return self.streamName
 end
 
 
 local Runner = {}
 setmetatable( Runner, { ifList = {__Runner,} } )
-function Runner._new( parserSrc, stdinFile, overridePos )
+function Runner._new( tokenizerSrc, stdinFile, overridePos )
    local obj = {}
    Runner._setmeta( obj )
-   if obj.__init then obj:__init( parserSrc, stdinFile, overridePos ); end
+   if obj.__init then obj:__init( tokenizerSrc, stdinFile, overridePos ); end
    return obj
 end
-function Runner:__init(parserSrc, stdinFile, overridePos) 
-   self.parser, self.errMess = Parser.create( parserSrc, stdinFile, overridePos )
+function Runner:__init(tokenizerSrc, stdinFile, overridePos) 
+   self.tokenizer, self.errMess = Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
    
    do
-      local _exp = self.parser
+      local _exp = self.tokenizer
       if _exp ~= nil then
          _exp:start(  )
-         if not _lune._run(self, 2, string.format( "parser - %s", _exp:get_streamName()) ) then
+         if not _lune._run(self, 2, string.format( "tokenizer - %s", _exp:get_streamName()) ) then
             _exp:stop(  )
          end
          
@@ -560,7 +560,7 @@ end
 function Runner:run(  )
 
    do
-      local _exp = self.parser
+      local _exp = self.tokenizer
       if _exp ~= nil then
          _exp:run(  )
       end
@@ -570,32 +570,32 @@ end
 function Runner._setmeta( obj )
   setmetatable( obj, { __index = Runner  } )
 end
-function Runner:get_parser()
-   return self.parser
+function Runner:get_tokenizer()
+   return self.tokenizer
 end
 function Runner:get_errMess()
    return self.errMess
 end
 
 
-local function create( parserSrc, stdinFile, overridePos, async )
+local function create( tokenizerSrc, stdinFile, overridePos, async )
 
    if async then
-      local runner = Runner._new(parserSrc, stdinFile, overridePos)
-      return runner:get_parser(), runner:get_errMess()
+      local runner = Runner._new(tokenizerSrc, stdinFile, overridePos)
+      return runner:get_tokenizer(), runner:get_errMess()
    end
    
-   local parser, mess = Parser.create( parserSrc, stdinFile, overridePos )
-   if parser ~= nil then
+   local tokenizer, mess = Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
+   if tokenizer ~= nil then
       
-      parser:stop(  )
+      tokenizer:stop(  )
    end
    
-   return parser, mess
+   return tokenizer, mess
 end
 _moduleObj.create = create
 
-function Parser:createInfo( tokenKind, token, tokenColumn )
+function Tokenizer:createInfo( tokenKind, token, tokenColumn )
 
    if tokenKind == Types.TokenKind.Symb then
       if _lune._Set_has(self.keywordSet, token ) then
@@ -619,7 +619,7 @@ function Parser:createInfo( tokenKind, token, tokenColumn )
 end
 
 
-function Parser:analyzeNumber( token, beginIndex )
+function Tokenizer:analyzeNumber( token, beginIndex )
 
    local nonNumIndex = token:find( '[^%d]', beginIndex )
    if  nil == nonNumIndex then
@@ -686,7 +686,7 @@ function Parser:analyzeNumber( token, beginIndex )
 end
 
 
-function Parser:readLine(  )
+function Tokenizer:readLine(  )
 
    if self.lineNo >= #self.lineList then
       return nil
@@ -696,7 +696,7 @@ function Parser:readLine(  )
    return self.lineList[self.lineNo]
 end
 
-function Parser:addVal( list, kind, val, column )
+function Tokenizer:addVal( list, kind, val, column )
 
    if kind ~= Types.TokenKind.Symb then
       table.insert( list, self:createInfo( kind, val, column ) )
@@ -802,7 +802,7 @@ end
 
 
 
-function Parser:parse(  )
+function Tokenizer:parse(  )
 
    local rawLine = self:readLine(  )
    if  nil == rawLine then

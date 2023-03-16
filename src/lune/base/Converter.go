@@ -262,10 +262,10 @@ func Converter_closeStreams__txt2ModuleId_0_(_env *LnsEnv, txt string) *FrontInt
 
 
 // 104: decl @lune.@base.@Converter.AstCreater.createAst
-func (self *Converter_AstCreater) createAst(_env *LnsEnv, frontAccessor *FrontInterface_FrontAccessor,importModuleInfo *FrontInterface_ImportModuleInfo,parserSrc LnsAny,baseDir LnsAny,stdinFile LnsAny,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny) *AstInfo_ASTInfo {
+func (self *Converter_AstCreater) createAst(_env *LnsEnv, frontAccessor *FrontInterface_FrontAccessor,importModuleInfo *FrontInterface_ImportModuleInfo,tokenizerSrc LnsAny,baseDir LnsAny,stdinFile LnsAny,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny) *AstInfo_ASTInfo {
     var transUnit *TransUnit_TransUnitCtrl
     transUnit = NewTransUnit_TransUnitCtrl(_env, frontAccessor, self.moduleId, importModuleInfo, &NewConvLua_MacroEvalImp(_env, self.builtinFunc).Nodes_MacroEval, true, analyzeModule, analyzeMode, pos, self.option.TargetLuaVer, self.option.TransCtrlInfo, self.builtinFunc)
-    return transUnit.FP.CreateAST(_env, parserSrc, true, baseDir, stdinFile, false, self.mod, TransUnit_ReadyExportInfo(func(_env *LnsEnv, exportInfo *FrontInterface_ExportInfo) {
+    return transUnit.FP.CreateAST(_env, tokenizerSrc, true, baseDir, stdinFile, false, self.mod, TransUnit_ReadyExportInfo(func(_env *LnsEnv, exportInfo *FrontInterface_ExportInfo) {
         self.exportInfo = exportInfo
         {
             __exp := self.exportInfoReadyFlag
@@ -468,7 +468,7 @@ func NewConverter_AstCreater(_env *LnsEnv, arg1 *FrontInterface_FrontAccessor, a
     return obj
 }
 // 129: DeclConstr
-func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, frontAccessor *FrontInterface_FrontAccessor,importModuleInfo *FrontInterface_ImportModuleInfo,parserSrc LnsAny,mod string,baseDir LnsAny,moduleId *FrontInterface_ModuleId,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny,builtinFunc *Builtin_BuiltinFuncType,option *Option_Option) {
+func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, frontAccessor *FrontInterface_FrontAccessor,importModuleInfo *FrontInterface_ImportModuleInfo,tokenizerSrc LnsAny,mod string,baseDir LnsAny,moduleId *FrontInterface_ModuleId,analyzeModule LnsAny,analyzeMode LnsInt,pos LnsAny,builtinFunc *Builtin_BuiltinFuncType,option *Option_Option) {
     self.InitRunner_Runner(_env)
     self.option = option
     self.builtinFunc = builtinFunc
@@ -481,7 +481,7 @@ func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, frontAc
     self.converter = Converter_ConverterFunc(func(_env *LnsEnv) {
         __func__ := "@lune.@base.@Converter.AstCreater.__init.<anonymous>"
         var ast *AstInfo_ASTInfo
-        ast = self.FP.createAst(_env, frontAccessor, importModuleInfo, parserSrc, baseDir, option.FP.Get_stdinFile(_env), analyzeModule, analyzeMode, pos)
+        ast = self.FP.createAst(_env, frontAccessor, importModuleInfo, tokenizerSrc, baseDir, option.FP.Get_stdinFile(_env), analyzeModule, analyzeMode, pos)
         self.ast = ast
         self.moduleInfo = Converter_createModuleInfo_0_(_env, ast, self.mod, self.moduleId)
         Log_log(_env, Log_Level__Log, __func__, 153, Log_CreateMessage(func(_env *LnsEnv) string {
@@ -490,14 +490,14 @@ func (self *Converter_AstCreater) InitConverter_AstCreater(_env *LnsEnv, frontAc
         
     })
     var lnsPath string
-    switch _matchExp0 := parserSrc.(type) {
-    case *Types_ParserSrc__LnsCode:
+    switch _matchExp0 := tokenizerSrc.(type) {
+    case *Types_TokenizerSrc__LnsCode:
         path := _matchExp0.Val2
         lnsPath = path
-    case *Types_ParserSrc__LnsPath:
+    case *Types_TokenizerSrc__LnsPath:
         path := _matchExp0.Val2
         lnsPath = path
-    case *Types_ParserSrc__Parser:
+    case *Types_TokenizerSrc__Tokenizer:
         path := _matchExp0.Val1
         lnsPath = path
     }

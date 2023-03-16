@@ -565,31 +565,31 @@ function StdinFile:get_txt()
 end
 
 
-local ParserSrc = {}
-ParserSrc._name2Val = {}
-_moduleObj.ParserSrc = ParserSrc
-function ParserSrc:_getTxt( val )
+local TokenizerSrc = {}
+TokenizerSrc._name2Val = {}
+_moduleObj.TokenizerSrc = TokenizerSrc
+function TokenizerSrc:_getTxt( val )
    local name = val[ 1 ]
    if name then
-      return string.format( "ParserSrc.%s", name )
+      return string.format( "TokenizerSrc.%s", name )
    end
    return string.format( "illegal val -- %s", val )
 end
 
-function ParserSrc._from( val )
-   return _lune._AlgeFrom( ParserSrc, val )
+function TokenizerSrc._from( val )
+   return _lune._AlgeFrom( TokenizerSrc, val )
 end
 
-ParserSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
-ParserSrc._name2Val["LnsCode"] = ParserSrc.LnsCode
-ParserSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=true, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
-ParserSrc._name2Val["LnsPath"] = ParserSrc.LnsPath
-ParserSrc.Parser = { "Parser", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
-ParserSrc._name2Val["Parser"] = ParserSrc.Parser
+TokenizerSrc.LnsCode = { "LnsCode", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
+TokenizerSrc._name2Val["LnsCode"] = TokenizerSrc.LnsCode
+TokenizerSrc.LnsPath = { "LnsPath", {{ func=_lune._toStr, nilable=true, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
+TokenizerSrc._name2Val["LnsPath"] = TokenizerSrc.LnsPath
+TokenizerSrc.Tokenizer = { "Tokenizer", {{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toBool, nilable=false, child={} },{ func=_lune._toStr, nilable=false, child={} },{ func=_lune._toInt, nilable=true, child={} }}}
+TokenizerSrc._name2Val["Tokenizer"] = TokenizerSrc.Tokenizer
 
 
-local defaultParserPipeSize = 100
-_moduleObj.defaultParserPipeSize = defaultParserPipeSize
+local defaultTokenizerPipeSize = 100
+_moduleObj.defaultTokenizerPipeSize = defaultTokenizerPipeSize
 
 
 return _moduleObj

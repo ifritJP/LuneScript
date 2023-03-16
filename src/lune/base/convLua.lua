@@ -246,7 +246,7 @@ local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
@@ -1153,7 +1153,7 @@ function ConvFilter:outputMeta( node )
                workFilter.macroDepth = workFilter.macroDepth - 1
                
                memStream:close(  )
-               self:writeln( string.format( 'info.stmtBlock = %s', Parser.quoteStr( memStream:get_txt() )) )
+               self:writeln( string.format( 'info.stmtBlock = %s', Tokenizer.quoteStr( memStream:get_txt() )) )
             end
          end
          
@@ -1166,11 +1166,11 @@ function ConvFilter:outputMeta( node )
             end
             
             if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo then
-               self:writeRaw( string.format( "{%d,%s},", Parser.TokenKind.Dlmt, Parser.quoteStr( "\n" )) )
+               self:writeRaw( string.format( "{%d,%s},", Tokenizer.TokenKind.Dlmt, Tokenizer.quoteStr( "\n" )) )
             end
             
             prevLineNo = token.pos.lineNo
-            self:writeRaw( string.format( "{%d,%s}", token.kind, Parser.quoteStr( token.txt )) )
+            self:writeRaw( string.format( "{%d,%s}", token.kind, Tokenizer.quoteStr( token.txt )) )
          end
          
          self:writeln( '}' )

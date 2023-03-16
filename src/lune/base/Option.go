@@ -241,7 +241,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
             if option.Mode != Option_ModeKind__Shebang{
                 if _switch2 := (arg); _switch2 == "-i" {
                     useStdInFlag = true
-                } else if _switch2 == "--parserPipeSize" {
+                } else if _switch2 == "--tokenizerPipeSize" {
                     AsyncParser_setDefaultPipeSize(_env, Option_getNextOpInt(_env))
                 } else if _switch2 == "-prof" {
                     option.ValidProf = true
@@ -636,7 +636,7 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
 
 // 55: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 13871
+    return 13877
 }
 
 

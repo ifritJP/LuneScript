@@ -90,7 +90,7 @@ func Types_TokenKind_getTxt(arg1 LnsInt) string {
 }
 var Types_nonePos Types_Position
 var Types_noneToken *Types_Token
-var Types_defaultParserPipeSize LnsInt
+var Types_defaultTokenizerPipeSize LnsInt
 // decl alge -- CheckingUptodateMode
 type Types_CheckingUptodateMode = LnsAny
 type Types_CheckingUptodateMode__Force1 struct{
@@ -117,33 +117,33 @@ var Types_CheckingUptodateMode__Touch_Obj = &Types_CheckingUptodateMode__Touch{}
 func (self *Types_CheckingUptodateMode__Touch) GetTxt() string {
 return "CheckingUptodateMode.Touch"
 }
-// decl alge -- ParserSrc
-type Types_ParserSrc = LnsAny
-type Types_ParserSrc__LnsCode struct{
+// decl alge -- TokenizerSrc
+type Types_TokenizerSrc = LnsAny
+type Types_TokenizerSrc__LnsCode struct{
 Val1 string
 Val2 string
 Val3 LnsAny
 }
-func (self *Types_ParserSrc__LnsCode) GetTxt() string {
-return "ParserSrc.LnsCode"
+func (self *Types_TokenizerSrc__LnsCode) GetTxt() string {
+return "TokenizerSrc.LnsCode"
 }
-type Types_ParserSrc__LnsPath struct{
+type Types_TokenizerSrc__LnsPath struct{
 Val1 LnsAny
 Val2 string
 Val3 string
 Val4 LnsAny
 }
-func (self *Types_ParserSrc__LnsPath) GetTxt() string {
-return "ParserSrc.LnsPath"
+func (self *Types_TokenizerSrc__LnsPath) GetTxt() string {
+return "TokenizerSrc.LnsPath"
 }
-type Types_ParserSrc__Parser struct{
+type Types_TokenizerSrc__Tokenizer struct{
 Val1 string
 Val2 bool
 Val3 string
 Val4 LnsAny
 }
-func (self *Types_ParserSrc__Parser) GetTxt() string {
-return "ParserSrc.Parser"
+func (self *Types_TokenizerSrc__Tokenizer) GetTxt() string {
+return "TokenizerSrc.Tokenizer"
 }
 // 147: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
@@ -669,7 +669,7 @@ func Lns_Types_init(_env *LnsEnv) {
     Types_Token____init_2_(_env)
     Types_nonePos = NewTypes_Position(_env, 0, -1, "eof", nil)
     Types_noneToken = NewTypes_Token(_env, Types_TokenKind__Eof, "", Types_nonePos, false, NewLnsList2_[*Types_Token]([]*Types_Token{}))
-    Types_defaultParserPipeSize = 100
+    Types_defaultTokenizerPipeSize = 100
 }
 func init() {
     init_Types = false

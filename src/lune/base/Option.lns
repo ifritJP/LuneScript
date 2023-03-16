@@ -26,8 +26,8 @@ _lune_control default_async_all;
 _lune_control default_strict_generics;
 
 import lune.base.Types;
-import lune.base.Parser;
-import lune.base.AsyncParser;
+import lune.base.Parser as Tokenizer;
+import lune.base.AsyncParser as AsyncTokenizer;
 import lune.base.Json;
 import lune.base.Util;
 import lune.base.LuaMod;
@@ -109,7 +109,7 @@ pub class Option {
    /** 解析対象のモジール名。 comp モードの時に使用。 */
    pub let mut analyzeModule:str!;
    /** 解析位置。comp モードの時に使用。 */
-   pub let mut analyzePos: Parser.Position!;
+   pub let mut analyzePos: Tokenizer.Position!;
    /** 出力ディレクトリ。 save, SAVE モードの時に使用*/
    pub let mut outputDir:str!;
    /** 処理対象のスクリプトファイルパス */
@@ -410,8 +410,8 @@ usage:
                case "-i" {
                   useStdInFlag = true;
                }
-               case "--parserPipeSize" {
-                  AsyncParser.setDefaultPipeSize( getNextOpInt());
+               case "--tokenizerPipeSize" {
+                  AsyncTokenizer.setDefaultPipeSize( getNextOpInt());
                }
                case "-prof" {
                   option.validProf = true;
@@ -698,7 +698,7 @@ usage:
                   }
                   elseif not column {
                      column = (unwrap tonumber( arg ## ) default 0)@@int;
-                     option.analyzePos = new Parser.Position(
+                     option.analyzePos = new Tokenizer.Position(
                         unwrap lineNo, unwrap column,
                         Util.scriptPath2Module( option.scriptPath ) ## );
                   }

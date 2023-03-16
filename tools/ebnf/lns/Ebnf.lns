@@ -1,0 +1,738 @@
+// -*- coding: utf-8 -*-
+
+import go/github:com.ifritJP.LuneScript.src.lune.base.Parser as LnsParser;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+
+
+pub class EbnfParser {
+   let parser:LnsParser.PushbackParser;
+   let mut inEbnf:bool {pub,pub};
+
+   fn __init( parser:LnsParser.Parser ) {
+      self.parser = new LnsParser.DefaultPushbackParser( parser );
+      self.inEbnf = false;
+   }
+
+   pub static fn create() : EbnfParser {
+      let path = "../../../ifritJP.github.io/hugo/content/LuneScript/ebnf.ja.org";
+      let mut parser = LnsParser.StreamParser.create(
+         LnsTypes.ParserSrc.LnsPath( nil, path, "ebnf", nil ), false, nil, nil );
+      return new EbnfParser( parser );
+   }
+
+   pri fn checkRawNext( txt:str ) mut : &LnsTypes.Token {
+      let token = self.parser.getTokenNoErr( false );
+      if token.txt == txt {
+         return token;
+      }
+      print(
+         "%d:%d: Illegal token. expects '%s' but '%s'"
+         ( token.pos.lineNo, token.pos.column, txt, token.txt) );
+      os.exit( 1 );
+   }
+   
+   pub fn getToken() mut : &LnsTypes.Token {
+      let token = self.parser.getTokenNoErr(false);
+      switch token.txt {
+         case "#" {
+            let nextToken = self.parser.getTokenNoErr(false);
+            if nextToken.txt == "+" and nextToken.consecutive {
+               return new LnsTypes.Token( .Dlmt, "#+", token.pos, false, nil );
+            }
+            self.parser.pushback();
+         }
+         case ":" {
+            let nextToken = self.parser.getTokenNoErr( false );
+            if nextToken.txt == ":" {
+               self.checkRawNext( "=" );
+               return new LnsTypes.Token( .Dlmt, "::=", token.pos, false, nil );
+            } else {
+               self.parser.pushback();
+            }
+         }
+         case "<" {
+            if self.inEbnf {
+               let nextToken = self.parser.getTokenNoErr( false );
+               self.checkRawNext( ">" );
+               return new LnsTypes.Token(
+                  .Type, "<%s>" (nextToken.txt), token.pos, false, nil );
+            }
+         }
+      }
+      return token;
+   }
+
+   pub fn checkNext( txt:str ) mut : &LnsTypes.Token {
+      let token = self.getToken();
+      if token.txt == txt {
+         return token;
+      }
+      print(
+         "%d:%d: Illegal token. expects '%s' but '%s'"
+         ( token.pos.lineNo, token.pos.column, txt, token.txt) );
+      os.exit( 1 );
+   }
+
+   pub fn pushBack( token:&LnsTypes.Token ) mut {
+      self.parser.pushbackToken( token );
+   }
+
+   pub fn skipLine( curToken:&LnsTypes.Token ) mut {
+      let mut token = self.getToken();
+      while token.pos.lineNo == curToken.pos.lineNo {
+         token = self.getToken();
+      }
+      self.pushBack( token );
+   }
+}
+
+
+pub class CodeParser {
+   let parser:LnsParser.PushbackParser;
+   let tokenListStack:List<List<&LnsTypes.Token>>;
+   let mut tokenList:List<&LnsTypes.Token>;
+   let mut commonList:__List<&LnsTypes.Token>;
+
+   pub fn __init(parser:LnsParser.PushbackParser) {
+      self.parser = parser;
+      self.tokenList = [];
+      self.tokenListStack = [];
+      self.commonList = [];
+   }
+
+   pub fn pushTokenList() mut {
+      print( __func__, #self.tokenListStack );
+      self.tokenListStack.insert( self.tokenList );
+      self.tokenList = [];
+   }
+   pub fn popTokenList() mut {
+      print( __func__, #self.tokenListStack, #self.tokenList );
+      if #self.tokenListStack == 0 {
+         error( "self.tokenListStack is zero" );
+      }
+      for _ = 1, #self.tokenList {
+         self.parser.pushback();
+      }
+      self.tokenList = self.tokenListStack[ #self.tokenListStack ];
+      self.tokenListStack.remove(##);
+   }
+   
+   pub fn getToken() mut : &LnsTypes.Token {
+
+      fn process( token:&LnsTypes.Token ) : &LnsTypes.Token {
+         let result;
+         if #self.commonList == 0 {
+            result = token;
+         } else {
+            let newToken = new LnsTypes.Token(
+               token.kind, token.txt, token.pos, token.consecutive, self.commonList );
+            self.commonList = [];
+            result = newToken;
+         }
+         self.tokenList.insert( result );
+         return result;
+      }
+      
+      while true {
+         let token = self.parser.getTokenNoErr( false );
+         switch token.kind {
+            case .Eof {
+               return process(token);
+            }
+            case .Cmnt {
+               self.commonList.insert( token );
+            }
+            default {
+               return process(token);
+            }
+         } 
+      }
+   }
+
+   pub fn pushback() mut {
+      if #self.tokenList == 0 {
+         error( "self.tokenList is zero" );
+      }
+      self.parser.pushbackToken( self.tokenList[ #self.tokenList ] );
+      self.tokenList.remove( ## );
+   }
+}
+
+pub proto class RuleList;
+pub proto interface Core;
+proto class ElementCore extend (Core);
+
+pub class EbnfCtrl {
+   // element 名 → RuleList マップ
+   let element2ruleList:Map<str,&RuleList>;
+   let allElementSet:Set<str>;
+   let elementName2ElementCore:Map<str,&ElementCore>;
+
+   pub fn __init() {
+      self.element2ruleList = {};
+      self.allElementSet = (@);
+      self.elementName2ElementCore = {};
+   }
+
+   pub fn getRuleList( name:str ) : &RuleList! {
+      return self.element2ruleList[ name ];
+   }
+}
+
+
+pub proto class CodeGenerator;
+
+pub interface CodeCore {
+   pub fn outputCode( stream:CodeGenerator );
+}
+
+pub class CodeGenerator {
+   let stream:oStream;
+   let tokenList:List<&LnsTypes.Token>;
+   let mut prevToken:&LnsTypes.Token;
+
+   pub fn __init( stream:oStream ) {
+      self.stream = stream;
+      self.tokenList = [];
+      self.prevToken = LnsTypes.noneToken;
+   }
+   
+   
+   pub fn output( codeCore:CodeCore ) mut {
+      codeCore.outputCode( self );
+   }
+   pub fn outputElement( elementName:str!, codeCoreList:&List<&CodeCore> ) mut {
+      foreach core in codeCoreList {
+         core.outputCode( self );
+      }
+   }
+   pub fn outputToken( token:&LnsTypes.Token ) mut {
+      if self.prevToken.pos.lineNo ~= token.pos.lineNo {
+         self.stream.write( "\n" );
+      } else {
+         if not token.consecutive {
+            self.stream.write( " " );
+         }
+      }
+      self.stream.write( token.txt );
+      self.tokenList.insert( token );
+      self.prevToken = token;
+   }
+}
+
+
+pub alge ParseCodeRet {
+   /** EOF */
+   Eof,
+   /** 不適合 */
+   Unmatch,
+   /** 省略 */
+   Abbr,
+   /** 検出 */
+   Detect(&CodeCore),
+}
+
+/**
+ebnf の element を構成する一つの要素
+
+以下の "if", <exp>, <block> の部分。
+
+<hoge> ::= "if" <exp> <block>
+*/
+pub interface Core {
+   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str>;
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str>):ParseCodeRet;
+}
+
+pub class CodeCoreBuiltin extend (CodeCore) {
+   let token:&LnsTypes.Token;
+   pub fn outputCode( stream:CodeGenerator ) {
+      stream.outputToken( self.token );
+   }
+}
+
+pub class CodeCoreToken extend (CodeCore) {
+   let core:&Core;
+   let token:&LnsTypes.Token;
+   pub fn outputCode( stream:CodeGenerator ) {
+      stream.outputToken( self.token );
+   }
+}
+pub class CodeCoreList extend (CodeCore) {
+   let elementName:str!;
+   let codeCoreList:&List<&CodeCore>;
+   pub fn outputCode( stream:CodeGenerator ) {
+      stream.outputElement( self.elementName, self.codeCoreList );
+   }
+}
+pub class CodeSyntax {
+   let ruleList:&RuleList;
+   let codeCoreList:&List<&CodeCore>;
+}
+
+
+
+/**
+ebnf の文
+
+以下の右辺の部分。
+
+<hoge> ::= "if" <exp> <block> 
+*/
+class Rule {
+   let elementName:str!;
+   let coreList:&List<&Core>;
+
+   pub fn __init( elementName:str!, coreList:&List<&Core> ) {
+      self.elementName = elementName;
+      self.coreList = coreList;
+   }
+
+   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
+      let mut targetIndex = index;
+      let mut curIndex = 1;
+      for coreIndex = 1, #self.coreList {
+         let core = self.coreList[ coreIndex ];
+         while curIndex <= targetIndex {
+            let mut coreSet = usedCoreSet.clone();
+            let list = core.getKeyword( ctrl, curIndex, coreSet );
+            if #list == 0 {
+               break;
+            }
+            if curIndex == targetIndex {
+               return list;
+            }
+            curIndex = curIndex + 1;
+         }
+         targetIndex = targetIndex - curIndex + 1;
+         curIndex = 1;
+      }
+      return [];
+   }
+
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str> ) : ParseCodeRet
+   {
+      parser.pushTokenList();
+      let codeCoreList:List<&CodeCore> = [];
+      foreach core, index in self.coreList {
+         print( __func__, index, #self.coreList ); 
+         _match core.parseCode(ctrl, parser, usedElementSet ) {
+            case .Eof {
+               return .Eof;
+            }
+            case .Unmatch {
+               parser.popTokenList();
+               return .Unmatch;
+            }
+            case .Abbr {
+            }
+            case .Detect( codeCore ) {
+               codeCoreList.insert( codeCore );
+            }
+         }
+      }
+      if #codeCoreList == 0 {
+         //return .Unmatch;
+         return .Abbr;
+      }
+      return .Detect( new CodeCoreList( self.elementName, codeCoreList ) );
+   }
+}
+
+/**
+ebnf の文。 or で括られた Rule をまとめたもの。
+
+
+以下の <subfile_owner> と <subfile_sub> の部分。
+
+  <subfile> ::= <subfile_owner> | <subfile_sub>
+*/
+pub class RuleList {
+   let elementName:str;
+   let list:&List<&Rule>;
+   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
+      let list:List<str> = [];
+      foreach rule in self.list {
+         foreach keyword in rule.getKeyword( ctrl, index, usedCoreSet ) {
+            list.insert( keyword );
+         }
+      }
+      return list;
+   }
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str> ) : ParseCodeRet
+   {
+      // if usedElementSet.has( self.elementName ) {
+      //    print( __func__, "already use", self.elementName );
+      //    return .Unmatch;
+      // }
+      //usedElementSet.add( self.elementName );
+
+
+      let mut result = ParseCodeRet.Unmatch;
+      
+      foreach rule, index in self.list {
+         print( "check -- ", index, #self.list, self.elementName );
+         parser.pushTokenList();
+         _match rule.parseCode(ctrl, parser, usedElementSet ) {
+            case .Eof {
+               return .Eof;
+            }
+            case .Unmatch {
+            }
+            case .Abbr {
+               result = .Abbr;
+               // error( "illegal abbr -- %s" ( self.elementName ) );
+            }
+            case .Detect( codeCore ) {
+               print( "detect -- ", self.elementName );
+               return .Detect( codeCore );
+            }
+         }
+         parser.popTokenList();
+      }
+      print( result.$_txt, " -- ", self.elementName );
+      return result;
+   }
+}
+
+/**
+Token を Core として管理するクラス
+
+以下の "if" の部分。
+
+<hoge> ::= "if" <exp> <block>
+ */
+class TokenCore extend (Core) {
+   let token:&LnsTypes.Token {pub};
+   let rawTxt:str;
+   pub fn __init( token:&LnsTypes.Token ) {
+      self.token = token;
+      self.rawTxt = token.getExcludedDelimitTxt();
+   }
+   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
+      if index ~= 1 {
+         return [];
+      }
+      return [ self.rawTxt ];
+   }
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str>):ParseCodeRet
+   {
+      let token = parser.getToken();
+      print( __func__, self.token.txt, token.txt );
+      if token.kind == .Eof {
+         return .Eof;
+      }
+      if token.txt == self.rawTxt {
+         print( __func__, "detect", token.txt,
+                "%d:%d" (token.pos.lineNo, token.pos.column ) );
+         return .Detect( new CodeCoreToken( self, token ) );
+      }
+      return .Unmatch;
+   }
+}
+
+/**
+element を Core にするクラス。
+
+以下の <exp>, <block> の部分。
+
+<hoge> ::= "if" <exp> <block>
+*/
+class ElementCore extend (Core) {
+   let elementName:str;
+   pri fn __init( elementName:str ) {
+      self.elementName = elementName;
+   }
+   pub static fn create(
+      elementName2ElementCore:Map<str,&ElementCore>, elementName:str ) : &ElementCore
+   {
+      let! core = elementName2ElementCore[ elementName ] {
+         core = new ElementCore( elementName );
+         elementName2ElementCore[ elementName ] = core;
+      };
+      return core;
+   }
+   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
+      if not usedCoreSet.has( self ) {
+         usedCoreSet.add( self );
+         if! let ruleList = ctrl.getRuleList( self.elementName ) {
+            return ruleList.getKeyword( ctrl, index, usedCoreSet );
+         }
+      } else {
+         print( "already:", self.elementName );
+      }
+      return [];
+   }
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str>):ParseCodeRet
+   {
+      if! let ruleList = ctrl.getRuleList( self.elementName ) {
+         return ruleList.parseCode( ctrl, parser, usedElementSet );
+      }
+      let token = parser.getToken();
+      switch self.elementName {
+         case "<sym>" {
+            switch token.kind {
+               case .Symb, .Type {
+                  print( __func__, "detect", self.elementName );
+                  return .Detect( new CodeCoreBuiltin( token ) );
+               }
+            }
+         }
+         case "<literal_str>" {
+            if token.kind == .Str {
+               print( __func__, "detect", self.elementName );
+               return .Detect( new CodeCoreBuiltin( token ) );
+            }
+         }
+         case "<literal_int>" {
+            if token.kind == .Int {
+               print( __func__, "detect", self.elementName );
+               return .Detect( new CodeCoreBuiltin( token ) );
+            }
+         }
+         case "<literal_char>" {
+            if token.kind == .Char {
+               print( __func__, "detect", self.elementName );
+               return .Detect( new CodeCoreBuiltin( token ) );
+            }
+         }
+         default {
+            print( "unknown -- ", self.elementName );
+         }
+      }
+      return .Unmatch;
+   }
+}
+enum RuleKind {
+   // 0 or 1
+   Option,
+   // 0 以上
+   Repeat,
+}
+class RuleCore extend (Core) {
+   let kind:RuleKind;
+   let rule:&Rule;
+   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
+      return [];
+   }
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str> ) : ParseCodeRet
+   {
+      let list:List<&CodeCore> = [];
+      while true {
+         let result = self.rule.parseCode( ctrl, parser, usedElementSet );
+         _match result {
+            case .Eof {
+               if #list == 0 {
+                  return .Abbr;
+               } else {
+                  return .Detect( new CodeCoreList( nil, list ) );
+               }
+            }
+            case .Unmatch {
+               if #list == 0 {
+                  return .Abbr;
+               } else {
+                  return .Detect( new CodeCoreList( nil, list ) );
+               }
+            }
+            case .Abbr {
+               if #list == 0 {
+                  return .Abbr;
+               } else {
+                  return .Detect( new CodeCoreList( nil, list ) );
+               }
+            }
+            case .Detect( codeCore ) {
+               print( __func__, self.kind.$_txt  );
+               if self.kind == .Option {
+                  return result;
+               }
+               list.insert( codeCore );
+            }
+         }
+      }
+   }
+}
+
+fn isElement( token:&LnsTypes.Token ) : bool {
+   return token.kind == .Type and token.txt[1] == ?<;
+}
+
+
+class DeclParser {
+   let parser:EbnfParser;
+   let mut prevToken:LnsParser.Token;
+   let allElementSet:Set<str>;
+
+   pub fn __init( parser:EbnfParser, prevToken:LnsParser.Token, allElementSet:Set<str> ) {
+      self.parser = parser;
+      self.prevToken = prevToken;
+      self.allElementSet = allElementSet;
+   }
+   
+   pub fn getToken() mut : &LnsTypes.Token! {
+      let nextToken = self.parser.getToken();
+      if nextToken.kind == .Eof {
+         return nil;
+      }
+      if nextToken.pos.lineNo ~= self.prevToken.pos.lineNo {
+         if nextToken.txt == "#+" {
+            self.parser.pushBack( nextToken );
+            return nil;
+         }
+         let checkToken = self.parser.getToken();
+         self.parser.pushBack( checkToken );
+         if checkToken.txt == "::=" {
+            self.parser.pushBack( nextToken );
+            return nil;
+         }
+      }
+      if isElement( nextToken ) {
+         self.allElementSet.add( nextToken.txt );
+      }
+      self.prevToken = nextToken;
+      return nextToken;
+   }
+
+   pub fn err( mess:str ) {
+      print( "%d:%d:" (self.prevToken.pos.lineNo, self.prevToken.pos.column), mess );
+      os.exit( 1 );
+   }
+}
+
+fn EbnfCtrl.processRule( elementName:str!, parser:DeclParser, termTxt:str! ) mut : &Rule!, str
+{
+   let mut coreList:List<&Core> = [];
+   let mut endsTerm = false;
+   while true {
+      let! token = parser.getToken() {
+         break;
+      };
+      switch token.txt {
+         case "[" {
+            let optRule = self.processRule( nil, parser, "]" )!;
+            coreList.insert( new RuleCore( .Option, optRule ) );
+         }
+         case "{" {
+            let optRule = self.processRule( nil, parser, "}" )!;
+            coreList.insert( new RuleCore( .Repeat, optRule ) );
+         }
+         case "|" {
+            break;
+         }
+         case termTxt {
+            endsTerm = true;
+            break;
+         }
+         default {
+            if isElement( token ) {
+               coreList.insert(
+                  ElementCore.create( self.elementName2ElementCore,token.txt ) );
+            } else {
+               coreList.insert( new TokenCore( token ) );
+            }
+         }
+      }
+   }
+   if #coreList == 0 {
+      return nil, "coreList is 0";
+   }
+   if termTxt and not endsTerm {
+      return nil, "not end term -- %s" (termTxt) ;
+   }
+   return new Rule( elementName, coreList ), "";
+}
+
+
+local fn EbnfCtrl.processDecl(
+   parser:EbnfParser, symbolToken:&LnsTypes.Token ) mut : &RuleList
+{
+   let elementName = symbolToken.txt;
+   print( __func__, elementName );
+   parser.checkNext( "::=" );
+
+   let mut list:List<&Rule> = [];
+   while true {
+      let mut declParser = new DeclParser( parser, symbolToken, self.allElementSet );
+      let rule, mess = self.processRule( elementName, declParser, nil );
+      when! rule {
+         list.insert( rule );
+      } else {
+         if #list == 0 {
+            declParser.err( mess );
+         }
+         break;
+      }
+   }
+   let ruleList = new RuleList( elementName, list );
+   self.element2ruleList[ elementName ] = ruleList;
+   return ruleList;
+}
+
+pub fn EbnfCtrl.dump() {
+   print( "=================" );
+   forsort element in self.allElementSet {
+      print( self.element2ruleList[ element ] ~= nil, element );
+   }
+}
+
+pub fn EbnfCtrl.parse( elementName:str, parser:CodeParser ) {
+   let! ruleList = self.element2ruleList[ elementName ] {
+      print( "error parse" );
+      return;
+   };
+   _match ruleList.parseCode( self, parser, (@) ) {
+      case .Eof {
+         print( "eof" );
+      }
+      case .Unmatch {
+         print( "unmatch" );
+      }
+      case .Abbr {
+         print( "illegal" );
+      }
+      case .Detect( codeCore ) {
+         print( "outputCode" );
+         codeCore.outputCode( new CodeGenerator( io.stdout ) );
+         io.stdout.flush();
+      }
+   }
+}
+
+pub fn analyze_ebnf( parser:EbnfParser ) : &EbnfCtrl {
+
+   let mut ebnfCtrl = new EbnfCtrl();
+   
+   while true {
+      let token = parser.getToken();
+      if token.kind == .Eof {
+         break;
+      }
+      if token.txt == "#" {
+         parser.skipLine( token );
+      } elseif token.txt == "#+" {
+         let nextToken = parser.getToken();
+         switch nextToken.txt.upper() {
+            case "BEGIN_SRC" {
+               parser.set_inEbnf( true );
+            }
+            case "END_SRC" {
+               parser.set_inEbnf( false );
+            }
+         }
+         parser.skipLine( token );
+      } elseif parser.$inEbnf {
+         if isElement( token ) {
+            ebnfCtrl.processDecl( parser, token );
+         }
+      }
+   }
+
+   return ebnfCtrl;
+}

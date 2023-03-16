@@ -191,7 +191,7 @@ if not _lune8 then
    _lune8 = _lune
 end
 local Types = _lune.loadModule( 'lune.base.Types' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
@@ -1886,7 +1886,7 @@ function Builtin:registBuiltInScope(  )
       
    end
    
-   local pos = Parser.Position._new(0, 0, "@builtin@")
+   local pos = Tokenizer.Position._new(0, 0, "@builtin@")
    
    for __index, builtinClassInfo in ipairs( builtInInfo ) do
       for className, name2FieldInfo in pairs( builtinClassInfo ) do

@@ -34,7 +34,7 @@ subfile use lune.base.TransUnitCtrl;
 
 import lune.base.Types;
 import lune.base.Meta;
-import lune.base.Parser;
+import lune.base.Parser as Tokenizer;
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.Nodes;
@@ -103,12 +103,12 @@ enum DefaultAsyncMode {
 
 class AccessSymPos {
    pri let symbol:&Ast.SymbolInfo {pub};
-   pri let pos:&Parser.Position {pub};
+   pri let pos:&Tokenizer.Position {pub};
 }
 
 class RefAccessSymPos {
    pri let symbol:&Ast.SymbolInfo {pub};
-   pri let pos:&Parser.Position! {pub};
+   pri let pos:&Tokenizer.Position! {pub};
 }
 
 fn clearThePosForModToRef(
@@ -242,7 +242,7 @@ if のブロックを解析終了時に symbolSet を oldSymbolSet にセット�
    /**
 値をセットしたシンボルを登録する。   
    */
-   pub fn regist( symbolInfo:&Ast.SymbolInfo, pos:&Parser.Position ) mut : bool {
+   pub fn regist( symbolInfo:&Ast.SymbolInfo, pos:&Tokenizer.Position ) mut : bool {
       self.symbolSet.add( symbolInfo.getOrg() );
       self.initSymSet.add( symbolInfo.getOrg() );
       symbolInfo.set_hasValueFlag( true );
@@ -479,7 +479,7 @@ analyzeExpSymbol() 実行時点では、
 参照として確定している場合は、このクラスは利用せずに直接情報を反映する。
 */
 class AccessSymbolSet {
-   let mut accessSym2Pos:Map<&Ast.SymbolInfo,&Parser.Position> {pub&};
+   let mut accessSym2Pos:Map<&Ast.SymbolInfo,&Tokenizer.Position> {pub&};
    pub fn __init() {
       self.accessSym2Pos = {};
    }
@@ -525,7 +525,7 @@ class AccessSymbolSetQueue {
    pub fn add( symbol:&Ast.SymbolInfo ) mut {
       self.queue[ #self.queue ].add( symbol );
    }
-   pub fn getMap() : &Map<&Ast.SymbolInfo,&Parser.Position> {
+   pub fn getMap() : &Map<&Ast.SymbolInfo,&Tokenizer.Position> {
       return self.queue[ #self.queue ].$accessSym2Pos;
    }
 
@@ -542,9 +542,9 @@ final class FuncBlockInfo extend (__AsyncItem) {
    let funcType:&Ast.TypeInfo{pub};
    let typeDataAccessor:Ast.TypeDataAccessor{pub};
    let mut funcScope:Ast.Scope {pub,local};
-   let tokenList:&List<&Parser.Token> {pub};
-   let declPos:&Parser.Position {pub};
-   let orgPos:&Parser.Position! {pub};
+   let tokenList:&List<&Tokenizer.Token> {pub};
+   let declPos:&Tokenizer.Position {pub};
+   let orgPos:&Tokenizer.Position! {pub};
 }
 
 interface FuncBlockCtlIF {
@@ -598,12 +598,12 @@ enum AnalyzePhase {
    Main,
 }
 
-pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackParser) {
+pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Tokenizer.PushbackTokenizer) {
 
    /** 解析モード */
    local let analyzeMode: AnalyzeMode;
    /** 解析対象位置 */
-   pri let analyzePos: &Parser.Position;
+   pri let analyzePos: &Tokenizer.Position;
    /** 解析対象モジュール */
    pri let analyzeModule: str;
    /**
@@ -655,9 +655,9 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackPa
    /** */
    pri let mut tentativeSymbol:TentativeSymbol;
    /** パーサー */
-   pro let mut parser: Parser.DefaultPushbackParser;
-   pro fn setParser( parser:Parser.DefaultPushbackParser ) mut {
-      self.parser = parser;
+   pro let mut tokenizer: Tokenizer.DefaultPushbackTokenizer;
+   pro fn setTokenizer( tokenizer:Tokenizer.DefaultPushbackTokenizer ) mut {
+      self.tokenizer = tokenizer;
    }
    pro let mut scopeAccess:Ast.ScopeAccess;
 
@@ -667,7 +667,7 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackPa
    local let mut inTestBlock:bool;
 
    /** Meta 解析後に、各関数ブロックを解析する際の*/  
-   pro let mut funcBlockInfoLinkNo:&Parser.Position!;
+   pro let mut funcBlockInfoLinkNo:&Tokenizer.Position!;
 
    /** モジュールの最上位スコープ */
    pro let mut moduleScope: &Ast.Scope;
@@ -683,7 +683,7 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Parser.PushbackPa
    local let closureFunList:List<ClosureFun>;
 
    /** コメントリスト */
-   local let commentCtrl: Parser.CommentCtrl;
+   local let commentCtrl: Tokenizer.CommentCtrl;
 
 
    /** クラスの型情報 -> そのクラスを宣言しているノード */
@@ -777,7 +777,7 @@ alias で置き換えている元の Type → alias の型
       }
 
       // /** コメントリスト */
-      // local let commentCtrl: Parser.CommentCtrl;
+      // local let commentCtrl: Tokenizer.CommentCtrl;
 
       self.macroCtrl.mergeFrom( src.macroCtrl );
 
@@ -840,7 +840,7 @@ alias で置き換えている元の Type → alias の型
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                   analyzeModule:str!, mode:AnalyzeMode!,
-                  pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
+                  pos:&Tokenizer.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType) 
    {
@@ -896,7 +896,7 @@ alias で置き換えている元の Type → alias の型
          self.validMutControl, self.processInfo );
       self.moduleName = "";
       self.moduleType = Ast.headTypeInfo;
-      self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
+      self.tokenizer = new Tokenizer.DefaultPushbackTokenizer( new Tokenizer.DummyTokenizer() );
       // self.subfileList = [];
       self.topScope = self.$scope;
       self.moduleScope = self.$scope;
@@ -905,7 +905,7 @@ alias で置き換えている元の Type → alias の型
          nil, self.globalScope, self.moduleScope, false, nil );
 
       self.typeInfo2ClassNode = {};
-      self.commentCtrl = new Parser.CommentCtrl();
+      self.commentCtrl = new Tokenizer.CommentCtrl();
       self.warnMessList = [];
       self.analyzeMode = unwrap mode default AnalyzeMode.Compile;
       self.analyzePos = unwrap pos default self.createPosition( 0, 0 );
@@ -914,8 +914,8 @@ alias で置き換えている元の Type → alias の型
       // self.importCtrl = nil;
    }
 
-   pub override fn getLatestPos() __async : &Parser.Position {
-      return self.parser.getLastPos();
+   pub override fn getLatestPos() __async : &Tokenizer.Position {
+      return self.tokenizer.getLastPos();
    }
 
    pri fn pushAnalyzingState( state:AnalyzingState ) mut {
@@ -936,12 +936,12 @@ alias で置き換えている元の Type → alias の型
       return false;
    }
 
-   pri fn addWarnMess( pos: &Parser.Position, mess: str ) __async mut {
+   pri fn addWarnMess( pos: &Tokenizer.Position, mess: str ) __async mut {
       self.warnMessList.insert( new TransUnitIF.ErrMess(
          "%s: warning: %s" ( pos.getDisplayTxt(), mess ), pos ) );
    }
 
-   pri fn addWarnErrMess( pos:&Parser.Position, err:bool, mess: str ) __async mut {
+   pri fn addWarnErrMess( pos:&Tokenizer.Position, err:bool, mess: str ) __async mut {
       if err {
          self.addErrMess( pos, mess );
       }
@@ -951,7 +951,7 @@ alias で置き換えている元の Type → alias の型
    }
    
    /** scope を名前空間に属させるためのダミーの関数を定義 */
-   fn createDummyNS( scope:Ast.Scope, pos:&Parser.Position, asyncMode:Ast.Async ) mut {
+   fn createDummyNS( scope:Ast.Scope, pos:&Tokenizer.Position, asyncMode:Ast.Async ) mut {
       let mut dummyType = self.processInfo.createDummyNameSpace(
          scope, Ast.headTypeInfo, asyncMode );
       self.newNSInfo( dummyType, pos );
@@ -995,7 +995,7 @@ alias で置き換えている元の Type → alias の型
          }
          forsort symbolInfo in errSymMap {
             self.addErrMess(
-               self.parser.getLastPos(),
+               self.tokenizer.getLastPos(),
                "There is the case no initialized value for '%s'"
                (symbolInfo.$name) );
          }
@@ -1039,7 +1039,7 @@ alias で置き換えている元の Type → alias の型
 
 
    pri fn pushExtModule(
-      externalFlag: bool, name:str, accessMode:Ast.AccessMode, pos:&Parser.Position,
+      externalFlag: bool, name:str, accessMode:Ast.AccessMode, pos:&Tokenizer.Position,
       lazy:bool, lang:Types.Lang, requirePath:str ) mut : TransUnitIF.NSInfo
    {
 
@@ -1071,19 +1071,19 @@ alias で置き換えている元の Type → alias の型
 
    pub fn pushbackStr( asyncParse:bool!, name: str, statement: str, pos:&Types.Position ) __async mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
-                       bool, firstToken: &Parser.Token,
-                       token: &Parser.Token ) mut: Nodes.Node!, bool;
+                       bool, firstToken: &Tokenizer.Token,
+                       token: &Tokenizer.Token ) mut: Nodes.Node!, bool;
    pri fn analyzeDeclVar(
       mode:Nodes.DeclVarMode,
-      accessMode: Ast.AccessMode, firstToken: &Parser.Token ) mut: Nodes.Node;
+      accessMode: Ast.AccessMode, firstToken: &Tokenizer.Token ) mut: Nodes.Node;
    pri fn analyzeDeclFunc(
       declFuncMode: DeclFuncMode, asyncLocked:bool, abstractFlag: bool,
       overrideFlag: bool, accessMode: Ast.AccessMode, staticFlag: bool,
       mut classTypeInfo: &Ast.TypeInfo!,
-      firstToken: &Parser.Token, name: &Parser.Token! ) mut : Nodes.Node;
+      firstToken: &Tokenizer.Token, name: &Tokenizer.Token! ) mut : Nodes.Node;
    pri fn analyzeDeclClass(
       finalFlag:bool, abstractFlag:bool, classAccessMode: Ast.AccessMode,
-      classToken: &Parser.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode!;
+      classToken: &Tokenizer.Token, mode:DeclClassMode ) mut : Nodes.DeclClassNode!;
    pri fn analyzeExpSub(
       allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool,
       opLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
@@ -1095,15 +1095,15 @@ alias で置き換えている元の Type → alias の型
       expectType:&Ast.TypeInfo! ) mut : Nodes.Node;
    pri fn analyzeStatement( termTxt: str! ) mut : Nodes.Node!;
    local fn analyzeExpSymbol(
-      firstToken: &Parser.Token, token: &Parser.Token, mode: ExpSymbolMode,
+      firstToken: &Tokenizer.Token, token: &Tokenizer.Token, mode: ExpSymbolMode,
       prefixExp: &Nodes.Node!, skipFlag: bool,
       canLeftExp:bool, canCondRet:bool ) mut : Nodes.Node;
    pri fn analyzeExpList(
       allowNoneType:bool, skipOp2Flag: bool, canLeftExp:bool, canCondRet:bool,
       expNode: &Nodes.Node!,
       expectTypeList: &List<&Ast.TypeInfo>!, contExpect: bool! ) mut : Nodes.ExpListNode;
-   pri fn analyzeIfUnwrap( firstToken: &Parser.Token ) mut : Nodes.IfUnwrapNode;
-   pub fn getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token;
+   pri fn analyzeIfUnwrap( firstToken: &Tokenizer.Token ) mut : Nodes.IfUnwrapNode;
+   pub fn getTokenNoErr(skipFlag:bool!) __async mut : &Tokenizer.Token;
    fn analyzeRefType(
       accessMode: Ast.AccessMode, allowDDD:bool, parentPub:bool,
       allowOmitTypeParamFlag:bool, allowToSetAlt:bool ) mut: Nodes.RefTypeNode;
@@ -1111,23 +1111,23 @@ alias で置き換えている元の Type → alias の型
       accessMode: Ast.AccessMode, allowDDD:bool, mutMode:Ast.MutMode!,
       symbolNode:&Nodes.Node, parentPub:bool, allowToSetAlt:bool ) mut: Nodes.RefTypeNode;
    fn analyzeFuncBlock(
-      analyzingState:AnalyzingState, firstToken: &Parser.Token,
+      analyzingState:AnalyzingState, firstToken: &Tokenizer.Token,
       classTypeInfo:&Ast.TypeInfo!, funcTypeInfo:&Ast.TypeInfo,
       funcName:str, funcBodyScope:Ast.Scope,
       retTypeInfoList:&List<&Ast.TypeInfo> ) mut : Nodes.BlockNode;
 
-   pri fn checkAlgeComp( token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
+   pri fn checkAlgeComp( token:&Tokenizer.Token, algeTypeInfo: &Ast.AlgeTypeInfo );
 
 
    fn evalMacroOp(
-      firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
+      firstToken: &Tokenizer.Token, macroTypeInfo: &Ast.TypeInfo,
       expList: &Nodes.ExpListNode!, evalMacroCallback:Macro.EvalMacroCallback ) mut;
    fn prepareExpCall(
-      termTxt:str, position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
+      termTxt:str, position:&Tokenizer.Position, funcTypeInfo:&Ast.TypeInfo,
       genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut:
       Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!;
 
-   fn isTargetTokenPos( txt:str, pos:&Parser.Position ) : bool {
+   fn isTargetTokenPos( txt:str, pos:&Tokenizer.Position ) : bool {
       if self.analyzePos.lineNo == pos.lineNo and
          self.analyzePos.column >= pos.column and
          self.analyzePos.column <= pos.column + #txt
@@ -1137,7 +1137,7 @@ alias で置き換えている元の Type → alias の型
       return false;
    }
 
-   fn isTargetToken( token:&Parser.Token ) : bool {
+   fn isTargetToken( token:&Tokenizer.Token ) : bool {
       return self.isTargetTokenPos( token.txt, token.pos );
    }
 
@@ -1158,7 +1158,7 @@ alias で置き換えている元の Type → alias の型
    }
 
    pro fn errorShadowingOp(
-      pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo!, errFlag:bool ) mut
+      pos:&Tokenizer.Position, symbolInfo:&Ast.SymbolInfo!, errFlag:bool ) mut
    {
       when! symbolInfo {
          let symPos = symbolInfo.$pos;
@@ -1175,11 +1175,11 @@ alias で置き換えている元の Type → alias の型
    }
    
    
-   fn errorShadowing( pos:&Parser.Position, symbolInfo:&Ast.SymbolInfo! ) mut {
+   fn errorShadowing( pos:&Tokenizer.Position, symbolInfo:&Ast.SymbolInfo! ) mut {
       self.errorShadowingOp( pos, symbolInfo,not self.ctrl_info.warningShadowing );
    }
    
-   pri fn checkShadowing( pos:&Parser.Position, name:str, scope:&Ast.Scope ) mut {
+   pri fn checkShadowing( pos:&Tokenizer.Position, name:str, scope:&Ast.Scope ) mut {
       if name == "_" {
          return;
       }
@@ -1194,7 +1194,7 @@ alias で置き換えている元の Type → alias の型
 
    
    pro fn addLocalVar(
-      pos:&Parser.Position, argFlag:bool, canBeLeft:bool, name:str,
+      pos:&Tokenizer.Position, argFlag:bool, canBeLeft:bool, name:str,
       typeInfo: &Ast.TypeInfo, mutable:Ast.MutMode, allowShadow:bool! ) mut:
       &Ast.SymbolInfo
    {
@@ -1216,7 +1216,7 @@ alias で置き換えている元の Type → alias の型
       dstTypeList:&List<&Ast.TypeInfo>, expListNode:&Nodes.ExpListNode,
       callback:checkImplicitCastCallback ) mut : Nodes.ExpListNode!;
 
-   fn getLineNo( token:&Parser.Token ) : &Parser.Position {
+   fn getLineNo( token:&Tokenizer.Token ) : &Tokenizer.Position {
       let mut pos = token.pos;
       if! let work = self.funcBlockInfoLinkNo {
          pos = work;
@@ -1309,7 +1309,7 @@ fn TransUnit.createModifier(
 }
 
 fn TransUnit.createExtType(
-   pos:&Parser.Position, typeInfo:&Ast.TypeInfo ) mut :&Ast.TypeInfo
+   pos:&Tokenizer.Position, typeInfo:&Ast.TypeInfo ) mut :&Ast.TypeInfo
 {
    _match self.processInfo.createLuaval( typeInfo, true ) {
       case .OK( work, _ ) {
@@ -1322,7 +1322,7 @@ fn TransUnit.createExtType(
    }
 }
 
-pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut : __ {
+pub override fn TransUnit.errorAt( pos:&Tokenizer.Position, mess: str ) __async mut : __ {
    self.addErrMess( pos, mess);
 
    foreach errmess in TransUnitIF.sortMess( self.errMessList ) {
@@ -1333,34 +1333,34 @@ pub override fn TransUnit.errorAt( pos:&Parser.Position, mess: str ) __async mut
    }
    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
       Util.println( "------ near code -----", self.macroCtrl.$analyzeInfo.$mode.$_txt );
-      Util.println( self.parser.getNearCode() );
+      Util.println( self.tokenizer.getNearCode() );
       Util.println( "------" );
    }
    
    Util.err( "has error" ); // エラー
 }
 
-fn TransUnit.createNoneNode( pos: &Parser.Position ) mut : Nodes.Node {
+fn TransUnit.createNoneNode( pos: &Tokenizer.Position ) mut : Nodes.Node {
    return Nodes.NoneNode.create(
       self.nodeManager, pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
 }
 
-pub fn TransUnit.pushbackToken( token: &Parser.Token ) __async mut {
-   self.parser.pushbackToken( token );
+pub fn TransUnit.pushbackToken( token: &Tokenizer.Token ) __async mut {
+   self.tokenizer.pushbackToken( token );
 }
 
 
-pub fn TransUnit.newPushback( tokenList: List<&Parser.Token> ) __async mut {
-   self.parser.newPushback( tokenList );
+pub fn TransUnit.newPushback( tokenList: List<&Tokenizer.Token> ) __async mut {
+   self.tokenizer.newPushback( tokenList );
 }
 
 pub fn TransUnit.getStreamName() __async : str {
-   return self.parser.getStreamName();
+   return self.tokenizer.getStreamName();
 }
 
-pub fn TransUnit.createPosition( lineNo: int, column: int ) __async : &Parser.Position {
-   return self.parser.createPosition( lineNo, column );
+pub fn TransUnit.createPosition( lineNo: int, column: int ) __async : &Tokenizer.Position {
+   return self.tokenizer.createPosition( lineNo, column );
 }
 
 // Test 
@@ -1368,17 +1368,17 @@ fn TransUnit.isValidBlockWithoutTesting(): bool {
    return not self.inTestBlock or self.ctrl_info.testing;
 }
 
-pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
+pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Tokenizer.Token
 {
    let mut token;
 
-   let mut commentList:List<&Parser.Token>! = nil;
-   let mut workToken = self.parser.getTokenNoErr(##);
-   if workToken.kind == Parser.TokenKind.Cmnt {
-      let workCommentList:List<&Parser.Token> = [];
-      while workToken.kind == Parser.TokenKind.Cmnt {
+   let mut commentList:List<&Tokenizer.Token>! = nil;
+   let mut workToken = self.tokenizer.getTokenNoErr(##);
+   if workToken.kind == Tokenizer.TokenKind.Cmnt {
+      let workCommentList:List<&Tokenizer.Token> = [];
+      while workToken.kind == Tokenizer.TokenKind.Cmnt {
          workCommentList.insert( workToken );
-         workToken = self.parser.getTokenNoErr(##);
+         workToken = self.tokenizer.getTokenNoErr(##);
       }
       commentList = workCommentList;
    }
@@ -1398,7 +1398,7 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
       }
    }
    else {
-      token = Parser.getEofToken();
+      token = Tokenizer.getEofToken();
       when! commentList {
          self.commentCtrl.addDirect( commentList );
       }
@@ -1413,9 +1413,9 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Parser.Token
 
 
 
-pro fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
+pro fn TransUnit.getToken( allowEof:bool! ) mut : &Tokenizer.Token {
    let token = self.getTokenNoErr(##);
-   if token == Parser.getEofToken() {
+   if token == Tokenizer.getEofToken() {
       if allowEof {
          return token;
       }
@@ -1426,7 +1426,7 @@ pro fn TransUnit.getToken( allowEof:bool! ) mut : &Parser.Token {
 }
 
 pub fn TransUnit.pushback() __async mut {
-   self.parser.pushback();
+   self.tokenizer.pushback();
 }
 
 pub fn TransUnit.pushbackStr(
@@ -1440,7 +1440,7 @@ pub fn TransUnit.pushbackStr(
       }
    };
    
-   self.parser.pushbackStr( async, name, statement, pos );
+   self.tokenizer.pushbackStr( async, name, statement, pos );
 }
 
 enum SymbolMode {
@@ -1465,10 +1465,10 @@ let builtinKeywordSet = (@ "self", "super" );
 /**
 指定 token をシンボルとして利用可能かチェックする。
 */
-fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.Token {
-   if token.kind ~= Parser.TokenKind.Symb and
-      token.kind ~= Parser.TokenKind.Kywd and
-      token.kind ~= Parser.TokenKind.Type
+fn TransUnit.checkSymbol( token: &Tokenizer.Token, mode:SymbolMode ) mut : &Tokenizer.Token {
+   if token.kind ~= Tokenizer.TokenKind.Symb and
+      token.kind ~= Tokenizer.TokenKind.Kywd and
+      token.kind ~= Tokenizer.TokenKind.Type
    {
       self.addErrMess( token.pos, "illegal symbol -- '%s'" ( token.txt) );
    }
@@ -1492,8 +1492,8 @@ fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.
       self.addErrMess(
          token.pos, "this symbol is special keyword -- %s" (token.txt) );
    }
-   elseif Parser.isLuaKeyword( token.txt ) or
-      Parser.isOp2( token.txt ) or Parser.isOp1( token.txt )
+   elseif Tokenizer.isLuaKeyword( token.txt ) or
+      Tokenizer.isOp2( token.txt ) or Tokenizer.isOp1( token.txt )
    {
       self.addErrMess(
          token.pos, "this symbol is lua keyword -- %s" (token.txt) );
@@ -1501,29 +1501,29 @@ fn TransUnit.checkSymbol( token: &Parser.Token, mode:SymbolMode ) mut : &Parser.
    return token;
 }
 
-local fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Parser.Token {
+local fn TransUnit.getSymbolToken(mode:SymbolMode) mut : &Tokenizer.Token {
    return self.checkSymbol( self.getToken(##), mode );
 }
 
 
-local fn TransUnit.checkToken( token: &Parser.Token, txt: str ) mut : &Parser.Token {
+local fn TransUnit.checkToken( token: &Tokenizer.Token, txt: str ) mut : &Tokenizer.Token {
    if token.txt ~= txt {
       self.error( "not found -- '%s'. actually '%s'" ( txt, token.txt ) ); // 要対応
    }
    return token;
 }
 
-local fn TransUnit.checkNextToken( txt: str ) mut : &Parser.Token {
+local fn TransUnit.checkNextToken( txt: str ) mut : &Tokenizer.Token {
    return self.checkToken( self.getToken(##), txt );
 }
 
 /**
 次のトークンが、スペースの空きがなく、連続したトークンであるか確認する。
 
-@return &Parser.Token 次のトークン
+@return &Tokenizer.Token 次のトークン
 @return bool 連続したトークンだった場合 true
 */
-fn TransUnit.getContinueToken() mut : &Parser.Token, bool {
+fn TransUnit.getContinueToken() mut : &Tokenizer.Token, bool {
    let token = self.getToken(##);
    return token, token.consecutive;
 }
@@ -1585,29 +1585,29 @@ local fn TransUnit.checkCondRet() mut : &Nodes.CondRetInfo! {
 termTxt が表われるまで statement を解析し、 stmtList に格納する。
 
 @param stmtList 解析した statement を格納するリスト
-@param firstSwitchingParser Parser を切り替えた初回の処理かどうか。
+@param firstSwitchingTokenizer Tokenizer を切り替えた初回の処理かどうか。
 @param termTxt 終端文字列。 nil の場合は EOF まで解析する。
 @return Nodes.Node! 最後に解析した statement
 @return int 最後に解析した statement の直前の行
 */
 local fn TransUnit.analyzeStatementList(
    stmtList: List<&Nodes.Node>,
-   mut firstSwitchingParser:bool, termTxt: str! ) mut : Nodes.Node!, int
+   mut firstSwitchingTokenizer:bool, termTxt: str! ) mut : Nodes.Node!, int
 {
    let mut breakKind = Nodes.BreakKind.None;
    if #stmtList > 0 {
       breakKind = stmtList[ #stmtList ].getBreakKind( .Normal );
    }
 
-   let mut parser2lastLineMap:Map<&Parser.PushbackParser,int> = {};
+   let mut tokenizer2lastLineMap:Map<&Tokenizer.PushbackTokenizer,int> = {};
    fn getLastLineNo() __trans : int {
-      if! let lastLineNo = parser2lastLineMap[ self.parser ] {
+      if! let lastLineNo = tokenizer2lastLineMap[ self.tokenizer ] {
          return lastLineNo;
       }
-      return self.parser.getLastPos().lineNo;
+      return self.tokenizer.getLastPos().lineNo;
    }
    fn setLastLineNo( lineNo:int ) __trans {
-      parser2lastLineMap[ self.parser ] = lineNo;
+      tokenizer2lastLineMap[ self.tokenizer ] = lineNo;
    }
    
    let mut lastStatement:Nodes.Node! = nil;
@@ -1621,7 +1621,7 @@ local fn TransUnit.analyzeStatementList(
       let mut commentList = self.commentCtrl.$commentList;
       if #commentList > 0 {
          when! lastStatement {
-            let mut tailComment:&Parser.Token! = nil;
+            let mut tailComment:&Tokenizer.Token! = nil;
             foreach comment in commentList {
                if comment.pos.lineNo == lastStatement.$pos.lineNo {
                   if not tailComment {
@@ -1655,7 +1655,7 @@ local fn TransUnit.analyzeStatementList(
             blank = statement.$pos.lineNo - lastLineNo;
          }
          else {
-            blank = self.parser.getLastPos().lineNo - lastLineNo;
+            blank = self.tokenizer.getLastPos().lineNo - lastLineNo;
          }
       }
       return blank;
@@ -1675,16 +1675,16 @@ local fn TransUnit.analyzeStatementList(
 
          // 空白行と、コメントの処理
          let blank = setTailComment( statement );
-         if blank > 1 and not firstSwitchingParser {
+         if blank > 1 and not firstSwitchingTokenizer {
             stmtList.insert(
                Nodes.BlankLineNode.create(
                   self.nodeManager, self.createPosition( lastLineNo + 1, 0 ),
                   self.inTestBlock, self.macroCtrl.isInAnalyzeArgMode(),
                   [ Ast.builtinTypeNone ], blank - 1 ) );
          }
-         setLastLineNo( self.parser.getLastPos().lineNo );
-         if firstSwitchingParser {
-            firstSwitchingParser = false;
+         setLastLineNo( self.tokenizer.getLastPos().lineNo );
+         if firstSwitchingTokenizer {
+            firstSwitchingTokenizer = false;
          }
 
          stmtList.insert( statement );
@@ -1733,7 +1733,7 @@ fn TransUnit.supportLang( lang:LuneControl.Code ) : bool {
 }
 
 pro fn TransUnit.analyzeLuneControlToken(
-   firstToken:&Parser.Token, controlToken:&Parser.Token ) mut : LuneControl.Pragma!
+   firstToken:&Tokenizer.Token, controlToken:&Tokenizer.Token ) mut : LuneControl.Pragma!
 {
    return nil;
 }
@@ -1745,7 +1745,7 @@ _lune_control の解析
 @return Nodes.LuneControlNode! 解析失敗した場合 nil
 */
 fn TransUnit.analyzeLuneControl(
-   firstToken: &Parser.Token ) mut : Nodes.LuneControlNode!
+   firstToken: &Tokenizer.Token ) mut : Nodes.LuneControlNode!
 {
    let mut node:Nodes.LuneControlNode! = nil;
    let nextToken = self.getToken(##);
@@ -1948,9 +1948,9 @@ local fn TransUnit.analyzeBlock(
    return node;
 }
 
-fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Parser.Token> {
+fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Tokenizer.Token> {
    let mut blockDepth = 0;
-   let mut tokenList:List<&Parser.Token> = [];
+   let mut tokenList:List<&Tokenizer.Token> = [];
    //tokenList = tokenList.__new( 1000 );
    while true {
       let token = self.getTokenNoErr( not recordToken );
@@ -1997,7 +1997,7 @@ local fn TransUnit.skipAndCreateDummyBlock() mut : Nodes.BlockNode {
 }
 
 
-fn TransUnit.analyzeRequest( reqToken: &Parser.Token ) mut : Nodes.RequestNode
+fn TransUnit.analyzeRequest( reqToken: &Tokenizer.Token ) mut : Nodes.RequestNode
 {
    let processor = self.analyzeExp( false, true, false, false, nil, Ast.builtinTypeProcessor );
    if processor.$expType ~= Ast.builtinTypeProcessor {
@@ -2014,7 +2014,7 @@ fn TransUnit.analyzeRequest( reqToken: &Parser.Token ) mut : Nodes.RequestNode
 }
 
 fn TransUnit.analyzeAsyncLock(
-   asyncToken: &Parser.Token, lockKind:Nodes.LockKind ) mut : Nodes.Node
+   asyncToken: &Tokenizer.Token, lockKind:Nodes.LockKind ) mut : Nodes.Node
 {
    let mut nsInfo = self.getNSInfo( self.getCurrentNamespaceTypeInfo() );
    _switch lockKind {
@@ -2058,7 +2058,7 @@ fn TransUnit.analyzeAsyncLock(
 }
 
 fn TransUnit.analyzeIf(
-   token: &Parser.Token ) mut : Nodes.Node
+   token: &Tokenizer.Token ) mut : Nodes.Node
 {
    let mut nextToken, continueFlag = self.getContinueToken();
    if continueFlag and nextToken.txt == "!" {
@@ -2125,8 +2125,8 @@ fn TransUnit.analyzeIf(
 default 部分の処理を行なう。
 */
 fn TransUnit.processCaseDefault(
-   firstToken:&Parser.Token, mut caseKind:Nodes.CaseKind,
-   nextToken:&Parser.Token, hasCase:bool ) mut :
+   firstToken:&Tokenizer.Token, mut caseKind:Nodes.CaseKind,
+   nextToken:&Tokenizer.Token, hasCase:bool ) mut :
 Nodes.BlockNode!, bool
 {
    let keyword = firstToken.txt.gsub( "_", "" );
@@ -2176,7 +2176,7 @@ Nodes.BlockNode!, bool
    return defaultBlock, failSafeDefault;
 }
 
-fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
+fn TransUnit.analyzeSwitch( firstToken: &Tokenizer.Token ) mut : Nodes.SwitchNode {
    let exp = self.analyzeExpOneRVal( false, false ## );
 
    self.checkNextToken( "{" );
@@ -2288,7 +2288,7 @@ fn TransUnit.analyzeSwitch( firstToken: &Parser.Token ) mut : Nodes.SwitchNode {
 }
 
 
-fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
+fn TransUnit.analyzeMatch( firstToken: &Tokenizer.Token ) mut : Nodes.MatchNode {
    let exp = self.analyzeExpOneRVal( false, false ## );
 
    let! algeTypeInfo = exp.$expType.$srcTypeInfo.$genSrcTypeInfo@@@Ast.AlgeTypeInfo {
@@ -2416,7 +2416,7 @@ fn TransUnit.analyzeMatch( firstToken: &Parser.Token ) mut : Nodes.MatchNode {
 
 
 
-fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
+fn TransUnit.analyzeWhile( token: &Tokenizer.Token ) mut : Nodes.WhileNode {
 
    let refAccessSymPosList = clearThePosForModToRef( self.$scope, self.moduleScope );
    
@@ -2441,7 +2441,7 @@ fn TransUnit.analyzeWhile( token: &Parser.Token ) mut : Nodes.WhileNode {
       self.analyzeBlock( .While, .Loop, nil, refAccessSymPosList ) );
 }
 
-fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
+fn TransUnit.analyzeRepeat( token: &Tokenizer.Token ) mut : Nodes.RepeatNode {
    let mut scope = self.pushScope( .Other## );
    let mut node = Nodes.RepeatNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
@@ -2460,12 +2460,12 @@ fn TransUnit.analyzeRepeat( token: &Parser.Token ) mut : Nodes.RepeatNode {
    return node;
 }
 
-fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
+fn TransUnit.analyzeFor( firstToken: &Tokenizer.Token ) mut : Nodes.ForNode {
 
    let mut scope = self.pushScope( .Other## );
 
    let val = self.getToken(##);
-   if val.kind ~= Parser.TokenKind.Symb {
+   if val.kind ~= Tokenizer.TokenKind.Symb {
       self.error( "not symbol" ); // 要対応
    }
    self.checkNextToken( "=" );
@@ -2522,13 +2522,13 @@ fn TransUnit.analyzeFor( firstToken: &Parser.Token ) mut : Nodes.ForNode {
    return node;
 }
 
-fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
+fn TransUnit.analyzeApply( token: &Tokenizer.Token ) mut : Nodes.ApplyNode {
    let mut scope = self.pushScope( .Other## );
-   let mut varList:List<&Parser.Token> = [];
-   let mut nextToken:&Parser.Token = Parser.getEofToken();
+   let mut varList:List<&Tokenizer.Token> = [];
+   let mut nextToken:&Tokenizer.Token = Tokenizer.getEofToken();
    repeat {
       let var = self.getSymbolToken( .MustNot_Or_ );
-      if var.kind ~= Parser.TokenKind.Symb {
+      if var.kind ~= Tokenizer.TokenKind.Symb {
          self.error( "illegal symbol" ); // 要対応
       }
       varList.insert( var );
@@ -2635,7 +2635,7 @@ fn TransUnit.analyzeApply( token: &Parser.Token ) mut : Nodes.ApplyNode {
 }
 
 fn TransUnit.convToExtTypeList(
-   pos:&Parser.Position,
+   pos:&Tokenizer.Position,
    typeInfo:&Ast.TypeInfo, list:&List<&Ast.TypeInfo> ) mut : &List<&Ast.TypeInfo>
 {
    if typeInfo.$nonnilableType.$kind ~= .Ext {
@@ -2650,16 +2650,16 @@ fn TransUnit.convToExtTypeList(
 }
 
 
-fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.Node {
+fn TransUnit.analyzeForeach( token: &Tokenizer.Token, sortFlag: bool ) mut : Nodes.Node {
    let mut scope = self.pushScope( .Other## );
-   let mut mainSymToken:&Parser.Token = Parser.getEofToken();
-   let mut subSymToken:&Parser.Token! = nil;
+   let mut mainSymToken:&Tokenizer.Token = Tokenizer.getEofToken();
+   let mut subSymToken:&Tokenizer.Token! = nil;
    let mut mainSym:&Ast.SymbolInfo;
    let mut subSym:&Ast.SymbolInfo! = nil;
-   let mut nextToken:&Parser.Token = Parser.getEofToken();
+   let mut nextToken:&Tokenizer.Token = Tokenizer.getEofToken();
    for index = 1, 2 {
       let symbol = self.getToken(##);
-      if symbol.kind ~= Parser.TokenKind.Symb {
+      if symbol.kind ~= Tokenizer.TokenKind.Symb {
          self.error( "illegal symbol" ); // 要対応
       }
       if index == 1 {
@@ -2789,7 +2789,7 @@ fn TransUnit.analyzeForeach( token: &Parser.Token, sortFlag: bool ) mut : Nodes.
    }
 }
 
-fn TransUnit.analyzeScope( firstToken: &Parser.Token ) mut : Nodes.ScopeNode {
+fn TransUnit.analyzeScope( firstToken: &Tokenizer.Token ) mut : Nodes.ScopeNode {
 
    let mut nextToken = self.getToken(##);
    let scopeKind:Nodes.ScopeKind;

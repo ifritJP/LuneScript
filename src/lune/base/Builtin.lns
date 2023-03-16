@@ -23,7 +23,7 @@ SOFTWARE.
 */
 
 import lune.base.Types;
-import lune.base.Parser;
+import lune.base.Parser as Tokenizer;
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.LuaVer;
@@ -817,7 +817,7 @@ fn Builtin.processField( prefixName:str, orgName:str, fieldName:str,
 
 fn Builtin.registClass(
    nameList:&List<str>, name2FieldInfo:&Map<str,&Map<str,&List<str>>>,
-   pos:&Parser.Position, genTypeList:List<&Ast.AlternateTypeInfo> ) mut : &Ast.TypeInfo
+   pos:&Tokenizer.Position, genTypeList:List<&Ast.AlternateTypeInfo> ) mut : &Ast.TypeInfo
 {
    let mut classKind = TransUnitIF.DeclClassMode.Class;
    if! let types = name2FieldInfo.__attrib$.type {
@@ -961,7 +961,7 @@ pub fn Builtin.registBuiltInScope() mut : BuiltinFuncType {
       }
    }
 
-   let pos = new Parser.Position( 0, 0, "@builtin@" ## );
+   let pos = new Tokenizer.Position( 0, 0, "@builtin@" ## );
    
    foreach builtinClassInfo in builtInInfo {
       foreach name2FieldInfo, className in builtinClassInfo {

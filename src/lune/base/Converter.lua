@@ -175,7 +175,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )
 local convGo = _lune.loadModule( 'lune.base.convGo' )
 local convPython = _lune.loadModule( 'lune.base.convPython' )
@@ -222,11 +222,11 @@ _moduleObj.byteCompileFromLuaTxt = byteCompileFromLuaTxt
 local AstCreater = {}
 setmetatable( AstCreater, { __index = Runner.Runner } )
 _moduleObj.AstCreater = AstCreater
-function AstCreater:createAst( frontAccessor, importModuleInfo, parserSrc, baseDir, stdinFile, analyzeModule, analyzeMode, pos )
+function AstCreater:createAst( frontAccessor, importModuleInfo, tokenizerSrc, baseDir, stdinFile, analyzeModule, analyzeMode, pos )
 
    local transUnit = TransUnit.TransUnitCtrl._new(frontAccessor, self.moduleId, importModuleInfo, convLua.MacroEvalImp._new(self.builtinFunc), true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
    
-   return transUnit:createAST( parserSrc, true, baseDir, stdinFile, false, self.mod, function ( exportInfo )
+   return transUnit:createAST( tokenizerSrc, true, baseDir, stdinFile, false, self.mod, function ( exportInfo )
    
       self.exportInfo = exportInfo
       
@@ -239,13 +239,13 @@ function AstCreater:createAst( frontAccessor, importModuleInfo, parserSrc, baseD
       
    end )
 end
-function AstCreater._new( frontAccessor, importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option )
+function AstCreater._new( frontAccessor, importModuleInfo, tokenizerSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option )
    local obj = {}
    AstCreater._setmeta( obj )
-   if obj.__init then obj:__init( frontAccessor, importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option ); end
+   if obj.__init then obj:__init( frontAccessor, importModuleInfo, tokenizerSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option ); end
    return obj
 end
-function AstCreater:__init(frontAccessor, importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option) 
+function AstCreater:__init(frontAccessor, importModuleInfo, tokenizerSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option) 
    Runner.Runner.__init( self)
    
    
@@ -261,7 +261,7 @@ function AstCreater:__init(frontAccessor, importModuleInfo, parserSrc, mod, base
    self.converter = function (  )
       local __func__ = '@lune.@base.@Converter.AstCreater.__init.<anonymous>'
    
-      local ast = self:createAst( frontAccessor, importModuleInfo, parserSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
+      local ast = self:createAst( frontAccessor, importModuleInfo, tokenizerSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
       self.ast = ast
       self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId )
       Log.log( Log.Level.Log, __func__, 153, function (  )
@@ -274,21 +274,21 @@ function AstCreater:__init(frontAccessor, importModuleInfo, parserSrc, mod, base
    local lnsPath
    
    do
-      local _matchExp = parserSrc
-      if _matchExp[1] == Types.ParserSrc.LnsCode[1] then
+      local _matchExp = tokenizerSrc
+      if _matchExp[1] == Types.TokenizerSrc.LnsCode[1] then
          local _ = _matchExp[2][1]
          local path = _matchExp[2][2]
          local _ = _matchExp[2][3]
       
          lnsPath = path
-      elseif _matchExp[1] == Types.ParserSrc.LnsPath[1] then
+      elseif _matchExp[1] == Types.TokenizerSrc.LnsPath[1] then
          local _ = _matchExp[2][1]
          local path = _matchExp[2][2]
          local _ = _matchExp[2][3]
          local _ = _matchExp[2][4]
       
          lnsPath = path
-      elseif _matchExp[1] == Types.ParserSrc.Parser[1] then
+      elseif _matchExp[1] == Types.TokenizerSrc.Tokenizer[1] then
          local path = _matchExp[2][1]
          local _ = _matchExp[2][2]
          local _ = _matchExp[2][3]
@@ -510,7 +510,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
          end
          
          
-         local sameFlag, txt = checkDiff( Parser.TxtStream._new(oldMetaTxt), Parser.TxtStream._new(newMetaTxt) )
+         local sameFlag, txt = checkDiff( Tokenizer.TxtStream._new(oldMetaTxt), Tokenizer.TxtStream._new(newMetaTxt) )
          
          local function saveMeta( meta )
          

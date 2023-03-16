@@ -27,7 +27,7 @@ _lune_control default_strict_generics;
 
 import lune.base.Ast;
 import lune.base.Nodes;
-//import lune.base.Parser;
+//import lune.base.Parser as Tokenizer;
 import lune.base.Util;
 
 class glueGenerator {

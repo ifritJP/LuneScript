@@ -229,7 +229,7 @@ if not _lune8 then
 end
 
 
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
@@ -626,7 +626,7 @@ function Node:get_expType(  )
 end
 function Node:addTokenList( list, kind, txt )
 
-   table.insert( list, Parser.Token._new(kind, txt, self.pos, false) )
+   table.insert( list, Tokenizer.Token._new(kind, txt, self.pos, false) )
 end
 function Node:setupLiteralTokenList( list )
 
@@ -15244,7 +15244,7 @@ end
 
 function LiteralNilNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Kywd, "nil" )
+   self:addTokenList( list, Tokenizer.TokenKind.Kywd, "nil" )
    return true
 end
 
@@ -15256,7 +15256,7 @@ end
 
 function LiteralCharNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Char, string.format( "%d", self.num) )
+   self:addTokenList( list, Tokenizer.TokenKind.Char, string.format( "%d", self.num) )
    return true
 end
 
@@ -15268,7 +15268,7 @@ end
 
 function LiteralIntNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Int, string.format( "%d", self.num) )
+   self:addTokenList( list, Tokenizer.TokenKind.Int, string.format( "%d", self.num) )
    return true
 end
 
@@ -15280,7 +15280,7 @@ end
 
 function LiteralRealNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Real, string.format( "%g", self.num) )
+   self:addTokenList( list, Tokenizer.TokenKind.Real, string.format( "%g", self.num) )
    return true
 end
 
@@ -15310,13 +15310,13 @@ end
 
 function LiteralArrayNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "[@" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "[@" )
    do
       local _exp = self.expList
       if _exp ~= nil then
          for index, node in ipairs( _exp:get_expList(  ) ) do
             if index > 1 then
-               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+               self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
             
             if not node:setupLiteralTokenList( list ) then
@@ -15328,7 +15328,7 @@ function LiteralArrayNode:setupLiteralTokenList( list )
       end
    end
    
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "]" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "]" )
    return true
 end
 
@@ -15358,13 +15358,13 @@ end
 
 function LiteralListNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "[" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "[" )
    do
       local _exp = self.expList
       if _exp ~= nil then
          for index, node in ipairs( _exp:get_expList(  ) ) do
             if index > 1 then
-               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+               self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
             
             if not node:setupLiteralTokenList( list ) then
@@ -15376,7 +15376,7 @@ function LiteralListNode:setupLiteralTokenList( list )
       end
    end
    
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "]" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "]" )
    return true
 end
 
@@ -15406,13 +15406,13 @@ end
 
 function LiteralSetNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "(@" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "(@" )
    do
       local _exp = self.expList
       if _exp ~= nil then
          for index, node in ipairs( _exp:get_expList(  ) ) do
             if index > 1 then
-               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+               self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
             
             if not node:setupLiteralTokenList( list ) then
@@ -15424,7 +15424,7 @@ function LiteralSetNode:setupLiteralTokenList( list )
       end
    end
    
-   self:addTokenList( list, Parser.TokenKind.Dlmt, ")" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, ")" )
    return true
 end
 
@@ -15456,7 +15456,7 @@ end
 
 function LiteralMapNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "{" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "{" )
    
    local lit2valNode = {}
    for key, _1 in pairs( self.map ) do
@@ -15501,17 +15501,17 @@ function LiteralMapNode:setupLiteralTokenList( list )
                return false
             end
             
-            self:addTokenList( list, Parser.TokenKind.Dlmt, ":" )
+            self:addTokenList( list, Tokenizer.TokenKind.Dlmt, ":" )
             if not _lune.nilacc( self.map[key], 'setupLiteralTokenList', 'callmtd' , list ) then
                return false
             end
             
-            self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+            self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
          end
       end
    end
    
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "}" )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "}" )
    return true
 end
 
@@ -15553,14 +15553,14 @@ end
 
 function LiteralStringNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Str, self.token.txt )
+   self:addTokenList( list, Tokenizer.TokenKind.Str, self.token.txt )
    do
       local param = self:get_orgParam()
       if param ~= nil then
-         self:addTokenList( list, Parser.TokenKind.Dlmt, "(" )
+         self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "(" )
          for index, argNode in ipairs( param:get_expList() ) do
             if index > 1 then
-               self:addTokenList( list, Parser.TokenKind.Dlmt, "," )
+               self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
             
             if not argNode:setupLiteralTokenList( list ) then
@@ -15569,7 +15569,7 @@ function LiteralStringNode:setupLiteralTokenList( list )
             
          end
          
-         self:addTokenList( list, Parser.TokenKind.Dlmt, ")" )
+         self:addTokenList( list, Tokenizer.TokenKind.Dlmt, ")" )
       end
    end
    
@@ -15585,7 +15585,7 @@ end
 
 function LiteralBoolNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Kywd, self.token.txt )
+   self:addTokenList( list, Tokenizer.TokenKind.Kywd, self.token.txt )
    return true
 end
 
@@ -15598,7 +15598,7 @@ end
 
 function LiteralSymbolNode:setupLiteralTokenList( list )
 
-   self:addTokenList( list, Parser.TokenKind.Symb, self.token.txt )
+   self:addTokenList( list, Tokenizer.TokenKind.Symb, self.token.txt )
    return true
 end
 
@@ -15740,9 +15740,9 @@ function ExpOmitEnumNode:setupLiteralTokenList( list )
 
    
    local enumval = self.valInfo
-   self:addTokenList( list, Parser.TokenKind.Dlmt, "." )
+   self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "." )
    
-   self:addTokenList( list, Parser.TokenKind.Symb, (Ast.EnumLiteral:_getTxt( enumval:get_val())
+   self:addTokenList( list, Tokenizer.TokenKind.Symb, (Ast.EnumLiteral:_getTxt( enumval:get_val())
    :gsub( ".*%.", "" ) ) )
    return true
 end
@@ -15799,15 +15799,15 @@ function ExpOp2Node:setupLiteralTokenList( list )
          if _matchExp[1] == Literal.Int[1] then
             local val = _matchExp[2][1]
          
-            self:addTokenList( list, Parser.TokenKind.Int, string.format( "%d", val) )
+            self:addTokenList( list, Tokenizer.TokenKind.Int, string.format( "%d", val) )
          elseif _matchExp[1] == Literal.Real[1] then
             local val = _matchExp[2][1]
          
-            self:addTokenList( list, Parser.TokenKind.Real, string.format( "%g", val) )
+            self:addTokenList( list, Tokenizer.TokenKind.Real, string.format( "%g", val) )
          elseif _matchExp[1] == Literal.Str[1] then
             local val = _matchExp[2][1]
          
-            self:addTokenList( list, Parser.TokenKind.Str, string.format( "%q", val) )
+            self:addTokenList( list, Tokenizer.TokenKind.Str, string.format( "%q", val) )
          else 
             
                return false

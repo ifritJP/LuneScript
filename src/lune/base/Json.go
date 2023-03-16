@@ -21,22 +21,22 @@ func Json_getRawTxt_0_(_env *LnsEnv, token *Types_Token) string {
 }
 
 // 35: decl @lune.@base.@Json.getVal
-func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, bool) {
+func Json_getVal_1_(_env *LnsEnv, tokenizer *Parser_DefaultPushbackTokenizer)(LnsAny, bool) {
     var token *Types_Token
-    token = parser.FP.GetTokenNoErr(_env, nil)
+    token = tokenizer.FP.GetTokenNoErr(_env, nil)
     if _switch5 := token.Kind; _switch5 == Types_TokenKind__Dlmt {
         if _switch3 := token.Txt; _switch3 == "{" {
             var _map *LnsMap
             _map = NewLnsMap( map[LnsAny]LnsAny{})
             for  {
                 var key *Types_Token
-                key = parser.FP.GetTokenNoErr(_env, nil)
+                key = tokenizer.FP.GetTokenNoErr(_env, nil)
                 if _switch1 := key.Kind; _switch1 == Types_TokenKind__Str {
                 } else if _switch1 == Types_TokenKind__Dlmt {
                     if _switch0 := key.Txt; _switch0 == "}" {
                         return _map, true
                     } else if _switch0 == "," {
-                        key = parser.FP.GetTokenNoErr(_env, nil)
+                        key = tokenizer.FP.GetTokenNoErr(_env, nil)
                         if key.Kind != Types_TokenKind__Str{
                             return nil, false
                         }
@@ -46,12 +46,12 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
                 } else {
                     return nil, false
                 }
-                if parser.FP.GetTokenNoErr(_env, nil).Txt != ":"{
+                if tokenizer.FP.GetTokenNoErr(_env, nil).Txt != ":"{
                     return nil, false
                 }
                 var val LnsAny
                 var ok bool
-                val,ok = Json_getVal_1_(_env, parser)
+                val,ok = Json_getVal_1_(_env, tokenizer)
                 if Lns_op_not(ok){
                     return nil, false
                 }
@@ -67,16 +67,16 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
             count = 1
             for  {
                 var nextToken *Types_Token
-                nextToken = parser.FP.GetTokenNoErr(_env, nil)
+                nextToken = tokenizer.FP.GetTokenNoErr(_env, nil)
                 if _switch2 := nextToken.Txt; _switch2 == "]" {
                     return list, true
                 } else if _switch2 == "," {
                 } else {
-                    parser.FP.Pushback(_env)
+                    tokenizer.FP.Pushback(_env)
                 }
                 var val LnsAny
                 var ok bool
-                val,ok = Json_getVal_1_(_env, parser)
+                val,ok = Json_getVal_1_(_env, tokenizer)
                 if Lns_op_not(ok){
                     return nil, false
                 }
@@ -126,13 +126,13 @@ func Json_getVal_1_(_env *LnsEnv, parser *Parser_DefaultPushbackParser)(LnsAny, 
 
 // 146: decl @lune.@base.@Json.fromStr
 func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
-    var parser *Parser_DefaultPushbackParser
-    parser = NewParser_DefaultPushbackParser(_env, &Parser_StreamParser_create(_env, &Types_ParserSrc__LnsCode{txt, "json", nil}, false, nil, nil).Parser_Parser)
+    var tokenizer *Parser_DefaultPushbackTokenizer
+    tokenizer = NewParser_DefaultPushbackTokenizer(_env, &Parser_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsCode{txt, "json", nil}, false, nil, nil).Parser_Tokenizer)
     var val LnsAny
     var ok bool
-    val,ok = Json_getVal_1_(_env, parser)
+    val,ok = Json_getVal_1_(_env, tokenizer)
     if Lns_op_not(ok){
-        return nil, parser.FP.GetLastPos(_env)
+        return nil, tokenizer.FP.GetLastPos(_env)
     }
     return val, nil
 }

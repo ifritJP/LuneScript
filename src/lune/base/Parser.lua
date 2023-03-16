@@ -192,11 +192,11 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local Str = _lune.loadModule( 'lune.base.Str' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Async = _lune.loadModule( 'lune.base.Async' )
-local AsyncParser = _lune.loadModule( 'lune.base.AsyncParser' )
+local AsyncTokenizer = _lune.loadModule( 'lune.base.AsyncParser' )
 
 local function isLuaKeyword( txt )
 
-   return AsyncParser.isLuaKeyword( txt )
+   return AsyncTokenizer.isLuaKeyword( txt )
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
 
@@ -209,38 +209,38 @@ _moduleObj.TokenKind = TokenKind
 local Token = Types.Token
 _moduleObj.Token = Token
 
-local Parser = {}
-_moduleObj.Parser = Parser
-function Parser._setmeta( obj )
-  setmetatable( obj, { __index = Parser  } )
+local Tokenizer = {}
+_moduleObj.Tokenizer = Tokenizer
+function Tokenizer._setmeta( obj )
+  setmetatable( obj, { __index = Tokenizer  } )
 end
-function Parser._new(  )
+function Tokenizer._new(  )
    local obj = {}
-   Parser._setmeta( obj )
+   Tokenizer._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
    return obj
 end
-function Parser:__init(  )
+function Tokenizer:__init(  )
 
 end
 
 
-local PushbackParser = {}
-_moduleObj.PushbackParser = PushbackParser
-function PushbackParser._setmeta( obj )
-  setmetatable( obj, { __index = PushbackParser  } )
+local PushbackTokenizer = {}
+_moduleObj.PushbackTokenizer = PushbackTokenizer
+function PushbackTokenizer._setmeta( obj )
+  setmetatable( obj, { __index = PushbackTokenizer  } )
 end
-function PushbackParser._new(  )
+function PushbackTokenizer._new(  )
    local obj = {}
-   PushbackParser._setmeta( obj )
+   PushbackTokenizer._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
    return obj
 end
-function PushbackParser:__init(  )
+function PushbackTokenizer:__init(  )
 
 end
 
@@ -306,17 +306,17 @@ local function convFromRawToStr( txt )
 end
 _moduleObj.convFromRawToStr = convFromRawToStr
 
-local TokenListParser = {}
-setmetatable( TokenListParser, { __index = Parser } )
-_moduleObj.TokenListParser = TokenListParser
-function TokenListParser._new( tokenList, streamName, overridePos )
+local TokenListTokenizer = {}
+setmetatable( TokenListTokenizer, { __index = Tokenizer } )
+_moduleObj.TokenListTokenizer = TokenListTokenizer
+function TokenListTokenizer._new( tokenList, streamName, overridePos )
    local obj = {}
-   TokenListParser._setmeta( obj )
+   TokenListTokenizer._setmeta( obj )
    if obj.__init then obj:__init( tokenList, streamName, overridePos ); end
    return obj
 end
-function TokenListParser:__init(tokenList, streamName, overridePos) 
-   Parser.__init( self)
+function TokenListTokenizer:__init(tokenList, streamName, overridePos) 
+   Tokenizer.__init( self)
    
    
    self.index = 1
@@ -324,15 +324,15 @@ function TokenListParser:__init(tokenList, streamName, overridePos)
    self.streamName = streamName
    self.overridePos = overridePos
 end
-function TokenListParser:createPosition( lineNo, column )
+function TokenListTokenizer:createPosition( lineNo, column )
 
    return Position.create( lineNo, column, self:getStreamName(  ), self.overridePos )
 end
-function TokenListParser:getStreamName(  )
+function TokenListTokenizer:getStreamName(  )
 
    return self.streamName
 end
-function TokenListParser:getToken(  )
+function TokenListTokenizer:getToken(  )
 
    if #self.tokenList < self.index then
       return nil
@@ -343,65 +343,65 @@ function TokenListParser:getToken(  )
    
    return token
 end
-function TokenListParser._setmeta( obj )
-  setmetatable( obj, { __index = TokenListParser  } )
+function TokenListTokenizer._setmeta( obj )
+  setmetatable( obj, { __index = TokenListTokenizer  } )
 end
 
 
-local StreamParser = {}
-setmetatable( StreamParser, { __index = Parser } )
-_moduleObj.StreamParser = StreamParser
-function StreamParser.setStdinStream( moduleName )
+local StreamTokenizer = {}
+setmetatable( StreamTokenizer, { __index = Tokenizer } )
+_moduleObj.StreamTokenizer = StreamTokenizer
+function StreamTokenizer.setStdinStream( moduleName )
 
-   StreamParser.stdinStreamModuleName = moduleName
-   StreamParser.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
+   StreamTokenizer.stdinStreamModuleName = moduleName
+   StreamTokenizer.stdinTxt = _lune.unwrapDefault( io.stdin:read( '*a' ), "")
 end
-function StreamParser._new( parserSrc, async, stdinFile, pos )
+function StreamTokenizer._new( tokenizerSrc, async, stdinFile, pos )
    local obj = {}
-   StreamParser._setmeta( obj )
-   if obj.__init then obj:__init( parserSrc, async, stdinFile, pos ); end
+   StreamTokenizer._setmeta( obj )
+   if obj.__init then obj:__init( tokenizerSrc, async, stdinFile, pos ); end
    return obj
 end
-function StreamParser:__init(parserSrc, async, stdinFile, pos) 
-   Parser.__init( self)
+function StreamTokenizer:__init(tokenizerSrc, async, stdinFile, pos) 
+   Tokenizer.__init( self)
    
    
    self.pos = 1
    self.lineTokenList = {}
    self.overridePos = pos
    
-   local asyncParser, errMess = AsyncParser.create( parserSrc, stdinFile, pos, async )
+   local asyncTokenizer, errMess = AsyncTokenizer.create( tokenizerSrc, stdinFile, pos, async )
    do
-      local _exp = asyncParser
+      local _exp = asyncTokenizer
       if _exp ~= nil then
-         self.asyncParser = _exp
+         self.asyncTokenizer = _exp
       else
          Util.err( errMess )
          
       end
    end
    
-   self.streamName = self.asyncParser:get_streamName()
+   self.streamName = self.asyncTokenizer:get_streamName()
 end
-function StreamParser:createPosition( lineNo, column )
+function StreamTokenizer:createPosition( lineNo, column )
 
    return Position.create( lineNo, column, self:getStreamName(  ), self.overridePos )
 end
-function StreamParser:getStreamName(  )
+function StreamTokenizer:getStreamName(  )
 
    return self.streamName
 end
-function StreamParser.create( parserSrc, async, stdinFile, pos )
+function StreamTokenizer.create( tokenizerSrc, async, stdinFile, pos )
 
-   return StreamParser._new(parserSrc, async, stdinFile, pos)
+   return StreamTokenizer._new(tokenizerSrc, async, stdinFile, pos)
 end
-function StreamParser:getToken(  )
+function StreamTokenizer:getToken(  )
 
    if #self.lineTokenList < self.pos then
       self.pos = 1
       self.lineTokenList = {}
       while #self.lineTokenList == 0 do
-         local pipeItem = self.asyncParser:getNext(  )
+         local pipeItem = self.asyncTokenizer:getNext(  )
          if  nil == pipeItem then
             local _pipeItem = pipeItem
          
@@ -419,43 +419,43 @@ function StreamParser:getToken(  )
    
    return token
 end
-function StreamParser._setmeta( obj )
-  setmetatable( obj, { __index = StreamParser  } )
+function StreamTokenizer._setmeta( obj )
+  setmetatable( obj, { __index = StreamTokenizer  } )
 end
 do
-   StreamParser.stdinStreamModuleName = nil
-   StreamParser.stdinTxt = ""
+   StreamTokenizer.stdinStreamModuleName = nil
+   StreamTokenizer.stdinTxt = ""
 end
 
 
-local DefaultPushbackParser = {}
-setmetatable( DefaultPushbackParser, { ifList = {PushbackParser,} } )
-_moduleObj.DefaultPushbackParser = DefaultPushbackParser
-function DefaultPushbackParser._new( parser )
+local DefaultPushbackTokenizer = {}
+setmetatable( DefaultPushbackTokenizer, { ifList = {PushbackTokenizer,} } )
+_moduleObj.DefaultPushbackTokenizer = DefaultPushbackTokenizer
+function DefaultPushbackTokenizer._new( tokenizer )
    local obj = {}
-   DefaultPushbackParser._setmeta( obj )
-   if obj.__init then obj:__init( parser ); end
+   DefaultPushbackTokenizer._setmeta( obj )
+   if obj.__init then obj:__init( tokenizer ); end
    return obj
 end
-function DefaultPushbackParser:__init(parser) 
-   self.parser = parser
+function DefaultPushbackTokenizer:__init(tokenizer) 
+   self.tokenizer = tokenizer
    self.pushbackedList = {}
    self.usedTokenList = {}
    self.currentToken = Types.noneToken
 end
-function DefaultPushbackParser:getUsedTokenListLen(  )
+function DefaultPushbackTokenizer:getUsedTokenListLen(  )
 
    return #self.usedTokenList
 end
-function DefaultPushbackParser.createFromLnsCode( code, name )
+function DefaultPushbackTokenizer.createFromLnsCode( code, name )
 
-   return DefaultPushbackParser._new(StreamParser._new(_lune.newAlge( Types.ParserSrc.LnsCode, {code,name,nil}), false))
+   return DefaultPushbackTokenizer._new(StreamTokenizer._new(_lune.newAlge( Types.TokenizerSrc.LnsCode, {code,name,nil}), false))
 end
-function DefaultPushbackParser:createPosition( lineNo, column )
+function DefaultPushbackTokenizer:createPosition( lineNo, column )
 
-   return self.parser:createPosition( lineNo, column )
+   return self.tokenizer:createPosition( lineNo, column )
 end
-function DefaultPushbackParser:getTokenNoErr( skipFlag )
+function DefaultPushbackTokenizer:getTokenNoErr( skipFlag )
 
    if #self.pushbackedList > 0 then
       self.currentToken = self.pushbackedList[#self.pushbackedList]
@@ -463,7 +463,7 @@ function DefaultPushbackParser:getTokenNoErr( skipFlag )
    else
     
       do
-         local token = self.parser:getToken(  )
+         local token = self.tokenizer:getToken(  )
          if token ~= nil then
             self.currentToken = token
          else
@@ -480,7 +480,7 @@ function DefaultPushbackParser:getTokenNoErr( skipFlag )
    
    return self.currentToken
 end
-function DefaultPushbackParser:pushbackToken( token )
+function DefaultPushbackTokenizer:pushbackToken( token )
 
    if token.kind ~= Types.TokenKind.Eof then
       table.insert( self.pushbackedList, token )
@@ -508,18 +508,18 @@ function DefaultPushbackParser:pushbackToken( token )
    end
    
 end
-function DefaultPushbackParser:pushback(  )
+function DefaultPushbackTokenizer:pushback(  )
 
    self:pushbackToken( self.currentToken )
 end
-function DefaultPushbackParser:pushbackStr( asyncParse, name, statement, pos )
+function DefaultPushbackTokenizer:pushbackStr( asyncParse, name, statement, pos )
 
-   local parser = StreamParser._new(_lune.newAlge( Types.ParserSrc.LnsCode, {statement,name,nil}), asyncParse == true, nil, pos)
+   local tokenizer = StreamTokenizer._new(_lune.newAlge( Types.TokenizerSrc.LnsCode, {statement,name,nil}), asyncParse == true, nil, pos)
    
    local list = {}
    while true do
       do
-         local _exp = parser:getToken(  )
+         local _exp = tokenizer:getToken(  )
          if _exp ~= nil then
             table.insert( list, _exp )
          else
@@ -534,16 +534,16 @@ function DefaultPushbackParser:pushbackStr( asyncParse, name, statement, pos )
    end
    
 end
-function DefaultPushbackParser:newPushback( tokenList )
+function DefaultPushbackTokenizer:newPushback( tokenList )
 
    for index = #tokenList, 1, -1 do
       self:pushbackToken( tokenList[index] )
    end
    
 end
-function DefaultPushbackParser:getLastPos(  )
+function DefaultPushbackTokenizer:getLastPos(  )
 
-   local pos = self.parser:createPosition( 0, 0 )
+   local pos = self.tokenizer:createPosition( 0, 0 )
    if self:get_currentToken().kind ~= Types.TokenKind.Eof then
       pos = self:get_currentToken().pos
    else
@@ -557,7 +557,7 @@ function DefaultPushbackParser:getLastPos(  )
    
    return pos
 end
-function DefaultPushbackParser:getNearCode(  )
+function DefaultPushbackTokenizer:getNearCode(  )
 
    local code = ""
    for index = #self.usedTokenList - 30, #self.usedTokenList do
@@ -576,27 +576,27 @@ function DefaultPushbackParser:getNearCode(  )
    
    return string.format( "%s -- current '%s'", code, self.currentToken.txt)
 end
-function DefaultPushbackParser:getStreamName(  )
+function DefaultPushbackTokenizer:getStreamName(  )
 
-   return self.parser:getStreamName(  )
+   return self.tokenizer:getStreamName(  )
 end
-function DefaultPushbackParser._setmeta( obj )
-  setmetatable( obj, { __index = DefaultPushbackParser  } )
+function DefaultPushbackTokenizer._setmeta( obj )
+  setmetatable( obj, { __index = DefaultPushbackTokenizer  } )
 end
-function DefaultPushbackParser:get_currentToken()
+function DefaultPushbackTokenizer:get_currentToken()
    return self.currentToken
 end
 
 
 local function isOp2( ope )
 
-   return AsyncParser.isOp2( ope )
+   return AsyncTokenizer.isOp2( ope )
 end
 _moduleObj.isOp2 = isOp2
 
 local function isOp1( ope )
 
-   return AsyncParser.isOp1( ope )
+   return AsyncTokenizer.isOp1( ope )
 end
 _moduleObj.isOp1 = isOp1
 local eofToken = Token._new(Types.TokenKind.Eof, "<EOF>", Position._new(0, 0, "eof"), false, {})
@@ -605,35 +605,35 @@ local function getEofToken(  )
    return eofToken
 end
 _moduleObj.getEofToken = getEofToken
-local DummyParser = {}
-setmetatable( DummyParser, { __index = Parser } )
-_moduleObj.DummyParser = DummyParser
-function DummyParser:getToken(  )
+local DummyTokenizer = {}
+setmetatable( DummyTokenizer, { __index = Tokenizer } )
+_moduleObj.DummyTokenizer = DummyTokenizer
+function DummyTokenizer:getToken(  )
 
    return eofToken
 end
-function DummyParser:getStreamName(  )
+function DummyTokenizer:getStreamName(  )
 
    return "dummy"
 end
-function DummyParser:createPosition( lineNo, column )
+function DummyTokenizer:createPosition( lineNo, column )
 
    return Position.create( lineNo, column, self:getStreamName(  ), nil )
 end
-function DummyParser._setmeta( obj )
-  setmetatable( obj, { __index = DummyParser  } )
+function DummyTokenizer._setmeta( obj )
+  setmetatable( obj, { __index = DummyTokenizer  } )
 end
-function DummyParser._new(  )
+function DummyTokenizer._new(  )
    local obj = {}
-   DummyParser._setmeta( obj )
+   DummyTokenizer._setmeta( obj )
    if obj.__init then
       obj:__init(  )
    end
    return obj
 end
-function DummyParser:__init(  )
+function DummyTokenizer:__init(  )
 
-   Parser.__init( self)
+   Tokenizer.__init( self)
 end
 
 
@@ -765,11 +765,11 @@ local function quoteStr( txt )
 end
 _moduleObj.quoteStr = quoteStr
 
-local function createParserFrom( src, async, stdinFile )
+local function createTokenizerFrom( src, async, stdinFile )
 
-   return StreamParser._new(src, async, stdinFile, nil)
+   return StreamTokenizer._new(src, async, stdinFile, nil)
 end
-_moduleObj.createParserFrom = createParserFrom
+_moduleObj.createTokenizerFrom = createTokenizerFrom
 
 
 

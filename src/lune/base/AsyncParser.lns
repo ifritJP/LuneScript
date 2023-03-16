@@ -217,7 +217,7 @@ pub fn setDefaultPipeSize( size:int ) {
    defaultPipeSize = size;
 }
 
-pub class Parser extend Async.Pipe<AsyncItem> {
+pub class Tokenizer extend Async.Pipe<AsyncItem> {
    let streamName: str {pub};
    let mut lineNo : int;
    let mut prevToken: &Types.Token;
@@ -265,8 +265,8 @@ pub class Parser extend Async.Pipe<AsyncItem> {
    }
 
    local static fn create(
-      parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
-      overridePos:&Types.Position! ) : Parser!, str
+      tokenizerSrc:&Types.TokenizerSrc, stdinFile:&Types.StdinFile!,
+      overridePos:&Types.Position! ) : Tokenizer!, str
    {
       fn createStream(mod:str,path:str) __trans : iStream!, str {
          when! stdinFile {
@@ -289,7 +289,7 @@ pub class Parser extend Async.Pipe<AsyncItem> {
       
 
       fn createStreamFrom() __trans : str, bool, iStream!, str, int! {
-         _match parserSrc {
+         _match tokenizerSrc {
             case .LnsCode( txt, path, pipeSize ) {
                return path, false, new Util.TxtStream( txt ), "", pipeSize;
             }
@@ -297,7 +297,7 @@ pub class Parser extend Async.Pipe<AsyncItem> {
                let mut stream, mess = createStreamWithBaseDir( mod, baseDir, path );
                return path, false, stream, mess, pipeSize;
             }
-            case .Parser( path, luaMode, mod, pipeSize ) {
+            case .Tokenizer( path, luaMode, mod, pipeSize ) {
                let mut stream, mess = createStream( mod, path );
                return path, luaMode, stream, mess, pipeSize;
             }
@@ -306,7 +306,7 @@ pub class Parser extend Async.Pipe<AsyncItem> {
 
       let streamName, luaMode, mut stream, mess, pipeSize = createStreamFrom();
       when! stream {
-         return new Parser( streamName, stream, luaMode, overridePos, pipeSize ), "";
+         return new Tokenizer( streamName, stream, luaMode, overridePos, pipeSize ), "";
       }
       return nil, mess;
    }
@@ -323,50 +323,50 @@ pub class Parser extend Async.Pipe<AsyncItem> {
 
 class Runner extend (__Runner)
 {
-   let mut parser:Parser! {pub};
+   let mut tokenizer:Tokenizer! {pub};
    let mut errMess:str {pub};
 
-   pub fn __init( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
+   pub fn __init( tokenizerSrc:&Types.TokenizerSrc, stdinFile:&Types.StdinFile!,
                   overridePos:&Types.Position! )
    {
-      self.parser, self.errMess = Parser.create( parserSrc, stdinFile, overridePos );
+      self.tokenizer, self.errMess = Tokenizer.create( tokenizerSrc, stdinFile, overridePos );
 
-      if! self.parser {
+      if! self.tokenizer {
          _exp.start();
-         if not __run( self, __lns.runMode.Skip, "parser - %s" (_exp.$streamName) ) {
+         if not __run( self, __lns.runMode.Skip, "tokenizer - %s" (_exp.$streamName) ) {
             // スレッドフルの場合、
-            // 同期実行せずに getNext() 毎に parser する
+            // 同期実行せずに getNext() 毎に tokenizer する
             _exp.stop();
          }; 
       }
    }
 
    pub fn run() mut {
-      if! self.parser {
+      if! self.tokenizer {
          _exp.run();
       }
    }
 }
 
-pub fn create( parserSrc:&Types.ParserSrc, stdinFile:&Types.StdinFile!,
-               overridePos:&Types.Position!, async:bool ) : Parser!, str
+pub fn create( tokenizerSrc:&Types.TokenizerSrc, stdinFile:&Types.StdinFile!,
+               overridePos:&Types.Position!, async:bool ) : Tokenizer!, str
 {
    if async {
-      let mut runner = new Runner( parserSrc, stdinFile, overridePos );
-      return runner.$parser, runner.$errMess;
+      let mut runner = new Runner( tokenizerSrc, stdinFile, overridePos );
+      return runner.$tokenizer, runner.$errMess;
    }
-   let mut parser, mess = Parser.create( parserSrc, stdinFile, overridePos )**;
-   when! parser {
+   let mut tokenizer, mess = Tokenizer.create( tokenizerSrc, stdinFile, overridePos )**;
+   when! tokenizer {
       // stop を呼ぶと、 setup() が内部的に呼ばれる。
-      parser.stop();
+      tokenizer.stop();
    }
-   return parser, mess;
+   return tokenizer, mess;
 }
 
 
 
 
-fn Parser.createInfo( mut tokenKind: Types.TokenKind,
+fn Tokenizer.createInfo( mut tokenKind: Types.TokenKind,
                       token: str, tokenColumn: int ) mut : Types.Token
 {
    if tokenKind == .Symb {
@@ -404,7 +404,7 @@ token の beginIndex から始まる数値表現領域を特定する
 @return int 数値表現の終了位置
 @return bool 整数かどうか
 */
-fn Parser.analyzeNumber( token: &str, beginIndex: int ) : int, bool {
+fn Tokenizer.analyzeNumber( token: &str, beginIndex: int ) : int, bool {
    let! mut nonNumIndex = token.find( '[^%d]', beginIndex ## ) {
       return #token, true;
    };
@@ -445,7 +445,7 @@ fn Parser.analyzeNumber( token: &str, beginIndex: int ) : int, bool {
    return nonNumIndex - 1, intFlag;       
 }
 
-fn Parser.readLine() mut : str! {
+fn Tokenizer.readLine() mut : str! {
    if self.lineNo >= #self.lineList {
       return nil;
    }
@@ -464,7 +464,7 @@ fn Parser.readLine() mut : str! {
 @param column 現在の解析行内の位置
     */
 
-fn Parser.addVal(
+fn Tokenizer.addVal(
    list: List<Types.Token>, kind: Types.TokenKind, val: str, column: int ) mut
 {
    if kind ~= .Symb {
@@ -562,7 +562,7 @@ fn Parser.addVal(
 
 
 
-pub fn Parser.parse() mut : List<Types.Token>! {
+pub fn Tokenizer.parse() mut : List<Types.Token>! {
    let! mut rawLine = self.readLine() {
       return nil;
    };

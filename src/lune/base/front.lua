@@ -321,7 +321,7 @@ end
 
 local Types = _lune.loadModule( 'lune.base.Types' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )
 local convGo = _lune.loadModule( 'lune.base.convGo' )
 local convPython = _lune.loadModule( 'lune.base.convPython' )
@@ -578,7 +578,7 @@ end
 
 local function createPaser( baseDir, path, mod, stdinFile )
 
-   return Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,path,mod,nil}), false, stdinFile, nil )
+   return Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,path,mod,nil}), false, stdinFile, nil )
 end
 
 function Front:scriptPath2Module( path, baseDir )
@@ -595,7 +595,7 @@ function Front:createPaser( scriptPath, baseDir )
 end
 
 
-function Front:createAstSub( importModuleInfo, parserSrc, baseDir, mod, moduleId, analyzeModule, analyzeMode, pos )
+function Front:createAstSub( importModuleInfo, tokenizerSrc, baseDir, mod, moduleId, analyzeModule, analyzeMode, pos )
 
    do
       local _exp = self.moduleMgr:get( mod )
@@ -627,7 +627,7 @@ function Front:createAstSub( importModuleInfo, parserSrc, baseDir, mod, moduleId
    end
    
    
-   local astCreater = Converter.AstCreater._new(frontInterface.FrontAccessor._new(self), importModuleInfo, parserSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, self.builtinFunc, self.option)
+   local astCreater = Converter.AstCreater._new(frontInterface.FrontAccessor._new(self), importModuleInfo, tokenizerSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, self.builtinFunc, self.option)
    self.mod2astCreate[mod] = astCreater
    return _lune.newAlge( Converter.CreateAstResult.Creater, {astCreater})
 end
@@ -664,9 +664,9 @@ function Front:applyAstResult( result )
 end
 
 
-function Front:createAst( importModuleInfo, parserSrc, baseDir, mod, moduleId, analyzeModule, analyzeMode, pos )
+function Front:createAst( importModuleInfo, tokenizerSrc, baseDir, mod, moduleId, analyzeModule, analyzeMode, pos )
 
-   local ast = self:applyAstResult( self:createAstSub( importModuleInfo, parserSrc, baseDir, mod, moduleId, analyzeModule, analyzeMode, pos ) )
+   local ast = self:applyAstResult( self:createAstSub( importModuleInfo, tokenizerSrc, baseDir, mod, moduleId, analyzeModule, analyzeMode, pos ) )
    if self.option.dumpDebugAst then
       Util.println( string.format( "=== ast:%s ==========", mod) )
       ast:get_node():processFilter( dumpNode.createFilter( ast:get_exportInfo():get_moduleTypeInfo(), ast:get_exportInfo():get_processInfo(), io.stdout ), dumpNode.Opt._new("", 0) )
@@ -739,7 +739,7 @@ function Front:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
    local _
    local transUnit = TransUnit.TransUnitCtrl._new(frontInterface.FrontAccessor._new(self), frontInterface.ModuleId.tempId, importModuleInfo, convLua.MacroEvalImp._new(self.builtinFunc), false, nil, nil, nil, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
    
-   local ast = transUnit:createAST( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,name,nil}), false, baseDir, self.option:get_stdinFile(), false, string.format( "$load%d", self.loadCount), nil )
+   local ast = transUnit:createAST( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,name,nil}), false, baseDir, self.option:get_stdinFile(), false, string.format( "$load%d", self.loadCount), nil )
    self.loadCount = self.loadCount + 1
    
    local _1, luaTxt = self:convertFromAst( ast, name, convLua.ConvMode.ConvMeta )
@@ -1131,11 +1131,11 @@ function Front:getModuleIdAndCheckUptodate( lnsPath, mod )
    return moduleId, uptodate
 end
 
-function Front:convertLns2LuaCode( importModuleInfo, analyzeMode, parserSrc, baseDir, stream, streamName )
+function Front:convertLns2LuaCode( importModuleInfo, analyzeMode, tokenizerSrc, baseDir, stream, streamName )
 
    local _
    local mod = self:scriptPath2Module( streamName, baseDir )
-   local ast = self:createAst( importModuleInfo, parserSrc, baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, analyzeMode )
+   local ast = self:createAst( importModuleInfo, tokenizerSrc, baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, analyzeMode )
    
    local _1, luaTxt = self:convertFromAst( ast, streamName, convLua.ConvMode.ConvMeta )
    
@@ -1243,12 +1243,12 @@ function Front:convertToLanguage( ast, stream, path )
    
 end
 
-function Front:loadParserToLuaCode( importModuleInfo, parserSrc, path, mod, baseDir )
-   local __func__ = '@lune.@base.@front.Front.loadParserToLuaCode'
+function Front:loadTokenizerToLuaCode( importModuleInfo, tokenizerSrc, path, mod, baseDir )
+   local __func__ = '@lune.@base.@front.Front.loadTokenizerToLuaCode'
 
    
    local moduleId = getModuleId( path, mod )
-   local ast = self:createAst( importModuleInfo, parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile, nil )
+   local ast = self:createAst( importModuleInfo, tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile, nil )
    
    local metaTxt, luaTxt = self:convertFromAst( ast, path, convLua.ConvMode.ConvMeta )
    Log.log( Log.Level.Trace, __func__, 815, function (  )
@@ -1353,7 +1353,7 @@ function Front:loadFile( importModuleInfo, baseDir, path, mod )
    end )
    
    
-   local meta, luaTxt = self:loadParserToLuaCode( importModuleInfo, _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,path,mod,nil}), path, mod, baseDir )
+   local meta, luaTxt = self:loadTokenizerToLuaCode( importModuleInfo, _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,path,mod,nil}), path, mod, baseDir )
    
    do
       local preLoadInfo = self.preloadedModMap[mod]
@@ -1767,7 +1767,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                      end
                      
                   else
-                     local metawork, luaTxt = self:loadParserToLuaCode( importModuleInfo, _lune.newAlge( Types.ParserSrc.LnsPath, {nil,lnsPath,orgMod,nil}), lnsPath, orgMod, baseDir )
+                     local metawork, luaTxt = self:loadTokenizerToLuaCode( importModuleInfo, _lune.newAlge( Types.TokenizerSrc.LnsPath, {nil,lnsPath,orgMod,nil}), lnsPath, orgMod, baseDir )
                      self:regConvertedMap( orgMod, luaTxt, metawork )
                   end
                   
@@ -1776,7 +1776,7 @@ function Front:loadMeta( importModuleInfo, mod, orgMod, baseDir, loader )
                      local lnsCode = Depend.getBindLns( orgMod )
                      if lnsCode ~= nil then
                         local path = mod:gsub( "%.", "/" ) .. ".lns"
-                        local meta, luaTxt = self:loadParserToLuaCode( importModuleInfo, _lune.newAlge( Types.ParserSrc.LnsCode, {lnsCode,orgMod,nil}), path, orgMod, baseDir )
+                        local meta, luaTxt = self:loadTokenizerToLuaCode( importModuleInfo, _lune.newAlge( Types.TokenizerSrc.LnsCode, {lnsCode,orgMod,nil}), path, orgMod, baseDir )
                         self:regConvertedMap( orgMod, luaTxt, meta )
                      end
                   end
@@ -1804,9 +1804,9 @@ end
 function Front:dumpTokenize( scriptPath, baseDir )
 
    
-   local parser = self:createPaser( scriptPath, baseDir )
+   local tokenizer = self:createPaser( scriptPath, baseDir )
    while true do
-      local token = parser:getToken(  )
+      local token = tokenizer:getToken(  )
       if  nil == token then
          local _token = token
       
@@ -1819,45 +1819,45 @@ function Front:dumpTokenize( scriptPath, baseDir )
    
 end
 
-function Front:dumpAst( parserSrc, mod, moduleId, baseDir )
+function Front:dumpAst( tokenizerSrc, mod, moduleId, baseDir )
 
    
    Depend.profile( self.option.validProf, function (  )
    
-      local ast = self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
+      local ast = self:createAst( frontInterface.ImportModuleInfo._new(), tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
       ast:get_node():processFilter( dumpNode.createFilter( ast:get_exportInfo():get_moduleTypeInfo(), ast:get_exportInfo():get_processInfo(), io.stdout ), dumpNode.Opt._new("", 0) )
    end, mod .. ".profi" )
 end
 
-function Front:format( parserSrc, mod, moduleId, baseDir )
+function Front:format( tokenizerSrc, mod, moduleId, baseDir )
 
-   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
    ast:get_node():processFilter( Formatter.createFilter( ast:get_exportInfo():get_moduleTypeInfo(), io.stdout, false ), Formatter.Opt._new(ast:get_node()) )
 end
 
 
-function Front:checkDiag( parserSrc, mod, moduleId, baseDir )
+function Front:checkDiag( tokenizerSrc, mod, moduleId, baseDir )
 
    Util.setErrorCode( 0 )
-   self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Diag )
+   self:createAst( frontInterface.ImportModuleInfo._new(), tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Diag )
 end
 
 
-function Front:complete( parserSrc, mod, moduleId, baseDir )
+function Front:complete( tokenizerSrc, mod, moduleId, baseDir )
 
-   self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
+   self:createAst( frontInterface.ImportModuleInfo._new(), tokenizerSrc, baseDir, mod, moduleId, self.option.analyzeModule, TransUnit.AnalyzeMode.Complete, self.option.analyzePos )
 end
 
 
-function Front:inquire( parserSrc, mod, moduleId, baseDir )
+function Front:inquire( tokenizerSrc, mod, moduleId, baseDir )
 
-   self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, self.option.analyzeModule, TransUnit.AnalyzeMode.Inquire, self.option.analyzePos )
+   self:createAst( frontInterface.ImportModuleInfo._new(), tokenizerSrc, baseDir, mod, moduleId, self.option.analyzeModule, TransUnit.AnalyzeMode.Inquire, self.option.analyzePos )
 end
 
 
-function Front:createGlue( parserSrc, mod, moduleId, baseDir )
+function Front:createGlue( tokenizerSrc, mod, moduleId, baseDir )
 
-   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), parserSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), tokenizerSrc, baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
    local filter = glueFilter.createFilter( self.option.outputDir )
    ast:get_node():processFilter( filter, 0 )
 end
@@ -1885,7 +1885,7 @@ function Front:convertToLua( scriptPath, baseDir, convMode, streamLua, streamMet
    local mod = self:scriptPath2Module( scriptPath, baseDir )
    
    local moduleId = getModuleId( scriptPath, mod )
-   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,scriptPath,mod,nil}), baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile, nil )
+   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,scriptPath,mod,nil}), baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile, nil )
    local metaTxt, luaTxt = self:convertFromAst( ast, scriptPath, convMode )
    streamLua:write( luaTxt )
    streamMeta:write( metaTxt )
@@ -1936,7 +1936,7 @@ function Front:outputBuiltin( scriptPath )
 
    local mod, baseDir = self:scriptPath2Module( "lns_builtin", nil )
    
-   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsCode, {"",mod,nil}), baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
+   local ast = self:createAst( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.TokenizerSrc.LnsCode, {"",mod,nil}), baseDir, mod, frontInterface.ModuleId.createId( 0.0, 0 ), nil, TransUnit.AnalyzeMode.Compile )
    
    self:saveToC( scriptPath, ast )
 end
@@ -2004,7 +2004,7 @@ function Front:saveToLua( updateInfo, baseDir )
       local _matchExp = uptodate
       if _matchExp[1] == ModuleUptodate.NeedUpdate[1] then
       
-         local result = self:createAstSub( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,scriptPath,mod,nil}), baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
+         local result = self:createAstSub( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,scriptPath,mod,nil}), baseDir, mod, moduleId, nil, TransUnit.AnalyzeMode.Compile )
          
          local luaConv
          
@@ -2072,7 +2072,7 @@ end
 
 function Front:convertLnsCode2LuaCodeWithOpt( lnsCode, path, baseDir )
 
-   return self:convertLns2LuaCode( frontInterface.ImportModuleInfo._new(), TransUnit.AnalyzeMode.Compile, _lune.newAlge( Types.ParserSrc.LnsCode, {lnsCode,path,nil}), baseDir, Parser.TxtStream._new(lnsCode), path )
+   return self:convertLns2LuaCode( frontInterface.ImportModuleInfo._new(), TransUnit.AnalyzeMode.Compile, _lune.newAlge( Types.TokenizerSrc.LnsCode, {lnsCode,path,nil}), baseDir, Tokenizer.TxtStream._new(lnsCode), path )
 end
 
 
@@ -2134,7 +2134,7 @@ local function getParseSrcAndBaseDir( path, userProjDir )
    local workPath, projDir = getBaseDir( path, userProjDir )
    local mod = Util.scriptPath2ModuleFromProjDir( workPath, projDir )
    local moduleId = getModuleId( path, mod )
-   return _lune.newAlge( Types.ParserSrc.LnsPath, {projDir,workPath,mod,nil}), mod, moduleId, projDir
+   return _lune.newAlge( Types.TokenizerSrc.LnsPath, {projDir,workPath,mod,nil}), mod, moduleId, projDir
 end
 
 local BuildMode = {}
@@ -2187,7 +2187,7 @@ function Front:build( buildMode, astCallback )
          elseif _matchExp[1] == BuildMode.CreateAst[1] then
          
             if not self.mod2astCreate[mod] and not self.moduleMgr:getAst( mod ) then
-               local result = self:createAstSub( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,updateInfo:get_scriptPath(),mod,nil}), baseDir, mod, updateInfo:get_moduleId(), nil, TransUnit.AnalyzeMode.Compile )
+               local result = self:createAstSub( frontInterface.ImportModuleInfo._new(), _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,updateInfo:get_scriptPath(),mod,nil}), baseDir, mod, updateInfo:get_moduleId(), nil, TransUnit.AnalyzeMode.Compile )
                return function (  )
                
                   self:applyAstResult( result )
@@ -2410,8 +2410,8 @@ function Front:executeLns( path, baseDir )
    
    local mod = Util.scriptPath2ModuleFromProjDir( path, baseDir )
    
-   local parserSrc = _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,path,mod,nil})
-   local _1, luaCode = self:loadParserToLuaCode( frontInterface.ImportModuleInfo._new(), parserSrc, path, mod, baseDir )
+   local tokenizerSrc = _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,path,mod,nil})
+   local _1, luaCode = self:loadTokenizerToLuaCode( frontInterface.ImportModuleInfo._new(), tokenizerSrc, path, mod, baseDir )
    Log.log( Log.Level.Debug, __func__, 1763, function (  )
    
       return "luacode: " .. luaCode

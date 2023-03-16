@@ -27,7 +27,7 @@ _lune_control default_strict_generics;
 
 import lune.base.Ast;
 import lune.base.Nodes;
-import lune.base.Parser;
+import lune.base.Parser as Tokenizer;
 import lune.base.Types;
 import lune.base.Util;
 import lune.base.LuneControl;
@@ -77,7 +77,7 @@ fn filter( node: &Nodes.Node, filter: FormatterFilter, opt:Opt ) {
    node.processFilter( filter, opt );
 }
 
-fn getTxt( token: Parser.Token ): str {
+fn getTxt( token: Tokenizer.Token ): str {
    return token.txt;
 }
 
@@ -277,7 +277,7 @@ pub override fn FormatterFilter.processNewAlgeVal(
 
 fn FormatterFilter.outputDeclClass(
    protoFlag:bool, classType:&Ast.TypeInfo,
-   gluePrefix: str!, moduleName: &Parser.Token! ) mut
+   gluePrefix: str!, moduleName: &Tokenizer.Token! ) mut
 {
    if classType.$accessMode == .Pub {
       self.write( "pub " );

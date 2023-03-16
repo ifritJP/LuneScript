@@ -7154,13 +7154,13 @@ func (self *Ast_RefTypeInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return se
 
 // declaration Class -- TypeAnalyzer
 type Ast_TypeAnalyzerMtd interface {
-    AnalyzeType(_env *LnsEnv, arg1 *Ast_Scope, arg2 Parser_PushbackParser, arg3 LnsInt, arg4 bool, arg5 bool)(LnsAny, LnsAny, LnsAny)
+    AnalyzeType(_env *LnsEnv, arg1 *Ast_Scope, arg2 Parser_PushbackTokenizer, arg3 LnsInt, arg4 bool, arg5 bool)(LnsAny, LnsAny, LnsAny)
     AnalyzeTypeFromTxt(_env *LnsEnv, arg1 string, arg2 *Ast_Scope, arg3 LnsInt, arg4 bool)(LnsAny, LnsAny, LnsAny)
     AnalyzeTypeItemList(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 *Ast_TypeInfo, arg5 Types_Position)(LnsAny, LnsAny, LnsAny)
     analyzeTypeSub(_env *LnsEnv, arg1 bool)(LnsAny, LnsAny, LnsAny)
 }
 type Ast_TypeAnalyzer struct {
-    parser Parser_PushbackParser
+    tokenizer Parser_PushbackTokenizer
     parentInfo *Ast_TypeInfo
     moduleType *Ast_TypeInfo
     moduleScope *Ast_Scope
@@ -7216,7 +7216,7 @@ func (self *Ast_TypeAnalyzer) InitAst_TypeAnalyzer(_env *LnsEnv, processInfo *As
     self.scope = Ast_rootScope
     self.accessMode = Ast_AccessMode__Local
     self.parentPub = false
-    self.parser = NewParser_DefaultPushbackParser(_env, &NewParser_DummyParser(_env).Parser_Parser).FP
+    self.tokenizer = NewParser_DefaultPushbackTokenizer(_env, &NewParser_DummyTokenizer(_env).Parser_Tokenizer).FP
 }
 
 
@@ -12502,36 +12502,36 @@ func (self *Ast_ExtTypeInfo) ApplyGeneric(_env *LnsEnv, processInfo *Ast_Process
     return &self.Ast_TypeInfo
 }
 // 8340: decl @lune.@base.@Ast.TypeAnalyzer.analyzeType
-func (self *Ast_TypeAnalyzer) AnalyzeType(_env *LnsEnv, scope *Ast_Scope,parser Parser_PushbackParser,accessMode LnsInt,allowDDD bool,parentPub bool)(LnsAny, LnsAny, LnsAny) {
+func (self *Ast_TypeAnalyzer) AnalyzeType(_env *LnsEnv, scope *Ast_Scope,tokenizer Parser_PushbackTokenizer,accessMode LnsInt,allowDDD bool,parentPub bool)(LnsAny, LnsAny, LnsAny) {
     self.scope = scope
-    self.parser = parser
+    self.tokenizer = tokenizer
     self.accessMode = accessMode
     self.parentPub = parentPub
     return self.FP.analyzeTypeSub(_env, allowDDD)
 }
 // 8352: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeFromTxt
 func (self *Ast_TypeAnalyzer) AnalyzeTypeFromTxt(_env *LnsEnv, txt string,scope *Ast_Scope,accessMode LnsInt,parentPub bool)(LnsAny, LnsAny, LnsAny) {
-    var parser *Parser_DefaultPushbackParser
-    parser = Parser_DefaultPushbackParser_createFromLnsCode(_env, txt, "test")
-    return self.FP.AnalyzeType(_env, scope, parser.FP, accessMode, true, parentPub)
+    var tokenizer *Parser_DefaultPushbackTokenizer
+    tokenizer = Parser_DefaultPushbackTokenizer_createFromLnsCode(_env, txt, "test")
+    return self.FP.AnalyzeType(_env, scope, tokenizer.FP, accessMode, true, parentPub)
 }
 // 8361: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeSub
 func (self *Ast_TypeAnalyzer) analyzeTypeSub(_env *LnsEnv, allowDDD bool)(LnsAny, LnsAny, LnsAny) {
     var firstToken *Types_Token
-    firstToken = self.parser.GetTokenNoErr(_env, nil)
+    firstToken = self.tokenizer.GetTokenNoErr(_env, nil)
     var token *Types_Token
     token = firstToken
     var refFlag bool
     refFlag = false
     if token.Txt == "&"{
         refFlag = true
-        token = self.parser.GetTokenNoErr(_env, nil)
+        token = self.tokenizer.GetTokenNoErr(_env, nil)
     }
     var mutFlag bool
     mutFlag = false
     if token.Txt == "mut"{
         mutFlag = true
-        token = self.parser.GetTokenNoErr(_env, nil)
+        token = self.tokenizer.GetTokenNoErr(_env, nil)
     }
     var typeInfo *Ast_TypeInfo
     if token.Txt == "..."{
@@ -12563,12 +12563,12 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
         return nil, pos, _env.GetVM().String_format("This type must be public. -- %s", Lns_2DDD(typeInfo.FP.GetTxt(_env, nil, nil, nil)))
     }
     var token *Types_Token
-    token = self.parser.GetTokenNoErr(_env, nil)
+    token = self.tokenizer.GetTokenNoErr(_env, nil)
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( token.Consecutive) &&
         _env.SetStackVal( token.Txt == "!") ).(bool)){
         typeInfo = typeInfo.FP.Get_nilableTypeInfo(_env)
-        token = self.parser.GetTokenNoErr(_env, nil)
+        token = self.tokenizer.GetTokenNoErr(_env, nil)
     }
     var genericRefList *LnsList2_[*Ast_RefTypeInfo]
     genericRefList = NewLnsList2_[*Ast_RefTypeInfo]([]*Ast_RefTypeInfo{})
@@ -12581,7 +12581,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
             } else { 
                 typeInfo = self.processInfo.FP.CreateArray(_env, self.accessMode, self.parentInfo, NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](typeInfo)), Ast_MutMode__Mut)
             }
-            token = self.parser.GetTokenNoErr(_env, nil)
+            token = self.tokenizer.GetTokenNoErr(_env, nil)
             if token.Txt != "]"{
                 return nil, token.Pos, "not found -- ']'"
             }
@@ -12599,7 +12599,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
                     genericRefList.Insert(refType_4457)
                     genericList.Insert(refType_4457.FP.Get_typeInfo(_env))
                 }
-                nextToken = self.parser.GetTokenNoErr(_env, nil)
+                nextToken = self.tokenizer.GetTokenNoErr(_env, nil)
                 if nextToken.Txt != ","{ break }
             }
             if nextToken.Txt != ">"{
@@ -12673,14 +12673,14 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
                 return nil, pos, _env.GetVM().String_format("not support generic: %s", Lns_2DDD(typeInfo.FP.GetTxt(_env, nil, nil, nil)))
             }
         } else { 
-            self.parser.Pushback(_env)
+            self.tokenizer.Pushback(_env)
             break
         }
-        token = self.parser.GetTokenNoErr(_env, nil)
+        token = self.tokenizer.GetTokenNoErr(_env, nil)
     }
     if token.Txt == "!"{
         typeInfo = typeInfo.FP.Get_nilableTypeInfo(_env)
-        self.parser.GetTokenNoErr(_env, nil)
+        self.tokenizer.GetTokenNoErr(_env, nil)
     }
     if Lns_op_not(allowDDD){
         if typeInfo.FP.Get_kind(_env) == Ast_TypeInfoKind__DDD{

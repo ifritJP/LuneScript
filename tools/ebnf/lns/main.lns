@@ -1,0 +1,57 @@
+// -*- coding: utf-8 -*-
+
+import lns.Ebnf;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Parser as LnsParser;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+
+
+
+let ebnfCtrl = Ebnf.analyze_ebnf( Ebnf.EbnfParser.create() );
+ebnfCtrl.dump();
+
+
+fn createParser() : LnsParser.Parser {
+   let lnsCode = ```
+// import lns.Ebnf;
+// import go/github:com.ifritJP.LuneScript.src.lune.base.Parser as LnsParser;
+// import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+// if hoge == aaa {
+// } elseif not hoge.foo.bar {
+// } else {
+// }
+// let ebnfCtrl = Ebnf.analyze_ebnf( Ebnf.EbnfParser.create() );
+// fn createParser() : LnsParser.Parser {
+// }
+// LnsTypes.ParserSrc.LnsCode( lnsCode, "test", nil );
+// pub class EbnfParser {
+//    let parser:LnsParser.PushbackParser;
+//    let mut inEbnf:bool {pub,pub};
+// }
+  pub fn checkNext( txt:str ) mut : &LnsTypes.Token {
+      let token = self.getToken();
+      if token.txt == txt {
+         return token;
+      }
+      print(
+         "%d:%d: Illegal token. expects '%s' but '%s'"
+         ( token.pos.lineNo, token.pos.column, txt, token.txt) );
+      os.exit( 1 );
+   }
+```;
+   return LnsParser.StreamParser.create(
+      LnsTypes.ParserSrc.LnsCode( lnsCode, "test", nil ), false, nil, nil );
+}
+
+fn createParserFromFile( path:str ) : LnsParser.Parser {
+   return LnsParser.StreamParser.create(
+      LnsTypes.ParserSrc.LnsPath( nil, path, "test", nil), false, nil, nil );
+}
+
+
+// let mut codeParser = createParser();
+// let mut codeParser = createParserFromFile( "lns/main.lns" );
+let mut codeParser = createParserFromFile( "lns/Ebnf.lns" );
+
+ebnfCtrl.parse(
+   "<code>",
+   new Ebnf.CodeParser( new LnsParser.DefaultPushbackParser( codeParser ) ) );

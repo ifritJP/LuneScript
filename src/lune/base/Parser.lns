@@ -29,10 +29,10 @@ import lune.base.Util;
 import lune.base.Str;
 import lune.base.Types;
 import lune.base.Async;
-import lune.base.AsyncParser;
+import lune.base.AsyncParser as AsyncTokenizer;
 
 pub fn isLuaKeyword( txt:str ) : bool {
-   return AsyncParser.isLuaKeyword( txt );
+   return AsyncTokenizer.isLuaKeyword( txt );
 }
 
 pub alias TxtStream = Util.TxtStream;
@@ -40,7 +40,7 @@ pub alias Position = Types.Position;
 pub alias TokenKind = Types.TokenKind;
 pub alias Token = Types.Token;
 
-pub abstract class Parser {
+pub abstract class Tokenizer {
    pub abstract fn getToken() mut : &Token!;
    pub abstract fn getStreamName(): str;
    pub abstract fn createPosition( lineNo: int, column: int ) : &Position;
@@ -49,7 +49,7 @@ pub abstract class Parser {
    // }
 }
 
-pub interface PushbackParser {
+pub interface PushbackTokenizer {
    pub fn getTokenNoErr(skipFlag:bool!) mut : &Token;
    pub fn pushback() mut;
    pub fn pushbackToken( token: &Token ) mut;
@@ -111,7 +111,7 @@ pub fn convFromRawToStr( txt:str ) : str {
    }
 }
 
-pub class TokenListParser extend Parser {
+pub class TokenListTokenizer extend Tokenizer {
    let streamName: str;
    let tokenList:&List<&Types.Token>;
    let mut index:int;
@@ -148,28 +148,28 @@ pub class TokenListParser extend Parser {
 }
 
 
-pub class StreamParser extend Parser {
+pub class StreamTokenizer extend Tokenizer {
    /** stdin に紐付けている*/
    static let mut stdinStreamModuleName: str!;
    static let mut stdinTxt: str;
 
    __init {
-      StreamParser.stdinStreamModuleName = nil;
-      StreamParser.stdinTxt = "";
+      StreamTokenizer.stdinStreamModuleName = nil;
+      StreamTokenizer.stdinTxt = "";
    }
    pub static fn setStdinStream( moduleName:str ){
-      StreamParser.stdinStreamModuleName = moduleName;
-      StreamParser.stdinTxt = unwrap io.stdin.read( '*a' ) default "";
+      StreamTokenizer.stdinStreamModuleName = moduleName;
+      StreamTokenizer.stdinTxt = unwrap io.stdin.read( '*a' ) default "";
    }
 
    let streamName: str;
    let mut pos : int;
    let mut lineTokenList : &List<&Token>;
-   let mut asyncParser:AsyncParser.Parser;
+   let mut asyncTokenizer:AsyncTokenizer.Tokenizer;
    let overridePos:&Types.Position!;
    // let mut pipe:AsyncPipe;
    
-   local fn __init( parserSrc:&Types.ParserSrc, async:bool,
+   local fn __init( tokenizerSrc:&Types.TokenizerSrc, async:bool,
                     stdinFile:&Types.StdinFile!, pos:&Types.Position! )
    {
       super();
@@ -178,14 +178,14 @@ pub class StreamParser extend Parser {
       self.lineTokenList = [];
       self.overridePos = pos;
 
-      let mut asyncParser, errMess =
-         AsyncParser.create( parserSrc, stdinFile, pos, async );
-      if! asyncParser {
-         self.asyncParser = _exp;
+      let mut asyncTokenizer, errMess =
+         AsyncTokenizer.create( tokenizerSrc, stdinFile, pos, async );
+      if! asyncTokenizer {
+         self.asyncTokenizer = _exp;
       } else {
          Util.err( errMess ); // 要対応
       }
-      self.streamName = self.asyncParser.$streamName;
+      self.streamName = self.asyncTokenizer.$streamName;
    }
 
    pub override fn createPosition( lineNo: int, column: int ) : &Position {
@@ -198,10 +198,10 @@ pub class StreamParser extend Parser {
    }
 
    pub static fn create(
-      parserSrc:&Types.ParserSrc, async:bool,
-      stdinFile:&Types.StdinFile!, pos:&Types.Position! ): StreamParser
+      tokenizerSrc:&Types.TokenizerSrc, async:bool,
+      stdinFile:&Types.StdinFile!, pos:&Types.Position! ): StreamTokenizer
    {
-      return new StreamParser( parserSrc, async, stdinFile, pos );
+      return new StreamTokenizer( tokenizerSrc, async, stdinFile, pos );
    }
 
    pub override fn getToken() mut : &Token! {
@@ -209,7 +209,7 @@ pub class StreamParser extend Parser {
          self.pos = 1;
          self.lineTokenList = [];
          while #self.lineTokenList == 0 {
-            let! mut pipeItem = self.asyncParser.getNext() {
+            let! mut pipeItem = self.asyncTokenizer.getNext() {
                return nil;
             };
             self.lineTokenList = pipeItem.$item.list;
@@ -223,14 +223,14 @@ pub class StreamParser extend Parser {
    }
 }
 
-pub class DefaultPushbackParser extend (PushbackParser) {
-   let mut parser:Parser;
+pub class DefaultPushbackTokenizer extend (PushbackTokenizer) {
+   let mut tokenizer:Tokenizer;
    let mut pushbackedList:List<&Token>;
    let mut usedTokenList:List<&Token>;
    let mut currentToken:&Token {pub};
 
-   pub fn __init( parser:Parser ) {
-      self.parser = parser;
+   pub fn __init( tokenizer:Tokenizer ) {
+      self.tokenizer = tokenizer;
       self.pushbackedList = [];
       self.usedTokenList = [];
       self.currentToken = Types.noneToken;
@@ -240,15 +240,15 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       return #self.usedTokenList;
    }
 
-   pub static fn createFromLnsCode( code:str, name:str ): DefaultPushbackParser {
-      return new DefaultPushbackParser(
-         new StreamParser(
-            Types.ParserSrc.LnsCode( code, name, nil ), false ## ) );
+   pub static fn createFromLnsCode( code:str, name:str ): DefaultPushbackTokenizer {
+      return new DefaultPushbackTokenizer(
+         new StreamTokenizer(
+            Types.TokenizerSrc.LnsCode( code, name, nil ), false ## ) );
    }
    
    
    pub fn createPosition( lineNo: int, column: int ) : &Position {
-      return self.parser.createPosition( lineNo, column );
+      return self.tokenizer.createPosition( lineNo, column );
    }
 
    pub fn getTokenNoErr(skipFlag:bool!) mut : &Token {
@@ -257,7 +257,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
          self.pushbackedList.remove(##);
       }
       else {
-         if! let token = self.parser.getToken() {
+         if! let token = self.tokenizer.getToken() {
             self.currentToken = token;
          }
          else {
@@ -298,13 +298,13 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    pub fn pushbackStr(
       asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut
    {
-      let mut parser = new StreamParser(
-         Types.ParserSrc.LnsCode( statement, name, nil ),
+      let mut tokenizer = new StreamTokenizer(
+         Types.TokenizerSrc.LnsCode( statement, name, nil ),
          asyncParse == true, nil, pos );
 
       let mut list:List<&Token> = [];
       while true {
-         if! parser.getToken() {
+         if! tokenizer.getToken() {
             list.insert( _exp );
          }
          else {
@@ -322,7 +322,7 @@ pub class DefaultPushbackParser extend (PushbackParser) {
    }
 
    pub fn getLastPos() : &Position {
-      let mut pos:&Position = self.parser.createPosition( 0, 0 );
+      let mut pos:&Position = self.tokenizer.createPosition( 0, 0 );
       if self.$currentToken.$kind ~= .Eof {
          pos = self.$currentToken.pos;
       }
@@ -353,16 +353,16 @@ pub class DefaultPushbackParser extend (PushbackParser) {
       return "%s -- current '%s'" (code, self.currentToken.txt );
    }
    pub fn getStreamName(): str {
-      return self.parser.getStreamName();
+      return self.tokenizer.getStreamName();
    }
 }
 
 pub static fn isOp2( ope: str ) : bool {
-   return AsyncParser.isOp2( ope );
+   return AsyncTokenizer.isOp2( ope );
 }
 
 pub static fn isOp1( ope: str ) : bool {
-   return AsyncParser.isOp1( ope );
+   return AsyncTokenizer.isOp1( ope );
 }
 
 // class TokenList {
@@ -373,7 +373,7 @@ let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0, "eof" ## ), false, 
 pub fn getEofToken(): &Token {
    return eofToken;
 }
-pub class DummyParser extend Parser {
+pub class DummyTokenizer extend Tokenizer {
    pub override fn getToken() mut : &Token! {
       return eofToken;
    }
@@ -490,10 +490,10 @@ pub fn quoteStr( txt:str ) : str {
    return work;
 }
 
-pub fn createParserFrom(
-   src:&Types.ParserSrc, async:bool, stdinFile:&Types.StdinFile! ) : Parser
+pub fn createTokenizerFrom(
+   src:&Types.TokenizerSrc, async:bool, stdinFile:&Types.StdinFile! ) : Tokenizer
 {
-   return new StreamParser( src, async, stdinFile, nil );
+   return new StreamTokenizer( src, async, stdinFile, nil );
 }
 
 
@@ -506,9 +506,9 @@ let val = ?a;
 fn func():int {
    return "%g" val + 1 + 2.0;
 }```;
-      let mut parser =
-         new StreamParser(
-            Types.ParserSrc.LnsCode( txt, "test", nil ), false ## );
+      let mut tokenizer =
+         new StreamTokenizer(
+            Types.TokenizerSrc.LnsCode( txt, "test", nil ), false ## );
 
       class LowToken {
          pub let txt:str;
@@ -535,7 +535,7 @@ fn func():int {
          new LowToken( "}", .Dlmt )
       ];
       foreach lowToken in txtList {
-         if! let token = parser.getToken() {
+         if! let token = tokenizer.getToken() {
             __t._eq( ctrl, lowToken.txt, token.txt );
             __t._eq( ctrl, lowToken.kind.$_txt, token.kind.$_txt );
          }
@@ -546,42 +546,42 @@ fn func():int {
    }
 
    {
-      let mut parser = new DefaultPushbackParser(
-         new StreamParser(Types.ParserSrc.LnsCode(
+      let mut tokenizer = new DefaultPushbackTokenizer(
+         new StreamTokenizer(Types.TokenizerSrc.LnsCode(
             "1 2 3 4 5", "test", nil ), false ## ) );
 
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "1" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "2" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "3" );
-      parser.pushback(); // 3
-      parser.pushback(); // 2
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "2" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "3" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "4" );
-      parser.pushbackStr( false, "dummy", "a b", parser.createPosition( 0, -1 ) );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "a" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "b" );
-      parser.pushback(); // b
-      parser.pushback(); // a
-      parser.pushback(); // 4
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "4" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "a" );
-      parser.newPushback(
-         [ new Token( .Symb, "z", parser.createPosition( 0, -1 ), false, [] ),
-           new Token( .Symb, "y", parser.createPosition( 0, -1 ), false, [] ) ] );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "z" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "y" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "b" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "5" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).kind, TokenKind.Eof );
-      __t._eq( ctrl, parser.getTokenNoErr(##).kind, TokenKind.Eof );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "1" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "2" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "3" );
+      tokenizer.pushback(); // 3
+      tokenizer.pushback(); // 2
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "2" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "3" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "4" );
+      tokenizer.pushbackStr( false, "dummy", "a b", tokenizer.createPosition( 0, -1 ) );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "a" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "b" );
+      tokenizer.pushback(); // b
+      tokenizer.pushback(); // a
+      tokenizer.pushback(); // 4
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "4" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "a" );
+      tokenizer.newPushback(
+         [ new Token( .Symb, "z", tokenizer.createPosition( 0, -1 ), false, [] ),
+           new Token( .Symb, "y", tokenizer.createPosition( 0, -1 ), false, [] ) ] );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "z" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "y" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "b" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "5" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).kind, TokenKind.Eof );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).kind, TokenKind.Eof );
    }
    {
-      let mut parser = new DefaultPushbackParser(
-         new StreamParser(Types.ParserSrc.LnsCode( "int", "test", nil ), false ## ) );
+      let mut tokenizer = new DefaultPushbackTokenizer(
+         new StreamTokenizer(Types.TokenizerSrc.LnsCode( "int", "test", nil ), false ## ) );
 
-      __t._eq( ctrl, parser.getTokenNoErr(##).txt, "int" );
-      __t._eq( ctrl, parser.getTokenNoErr(##).kind, TokenKind.Eof );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "int" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).kind, TokenKind.Eof );
    }
 
    {
