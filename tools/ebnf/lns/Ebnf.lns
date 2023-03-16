@@ -1,27 +1,27 @@
 // -*- coding: utf-8 -*-
 
-import go/github:com.ifritJP.LuneScript.src.lune.base.Parser as LnsParser;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
 
 
-pub class EbnfParser {
-   let parser:LnsParser.PushbackParser;
+pub class EbnfTokenizer {
+   let tokenizer:LnsTokenizer.PushbackTokenizer;
    let mut inEbnf:bool {pub,pub};
 
-   fn __init( parser:LnsParser.Parser ) {
-      self.parser = new LnsParser.DefaultPushbackParser( parser );
+   fn __init( tokenizer:LnsTokenizer.Tokenizer ) {
+      self.tokenizer = new LnsTokenizer.DefaultPushbackTokenizer( tokenizer );
       self.inEbnf = false;
    }
 
-   pub static fn create() : EbnfParser {
+   pub static fn create() : EbnfTokenizer {
       let path = "../../../ifritJP.github.io/hugo/content/LuneScript/ebnf.ja.org";
-      let mut parser = LnsParser.StreamParser.create(
-         LnsTypes.ParserSrc.LnsPath( nil, path, "ebnf", nil ), false, nil, nil );
-      return new EbnfParser( parser );
+      let mut tokenizer = LnsTokenizer.StreamTokenizer.create(
+         LnsTypes.TokenizerSrc.LnsPath( nil, path, "ebnf", nil ), false, nil, nil );
+      return new EbnfTokenizer( tokenizer );
    }
 
    pri fn checkRawNext( txt:str ) mut : &LnsTypes.Token {
-      let token = self.parser.getTokenNoErr( false );
+      let token = self.tokenizer.getTokenNoErr( false );
       if token.txt == txt {
          return token;
       }
@@ -32,27 +32,27 @@ pub class EbnfParser {
    }
    
    pub fn getToken() mut : &LnsTypes.Token {
-      let token = self.parser.getTokenNoErr(false);
+      let token = self.tokenizer.getTokenNoErr(false);
       switch token.txt {
          case "#" {
-            let nextToken = self.parser.getTokenNoErr(false);
+            let nextToken = self.tokenizer.getTokenNoErr(false);
             if nextToken.txt == "+" and nextToken.consecutive {
                return new LnsTypes.Token( .Dlmt, "#+", token.pos, false, nil );
             }
-            self.parser.pushback();
+            self.tokenizer.pushback();
          }
          case ":" {
-            let nextToken = self.parser.getTokenNoErr( false );
+            let nextToken = self.tokenizer.getTokenNoErr( false );
             if nextToken.txt == ":" {
                self.checkRawNext( "=" );
                return new LnsTypes.Token( .Dlmt, "::=", token.pos, false, nil );
             } else {
-               self.parser.pushback();
+               self.tokenizer.pushback();
             }
          }
          case "<" {
             if self.inEbnf {
-               let nextToken = self.parser.getTokenNoErr( false );
+               let nextToken = self.tokenizer.getTokenNoErr( false );
                self.checkRawNext( ">" );
                return new LnsTypes.Token(
                   .Type, "<%s>" (nextToken.txt), token.pos, false, nil );
@@ -74,7 +74,7 @@ pub class EbnfParser {
    }
 
    pub fn pushBack( token:&LnsTypes.Token ) mut {
-      self.parser.pushbackToken( token );
+      self.tokenizer.pushbackToken( token );
    }
 
    pub fn skipLine( curToken:&LnsTypes.Token ) mut {
@@ -87,14 +87,14 @@ pub class EbnfParser {
 }
 
 
-pub class CodeParser {
-   let parser:LnsParser.PushbackParser;
+pub class CodeTokenizer {
+   let tokenizer:LnsTokenizer.PushbackTokenizer;
    let tokenListStack:List<List<&LnsTypes.Token>>;
    let mut tokenList:List<&LnsTypes.Token>;
    let mut commonList:__List<&LnsTypes.Token>;
 
-   pub fn __init(parser:LnsParser.PushbackParser) {
-      self.parser = parser;
+   pub fn __init(tokenizer:LnsTokenizer.PushbackTokenizer) {
+      self.tokenizer = tokenizer;
       self.tokenList = [];
       self.tokenListStack = [];
       self.commonList = [];
@@ -111,7 +111,7 @@ pub class CodeParser {
          error( "self.tokenListStack is zero" );
       }
       for _ = 1, #self.tokenList {
-         self.parser.pushback();
+         self.tokenizer.pushback();
       }
       self.tokenList = self.tokenListStack[ #self.tokenListStack ];
       self.tokenListStack.remove(##);
@@ -134,7 +134,7 @@ pub class CodeParser {
       }
       
       while true {
-         let token = self.parser.getTokenNoErr( false );
+         let token = self.tokenizer.getTokenNoErr( false );
          switch token.kind {
             case .Eof {
                return process(token);
@@ -153,7 +153,7 @@ pub class CodeParser {
       if #self.tokenList == 0 {
          error( "self.tokenList is zero" );
       }
-      self.parser.pushbackToken( self.tokenList[ #self.tokenList ] );
+      self.tokenizer.pushbackToken( self.tokenList[ #self.tokenList ] );
       self.tokenList.remove( ## );
    }
 }
@@ -242,7 +242,7 @@ ebnf の element を構成する一つの要素
 pub interface Core {
    pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str>;
    pub fn parseCode(
-      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str>):ParseCodeRet;
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet;
 }
 
 pub class CodeCoreBuiltin extend (CodeCore) {
@@ -312,18 +312,18 @@ class Rule {
    }
 
    pub fn parseCode(
-      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str> ) : ParseCodeRet
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str> ) : ParseCodeRet
    {
-      parser.pushTokenList();
+      tokenizer.pushTokenList();
       let codeCoreList:List<&CodeCore> = [];
       foreach core, index in self.coreList {
          print( __func__, index, #self.coreList ); 
-         _match core.parseCode(ctrl, parser, usedElementSet ) {
+         _match core.parseCode(ctrl, tokenizer, usedElementSet ) {
             case .Eof {
                return .Eof;
             }
             case .Unmatch {
-               parser.popTokenList();
+               tokenizer.popTokenList();
                return .Unmatch;
             }
             case .Abbr {
@@ -362,7 +362,7 @@ pub class RuleList {
       return list;
    }
    pub fn parseCode(
-      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str> ) : ParseCodeRet
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str> ) : ParseCodeRet
    {
       // if usedElementSet.has( self.elementName ) {
       //    print( __func__, "already use", self.elementName );
@@ -375,8 +375,8 @@ pub class RuleList {
       
       foreach rule, index in self.list {
          print( "check -- ", index, #self.list, self.elementName );
-         parser.pushTokenList();
-         _match rule.parseCode(ctrl, parser, usedElementSet ) {
+         tokenizer.pushTokenList();
+         _match rule.parseCode(ctrl, tokenizer, usedElementSet ) {
             case .Eof {
                return .Eof;
             }
@@ -391,7 +391,7 @@ pub class RuleList {
                return .Detect( codeCore );
             }
          }
-         parser.popTokenList();
+         tokenizer.popTokenList();
       }
       print( result.$_txt, " -- ", self.elementName );
       return result;
@@ -419,9 +419,9 @@ class TokenCore extend (Core) {
       return [ self.rawTxt ];
    }
    pub fn parseCode(
-      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str>):ParseCodeRet
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
    {
-      let token = parser.getToken();
+      let token = tokenizer.getToken();
       print( __func__, self.token.txt, token.txt );
       if token.kind == .Eof {
          return .Eof;
@@ -468,12 +468,12 @@ class ElementCore extend (Core) {
       return [];
    }
    pub fn parseCode(
-      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str>):ParseCodeRet
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
    {
       if! let ruleList = ctrl.getRuleList( self.elementName ) {
-         return ruleList.parseCode( ctrl, parser, usedElementSet );
+         return ruleList.parseCode( ctrl, tokenizer, usedElementSet );
       }
-      let token = parser.getToken();
+      let token = tokenizer.getToken();
       switch self.elementName {
          case "<sym>" {
             switch token.kind {
@@ -521,11 +521,11 @@ class RuleCore extend (Core) {
       return [];
    }
    pub fn parseCode(
-      ctrl:&EbnfCtrl, parser:CodeParser, usedElementSet:Set<&str> ) : ParseCodeRet
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str> ) : ParseCodeRet
    {
       let list:List<&CodeCore> = [];
       while true {
-         let result = self.rule.parseCode( ctrl, parser, usedElementSet );
+         let result = self.rule.parseCode( ctrl, tokenizer, usedElementSet );
          _match result {
             case .Eof {
                if #list == 0 {
@@ -565,31 +565,33 @@ fn isElement( token:&LnsTypes.Token ) : bool {
 }
 
 
-class DeclParser {
-   let parser:EbnfParser;
-   let mut prevToken:LnsParser.Token;
+class DeclTokenizer {
+   let tokenizer:EbnfTokenizer;
+   let mut prevToken:LnsTokenizer.Token;
    let allElementSet:Set<str>;
 
-   pub fn __init( parser:EbnfParser, prevToken:LnsParser.Token, allElementSet:Set<str> ) {
-      self.parser = parser;
+   pub fn __init( tokenizer:EbnfTokenizer, prevToken:LnsTokenizer.Token,
+                  allElementSet:Set<str> )
+   {
+      self.tokenizer = tokenizer;
       self.prevToken = prevToken;
       self.allElementSet = allElementSet;
    }
    
    pub fn getToken() mut : &LnsTypes.Token! {
-      let nextToken = self.parser.getToken();
+      let nextToken = self.tokenizer.getToken();
       if nextToken.kind == .Eof {
          return nil;
       }
       if nextToken.pos.lineNo ~= self.prevToken.pos.lineNo {
          if nextToken.txt == "#+" {
-            self.parser.pushBack( nextToken );
+            self.tokenizer.pushBack( nextToken );
             return nil;
          }
-         let checkToken = self.parser.getToken();
-         self.parser.pushBack( checkToken );
+         let checkToken = self.tokenizer.getToken();
+         self.tokenizer.pushBack( checkToken );
          if checkToken.txt == "::=" {
-            self.parser.pushBack( nextToken );
+            self.tokenizer.pushBack( nextToken );
             return nil;
          }
       }
@@ -606,21 +608,22 @@ class DeclParser {
    }
 }
 
-fn EbnfCtrl.processRule( elementName:str!, parser:DeclParser, termTxt:str! ) mut : &Rule!, str
+fn EbnfCtrl.processRule(
+   elementName:str!, tokenizer:DeclTokenizer, termTxt:str! ) mut : &Rule!, str
 {
    let mut coreList:List<&Core> = [];
    let mut endsTerm = false;
    while true {
-      let! token = parser.getToken() {
+      let! token = tokenizer.getToken() {
          break;
       };
       switch token.txt {
          case "[" {
-            let optRule = self.processRule( nil, parser, "]" )!;
+            let optRule = self.processRule( nil, tokenizer, "]" )!;
             coreList.insert( new RuleCore( .Option, optRule ) );
          }
          case "{" {
-            let optRule = self.processRule( nil, parser, "}" )!;
+            let optRule = self.processRule( nil, tokenizer, "}" )!;
             coreList.insert( new RuleCore( .Repeat, optRule ) );
          }
          case "|" {
@@ -651,21 +654,21 @@ fn EbnfCtrl.processRule( elementName:str!, parser:DeclParser, termTxt:str! ) mut
 
 
 local fn EbnfCtrl.processDecl(
-   parser:EbnfParser, symbolToken:&LnsTypes.Token ) mut : &RuleList
+   tokenizer:EbnfTokenizer, symbolToken:&LnsTypes.Token ) mut : &RuleList
 {
    let elementName = symbolToken.txt;
    print( __func__, elementName );
-   parser.checkNext( "::=" );
+   tokenizer.checkNext( "::=" );
 
    let mut list:List<&Rule> = [];
    while true {
-      let mut declParser = new DeclParser( parser, symbolToken, self.allElementSet );
-      let rule, mess = self.processRule( elementName, declParser, nil );
+      let mut declTokenizer = new DeclTokenizer( tokenizer, symbolToken, self.allElementSet );
+      let rule, mess = self.processRule( elementName, declTokenizer, nil );
       when! rule {
          list.insert( rule );
       } else {
          if #list == 0 {
-            declParser.err( mess );
+            declTokenizer.err( mess );
          }
          break;
       }
@@ -682,12 +685,12 @@ pub fn EbnfCtrl.dump() {
    }
 }
 
-pub fn EbnfCtrl.parse( elementName:str, parser:CodeParser ) {
+pub fn EbnfCtrl.parse( elementName:str, tokenizer:CodeTokenizer ) {
    let! ruleList = self.element2ruleList[ elementName ] {
       print( "error parse" );
       return;
    };
-   _match ruleList.parseCode( self, parser, (@) ) {
+   _match ruleList.parseCode( self, tokenizer, (@) ) {
       case .Eof {
          print( "eof" );
       }
@@ -705,31 +708,31 @@ pub fn EbnfCtrl.parse( elementName:str, parser:CodeParser ) {
    }
 }
 
-pub fn analyze_ebnf( parser:EbnfParser ) : &EbnfCtrl {
+pub fn analyze_ebnf( tokenizer:EbnfTokenizer ) : &EbnfCtrl {
 
    let mut ebnfCtrl = new EbnfCtrl();
    
    while true {
-      let token = parser.getToken();
+      let token = tokenizer.getToken();
       if token.kind == .Eof {
          break;
       }
       if token.txt == "#" {
-         parser.skipLine( token );
+         tokenizer.skipLine( token );
       } elseif token.txt == "#+" {
-         let nextToken = parser.getToken();
+         let nextToken = tokenizer.getToken();
          switch nextToken.txt.upper() {
             case "BEGIN_SRC" {
-               parser.set_inEbnf( true );
+               tokenizer.set_inEbnf( true );
             }
             case "END_SRC" {
-               parser.set_inEbnf( false );
+               tokenizer.set_inEbnf( false );
             }
          }
-         parser.skipLine( token );
-      } elseif parser.$inEbnf {
+         tokenizer.skipLine( token );
+      } elseif tokenizer.$inEbnf {
          if isElement( token ) {
-            ebnfCtrl.processDecl( parser, token );
+            ebnfCtrl.processDecl( tokenizer, token );
          }
       }
    }

@@ -249,7 +249,7 @@ end
 
 
 
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
 local Log = _lune.loadModule( 'lune.base.Log' )
@@ -7930,7 +7930,7 @@ end
 function ProcessInfo:createModule( scope, parentInfo, typeDataAccessor, externalFlag, moduleName, mutable )
 
    
-   if Parser.isLuaKeyword( moduleName ) then
+   if Tokenizer.isLuaKeyword( moduleName ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
    end
    
@@ -7945,7 +7945,7 @@ end
 
 function ProcessInfo:createClassAsync( classFlag, finalFlag, abstractFlag, scope, baseInfo, interfaceList, genTypeList, parentInfo, typeDataAccessor, externalFlag, accessMode, className )
 
-   if Parser.isLuaKeyword( className ) then
+   if Tokenizer.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
    
@@ -7970,7 +7970,7 @@ end
 function ProcessInfo:createExtModule( scope, parentInfo, typeDataAccessor, externalFlag, accessMode, className, moduleLang, requirePath )
 
    
-   if Parser.isLuaKeyword( className ) then
+   if Tokenizer.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
    
@@ -7984,7 +7984,7 @@ end
 
 function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, parentInfo, typeDataAccessor, autoFlag, externalFlag, staticFlag, accessMode, funcName, asyncMode, altTypeList, argTypeList, retTypeInfoList, mutMode )
 
-   if not builtinFlag and Parser.isLuaKeyword( funcName ) then
+   if not builtinFlag and Tokenizer.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
    end
    
@@ -9558,7 +9558,7 @@ _moduleObj.isNumberType = isNumberType
 
 function ProcessInfo:createEnum( scope, parentInfo, typeDataAccessor, externalFlag, accessMode, enumName, valTypeInfo )
 
-   if Parser.isLuaKeyword( enumName ) then
+   if Tokenizer.isLuaKeyword( enumName ) then
       Util.err( string.format( "This symbol can not use for a enum. -- %s", enumName) )
    end
    
@@ -9625,7 +9625,7 @@ end
 
 function ProcessInfo:createAlge( scope, parentInfo, typeDataAccessor, externalFlag, accessMode, algeName, itemTypeInfoList )
 
-   if Parser.isLuaKeyword( algeName ) then
+   if Tokenizer.isLuaKeyword( algeName ) then
       Util.err( string.format( "This symbol can not use for a alge. -- %s", algeName) )
    end
    
@@ -10927,20 +10927,20 @@ function TypeAnalyzer:__init(processInfo, parentInfo, moduleType, moduleScope, s
    self.scope = rootScope
    self.accessMode = AccessMode.Local
    self.parentPub = false
-   self.parser = Parser.DefaultPushbackParser._new(Parser.DummyParser._new())
+   self.tokenizer = Tokenizer.DefaultPushbackTokenizer._new(Tokenizer.DummyTokenizer._new())
 end
-function TypeAnalyzer:analyzeType( scope, parser, accessMode, allowDDD, parentPub )
+function TypeAnalyzer:analyzeType( scope, tokenizer, accessMode, allowDDD, parentPub )
 
    self.scope = scope
-   self.parser = parser
+   self.tokenizer = tokenizer
    self.accessMode = accessMode
    self.parentPub = parentPub
    return self:analyzeTypeSub( allowDDD )
 end
 function TypeAnalyzer:analyzeTypeFromTxt( txt, scope, accessMode, parentPub )
 
-   local parser = Parser.DefaultPushbackParser.createFromLnsCode( txt, "test" )
-   return self:analyzeType( scope, parser, accessMode, true, parentPub )
+   local tokenizer = Tokenizer.DefaultPushbackTokenizer.createFromLnsCode( txt, "test" )
+   return self:analyzeType( scope, tokenizer, accessMode, true, parentPub )
 end
 function TypeAnalyzer._setmeta( obj )
   setmetatable( obj, { __index = TypeAnalyzer  } )
@@ -10949,18 +10949,18 @@ end
 
 function TypeAnalyzer:analyzeTypeSub( allowDDD )
 
-   local firstToken = self.parser:getTokenNoErr(  )
+   local firstToken = self.tokenizer:getTokenNoErr(  )
    local token = firstToken
    local refFlag = false
    if token.txt == "&" then
       refFlag = true
-      token = self.parser:getTokenNoErr(  )
+      token = self.tokenizer:getTokenNoErr(  )
    end
    
    local mutFlag = false
    if token.txt == "mut" then
       mutFlag = true
-      token = self.parser:getTokenNoErr(  )
+      token = self.tokenizer:getTokenNoErr(  )
    end
    
    
@@ -10997,11 +10997,11 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
    end
    
    
-   local token = self.parser:getTokenNoErr(  )
+   local token = self.tokenizer:getTokenNoErr(  )
    
    if token.consecutive and token.txt == "!" then
       typeInfo = typeInfo:get_nilableTypeInfo()
-      token = self.parser:getTokenNoErr(  )
+      token = self.tokenizer:getTokenNoErr(  )
    end
    
    
@@ -11017,7 +11017,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
             typeInfo = self.processInfo:createArray( self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
          end
          
-         token = self.parser:getTokenNoErr(  )
+         token = self.tokenizer:getTokenNoErr(  )
          if token.txt ~= ']' then
             return nil, token.pos, "not found -- ']'"
          end
@@ -11025,7 +11025,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
          
       elseif token.txt == "<" then
          local genericList = {}
-         local nextToken = Parser.getEofToken(  )
+         local nextToken = Tokenizer.getEofToken(  )
          repeat 
             local refType = self:analyzeTypeSub( false )
             if refType ~= nil then
@@ -11033,7 +11033,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                table.insert( genericList, refType:get_typeInfo() )
             end
             
-            nextToken = self.parser:getTokenNoErr(  )
+            nextToken = self.tokenizer:getTokenNoErr(  )
          until nextToken.txt ~= ","
          if nextToken.txt ~= '>' then
             return nil, nextToken.pos, "not found -- ']'"
@@ -11131,16 +11131,16 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
          
       else
        
-         self.parser:pushback(  )
+         self.tokenizer:pushback(  )
          break
       end
       
-      token = self.parser:getTokenNoErr(  )
+      token = self.tokenizer:getTokenNoErr(  )
    end
    
    if token.txt == "!" then
       typeInfo = typeInfo:get_nilableTypeInfo(  )
-      self.parser:getTokenNoErr(  )
+      self.tokenizer:getTokenNoErr(  )
    end
    
    

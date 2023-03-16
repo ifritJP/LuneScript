@@ -313,10 +313,10 @@ pub class StdinFile {
    let txt:str {pub};
 }
 
-pub alge ParserSrc {
+pub alge TokenizerSrc {
    LnsCode( code:str, path:str, pipeSize:int! ),
    LnsPath( baseDir:str!, path:str, moduleName:str, pipeSize:int! ),
-   Parser( path: str, luaMode: bool, moduleName:str, pipeSize:int! ),
+   Tokenizer( path: str, luaMode: bool, moduleName:str, pipeSize:int! ),
 }
 
-pub let defaultParserPipeSize = 100;
+pub let defaultTokenizerPipeSize = 100;

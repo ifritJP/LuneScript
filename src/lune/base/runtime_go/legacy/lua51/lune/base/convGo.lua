@@ -244,7 +244,7 @@ local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local LnsOpt = _lune.loadModule( 'lune.base.Option' )
@@ -447,7 +447,7 @@ function convFilter:__init(enableTest, streamName, stream, ast, option)
    self.modDir = Str.replace( modDir, "@", "" ):gsub( "%.$", "" )
    self.localPrefix = Str.replace( self.moduleTypeInfo:get_rawTxt(), "@", "" )
    
-   self.noneNode = Nodes.NoneNode.create( self.nodeManager, Parser.noneToken.pos, false, false, {Ast.builtinTypeNone} )
+   self.noneNode = Nodes.NoneNode.create( self.nodeManager, Tokenizer.noneToken.pos, false, false, {Ast.builtinTypeNone} )
    
    self.builtin2code = {[self.builtinFuncs.__lns_runmode_Sync_sym] = string.format( "%d", 0), [self.builtinFuncs.__lns_runmode_Queue_sym] = string.format( "%d", 1), [self.builtinFuncs.__lns_runmode_Skip_sym] = string.format( "%d", 2), [self.builtinFuncs.__lns_capability_async_sym] = "true"}
    
@@ -1131,9 +1131,9 @@ local function str2gostr( txt )
    local work = txt
    if string.find( work, '^```' ) then
       work = work:sub( 4, -4 ):gsub( "^\n", "" )
-      work = Parser.quoteStr( work )
+      work = Tokenizer.quoteStr( work )
    elseif string.find( work, "^'" ) then
-      work = Str.replace( Parser.convFromRawToStr( work ), '"', '\\"' )
+      work = Str.replace( Tokenizer.convFromRawToStr( work ), '"', '\\"' )
       work = string.format( '"%s"', work)
    end
    

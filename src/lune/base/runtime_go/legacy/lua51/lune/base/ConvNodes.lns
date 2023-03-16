@@ -24,7 +24,7 @@ SOFTWARE.
 
 _lune_control default_strict_generics;
 
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.Types;
@@ -39,7 +39,7 @@ pub form NodeVisitor(
 
 pub abstract class Node {
    pri let id: int { pub };
-   pri let pos: &Parser.Position { pub };
+   pri let pos: &Tokenizer.Position { pub };
    pri let kind: str {pub};
    pri let hasNilAcc: bool {pub};
    pri let mut parent:&Node! {pub, pub};
@@ -56,7 +56,7 @@ pub abstract class ExpNode extend Node {
 
 pub class DummyExpNode extend ExpNode {
    local fn __init() {
-      super( 0, Parser.getEofToken().pos, "DummyExpNode", false, nil );
+      super( 0, Tokenizer.getEofToken().pos, "DummyExpNode", false, nil );
    }
 }
 let dummyExpNode = new DummyExpNode();
@@ -331,7 +331,7 @@ macro _declNode( name:str, hasOrg:bool, autoCreate:bool, fieldList:List<List<str
       ,,orgNodeStat;
       ,,fieldStatList;
 
-      pub fn __init( id: int, pos: &Parser.Position, kind: str,
+      pub fn __init( id: int, pos: &Tokenizer.Position, kind: str,
                      hasNilAcc:bool, parent:&Node! ,,initParamStat )
       {    
          super( id, pos, kind, hasNilAcc, parent );

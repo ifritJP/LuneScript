@@ -33,7 +33,7 @@ import lune.base.Builtin;
 import lune.base.frontInterface;
 import lune.base.Types;
 import lune.base.TransUnit;
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.convLua;
 import lune.base.convGo;
 import lune.base.convPython;
@@ -104,9 +104,9 @@ pub class AstCreater extend Runner.Runner {
    pri fn createAst(
       frontAccessor:frontInterface.FrontAccessor,
       importModuleInfo:&frontInterface.ImportModuleInfo,
-      mut parserSrc:&Types.ParserSrc, baseDir:str!, stdinFile:&Types.StdinFile!,
+      mut tokenizerSrc:&Types.TokenizerSrc, baseDir:str!, stdinFile:&Types.StdinFile!,
       analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode,
-      pos:&Parser.Position! ) mut : &AstInfo.ASTInfo
+      pos:&Tokenizer.Position! ) mut : &AstInfo.ASTInfo
    {
       let mut transUnit = new TransUnit.TransUnitCtrl(
          frontAccessor,
@@ -115,7 +115,7 @@ pub class AstCreater extend Runner.Runner {
          self.option.transCtrlInfo, self.builtinFunc );
 
       return transUnit.createAST(
-         parserSrc, true, baseDir, stdinFile, false, self.mod,
+         tokenizerSrc, true, baseDir, stdinFile, false, self.mod,
          fn ( exportInfo:&frontInterface.ExportInfo ) __trans {
             self.exportInfo = exportInfo;
             // exportInfo をセットしてから flag をセットする。
@@ -128,9 +128,9 @@ pub class AstCreater extend Runner.Runner {
    
    pub fn __init(
       frontAccessor:frontInterface.FrontAccessor,
-      importModuleInfo:&frontInterface.ImportModuleInfo, parserSrc:&Types.ParserSrc,
+      importModuleInfo:&frontInterface.ImportModuleInfo, tokenizerSrc:&Types.TokenizerSrc,
       mod:str, baseDir:str!, moduleId:&frontInterface.ModuleId,
-      analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode, pos:&Parser.Position!,
+      analyzeModule:str!, analyzeMode:TransUnit.AnalyzeMode, pos:&Tokenizer.Position!,
       builtinFunc:&Builtin.BuiltinFuncType, option:&Option.Option )
    {
       super();
@@ -146,7 +146,7 @@ pub class AstCreater extend Runner.Runner {
       
       self.converter = fn () {
          let ast = self.createAst(
-            frontAccessor, importModuleInfo, parserSrc, baseDir, option.$stdinFile,
+            frontAccessor, importModuleInfo, tokenizerSrc, baseDir, option.$stdinFile,
             analyzeModule, analyzeMode, pos );
          self.ast = ast;
          self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId );
@@ -154,14 +154,14 @@ pub class AstCreater extend Runner.Runner {
       };
 
       let lnsPath;
-      match parserSrc {
+      match tokenizerSrc {
          case .LnsCode( _, path, _ ) {
             lnsPath = path;
          }
          case .LnsPath( _, path, _, _ ) {
             lnsPath = path;
          }
-         case .Parser( path, _, _, _ ) {
+         case .Tokenizer( path, _, _, _ ) {
             lnsPath = path;
          }
       }
@@ -237,7 +237,7 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
 @return bool 一致している場合 true。 true の場合、次の str の情報が有効。
 @return str 新しく書き込むメタ情報の文字列。
    */
-   fn checkDiff( oldStream:Parser.TxtStream, newStream:Parser.TxtStream ) : bool, str
+   fn checkDiff( oldStream:Tokenizer.TxtStream, newStream:Tokenizer.TxtStream ) : bool, str
    {
       macro _getBuildId( line:__exp, buildIdLine:__exp ) {
          when! ,,line {
@@ -336,8 +336,8 @@ oldStream, newStream に格納されているモジュールのメタ情報が�
             oldFileObj.close();
          }
 
-         let sameFlag, txt = checkDiff( new Parser.TxtStream( oldMetaTxt ),
-                                        new Parser.TxtStream( newMetaTxt ) );
+         let sameFlag, txt = checkDiff( new Tokenizer.TxtStream( oldMetaTxt ),
+                                        new Tokenizer.TxtStream( newMetaTxt ) );
 
          fn saveMeta( meta:str ) {
             if! let mut fileObj = io.open( metaPath, "w" ) {

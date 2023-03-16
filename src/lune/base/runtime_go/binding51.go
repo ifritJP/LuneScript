@@ -39,10 +39,10 @@ var lune_base_Util []byte
 var lune_base_frontInterface []byte
 //go:embed legacy/lua51/lune/base/Writer.lua
 var lune_base_Writer []byte
-//go:embed legacy/lua51/lune/base/AsyncParser.lua
-var lune_base_AsyncParser []byte
-//go:embed legacy/lua51/lune/base/Parser.lua
-var lune_base_Parser []byte
+//go:embed legacy/lua51/lune/base/AsyncTokenizer.lua
+var lune_base_AsyncTokenizer []byte
+//go:embed legacy/lua51/lune/base/Tokenizer.lua
+var lune_base_Tokenizer []byte
 //go:embed legacy/lua51/lune/base/Json.lua
 var lune_base_Json []byte
 //go:embed legacy/lua51/lune/base/Ast.lua
@@ -109,8 +109,8 @@ AddlnsSrcInfo( "lune.base.Depend", lune_base_Depend )
 AddlnsSrcInfo( "lune.base.Util", lune_base_Util )
 AddlnsSrcInfo( "lune.base.frontInterface", lune_base_frontInterface )
 AddlnsSrcInfo( "lune.base.Writer", lune_base_Writer )
-AddlnsSrcInfo( "lune.base.AsyncParser", lune_base_AsyncParser )
-AddlnsSrcInfo( "lune.base.Parser", lune_base_Parser )
+AddlnsSrcInfo( "lune.base.AsyncTokenizer", lune_base_AsyncTokenizer )
+AddlnsSrcInfo( "lune.base.Tokenizer", lune_base_Tokenizer )
 AddlnsSrcInfo( "lune.base.Json", lune_base_Json )
 AddlnsSrcInfo( "lune.base.Ast", lune_base_Ast )
 AddlnsSrcInfo( "lune.base.Option", lune_base_Option )

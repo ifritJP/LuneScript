@@ -201,8 +201,8 @@ end
 
 
 local Types = _lune.loadModule( 'lune.base.Types' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
-local AsyncParser = _lune.loadModule( 'lune.base.AsyncParser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+local AsyncTokenizer = _lune.loadModule( 'lune.base.AsyncTokenizer' )
 local Json = _lune.loadModule( 'lune.base.Json' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
@@ -217,7 +217,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 13871
+   return 13880
 end
 
 
@@ -711,8 +711,8 @@ end
                local _switchExp = (arg )
                if _switchExp == "-i" then
                   useStdInFlag = true
-               elseif _switchExp == "--parserPipeSize" then
-                  AsyncParser.setDefaultPipeSize( getNextOpInt(  ) )
+               elseif _switchExp == "--tokenizerPipeSize" then
+                  AsyncTokenizer.setDefaultPipeSize( getNextOpInt(  ) )
                elseif _switchExp == "-prof" then
                   option.validProf = true
                elseif _switchExp == "--noEnvArg" then
@@ -998,7 +998,7 @@ end
                      lineNo = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
                   elseif not column then
                      column = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
-                     option.analyzePos = Parser.Position._new(_lune.unwrap( lineNo), _lune.unwrap( column), Util.scriptPath2Module( option.scriptPath ))
+                     option.analyzePos = Tokenizer.Position._new(_lune.unwrap( lineNo), _lune.unwrap( column), Util.scriptPath2Module( option.scriptPath ))
                   end
                   
                elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta or _switchExp == ModeKind.Glue then

@@ -261,7 +261,7 @@ end
 
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Meta = _lune.loadModule( 'lune.base.Meta' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -1132,11 +1132,11 @@ AnalyzePhase.__allList[3] = AnalyzePhase.Main
 
 
 local TransUnit = {}
-setmetatable( TransUnit, { __index = TransUnitIF.TransUnitBase,ifList = {Parser.PushbackParser,} } )
+setmetatable( TransUnit, { __index = TransUnitIF.TransUnitBase,ifList = {Tokenizer.PushbackTokenizer,} } )
 _moduleObj.TransUnit = TransUnit
-function TransUnit:setParser( parser )
+function TransUnit:setTokenizer( tokenizer )
 
-   self.parser = parser
+   self.tokenizer = tokenizer
 end
 function TransUnit:setup( src )
 
@@ -1327,14 +1327,14 @@ function TransUnit:__init(frontAccessor, moduleId, importModuleInfo, macroEval, 
    self.modifier = TransUnitIF.Modifier._new(self.validMutControl, self.processInfo)
    self.moduleName = ""
    self.moduleType = Ast.headTypeInfo
-   self.parser = Parser.DefaultPushbackParser._new(Parser.DummyParser._new())
+   self.tokenizer = Tokenizer.DefaultPushbackTokenizer._new(Tokenizer.DummyTokenizer._new())
    self.topScope = self:get_scope()
    self.moduleScope = self:get_scope()
    
    self.tentativeSymbol = TentativeSymbol._new(nil, self.globalScope, self.moduleScope, false, nil)
    
    self.typeInfo2ClassNode = {}
-   self.commentCtrl = Parser.CommentCtrl._new()
+   self.commentCtrl = Tokenizer.CommentCtrl._new()
    self.warnMessList = {}
    self.analyzeMode = _lune.unwrapDefault( mode, AnalyzeMode.Compile)
    self.analyzePos = _lune.unwrapDefault( pos, self:createPosition( 0, 0 ))
@@ -1343,7 +1343,7 @@ function TransUnit:__init(frontAccessor, moduleId, importModuleInfo, macroEval, 
 end
 function TransUnit:getLatestPos(  )
 
-   return self.parser:getLastPos(  )
+   return self.tokenizer:getLastPos(  )
 end
 function TransUnit:pushAnalyzingState( state )
 
@@ -1429,7 +1429,7 @@ function TransUnit:finishTentativeSymbol( complete )
          for __index, __key in ipairs( __sorted ) do
             local symbolInfo = __map[ __key ]
             do
-               self:addErrMess( self.parser:getLastPos(  ), string.format( "There is the case no initialized value for '%s'", symbolInfo:get_name()) )
+               self:addErrMess( self.tokenizer:getLastPos(  ), string.format( "There is the case no initialized value for '%s'", symbolInfo:get_name()) )
             end
          end
       end
@@ -1730,7 +1730,7 @@ function TransUnit:errorAt( pos, mess )
    if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
       Util.println( "------ near code -----", Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
        )
-      Util.println( self.parser:getNearCode(  ) )
+      Util.println( self.tokenizer:getNearCode(  ) )
       Util.println( "------" )
    end
    
@@ -1747,25 +1747,25 @@ end
 
 function TransUnit:pushbackToken( token )
 
-   self.parser:pushbackToken( token )
+   self.tokenizer:pushbackToken( token )
 end
 
 
 function TransUnit:newPushback( tokenList )
 
-   self.parser:newPushback( tokenList )
+   self.tokenizer:newPushback( tokenList )
 end
 
 
 function TransUnit:getStreamName(  )
 
-   return self.parser:getStreamName(  )
+   return self.tokenizer:getStreamName(  )
 end
 
 
 function TransUnit:createPosition( lineNo, column )
 
-   return self.parser:createPosition( lineNo, column )
+   return self.tokenizer:createPosition( lineNo, column )
 end
 
 function TransUnit:isValidBlockWithoutTesting(  )
@@ -1780,18 +1780,18 @@ function TransUnit:getTokenNoErr( skipFlag )
    
    
    local commentList = nil
-   local workToken = self.parser:getTokenNoErr(  )
-   if workToken.kind == Parser.TokenKind.Cmnt then
+   local workToken = self.tokenizer:getTokenNoErr(  )
+   if workToken.kind == Tokenizer.TokenKind.Cmnt then
       local workCommentList = {}
-      while workToken.kind == Parser.TokenKind.Cmnt do
+      while workToken.kind == Tokenizer.TokenKind.Cmnt do
          table.insert( workCommentList, workToken )
-         workToken = self.parser:getTokenNoErr(  )
+         workToken = self.tokenizer:getTokenNoErr(  )
       end
       
       commentList = workCommentList
    end
    
-   if workToken.kind ~= Parser.TokenKind.Eof then
+   if workToken.kind ~= Tokenizer.TokenKind.Eof then
       token = workToken
       if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None and (not skipFlag or self:isValidBlockWithoutTesting(  ) ) then
          
@@ -1807,7 +1807,7 @@ function TransUnit:getTokenNoErr( skipFlag )
       
    else
     
-      token = Parser.getEofToken(  )
+      token = Tokenizer.getEofToken(  )
       if commentList ~= nil then
          self.commentCtrl:addDirect( commentList )
       end
@@ -1827,7 +1827,7 @@ end
 function TransUnit:getToken( allowEof )
 
    local token = self:getTokenNoErr(  )
-   if token == Parser.getEofToken(  ) then
+   if token == Tokenizer.getEofToken(  ) then
       if allowEof then
          return token
       end
@@ -1843,7 +1843,7 @@ end
 
 function TransUnit:pushback(  )
 
-   self.parser:pushback(  )
+   self.tokenizer:pushback(  )
 end
 
 
@@ -1863,7 +1863,7 @@ function TransUnit:pushbackStr( asyncParse, name, statement, pos )
    end
    
    
-   self.parser:pushbackStr( async, name, statement, pos )
+   self.tokenizer:pushbackStr( async, name, statement, pos )
 end
 
 
@@ -1903,7 +1903,7 @@ local specialSymbolSet = {["__init"] = true, ["__free"] = true, ["__"] = true, [
 local builtinKeywordSet = {["self"] = true, ["super"] = true}
 function TransUnit:checkSymbol( token, mode )
 
-   if token.kind ~= Parser.TokenKind.Symb and token.kind ~= Parser.TokenKind.Kywd and token.kind ~= Parser.TokenKind.Type then
+   if token.kind ~= Tokenizer.TokenKind.Symb and token.kind ~= Tokenizer.TokenKind.Kywd and token.kind ~= Tokenizer.TokenKind.Type then
       self:addErrMess( token.pos, string.format( "illegal symbol -- '%s'", token.txt) )
    end
    
@@ -1921,7 +1921,7 @@ function TransUnit:checkSymbol( token, mode )
       
    elseif _lune._Set_has(builtinKeywordSet, token.txt ) then
       self:addErrMess( token.pos, string.format( "this symbol is special keyword -- %s", token.txt) )
-   elseif Parser.isLuaKeyword( token.txt ) or Parser.isOp2( token.txt ) or Parser.isOp1( token.txt ) then
+   elseif Tokenizer.isLuaKeyword( token.txt ) or Tokenizer.isOp2( token.txt ) or Tokenizer.isOp1( token.txt ) then
       self:addErrMess( token.pos, string.format( "this symbol is lua keyword -- %s", token.txt) )
    end
    
@@ -2016,7 +2016,7 @@ function TransUnit:checkCondRet(  )
 end
 
 
-function TransUnit:analyzeStatementList( stmtList, firstSwitchingParser, termTxt )
+function TransUnit:analyzeStatementList( stmtList, firstSwitchingTokenizer, termTxt )
 
    local breakKind = Nodes.BreakKind.None
    if #stmtList > 0 then
@@ -2024,21 +2024,21 @@ function TransUnit:analyzeStatementList( stmtList, firstSwitchingParser, termTxt
    end
    
    
-   local parser2lastLineMap = {}
+   local tokenizer2lastLineMap = {}
    local function getLastLineNo(  )
    
       do
-         local lastLineNo = parser2lastLineMap[self.parser]
+         local lastLineNo = tokenizer2lastLineMap[self.tokenizer]
          if lastLineNo ~= nil then
             return lastLineNo
          end
       end
       
-      return self.parser:getLastPos(  ).lineNo
+      return self.tokenizer:getLastPos(  ).lineNo
    end
    local function setLastLineNo( lineNo )
    
-      parser2lastLineMap[self.parser] = lineNo
+      tokenizer2lastLineMap[self.tokenizer] = lineNo
    end
    
    local lastStatement = nil
@@ -2080,7 +2080,7 @@ function TransUnit:analyzeStatementList( stmtList, firstSwitchingParser, termTxt
          if statement ~= nil then
             blank = statement:get_pos().lineNo - lastLineNo
          else
-            blank = self.parser:getLastPos(  ).lineNo - lastLineNo
+            blank = self.tokenizer:getLastPos(  ).lineNo - lastLineNo
          end
          
       end
@@ -2102,13 +2102,13 @@ function TransUnit:analyzeStatementList( stmtList, firstSwitchingParser, termTxt
          
          
          local blank = setTailComment( statement )
-         if blank > 1 and not firstSwitchingParser then
+         if blank > 1 and not firstSwitchingTokenizer then
             table.insert( stmtList, Nodes.BlankLineNode.create( self.nodeManager, self:createPosition( lastLineNo + 1, 0 ), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blank - 1 ) )
          end
          
-         setLastLineNo( self.parser:getLastPos(  ).lineNo )
-         if firstSwitchingParser then
-            firstSwitchingParser = false
+         setLastLineNo( self.tokenizer:getLastPos(  ).lineNo )
+         if firstSwitchingTokenizer then
+            firstSwitchingTokenizer = false
          end
          
          
@@ -2380,7 +2380,7 @@ function TransUnit:skipBlock( recordToken )
          table.insert( tokenList, token )
       end
       
-      if token.kind == Parser.TokenKind.Eof then
+      if token.kind == Tokenizer.TokenKind.Eof then
          self:error( "EOF" )
       end
       
@@ -2895,7 +2895,7 @@ function TransUnit:analyzeFor( firstToken )
    local scope = self:pushScope( Ast.ScopeKind.Other )
    
    local val = self:getToken(  )
-   if val.kind ~= Parser.TokenKind.Symb then
+   if val.kind ~= Tokenizer.TokenKind.Symb then
       self:error( "not symbol" )
    end
    
@@ -2951,10 +2951,10 @@ function TransUnit:analyzeApply( token )
 
    local scope = self:pushScope( Ast.ScopeKind.Other )
    local varList = {}
-   local nextToken = Parser.getEofToken(  )
+   local nextToken = Tokenizer.getEofToken(  )
    repeat 
       local var = self:getSymbolToken( SymbolMode.MustNot_Or_ )
-      if var.kind ~= Parser.TokenKind.Symb then
+      if var.kind ~= Tokenizer.TokenKind.Symb then
          self:error( "illegal symbol" )
       end
       
@@ -3082,15 +3082,15 @@ end
 function TransUnit:analyzeForeach( token, sortFlag )
 
    local scope = self:pushScope( Ast.ScopeKind.Other )
-   local mainSymToken = Parser.getEofToken(  )
+   local mainSymToken = Tokenizer.getEofToken(  )
    local subSymToken = nil
    local mainSym
    
    local subSym = nil
-   local nextToken = Parser.getEofToken(  )
+   local nextToken = Tokenizer.getEofToken(  )
    for index = 1, 2 do
       local symbol = self:getToken(  )
-      if symbol.kind ~= Parser.TokenKind.Symb then
+      if symbol.kind ~= Tokenizer.TokenKind.Symb then
          self:error( "illegal symbol" )
       end
       
@@ -3295,7 +3295,7 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
       local symToken = nil
       do
          local work = self:getToken(  )
-         if work.kind == Parser.TokenKind.Symb then
+         if work.kind == Tokenizer.TokenKind.Symb then
             if self:getToken(  ).txt == ":" then
                symToken = work
             else
@@ -3436,7 +3436,7 @@ end
 function TransUnit:analyzeTypeParamArg( accessMode, parentPub, itemNodeList, itemIndex2alt )
 
    local genericList = {}
-   local nextToken = Parser.getEofToken(  )
+   local nextToken = Tokenizer.getEofToken(  )
    repeat 
       local altToken = self:getToken(  )
       local altMode
@@ -3783,7 +3783,7 @@ end
 
 function TransUnit:analyzeDeclArgList( accessMode, scope, argList, parentPub )
 
-   local nextToken = Parser.noneToken
+   local nextToken = Tokenizer.noneToken
    local hasDDDFlag = false
    repeat 
       nextToken = self:getToken(  )
@@ -5073,7 +5073,7 @@ function TransUnit:analyzeDecl( accessMode, staticFlag, firstToken, token )
    elseif token.txt == "fn" then
       local nextToken = self:getToken(  )
       self:pushback(  )
-      if nextToken.kind == Parser.TokenKind.Symb or Ast.isPubToExternal( accessMode ) or staticFlag or overrideFlag or abstractFlag then
+      if nextToken.kind == Tokenizer.TokenKind.Symb or Ast.isPubToExternal( accessMode ) or staticFlag or overrideFlag or abstractFlag then
          
          return self:analyzeDeclFunc( DeclFuncMode.Func, false, abstractFlag, overrideFlag, accessMode, staticFlag, nil, firstToken, nil ), true
       end
@@ -5784,7 +5784,7 @@ function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode
    
       while true do
          local token = self:getToken( inMacro )
-         if token.kind == Parser.TokenKind.Eof or token.txt == "}" then
+         if token.kind == Tokenizer.TokenKind.Eof or token.txt == "}" then
             break
          end
          
@@ -5975,7 +5975,7 @@ function TransUnit:analyzeDeclClass( finalFlag, classAbstructFlag, classAccessMo
       local nextToken = self:getToken(  )
       if nextToken.txt == "of" then
          local langToken = self:getToken(  )
-         if langToken.kind ~= Parser.TokenKind.Str then
+         if langToken.kind ~= Tokenizer.TokenKind.Str then
             self:addErrMess( langToken.pos, string.format( "it's not a string -- %s", langToken.txt) )
             return nil
          end
@@ -7187,7 +7187,7 @@ function TransUnit:analyzeLetAndInitExp( firstPos, letFlag, initMutable, accessM
    
    local letVarList = {}
    
-   local nextToken = Parser.getEofToken(  )
+   local nextToken = Tokenizer.getEofToken(  )
    
    if letFlag then
       local hasValidName = false
@@ -7500,7 +7500,7 @@ function TransUnit:analyzeIfUnwrap( firstToken )
       local _
       self:pushback(  )
       local tmpTypeInfoList = {Ast.builtinTypeEmpty}
-      local tmpLetVarList = {LetVarInfo._new(Ast.MutMode.Mut, Parser.Token._new(Parser.TokenKind.Symb, "_exp", firstToken.pos, false), nil)}
+      local tmpLetVarList = {LetVarInfo._new(Ast.MutMode.Mut, Tokenizer.Token._new(Tokenizer.TokenKind.Symb, "_exp", firstToken.pos, false), nil)}
       workTypeInfoList, letVarList, _, workExpList = self:analyzeInitExp( firstToken.pos, Ast.AccessMode.Local, true, tmpLetVarList, tmpTypeInfoList )
    end
    
@@ -7655,7 +7655,7 @@ function TransUnit:processFuncBlockInfo( funcBlockCtlIF, streamName )
 
    local resultMap = {}
    
-   local bakParser = self.parser
+   local bakTokenizer = self.tokenizer
    
    local outerScope = self:pushScope( Ast.ScopeKind.Other )
    
@@ -7669,7 +7669,7 @@ function TransUnit:processFuncBlockInfo( funcBlockCtlIF, streamName )
       
       
       local typeInfo = funcBlockInfo:get_funcType()
-      self.parser = Parser.DefaultPushbackParser._new(Parser.TokenListParser._new(funcBlockInfo:get_tokenList(), streamName, funcBlockInfo:get_tokenList()[1].pos.orgPos))
+      self.tokenizer = Tokenizer.DefaultPushbackTokenizer._new(Tokenizer.TokenListTokenizer._new(funcBlockInfo:get_tokenList(), streamName, funcBlockInfo:get_tokenList()[1].pos.orgPos))
       
       local declFuncInfo = funcBlockInfo:get_declFuncInfo()
       local classTypeInfo = declFuncInfo:get_classTypeInfo()
@@ -7696,7 +7696,7 @@ function TransUnit:processFuncBlockInfo( funcBlockCtlIF, streamName )
    
    self:popScope(  )
    
-   self.parser = bakParser
+   self.tokenizer = bakTokenizer
    
    return resultMap
 end
@@ -8864,12 +8864,12 @@ end
 
 function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCallback )
 
-   local parser, mess = self.macroCtrl:evalMacroOp( self.moduleType, self.parser:getStreamName(  ), firstToken, macroTypeInfo, expList )
+   local tokenizer, mess = self.macroCtrl:evalMacroOp( self.moduleType, self.tokenizer:getStreamName(  ), firstToken, macroTypeInfo, expList )
    
-   local bakParser = self.parser
+   local bakTokenizer = self.tokenizer
    
-   if parser ~= nil then
-      self:setParser( Parser.DefaultPushbackParser._new(parser) )
+   if tokenizer ~= nil then
+      self:setTokenizer( Tokenizer.DefaultPushbackTokenizer._new(tokenizer) )
    else
       self:error( _lune.unwrap( mess) )
    end
@@ -8879,9 +8879,9 @@ function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCal
    
    local nextToken = self:getTokenNoErr(  )
    
-   self:setParser( bakParser )
+   self:setTokenizer( bakTokenizer )
    
-   if nextToken ~= Parser.getEofToken(  ) then
+   if nextToken ~= Tokenizer.getEofToken(  ) then
       self:addErrMess( firstToken.pos, string.format( "remain macro expand-statement token -- '%s'(%d:%d)", nextToken.txt, nextToken.pos.lineNo, nextToken.pos.column) )
       if not macroTypeInfo:get_externalFlag() then
          self:addErrMess( nextToken.pos, string.format( "remain macro expand-statement token -- '%s'", nextToken.txt) )
@@ -9891,7 +9891,7 @@ end
 function TransUnit:analyzeExpCont( firstToken, exp, skipFlag, canLeftExp, canCondRet )
 
    local nextToken = self:getToken( true )
-   if nextToken.kind == Parser.TokenKind.Eof then
+   if nextToken.kind == Tokenizer.TokenKind.Eof then
       return exp
    end
    
@@ -10254,7 +10254,7 @@ end
 function TransUnit:checkComp( token, callback )
 
    if self.analyzeMode == AnalyzeMode.Complete and self:isTargetToken( token ) then
-      local currentModule = self.parser:getStreamName(  ):gsub( "%.lns", "" )
+      local currentModule = self.tokenizer:getStreamName(  ):gsub( "%.lns", "" )
       currentModule = currentModule:gsub( ".*/", "" )
       local target = self.analyzeModule:gsub( "[^%.]+%.", "" )
       if currentModule == target then
@@ -11418,8 +11418,8 @@ function TransUnit:analyzeExpOp2( firstToken, exp, prevOpLevel, expectType )
       
       if opToken.txt == "@@" or opToken.txt == "@@@" or opToken.txt == "@@=" then
          exp = self:analyzeExpCast( firstToken, opTxt, exp )
-      elseif opToken.kind == Parser.TokenKind.Ope then
-         if Parser.isOp2( opTxt ) then
+      elseif opToken.kind == Tokenizer.TokenKind.Ope then
+         if Tokenizer.isOp2( opTxt ) then
             if opTxt ~= "=" and not exp:canBeRight( self.processInfo ) then
                self:addErrMess( exp:get_pos(), string.format( "This can't evaluate for '%s' -- %s", opTxt, Nodes.getNodeKindName( exp:get_kind() )) )
             end
@@ -11812,7 +11812,7 @@ function TransUnit:analyzeExpMacroStat( firstToken )
             consecutive = false
          end
          
-         local newToken = Parser.Token._new(token.kind, string.format( format, token.txt ), token.pos, consecutive)
+         local newToken = Tokenizer.Token._new(token.kind, string.format( format, token.txt ), token.pos, consecutive)
          local literalStr = Nodes.LiteralStringNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeString}, newToken, nil, nil )
          table.insert( expStrList, literalStr )
       end
@@ -12003,7 +12003,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
    
    
    local nextToken = self:getToken( true )
-   if nextToken.kind ~= Parser.TokenKind.Eof then
+   if nextToken.kind ~= Tokenizer.TokenKind.Eof then
       local param
       
       local dddParam
@@ -12041,7 +12041,7 @@ function TransUnit:analyzeStrConst( firstToken, token )
       else
        
          exp = workExp
-         if nextToken.kind ~= Parser.TokenKind.Eof then
+         if nextToken.kind ~= Tokenizer.TokenKind.Eof then
             self:pushback(  )
          end
          
@@ -12326,7 +12326,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
    end
    
    
-   if token.kind == Parser.TokenKind.Dlmt then
+   if token.kind == Tokenizer.TokenKind.Dlmt then
       if token.txt == "." then
          if expectType ~= nil then
             local orgExpectType = expectType
@@ -12366,7 +12366,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
    end
    
    
-   if token.kind == Parser.TokenKind.Ope and Parser.isOp1( token.txt ) then
+   if token.kind == Tokenizer.TokenKind.Ope and Tokenizer.isOp1( token.txt ) then
       local workExp, fin = processOp1( token )
       if fin then
          return workExp
@@ -12376,11 +12376,11 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
    end
    
    
-   if token.kind == Parser.TokenKind.Int then
+   if token.kind == Tokenizer.TokenKind.Int then
       exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, token, math.floor((_lune.unwrapDefault( tonumber( token.txt ), 0) )) )
-   elseif token.kind == Parser.TokenKind.Real then
+   elseif token.kind == Tokenizer.TokenKind.Real then
       exp = Nodes.LiteralRealNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeReal}, token, (_lune.unwrapDefault( tonumber( token.txt ), 0.0) ) )
-   elseif token.kind == Parser.TokenKind.Char then
+   elseif token.kind == Tokenizer.TokenKind.Char then
       local num
       
       if #token.txt == 1 then
@@ -12391,19 +12391,19 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
       end
       
       exp = Nodes.LiteralCharNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeChar}, token, num )
-   elseif token.kind == Parser.TokenKind.Str then
+   elseif token.kind == Tokenizer.TokenKind.Str then
       exp = self:analyzeStrConst( firstToken, token )
-   elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" then
+   elseif token.kind == Tokenizer.TokenKind.Symb and token.txt == "__line__" then
       local pos = self:getLineNo( token )
-      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, Parser.Token._new(Parser.TokenKind.Int, string.format( "%d", pos.lineNo), token.pos, false, nil), token.pos.lineNo )
-   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" then
+      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, Tokenizer.Token._new(Tokenizer.TokenKind.Int, string.format( "%d", pos.lineNo), token.pos, false, nil), token.pos.lineNo )
+   elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "fn" then
       
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Fn, nil, false, false, false )
-   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "unwrap" then
+   elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "unwrap" then
       exp = self:analyzeExpUnwrap( token, expectType )
-   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "__request" then
+   elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "__request" then
       exp = self:analyzeRequest( token )
-   elseif token.kind == Parser.TokenKind.Symb then
+   elseif token.kind == Tokenizer.TokenKind.Symb then
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Symbol, nil, false, canLeftExp, canCondRet )
       local symbolInfoList = exp:getSymbolInfo(  )
       if #symbolInfoList == 1 then
@@ -12423,7 +12423,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
       end
       
       exp:setTailExp(  )
-   elseif token.kind == Parser.TokenKind.Type then
+   elseif token.kind == Tokenizer.TokenKind.Type then
       local symbolTypeInfo = Ast.getSym2builtInTypeMap(  )[token.txt]
       if  nil == symbolTypeInfo then
          local _symbolTypeInfo = symbolTypeInfo
@@ -12434,9 +12434,9 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
       exp = Nodes.ExpRefNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {symbolTypeInfo:get_typeInfo()}, Ast.AccessSymbolInfo._new(self.processInfo, symbolTypeInfo, _lune.newAlge( Ast.OverrideMut.None), false) )
       
       exp = Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, exp, {}, {}, Ast.MutMode.Mut, "no" )
-   elseif token.kind == Parser.TokenKind.Kywd and (token.txt == "true" or token.txt == "false" ) then
+   elseif token.kind == Tokenizer.TokenKind.Kywd and (token.txt == "true" or token.txt == "false" ) then
       exp = Nodes.LiteralBoolNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeBool}, token )
-   elseif token.kind == Parser.TokenKind.Kywd and (token.txt == "nil" or token.txt == "null" ) then
+   elseif token.kind == Tokenizer.TokenKind.Kywd and (token.txt == "nil" or token.txt == "null" ) then
       exp = Nodes.LiteralNilNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNil} )
    end
    
@@ -12509,11 +12509,11 @@ function TransUnit:analyzeStatement( termTxt )
    
    local token = self:getTokenNoErr(  )
    local statement = nil
-   if token.kind == Parser.TokenKind.Sheb then
+   if token.kind == Tokenizer.TokenKind.Sheb then
       statement = Nodes.ShebangNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, token.txt )
    end
    
-   if token == Parser.getEofToken(  ) then
+   if token == Tokenizer.getEofToken(  ) then
       return nil
    end
    
@@ -12724,7 +12724,7 @@ function TransUnitForRunner:analyzeStatementToken( token )
 end
 function TransUnitForRunner:run(  )
 
-   self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.parser:getStreamName(  ) )
+   self.resultMap = self:processFuncBlockInfo( self.funcBlockCtl, self.tokenizer:getStreamName(  ) )
 end
 function TransUnitForRunner._setmeta( obj )
   setmetatable( obj, { __index = TransUnitForRunner  } )
@@ -12891,7 +12891,7 @@ function TransUnitCtrl:analyzeImportFor( pos, modulePath, assignName, assigned, 
    if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None then
       macroMode = Nodes.MacroMode:_getTxt( self.macroCtrl:get_analyzeInfo():get_mode())
       
-      nearCode = self.parser:getNearCode(  )
+      nearCode = self.tokenizer:getNearCode(  )
    else
     
       macroMode = ""
@@ -13348,7 +13348,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
       
       self.analyzePhase = AnalyzePhase.Main
       
-      resultMap = self:processFuncBlockInfo( ListFuncBlockCtl._new(self.funcBlockInfoList), self.parser:getStreamName(  ) )
+      resultMap = self:processFuncBlockInfo( ListFuncBlockCtl._new(self.funcBlockInfoList), self.tokenizer:getStreamName(  ) )
    else
     
       for __index, runner in ipairs( runnerList ) do
@@ -13357,7 +13357,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
       
       
       if lastPartList ~= nil then
-         resultMap = self:processFuncBlockInfo( ListFuncBlockCtl._new(lastPartList), self.parser:getStreamName(  ) )
+         resultMap = self:processFuncBlockInfo( ListFuncBlockCtl._new(lastPartList), self.tokenizer:getStreamName(  ) )
          
       end
       
@@ -13402,7 +13402,7 @@ function TransUnitCtrl:processFuncBlock( streamName )
       
       
       for __index, noRunner in ipairs( noRunnerList ) do
-         local workMap = self:processFuncBlockInfo( ListFuncBlockCtl._new(noRunner), self.parser:getStreamName(  ) )
+         local workMap = self:processFuncBlockInfo( ListFuncBlockCtl._new(noRunner), self.tokenizer:getStreamName(  ) )
          for funcBlockInfo, _1 in pairs( workMap ) do
             noRunnerTypeSet[funcBlockInfo:get_funcType()]= true
          end
@@ -13433,12 +13433,12 @@ function TransUnitCtrl:processFuncBlock( streamName )
 end
 
 
-function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName, readyExportInfo )
+function TransUnitCtrl:createAST( tokenizerSrc, asyncParse, baseDir, stdinFile, macroFlag, moduleName, readyExportInfo )
    local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST'
 
-   local parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile )
+   local tokenizer = Tokenizer.createTokenizerFrom( tokenizerSrc, asyncParse, stdinFile )
    
-   local streamName = parser:getStreamName(  )
+   local streamName = tokenizer:getStreamName(  )
    
    self.stdinFile = stdinFile
    self.baseDir = baseDir
@@ -13446,7 +13446,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    Log.log( Log.Level.Log, __func__, 788, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
-      return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, parser:getStreamName(  ), tostring( baseDir), tostring( macroFlag), AnalyzePhase:_getTxt( self.analyzePhase)
+      return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, tokenizer:getStreamName(  ), tostring( baseDir), tostring( macroFlag), AnalyzePhase:_getTxt( self.analyzePhase)
       , tostring( self.ctrl_info.testing))
    end )
    
@@ -13486,7 +13486,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    
    self.typeNameCtrl = Ast.TypeNameCtrl._new(moduleTypeInfo)
    
-   self:setParser( Parser.DefaultPushbackParser._new(parser) )
+   self:setTokenizer( Tokenizer.DefaultPushbackTokenizer._new(tokenizer) )
    
    self:get_scope():addIgnoredVar( self.processInfo )
    
@@ -13523,7 +13523,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       
       Log.log( Log.Level.Log, __func__, 864, function (  )
       
-         return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.parser:getUsedTokenListLen(  ), tostring( moduleTypeInfo), tostring( moduleTypeInfo:get_scope()))
+         return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.tokenizer:getUsedTokenListLen(  ), tostring( moduleTypeInfo), tostring( moduleTypeInfo:get_scope()))
       end )
       
       
@@ -13552,8 +13552,8 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
       table.insert( children, statement )
       
       local token = self:getTokenNoErr(  )
-      if token ~= Parser.getEofToken(  ) then
-         self:error( string.format( "%s:%d:%d:(%s) not eof -- %s", self.parser:getStreamName(  ), token.pos.lineNo, token.pos.column, Types.TokenKind:_getTxt( token.kind)
+      if token ~= Tokenizer.getEofToken(  ) then
+         self:error( string.format( "%s:%d:%d:(%s) not eof -- %s", self.tokenizer:getStreamName(  ), token.pos.lineNo, token.pos.column, Types.TokenKind:_getTxt( token.kind)
          , token.txt) )
       end
       
@@ -13580,14 +13580,14 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
          end
          
          
-         local subParser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsPath, {baseDir,file,subModule,nil}), true, self.stdinFile, nil )
+         local subTokenizer = Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,file,subModule,nil}), true, self.stdinFile, nil )
          
-         self:setParser( Parser.DefaultPushbackParser._new(subParser) )
+         self:setTokenizer( Tokenizer.DefaultPushbackTokenizer._new(subTokenizer) )
          
          lastStatement = self:analyzeStatementListSubfile( children )
          
          token = self:getTokenNoErr(  )
-         if token ~= Parser.getEofToken(  ) then
+         if token ~= Tokenizer.getEofToken(  ) then
             Util.err( string.format( "unknown:%d:%d:(%s) %s", token.pos.lineNo, token.pos.column, Types.TokenKind:_getTxt( token.kind)
             , token.txt) )
          end
@@ -13731,7 +13731,7 @@ function TransUnitCtrl:createAST( parserSrc, asyncParse, baseDir, stdinFile, mac
    end
    
    
-   return AstInfo.ASTInfo._new(ast, exportInfo, parser:getStreamName(  ), self.builtinFunc)
+   return AstInfo.ASTInfo._new(ast, exportInfo, tokenizer:getStreamName(  ), self.builtinFunc)
 end
 
 return _moduleObj

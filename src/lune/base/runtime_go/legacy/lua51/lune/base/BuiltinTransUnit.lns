@@ -25,7 +25,7 @@ SOFTWARE.
 _lune_control default_strict_generics;
 
 import lune.base.Types;
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.Nodes;
@@ -119,7 +119,7 @@ pub class TransUnit {
 既存クラスの Scope を push する。
    */
    pub fn pushClassScope(
-      errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut {
+      errPos:&Tokenizer.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut {
       if self.scope ~= classTypeInfo.$scope$.$parent {
          let classParentName;
          let classParentTypeId;
@@ -148,7 +148,7 @@ pub class TransUnit {
    */
    pub fn pushClassLow(
       processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:TransUnitIF.DeclClassMode,
+      errPos:&Tokenizer.Position, mode:TransUnitIF.DeclClassMode,
       finalFlag: bool, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,

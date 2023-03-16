@@ -77,7 +77,7 @@ ExpNode のリスト expList を、 expTypeList
 
 */
 fn TransUnit.createExpList(
-   pos:&Parser.Position,
+   pos:&Tokenizer.Position,
    expTypeList:List<&Ast.TypeInfo>, expList:&List<&Nodes.Node>,
    followOn:bool, abbrNode:&Nodes.AbbrNode! ) mut: Nodes.ExpListNode
 {
@@ -161,7 +161,7 @@ fn TransUnit.analyzeExpList(
    expectTypeList: &List<&Ast.TypeInfo>!, contExpect:bool! ) mut: Nodes.ExpListNode
 {
    let mut expList:List<&Nodes.Node> = [];
-   let mut pos:&Parser.Position! = nil;
+   let mut pos:&Tokenizer.Position! = nil;
    let mut expTypeList:List<&Ast.TypeInfo> = [];
    when! expNode {
       pos = expNode.$pos;
@@ -300,7 +300,7 @@ fn TransUnit.analyzeExpList(
 }
 
 fn TransUnit.checkSymbolHavingValue(
-   pos:&Parser.Position, symbolInfoList:&List<&Ast.SymbolInfo> ) mut
+   pos:&Tokenizer.Position, symbolInfoList:&List<&Ast.SymbolInfo> ) mut
 {
    foreach symbolInfo in symbolInfoList {
       if symbolInfo.$kind == .Var {
@@ -314,7 +314,7 @@ fn TransUnit.checkSymbolHavingValue(
 
 
 fn TransUnit.analyzeExpRefItem(
-   token: &Parser.Token, exp: &Nodes.Node, mut nilAccess:bool ) mut : Nodes.Node
+   token: &Tokenizer.Token, exp: &Nodes.Node, mut nilAccess:bool ) mut : Nodes.Node
 {
    self.checkSymbolHavingValue( exp.$pos, exp.getSymbolInfo() );
       
@@ -612,7 +612,7 @@ fn TransUnit.checkImplicitCast(
 @return 
 */
 fn TransUnit.checkMatchType(
-   mut message:str, pos: &Parser.Position, dstTypeList: &List<&Ast.TypeInfo>,
+   mut message:str, pos: &Tokenizer.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expListNode: &Nodes.ExpListNode!, allowDstShort:bool, warnForFollow:bool,
    workAlt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>!, validImplicitCast:bool ) mut :
    //genericsClassType:&Ast.TypeInfo!, altDetectFlag:bool ) mut :
@@ -786,7 +786,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.
 @return &Nodes.ExpListNode! 暗黙キャストなどを解決した引数 
 */
 fn TransUnit.checkMatchValType(
-   pos: &Parser.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Nodes.ExpListNode!,
+   pos: &Tokenizer.Position, funcTypeInfo:&Ast.TypeInfo, expList:&Nodes.ExpListNode!,
    genericTypeList: &List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo! ) mut :
 Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
@@ -883,7 +883,7 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 }
 
 fn TransUnit.analyzeListItems(
-   firstPos:&Parser.Position, nextToken:&Parser.Token, termTxt:str,
+   firstPos:&Tokenizer.Position, nextToken:&Tokenizer.Token, termTxt:str,
    expectType:&Ast.TypeInfo! ) mut : &Nodes.ExpListNode!, &Ast.TypeInfo
 {
    if nextToken.txt == termTxt {
@@ -978,7 +978,7 @@ fn TransUnit.analyzeListItems(
 }
 
 fn TransUnit.analyzeListConst(
-   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+   token: &Tokenizer.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
    let nextToken = self.getToken(##);
 
@@ -1013,7 +1013,7 @@ fn TransUnit.analyzeListConst(
 }
 
 fn TransUnit.analyzeSetConst(
-   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+   token: &Tokenizer.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
 
    self.helperInfo.useSet = true;
@@ -1056,7 +1056,7 @@ fn TransUnit.analyzeSetConst(
 
 
 fn TransUnit.analyzeTupleConst(
-   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+   token: &Tokenizer.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
    
    //self.helperInfo.useSet = true;
@@ -1104,7 +1104,7 @@ fn TransUnit.analyzeTupleConst(
 
 
 fn TransUnit.analyzeMapConst(
-   token: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.LiteralMapNode
+   token: &Tokenizer.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.LiteralMapNode
 {
    let mut nextToken = self.getToken(##);
    let mut map:Map<&Nodes.Node,&Nodes.Node> = {};
@@ -1114,7 +1114,7 @@ fn TransUnit.analyzeMapConst(
 
 
    fn getMapKeyValType(
-      pos: &Parser.Position, keyFlag: bool,
+      pos: &Tokenizer.Position, keyFlag: bool,
       mut typeInfo:&Ast.TypeInfo, mut expType:&Ast.TypeInfo ): &Ast.TypeInfo
    {
       if expType.$nilable {
@@ -1308,17 +1308,17 @@ getToken() で取得したトークンを実際に処理するのは evalMacroCa
 @param evalMacroCallback マクロ展開したコードを処理するコールバック関数。
 */
 fn TransUnit.evalMacroOp(
-   firstToken: &Parser.Token, macroTypeInfo: &Ast.TypeInfo,
+   firstToken: &Tokenizer.Token, macroTypeInfo: &Ast.TypeInfo,
    expList: &Nodes.ExpListNode!, evalMacroCallback:Macro.EvalMacroCallback ) mut
 {
-   let mut parser, mess = self.macroCtrl.evalMacroOp(
-      self.moduleType, self.parser.getStreamName(),
+   let mut tokenizer, mess = self.macroCtrl.evalMacroOp(
+      self.moduleType, self.tokenizer.getStreamName(),
       firstToken, macroTypeInfo, expList );
 
-   let mut bakParser = self.parser;
+   let mut bakTokenizer = self.tokenizer;
 
-   when! parser {
-      self.setParser( new Parser.DefaultPushbackParser( parser ) );
+   when! tokenizer {
+      self.setTokenizer( new Tokenizer.DefaultPushbackTokenizer( tokenizer ) );
    }
    else {
       self.error( unwrap mess ); // 要対応
@@ -1333,9 +1333,9 @@ fn TransUnit.evalMacroOp(
 
    let nextToken = self.getTokenNoErr(##);
 
-   self.setParser( bakParser );
+   self.setTokenizer( bakTokenizer );
    
-   if nextToken ~= Parser.getEofToken() {
+   if nextToken ~= Tokenizer.getEofToken() {
       self.addErrMess( firstToken.pos,
                        "remain macro expand-statement token -- '%s'(%d:%d)"
                        (nextToken.txt, nextToken.pos.lineNo, nextToken.pos.column) );
@@ -1348,7 +1348,7 @@ fn TransUnit.evalMacroOp(
 
 
 fn TransUnit.evalMacro(
-   firstToken: &Parser.Token, macroRefNode: Nodes.Node,
+   firstToken: &Tokenizer.Token, macroRefNode: Nodes.Node,
    expList: &Nodes.ExpListNode! ) mut : Nodes.ExpMacroExpNode
 {
    let macroTypeInfo = macroRefNode.$expType.$nonnilableType;
@@ -1492,7 +1492,7 @@ pub fn isMatchStringFormatType(
 
 
 fn TransUnit.checkStringFormat(
-   pos:&Parser.Position, formatTxt:str, argTypeList:&List<&Ast.TypeInfo> ) mut
+   pos:&Tokenizer.Position, formatTxt:str, argTypeList:&List<&Ast.TypeInfo> ) mut
 {
    let opList = findForm( formatTxt );
    //let mut dstTypeList:List<&Ast.TypeInfo> = [];
@@ -1531,7 +1531,7 @@ fn TransUnit.checkStringFormat(
          funcTypeInfo がメソッドでなければ headTypeInfo.
 */
 fn TransUnit.prepareExpCall(
-   termTxt:str, position:&Parser.Position, funcTypeInfo:&Ast.TypeInfo,
+   termTxt:str, position:&Tokenizer.Position, funcTypeInfo:&Ast.TypeInfo,
    genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo ) mut :
    Map<&Ast.TypeInfo,&Ast.TypeInfo>, &Nodes.ExpListNode!
 {
@@ -1599,7 +1599,7 @@ fn TransUnit.prepareExpCall(
 
 // string.format() の引数チェック
 fn TransUnit.checkArgForStringForm(
-   firstToken:&Parser.Token, argList:&Nodes.ExpListNode ) mut {
+   firstToken:&Tokenizer.Token, argList:&Nodes.ExpListNode ) mut {
    let mut formArgTypeList:List<&Ast.TypeInfo> = [];
    let mut formatTxt = "";
    if #argList.$expList > 0 {
@@ -1636,7 +1636,7 @@ fn TransUnit.checkArgForStringForm(
 
 // List.sort() の引数チェック 
 fn TransUnit.checkArgForSort(
-   firstToken:&Parser.Token,
+   firstToken:&Tokenizer.Token,
    genericTypeList:&List<&Ast.TypeInfo>, argList:&Nodes.ExpListNode ) mut
 {  
    if #argList.$expTypeList > 0 {
@@ -1685,7 +1685,7 @@ fn TransUnit.checkArgForSort(
 
 
 fn TransUnit.getRetTypeInfo(
-   firstToken:&Parser.Token,
+   firstToken:&Tokenizer.Token,
    refFieldNode:&Nodes.RefFieldNode!, funcTypeInfo:&Ast.TypeInfo,
    alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
    genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo )
@@ -1767,7 +1767,7 @@ mut : &List<&Ast.TypeInfo>
 
 
 fn TransUnit.processFunc(
-   firstToken:&Parser.Token, nextToken:&Parser.Token,
+   firstToken:&Tokenizer.Token, nextToken:&Tokenizer.Token,
    refFieldNode:&Nodes.RefFieldNode!, funcExp: Nodes.Node,
    funcType:&Ast.TypeInfo, alt2typeMap:Map<&Ast.TypeInfo,&Ast.TypeInfo>,
    genericTypeList:&List<&Ast.TypeInfo>, genericsClass:&Ast.TypeInfo,
@@ -1906,7 +1906,7 @@ fn TransUnit.processFunc(
 /**
 現在の名前空間から funcTypeInfo をコールする上での nosync 系チェック。
 */
-fn TransUnit.checkNoasyncType( pos:&Parser.Position, funcTypeInfo:&Ast.TypeInfo ) mut {
+fn TransUnit.checkNoasyncType( pos:&Tokenizer.Position, funcTypeInfo:&Ast.TypeInfo ) mut {
    if self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() {
       return;
    }
@@ -2001,8 +2001,8 @@ mut : Nodes.ExpCallNode
 
 */
 fn TransUnit.analyzeExpCall(
-   firstToken:&Parser.Token, funcExp: Nodes.Node, nextToken:&Parser.Token ) mut :
-   Nodes.Node, &Parser.Token
+   firstToken:&Tokenizer.Token, funcExp: Nodes.Node, nextToken:&Tokenizer.Token ) mut :
+   Nodes.Node, &Tokenizer.Token
 {
    self.checkSymbolHavingValue( funcExp.$pos, funcExp.getSymbolInfo() );
 
@@ -2086,7 +2086,7 @@ fn TransUnit.analyzeExpCall(
 }
 
 fn TransUnit.analyzeExpCast(
-   firstToken:&Parser.Token, opTxt:str, exp:Nodes.Node ) mut : Nodes.Node
+   firstToken:&Tokenizer.Token, opTxt:str, exp:Nodes.Node ) mut : Nodes.Node
 {
    let castTypeNode = self.analyzeRefType( .Local, false, false, false, false );
    let mut castType = castTypeNode.$expType;
@@ -2259,7 +2259,7 @@ fn TransUnit.getRetErrTypeInfo(
 }
 
 fn TransUnit.analyzeCondRet(
-   firstToken: &Parser.Token, mut exp: Nodes.Node ) mut : Nodes.Node
+   firstToken: &Tokenizer.Token, mut exp: Nodes.Node ) mut : Nodes.Node
 {
    let mess = "can't use '!' here. --";
    self.canReturnFromHere( firstToken.pos );
@@ -2375,7 +2375,7 @@ fn TransUnit.analyzeCondRet(
 }
 
 fn TransUnit.analyzeExpCont(
-   firstToken: &Parser.Token, mut exp: Nodes.Node,
+   firstToken: &Tokenizer.Token, mut exp: Nodes.Node,
    skipFlag: bool, canLeftExp:bool, canCondRet:bool ) mut : Nodes.Node
 {
    let mut nextToken = self.getToken( true );
@@ -2491,7 +2491,7 @@ fn getClassTypeFor( classTypeInfo:&Ast.TypeInfo ) : &Ast.TypeInfo {
 
 
 fn TransUnit.analyzeAccessClassField(
-   mut classTypeInfo: &Ast.TypeInfo, mode:ExpSymbolMode, token:&Parser.Token ) mut :
+   mut classTypeInfo: &Ast.TypeInfo, mode:ExpSymbolMode, token:&Tokenizer.Token ) mut :
    &Ast.TypeInfo, &Ast.SymbolInfo!, bool
 {
    classTypeInfo = getClassTypeFor( classTypeInfo );
@@ -2715,10 +2715,10 @@ fn TransUnit.dumpSymbolComp( writer: Writer.Writer, scope: &Ast.Scope, pattern: 
 
 form checkCompForm( jsonWriter: Writer.JSON, prefix:str  );
 
-fn TransUnit.checkComp( token:&Parser.Token, callback:checkCompForm ) 
+fn TransUnit.checkComp( token:&Tokenizer.Token, callback:checkCompForm ) 
 {
    if self.analyzeMode == .Complete and self.isTargetToken ( token ) {
-      let mut currentModule = self.parser.getStreamName().gsub( "%.lns", "" );
+      let mut currentModule = self.tokenizer.getStreamName().gsub( "%.lns", "" );
       currentModule = currentModule.gsub( ".*/", "" );
       let target = self.analyzeModule.gsub( "[^%.]+%.", "" );
       if currentModule == target {
@@ -2740,7 +2740,7 @@ fn TransUnit.checkComp( token:&Parser.Token, callback:checkCompForm )
 
 
 fn TransUnit.checkFieldComp(
-   getterFlag:bool, token:&Parser.Token, prefixExp: &Nodes.Node ) 
+   getterFlag:bool, token:&Tokenizer.Token, prefixExp: &Nodes.Node ) 
 {
    if self.analyzeMode ~= .Complete {
       return;
@@ -2770,7 +2770,7 @@ fn TransUnit.checkFieldComp(
 }
 
 fn TransUnit.checkEnumComp(
-   token:&Parser.Token, enumTypeInfo: &Ast.EnumTypeInfo ) 
+   token:&Tokenizer.Token, enumTypeInfo: &Ast.EnumTypeInfo ) 
 {
    if self.analyzeMode ~= .Complete {
       return;
@@ -2796,7 +2796,7 @@ fn TransUnit.checkEnumComp(
 }
 
 fn TransUnit.checkAlgeComp(
-   token:&Parser.Token, algeTypeInfo: &Ast.AlgeTypeInfo ) 
+   token:&Tokenizer.Token, algeTypeInfo: &Ast.AlgeTypeInfo ) 
 {
    if self.analyzeMode ~= .Complete {
       return;
@@ -2904,7 +2904,7 @@ fn TransUnit.checkAsyncField( symbolInfo:&Ast.SymbolInfo, pos:&Types.Position ) 
 }
 
 
-fn TransUnit.checkSymbolComp( token:&Parser.Token ) 
+fn TransUnit.checkSymbolComp( token:&Tokenizer.Token ) 
 {
    self.checkComp(
       token,
@@ -2916,7 +2916,7 @@ fn TransUnit.checkSymbolComp( token:&Parser.Token )
 }
 
 fn TransUnit.analyzeExpField(
-   firstToken: &Parser.Token, fieldToken: &Parser.Token,
+   firstToken: &Tokenizer.Token, fieldToken: &Tokenizer.Token,
    mode: ExpSymbolMode, mut prefixExp: &Nodes.Node ) mut : Nodes.Node
 {
    if #prefixExp.$expTypeList > 1 {
@@ -3324,7 +3324,7 @@ fn TransUnit.analyzeExpField(
 }
 
 fn TransUnit.analyzeNewAlge(
-   firstToken:&Parser.Token, expectType:&Ast.TypeInfo,
+   firstToken:&Tokenizer.Token, expectType:&Ast.TypeInfo,
    algeTypeInfo:&Ast.AlgeTypeInfo, prefix:&Nodes.Node! ) mut : Nodes.NewAlgeValNode
 {
    if not self.helperInfo.useAlge {
@@ -3419,7 +3419,7 @@ fn TransUnit.analyzeNewAlge(
 }
 
 local fn TransUnit.analyzeExpSymbol(
-   firstToken: &Parser.Token, symbolToken: &Parser.Token, mode: ExpSymbolMode,
+   firstToken: &Tokenizer.Token, symbolToken: &Tokenizer.Token, mode: ExpSymbolMode,
    prefixExp: &Nodes.Node!, mut skipFlag: bool,
    canLeftExp:bool, canCondRet:bool ) mut : Nodes.Node
 {
@@ -3627,7 +3627,7 @@ local fn TransUnit.analyzeExpSymbol(
 *      左辺の変数の数だけ要素がある。
 */
 fn TransUnit.analyzeExpOpSet(
-   exp: Nodes.Node, opeToken: &Parser.Token,
+   exp: Nodes.Node, opeToken: &Tokenizer.Token,
    expectTypeList:&List<&Ast.TypeInfo> ) mut : Nodes.Node
 {
    exp.setLValue();
@@ -3784,7 +3784,7 @@ fn TransUnit.analyzeExpOpSet(
 
 
 fn TransUnit.analyzeExpOpEquals(
-   pos:&Parser.Position, opToken:&Parser.Token,
+   pos:&Tokenizer.Position, opToken:&Tokenizer.Token,
    mut exp1: Nodes.Node, mut exp2: Nodes.Node ) mut : Nodes.Node, Nodes.Node
 {
    let exp1Type = exp1.$expType;
@@ -3875,7 +3875,7 @@ fn TransUnit.analyzeExpOpEquals(
 
 
 fn TransUnit.analyzeExpOp2(
-   firstToken: &Parser.Token, mut exp: Nodes.Node,
+   firstToken: &Tokenizer.Token, mut exp: Nodes.Node,
    prevOpLevel: int!, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
    while true {
@@ -3885,8 +3885,8 @@ fn TransUnit.analyzeExpOp2(
       if opToken.txt == "@@" or opToken.txt == "@@@" or opToken.txt ==  "@@=" {
          exp = self.analyzeExpCast( firstToken, opTxt, exp );
       }
-      elseif opToken.kind == Parser.TokenKind.Ope {
-         if Parser.isOp2( opTxt ) {
+      elseif opToken.kind == Tokenizer.TokenKind.Ope {
+         if Tokenizer.isOp2( opTxt ) {
             if opTxt ~= "=" and not exp.canBeRight( self.processInfo ) {
                self.addErrMess(
                   exp.$pos, "This can't evaluate for '%s' -- %s"
@@ -4277,7 +4277,7 @@ fn TransUnit.analyzeExpOp2(
    }
 }
 
-fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMacroStatNode {
+fn TransUnit.analyzeExpMacroStat( firstToken: &Tokenizer.Token ) mut : Nodes.ExpMacroStatNode {
    let mut expStrList: List<&Nodes.Node> = [];
 
    //self.checkNextToken( "{" );
@@ -4322,7 +4322,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
          else {
             consecutive = false;
          }
-         let newToken = new Parser.Token(
+         let newToken = new Tokenizer.Token(
             token.kind, string.format( format, token.txt ), token.pos, consecutive ## );
          let literalStr = Nodes.LiteralStringNode.create(
             self.nodeManager, token.pos, self.inTestBlock,
@@ -4340,7 +4340,7 @@ fn TransUnit.analyzeExpMacroStat( firstToken: &Parser.Token ) mut : Nodes.ExpMac
 }
 
 
-fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
+fn TransUnit.analyzeSuper( firstToken:&Tokenizer.Token ) mut : Nodes.Node {
 
    self.checkNextToken( "(" );
 
@@ -4405,7 +4405,7 @@ fn TransUnit.analyzeSuper( firstToken:&Parser.Token ) mut : Nodes.Node {
    return self.createNoneNode( firstToken.pos );
 }
 
-fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
+fn TransUnit.analyzeUnwrap( firstToken: &Tokenizer.Token ) mut : Nodes.Node {
    let nextToken, continueFlag = self.getContinueToken();
 
    if not continueFlag or nextToken.txt ~= "!" {
@@ -4426,7 +4426,7 @@ fn TransUnit.analyzeUnwrap( firstToken: &Parser.Token ) mut : Nodes.Node {
 }
 
 fn TransUnit.analyzeExpUnwrap(
-   firstToken: &Parser.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
+   firstToken: &Tokenizer.Token, expectType:&Ast.TypeInfo! ) mut : Nodes.Node
 {
    //   let expNode = self.analyzeExp( false, opTopLevel ## );
    let expNode = self.analyzeExpOneRVal(
@@ -4513,7 +4513,7 @@ fn TransUnit.analyzeExpUnwrap(
 @return LiteralStringNode
 */
 fn TransUnit.analyzeStrConst(
-   firstToken:&Parser.Token, token:&Parser.Token ) mut : Nodes.Node
+   firstToken:&Tokenizer.Token, token:&Tokenizer.Token ) mut : Nodes.Node
 {
    let exp;
    
@@ -4588,7 +4588,7 @@ fn TransUnit.analyzeExpSub(
 {
    let firstToken = self.getToken(##);
    
-   fn processsExpectExp( token:&Parser.Token, orgExpectType:&Ast.TypeInfo ): Nodes.Node {
+   fn processsExpectExp( token:&Tokenizer.Token, orgExpectType:&Ast.TypeInfo ): Nodes.Node {
       if! let enumTypeInfo = orgExpectType.$srcTypeInfo.$aliasSrc@@@Ast.EnumTypeInfo {
          let nextToken = self.getToken(##);
          self.checkEnumComp( nextToken, enumTypeInfo );
@@ -4635,7 +4635,7 @@ fn TransUnit.analyzeExpSub(
       self.error( "illegal type for '.' -- %s" (orgExpectType.getTxt(##) ) ); // 要対応
    }
 
-   fn processsNewExp( token:&Parser.Token ): Nodes.Node {
+   fn processsNewExp( token:&Tokenizer.Token ): Nodes.Node {
       let mut exp:Nodes.Node = self.analyzeRefType( .Local, false, false, true, false );
 
       let mut classTypeInfo = exp.$expType;
@@ -4736,7 +4736,7 @@ fn TransUnit.analyzeExpSub(
       return exp;
    }
 
-   fn processOp1( token:&Parser.Token ): Nodes.Node, bool {
+   fn processOp1( token:&Tokenizer.Token ): Nodes.Node, bool {
       // 単項演算
       if token.txt == "`{" {
          return self.analyzeExpMacroStat( token ), false;
@@ -4858,7 +4858,7 @@ fn TransUnit.analyzeExpSub(
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeAbbr ] );
    }
    
-   if token.kind == Parser.TokenKind.Dlmt {
+   if token.kind == Tokenizer.TokenKind.Dlmt {
       if token.txt == "." {
          when! expectType {
             let mut orgExpectType = expectType;
@@ -4901,7 +4901,7 @@ fn TransUnit.analyzeExpSub(
       exp = processsNewExp( token );
    }  
 
-   if token.kind == Parser.TokenKind.Ope and Parser.isOp1( token.txt ) {
+   if token.kind == Tokenizer.TokenKind.Ope and Tokenizer.isOp1( token.txt ) {
       let mut workExp, fin = processOp1( token );
       if fin {
          return workExp;
@@ -4909,19 +4909,19 @@ fn TransUnit.analyzeExpSub(
       exp = workExp;
    }
 
-   if token.kind == Parser.TokenKind.Int {
+   if token.kind == Tokenizer.TokenKind.Int {
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
          token, (unwrap tonumber( token.txt ## ) default 0)@@int );
    }  
-   elseif token.kind == Parser.TokenKind.Real {
+   elseif token.kind == Tokenizer.TokenKind.Real {
       exp = Nodes.LiteralRealNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeReal ],
          token, (unwrap tonumber( token.txt ## ) default 0.0));
    }  
-   elseif token.kind == Parser.TokenKind.Char {
+   elseif token.kind == Tokenizer.TokenKind.Char {
       let num;
       if #token.txt == 1 {
          num = token.txt[ 1 ];
@@ -4933,29 +4933,29 @@ fn TransUnit.analyzeExpSub(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeChar ], token, num );
    }  
-   elseif token.kind == Parser.TokenKind.Str {
+   elseif token.kind == Tokenizer.TokenKind.Str {
       exp = self.analyzeStrConst( firstToken, token );
    }
-   elseif token.kind == Parser.TokenKind.Symb and token.txt == "__line__" {
+   elseif token.kind == Tokenizer.TokenKind.Symb and token.txt == "__line__" {
       let mut pos = self.getLineNo( token );
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
-         new Parser.Token( .Int, "%d" (pos.lineNo),
+         new Tokenizer.Token( .Int, "%d" (pos.lineNo),
                            token.pos, false, nil ), token.pos.lineNo );
    }
-   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "fn" {
+   elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "fn" {
       // anonymous 関数 (lambda)
       exp = self.analyzeExpSymbol( firstToken, token, .Fn, nil, false, false, false );
    }  
-   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "unwrap" {
+   elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "unwrap" {
       exp = self.analyzeExpUnwrap( token, expectType );
    }
-   elseif token.kind == Parser.TokenKind.Kywd and token.txt == "__request" {
+   elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "__request" {
       exp = self.analyzeRequest( token );
 
    }
-   elseif token.kind == Parser.TokenKind.Symb {
+   elseif token.kind == Tokenizer.TokenKind.Symb {
       exp = self.analyzeExpSymbol(
          firstToken, token, .Symbol, nil, false, canLeftExp, canCondRet );
       let symbolInfoList = exp.getSymbolInfo();
@@ -4977,7 +4977,7 @@ fn TransUnit.analyzeExpSub(
       }
       exp.setTailExp();
    }  
-   elseif token.kind == Parser.TokenKind.Type {
+   elseif token.kind == Tokenizer.TokenKind.Type {
       let! symbolTypeInfo = Ast.getSym2builtInTypeMap()[ token.txt ] {
          self.error( "unknown type -- %s" ( token.txt ) ); // バグ
       }; 
@@ -4991,14 +4991,14 @@ fn TransUnit.analyzeExpSub(
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
          exp, [], {}, .Mut, "no" );
    }
-   elseif token.kind == Parser.TokenKind.Kywd and
+   elseif token.kind == Tokenizer.TokenKind.Kywd and
        ( token.txt == "true" or token.txt == "false" )
    {  
       exp = Nodes.LiteralBoolNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeBool ], token );
    }  
-   elseif token.kind == Parser.TokenKind.Kywd and
+   elseif token.kind == Tokenizer.TokenKind.Kywd and
        ( token.txt == "nil" or token.txt == "null" )
    {  
       exp = Nodes.LiteralNilNode.create(

@@ -323,7 +323,7 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
-local Parser = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
@@ -496,27 +496,27 @@ function MacroMetaInfo._fromMapSub( obj, val )
 end
 
 
-local MacroParser = {}
-setmetatable( MacroParser, { __index = Parser.Parser } )
-function MacroParser._new( tokenList, name, overridePos )
+local MacroTokenizer = {}
+setmetatable( MacroTokenizer, { __index = Tokenizer.Tokenizer } )
+function MacroTokenizer._new( tokenList, name, overridePos )
    local obj = {}
-   MacroParser._setmeta( obj )
+   MacroTokenizer._setmeta( obj )
    if obj.__init then obj:__init( tokenList, name, overridePos ); end
    return obj
 end
-function MacroParser:__init(tokenList, name, overridePos) 
-   Parser.Parser.__init( self)
+function MacroTokenizer:__init(tokenList, name, overridePos) 
+   Tokenizer.Tokenizer.__init( self)
    
    self.pos = 1
    self.tokenList = tokenList
    self.name = name
    self.overridePos = _lune.nilacc( overridePos, 'get_orgPos', 'callmtd' )
 end
-function MacroParser:createPosition( lineNo, column )
+function MacroTokenizer:createPosition( lineNo, column )
 
    return Types.Position.create( lineNo, column, self:getStreamName(  ), self.overridePos )
 end
-function MacroParser:getToken(  )
+function MacroTokenizer:getToken(  )
 
    if #self.tokenList < self.pos then
       return nil
@@ -534,12 +534,12 @@ function MacroParser:getToken(  )
    
    return token
 end
-function MacroParser:getStreamName(  )
+function MacroTokenizer:getStreamName(  )
 
    return self.name
 end
-function MacroParser._setmeta( obj )
-  setmetatable( obj, { __index = MacroParser  } )
+function MacroTokenizer._setmeta( obj )
+  setmetatable( obj, { __index = MacroTokenizer  } )
 end
 
 
@@ -1360,7 +1360,7 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
    end
    
    
-   return MacroParser._new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
+   return MacroTokenizer._new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
 
 
@@ -1405,7 +1405,7 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
          else
           
             local pos = Types.Position.create( lineNo, column, string.format( "macro:%s", macroInfo.name), orgPos )
-            table.insert( tokenList, Parser.Token._new(_lune.unwrap( Parser.TokenKind._from( math.floor(tokenInfo[1]) )), txt, pos, false) )
+            table.insert( tokenList, Tokenizer.Token._new(_lune.unwrap( Tokenizer.TokenKind._from( math.floor(tokenInfo[1]) )), txt, pos, false) )
             column = column + #txt + 1
          end
          
@@ -1522,18 +1522,18 @@ local function expandVal( tokenList, workval, pos )
          local _switchExp = type( val )
          if _switchExp == "boolean" then
             local token = string.format( "%s", tostring( val))
-            local kind = Parser.TokenKind.Kywd
-            table.insert( tokenList, Parser.Token._new(kind, token, pos, false) )
+            local kind = Tokenizer.TokenKind.Kywd
+            table.insert( tokenList, Tokenizer.Token._new(kind, token, pos, false) )
          elseif _switchExp == "number" then
             local num = string.format( "%g", val * 1.0)
-            local kind = Parser.TokenKind.Int
+            local kind = Tokenizer.TokenKind.Int
             if string.find( num, ".", 1, true ) then
-               kind = Parser.TokenKind.Real
+               kind = Tokenizer.TokenKind.Real
             end
             
-            table.insert( tokenList, Parser.Token._new(kind, num, pos, false) )
+            table.insert( tokenList, Tokenizer.Token._new(kind, num, pos, false) )
          elseif _switchExp == "string" then
-            table.insert( tokenList, Parser.Token._new(Parser.TokenKind.Str, Parser.quoteStr( val ), pos, false) )
+            table.insert( tokenList, Tokenizer.Token._new(Tokenizer.TokenKind.Str, Tokenizer.quoteStr( val ), pos, false) )
          else 
             
                return string.format( "not support ,, List -- %s", type( val ))
@@ -1544,30 +1544,30 @@ local function expandVal( tokenList, workval, pos )
    
    return nil
 end
-local function pushbackTxt( pushbackParser, txtList, streamName, pos )
+local function pushbackTxt( pushbackTokenizer, txtList, streamName, pos )
 
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
-      local parser = Parser.StreamParser.create( _lune.newAlge( Types.ParserSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
-      local workParser = Parser.DefaultPushbackParser._new(parser)
+      local tokenizer = Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
+      local workTokenizer = Tokenizer.DefaultPushbackTokenizer._new(tokenizer)
       while true do
-         local worktoken = workParser:getTokenNoErr(  )
-         if worktoken.kind == Parser.TokenKind.Eof then
+         local worktoken = workTokenizer:getTokenNoErr(  )
+         if worktoken.kind == Tokenizer.TokenKind.Eof then
             break
          end
          
-         table.insert( tokenList, Parser.Token._new(worktoken.kind, worktoken.txt, pos, false) )
+         table.insert( tokenList, Tokenizer.Token._new(worktoken.kind, worktoken.txt, pos, false) )
       end
       
    end
    
    for index = #tokenList, 1, -1 do
-      pushbackParser:pushbackToken( tokenList[index] )
+      pushbackTokenizer:pushbackToken( tokenList[index] )
    end
    
 end
 
-function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
+function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
    local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
 
    Log.log( Log.Level.Trace, __func__, 979, function (  )
@@ -1584,7 +1584,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
    local function getToken(  )
    
       self.tokenExpanding = true
-      local work = parser:getTokenNoErr(  )
+      local work = tokenizer:getTokenNoErr(  )
       self.tokenExpanding = false
       return work
    end
@@ -1643,21 +1643,21 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                table.insert( txtList, txt )
             end
             
-            pushbackTxt( parser, txtList, nextToken.txt, nextToken.pos )
+            pushbackTxt( tokenizer, txtList, nextToken.txt, nextToken.pos )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
             local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
             local txt = _lune.unwrapDefault( macroVal.val, "")
-            parser:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
+            tokenizer:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
             local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
             local txt = _lune.unwrapDefault( macroVal.val, "nil")
-            parser:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
+            tokenizer:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
          elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
             if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
                local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
                local strList = macroVal2strList( nextToken.txt, macroVal )
                for index = #strList, 1, -1 do
-                  parser:pushbackStr( nil, string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
+                  tokenizer:pushbackStr( nil, string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
                end
                
             else
@@ -1677,7 +1677,7 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                end
                
                
-               parser:newPushback( tokenList )
+               tokenizer:newPushback( tokenList )
             end
             
          elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
@@ -1686,13 +1686,13 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             
             local nameList = Util.splitStr( fullname, "[^%.]+" )
             local enumValInfo = _lune.unwrap( enumTypeInfo:get_val2EnumValInfo()[_lune.unwrap( macroVal.val)])
-            nextToken = Parser.Token._new(Parser.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
-            parser:pushbackToken( nextToken )
+            nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
+            tokenizer:pushbackToken( nextToken )
             for index = #nameList, 1, -1 do
-               nextToken = Parser.Token._new(Parser.TokenKind.Dlmt, ".", nextToken.pos, false)
-               parser:pushbackToken( nextToken )
-               nextToken = Parser.Token._new(Parser.TokenKind.Symb, nameList[index], nextToken.pos, false)
-               parser:pushbackToken( nextToken )
+               nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Dlmt, ".", nextToken.pos, false)
+               tokenizer:pushbackToken( nextToken )
+               nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Symb, nameList[index], nextToken.pos, false)
+               tokenizer:pushbackToken( nextToken )
             end
             
          else
@@ -1712,12 +1712,12 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
             end
             
             
-            parser:newPushback( tokenList )
+            tokenizer:newPushback( tokenList )
          end
          
       elseif tokenTxt == ',,,' then
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) then
-            pushbackTxt( parser, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
+            pushbackTxt( tokenizer, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
          else
           
             Util.err( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )
@@ -1731,23 +1731,23 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, parser, token )
                newToken = string.format( "%s%s", newToken, txt)
             end
             
-            nextToken = Parser.Token._new(Parser.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
-            parser:pushbackToken( nextToken )
+            nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
+            tokenizer:pushbackToken( nextToken )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
             local txt = (_lune.unwrap( macroVal.val) )
             local rawTxt
             
             if txt:find( "^```" ) then
                
-               rawTxt = Parser.quoteStr( txt )
+               rawTxt = Tokenizer.quoteStr( txt )
             else
              
                
-               rawTxt = Parser.quoteStr( txt )
+               rawTxt = Tokenizer.quoteStr( txt )
             end
             
-            nextToken = Parser.Token._new(Parser.TokenKind.Str, rawTxt, nextToken.pos, false)
-            parser:pushbackToken( nextToken )
+            nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Str, rawTxt, nextToken.pos, false)
+            tokenizer:pushbackToken( nextToken )
          else
           
             Util.err( string.format( "not support this symbol -- %s%s", tokenTxt, nextToken.txt) )
@@ -1787,11 +1787,11 @@ function ErrorMess:__init( pos, mess )
 end
 
 
-function MacroCtrl:expandSymbol( parser, inTestBlock, prefixToken, exp, nodeManager, errMessList )
+function MacroCtrl:expandSymbol( tokenizer, inTestBlock, prefixToken, exp, nodeManager, errMessList )
 
-   local nextToken = parser:getTokenNoErr(  )
+   local nextToken = tokenizer:getTokenNoErr(  )
    if nextToken.txt ~= "~~" then
-      parser:pushbackToken( nextToken )
+      tokenizer:pushbackToken( nextToken )
    end
    
    
@@ -1832,7 +1832,7 @@ function MacroCtrl:expandSymbol( parser, inTestBlock, prefixToken, exp, nodeMana
       
    end
    
-   local newToken = Parser.Token._new(Parser.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
+   local newToken = Tokenizer.Token._new(Tokenizer.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
    
    local expListNode = Nodes.ExpListNode.create( nodeManager, exp:get_pos(), inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false )
    local dddNode = Nodes.ExpToDDDNode.create( nodeManager, exp:get_pos(), inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), expListNode )

@@ -16,7 +16,7 @@ class TransUnitForRunner extend TransUnit {
                     importModuleInfo:&frontInterface.ImportModuleInfo,
                     macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                     analyzeModule:str!, mode:AnalyzeMode!,
-                    pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
+                    pos:&Tokenizer.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                     ctrl_info: &Types.TransCtrlInfo,
                     builtinFunc:&Builtin.BuiltinFuncType,
                     list:&List<&FuncBlockInfo>, managerId:int)      
@@ -29,7 +29,7 @@ class TransUnitForRunner extend TransUnit {
       self.resultMap = {};
    }
 
-   pro override fn analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!, bool
+   pro override fn analyzeStatementToken( token:&Tokenizer.Token ) mut : Nodes.Node!, bool
    {
       if unsupportStatement.has( token.txt ) {
          self.errorAt(
@@ -43,7 +43,7 @@ class TransUnitForRunner extend TransUnit {
 
    local fn run() __async mut {
       self.resultMap = self.processFuncBlockInfo(
-         self.funcBlockCtl, self.parser.getStreamName() );
+         self.funcBlockCtl, self.tokenizer.getStreamName() );
    }
 }
 
@@ -61,7 +61,7 @@ class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockRes
       importModuleInfo:&frontInterface.ImportModuleInfo,
       macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
       analyzeModule:str!, mode:AnalyzeMode!,
-      pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
+      pos:&Tokenizer.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
       ctrl_info: &Types.TransCtrlInfo,
       builtinFunc:&Builtin.BuiltinFuncType,
       list:&List<&FuncBlockInfo>,
@@ -142,7 +142,7 @@ pub class TransUnitCtrl extend TransUnit {
                   importModuleInfo:&frontInterface.ImportModuleInfo,
                   macroEval: &Nodes.MacroEval, enableMultiPhase:bool,
                   analyzeModule:str!, mode:AnalyzeMode!,
-                  pos:&Parser.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
+                  pos:&Tokenizer.Position!, targetLuaVer:&LuaVer.LuaVerInfo,
                   ctrl_info: &Types.TransCtrlInfo,
                   builtinFunc:&Builtin.BuiltinFuncType )
    {
@@ -166,11 +166,11 @@ pub class TransUnitCtrl extend TransUnit {
       self.funcBlockInfoList = [];
    }
 
-   fn analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode;
+   fn analyzeTestCase( firstToken:&Tokenizer.Token ) mut : Nodes.TestCaseNode;
 }
 
 pro override fn TransUnitCtrl.analyzeLuneControlToken(
-   firstToken:&Parser.Token, controlToken:&Parser.Token ) mut : LuneControl.Pragma!
+   firstToken:&Tokenizer.Token, controlToken:&Tokenizer.Token ) mut : LuneControl.Pragma!
 {
    let pragma:LuneControl.Pragma!;
    switch controlToken.txt {
@@ -228,7 +228,7 @@ pro override fn TransUnitCtrl.analyzeLuneControlToken(
 
 
 fn TransUnitCtrl.analyzeImportFor(
-   pos: &Parser.Position, modulePath:str, assignName:str,
+   pos: &Tokenizer.Position, modulePath:str, assignName:str,
    assigned:bool, lazyLoad:Nodes.LazyLoad ) mut : Nodes.ImportNode!
 {
    let mut backupScope = self.$scope;
@@ -240,7 +240,7 @@ fn TransUnitCtrl.analyzeImportFor(
    let nearCode:str!;
    if self.macroCtrl.$analyzeInfo.$mode ~= .None {
       macroMode = self.macroCtrl.$analyzeInfo.$mode.$_txt;
-      nearCode = self.parser.getNearCode();
+      nearCode = self.tokenizer.getNearCode();
    } else {
       macroMode = "";
       nearCode = nil;
@@ -327,7 +327,7 @@ fn TransUnitCtrl.analyzeImportFor(
 }
 
 
-fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode! {
+fn TransUnitCtrl.analyzeImport( opeToken: &Tokenizer.Token ) mut : Nodes.ImportNode! {
    let lazyLoad:Nodes.LazyLoad;
    if self.getToken(##).txt == "." {
       let modeToken = self.getToken(##);
@@ -358,7 +358,7 @@ fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode
 
    let mut moduleToken = self.getToken(##);
    let mut modulePath = moduleToken.txt;
-   let mut nextToken:&Parser.Token = moduleToken;
+   let mut nextToken:&Tokenizer.Token = moduleToken;
 
    while true {
       nextToken = self.getToken(##);
@@ -398,7 +398,7 @@ fn TransUnitCtrl.analyzeImport( opeToken: &Parser.Token ) mut : Nodes.ImportNode
    return nil;
 }
 
-fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCaseNode
+fn TransUnitCtrl.analyzeTestCase( firstToken:&Tokenizer.Token ) mut : Nodes.TestCaseNode
 {
    let mut newScope = self.pushScope( .Other ## );
 
@@ -449,7 +449,7 @@ fn TransUnitCtrl.analyzeTestCase( firstToken:&Parser.Token ) mut : Nodes.TestCas
    self.errorAt( firstToken.pos, "failed to import -- '%s'" (testMod) ); // バグ
 }
 
-fn TransUnitCtrl.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
+fn TransUnitCtrl.analyzeTest( firstToken:&Tokenizer.Token ) mut : Nodes.Node
 {
    let nextToken = self.getToken( ## );
    if nextToken.txt ~= "{" {
@@ -476,7 +476,7 @@ fn TransUnitCtrl.analyzeTest( firstToken:&Parser.Token ) mut : Nodes.Node
 
 pro override fn TransUnitCtrl.analyzeDeclToken(
    accessMode: Ast.AccessMode, mut staticFlag: bool,
-   firstToken: &Parser.Token, mut token: &Parser.Token ) mut : Nodes.Node!
+   firstToken: &Tokenizer.Token, mut token: &Tokenizer.Token ) mut : Nodes.Node!
 {
    if token.txt == "__test" {
       return self.analyzeTest( firstToken );
@@ -485,7 +485,7 @@ pro override fn TransUnitCtrl.analyzeDeclToken(
 }
 
 
-fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.SubfileNode!
+fn TransUnitCtrl.analyzeSubfile( token: &Tokenizer.Token ) __noasync mut : Nodes.SubfileNode!
 {
    if self.$scope ~= self.moduleScope {
       self.addErrMess( token.pos, "'module' must be top scope." );
@@ -545,7 +545,7 @@ fn TransUnitCtrl.analyzeSubfile( token: &Parser.Token ) __noasync mut : Nodes.Su
       [ Ast.builtinTypeNone ], usePath );
 }
 
-fn TransUnitCtrl.analyzeProvide( firstToken: &Parser.Token ) mut : Nodes.ProvideNode! {
+fn TransUnitCtrl.analyzeProvide( firstToken: &Tokenizer.Token ) mut : Nodes.ProvideNode! {
    let token = self.getSymbolToken( .MustNot_ );
    let symbolNode = self.analyzeExpSymbol(
       firstToken, token, .Symbol, nil, true, false, false );
@@ -584,7 +584,7 @@ statement を解析する。
 @return Nodes.Node! 解析した Node。 適切なノードがない場合は nil。
 @return bool 解析を続ける場合 true
 */
-pro override fn TransUnitCtrl.analyzeStatementToken( token:&Parser.Token )
+pro override fn TransUnitCtrl.analyzeStatementToken( token:&Tokenizer.Token )
    mut : Nodes.Node!, bool
 {
    let statement:Nodes.Node!;
@@ -704,7 +704,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       
       resultMap = self.processFuncBlockInfo(
          new ListFuncBlockCtl( self.funcBlockInfoList ),
-         self.parser.getStreamName() );
+         self.tokenizer.getStreamName() );
    } else {
       foreach runner in runnerList {
          runner.waitToSetup();
@@ -714,7 +714,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       
       when! lastPartList {
          resultMap = self.processFuncBlockInfo(
-            new ListFuncBlockCtl( lastPartList ), self.parser.getStreamName() );
+            new ListFuncBlockCtl( lastPartList ), self.tokenizer.getStreamName() );
          __lns.runtime.log( "process lastpart" );
       }
 
@@ -752,7 +752,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       foreach noRunner in noRunnerList {
          let workMap = self.processFuncBlockInfo(
             new ListFuncBlockCtl( noRunner ),
-            self.parser.getStreamName() );
+            self.tokenizer.getStreamName() );
          foreach _, funcBlockInfo in workMap {
             noRunnerTypeSet.add( funcBlockInfo.$funcType );
          }
@@ -774,19 +774,19 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
 }
 
 pub fn TransUnitCtrl.createAST(
-   parserSrc: &Types.ParserSrc, asyncParse:bool,
+   tokenizerSrc: &Types.TokenizerSrc, asyncParse:bool,
    baseDir:str!, stdinFile:&Types.StdinFile!, macroFlag: bool,
    moduleName: str!, readyExportInfo:ReadyExportInfo! ) mut : AstInfo.ASTInfo
 {
-   let mut parser = Parser.createParserFrom( parserSrc, asyncParse, stdinFile );
+   let mut tokenizer = Tokenizer.createTokenizerFrom( tokenizerSrc, asyncParse, stdinFile );
 
-   let streamName = parser.getStreamName();
+   let streamName = tokenizer.getStreamName();
 
    self.stdinFile = stdinFile;
    self.baseDir = baseDir;
    
    Log._log2( .Log, "%s start -- %s on %s, macroFlag:%s, %s, testing:%s"
-              (__func__, parser.getStreamName(), baseDir,
+              (__func__, tokenizer.getStreamName(), baseDir,
                 macroFlag, self.analyzePhase.$_txt, self.ctrl_info.testing ) );
 
    self.moduleName = unwrap moduleName default "";
@@ -826,7 +826,7 @@ pub fn TransUnitCtrl.createAST(
    self.typeNameCtrl = new Ast.TypeNameCtrl( moduleTypeInfo );
 
 
-   self.setParser( new Parser.DefaultPushbackParser( parser ) );
+   self.setTokenizer( new Tokenizer.DefaultPushbackTokenizer( tokenizer ) );
 
    self.$scope.addIgnoredVar( self.processInfo );
 
@@ -862,7 +862,7 @@ pub fn TransUnitCtrl.createAST(
       __lns.runtime.log( "ready meta -- %d, %d"
                          (#self.funcBlockInfoList, self.totalFuncBlockTokenNum ) );
       Log._log2( .Log, "ready meta -- %s, %d, %s, %s"
-                 ( streamName, self.parser.getUsedTokenListLen(),
+                 ( streamName, self.tokenizer.getUsedTokenListLen(),
                    moduleTypeInfo, moduleTypeInfo.$scope ) );
       
       when! readyExportInfo {
@@ -893,9 +893,9 @@ pub fn TransUnitCtrl.createAST(
       
 
       let mut token = self.getTokenNoErr(##);
-      if token ~= Parser.getEofToken() {
+      if token ~= Tokenizer.getEofToken() {
          self.error( "%s:%d:%d:(%s) not eof -- %s" // バグ
-                     ( self.parser.getStreamName(),
+                     ( self.tokenizer.getStreamName(),
                        token.pos.lineNo, token.pos.column,
                        token.kind.$_txt, token.txt ) );
       }
@@ -915,16 +915,16 @@ pub fn TransUnitCtrl.createAST(
             self.error( "scope does not close" ); // 要対応
          }
 
-         let mut subParser = Parser.StreamParser.create(
-            Types.ParserSrc.LnsPath( baseDir, file, subModule, nil ),
+         let mut subTokenizer = Tokenizer.StreamTokenizer.create(
+            Types.TokenizerSrc.LnsPath( baseDir, file, subModule, nil ),
             true, self.stdinFile, nil );
 
-         self.setParser( new Parser.DefaultPushbackParser( subParser ) );
+         self.setTokenizer( new Tokenizer.DefaultPushbackTokenizer( subTokenizer ) );
 
          lastStatement = self.analyzeStatementListSubfile( children );
 
          token = self.getTokenNoErr(##);
-         if token ~= Parser.getEofToken() {
+         if token ~= Tokenizer.getEofToken() {
             Util.err( "unknown:%d:%d:(%s) %s" // バグ
                       ( token.pos.lineNo, token.pos.column,
                         token.kind.$_txt, token.txt ) );
@@ -1034,5 +1034,5 @@ pub fn TransUnitCtrl.createAST(
    }
    
    return new AstInfo.ASTInfo(
-      ast, exportInfo, parser.getStreamName(), self.builtinFunc );
+      ast, exportInfo, tokenizer.getStreamName(), self.builtinFunc );
 }

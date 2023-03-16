@@ -25,7 +25,7 @@ SOFTWARE.
 _lune_control default_async_all;
 _lune_control default_strict_generics;
 
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.Util;
 import lune.base.Code;
 import lune.base.Log;
@@ -512,7 +512,7 @@ pub abstract class SymbolInfo extend (LowSymbol) {
 シンボルの定義位置。実際の定義位置とズレることがある。参考程度にすること。
 外部シンボルや、ビルトインの場合は nil。
  */
-   pub abstract fn get_pos(): &Parser.Position!;
+   pub abstract fn get_pos(): &Tokenizer.Position!;
    /** シンボルの型 */
    pub abstract fn get_typeInfo(): &TypeInfo;
    /** シンボルの型 */
@@ -530,11 +530,11 @@ pub abstract class SymbolInfo extend (LowSymbol) {
    pub abstract fn get_hasAccessFromClosure(): bool;
    local abstract fn set_hasAccessFromClosure(flag:bool);
    /** このシンボルに値をセットした最後の位置。 変数の時に有効。 */
-   pub abstract fn get_posForLatestMod():&Parser.Position!;
-   local abstract fn set_posForLatestMod(pos:&Parser.Position!);
+   pub abstract fn get_posForLatestMod():&Tokenizer.Position!;
+   local abstract fn set_posForLatestMod(pos:&Tokenizer.Position!);
    /** このシンボルを最後に参照した値をセットした位置。 変数の時に有効。 */
-   pub abstract fn get_posForModToRef():&Parser.Position!;
-   pub abstract fn set_posForModToRef(pos:&Parser.Position!);
+   pub abstract fn get_posForModToRef():&Tokenizer.Position!;
+   pub abstract fn set_posForModToRef(pos:&Tokenizer.Position!);
 
    pub fn hasAccess(): bool {
       if self.$posForModToRef or self.$posForLatestMod ~= self.$pos {
@@ -543,7 +543,7 @@ pub abstract class SymbolInfo extend (LowSymbol) {
       return false;
    }
    
-   pub fn updateValue( pos:&Parser.Position! ) {
+   pub fn updateValue( pos:&Tokenizer.Position! ) {
       self.set_hasValueFlag( true );
       self.set_posForLatestMod( pos );
    }
@@ -1491,7 +1491,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    /** シンボルの名前 */
    pri let name: str { pub };
    /** シンボルの名前 */
-   pri let pos: &Parser.Position! { pub };
+   pri let pos: &Tokenizer.Position! { pub };
    /** シンボルの型 */
    pri let allmut typeInfo: &TypeInfo {pub};
    /** このシンボルの種類 SymbolKind */
@@ -1501,8 +1501,8 @@ pub class NormalSymbolInfo extend SymbolInfo {
    pri let mutMode: MutMode {pub};
    // pri let allmut accessFromClosure: AccessFromClosuer { pub, pub };
    pri let allmut hasAccessFromClosure: bool {pub,local};
-   pri let allmut posForLatestMod: &Parser.Position! {pub,local};
-   pri let allmut posForModToRef:&Parser.Position! {pub,pub};
+   pri let allmut posForLatestMod: &Tokenizer.Position! {pub,local};
+   pri let allmut posForModToRef:&Tokenizer.Position! {pub,pub};
    
    /** 変換モジュール用パラメータ */
    pri let allmut convModuleParam:&stem! {pub,pub}; 
@@ -1522,7 +1522,7 @@ pub class NormalSymbolInfo extend SymbolInfo {
    local fn __init(
       processInfo:ProcessInfo,
       kind:SymbolKind, canBeLeft:bool, canBeRight:bool, scope: Scope,
-      accessMode: AccessMode, staticFlag: bool, name: str, pos:&Parser.Position!,
+      accessMode: AccessMode, staticFlag: bool, name: str, pos:&Tokenizer.Position!,
       typeInfo: &TypeInfo, mutMode: MutMode!, hasValueFlag: bool, isLazyLoad:bool )
    {
       super();
@@ -2629,7 +2629,7 @@ pub fn Scope.filterSymbolTypeInfo(
 
 pub fn Scope.add(
    processInfo:ProcessInfo,
-   kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str, pos:&Parser.Position!,
+   kind: SymbolKind, canBeLeft:bool, canBeRight:bool, name:str, pos:&Tokenizer.Position!,
    typeInfo: &TypeInfo, accessMode:AccessMode, staticFlag:bool,
    mutMode:MutMode, hasValueFlag:bool, isLazyLoad:bool ) mut : SymbolInfo!, &SymbolInfo!
 {
@@ -2688,7 +2688,7 @@ pub fn Scope.addSymbolInfo(
 
 pub fn Scope.addLocalVar(
    processInfo:ProcessInfo,
-   argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
+   argFlag:bool, canBeLeft:bool, name:str, pos:&Tokenizer.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut : SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2701,7 +2701,7 @@ pub let dummySymbol = unwrap rootScope.addLocalVar(
 
 pub fn Scope.addUnwrapedVar(
    processInfo:ProcessInfo,
-   argFlag:bool, canBeLeft:bool, name:str, pos:&Parser.Position!,
+   argFlag:bool, canBeLeft:bool, name:str, pos:&Tokenizer.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut : SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2712,7 +2712,7 @@ pub fn Scope.addUnwrapedVar(
 
 pub fn Scope.addExportedVar(
    processInfo:ProcessInfo,
-   canBeLeft:bool, accessMode:AccessMode, name:str, pos:&Parser.Position!,
+   canBeLeft:bool, accessMode:AccessMode, name:str, pos:&Tokenizer.Position!,
    typeInfo: &TypeInfo, mutable:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2722,7 +2722,7 @@ pub fn Scope.addExportedVar(
 
 pub fn Scope.addVar(
    processInfo:ProcessInfo,
-   accessMode:AccessMode, name:str, pos:&Parser.Position!,
+   accessMode:AccessMode, name:str, pos:&Tokenizer.Position!,
    typeInfo: &TypeInfo, mutable:MutMode, hasValueFlag:bool ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
@@ -2736,7 +2736,7 @@ pub fn Scope.addVar(
 
 pub fn Scope.addEnumVal(
    processInfo:ProcessInfo,
-   name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   name:str, pos:&Tokenizer.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2746,7 +2746,7 @@ pub fn Scope.addEnumVal(
 
 pub fn Scope.addEnum(
    processInfo:ProcessInfo,
-   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   accessMode:AccessMode, name:str, pos:&Tokenizer.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2756,7 +2756,7 @@ pub fn Scope.addEnum(
 
 pub fn Scope.addAlgeVal(
    processInfo:ProcessInfo,
-   name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   name:str, pos:&Tokenizer.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2766,7 +2766,7 @@ pub fn Scope.addAlgeVal(
 
 pub fn Scope.addAlge(
    processInfo:ProcessInfo,
-   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut :
+   accessMode:AccessMode, name:str, pos:&Tokenizer.Position!, typeInfo: &TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2776,7 +2776,7 @@ pub fn Scope.addAlge(
 
 pub fn Scope.addAlternate(
    processInfo:ProcessInfo,
-   accessMode:AccessMode, name:str, pos:&Parser.Position!, typeInfo: &TypeInfo ) mut
+   accessMode:AccessMode, name:str, pos:&Tokenizer.Position!, typeInfo: &TypeInfo ) mut
 {
    self.add(
       processInfo, SymbolKind.Typ, false, false,
@@ -2785,7 +2785,7 @@ pub fn Scope.addAlternate(
 
 pub fn Scope.addMember(
    processInfo:ProcessInfo,
-   name:str, pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
+   name:str, pos:&Tokenizer.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
    staticFlag:bool, mutMode:MutMode ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2795,7 +2795,7 @@ pub fn Scope.addMember(
 
 pub fn Scope.addMethod(
    processInfo:ProcessInfo,
-   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
+   pos:&Tokenizer.Position!, typeInfo: &TypeInfo, accessMode:AccessMode,
    staticFlag:bool ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2805,7 +2805,7 @@ pub fn Scope.addMethod(
 
 pub fn Scope.addFunc(
    processInfo:ProcessInfo,
-   pos:&Parser.Position!, typeInfo: &TypeInfo,
+   pos:&Tokenizer.Position!, typeInfo: &TypeInfo,
    accessMode:AccessMode, staticFlag:bool, mutable:bool ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
@@ -2816,7 +2816,7 @@ pub fn Scope.addFunc(
 
 pub fn Scope.addForm(
    processInfo:ProcessInfo,
-   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut :
+   pos:&Tokenizer.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2826,7 +2826,7 @@ pub fn Scope.addForm(
 
 pub fn Scope.addMacro(
    processInfo:ProcessInfo,
-   pos:&Parser.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut :
+   pos:&Tokenizer.Position!, typeInfo: &TypeInfo, accessMode:AccessMode ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2836,7 +2836,7 @@ pub fn Scope.addMacro(
 
 
 pub fn Scope.addClassLazy(
-   processInfo:ProcessInfo, name:str, pos:&Parser.Position!,
+   processInfo:ProcessInfo, name:str, pos:&Tokenizer.Position!,
    typeInfo: &TypeInfo, lazyLoad:bool ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.add(
@@ -2845,14 +2845,14 @@ pub fn Scope.addClassLazy(
 }
 
 pub fn Scope.addClass(
-   processInfo:ProcessInfo, name:str, pos:&Parser.Position!,
+   processInfo:ProcessInfo, name:str, pos:&Tokenizer.Position!,
    typeInfo: &TypeInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
    return self.addClassLazy( processInfo, name, pos, typeInfo, false )**;
 }
 
 pub fn Scope.addExtModule(
-   processInfo:ProcessInfo, name:str, pos:&Parser.Position!, mut typeInfo: &TypeInfo,
+   processInfo:ProcessInfo, name:str, pos:&Tokenizer.Position!, mut typeInfo: &TypeInfo,
    lazy:bool, lang:Types.Lang ) mut : &SymbolInfo!, &SymbolInfo!
 {
    if lang ~= .Same {
@@ -5817,7 +5817,7 @@ pub fn ProcessInfo.createModule(
    //    return _exp.$typeInfo;
    // }              
 
-   if Parser.isLuaKeyword( moduleName ) {
+   if Tokenizer.isLuaKeyword( moduleName ) {
       Util.err( "This symbol can not use for a class or script file. -- %s" // 要対応
                 (moduleName) );
    }
@@ -5837,7 +5837,7 @@ pub fn ProcessInfo.createClassAsync(
    parentInfo: &TypeInfo, typeDataAccessor:TypeDataAccessor, externalFlag: bool,
    accessMode: AccessMode, className: str ) mut : TypeInfo
 {
-   if Parser.isLuaKeyword( className ) {
+   if Tokenizer.isLuaKeyword( className ) {
       Util.err( "This symbol can not use for a class or script file. -- %s" // 要対応
                 (className) );
    }
@@ -5874,7 +5874,7 @@ pub fn ProcessInfo.createExtModule(
    //    return _exp.$typeInfo;
    // }              
 
-   if Parser.isLuaKeyword( className ) {
+   if Tokenizer.isLuaKeyword( className ) {
       Util.err( "This symbol can not use for a class or script file. -- %s" // 要対応
                 (className) );
    }
@@ -5898,7 +5898,7 @@ pub fn ProcessInfo.createFuncAsync(
    argTypeList: &List<&TypeInfo>!, retTypeInfoList: &List<&TypeInfo>!,
    mutMode: MutMode ) mut : NormalTypeInfo
 {
-   if not builtinFlag and Parser.isLuaKeyword( funcName ) {
+   if not builtinFlag and Tokenizer.isLuaKeyword( funcName ) {
       Util.err( "This symbol can not use for a function. -- %s" (funcName) ); // 要対応
    }
 
@@ -5999,7 +5999,7 @@ pub fn ProcessInfo.createAlias(
 
 pub fn Scope.addAlias(
    processInfo:ProcessInfo,
-   name:str, pos:&Parser.Position, externalFlag:bool, accessMode:AccessMode,
+   name:str, pos:&Tokenizer.Position, externalFlag:bool, accessMode:AccessMode,
    parentInfo: &TypeInfo, symbolInfo:&SymbolInfo ) mut : &SymbolInfo!, &SymbolInfo!
 {
    let aliasType = processInfo.createAlias(
@@ -6011,7 +6011,7 @@ pub fn Scope.addAlias(
 }
 
 pub fn Scope.addAliasForType(
-   processInfo:ProcessInfo, name:str, pos:&Parser.Position!, typeInfo:&TypeInfo ) mut :
+   processInfo:ProcessInfo, name:str, pos:&Tokenizer.Position!, typeInfo:&TypeInfo ) mut :
    &SymbolInfo!, &SymbolInfo!
 {
    let mut skind = SymbolKind.Typ;
@@ -7005,7 +7005,7 @@ pub fn ProcessInfo.createEnum(
    externalFlag: bool, accessMode: AccessMode,
    enumName: str, valTypeInfo:&TypeInfo ) mut : EnumTypeInfo
 {
-   if Parser.isLuaKeyword( enumName ) {
+   if Tokenizer.isLuaKeyword( enumName ) {
       Util.err( "This symbol can not use for a enum. -- %s" // 要対応
                 (enumName) );
    }
@@ -7075,7 +7075,7 @@ pub fn ProcessInfo.createAlge(
    accessMode: AccessMode, algeName: str,
    itemTypeInfoList:&List<&TypeInfo> ) mut : AlgeTypeInfo
 {
-   if Parser.isLuaKeyword( algeName ) {
+   if Tokenizer.isLuaKeyword( algeName ) {
       Util.err( "This symbol can not use for a alge. -- %s" // 要対応
                 (algeName) );
    }
@@ -8295,13 +8295,13 @@ pub let compOpSet = (@ "==", "~=" );
 pub let mathCompOpSet = (@ "<", "<=", ">", ">=" );
 
 pub class RefTypeInfo { 
-   let pos:Parser.Position {pub};
+   let pos:Tokenizer.Position {pub};
    let mut itemRefTypeList: List<&RefTypeInfo> {pub};
    let typeInfo:&TypeInfo {pub};
 }
 
 class TypeAnalyzer {    
-   let mut parser:Parser.PushbackParser;
+   let mut tokenizer:Tokenizer.PushbackTokenizer;
    let parentInfo:&TypeInfo;
    let moduleType:&TypeInfo;
    let moduleScope:&Scope; 
@@ -8326,24 +8326,24 @@ class TypeAnalyzer {
       self.scope = rootScope; 
       self.accessMode = .Local;
       self.parentPub = false; 
-      self.parser = new Parser.DefaultPushbackParser( new Parser.DummyParser() );
+      self.tokenizer = new Tokenizer.DefaultPushbackTokenizer( new Tokenizer.DummyTokenizer() );
    }
    
    pub fn analyzeTypeItemList(
       allowDDD:bool, refFlag: bool, mutFlag: bool,
-      typeInfo:&TypeInfo, pos:&Parser.Position ) __noasync mut:
-      &RefTypeInfo!, &Parser.Position!, str!;
+      typeInfo:&TypeInfo, pos:&Tokenizer.Position ) __noasync mut:
+      &RefTypeInfo!, &Tokenizer.Position!, str!;
 
    fn analyzeTypeSub( allowDDD:bool ) __noasync mut :
-   &RefTypeInfo!, &Parser.Position!, str!;
+   &RefTypeInfo!, &Tokenizer.Position!, str!;
 
    pub fn analyzeType(     
-      scope:&Scope, parser:Parser.PushbackParser, accessMode: AccessMode,
+      scope:&Scope, tokenizer:Tokenizer.PushbackTokenizer, accessMode: AccessMode,
       allowDDD:bool, parentPub:bool ) __noasync mut :
-      &RefTypeInfo!, &Parser.Position!, str!
+      &RefTypeInfo!, &Tokenizer.Position!, str!
    {
       self.scope = scope;     
-      self.parser = parser;   
+      self.tokenizer = tokenizer;   
       self.accessMode = accessMode;
       self.parentPub = parentPub;
       return self.analyzeTypeSub( allowDDD )**;
@@ -8351,27 +8351,27 @@ class TypeAnalyzer {
 
    pub fn analyzeTypeFromTxt(
       txt:str, scope:&Scope, accessMode: AccessMode, parentPub:bool ) __noasync mut :
-      &RefTypeInfo!, &Parser.Position!, str!
+      &RefTypeInfo!, &Tokenizer.Position!, str!
    {
-      let mut parser = Parser.DefaultPushbackParser.createFromLnsCode( txt, "test" );
-      return self.analyzeType( scope, parser, accessMode, true, parentPub )**;
+      let mut tokenizer = Tokenizer.DefaultPushbackTokenizer.createFromLnsCode( txt, "test" );
+      return self.analyzeType( scope, tokenizer, accessMode, true, parentPub )**;
    }
 }
 
 pri fn TypeAnalyzer.analyzeTypeSub( allowDDD:bool ) __noasync mut :
-   &RefTypeInfo!, &Parser.Position!, str!
+   &RefTypeInfo!, &Tokenizer.Position!, str!
 {
-   let firstToken = self.parser.getTokenNoErr(##);
+   let firstToken = self.tokenizer.getTokenNoErr(##);
    let mut token = firstToken;
    let mut refFlag = false;
    if token.txt == "&" {   
       refFlag = true;         
-      token = self.parser.getTokenNoErr(##);
+      token = self.tokenizer.getTokenNoErr(##);
    }
    let mut mutFlag = false;
    if token.txt == "mut" { 
       mutFlag = true;         
-      token = self.parser.getTokenNoErr(##);
+      token = self.tokenizer.getTokenNoErr(##);
    }
    // builtin の型名などは _ で始まることもあるので、シンボル名チェックしない
    // self.checkSymbol( token, .MustNot_ );
@@ -8400,8 +8400,8 @@ pri fn TypeAnalyzer.analyzeTypeSub( allowDDD:bool ) __noasync mut :
 
 pub fn TypeAnalyzer.analyzeTypeItemList(
    allowDDD:bool, refFlag: bool, mutFlag: bool,
-   mut typeInfo:&TypeInfo, pos:&Parser.Position ) __noasync mut:
-   &RefTypeInfo!, &Parser.Position!, str!
+   mut typeInfo:&TypeInfo, pos:&Tokenizer.Position ) __noasync mut:
+   &RefTypeInfo!, &Tokenizer.Position!, str!
 {
    if self.parentPub and   
       isPubToExternal( self.accessMode ) and
@@ -8412,11 +8412,11 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
    }
    
 
-   let mut token = self.parser.getTokenNoErr(##);
+   let mut token = self.tokenizer.getTokenNoErr(##);
    
    if token.consecutive and token.txt == "!" {
       typeInfo = typeInfo.$nilableTypeInfo;
-      token = self.parser.getTokenNoErr(##);
+      token = self.tokenizer.getTokenNoErr(##);
    }
 
    macro _checkToken( workToken:sym, oneChar:str ) {
@@ -8437,19 +8437,19 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
             typeInfo = self.processInfo.createArray(
                self.accessMode, self.parentInfo, [ typeInfo ], .Mut );
          }
-         token = self.parser.getTokenNoErr(##);
+         token = self.tokenizer.getTokenNoErr(##);
          _checkToken( token, ']' );
       }
       elseif token.txt == "<" {
          let mut genericList: List<&TypeInfo> = [];
-         let mut nextToken: &Parser.Token = Parser.getEofToken();
+         let mut nextToken: &Tokenizer.Token = Tokenizer.getEofToken();
          repeat {                 
             let refType = self.analyzeTypeSub( false );
             when! refType {          
                genericRefList.insert( refType );
                genericList.insert( refType.$typeInfo );
             }
-            nextToken = self.parser.getTokenNoErr(##);
+            nextToken = self.tokenizer.getTokenNoErr(##);
          } nextToken.txt ~= ",";
          _checkToken( nextToken, '>' );
 
@@ -8530,14 +8530,14 @@ pub fn TypeAnalyzer.analyzeTypeItemList(
          }
       }
       else {                   
-         self.parser.pushback();  
+         self.tokenizer.pushback();  
          break;                   
       }
-      token = self.parser.getTokenNoErr(##);
+      token = self.tokenizer.getTokenNoErr(##);
    }
    if token.txt == "!" {    
       typeInfo = typeInfo.get_nilableTypeInfo();
-      self.parser.getTokenNoErr(##);
+      self.tokenizer.getTokenNoErr(##);
    }
 
    if not allowDDD {        

@@ -34,7 +34,7 @@ import lune.base.AstInfo;
 import lune.base.TransUnit;
 import lune.base.LuaMod;
 import lune.base.LuaVer;
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.Types;
 import lune.base.Log;
 import lune.base.LuneControl;
@@ -798,7 +798,7 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
 
             memStream.close();
             self.writeln( 'info.stmtBlock = %s'
-                          (Parser.quoteStr( memStream.$txt ) ) );
+                          (Tokenizer.quoteStr( memStream.$txt ) ) );
          }
 
          self.writeln( 'info.tokenList = {' );
@@ -808,12 +808,12 @@ fn ConvFilter.outputMeta( node: &Nodes.RootNode ) mut
                self.writeRaw( "," );
             }
             if prevLineNo ~= -1 and prevLineNo ~= token.pos.lineNo {
-               self.writeRaw( "{%d,%s}," (Parser.TokenKind.Dlmt,
-                                        Parser.quoteStr( "\n" ) ) );
+               self.writeRaw( "{%d,%s}," (Tokenizer.TokenKind.Dlmt,
+                                        Tokenizer.quoteStr( "\n" ) ) );
             }
             prevLineNo = token.pos.lineNo;
             self.writeRaw( "{%d,%s}" (token.kind,
-                                    Parser.quoteStr( token.txt )) );
+                                    Tokenizer.quoteStr( token.txt )) );
          }
          self.writeln( '}' );
 
@@ -3960,7 +3960,7 @@ __test {
    import lune.base.TestingMacro;
 
    pub fn createAstFromStream(
-      parserSrc:&Types.ParserSrc, scriptPath:str,
+      tokenizerSrc:&Types.TokenizerSrc, scriptPath:str,
       stream:iStream, option:&LnsOpt.Option ) __noasync: AstInfo.ASTInfo
    {
       let moduleId = frontInterface.ModuleId.createId( 0.0, 0 );
@@ -3977,7 +3977,7 @@ __test {
          nil, .Compile,
          nil, option.targetLuaVer, option.transCtrlInfo, builtinFunc );
       
-      return transUnit.createAST( parserSrc, false, nil, nil, false, mod, nil );
+      return transUnit.createAST( tokenizerSrc, false, nil, nil, false, mod, nil );
    }
    
    
@@ -3986,7 +3986,7 @@ __test {
          Util.err( "not failed to open -- %s" (scriptPath) ); // バグ
       };
       let mut ast = createAstFromStream(
-         Types.ParserSrc.LnsPath(
+         Types.TokenizerSrc.LnsPath(
             nil, scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
          scriptPath, stream, option );
       stream.close();
@@ -3997,10 +3997,10 @@ __test {
       scriptPath:str, lnsCode:str, option:&LnsOpt.Option ) __noasync: AstInfo.ASTInfo
    {
       return createAstFromStream(
-         // Types.ParserSrc.LnsPath(
+         // Types.TokenizerSrc.LnsPath(
          //    scriptPath, Util.scriptPath2Module( scriptPath ), nil ),
-         Types.ParserSrc.LnsCode( lnsCode, scriptPath, nil ),
-         scriptPath, new Parser.TxtStream( lnsCode ), option );
+         Types.TokenizerSrc.LnsCode( lnsCode, scriptPath, nil ),
+         scriptPath, new Tokenizer.TxtStream( lnsCode ), option );
    }
    
    pub fn getTestLnsCode() : str {

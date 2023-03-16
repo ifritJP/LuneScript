@@ -32,7 +32,7 @@ import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.AstInfo;
 import lune.base.LuaVer;
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.LuneControl;
 import lune.base.Types;
 import lune.base.Option as LnsOpt;
@@ -217,7 +217,7 @@ class convFilter extend Nodes.Filter<Opt> {
       self.modDir = Str.replace( modDir, "@", "" ).gsub( "%.$", "" );
 
       self.noneNode = Nodes.NoneNode.create(
-         self.nodeManager, Parser.noneToken.pos, false, false,
+         self.nodeManager, Tokenizer.noneToken.pos, false, false,
          [ Ast.builtinTypeNone ] );
 
       self.builtin2code = {
@@ -683,10 +683,10 @@ fn str2gostr( txt:str ) : str {
    let mut work = txt;
    if string.find( work, '^```' ## ) {
       work = work.sub( 4, -4 ).gsub( "^\n", "" );
-      work = Parser.quoteStr( work );
+      work = Tokenizer.quoteStr( work );
    }
    elseif string.find( work, "^'" ## ) {
-      work = Str.replace( Parser.convFromRawToStr( work ), '"', '\\"' );
+      work = Str.replace( Tokenizer.convFromRawToStr( work ), '"', '\\"' );
       work = '"%s"' (work);
    }
    //work = work.gsub( "\\\n", "\\n" );

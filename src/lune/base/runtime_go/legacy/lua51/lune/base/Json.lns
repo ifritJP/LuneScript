@@ -25,22 +25,22 @@ SOFTWARE.
 _lune_control default_async_all;
 _lune_control default_strict_generics;
 
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.Types;
 
-fn getRawTxt( token:Parser.Token ) : str {
+fn getRawTxt( token:Tokenizer.Token ) : str {
    return token.txt.sub( 2, -2 );
 }
 
-fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
-   let token = parser.getTokenNoErr(##);
+fn getVal( tokenizer:Tokenizer.DefaultPushbackTokenizer ) : stem!, bool {
+   let token = tokenizer.getTokenNoErr(##);
    switch token.kind {
       case .Dlmt {
          switch token.txt {
             case "{" {
                let mut map:_Map<str,stem> = {};
                while true {
-                  let mut key = parser.getTokenNoErr(##);
+                  let mut key = tokenizer.getTokenNoErr(##);
                   switch key.kind {
                      case .Str {
                      }
@@ -50,7 +50,7 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                               return map, true;
                            }
                            case "," {
-                              key = parser.getTokenNoErr(##);
+                              key = tokenizer.getTokenNoErr(##);
                               if key.kind ~= .Str {
                                  return nil, false;
                               }
@@ -64,10 +64,10 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                         return nil, false;
                      }
                   }
-                  if parser.getTokenNoErr(##).txt ~= ":" {
+                  if tokenizer.getTokenNoErr(##).txt ~= ":" {
                      return nil, false;
                   }
-                  let mut val, ok = getVal( parser );
+                  let mut val, ok = getVal( tokenizer );
                   if not ok {
                      return nil, false;
                   }
@@ -80,7 +80,7 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                let mut list:_List<stem!> = [];
                let mut count = 1;
                while true {
-                  let nextToken = parser.getTokenNoErr(##);
+                  let nextToken = tokenizer.getTokenNoErr(##);
                   switch nextToken.txt {
                      case "]" {
                         return list, true;
@@ -88,10 +88,10 @@ fn getVal( parser:Parser.DefaultPushbackParser ) : stem!, bool {
                      case "," {
                      }
                      default {
-                        parser.pushback();
+                        tokenizer.pushback();
                      }
                   }
-                  let mut val, ok = getVal( parser );
+                  let mut val, ok = getVal( tokenizer );
                   if not ok {
                      return nil, false;
                   }
@@ -144,13 +144,13 @@ txt に与えた JSON 文字列からデータを解析して返す。
 @return Types.Position! 解析エラーした際の位置情報。 解析成功した場合は nil。
 */
 pub fn fromStr(txt:str) : stem!, &Types.Position! {
-   let mut parser = new Parser.DefaultPushbackParser(
-      Parser.StreamParser.create(
-         Types.ParserSrc.LnsCode( txt, "json", nil ),
+   let mut tokenizer = new Tokenizer.DefaultPushbackTokenizer(
+      Tokenizer.StreamTokenizer.create(
+         Types.TokenizerSrc.LnsCode( txt, "json", nil ),
          false ## ) );
-   let val, ok = getVal( parser );
+   let val, ok = getVal( tokenizer );
    if not ok {
-      return nil, parser.getLastPos();
+      return nil, tokenizer.getLastPos();
    }
    return val, nil;
 }

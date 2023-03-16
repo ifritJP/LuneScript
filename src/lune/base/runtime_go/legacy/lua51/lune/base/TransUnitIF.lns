@@ -25,7 +25,7 @@ SOFTWARE.
 _lune_control default_async_all;
 _lune_control default_strict_generics;
 
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.Ast;
 import lune.base.Nodes;
 import lune.base.Util;
@@ -100,7 +100,7 @@ pub class NSInfo {
    let typeInfo:&Ast.TypeInfo {pub};
    let typeDataAccessor:Ast.TypeDataAccessor {pub};
    /** この名前空間の定義位置 */
-   let pos:&Parser.Position {pub};
+   let pos:&Tokenizer.Position {pub};
 
    /** この名前空間で処理しているループ系制御構文(for 等)の Scope */
    let mut loopScopeQueue: List<&Ast.Scope> {pub};
@@ -154,7 +154,7 @@ pub class NSInfo {
    }
    
    pub fn __init( typeInfo:&Ast.TypeInfo, typeDataAccessor:Ast.TypeDataAccessor,
-                  pos:&Parser.Position, validAsyncCtrl:bool )
+                  pos:&Tokenizer.Position, validAsyncCtrl:bool )
    {
       self.stmtIdList = [];
       foreach _ in StmtKind.$_allList {
@@ -287,13 +287,13 @@ pub interface TransUnitIF {
       externalFlag: bool, name:str, mutable: bool ) mut : NSInfo;
    pub fn popModule() mut;
    pub fn pushClassScope(
-      errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut;
+      errPos:&Tokenizer.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut;
    pub fn popClass() mut;
 }
 
 pub class ErrMess {
    pub let mess:str {pub};
-   pub let pos:&Parser.Position {pub};
+   pub let pos:&Tokenizer.Position {pub};
 }
 
 pub fn sortMess( list:List<&ErrMess> ) : &List<&ErrMess>
@@ -356,7 +356,7 @@ curNsInfo が nil になる。
    pri let mut curNsInfo:NSInfo!;
 
    // /** 解析済みトークンリスト */
-   // pri let mut usedTokenList: List<&Parser.Token>;
+   // pri let mut usedTokenList: List<&Tokenizer.Token>;
    /** 解析エラーメッセージ */
    pro let errMessList: List<&ErrMess> { pub };
 
@@ -371,9 +371,9 @@ curNsInfo が nil になる。
    pro fn getCurrentNamespaceTypeInfo() : &Ast.TypeInfo {
       return self.scope.getNamespaceTypeInfo();
    }
-   pub abstract fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __;
+   pub abstract fn errorAt( pos:&Tokenizer.Position, mess: str ) __async mut : __;
 
-   pub abstract fn getLatestPos() : &Parser.Position;
+   pub abstract fn getLatestPos() : &Tokenizer.Position;
 
    pub fn error( mess: str ) __async mut : __ {
       self.errorAt( self.getLatestPos(), mess );
@@ -435,7 +435,7 @@ curNsInfo が nil になる。
       self.nsInfoMap[ subRootTypeInfo ] = nsInfo;
    }
 
-   pro fn addErrMess( pos: &Parser.Position, mut mess: str ) __async mut {
+   pro fn addErrMess( pos: &Tokenizer.Position, mut mess: str ) __async mut {
       if mess.find( "type mismatch.*<- &" ##) {
          mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
       }
@@ -468,7 +468,7 @@ curNsInfo が nil になる。
 
    pro fn newNSInfoWithTypeData(
       typeInfo:&Ast.TypeInfo, typeDataAccessor:Ast.TypeDataAccessor,
-      pos:&Parser.Position) __async mut : NSInfo
+      pos:&Tokenizer.Position) __async mut : NSInfo
    {
       let mut nsInfo = new NSInfo(
          typeInfo, typeDataAccessor, pos, self.ctrl_info.validAsyncCtrl );
@@ -481,7 +481,7 @@ curNsInfo が nil になる。
 この情報は、&TypeInfo から imut を外すために利用する。
    */ 
    pro fn newNSInfo(
-      typeInfo:Ast.TypeInfo, pos:&Parser.Position) __async mut : NSInfo
+      typeInfo:Ast.TypeInfo, pos:&Tokenizer.Position) __async mut : NSInfo
    {
       let mut nsInfo = new NSInfo(
          typeInfo, typeInfo, pos, self.ctrl_info.validAsyncCtrl );
@@ -563,7 +563,7 @@ curNsInfo が nil になる。
 既存クラスの Scope を push する。
    */
    pub fn pushClassScope(
-      errPos:&Parser.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut
+      errPos:&Tokenizer.Position, classTypeInfo:&Ast.TypeInfo, scope:Ast.Scope ) mut
    {
       if self.scope ~= classTypeInfo.$scope$.$parent {
          let classParentName;
@@ -597,7 +597,7 @@ curNsInfo が nil になる。
    */
    pub fn pushClass(
       processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
+      errPos:&Tokenizer.Position, mode:DeclClassMode, finalFlag:bool, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       allowMultiple:bool, accessMode:Ast.AccessMode,
@@ -757,7 +757,7 @@ curNsInfo が nil になる。
    */
    pub fn pushClassLow(
       processInfo:Ast.ProcessInfo,
-      errPos:&Parser.Position, mode:DeclClassMode, finalFlag: bool, abstractFlag: bool,
+      errPos:&Tokenizer.Position, mode:DeclClassMode, finalFlag: bool, abstractFlag: bool,
       baseInfo: &Ast.TypeInfo!, interfaceList: &List<&Ast.TypeInfo>!,
       genTypeList: &List<&Ast.AlternateTypeInfo>!, externalFlag: bool, name:str,
       allowMultiple:bool, accessMode:Ast.AccessMode,
@@ -775,10 +775,10 @@ curNsInfo が nil になる。
 }
 
 pub class SimpeTransUnit extend TransUnitBase {
-   let latestPos:&Parser.Position;
+   let latestPos:&Tokenizer.Position;
    let macroMode:str;
    let nearCode:str!;
-   pub override fn errorAt( pos:&Parser.Position, mess: str ) __async mut : __
+   pub override fn errorAt( pos:&Tokenizer.Position, mess: str ) __async mut : __
    {
       self.addErrMess( pos, mess);
       foreach errmess in self.errMessList {
@@ -792,7 +792,7 @@ pub class SimpeTransUnit extend TransUnitBase {
       
       Util.err( "has error" ); // バグ
    }
-   pub override fn getLatestPos() : &Parser.Position {
+   pub override fn getLatestPos() : &Tokenizer.Position {
       return self.latestPos;
    }
 }

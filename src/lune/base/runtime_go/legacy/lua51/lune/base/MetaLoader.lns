@@ -1,7 +1,7 @@
 import lune.base.Str;
 import lune.base.Util;
 import lune.base.Meta;
-import lune.base.Parser;
+import lune.base.Tokenizer;
 import lune.base.Depend;
 
 class SymbolInfo {
@@ -46,11 +46,11 @@ let quotedChar2Code:Map<str,int> = {
 };
 
 class Loader {
-   let mut parser:Parser.PushbackParser;
+   let mut tokenizer:Tokenizer.PushbackTokenizer;
    let mut curScope:Scope;
    
-   pub fn __init( parser:Parser.PushbackParser ) {
-      self.parser = parser;
+   pub fn __init( tokenizer:Tokenizer.PushbackTokenizer ) {
+      self.tokenizer = tokenizer;
       self.curScope = new Scope( nil );
    }
    
@@ -60,7 +60,7 @@ class Loader {
       let mut map:Map<&stem,&stem> = {};
       let mut index = 1;
       while true {
-         let token = self.parser.getTokenNoErr();
+         let token = self.tokenizer.getTokenNoErr();
          if token.kind == .Eof {
             return nil, "eof";
          }
@@ -74,8 +74,8 @@ class Loader {
                let mut item:&stem! = nil;
                switch token.kind {
                   case .Symb {
-                     let nextToken = self.parser.getTokenNoErr();
-                     self.parser.pushbackToken( nextToken );
+                     let nextToken = self.tokenizer.getTokenNoErr();
+                     self.tokenizer.pushbackToken( nextToken );
                      if nextToken.txt == "=" {
                         item = token.txt;
                      }  else {
@@ -94,7 +94,7 @@ class Loader {
                      }
                   }
                   default {
-                     self.parser.pushback();
+                     self.tokenizer.pushback();
                      let err;
                      item, err = self.analyzeExp();
                      if err {
@@ -103,9 +103,9 @@ class Loader {
                   }
                }
                if not item {
-                  self.parser.pushbackToken( token );
+                  self.tokenizer.pushbackToken( token );
                }
-               let nextToken = self.parser.getTokenNoErr();
+               let nextToken = self.tokenizer.getTokenNoErr();
                if nextToken.txt == "=" {
                   // key = val なので、 val を解析して登録する。
                   let val, work = self.analyzeExp();
@@ -116,7 +116,7 @@ class Loader {
                      map[ item ] = val;
                   }
                } else {
-                  self.parser.pushback();
+                  self.tokenizer.pushback();
                   when! item {
                      map[ index ] = item;
                   }
@@ -129,7 +129,7 @@ class Loader {
 
    fn analyzeExp() mut : stem!, str! {
       while true {
-         let token = self.parser.getTokenNoErr();
+         let token = self.tokenizer.getTokenNoErr();
          if token.kind == .Eof {
             return nil, "eof";
          }
@@ -189,13 +189,13 @@ class Loader {
    }
    
    fn processDeclVar() mut : str! {
-      let token = self.parser.getTokenNoErr();
+      let token = self.tokenizer.getTokenNoErr();
       if token.kind ~= .Symb {
          return "no synbol -- %s" (token.txt);
       }
-      let nextToken = self.parser.getTokenNoErr();
+      let nextToken = self.tokenizer.getTokenNoErr();
       if nextToken.txt ~= "=" {
-         self.parser.pushback();
+         self.tokenizer.pushback();
          return nil;
       }
       let val, err = self.analyzeExp();
@@ -207,11 +207,11 @@ class Loader {
       return nil;
    }
 
-   fn processExpSym( symToken:&Parser.Token ) mut : str! {
+   fn processExpSym( symToken:&Tokenizer.Token ) mut : str! {
       let! mut symbolInfo = self.curScope.get( symToken.txt ) {
          return "not found -- %s" (symToken.txt);
       };
-      let mut nextToken = self.parser.getTokenNoErr();
+      let mut nextToken = self.tokenizer.getTokenNoErr();
       let mut exp = symbolInfo.$val;
       let mut index:stem! = nil;
 
@@ -221,7 +221,7 @@ class Loader {
          }
          switch nextToken.txt {
             case "." {
-               let fieldToken = self.parser.getTokenNoErr();
+               let fieldToken = self.tokenizer.getTokenNoErr();
                when! exp {
                   index = fieldToken.txt;
                } else {
@@ -235,7 +235,7 @@ class Loader {
                } else {
                   return "illegal index -- %s" (err);
                }
-               let closeToken = self.parser.getTokenNoErr();
+               let closeToken = self.tokenizer.getTokenNoErr();
                if closeToken.txt ~= "]" {
                   return "illegal token -- %s" (closeToken.txt);
                }
@@ -252,13 +252,13 @@ class Loader {
                return nil;
             }
          }
-         nextToken = self.parser.getTokenNoErr();
+         nextToken = self.tokenizer.getTokenNoErr();
       }
    }
 
    fn processStmt() mut : &stem!, str! {
       while true {
-         let token = self.parser.getTokenNoErr();
+         let token = self.tokenizer.getTokenNoErr();
          if token.kind == .Eof {
             return nil, "eof";
          }
@@ -297,7 +297,7 @@ class Loader {
    pub fn process() mut : &stem!, str! {
       let val, err = self.processStmt();
       when! err {
-         let pos = self.parser.getTokenNoErr().pos;
+         let pos = self.tokenizer.getTokenNoErr().pos;
          return nil, "%d:%d:%s" (pos.lineNo, pos.column, err);
       }
       return val, err;
@@ -305,9 +305,9 @@ class Loader {
 }
 
 pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo!, str! {
-   let mut streamParser = new Parser.StreamParser( stream, path, true );
-   let mut parser = new Parser.DefaultPushbackParser( streamParser );
-   let mut loader = new Loader( parser );
+   let mut streamTokenizer = new Tokenizer.StreamTokenizer( stream, path, true );
+   let mut tokenizer = new Tokenizer.DefaultPushbackTokenizer( streamTokenizer );
+   let mut loader = new Loader( tokenizer );
 
    let item, err = loader.process();
    if err {
@@ -373,7 +373,7 @@ pub fn loadFromStream( path:str, stream:iStream ) : &Meta._MetaInfo!, str! {
 }
 
 pub fn loadFromCode( path:str, code:str ) : &Meta._MetaInfo!, str! {
-   return loadFromStream( path, new Parser.TxtStream( code ) )**;
+   return loadFromStream( path, new Tokenizer.TxtStream( code ) )**;
 }
 
 pub fn load( path:str ) : &Meta._MetaInfo!, str! {

@@ -1,0 +1,609 @@
+/*
+MIT License
+
+Copyright (c) 2018, 2020 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+_lune_control default_async_all;
+_lune_control default_strict_generics;
+
+import lune.base.Util;
+import lune.base.Str;
+import lune.base.Types;
+import lune.base.Async;
+import lune.base.AsyncTokenizer;
+
+pub fn isLuaKeyword( txt:str ) : bool {
+   return AsyncTokenizer.isLuaKeyword( txt );
+}
+
+pub alias TxtStream = Util.TxtStream;
+pub alias Position = Types.Position;
+pub alias TokenKind = Types.TokenKind;
+pub alias Token = Types.Token;
+
+pub abstract class Tokenizer {
+   pub abstract fn getToken() mut : &Token!;
+   pub abstract fn getStreamName(): str;
+   pub abstract fn createPosition( lineNo: int, column: int ) : &Position;
+   // pub fn createPosition( lineNo: int, column: int ) : &Position {
+   //    return Position.create( lineNo, column, self.getStreamName(), nil );
+   // }
+}
+
+pub interface PushbackTokenizer {
+   pub fn getTokenNoErr(skipFlag:bool!) mut : &Token;
+   pub fn pushback() mut;
+   pub fn pushbackToken( token: &Token ) mut;
+   pub fn pushbackStr( asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut;
+   pub fn newPushback( tokenList: List<&Token> ) mut;
+   pub fn getStreamName(): str;
+   pub fn createPosition( lineNo: int, column: int ) : &Position;
+}
+
+pub let noneToken = Types.noneToken;
+
+/**
+', ", ``` の区切り記号で囲まれた文字列から、区切り記号を取り除いた文字列を返す。
+
+\', \" のクオートを解決した文字列を返す。
+*/
+pub fn convFromRawToStr( txt:str ) : str {
+   if #txt == 0 {
+      return txt;
+   }
+   switch txt[1] {
+      case ?\', ?\" {
+      }
+      default {
+         return txt.sub( 4, #txt - 3 );
+      }
+   }
+   let findChar = txt[1];
+   let mut workTxt = txt;
+   let mut retTxt = "";
+   let mut workIndex = 2;
+   let mut setIndex = 2;
+   let workPattern = "[\"'\\]";
+   while true {
+      let! endIndex = string.find( workTxt, workPattern, workIndex ## ) {
+         // 文字列の区切り文字がない場合はエラー
+         Util.err( "error: illegal string -- %s" ( workTxt ) ); // 要対応
+      };
+      let workChar = workTxt[ endIndex ];
+      if workChar == findChar {
+         // 対になる区切り文字だった場合は文字列として登録
+         return retTxt .. workTxt.sub( setIndex, endIndex - 1 );
+      } elseif workChar == ?\\ {
+         let mut quote = workTxt[ endIndex + 1 ];
+         switch quote {
+            case ?\', ?\" {
+               retTxt = "%s%s%c" (retTxt, workTxt.sub( setIndex, endIndex - 1 ), quote );
+            }
+            default {
+               retTxt = "%s%s" (retTxt, workTxt.sub( setIndex, endIndex + 1 ) );
+            }
+         }
+         workIndex = endIndex + 2;
+         setIndex = workIndex;
+      }
+      else {
+         workIndex = endIndex + 1;
+      }
+   }
+}
+
+pub class TokenListTokenizer extend Tokenizer {
+   let streamName: str;
+   let tokenList:&List<&Types.Token>;
+   let mut index:int;
+   let overridePos:&Types.Position!;
+   
+   pub fn __init( tokenList:&List<&Types.Token>,
+                  streamName:str, overridePos:&Types.Position! )
+   {
+      super();
+
+      self.index = 1;
+      self.tokenList = tokenList;
+      self.streamName = streamName;
+      self.overridePos = overridePos;
+   }
+
+   pub override fn createPosition( lineNo: int, column: int ) : &Position {
+      return Position.create( lineNo, column, self.getStreamName(), self.overridePos );
+   }
+   
+   pub override fn getStreamName(): str {
+      return self.streamName;
+   }
+
+   pub override fn getToken() mut : &Token! {
+      if #self.tokenList < self.index {
+         return nil;
+      }
+      let token = self.tokenList[ self.index ];
+      self.index = self.index + 1;
+
+      return token;
+   }
+}
+
+
+pub class StreamTokenizer extend Tokenizer {
+   /** stdin に紐付けている*/
+   static let mut stdinStreamModuleName: str!;
+   static let mut stdinTxt: str;
+
+   __init {
+      StreamTokenizer.stdinStreamModuleName = nil;
+      StreamTokenizer.stdinTxt = "";
+   }
+   pub static fn setStdinStream( moduleName:str ){
+      StreamTokenizer.stdinStreamModuleName = moduleName;
+      StreamTokenizer.stdinTxt = unwrap io.stdin.read( '*a' ) default "";
+   }
+
+   let streamName: str;
+   let mut pos : int;
+   let mut lineTokenList : &List<&Token>;
+   let mut asyncTokenizer:AsyncTokenizer.Tokenizer;
+   let overridePos:&Types.Position!;
+   // let mut pipe:AsyncPipe;
+   
+   local fn __init( tokenizerSrc:&Types.TokenizerSrc, async:bool,
+                    stdinFile:&Types.StdinFile!, pos:&Types.Position! )
+   {
+      super();
+
+      self.pos = 1;
+      self.lineTokenList = [];
+      self.overridePos = pos;
+
+      let mut asyncTokenizer, errMess =
+         AsyncTokenizer.create( tokenizerSrc, stdinFile, pos, async );
+      if! asyncTokenizer {
+         self.asyncTokenizer = _exp;
+      } else {
+         Util.err( errMess ); // 要対応
+      }
+      self.streamName = self.asyncTokenizer.$streamName;
+   }
+
+   pub override fn createPosition( lineNo: int, column: int ) : &Position {
+      return Position.create( lineNo, column, self.getStreamName(), self.overridePos );
+   }
+   
+
+   pub override fn getStreamName(): str {
+      return self.streamName;
+   }
+
+   pub static fn create(
+      tokenizerSrc:&Types.TokenizerSrc, async:bool,
+      stdinFile:&Types.StdinFile!, pos:&Types.Position! ): StreamTokenizer
+   {
+      return new StreamTokenizer( tokenizerSrc, async, stdinFile, pos );
+   }
+
+   pub override fn getToken() mut : &Token! {
+      if #self.lineTokenList < self.pos {
+         self.pos = 1;
+         self.lineTokenList = [];
+         while #self.lineTokenList == 0 {
+            let! mut pipeItem = self.asyncTokenizer.getNext() {
+               return nil;
+            };
+            self.lineTokenList = pipeItem.$item.list;
+         }
+      }
+
+      let token = self.lineTokenList[ self.pos ];
+      self.pos = self.pos + 1;
+
+      return token;
+   }
+}
+
+pub class DefaultPushbackTokenizer extend (PushbackTokenizer) {
+   let mut tokenizer:Tokenizer;
+   let mut pushbackedList:List<&Token>;
+   let mut usedTokenList:List<&Token>;
+   let mut currentToken:&Token {pub};
+
+   pub fn __init( tokenizer:Tokenizer ) {
+      self.tokenizer = tokenizer;
+      self.pushbackedList = [];
+      self.usedTokenList = [];
+      self.currentToken = Types.noneToken;
+   }
+
+   pub fn getUsedTokenListLen(): int {
+      return #self.usedTokenList;
+   }
+
+   pub static fn createFromLnsCode( code:str, name:str ): DefaultPushbackTokenizer {
+      return new DefaultPushbackTokenizer(
+         new StreamTokenizer(
+            Types.TokenizerSrc.LnsCode( code, name, nil ), false ## ) );
+   }
+   
+   
+   pub fn createPosition( lineNo: int, column: int ) : &Position {
+      return self.tokenizer.createPosition( lineNo, column );
+   }
+
+   pub fn getTokenNoErr(skipFlag:bool!) mut : &Token {
+      if #self.pushbackedList > 0 {
+         self.currentToken = self.pushbackedList[ #self.pushbackedList ];
+         self.pushbackedList.remove(##);
+      }
+      else {
+         if! let token = self.tokenizer.getToken() {
+            self.currentToken = token;
+         }
+         else {
+            self.currentToken = Types.noneToken;
+         };
+      }
+      if self.currentToken.kind ~= .Eof {
+         self.usedTokenList.insert( self.currentToken );
+      }
+      return self.currentToken;
+   }
+   pub fn pushbackToken( token: &Token ) mut
+   {
+      if token.kind ~= .Eof {
+         self.pushbackedList.insert( token );
+      }
+      if token == self.currentToken {
+         if #self.usedTokenList > 0 {
+            let used = self.usedTokenList[ #self.usedTokenList ];
+            if used == token {
+               self.usedTokenList.remove(##);
+            }
+            if #self.usedTokenList > 0 {
+               self.currentToken = self.usedTokenList[ #self.usedTokenList ];
+            }
+            else {
+               self.currentToken = Types.noneToken;
+            }
+         }
+         else {
+            self.currentToken = Types.noneToken;
+         }
+      }
+   }
+   pub fn pushback() mut {
+      self.pushbackToken( self.currentToken );
+   }
+   pub fn pushbackStr(
+      asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut
+   {
+      let mut tokenizer = new StreamTokenizer(
+         Types.TokenizerSrc.LnsCode( statement, name, nil ),
+         asyncParse == true, nil, pos );
+
+      let mut list:List<&Token> = [];
+      while true {
+         if! tokenizer.getToken() {
+            list.insert( _exp );
+         }
+         else {
+            break;
+         }
+      }
+      for index = #list, 1, -1  {
+         self.pushbackToken( list[ index ] );
+      }
+   }
+   pub fn newPushback( tokenList: List<&Token> ) mut {
+      for index = #tokenList, 1, -1  {
+         self.pushbackToken( tokenList[ index ] );
+      }
+   }
+
+   pub fn getLastPos() : &Position {
+      let mut pos:&Position = self.tokenizer.createPosition( 0, 0 );
+      if self.$currentToken.$kind ~= .Eof {
+         pos = self.$currentToken.pos;
+      }
+      else {
+         if #self.$usedTokenList > 0 {
+            let token = self.$usedTokenList[ #self.$usedTokenList ];
+            pos = token.pos;
+         }
+      }
+      return pos;
+      // Util.err( "%s:%d:%d: error:(%s) %s"
+      //           ( self.getStreamName(),
+      //             pospos.lineNo, pos.column, txt, mess ) );
+   }
+   pub fn getNearCode():str {
+      let mut code = "";
+      for index = #self.usedTokenList - 30, #self.usedTokenList {
+         if index > 1 {
+            let token = self.usedTokenList[ index ];
+            if token.consecutive {
+               code = "%s%s" ( code, self.usedTokenList[ index ].txt );
+            }
+            else {
+               code = "%s %s" ( code, self.usedTokenList[ index ].txt );
+            }
+         }
+      }
+      return "%s -- current '%s'" (code, self.currentToken.txt );
+   }
+   pub fn getStreamName(): str {
+      return self.tokenizer.getStreamName();
+   }
+}
+
+pub static fn isOp2( ope: str ) : bool {
+   return AsyncTokenizer.isOp2( ope );
+}
+
+pub static fn isOp1( ope: str ) : bool {
+   return AsyncTokenizer.isOp1( ope );
+}
+
+// class TokenList {
+//    pub let list:List<Token>;
+// }
+
+let eofToken = new Token( .Eof, "<EOF>", new Position( 0, 0, "eof" ## ), false, [] );
+pub fn getEofToken(): &Token {
+   return eofToken;
+}
+pub class DummyTokenizer extend Tokenizer {
+   pub override fn getToken() mut : &Token! {
+      return eofToken;
+   }
+   pub override fn getStreamName(): str {
+      return "dummy";
+   }
+   pub override fn createPosition( lineNo: int, column: int ) : &Position {
+      return Position.create( lineNo, column, self.getStreamName(), nil );
+   }
+}
+
+pub class CommentLayer {
+   /** コメントトークンリスト */
+   pri let mut commentList: List<&Token> {pub};
+   /** commentList に追加したコメントを保持するトークンの Set */
+   pri let mut tokenSet: Set<&Token>;
+   /** commentList に追加したコメントを保持するトークンのリスト */
+   pri let mut tokenList: List<&Token>;
+
+   pub fn __init() {
+      self.commentList = [];
+      self.tokenSet = (@);
+      self.tokenList = [];
+   }
+
+   pub fn addDirect( commentList:&List<&Token> ) mut {
+      foreach comment in commentList {
+         self.commentList.insert( comment );
+      }
+
+   }
+   pub fn add( token:&Token ) mut {
+      if not self.tokenSet.has( token ) {
+         self.tokenSet.add( token );
+         self.tokenList.insert( token );
+
+         self.addDirect( token.$commentList );
+      }
+   }
+
+   pub fn clear() mut {
+      if #self.commentList ~= 0 {
+         self.commentList = [];
+         self.tokenSet = (@);
+         self.tokenList = [];
+      }
+   }
+
+
+   /**
+文の中途半端な位置にコメントがある調べる。
+
+たとえば、次のような箇所にコメントがあるかどうか。
+
+func( val1 コメント, val )
+*/
+   pub fn hasInvalidComment(): &Token! {
+      return #self.tokenList > 1 and self.tokenList[ 2 ].$commentList[1] or nil;
+   }
+}
+
+pub class CommentCtrl {
+   let mut layerStack:List<CommentLayer>;
+   let mut layer:CommentLayer;
+
+   pub fn __init() {
+      self.layer = new CommentLayer();
+      self.layerStack = [ self.layer ];
+   }
+
+   pub fn push() mut {
+      self.layer = new CommentLayer();
+      self.layerStack.insert( self.layer );
+   }
+
+   pub fn pop() mut {
+      self.layer = self.layerStack[ #self.layerStack ];
+      self.layerStack.remove(##);
+   }
+
+   advertise layer;
+}
+
+/**
+区切り記号で囲んでいる文字列を quote 変換する。
+*/
+pub fn quoteStr( txt:str ) : str {
+   let mut work = txt;
+   let mut part = '"';
+   for index = 1, #work {
+      let char = work[ index ];
+      switch char {
+         case ?\n {
+            part = part .. "\\n";
+         }
+         case ?\r {
+            part = part .. "\\r";
+         }
+         case ?\t {
+            part = part .. "\\t";
+         }
+         case ?\" {
+            part = part .. '\\"';
+         }
+         case ?\\ {
+            part = part .. '\\\\';
+         }
+         default {
+            part = part .. "%c" ( char );
+         }
+      }
+   }
+   work = part .. '"';
+   return work;
+}
+
+pub fn createTokenizerFrom(
+   src:&Types.TokenizerSrc, async:bool, stdinFile:&Types.StdinFile! ) : Tokenizer
+{
+   return new StreamTokenizer( src, async, stdinFile, nil );
+}
+
+
+__test case1(ctrl) {
+   {
+      let mut txt = ```
+let hoge:real = 2.0;
+let val = ?a;
+// hoge
+fn func():int {
+   return "%g" val + 1 + 2.0;
+}```;
+      let mut tokenizer =
+         new StreamTokenizer(
+            Types.TokenizerSrc.LnsCode( txt, "test", nil ), false ## );
+
+      class LowToken {
+         pub let txt:str;
+         pub let kind:TokenKind;
+      }
+      let txtList = [
+         new LowToken( "let", .Kywd ), new LowToken( "hoge", .Symb ),
+         new LowToken( ":", .Dlmt ), new LowToken( "real", .Type ),
+         new LowToken( "=", .Ope ), new LowToken( "2.0", .Real ),
+         new LowToken( ";", .Dlmt ),
+         new LowToken( "let", .Kywd ), new LowToken( "val", .Symb ),
+         new LowToken( "=", .Ope ), new LowToken( "a", .Char ),
+         new LowToken( ";", .Dlmt ),
+         new LowToken( "// hoge", .Cmnt ),
+         new LowToken( "fn", .Kywd ), new LowToken( "func", .Symb ),
+         new LowToken( "(", .Dlmt ), new LowToken( ")", .Dlmt ),
+         new LowToken( ":", .Dlmt ), new LowToken( "int", .Type ),
+         new LowToken( "{", .Dlmt ),
+         new LowToken( "return", .Kywd ), new LowToken( '"%g"', .Str ),
+         new LowToken( "val", .Symb ),
+         new LowToken( "+", .Ope ), new LowToken( "1", .Int ),
+         new LowToken( "+", .Ope ), new LowToken( "2.0", .Real ),
+         new LowToken( ";", .Dlmt ),
+         new LowToken( "}", .Dlmt )
+      ];
+      foreach lowToken in txtList {
+         if! let token = tokenizer.getToken() {
+            __t._eq( ctrl, lowToken.txt, token.txt );
+            __t._eq( ctrl, lowToken.kind.$_txt, token.kind.$_txt );
+         }
+         else {
+            __t._err( ctrl, "token is nil" );
+         }
+      }
+   }
+
+   {
+      let mut tokenizer = new DefaultPushbackTokenizer(
+         new StreamTokenizer(Types.TokenizerSrc.LnsCode(
+            "1 2 3 4 5", "test", nil ), false ## ) );
+
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "1" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "2" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "3" );
+      tokenizer.pushback(); // 3
+      tokenizer.pushback(); // 2
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "2" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "3" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "4" );
+      tokenizer.pushbackStr( false, "dummy", "a b", tokenizer.createPosition( 0, -1 ) );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "a" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "b" );
+      tokenizer.pushback(); // b
+      tokenizer.pushback(); // a
+      tokenizer.pushback(); // 4
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "4" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "a" );
+      tokenizer.newPushback(
+         [ new Token( .Symb, "z", tokenizer.createPosition( 0, -1 ), false, [] ),
+           new Token( .Symb, "y", tokenizer.createPosition( 0, -1 ), false, [] ) ] );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "z" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "y" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "b" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "5" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).kind, TokenKind.Eof );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).kind, TokenKind.Eof );
+   }
+   {
+      let mut tokenizer = new DefaultPushbackTokenizer(
+         new StreamTokenizer(Types.TokenizerSrc.LnsCode( "int", "test", nil ), false ## ) );
+
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).txt, "int" );
+      __t._eq( ctrl, tokenizer.getTokenNoErr(##).kind, TokenKind.Eof );
+   }
+
+   {
+      let txt = ```
+1
+2
+3
+4
+5
+```;
+      let stream = new TxtStream( txt );
+      __t._eq( ctrl, stream.getSubstring( 1, 2 ), "1\n" );
+      __t._eq( ctrl, stream.getSubstring( 1, 3 ), "1\n2\n" );
+      __t._eq( ctrl, stream.getSubstring( 4, 6 ), "4\n5\n" );
+      __t._eq( ctrl, stream.getSubstring( 4## ), "4\n5\n" );
+      __t._eq( ctrl, stream.getSubstring( 6, 7 ), "" );
+   }
+   let txt = "aa\nbbb\ncc\n\nd";
+   let lineList = Str.getLineList( txt );
+   __t._eq( ctrl, lineList[ 1 ], "aa\n" );
+   __t._eq( ctrl, lineList[ 2 ], "bbb\n" );
+   __t._eq( ctrl, lineList[ 3 ], "cc\n" );
+   __t._eq( ctrl, lineList[ 4 ], "\n" );
+   __t._eq( ctrl, lineList[ 5 ], "d" );
+}

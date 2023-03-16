@@ -24,7 +24,7 @@ SOFTWARE.
 
 subfile owner lune.base.TransUnit;
 
-fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
+fn TransUnit.analyzeReturn( token: &Tokenizer.Token ) mut: Nodes.ReturnNode {
 
    self.canReturnFromHere( token.pos );
 
@@ -61,7 +61,7 @@ fn TransUnit.analyzeReturn( token: &Parser.Token ) mut: Nodes.ReturnNode {
       self.macroCtrl.isInAnalyzeArgMode(), retTypeList, expList );
 }
 
-pro fn TransUnit.analyzeStatementToken( token:&Parser.Token ) mut : Nodes.Node!,bool
+pro fn TransUnit.analyzeStatementToken( token:&Tokenizer.Token ) mut : Nodes.Node!,bool
 {
    return nil, true;
 }
@@ -80,7 +80,7 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          token.txt );
       
    }
-   if token == Parser.getEofToken() {
+   if token == Tokenizer.getEofToken() {
       return nil;
    };
 
