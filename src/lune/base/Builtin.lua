@@ -191,7 +191,7 @@ if not _lune8 then
    _lune8 = _lune
 end
 local Types = _lune.loadModule( 'lune.base.Types' )
-local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )

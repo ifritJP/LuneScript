@@ -321,7 +321,7 @@ end
 
 local Types = _lune.loadModule( 'lune.base.Types' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
-local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local convLua = _lune.loadModule( 'lune.base.convLua' )
 local convGo = _lune.loadModule( 'lune.base.convGo' )
 local convPython = _lune.loadModule( 'lune.base.convPython' )

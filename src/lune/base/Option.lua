@@ -201,8 +201,8 @@ end
 
 
 local Types = _lune.loadModule( 'lune.base.Types' )
-local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
-local AsyncTokenizer = _lune.loadModule( 'lune.base.AsyncParser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+local AsyncTokenizer = _lune.loadModule( 'lune.base.AsyncTokenizer' )
 local Json = _lune.loadModule( 'lune.base.Json' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
@@ -217,7 +217,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 13877
+   return 13879
 end
 
 

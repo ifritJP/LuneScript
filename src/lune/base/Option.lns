@@ -26,8 +26,8 @@ _lune_control default_async_all;
 _lune_control default_strict_generics;
 
 import lune.base.Types;
-import lune.base.Parser as Tokenizer;
-import lune.base.AsyncParser as AsyncTokenizer;
+import lune.base.Tokenizer;
+import lune.base.AsyncTokenizer;
 import lune.base.Json;
 import lune.base.Util;
 import lune.base.LuaMod;

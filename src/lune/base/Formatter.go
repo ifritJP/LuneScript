@@ -1564,7 +1564,7 @@ func Lns_Formatter_init(_env *LnsEnv) {
     Lns_InitMod()
     Lns_Ast_init(_env)
     Lns_Nodes_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Types_init(_env)
     Lns_Util_init(_env)
     Lns_LuneControl_init(_env)

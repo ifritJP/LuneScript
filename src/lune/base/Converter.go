@@ -816,7 +816,7 @@ func Lns_Converter_init(_env *LnsEnv) {
     Lns_frontInterface_init(_env)
     Lns_Types_init(_env)
     Lns_TransUnit_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_convLua_init(_env)
     Lns_convGo_init(_env)
     Lns_convPython_init(_env)

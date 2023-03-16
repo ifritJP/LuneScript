@@ -231,7 +231,7 @@ func Macro_expandVal_15_(_env *LnsEnv, tokenList *LnsList2_[*Types_Token],workva
             }
             tokenList.Insert(NewTypes_Token(_env, kind, num, pos, false, nil))
         } else if _switch0 == "string" {
-            tokenList.Insert(NewTypes_Token(_env, Types_TokenKind__Str, Parser_quoteStr(_env, val.(string)), pos, false, nil))
+            tokenList.Insert(NewTypes_Token(_env, Types_TokenKind__Str, Tokenizer_quoteStr(_env, val.(string)), pos, false, nil))
         } else {
             return _env.GetVM().String_format("not support ,, List -- %s", Lns_2DDD(Lns_type(val)))
         }
@@ -240,15 +240,15 @@ func Macro_expandVal_15_(_env *LnsEnv, tokenList *LnsList2_[*Types_Token],workva
 }
 
 // 945: decl @lune.@base.@Macro.pushbackTxt
-func Macro_pushbackTxt_16_(_env *LnsEnv, pushbackTokenizer Parser_PushbackTokenizer,txtList *LnsList2_[string],streamName string,pos Types_Position) {
+func Macro_pushbackTxt_16_(_env *LnsEnv, pushbackTokenizer Tokenizer_PushbackTokenizer,txtList *LnsList2_[string],streamName string,pos Types_Position) {
     var tokenList *LnsList2_[*Types_Token]
     tokenList = NewLnsList2_[*Types_Token]([]*Types_Token{})
     for _, _txt := range( txtList.Items ) {
         txt := _txt
-        var tokenizer *Parser_StreamTokenizer
-        tokenizer = Parser_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsCode{txt, _env.GetVM().String_format("macro symbol -- %s", Lns_2DDD(streamName)), nil}, false, nil, pos.Get_RawOrgPos(_env))
-        var workTokenizer *Parser_DefaultPushbackTokenizer
-        workTokenizer = NewParser_DefaultPushbackTokenizer(_env, &tokenizer.Parser_Tokenizer)
+        var tokenizer *Tokenizer_StreamTokenizer
+        tokenizer = Tokenizer_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsCode{txt, _env.GetVM().String_format("macro symbol -- %s", Lns_2DDD(streamName)), nil}, false, nil, pos.Get_RawOrgPos(_env))
+        var workTokenizer *Tokenizer_DefaultPushbackTokenizer
+        workTokenizer = NewTokenizer_DefaultPushbackTokenizer(_env, &tokenizer.Tokenizer_Tokenizer)
         for  {
             var worktoken *Types_Token
             worktoken = workTokenizer.FP.GetTokenNoErr(_env, nil)
@@ -872,7 +872,7 @@ func (self *Macro_MacroCtrl) EvalMacroOp(_env *LnsEnv, moduleTypeInfo *Ast_TypeI
             return nil, mess
         }
     }
-    return &NewMacro_MacroTokenizer(_env, macroInfo.FP.GetTokenList(_env), _env.GetVM().String_format("%s:%d:%d: (macro %s)", Lns_2DDD(streamName, firstToken.Pos.LineNo, firstToken.Pos.Column, macroTypeInfo.FP.GetTxt(_env, nil, nil, nil))), firstToken.Pos.Get_orgPos(_env)).Parser_Tokenizer, nil
+    return &NewMacro_MacroTokenizer(_env, macroInfo.FP.GetTokenList(_env), _env.GetVM().String_format("%s:%d:%d: (macro %s)", Lns_2DDD(streamName, firstToken.Pos.LineNo, firstToken.Pos.Column, macroTypeInfo.FP.GetTxt(_env, nil, nil, nil))), firstToken.Pos.Get_orgPos(_env)).Tokenizer_Tokenizer, nil
 }
 // 754: decl @lune.@base.@Macro.MacroCtrl.importMacro
 func (self *Macro_MacroCtrl) ImportMacro(_env *LnsEnv, processInfo *Ast_ProcessInfo,lnsPath string,macroInfoStem LnsAny,macroTypeInfo *Ast_TypeInfo,typeId2TypeInfo *LnsMap2_[LnsInt,*Ast_TypeInfo],importedMacroInfoMap *LnsMap2_[*Ast_IdInfo,*Nodes_MacroInfo],baseDir LnsAny) {
@@ -1013,7 +1013,7 @@ func (self *Macro_MacroCtrl) Regist(_env *LnsEnv, processInfo *Ast_ProcessInfo,n
     return err
 }
 // 975: decl @lune.@base.@Macro.MacroCtrl.expandMacroVal
-func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_TypeNameCtrl,scope *Ast_Scope,tokenizer Parser_PushbackTokenizer,token *Types_Token) *Types_Token {
+func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_TypeNameCtrl,scope *Ast_Scope,tokenizer Tokenizer_PushbackTokenizer,token *Types_Token) *Types_Token {
     __func__ := "@lune.@base.@Macro.MacroCtrl.expandMacroVal"
     Log_log(_env, Log_Level__Trace, __func__, 979, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("start -- %s:%d:%s", Lns_2DDD(token.Pos.Get_orgPos(_env).StreamName, token.Pos.Get_orgPos(_env).LineNo, token.Txt))
@@ -1201,9 +1201,9 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
                 txt = (Lns_unwrap( macroVal.Val)).(string)
                 var rawTxt string
                 if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(txt,"^```", nil, nil))){
-                    rawTxt = Parser_quoteStr(_env, txt)
+                    rawTxt = Tokenizer_quoteStr(_env, txt)
                 } else { 
-                    rawTxt = Parser_quoteStr(_env, txt)
+                    rawTxt = Tokenizer_quoteStr(_env, txt)
                 }
                 nextToken = NewTypes_Token(_env, Types_TokenKind__Str, rawTxt, nextToken.Pos, false, nil)
                 tokenizer.PushbackToken(_env, nextToken)
@@ -1218,7 +1218,7 @@ func (self *Macro_MacroCtrl) ExpandMacroVal(_env *LnsEnv, typeNameCtrl *Ast_Type
     return token
 }
 // 1170: decl @lune.@base.@Macro.MacroCtrl.expandSymbol
-func (self *Macro_MacroCtrl) ExpandSymbol(_env *LnsEnv, tokenizer Parser_PushbackTokenizer,inTestBlock bool,prefixToken *Types_Token,exp *Nodes_Node,nodeManager *Nodes_NodeManager,errMessList *LnsList2_[*Macro_ErrorMess]) *Nodes_LiteralStringNode {
+func (self *Macro_MacroCtrl) ExpandSymbol(_env *LnsEnv, tokenizer Tokenizer_PushbackTokenizer,inTestBlock bool,prefixToken *Types_Token,exp *Nodes_Node,nodeManager *Nodes_NodeManager,errMessList *LnsList2_[*Macro_ErrorMess]) *Nodes_LiteralStringNode {
     var nextToken *Types_Token
     nextToken = tokenizer.GetTokenNoErr(_env, nil)
     if nextToken.Txt != "~~"{
@@ -1575,7 +1575,7 @@ type Macro_MacroTokenizerMtd interface {
     GetToken(_env *LnsEnv) LnsAny
 }
 type Macro_MacroTokenizer struct {
-    Parser_Tokenizer
+    Tokenizer_Tokenizer
     tokenList *LnsList2_[*Types_Token]
     pos LnsInt
     name string
@@ -1612,13 +1612,13 @@ func (obj *Macro_MacroTokenizer) ToMacro_MacroTokenizer() *Macro_MacroTokenizer 
 func NewMacro_MacroTokenizer(_env *LnsEnv, arg1 *LnsList2_[*Types_Token], arg2 string, arg3 LnsAny) *Macro_MacroTokenizer {
     obj := &Macro_MacroTokenizer{}
     obj.FP = obj
-    obj.Parser_Tokenizer.FP = obj
+    obj.Tokenizer_Tokenizer.FP = obj
     obj.InitMacro_MacroTokenizer(_env, arg1, arg2, arg3)
     return obj
 }
 // 129: DeclConstr
 func (self *Macro_MacroTokenizer) InitMacro_MacroTokenizer(_env *LnsEnv, tokenList *LnsList2_[*Types_Token],name string,overridePos LnsAny) {
-    self.InitParser_Tokenizer(_env)
+    self.InitTokenizer_Tokenizer(_env)
     self.pos = 1
     self.tokenList = tokenList
     self.name = name
@@ -1878,8 +1878,8 @@ func (self *Macro_DefMacroInfoWithSrc) InitMacro_DefMacroInfoWithSrc(_env *LnsEn
 type Macro_MacroCtrlMtd interface {
     Clone(_env *LnsEnv, arg1 *FrontInterface_FrontAccessor) *Macro_MacroCtrl
     EvalMacroOp(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 string, arg3 *Types_Token, arg4 *Ast_TypeInfo, arg5 LnsAny)(LnsAny, LnsAny)
-    ExpandMacroVal(_env *LnsEnv, arg1 *Ast_TypeNameCtrl, arg2 *Ast_Scope, arg3 Parser_PushbackTokenizer, arg4 *Types_Token) *Types_Token
-    ExpandSymbol(_env *LnsEnv, arg1 Parser_PushbackTokenizer, arg2 bool, arg3 *Types_Token, arg4 *Nodes_Node, arg5 *Nodes_NodeManager, arg6 *LnsList2_[*Macro_ErrorMess]) *Nodes_LiteralStringNode
+    ExpandMacroVal(_env *LnsEnv, arg1 *Ast_TypeNameCtrl, arg2 *Ast_Scope, arg3 Tokenizer_PushbackTokenizer, arg4 *Types_Token) *Types_Token
+    ExpandSymbol(_env *LnsEnv, arg1 Tokenizer_PushbackTokenizer, arg2 bool, arg3 *Types_Token, arg4 *Nodes_Node, arg5 *Nodes_NodeManager, arg6 *LnsList2_[*Macro_ErrorMess]) *Nodes_LiteralStringNode
     FinishMacroMode(_env *LnsEnv)
     Get_analyzeInfo(_env *LnsEnv) *Macro_MacroAnalyzeInfo
     Get_declPubMacroInfoMap(_env *LnsEnv) *LnsMap2_[*Ast_IdInfo,*Nodes_MacroInfo]
@@ -2048,7 +2048,7 @@ func Lns_Macro_init(_env *LnsEnv) {
     Lns_Util_init(_env)
     Lns_Nodes_init(_env)
     Lns_Ast_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Types_init(_env)
     Lns_Formatter_init(_env)
     Lns_DependLuaOnLns_init(_env)

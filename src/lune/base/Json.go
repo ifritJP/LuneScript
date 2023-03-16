@@ -21,7 +21,7 @@ func Json_getRawTxt_0_(_env *LnsEnv, token *Types_Token) string {
 }
 
 // 35: decl @lune.@base.@Json.getVal
-func Json_getVal_1_(_env *LnsEnv, tokenizer *Parser_DefaultPushbackTokenizer)(LnsAny, bool) {
+func Json_getVal_1_(_env *LnsEnv, tokenizer *Tokenizer_DefaultPushbackTokenizer)(LnsAny, bool) {
     var token *Types_Token
     token = tokenizer.FP.GetTokenNoErr(_env, nil)
     if _switch5 := token.Kind; _switch5 == Types_TokenKind__Dlmt {
@@ -126,8 +126,8 @@ func Json_getVal_1_(_env *LnsEnv, tokenizer *Parser_DefaultPushbackTokenizer)(Ln
 
 // 146: decl @lune.@base.@Json.fromStr
 func Json_fromStr(_env *LnsEnv, txt string)(LnsAny, LnsAny) {
-    var tokenizer *Parser_DefaultPushbackTokenizer
-    tokenizer = NewParser_DefaultPushbackTokenizer(_env, &Parser_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsCode{txt, "json", nil}, false, nil, nil).Parser_Tokenizer)
+    var tokenizer *Tokenizer_DefaultPushbackTokenizer
+    tokenizer = NewTokenizer_DefaultPushbackTokenizer(_env, &Tokenizer_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsCode{txt, "json", nil}, false, nil, nil).Tokenizer_Tokenizer)
     var val LnsAny
     var ok bool
     val,ok = Json_getVal_1_(_env, tokenizer)
@@ -142,7 +142,7 @@ func Lns_Json_init(_env *LnsEnv) {
     init_Json = true
     Json__mod__ = "@lune.@base.@Json"
     Lns_InitMod()
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Types_init(_env)
 }
 func init() {

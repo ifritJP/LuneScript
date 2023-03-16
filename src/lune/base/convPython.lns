@@ -32,7 +32,7 @@ import lune.base.Nodes;
 import lune.base.Util;
 import lune.base.AstInfo;
 import lune.base.LuaVer;
-import lune.base.Parser as Tokenizer;
+import lune.base.Tokenizer;
 import lune.base.LuneControl;
 import lune.base.Types;
 import lune.base.Option as LnsOpt;

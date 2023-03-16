@@ -33,7 +33,7 @@ import lune.base.Builtin;
 import lune.base.frontInterface;
 import lune.base.Types;
 import lune.base.TransUnit;
-import lune.base.Parser as Tokenizer;
+import lune.base.Tokenizer;
 import lune.base.convLua;
 import lune.base.convGo;
 import lune.base.convPython;

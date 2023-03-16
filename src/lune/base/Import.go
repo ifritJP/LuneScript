@@ -3748,7 +3748,7 @@ func Lns_Import_init(_env *LnsEnv) {
     Lns_InitMod()
     Lns_Types_init(_env)
     Lns_Meta_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Util_init(_env)
     Lns_Ast_init(_env)
     Lns_Macro_init(_env)

@@ -226,8 +226,8 @@ LNS_SRCS += base/Depend
 LNS_SRCS += base/Util
 LNS_SRCS += base/frontInterface
 LNS_SRCS += base/Writer
-LNS_SRCS += base/AsyncParser
-LNS_SRCS += base/Parser
+LNS_SRCS += base/AsyncTokenizer
+LNS_SRCS += base/Tokenizer
 LNS_SRCS += base/Json
 #LNS_SRCS += base/MetaLoader
 LNS_SRCS += base/Ast
@@ -282,8 +282,8 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/Util)
 	$(call $5,$1,$2,$3,$4,base/frontInterface)
 	$(call $5,$1,$2,$3,$4,base/Writer)
-	$(call $5,$1,$2,$3,$4,base/AsyncParser)
-	$(call $5,$1,$2,$3,$4,base/Parser)
+	$(call $5,$1,$2,$3,$4,base/AsyncTokenizer)
+	$(call $5,$1,$2,$3,$4,base/Tokenizer)
 	$(call $5,$1,$2,$3,$4,base/Json)
 	$(call $5,$1,$2,$3,$4,base/Ast)
 	$(call $5,$1,$2,$3,$4,base/Option)
@@ -1449,7 +1449,7 @@ test-testC:
 	$(call test-convC-test,$(LNSC),work/0,lune/base/Util, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c )
-	$(call test-convC-test,$(LNSC),work/0,lune/base/Parser, \
+	$(call test-convC-test,$(LNSC),work/0,lune/base/Tokenizer, \
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c)
@@ -1461,7 +1461,7 @@ test-testC:
 		lune/base/Depend.sub.c lune/base/Depend.c \
 		lune/base/LuneControl.c lune/base/LuaMod.c \
 		lune/base/Util.c lune/base/Writer.c \
-		lune/base/Parser.c lune/base/Code.c )
+		lune/base/Tokenizer.c lune/base/Code.c )
 	$(call convC,$(LNSC),work/0,lune/base/frontInterface.lns,--testing)
 
 test-mkbuiltin:
@@ -1763,8 +1763,8 @@ test-testGo:
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Meta,--testing --package lnsc,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/Log,--testing --package lnsc,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Util,lune/base,./test)
-	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),AsyncParser,lune/base,./test)
-	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Parser,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),AsyncTokenizer,lune/base,./test)
+	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Tokenizer,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Json,lune/base,./test)
 	$(call test-convGo-test,$(LNSC),$(GO_WORK_DIR),Writer,lune/base,./test)
 	$(call convGo,$(LNSC),$(GO_WORK_DIR),lune/base/frontInterface,--testing --package lnsc,./test)

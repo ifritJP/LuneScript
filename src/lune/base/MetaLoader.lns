@@ -1,7 +1,7 @@
 import lune.base.Str;
 import lune.base.Util;
 import lune.base.Meta;
-import lune.base.Parser as Tokenizer;
+import lune.base.Tokenizer;
 import lune.base.Depend;
 
 class SymbolInfo {

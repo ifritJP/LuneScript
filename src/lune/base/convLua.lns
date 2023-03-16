@@ -34,7 +34,7 @@ import lune.base.AstInfo;
 import lune.base.TransUnit;
 import lune.base.LuaMod;
 import lune.base.LuaVer;
-import lune.base.Parser as Tokenizer;
+import lune.base.Tokenizer;
 import lune.base.Types;
 import lune.base.Log;
 import lune.base.LuneControl;

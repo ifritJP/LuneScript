@@ -249,7 +249,7 @@ end
 
 
 
-local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
 local Log = _lune.loadModule( 'lune.base.Log' )

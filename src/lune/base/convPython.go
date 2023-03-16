@@ -336,9 +336,9 @@ func convPython_str2gostr_14_(_env *LnsEnv, txt string) string {
     work = txt
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(work, "^```", nil, nil))){
         work = convPython_convExp1_2011(Lns_2DDD(_env.GetVM().String_gsub(_env.GetVM().String_sub(work,4, -4),"^\n", "")))
-        work = Parser_quoteStr(_env, work)
+        work = Tokenizer_quoteStr(_env, work)
     } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(work, "^'", nil, nil))){
-        work = Str_replace(_env, Parser_convFromRawToStr(_env, work), "\"", "\\\"")
+        work = Str_replace(_env, Tokenizer_convFromRawToStr(_env, work), "\"", "\\\"")
         work = _env.GetVM().String_format("\"%s\"", Lns_2DDD(work))
     }
     return work
@@ -1061,7 +1061,7 @@ func (self *convPython_convFilter) InitconvPython_convFilter(_env *LnsEnv, enabl
     var modDir string
     modDir = self.moduleTypeInfo.FP.GetParentFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), false)
     self.modDir = convPython_convExp0_574(Lns_2DDD(_env.GetVM().String_gsub(Str_replace(_env, modDir, "@", ""),"%.$", "")))
-    self.noneNode = Nodes_NoneNode_create(_env, self.nodeManager, Parser_noneToken.Pos, false, false, NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeNone)))
+    self.noneNode = Nodes_NoneNode_create(_env, self.nodeManager, Tokenizer_noneToken.Pos, false, false, NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeNone)))
     self.builtin2code = NewLnsMap2_[*Ast_SymbolInfo,string]( map[*Ast_SymbolInfo]string{self.builtinFuncs.G__lns_runmode_Sync_sym:_env.GetVM().String_format("%d", Lns_2DDD(0)),self.builtinFuncs.G__lns_runmode_Queue_sym:_env.GetVM().String_format("%d", Lns_2DDD(1)),self.builtinFuncs.G__lns_runmode_Skip_sym:_env.GetVM().String_format("%d", Lns_2DDD(2)),self.builtinFuncs.G__lns_capability_async_sym:"true",self.builtinFuncs.Io_stdout_sym:"sys.stdout",})
 }
 
@@ -1357,7 +1357,7 @@ func Lns_convPython_init(_env *LnsEnv) {
     Lns_Util_init(_env)
     Lns_AstInfo_init(_env)
     Lns_LuaVer_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_LuneControl_init(_env)
     Lns_Types_init(_env)
     Lns_Option_init(_env)

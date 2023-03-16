@@ -439,8 +439,8 @@ func front__anonymous_0_(_env *LnsEnv, ver LnsInt) {
     LuaVer_setCurVer(_env, ver)
 }
 // 283: decl @lune.@base.@front.createPaser
-func front_createPaser_6_(_env *LnsEnv, baseDir LnsAny,path string,mod string,stdinFile LnsAny) *Parser_Tokenizer {
-    return &Parser_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsPath{baseDir, path, mod, nil}, false, stdinFile, nil).Parser_Tokenizer
+func front_createPaser_6_(_env *LnsEnv, baseDir LnsAny,path string,mod string,stdinFile LnsAny) *Tokenizer_Tokenizer {
+    return &Tokenizer_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsPath{baseDir, path, mod, nil}, false, stdinFile, nil).Tokenizer_Tokenizer
 }
 
 // 380: decl @lune.@base.@front.ast2Lua
@@ -774,7 +774,7 @@ func (self *Front_Front) scriptPath2Module(_env *LnsEnv, path string,baseDir Lns
     return mod, baseDir
 }
 // 294: decl @lune.@base.@front.Front.createPaser
-func (self *Front_Front) createPaser(_env *LnsEnv, scriptPath string,baseDir LnsAny) *Parser_Tokenizer {
+func (self *Front_Front) createPaser(_env *LnsEnv, scriptPath string,baseDir LnsAny) *Tokenizer_Tokenizer {
     var mod string
     mod = front_convExp1_399(Lns_2DDD(self.FP.scriptPath2Module(_env, scriptPath, baseDir)))
     return front_createPaser_6_(_env, baseDir, scriptPath, mod, self.option.FP.Get_stdinFile(_env))
@@ -1636,7 +1636,7 @@ func (self *Front_Front) LoadMeta(_env *LnsEnv, importModuleInfo *FrontInterface
 }
 // 1238: decl @lune.@base.@front.Front.dumpTokenize
 func (self *Front_Front) DumpTokenize(_env *LnsEnv, scriptPath string,baseDir LnsAny) {
-    var tokenizer *Parser_Tokenizer
+    var tokenizer *Tokenizer_Tokenizer
     tokenizer = self.FP.createPaser(_env, scriptPath, baseDir)
     for  {
         var token *Types_Token
@@ -2268,7 +2268,7 @@ type Front_FrontMtd interface {
     createAstSub(_env *LnsEnv, arg1 *FrontInterface_ImportModuleInfo, arg2 LnsAny, arg3 LnsAny, arg4 string, arg5 *FrontInterface_ModuleId, arg6 LnsAny, arg7 LnsInt, arg8 LnsAny) LnsAny
     CreateGlue(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 *FrontInterface_ModuleId, arg4 LnsAny)
     createGoOption(_env *LnsEnv, arg1 string) *ConvGo_Option
-    createPaser(_env *LnsEnv, arg1 string, arg2 LnsAny) *Parser_Tokenizer
+    createPaser(_env *LnsEnv, arg1 string, arg2 LnsAny) *Tokenizer_Tokenizer
     createPythonOption(_env *LnsEnv, arg1 string) *ConvPython_Option
     DumpAst(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 *FrontInterface_ModuleId, arg4 LnsAny)
     DumpTokenize(_env *LnsEnv, arg1 string, arg2 LnsAny)
@@ -2672,7 +2672,7 @@ func Lns_front_init(_env *LnsEnv) {
     Lns_InitMod()
     Lns_Types_init(_env)
     Lns_frontInterface_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_convLua_init(_env)
     Lns_convGo_init(_env)
     Lns_convPython_init(_env)

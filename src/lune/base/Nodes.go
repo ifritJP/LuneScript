@@ -11924,7 +11924,7 @@ func Lns_Nodes_init(_env *LnsEnv) {
     init_Nodes = true
     Nodes__mod__ = "@lune.@base.@Nodes"
     Lns_InitMod()
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Util_init(_env)
     Lns_frontInterface_init(_env)
     Lns_Ast_init(_env)

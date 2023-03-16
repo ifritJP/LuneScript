@@ -1817,7 +1817,7 @@ type TransUnit_TransUnitMtd interface {
     PushbackStr(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 string, arg4 Types_Position)
     PushbackToken(_env *LnsEnv, arg1 *Types_Token)
     SetScope(_env *LnsEnv, arg1 *Ast_Scope, arg2 LnsInt)
-    SetTokenizer(_env *LnsEnv, arg1 *Parser_DefaultPushbackTokenizer)
+    SetTokenizer(_env *LnsEnv, arg1 *Tokenizer_DefaultPushbackTokenizer)
     Set_curNsInfo(_env *LnsEnv, arg1 *TransUnitIF_NSInfo)
     setup(_env *LnsEnv, arg1 *TransUnit_TransUnit)
     skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_BlockNode
@@ -1845,7 +1845,7 @@ type TransUnit_TransUnit struct {
     TopScope *Ast_Scope
     macroScope LnsAny
     tentativeSymbol *TransUnit_TentativeSymbol
-    Tokenizer *Parser_DefaultPushbackTokenizer
+    Tokenizer *Tokenizer_DefaultPushbackTokenizer
     ScopeAccess LnsInt
     analyzingStaticMethodArgsScope LnsAny
     inTestBlock bool
@@ -1854,7 +1854,7 @@ type TransUnit_TransUnit struct {
     Has__func__Symbol *LnsSet2_[*Ast_TypeInfo]
     NodeManager *Nodes_NodeManager
     closureFunList *LnsList2_[*TransUnit_ClosureFun]
-    commentCtrl *Parser_CommentCtrl
+    commentCtrl *Tokenizer_CommentCtrl
     typeInfo2ClassNode *LnsMap2_[*Ast_TypeInfo,*Nodes_DeclClassNode]
     analyzingStateQueue *LnsList2_[LnsInt]
     MacroCtrl *Macro_MacroCtrl
@@ -1945,12 +1945,12 @@ func (self *TransUnit_TransUnit) InitTransUnit_TransUnit(_env *LnsEnv, frontAcce
     self.Modifier = NewTransUnitIF_Modifier(_env, self.ValidMutControl, self.ProcessInfo)
     self.moduleName = ""
     self.moduleType = Ast_headTypeInfo
-    self.Tokenizer = NewParser_DefaultPushbackTokenizer(_env, &NewParser_DummyTokenizer(_env).Parser_Tokenizer)
+    self.Tokenizer = NewTokenizer_DefaultPushbackTokenizer(_env, &NewTokenizer_DummyTokenizer(_env).Tokenizer_Tokenizer)
     self.TopScope = self.FP.Get_scope(_env)
     self.ModuleScope = self.FP.Get_scope(_env)
     self.tentativeSymbol = NewTransUnit_TentativeSymbol(_env, nil, self.GlobalScope, self.ModuleScope, false, nil)
     self.typeInfo2ClassNode = NewLnsMap2_[*Ast_TypeInfo,*Nodes_DeclClassNode]( map[*Ast_TypeInfo]*Nodes_DeclClassNode{})
-    self.commentCtrl = NewParser_CommentCtrl(_env)
+    self.commentCtrl = NewTokenizer_CommentCtrl(_env)
     self.WarnMessList = NewLnsList2_[*TransUnitIF_ErrMess]([]*TransUnitIF_ErrMess{})
     self.analyzeMode = Lns_unwrapDefault( mode, TransUnit_AnalyzeMode__Compile).(LnsInt)
     self.analyzePos = Lns_unwrapDefault( pos, self.FP.CreatePosition(_env, 0, 0)).(Types_Position)
@@ -2080,7 +2080,7 @@ type TransUnit_TransUnitForRunnerMtd interface {
     PushbackToken(_env *LnsEnv, arg1 *Types_Token)
     run(_env *LnsEnv)
     SetScope(_env *LnsEnv, arg1 *Ast_Scope, arg2 LnsInt)
-    SetTokenizer(_env *LnsEnv, arg1 *Parser_DefaultPushbackTokenizer)
+    SetTokenizer(_env *LnsEnv, arg1 *Tokenizer_DefaultPushbackTokenizer)
     Set_curNsInfo(_env *LnsEnv, arg1 *TransUnitIF_NSInfo)
     setup(_env *LnsEnv, arg1 *TransUnit_TransUnit)
     skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_BlockNode
@@ -2259,7 +2259,7 @@ type TransUnit_TransUnitCtrlMtd interface {
     PushbackStr(_env *LnsEnv, arg1 LnsAny, arg2 string, arg3 string, arg4 Types_Position)
     PushbackToken(_env *LnsEnv, arg1 *Types_Token)
     SetScope(_env *LnsEnv, arg1 *Ast_Scope, arg2 LnsInt)
-    SetTokenizer(_env *LnsEnv, arg1 *Parser_DefaultPushbackTokenizer)
+    SetTokenizer(_env *LnsEnv, arg1 *Tokenizer_DefaultPushbackTokenizer)
     Set_curNsInfo(_env *LnsEnv, arg1 *TransUnitIF_NSInfo)
     setup(_env *LnsEnv, arg1 *TransUnit_TransUnit)
     skipAndCreateDummyBlock(_env *LnsEnv) *Nodes_BlockNode
@@ -2333,7 +2333,7 @@ func Lns_TransUnit_init(_env *LnsEnv) {
     Lns_InitMod()
     Lns_Types_init(_env)
     Lns_Meta_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Util_init(_env)
     Lns_Ast_init(_env)
     Lns_Nodes_init(_env)
@@ -2665,7 +2665,7 @@ func (self *TransUnit_PipeFuncBlockCtl) GetNext(_env *LnsEnv) LnsAny {
     return (self.pipe.Get(_env))
 }
 // 659: decl @lune.@base.@TransUnit.TransUnit.setTokenizer
-func (self *TransUnit_TransUnit) SetTokenizer(_env *LnsEnv, tokenizer *Parser_DefaultPushbackTokenizer) {
+func (self *TransUnit_TransUnit) SetTokenizer(_env *LnsEnv, tokenizer *Tokenizer_DefaultPushbackTokenizer) {
     self.Tokenizer = tokenizer
 }
 // 729: decl @lune.@base.@TransUnit.TransUnit.setup
@@ -3161,7 +3161,7 @@ func (self *TransUnit_TransUnit) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *T
             }
         }
     } else { 
-        token = Parser_getEofToken(_env)
+        token = Tokenizer_getEofToken(_env)
         if commentList != nil{
             commentList_306 := commentList.(*LnsList2_[*Types_Token])
             self.commentCtrl.FP.AddDirect(_env, commentList_306)
@@ -3176,7 +3176,7 @@ func (self *TransUnit_TransUnit) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *T
 func (self *TransUnit_TransUnit) GetToken(_env *LnsEnv, allowEof LnsAny) *Types_Token {
     var token *Types_Token
     token = self.FP.GetTokenNoErr(_env, nil)
-    if token == Parser_getEofToken(_env){
+    if token == Tokenizer_getEofToken(_env){
         if Lns_isCondTrue( allowEof){
             return token
         }
@@ -3234,9 +3234,9 @@ func (self *TransUnit_TransUnit) checkSymbol(_env *LnsEnv, token *Types_Token,mo
     } else if TransUnit_builtinKeywordSet.Has(token.Txt){
         self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("this symbol is special keyword -- %s", Lns_2DDD(token.Txt)))
     } else if _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( Parser_isLuaKeyword(_env, token.Txt)) ||
-        _env.SetStackVal( Parser_isOp2(_env, token.Txt)) ||
-        _env.SetStackVal( Parser_isOp1(_env, token.Txt)) ).(bool){
+        _env.SetStackVal( Tokenizer_isLuaKeyword(_env, token.Txt)) ||
+        _env.SetStackVal( Tokenizer_isOp2(_env, token.Txt)) ||
+        _env.SetStackVal( Tokenizer_isOp1(_env, token.Txt)) ).(bool){
         self.FP.AddErrMess(_env, token.Pos, _env.GetVM().String_format("this symbol is lua keyword -- %s", Lns_2DDD(token.Txt)))
     }
     return token
@@ -3304,8 +3304,8 @@ func (self *TransUnit_TransUnit) analyzeStatementList(_env *LnsEnv, stmtList *Ln
     if stmtList.Len() > 0{
         breakKind = stmtList.GetAt(stmtList.Len()).FP.GetBreakKind(_env, Nodes_CheckBreakMode__Normal)
     }
-    var tokenizer2lastLineMap *LnsMap2_[Parser_PushbackTokenizer,LnsInt]
-    tokenizer2lastLineMap = NewLnsMap2_[Parser_PushbackTokenizer,LnsInt]( map[Parser_PushbackTokenizer]LnsInt{})
+    var tokenizer2lastLineMap *LnsMap2_[Tokenizer_PushbackTokenizer,LnsInt]
+    tokenizer2lastLineMap = NewLnsMap2_[Tokenizer_PushbackTokenizer,LnsInt]( map[Tokenizer_PushbackTokenizer]LnsInt{})
     var TransUnit_getLastLineNo func(_env *LnsEnv) LnsInt
     TransUnit_getLastLineNo = func(_env *LnsEnv) LnsInt {
         {
@@ -4064,7 +4064,7 @@ func (self *TransUnit_TransUnit) analyzeApply(_env *LnsEnv, token *Types_Token) 
     var varList *LnsList2_[*Types_Token]
     varList = NewLnsList2_[*Types_Token]([]*Types_Token{})
     var nextToken *Types_Token
-    nextToken = Parser_getEofToken(_env)
+    nextToken = Tokenizer_getEofToken(_env)
     for {
         var _var *Types_Token
         _var = self.FP.getSymbolToken(_env, TransUnit_SymbolMode__MustNot_Or_)
@@ -4183,14 +4183,14 @@ func (self *TransUnit_TransUnit) analyzeForeach(_env *LnsEnv, token *Types_Token
     var scope *Ast_Scope
     scope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
     var mainSymToken *Types_Token
-    mainSymToken = Parser_getEofToken(_env)
+    mainSymToken = Tokenizer_getEofToken(_env)
     var subSymToken LnsAny
     subSymToken = nil
     var mainSym *Ast_SymbolInfo
     var subSym LnsAny
     subSym = nil
     var nextToken *Types_Token
-    nextToken = Parser_getEofToken(_env)
+    nextToken = Tokenizer_getEofToken(_env)
     {
         var _forFrom0 LnsInt = 1
         var _forTo0 LnsInt = 2
@@ -4482,7 +4482,7 @@ func (self *TransUnit_TransUnit) analyzeTypeParamArg(_env *LnsEnv, accessMode Ln
     var genericList *LnsList2_[*Ast_TypeInfo]
     genericList = NewLnsList2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
     var nextToken *Types_Token
-    nextToken = Parser_getEofToken(_env)
+    nextToken = Tokenizer_getEofToken(_env)
     for {
         var altToken *Types_Token
         altToken = self.FP.GetToken(_env, nil)
@@ -4761,7 +4761,7 @@ func (self *TransUnit_TransUnit) analyzeRefTypeWithSymbol(_env *LnsEnv, accessMo
 // 556: decl @lune.@base.@TransUnit.TransUnit.analyzeDeclArgList
 func (self *TransUnit_TransUnit) analyzeDeclArgList(_env *LnsEnv, accessMode LnsInt,scope *Ast_Scope,argList *LnsList2_[*Nodes_Node],parentPub bool) *Types_Token {
     var nextToken *Types_Token
-    nextToken = Parser_noneToken
+    nextToken = Tokenizer_noneToken
     var hasDDDFlag bool
     hasDDDFlag = false
     for {
@@ -7660,7 +7660,7 @@ func (self *TransUnit_TransUnit) analyzeLetAndInitExp(_env *LnsEnv, firstPos Typ
     var letVarList *LnsList2_[*TransUnit_LetVarInfo]
     letVarList = NewLnsList2_[*TransUnit_LetVarInfo]([]*TransUnit_LetVarInfo{})
     var nextToken *Types_Token
-    nextToken = Parser_getEofToken(_env)
+    nextToken = Tokenizer_getEofToken(_env)
     if letFlag{
         var hasValidName bool
         hasValidName = false
@@ -8087,7 +8087,7 @@ func (self *TransUnit_TransUnit) analyzeWhen(_env *LnsEnv, firstToken *Types_Tok
 func (self *TransUnit_TransUnit) processFuncBlockInfo(_env *LnsEnv, funcBlockCtlIF TransUnit_FuncBlockCtlIF,streamName string) *LnsMap2_[*TransUnit_FuncBlockInfo,*TransUnit_FuncBlockResult] {
     var resultMap *LnsMap2_[*TransUnit_FuncBlockInfo,*TransUnit_FuncBlockResult]
     resultMap = NewLnsMap2_[*TransUnit_FuncBlockInfo,*TransUnit_FuncBlockResult]( map[*TransUnit_FuncBlockInfo]*TransUnit_FuncBlockResult{})
-    var bakTokenizer *Parser_DefaultPushbackTokenizer
+    var bakTokenizer *Tokenizer_DefaultPushbackTokenizer
     bakTokenizer = self.Tokenizer
     var outerScope *Ast_Scope
     outerScope = self.FP.PushScope(_env, Ast_ScopeKind__Other, nil, nil)
@@ -8104,7 +8104,7 @@ func (self *TransUnit_TransUnit) processFuncBlockInfo(_env *LnsEnv, funcBlockCtl
         }
         var typeInfo *Ast_TypeInfo
         typeInfo = funcBlockInfo.FP.Get_funcType(_env)
-        self.Tokenizer = NewParser_DefaultPushbackTokenizer(_env, &NewParser_TokenListTokenizer(_env, funcBlockInfo.FP.Get_tokenList(_env), streamName, funcBlockInfo.FP.Get_tokenList(_env).GetAt(1).Pos.OrgPos).Parser_Tokenizer)
+        self.Tokenizer = NewTokenizer_DefaultPushbackTokenizer(_env, &NewTokenizer_TokenListTokenizer(_env, funcBlockInfo.FP.Get_tokenList(_env), streamName, funcBlockInfo.FP.Get_tokenList(_env).GetAt(1).Pos.OrgPos).Tokenizer_Tokenizer)
         var declFuncInfo *Nodes_DeclFuncInfo
         declFuncInfo = funcBlockInfo.FP.Get_declFuncInfo(_env)
         var classTypeInfo LnsAny
@@ -9158,11 +9158,11 @@ func (self *TransUnit_TransUnit) evalMacroOp(_env *LnsEnv, firstToken *Types_Tok
     var tokenizer LnsAny
     var mess LnsAny
     tokenizer,mess = self.MacroCtrl.FP.EvalMacroOp(_env, self.moduleType, self.Tokenizer.FP.GetStreamName(_env), firstToken, macroTypeInfo, expList)
-    var bakTokenizer *Parser_DefaultPushbackTokenizer
+    var bakTokenizer *Tokenizer_DefaultPushbackTokenizer
     bakTokenizer = self.Tokenizer
     if tokenizer != nil{
-        tokenizer_268 := tokenizer.(*Parser_Tokenizer)
-        self.FP.SetTokenizer(_env, NewParser_DefaultPushbackTokenizer(_env, tokenizer_268))
+        tokenizer_268 := tokenizer.(*Tokenizer_Tokenizer)
+        self.FP.SetTokenizer(_env, NewTokenizer_DefaultPushbackTokenizer(_env, tokenizer_268))
     } else {
         self.FP.Error(_env, Lns_unwrap( mess).(string))
     }
@@ -9170,7 +9170,7 @@ func (self *TransUnit_TransUnit) evalMacroOp(_env *LnsEnv, firstToken *Types_Tok
     var nextToken *Types_Token
     nextToken = self.FP.GetTokenNoErr(_env, nil)
     self.FP.SetTokenizer(_env, bakTokenizer)
-    if nextToken != Parser_getEofToken(_env){
+    if nextToken != Tokenizer_getEofToken(_env){
         self.FP.AddErrMess(_env, firstToken.Pos, _env.GetVM().String_format("remain macro expand-statement token -- '%s'(%d:%d)", Lns_2DDD(nextToken.Txt, nextToken.Pos.LineNo, nextToken.Pos.Column)))
         if Lns_op_not(macroTypeInfo.FP.Get_externalFlag(_env)){
             self.FP.AddErrMess(_env, nextToken.Pos, _env.GetVM().String_format("remain macro expand-statement token -- '%s'", Lns_2DDD(nextToken.Txt)))
@@ -11231,7 +11231,7 @@ func (self *TransUnit_TransUnit) analyzeExpOp2(_env *LnsEnv, firstToken *Types_T
             _env.SetStackVal( opToken.Txt == "@@=") ).(bool){
             exp = self.FP.analyzeExpCast(_env, firstToken, opTxt, exp)
         } else if opToken.Kind == Types_TokenKind__Ope{
-            if Parser_isOp2(_env, opTxt){
+            if Tokenizer_isOp2(_env, opTxt){
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( opTxt != "=") &&
                     _env.SetStackVal( Lns_op_not(exp.FP.CanBeRight(_env, self.ProcessInfo))) ).(bool)){
@@ -12071,7 +12071,7 @@ func (self *TransUnit_TransUnit) analyzeExpSub(_env *LnsEnv, allowNoneType bool,
     }
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( token.Kind == Types_TokenKind__Ope) &&
-        _env.SetStackVal( Parser_isOp1(_env, token.Txt)) ).(bool)){
+        _env.SetStackVal( Tokenizer_isOp1(_env, token.Txt)) ).(bool)){
         var workExp *Nodes_Node
         var fin bool
         workExp,fin = TransUnit_processOp1(_env, token)
@@ -12216,7 +12216,7 @@ func (self *TransUnit_TransUnit) analyzeStatement(_env *LnsEnv, termTxt LnsAny) 
     if token.Kind == Types_TokenKind__Sheb{
         statement = &Nodes_ShebangNode_create(_env, self.NodeManager, token.Pos, self.inTestBlock, self.MacroCtrl.FP.IsInAnalyzeArgMode(_env), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeNone)), token.Txt).Nodes_Node
     }
-    if token == Parser_getEofToken(_env){
+    if token == Tokenizer_getEofToken(_env){
         return nil
     }
     if Lns_op_not(statement){
@@ -12963,8 +12963,8 @@ func (self *TransUnit_TransUnitCtrl) processFuncBlock(_env *LnsEnv, streamName s
 // 776: decl @lune.@base.@TransUnit.TransUnitCtrl.createAST
 func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, tokenizerSrc LnsAny,asyncParse bool,baseDir LnsAny,stdinFile LnsAny,macroFlag bool,moduleName LnsAny,readyExportInfo LnsAny) *AstInfo_ASTInfo {
     __func__ := "@lune.@base.@TransUnit.TransUnitCtrl.createAST"
-    var tokenizer *Parser_Tokenizer
-    tokenizer = Parser_createTokenizerFrom(_env, tokenizerSrc, asyncParse, stdinFile)
+    var tokenizer *Tokenizer_Tokenizer
+    tokenizer = Tokenizer_createTokenizerFrom(_env, tokenizerSrc, asyncParse, stdinFile)
     var streamName string
     streamName = tokenizer.FP.GetStreamName(_env)
     self.stdinFile = stdinFile
@@ -13004,7 +13004,7 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, tokenizerSrc LnsAny
     self.FP.Get_scope(_env).FP.AddVar(_env, self.ProcessInfo, Ast_AccessMode__Global, "__mod__", nil, Ast_builtinTypeString, Ast_MutMode__IMut, true)
     self.moduleType = moduleTypeInfo
     self.TypeNameCtrl = NewAst_TypeNameCtrl(_env, moduleTypeInfo)
-    self.FP.SetTokenizer(_env, NewParser_DefaultPushbackTokenizer(_env, tokenizer))
+    self.FP.SetTokenizer(_env, NewTokenizer_DefaultPushbackTokenizer(_env, tokenizer))
     self.FP.Get_scope(_env).FP.AddIgnoredVar(_env, self.ProcessInfo)
     var ast *Nodes_Node
     var exportInfo *Nodes_ExportInfo
@@ -13060,7 +13060,7 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, tokenizerSrc LnsAny
         children.Insert(&statement.Nodes_Node)
         var token *Types_Token
         token = self.FP.GetTokenNoErr(_env, nil)
-        if token != Parser_getEofToken(_env){
+        if token != Tokenizer_getEofToken(_env){
             self.FP.Error(_env, _env.GetVM().String_format("%s:%d:%d:(%s) not eof -- %s", Lns_2DDD(self.Tokenizer.FP.GetStreamName(_env), token.Pos.LineNo, token.Pos.Column, Types_TokenKind_getTxt( token.Kind), token.Txt)))
         }
         for _, _subModule := range( self.subfileList.Items ) {
@@ -13080,12 +13080,12 @@ func (self *TransUnit_TransUnitCtrl) CreateAST(_env *LnsEnv, tokenizerSrc LnsAny
             if self.FP.Get_scope(_env) != self.ModuleScope{
                 self.FP.Error(_env, "scope does not close")
             }
-            var subTokenizer *Parser_StreamTokenizer
-            subTokenizer = Parser_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsPath{baseDir, file, subModule, nil}, true, self.stdinFile, nil)
-            self.FP.SetTokenizer(_env, NewParser_DefaultPushbackTokenizer(_env, &subTokenizer.Parser_Tokenizer))
+            var subTokenizer *Tokenizer_StreamTokenizer
+            subTokenizer = Tokenizer_StreamTokenizer_create(_env, &Types_TokenizerSrc__LnsPath{baseDir, file, subModule, nil}, true, self.stdinFile, nil)
+            self.FP.SetTokenizer(_env, NewTokenizer_DefaultPushbackTokenizer(_env, &subTokenizer.Tokenizer_Tokenizer))
             lastStatement = self.FP.analyzeStatementListSubfile(_env, children)
             token = self.FP.GetTokenNoErr(_env, nil)
-            if token != Parser_getEofToken(_env){
+            if token != Tokenizer_getEofToken(_env){
                 Util_err(_env, _env.GetVM().String_format("unknown:%d:%d:(%s) %s", Lns_2DDD(token.Pos.LineNo, token.Pos.Column, Types_TokenKind_getTxt( token.Kind), token.Txt)))
             }
         }

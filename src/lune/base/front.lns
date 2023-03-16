@@ -28,7 +28,7 @@ _lune_control default_strict_generics;
 
 import lune.base.Types;
 import lune.base.frontInterface;
-import lune.base.Parser as Tokenizer;
+import lune.base.Tokenizer;
 import lune.base.convLua;
 import lune.base.convGo;
 import lune.base.convPython;

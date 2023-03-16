@@ -800,7 +800,7 @@ func Lns_convLua_init(_env *LnsEnv) {
     Lns_TransUnit_init(_env)
     Lns_LuaMod_init(_env)
     Lns_LuaVer_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Types_init(_env)
     Lns_Log_init(_env)
     Lns_LuneControl_init(_env)
@@ -1343,7 +1343,7 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
                     workFilter.FP.ProcessBlock(_env, stmtBlock, ConvLua_Opt2Stem(NewConvLua_Opt(_env, &node.Nodes_Node)))
                     workFilter.macroDepth = workFilter.macroDepth - 1
                     memStream.FP.Close(_env)
-                    self.FP.writeln(_env, _env.GetVM().String_format("info.stmtBlock = %s", Lns_2DDD(Parser_quoteStr(_env, memStream.FP.Get_txt(_env)))))
+                    self.FP.writeln(_env, _env.GetVM().String_format("info.stmtBlock = %s", Lns_2DDD(Tokenizer_quoteStr(_env, memStream.FP.Get_txt(_env)))))
                 }
             }
             self.FP.writeln(_env, "info.tokenList = {")
@@ -1358,10 +1358,10 @@ func (self *convLua_ConvFilter) outputMeta(_env *LnsEnv, node *Nodes_RootNode) {
                 if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                     _env.SetStackVal( prevLineNo != -1) &&
                     _env.SetStackVal( prevLineNo != token.Pos.LineNo) ).(bool)){
-                    self.FP.WriteRaw(_env, _env.GetVM().String_format("{%d,%s},", Lns_2DDD(Types_TokenKind__Dlmt, Parser_quoteStr(_env, "\n"))))
+                    self.FP.WriteRaw(_env, _env.GetVM().String_format("{%d,%s},", Lns_2DDD(Types_TokenKind__Dlmt, Tokenizer_quoteStr(_env, "\n"))))
                 }
                 prevLineNo = token.Pos.LineNo
-                self.FP.WriteRaw(_env, _env.GetVM().String_format("{%d,%s}", Lns_2DDD(token.Kind, Parser_quoteStr(_env, token.Txt))))
+                self.FP.WriteRaw(_env, _env.GetVM().String_format("{%d,%s}", Lns_2DDD(token.Kind, Tokenizer_quoteStr(_env, token.Txt))))
             }
             self.FP.writeln(_env, "}")
             self.FP.popIndent(_env)

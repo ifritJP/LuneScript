@@ -29,7 +29,7 @@ import lune.base.Util;
 import lune.base.Str;
 import lune.base.Types;
 import lune.base.Async;
-import lune.base.AsyncParser as AsyncTokenizer;
+import lune.base.AsyncTokenizer;
 
 pub fn isLuaKeyword( txt:str ) : bool {
    return AsyncTokenizer.isLuaKeyword( txt );

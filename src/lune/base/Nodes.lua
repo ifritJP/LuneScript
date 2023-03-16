@@ -229,7 +229,7 @@ if not _lune8 then
 end
 
 
-local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Util = _lune.loadModule( 'lune.base.Util' )
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )

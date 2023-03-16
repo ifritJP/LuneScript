@@ -292,7 +292,7 @@ func Lns_BuiltinTransUnit_init(_env *LnsEnv) {
     BuiltinTransUnit__mod__ = "@lune.@base.@BuiltinTransUnit"
     Lns_InitMod()
     Lns_Types_init(_env)
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Util_init(_env)
     Lns_Ast_init(_env)
     Lns_Nodes_init(_env)

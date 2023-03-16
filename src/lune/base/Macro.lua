@@ -322,7 +322,7 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
 local Ast = _lune.loadModule( 'lune.base.Ast' )
-local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )

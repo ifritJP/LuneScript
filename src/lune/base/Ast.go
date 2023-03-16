@@ -7154,13 +7154,13 @@ func (self *Ast_RefTypeInfo) Get_typeInfo(_env *LnsEnv) *Ast_TypeInfo{ return se
 
 // declaration Class -- TypeAnalyzer
 type Ast_TypeAnalyzerMtd interface {
-    AnalyzeType(_env *LnsEnv, arg1 *Ast_Scope, arg2 Parser_PushbackTokenizer, arg3 LnsInt, arg4 bool, arg5 bool)(LnsAny, LnsAny, LnsAny)
+    AnalyzeType(_env *LnsEnv, arg1 *Ast_Scope, arg2 Tokenizer_PushbackTokenizer, arg3 LnsInt, arg4 bool, arg5 bool)(LnsAny, LnsAny, LnsAny)
     AnalyzeTypeFromTxt(_env *LnsEnv, arg1 string, arg2 *Ast_Scope, arg3 LnsInt, arg4 bool)(LnsAny, LnsAny, LnsAny)
     AnalyzeTypeItemList(_env *LnsEnv, arg1 bool, arg2 bool, arg3 bool, arg4 *Ast_TypeInfo, arg5 Types_Position)(LnsAny, LnsAny, LnsAny)
     analyzeTypeSub(_env *LnsEnv, arg1 bool)(LnsAny, LnsAny, LnsAny)
 }
 type Ast_TypeAnalyzer struct {
-    tokenizer Parser_PushbackTokenizer
+    tokenizer Tokenizer_PushbackTokenizer
     parentInfo *Ast_TypeInfo
     moduleType *Ast_TypeInfo
     moduleScope *Ast_Scope
@@ -7216,7 +7216,7 @@ func (self *Ast_TypeAnalyzer) InitAst_TypeAnalyzer(_env *LnsEnv, processInfo *As
     self.scope = Ast_rootScope
     self.accessMode = Ast_AccessMode__Local
     self.parentPub = false
-    self.tokenizer = NewParser_DefaultPushbackTokenizer(_env, &NewParser_DummyTokenizer(_env).Parser_Tokenizer).FP
+    self.tokenizer = NewTokenizer_DefaultPushbackTokenizer(_env, &NewTokenizer_DummyTokenizer(_env).Tokenizer_Tokenizer).FP
 }
 
 
@@ -7227,7 +7227,7 @@ func Lns_Ast_init(_env *LnsEnv) {
     init_Ast = true
     Ast__mod__ = "@lune.@base.@Ast"
     Lns_InitMod()
-    Lns_Parser_init(_env)
+    Lns_Tokenizer_init(_env)
     Lns_Util_init(_env)
     Lns_Code_init(_env)
     Lns_Log_init(_env)
@@ -7682,7 +7682,7 @@ func (self *Ast_ProcessInfo) CreateMap_(_env *LnsEnv, canDealGenInherit bool,acc
 }
 // 5811: decl @lune.@base.@Ast.ProcessInfo.createModule
 func (self *Ast_ProcessInfo) CreateModule(_env *LnsEnv, scope *Ast_Scope,parentInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,externalFlag bool,moduleName string,mutable bool) *Ast_TypeInfo {
-    if Parser_isLuaKeyword(_env, moduleName){
+    if Tokenizer_isLuaKeyword(_env, moduleName){
         Util_err(_env, _env.GetVM().String_format("This symbol can not use for a class or script file. -- %s", Lns_2DDD(moduleName)))
     }
     var info *Ast_ModuleTypeInfo
@@ -7692,7 +7692,7 @@ func (self *Ast_ProcessInfo) CreateModule(_env *LnsEnv, scope *Ast_Scope,parentI
 }
 // 5833: decl @lune.@base.@Ast.ProcessInfo.createClassAsync
 func (self *Ast_ProcessInfo) CreateClassAsync(_env *LnsEnv, classFlag bool,finalFlag bool,abstractFlag bool,scope LnsAny,baseInfo LnsAny,interfaceList LnsAny,genTypeList *LnsList2_[*Ast_AlternateTypeInfo],parentInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,externalFlag bool,accessMode LnsInt,className string) *Ast_TypeInfo {
-    if Parser_isLuaKeyword(_env, className){
+    if Tokenizer_isLuaKeyword(_env, className){
         Util_err(_env, _env.GetVM().String_format("This symbol can not use for a class or script file. -- %s", Lns_2DDD(className)))
     }
     var itemTypeList *LnsList2_[*Ast_TypeInfo]
@@ -7715,7 +7715,7 @@ func (self *Ast_ProcessInfo) CreateClassAsync(_env *LnsEnv, classFlag bool,final
 }
 // 5864: decl @lune.@base.@Ast.ProcessInfo.createExtModule
 func (self *Ast_ProcessInfo) CreateExtModule(_env *LnsEnv, scope LnsAny,parentInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,externalFlag bool,accessMode LnsInt,className string,moduleLang LnsInt,requirePath string) *Ast_TypeInfo {
-    if Parser_isLuaKeyword(_env, className){
+    if Tokenizer_isLuaKeyword(_env, className){
         Util_err(_env, _env.GetVM().String_format("This symbol can not use for a class or script file. -- %s", Lns_2DDD(className)))
     }
     var info *Ast_NormalTypeInfo
@@ -7728,7 +7728,7 @@ func (self *Ast_ProcessInfo) CreateExtModule(_env *LnsEnv, scope LnsAny,parentIn
 func (self *Ast_ProcessInfo) CreateFuncAsync(_env *LnsEnv, abstractFlag bool,builtinFlag bool,scope LnsAny,kind LnsInt,parentInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,autoFlag bool,externalFlag bool,staticFlag bool,accessMode LnsInt,funcName string,asyncMode LnsInt,altTypeList LnsAny,argTypeList LnsAny,retTypeInfoList LnsAny,mutMode LnsInt) *Ast_NormalTypeInfo {
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( Lns_op_not(builtinFlag)) &&
-        _env.SetStackVal( Parser_isLuaKeyword(_env, funcName)) ).(bool)){
+        _env.SetStackVal( Tokenizer_isLuaKeyword(_env, funcName)) ).(bool)){
         Util_err(_env, _env.GetVM().String_format("This symbol can not use for a function. -- %s", Lns_2DDD(funcName)))
     }
     var info *Ast_NormalTypeInfo
@@ -7908,7 +7908,7 @@ func (self *Ast_ProcessInfo) CreateLuaval(_env *LnsEnv, luneType *Ast_TypeInfo,v
 }
 // 7003: decl @lune.@base.@Ast.ProcessInfo.createEnum
 func (self *Ast_ProcessInfo) CreateEnum(_env *LnsEnv, scope *Ast_Scope,parentInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,externalFlag bool,accessMode LnsInt,enumName string,valTypeInfo *Ast_TypeInfo) *Ast_EnumTypeInfo {
-    if Parser_isLuaKeyword(_env, enumName){
+    if Tokenizer_isLuaKeyword(_env, enumName){
         Util_err(_env, _env.GetVM().String_format("This symbol can not use for a enum. -- %s", Lns_2DDD(enumName)))
     }
     var info *Ast_EnumTypeInfo
@@ -7929,7 +7929,7 @@ func (self *Ast_ProcessInfo) CreateEnum(_env *LnsEnv, scope *Ast_Scope,parentInf
 }
 // 7072: decl @lune.@base.@Ast.ProcessInfo.createAlge
 func (self *Ast_ProcessInfo) CreateAlge(_env *LnsEnv, scope *Ast_Scope,parentInfo *Ast_TypeInfo,typeDataAccessor Ast_TypeDataAccessor,externalFlag bool,accessMode LnsInt,algeName string,itemTypeInfoList *LnsList2_[*Ast_TypeInfo]) *Ast_AlgeTypeInfo {
-    if Parser_isLuaKeyword(_env, algeName){
+    if Tokenizer_isLuaKeyword(_env, algeName){
         Util_err(_env, _env.GetVM().String_format("This symbol can not use for a alge. -- %s", Lns_2DDD(algeName)))
     }
     var info *Ast_AlgeTypeInfo
@@ -12502,7 +12502,7 @@ func (self *Ast_ExtTypeInfo) ApplyGeneric(_env *LnsEnv, processInfo *Ast_Process
     return &self.Ast_TypeInfo
 }
 // 8340: decl @lune.@base.@Ast.TypeAnalyzer.analyzeType
-func (self *Ast_TypeAnalyzer) AnalyzeType(_env *LnsEnv, scope *Ast_Scope,tokenizer Parser_PushbackTokenizer,accessMode LnsInt,allowDDD bool,parentPub bool)(LnsAny, LnsAny, LnsAny) {
+func (self *Ast_TypeAnalyzer) AnalyzeType(_env *LnsEnv, scope *Ast_Scope,tokenizer Tokenizer_PushbackTokenizer,accessMode LnsInt,allowDDD bool,parentPub bool)(LnsAny, LnsAny, LnsAny) {
     self.scope = scope
     self.tokenizer = tokenizer
     self.accessMode = accessMode
@@ -12511,8 +12511,8 @@ func (self *Ast_TypeAnalyzer) AnalyzeType(_env *LnsEnv, scope *Ast_Scope,tokeniz
 }
 // 8352: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeFromTxt
 func (self *Ast_TypeAnalyzer) AnalyzeTypeFromTxt(_env *LnsEnv, txt string,scope *Ast_Scope,accessMode LnsInt,parentPub bool)(LnsAny, LnsAny, LnsAny) {
-    var tokenizer *Parser_DefaultPushbackTokenizer
-    tokenizer = Parser_DefaultPushbackTokenizer_createFromLnsCode(_env, txt, "test")
+    var tokenizer *Tokenizer_DefaultPushbackTokenizer
+    tokenizer = Tokenizer_DefaultPushbackTokenizer_createFromLnsCode(_env, txt, "test")
     return self.FP.AnalyzeType(_env, scope, tokenizer.FP, accessMode, true, parentPub)
 }
 // 8361: decl @lune.@base.@Ast.TypeAnalyzer.analyzeTypeSub
@@ -12590,7 +12590,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
             var genericList *LnsList2_[*Ast_TypeInfo]
             genericList = NewLnsList2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
             var nextToken *Types_Token
-            nextToken = Parser_getEofToken(_env)
+            nextToken = Tokenizer_getEofToken(_env)
             for {
                 var refType LnsAny
                 refType = Ast_convExp0_17946(Lns_2DDD(self.FP.analyzeTypeSub(_env, false)))

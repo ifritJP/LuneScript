@@ -25,7 +25,7 @@ SOFTWARE.
 _lune_control default_strict_generics;
 
 import lune.base.Types;
-import lune.base.Parser as Tokenizer;
+import lune.base.Tokenizer;
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.Nodes;

@@ -34,7 +34,7 @@ subfile use lune.base.TransUnitCtrl;
 
 import lune.base.Types;
 import lune.base.Meta;
-import lune.base.Parser as Tokenizer;
+import lune.base.Tokenizer;
 import lune.base.Util;
 import lune.base.Ast;
 import lune.base.Nodes;

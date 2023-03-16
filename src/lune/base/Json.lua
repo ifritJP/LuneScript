@@ -105,7 +105,7 @@ end
 
 
 
-local Tokenizer = _lune.loadModule( 'lune.base.Parser' )
+local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
 local Types = _lune.loadModule( 'lune.base.Types' )
 
 local function getRawTxt( token )

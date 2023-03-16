@@ -242,7 +242,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
                 if _switch2 := (arg); _switch2 == "-i" {
                     useStdInFlag = true
                 } else if _switch2 == "--tokenizerPipeSize" {
-                    AsyncParser_setDefaultPipeSize(_env, Option_getNextOpInt(_env))
+                    AsyncTokenizer_setDefaultPipeSize(_env, Option_getNextOpInt(_env))
                 } else if _switch2 == "-prof" {
                     option.ValidProf = true
                 } else if _switch2 == "--noEnvArg" {
@@ -636,7 +636,7 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
 
 // 55: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 13877
+    return 13879
 }
 
 
@@ -937,8 +937,8 @@ func Lns_Option_init(_env *LnsEnv) {
     Option__mod__ = "@lune.@base.@Option"
     Lns_InitMod()
     Lns_Types_init(_env)
-    Lns_Parser_init(_env)
-    Lns_AsyncParser_init(_env)
+    Lns_Tokenizer_init(_env)
+    Lns_AsyncTokenizer_init(_env)
     Lns_Json_init(_env)
     Lns_Util_init(_env)
     Lns_LuaMod_init(_env)
