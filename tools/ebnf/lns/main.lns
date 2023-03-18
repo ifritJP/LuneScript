@@ -12,31 +12,6 @@ ebnfCtrl.dump();
 
 fn createTokenizer() : LnsTokenizer.Tokenizer {
    let lnsCode = ```
-// import lns.Ebnf;
-// import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
-// import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
-// if hoge == aaa {
-// } elseif not hoge.foo.bar {
-// } else {
-// }
-// let ebnfCtrl = Ebnf.analyze_ebnf( Ebnf.EbnfTokenizer.create() );
-// fn createTokenizer() : LnsTokenizer.Tokenizer {
-// }
-// LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil );
-// pub class EbnfTokenizer {
-//    let tokenizer:LnsTokenizer.PushbackTokenizer;
-//    let mut inEbnf:bool {pub,pub};
-// }
-  pub fn checkNext( txt:str ) mut : &LnsTypes.Token {
-      let token = self.getToken();
-      if token.txt == txt {
-         return token;
-      }
-      print(
-         "%d:%d: Illegal token. expects '%s' but '%s'"
-         ( token.pos.lineNo, token.pos.column, txt, token.txt) );
-      os.exit( 1 );
-   }
 ```;
    return LnsTokenizer.StreamTokenizer.create(
       LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ), false, nil, nil );
@@ -49,9 +24,12 @@ fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
 
 
 // let mut codeTokenizer = createTokenizer();
-// let mut codeTokenizer = createTokenizerFromFile( "lns/main.lns" );
-let mut codeTokenizer = createTokenizerFromFile( "lns/Ebnf.lns" );
+//let mut codeTokenizer = createTokenizerFromFile( "lns/main.lns" );
+//let mut codeTokenizer = createTokenizerFromFile( "lns/Ebnf.lns" );
+// let mut codeTokenizer = createTokenizerFromFile( "../../src/test/testGo.lns" );
+let mut codeTokenizer = createTokenizerFromFile( "../../src/lune/base/front.lns" );
+
 
 ebnfCtrl.parse(
-   "<code>",
-   new Ebnf.CodeTokenizer( new LnsTokenizer.DefaultPushbackTokenizer( codeTokenizer ) ) );
+   "<code>", new Ebnf.CodeTokenizer( codeTokenizer ) );
+

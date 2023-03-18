@@ -88,36 +88,25 @@ pub class EbnfTokenizer {
 
 
 pub class CodeTokenizer {
-   let tokenizer:LnsTokenizer.PushbackTokenizer;
-   let tokenListStack:List<List<&LnsTypes.Token>>;
+   let tokenizer:LnsTokenizer.Tokenizer;
    let mut tokenList:List<&LnsTypes.Token>;
    let mut commonList:__List<&LnsTypes.Token>;
+   let pushbackedList:List<&LnsTypes.Token>;
 
-   pub fn __init(tokenizer:LnsTokenizer.PushbackTokenizer) {
+   pub fn __init(tokenizer:LnsTokenizer.Tokenizer) {
       self.tokenizer = tokenizer;
       self.tokenList = [];
-      self.tokenListStack = [];
       self.commonList = [];
+      self.pushbackedList = [];
    }
 
-   pub fn pushTokenList() mut {
-      print( __func__, #self.tokenListStack );
-      self.tokenListStack.insert( self.tokenList );
-      self.tokenList = [];
-   }
-   pub fn popTokenList() mut {
-      print( __func__, #self.tokenListStack, #self.tokenList );
-      if #self.tokenListStack == 0 {
-         error( "self.tokenListStack is zero" );
-      }
-      for _ = 1, #self.tokenList {
-         self.tokenizer.pushback();
-      }
-      self.tokenList = self.tokenListStack[ #self.tokenListStack ];
-      self.tokenListStack.remove(##);
-   }
-   
    pub fn getToken() mut : &LnsTypes.Token {
+      if #self.pushbackedList > 0 {
+         let token = self.pushbackedList[ #self.pushbackedList ];
+         self.pushbackedList.remove(##);
+         self.tokenList.insert( token );
+         return token;
+      }
 
       fn process( token:&LnsTypes.Token ) : &LnsTypes.Token {
          let result;
@@ -134,7 +123,9 @@ pub class CodeTokenizer {
       }
       
       while true {
-         let token = self.tokenizer.getTokenNoErr( false );
+         let! token = self.tokenizer.getToken() {
+            token = LnsTypes.noneToken;
+         };
          switch token.kind {
             case .Eof {
                return process(token);
@@ -150,10 +141,8 @@ pub class CodeTokenizer {
    }
 
    pub fn pushback() mut {
-      if #self.tokenList == 0 {
-         error( "self.tokenList is zero" );
-      }
-      self.tokenizer.pushbackToken( self.tokenList[ #self.tokenList ] );
+      print( __func__, #self.tokenList, self.tokenList[ #self.tokenList ].txt );
+      self.pushbackedList.insert( self.tokenList[ #self.tokenList ] );
       self.tokenList.remove( ## );
    }
 }
@@ -184,6 +173,7 @@ pub proto class CodeGenerator;
 
 pub interface CodeCore {
    pub fn outputCode( stream:CodeGenerator );
+   pub fn pushback(tokenizer:CodeTokenizer);
 }
 
 pub class CodeGenerator {
@@ -245,10 +235,28 @@ pub interface Core {
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet;
 }
 
+pub class CodeCoreStat extend (CodeCore) {
+   let list:&List<&LnsTypes.Token>;
+   pub fn outputCode( stream:CodeGenerator ) {
+      foreach token in self.list {
+         stream.outputToken( token );
+      }
+   }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      foreach _ in self.list {
+         tokenizer.pushback();
+      }
+   }
+}
+
+
 pub class CodeCoreBuiltin extend (CodeCore) {
    let token:&LnsTypes.Token;
    pub fn outputCode( stream:CodeGenerator ) {
       stream.outputToken( self.token );
+   }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      tokenizer.pushback();
    }
 }
 
@@ -258,12 +266,23 @@ pub class CodeCoreToken extend (CodeCore) {
    pub fn outputCode( stream:CodeGenerator ) {
       stream.outputToken( self.token );
    }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      print( __func__, self.token.txt );
+      tokenizer.pushback();
+   }
 }
 pub class CodeCoreList extend (CodeCore) {
    let elementName:str!;
    let codeCoreList:&List<&CodeCore>;
    pub fn outputCode( stream:CodeGenerator ) {
       stream.outputElement( self.elementName, self.codeCoreList );
+   }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      print( __func__, self.elementName );
+      for index = #self.codeCoreList, 1, -1 {
+         let codeCore = self.codeCoreList[ index ];
+         codeCore.pushback( tokenizer );
+      }
    }
 }
 pub class CodeSyntax {
@@ -314,7 +333,6 @@ class Rule {
    pub fn parseCode(
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str> ) : ParseCodeRet
    {
-      tokenizer.pushTokenList();
       let codeCoreList:List<&CodeCore> = [];
       foreach core, index in self.coreList {
          print( __func__, index, #self.coreList ); 
@@ -323,7 +341,10 @@ class Rule {
                return .Eof;
             }
             case .Unmatch {
-               tokenizer.popTokenList();
+               for coreIndex = #codeCoreList, 1, -1 {
+                  let codeCore = codeCoreList[ coreIndex ];
+                  codeCore.pushback( tokenizer );
+               }
                return .Unmatch;
             }
             case .Abbr {
@@ -334,7 +355,6 @@ class Rule {
          }
       }
       if #codeCoreList == 0 {
-         //return .Unmatch;
          return .Abbr;
       }
       return .Detect( new CodeCoreList( self.elementName, codeCoreList ) );
@@ -375,7 +395,6 @@ pub class RuleList {
       
       foreach rule, index in self.list {
          print( "check -- ", index, #self.list, self.elementName );
-         tokenizer.pushTokenList();
          _match rule.parseCode(ctrl, tokenizer, usedElementSet ) {
             case .Eof {
                return .Eof;
@@ -391,7 +410,6 @@ pub class RuleList {
                return .Detect( codeCore );
             }
          }
-         tokenizer.popTokenList();
       }
       print( result.$_txt, " -- ", self.elementName );
       return result;
@@ -422,14 +440,15 @@ class TokenCore extend (Core) {
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
    {
       let token = tokenizer.getToken();
-      print( __func__, self.token.txt, token.txt );
-      if token.kind == .Eof {
-         return .Eof;
-      }
+      print( __func__, self.token.txt, token.txt, token.kind.$_txt );
       if token.txt == self.rawTxt {
          print( __func__, "detect", token.txt,
                 "%d:%d" (token.pos.lineNo, token.pos.column ) );
          return .Detect( new CodeCoreToken( self, token ) );
+      }
+      tokenizer.pushback();
+      if token.kind == .Eof {
+         return .Eof;
       }
       return .Unmatch;
    }
@@ -470,6 +489,17 @@ class ElementCore extend (Core) {
    pub fn parseCode(
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
    {
+      switch self.elementName {
+         case "<shebang>" {
+            let token = tokenizer.getToken();
+            if token.kind == .Sheb {
+               return .Detect( new CodeCoreBuiltin( token ) );
+            }
+            tokenizer.pushback();
+            return .Unmatch;
+         }
+      }
+      
       if! let ruleList = ctrl.getRuleList( self.elementName ) {
          return ruleList.parseCode( ctrl, tokenizer, usedElementSet );
       }
@@ -477,7 +507,7 @@ class ElementCore extend (Core) {
       switch self.elementName {
          case "<sym>" {
             switch token.kind {
-               case .Symb, .Type {
+               case .Symb, .Type, .Kywd {
                   print( __func__, "detect", self.elementName );
                   return .Detect( new CodeCoreBuiltin( token ) );
                }
@@ -495,16 +525,54 @@ class ElementCore extend (Core) {
                return .Detect( new CodeCoreBuiltin( token ) );
             }
          }
+         case "<literal_real>" {
+            if token.kind == .Real {
+               print( __func__, "detect", self.elementName );
+               return .Detect( new CodeCoreBuiltin( token ) );
+            }
+         }
          case "<literal_char>" {
             if token.kind == .Char {
                print( __func__, "detect", self.elementName );
                return .Detect( new CodeCoreBuiltin( token ) );
             }
          }
+         case "<token>" {
+            if token.txt ~= ";" {
+               print( __func__, "detect", self.elementName );
+               return .Detect( new CodeCoreBuiltin( token ) );
+            }
+         }
+         case "<stat>" {
+            let list:List<&LnsTypes.Token> = [];
+            let mut workToken = token;
+            let mut depth = 1;
+            while true {
+               if workToken.kind == .Eof {
+                  return .Eof;
+               }
+               switch workToken.txt {
+                  case "}" {
+                     depth = depth - 1;
+                     if depth == 0 {
+                        break;
+                     }
+                  }
+                  case "{", "`{" {
+                     depth = depth + 1;
+                  }
+               }
+               list.insert( workToken );
+               workToken = tokenizer.getToken();
+            }
+            tokenizer.pushback();
+            return .Detect( new CodeCoreStat( list ));
+         }
          default {
             print( "unknown -- ", self.elementName );
          }
       }
+      tokenizer.pushback();
       return .Unmatch;
    }
 }
@@ -698,12 +766,17 @@ pub fn EbnfCtrl.parse( elementName:str, tokenizer:CodeTokenizer ) {
          print( "unmatch" );
       }
       case .Abbr {
-         print( "illegal" );
+         let pos = tokenizer.getToken().pos;
+         print( "illegal", pos.lineNo, pos.column );
       }
       case .Detect( codeCore ) {
          print( "outputCode" );
          codeCore.outputCode( new CodeGenerator( io.stdout ) );
          io.stdout.flush();
+         print( "" );
+         let token = tokenizer.getToken();
+         let pos = token.pos;
+         print( "%d:%d" (pos.lineNo, pos.column), token.kind.$_txt );
       }
    }
 }
