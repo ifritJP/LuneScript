@@ -1943,6 +1943,16 @@ test-govslua-go-batch:
 	$(call selfhost_buildOp_batch,$(GO_WORK_DIR),$(LNSC_GO),../2,--depends ../2/ -langGo --package lnsc)
 
 
+goprof-measure:
+	@index=1;									\
+	while test $${index} -lt 12 ; do						\
+		echo $${index};								\
+		GOMAXPROCS=$${index} make goprof LNSC_CMD=./lnsc 2>&1 | grep -e '^go:';	\
+		GOMAXPROCS=$${index} make goprof LNSC_CMD=./lnsc 2>&1 | grep -e '^go:';	\
+		GOMAXPROCS=$${index} make goprof LNSC_CMD=./lnsc 2>&1 | grep -e '^go:';	\
+		index=$$((index+1));							\
+	done
+
 goprof:
 	$(call test-buildlns-setup,work/go)
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
