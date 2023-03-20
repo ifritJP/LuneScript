@@ -12,6 +12,9 @@ ebnfCtrl.dump();
 
 fn createTokenizer() : LnsTokenizer.Tokenizer {
    let lnsCode = ```
+Depend.setup( fn(ver:int) {
+   LuaVer.setCurVer( ver );
+});
 ```;
    return LnsTokenizer.StreamTokenizer.create(
       LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ), false, nil, nil );
@@ -24,12 +27,11 @@ fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
 
 
 // let mut codeTokenizer = createTokenizer();
-//let mut codeTokenizer = createTokenizerFromFile( "lns/main.lns" );
-//let mut codeTokenizer = createTokenizerFromFile( "lns/Ebnf.lns" );
+// let mut codeTokenizer = createTokenizerFromFile( "lns/main.lns" );
+// let mut codeTokenizer = createTokenizerFromFile( "lns/Ebnf.lns" );
 // let mut codeTokenizer = createTokenizerFromFile( "../../src/test/testGo.lns" );
 let mut codeTokenizer = createTokenizerFromFile( "../../src/lune/base/front.lns" );
 
 
 ebnfCtrl.parse(
    "<code>", new Ebnf.CodeTokenizer( codeTokenizer ) );
-

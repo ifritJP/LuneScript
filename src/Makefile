@@ -1613,6 +1613,7 @@ define setup-go
 #	cp -au go.mod $1
 	cp -au lune/base/runtime_go $1/lune/base/
 	cp -au lune/base/binding_dummy.go $1/lune/base/
+	cp -au lune/base/DependLuaOnLns.go $1/lune/base
 	cp -au build.counter $1
 	-rm work/result-testGo.txt work/result-testGo2.txt
 endef
@@ -1624,7 +1625,7 @@ endef
 define test-go-one-exec
 	$(LNSC) $5 mkmain $2/main.go $6
 	cp -au $4/$3.lns $2/$4
-	$(call convGo,$1,$2,$4/$3,--main $5 $6)
+	$(call convGo,$1,$2,$4/$3,--main $5 $6 --app testgo)
 #	if [ $4 != "." ]; then mv $2/$4/$3.go $2; fi
 	$(call buildGo,$2,test.exe,testgo) > work/result-testGo.txt
 	$(call exeLune,$1,$2,$4/$3.lns,shebang) > work/result-testGo2.txt

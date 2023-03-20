@@ -3157,6 +3157,20 @@ _section();
       func4( list2.unpack() );
    }
 }
+_section();
+{
+   print( SubPkg.Age.Val.$_txt );
+}
+_section();
+class HogeAAAA {
+}
+alias AAAA = HogeAAAA;
+{
+   let mut list1:__List<&AAAA> = [];
+   let mut list2:__List<&HogeAAAA> = [];
+   list1.insert( new AAAA() );
+   list2.insert( new HogeAAAA() );
+}
 // _section();
 // {
 //    class Super {

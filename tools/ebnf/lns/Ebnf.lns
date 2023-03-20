@@ -1,7 +1,13 @@
 // -*- coding: utf-8 -*-
 
+_lune_control default_async_all;
+
 import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+
+fn log(...) {
+   print( ... );
+}
 
 
 pub class EbnfTokenizer {
@@ -25,7 +31,7 @@ pub class EbnfTokenizer {
       if token.txt == txt {
          return token;
       }
-      print(
+      log(
          "%d:%d: Illegal token. expects '%s' but '%s'"
          ( token.pos.lineNo, token.pos.column, txt, token.txt) );
       os.exit( 1 );
@@ -67,7 +73,7 @@ pub class EbnfTokenizer {
       if token.txt == txt {
          return token;
       }
-      print(
+      log(
          "%d:%d: Illegal token. expects '%s' but '%s'"
          ( token.pos.lineNo, token.pos.column, txt, token.txt) );
       os.exit( 1 );
@@ -88,37 +94,51 @@ pub class EbnfTokenizer {
 
 
 pub class CodeTokenizer {
+   /** コードの tokenizer 元 */
    let tokenizer:LnsTokenizer.Tokenizer;
+   /** 読み込み済みの token のリスト */
    let mut tokenList:List<&LnsTypes.Token>;
-   let mut commonList:__List<&LnsTypes.Token>;
-   let pushbackedList:List<&LnsTypes.Token>;
+   /**
+   tokenList のアクセス位置。
+   pushBack したときは、この位置を前後に動かす。
+   次の条件のときに、tokenList から token を読み出す。
+   1 <= tokenIndex <= #tokenList 
+   */ 
+   let mut tokenIndex:int;
+   /** コメントリスト。 次のコメント以外の token に付加する */
+   let mut commentList:__List<&LnsTypes.Token>;
 
    pub fn __init(tokenizer:LnsTokenizer.Tokenizer) {
       self.tokenizer = tokenizer;
       self.tokenList = [];
-      self.commonList = [];
-      self.pushbackedList = [];
+      self.commentList = [];
+      self.tokenIndex = 1;
    }
 
+   /**
+   トークン取得
+
+コメントがある場合は、コメントを読み飛ばして次のトークンを取得する。
+   */
    pub fn getToken() mut : &LnsTypes.Token {
-      if #self.pushbackedList > 0 {
-         let token = self.pushbackedList[ #self.pushbackedList ];
-         self.pushbackedList.remove(##);
-         self.tokenList.insert( token );
+      if self.tokenIndex <= #self.tokenList {
+         let token = self.tokenList[ self.tokenIndex ];
+         self.tokenIndex = self.tokenIndex + 1;
          return token;
       }
 
       fn process( token:&LnsTypes.Token ) : &LnsTypes.Token {
          let result;
-         if #self.commonList == 0 {
+         if #self.commentList == 0 {
             result = token;
          } else {
             let newToken = new LnsTypes.Token(
-               token.kind, token.txt, token.pos, token.consecutive, self.commonList );
-            self.commonList = [];
+               token.kind, token.txt, token.pos, token.consecutive, self.commentList );
+            self.commentList = [];
             result = newToken;
          }
          self.tokenList.insert( result );
+         self.tokenIndex = #self.tokenList + 1;
          return result;
       }
       
@@ -131,7 +151,7 @@ pub class CodeTokenizer {
                return process(token);
             }
             case .Cmnt {
-               self.commonList.insert( token );
+               self.commentList.insert( token );
             }
             default {
                return process(token);
@@ -140,35 +160,31 @@ pub class CodeTokenizer {
       }
    }
 
+   /**
+   現在のトークンを pushback する
+   */
    pub fn pushback() mut {
-      print( __func__, #self.tokenList, self.tokenList[ #self.tokenList ].txt );
-      self.pushbackedList.insert( self.tokenList[ #self.tokenList ] );
-      self.tokenList.remove( ## );
+      log( __func__, #self.tokenList, self.tokenIndex );
+      if self.tokenIndex <= 1 {
+         error( "illegal tokenIndex" );
+      }
+      self.tokenIndex = self.tokenIndex - 1;
+   }
+
+   pub fn peekToken() mut : &LnsTypes.Token {
+      if self.tokenIndex <= #self.tokenList {
+         let token = self.tokenList[ self.tokenIndex ];
+         return token;
+      }
+      let token = self.getToken();
+      self.pushback();
+      return token;
    }
 }
 
 pub proto class RuleList;
 pub proto interface Core;
 proto class ElementCore extend (Core);
-
-pub class EbnfCtrl {
-   // element 名 → RuleList マップ
-   let element2ruleList:Map<str,&RuleList>;
-   let allElementSet:Set<str>;
-   let elementName2ElementCore:Map<str,&ElementCore>;
-
-   pub fn __init() {
-      self.element2ruleList = {};
-      self.allElementSet = (@);
-      self.elementName2ElementCore = {};
-   }
-
-   pub fn getRuleList( name:str ) : &RuleList! {
-      return self.element2ruleList[ name ];
-   }
-}
-
-
 pub proto class CodeGenerator;
 
 pub interface CodeCore {
@@ -222,6 +238,63 @@ pub alge ParseCodeRet {
    Detect(&CodeCore),
 }
 
+
+pub class Candidate {
+   let txtSet:Set<str>;
+   let tokenKindSet:Set<LnsTypes.TokenKind>;
+   let mut canAbbr:bool {pub};
+   let mut any:bool {pub};
+
+   pub fn __init(canAbbr:bool, any:bool ) {
+      self.canAbbr = canAbbr;
+      self.txtSet = (@);
+      self.tokenKindSet = (@);
+      self.any = any;
+   }
+
+   pub fn addTxt( txt:str ) mut {
+      self.txtSet.add( txt) ;
+   }
+   pub fn addTokenKind( kind:LnsTypes.TokenKind ) mut {
+      self.tokenKindSet.add( kind ) ;
+   }
+   pub fn add( other:&Candidate, validAbbr:bool ) mut {
+      self.txtSet.or( other.txtSet );
+      self.tokenKindSet.or( other.tokenKindSet );
+      if validAbbr {
+         self.canAbbr = self.canAbbr and other.canAbbr;
+      }
+      self.any = self.any and other.any;
+   }
+
+   pub fn hasTxt( txt:str ) : bool {
+      return self.txtSet.has( txt );
+   }
+   pub fn hasKind( kind:LnsTypes.TokenKind ) : bool {
+      return self.tokenKindSet.has( kind );
+   }
+   pub fn has( token:&LnsTypes.Token ) : bool {
+      return self.hasTxt( token.txt ) or self.hasKind( token.kind );
+   }
+
+   pub fn dump( stream:oStream ) {
+      stream.write( "txt: " );
+      foreach txt in self.txtSet {
+         stream.write( "%s, " (txt) );
+      }
+      stream.write( "\n" );
+      stream.write( "kind: " );
+      foreach kind in self.tokenKindSet {
+         stream.write( "%s, " (kind.$_txt));
+      }
+      stream.write( "\n" );
+      stream.write( "abbr: %s, any: %s\n" (self.canAbbr, self.any ) );
+   }
+}
+
+
+pub proto class EbnfCtrl;
+
 /**
 ebnf の element を構成する一つの要素
 
@@ -230,7 +303,8 @@ ebnf の element を構成する一つの要素
 <hoge> ::= "if" <exp> <block>
 */
 pub interface Core {
-   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str>;
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate;
+   pub fn get_candidate(): &Candidate;
    pub fn parseCode(
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet;
 }
@@ -267,7 +341,7 @@ pub class CodeCoreToken extend (CodeCore) {
       stream.outputToken( self.token );
    }
    pub fn pushback(tokenizer:CodeTokenizer) {
-      print( __func__, self.token.txt );
+      log( __func__, self.token.txt );
       tokenizer.pushback();
    }
 }
@@ -278,7 +352,7 @@ pub class CodeCoreList extend (CodeCore) {
       stream.outputElement( self.elementName, self.codeCoreList );
    }
    pub fn pushback(tokenizer:CodeTokenizer) {
-      print( __func__, self.elementName );
+      log( __func__, self.elementName );
       for index = #self.codeCoreList, 1, -1 {
          let codeCore = self.codeCoreList[ index ];
          codeCore.pushback( tokenizer );
@@ -301,33 +375,24 @@ ebnf の文
 */
 class Rule {
    let elementName:str!;
-   let coreList:&List<&Core>;
+   let coreList:&List<Core>;
 
-   pub fn __init( elementName:str!, coreList:&List<&Core> ) {
+   pub fn __init( elementName:str!, coreList:&List<Core> ) {
       self.elementName = elementName;
       self.coreList = coreList;
    }
 
-   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
-      let mut targetIndex = index;
-      let mut curIndex = 1;
-      for coreIndex = 1, #self.coreList {
-         let core = self.coreList[ coreIndex ];
-         while curIndex <= targetIndex {
-            let mut coreSet = usedCoreSet.clone();
-            let list = core.getKeyword( ctrl, curIndex, coreSet );
-            if #list == 0 {
-               break;
-            }
-            if curIndex == targetIndex {
-               return list;
-            }
-            curIndex = curIndex + 1;
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate {
+      let mut candidate = new Candidate( true, true );
+      foreach core in self.coreList {
+         let mut coreSet = usedCoreSet.clone();
+         let work = core.setupCandidate( ctrl, coreSet );
+         candidate.add( work, true );
+         if not work.$canAbbr {
+            break;
          }
-         targetIndex = targetIndex - curIndex + 1;
-         curIndex = 1;
       }
-      return [];
+      return candidate;
    }
 
    pub fn parseCode(
@@ -335,7 +400,7 @@ class Rule {
    {
       let codeCoreList:List<&CodeCore> = [];
       foreach core, index in self.coreList {
-         print( __func__, index, #self.coreList ); 
+         log( __func__, index, #self.coreList ); 
          _match core.parseCode(ctrl, tokenizer, usedElementSet ) {
             case .Eof {
                return .Eof;
@@ -371,30 +436,38 @@ ebnf の文。 or で括られた Rule をまとめたもの。
 */
 pub class RuleList {
    let elementName:str;
-   let list:&List<&Rule>;
-   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
-      let list:List<str> = [];
+   let list:&List<Rule>;
+   let candidate:Candidate {pub&};
+
+   local fn __init( elementName:str, list:&List<Rule> ) {
+      self.elementName = elementName;
+      self.list = list;
+      self.candidate = new Candidate( true, true );
+   }
+   
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate {
       foreach rule in self.list {
-         foreach keyword in rule.getKeyword( ctrl, index, usedCoreSet ) {
-            list.insert( keyword );
-         }
+         self.candidate.add( rule.setupCandidate( ctrl, usedCoreSet ), true );
       }
-      return list;
+      return self.candidate;
    }
    pub fn parseCode(
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str> ) : ParseCodeRet
    {
-      // if usedElementSet.has( self.elementName ) {
-      //    print( __func__, "already use", self.elementName );
-      //    return .Unmatch;
-      // }
-      //usedElementSet.add( self.elementName );
-
-
-      let mut result = ParseCodeRet.Unmatch;
+      if not self.candidate.has( tokenizer.peekToken() ) {
+         log( __func__, "not found candidate -- ",
+              tokenizer.peekToken().txt, tokenizer.peekToken().kind.$_txt,
+              self.elementName );
+         if self.candidate.$canAbbr {
+            return .Abbr;
+         }
+         return .Unmatch;
+      }
       
+      let mut result = ParseCodeRet.Unmatch;
+
       foreach rule, index in self.list {
-         print( "check -- ", index, #self.list, self.elementName );
+         log( "check -- ", index, #self.list, self.elementName );
          _match rule.parseCode(ctrl, tokenizer, usedElementSet ) {
             case .Eof {
                return .Eof;
@@ -406,12 +479,12 @@ pub class RuleList {
                // error( "illegal abbr -- %s" ( self.elementName ) );
             }
             case .Detect( codeCore ) {
-               print( "detect -- ", self.elementName );
+               log( "detect -- ", self.elementName );
                return .Detect( codeCore );
             }
          }
       }
-      print( result.$_txt, " -- ", self.elementName );
+      log( result.$_txt, " -- ", self.elementName );
       return result;
    }
 }
@@ -426,23 +499,24 @@ Token を Core として管理するクラス
 class TokenCore extend (Core) {
    let token:&LnsTypes.Token {pub};
    let rawTxt:str;
+   let candidate:Candidate {pub&};
+   
    pub fn __init( token:&LnsTypes.Token ) {
       self.token = token;
       self.rawTxt = token.getExcludedDelimitTxt();
+      self.candidate = new Candidate( false, false );
+      self.candidate.addTxt( self.rawTxt );
    }
-   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
-      if index ~= 1 {
-         return [];
-      }
-      return [ self.rawTxt ];
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate {
+      return self.candidate;
    }
    pub fn parseCode(
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
    {
       let token = tokenizer.getToken();
-      print( __func__, self.token.txt, token.txt, token.kind.$_txt );
+      log( __func__, self.token.txt, token.txt, token.kind.$_txt );
       if token.txt == self.rawTxt {
-         print( __func__, "detect", token.txt,
+         log( __func__, "detect", token.txt,
                 "%d:%d" (token.pos.lineNo, token.pos.column ) );
          return .Detect( new CodeCoreToken( self, token ) );
       }
@@ -454,6 +528,163 @@ class TokenCore extend (Core) {
    }
 }
 
+class BuiltinTokenKindCore extend (Core) {
+   let elementName:str;
+   let tokenKindSet:__Set<LnsTypes.TokenKind>;
+   let candidate:Candidate {pub&};
+   
+   pub fn __init( elementName:str, tokenKindSet:__Set<LnsTypes.TokenKind> ) {
+      self.elementName = elementName;
+      self.tokenKindSet = tokenKindSet;
+      self.candidate = new Candidate( false, false );
+      foreach kind in tokenKindSet {
+         self.candidate.addTokenKind( kind );
+      }
+   }
+
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate {
+      return self.candidate;
+   }
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
+   {
+      let token = tokenizer.getToken();
+      if self.tokenKindSet.has( token.kind ) {
+         log( __func__, "detect", self.elementName );
+         return .Detect( new CodeCoreBuiltin( token ) );
+      }
+      tokenizer.pushback();
+      return .Unmatch;
+   }
+}
+
+class BuiltinTokenCore extend (Core) {
+   let elementName:str;
+   let tokenTxtSet:__Set<str>;
+   let candidate:Candidate {pub&};
+
+   pub fn __init( elementName:str, tokenTxtSet:__Set<str> ) {
+      self.elementName = elementName;
+      self.tokenTxtSet = tokenTxtSet;
+      self.candidate = new Candidate( false, false );
+      foreach kind in tokenTxtSet {
+         self.candidate.addTxt( kind );
+      }
+   }
+
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate {
+      return self.candidate;
+   }
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
+   {
+      let token = tokenizer.getToken();
+      if not self.tokenTxtSet.has( token.txt ) {
+         log( __func__, "detect", self.elementName );
+         return .Detect( new CodeCoreBuiltin( token ) );
+      }
+      tokenizer.pushback();
+      return .Unmatch;
+   }
+}
+
+class BuiltinStatCore extend (Core) {
+   let candidate:Candidate {pub&};
+
+   pub fn __init() {
+      self.candidate = new Candidate( false, true );
+   }
+   
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate {
+      return self.candidate;
+   }
+   pub fn parseCode(
+      ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
+   {
+      let list:List<&LnsTypes.Token> = [];
+      let mut depth = 1;
+      while true {
+         let mut workToken = tokenizer.getToken();
+         if workToken.kind == .Eof {
+            return .Eof;
+         }
+         switch workToken.txt {
+            case "}" {
+               depth = depth - 1;
+               if depth == 0 {
+                  break;
+               }
+            }
+            case "{", "`{" {
+               depth = depth + 1;
+            }
+         }
+         list.insert( workToken );
+      }
+      tokenizer.pushback();
+      return .Detect( new CodeCoreStat( list ));
+   }
+}
+
+
+
+
+
+class BuiltinCore {
+   local static let elementNameMap:Map<str,Core>;
+   __init {
+      BuiltinCore.elementNameMap = {};
+
+      {
+         let map:__Map<str,__Set<LnsTypes.TokenKind>> = {
+            "<shebang>": (@ .Sheb),
+            "<sym>": (@ .Symb, .Type, .Kywd, .Ope ),
+            "<literal_str>": (@ .Str ),
+            "<literal_int>": (@ .Int ),
+            "<literal_real>": (@ .Real ),
+            "<literal_char>": (@ .Char ),
+         };
+         foreach tokenKindSet, elementName in map {
+            BuiltinCore.elementNameMap[ elementName ] = new BuiltinTokenKindCore(
+               elementName, tokenKindSet );
+         }
+      }
+
+      {
+         let map:__Map<str,__Set<str>> = {
+            "<token>": (@ ";"),
+         };
+         foreach tokenTxtSet, elementName in map {
+            BuiltinCore.elementNameMap[ "<token>" ] = new BuiltinTokenCore(
+               elementName, tokenTxtSet );
+         }
+      }
+      BuiltinCore.elementNameMap[ "<stat>" ] = new BuiltinStatCore();
+   }
+   pub static fn get( elementName:str ) __noasync : Core! {
+      return BuiltinCore.elementNameMap[ elementName ];
+   }
+}
+
+pub class EbnfCtrl {
+   // element 名 → RuleList マップ
+   let element2ruleList:Map<str,RuleList>;
+   let allElementSet:Set<str>;
+   let elementName2Core:Map<str,Core>;
+
+   pub fn __init() {
+      self.element2ruleList = {};
+      self.allElementSet = (@);
+      self.elementName2Core = {};
+   }
+
+   pub fn getRuleList( name:str ) : RuleList! {
+      return self.element2ruleList[ name ];
+   }
+}
+
+
+
 /**
 element を Core にするクラス。
 
@@ -463,117 +694,47 @@ element を Core にするクラス。
 */
 class ElementCore extend (Core) {
    let elementName:str;
+   let candidate:Candidate {pub&};
    pri fn __init( elementName:str ) {
       self.elementName = elementName;
+      self.candidate = new Candidate( true, false );
    }
    pub static fn create(
-      elementName2ElementCore:Map<str,&ElementCore>, elementName:str ) : &ElementCore
+      elementName2Core:Map<str,Core>, elementName:str ) : Core
    {
-      let! core = elementName2ElementCore[ elementName ] {
-         core = new ElementCore( elementName );
-         elementName2ElementCore[ elementName ] = core;
+      let! mut core = elementName2Core[ elementName ] {
+         __asyncLock {
+            if! BuiltinCore.get( elementName ) {
+               core = _exp;
+            } else {
+               core = new ElementCore( elementName );
+            }
+         }
+         elementName2Core[ elementName ] = core;
       };
       return core;
    }
-   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut : &Candidate {
+      print( __func__, self.elementName );
       if not usedCoreSet.has( self ) {
          usedCoreSet.add( self );
-         if! let ruleList = ctrl.getRuleList( self.elementName ) {
-            return ruleList.getKeyword( ctrl, index, usedCoreSet );
+         if! let mut ruleList = ctrl.getRuleList( self.elementName ) {
+            self.candidate.add(ruleList.setupCandidate( ctrl, usedCoreSet ), true );
+         } else {
+            error( "unknown -- %s" (self.elementName) );
          }
       } else {
-         print( "already:", self.elementName );
+         log( "already:", self.elementName );
       }
-      return [];
+      return self.candidate;
    }
    pub fn parseCode(
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str>):ParseCodeRet
    {
-      switch self.elementName {
-         case "<shebang>" {
-            let token = tokenizer.getToken();
-            if token.kind == .Sheb {
-               return .Detect( new CodeCoreBuiltin( token ) );
-            }
-            tokenizer.pushback();
-            return .Unmatch;
-         }
-      }
-      
-      if! let ruleList = ctrl.getRuleList( self.elementName ) {
-         return ruleList.parseCode( ctrl, tokenizer, usedElementSet );
-      }
-      let token = tokenizer.getToken();
-      switch self.elementName {
-         case "<sym>" {
-            switch token.kind {
-               case .Symb, .Type, .Kywd {
-                  print( __func__, "detect", self.elementName );
-                  return .Detect( new CodeCoreBuiltin( token ) );
-               }
-            }
-         }
-         case "<literal_str>" {
-            if token.kind == .Str {
-               print( __func__, "detect", self.elementName );
-               return .Detect( new CodeCoreBuiltin( token ) );
-            }
-         }
-         case "<literal_int>" {
-            if token.kind == .Int {
-               print( __func__, "detect", self.elementName );
-               return .Detect( new CodeCoreBuiltin( token ) );
-            }
-         }
-         case "<literal_real>" {
-            if token.kind == .Real {
-               print( __func__, "detect", self.elementName );
-               return .Detect( new CodeCoreBuiltin( token ) );
-            }
-         }
-         case "<literal_char>" {
-            if token.kind == .Char {
-               print( __func__, "detect", self.elementName );
-               return .Detect( new CodeCoreBuiltin( token ) );
-            }
-         }
-         case "<token>" {
-            if token.txt ~= ";" {
-               print( __func__, "detect", self.elementName );
-               return .Detect( new CodeCoreBuiltin( token ) );
-            }
-         }
-         case "<stat>" {
-            let list:List<&LnsTypes.Token> = [];
-            let mut workToken = token;
-            let mut depth = 1;
-            while true {
-               if workToken.kind == .Eof {
-                  return .Eof;
-               }
-               switch workToken.txt {
-                  case "}" {
-                     depth = depth - 1;
-                     if depth == 0 {
-                        break;
-                     }
-                  }
-                  case "{", "`{" {
-                     depth = depth + 1;
-                  }
-               }
-               list.insert( workToken );
-               workToken = tokenizer.getToken();
-            }
-            tokenizer.pushback();
-            return .Detect( new CodeCoreStat( list ));
-         }
-         default {
-            print( "unknown -- ", self.elementName );
-         }
-      }
-      tokenizer.pushback();
-      return .Unmatch;
+      let! ruleList = ctrl.getRuleList( self.elementName ) {
+         return .Unmatch;
+      };
+      return ruleList.parseCode( ctrl, tokenizer, usedElementSet );
    }
 }
 enum RuleKind {
@@ -584,9 +745,18 @@ enum RuleKind {
 }
 class RuleCore extend (Core) {
    let kind:RuleKind;
-   let rule:&Rule;
-   pub fn getKeyword( ctrl:&EbnfCtrl, index:int, usedCoreSet:Set<&Core>): &List<str> {
-      return [];
+   let rule:Rule;
+   let candidate:Candidate {pub&};
+
+   local fn __init( kind:RuleKind, rule:Rule ) {
+      self.kind = kind;
+      self.rule = rule;
+      self.candidate = new Candidate( true, false );
+   }
+
+   pub fn setupCandidate( ctrl:&EbnfCtrl, usedCoreSet:Set<&Core>) mut: &Candidate {
+      self.candidate.add( self.rule.setupCandidate( ctrl, usedCoreSet ), false );
+      return self.candidate;
    }
    pub fn parseCode(
       ctrl:&EbnfCtrl, tokenizer:CodeTokenizer, usedElementSet:Set<&str> ) : ParseCodeRet
@@ -617,7 +787,7 @@ class RuleCore extend (Core) {
                }
             }
             case .Detect( codeCore ) {
-               print( __func__, self.kind.$_txt  );
+               log( __func__, self.kind.$_txt  );
                if self.kind == .Option {
                   return result;
                }
@@ -671,15 +841,15 @@ class DeclTokenizer {
    }
 
    pub fn err( mess:str ) {
-      print( "%d:%d:" (self.prevToken.pos.lineNo, self.prevToken.pos.column), mess );
+      log( "%d:%d:" (self.prevToken.pos.lineNo, self.prevToken.pos.column), mess );
       os.exit( 1 );
    }
 }
 
 fn EbnfCtrl.processRule(
-   elementName:str!, tokenizer:DeclTokenizer, termTxt:str! ) mut : &Rule!, str
+   elementName:str!, tokenizer:DeclTokenizer, termTxt:str! ) mut : Rule!, str
 {
-   let mut coreList:List<&Core> = [];
+   let mut coreList:List<Core> = [];
    let mut endsTerm = false;
    while true {
       let! token = tokenizer.getToken() {
@@ -687,11 +857,11 @@ fn EbnfCtrl.processRule(
       };
       switch token.txt {
          case "[" {
-            let optRule = self.processRule( nil, tokenizer, "]" )!;
+            let mut optRule = self.processRule( nil, tokenizer, "]" )!;
             coreList.insert( new RuleCore( .Option, optRule ) );
          }
          case "{" {
-            let optRule = self.processRule( nil, tokenizer, "}" )!;
+            let mut optRule = self.processRule( nil, tokenizer, "}" )!;
             coreList.insert( new RuleCore( .Repeat, optRule ) );
          }
          case "|" {
@@ -704,7 +874,7 @@ fn EbnfCtrl.processRule(
          default {
             if isElement( token ) {
                coreList.insert(
-                  ElementCore.create( self.elementName2ElementCore,token.txt ) );
+                  ElementCore.create( self.elementName2Core,token.txt ) );
             } else {
                coreList.insert( new TokenCore( token ) );
             }
@@ -725,13 +895,15 @@ local fn EbnfCtrl.processDecl(
    tokenizer:EbnfTokenizer, symbolToken:&LnsTypes.Token ) mut : &RuleList
 {
    let elementName = symbolToken.txt;
-   print( __func__, elementName );
+   log( __func__, elementName );
    tokenizer.checkNext( "::=" );
 
-   let mut list:List<&Rule> = [];
+   self.allElementSet.add( elementName );
+
+   let mut list:List<Rule> = [];
    while true {
       let mut declTokenizer = new DeclTokenizer( tokenizer, symbolToken, self.allElementSet );
-      let rule, mess = self.processRule( elementName, declTokenizer, nil );
+      let mut rule, mess = self.processRule( elementName, declTokenizer, nil );
       when! rule {
          list.insert( rule );
       } else {
@@ -741,43 +913,54 @@ local fn EbnfCtrl.processDecl(
          break;
       }
    }
-   let ruleList = new RuleList( elementName, list );
+   let mut ruleList = new RuleList( elementName, list );
    self.element2ruleList[ elementName ] = ruleList;
    return ruleList;
 }
 
 pub fn EbnfCtrl.dump() {
-   print( "=================" );
+   log( "=================" );
    forsort element in self.allElementSet {
-      print( self.element2ruleList[ element ] ~= nil, element );
+      let ruleList = self.element2ruleList[ element ];
+      log( ruleList ~= nil, element );
+      when! ruleList {
+         ruleList.get_candidate().dump( io.stdout );
+      }
    }
 }
 
 pub fn EbnfCtrl.parse( elementName:str, tokenizer:CodeTokenizer ) {
    let! ruleList = self.element2ruleList[ elementName ] {
-      print( "error parse" );
+      log( "error parse" );
       return;
    };
    _match ruleList.parseCode( self, tokenizer, (@) ) {
       case .Eof {
-         print( "eof" );
+         log( "eof" );
       }
       case .Unmatch {
-         print( "unmatch" );
+         log( "unmatch" );
       }
       case .Abbr {
          let pos = tokenizer.getToken().pos;
-         print( "illegal", pos.lineNo, pos.column );
+         log( "illegal", pos.lineNo, pos.column );
       }
       case .Detect( codeCore ) {
-         print( "outputCode" );
+         log( "outputCode" );
          codeCore.outputCode( new CodeGenerator( io.stdout ) );
          io.stdout.flush();
-         print( "" );
+         log( "" );
          let token = tokenizer.getToken();
          let pos = token.pos;
-         print( "%d:%d" (pos.lineNo, pos.column), token.kind.$_txt );
+         log( "%d:%d" (pos.lineNo, pos.column), token.kind.$_txt );
       }
+   }
+}
+
+pub fn EbnfCtrl.setupCandidate() mut {
+   let fusedCoreSet:Set<&Core> = (@);
+   foreach ruleList in self.element2ruleList {
+      ruleList.setupCandidate( self, fusedCoreSet );
    }
 }
 
@@ -810,5 +993,7 @@ pub fn analyze_ebnf( tokenizer:EbnfTokenizer ) : &EbnfCtrl {
       }
    }
 
+   ebnfCtrl.setupCandidate();
+   
    return ebnfCtrl;
 }

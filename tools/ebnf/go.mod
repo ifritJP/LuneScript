@@ -1,15 +1,11 @@
-module github.com/ifritJP/lnstags
+module github.com/LuneScript/tools/ebnf
 
 go 1.18
 
-require (
-	github.com/ifritJP/LuneScript/src v0.0.0-20230304114223-928f73113833
-	github.com/ifritJP/lnssqlite3/src v0.0.0-20230225123857-cfb8496afd8c
-)
+require github.com/ifritJP/LuneScript/src v0.0.0-20230319065254-f55e6a76158e
 
 require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/mattn/go-sqlite3 v1.14.7 // indirect
 	github.com/yuin/gopher-lua v0.0.0-20220413183635-c841877397d8 // indirect
 )
 

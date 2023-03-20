@@ -1,2 +1,5 @@
 pub class Hoge {
 }
+pub enum Age {
+   Val,
+}

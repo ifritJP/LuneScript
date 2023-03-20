@@ -1075,6 +1075,22 @@ fn convFilter.outputImplicitCast(
    castType:&Ast.TypeInfo, node: &Nodes.Node, parent: &Nodes.ExpCastNode ) mut
 {
    switch castType.$kind {
+      case .Class, .IF {
+         let castSrc = castType.$nonnilableType.$srcTypeInfo;
+         let orgSrc = node.$expType.$nonnilableType.$srcTypeInfo;
+         if ( castSrc.$aliasSrc ~= castSrc and castSrc.$aliasSrc == orgSrc ) or
+             ( orgSrc.$aliasSrc ~= orgSrc and orgSrc.$aliasSrc == castSrc )
+         {
+            // 次の場合は、そのまま出力する
+            // - キャスト元がキャスト先の alias の場合
+            // - キャスト先がキャスト元の alias の場合
+            filter( node, self, parent );
+            return;
+         }
+      }
+   }
+   
+   switch castType.$kind {
       case .Nilable {
          self.outputImplicitCast( castType.$nonnilableType, node, parent );
       }
@@ -3248,7 +3264,11 @@ pub override fn convFilter.processProtoMethod(
 }
 
 fn convFilter.getEnumGetTxtSym( enumType:&Ast.EnumTypeInfo ) mut : str {
-   return "%s_getTxt" (self.getTypeSymbol( enumType ));
+   let txt = "%s_getTxt" (self.getTypeSymbol( enumType ));
+   if self.needPrefix( enumType.getModule() ) {
+      return "%s.%s" (self.getModuleName( enumType.getModule(), true ), txt );
+   }
+   return txt;
 }
 
 pub override fn convFilter.processDeclEnum(

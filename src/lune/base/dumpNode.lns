@@ -668,10 +668,11 @@ pub override fn dumpFilter.processExpCast(
 {
    self.dump(
       opt, node,
-      "%s(%d) -> %s(%d)" ( node.$exp.$expType.getTxt( self.$typeNameCtrl ##),
-                           node.$exp.$expType.$typeId.id,
-                           node.$castType.getTxt( self.$typeNameCtrl ## ),
-                           node.$castType.$typeId.id) );
+      "%s: %s(%d) -> %s(%d)" ( node.$castKind.$_txt,
+                               node.$exp.$expType.getTxt( self.$typeNameCtrl ##),
+                               node.$exp.$expType.$typeId.id,
+                               node.$castType.getTxt( self.$typeNameCtrl ## ),
+                               node.$castType.$typeId.id) );
    filter( node.get_exp(), self, opt.nextOpt() );
 };
 pub override fn dumpFilter.processExpParen(
