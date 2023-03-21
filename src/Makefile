@@ -2049,7 +2049,9 @@ endif
 	cp -a test work/formatter/work/3
 
 test-formatter-sub: test-new test-new-proj
+ifndef SKIP_PROJ_TEST
 	cat work/3/log/proj >> work/test2.result
+endif
 
 
 diff-formatter:
