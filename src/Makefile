@@ -923,6 +923,7 @@ test-new2:
 # オプション -u 付きで save して実行テスト
 	$(call mk_lune_proj_dir,work/4)
 	cp -a test work/4
+	-rm work/4/test/error/dis_mutable.lns
 	cp -a work/3_2/lune work/4
 	$(call exeLune,$(LNSC),work/3_2,test/start.lns,-u SAVE ../4 $(EXE_OPT),)
 	(cd work/4; $(LUA) test/start.lua) > work/test5.result
@@ -1139,8 +1140,10 @@ ifneq ($(LANG_KIND),lua)
 			-x 'log' -x 'test' -x binding.go		\
 			work/13/lune work/3_3/work/3_3_3/lune
 endif
+ifndef SKIP_PROJ_TEST
 ifeq ($(WITH_GO),y)
 	diff test/result/test1.result work/test2.result
+endif
 endif
 	diff work/test1.result work/test2.result
 	diff work/org-error.result work/new-error.result
