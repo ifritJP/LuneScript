@@ -523,14 +523,14 @@ BlockKind._val2NameMap[2] = 'Replace'
 BlockKind.__allList[3] = BlockKind.Replace
 
 
-local function getReplace( map, tokenList, modIndex )
+local function getReplace( map, tokenList, modIndex, gomodDir )
 
    local prevArrow = false
    for __index, token in ipairs( tokenList ) do
       if token == "=>" then
          prevArrow = true
       elseif prevArrow then
-         map[tokenList[modIndex]] = token
+         map[tokenList[modIndex]] = Util.pathJoin( gomodDir, token )
          break
       end
       
@@ -538,67 +538,105 @@ local function getReplace( map, tokenList, modIndex )
    
 end
 
-local function getGoMap(  )
+local function searchGoMod( path )
+   local __func__ = '@lune.@base.@GoMod.searchGoMod'
+
+   while true do
+      local gomodPath = Util.pathJoin( path, "go.mod" )
+      Log.log( Log.Level.Log, __func__, 313, function (  )
+      
+         return string.format( "gomodPath = %s", gomodPath)
+      end )
+      
+      if Depend.existFile( gomodPath ) then
+         return path
+      end
+      
+      local work = Util.parentPath( path )
+      if work == path then
+         return nil
+      end
+      
+      path = work
+   end
+   
+end
+
+local function getGoMap( path )
+   local __func__ = '@lune.@base.@GoMod.getGoMap'
 
    local requireMap = {}
    local replaceMap = {}
    local name = "lnsc"
    do
-      local file = io.open( "go.mod" )
-      if file ~= nil then
-         local inBlock = BlockKind.None
-         while true do
-            local line = file:read( "*l" )
-            if  nil == line then
-               local _line = line
-            
-               break
-            end
-            
-            local trimedLine = line:gsub( "^%s", "" )
-            local tokenList = Util.splitStr( trimedLine, "[^%s]+" )
-            do
-               local _switchExp = inBlock
-               if _switchExp == BlockKind.Require then
-                  if line:find( "^%)" ) then
-                     inBlock = BlockKind.None
-                  else
-                   
-                     requireMap[tokenList[1]] = tokenList[2]
+      local gomodDir = searchGoMod( path )
+      if gomodDir ~= nil then
+         Log.log( Log.Level.Log, __func__, 330, function (  )
+         
+            return string.format( "gomodDir = %s", gomodDir)
+         end )
+         
+         local gomodPath = Util.pathJoin( gomodDir, "go.mod" )
+         do
+            local file = io.open( gomodPath )
+            if file ~= nil then
+               local inBlock = BlockKind.None
+               while true do
+                  local line = file:read( "*l" )
+                  if  nil == line then
+                     local _line = line
+                  
+                     break
                   end
                   
-               elseif _switchExp == BlockKind.Replace then
-                  if line:find( "^%)" ) then
-                     inBlock = BlockKind.None
-                  else
-                   
-                     getReplace( replaceMap, tokenList, 1 )
-                  end
-                  
-               elseif _switchExp == BlockKind.None then
-                  if line:find( "^module%s+" ) then
-                     name = tokenList[2]
-                  elseif line:find( "^require%s+[^%(]" ) then
-                     if #tokenList == 3 then
-                        requireMap[tokenList[2]] = tokenList[3]
+                  local trimedLine = line:gsub( "^%s", "" )
+                  local tokenList = Util.splitStr( trimedLine, "[^%s]+" )
+                  do
+                     local _switchExp = inBlock
+                     if _switchExp == BlockKind.Require then
+                        if line:find( "^%)" ) then
+                           inBlock = BlockKind.None
+                        else
+                         
+                           requireMap[tokenList[1]] = tokenList[2]
+                        end
+                        
+                     elseif _switchExp == BlockKind.Replace then
+                        if line:find( "^%)" ) then
+                           inBlock = BlockKind.None
+                        else
+                         
+                           getReplace( replaceMap, tokenList, 1, gomodDir )
+                        end
+                        
+                     elseif _switchExp == BlockKind.None then
+                        if line:find( "^module%s+" ) then
+                           name = tokenList[2]
+                        elseif line:find( "^require%s+[^%(]" ) then
+                           if #tokenList == 3 then
+                              requireMap[tokenList[2]] = tokenList[3]
+                           end
+                           
+                        elseif line:find( "^require%s+%(" ) then
+                           inBlock = BlockKind.Require
+                        elseif line:find( "^replace%s+[^%(]" ) then
+                           getReplace( replaceMap, tokenList, 2, gomodDir )
+                        elseif line:find( "^replace%s+%(" ) then
+                           inBlock = BlockKind.Replace
+                        end
+                        
                      end
-                     
-                  elseif line:find( "^require%s+%(" ) then
-                     inBlock = BlockKind.Require
-                  elseif line:find( "^replace%s+[^%(]" ) then
-                     getReplace( replaceMap, tokenList, 2 )
-                  elseif line:find( "^replace%s+%(" ) then
-                     inBlock = BlockKind.Replace
                   end
                   
                end
+               
+               file:close(  )
             end
-            
          end
          
-         file:close(  )
       end
    end
+   
    
    local modInfo = ModInfo._new(name, requireMap, replaceMap)
    return modInfo

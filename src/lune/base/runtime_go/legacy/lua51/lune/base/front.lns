@@ -200,7 +200,13 @@ loadedMap で管理する前にシステムにロードされているため、
          }
       }
       self.moduleMgr = new ModuleMgr();
-      self.gomodMap = GoMod.getGoMap();
+      let gomodDir;
+      if option.scriptPath ~= "" {
+         gomodDir = Util.parentPath( option.scriptPath );
+      } else {
+         gomodDir = "";
+      }
+      self.gomodMap = GoMod.getGoMap( gomodDir );
       DependLuaOnLns.addGoModPath( self.gomodMap.getModPathList() );
       
       self.option = option;
@@ -1195,12 +1201,14 @@ pub fn Front.loadMeta(
 
             when! meta {
 	       self.moduleMgr.addMeta( orgMod, meta );
-               if self.option.mode == .Exec {
-                  // self.regConvertedMap 時間短縮のため、 .Exec のときのみ
-                  // luaCode を登録する。
-                  when! luaPath {
-                     if! let luaCode = Util.readFile( luaPath ) {
-                        self.regConvertedMap( orgMod, luaCode, meta );
+               switch self.option.mode {
+                  case .Exec, .Shebang {
+                     // self.regConvertedMap 時間短縮のため、
+                     // 実行のときのみ luaCode を登録する。
+                     when! luaPath {
+                        if! let luaCode = Util.readFile( luaPath ) {
+                           self.regConvertedMap( orgMod, luaCode, meta );
+                        }
                      }
                   }
                }
@@ -1243,7 +1251,8 @@ pub fn Front.dumpTokenize( scriptPath:str, baseDir:str! ) mut {
       let! token = tokenizer.getToken() {
          break;
       };
-      Util.println( token.kind.$_txt, token.pos.lineNo, token.pos.column, token.txt );
+      Util.println( token.kind.$_txt, token.consecutive,
+                    token.pos.lineNo, token.pos.column, token.txt );
    }
 }
 

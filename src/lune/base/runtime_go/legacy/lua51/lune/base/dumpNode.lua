@@ -943,7 +943,8 @@ end
 
 function dumpFilter:processExpCast( node, opt )
 
-   self:dump( opt, node, string.format( "%s(%d) -> %s(%d)", node:get_exp():get_expType():getTxt( self:get_typeNameCtrl() ), node:get_exp():get_expType():get_typeId().id, node:get_castType():getTxt( self:get_typeNameCtrl() ), node:get_castType():get_typeId().id) )
+   self:dump( opt, node, string.format( "%s: %s(%d) -> %s(%d)", Nodes.CastKind:_getTxt( node:get_castKind())
+   , node:get_exp():get_expType():getTxt( self:get_typeNameCtrl() ), node:get_exp():get_expType():get_typeId().id, node:get_castType():getTxt( self:get_typeNameCtrl() ), node:get_castType():get_typeId().id) )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
 end
 

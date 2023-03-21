@@ -1470,6 +1470,21 @@ function convFilter:outputImplicitCast( castType, node, parent )
 
    do
       local _switchExp = castType:get_kind()
+      if _switchExp == Ast.TypeInfoKind.Class or _switchExp == Ast.TypeInfoKind.IF then
+         local castSrc = castType:get_nonnilableType():get_srcTypeInfo()
+         local orgSrc = node:get_expType():get_nonnilableType():get_srcTypeInfo()
+         if (castSrc:get_aliasSrc() ~= castSrc and castSrc:get_aliasSrc() == orgSrc ) or (orgSrc:get_aliasSrc() ~= orgSrc and orgSrc:get_aliasSrc() == castSrc ) then
+            
+            filter( node, self, parent )
+            return 
+         end
+         
+      end
+   end
+   
+   
+   do
+      local _switchExp = castType:get_kind()
       if _switchExp == Ast.TypeInfoKind.Nilable then
          self:outputImplicitCast( castType:get_nonnilableType(), node, parent )
       elseif _switchExp == Ast.TypeInfoKind.Class then
@@ -4201,7 +4216,12 @@ end
 
 function convFilter:getEnumGetTxtSym( enumType )
 
-   return string.format( "%s_getTxt", self:getTypeSymbol( enumType ))
+   local txt = string.format( "%s_getTxt", self:getTypeSymbol( enumType ))
+   if self:needPrefix( enumType:getModule(  ) ) then
+      return string.format( "%s.%s", self:getModuleName( enumType:getModule(  ), true ), txt)
+   end
+   
+   return txt
 end
 
 

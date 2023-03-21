@@ -217,6 +217,11 @@ pub fn setDefaultPipeSize( size:int ) {
    defaultPipeSize = size;
 }
 
+
+class MultiLineToken extend Types.Token {
+   let endPos:&Types.Position {pub};
+}
+
 pub class Tokenizer extend Async.Pipe<AsyncItem> {
    let streamName: str {pub};
    let mut lineNo : int;
@@ -363,12 +368,13 @@ pub fn create( tokenizerSrc:&Types.TokenizerSrc, stdinFile:&Types.StdinFile!,
    return tokenizer, mess;
 }
 
-
-
-
-fn Tokenizer.createInfo( mut tokenKind: Types.TokenKind,
-                      token: str, tokenColumn: int ) mut : Types.Token
+fn Tokenizer.createInfo(
+   mut tokenKind: Types.TokenKind, token: str,
+   tokenColumn: int, tokenLineNo:int!, endColumn:int! ) mut : Types.Token
 {
+   let! lineNo = tokenLineNo {
+      lineNo = self.lineNo;
+   };
    if tokenKind == .Symb {
       if self.keywordSet.has( token ) {
          tokenKind = .Kywd;
@@ -381,16 +387,34 @@ fn Tokenizer.createInfo( mut tokenKind: Types.TokenKind,
       }
    }
    let mut consecutive = false;
-   if self.prevToken.pos.lineNo == self.lineNo and
+   if self.prevToken.pos.lineNo == lineNo and
       self.prevToken.pos.column + #self.prevToken.txt == tokenColumn
    {
       consecutive = true;
+   } elseif self.prevToken.kind == .Str {
+      if! let multiLineToken = self.prevToken@@@MultiLineToken {
+         let endPos = multiLineToken.$endPos;
+         if endPos.lineNo == lineNo and endPos.column + 1 == tokenColumn {
+            consecutive = true;
+         }
+      }
    }
-   let mut newToken = new Types.Token(
-      tokenKind, token,
-      Types.Position.create(
-         self.lineNo, tokenColumn, self.streamName, self.overridePos ),
-      consecutive, [] );
+   let mut newToken:Types.Token;
+   when! tokenLineNo, endColumn {
+      newToken = new MultiLineToken(
+         tokenKind, token,
+         Types.Position.create(
+            lineNo, tokenColumn, self.streamName, self.overridePos ),
+         consecutive, [],
+         Types.Position.create(
+            self.lineNo, endColumn, self.streamName, self.overridePos ) );
+   } else {
+      newToken = new Types.Token(
+         tokenKind, token,
+         Types.Position.create(
+            lineNo, tokenColumn, self.streamName, self.overridePos ),
+         consecutive, [] );
+   }
    self.prevToken = newToken;
    return newToken;
 }
@@ -468,7 +492,7 @@ fn Tokenizer.addVal(
    list: List<Types.Token>, kind: Types.TokenKind, val: str, column: int ) mut
 {
    if kind ~= .Symb {
-      list.insert( self.createInfo( kind, val, column ) );
+      list.insert( self.createInfo( kind, val, column ## ) );
       return;
    }
    
@@ -495,7 +519,7 @@ fn Tokenizer.addVal(
             let endIndex, intFlag = self.analyzeNumber( token, checkIndex );
             let mut info = self.createInfo(
                intFlag and Types.TokenKind.Int or Types.TokenKind.Real,
-               token.sub( subIndex, endIndex ), columnIndex + subIndex );
+               token.sub( subIndex, endIndex ), columnIndex + subIndex ## );
             list.insert( info );
             subIndex = endIndex + 1;
          }
@@ -506,7 +530,7 @@ fn Tokenizer.addVal(
                if index > subIndex {
                   let mut info = self.createInfo(
                      .Symb, token.sub( subIndex, index - 1 ),
-                     columnIndex + subIndex );
+                     columnIndex + subIndex ## );
                   list.insert( info );
                }
                let mut delimit = token.sub( index, index );
@@ -539,19 +563,19 @@ fn Tokenizer.addVal(
                if delimit == "?" {
                   let nextChar = token.sub( index, subIndex );
                   list.insert( self.createInfo(
-                     .Char, nextChar, columnIndex + subIndex ) );
+                     .Char, nextChar, columnIndex + subIndex ## ) );
                   subIndex = subIndex + 1;
                }
                else {
                   list.insert( self.createInfo(
-                     workKind, delimit, columnIndex + index ) );
+                     workKind, delimit, columnIndex + index ## ) );
                }
             }
             else {
                if subIndex <= #token {
                   list.insert(
                      self.createInfo( .Symb, token.sub( subIndex ##),
-                                      columnIndex + subIndex ) );
+                                      columnIndex + subIndex ## ) );
                }
                break;
             }
@@ -664,10 +688,13 @@ pub fn Tokenizer.parse() mut : List<Types.Token>! {
          }
          elseif findChar == ?` {
             if ( nextChar == findChar and getChar( index + 2 ) == ?` ) { // '```'
-              // 複数行文字列の場合
-              let txt, nextIndex = multiComment( index + 3, '```' );
-              self.addVal( list, .Str, '```' .. txt, index );
-              searchIndex = nextIndex;
+               // 複数行文字列の場合
+               let lineNo = self.lineNo;
+               let txt, nextIndex = multiComment( index + 3, '```' );
+               //self.addVal( list, .Str, '```' .. txt, index );
+               list.insert(
+                  self.createInfo( .Str, '```' .. txt, index, lineNo, nextIndex - 1 ) );
+               searchIndex = nextIndex;
             } elseif nextChar == 123 { // {
                self.addVal( list, .Ope, '`{', index );
                searchIndex = index + 2;

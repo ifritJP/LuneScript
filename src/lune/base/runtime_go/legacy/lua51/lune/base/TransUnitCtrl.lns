@@ -836,7 +836,7 @@ pub fn TransUnitCtrl.createAST(
 
    fn createExportInfo(
       moduleSymboInfo:&Ast.SymbolInfo!, globalSymbolList:List<&Ast.SymbolInfo>,
-      processInfo:&Ast.ProcessInfo, ) __trans : Nodes.ExportInfo
+      processInfo:&Ast.ProcessInfo ) __trans : Nodes.ExportInfo
    {
       let provideInfo:frontInterface.ModuleProvideInfo;
       when! moduleSymboInfo {
