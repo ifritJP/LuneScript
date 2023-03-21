@@ -1,0 +1,5 @@
+_lune_control default_async_all;
+
+pub fn log(...) {
+   //print( ... );
+}

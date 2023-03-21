@@ -1,12 +1,14 @@
 // -*- coding: utf-8 -*-
 
 import lns.Ebnf;
+import lns.Parser;
+import lns.Code;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
 
 
 
-let ebnfCtrl = Ebnf.analyze_ebnf( Ebnf.EbnfTokenizer.create() );
+let ebnfCtrl = Parser.analyze_ebnf( Ebnf.EbnfTokenizer.create() );
 ebnfCtrl.dump();
 
 
@@ -34,4 +36,4 @@ let mut codeTokenizer = createTokenizerFromFile( "../../src/lune/base/front.lns"
 
 
 ebnfCtrl.parse(
-   "<code>", new Ebnf.CodeTokenizer( codeTokenizer ) );
+   "<code>", new Code.CodeTokenizer( codeTokenizer ) );

@@ -1,0 +1,189 @@
+// -*- coding: utf-8 -*-
+
+_lune_control default_async_all;
+
+import lns.Util;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+
+pub class CodeTokenizer {
+   /** コードの tokenizer 元 */
+   let tokenizer:LnsTokenizer.Tokenizer;
+   /** 読み込み済みの token のリスト */
+   let mut tokenList:List<&LnsTypes.Token>;
+   /**
+   tokenList のアクセス位置。
+   pushBack したときは、この位置を前後に動かす。
+   次の条件のときに、tokenList から token を読み出す。
+   1 <= tokenIndex <= #tokenList 
+   */ 
+   let mut tokenIndex:int;
+   /** コメントリスト。 次のコメント以外の token に付加する */
+   let mut commentList:__List<&LnsTypes.Token>;
+
+   pub fn __init(tokenizer:LnsTokenizer.Tokenizer) {
+      self.tokenizer = tokenizer;
+      self.tokenList = [];
+      self.commentList = [];
+      self.tokenIndex = 1;
+   }
+
+   /**
+   トークン取得
+
+コメントがある場合は、コメントを読み飛ばして次のトークンを取得する。
+   */
+   pub fn getToken() mut : &LnsTypes.Token {
+      if self.tokenIndex <= #self.tokenList {
+         let token = self.tokenList[ self.tokenIndex ];
+         self.tokenIndex = self.tokenIndex + 1;
+         return token;
+      }
+
+      fn process( token:&LnsTypes.Token ) : &LnsTypes.Token {
+         let result;
+         if #self.commentList == 0 {
+            result = token;
+         } else {
+            let newToken = new LnsTypes.Token(
+               token.kind, token.txt, token.pos, token.consecutive, self.commentList );
+            self.commentList = [];
+            result = newToken;
+         }
+         self.tokenList.insert( result );
+         self.tokenIndex = #self.tokenList + 1;
+         return result;
+      }
+      
+      while true {
+         let! token = self.tokenizer.getToken() {
+            token = LnsTypes.noneToken;
+         };
+         switch token.kind {
+            case .Eof {
+               return process(token);
+            }
+            case .Cmnt {
+               self.commentList.insert( token );
+            }
+            default {
+               return process(token);
+            }
+         } 
+      }
+   }
+
+   /**
+   現在のトークンを pushback する
+   */
+   pub fn pushback() mut {
+      Util.log( __func__, #self.tokenList, self.tokenIndex );
+      if self.tokenIndex <= 1 {
+         error( "illegal tokenIndex" );
+      }
+      self.tokenIndex = self.tokenIndex - 1;
+   }
+
+   pub fn peekToken() mut : &LnsTypes.Token {
+      if self.tokenIndex <= #self.tokenList {
+         let token = self.tokenList[ self.tokenIndex ];
+         return token;
+      }
+      let token = self.getToken();
+      self.pushback();
+      return token;
+   }
+}
+
+pub proto class CodeGenerator;
+
+pub interface CodeCore {
+   pub fn outputCode( stream:CodeGenerator );
+   pub fn pushback(tokenizer:CodeTokenizer);
+}
+
+pub class CodeGenerator {
+   let stream:oStream;
+   let tokenList:List<&LnsTypes.Token>;
+   let mut prevToken:&LnsTypes.Token;
+
+   pub fn __init( stream:oStream ) {
+      self.stream = stream;
+      self.tokenList = [];
+      self.prevToken = LnsTypes.noneToken;
+   }
+   
+   
+   pub fn output( codeCore:CodeCore ) mut {
+      codeCore.outputCode( self );
+   }
+   pub fn outputElement( elementName:str!, codeCoreList:&List<&CodeCore> ) mut {
+      foreach core in codeCoreList {
+         core.outputCode( self );
+      }
+   }
+   pub fn outputToken( token:&LnsTypes.Token ) mut {
+      if self.prevToken.pos.lineNo ~= token.pos.lineNo {
+         self.stream.write( "\n" );
+      } else {
+         if not token.consecutive {
+            self.stream.write( " " );
+         }
+      }
+      self.stream.write( token.txt );
+      self.tokenList.insert( token );
+      self.prevToken = token;
+   }
+}
+
+
+pub class CodeCoreStat extend (CodeCore) {
+   let list:&List<&LnsTypes.Token>;
+   pub fn outputCode( stream:CodeGenerator ) {
+      foreach token in self.list {
+         stream.outputToken( token );
+      }
+   }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      foreach _ in self.list {
+         tokenizer.pushback();
+      }
+   }
+}
+
+
+pub class CodeCoreBuiltin extend (CodeCore) {
+   let token:&LnsTypes.Token;
+   pub fn outputCode( stream:CodeGenerator ) {
+      stream.outputToken( self.token );
+   }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      tokenizer.pushback();
+   }
+}
+
+pub class CodeCoreToken extend (CodeCore) {
+//   let core:&Core;
+   let token:&LnsTypes.Token;
+   pub fn outputCode( stream:CodeGenerator ) {
+      stream.outputToken( self.token );
+   }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      Util.log( __func__, self.token.txt );
+      tokenizer.pushback();
+   }
+}
+pub class CodeCoreList extend (CodeCore) {
+   let elementName:str!;
+   let codeCoreList:&List<&CodeCore>;
+   pub fn outputCode( stream:CodeGenerator ) {
+      stream.outputElement( self.elementName, self.codeCoreList );
+   }
+   pub fn pushback(tokenizer:CodeTokenizer) {
+      Util.log( __func__, self.elementName );
+      for index = #self.codeCoreList, 1, -1 {
+         let codeCore = self.codeCoreList[ index ];
+         codeCore.pushback( tokenizer );
+      }
+   }
+}

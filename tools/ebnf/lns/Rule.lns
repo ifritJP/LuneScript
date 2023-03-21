@@ -1,0 +1,204 @@
+// -*- coding: utf-8 -*-
+
+_lune_control default_async_all;
+
+import lns.Ebnf;
+import lns.Code;
+import lns.Util;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+
+
+pub enum RuleKind {
+   // 0 or 1
+   Option,
+   // 0 以上
+   Repeat,
+}
+pub class RuleCore extend (Ebnf.Core) {
+   let kind:RuleKind;
+   let rule:Ebnf.RuleIF;
+   let candidate:Ebnf.Candidate {pub&};
+
+   pub fn __init( kind:RuleKind, rule:Ebnf.RuleIF ) {
+      self.kind = kind;
+      self.rule = rule;
+      self.candidate = new Ebnf.Candidate( true, false );
+   }
+
+   pub fn setupCandidate( ctrl:&Ebnf.EbnfCtrlIF,
+                          usedCoreSet:Set<&Ebnf.Core>) mut: &Ebnf.Candidate
+   {
+      self.candidate.add( self.rule.setupCandidate( ctrl, usedCoreSet ), false );
+      return self.candidate;
+   }
+   pub fn parseCode(
+      ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
+      usedElementSet:Set<&str> ) : Ebnf.ParseCodeRet
+   {
+      let list:List<&Code.CodeCore> = [];
+      while true {
+         let result = self.rule.parseCode( ctrl, tokenizer, usedElementSet );
+         _match result {
+            case .Eof {
+               if #list == 0 {
+                  return .Abbr;
+               } else {
+                  return .Detect( new Code.CodeCoreList( nil, list ) );
+               }
+            }
+            case .Unmatch {
+               if #list == 0 {
+                  return .Abbr;
+               } else {
+                  return .Detect( new Code.CodeCoreList( nil, list ) );
+               }
+            }
+            case .Abbr {
+               if #list == 0 {
+                  return .Abbr;
+               } else {
+                  return .Detect( new Code.CodeCoreList( nil, list ) );
+               }
+            }
+            case .Detect( codeCore ) {
+               Util.log( __func__, self.kind.$_txt  );
+               if self.kind == .Option {
+                  return result;
+               }
+               list.insert( codeCore );
+            }
+         }
+      }
+   }
+}
+
+
+/**
+ebnf の文
+
+以下の右辺の部分。
+
+<hoge> ::= "if" <exp> <block> 
+*/
+pub class Rule extend (Ebnf.RuleIF){
+   let elementName:str!;
+   let coreList:&List<Ebnf.Core>;
+
+   pub fn __init( elementName:str!, coreList:&List<Ebnf.Core> ) {
+      self.elementName = elementName;
+      self.coreList = coreList;
+   }
+
+   pub fn setupCandidate( ctrl:&Ebnf.EbnfCtrlIF,
+                          usedCoreSet:Set<&Ebnf.Core>) mut : &Ebnf.Candidate
+   {
+      let mut candidate = new Ebnf.Candidate( true, true );
+      foreach core in self.coreList {
+         let mut coreSet = usedCoreSet.clone();
+         let work = core.setupCandidate( ctrl, coreSet );
+         candidate.add( work, true );
+         if not work.$canAbbr {
+            break;
+         }
+      }
+      return candidate;
+   }
+
+   pub fn parseCode(
+      ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
+      usedElementSet:Set<&str> ) : Ebnf.ParseCodeRet
+   {
+      let codeCoreList:List<&Code.CodeCore> = [];
+      foreach core, index in self.coreList {
+         Util.log( __func__, index, #self.coreList ); 
+         _match core.parseCode(ctrl, tokenizer, usedElementSet ) {
+            case .Eof {
+               return .Eof;
+            }
+            case .Unmatch {
+               for coreIndex = #codeCoreList, 1, -1 {
+                  let codeCore = codeCoreList[ coreIndex ];
+                  codeCore.pushback( tokenizer );
+               }
+               return .Unmatch;
+            }
+            case .Abbr {
+            }
+            case .Detect( codeCore ) {
+               codeCoreList.insert( codeCore );
+            }
+         }
+      }
+      if #codeCoreList == 0 {
+         return .Abbr;
+      }
+      return .Detect( new Code.CodeCoreList( self.elementName, codeCoreList ) );
+   }
+}
+
+/**
+ebnf の文。 or で括られた Rule をまとめたもの。
+
+
+以下の <subfile_owner> と <subfile_sub> の部分。
+
+  <subfile> ::= <subfile_owner> | <subfile_sub>
+*/
+pub class RuleList extend (Ebnf.RuleListIF) {
+   let elementName:str;
+   let list:&List<Rule>;
+   let candidate:Ebnf.Candidate {pub&};
+
+   pub fn __init( elementName:str, list:&List<Rule> ) {
+      self.elementName = elementName;
+      self.list = list;
+      self.candidate = new Ebnf.Candidate( true, true );
+   }
+   
+   pub fn setupCandidate(
+      ctrl:&Ebnf.EbnfCtrlIF, usedCoreSet:Set<&Ebnf.Core>) mut : &Ebnf.Candidate
+   {
+      foreach rule in self.list {
+         self.candidate.add( rule.setupCandidate( ctrl, usedCoreSet ), true );
+      }
+      return self.candidate;
+   }
+   pub fn parseCode(
+      ctrl:&Ebnf.EbnfCtrlIF,
+      tokenizer:Code.CodeTokenizer, usedElementSet:Set<&str> ) : Ebnf.ParseCodeRet
+   {
+      if not self.candidate.has( tokenizer.peekToken() ) {
+         Util.log( __func__, "not found candidate -- ",
+              tokenizer.peekToken().txt, tokenizer.peekToken().kind.$_txt,
+              self.elementName );
+         if self.candidate.$canAbbr {
+            return .Abbr;
+         }
+         return .Unmatch;
+      }
+      
+      let mut result = Ebnf.ParseCodeRet.Unmatch;
+
+      foreach rule, index in self.list {
+         Util.log( "check -- ", index, #self.list, self.elementName );
+         _match rule.parseCode(ctrl, tokenizer, usedElementSet ) {
+            case .Eof {
+               return .Eof;
+            }
+            case .Unmatch {
+            }
+            case .Abbr {
+               result = .Abbr;
+               // error( "illegal abbr -- %s" ( self.elementName ) );
+            }
+            case .Detect( codeCore ) {
+               Util.log( "detect -- ", self.elementName );
+               return .Detect( codeCore );
+            }
+         }
+      }
+      Util.log( result.$_txt, " -- ", self.elementName );
+      return result;
+   }
+}

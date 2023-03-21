@@ -19,7 +19,7 @@ help:
 
 build:
 	@echo $(SRCS) | sed 's/ /\n/g' |	\
-		$(LNSC) @- save -langGo --main lns.main $(LNS_OPT)
+		$(LNSC) @- save -langGo -noLua --main lns.main $(LNS_OPT)
 	$(LNSC) lns/main.lns mkmain entry.go
 	go build -tags gopherlua -o formatter
 
