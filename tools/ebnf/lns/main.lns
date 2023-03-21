@@ -3,20 +3,19 @@
 import lns.Ebnf;
 import lns.Parser;
 import lns.Code;
+import lns.Util;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
 
-
-
-let ebnfCtrl = Parser.analyze_ebnf( Ebnf.EbnfTokenizer.create() );
-ebnfCtrl.dump();
-
-
 fn createTokenizer() : LnsTokenizer.Tokenizer {
    let lnsCode = ```
-Depend.setup( fn(ver:int) {
-   LuaVer.setCurVer( ver );
-});
+   profile(
+      validProf,
+      fn () {
+                                if self.option.scriptPath == "@-" {
+}
+}
+);
 ```;
    return LnsTokenizer.StreamTokenizer.create(
       LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ), false, nil, nil );
@@ -28,12 +27,90 @@ fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
 }
 
 
-// let mut codeTokenizer = createTokenizer();
-// let mut codeTokenizer = createTokenizerFromFile( "lns/main.lns" );
-// let mut codeTokenizer = createTokenizerFromFile( "lns/Ebnf.lns" );
-// let mut codeTokenizer = createTokenizerFromFile( "../../src/test/testGo.lns" );
-let mut codeTokenizer = createTokenizerFromFile( "../../src/lune/base/front.lns" );
+fn format( inpath:str, outpath:str, ebnfPath:str! ) : bool {
+   let mut tokenizer;
+   if inpath == "" {
+      tokenizer = createTokenizer();
+   } else {
+      tokenizer = createTokenizerFromFile( inpath );
+   }
+   
+   //let mut tokenizer = createTokenizer();
+   // let mut tokenizer = createTokenizerFromFile( "lns/main.lns" );
+   // let mut tokenizer = createTokenizerFromFile( "lns/Ebnf.lns" );
+   // let mut tokenizer = createTokenizerFromFile( "../../src/test/testGo.lns" );
+   // let mut tokenizer = createTokenizerFromFile( "../../src/lune/base/front.lns" );
+   // let mut tokenizer = createTokenizerFromFile( "../../src/lune/base/Nodes.lns" );
 
 
-ebnfCtrl.parse(
-   "<code>", new Code.CodeTokenizer( codeTokenizer ) );
+   let ebnfCtrl = Parser.analyze_ebnf(
+      Ebnf.EbnfTokenizer.create( ebnfPath ) );
+   // ebnfCtrl.dump();
+
+   let mut codeTokenizer = new Code.CodeTokenizer( tokenizer );
+   _match ebnfCtrl.parse( "<code>", codeTokenizer ) {
+      case .Eof {
+         Util.log( "eof" );
+      }
+      case .Unmatch {
+         Util.log( "unmatch" );
+      }
+      case .Abbr {
+         let pos = codeTokenizer.getToken().pos;
+         Util.log( "illegal", pos.lineNo, pos.column );
+      }
+      case .Detect( codeCore ) {
+         Util.log( "outputCode" );
+         if! let mut fileObj = io.open( outpath, "w" ) {
+            Code.outputCode( codeCore, new Code.CodeGenerator( fileObj ) );
+            fileObj.close();
+            Util.log( "" );
+            let token = codeTokenizer.getToken();
+            let pos = token.pos;
+            Util.log( "%d:%d" (pos.lineNo, pos.column), token.kind.$_txt );
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+fn usage( mess:str ) {
+   print( mess );
+   print( "" );
+   print( "usage: command inpath outpath" );
+   os.exit( 1 );
+}
+
+pub fn __main( argList:&_List<str> ) : int {
+   let optList:List<str> = [];
+   let mut ebnfPath:str! = nil;
+   let mut index = 1;
+   fn getNext() : str {
+      if index > #argList {
+         usage( "illegal option" );
+      }
+      let arg = argList[ index ];
+      index = index + 1;
+      return arg;
+   }
+   while index <= #argList {
+      let arg = getNext();
+      if arg == "-log" {
+         Util.setLog( true );
+      } elseif arg == "-ebnf" {
+         ebnfPath = getNext();
+      } else {
+         optList.insert( arg );
+      }
+   }
+
+   if #optList < 3 {
+      print( "usage: command inpath outpath" );
+      return 1;
+   }
+   if format( optList[ 2 ], optList[ 3 ], ebnfPath ) {
+      return 0;
+   }
+   return 1;
+}

@@ -883,6 +883,7 @@ endif
 
 test-new-proj:
 ifndef SKIP_PROJ_TEST
+	mkdir -p work/3/log
 	$(MAKE) -j1 -C work/3/test/proj/ test MKFILE=Makefile LUA=$(LUA) SRC_DIR= 2>&1 | \
 		grep -v /test/proj > work/3/log/proj
 else
@@ -975,7 +976,8 @@ endif
 test-parallel: test-org test-org-proj \
 			test-comp-go-new-2 test-comp-go-org-2 \
 			test-new test-new-proj test-new2 \
-			test-comp-go-new test-comp-go-org
+			test-comp-go-new test-comp-go-org \
+			test-formatter
 
 
 # 元の lnsc で test-go を実行
@@ -1161,6 +1163,8 @@ ifeq ($(WITH_GO),y)
 	diff -C 2 -I 'ONLY_LUA' -I 'DIFF_IGNORE' \
 		work/err_org/work/result-testGo.txt work/err_new/work/result-testGo.txt
 endif
+
+	$(MAKE) diff-formatter
 
 
 define setup-lua51-test
@@ -1421,10 +1425,6 @@ build-cc:
 	$(call convC,$(LNSC),.,ccc.lns)
 	$(call convC,$(LNSC),.,subC.lns)
 	$(call test-convC-exe,$(LNSC),.,ccc.lns subC.lns,ccc,ccc)
-
-test-formatter:
-	$(call cmd_exec_trans,$(LNSC),.,.,,base/Formatter)
-	$(call exeLune,$(LNSC),.,ccc.lns,format,) > work/format.lns
 
 define test-convC-test
 	$(call convC,$1,$2,$3.lns,--testing)
@@ -2003,3 +2003,58 @@ test-reference-sample:
 
 update-lnstags:
 	(../../lnstags/lnstags build lune/base/front.lns --log debug)
+
+
+test-formatter:
+	-rm -rf work/formatter
+	mkdir -p work/formatter/apply/lune/base
+	$(MAKE) test-formatter-prepare
+	$(MAKE) -C work/formatter test-formatter-sub
+
+
+work/formatter/apply/lune/base/%.lns: lune/base/%.lns
+	@echo formatter: "$< ==> $@"
+	@$(LNSC) ../tools/ebnf/lns/main.lns -shebang $< $@ -log > $@.log
+
+FORMAT_SRCS := $(shell find lune/base -maxdepth 1 -iname '*.lns' )
+FORMAT_SRCS := $(addprefix work/formatter/apply/,$(FORMAT_SRCS))
+
+# work/formatter/apply に formatter で変換したコードを出力し、
+# 変換後のソースをビルドする
+test-formatter-prepare: $(FORMAT_SRCS)
+# work/formatter/test/work/1 にビルド環境をコピー
+	cp Makefile work/formatter
+	cp -a test work/formatter
+	mkdir -p work/formatter/work/1
+	$(call cp_src_set,work/formatter/work/1,.)
+	cp -a lune work/formatter/work/1
+# work/formatter/apply/lune を work/formatter/work/1 に上書き
+	cp -a work/formatter/apply/lune work/formatter/work/1
+
+# work/formatter/work/1 から work/formatter/work/3 にビルド
+ifeq ($(WITH_GO),y)
+	cp $(LNSC_GO) work/formatter/work/1
+endif
+	mkdir -p work/formatter/work/3/lune/base
+	$(call cp_src_set,work/formatter/work/3,work/formatter/work/1)
+	$(call selfhost_buildOp_batch,work/formatter/work/1,$(LNSC),../3,-langGo)
+
+ifeq ($(WITH_GO),y)
+# work/formatter/work/3 で lnsc をビルド
+	$(call binding-lns-go,work/formatter/work/3)
+	-rm work/formatter/work/3/go.mod
+	$(call go-build-lns,work/formatter/work/3)
+endif
+
+	cp -a test work/formatter/work/3
+
+test-formatter-sub: test-new test-new-proj
+	cat work/3/log/proj >> work/test2.result
+
+
+diff-formatter:
+	diff work/test1.result work/formatter/work/test2.result
+	diff work/org-error.result work/formatter/work/new-error.result
+	diff work/ast1.result work/formatter/work/ast2.result
+	diff work/lua1.result work/formatter/work/lua2.result -I " _lune"
+

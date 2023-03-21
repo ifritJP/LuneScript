@@ -1,3 +1,6 @@
 {
-    "cmd_option": [ "--valid-luaval" ]
+    "cmd_option": [
+        "--valid-luaval",
+        "--enableAsyncCtl"
+    ]
 }

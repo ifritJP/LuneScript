@@ -49,36 +49,36 @@ var GoMod_GoModResult__NotGo_Obj = &GoMod_GoModResult__NotGo{}
 func (self *GoMod_GoModResult__NotGo) GetTxt() string {
 return "GoModResult.NotGo"
 }
-// for 314
-func GoMod_convExp0_1732(arg1 []LnsAny) LnsAny {
+// for 332
+func GoMod_convExp0_1933(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 176
-func GoMod_convExp0_838(arg1 []LnsAny) string {
+func GoMod_convExp0_852(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 173
-func GoMod_convExp0_800(arg1 []LnsAny) string {
+func GoMod_convExp0_814(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 248
-func GoMod_convExp0_1248(arg1 []LnsAny) (string, string) {
+func GoMod_convExp0_1262(arg1 []LnsAny) (string, string) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// for 320
-func GoMod_convExp0_1517(arg1 []LnsAny) string {
+// for 338
+func GoMod_convExp0_1714(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 74
-func GoMod_convExp0_335(arg1 []LnsAny) []LnsAny {
+func GoMod_convExp0_349(arg1 []LnsAny) []LnsAny {
     return Lns_2DDD( arg1[0:])
 }
 // for 147
-func GoMod_convExp0_636(arg1 []LnsAny) []LnsAny {
+func GoMod_convExp0_650(arg1 []LnsAny) []LnsAny {
     return Lns_2DDD( arg1[0:])
 }
 // 298: decl @lune.@base.@GoMod.getReplace
-func GoMod_getReplace_4_(_env *LnsEnv, _map *LnsMap2_[string,string],tokenList *LnsList2_[string],modIndex LnsInt) {
+func GoMod_getReplace_4_(_env *LnsEnv, _map *LnsMap2_[string,string],tokenList *LnsList2_[string],modIndex LnsInt,gomodDir string) {
     var prevArrow bool
     prevArrow = false
     for _, _token := range( tokenList.Items ) {
@@ -86,14 +86,39 @@ func GoMod_getReplace_4_(_env *LnsEnv, _map *LnsMap2_[string,string],tokenList *
         if token == "=>"{
             prevArrow = true
         } else if prevArrow{
-            _map.Set(tokenList.GetAt(modIndex),token)
+            _map.Set(tokenList.GetAt(modIndex),Util_pathJoin(_env, gomodDir, token))
             break
         }
     }
 }
 
-// 310: decl @lune.@base.@GoMod.getGoMap
-func GoMod_getGoMap(_env *LnsEnv) *GoMod_ModInfo {
+// 310: decl @lune.@base.@GoMod.searchGoMod
+func GoMod_searchGoMod_5_(_env *LnsEnv, path string) LnsAny {
+    __func__ := "@lune.@base.@GoMod.searchGoMod"
+    for  {
+        var gomodPath string
+        gomodPath = Util_pathJoin(_env, path, "go.mod")
+        Log_log(_env, Log_Level__Log, __func__, 313, Log_CreateMessage(func(_env *LnsEnv) string {
+            return _env.GetVM().String_format("gomodPath = %s", Lns_2DDD(gomodPath))
+        }))
+        
+        if Depend_existFile(_env, gomodPath){
+            return path
+        }
+        var work string
+        work = Util_parentPath(_env, path)
+        if work == path{
+            return nil
+        }
+        path = work
+    }
+// insert a dummy
+    return nil
+}
+
+// 325: decl @lune.@base.@GoMod.getGoMap
+func GoMod_getGoMap(_env *LnsEnv, path string) *GoMod_ModInfo {
+    __func__ := "@lune.@base.@GoMod.getGoMap"
     var requireMap *LnsMap2_[string,string]
     requireMap = NewLnsMap2_[string,string]( map[string]string{})
     var replaceMap *LnsMap2_[string,string]
@@ -101,61 +126,75 @@ func GoMod_getGoMap(_env *LnsEnv) *GoMod_ModInfo {
     var name string
     name = "lnsc"
     {
-        _file := GoMod_convExp0_1732(Lns_2DDD(Lns_io_open("go.mod", nil)))
-        if !Lns_IsNil( _file ) {
-            file := _file.(Lns_luaStream)
-            var inBlock LnsInt
-            inBlock = GoMod_BlockKind__None
-            for  {
-                var line string
-                
-                {
-                    _line := file.Read(_env, "*l")
-                    if _line == nil{
-                        break
-                    } else {
-                        line = _line.(string)
-                    }
-                }
-                var trimedLine string
-                trimedLine = GoMod_convExp0_1517(Lns_2DDD(_env.GetVM().String_gsub(line,"^%s", "")))
-                var tokenList *LnsList2_[string]
-                tokenList = Util_splitStr(_env, trimedLine, "[^%s]+")
-                if _switch0 := inBlock; _switch0 == GoMod_BlockKind__Require {
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^%)", nil, nil))){
-                        inBlock = GoMod_BlockKind__None
-                    } else { 
-                        requireMap.Set(tokenList.GetAt(1),tokenList.GetAt(2))
-                    }
-                } else if _switch0 == GoMod_BlockKind__Replace {
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^%)", nil, nil))){
-                        inBlock = GoMod_BlockKind__None
-                    } else { 
-                        GoMod_getReplace_4_(_env, replaceMap, tokenList, 1)
-                    }
-                } else if _switch0 == GoMod_BlockKind__None {
-                    if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^module%s+", nil, nil))){
-                        name = tokenList.GetAt(2)
-                    } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^require%s+[^%(]", nil, nil))){
-                        if tokenList.Len() == 3{
-                            requireMap.Set(tokenList.GetAt(2),tokenList.GetAt(3))
+        _gomodDir := GoMod_searchGoMod_5_(_env, path)
+        if !Lns_IsNil( _gomodDir ) {
+            gomodDir := _gomodDir.(string)
+            Log_log(_env, Log_Level__Log, __func__, 330, Log_CreateMessage(func(_env *LnsEnv) string {
+                return _env.GetVM().String_format("gomodDir = %s", Lns_2DDD(gomodDir))
+            }))
+            
+            var gomodPath string
+            gomodPath = Util_pathJoin(_env, gomodDir, "go.mod")
+            {
+                _file := GoMod_convExp0_1933(Lns_2DDD(Lns_io_open(gomodPath, nil)))
+                if !Lns_IsNil( _file ) {
+                    file := _file.(Lns_luaStream)
+                    var inBlock LnsInt
+                    inBlock = GoMod_BlockKind__None
+                    for  {
+                        var line string
+                        
+                        {
+                            _line := file.Read(_env, "*l")
+                            if _line == nil{
+                                break
+                            } else {
+                                line = _line.(string)
+                            }
                         }
-                    } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^require%s+%(", nil, nil))){
-                        inBlock = GoMod_BlockKind__Require
-                    } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^replace%s+[^%(]", nil, nil))){
-                        GoMod_getReplace_4_(_env, replaceMap, tokenList, 2)
-                    } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^replace%s+%(", nil, nil))){
-                        inBlock = GoMod_BlockKind__Replace
+                        var trimedLine string
+                        trimedLine = GoMod_convExp0_1714(Lns_2DDD(_env.GetVM().String_gsub(line,"^%s", "")))
+                        var tokenList *LnsList2_[string]
+                        tokenList = Util_splitStr(_env, trimedLine, "[^%s]+")
+                        if _switch0 := inBlock; _switch0 == GoMod_BlockKind__Require {
+                            if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^%)", nil, nil))){
+                                inBlock = GoMod_BlockKind__None
+                            } else { 
+                                requireMap.Set(tokenList.GetAt(1),tokenList.GetAt(2))
+                            }
+                        } else if _switch0 == GoMod_BlockKind__Replace {
+                            if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^%)", nil, nil))){
+                                inBlock = GoMod_BlockKind__None
+                            } else { 
+                                GoMod_getReplace_4_(_env, replaceMap, tokenList, 1, gomodDir)
+                            }
+                        } else if _switch0 == GoMod_BlockKind__None {
+                            if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^module%s+", nil, nil))){
+                                name = tokenList.GetAt(2)
+                            } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^require%s+[^%(]", nil, nil))){
+                                if tokenList.Len() == 3{
+                                    requireMap.Set(tokenList.GetAt(2),tokenList.GetAt(3))
+                                }
+                            } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^require%s+%(", nil, nil))){
+                                inBlock = GoMod_BlockKind__Require
+                            } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^replace%s+[^%(]", nil, nil))){
+                                GoMod_getReplace_4_(_env, replaceMap, tokenList, 2, gomodDir)
+                            } else if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(line,"^replace%s+%(", nil, nil))){
+                                inBlock = GoMod_BlockKind__Replace
+                            }
+                        }
                     }
+                    file.Close(_env)
                 }
             }
-            file.Close(_env)
         }
     }
     var modInfo *GoMod_ModInfo
     modInfo = NewGoMod_ModInfo(_env, name, requireMap, replaceMap)
     return modInfo
 }
+
+
 
 
 
@@ -173,13 +212,13 @@ func (self *GoMod_ModInfo) getGoModPath(_env *LnsEnv, ver string,mod string) *Ln
             for _, _aChar := range( NewLnsList2_[LnsAny](Lns_2Slice[LnsAny]( Lns_2DDD(_env.GetVM().String_byte(mod,1, len(mod))))).Items ) {
                 aChar := _aChar
                 if aChar != nil{
-                    aChar_107 := aChar.(LnsInt)
+                    aChar_112 := aChar.(LnsInt)
                     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                        _env.SetStackVal( aChar_107 >= 65) &&
-                        _env.SetStackVal( aChar_107 <= 90) ).(bool)){
-                        gomod = _env.GetVM().String_format("%s!%c", Lns_2DDD(gomod, aChar_107 - 65 + 97))
+                        _env.SetStackVal( aChar_112 >= 65) &&
+                        _env.SetStackVal( aChar_112 <= 90) ).(bool)){
+                        gomod = _env.GetVM().String_format("%s!%c", Lns_2DDD(gomod, aChar_112 - 65 + 97))
                     } else { 
-                        gomod = _env.GetVM().String_format("%s%c", Lns_2DDD(gomod, aChar_107))
+                        gomod = _env.GetVM().String_format("%s%c", Lns_2DDD(gomod, aChar_112))
                     }
                 }
             }
@@ -247,13 +286,13 @@ func (self *GoMod_ModInfo) getLocalModulePathList(_env *LnsEnv, path string) *Ln
                     for _, _aChar := range( NewLnsList2_[LnsAny](Lns_2Slice[LnsAny]( Lns_2DDD(_env.GetVM().String_byte(mod,1, len(mod))))).Items ) {
                         aChar := _aChar
                         if aChar != nil{
-                            aChar_137 := aChar.(LnsInt)
+                            aChar_142 := aChar.(LnsInt)
                             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-                                _env.SetStackVal( aChar_137 >= 65) &&
-                                _env.SetStackVal( aChar_137 <= 90) ).(bool)){
-                                gomod = _env.GetVM().String_format("%s!%c", Lns_2DDD(gomod, aChar_137 - 65 + 97))
+                                _env.SetStackVal( aChar_142 >= 65) &&
+                                _env.SetStackVal( aChar_142 <= 90) ).(bool)){
+                                gomod = _env.GetVM().String_format("%s!%c", Lns_2DDD(gomod, aChar_142 - 65 + 97))
                             } else { 
-                                gomod = _env.GetVM().String_format("%s%c", Lns_2DDD(gomod, aChar_137))
+                                gomod = _env.GetVM().String_format("%s%c", Lns_2DDD(gomod, aChar_142))
                             }
                         }
                     }
@@ -273,11 +312,11 @@ func (self *GoMod_ModInfo) convPath(_env *LnsEnv, mod string,suffix string) stri
 // 171: decl @lune.@base.@GoMod.ModInfo.getProjRootPath
 func (self *GoMod_ModInfo) getProjRootPath(_env *LnsEnv, mod string,path string)(string, string) {
     var convPath string
-    convPath = GoMod_convExp0_800(Lns_2DDD(_env.GetVM().String_gsub(self.FP.convPath(_env, mod, ".lns"),"github%.com/[^/]+/[^/]+/", "")))
+    convPath = GoMod_convExp0_814(Lns_2DDD(_env.GetVM().String_gsub(self.FP.convPath(_env, mod, ".lns"),"github%.com/[^/]+/[^/]+/", "")))
     var projRoot string
     projRoot = _env.GetVM().String_sub(path,1, len(path) - len(convPath))
     if projRoot != "/"{
-        projRoot = GoMod_convExp0_838(Lns_2DDD(_env.GetVM().String_gsub(projRoot,"/$", "")))
+        projRoot = GoMod_convExp0_852(Lns_2DDD(_env.GetVM().String_gsub(projRoot,"/$", "")))
     }
     path = Util_parentPath(_env, path)
     var modList *LnsList2_[string]
@@ -320,17 +359,17 @@ func (self *GoMod_ModInfo) ConvLocalModulePath(_env *LnsEnv, mod string,suffix s
     __func__ := "@lune.@base.@GoMod.ModInfo.convLocalModulePath"
     if Lns_op_not(Lns_car(_env.GetVM().String_find(mod,"^go/", nil, nil))){
         if baseDir != nil{
-            baseDir_158 := baseDir.(string)
+            baseDir_163 := baseDir.(string)
             var goModDir LnsAny
             goModDir = nil
-            goModDir = self.goModDir2Path.Get(baseDir_158)
+            goModDir = self.goModDir2Path.Get(baseDir_163)
             if goModDir != nil{
-                goModDir_161 := goModDir.(string)
-                mod = _env.GetVM().String_format("go/%s.%s", Lns_2DDD(Lns_car(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(goModDir_161,"%.", ":")).(string),"/", ".")).(string), mod))
+                goModDir_166 := goModDir.(string)
+                mod = _env.GetVM().String_format("go/%s.%s", Lns_2DDD(Lns_car(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(goModDir_166,"%.", ":")).(string),"/", ".")).(string), mod))
             }
             if Lns_op_not(goModDir){
                 Log_log(_env, Log_Level__Log, __func__, 220, Log_CreateMessage(func(_env *LnsEnv) string {
-                    return _env.GetVM().String_format("not found baseDir -- %s", Lns_2DDD(baseDir_158))
+                    return _env.GetVM().String_format("not found baseDir -- %s", Lns_2DDD(baseDir_163))
                 }))
                 
             }
@@ -352,8 +391,8 @@ func (self *GoMod_ModInfo) ConvLocalModulePath(_env *LnsEnv, mod string,suffix s
     pathList = self.FP.getLocalModulePathList(_env, workMod)
     if Lns_op_not(Lns_car(_env.GetVM().String_find(mod,"^go/", nil, nil))){
         if baseDir != nil{
-            baseDir_172 := baseDir.(string)
-            pathList.Insert(Util_pathJoin(_env, baseDir_172, workMod))
+            baseDir_177 := baseDir.(string)
+            pathList.Insert(Util_pathJoin(_env, baseDir_177, workMod))
         }
     }
     pathList.Insert(Util_pathJoin(_env, "vendor", workMod))

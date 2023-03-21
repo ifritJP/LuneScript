@@ -295,64 +295,83 @@ enum BlockKind {
    Replace,
 }
 
-fn getReplace( map:Map<str,str>, tokenList:&List<str>, modIndex:int ) {
+fn getReplace( map:Map<str,str>, tokenList:&List<str>, modIndex:int, gomodDir:str ) {
    let mut prevArrow = false;
    foreach token in tokenList {
       if token == "=>" {
          prevArrow = true;
       } elseif prevArrow {
-         map[ tokenList[ modIndex ] ] = token;
+         map[ tokenList[ modIndex ] ] = Util.pathJoin( gomodDir, token );
          break;
       }
    }
 }
 
-pub fn getGoMap() : ModInfo {
+fn searchGoMod( mut path:str ) : str! {
+   while true {
+      let gomodPath = Util.pathJoin( path, "go.mod" );
+      Log._log2( .Log, "gomodPath = %s" (gomodPath) );
+      if Depend.existFile( gomodPath ) {
+         return path;
+      }
+      let work = Util.parentPath( path );
+      if work == path {
+         return nil;
+      }
+      path = work;
+   }
+}
+
+pub fn getGoMap( path:str ) : ModInfo {
    let mut requireMap:Map<str,str> = {};
    let mut replaceMap:Map<str,str> = {};
    let mut name = "lnsc";
-   if! let mut file = io.open( "go.mod"## ) {
-      let mut inBlock = BlockKind.None;
-      while true {
-         let! line = file.read( "*l" ) {
-            break;
-         };
-         let trimedLine = line.gsub( "^%s", "" );
-         let tokenList = Util.splitStr( trimedLine, "[^%s]+" );
-         _switch inBlock {
-            case .Require {
-               if line.find( "^%)"## ) {
-                  inBlock = .None;
-               } else {
-                  requireMap[ tokenList[ 1 ] ] = tokenList[ 2 ];
-               }
-            }
-            case .Replace {
-               if line.find( "^%)"## ) {
-                  inBlock = .None;
-               } else {
-                  getReplace( replaceMap, tokenList, 1 );
-               }
-            }
-            case .None {
-               if line.find( "^module%s+" ## ) {
-                  name = tokenList[ 2 ];
-               } elseif line.find( "^require%s+[^%(]"## ) {
-                  if #tokenList == 3 {
-                     requireMap[ tokenList[ 2 ] ] = tokenList[ 3 ];
+   if! let gomodDir = searchGoMod( path ) {
+      Log._log2( .Log, "gomodDir = %s" (gomodDir) );
+      let gomodPath = Util.pathJoin( gomodDir, "go.mod" );
+      if! let mut file = io.open( gomodPath ## ) {
+         let mut inBlock = BlockKind.None;
+         while true {
+            let! line = file.read( "*l" ) {
+               break;
+            };
+            let trimedLine = line.gsub( "^%s", "" );
+            let tokenList = Util.splitStr( trimedLine, "[^%s]+" );
+            _switch inBlock {
+               case .Require {
+                  if line.find( "^%)"## ) {
+                     inBlock = .None;
+                  } else {
+                     requireMap[ tokenList[ 1 ] ] = tokenList[ 2 ];
                   }
-               } elseif line.find( "^require%s+%("## ) {
-                  inBlock = .Require;
-               } elseif line.find( "^replace%s+[^%(]"## ) {
-                  getReplace( replaceMap, tokenList, 2 );
-               } elseif line.find( "^replace%s+%("## ) {
-                  inBlock = .Replace;
+               }
+               case .Replace {
+                  if line.find( "^%)"## ) {
+                     inBlock = .None;
+                  } else {
+                     getReplace( replaceMap, tokenList, 1, gomodDir );
+                  }
+               }
+               case .None {
+                  if line.find( "^module%s+" ## ) {
+                     name = tokenList[ 2 ];
+                  } elseif line.find( "^require%s+[^%(]"## ) {
+                     if #tokenList == 3 {
+                        requireMap[ tokenList[ 2 ] ] = tokenList[ 3 ];
+                     }
+                  } elseif line.find( "^require%s+%("## ) {
+                     inBlock = .Require;
+                  } elseif line.find( "^replace%s+[^%(]"## ) {
+                     getReplace( replaceMap, tokenList, 2, gomodDir );
+                  } elseif line.find( "^replace%s+%("## ) {
+                     inBlock = .Replace;
+                  }
                }
             }
          }
+         file.close();
       }
-      file.close();
-   }
+   };
    let mut modInfo = new ModInfo( name, requireMap, replaceMap );
    return modInfo;
 }

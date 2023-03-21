@@ -1,4 +1,5 @@
 LNSC=lnsc
+LNSTAGS=lnstags
 
 SRCS=
 SRCS += $(shell find lns -iname '*.lns')
@@ -14,6 +15,7 @@ endif
 
 help:
 	@echo make build [LNS_OPT=opt]
+	@echo make update_lnstags
 	@echo make clean
 
 
@@ -25,3 +27,6 @@ build:
 
 clean:
 	-rm $(GO_SRCS)
+
+update_lnstags:
+	$(LNSTAGS) build lns/main.lns --log log

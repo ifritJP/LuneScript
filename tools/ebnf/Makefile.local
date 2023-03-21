@@ -1,11 +1,13 @@
 # -*-makefile-*-
 LUA_PATH=./?.lua;$(HOME)/work/LuneScript/src/?.lua
 LNSC=../../src/lnsc
+LNSTAGS=../../../lnstags/lnstags
+
 
 help_sub: help
 	@echo make test
 
 
 test:
-	$(LNSC) lns/main.lns exe
+	$(LNSC) lns/main.lns -shebang lns/main.lns dummy.lns
 

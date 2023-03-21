@@ -742,7 +742,12 @@ local function parentPath( path )
       path = path:gsub( "/$", "" )
    end
    
-   return (path:gsub( "/[^/]+$", "" ) )
+   local parent = path:gsub( "/[^/]+$", "" )
+   if parent == path then
+      return "./"
+   end
+   
+   return parent
 end
 _moduleObj.parentPath = parentPath
 

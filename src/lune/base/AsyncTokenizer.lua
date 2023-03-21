@@ -399,6 +399,57 @@ local function setDefaultPipeSize( size )
 end
 _moduleObj.setDefaultPipeSize = setDefaultPipeSize
 
+local MultiLineToken = {}
+setmetatable( MultiLineToken, { __index = Types.Token } )
+function MultiLineToken._setmeta( obj )
+  setmetatable( obj, { __index = MultiLineToken  } )
+end
+function MultiLineToken._new( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5,endPos )
+   local obj = {}
+   MultiLineToken._setmeta( obj )
+   if obj.__init then
+      obj:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5,endPos )
+   end
+   return obj
+end
+function MultiLineToken:__init( __superarg1, __superarg2, __superarg3, __superarg4, __superarg5,endPos )
+
+   Types.Token.__init( self, __superarg1, __superarg2, __superarg3, __superarg4, __superarg5 )
+   self.endPos = endPos
+end
+function MultiLineToken:get_endPos()
+   return self.endPos
+end
+function MultiLineToken:_toMap()
+  return self
+end
+function MultiLineToken._fromMap( val )
+  local obj, mes = MultiLineToken._fromMapSub( {}, val )
+  if obj then
+     MultiLineToken._setmeta( obj )
+  end
+  return obj, mes
+end
+function MultiLineToken._fromStem( val )
+  return MultiLineToken._fromMap( val )
+end
+
+function MultiLineToken._fromMapSub( obj, val )
+   local result, mes = Types.Token._fromMapSub( obj, val )
+   if not result then
+      return nil, mes
+   end
+
+   local memInfo = {}
+   table.insert( memInfo, { name = "endPos", func = Types.Position._fromMap, nilable = false, child = {} } )
+   local result, mess = _lune._fromMap( obj, val, memInfo )
+   if not result then
+      return nil, mess
+   end
+   return obj
+end
+
+
 local Tokenizer = {}
 setmetatable( Tokenizer, { __index = Async.Pipe } )
 _moduleObj.Tokenizer = Tokenizer
@@ -595,8 +646,15 @@ local function create( tokenizerSrc, stdinFile, overridePos, async )
 end
 _moduleObj.create = create
 
-function Tokenizer:createInfo( tokenKind, token, tokenColumn )
+function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endColumn )
 
+   local lineNo = tokenLineNo
+   if  nil == lineNo then
+      local _lineNo = lineNo
+   
+      lineNo = self.lineNo
+   end
+   
    if tokenKind == Types.TokenKind.Symb then
       if _lune._Set_has(self.keywordSet, token ) then
          tokenKind = Types.TokenKind.Kywd
@@ -609,11 +667,30 @@ function Tokenizer:createInfo( tokenKind, token, tokenColumn )
    end
    
    local consecutive = false
-   if self.prevToken.pos.lineNo == self.lineNo and self.prevToken.pos.column + #self.prevToken.txt == tokenColumn then
+   if self.prevToken.pos.lineNo == lineNo and self.prevToken.pos.column + #self.prevToken.txt == tokenColumn then
       consecutive = true
+   elseif self.prevToken.kind == Types.TokenKind.Str then
+      do
+         local multiLineToken = _lune.__Cast( self.prevToken, 3, MultiLineToken )
+         if multiLineToken ~= nil then
+            local endPos = multiLineToken:get_endPos()
+            if endPos.lineNo == lineNo and endPos.column + 1 == tokenColumn then
+               consecutive = true
+            end
+            
+         end
+      end
+      
    end
    
-   local newToken = Types.Token._new(tokenKind, token, Types.Position.create( self.lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {})
+   local newToken
+   
+   if tokenLineNo ~= nil and endColumn ~= nil then
+      newToken = MultiLineToken._new(tokenKind, token, Types.Position.create( lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {}, Types.Position.create( self.lineNo, endColumn, self.streamName, self.overridePos ))
+   else
+      newToken = Types.Token._new(tokenKind, token, Types.Position.create( lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {})
+   end
+   
    self.prevToken = newToken
    return newToken
 end
@@ -914,8 +991,10 @@ function Tokenizer:parse(  )
          elseif findChar == 96 then
             if (nextChar == findChar and getChar( index + 2 ) == 96 ) then
                
+               local lineNo = self.lineNo
                local txt, nextIndex = multiComment( index + 3, '```' )
-               self:addVal( list, Types.TokenKind.Str, '```' .. txt, index )
+               
+               table.insert( list, self:createInfo( Types.TokenKind.Str, '```' .. txt, index, lineNo, nextIndex - 1 ) )
                searchIndex = nextIndex
             elseif nextChar == 123 then
                self:addVal( list, Types.TokenKind.Ope, '`{', index )

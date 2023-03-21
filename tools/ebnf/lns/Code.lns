@@ -84,6 +84,10 @@ pub class CodeTokenizer {
       self.tokenIndex = self.tokenIndex - 1;
    }
 
+   /**
+次に getToken() した時に取得できる token を返す。
+peekToken() を複数回連続実行しても同じ token を返す。
+   */
    pub fn peekToken() mut : &LnsTypes.Token {
       if self.tokenIndex <= #self.tokenList {
          let token = self.tokenList[ self.tokenIndex ];
@@ -97,46 +101,221 @@ pub class CodeTokenizer {
 
 pub proto class CodeGenerator;
 
+/**
+Parse 結果の一つの要素。
+*/
 pub interface CodeCore {
    pub fn outputCode( stream:CodeGenerator );
    pub fn pushback(tokenizer:CodeTokenizer);
 }
 
+class CodeIndentInfo {
+   let endTxt:str {pub};
+   let indent:int {pub};
+}
+
+class ElementIndentInfo {
+   let mut indent:int {pub, local};
+   let mut hasToken:bool {pub,local};
+}
+
+/**
+CodeCore からソースコードを出力する
+*/
 pub class CodeGenerator {
    let stream:oStream;
    let tokenList:List<&LnsTypes.Token>;
    let mut prevToken:&LnsTypes.Token;
+   let indentStack:List<&CodeIndentInfo>;
+   let indentPairMap:Map<str,str>;
+   let baseIndent:int;
+   let mut colmun:int;
+   let elementIndent:List<ElementIndentInfo>;
 
    pub fn __init( stream:oStream ) {
       self.stream = stream;
       self.tokenList = [];
       self.prevToken = LnsTypes.noneToken;
+      self.indentStack = [ new CodeIndentInfo( "", 0 ) ];
+      self.elementIndent = [ new ElementIndentInfo( 0, false) ];
+      self.baseIndent = 3;
+      self.colmun = 0;
+      self.indentPairMap = {
+         "{": "}",
+         "`{":"}",
+         "[":"]",
+         "(":")",
+         "(@":")",
+         "(=":")",
+      };
+   }
+
+   fn pushElementIndent() mut {
+      self.elementIndent.insert( new ElementIndentInfo( self.colmun + 1, false ) );
+   }
+   fn popElementIndent() mut {
+      self.elementIndent.remove( ## );
+   }
+   fn peekElementIndent() mut : ElementIndentInfo {
+      return self.elementIndent[ #self.elementIndent ];
+   }
+   fn peekElementIndentRO() : &ElementIndentInfo {
+      return self.elementIndent[ #self.elementIndent ];
+   }
+
+
+   fn curIndent( term:bool ) : int {
+      let indent;
+      let elementIndent = self.peekElementIndentRO();
+      if elementIndent.$hasToken {
+         indent = elementIndent.$indent;
+      } else {
+         indent = 0;
+      }
+      let work = self.indentStack[ #self.indentStack ].$indent;
+      if term {
+         return work;
+      }
+      if indent > work {
+         return indent;
+      }
+      return work;
+   }
+   fn isIndentEnd( token:&LnsTypes.Token ) : bool {
+      let endTxt = self.indentStack[ #self.indentStack ].$endTxt;
+      return token.txt == endTxt;
+   }
+   fn popIndent() mut {
+      let indentInfo = self.indentStack[ #self.indentStack ];
+      Util.log( __func__, indentInfo.$endTxt );
+      self.indentStack.remove(##);
+   }
+   fn pushIndent( endTxt:str, pos:int ) mut {
+      Util.log( __func__, endTxt, pos );
+      self.indentStack.insert( new CodeIndentInfo( endTxt, pos ) );
    }
    
-   
-   pub fn output( codeCore:CodeCore ) mut {
-      codeCore.outputCode( self );
-   }
    pub fn outputElement( elementName:str!, codeCoreList:&List<&CodeCore> ) mut {
+      let pushedElementIndent;
+      if elementName == "<exp>" {
+         pushedElementIndent = true;
+         self.pushElementIndent();
+      } else {
+         pushedElementIndent = false;
+      }
       foreach core in codeCoreList {
          core.outputCode( self );
       }
+      if pushedElementIndent {
+         self.popElementIndent();
+      }
    }
-   pub fn outputToken( token:&LnsTypes.Token ) mut {
-      if self.prevToken.pos.lineNo ~= token.pos.lineNo {
-         self.stream.write( "\n" );
-      } else {
-         if not token.consecutive {
-            self.stream.write( " " );
+
+
+   fn processIndentCur( token:&LnsTypes.Token, newLine:bool ) mut : int {
+      {
+         let indentPos;
+         if newLine {
+            indentPos = self.curIndent( false ) + self.baseIndent;
+         } else {
+            indentPos = self.colmun + 1;
+         }
+         if! let endTxt = self.indentPairMap[ self.prevToken.txt ] {
+            self.pushIndent( endTxt, indentPos );
          }
       }
-      self.stream.write( token.txt );
+      if self.isIndentEnd( token ) {
+         self.popIndent();
+         return self.curIndent( true );
+      }
+
+      return self.curIndent( false );
+   }
+
+   fn writeRaw( txt:str, validToken:bool ) mut {
+      if validToken {
+         self.peekElementIndent().set_hasToken( true );
+      }
+      self.colmun = self.colmun + #txt;
+      self.stream.write( txt );
+   }
+   fn writeRawln( num:int ) mut {
+      self.colmun = 0;
+      self.stream.write( "\n" );
+      if num > 1 {
+         self.stream.write( "\n" );
+      }
+
+      let mut elementIndent = self.peekElementIndent();
+      if not elementIndent.$hasToken {
+         elementIndent.set_indent( self.curIndent( false ) );
+      }
+   }
+   pub fn writeln() mut {
+      self.writeRawln( 0 );
+   }
+
+   fn isNewLine( token:&LnsTypes.Token ) : bool {
+      if self.prevToken == LnsTypes.noneToken {
+         return false;
+      }
+      let mut prevLineNo = self.prevToken.pos.lineNo;
+      switch self.prevToken.kind {
+         case .Str {
+            if self.prevToken.txt[ 1 ] == ?` {
+               __luaLock {
+                  apply _ of self.prevToken.txt.gmatch( "\n" ) {
+                     prevLineNo = prevLineNo + 1;
+                  }
+               }
+            }
+         }
+      }
+      return prevLineNo ~= token.pos.lineNo;
+   }
+   
+   pub fn outputToken( token:&LnsTypes.Token ) mut {
+      foreach comment in token.$commentList {
+         self.outputToken( comment );
+      }
+      if token.kind == .Eof {
+         return;
+      }
+      if self.isNewLine( token ) {
+         Util.log( __func__,
+                   self.prevToken.kind.$_txt, self.prevToken.pos.lineNo,
+                   token.kind.$_txt, token.pos.lineNo );
+         self.writeRawln(token.pos.lineNo - self.prevToken.pos.lineNo );
+         self.writeRaw( string.rep( " ", self.processIndentCur( token, true ) ), false );
+      } else {
+         self.processIndentCur( token, false );
+
+         if not token.consecutive and self.prevToken ~= LnsTypes.noneToken {
+            self.writeRaw( " ", false );
+         }
+      }
+      if token.kind == .Char {
+         switch token.txt {
+            case "'", '"', '\\' {
+               self.writeRaw( "?\\%s" (token.txt), true );
+            }
+            default {
+               self.writeRaw( "?%s" (token.txt), true );
+            }
+         }
+      } else {
+         self.writeRaw( token.txt, token.kind ~= .Cmnt );
+      }
+      //if token.kind ~= .Cmnt{
       self.tokenList.insert( token );
       self.prevToken = token;
+      //}
    }
 }
 
-
+/**
+`{} を保持する CodeCore。
+*/
 pub class CodeCoreStat extend (CodeCore) {
    let list:&List<&LnsTypes.Token>;
    pub fn outputCode( stream:CodeGenerator ) {
@@ -151,7 +330,9 @@ pub class CodeCoreStat extend (CodeCore) {
    }
 }
 
-
+/**
+builtin の token を保持する CodeCore。
+*/
 pub class CodeCoreBuiltin extend (CodeCore) {
    let token:&LnsTypes.Token;
    pub fn outputCode( stream:CodeGenerator ) {
@@ -162,8 +343,10 @@ pub class CodeCoreBuiltin extend (CodeCore) {
    }
 }
 
+/**
+token を保持する CodeCore。
+*/
 pub class CodeCoreToken extend (CodeCore) {
-//   let core:&Core;
    let token:&LnsTypes.Token;
    pub fn outputCode( stream:CodeGenerator ) {
       stream.outputToken( self.token );
@@ -173,6 +356,10 @@ pub class CodeCoreToken extend (CodeCore) {
       tokenizer.pushback();
    }
 }
+
+/**
+elementName の CodeCore リストを保持する CodeCore。
+*/
 pub class CodeCoreList extend (CodeCore) {
    let elementName:str!;
    let codeCoreList:&List<&CodeCore>;
@@ -186,4 +373,9 @@ pub class CodeCoreList extend (CodeCore) {
          codeCore.pushback( tokenizer );
       }
    }
+}
+
+pub fn outputCode( codeCore:&CodeCore, stream:CodeGenerator ) {
+   codeCore.outputCode( stream );
+   stream.writeln();
 }

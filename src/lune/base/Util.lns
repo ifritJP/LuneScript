@@ -468,7 +468,11 @@ pub fn parentPath( mut path:str ) : str {
    if path.find( "/$" ## ) {
       path = path.gsub( "/$", "" );
    }
-   return (path.gsub( "/[^/]+$", "" ));
+   let parent = path.gsub( "/[^/]+$", "" );
+   if parent == path {
+      return "./";
+   }
+   return parent;
 }
 
 pub fn searchProjDir( dir:str ) : str! {

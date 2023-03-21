@@ -1,0 +1,236 @@
+_lune_control default_async_all;
+
+import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+
+let ebnf = ```
+  <comment> ::= "//" <anytoken_br> | "/*" <anytoken> "*/"
+
+     <code> ::= [<shebang>] {<code_header>} {<stmt>} <eof>
+
+  <code_header> ::= <subfile> | <lune_control> | <import>
+
+  <shebang> ::= "#!" <token> <anytoken_br>
+
+  <import> ::= "import" <lazy_direct> [ "go" "/" ] <sym> { <import_dlmt> <sym> } [ "as" <sym> ] ";"
+  <import_dlmt> ::= "." | ":"
+
+
+  <subfile> ::= <subfile_owner> | <subfile_sub>
+  <subfile_owner> ::= "subfile" "owner" <module_path> ";"
+  <subfile_sub> ::= { "subfile" "use" <module_path> ";" }
+  <module_path> ::= <sym> { "." <sym> }
+
+  <stmt> ::= <decl_access> <declaration> | <test> | <block> | <super> |
+	   <asynclock> | <if> | <if_unwrap> | <when> | <switch> | <match> | <while> |
+	     <repeat> | <for> | <apply> | <foreach> | <forsort> | <return> |
+	     <break> | <unwrap_stmt> | <scope> | <lune_control> |
+             <test_block> |
+	     <none> | <stmt_exp>
+
+  <test_block> ::= "__test" [<sym> "(" <sym> ")" ] "{" {<import>} { <stmt> } "}"
+
+  <declaration> ::= <decl_var> | <decl_fn> | 
+		    <decl_class> | <decl_interface> | <decl_module> |
+		    <decl_proto> | <decl_macro> | <alge> | <form> | <alias> | <decl_enum>
+
+
+  <decl_access> ::= [<access>] ["static"]
+  <decl_macro> ::= "macro" <sym> "(" [ <decl_arg_list> ] ")"
+		   [ ":" <reftype_list> ] "{" [ <block> ] <stat> "}"
+  <fn_attrib> ::= [<decl_async>] ["mut"]
+  <form> ::= "form" <sym> [<generics>] "(" [ <decl_arg_list> ] ")"
+		<fn_attrib> [":" <reftype_list>] ";"
+  <decl_fn> ::= ["override"] "fn" [ <sym> "." ] <sym> [<generics>] "(" [ <decl_arg_list> ] ")"
+		<fn_attrib> [":" <reftype_list>] <decl_fn_body>
+  <decl_fn_body> ::= <block> | ";"
+
+  <decl_class_attrib> ::= [ "abstract" ] [ "final" ]
+
+  <decl_class> ::= <decl_class_attrib> "class" <sym> [<generics>] 
+		   [ "extend" [<type>] ["("<type_list> ")" ] ] "{" { <class_field> } "}"
+  <decl_proto> ::= "proto" <decl_class_attrib> <decl_proto_class_if> <sym> [<generics>] 
+		   [ "extend" [<type>] ["("<type_list> ")" ] ] ";"
+  <decl_proto_class_if> ::= "class" | "interface"
+  <decl_interface> ::= "interface" <sym> [<generics>] 
+		       [ "extend" <type> ] "{" { <decl_access> <if_field> } "}"
+  <decl_module> ::= "module" <lazy_direct> <sym> "require" <literal_str>
+		       "{" { <decl_access> <module_field> } "}"
+  <lazy_direct> ::= [ "." "l" ] | [ "." "d" ]
+  <alge> ::= "alge" <sym> [<generics>] "{" { <alge_val> [","] } "}"
+  <alias> ::= "alias" <sym> "=" <reftype> ";"
+  <decl_enum> ::= "enum" <sym> "{" {<enum_val> [ "," ] } "}"
+  <decl_member> ::= "let" <decl_sym> [ "{" <accessor> ["," <accessor>] "}" ] ";"
+  <decl_method> ::= [ "abstract" ] ["override"] "fn" <sym> [<generics>]
+		    "(" [ <decl_arg_list> ] ")" <fn_attrib> [":" 
+		    <reftype_list>] <decl_method_body>
+  <decl_var> ::= "let" <decl_sym_list> [ "=" <exp_list> ] ";" |
+	       "let" "!" <decl_sym_list> "=" <exp_list> <block> [ "then" <block> ] [ "else" <block> ] ";"
+
+  <decl_async> ::= "__async" | "__noasync" | "__trans"
+
+  <test> ::= "__test" <sym> "(" <sym> ")" <block>
+
+  <block> ::= "{" { <stmt> } "}"
+  <super> ::= "super" <arg_list> ";"
+
+  <arg_paren_begin> ::= "(" | "$("
+  <arg_list> ::=<arg_paren_begin> [ <arg> {"," <arg>} ] ["##"] ")"
+  <arg> ::= <exp>
+
+  <asynclock> ::= "__asyncLock" <block> |
+		  "__luago" <block> | 
+		  "__luaLock" <block> | 
+		  "__luaDepend" <block>
+  <if> ::= "if" <exp> <block> { "elseif" <exp> <block> } [ "else" <block> ]
+  <if_unwrap> ::= "if" "!" [ "let" <decl_sym_list> "=" ] <exp_list> <block> [ "else" <block> ]
+  <sym_list> ::= <sym> { "," <sym> }
+  <when> ::= "when" "!" <exp_list> <block> [ "else" <block> ]
+  <switch> ::= <switch_keyword> <exp> "{" { "case" <exp_list> <block> }
+	       [ "default" <block> ] "}"
+  <switch_keyword> ::= "switch" | "_switch"
+
+
+  <exp_list> ::= <exp> { "," <exp> }
+  <match> ::= <match_keyword> <exp> "{" { <match_case> } [ "default" <block> ] "}"
+  <match_case> ::= "case" <match_case_val> <block>
+  <match_case_val> ::= [ <type> ] "." <sym> ["(" <sym_list> ")"]
+  <match_keyword> ::= "match" | "_match"
+  <sym_list> ::= <sym> { "," <exp> }	      
+  <while> ::= "while" <exp> <block>
+  <repeat> ::= "repeat" <block> <exp> ";"
+  <for> ::= "for" <sym> "=" <exp> "," <exp> [ "," <exp> ] <block>
+  <apply> ::= "apply" <sym_list> "of" <exp> <block>
+  <foreach> ::= "foreach" <sym_list> "in" <exp> <block>
+  <forsort> ::= "forsort" <sym_list> "in" <exp> <block>
+  <return> ::= "return" [<exp_list>] ";"
+  <break> ::= "break" ";"
+  <unwrap_stmt> ::= "unwrap" "!" <sym_list> "=" <exp_list> <block> ";"
+  <scope> ::= "__scope" "root" "(" <sym_list> ")" <block>
+  <lune_control> ::= "_lune_control" <sym> <anytoken> ";"
+  <none> ::= ";"
+  <stmt_exp> ::= <exp_list> [ "=" <exp_list> ] ";"
+
+  <anytoken> ::= { <token> }
+
+
+
+  <decl_sym_list> ::= <decl_sym> { "," <decl_sym> }
+  <decl_sym> ::= [<decl_sym_mut>] <sym> [":" <reftype>]
+  <decl_sym_mut> ::= "mut" | "allmut"
+
+
+  <reftype_list> ::= <reftype> { "," <reftype> }
+
+  <decl_arg_list> ::= <decl_arg> { "," <decl_arg> }
+
+  <decl_arg> ::= ["mut"] <sym> ":" <reftype> | <decl_arg_ddd>
+  <decl_arg_ddd> ::= "..." [ "<" <reftype> ">"]
+
+  <type_list> ::= <type> { "," <type> }
+  <type> ::= <sym> { "." <sym> } [<generics>]
+
+  <class_field> ::= <decl_access> <decl_field> | <init_block> | <advertise> |
+		    <lune_control> | <exp_macro> | <none>
+
+  <decl_field> ::= <decl_member> | <decl_method> | <decl_enum> 
+
+  <init_block> ::= "__init" <block>
+
+  <exp_macro> ::= <sym> "(" <exp_list> ")"
+
+
+
+  <if_field> ::= <decl_access> <decl_method>
+
+  <module_field> ::= <decl_member> | <decl_method> 
+
+  <generics> ::= "<" <generics_decl> {"," <generics_decl>} ">"
+
+  <generics_decl_one> ::= <reftype> [ ":" ["("] <reftype> [")"] ]
+  <generics_decl> ::= <sym> "=" <generics_decl_one> | <generics_decl_one>
+
+  <advertise> ::= "advertise" <sym> ";"
+
+
+  <alge_val> ::= <sym> [ "(" { <alge_val_param> [ "," ]  }")" ]
+
+  <alge_val_param> ::= <sym> ":" <reftype> | <reftype>
+
+  <decl_tuple> ::= "(" <decl_tuple_item> {"," <decl_tuple_item> } ")"
+  <decl_tuple_item> ::= <sym> ":" <reftype> | <reftype>
+
+  <reftype> ::= ["&"] <reftype_raw> [<reftype_suffix>] ["!"]
+  <reftype_raw> ::= <decl_tuple> | <type> [<set_generics>]
+  <reftype_suffix> ::= "[" "]" | "[@" "]"
+
+
+  <set_generics> ::= "<" <reftype> { "," <reftype> } ">"
+
+  <access> ::= "global" | "pub" | "pro" | "pri" | "local"
+
+
+  <enum_val> ::= <sym> [ "=" <exp> ]
+
+
+  <accessor> ::= <accessor_kind> ["&"] [ ":" <reftype> ]
+  <accessor_kind> ::= "non" | "pub" | "pri" | "pro" | "local"
+
+  <decl_method_body> ::= <block> | ";"
+
+
+
+  <exp> ::= <exp_wrap>
+  <exp_wrap> ::= [<op1>] <exp_single> { <op2> <exp_wrap> }
+  <exp_single> ::= <exp_one> { <exp_suffix> }
+  <exp_one> ::= "..." | <omit_enum> | <const_list> | <const_array> | <const_set> | 
+		<const_tuple> | <const_map> |
+		<paren> | <new> | <literal_int> | <literal_real > |
+		<literal_char> | <const_str> | 
+		<unwrap> | <anonymous_func> | 
+		<literal_bool> | "nil" | "null" | "##" | 
+                <stat_block> | <block> | <reftype> | <ref_sym>
+  <stat_block> ::= "`{" <stat> "}"
+  <const_str> ::= <literal_str> [ <arg_list>]
+  <exp_suffix> ::= [<ref_sym_dlmt> <exp_one>] [ <ref_index> ] [ <call> ] 
+		   [ "!" ] ["..." [ "**"] ] [<cast>]
+  <ref_index_begin> ::= "[" | "$["
+  <ref_index> ::= <ref_index_begin> <exp> "]"
+  <call> ::= [<set_generics>] <arg_list> ["**"]
+
+  <new> ::= "new" <type> [<set_generics>] <arg_list>
+
+  <omit_enum> ::= "." <sym>
+  <paren> ::= "(" <exp> ")"
+  <ref_sym> ::= <sym> { <ref_sym_dlmt> <sym> }
+  <ref_sym_dlmt> ::= "." | ".$" | "$." | "$.$"
+
+  <cast> ::= <cast_op> <reftype>
+  <cast_op> ::= "@@" | "@@=" | "@@@"
+
+  <anonymous_func> ::= "fn" [<generics>] "(" [ <decl_arg_list> ] ")"
+		       <fn_attrib> [":" <reftype_list>] <block>
+
+
+  <unwrap> ::= "unwrap" <exp> [default <exp>]
+
+  <const_list> ::= "[" [<exp_list>] "]"
+  <const_map> ::= "{" {<const_map_entry>} "}"
+  <const_map_entry> ::= <exp> ":" <exp> [ "," ]
+  <const_set> ::= "(@" [<exp_list>] ")"
+  <const_array> ::= "[@" [<exp_list>] "]"
+  <const_tuple> ::= "(=" [<exp_list>] ")"
+
+  <literal_bool> ::= true | false
+
+  <op1> ::= "not" | "#" | "~" | ",," | ",,," | ",,,,"
+
+  <op2> ::= "+" | "-" | "*" | "/" | "^" | "%" | "&" | "~" |
+	    "|" | "|>>" | "|<<" | ".." |
+	    "<" | "<=" | ">" | ">=" | "==" | "~=" | "and" | "or"
+
+```;
+
+
+pub fn getEbnfSrc() : LnsTypes.TokenizerSrc {
+   return LnsTypes.TokenizerSrc.LnsCode( ebnf, "", nil );
+}

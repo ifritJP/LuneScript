@@ -1249,7 +1249,7 @@ fn setupOpLevel() : &Map<str,int>, &Map<str,int> {
    let op1levelMapWork:Map<str,int> = {};
    
    let mut opLevelBase = 0;
-   fn regOpLevel( opnum: int, opList: str[@] ) __trans {
+   fn regOpLevel( opnum: int, opList: Array<str> ) __trans {
       opLevelBase = opLevelBase + 1;
       if opnum == 1 {
          foreach op in opList {

@@ -242,7 +242,7 @@ fn glueGenerator.outputMethod( node:&Nodes.Node, gluePrefix:str ) mut {
    self.outputPrototype( node );
    self.write( "{\n" );
 
-   let mut glueArgInfoList:GlueArgInfo[] = [];
+   let mut glueArgInfoList:List<GlueArgInfo> = [];
    foreach argNode, index in declInfo.$argList {
       let typeTxt, argTypeTxt, argType, argName = self.getArgInfo( argNode );
       if typeTxt ~= "" {

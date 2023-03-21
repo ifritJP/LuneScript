@@ -24,8 +24,12 @@ func Util_convExp0_1789(arg1 []LnsAny) LnsAny {
 func Util_convExp0_1852(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 480
-func Util_convExp0_2067(arg1 []LnsAny) string {
+// for 471
+func Util_convExp0_2025(arg1 []LnsAny) string {
+    return Lns_getFromMulti( arg1, 0 ).(string)
+}
+// for 484
+func Util_convExp0_2082(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 62
@@ -216,10 +220,15 @@ func Util_parentPath(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
         path = Util_convExp0_2009(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
     }
-    return Lns_car(_env.GetVM().String_gsub(path,"/[^/]+$", "")).(string)
+    var parent string
+    parent = Util_convExp0_2025(Lns_2DDD(_env.GetVM().String_gsub(path,"/[^/]+$", "")))
+    if parent == path{
+        return "./"
+    }
+    return parent
 }
 
-// 474: decl @lune.@base.@Util.searchProjDir
+// 478: decl @lune.@base.@Util.searchProjDir
 func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
     var work string
     work = dir
@@ -228,7 +237,7 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
             return work
         }
         var parent string
-        parent = Util_convExp0_2067(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
+        parent = Util_convExp0_2082(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
         if parent == work{
             return nil
         }

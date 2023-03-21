@@ -1,5 +1,13 @@
 _lune_control default_async_all;
 
+let mut validLog = false;
+
+pub fn setLog( valid:bool ) {
+   validLog = valid;
+}
+
 pub fn log(...) {
-   //print( ... );
+   if validLog {
+      print( ... );
+   }
 }

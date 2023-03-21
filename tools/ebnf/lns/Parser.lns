@@ -111,32 +111,14 @@ pub fn EbnfCtrl.dump() {
    }
 }
 
-pub fn EbnfCtrl.parse( elementName:str, tokenizer:Code.CodeTokenizer ) {
+pub fn EbnfCtrl.parse(
+   elementName:str, tokenizer:Code.CodeTokenizer ) : Ebnf.ParseCodeRet
+{
    let! ruleList = self.element2ruleList[ elementName ] {
       Util.log( "error parse" );
-      return;
+      return .Unmatch;
    };
-   _match ruleList.parseCode( self, tokenizer, (@) ) {
-      case .Eof {
-         Util.log( "eof" );
-      }
-      case .Unmatch {
-         Util.log( "unmatch" );
-      }
-      case .Abbr {
-         let pos = tokenizer.getToken().pos;
-         Util.log( "illegal", pos.lineNo, pos.column );
-      }
-      case .Detect( codeCore ) {
-         Util.log( "outputCode" );
-         codeCore.outputCode( new Code.CodeGenerator( io.stdout ) );
-         io.stdout.flush();
-         Util.log( "" );
-         let token = tokenizer.getToken();
-         let pos = token.pos;
-         Util.log( "%d:%d" (pos.lineNo, pos.column), token.kind.$_txt );
-      }
-   }
+   return ruleList.parseCode( self, tokenizer, (@) );
 }
 
 pub fn EbnfCtrl.setupCandidate() mut {

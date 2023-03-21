@@ -4,23 +4,34 @@ _lune_control default_async_all;
 
 import lns.Util;
 import lns.Code;
+import lns.EbnfDef;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+
+pub let defaultEbnfPath = "../../../ifritJP.github.io/hugo/content/LuneScript/ebnf.ja.org";
 
 pub class EbnfTokenizer {
    let tokenizer:LnsTokenizer.PushbackTokenizer;
    let mut inEbnf:bool {pub,pub};
 
-   fn __init( tokenizer:LnsTokenizer.Tokenizer ) {
+   fn __init( tokenizer:LnsTokenizer.Tokenizer, inEbnf:bool ) {
       self.tokenizer = new LnsTokenizer.DefaultPushbackTokenizer( tokenizer );
-      self.inEbnf = false;
+      self.inEbnf = inEbnf;
    }
 
-   pub static fn create() : EbnfTokenizer {
-      let path = "../../../ifritJP.github.io/hugo/content/LuneScript/ebnf.ja.org";
+   pub static fn create( path:str! ) : EbnfTokenizer {
+      let src;
+      let inEbnf;
+      when! path {
+         src = LnsTypes.TokenizerSrc.LnsPath( nil, path, "ebnf", nil );
+         inEbnf = false;
+      } else {
+         src = EbnfDef.getEbnfSrc();
+         inEbnf = true;
+      }
       let mut tokenizer = LnsTokenizer.StreamTokenizer.create(
-         LnsTypes.TokenizerSrc.LnsPath( nil, path, "ebnf", nil ), false, nil, nil );
-      return new EbnfTokenizer( tokenizer );
+         src, false, nil, nil );
+      return new EbnfTokenizer( tokenizer, inEbnf );
    }
 
    pri fn checkRawNext( txt:str ) mut : &LnsTypes.Token {
@@ -105,6 +116,8 @@ pub alge ParseCodeRet {
 
 pub class Candidate {
    let txtSet:Set<str>;
+   let excludeTxtSet:Set<str>;
+   let mut hasExcludeTxt:bool;
    let tokenKindSet:Set<LnsTypes.TokenKind>;
    let mut canAbbr:bool {pub};
    let mut any:bool {pub};
@@ -112,6 +125,8 @@ pub class Candidate {
    pub fn __init(canAbbr:bool, any:bool ) {
       self.canAbbr = canAbbr;
       self.txtSet = (@);
+      self.excludeTxtSet = (@);
+      self.hasExcludeTxt = false;
       self.tokenKindSet = (@);
       self.any = any;
    }
@@ -119,12 +134,18 @@ pub class Candidate {
    pub fn addTxt( txt:str ) mut {
       self.txtSet.add( txt) ;
    }
+   pub fn addExcludeTxt( txt:str ) mut {
+      self.excludeTxtSet.add( txt) ;
+      self.hasExcludeTxt = true;
+   }
    pub fn addTokenKind( kind:LnsTypes.TokenKind ) mut {
       self.tokenKindSet.add( kind ) ;
    }
    pub fn add( other:&Candidate, validAbbr:bool ) mut {
       self.txtSet.or( other.txtSet );
       self.tokenKindSet.or( other.tokenKindSet );
+      self.excludeTxtSet.or( other.excludeTxtSet );
+      self.hasExcludeTxt = other.hasExcludeTxt;
       if validAbbr {
          self.canAbbr = self.canAbbr and other.canAbbr;
       }
@@ -132,6 +153,9 @@ pub class Candidate {
    }
 
    pub fn hasTxt( txt:str ) : bool {
+      if self.hasExcludeTxt {
+         return not self.excludeTxtSet.has( txt );
+      }
       return self.txtSet.has( txt );
    }
    pub fn hasKind( kind:LnsTypes.TokenKind ) : bool {
@@ -262,15 +286,15 @@ class BuiltinTokenKindCore extend (Core) {
 
 class BuiltinTokenCore extend (Core) {
    let elementName:str;
-   let tokenTxtSet:__Set<str>;
+   //let excludeTxtSet:__Set<str>;
    let candidate:Candidate {pub&};
 
-   pub fn __init( elementName:str, tokenTxtSet:__Set<str> ) {
+   pub fn __init( elementName:str, excludeTxtSet:__Set<str> ) {
       self.elementName = elementName;
-      self.tokenTxtSet = tokenTxtSet;
+      //self.excludeTxtSet = excludeTxtSet;
       self.candidate = new Candidate( false, false );
-      foreach kind in tokenTxtSet {
-         self.candidate.addTxt( kind );
+      foreach txt in excludeTxtSet {
+         self.candidate.addExcludeTxt( txt );
       }
    }
 
@@ -282,7 +306,8 @@ class BuiltinTokenCore extend (Core) {
       usedElementSet:Set<&str>):ParseCodeRet
    {
       let token = tokenizer.getToken();
-      if not self.tokenTxtSet.has( token.txt ) {
+      //if not self.excludeTxtSet.has( token.txt ) {
+      if self.candidate.hasTxt( token.txt ) {
          Util.log( __func__, "detect", self.elementName );
          return .Detect( new Code.CodeCoreBuiltin( token ) );
       }
@@ -339,6 +364,7 @@ class BuiltinCore {
       {
          let map:__Map<str,__Set<LnsTypes.TokenKind>> = {
             "<shebang>": (@ .Sheb),
+            "<eof>": (@ .Eof ),
             "<sym>": (@ .Symb, .Type, .Kywd, .Ope ),
             "<literal_str>": (@ .Str ),
             "<literal_int>": (@ .Int ),
@@ -355,9 +381,9 @@ class BuiltinCore {
          let map:__Map<str,__Set<str>> = {
             "<token>": (@ ";"),
          };
-         foreach tokenTxtSet, elementName in map {
+         foreach excludeTxtSet, elementName in map {
             BuiltinCore.elementNameMap[ "<token>" ] = new BuiltinTokenCore(
-               elementName, tokenTxtSet );
+               elementName, excludeTxtSet );
          }
       }
       BuiltinCore.elementNameMap[ "<stat>" ] = new BuiltinStatCore();
@@ -397,7 +423,7 @@ pub class ElementCore extend (Core) {
       return core;
    }
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate {
-      print( __func__, self.elementName );
+      Util.log( __func__, self.elementName );
       if not usedCoreSet.has( self ) {
          usedCoreSet.add( self );
          if! let mut ruleList = ctrl.getRuleList( self.elementName ) {
