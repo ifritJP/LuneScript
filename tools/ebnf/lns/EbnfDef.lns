@@ -81,17 +81,23 @@ let ebnf = ```
 		  "__luago" <block> | 
 		  "__luaLock" <block> | 
 		  "__luaDepend" <block>
-  <if> ::= "if" <exp> <block> { "elseif" <exp> <block> } [ "else" <block> ]
-  <if_unwrap> ::= "if" "!" [ "let" <decl_sym_list> "=" ] <exp_list> <block> [ "else" <block> ]
+  <if> ::= <if_base> { <if_elseif> } [ <if_else> ]
+  <if_base> ::= "if" <exp> <block>
+  <if_elseif> ::= "elseif" <exp> <block>
+  <if_else> ::= "else" <block>
+  <if_unwrap> ::= <if_unwrap_base> [ <if_else> ]
+  <if_unwrap_base> ::= "if" "!" [ "let" <decl_sym_list> "=" ] <exp_list> <block>
   <sym_list> ::= <sym> { "," <sym> }
   <when> ::= "when" "!" <exp_list> <block> [ "else" <block> ]
-  <switch> ::= <switch_keyword> <exp> "{" { "case" <exp_list> <block> }
-	       [ "default" <block> ] "}"
+  <switch> ::= <switch_keyword> <exp> "{" { <switch_case> }
+	       [ <default> ] "}"
+  <switch_case> ::= "case" <exp_list> <block>
   <switch_keyword> ::= "switch" | "_switch"
+  <default> ::= "default" <block>
 
 
   <exp_list> ::= <exp> { "," <exp> }
-  <match> ::= <match_keyword> <exp> "{" { <match_case> } [ "default" <block> ] "}"
+  <match> ::= <match_keyword> <exp> "{" { <match_case> } [ <default> ] "}"
   <match_case> ::= "case" <match_case_val> <block>
   <match_case_val> ::= [ <type> ] "." <sym> ["(" <sym_list> ")"]
   <match_keyword> ::= "match" | "_match"

@@ -627,6 +627,53 @@ pattern は  {, }, {{, }} のいずれか。
 	))))
 
 (defvar lns-indent-region-running nil)
+
+
+
+(defun lns-process-line-test ()
+  ;;; formater を使ったインデントテスト
+  (let (command-list workbuf lns-code json-obj indent)
+    (save-excursion
+      (end-of-line)
+      (setq lns-code (concat (buffer-substring-no-properties (point-min) (point))
+			     " ___LNS___"
+			     (buffer-substring-no-properties (point) (point-max))
+			     " ___LNS___"
+			     )))
+    (setq command-list
+	  (list (expand-file-name "~/work/LuneScript/tools/ebnf/lns/main.lns")
+		"-shebang" "@-" (format "%d" (lns-get-line)) ""))
+    (setq workbuf (lns-get-buffer "*lns-process*" t))
+    (lns-execute-command nil workbuf lns-code command-list )
+
+    (with-current-buffer workbuf
+      (setq json-obj
+	  (let ((json-object-type 'plist)
+		(json-array-type 'list))
+	    (json-read-from-string
+	     (buffer-substring-no-properties (point-min) (point-max))))))
+
+
+    (setq indent (1- (plist-get (plist-get json-obj :indent) :column)))
+    (save-excursion
+      (indent-line-to indent))
+  ))
+(defun lns-indent-region-test ()
+  (interactive)
+  (let* ((start (region-beginning))
+	 (end (region-end)))
+    (save-excursion
+      (goto-char start)
+      (lns-process-line-test)
+      (while (and (forward-line)
+		  (< (point) end))
+	(message (format "%d" (lns-get-line) ))
+	(lns-process-line-test))
+      )))
+
+
+
+
 (defun lns-indent-line (&optional force)
   (if (and (not force)
 	   (not lns-indent-region-running)

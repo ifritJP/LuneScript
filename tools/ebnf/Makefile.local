@@ -4,10 +4,16 @@ LNSC=../../src/lnsc
 LNSTAGS=../../../lnstags/lnstags
 
 
+INFILE=lns/main.lns
+
 help_sub: help
 	@echo make test
+	@echo make test_log
 
 
 test:
-	$(LNSC) lns/main.lns -shebang lns/main.lns dummy.lns
+	$(LNSC) lns/main.lns -shebang "$(INFILE)" dummy.lns
+
+test_log:
+	$(LNSC) lns/main.lns -shebang -log "$(INFILE)" dummy.lns
 

@@ -4,18 +4,46 @@ import lns.Ebnf;
 import lns.Parser;
 import lns.Code;
 import lns.Util;
+import lns.Formatter;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Depend as LnsDepend;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Util as LnsUtil;
 
 fn createTokenizer() : LnsTokenizer.Tokenizer {
    let lnsCode = ```
-   profile(
-      validProf,
-      fn () {
-                                if self.option.scriptPath == "@-" {
+{
+   if val.val2
+ {
+   }
+
+
+
+
+   else {
+}
+
+
+}
+let val = [ 
+  a
+
+];
+match hoge {
+
+   case .a  {
+
 }
 }
-);
+
+switch hoge {
+    case .a {
+}
+    case .b,
+.c ___LNS___
+{ 
+
+}
 ```;
    return LnsTokenizer.StreamTokenizer.create(
       LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ), false, nil, nil );
@@ -27,12 +55,23 @@ fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
 }
 
 
-fn format( inpath:str, outpath:str, ebnfPath:str! ) : bool {
+fn format( inpath:str, targetLineNo:int,
+           outpath:str, ebnfPath:str!, debugFlag:bool ) : bool
+{
    let mut tokenizer;
-   if inpath == "" {
-      tokenizer = createTokenizer();
-   } else {
-      tokenizer = createTokenizerFromFile( inpath );
+   switch inpath {
+      case "" {
+         tokenizer = createTokenizer();
+      }
+      case "@-" {
+         let lnsCode = io.stdin.read( "*a" ) or "";
+         tokenizer = LnsTokenizer.StreamTokenizer.create(
+            LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ),
+            false, nil, nil );
+      }
+      default {
+         tokenizer = createTokenizerFromFile( inpath );
+      }
    }
    
    //let mut tokenizer = createTokenizer();
@@ -43,12 +82,14 @@ fn format( inpath:str, outpath:str, ebnfPath:str! ) : bool {
    // let mut tokenizer = createTokenizerFromFile( "../../src/lune/base/Nodes.lns" );
 
 
-   let ebnfCtrl = Parser.analyze_ebnf(
-      Ebnf.EbnfTokenizer.create( ebnfPath ) );
-   // ebnfCtrl.dump();
+   let ebnfCtrl = Parser.analyze_ebnf( Ebnf.EbnfTokenizer.create( ebnfPath ) );
+   if debugFlag {
+      ebnfCtrl.dump();
+   }
 
    let mut codeTokenizer = new Code.CodeTokenizer( tokenizer );
-   _match ebnfCtrl.parse( "<code>", codeTokenizer ) {
+   let mut hook = new Formatter.ParseCodeHook( codeTokenizer, targetLineNo );
+   _match ebnfCtrl.parse( "<code>", hook, hook ) {
       case .Eof {
          Util.log( "eof" );
       }
@@ -62,7 +103,9 @@ fn format( inpath:str, outpath:str, ebnfPath:str! ) : bool {
       case .Detect( codeCore ) {
          Util.log( "outputCode" );
          if! let mut fileObj = io.open( outpath, "w" ) {
-            Code.outputCode( codeCore, new Code.CodeGenerator( fileObj ) );
+            let mut stream = new LnsUtil.memStream();
+            Code.outputCode( codeCore, new Code.CodeGenerator( stream ) );
+            fileObj.write( stream.$txt );
             fileObj.close();
             Util.log( "" );
             let token = codeTokenizer.getToken();
@@ -75,10 +118,10 @@ fn format( inpath:str, outpath:str, ebnfPath:str! ) : bool {
    return false;
 }
 
-fn usage( mess:str ) {
+fn usage( mess:str ) : __ {
    print( mess );
    print( "" );
-   print( "usage: command inpath outpath" );
+   print( "usage: command [-log] [-ebnf path] [-prof] inpath lineno outpath" );
    os.exit( 1 );
 }
 
@@ -86,6 +129,9 @@ pub fn __main( argList:&_List<str> ) : int {
    let optList:List<str> = [];
    let mut ebnfPath:str! = nil;
    let mut index = 1;
+   let mut prof = false;
+   let mut debugFlag = false;
+
    fn getNext() : str {
       if index > #argList {
          usage( "illegal option" );
@@ -97,7 +143,10 @@ pub fn __main( argList:&_List<str> ) : int {
    while index <= #argList {
       let arg = getNext();
       if arg == "-log" {
+         debugFlag = true;
          Util.setLog( true );
+      } elseif arg == "-prof" {
+         prof = true;
       } elseif arg == "-ebnf" {
          ebnfPath = getNext();
       } else {
@@ -106,11 +155,24 @@ pub fn __main( argList:&_List<str> ) : int {
    }
 
    if #optList < 3 {
-      print( "usage: command inpath outpath" );
-      return 1;
+      usage( "illegal argument" );
    }
-   if format( optList[ 2 ], optList[ 3 ], ebnfPath ) {
-      return 0;
+
+   let targetLineNo;
+   if! let num = tonumber( optList[ 3 ]## ) {
+      targetLineNo = num@@int;
+   } else {
+      usage( "lineno is not number" );
    }
-   return 1;
+
+   let mut exitCode = 1;
+   LnsDepend.profile(
+      prof, 
+      fn() {               
+         if format( optList[ 2 ], targetLineNo, optList[ 4 ], ebnfPath, debugFlag ) {
+            exitCode = 0;
+         }
+      }, "prof" );
+      
+   return exitCode;
 }

@@ -105,20 +105,23 @@ pub fn EbnfCtrl.dump() {
    forsort element in self.allElementSet {
       let ruleList = self.element2ruleList[ element ];
       Util.log( ruleList ~= nil, element );
-      when! ruleList {
-         ruleList.get_candidate().dump( io.stdout );
+      if! let core = self.elementName2Core[ element ] {
+         core.$candidate.dump( io.stdout );
       }
    }
 }
 
-pub fn EbnfCtrl.parse(
-   elementName:str, tokenizer:Code.CodeTokenizer ) : Ebnf.ParseCodeRet
+pub fn EbnfCtrl.parse( elementName:str, tokenizer:Code.CodeTokenizerIF,
+                       hook:Code.ParseCodeHookIF ) : Code.ParseCodeRet
 {
    let! ruleList = self.element2ruleList[ elementName ] {
       Util.log( "error parse" );
       return .Unmatch;
    };
-   return ruleList.parseCode( self, tokenizer, (@) );
+   let depth = 0;
+   hook.prepare( elementName, depth, tokenizer.getToken() );
+   tokenizer.pushback();
+   return hook.process( ruleList.parseCode( self, tokenizer, hook, depth ), depth );
 }
 
 pub fn EbnfCtrl.setupCandidate() mut {

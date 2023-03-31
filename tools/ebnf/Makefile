@@ -25,6 +25,13 @@ build:
 	$(LNSC) lns/main.lns mkmain entry.go
 	go build -tags gopherlua -o formatter
 
+goprof:
+	./formatter -prof ../../src/lune/base/Ast.lns dummy.lns
+
+view-goprof:
+	go tool pprof -http=0.0.0.0:8100 -no_browser lnsc prof
+
+
 clean:
 	-rm $(GO_SRCS)
 

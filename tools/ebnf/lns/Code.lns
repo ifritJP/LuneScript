@@ -6,7 +6,24 @@ import lns.Util;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Tokenizer as LnsTokenizer;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
 
-pub class CodeTokenizer {
+pub interface CodeTokenizerIF {
+   pub fn getToken() mut : &LnsTypes.Token;
+
+   /**
+   現在のトークンを pushback する
+   */
+   pub fn pushback() mut;
+
+   pub fn getPrevToken() : &LnsTypes.Token;
+   
+   /**
+次に getToken() した時に取得できる token を返す。
+peekToken() を複数回連続実行しても同じ token を返す。
+   */
+   pub fn peekToken() mut : &LnsTypes.Token;
+}
+
+pub class CodeTokenizer extend (CodeTokenizerIF) {
    /** コードの tokenizer 元 */
    let tokenizer:LnsTokenizer.Tokenizer;
    /** 読み込み済みの token のリスト */
@@ -73,6 +90,13 @@ pub class CodeTokenizer {
       }
    }
 
+   pub fn getPrevToken() : &LnsTypes.Token {
+      if self.tokenIndex <= 1 {
+         return LnsTypes.noneToken;
+      }
+      return self.tokenList[ self.tokenIndex - 1 ];
+   }
+
    /**
    現在のトークンを pushback する
    */
@@ -106,7 +130,7 @@ Parse 結果の一つの要素。
 */
 pub interface CodeCore {
    pub fn outputCode( stream:CodeGenerator );
-   pub fn pushback(tokenizer:CodeTokenizer);
+   pub fn pushback(tokenizer:CodeTokenizerIF);
 }
 
 class CodeIndentInfo {
@@ -124,7 +148,6 @@ CodeCore からソースコードを出力する
 */
 pub class CodeGenerator {
    let stream:oStream;
-   let tokenList:List<&LnsTypes.Token>;
    let mut prevToken:&LnsTypes.Token;
    let indentStack:List<&CodeIndentInfo>;
    let indentPairMap:Map<str,str>;
@@ -134,7 +157,6 @@ pub class CodeGenerator {
 
    pub fn __init( stream:oStream ) {
       self.stream = stream;
-      self.tokenList = [];
       self.prevToken = LnsTypes.noneToken;
       self.indentStack = [ new CodeIndentInfo( "", 0 ) ];
       self.elementIndent = [ new ElementIndentInfo( 0, false) ];
@@ -306,24 +328,32 @@ pub class CodeGenerator {
       } else {
          self.writeRaw( token.txt, token.kind ~= .Cmnt );
       }
-      //if token.kind ~= .Cmnt{
-      self.tokenList.insert( token );
       self.prevToken = token;
-      //}
    }
+}
+
+pub alge ParseCodeRet {
+   /** EOF */
+   Eof,
+   /** 不適合 */
+   Unmatch,
+   /** 省略 */
+   Abbr,
+   /** 検出 */
+   Detect(&CodeCore),
 }
 
 /**
 `{} を保持する CodeCore。
 */
 pub class CodeCoreStat extend (CodeCore) {
-   let list:&List<&LnsTypes.Token>;
+   let list:&List<&LnsTypes.Token> {pub};
    pub fn outputCode( stream:CodeGenerator ) {
       foreach token in self.list {
          stream.outputToken( token );
       }
    }
-   pub fn pushback(tokenizer:CodeTokenizer) {
+   pub fn pushback(tokenizer:CodeTokenizerIF) {
       foreach _ in self.list {
          tokenizer.pushback();
       }
@@ -334,11 +364,11 @@ pub class CodeCoreStat extend (CodeCore) {
 builtin の token を保持する CodeCore。
 */
 pub class CodeCoreBuiltin extend (CodeCore) {
-   let token:&LnsTypes.Token;
+   let token:&LnsTypes.Token {pub};
    pub fn outputCode( stream:CodeGenerator ) {
       stream.outputToken( self.token );
    }
-   pub fn pushback(tokenizer:CodeTokenizer) {
+   pub fn pushback(tokenizer:CodeTokenizerIF) {
       tokenizer.pushback();
    }
 }
@@ -347,11 +377,11 @@ pub class CodeCoreBuiltin extend (CodeCore) {
 token を保持する CodeCore。
 */
 pub class CodeCoreToken extend (CodeCore) {
-   let token:&LnsTypes.Token;
+   let token:&LnsTypes.Token {pub};
    pub fn outputCode( stream:CodeGenerator ) {
       stream.outputToken( self.token );
    }
-   pub fn pushback(tokenizer:CodeTokenizer) {
+   pub fn pushback(tokenizer:CodeTokenizerIF) {
       Util.log( __func__, self.token.txt );
       tokenizer.pushback();
    }
@@ -361,12 +391,12 @@ pub class CodeCoreToken extend (CodeCore) {
 elementName の CodeCore リストを保持する CodeCore。
 */
 pub class CodeCoreList extend (CodeCore) {
-   let elementName:str!;
+   let elementName:str! {pub};
    let codeCoreList:&List<&CodeCore>;
    pub fn outputCode( stream:CodeGenerator ) {
       stream.outputElement( self.elementName, self.codeCoreList );
    }
-   pub fn pushback(tokenizer:CodeTokenizer) {
+   pub fn pushback(tokenizer:CodeTokenizerIF) {
       Util.log( __func__, self.elementName );
       for index = #self.codeCoreList, 1, -1 {
          let codeCore = self.codeCoreList[ index ];
@@ -378,4 +408,10 @@ pub class CodeCoreList extend (CodeCore) {
 pub fn outputCode( codeCore:&CodeCore, stream:CodeGenerator ) {
    codeCore.outputCode( stream );
    stream.writeln();
+}
+
+
+pub interface ParseCodeHookIF {
+   pub fn prepare( elementName:str, depth:int, token:&LnsTypes.Token ) mut;
+   pub fn process( parseCodeRet:ParseCodeRet, depth:int ) mut : ParseCodeRet;
 }

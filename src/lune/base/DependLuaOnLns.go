@@ -1,4 +1,3 @@
-// This code is transcompiled by LuneScript.
 package lnsc
 
 import (
@@ -15,9 +14,16 @@ func DependLuaOnLns_runLuaOnLns(
 	return Lns_dependLuaOnLns_runLuaOnLns(_env, luaCode, baseDir, async)
 }
 
+func Depend_profile(_env *LnsEnv, validTest bool, work LnsForm, path string) LnsAny {
+	return Lns_Depend_profile(_env, validTest, work, path)
+}
+
 func Lns_DependLuaOnLns_init(_env *LnsEnv) {
 	if init_DependLuaOnLns {
 		return
 	}
 	init_DependLuaOnLns = true
+}
+func Lns_Depend_init(_env *LnsEnv) {
+	Lns_DependLuaOnLns_init(_env)
 }

@@ -2062,4 +2062,7 @@ diff-formatter:
 	diff work/org-error.result work/formatter/work/new-error.result
 	diff work/ast1.result work/formatter/work/ast2.result
 	diff work/lua1.result work/formatter/work/lua2.result -I " _lune"
-
+# formatter をかけた後のファイルとの比較
+	diff -r lune/base/ work/formatter/apply/lune/base/ \
+		-x '*.lua' -x '*.meta' -x '*~' -x '*.go' \
+		-x '*.lns.log' -x runtime_* -x '*.profi' -w -B

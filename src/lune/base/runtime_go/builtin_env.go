@@ -1,3 +1,4 @@
+//go:build !noEnvArg
 // +build !noEnvArg
 
 package runtimelns
@@ -8,7 +9,7 @@ import (
 
 type LnsForm func(_env *LnsEnv, val []LnsAny) []LnsAny
 
-func Depend_profile(_env *LnsEnv, validTest bool, work LnsForm, path string) LnsAny {
+func Lns_Depend_profile(_env *LnsEnv, validTest bool, work LnsForm, path string) LnsAny {
 	return depend_profileSub(
 		_env, validTest, path,
 		func() LnsAny {

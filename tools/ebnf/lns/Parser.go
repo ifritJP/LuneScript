@@ -5,15 +5,11 @@ import LnsTokenizer "github.com/ifritJP/LuneScript/src/lune/base"
 import LnsTypes "github.com/ifritJP/LuneScript/src/lune/base"
 var init_Parser bool
 var Parser__mod__ string
-// for 92
-func Parser_convExp0_443(arg1 []LnsAny) (LnsAny, string) {
+// for 88
+func Parser_convExp0_447(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// 11: decl @lns.@Parser.log
-func Parser_log_0_(_env *LnsEnv, ddd []LnsAny) {
-}
-
-// 153: decl @lns.@Parser.analyze_ebnf
+// 131: decl @lns.@Parser.analyze_ebnf
 func Parser_analyze_ebnf(_env *LnsEnv, tokenizer *Ebnf_EbnfTokenizer) *Parser_EbnfCtrl {
     var ebnfCtrl *Parser_EbnfCtrl
     ebnfCtrl = NewParser_EbnfCtrl(_env)
@@ -44,11 +40,11 @@ func Parser_analyze_ebnf(_env *LnsEnv, tokenizer *Ebnf_EbnfTokenizer) *Parser_Eb
     return ebnfCtrl
 }
 
-// 28: decl @lns.@Parser.EbnfCtrl.getRuleList
+// 24: decl @lns.@Parser.EbnfCtrl.getRuleList
 func (self *Parser_EbnfCtrl) GetRuleList(_env *LnsEnv, name string) LnsAny {
     return self.element2ruleList.Get(name)
 }
-// 34: decl @lns.@Parser.EbnfCtrl.processRule
+// 30: decl @lns.@Parser.EbnfCtrl.processRule
 func (self *Parser_EbnfCtrl) processRule(_env *LnsEnv, elementName LnsAny,tokenizer *Ebnf_DeclTokenizer,termTxt LnsAny)(LnsAny, string) {
     var coreList *LnsList
     coreList = NewLnsList([]LnsAny{})
@@ -108,12 +104,12 @@ func (self *Parser_EbnfCtrl) processRule(_env *LnsEnv, elementName LnsAny,tokeni
     }
     return NewRule_Rule(_env, elementName, coreList), ""
 }
-// 79: decl @lns.@Parser.EbnfCtrl.processDecl
+// 75: decl @lns.@Parser.EbnfCtrl.processDecl
 func (self *Parser_EbnfCtrl) processDecl(_env *LnsEnv, tokenizer *Ebnf_EbnfTokenizer,symbolToken *LnsTypes.Types_Token) *Rule_RuleList {
     __func__ := "@lns.@Parser.EbnfCtrl.processDecl"
     var elementName string
     elementName = symbolToken.Txt
-    Parser_log_0_(_env, Lns_2DDD(__func__, elementName))
+    Util_log(_env, Lns_2DDD(__func__, elementName))
     tokenizer.FP.CheckNext(_env, "::=")
     self.allElementSet.Add(elementName)
     var list *LnsList
@@ -125,8 +121,8 @@ func (self *Parser_EbnfCtrl) processDecl(_env *LnsEnv, tokenizer *Ebnf_EbnfToken
         var mess string
         rule,mess = self.FP.processRule(_env, elementName, declTokenizer, nil)
         if rule != nil{
-            rule_77 := rule.(*Rule_Rule)
-            list.Insert(Rule_Rule2Stem(rule_77))
+            rule_75 := rule.(*Rule_Rule)
+            list.Insert(Rule_Rule2Stem(rule_75))
         } else {
             if list.Len() == 0{
                 declTokenizer.FP.Err(_env, mess)
@@ -139,9 +135,9 @@ func (self *Parser_EbnfCtrl) processDecl(_env *LnsEnv, tokenizer *Ebnf_EbnfToken
     self.element2ruleList.Set(elementName,ruleList)
     return ruleList
 }
-// 107: decl @lns.@Parser.EbnfCtrl.dump
+// 103: decl @lns.@Parser.EbnfCtrl.dump
 func (self *Parser_EbnfCtrl) Dump(_env *LnsEnv) {
-    Parser_log_0_(_env, Lns_2DDD("================="))
+    Util_log(_env, Lns_2DDD("================="))
     {
         __forsortCollection0 := self.allElementSet
         __forsortSorted0 := __forsortCollection0.CreateKeyListStr()
@@ -150,50 +146,33 @@ func (self *Parser_EbnfCtrl) Dump(_env *LnsEnv) {
             element := _element.(string)
             var ruleList LnsAny
             ruleList = self.element2ruleList.Get(element)
-            Parser_log_0_(_env, Lns_2DDD(Rule_RuleList2Stem(ruleList) != nil, element))
-            if ruleList != nil{
-                ruleList_86 := ruleList.(*Rule_RuleList)
-                ruleList_86.FP.Get_candidate(_env).FP.Dump(_env, Lns_io_stdout)
+            Util_log(_env, Lns_2DDD(Rule_RuleList2Stem(ruleList) != nil, element))
+            {
+                _core := self.elementName2Core.Get(element)
+                if !Lns_IsNil( _core ) {
+                    core := _core.(Ebnf_Core)
+                    core.Get_candidate(_env).FP.Dump(_env, Lns_io_stdout)
+                }
             }
         }
     }
 }
-// 118: decl @lns.@Parser.EbnfCtrl.parse
-func (self *Parser_EbnfCtrl) Parse(_env *LnsEnv, elementName string,tokenizer *Code_CodeTokenizer) {
+// 114: decl @lns.@Parser.EbnfCtrl.parse
+func (self *Parser_EbnfCtrl) Parse(_env *LnsEnv, elementName string,tokenizer *Code_CodeTokenizer,hook Code_ParseCodeHookIF) LnsAny {
     var ruleList *Rule_RuleList
     
     {
         _ruleList := self.element2ruleList.Get(elementName)
         if _ruleList == nil{
-            Parser_log_0_(_env, Lns_2DDD("error parse"))
-            return 
+            Util_log(_env, Lns_2DDD("error parse"))
+            return Code_ParseCodeRet__Unmatch_Obj
         } else {
             ruleList = _ruleList.(*Rule_RuleList)
         }
     }
-    switch _matchExp0 := ruleList.FP.ParseCode(_env, self.FP, tokenizer, NewLnsSet([]LnsAny{})).(type) {
-    case *Ebnf_ParseCodeRet__Eof:
-        Parser_log_0_(_env, Lns_2DDD("eof"))
-    case *Ebnf_ParseCodeRet__Unmatch:
-        Parser_log_0_(_env, Lns_2DDD("unmatch"))
-    case *Ebnf_ParseCodeRet__Abbr:
-        var pos LnsTypes.Types_Position
-        pos = tokenizer.FP.GetToken(_env).Pos
-        Parser_log_0_(_env, Lns_2DDD("illegal", pos.LineNo, pos.Column))
-    case *Ebnf_ParseCodeRet__Detect:
-        codeCore := _matchExp0.Val1
-        Parser_log_0_(_env, Lns_2DDD("outputCode"))
-        codeCore.OutputCode(_env, NewCode_CodeGenerator(_env, Lns_io_stdout))
-        Lns_io_stdout.Flush(_env)
-        Parser_log_0_(_env, Lns_2DDD(""))
-        var token *LnsTypes.Types_Token
-        token = tokenizer.FP.GetToken(_env)
-        var pos LnsTypes.Types_Position
-        pos = token.Pos
-        Parser_log_0_(_env, Lns_2DDD(_env.GetVM().String_format("%d:%d", Lns_2DDD(pos.LineNo, pos.Column)), LnsTypes.Types_TokenKind_getTxt( token.Kind)))
-    }
+    return hook.Process(_env, ruleList.FP.ParseCode(_env, self.FP, tokenizer, hook, 0), 0)
 }
-// 146: decl @lns.@Parser.EbnfCtrl.setupCandidate
+// 124: decl @lns.@Parser.EbnfCtrl.setupCandidate
 func (self *Parser_EbnfCtrl) SetupCandidate(_env *LnsEnv) {
     var fusedCoreSet *LnsSet
     fusedCoreSet = NewLnsSet([]LnsAny{})
@@ -206,7 +185,7 @@ func (self *Parser_EbnfCtrl) SetupCandidate(_env *LnsEnv) {
 type Parser_EbnfCtrlMtd interface {
     Dump(_env *LnsEnv)
     GetRuleList(_env *LnsEnv, arg1 string) LnsAny
-    Parse(_env *LnsEnv, arg1 string, arg2 *Code_CodeTokenizer)
+    Parse(_env *LnsEnv, arg1 string, arg2 *Code_CodeTokenizer, arg3 Code_ParseCodeHookIF) LnsAny
     processDecl(_env *LnsEnv, arg1 *Ebnf_EbnfTokenizer, arg2 *LnsTypes.Types_Token) *Rule_RuleList
     processRule(_env *LnsEnv, arg1 LnsAny, arg2 *Ebnf_DeclTokenizer, arg3 LnsAny)(LnsAny, string)
     SetupCandidate(_env *LnsEnv)
@@ -250,7 +229,7 @@ func NewParser_EbnfCtrl(_env *LnsEnv) *Parser_EbnfCtrl {
     obj.InitParser_EbnfCtrl(_env)
     return obj
 }
-// 22: DeclConstr
+// 18: DeclConstr
 func (self *Parser_EbnfCtrl) InitParser_EbnfCtrl(_env *LnsEnv) {
     self.element2ruleList = NewLnsMap( map[LnsAny]LnsAny{})
     self.allElementSet = NewLnsSet([]LnsAny{})
@@ -263,6 +242,7 @@ func Lns_Parser_init(_env *LnsEnv) {
     init_Parser = true
     Parser__mod__ = "@lns.@Parser"
     Lns_InitMod()
+    Lns_Util_init(_env)
     Lns_Ebnf_init(_env)
     Lns_Rule_init(_env)
     Lns_Code_init(_env)

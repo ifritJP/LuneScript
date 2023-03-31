@@ -15,6 +15,13 @@ pub enum RuleKind {
    // 0 以上
    Repeat,
 }
+/**
+ebnf の文。
+
+以下の [], {} の部分。
+
+<hoge> ::= [ <foo> ] { <bar> }
+*/
 pub class RuleCore extend (Ebnf.Core) {
    let kind:RuleKind;
    let rule:Ebnf.RuleIF;
@@ -32,13 +39,13 @@ pub class RuleCore extend (Ebnf.Core) {
       self.candidate.add( self.rule.setupCandidate( ctrl, usedCoreSet ), false );
       return self.candidate;
    }
-   pub fn parseCode(
-      ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str> ) : Ebnf.ParseCodeRet
+   pub fn parseCode( ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ) : Code.ParseCodeRet
    {
       let list:List<&Code.CodeCore> = [];
       while true {
-         let result = self.rule.parseCode( ctrl, tokenizer, usedElementSet );
+         let result = hook.process(
+            self.rule.parseCode( ctrl, tokenizer, hook, depth + 1 ), depth + 1 );
          _match result {
             case .Eof {
                if #list == 0 {
@@ -84,56 +91,78 @@ ebnf の文
 pub class Rule extend (Ebnf.RuleIF){
    let elementName:str!;
    let coreList:&List<Ebnf.Core>;
+   let candidate:Ebnf.Candidate {pub&};
 
    pub fn __init( elementName:str!, coreList:&List<Ebnf.Core> ) {
       self.elementName = elementName;
       self.coreList = coreList;
+      self.candidate = new Ebnf.Candidate( true, true );
    }
 
    pub fn setupCandidate( ctrl:&Ebnf.EbnfCtrlIF,
                           usedCoreSet:Set<&Ebnf.Core>) mut : &Ebnf.Candidate
    {
-      let mut candidate = new Ebnf.Candidate( true, true );
       foreach core in self.coreList {
          let mut coreSet = usedCoreSet.clone();
          let work = core.setupCandidate( ctrl, coreSet );
-         candidate.add( work, true );
+         self.candidate.add( work, true );
          if not work.$canAbbr {
             break;
          }
       }
-      return candidate;
+      return self.candidate;
    }
 
-   pub fn parseCode(
-      ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str> ) : Ebnf.ParseCodeRet
+   fn parseCodeSub(ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                    hook:Code.ParseCodeHookIF, nextDepth:int ) : Code.ParseCodeRet
    {
       let codeCoreList:List<&Code.CodeCore> = [];
+      fn pushbackToken() __trans {
+         for coreIndex = #codeCoreList, 1, -1 {
+            let codeCore = codeCoreList[ coreIndex ];
+            codeCore.pushback( tokenizer );
+         }
+      }
+      
       foreach core, index in self.coreList {
-         Util.log( __func__, index, #self.coreList ); 
-         _match core.parseCode(ctrl, tokenizer, usedElementSet ) {
-            case .Eof {
-               return .Eof;
-            }
-            case .Unmatch {
-               for coreIndex = #codeCoreList, 1, -1 {
-                  let codeCore = codeCoreList[ coreIndex ];
-                  codeCore.pushback( tokenizer );
+         let token = tokenizer.peekToken();
+         Util.log( __func__, self.elementName, index, #self.coreList, token.txt );
+         if core.$candidate.has( token ) or core.$candidate.$canAbbr {
+            _match hook.process(
+               core.parseCode( ctrl, tokenizer, hook, nextDepth ), nextDepth ) {
+               case .Eof {
+                  return .Eof;
                }
-               return .Unmatch;
+               case .Unmatch {
+                  pushbackToken();
+                  return .Unmatch;
+               }
+               case .Abbr {
+               }
+               case .Detect( codeCore ) {
+                  codeCoreList.insert( codeCore );
+               }
             }
-            case .Abbr {
-            }
-            case .Detect( codeCore ) {
-               codeCoreList.insert( codeCore );
-            }
+         } else {
+            Util.log( __func__, self.elementName, "Unmatch -- candidate", index );
+            pushbackToken();
+            return .Unmatch;
          }
       }
       if #codeCoreList == 0 {
          return .Abbr;
       }
       return .Detect( new Code.CodeCoreList( self.elementName, codeCoreList ) );
+   }
+
+   pub fn parseCode( ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ) : Code.ParseCodeRet
+   {
+      if! let elementName = self.elementName {
+         hook.prepare( elementName, depth + 1, tokenizer.peekToken() );
+      }
+      return hook.process( self.parseCodeSub( ctrl, tokenizer, hook, depth + 2 ),
+                           depth + 1 );               
    }
 }
 
@@ -164,9 +193,8 @@ pub class RuleList extend (Ebnf.RuleListIF) {
       }
       return self.candidate;
    }
-   pub fn parseCode(
-      ctrl:&Ebnf.EbnfCtrlIF,
-      tokenizer:Code.CodeTokenizer, usedElementSet:Set<&str> ) : Ebnf.ParseCodeRet
+   pub fn parseCode( ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ) : Code.ParseCodeRet
    {
       if not self.candidate.has( tokenizer.peekToken() ) {
          Util.log( __func__, "not found candidate -- ",
@@ -178,23 +206,25 @@ pub class RuleList extend (Ebnf.RuleListIF) {
          return .Unmatch;
       }
       
-      let mut result = Ebnf.ParseCodeRet.Unmatch;
+      let mut result = Code.ParseCodeRet.Unmatch;
 
       foreach rule, index in self.list {
-         Util.log( "check -- ", index, #self.list, self.elementName );
-         _match rule.parseCode(ctrl, tokenizer, usedElementSet ) {
-            case .Eof {
-               return .Eof;
-            }
-            case .Unmatch {
-            }
-            case .Abbr {
-               result = .Abbr;
-               // error( "illegal abbr -- %s" ( self.elementName ) );
-            }
-            case .Detect( codeCore ) {
-               Util.log( "detect -- ", self.elementName );
-               return .Detect( codeCore );
+         if rule.$candidate.has( tokenizer.peekToken() ) {
+            Util.log( "check -- ", index, #self.list, self.elementName );
+            _match rule.parseCode(ctrl, tokenizer, hook, depth + 1 ) {
+               case .Eof {
+                  return .Eof;
+               }
+               case .Unmatch {
+               }
+               case .Abbr {
+                  result = .Abbr;
+                  // error( "illegal abbr -- %s" ( self.elementName ) );
+               }
+               case .Detect( codeCore ) {
+                  Util.log( "detect -- ", self.elementName );
+                  return .Detect( codeCore );
+               }
             }
          }
       }

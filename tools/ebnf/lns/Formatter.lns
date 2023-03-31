@@ -1,0 +1,269 @@
+// -*- coding:utf-8; -*-
+
+_lune_control default_async_all;
+
+import lns.Code;
+import lns.Util;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
+import go/github:com.ifritJP.LuneScript.src.lune.base.Writer as LnsWriter;
+
+let indentStmtSet = (@ "<subfile>", "<lune_control>", "<import>", "<stmt>",
+                      "<block>", "<match_case>",
+                      "<switch_case>", "<default>", "<const_list>" );          
+
+let indentElementSet = indentStmtSet.clone().or(
+   (@ "<exp>", "<exp_list>" ) );
+let termTxtSet = (@ "]", ")", "}" );
+let beginTxtSet = (@ "[", "(", "{", "[@", "(@", "[=", "`{" );
+
+
+fn getTokenTxt( token:&LnsTypes.Token ) : str {
+   let pos = token.pos;
+   return "%d:%d:%s" (pos.lineNo, pos.column, token.txt);
+}
+
+
+class ElementInfo {
+   let elementName:str {pub};
+   let token:&LnsTypes.Token {pub};   
+}
+
+let indentDelta = 3;
+
+class TokenIndent {
+   let startToken:&LnsTypes.Token {pub};
+   let indent:int {pub};
+   let mut contIndent:int {pub,pub};
+
+   pub fn __init( startToken:&LnsTypes.Token, indent:int ) {
+      self.startToken = startToken;
+      self.indent = indent;
+      self.contIndent = indent + indentDelta;
+   }
+}
+
+class BaseIndentInfo {
+   let elementName:str {pub};
+   let tokenIndent:TokenIndent;
+   let depth:int {pub};
+   let depth2ElementInfo:Map<int,&ElementInfo> {pub};
+   /** 同じ行に続く element があるかどうか */
+   let mut hasElementOnSameLine:bool {pub,pub};
+   pub fn __init( elementName:str, tokenIndent:TokenIndent, depth:int ) {
+      self.elementName = elementName;
+      self.tokenIndent = tokenIndent;
+      self.depth = depth;
+      self.depth2ElementInfo = {};
+      self.hasElementOnSameLine = false;
+   }
+
+   pub fn pushElement( depth:int, elementInfo:&ElementInfo ) mut {
+      self.depth2ElementInfo[ depth ] = elementInfo;
+   }
+   pub fn popElement( depth:int ) mut {
+      self.depth2ElementInfo[ depth ] = nil;
+   }
+
+   advertise tokenIndent;
+}
+
+pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
+   let indentStack:List<BaseIndentInfo>;
+   let mut currentIndentInfo:BaseIndentInfo;
+   let tokenizer:Code.CodeTokenizer;
+   let targetLineNo:int;
+   let token2tokenIndent:Map<&LnsTypes.Token,TokenIndent>;
+
+   fn getTokenIndent( startToken:&LnsTypes.Token, indent:int ) mut : TokenIndent {
+      if! let mut tokenIndent = self.token2tokenIndent[ startToken ] {
+         return tokenIndent;
+      }
+      let mut tokenIndent = new TokenIndent( startToken, indent );
+      self.token2tokenIndent[ startToken ] = tokenIndent;
+      return tokenIndent;
+   }
+   
+   pub fn __init( tokenizer:Code.CodeTokenizer, targetLineNo:int ) {
+      self.token2tokenIndent = {};
+      self.indentStack = [];
+      self.currentIndentInfo = new BaseIndentInfo(
+         "", new TokenIndent( LnsTypes.noneToken, 1 ), 1 );
+      self.currentIndentInfo.set_contIndent( 1 );
+      self.indentStack.insert( self.currentIndentInfo );
+      self.tokenizer = tokenizer;
+      self.targetLineNo = targetLineNo;
+   }
+
+   fn getParentIndentInfoSameLine( beginIndex:int ) : BaseIndentInfo {
+      let nowPos = self.indentStack[ beginIndex ].$startToken.pos;
+      for index = beginIndex - 1, 1, -1 {
+         let mut indentInfo = self.indentStack[ index ];
+         if nowPos.lineNo ~= indentInfo.$startToken.pos.lineNo {
+            return indentInfo;
+         }
+      }
+      return self.indentStack[ 1 ];
+   }
+
+   fn getParentStmtIndentInfo( beginIndex:int ) : BaseIndentInfo {
+      for index = beginIndex - 1, 1, -1 {
+         let mut indentInfo = self.indentStack[ index ];
+         if indentStmtSet.has( indentInfo.$elementName ) {
+            return indentInfo;
+         }
+      }
+      return self.indentStack[ 1 ];
+   }
+   
+   
+   pub fn prepare( elementName:str, depth:int, token:&LnsTypes.Token ) mut {
+      if indentElementSet.has( elementName ) {
+         let prevIndentInfo = self.currentIndentInfo;
+         self.currentIndentInfo = new BaseIndentInfo(
+            elementName, self.getTokenIndent( token, token.pos.column ), depth );
+         switch elementName {
+            case "<block>", "<const_list>" {
+               self.currentIndentInfo.set_contIndent(
+                  self.getParentStmtIndentInfo( #self.indentStack + 1 ).$indent +
+                  indentDelta );
+            }
+            case "<exp>" {
+               self.currentIndentInfo.set_contIndent(
+                  prevIndentInfo.$indent + indentDelta );
+            }
+            case "<exp_list>" {
+               self.currentIndentInfo.set_contIndent( self.currentIndentInfo.$indent );
+            }
+         }
+         self.indentStack.insert( self.currentIndentInfo );
+         Util.log( __func__, "push", elementName, depth, getTokenTxt( token ) );
+      } else {
+         self.currentIndentInfo.pushElement(
+            depth, new ElementInfo( elementName, token ) );
+         if self.currentIndentInfo.$startToken.pos.lineNo == token.pos.lineNo and
+            self.currentIndentInfo.$startToken ~= token
+         { 
+            self.currentIndentInfo.set_hasElementOnSameLine( true );
+            if elementName == "<exp>" {
+               self.currentIndentInfo.set_contIndent(
+                  self.currentIndentInfo.$indent + 2 );
+            }
+         }
+         if elementName == "<if>" {
+            self.currentIndentInfo.set_contIndent( self.currentIndentInfo.$indent );
+         }
+      }
+   }
+
+   fn dump() {
+      foreach indentInfo, index in self.indentStack {
+         if index > 1 {
+            Util.log( "-------", indentInfo.$elementName,
+                      indentInfo.$hasElementOnSameLine,
+                      getTokenTxt( indentInfo.$startToken ) );
+            forsort elementInfo, depth in indentInfo.$depth2ElementInfo {
+               let elementToken = elementInfo.$token;
+               Util.log( depth, elementInfo.$elementName,
+                         getTokenTxt( elementToken ) );
+            }
+         }
+      }
+   }
+   
+   
+   fn output( lineNo:int, indent:int ) : __ {
+      self.dump();
+      
+      let mut json = new LnsWriter.JSON( io.stdout );
+      json.startParent( "indent", false );
+      json.startElement( "debugLineNo" );
+      json.writeValue( lineNo );
+      json.endElement();
+      json.startElement( "column" );
+      json.writeValue( indent );
+      json.endElement();
+
+      json.endLayer();
+      json.endLayer();
+      
+      
+      os.exit(0);
+   }
+
+   
+   fn checkKeyword( token:&LnsTypes.Token ) : &LnsTypes.Token{
+      fn process() __trans : int, int {
+         let mut indentInfo = self.indentStack[ #self.indentStack ];
+         if token.pos.lineNo == indentInfo.$startToken.pos.lineNo {
+            if #self.indentStack == 2 {
+               return __line__, 1;
+            } else {
+               if indentStmtSet.has( indentInfo.$elementName ) {
+                  let indent =
+                     self.getParentStmtIndentInfo( #self.indentStack ).$indent;
+                  return __line__, indent;
+               } else {
+                  let indent =
+                     self.getParentIndentInfoSameLine( #self.indentStack ).$contIndent;
+                  return __line__, indent;
+               }
+            }
+         } else {
+            if indentInfo.$elementName == "<exp_list>" {
+               return __line__, indentInfo.$indent;
+            }
+            return __line__, indentInfo.$contIndent;
+         }
+      }
+      
+      if token.txt == "___LNS___" or token.pos.lineNo > self.targetLineNo or
+         token.pos.lineNo == self.targetLineNo and
+         not termTxtSet.has( token.txt ) and not beginTxtSet.has( token.txt )
+      {
+         Util.log( "self.indentStack=", #self.indentStack );
+
+         self.output( process()** );
+      }
+      return token;
+   }
+
+   
+   pub fn getToken() mut : &LnsTypes.Token {
+      return self.checkKeyword( self.tokenizer.getToken() );
+   }
+   pub fn peekToken() mut : &LnsTypes.Token {
+      return self.checkKeyword( self.tokenizer.peekToken() );
+   }
+
+   pub fn process( parseCodeRet:Code.ParseCodeRet, depth:int ) mut : Code.ParseCodeRet {
+      self.currentIndentInfo.popElement( depth );
+
+      match parseCodeRet {
+         case .Detect(codeCore) {
+            if! let codeCoreToken = codeCore@@@Code.CodeCoreToken {
+               let token = codeCoreToken.$token;
+               if token.pos.lineNo == self.targetLineNo and
+                  termTxtSet.has( token.txt )
+               {
+                  self.output(
+                     __line__, self.currentIndentInfo.$contIndent - indentDelta );
+               }
+            }
+         }
+      }
+
+      
+      if self.currentIndentInfo.$depth == depth {
+         Util.log( __func__, "pop", self.currentIndentInfo.$elementName );
+         self.indentStack.remove(##);
+         self.currentIndentInfo = self.indentStack[ #self.indentStack ];
+      }
+
+      
+      return parseCodeRet;
+   }
+
+   
+   
+   advertise tokenizer;
+}

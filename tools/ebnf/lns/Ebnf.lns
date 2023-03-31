@@ -102,18 +102,6 @@ pub class EbnfTokenizer {
 
 
 
-pub alge ParseCodeRet {
-   /** EOF */
-   Eof,
-   /** 不適合 */
-   Unmatch,
-   /** 省略 */
-   Abbr,
-   /** 検出 */
-   Detect(&Code.CodeCore),
-}
-
-
 pub class Candidate {
    let txtSet:Set<str>;
    let excludeTxtSet:Set<str>;
@@ -171,6 +159,11 @@ pub class Candidate {
          stream.write( "%s, " (txt) );
       }
       stream.write( "\n" );
+      stream.write( "excludeTxt: " );
+      foreach txt in self.excludeTxtSet {
+         stream.write( "%s, " (txt) );
+      }
+      stream.write( "\n" );
       stream.write( "kind: " );
       foreach kind in self.tokenKindSet {
          stream.write( "%s, " (kind.$_txt));
@@ -185,13 +178,13 @@ pub proto interface Core;
 pub proto interface EbnfCtrlIF;
 pub interface RuleListIF {
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate;
-   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-                     usedElementSet:Set<&str> ) : ParseCodeRet;
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ) : Code.ParseCodeRet;
 }
 pub interface RuleIF {
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate;
-   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-                     usedElementSet:Set<&str> ) : ParseCodeRet;
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ) : Code.ParseCodeRet;
 }
 pub interface EbnfCtrlIF {
    pub fn getRuleList( name:str ) : RuleListIF!;
@@ -207,9 +200,8 @@ ebnf の element を構成する一つの要素
 pub interface Core {
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate;
    pub fn get_candidate(): &Candidate;
-   pub fn parseCode(
-      ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str>):ParseCodeRet;
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ):Code.ParseCodeRet;
 }
 
 
@@ -234,9 +226,8 @@ pub class TokenCore extend (Core) {
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate {
       return self.candidate;
    }
-   pub fn parseCode(
-      ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str>):ParseCodeRet
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ): Code.ParseCodeRet
    {
       let token = tokenizer.getToken();
       Util.log( __func__, self.token.txt, token.txt, token.kind.$_txt );
@@ -270,9 +261,8 @@ class BuiltinTokenKindCore extend (Core) {
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate {
       return self.candidate;
    }
-   pub fn parseCode(
-      ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str>):ParseCodeRet
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ): Code.ParseCodeRet
    {
       let token = tokenizer.getToken();
       if self.tokenKindSet.has( token.kind ) {
@@ -301,9 +291,8 @@ class BuiltinTokenCore extend (Core) {
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate {
       return self.candidate;
    }
-   pub fn parseCode(
-      ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str>):ParseCodeRet
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ): Code.ParseCodeRet
    {
       let token = tokenizer.getToken();
       //if not self.excludeTxtSet.has( token.txt ) {
@@ -316,22 +305,28 @@ class BuiltinTokenCore extend (Core) {
    }
 }
 
+/**
+<stat> の処理。
+*/
 class BuiltinStatCore extend (Core) {
    let candidate:Candidate {pub&};
 
    pub fn __init() {
       self.candidate = new Candidate( false, true );
+      // 全てのトークンを処理対象にするために、 excludeTxt に "" を設定する。
+      self.candidate.addExcludeTxt("");
    }
    
    pub fn setupCandidate( ctrl:&EbnfCtrlIF, usedCoreSet:Set<&Core>) mut : &Candidate {
       return self.candidate;
    }
-   pub fn parseCode(
-      ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str>):ParseCodeRet
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ): Code.ParseCodeRet
    {
+      // "}" まで全ての token を処理する。
+      // そこ間に "{", "`{" がある場合は、ネストして処理する。
       let list:List<&LnsTypes.Token> = [];
-      let mut depth = 1;
+      let mut level = 1;
       while true {
          let mut workToken = tokenizer.getToken();
          if workToken.kind == .Eof {
@@ -339,13 +334,13 @@ class BuiltinStatCore extend (Core) {
          }
          switch workToken.txt {
             case "}" {
-               depth = depth - 1;
-               if depth == 0 {
+               level = level - 1;
+               if level == 0 {
                   break;
                }
             }
             case "{", "`{" {
-               depth = depth + 1;
+               level = level + 1;
             }
          }
          list.insert( workToken );
@@ -436,14 +431,13 @@ pub class ElementCore extend (Core) {
       }
       return self.candidate;
    }
-   pub fn parseCode(
-      ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizer,
-      usedElementSet:Set<&str>):ParseCodeRet
+   pub fn parseCode( ctrl:&EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
+                     hook:Code.ParseCodeHookIF, depth:int ): Code.ParseCodeRet
    {
       let! ruleList = ctrl.getRuleList( self.elementName ) {
          return .Unmatch;
       };
-      return ruleList.parseCode( ctrl, tokenizer, usedElementSet );
+      return ruleList.parseCode( ctrl, tokenizer, hook, depth + 1 );
    }
 }
 

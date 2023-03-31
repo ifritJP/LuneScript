@@ -3,8 +3,8 @@
 
 package runtimelns
 
-func Lns_Depend_init(_env *LnsEnv) {
-}
+// func Lns_Depend_init(_env *LnsEnv) {
+// }
 
 func Depend_getFileLastModifiedTime(_env *LnsEnv, path string) LnsAny {
 	return depend_getFileLastModifiedTime(path)
