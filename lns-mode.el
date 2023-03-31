@@ -642,7 +642,7 @@ pattern は  {, }, {{, }} のいずれか。
 			     )))
     (setq command-list
 	  (list (expand-file-name "~/work/LuneScript/tools/ebnf/lns/main.lns")
-		"-shebang" "@-" (format "%d" (lns-get-line)) ""))
+		"-shebang" "-i" (format "%d" (lns-get-line)) "@-" ""))
     (setq workbuf (lns-get-buffer "*lns-process*" t))
     (lns-execute-command nil workbuf lns-code command-list )
 

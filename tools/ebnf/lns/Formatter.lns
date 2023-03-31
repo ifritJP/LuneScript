@@ -71,7 +71,7 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    let indentStack:List<BaseIndentInfo>;
    let mut currentIndentInfo:BaseIndentInfo;
    let tokenizer:Code.CodeTokenizer;
-   let targetLineNo:int;
+   let targetLineNo:int!;
    let token2tokenIndent:Map<&LnsTypes.Token,TokenIndent>;
 
    fn getTokenIndent( startToken:&LnsTypes.Token, indent:int ) mut : TokenIndent {
@@ -83,7 +83,7 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
       return tokenIndent;
    }
    
-   pub fn __init( tokenizer:Code.CodeTokenizer, targetLineNo:int ) {
+   pub fn __init( tokenizer:Code.CodeTokenizer, targetLineNo:int! ) {
       self.token2tokenIndent = {};
       self.indentStack = [];
       self.currentIndentInfo = new BaseIndentInfo(
@@ -191,7 +191,10 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    }
 
    
-   fn checkKeyword( token:&LnsTypes.Token ) : &LnsTypes.Token{
+   fn checkKeyword( token:&LnsTypes.Token ) : &LnsTypes.Token {
+      let! targetLineNo = self.targetLineNo {
+         return token;
+      };
       fn process() __trans : int, int {
          let mut indentInfo = self.indentStack[ #self.indentStack ];
          if token.pos.lineNo == indentInfo.$startToken.pos.lineNo {
@@ -216,8 +219,8 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
          }
       }
       
-      if token.txt == "___LNS___" or token.pos.lineNo > self.targetLineNo or
-         token.pos.lineNo == self.targetLineNo and
+      if token.txt == "___LNS___" or token.pos.lineNo > targetLineNo or
+         token.pos.lineNo == targetLineNo and
          not termTxtSet.has( token.txt ) and not beginTxtSet.has( token.txt )
       {
          Util.log( "self.indentStack=", #self.indentStack );

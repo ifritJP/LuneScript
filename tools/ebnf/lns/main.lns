@@ -55,7 +55,7 @@ fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
 }
 
 
-fn format( inpath:str, targetLineNo:int,
+fn format( inpath:str, targetLineNo:int!,
            outpath:str, ebnfPath:str!, debugFlag:bool ) : bool
 {
    let mut tokenizer;
@@ -121,7 +121,7 @@ fn format( inpath:str, targetLineNo:int,
 fn usage( mess:str ) : __ {
    print( mess );
    print( "" );
-   print( "usage: command [-log] [-ebnf path] [-prof] inpath lineno outpath" );
+   print( "usage: command [-log] [-ebnf path] [-prof] [-i lineno] inpath outpath" );
    os.exit( 1 );
 }
 
@@ -131,6 +131,7 @@ pub fn __main( argList:&_List<str> ) : int {
    let mut index = 1;
    let mut prof = false;
    let mut debugFlag = false;
+   let mut targetLineNo:int! = nil;
 
    fn getNext() : str {
       if index > #argList {
@@ -149,6 +150,12 @@ pub fn __main( argList:&_List<str> ) : int {
          prof = true;
       } elseif arg == "-ebnf" {
          ebnfPath = getNext();
+      } elseif arg == "-i" {
+         if! let num = tonumber( getNext()## ) {
+            targetLineNo = num@@int;
+         } else {
+            usage( "lineno is not number" );
+         }
       } else {
          optList.insert( arg );
       }
@@ -158,18 +165,12 @@ pub fn __main( argList:&_List<str> ) : int {
       usage( "illegal argument" );
    }
 
-   let targetLineNo;
-   if! let num = tonumber( optList[ 3 ]## ) {
-      targetLineNo = num@@int;
-   } else {
-      usage( "lineno is not number" );
-   }
 
    let mut exitCode = 1;
    LnsDepend.profile(
       prof, 
       fn() {               
-         if format( optList[ 2 ], targetLineNo, optList[ 4 ], ebnfPath, debugFlag ) {
+         if format( optList[ 2 ], targetLineNo, optList[ 3 ], ebnfPath, debugFlag ) {
             exitCode = 0;
          }
       }, "prof" );
