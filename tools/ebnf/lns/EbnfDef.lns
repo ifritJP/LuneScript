@@ -35,12 +35,12 @@ let ebnf = ```
 
 
   <decl_access> ::= [<access>] ["static"]
-  <decl_macro> ::= "macro" <sym> "(" [ <decl_arg_list> ] ")"
+  <decl_macro> ::= "macro" <sym> <decl_arg_paren>
 		   [ ":" <reftype_list> ] "{" [ <block> ] <stat> "}"
   <fn_attrib> ::= [<decl_async>] ["mut"]
-  <form> ::= "form" <sym> [<generics>] "(" [ <decl_arg_list> ] ")"
+  <form> ::= "form" <sym> [<generics>] <decl_arg_paren>
 		<fn_attrib> [":" <reftype_list>] ";"
-  <decl_fn> ::= ["override"] "fn" [ <sym> "." ] <sym> [<generics>] "(" [ <decl_arg_list> ] ")"
+  <decl_fn> ::= ["override"] "fn" [ <sym> "." ] <sym> [<generics>] <decl_arg_paren>
 		<fn_attrib> [":" <reftype_list>] <decl_fn_body>
   <decl_fn_body> ::= <block> | ";"
 
@@ -61,7 +61,7 @@ let ebnf = ```
   <decl_enum> ::= "enum" <sym> "{" {<enum_val> [ "," ] } "}"
   <decl_member> ::= "let" <decl_sym> [ "{" <accessor> ["," <accessor>] "}" ] ";"
   <decl_method> ::= [ "abstract" ] ["override"] "fn" <sym> [<generics>]
-		    "(" [ <decl_arg_list> ] ")" <fn_attrib> [":" 
+		    <decl_arg_paren> <fn_attrib> [":" 
 		    <reftype_list>] <decl_method_body>
   <decl_var> ::= "let" <decl_sym_list> [ "=" <exp_list> ] ";" |
 	       "let" "!" <decl_sym_list> "=" <exp_list> <block> [ "then" <block> ] [ "else" <block> ] ";"
@@ -127,6 +127,7 @@ let ebnf = ```
 
   <reftype_list> ::= <reftype> { "," <reftype> }
 
+  <decl_arg_paren> ::= "(" [ <decl_arg_list> ] ")"
   <decl_arg_list> ::= <decl_arg> { "," <decl_arg> }
 
   <decl_arg> ::= ["mut"] <sym> ":" <reftype> | <decl_arg_ddd>
@@ -213,7 +214,7 @@ let ebnf = ```
   <cast> ::= <cast_op> <reftype>
   <cast_op> ::= "@@" | "@@=" | "@@@"
 
-  <anonymous_func> ::= "fn" [<generics>] "(" [ <decl_arg_list> ] ")"
+  <anonymous_func> ::= "fn" [<generics>] <decl_arg_paren>
 		       <fn_attrib> [":" <reftype_list>] <block>
 
 

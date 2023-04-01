@@ -415,3 +415,11 @@ pub interface ParseCodeHookIF {
    pub fn prepare( elementName:str, depth:int, token:&LnsTypes.Token ) mut;
    pub fn process( parseCodeRet:ParseCodeRet, depth:int ) mut : ParseCodeRet;
 }
+
+pub class DummyParseCodeHook extend (ParseCodeHookIF) {
+   pub fn prepare( elementName:str, depth:int, token:&LnsTypes.Token ) mut {
+   }
+   pub fn process( parseCodeRet:ParseCodeRet, depth:int ) mut : ParseCodeRet {
+      return parseCodeRet;
+   }
+}

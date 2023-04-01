@@ -155,7 +155,7 @@ let quotedCharSet:&Set<str> =
     );
 
 
-let op2Set:&Set<str> =
+pub let op2Set:&Set<str> =
     (@
       '+',  
       '-',  
@@ -200,11 +200,11 @@ let op1Set:&Set<str> =
 //    return unwrap kind2Txt[ kind ];
 // }
 
-pub static fn isOp2( ope: str ) : bool {
+pub fn isOp2( ope: str ) : bool {
    return op2Set.has( ope );
 }
 
-pub static fn isOp1( ope: str ) : bool {
+pub fn isOp1( ope: str ) : bool {
    return op1Set.has( ope );
 }
 

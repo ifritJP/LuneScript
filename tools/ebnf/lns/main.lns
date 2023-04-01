@@ -55,7 +55,7 @@ fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
 }
 
 
-fn format( inpath:str, targetLineNo:int!,
+fn format( inpath:str, lineNo:(int,int)!,
            outpath:str, ebnfPath:str!, debugFlag:bool ) : bool
 {
    let mut tokenizer;
@@ -87,9 +87,18 @@ fn format( inpath:str, targetLineNo:int!,
       ebnfCtrl.dump();
    }
 
-   let mut codeTokenizer = new Code.CodeTokenizer( tokenizer );
-   let mut hook = new Formatter.ParseCodeHook( codeTokenizer, targetLineNo );
-   _match ebnfCtrl.parse( "<code>", hook, hook ) {
+   let mut codeTokenizer:Code.CodeTokenizerIF = new Code.CodeTokenizer( tokenizer );
+   let hookIf:Code.ParseCodeHookIF;
+   when! lineNo {
+      let targetLineNo, endLineNo = lineNo...;
+      let mut hook = new Formatter.ParseCodeHook(
+         codeTokenizer, targetLineNo, endLineNo );
+      codeTokenizer = hook;
+      hookIf = hook;
+   } else {
+      hookIf = new Code.DummyParseCodeHook();
+   }
+   _match ebnfCtrl.parse( "<code>", codeTokenizer, hookIf ) {
       case .Eof {
          Util.log( "eof" );
       }
@@ -131,7 +140,7 @@ pub fn __main( argList:&_List<str> ) : int {
    let mut index = 1;
    let mut prof = false;
    let mut debugFlag = false;
-   let mut targetLineNo:int! = nil;
+   let mut region:(int,int)! = nil;
 
    fn getNext() : str {
       if index > #argList {
@@ -141,6 +150,14 @@ pub fn __main( argList:&_List<str> ) : int {
       index = index + 1;
       return arg;
    }
+   fn convInt( txt:str, mess:str ) : int {
+      if! let num = tonumber( txt## ) {
+         return num@@int;
+      } else {
+         usage( mess );
+      }
+   }
+   
    while index <= #argList {
       let arg = getNext();
       if arg == "-log" {
@@ -151,11 +168,12 @@ pub fn __main( argList:&_List<str> ) : int {
       } elseif arg == "-ebnf" {
          ebnfPath = getNext();
       } elseif arg == "-i" {
-         if! let num = tonumber( getNext()## ) {
-            targetLineNo = num@@int;
-         } else {
-            usage( "lineno is not number" );
-         }
+         let nextArg = getNext();
+         let pre = nextArg.gsub( ":.*", "" );
+         let post = nextArg.gsub( ".*:", "" );
+         let startLineNo = convInt( pre, "%s is not number" (pre) );
+         let endLineNo = convInt( post, "%s is not number" (post) );
+         region = (= startLineNo, endLineNo );
       } else {
          optList.insert( arg );
       }
@@ -170,7 +188,8 @@ pub fn __main( argList:&_List<str> ) : int {
    LnsDepend.profile(
       prof, 
       fn() {               
-         if format( optList[ 2 ], targetLineNo, optList[ 3 ], ebnfPath, debugFlag ) {
+         if format( optList[ 2 ], region,
+                    optList[ 3 ], ebnfPath, debugFlag ) {
             exitCode = 0;
          }
       }, "prof" );

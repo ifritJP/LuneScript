@@ -334,12 +334,14 @@ end
 local quotedCharSet = {['a'] = true, ['b'] = true, ['f'] = true, ['n'] = true, ['r'] = true, ['t'] = true, ['v'] = true, ['\\'] = true, ['"'] = true, ["'"] = true}
 
 local op2Set = {['+'] = true, ['-'] = true, ['*'] = true, ['/'] = true, ['^'] = true, ['%'] = true, ['&'] = true, ['~'] = true, ['|'] = true, ['|>>'] = true, ['|<<'] = true, ['..'] = true, ['<'] = true, ['<='] = true, ['>'] = true, ['>='] = true, ['=='] = true, ['~='] = true, ['and'] = true, ['or'] = true, ['@'] = true, ['@@'] = true, ['@@@'] = true, ['='] = true}
+_moduleObj.op2Set = op2Set
+
 
 local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['`{'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
 
 local function isOp2( ope )
 
-   return _lune._Set_has(op2Set, ope )
+   return _lune._Set_has(_moduleObj.op2Set, ope )
 end
 _moduleObj.isOp2 = isOp2
 
@@ -660,7 +662,7 @@ function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endCo
          tokenKind = Types.TokenKind.Kywd
       elseif _lune._Set_has(self.typeSet, token ) then
          tokenKind = Types.TokenKind.Type
-      elseif _lune._Set_has(op2Set, token ) or _lune._Set_has(op1Set, token ) then
+      elseif _lune._Set_has(_moduleObj.op2Set, token ) or _lune._Set_has(op1Set, token ) then
          tokenKind = Types.TokenKind.Ope
       end
       
@@ -843,7 +845,7 @@ function Tokenizer:addVal( list, kind, val, column )
                   subIndex = index + #delimit
                   
                   local workKind = Types.TokenKind.Dlmt
-                  if _lune._Set_has(op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
+                  if _lune._Set_has(_moduleObj.op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
                      workKind = Types.TokenKind.Ope
                   end
                   

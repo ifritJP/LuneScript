@@ -1,3 +1,4 @@
+// -*- coding: utf-8 -*-
 /*
 MIT License
 
@@ -96,8 +97,15 @@ pub class XML extend (Writer) {
    }
 }
 
+pub enum JsonLayerState {
+   None,
+   Termed,
+   Named,
+   Valued,
+}
+
 class JsonLayer {
-   pub let mut state: str;
+   pub let mut state: JsonLayerState;
    pub let arrayFlag: bool;
    pub let name: str;
    pub let madeByArrayFlag: bool;
@@ -114,7 +122,7 @@ pub class JSON extend (Writer) {
 
    pri fn startLayer( arrayFlag: bool, madeByArrayFlag: bool ) mut {
       let mut info = new JsonLayer(
-         'none', // none, named, valued, termed
+         .None, // none, named, valued, termed
          arrayFlag,
          self.prevName,
          madeByArrayFlag,
@@ -140,6 +148,18 @@ pub class JSON extend (Writer) {
       return self.layerQueue[ #self.layerQueue ];
    }
 
+   pub fn equalLayerState( state:JsonLayerState ): bool {
+      return self.layerQueue[ #self.layerQueue ].state == state;
+   }
+
+   pub fn isArrayLayer(): bool {
+      return self.layerQueue[ #self.layerQueue ].arrayFlag;
+   }
+
+   pub fn setLayerState( state:JsonLayerState ) mut {
+      self.layerQueue[ #self.layerQueue ].state = state;
+   }
+
    pub fn endLayer() mut {
       if #self.layerQueue == 0 {
          Util.err( "illegal depth" ); // バグ
@@ -154,7 +174,7 @@ pub class JSON extend (Writer) {
 	    self.stream.write( '}' );
          }
          self.layerQueue.remove(##);
-         let parentInfo = self.getLayerInfo();
+         let mut parentInfo = self.getLayerInfo();
          if not parentInfo$.madeByArrayFlag {
 	    break;
          }
@@ -164,17 +184,7 @@ pub class JSON extend (Writer) {
       }
    }
 
-   pub fn equalLayerState( state:str ): bool {
-      return self.layerQueue[ #self.layerQueue ].state == state;
-   }
-
-   pub fn isArrayLayer(): bool {
-      return self.layerQueue[ #self.layerQueue ].arrayFlag;
-   }
-
-   pub fn setLayerState( state:str ) mut {
-      self.layerQueue[ #self.layerQueue ].state = state;
-   }
+   
 
    pub fn getLayerName(): &str {
       return self.layerQueue[ #self.layerQueue ].name;
@@ -192,13 +202,13 @@ pub class JSON extend (Writer) {
    pub fn startParent( name:str, arrayFlag:bool ) mut {
       self.addElementName( name );
 
-      if self.equalLayerState( 'termed' ) or
-         self.equalLayerState( 'named' ) or
-         self.equalLayerState( 'valued' )
+      if self.equalLayerState( .Termed ) or
+         self.equalLayerState( .Named ) or
+         self.equalLayerState( .Valued )
       {
          self.stream.write( "," );
       }
-      elseif self.equalLayerState( 'none' ) {
+      elseif self.equalLayerState( .None ) {
          ;
       }
 
@@ -215,13 +225,13 @@ pub class JSON extend (Writer) {
    pub fn startElement( name:str ) mut {
       self.addElementName( name );
 
-      if self.equalLayerState( 'termed' ) {
+      if self.equalLayerState( .Termed ) {
          self.stream.write( "," );
       }
-      elseif self.equalLayerState( 'named' ) {
+      elseif self.equalLayerState( .Named ) {
          Util.err( 'illegal layer state' ); // バグ
       }
-      elseif self.equalLayerState( 'none' ) {
+      elseif self.equalLayerState( .None ) {
          ;
       }
       if self.isArrayLayer() {
@@ -236,15 +246,15 @@ pub class JSON extend (Writer) {
       info.openElement = true;
 
       self.stream.write(  '"%s": ' ( name ) );
-      self.setLayerState( 'named' );
+      self.setLayerState( .Named );
       self.prevName = name;
    }
 
    pub fn endElement() mut {
-      if self.equalLayerState( 'none' ) or self.equalLayerState( 'termed' ) {
+      if self.equalLayerState( .None ) or self.equalLayerState( .Termed ) {
          self.endLayer();
       }
-      elseif self.equalLayerState( 'valued' ) {
+      elseif self.equalLayerState( .Valued ) {
          let mut info = unwrap self.getLayerInfo();
          if info.openElement {
 	    info.openElement = false;
@@ -256,7 +266,7 @@ pub class JSON extend (Writer) {
       else  {
          Util.err( 'illegal layer state %s'  (self.getLayerName() ) ); // バグ
       }
-      self.setLayerState( 'termed' );
+      self.setLayerState( .Termed );
    }
 
    pri static fn convertJsonTxt( mut txt:str ):str {
@@ -284,7 +294,7 @@ pub class JSON extend (Writer) {
       }
 
       self.stream.write( txt );
-      self.setLayerState( 'valued' );
+      self.setLayerState( .Valued );
    }
 
    pub fn write( name:str, val:stem ) mut {
@@ -294,7 +304,7 @@ pub class JSON extend (Writer) {
    }
 
    pub fn fin() mut {
-      if self.equalLayerState( 'none' ) or self.equalLayerState( 'termed' ) {
+      if self.equalLayerState( .None ) or self.equalLayerState( .Termed ) {
          self.endLayer();
       }
       else {

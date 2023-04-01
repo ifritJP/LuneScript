@@ -630,9 +630,9 @@ pattern は  {, }, {{, }} のいずれか。
 
 
 
-(defun lns-process-line-test ()
+(defun lns-process-line-test (&optional is-range)
   ;;; formater を使ったインデントテスト
-  (let (command-list workbuf lns-code json-obj indent)
+  (let (command-list workbuf lns-code json-obj indent pos)
     (save-excursion
       (end-of-line)
       (setq lns-code (concat (buffer-substring-no-properties (point-min) (point))
@@ -640,9 +640,15 @@ pattern は  {, }, {{, }} のいずれか。
 			     (buffer-substring-no-properties (point) (point-max))
 			     " ___LNS___"
 			     )))
+    (setq pos (cond (is-range
+		     (format "%d:%d"
+			     (line-number-at-pos (region-beginning))
+			     (line-number-at-pos (region-end))))
+		    (t
+		     (format "%d" (lns-get-line)))))
     (setq command-list
 	  (list (expand-file-name "~/work/LuneScript/tools/ebnf/lns/main.lns")
-		"-shebang" "-i" (format "%d" (lns-get-line)) "@-" ""))
+		"-shebang" "-i" pos "@-" ""))
     (setq workbuf (lns-get-buffer "*lns-process*" t))
     (lns-execute-command nil workbuf lns-code command-list )
 
@@ -653,23 +659,19 @@ pattern は  {, }, {{, }} のいずれか。
 	    (json-read-from-string
 	     (buffer-substring-no-properties (point-min) (point-max))))))
 
-
-    (setq indent (1- (plist-get (plist-get json-obj :indent) :column)))
     (save-excursion
-      (indent-line-to indent))
+      (dolist (X (plist-get (plist-get json-obj :indent) :lines))
+	(let* ((info (car (cdr X)))
+	       (indent (1- (plist-get info :column)))
+	       (lineNo (plist-get info :lineNo)))
+	  (goto-line lineNo)
+	  (indent-line-to indent))))
+    
+    (deactivate-mark)
   ))
 (defun lns-indent-region-test ()
   (interactive)
-  (let* ((start (region-beginning))
-	 (end (region-end)))
-    (save-excursion
-      (goto-char start)
-      (lns-process-line-test)
-      (while (and (forward-line)
-		  (< (point) end))
-	(message (format "%d" (lns-get-line) ))
-	(lns-process-line-test))
-      )))
+  (lns-process-line-test t))
 
 
 
