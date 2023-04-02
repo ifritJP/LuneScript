@@ -33,6 +33,14 @@
   (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
 
 
+(defvar lns-proj-info-check-useing-indent-command
+  (lambda (proj-dir)
+    t)
+    ;; nil)
+  "proj-dir のプロジェクトでインデントコマンドを利用するかどうか。"
+  )
+
+
 (defvar lns-indent-level 3)
 
 (defvar lns-no-token-pattern "[^a-zA-Z0-9_]")
@@ -238,6 +246,10 @@
   "キャッシュしている lnsc のパス"
   (plist-get proj :lnsc-path)
   )
+(defun lns-proj-info-get-use-indent-command-p (proj)
+  "インデントに外部コマンドを利用するかどうか"
+  (plist-get proj :use-indent-comamnd)
+  )
 
 (defun lns-proj-get-cmd-option (proj)
   (plist-get (lns-proj-info-get-conf proj) :cmd_option)
@@ -249,14 +261,35 @@
 
 (defvar lns-proj-info-list nil)
 
+
+(defun lns-proj-info-new (proj-dir)
+  (let ((info (list :conf (lns-get-proj-info proj-dir)))
+	formatter-dir formatter-path)
+    (add-to-list 'lns-proj-info-list (list proj-dir info))
+    (plist-put info :proj-dir proj-dir)
+    (plist-put info :use-indent-comamnd
+	       (funcall lns-proj-info-check-useing-indent-command proj-dir))
+    ;; lnsc の場所を更新
+    (lns-command-get-lnsc)
+    ;; formatter の場所を登録
+    (setq formatter-dir (expand-file-name (concat (lns-proj-info-get-lnsc-path info)
+						  "../../../tools/ebnf")))
+    (cond
+     ((and (setq formatter-path (expand-file-name "formatter" formatter-dir))
+	   (file-exists-p formatter-path))
+      (plist-put info :indent-command-path formatter-path))
+     ((and (setq formatter-path (expand-file-name "lns/main.lns" formatter-dir))
+	   (file-exists-p formatter-path))
+      (plist-put info :indent-command-script formatter-path)))
+    ))
+
 (defun lns-proj-info-get (&optional proj-dir new)
   (when (not proj-dir)
     (setq proj-dir (lns-get-proj-dir)))
   (let ((info (assoc proj-dir lns-proj-info-list)))
     (cond
      ((and (not info) new)
-      (setq info (list :conf (lns-get-proj-info proj-dir)))
-      (add-to-list 'lns-proj-info-list (list proj-dir info)))
+      (setq info (lns-proj-info-new proj-dir)))
      (t
       (setq info (nth 1 info))))
     info
@@ -264,14 +297,17 @@
 
 (defun lns-proj-reload (&optional proj-dir)
   (interactive)
-  (let ((info (lns-proj-info-get proj-dir))
-	(conf (lns-get-proj-info proj-dir)))
-	
-    (plist-put info :conf conf)
-    (plist-put info :lnsc-path nil)
-  ))
+  (let ((info (lns-proj-info-get proj-dir)))
+    ;; lns-proj-info-list から proj-dir のプロジェクト情報を削除する
+    (setq lns-proj-info-list
+	  (delq nil (mapcar (lambda (X)
+			      (when (not (equal (car X)
+						(plist-get info :proj-dir)))
+				X))
+			    lns-proj-info-list)))
+    (lns-proj-info-get proj-dir t)
+    ))
 
-      
 
 ;;;###autoload
 (define-derived-mode lns-mode lns--prog-mode "Lns"
@@ -304,6 +340,9 @@
   (set (make-local-variable 'lns-proj-dir) (lns-proj-search))
   (set (make-local-variable 'lns-proj-info) (lns-proj-info-get lns-proj-dir t))
   (set (make-local-variable 'flycheck-executable-find) 'lns-flycheck-executable-find)
+  ;; 改行時、複数回 indent が走ると重いので、electric が動作しないようにする。
+  ;; また、 ブロックで indent が走るように {} を登録する。
+  (set (make-local-variable 'electric-indent-chars) `(?{ ?}))
   (when (boundp 'company-backends)
     (set (make-local-variable 'company-backends)
 	 (delq 'company-dabbrev (copy-sequence company-backends))))
@@ -629,10 +668,41 @@ pattern は  {, }, {{, }} のいずれか。
 (defvar lns-indent-region-running nil)
 
 
+(defun lns-indent-by-command-result (json-obj)
+  ;;; インデント結果を反映
+  (let ((cur-line (lns-get-line))
+	(cur-marker (point-marker))
+	return-point)
+    (dolist (X (plist-get (plist-get json-obj :indent) :lines))
+      (let* ((info (car (cdr X)))
+	     (indent (1- (plist-get info :column)))
+	     (lineNo (plist-get info :lineNo))
+	     (same (plist-get info :same)))
+	(when (<= cur-line lineNo) 
+	  (goto-line lineNo)
+	  (if (eq same :json-true)
+	      (move-to-column indent)
+	    (indent-line-to indent))
+	  (when (equal cur-line (lns-get-line))
+	    (setq return-point (point)))
+	  )))
+    (goto-char (cond
+		(return-point
+		 (if (< return-point cur-marker)
+		     cur-marker
+		   return-point))
+		(t
+		 cur-marker)))
+    ;; marker の後処理
+    (set-marker cur-marker nil)
+    ))
 
-(defun lns-process-line-test (&optional is-range)
-  ;;; formater を使ったインデントテスト
-  (let (command-list workbuf lns-code json-obj indent pos)
+(defun lns-process-line-by-command-main (newline-p tab-p &optional is-range start end)
+  ;;; formater を使ったインデント
+  (let ((proj (lns-proj-info-get))
+	command-path command-list workbuf lns-code json-obj indent pos
+	)
+
     (save-excursion
       (end-of-line)
       (setq lns-code (concat (buffer-substring-no-properties (point-min) (point))
@@ -640,49 +710,93 @@ pattern は  {, }, {{, }} のいずれか。
 			     (buffer-substring-no-properties (point) (point-max))
 			     " ___LNS___"
 			     )))
-    (setq pos (cond (is-range
+    (setq pos (cond (newline-p
+		     (save-excursion
+		       (setq end (point))
+		       (previous-line)
+		       (setq start (point)))
 		     (format "%d:%d"
-			     (line-number-at-pos (region-beginning))
-			     (line-number-at-pos (region-end))))
+			     (line-number-at-pos start)
+			     (line-number-at-pos end)))
+		    (is-range
+		     (when (or (not start) (not end))
+		       (setq start (region-beginning))
+		       (setq end (region-end)))
+		     (format "%d:%d"
+			     (line-number-at-pos start)
+			     (line-number-at-pos end)))
 		    (t
 		     (format "%d" (lns-get-line)))))
-    (setq command-list
-	  (list (expand-file-name "~/work/LuneScript/tools/ebnf/lns/main.lns")
-		"-shebang" "-i" pos "@-" ""))
+    (setq command-list (list "-i" pos "@-" ""))
     (setq workbuf (lns-get-buffer "*lns-process*" t))
-    (lns-execute-command nil workbuf lns-code command-list )
+    ;; formatter 実行
+    (cond
+     ((setq command-path (plist-get proj :indent-command-script))
+      (lns-execute-command nil workbuf lns-code
+			   (append (list command-path "-shebang") command-list)))
+     ((setq command-path (plist-get proj :indent-command-path))
+      (with-temp-buffer
+	(setq default-directory (plist-get proj :proj-dir))
+	(insert lns-code)
+	(apply 'call-process-region (point-min) (point-max)
+	       command-path nil workbuf nil command-list)))
+     (t
+      (error "not set the indent-command"))
+     )
 
-    (with-current-buffer workbuf
-      (setq json-obj
-	  (let ((json-object-type 'plist)
-		(json-array-type 'list))
-	    (json-read-from-string
-	     (buffer-substring-no-properties (point-min) (point-max))))))
+    (condition-case err
+	(progn
+	  ;; formatter 結果反映
+	  (with-current-buffer workbuf
+	    (setq json-obj
+		  (let ((json-object-type 'plist)
+			(json-array-type 'list))
+		    (json-read-from-string
+		     (buffer-substring-no-properties (point-min) (point-max))))))
 
-    (save-excursion
-      (dolist (X (plist-get (plist-get json-obj :indent) :lines))
-	(let* ((info (car (cdr X)))
-	       (indent (1- (plist-get info :column)))
-	       (lineNo (plist-get info :lineNo)))
-	  (goto-line lineNo)
-	  (indent-line-to indent))))
-    
-    (deactivate-mark)
-  ))
-(defun lns-indent-region-test ()
+	  (cond ((or newline-p tab-p)
+		 (lns-indent-by-command-result json-obj))
+		(t
+		 (save-excursion
+		   (lns-indent-by-command-result json-obj))))
+
+	  (when (and transient-mark-mode mark-active)
+	    (deactivate-mark))
+	  )
+      (error (princ (format "failed to detect the indent. check '*lns-process*' buffer")))
+      )))
+(defun lns-process-line-by-command (&optional is-range start end)
+  ;; どの関数から実行されたか調べる
+  (let (newline-p tab-p)
+    (let ((backtrace-list (reverse (cdr (reverse (backtrace-frames))))))
+      (dolist (frame backtrace-list)
+	(let ((func (nth 1 frame)))
+	  (cond
+	   ((equal func 'newline-and-indent)
+	    (setq newline-p t))
+	   ((equal func 'indent-for-tab-command)
+	    (setq tab-p t))
+	   ))))
+    (lns-process-line-by-command-main newline-p tab-p is-range start end)
+    ))
+(defun lns-indent-region-by-command ()
   (interactive)
-  (lns-process-line-test t))
+  (lns-process-line-by-command t))
 
 
 
 
 (defun lns-indent-line (&optional force)
-  (if (and (not force)
-	   (not lns-indent-region-running)
-	   (eq (lns-get-column) 1))
-      ;; コメント改行時、
-      (run-at-time 0.01 nil (lambda () (lns-indent-line-sub)))
-    (lns-indent-line-sub)))
+  (cond
+   ((lns-proj-info-get-use-indent-command-p (lns-proj-info-get))
+    (lns-process-line-by-command))
+   (t
+    (if (and (not force)
+	     (not lns-indent-region-running)
+	     (eq (lns-get-column) 1))
+	;; コメント改行時、
+	(run-at-time 0.01 nil (lambda () (lns-indent-line-sub)))
+      (lns-indent-line-sub)))))
 
 (defun lns-indent-line-sub ()
   (let ((case-fold-search nil)
@@ -807,10 +921,14 @@ pattern は  {, }, {{, }} のいずれか。
     ))
 
 (defun lns-indent-region (start end)
-  (let ((indent-region-function nil)
-	(lns-indent-region-running t))
-    (indent-region start end nil) 
-  ))
+  (cond
+   ((lns-proj-info-get-use-indent-command-p (lns-proj-info-get))
+    (lns-process-line-by-command t start end))
+   (t
+    (let ((indent-region-function nil)
+	  (lns-indent-region-running t))
+      (indent-region start end nil) 
+      ))))
 
 
 (defun lns-beginning-of-fn (&optional arg)

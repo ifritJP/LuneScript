@@ -46,20 +46,28 @@ switch hoge {
 }
 ```;
    return LnsTokenizer.StreamTokenizer.create(
-      LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ), false, nil, nil );
+      LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ), true, nil, nil );
 }
 
 fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
    return LnsTokenizer.StreamTokenizer.create(
-      LnsTypes.TokenizerSrc.LnsPath( nil, path, "test", nil), false, nil, nil );
+      LnsTypes.TokenizerSrc.LnsPath( nil, path, "test", nil), true, nil, nil );
 }
 
 
-fn format( inpath:str, lineNo:(int,int)!,
-           outpath:str, ebnfPath:str!, debugFlag:bool ) : bool
+class Option {
+   let inpath:str {pub};
+   let lineNo:(int,int,bool)! {pub};
+   let outpath:str {pub};
+   let ebnfPath:str! {pub};
+   let debugFlag:bool {pub};
+}
+
+
+fn format( option:&Option ) : bool
 {
    let mut tokenizer;
-   switch inpath {
+   switch option.$inpath {
       case "" {
          tokenizer = createTokenizer();
       }
@@ -67,10 +75,10 @@ fn format( inpath:str, lineNo:(int,int)!,
          let lnsCode = io.stdin.read( "*a" ) or "";
          tokenizer = LnsTokenizer.StreamTokenizer.create(
             LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ),
-            false, nil, nil );
+            true, nil, nil );
       }
       default {
-         tokenizer = createTokenizerFromFile( inpath );
+         tokenizer = createTokenizerFromFile( option.$inpath );
       }
    }
    
@@ -81,22 +89,33 @@ fn format( inpath:str, lineNo:(int,int)!,
    // let mut tokenizer = createTokenizerFromFile( "../../src/lune/base/front.lns" );
    // let mut tokenizer = createTokenizerFromFile( "../../src/lune/base/Nodes.lns" );
 
-
-   let ebnfCtrl = Parser.analyze_ebnf( Ebnf.EbnfTokenizer.create( ebnfPath ) );
-   if debugFlag {
-      ebnfCtrl.dump();
-   }
-
    let mut codeTokenizer:Code.CodeTokenizerIF = new Code.CodeTokenizer( tokenizer );
    let hookIf:Code.ParseCodeHookIF;
-   when! lineNo {
-      let targetLineNo, endLineNo = lineNo...;
+   if! let lineNo = option.$lineNo {
+      let targetLineNo, endLineNo, useEbnf = lineNo...;
+      
+      let mut codePicker = Formatter.CodePicker.createFrom(
+         codeTokenizer, targetLineNo, endLineNo );
+
+      if not useEbnf {
+         let mut parser =
+            new Formatter.SimpleParser( codePicker, targetLineNo, endLineNo );
+         parser.analyze();
+         return true;
+      }
+
+      
       let mut hook = new Formatter.ParseCodeHook(
          codeTokenizer, targetLineNo, endLineNo );
       codeTokenizer = hook;
       hookIf = hook;
    } else {
       hookIf = new Code.DummyParseCodeHook();
+   }
+
+   let ebnfCtrl = Parser.analyze_ebnf( Ebnf.EbnfTokenizer.create( option.$ebnfPath ) );
+   if option.$debugFlag {
+      ebnfCtrl.dump();
    }
    _match ebnfCtrl.parse( "<code>", codeTokenizer, hookIf ) {
       case .Eof {
@@ -111,9 +130,9 @@ fn format( inpath:str, lineNo:(int,int)!,
       }
       case .Detect( codeCore ) {
          Util.log( "outputCode" );
-         if! let mut fileObj = io.open( outpath, "w" ) {
+         if! let mut fileObj = io.open( option.$outpath, "w" ) {
             let mut stream = new LnsUtil.memStream();
-            Code.outputCode( codeCore, new Code.CodeGenerator( stream ) );
+            Code.outputCode( codeCore, new Code.CodeGenerator( stream, codeTokenizer ) );
             fileObj.write( stream.$txt );
             fileObj.close();
             Util.log( "" );
@@ -140,7 +159,7 @@ pub fn __main( argList:&_List<str> ) : int {
    let mut index = 1;
    let mut prof = false;
    let mut debugFlag = false;
-   let mut region:(int,int)! = nil;
+   let mut region:(int,int,bool)! = nil;
 
    fn getNext() : str {
       if index > #argList {
@@ -160,22 +179,28 @@ pub fn __main( argList:&_List<str> ) : int {
    
    while index <= #argList {
       let arg = getNext();
-      if arg == "-log" {
-         debugFlag = true;
-         Util.setLog( true );
-      } elseif arg == "-prof" {
-         prof = true;
-      } elseif arg == "-ebnf" {
-         ebnfPath = getNext();
-      } elseif arg == "-i" {
-         let nextArg = getNext();
-         let pre = nextArg.gsub( ":.*", "" );
-         let post = nextArg.gsub( ".*:", "" );
-         let startLineNo = convInt( pre, "%s is not number" (pre) );
-         let endLineNo = convInt( post, "%s is not number" (post) );
-         region = (= startLineNo, endLineNo );
-      } else {
-         optList.insert( arg );
+      switch arg {
+         case "-log" {
+            debugFlag = true;
+            Util.setLog( true );
+         }
+         case "-prof" {
+            prof = true;
+         }
+         case "-ebnf" {
+            ebnfPath = getNext();
+         }
+         case "-i", "-I" {
+            let nextArg = getNext();
+            let pre = nextArg.gsub( ":.*", "" );
+            let post = nextArg.gsub( ".*:", "" );
+            let startLineNo = convInt( pre, "%s is not number" (pre) );
+            let endLineNo = convInt( post, "%s is not number" (post) );
+            region = (= startLineNo, endLineNo, arg == "-I" );
+         }
+         default {
+            optList.insert( arg );
+         }
       }
    }
 
@@ -188,8 +213,8 @@ pub fn __main( argList:&_List<str> ) : int {
    LnsDepend.profile(
       prof, 
       fn() {               
-         if format( optList[ 2 ], region,
-                    optList[ 3 ], ebnfPath, debugFlag ) {
+         if format( new Option( optList[ 2 ], region,
+                                optList[ 3 ], ebnfPath, debugFlag ) ) {
             exitCode = 0;
          }
       }, "prof" );

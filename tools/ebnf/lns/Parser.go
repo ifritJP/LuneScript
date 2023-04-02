@@ -9,7 +9,7 @@ var Parser__mod__ string
 func Parser_convExp0_447(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
-// 131: decl @lns.@Parser.analyze_ebnf
+// 134: decl @lns.@Parser.analyze_ebnf
 func Parser_analyze_ebnf(_env *LnsEnv, tokenizer *Ebnf_EbnfTokenizer) *Parser_EbnfCtrl {
     var ebnfCtrl *Parser_EbnfCtrl
     ebnfCtrl = NewParser_EbnfCtrl(_env)
@@ -158,7 +158,7 @@ func (self *Parser_EbnfCtrl) Dump(_env *LnsEnv) {
     }
 }
 // 114: decl @lns.@Parser.EbnfCtrl.parse
-func (self *Parser_EbnfCtrl) Parse(_env *LnsEnv, elementName string,tokenizer *Code_CodeTokenizer,hook Code_ParseCodeHookIF) LnsAny {
+func (self *Parser_EbnfCtrl) Parse(_env *LnsEnv, elementName string,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF) LnsAny {
     var ruleList *Rule_RuleList
     
     {
@@ -170,9 +170,13 @@ func (self *Parser_EbnfCtrl) Parse(_env *LnsEnv, elementName string,tokenizer *C
             ruleList = _ruleList.(*Rule_RuleList)
         }
     }
-    return hook.Process(_env, ruleList.FP.ParseCode(_env, self.FP, tokenizer, hook, 0), 0)
+    var depth LnsInt
+    depth = 0
+    hook.Prepare(_env, elementName, depth, tokenizer.GetToken(_env))
+    tokenizer.Pushback(_env)
+    return hook.Process(_env, ruleList.FP.ParseCode(_env, self.FP, tokenizer, hook, depth), depth)
 }
-// 124: decl @lns.@Parser.EbnfCtrl.setupCandidate
+// 127: decl @lns.@Parser.EbnfCtrl.setupCandidate
 func (self *Parser_EbnfCtrl) SetupCandidate(_env *LnsEnv) {
     var fusedCoreSet *LnsSet
     fusedCoreSet = NewLnsSet([]LnsAny{})
@@ -185,7 +189,7 @@ func (self *Parser_EbnfCtrl) SetupCandidate(_env *LnsEnv) {
 type Parser_EbnfCtrlMtd interface {
     Dump(_env *LnsEnv)
     GetRuleList(_env *LnsEnv, arg1 string) LnsAny
-    Parse(_env *LnsEnv, arg1 string, arg2 *Code_CodeTokenizer, arg3 Code_ParseCodeHookIF) LnsAny
+    Parse(_env *LnsEnv, arg1 string, arg2 Code_CodeTokenizerIF, arg3 Code_ParseCodeHookIF) LnsAny
     processDecl(_env *LnsEnv, arg1 *Ebnf_EbnfTokenizer, arg2 *LnsTypes.Types_Token) *Rule_RuleList
     processRule(_env *LnsEnv, arg1 LnsAny, arg2 *Ebnf_DeclTokenizer, arg3 LnsAny)(LnsAny, string)
     SetupCandidate(_env *LnsEnv)

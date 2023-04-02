@@ -114,7 +114,7 @@ pub class Rule extend (Ebnf.RuleIF){
    }
 
    fn parseCodeSub(ctrl:&Ebnf.EbnfCtrlIF, tokenizer:Code.CodeTokenizerIF,
-                    hook:Code.ParseCodeHookIF, nextDepth:int ) : Code.ParseCodeRet
+                   hook:Code.ParseCodeHookIF, nextDepth:int ) : Code.ParseCodeRet
    {
       let codeCoreList:List<&Code.CodeCore> = [];
       fn pushbackToken() __trans {
@@ -198,8 +198,8 @@ pub class RuleList extend (Ebnf.RuleListIF) {
    {
       if not self.candidate.has( tokenizer.peekToken() ) {
          Util.log( __func__, "not found candidate -- ",
-              tokenizer.peekToken().txt, tokenizer.peekToken().kind.$_txt,
-              self.elementName );
+                   tokenizer.peekToken().txt, tokenizer.peekToken().kind.$_txt,
+                   self.elementName );
          if self.candidate.$canAbbr {
             return .Abbr;
          }

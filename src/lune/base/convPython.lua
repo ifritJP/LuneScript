@@ -1220,7 +1220,6 @@ function convFilter:needConvFormFunc( node )
    return false
 end
 
-
 local function needConvCast( dstType, srcType )
 
    do

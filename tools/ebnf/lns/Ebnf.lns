@@ -41,7 +41,7 @@ pub class EbnfTokenizer {
       }
       Util.log(
          "%d:%d: Illegal token. expects '%s' but '%s'"
-         ( token.pos.lineNo, token.pos.column, txt, token.txt) );
+            ( token.pos.lineNo, token.pos.column, txt, token.txt) );
       os.exit( 1 );
    }
    
@@ -83,7 +83,7 @@ pub class EbnfTokenizer {
       }
       Util.log(
          "%d:%d: Illegal token. expects '%s' but '%s'"
-         ( token.pos.lineNo, token.pos.column, txt, token.txt) );
+            ( token.pos.lineNo, token.pos.column, txt, token.txt) );
       os.exit( 1 );
    }
 
@@ -211,7 +211,7 @@ Token を Core として管理するクラス
 以下の "if" の部分。
 
 <hoge> ::= "if" <exp> <block>
- */
+*/
 pub class TokenCore extend (Core) {
    let token:&LnsTypes.Token {pub};
    let rawTxt:str;
@@ -233,7 +233,7 @@ pub class TokenCore extend (Core) {
       Util.log( __func__, self.token.txt, token.txt, token.kind.$_txt );
       if token.txt == self.rawTxt {
          Util.log( __func__, "detect", token.txt,
-                "%d:%d" (token.pos.lineNo, token.pos.column ) );
+                   "%d:%d" (token.pos.lineNo, token.pos.column ) );
          return .Detect( new Code.CodeCoreToken( token ) );
       }
       tokenizer.pushback();
@@ -344,6 +344,7 @@ class BuiltinStatCore extend (Core) {
             }
          }
          list.insert( workToken );
+         hook.process( .Detect( new Code.CodeCoreStatOne( workToken ) ), depth + 1 );
       }
       tokenizer.pushback();
       return .Detect( new Code.CodeCoreStat( list ));

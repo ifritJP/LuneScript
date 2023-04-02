@@ -382,7 +382,6 @@ local function getAstFromResult( result )
    end
    
 end
-
 local function closeStreams( stream, metaStream, dependStream, metaPath, saveMetaFlag )
 
    local function txt2ModuleId( txt )

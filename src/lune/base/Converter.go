@@ -19,43 +19,43 @@ return "CreateAstResult.Creater"
 }
 type Converter_ConverterFunc func (_env *LnsEnv)
 // for 334
-func Converter_convExp0_2303(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2302(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 343
-func Converter_convExp0_2374(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2373(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 77
-func Converter_convExp0_1430(arg1 []LnsAny) (LnsAny, LnsAny) {
+func Converter_convExp0_1429(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 224
-func Converter_convExp0_1762(arg1 []LnsAny) string {
+func Converter_convExp0_1761(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 283
-func Converter_convExp0_2013(arg1 []LnsAny) string {
+func Converter_convExp0_2012(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 284
-func Converter_convExp0_2026(arg1 []LnsAny) string {
+func Converter_convExp0_2025(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 339
-func Converter_convExp0_2327(arg1 []LnsAny) (bool, string) {
+func Converter_convExp0_2326(arg1 []LnsAny) (bool, string) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 462
-func Converter_convExp0_2574(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2573(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 539
-func Converter_convExp0_2704(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2703(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 608
-func Converter_convExp0_2777(arg1 []LnsAny) LnsAny {
+func Converter_convExp0_2776(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 45: decl @lune.@base.@Converter.createModuleInfo
@@ -156,9 +156,9 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
                         _env.SetStackVal( Lns_car(_env.GetVM().String_find(oldLine_309,"^__dependModuleMap.*buildId =", nil, nil))) &&
                         _env.SetStackVal( Lns_car(_env.GetVM().String_find(newLine_308,"^__dependModuleMap.*buildId =", nil, nil))) )){
                         var oldSub string
-                        oldSub = Converter_convExp0_2013(Lns_2DDD(_env.GetVM().String_gsub(oldLine_309,"buildId =.*", "")))
+                        oldSub = Converter_convExp0_2012(Lns_2DDD(_env.GetVM().String_gsub(oldLine_309,"buildId =.*", "")))
                         var newSub string
-                        newSub = Converter_convExp0_2026(Lns_2DDD(_env.GetVM().String_gsub(newLine_308,"buildId =.*", "")))
+                        newSub = Converter_convExp0_2025(Lns_2DDD(_env.GetVM().String_gsub(newLine_308,"buildId =.*", "")))
                         if oldSub == newSub{
                             cont = true
                         }
@@ -212,7 +212,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
             var oldMetaTxt string
             oldMetaTxt = ""
             {
-                _oldFileObj := Converter_convExp0_2303(Lns_2DDD(Lns_io_open(metaPath, nil)))
+                _oldFileObj := Converter_convExp0_2302(Lns_2DDD(Lns_io_open(metaPath, nil)))
                 if !Lns_IsNil( _oldFileObj ) {
                     oldFileObj := _oldFileObj.(Lns_luaStream)
                     oldMetaTxt = Lns_unwrapDefault( oldFileObj.Read(_env, "*a"), "").(string)
@@ -225,7 +225,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
             var Converter_saveMeta func(_env *LnsEnv, meta string)
             Converter_saveMeta = func(_env *LnsEnv, meta string) {
                 {
-                    _fileObj := Converter_convExp0_2374(Lns_2DDD(Lns_io_open(metaPath, "w")))
+                    _fileObj := Converter_convExp0_2373(Lns_2DDD(Lns_io_open(metaPath, "w")))
                     if !Lns_IsNil( _fileObj ) {
                         fileObj := _fileObj.(Lns_luaStream)
                         fileObj.Write(_env, meta)
@@ -249,7 +249,7 @@ func Converter_closeStreams(_env *LnsEnv, stream LnsAny,metaStream LnsAny,depend
 // 223: decl @lune.@base.@Converter.closeStreams.txt2ModuleId
 func Converter_closeStreams__txt2ModuleId_0_(_env *LnsEnv, txt string) *FrontInterface_ModuleId {
     var buildIdTxt string
-    buildIdTxt = Converter_convExp0_1762(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(txt,"^_moduleObj.__buildId = ", "")).(string),"\"", "")))
+    buildIdTxt = Converter_convExp0_1761(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(txt,"^_moduleObj.__buildId = ", "")).(string),"\"", "")))
     return FrontInterface_ModuleId_createIdFromTxt(_env, buildIdTxt)
 }
 
@@ -345,7 +345,7 @@ func (self *Converter_LuaConverter) SaveLua(_env *LnsEnv) {
     var streamDst Lns_luaStream
     
     {
-        _streamDst := Converter_convExp0_2574(Lns_2DDD(Lns_io_open(self.luaPath, "w")))
+        _streamDst := Converter_convExp0_2573(Lns_2DDD(Lns_io_open(self.luaPath, "w")))
         if _streamDst == nil{
             Util_err(_env, _env.GetVM().String_format("write open error -- %s", Lns_2DDD(self.luaPath)))
         } else {
@@ -377,7 +377,7 @@ func (self *Converter_GoConverter) SaveGo(_env *LnsEnv) {
     var file Lns_luaStream
     
     {
-        _file := Converter_convExp0_2704(Lns_2DDD(Lns_io_open(self.path, "w")))
+        _file := Converter_convExp0_2703(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
             Util_err(_env, _env.GetVM().String_format("can't open file -- %s", Lns_2DDD(self.path)))
         } else {
@@ -400,7 +400,7 @@ func (self *Converter_PythonConverter) SavePython(_env *LnsEnv) {
     var file Lns_luaStream
     
     {
-        _file := Converter_convExp0_2777(Lns_2DDD(Lns_io_open(self.path, "w")))
+        _file := Converter_convExp0_2776(Lns_2DDD(Lns_io_open(self.path, "w")))
         if _file == nil{
             Util_err(_env, _env.GetVM().String_format("can't open file -- %s", Lns_2DDD(self.path)))
         } else {

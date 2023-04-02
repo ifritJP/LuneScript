@@ -691,7 +691,7 @@ func Ast_convExp4_4067(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 3639
-func Ast_convExp0_5228(arg1 []LnsAny) *Ast_TypeInfo {
+func Ast_convExp0_5218(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_AlternateTypeInfo).Ast_TypeInfo
 }
 // for 6908
@@ -699,7 +699,7 @@ func Ast_convExp4_4449(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 8509
-func Ast_convExp0_18428(arg1 []LnsAny) *Ast_TypeInfo {
+func Ast_convExp0_18413(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo).Ast_TypeInfo
 }
 // for 5508
@@ -739,79 +739,79 @@ func Ast_convExp4_3652(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 7309
-func Ast_convExp0_12357(arg1 []LnsAny) (bool, LnsAny) {
+func Ast_convExp0_12342(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 7337
-func Ast_convExp0_12481(arg1 []LnsAny) (bool, LnsAny) {
+func Ast_convExp0_12466(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 7440
-func Ast_convExp0_12704(arg1 []LnsAny) (bool, LnsAny) {
+func Ast_convExp0_12689(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 7478
-func Ast_convExp0_12922(arg1 []LnsAny) (bool, LnsAny) {
+func Ast_convExp0_12907(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 7501
-func Ast_convExp0_13176(arg1 []LnsAny) (bool, LnsAny) {
+func Ast_convExp0_13161(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 7518
-func Ast_convExp0_13274(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_13259(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 7544
-func Ast_convExp0_13498(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_13483(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 7552
-func Ast_convExp0_13642(arg1 []LnsAny) (bool, LnsAny) {
+func Ast_convExp0_13627(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 7942
-func Ast_convExp0_15592(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_15577(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 7950
-func Ast_convExp0_15629(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_15614(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 7958
-func Ast_convExp0_15666(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_15651(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 7966
-func Ast_convExp0_15703(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_15688(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 8084
-func Ast_convExp0_16707(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_16692(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 8090
-func Ast_convExp0_16743(arg1 []LnsAny) (LnsInt, string) {
+func Ast_convExp0_16728(arg1 []LnsAny) (LnsInt, string) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 8185
-func Ast_convExp0_17168(arg1 []LnsAny) (LnsAny, bool) {
+func Ast_convExp0_17153(arg1 []LnsAny) (LnsAny, bool) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 8447
-func Ast_convExp0_17946(arg1 []LnsAny) LnsAny {
+func Ast_convExp0_17931(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 1
-func Ast_convExp0_16014(arg1 []LnsAny) (bool, LnsAny) {
+func Ast_convExp0_15999(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 1
-func Ast_convExp0_16187(arg1 []LnsAny) bool {
+func Ast_convExp0_16172(arg1 []LnsAny) bool {
     return Lns_getFromMulti( arg1, 0 ).(bool)
 }
 // for 1
-func Ast_convExp0_16324(arg1 []LnsAny) bool {
+func Ast_convExp0_16309(arg1 []LnsAny) bool {
     return Lns_getFromMulti( arg1, 0 ).(bool)
 }
 func Ast_ProcessInfo_switchIdProvier___anonymous_0_(_env *LnsEnv) string {
@@ -7263,7 +7263,7 @@ func Lns_Ast_init(_env *LnsEnv) {
     Ast_dummyIdInfo = NewAst_IdInfo(_env, 1, Ast_rootProcessInfo)
     Ast_CanEvalCtrlTypeInfo____init_1_(_env)
     Ast_dummySymbol = Lns_unwrap( Lns_car(Ast_rootScope.FP.AddLocalVar(_env, Ast_rootProcessInfo, false, false, "$$", nil, Ast_headTypeInfo, Ast_MutMode__IMut))).(*Ast_SymbolInfo)
-    Ast_boxRootAltType = Ast_convExp0_5228(Lns_2DDD(Ast_AlternateTypeInfo_create_14_(_env, Ast_rootProcessInfo, true, 1, "_T", Ast_AccessMode__Pub, Ast_headTypeInfo, nil, nil, nil)))
+    Ast_boxRootAltType = Ast_convExp0_5218(Lns_2DDD(Ast_AlternateTypeInfo_create_14_(_env, Ast_rootProcessInfo, true, 1, "_T", Ast_AccessMode__Pub, Ast_headTypeInfo, nil, nil, nil)))
     Ast_addBuiltinMut(_env, Ast_headTypeInfoMut, Ast_rootScope)
     Ast_builtinTypeNone = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__None", "", Ast_TypeInfoKind__Prim, nil, nil)
     Ast_builtinTypeEmpty = Ast_NormalTypeInfo_createBuiltin_42_(_env, "__Empty", "::", Ast_TypeInfoKind__Prim, nil, nil)
@@ -9882,7 +9882,7 @@ func Ast_TypeInfo_canEvalWithBase(_env *LnsEnv, processInfo *Ast_ProcessInfo,des
                     evalMode = Ast_CanEvalType__SetOpIMut
                 }
                 var ret bool
-                ret = Ast_convExp0_16187(Lns_2DDD(workType1.FP.CanEvalWith(_env, processInfo, workType2, evalMode, alt2type)))
+                ret = Ast_convExp0_16172(Lns_2DDD(workType1.FP.CanEvalWith(_env, processInfo, workType2, evalMode, alt2type)))
                 if Lns_op_not(ret){
                     return false
                 }
@@ -9910,7 +9910,7 @@ func Ast_TypeInfo_canEvalWithBase(_env *LnsEnv, processInfo *Ast_ProcessInfo,des
                     evalMode = Ast_CanEvalType__SetOpIMut
                 }
                 var ret bool
-                ret = Ast_convExp0_16324(Lns_2DDD(workType1.FP.CanEvalWith(_env, processInfo, workType2, evalMode, alt2type)))
+                ret = Ast_convExp0_16309(Lns_2DDD(workType1.FP.CanEvalWith(_env, processInfo, workType2, evalMode, alt2type)))
                 if Lns_op_not(ret){
                     return false
                 }
@@ -12593,7 +12593,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
             nextToken = Tokenizer_getEofToken(_env)
             for {
                 var refType LnsAny
-                refType = Ast_convExp0_17946(Lns_2DDD(self.FP.analyzeTypeSub(_env, false)))
+                refType = Ast_convExp0_17931(Lns_2DDD(self.FP.analyzeTypeSub(_env, false)))
                 if refType != nil{
                     refType_4457 := refType.(*Ast_RefTypeInfo)
                     genericRefList.Insert(refType_4457)
@@ -12649,7 +12649,7 @@ func (self *Ast_TypeAnalyzer) AnalyzeTypeItemList(_env *LnsEnv, allowDDD bool,re
                         return nil, pos, mess
                     }
                 }
-                typeInfo = Ast_convExp0_18428(Lns_2DDD(self.processInfo.FP.CreateGeneric(_env, typeInfo, genericList, self.moduleType)))
+                typeInfo = Ast_convExp0_18413(Lns_2DDD(self.processInfo.FP.CreateGeneric(_env, typeInfo, genericList, self.moduleType)))
             } else if _switch0 == Ast_TypeInfoKind__Box {
                 if genericList.Len() != 1{
                     return nil, pos, _env.GetVM().String_format("generic type count is unmatch. -- %d", Lns_2DDD(genericList.Len()))

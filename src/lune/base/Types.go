@@ -244,6 +244,10 @@ func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
         }
     return count
 }
+// 307: decl @lune.@base.@Types.Token.get_endLineNo
+func (self *Types_Token) Get_endLineNo(_env *LnsEnv) LnsInt {
+    return self.Pos.LineNo
+}
 // declaration Class -- AltBase
 type Types_AltBaseMtd interface {
 }
@@ -495,6 +499,7 @@ type Types_TokenMtd interface {
     GetExcludedDelimitTxt(_env *LnsEnv) string
     GetLineCount(_env *LnsEnv) LnsInt
     Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token]
+    Get_endLineNo(_env *LnsEnv) LnsInt
 }
 type Types_Token struct {
     Kind LnsInt

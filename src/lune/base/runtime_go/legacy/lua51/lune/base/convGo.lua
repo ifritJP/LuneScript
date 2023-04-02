@@ -754,7 +754,6 @@ func main() {
    return nil
 end
 _moduleObj.outputGoMain = outputGoMain
-
 local function isInnerDeclType( typeInfo )
 
    if typeInfo:get_kind() == Ast.TypeInfoKind.FormFunc then
@@ -1404,7 +1403,6 @@ function convFilter:needConvFormFunc( node )
    
    return false
 end
-
 
 local function needConvCast( dstType, srcType )
 
@@ -3621,7 +3619,6 @@ function convFilter:getSliceUpcastName( typeInfo )
    end
    
 end
-
 
 function convFilter:processSetFromExpList( convArgFuncName, dstTypeList, expListNode, addEnvArg )
 
@@ -6143,7 +6140,7 @@ function convFilter:getFromStemName( typeInfo, suffix )
          local valType = workTypeInfo:get_itemTypeInfoList()[2]
          return string.format( "Lns_ToLnsMap2%s[%s,%s]", suffix, self:type2gotypeOrg( keyType, ClassAsterMode.Normal ), self:type2gotypeOrg( valType, ClassAsterMode.Normal ))
       elseif _switchExp == Ast.TypeInfoKind.Class then
-         return string.format( "%s_FromMap", self:getTypeSymbol( workTypeInfo )) .. suffix
+         return string.format( "%s_FromMap", self:getTypeSymbolWithPrefix( workTypeInfo )) .. suffix
       else 
          
             Util.err( string.format( "%s: not support -- %s", __func__, Ast.TypeInfoKind:_getTxt( workTypeInfo:get_kind())

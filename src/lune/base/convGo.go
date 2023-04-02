@@ -260,7 +260,7 @@ func convGo_convExp1_2504(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 5615
-func convGo_convExp0_6379(arg1 []LnsAny) (bool, LnsAny) {
+func convGo_convExp0_6376(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 399
@@ -312,7 +312,7 @@ func convGo_convExp2_7368(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 6413
-func convGo_convExp0_11037(arg1 []LnsAny) bool {
+func convGo_convExp0_11034(arg1 []LnsAny) bool {
     return Lns_getFromMulti( arg1, 0 ).(bool)
 }
 // 89: decl @lune.@base.@convGo.isMain
@@ -5885,7 +5885,7 @@ func (self *convGo_convFilter) getFromStemName(_env *LnsEnv, typeInfo *Ast_TypeI
         valType = workTypeInfo.FP.Get_itemTypeInfoList(_env).GetAt(2)
         return _env.GetVM().String_format("Lns_ToLnsMap2%s[%s,%s]", Lns_2DDD(suffix, self.FP.type2gotypeOrg(_env, keyType, convGo_ClassAsterMode__Normal), self.FP.type2gotypeOrg(_env, valType, convGo_ClassAsterMode__Normal)))
     } else if _switch0 == Ast_TypeInfoKind__Class {
-        return _env.GetVM().String_format("%s_FromMap", Lns_2DDD(self.FP.getTypeSymbol(_env, workTypeInfo))) + suffix
+        return _env.GetVM().String_format("%s_FromMap", Lns_2DDD(self.FP.getTypeSymbolWithPrefix(_env, workTypeInfo))) + suffix
     } else {
         Util_err(_env, _env.GetVM().String_format("%s: not support -- %s", Lns_2DDD(__func__, Ast_TypeInfoKind_getTxt( workTypeInfo.FP.Get_kind(_env)))))
     }
@@ -7252,7 +7252,7 @@ func (self *convGo_convFilter) ProcessGetField(_env *LnsEnv, node *Nodes_GetFiel
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", Lns_2DDD(convGo_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env)))))
             } else { 
                 var closeParen bool
-                closeParen = convGo_convExp0_11037(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
+                closeParen = convGo_convExp0_11034(Lns_2DDD(self.FP.OutputCallPrefix(_env, node.FP.GetIdTxt(_env), &node.Nodes_Node, node.FP.Get_prefix(_env), symbolInfo)))
                 self.FP.WriteRaw(_env, _env.GetVM().String_format("(%s)", Lns_2DDD(convGo_getAddEnvArg_6_(_env, 0, self.option.FP.Get_addEnvArg(_env)))))
                 var retType *Ast_TypeInfo
                 retType = symbolInfo.FP.Get_typeInfo(_env).FP.Get_retTypeInfoList(_env).GetAt(1)

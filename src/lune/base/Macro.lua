@@ -1565,7 +1565,6 @@ local function pushbackTxt( pushbackTokenizer, txtList, streamName, pos )
    end
    
 end
-
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
    local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
 
@@ -1925,7 +1924,6 @@ function MacroCtrl:isInExpandMode(  )
 
    return self:isInMode( Nodes.MacroMode.Expand )
 end
-
 
 local function nodeToCodeTxt( node, moduleTypeInfo )
 

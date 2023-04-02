@@ -218,22 +218,25 @@ pub fn setDefaultPipeSize( size:int ) {
 }
 
 
-class MultiLineToken extend Types.Token {
+pub class MultiLineToken extend Types.Token {
    let endPos:&Types.Position {pub};
+
+   pub override fn get_endLineNo():int {
+      return self.endPos.lineNo;
+   }
 }
 
 pub class Tokenizer extend Async.Pipe<AsyncItem> {
    let streamName: str {pub};
    let mut lineNo : int;
    let mut prevToken: &Types.Token;
-   let keywordSet : &Set<str>;
-   let typeSet : &Set<str>;
    let multiCharDelimitMap : &Map<str,&Array<str>>;
    let luaMode:bool;
    let mut lineList:&List<str>;
    let mut firstLine:bool;
    let overridePos:&Types.Position!;
    let stream:iStream;
+   let token2kind:Map<str,Types.TokenKind>;
 
    pub fn __init( streamName:str, stream:iStream, luaMode:bool,
                   overridePos:&Types.Position!, pipeSize:int! )
@@ -252,9 +255,13 @@ pub class Tokenizer extend Async.Pipe<AsyncItem> {
 
       let keywordSet, typeSet, _, multiCharDelimitMap = createReserveInfo( luaMode );
 
-      self.keywordSet = keywordSet;
-      self.typeSet = typeSet;
       self.multiCharDelimitMap = multiCharDelimitMap;
+
+      self.token2kind = {};
+      foreach txt in keywordSet { self.token2kind[ txt ] = .Kywd; }
+      foreach txt in typeSet { self.token2kind[ txt ] = .Type; }
+      foreach txt in op1Set { self.token2kind[ txt ] = .Ope; }
+      foreach txt in op2Set { self.token2kind[ txt ] = .Ope; }
    }
 
    pro override fn setup() mut {
@@ -376,16 +383,11 @@ fn Tokenizer.createInfo(
       lineNo = self.lineNo;
    };
    if tokenKind == .Symb {
-      if self.keywordSet.has( token ) {
-         tokenKind = .Kywd;
-      }
-      elseif self.typeSet.has( token ) {
-         tokenKind = .Type;
-      }
-      elseif op2Set.has( token ) or op1Set.has( token ) {
-         tokenKind = .Ope;
+      if! let kind = self.token2kind[ token ] {
+         tokenKind = kind;
       }
    }
+   
    let mut consecutive = false;
    if self.prevToken.pos.lineNo == lineNo and
       self.prevToken.pos.column + #self.prevToken.txt == tokenColumn
@@ -619,7 +621,11 @@ pub fn Tokenizer.parse() mut : List<Types.Token>! {
          }
          comment = comment .. rawLine.sub( searchIndex ## ) .. "\n";
          searchIndex = 1;
-         rawLine = unwrap self.readLine();
+         if! self.readLine() {
+            rawLine = _exp;
+         } else {
+            return comment, -1;
+         }
       }
    };
 
@@ -694,6 +700,9 @@ pub fn Tokenizer.parse() mut : List<Types.Token>! {
                //self.addVal( list, .Str, '```' .. txt, index );
                list.insert(
                   self.createInfo( .Str, '```' .. txt, index, lineNo, nextIndex - 1 ) );
+               if nextIndex == -1 {
+                  return list;
+               }
                searchIndex = nextIndex;
             } elseif nextChar == 123 { // {
                self.addVal( list, .Ope, '`{', index );
@@ -730,8 +739,15 @@ pub fn Tokenizer.parse() mut : List<Types.Token>! {
                // コメント処理
                if nextChar == ?* {
                   // 複数行コメントの場合
+                  let lineNo = self.lineNo;
                   let comment, nextIndex = multiComment( index + 2, "*/" );
-                  self.addVal( list, .Cmnt, "/*" .. comment, index );
+                  //self.addVal( list, .Cmnt, "/*" .. comment, index );
+                  list.insert(
+                     self.createInfo(
+                        .Cmnt, "/*" .. comment, index, lineNo, nextIndex - 1 ) );
+                  if nextIndex == -1 {
+                     return list;
+                  }
                   searchIndex = nextIndex;
                }
                elseif nextChar == ?/ {

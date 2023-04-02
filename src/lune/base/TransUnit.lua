@@ -850,7 +850,6 @@ function ClosureFun:__init( symbol, fromScope )
    self.fromScope = fromScope
 end
 
-
 local AccessSymbolSet = {}
 function AccessSymbolSet._new(  )
    local obj = {}
@@ -1999,7 +1998,6 @@ function TransUnit:getDefaultAsync( kind, classTypeInfo, asyncMode )
    return Ast.Async.Noasync
 end
 
-
 function TransUnit:checkCondRet(  )
 
    if #self:get_curNsInfo():get_condRetNodeList() > 0 then
@@ -2010,7 +2008,6 @@ function TransUnit:checkCondRet(  )
    
    return nil
 end
-
 
 function TransUnit:analyzeStatementList( stmtList, firstSwitchingTokenizer, termTxt )
 
@@ -5328,7 +5325,6 @@ function TransUnit:analyzeDeclMethod( classTypeInfo, declFuncMode, abstractFlag,
    return node
 end
 
-
 function TransUnit:addDefaultConstructor( pos, classTypeInfo, typeDataAccessor, classScope, memberNodeList, methodNameSet, oldFlag )
 
    if classScope:getTypeInfoChild( "__init" ) then
@@ -5533,7 +5529,6 @@ function TransUnit:addAccessor( memberNode, methodNameSet, classScope, classType
    end
    
 end
-
 
 function TransUnit:analyzeClassBody( hasProto, classAccessMode, firstToken, mode, gluePrefix, classTypeInfo, typeDataAccessor, name, moduleLang, moduleName, lazyLoad, nextToken, inheritInfo )
 
@@ -6939,7 +6934,6 @@ function LetVarInfo:__init( mutable, varName, varType )
    self.varType = varType
 end
 
-
 function TransUnit:analyzeInitExp( firstPos, accessMode, unwrapFlag, letVarList, typeInfoList )
 
    
@@ -8072,7 +8066,6 @@ function TransUnit:analyzeExpRefItem( token, exp, nilAccess )
    return Nodes.ExpRefItemNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {typeInfo}, exp, nilAccess, nil, indexExp )
 end
 
-
 function TransUnit:checkImplicitCast( alt2typeMap, validCastToGen, dstTypeList, expListNode, callback )
 
    local expNodeList = expListNode:get_expList()
@@ -8214,7 +8207,6 @@ function TransUnit:checkImplicitCast( alt2typeMap, validCastToGen, dstTypeList, 
    
    return Nodes.ExpListNode.create( self.nodeManager, expListNode:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, newExpNodeList, newMRetExp, expListNode:get_followOn() )
 end
-
 
 function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allowDstShort, warnForFollow, workAlt2typeMap, validImplicitCast )
 
@@ -8371,7 +8363,6 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
    
    return result, alt2typeMap, nil, expTypeList
 end
-
 
 function TransUnit:checkMatchValType( pos, funcTypeInfo, expList, genericTypeList, genericsClass )
 
@@ -8856,7 +8847,6 @@ function TransUnit:analyzeMapConst( token, expectType )
    self:checkToken( nextToken, "}" )
    return Nodes.LiteralMapNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {mapTypeInfo}, map, pairList )
 end
-
 
 function TransUnit:evalMacroOp( firstToken, macroTypeInfo, expList, evalMacroCallback )
 
@@ -13221,7 +13211,6 @@ function TransUnitCtrl:analyzeProvide( firstToken )
    
    return node
 end
-
 
 function TransUnitCtrl:analyzeStatementToken( token )
 

@@ -1351,7 +1351,6 @@ function Front:loadTokenizerToLuaCode( importModuleInfo, tokenizerSrc, path, mod
    return _lune.unwrap( self.moduleMgr:getMeta( mod )), luaTxt
 end
 
-
 function Front:loadFile( importModuleInfo, baseDir, path, mod )
    local __func__ = '@lune.@base.@front.Front.loadFile'
 
@@ -1493,7 +1492,6 @@ function Front:checkUptodateMeta( lnsPath, metaPath, baseDir, addSearchPath )
    
    return frontInterface.ModuleMeta._new(lnsPath, _lune.newAlge( frontInterface.MetaOrModule.MetaRaw, {meta}))
 end
-
 
 function Front:loadModuleWithBaseDir( orgMod, baseDir )
    local __func__ = '@lune.@base.@front.Front.loadModuleWithBaseDir'
@@ -1916,7 +1914,6 @@ function Front:saveToPython( scriptPath, astResult, mod )
 
    return Converter.PythonConverter._new(scriptPath, astResult, mod, self.option, self:createPythonOption( scriptPath ))
 end
-
 
 function Front:saveToC( scriptPath, ast )
 

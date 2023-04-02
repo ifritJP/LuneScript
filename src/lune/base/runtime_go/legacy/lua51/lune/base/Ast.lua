@@ -254,7 +254,6 @@ local Util = _lune.loadModule( 'lune.base.Util' )
 local Code = _lune.loadModule( 'lune.base.Code' )
 local Log = _lune.loadModule( 'lune.base.Log' )
 local Types = _lune.loadModule( 'lune.base.Types' )
-
 local builtinRootId = 0
 _moduleObj.builtinRootId = builtinRootId
 
@@ -1046,7 +1045,6 @@ local function accessMode2txt( accessMode )
    return _lune.unwrap( accessMode2txtMap[accessMode])
 end
 _moduleObj.accessMode2txt = accessMode2txt
-
 local MutMode = {}
 _moduleObj.MutMode = MutMode
 MutMode._val2NameMap = {}
@@ -1426,7 +1424,6 @@ function SymbolInfo:get_namespaceTypeInfo(  )
    self.namespaceTypeInfo = work
    return work
 end
-
 
 function Scope:isInnerOf( scope )
 
@@ -3644,7 +3641,6 @@ end
 
 
 
-
 function Scope:filterTypeInfoField( includeSelfFlag, fromScope, access, callback )
 
    if self.scopeKind ~= ScopeKind.Other then
@@ -3796,7 +3792,6 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope, access )
    return nil
 end
 
-
 function Scope:filterTypeInfoFieldAndIF( includeSelfFlag, fromScope, access, callback )
 
    if self.scopeKind ~= ScopeKind.Other then
@@ -3858,7 +3853,6 @@ function Scope:filterTypeInfoFieldAndIF( includeSelfFlag, fromScope, access, cal
    
    return true
 end
-
 
 function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
 
@@ -3937,7 +3931,6 @@ function Scope:getTypeInfo( name, fromScope, onlySameNsFlag, access )
    
    return symbolInfo:get_typeInfo()
 end
-
 
 function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
 
@@ -4327,7 +4320,6 @@ function Scope:isClosureAccess( moduleScope, symbol )
    return false
 end
 
-
 function Scope:accessSymbol( moduleScope, symbol )
 
    if symbol:get_kind() == SymbolKind.Fun and self:getNamespaceTypeInfo(  ) == symbol:get_typeInfo() then
@@ -4473,7 +4465,6 @@ function Scope:getClassTypeInfo(  )
    
    return _moduleObj.headTypeInfo
 end
-
 
 function NormalSymbolInfo:canAccess( fromScope, access )
 
@@ -4921,7 +4912,6 @@ end
 function AnonymousSymbolInfo:updateValue( ... )
    return self.symbolInfo:updateValue( ... )
 end
-
 
 
 local AlternateTypeInfo = {}
@@ -5461,7 +5451,6 @@ end
 function BoxTypeInfo:switchScope( ... )
    return self.boxingType:switchScope( ... )
 end
-
 
 
 local GenericTypeInfo = {}
@@ -7536,7 +7525,6 @@ LuavalConvKind.__allList[2] = LuavalConvKind.ToLua
 local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilTypeInfo._new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
 _moduleObj.builtinTypeNil = builtinTypeNil
 
-
 local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
 
    
@@ -8439,7 +8427,6 @@ CommonType._name2Val["Combine"] = CommonType.Combine
 CommonType.Normal = { "Normal", {{}}}
 CommonType._name2Val["Normal"] = CommonType.Normal
 
-
 function CombineType:andType( processInfo, other, alt2type )
 
    do
@@ -8482,7 +8469,6 @@ function CombineType:andType( processInfo, other, alt2type )
    end
    
 end
-
 
 function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2type )
 
@@ -10137,7 +10123,6 @@ function TypeInfo.checkMatchTypeAsync( processInfo, dstTypeList, expTypeList, al
    
    return TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
 end
-
 
 local function isSettableToForm( processInfo, typeInfo )
 

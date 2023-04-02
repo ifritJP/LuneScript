@@ -165,7 +165,6 @@ function Pipe._setmeta( obj )
   setmetatable( obj, { __index = Pipe  } )
 end
 
-
 local RunnerBase = {}
 setmetatable( RunnerBase, { ifList = {__Runner,__AsyncItem,} } )
 _moduleObj.RunnerBase = RunnerBase

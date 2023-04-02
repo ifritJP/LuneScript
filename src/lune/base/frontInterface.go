@@ -26,7 +26,7 @@ func (self *FrontInterface_MetaOrModule__Module) GetTxt() string {
 return "MetaOrModule.Module"
 }
 // for 375
-func frontInterface_convExp0_1556(arg1 []LnsAny) LnsAny {
+func frontInterface_convExp0_1554(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // 141: decl @lune.@base.@frontInterface.getRootDependModId
@@ -41,7 +41,7 @@ func FrontInterface_dummyLoadModule(_env *LnsEnv, mod string)(LnsAny, *FrontInte
     Lns_LockEnvSync( _env, 373, func () {
         var emptyTable LnsAny
         var loaded LnsAny
-        loaded = frontInterface_convExp0_1556(Lns_2DDD(_env.GetVM().Load("return {}", nil)))
+        loaded = frontInterface_convExp0_1554(Lns_2DDD(_env.GetVM().Load("return {}", nil)))
         if loaded != nil{
             loaded_333 := loaded.(*Lns_luaValue)
             emptyTable = Lns_unwrap( Lns_car(_env.GetVM().RunLoadedfunc(loaded_333,Lns_2DDD([]LnsAny{}))))

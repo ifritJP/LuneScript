@@ -17,6 +17,7 @@ help:
 	@echo make build [LNS_OPT=opt]
 	@echo make update_lnstags
 	@echo make clean
+	@echo make view-goprof
 
 
 build:
@@ -29,7 +30,7 @@ goprof:
 	./formatter -prof ../../src/lune/base/Ast.lns dummy.lns
 
 view-goprof:
-	go tool pprof -http=0.0.0.0:8100 -no_browser lnsc prof
+	go tool pprof -http=0.0.0.0:8100 -no_browser formatter prof
 
 
 clean:

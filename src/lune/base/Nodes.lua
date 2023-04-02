@@ -946,7 +946,6 @@ end
 
 
 
-
 function NodeKind.get_None(  )
 
    return 0
@@ -3247,7 +3246,6 @@ function ExpListNode:getDDD(  )
    
    return nil
 end
-
 
 function ExpListNode:getExpTypeAt( index )
 

@@ -11,12 +11,6 @@ import go/github:com.ifritJP.LuneScript.src.lune.base.Util as LnsUtil;
 import go/github:com.ifritJP.LuneScript.src.lune.base.AsyncTokenizer as LnsAsyncTokenizer;
 
 
-let indentStmtSet = (@ "<subfile>", "<lune_control>", "<import>", "<stmt>",
-                      "<block>", "<match_case>", 
-                      "<switch_case>", "<default>", "<const_list>" );
-
-let indentElementSet = indentStmtSet.clone().or(
-   (@ "<exp>", "<exp_list>", "<decl_arg_list>" ) );
 let termTxtSet = (@ "]", ")", "}" );
 let beginTxtSet = (@ "[", "(", "{", "[@", "(@", "[=", "`{" );
 
@@ -33,7 +27,7 @@ let parenMap = {
    "":"",
 };
 
-let indentTermTxtSet = LnsAsyncTokenizer.op2Set.clone().or( (@ ",", ";" ) );
+let indentTermTxtSet = ( (@ ",", ";" ) );
 
 
 fn getTokenTxt( token:&LnsTypes.Token ) : str {
@@ -42,22 +36,171 @@ fn getTokenTxt( token:&LnsTypes.Token ) : str {
 }
 
 
-class ElementInfo {
-   let elementName:str {pub};
-   let token:&LnsTypes.Token {pub};   
+interface PickCore {
+   pub fn collect( pickedTokenList:List<&LnsTypes.Token> );
 }
+
+class PickCoreToken extend (PickCore) {
+   let token:&LnsTypes.Token {pub};
+
+   pub fn collect( pickedTokenList:List<&LnsTypes.Token> ) {
+      if self.token.kind ~= .Eof {
+         pickedTokenList.insert( self.token );
+      }
+   }
+}
+
+class PickPareInfo extend (PickCore) {
+   let startToken:&LnsTypes.Token {pub};
+   /** 終了トークン */
+   let termTxt:str {pub};
+   /** このペア情報に含まれる token の list */
+   let mut coreList:List<PickCore>;
+   /** */
+   let mut closed:bool {pub,pub};
+
+   pub fn __init( startToken:&LnsTypes.Token ) {
+      self.startToken = startToken;
+      self.termTxt = unwrap parenMap[ startToken.txt ];
+      self.coreList = [];
+      self.coreList.insert( new PickCoreToken( startToken ) );
+      self.closed = false;
+   }
+
+   pub fn add( token:&LnsTypes.Token ) mut {
+      self.coreList.insert( new PickCoreToken( token ) );
+   }
+   pub fn addCore( core:PickCore ) mut {
+      self.coreList.insert( core );
+   }
+   fn clearSub() mut {
+      let list:List<PickCore> = [];
+      list.insert( self.coreList[ 1 ] );
+      if self.closed {
+         list.insert( self.coreList[ #self.coreList ] );
+      }
+      self.coreList = list;
+   }
+   pub fn clear() mut {
+      foreach core in self.coreList {
+         if! let mut pick = core@@@PickPareInfo {
+            pick.clearSub();
+         }
+      }
+   }
+
+   pub fn collect( pickedTokenList:List<&LnsTypes.Token> ) {
+      foreach core in self.coreList {
+         core.collect( pickedTokenList );
+      }
+   }
+}
+
+/**
+大きいファイルの全体を処理対象にすると時間がかかるので、
+必要最低限の領域を pickup する。
+*/
+pub class CodePicker extend Code.CodeTokenizerBase {
+      
+   let pickedTokenList:List<&LnsTypes.Token>;
+   let mut curIndex:int;
+   
+   pub fn __init() {
+      super();
+      self.pickedTokenList = [];
+      self.curIndex = 0;
+   }
+   
+   pro override fn getTokenMain() mut : &LnsTypes.Token! {
+      if #self.pickedTokenList < self.curIndex + 1 {
+         return nil;
+      }
+      self.curIndex = self.curIndex + 1;
+      return self.pickedTokenList[ self.curIndex ];
+   }
+
+   fn dump() mut {
+      foreach _ in self.pickedTokenList {
+         let prev = self.getPrevToken();
+         let token = self.getToken();
+         if prev.pos.lineNo ~= token.pos.lineNo {
+            print( "" );
+         }
+         io.stdout.write( token.txt .. " " );
+      }
+   }
+
+   pub static fn createFrom(
+      tokenizer:Code.CodeTokenizerIF, startLineNo:int, endLineNo:int ) : CodePicker
+   {
+      fn process( curInfo:PickPareInfo ) __trans : bool {
+         while true {
+            let token = tokenizer.getToken();
+            if token.kind == .Eof {
+               return false;
+            }
+            if token.txt ~= "case" and parenMap[ token.txt ] {
+               let mut nextInfo = new PickPareInfo( token );
+               //print( __func__, "push", getTokenTxt( token ) );
+               let result = process( nextInfo );
+               if result {
+                  curInfo.clear();
+               }
+               curInfo.addCore( nextInfo );
+               if result {
+                  return true;
+               }
+            } elseif token.txt == curInfo.$termTxt {
+               //print( __func__, "pop", getTokenTxt( token ) );
+               curInfo.add( token );
+               curInfo.set_closed( true );
+               if token.pos.lineNo >= startLineNo {
+                  return true;
+               }
+               return false;
+            } else {
+               curInfo.add( token );
+            }
+
+            if token.pos.lineNo >= startLineNo {
+               return true;
+            }
+         }
+      }
+
+      
+      let pickPareInfoStack:List<PickPareInfo> = [];
+      let mut curInfo = new PickPareInfo( LnsTypes.noneToken );
+      pickPareInfoStack.insert( curInfo );
+
+
+      process( curInfo );
+
+      let mut codePicker = new CodePicker();
+      pickPareInfoStack[ 1 ].collect( codePicker.pickedTokenList );
+
+      while true {
+         let token = tokenizer.getToken();
+         if token.kind == .Eof or token.pos.lineNo > endLineNo {
+            break;
+         }
+         codePicker.pickedTokenList.insert( token );
+      }
+      
+
+      // if true {
+      //    codePicker.dump();
+      //    os.exit(1);
+      // }
+      
+      return codePicker;
+   }
+}
+
+
+
 
 let indentDelta = 3;
-
-proto class TokenIndent;
-alge Indent {
-   // 絶対位置
-   Abs( column:int ),
-   // tokenindent の indent からの offset 位置
-   RelIndent( tokenIndent:&TokenIndent, offset:int ),
-   // tokenindent の contIndent からの offset 位置
-   RelCont( tokenIndent:&TokenIndent, offset:int ),
-}
 
 class LineIndent {
    let token:&LnsTypes.Token {pub};
@@ -71,13 +214,22 @@ class LineIndent {
 
 class Line2Indent {
    let lineno2indent:Map<int,&LineIndent> {pub&};
+   let indentList:List<&LineIndent>;
 
    pub fn __init() {
       self.lineno2indent = {};
+      self.indentList = [];
+      self.indentList.insert( new LineIndent( LnsTypes.noneToken, 1, 1, 0 ) );
    }
    
    pub fn add( lineNo:int, lineIndent:&LineIndent ) mut {
-      self.lineno2indent[ lineNo ] = lineIndent;
+      if not self.lineno2indent[ lineNo ] {
+         self.lineno2indent[ lineNo ] = lineIndent;
+         self.indentList.insert( lineIndent );
+      }
+   }
+   pub fn getPrevIndent() : &LineIndent {
+      return self.indentList[ #self.indentList ];
    }
    pub fn get( lineNo:int, column:int ) : int {
       let! lineIndent = self.lineno2indent[ lineNo ] {
@@ -87,81 +239,107 @@ class Line2Indent {
    }
 }
 
-class TokenIndent {
-   let line2Indent:&Line2Indent;
-   let startToken:&LnsTypes.Token {pub};
-   let indent:int;
-   let mut contIndent:Indent {non,pub};
 
-   pub fn __init( line2Indent:&Line2Indent, startToken:&LnsTypes.Token, indent:int ) {
-      self.line2Indent = line2Indent;
-      self.startToken = startToken;
-      self.indent = indent;
-      self.contIndent = .RelIndent( self, indentDelta );
-   }
-
-   pub fn get_indent() : int {
-      return self.line2Indent.get( self.startToken.pos.lineNo, self.indent );
-   }
-   pub fn get_contIndent() : int {
-      _match self.contIndent {
-         case .Abs( column ) {
-            return column;
-         }
-         case .RelIndent( tokenIndent, offset ) {
-            return tokenIndent.$indent + offset;
-         }
-         case .RelCont( tokenIndent, offset ) {
-            return tokenIndent.$contIndent + offset;
-         }
-      }
-   }
-}
-
-class BaseIndentInfo {
-   let elementName:str {pub};
-   let tokenIndent:TokenIndent {pub};
-   let depth:int {pub};
-   let depth2ElementInfo:Map<int,&ElementInfo> {pub};
-   /** 同じ行に続く element があるかどうか */
-   let mut hasElementOnSameLine:bool {pub,pub};
-   pub fn __init( elementName:str, tokenIndent:TokenIndent, depth:int ) {
-      self.elementName = elementName;
-      self.tokenIndent = tokenIndent;
-      self.depth = depth;
-      self.depth2ElementInfo = {};
-      self.hasElementOnSameLine = false;
-   }
-
-   pub fn pushElement( depth:int, elementInfo:&ElementInfo ) mut {
-      self.depth2ElementInfo[ depth ] = elementInfo;
-   }
-   pub fn popElement( depth:int ) mut {
-      self.depth2ElementInfo[ depth ] = nil;
-   }
-
-   advertise tokenIndent;
+proto class ParenInfo;
+alge ParenInfoIndent {
+   // 絶対位置
+   Abs( column:int ),
+   // parenInfo の indent からの offset 位置
+   RelIndent( parenInfo:&ParenInfo, offset:int ),
+   // parenInfo の termIndent からの offset 位置
+   RelTerm( parenInfo:&ParenInfo, offset:int ),
+   // parenInfo の termIndent から startToken 相対 offset 位置
+   RelTermPos( parenInfo:&ParenInfo, offset:int ),
 }
 
 class ParenInfo {
+   let line2Indent:&Line2Indent;
    let parentInfo:&ParenInfo;
    /** hook の depth */
-   let depth:int;
+   let depth:int {pub};
    /** 開始トークン */
    let startToken:&LnsTypes.Token {pub};
    /** 終了トークン */
    let termTxt:str {pub};
    /** startToken に続いて同じ行に続いているトークン */
    let mut contToken:&LnsTypes.Token!;
-   /** 先頭のトークンを待っているかどうか */
-   let mut isWaitingFront:bool {pub,pub};
+   /** 行頭のトークンを待っているかどうか */
+   let mut isWaitingFront:bool;
+   /** 行頭のトークン */
+   let mut frontToken:&LnsTypes.Token!;
    /** termTxt のインデント */
-   let mut termIndent:int {pub};
+   let mut termIndent:&ParenInfoIndent;
    /** インデント */
-   let mut indent:int;
-   
+   let mut indent:&ParenInfoIndent;
 
-   pub fn __init( parentInfo:&ParenInfo!, depth:int, startToken:&LnsTypes.Token ) {
+   pub fn set_frontToken( token:&LnsTypes.Token! ) mut {
+      self.frontToken = token;
+      self.isWaitingFront = token == nil;
+   }
+
+   fn get_indentPos( parenInfoIndent:&ParenInfoIndent ) : int;
+
+   pub fn get_stmtIndent() : int {
+      return self.get_indentPos( self.indent );
+   }
+   pub fn get_indent() : int {
+      let indent = self.get_indentPos( self.indent );
+      if self.isWaitingFront {
+         return indent;
+      }
+      return indent + indentDelta;
+   }
+   pub fn get_termIndent() : int {
+      return self.get_indentPos( self.termIndent );
+   }
+   
+   fn get_indentPos( parenInfoIndent:&ParenInfoIndent ) : int {
+      _match parenInfoIndent {
+         case .Abs( column ) {
+            return column;
+         }
+         case .RelIndent( tokenIndent, offset ) {
+            return tokenIndent.$stmtIndent + offset;
+         }
+         case .RelTerm( tokenIndent, offset ) {
+            return tokenIndent.$termIndent + offset;
+         }
+         case .RelTermPos( tokenIndent, offset ) {
+            let correct = self.line2Indent.get( self.parentInfo.startToken.pos.lineNo, 0 );
+            //           print( "hoge:", tokenIndent.$termIndent, correct, offset );
+            return tokenIndent.$termIndent + correct + offset;
+         }
+      }
+   }
+
+   pub fn set_contToken( contToken:&LnsTypes.Token ) mut {
+      if self.isWaitingFront {
+         self.set_frontToken( contToken );
+      }
+      if self.contToken {
+         return;
+      }
+      if self.startToken.pos.lineNo ~= contToken.pos.lineNo {
+         return;
+      }
+      self.contToken = contToken;
+      self.termIndent = ParenInfoIndent.RelTerm(
+         self.parentInfo, #self.startToken.txt + indentDelta  );
+      if self.startToken.txt == "case" {
+      } else {
+         self.indent = ParenInfoIndent.RelTermPos(
+            self.parentInfo,
+            contToken.pos.column - self.parentInfo.$termIndent );
+         self.termIndent = ParenInfoIndent.RelTermPos(
+            self.parentInfo,
+            contToken.pos.column - self.parentInfo.$termIndent - indentDelta * 2);
+      }
+   }
+
+   pub fn __init( line2Indent:&Line2Indent,
+                  parentInfo:&ParenInfo!, depth:int, startToken:&LnsTypes.Token )
+   {
+      self.line2Indent = line2Indent;
       self.parentInfo = parentInfo or self;
       
       self.depth = depth;
@@ -173,53 +351,46 @@ class ParenInfo {
       }
       self.contToken = nil;
       self.isWaitingFront = true;
+      self.frontToken = nil;
 
-      let mut termIndent = parentInfo and self.parentInfo.indent or 1;
-      let mut indent = parentInfo and (termIndent + indentDelta) or 1;
+      let mut termIndent = ParenInfoIndent.Abs( 1 );
+      let mut offset = 0;
+      if parentInfo {
+         if self.parentInfo.startToken.txt == "" {
+            offset = 0;
+         } else {
+            offset = indentDelta;
+         }
+         if self.parentInfo.frontToken$.pos$.lineNo ~= startToken.pos.lineNo and
+            not self.parentInfo.isWaitingFront and
+            not (startToken.txt == "{" or startToken.txt == "`{")
+         {
+            offset = offset + indentDelta;
+         }
+         termIndent = ParenInfoIndent.RelTerm( self.parentInfo, offset );
+      }
+      let mut indent = ParenInfoIndent.Abs( 1 );
+      if parentInfo {
+         indent = ParenInfoIndent.RelTerm( self.parentInfo, offset + indentDelta );
+      }
       if startToken.txt == "case" {
-         indent = startToken.pos.column + 5;
+         indent = ParenInfoIndent.RelTerm( self.parentInfo, indentDelta + 5 );
       } else {
          when! parentInfo {
             if parentInfo.startToken.txt == "case" {
                termIndent = parentInfo.parentInfo.indent;
-               indent = termIndent + indentDelta;
+               indent = ParenInfoIndent.RelTerm(
+                  self.parentInfo.parentInfo, indentDelta * 2 );
             }
          }
       }
       self.termIndent = termIndent;
       self.indent = indent;
    }
-
-   pub fn set_contToken( contToken:&LnsTypes.Token ) mut {
-      self.isWaitingFront = false;
-      if self.contToken {
-         return;
-      }
-      if self.startToken.pos.lineNo ~= contToken.pos.lineNo {
-         return;
-      }
-      self.contToken = contToken;
-      self.termIndent = self.startToken.pos.column;
-      if self.startToken.txt == "case" {
-         //self.indent = self.termIndent + indentDelta;
-      } else {
-         self.indent = self.termIndent + indentDelta;
-      }
-   }
-
-   pub fn get_indent() : int {
-      if self.isWaitingFront {
-         return self.indent;
-      }
-      return self.indent + indentDelta;
-   }
-   
 }
 
 
 pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
-   let indentStack:List<BaseIndentInfo>;
-   let mut currentIndentInfo:BaseIndentInfo;
    let tokenizer:Code.CodeTokenizerIF;
    /** 処理対象の行番号 */
    let mut targetLineNo:int;
@@ -230,32 +401,18 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    // 行番号 → インデント
    let line2Indent:Line2Indent;
    let mut latestLineIndent:&LineIndent!;
-   let token2tokenIndent:Map<&LnsTypes.Token,TokenIndent>;
    let parenInfoStack:List<ParenInfo>;
    
 
-   fn getTokenIndent( startToken:&LnsTypes.Token, indent:int ) mut : TokenIndent {
-      if! let mut tokenIndent = self.token2tokenIndent[ startToken ] {
-         return tokenIndent;
-      }
-      let mut tokenIndent = new TokenIndent( self.line2Indent, startToken, indent );
-      self.token2tokenIndent[ startToken ] = tokenIndent;
-      return tokenIndent;
-   }
-   
    pub fn __init( tokenizer:Code.CodeTokenizerIF, startLineNo:int, endLineNo:int ) {
-      self.parenInfoStack = [];
-      self.parenInfoStack.insert( new ParenInfo( nil, 1, LnsTypes.noneToken ) );
-         
-      self.token2tokenIndent = {};
-      self.indentStack = [];
 
       let mut line2Indent = new Line2Indent();
       self.line2Indent = line2Indent;
-      self.currentIndentInfo = new BaseIndentInfo(
-         "", new TokenIndent( line2Indent, LnsTypes.noneToken, 1 ), 1 );
-      self.currentIndentInfo.set_contIndent( .Abs( 1 ) );
-      self.indentStack.insert( self.currentIndentInfo );
+      
+      self.parenInfoStack = [];
+      self.parenInfoStack.insert(
+         new ParenInfo( line2Indent, nil, 1, LnsTypes.noneToken ) );
+         
       self.tokenizer = tokenizer;
       self.targetLineNo = startLineNo;
       self.endLineNo = endLineNo;
@@ -263,72 +420,7 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
       self.latestLineIndent = nil;
    }
 
-   fn getParentIndentInfoSameLine( beginIndex:int ) : BaseIndentInfo {
-      let nowPos = self.indentStack[ beginIndex ].$startToken.pos;
-      for index = beginIndex - 1, 1, -1 {
-         let mut indentInfo = self.indentStack[ index ];
-         if nowPos.lineNo ~= indentInfo.$startToken.pos.lineNo {
-            return indentInfo;
-         }
-      }
-      return self.indentStack[ 1 ];
-   }
-
-   fn getParentStmtIndentInfo( beginIndex:int ) : BaseIndentInfo {
-      for index = beginIndex - 1, 1, -1 {
-         let mut indentInfo = self.indentStack[ index ];
-         if indentStmtSet.has( indentInfo.$elementName ) {
-            return indentInfo;
-         }
-      }
-      return self.indentStack[ 1 ];
-   }
-   
-   
    pub fn prepare( elementName:str, depth:int, token:&LnsTypes.Token ) mut {
-      if indentElementSet.has( elementName ) {
-         let prevIndentInfo = self.currentIndentInfo;
-         self.currentIndentInfo = new BaseIndentInfo(
-            elementName, self.getTokenIndent( token, token.pos.column ), depth );
-         switch elementName {
-            case "<block>" {
-               self.currentIndentInfo.set_contIndent(
-                  .RelIndent( self.indentStack[ #self.indentStack ].$tokenIndent,
-                              indentDelta ) );
-            }
-            case "<const_list>" {
-               self.currentIndentInfo.set_contIndent(
-                  .RelIndent( self.getParentStmtIndentInfo( #self.indentStack + 1 ).$tokenIndent,
-                              indentDelta ) );
-            }
-            case "<exp>" {
-               self.currentIndentInfo.set_contIndent(
-                  .RelIndent( prevIndentInfo.$tokenIndent, indentDelta ));
-            }
-            case "<exp_list>", "<decl_arg_list>" {
-               self.currentIndentInfo.set_contIndent(
-                  .RelIndent( self.currentIndentInfo.$tokenIndent, 0 ) );
-            }
-         }
-         self.indentStack.insert( self.currentIndentInfo );
-         Util.log( __func__, "push", elementName, depth, getTokenTxt( token ) );
-      } else {
-         self.currentIndentInfo.pushElement(
-            depth, new ElementInfo( elementName, token ) );
-         if self.currentIndentInfo.$startToken.pos.lineNo == token.pos.lineNo and
-            self.currentIndentInfo.$startToken ~= token
-         { 
-            self.currentIndentInfo.set_hasElementOnSameLine( true );
-            if elementName == "<exp>" {
-               self.currentIndentInfo.set_contIndent(
-                  .RelIndent( self.currentIndentInfo.$tokenIndent, 2 ) );
-            }
-         }
-         if elementName == "<if>" {
-            self.currentIndentInfo.set_contIndent(
-               .RelIndent( self.currentIndentInfo.$tokenIndent, 0 ) );
-         }
-      }
    }
 
    fn dump() {
@@ -336,25 +428,10 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
          if index > 1 {
             Util.log( "-------",
                       getTokenTxt( parenInfo.$startToken ),
-                      parenInfo.$indent, parenInfo.$termIndent );
+                      parenInfo.$termIndent, parenInfo.$stmtIndent );
          }
       }
-
-      
-      // foreach indentInfo, index in self.indentStack {
-      //    if index > 1 {
-      //       Util.log( "-------", indentInfo.$elementName,
-      //                 indentInfo.$hasElementOnSameLine,
-      //                 getTokenTxt( indentInfo.$startToken ) );
-      //       forsort elementInfo, depth in indentInfo.$depth2ElementInfo {
-      //          let elementToken = elementInfo.$token;
-      //          Util.log( depth, elementInfo.$elementName,
-      //                    getTokenTxt( elementToken ) );
-      //       }
-      //    }
-      // }
    }
-
 
    pub fn outputResult( stream:oStream ) {
       let mut json = new LnsWriter.JSON( stream );
@@ -373,6 +450,7 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
          json.write( "debugLineNo", lineIndent.$decidePos );
          json.write( "column", lineIndent.$indent );
          json.write( "lineNo", line );
+         json.write( "same", lineIndent.$token.$pos.column == lineIndent.$indent );
          json.endElement();
       }
       json.endElement();
@@ -386,20 +464,36 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    
    fn output( token:&LnsTypes.Token, lineNo:int, indent:int ) mut {
       let pos = token.pos;
+
+      {
+         // コメントの処理
+         let commentIndent;
+         if termTxtSet.has( token.txt ) {
+            // 終端トークンの直前のコメントのインデントは、前の token と同じにする
+            let prev = self.line2Indent.getPrevIndent();
+            if prev.$indent == indent {
+               // 終端トークンと前の token のインデントが同じ場合は 一つ下げる。
+               commentIndent = indent + indentDelta;
+            } else {
+               commentIndent = prev.$indent;
+            }
+         } else {
+            commentIndent = indent;
+         }
+         foreach comment in token.$commentList {
+            let work = new LineIndent(
+               comment, commentIndent, lineNo, commentIndent - pos.column );
+            self.line2Indent.add( comment.pos.lineNo, work );
+         }
+      }
+         
+      
       let lineIndent = new LineIndent( token, indent, lineNo, indent - pos.column );
       self.line2Indent.add( pos.lineNo, lineIndent );
       
       self.latestLineIndent = lineIndent;
       self.targetLineNo = pos.lineNo + 1;
 
-      // コメントのインデントは、次に続く token と同じにする
-      foreach comment in  token.$commentList {
-         if token.pos.lineNo ~= comment.pos.lineNo {
-            let commentIndent = new LineIndent(
-               comment, indent, lineNo, indent - pos.column );
-            self.line2Indent.add( comment.pos.lineNo, commentIndent );
-         }
-      }
       
       
       if pos.lineNo < self.endLineNo {
@@ -433,40 +527,17 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
 
       
       fn process() __trans : int, int {
-         // let mut indentInfo = self.indentStack[ #self.indentStack ];
-         // if token.pos.lineNo == indentInfo.$startToken.pos.lineNo {
-         //    if #self.indentStack == 2 {
-         //       return __line__, 1;
-         //    } else {
-         //       if indentStmtSet.has( indentInfo.$elementName ) {
-         //          let indent =
-         //             self.getParentStmtIndentInfo( #self.indentStack ).$indent;
-         //          return __line__, indent;
-         //       } else {
-         //          let indent =
-         //             self.getParentIndentInfoSameLine( #self.indentStack ).$contIndent;
-         //          return __line__, indent;
-         //       }
-         //    }
-         // } else {
-         //    switch indentInfo.$elementName {
-         //       case "<exp_list>" {
-         //          return __line__, indentInfo.$indent;
-         //       }
-         //    }
-         //    return __line__, indentInfo.$contIndent;
-         // }
          let parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
          return __line__, parenInfo.$indent;
       }
       
       if token.txt == "___LNS___" or
-          ( token.pos.lineNo > self.targetLineNo or
-            token.pos.lineNo == self.targetLineNo ) and
-         not termTxtSet.has( token.txt ) and not beginTxtSet.has( token.txt )
+         ( token.pos.lineNo > self.targetLineNo or
+               token.pos.lineNo == self.targetLineNo ) and
+         not termTxtSet.has( token.txt ) and
+         not beginTxtSet.has( token.txt )
+      //         token.txt ~= "{"
       {
-         Util.log( "self.indentStack=", #self.indentStack );
-
          self.output( token, process()** );
       }
       return token;
@@ -481,34 +552,54 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    }
 
    pub fn process( parseCodeRet:Code.ParseCodeRet, depth:int ) mut : Code.ParseCodeRet {
-      self.currentIndentInfo.popElement( depth );
-
-      
       match parseCodeRet {
          case .Detect(codeCore) {
-            let mut parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+            let mut nowParenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+            let mut parenInfo = nowParenInfo;
 
             fn processTokens( token:&LnsTypes.Token ) __trans {
+               let mut isWaitingFront = false;
                if parenMap[ token.txt ] {
                   parenInfo = new ParenInfo(
+                     self.line2Indent,
                      self.parenInfoStack[ #self.parenInfoStack ], depth, token );
                   self.parenInfoStack.insert( parenInfo );
+                  Util.log( __func__, "push", getTokenTxt( parenInfo.$startToken ) );
                } elseif parenInfo.$termTxt == token.txt {
-                  self.parenInfoStack.remove(##);
-                  parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+                  Util.log( __func__, "pop", getTokenTxt( parenInfo.$startToken ) );
+
+                  if parenInfo.$depth >= depth {
+                     self.parenInfoStack.remove(##);
+                     parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+                  }
                   if parenInfo.$startToken.txt == "case" {
                      self.parenInfoStack.remove(##);
                      parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
                   }
                   if token.txt == "}" {
-                     parenInfo.set_isWaitingFront( true );
+                     isWaitingFront = true;
                   }
                } else {
                   if indentTermTxtSet.has( token.txt ) {
-                     parenInfo.set_isWaitingFront( true );
+                     isWaitingFront = true;
                   } else {
                      parenInfo.set_contToken( token );
                   }
+               }
+
+               if ( token.pos.lineNo > self.targetLineNo or
+                       token.pos.lineNo == self.targetLineNo )
+               {
+                  if termTxtSet.has( token.txt ) {
+                     let indent = nowParenInfo.$termIndent;
+                     self.output( token, __line__, indent );
+                  } elseif beginTxtSet.has( token.txt ) {
+                     let indent = parenInfo.$termIndent;
+                     self.output( token, __line__, indent );
+                  }
+               }
+               if isWaitingFront {
+                  parenInfo.set_frontToken( nil );
                }
             }
             
@@ -517,21 +608,6 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
                let token = codeCoreToken.$token;
 
                processTokens( token );
-               
-               if ( token.pos.lineNo > self.targetLineNo or
-                    token.pos.lineNo == self.targetLineNo )
-               {
-                  if termTxtSet.has( token.txt ) {
-                     // let indent = self.currentIndentInfo.$contIndent - indentDelta;
-                     let indent = parenInfo.$indent;
-                     self.output( token, __line__, indent );
-                  } elseif beginTxtSet.has( token.txt ) {
-                     // let indent =
-                     //    self.getParentStmtIndentInfo( #self.indentStack ).$indent;
-                     let indent = parenInfo.$termIndent;
-                     self.output( token, __line__, indent );
-                  }
-               }
             } else {
                if! let workCoreToken = codeCore@@@Code.CodeCoreBuiltin {
                   processTokens( workCoreToken.$token );
@@ -540,16 +616,22 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
                      foreach token in workCoreToken.$list {
                         processTokens( token );
                      }
+                  } else {
+                     if! let workCoreToken = codeCore@@@Code.CodeCoreStatOne {
+                        processTokens( workCoreToken.$token );
+                     }
                   }
                }
             }
          }
-      }
-
-      if self.currentIndentInfo.$depth == depth {
-         Util.log( __func__, "pop", self.currentIndentInfo.$elementName );
-         self.indentStack.remove(##);
-         self.currentIndentInfo = self.indentStack[ #self.indentStack ];
+         default {
+            let mut parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+            while parenInfo.$depth > depth {
+               Util.log( __func__, "pushback", getTokenTxt( parenInfo.$startToken ) );
+               self.parenInfoStack.remove( ## );
+               parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+            }
+         }
       }
 
       if depth == 0 {
@@ -563,4 +645,235 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    
    
    advertise tokenizer;
+}
+
+
+
+
+pub class SimpleParser {
+   let tokenizer:Code.CodeTokenizerIF;
+   /** 処理対象の行番号 */
+   let mut targetLineNo:int;
+   /** 最後に処理する行番号 */
+   let endLineNo:int;
+   // 行番号 → インデント
+   let line2Indent:Line2Indent;
+   let mut latestLineIndent:&LineIndent!;
+   let parenInfoStack:List<ParenInfo>;
+   
+
+   pub fn __init( tokenizer:Code.CodeTokenizerIF, startLineNo:int, endLineNo:int ) {
+
+      let mut line2Indent = new Line2Indent();
+      self.line2Indent = line2Indent;
+      
+      self.parenInfoStack = [];
+      self.parenInfoStack.insert(
+         new ParenInfo( line2Indent, nil, 1, LnsTypes.noneToken ) );
+         
+      self.tokenizer = tokenizer;
+      self.targetLineNo = startLineNo;
+      self.endLineNo = endLineNo;
+      self.latestLineIndent = nil;
+   }
+
+
+   fn dump() {
+      foreach parenInfo, index in self.parenInfoStack {
+         if index > 1 {
+            Util.log( "-------",
+                      getTokenTxt( parenInfo.$startToken ),
+                      parenInfo.$termIndent, parenInfo.$stmtIndent );
+         }
+      }
+   }
+
+   pub fn outputResult( stream:oStream ) {
+      let mut json = new LnsWriter.JSON( stream );
+      json.startParent( "indent", false );
+
+      if! let latest = self.latestLineIndent {
+         json.startParent( "latest", false );
+         json.write( "debugLineNo", latest.$decidePos );
+         json.write( "column", latest.$indent );
+         json.endElement();
+      }
+      
+      json.startParent( "lines", true );
+      forsort lineIndent, line in self.line2Indent.$lineno2indent {
+         json.startParent( "%d" (line), false );
+         json.write( "debugLineNo", lineIndent.$decidePos );
+         json.write( "column", lineIndent.$indent );
+         json.write( "lineNo", line );
+         json.write( "same", lineIndent.$token.$pos.column == lineIndent.$indent );
+         json.endElement();
+      }
+      json.endElement();
+      json.endElement();
+      json.endLayer();
+   }
+   
+   
+   fn output( token:&LnsTypes.Token, parenInfo:&ParenInfo,
+              lineNo:int, indent:int ) mut : bool
+   {
+      let pos = token.pos;
+
+      {
+         // コメントの処理
+         let commentIndent = parenInfo.$stmtIndent;
+         foreach comment in  token.$commentList {
+            let work = new LineIndent(
+               comment, commentIndent, lineNo, commentIndent - pos.column );
+            // 複数行コメントは、コメント内の行を全て同じインデントにする。
+            let list = LnsUtil.splitStr( comment.txt, "\n" );
+            if #list > 0 {
+               foreach _, index in list {
+                  self.line2Indent.add( comment.pos.lineNo + index - 1, work );
+               }
+            } else {
+               self.line2Indent.add( comment.pos.lineNo, work );
+            }
+         }
+      }
+         
+      
+      let lineIndent = new LineIndent( token, indent, lineNo, indent - pos.column );
+      self.line2Indent.add( pos.lineNo, lineIndent );
+      
+      self.latestLineIndent = lineIndent;
+      self.targetLineNo = pos.lineNo + 1;
+
+      
+      
+      return pos.lineNo < self.endLineNo;
+   }
+
+   
+   fn checkKeyword( token:&LnsTypes.Token ) mut : &LnsTypes.Token! {
+      {
+         switch token.kind {
+            case .Str, .Cmnt {
+               // 複数行のコメント、文字列内をインデント対象にしないように判定
+               let list = LnsUtil.splitStr( token.txt, "\n");
+               if #list > 0 and
+                  token.pos.lineNo <= self.targetLineNo and
+                  token.pos.lineNo + #list >= self.targetLineNo
+               {
+                  Util.log( __func__, "skip -- %s" (token.kind.$_txt) );
+                  
+                  self.targetLineNo = token.pos.lineNo + #list + 1;
+                  return token;
+               }
+            }
+         }
+      }
+
+      
+      fn process() __trans : int, int {
+         let parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+         return __line__, parenInfo.$indent;
+      }
+      
+      if token.txt == "___LNS___" or
+         ( token.pos.lineNo > self.targetLineNo or
+              token.pos.lineNo == self.targetLineNo ) and
+         not termTxtSet.has( token.txt ) and
+         not beginTxtSet.has( token.txt )
+      {
+         if not self.output( token, self.parenInfoStack[ #self.parenInfoStack ],
+                             process()** ) {
+            return nil;
+         }
+      }
+      return token;
+   }
+
+
+   fn getToken() mut : &LnsTypes.Token! {
+      return self.checkKeyword( self.tokenizer.getToken() );
+   }
+
+   fn process( token:&LnsTypes.Token ) mut : bool {
+      let mut nowParenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+      let mut parenInfo = nowParenInfo;
+
+      let depth = 1;
+
+      let mut isWaitingFront = false;
+      if parenMap[ token.txt ] {
+         parenInfo = new ParenInfo(
+            self.line2Indent,
+            self.parenInfoStack[ #self.parenInfoStack ], depth, token );
+         self.parenInfoStack.insert( parenInfo );
+         Util.log( __func__, "push", getTokenTxt( parenInfo.$startToken ) );
+      } elseif parenInfo.$termTxt == token.txt {
+         Util.log( __func__, "pop", getTokenTxt( parenInfo.$startToken ) );
+
+         if parenInfo.$depth >= depth {
+            self.parenInfoStack.remove(##);
+            parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+         }
+         if parenInfo.$startToken.txt == "case" {
+            self.parenInfoStack.remove(##);
+            parenInfo = self.parenInfoStack[ #self.parenInfoStack ];
+         }
+         if token.txt == "}" {
+            isWaitingFront = true;
+         }
+      } else {
+         if indentTermTxtSet.has( token.txt ) {
+            isWaitingFront = true;
+         } else {
+            parenInfo.set_contToken( token );
+         }
+      }
+
+      let continue;
+      if ( token.pos.lineNo > self.targetLineNo or
+              token.pos.lineNo == self.targetLineNo )
+      {
+         if termTxtSet.has( token.txt ) {
+            let indent = nowParenInfo.$termIndent;
+            continue = self.output( token, nowParenInfo, __line__, indent );
+         } elseif beginTxtSet.has( token.txt ) {
+            let indent = parenInfo.$termIndent;
+            continue = self.output( token, nowParenInfo, __line__, indent );
+         } else {
+            continue = true;
+         }
+      } else {
+         continue = true;
+      }
+      if isWaitingFront {
+         parenInfo.set_frontToken( nil );
+      }
+
+      return continue;
+   }
+
+   pub fn analyze() mut {
+      while true {
+         let! token = self.getToken() {
+            break;
+         };
+         
+         // {
+         //    if prev.pos.lineNo ~= token.pos.lineNo {
+         //       print( "" );
+         //    }
+         //    io.stdout.write( token.txt .. " " );
+         //    prev = token;
+         // }
+
+         if token.kind == .Eof {
+            break;
+         }
+
+         if not self.process( token ) {
+            break;
+         }
+      }
+      self.outputResult(io.stdout);
+   }
 }

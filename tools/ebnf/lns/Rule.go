@@ -35,7 +35,7 @@ func (self *Rule_RuleCore) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,use
     return self.candidate
 }
 // 42: decl @lns.@Rule.RuleCore.parseCode
-func (self *Rule_RuleCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer *Code_CodeTokenizer,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
+func (self *Rule_RuleCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
     __func__ := "@lns.@Rule.RuleCore.parseCode"
     var list *LnsList
     list = NewLnsList([]LnsAny{})
@@ -73,26 +73,24 @@ func (self *Rule_RuleCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenize
 // insert a dummy
     return nil
 }
-// 100: decl @lns.@Rule.Rule.setupCandidate
+// 102: decl @lns.@Rule.Rule.setupCandidate
 func (self *Rule_Rule) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,usedCoreSet *LnsSet) *Ebnf_Candidate {
-    var candidate *Ebnf_Candidate
-    candidate = NewEbnf_Candidate(_env, true, true)
     for _, _core := range( self.coreList.Items ) {
         core := _core.(Ebnf_Core)
         var coreSet *LnsSet
         coreSet = usedCoreSet.Clone()
         var work *Ebnf_Candidate
         work = core.SetupCandidate(_env, ctrl, coreSet)
-        candidate.FP.Add(_env, work, true)
+        self.candidate.FP.Add(_env, work, true)
         if Lns_op_not(work.FP.Get_canAbbr(_env)){
             break
         }
     }
-    return candidate
+    return self.candidate
 }
-// 115: decl @lns.@Rule.Rule.parseCode
-func (self *Rule_Rule) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer *Code_CodeTokenizer,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
-    __func__ := "@lns.@Rule.Rule.parseCode"
+// 116: decl @lns.@Rule.Rule.parseCodeSub
+func (self *Rule_Rule) parseCodeSub(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,nextDepth LnsInt) LnsAny {
+    __func__ := "@lns.@Rule.Rule.parseCodeSub"
     var codeCoreList *LnsList
     codeCoreList = NewLnsList([]LnsAny{})
     var Rule_pushbackToken func(_env *LnsEnv)
@@ -119,13 +117,13 @@ func (self *Rule_Rule) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer *C
     for _index, _core := range( self.coreList.Items ) {
         index := _index + 1
         core := _core.(Ebnf_Core)
-        Util_log(_env, Lns_2DDD(__func__, self.elementName, index, self.coreList.Len()))
         var token *LnsTypes.Types_Token
-        token = tokenizer.FP.PeekToken(_env)
+        token = tokenizer.PeekToken(_env)
+        Util_log(_env, Lns_2DDD(__func__, self.elementName, index, self.coreList.Len(), token.Txt))
         if _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( core.Get_candidate(_env).FP.Has(_env, token)) ||
             _env.SetStackVal( core.Get_candidate(_env).FP.Get_canAbbr(_env)) ).(bool){
-            switch _matchExp0 := hook.Process(_env, core.ParseCode(_env, ctrl, tokenizer, hook, depth + 1), depth + 1).(type) {
+            switch _matchExp0 := hook.Process(_env, core.ParseCode(_env, ctrl, tokenizer, hook, nextDepth), nextDepth).(type) {
             case *Code_ParseCodeRet__Eof:
                 return Code_ParseCodeRet__Eof_Obj
             case *Code_ParseCodeRet__Unmatch:
@@ -147,7 +145,18 @@ func (self *Rule_Rule) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer *C
     }
     return &Code_ParseCodeRet__Detect{NewCode_CodeCoreList(_env, self.elementName, codeCoreList).FP}
 }
-// 177: decl @lns.@Rule.RuleList.setupCandidate
+// 158: decl @lns.@Rule.Rule.parseCode
+func (self *Rule_Rule) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
+    {
+        _elementName := self.elementName
+        if !Lns_IsNil( _elementName ) {
+            elementName := _elementName.(string)
+            hook.Prepare(_env, elementName, depth + 1, tokenizer.PeekToken(_env))
+        }
+    }
+    return hook.Process(_env, self.FP.parseCodeSub(_env, ctrl, tokenizer, hook, depth + 2), depth + 1)
+}
+// 188: decl @lns.@Rule.RuleList.setupCandidate
 func (self *Rule_RuleList) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,usedCoreSet *LnsSet) *Ebnf_Candidate {
     for _, _rule := range( self.list.Items ) {
         rule := _rule.(Rule_RuleDownCast).ToRule_Rule()
@@ -155,11 +164,11 @@ func (self *Rule_RuleList) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,use
     }
     return self.candidate
 }
-// 185: decl @lns.@Rule.RuleList.parseCode
-func (self *Rule_RuleList) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer *Code_CodeTokenizer,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
+// 196: decl @lns.@Rule.RuleList.parseCode
+func (self *Rule_RuleList) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
     __func__ := "@lns.@Rule.RuleList.parseCode"
-    if Lns_op_not(self.candidate.FP.Has(_env, tokenizer.FP.PeekToken(_env))){
-        Util_log(_env, Lns_2DDD(__func__, "not found candidate -- ", tokenizer.FP.PeekToken(_env).Txt, LnsTypes.Types_TokenKind_getTxt( tokenizer.FP.PeekToken(_env).Kind), self.elementName))
+    if Lns_op_not(self.candidate.FP.Has(_env, tokenizer.PeekToken(_env))){
+        Util_log(_env, Lns_2DDD(__func__, "not found candidate -- ", tokenizer.PeekToken(_env).Txt, LnsTypes.Types_TokenKind_getTxt( tokenizer.PeekToken(_env).Kind), self.elementName))
         if self.candidate.FP.Get_canAbbr(_env){
             return Code_ParseCodeRet__Abbr_Obj
         }
@@ -170,17 +179,19 @@ func (self *Rule_RuleList) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenize
     for _index, _rule := range( self.list.Items ) {
         index := _index + 1
         rule := _rule.(Rule_RuleDownCast).ToRule_Rule()
-        Util_log(_env, Lns_2DDD("check -- ", index, self.list.Len(), self.elementName))
-        switch _matchExp0 := hook.Process(_env, rule.FP.ParseCode(_env, ctrl, tokenizer, hook, depth + 1), depth + 1).(type) {
-        case *Code_ParseCodeRet__Eof:
-            return Code_ParseCodeRet__Eof_Obj
-        case *Code_ParseCodeRet__Unmatch:
-        case *Code_ParseCodeRet__Abbr:
-            result = Code_ParseCodeRet__Abbr_Obj
-        case *Code_ParseCodeRet__Detect:
-            codeCore := _matchExp0.Val1
-            Util_log(_env, Lns_2DDD("detect -- ", self.elementName))
-            return &Code_ParseCodeRet__Detect{codeCore}
+        if rule.FP.Get_candidate(_env).FP.Has(_env, tokenizer.PeekToken(_env)){
+            Util_log(_env, Lns_2DDD("check -- ", index, self.list.Len(), self.elementName))
+            switch _matchExp0 := rule.FP.ParseCode(_env, ctrl, tokenizer, hook, depth + 1).(type) {
+            case *Code_ParseCodeRet__Eof:
+                return Code_ParseCodeRet__Eof_Obj
+            case *Code_ParseCodeRet__Unmatch:
+            case *Code_ParseCodeRet__Abbr:
+                result = Code_ParseCodeRet__Abbr_Obj
+            case *Code_ParseCodeRet__Detect:
+                codeCore := _matchExp0.Val1
+                Util_log(_env, Lns_2DDD("detect -- ", self.elementName))
+                return &Code_ParseCodeRet__Detect{codeCore}
+            }
         }
     }
     Util_log(_env, Lns_2DDD(result.(LnsAlgeVal).GetTxt(), " -- ", self.elementName))
@@ -189,7 +200,7 @@ func (self *Rule_RuleList) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenize
 // declaration Class -- RuleCore
 type Rule_RuleCoreMtd interface {
     Get_candidate(_env *LnsEnv) *Ebnf_Candidate
-    ParseCode(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 *Code_CodeTokenizer, arg3 Code_ParseCodeHookIF, arg4 LnsInt) LnsAny
+    ParseCode(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 Code_CodeTokenizerIF, arg3 Code_ParseCodeHookIF, arg4 LnsInt) LnsAny
     SetupCandidate(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 *LnsSet) *Ebnf_Candidate
 }
 type Rule_RuleCore struct {
@@ -242,12 +253,15 @@ func (self *Rule_RuleCore) InitRule_RuleCore(_env *LnsEnv, kind LnsInt,rule Ebnf
 
 // declaration Class -- Rule
 type Rule_RuleMtd interface {
-    ParseCode(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 *Code_CodeTokenizer, arg3 Code_ParseCodeHookIF, arg4 LnsInt) LnsAny
+    Get_candidate(_env *LnsEnv) *Ebnf_Candidate
+    ParseCode(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 Code_CodeTokenizerIF, arg3 Code_ParseCodeHookIF, arg4 LnsInt) LnsAny
+    parseCodeSub(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 Code_CodeTokenizerIF, arg3 Code_ParseCodeHookIF, arg4 LnsInt) LnsAny
     SetupCandidate(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 *LnsSet) *Ebnf_Candidate
 }
 type Rule_Rule struct {
     elementName LnsAny
     coreList *LnsList
+    candidate *Ebnf_Candidate
     FP Rule_RuleMtd
 }
 func Rule_Rule2Stem( obj LnsAny ) LnsAny {
@@ -283,17 +297,19 @@ func NewRule_Rule(_env *LnsEnv, arg1 LnsAny, arg2 *LnsList) *Rule_Rule {
     obj.InitRule_Rule(_env, arg1, arg2)
     return obj
 }
-// 95: DeclConstr
+func (self *Rule_Rule) Get_candidate(_env *LnsEnv) *Ebnf_Candidate{ return self.candidate }
+// 96: DeclConstr
 func (self *Rule_Rule) InitRule_Rule(_env *LnsEnv, elementName LnsAny,coreList *LnsList) {
     self.elementName = elementName
     self.coreList = coreList
+    self.candidate = NewEbnf_Candidate(_env, true, true)
 }
 
 
 // declaration Class -- RuleList
 type Rule_RuleListMtd interface {
     Get_candidate(_env *LnsEnv) *Ebnf_Candidate
-    ParseCode(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 *Code_CodeTokenizer, arg3 Code_ParseCodeHookIF, arg4 LnsInt) LnsAny
+    ParseCode(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 Code_CodeTokenizerIF, arg3 Code_ParseCodeHookIF, arg4 LnsInt) LnsAny
     SetupCandidate(_env *LnsEnv, arg1 Ebnf_EbnfCtrlIF, arg2 *LnsSet) *Ebnf_Candidate
 }
 type Rule_RuleList struct {
@@ -336,7 +352,7 @@ func NewRule_RuleList(_env *LnsEnv, arg1 string, arg2 *LnsList) *Rule_RuleList {
     return obj
 }
 func (self *Rule_RuleList) Get_candidate(_env *LnsEnv) *Ebnf_Candidate{ return self.candidate }
-// 171: DeclConstr
+// 182: DeclConstr
 func (self *Rule_RuleList) InitRule_RuleList(_env *LnsEnv, elementName string,list *LnsList) {
     self.elementName = elementName
     self.list = list

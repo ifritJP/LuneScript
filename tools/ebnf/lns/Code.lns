@@ -8,7 +8,6 @@ import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
 
 pub interface CodeTokenizerIF {
    pub fn getToken() mut : &LnsTypes.Token;
-
    /**
    現在のトークンを pushback する
    */
@@ -21,30 +20,68 @@ pub interface CodeTokenizerIF {
 peekToken() を複数回連続実行しても同じ token を返す。
    */
    pub fn peekToken() mut : &LnsTypes.Token;
+
+   // Token -> WithTailCommentToken のマップ
+   pub fn getTailCommentList( token:&LnsTypes.Token) : &List<&LnsTypes.Token>!;
 }
 
-pub class CodeTokenizer extend (CodeTokenizerIF) {
-   /** コードの tokenizer 元 */
-   let tokenizer:LnsTokenizer.Tokenizer;
+/*
+末尾に続くコメントを持つトークン
+*/
+class WithTailCommentToken extend LnsTypes.Token {
+   let tailCommentList:List<&LnsTypes.Token> {pub};
+
+   pub fn __init( token:&LnsTypes.Token ) {
+      super( token.kind, token.txt, token.pos, token.consecutive, token.$commentList );
+      self.tailCommentList = [];
+   }
+
+   pub fn add( comment:&LnsTypes.Token ) mut {
+      self.tailCommentList.insert( comment );
+   }
+}
+
+pub abstract class CodeTokenizerBase extend (CodeTokenizerIF) {
    /** 読み込み済みの token のリスト */
-   let mut tokenList:List<&LnsTypes.Token>;
+   pro let mut tokenList:List<&LnsTypes.Token>;
    /**
    tokenList のアクセス位置。
    pushBack したときは、この位置を前後に動かす。
    次の条件のときに、tokenList から token を読み出す。
    1 <= tokenIndex <= #tokenList 
    */ 
-   let mut tokenIndex:int;
+   pro let mut tokenIndex:int;
    /** コメントリスト。 次のコメント以外の token に付加する */
-   let mut commentList:__List<&LnsTypes.Token>;
+   pro let mut commentList:__List<&LnsTypes.Token>;
+   // Token -> WithTailCommentToken のマップ
+   let token2WithTailCommentToken:Map<&LnsTypes.Token,WithTailCommentToken>;
+   
 
-   pub fn __init(tokenizer:LnsTokenizer.Tokenizer) {
-      self.tokenizer = tokenizer;
+   pub fn __init() {
       self.tokenList = [];
       self.commentList = [];
       self.tokenIndex = 1;
+      self.token2WithTailCommentToken = {};
    }
 
+   // Token -> WithTailCommentToken のマップ
+   pub fn getTailCommentList( token:&LnsTypes.Token) : &List<&LnsTypes.Token>! {
+      let! withTailCommentToken = self.token2WithTailCommentToken[ token ] {
+         return nil;
+      };
+      return withTailCommentToken.$tailCommentList;
+   }
+   
+   pro abstract fn getTokenMain() mut : &LnsTypes.Token!;
+
+   pub fn getPrevToken() : &LnsTypes.Token {
+      if self.tokenIndex <= 1 {
+         return LnsTypes.noneToken;
+      }
+      return self.tokenList[ self.tokenIndex - 1 ];
+   }
+
+   
    /**
    トークン取得
 
@@ -73,7 +110,7 @@ pub class CodeTokenizer extend (CodeTokenizerIF) {
       }
       
       while true {
-         let! token = self.tokenizer.getToken() {
+         let! token = self.getTokenMain() {
             token = LnsTypes.noneToken;
          };
          switch token.kind {
@@ -81,7 +118,23 @@ pub class CodeTokenizer extend (CodeTokenizerIF) {
                return process(token);
             }
             case .Cmnt {
-               self.commentList.insert( token );
+               if #self.tokenList > 0 {
+                  let mut prevToken = self.tokenList[ #self.tokenList ];
+                  if token.pos.lineNo == prevToken.pos.lineNo {
+                     let! mut withTailCommentToken =
+                        self.token2WithTailCommentToken[ prevToken ]
+                     {
+                        withTailCommentToken = new WithTailCommentToken( prevToken );
+                        self.token2WithTailCommentToken[ prevToken ] =
+                           withTailCommentToken;
+                     };
+                     withTailCommentToken.add( token );
+                  } else {
+                     self.commentList.insert( token );
+                  }
+               } else {
+                  self.commentList.insert( token );
+               }
             }
             default {
                return process(token);
@@ -89,14 +142,7 @@ pub class CodeTokenizer extend (CodeTokenizerIF) {
          } 
       }
    }
-
-   pub fn getPrevToken() : &LnsTypes.Token {
-      if self.tokenIndex <= 1 {
-         return LnsTypes.noneToken;
-      }
-      return self.tokenList[ self.tokenIndex - 1 ];
-   }
-
+   
    /**
    現在のトークンを pushback する
    */
@@ -120,6 +166,26 @@ peekToken() を複数回連続実行しても同じ token を返す。
       let token = self.getToken();
       self.pushback();
       return token;
+   }
+}
+
+
+pub class CodeTokenizer extend CodeTokenizerBase {
+   /** コードの tokenizer 元 */
+   let tokenizer:LnsTokenizer.Tokenizer;
+
+   pub fn __init(tokenizer:LnsTokenizer.Tokenizer) {
+      super();
+      self.tokenizer = tokenizer;
+   }
+
+   /**
+   トークン取得
+
+コメントがある場合は、コメントを読み飛ばして次のトークンを取得する。
+   */
+   pro override fn getTokenMain() mut : &LnsTypes.Token! {
+      return self.tokenizer.getToken();
    }
 }
 
@@ -148,6 +214,7 @@ CodeCore からソースコードを出力する
 */
 pub class CodeGenerator {
    let stream:oStream;
+   let codeTokenizer:CodeTokenizerIF;
    let mut prevToken:&LnsTypes.Token;
    let indentStack:List<&CodeIndentInfo>;
    let indentPairMap:Map<str,str>;
@@ -155,8 +222,9 @@ pub class CodeGenerator {
    let mut colmun:int;
    let elementIndent:List<ElementIndentInfo>;
 
-   pub fn __init( stream:oStream ) {
+   pub fn __init( stream:oStream, codeTokenizer:CodeTokenizerIF ) {
       self.stream = stream;
+      self.codeTokenizer = codeTokenizer;
       self.prevToken = LnsTypes.noneToken;
       self.indentStack = [ new CodeIndentInfo( "", 0 ) ];
       self.elementIndent = [ new ElementIndentInfo( 0, false) ];
@@ -281,25 +349,15 @@ pub class CodeGenerator {
       if self.prevToken == LnsTypes.noneToken {
          return false;
       }
-      let mut prevLineNo = self.prevToken.pos.lineNo;
-      switch self.prevToken.kind {
-         case .Str {
-            if self.prevToken.txt[ 1 ] == ?` {
-               __luaLock {
-                  apply _ of self.prevToken.txt.gmatch( "\n" ) {
-                     prevLineNo = prevLineNo + 1;
-                  }
-               }
-            }
-         }
-      }
-      return prevLineNo ~= token.pos.lineNo;
+      return self.prevToken.$endLineNo ~= token.pos.lineNo;
    }
    
    pub fn outputToken( token:&LnsTypes.Token ) mut {
+      // token の前のコメント出力
       foreach comment in token.$commentList {
          self.outputToken( comment );
       }
+      
       if token.kind == .Eof {
          return;
       }
@@ -307,7 +365,7 @@ pub class CodeGenerator {
          Util.log( __func__,
                    self.prevToken.kind.$_txt, self.prevToken.pos.lineNo,
                    token.kind.$_txt, token.pos.lineNo );
-         self.writeRawln(token.pos.lineNo - self.prevToken.pos.lineNo );
+         self.writeRawln(token.pos.lineNo - self.prevToken.$endLineNo );
          self.writeRaw( string.rep( " ", self.processIndentCur( token, true ) ), false );
       } else {
          self.processIndentCur( token, false );
@@ -328,7 +386,15 @@ pub class CodeGenerator {
       } else {
          self.writeRaw( token.txt, token.kind ~= .Cmnt );
       }
+
       self.prevToken = token;
+
+      // token の後のコメント出力
+      if! let tailCommentList = self.codeTokenizer.getTailCommentList( token ) {
+         foreach comment in tailCommentList {
+            self.outputToken( comment );
+         }
+      }
    }
 }
 
@@ -341,6 +407,19 @@ pub alge ParseCodeRet {
    Abbr,
    /** 検出 */
    Detect(&CodeCore),
+}
+
+/**
+`{} 内の token を保持する CodeCore。
+*/
+pub class CodeCoreStatOne extend (CodeCore) {
+   let token:&LnsTypes.Token {pub};
+   pub fn outputCode( stream:CodeGenerator ) {
+      stream.outputToken( self.token );
+   }
+   pub fn pushback(tokenizer:CodeTokenizerIF) {
+      tokenizer.pushback();
+   }
 }
 
 /**

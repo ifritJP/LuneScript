@@ -233,7 +233,6 @@ local function getVal( tokenizer )
    
    return nil, false
 end
-
 local function fromStr( txt )
 
    local tokenizer = Tokenizer.DefaultPushbackTokenizer._new(Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,"json",nil}), false ))

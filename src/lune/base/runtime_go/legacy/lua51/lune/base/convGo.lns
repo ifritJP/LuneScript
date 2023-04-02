@@ -4918,7 +4918,7 @@ fn convFilter.getFromStemName(typeInfo:&Ast.TypeInfo, suffix:str) mut : str {
                                            self.type2gotypeOrg( valType, .Normal ) );
       }
       case .Class {
-         return "%s_FromMap" (self.getTypeSymbol(workTypeInfo))  .. suffix;
+         return "%s_FromMap" (self.getTypeSymbolWithPrefix(workTypeInfo))  .. suffix;
       }
       default {
          Util.err( "%s: not support -- %s" (__func__, workTypeInfo.$kind.$_txt ) ); // バグ

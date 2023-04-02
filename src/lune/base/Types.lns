@@ -303,6 +303,10 @@ pub class Token extend (Mapping) {
       }
       return count;
    }
+
+   pub fn get_endLineNo():int {
+      return self.pos.lineNo;
+   }
 }
 
 pub let nonePos = new Position( 0, -1, "eof" ## );

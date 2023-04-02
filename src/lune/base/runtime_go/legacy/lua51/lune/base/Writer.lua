@@ -286,6 +286,42 @@ function XML._setmeta( obj )
 end
 
 
+local JsonLayerState = {}
+_moduleObj.JsonLayerState = JsonLayerState
+JsonLayerState._val2NameMap = {}
+function JsonLayerState:_getTxt( val )
+   local name = self._val2NameMap[ val ]
+   if name then
+      return string.format( "JsonLayerState.%s", name )
+   end
+   return string.format( "illegal val -- %s", val )
+end
+function JsonLayerState._from( val )
+   if JsonLayerState._val2NameMap[ val ] then
+      return val
+   end
+   return nil
+end
+    
+JsonLayerState.__allList = {}
+function JsonLayerState.get__allList()
+   return JsonLayerState.__allList
+end
+
+JsonLayerState.None = 0
+JsonLayerState._val2NameMap[0] = 'None'
+JsonLayerState.__allList[1] = JsonLayerState.None
+JsonLayerState.Termed = 1
+JsonLayerState._val2NameMap[1] = 'Termed'
+JsonLayerState.__allList[2] = JsonLayerState.Termed
+JsonLayerState.Named = 2
+JsonLayerState._val2NameMap[2] = 'Named'
+JsonLayerState.__allList[3] = JsonLayerState.Named
+JsonLayerState.Valued = 3
+JsonLayerState._val2NameMap[3] = 'Valued'
+JsonLayerState.__allList[4] = JsonLayerState.Valued
+
+
 local JsonLayer = {}
 function JsonLayer._setmeta( obj )
   setmetatable( obj, { __index = JsonLayer  } )
@@ -315,7 +351,7 @@ setmetatable( JSON, { ifList = {Writer,} } )
 _moduleObj.JSON = JSON
 function JSON:startLayer( arrayFlag, madeByArrayFlag )
 
-   local info = JsonLayer._new('none', arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
+   local info = JsonLayer._new(JsonLayerState.None, arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
    
    table.insert( self.layerQueue, info )
    self.stream:write( arrayFlag and "[" or "{" )
@@ -339,6 +375,18 @@ function JSON:getLayerInfo(  )
    end
    
    return self.layerQueue[#self.layerQueue]
+end
+function JSON:equalLayerState( state )
+
+   return self.layerQueue[#self.layerQueue].state == state
+end
+function JSON:isArrayLayer(  )
+
+   return self.layerQueue[#self.layerQueue].arrayFlag
+end
+function JSON:setLayerState( state )
+
+   self.layerQueue[#self.layerQueue].state = state
 end
 function JSON:endLayer(  )
 
@@ -369,18 +417,6 @@ function JSON:endLayer(  )
    end
    
 end
-function JSON:equalLayerState( state )
-
-   return self.layerQueue[#self.layerQueue].state == state
-end
-function JSON:isArrayLayer(  )
-
-   return self.layerQueue[#self.layerQueue].arrayFlag
-end
-function JSON:setLayerState( state )
-
-   self.layerQueue[#self.layerQueue].state = state
-end
 function JSON:getLayerName(  )
 
    return self.layerQueue[#self.layerQueue].name
@@ -399,9 +435,9 @@ function JSON:startParent( name, arrayFlag )
 
    self:addElementName( name )
    
-   if self:equalLayerState( 'termed' ) or self:equalLayerState( 'named' ) or self:equalLayerState( 'valued' ) then
+   if self:equalLayerState( JsonLayerState.Termed ) or self:equalLayerState( JsonLayerState.Named ) or self:equalLayerState( JsonLayerState.Valued ) then
       self.stream:write( "," )
-   elseif self:equalLayerState( 'none' ) then
+   elseif self:equalLayerState( JsonLayerState.None ) then
       
    end
    
@@ -420,11 +456,11 @@ function JSON:startElement( name )
 
    self:addElementName( name )
    
-   if self:equalLayerState( 'termed' ) then
+   if self:equalLayerState( JsonLayerState.Termed ) then
       self.stream:write( "," )
-   elseif self:equalLayerState( 'named' ) then
+   elseif self:equalLayerState( JsonLayerState.Named ) then
       Util.err( 'illegal layer state' )
-   elseif self:equalLayerState( 'none' ) then
+   elseif self:equalLayerState( JsonLayerState.None ) then
       
    end
    
@@ -442,14 +478,14 @@ function JSON:startElement( name )
    info.openElement = true
    
    self.stream:write( string.format( '"%s": ', name) )
-   self:setLayerState( 'named' )
+   self:setLayerState( JsonLayerState.Named )
    self.prevName = name
 end
 function JSON:endElement(  )
 
-   if self:equalLayerState( 'none' ) or self:equalLayerState( 'termed' ) then
+   if self:equalLayerState( JsonLayerState.None ) or self:equalLayerState( JsonLayerState.Termed ) then
       self:endLayer(  )
-   elseif self:equalLayerState( 'valued' ) then
+   elseif self:equalLayerState( JsonLayerState.Valued ) then
       local info = _lune.unwrap( self:getLayerInfo(  ))
       if info.openElement then
          info.openElement = false
@@ -464,7 +500,7 @@ function JSON:endElement(  )
       Util.err( string.format( 'illegal layer state %s', self:getLayerName(  )) )
    end
    
-   self:setLayerState( 'termed' )
+   self:setLayerState( JsonLayerState.Termed )
 end
 function JSON.convertJsonTxt( txt )
 
@@ -492,7 +528,7 @@ function JSON:writeValue( val )
    
    
    self.stream:write( txt )
-   self:setLayerState( 'valued' )
+   self:setLayerState( JsonLayerState.Valued )
 end
 function JSON:write( name, val )
 
@@ -502,7 +538,7 @@ function JSON:write( name, val )
 end
 function JSON:fin(  )
 
-   if self:equalLayerState( 'none' ) or self:equalLayerState( 'termed' ) then
+   if self:equalLayerState( JsonLayerState.None ) or self:equalLayerState( JsonLayerState.Termed ) then
       self:endLayer(  )
    else
     

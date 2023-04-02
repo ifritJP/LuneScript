@@ -403,6 +403,11 @@ _moduleObj.setDefaultPipeSize = setDefaultPipeSize
 
 local MultiLineToken = {}
 setmetatable( MultiLineToken, { __index = Types.Token } )
+_moduleObj.MultiLineToken = MultiLineToken
+function MultiLineToken:get_endLineNo(  )
+
+   return self.endPos.lineNo
+end
 function MultiLineToken._setmeta( obj )
   setmetatable( obj, { __index = MultiLineToken  } )
 end
@@ -477,9 +482,25 @@ function Tokenizer:__init(streamName, stream, luaMode, overridePos, pipeSize)
    
    local keywordSet, typeSet, _1, multiCharDelimitMap = createReserveInfo( luaMode )
    
-   self.keywordSet = keywordSet
-   self.typeSet = typeSet
    self.multiCharDelimitMap = multiCharDelimitMap
+   
+   self.token2kind = {}
+   for txt, __val in pairs( keywordSet ) do
+      self.token2kind[txt] = Types.TokenKind.Kywd
+   end
+   
+   for txt, __val in pairs( typeSet ) do
+      self.token2kind[txt] = Types.TokenKind.Type
+   end
+   
+   for txt, __val in pairs( op1Set ) do
+      self.token2kind[txt] = Types.TokenKind.Ope
+   end
+   
+   for txt, __val in pairs( _moduleObj.op2Set ) do
+      self.token2kind[txt] = Types.TokenKind.Ope
+   end
+   
 end
 function Tokenizer:setup(  )
 
@@ -658,15 +679,15 @@ function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endCo
    end
    
    if tokenKind == Types.TokenKind.Symb then
-      if _lune._Set_has(self.keywordSet, token ) then
-         tokenKind = Types.TokenKind.Kywd
-      elseif _lune._Set_has(self.typeSet, token ) then
-         tokenKind = Types.TokenKind.Type
-      elseif _lune._Set_has(_moduleObj.op2Set, token ) or _lune._Set_has(op1Set, token ) then
-         tokenKind = Types.TokenKind.Ope
+      do
+         local kind = self.token2kind[token]
+         if kind ~= nil then
+            tokenKind = kind
+         end
       end
       
    end
+   
    
    local consecutive = false
    if self.prevToken.pos.lineNo == lineNo and self.prevToken.pos.column + #self.prevToken.txt == tokenColumn then
@@ -696,7 +717,6 @@ function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endCo
    self.prevToken = newToken
    return newToken
 end
-
 
 function Tokenizer:analyzeNumber( token, beginIndex )
 
@@ -915,7 +935,15 @@ function Tokenizer:parse(  )
          
          comment = comment .. rawLine:sub( searchIndex ) .. "\n"
          searchIndex = 1
-         rawLine = _lune.unwrap( self:readLine(  ))
+         do
+            local _exp = self:readLine(  )
+            if _exp ~= nil then
+               rawLine = _exp
+            else
+               return comment, -1
+            end
+         end
+         
       end
       
    end
@@ -997,6 +1025,10 @@ function Tokenizer:parse(  )
                local txt, nextIndex = multiComment( index + 3, '```' )
                
                table.insert( list, self:createInfo( Types.TokenKind.Str, '```' .. txt, index, lineNo, nextIndex - 1 ) )
+               if nextIndex == -1 then
+                  return list
+               end
+               
                searchIndex = nextIndex
             elseif nextChar == 123 then
                self:addVal( list, Types.TokenKind.Ope, '`{', index )
@@ -1031,8 +1063,14 @@ function Tokenizer:parse(  )
                
                if nextChar == 42 then
                   
+                  local lineNo = self.lineNo
                   local comment, nextIndex = multiComment( index + 2, "*/" )
-                  self:addVal( list, Types.TokenKind.Cmnt, "/*" .. comment, index )
+                  
+                  table.insert( list, self:createInfo( Types.TokenKind.Cmnt, "/*" .. comment, index, lineNo, nextIndex - 1 ) )
+                  if nextIndex == -1 then
+                     return list
+                  end
+                  
                   searchIndex = nextIndex
                elseif nextChar == 47 then
                   

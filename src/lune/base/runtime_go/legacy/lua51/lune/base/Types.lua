@@ -274,7 +274,6 @@ function TransCtrlInfo.create_normal(  )
    return TransCtrlInfo._new()
 end
 
-
 local Position = {}
 setmetatable( Position, { ifList = {Mapping,__absimmut,} } )
 _moduleObj.Position = Position
@@ -492,6 +491,10 @@ function Token:getLineCount(  )
    end
    
    return count
+end
+function Token:get_endLineNo(  )
+
+   return self.pos.lineNo
 end
 function Token._setmeta( obj )
   setmetatable( obj, { __index = Token  } )
