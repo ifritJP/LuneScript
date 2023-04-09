@@ -273,7 +273,7 @@
     (lns-command-get-lnsc)
     ;; formatter の場所を登録
     (setq formatter-dir (expand-file-name (concat (lns-proj-info-get-lnsc-path info)
-						  "../../../tools/ebnf")))
+						  "../../../tools/formatter")))
     (cond
      ((and (setq formatter-path (expand-file-name "formatter" formatter-dir))
 	   (file-exists-p formatter-path))
