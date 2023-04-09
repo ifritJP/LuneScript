@@ -19,12 +19,14 @@ help:
 	@echo make clean
 	@echo make view-goprof
 
+update_lns:
+	go get -u github.com/ifritJP/LuneScript/src@latest
 
 build:
 	@echo $(SRCS) | sed 's/ /\n/g' |	\
 		$(LNSC) @- save -langGo -noLua --main lns.main $(LNS_OPT)
 	$(LNSC) lns/main.lns mkmain entry.go
-	go build -tags gopherlua -o formatter
+	go build -tags gopherlua
 
 goprof:
 	./formatter -prof ../../src/lune/base/Ast.lns dummy.lns

@@ -1,8 +1,8 @@
-module github.com/LuneScript/tools/ebnf
+module github.com/LuneScript/tools/formatter
 
 go 1.18
 
-require github.com/ifritJP/LuneScript/src v0.0.0-20230319065254-f55e6a76158e
+require github.com/ifritJP/LuneScript/src v0.0.0-20230409073752-33f3ab0a6b08
 
 require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
