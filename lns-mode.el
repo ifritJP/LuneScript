@@ -35,9 +35,15 @@
 
 (defvar lns-proj-info-check-useing-indent-command
   (lambda (proj-dir)
-    t)
-    ;; nil)
+    (let ((proj-info (lns-proj-info-get proj-dir)))
+      (or (plist-get proj-info :indent-command-path)
+	  (plist-get proj-info :indent-command-script))))
   "proj-dir のプロジェクトでインデントコマンドを利用するかどうか。"
+  )
+(defvar lns-get-formatter-path
+  (lambda (lnsc-path)
+    (expand-file-name (concat lnsc-path "../../../tools/formatter")))
+  "formatter のパスを取得する関数を指定する"
   )
 
 
@@ -267,13 +273,11 @@
 	formatter-dir formatter-path)
     (add-to-list 'lns-proj-info-list (list proj-dir info))
     (plist-put info :proj-dir proj-dir)
-    (plist-put info :use-indent-comamnd
-	       (funcall lns-proj-info-check-useing-indent-command proj-dir))
     ;; lnsc の場所を更新
     (lns-command-get-lnsc)
     ;; formatter の場所を登録
-    (setq formatter-dir (expand-file-name (concat (lns-proj-info-get-lnsc-path info)
-						  "../../../tools/formatter")))
+    (setq formatter-dir (funcall lns-get-formatter-path
+				 (lns-proj-info-get-lnsc-path info)))
     (cond
      ((and (setq formatter-path (expand-file-name "formatter" formatter-dir))
 	   (file-exists-p formatter-path))
@@ -281,6 +285,8 @@
      ((and (setq formatter-path (expand-file-name "lns/main.lns" formatter-dir))
 	   (file-exists-p formatter-path))
       (plist-put info :indent-command-script formatter-path)))
+    (plist-put info :use-indent-comamnd
+	       (funcall lns-proj-info-check-useing-indent-command proj-dir))
     ))
 
 (defun lns-proj-info-get (&optional proj-dir new)
