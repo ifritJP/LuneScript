@@ -1,7 +1,7 @@
 package main
 
 import . "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
-import . "github.com/LuneScript/tools/ebnf/lns"
+import . "github.com/LuneScript/tools/formatter/lns"
 
 //IMPORT:
 ////TEST:import . "lns/lune/base"

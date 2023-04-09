@@ -9,6 +9,6 @@ require (
 	github.com/yuin/gopher-lua v0.0.0-20220413183635-c841877397d8 // indirect
 )
 
-replace github.com/ifritJP/LuneScript/src => ../../src
+// replace github.com/ifritJP/LuneScript/src => ../../src
 
 //replace github.com/ifritJP/lnssqlite3/src => ../lnssqlite3/src
