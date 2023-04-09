@@ -2017,7 +2017,7 @@ test-formatter:
 
 work/formatter/apply/lune/base/%.lns: lune/base/%.lns
 	@echo formatter: "$< ==> $@"
-	@$(LNSC) ../tools/ebnf/lns/main.lns -shebang $< $@ -log > $@.log
+	@$(LNSC) ../tools/formatter/lns/main.lns -shebang $< $@ -log > $@.log
 
 FORMAT_SRCS := $(shell find lune/base -maxdepth 1 -iname '*.lns' )
 FORMAT_SRCS := $(addprefix work/formatter/apply/,$(FORMAT_SRCS))
