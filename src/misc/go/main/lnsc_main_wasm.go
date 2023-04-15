@@ -43,7 +43,12 @@ func getIndent(this js.Value, args []js.Value) interface{} {
 
 	env := Lns_GetEnv()
 
-	return formatter.Main_getIndentWithCode(env, lnsCode, targetLineNo, endLineNo)
+	jsonTxt := ""
+	Lns_LockEnvSync(env, 0, func() {
+		jsonTxt = formatter.Main_getIndentWithCode(env, lnsCode, targetLineNo, endLineNo)
+	})
+
+	return jsonTxt
 }
 
 func lns2lua(this js.Value, args []js.Value) interface{} {
@@ -148,6 +153,8 @@ func main() {
 		})
 
 	//Lns_RunMainNoExit(lnsc.Front___main)
+
+	formatter.Lns_main_init(env)
 
 	js.Global().Set("__lnsc", js.FuncOf(Setup))
 	<-make(chan bool)

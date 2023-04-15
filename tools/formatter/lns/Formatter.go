@@ -41,11 +41,11 @@ Val2 LnsInt
 func (self *Formatter_ParenInfoIndent__RelTermPos) GetTxt() string {
 return "ParenInfoIndent.RelTermPos"
 }
-// for 539
+// for 536
 func Formatter_convExp3_405(_env *LnsEnv, arg1 *LnsTypes.Types_Token, arg2 []LnsAny) (*LnsEnv, *LnsTypes.Types_Token, LnsInt, LnsInt) {
     return _env, arg1, Lns_getFromMulti( arg2, 0 ).(LnsInt), Lns_getFromMulti( arg2, 1 ).(LnsInt)
 }
-// for 753
+// for 750
 func Formatter_convExp4_390(_env *LnsEnv, arg1 *LnsTypes.Types_Token, arg2 *Formatter_ParenInfo, arg3 []LnsAny) (*LnsEnv, *LnsTypes.Types_Token, *Formatter_ParenInfo, LnsInt, LnsInt) {
     return _env, arg1, arg2, Lns_getFromMulti( arg3, 0 ).(LnsInt), Lns_getFromMulti( arg3, 1 ).(LnsInt)
 }
@@ -246,18 +246,17 @@ func (self *Formatter_Line2Indent) OutputResult(_env *LnsEnv, stream Lns_oStream
     json.FP.EndElement(_env)
     json.FP.EndElement(_env)
     json.FP.EndLayer(_env)
-    _env.GetVM().OS_exit(0)
 }
-// 305: decl @lns.@Formatter.ParenInfo.set_frontToken
+// 302: decl @lns.@Formatter.ParenInfo.set_frontToken
 func (self *Formatter_ParenInfo) Set_frontToken(_env *LnsEnv, token LnsAny) {
     self.frontToken = token
     self.isWaitingFront = LnsTypes.Types_Token2Stem(token) == nil
 }
-// 312: decl @lns.@Formatter.ParenInfo.get_stmtIndent
+// 309: decl @lns.@Formatter.ParenInfo.get_stmtIndent
 func (self *Formatter_ParenInfo) Get_stmtIndent(_env *LnsEnv) LnsInt {
     return self.FP.get_indentPos(_env, self.indent)
 }
-// 315: decl @lns.@Formatter.ParenInfo.get_indent
+// 312: decl @lns.@Formatter.ParenInfo.get_indent
 func (self *Formatter_ParenInfo) Get_indent(_env *LnsEnv) LnsInt {
     var indent LnsInt
     indent = self.FP.get_indentPos(_env, self.indent)
@@ -266,11 +265,11 @@ func (self *Formatter_ParenInfo) Get_indent(_env *LnsEnv) LnsInt {
     }
     return indent + Formatter_indentDelta
 }
-// 322: decl @lns.@Formatter.ParenInfo.get_termIndent
+// 319: decl @lns.@Formatter.ParenInfo.get_termIndent
 func (self *Formatter_ParenInfo) Get_termIndent(_env *LnsEnv) LnsInt {
     return self.FP.get_indentPos(_env, self.termIndent)
 }
-// 326: decl @lns.@Formatter.ParenInfo.get_indentPos
+// 323: decl @lns.@Formatter.ParenInfo.get_indentPos
 func (self *Formatter_ParenInfo) get_indentPos(_env *LnsEnv, parenInfoIndent LnsAny) LnsInt {
     switch _matchExp0 := parenInfoIndent.(type) {
     case *Formatter_ParenInfoIndent__Abs:
@@ -294,7 +293,7 @@ func (self *Formatter_ParenInfo) get_indentPos(_env *LnsEnv, parenInfoIndent Lns
 // insert a dummy
     return 0
 }
-// 345: decl @lns.@Formatter.ParenInfo.set_contToken
+// 342: decl @lns.@Formatter.ParenInfo.set_contToken
 func (self *Formatter_ParenInfo) Set_contToken(_env *LnsEnv, contToken *LnsTypes.Types_Token) {
     if self.isWaitingFront{
         self.FP.Set_frontToken(_env, contToken)
@@ -313,10 +312,10 @@ func (self *Formatter_ParenInfo) Set_contToken(_env *LnsEnv, contToken *LnsTypes
         self.termIndent = &Formatter_ParenInfoIndent__RelTermPos{self.parentInfo, contToken.Pos.Column - self.parentInfo.FP.Get_termIndent(_env) - Formatter_indentDelta * 2}
     }
 }
-// 451: decl @lns.@Formatter.ParseCodeHook.prepare
+// 448: decl @lns.@Formatter.ParseCodeHook.prepare
 func (self *Formatter_ParseCodeHook) Prepare(_env *LnsEnv, elementName string,depth LnsInt,token *LnsTypes.Types_Token) {
 }
-// 454: decl @lns.@Formatter.ParseCodeHook.dump
+// 451: decl @lns.@Formatter.ParseCodeHook.dump
 func (self *Formatter_ParseCodeHook) dump(_env *LnsEnv) {
     for _index, _parenInfo := range( self.parenInfoStack.Items ) {
         index := _index + 1
@@ -326,7 +325,7 @@ func (self *Formatter_ParseCodeHook) dump(_env *LnsEnv) {
         }
     }
 }
-// 464: decl @lns.@Formatter.ParseCodeHook.output
+// 461: decl @lns.@Formatter.ParseCodeHook.output
 func (self *Formatter_ParseCodeHook) output(_env *LnsEnv, token *LnsTypes.Types_Token,lineNo LnsInt,indent LnsInt) {
     var pos LnsTypes.Types_Position
     pos = token.Pos
@@ -360,7 +359,7 @@ func (self *Formatter_ParseCodeHook) output(_env *LnsEnv, token *LnsTypes.Types_
     self.FP.dump(_env)
     self.line2Indent.FP.OutputResult(_env, Lns_io_stdout)
 }
-// 507: decl @lns.@Formatter.ParseCodeHook.checkKeyword
+// 504: decl @lns.@Formatter.ParseCodeHook.checkKeyword
 func (self *Formatter_ParseCodeHook) checkKeyword(_env *LnsEnv, token *LnsTypes.Types_Token) *LnsTypes.Types_Token {
     __func__ := "@lns.@Formatter.ParseCodeHook.checkKeyword"
     {
@@ -381,7 +380,7 @@ func (self *Formatter_ParseCodeHook) checkKeyword(_env *LnsEnv, token *LnsTypes.
     Formatter_process = func(_env *LnsEnv)(LnsInt, LnsInt) {
         var parenInfo *Formatter_ParenInfo
         parenInfo = self.parenInfoStack.GetAt(self.parenInfoStack.Len())
-        return 529, parenInfo.FP.Get_indent(_env)
+        return 526, parenInfo.FP.Get_indent(_env)
     }
     if _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( token.Txt == "___LNS___") ||
@@ -394,15 +393,15 @@ func (self *Formatter_ParseCodeHook) checkKeyword(_env *LnsEnv, token *LnsTypes.
     }
     return token
 }
-// 545: decl @lns.@Formatter.ParseCodeHook.getToken
+// 542: decl @lns.@Formatter.ParseCodeHook.getToken
 func (self *Formatter_ParseCodeHook) GetToken(_env *LnsEnv) *LnsTypes.Types_Token {
     return self.FP.checkKeyword(_env, self.tokenizer.GetToken(_env))
 }
-// 548: decl @lns.@Formatter.ParseCodeHook.peekToken
+// 545: decl @lns.@Formatter.ParseCodeHook.peekToken
 func (self *Formatter_ParseCodeHook) PeekToken(_env *LnsEnv) *LnsTypes.Types_Token {
     return self.FP.checkKeyword(_env, self.tokenizer.PeekToken(_env))
 }
-// 552: decl @lns.@Formatter.ParseCodeHook.process
+// 549: decl @lns.@Formatter.ParseCodeHook.process
 func (self *Formatter_ParseCodeHook) Process(_env *LnsEnv, parseCodeRet LnsAny,depth LnsInt) LnsAny {
     __func__ := "@lns.@Formatter.ParseCodeHook.process"
     switch _matchExp0 := parseCodeRet.(type) {
@@ -447,11 +446,11 @@ func (self *Formatter_ParseCodeHook) Process(_env *LnsEnv, parseCodeRet LnsAny,d
                 if Formatter_termTxtSet.Has(token.Txt){
                     var indent LnsInt
                     indent = nowParenInfo.FP.Get_termIndent(_env)
-                    self.FP.output(_env, token, 593, indent)
+                    self.FP.output(_env, token, 590, indent)
                 } else if Formatter_beginTxtSet.Has(token.Txt){
                     var indent LnsInt
                     indent = parenInfo.FP.Get_termIndent(_env)
-                    self.FP.output(_env, token, 596, indent)
+                    self.FP.output(_env, token, 593, indent)
                 }
             }
             if isWaitingFront{
@@ -508,7 +507,7 @@ func (self *Formatter_ParseCodeHook) Process(_env *LnsEnv, parseCodeRet LnsAny,d
     }
     return parseCodeRet
 }
-// 677: decl @lns.@Formatter.SimpleParser.dump
+// 674: decl @lns.@Formatter.SimpleParser.dump
 func (self *Formatter_SimpleParser) dump(_env *LnsEnv) {
     for _index, _parenInfo := range( self.parenInfoStack.Items ) {
         index := _index + 1
@@ -518,7 +517,7 @@ func (self *Formatter_SimpleParser) dump(_env *LnsEnv) {
         }
     }
 }
-// 687: decl @lns.@Formatter.SimpleParser.output
+// 684: decl @lns.@Formatter.SimpleParser.output
 func (self *Formatter_SimpleParser) output(_env *LnsEnv, token *LnsTypes.Types_Token,parenInfo *Formatter_ParenInfo,lineNo LnsInt,indent LnsInt) bool {
     var pos LnsTypes.Types_Position
     pos = token.Pos
@@ -547,7 +546,7 @@ func (self *Formatter_SimpleParser) output(_env *LnsEnv, token *LnsTypes.Types_T
     self.targetLineNo = pos.LineNo + 1
     return pos.LineNo < self.endLineNo
 }
-// 722: decl @lns.@Formatter.SimpleParser.checkKeyword
+// 719: decl @lns.@Formatter.SimpleParser.checkKeyword
 func (self *Formatter_SimpleParser) checkKeyword(_env *LnsEnv, token *LnsTypes.Types_Token) LnsAny {
     __func__ := "@lns.@Formatter.SimpleParser.checkKeyword"
     {
@@ -568,7 +567,7 @@ func (self *Formatter_SimpleParser) checkKeyword(_env *LnsEnv, token *LnsTypes.T
     Formatter_process = func(_env *LnsEnv)(LnsInt, LnsInt) {
         var parenInfo *Formatter_ParenInfo
         parenInfo = self.parenInfoStack.GetAt(self.parenInfoStack.Len())
-        return 744, parenInfo.FP.Get_indent(_env)
+        return 741, parenInfo.FP.Get_indent(_env)
     }
     if _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( token.Txt == "___LNS___") ||
@@ -583,11 +582,11 @@ func (self *Formatter_SimpleParser) checkKeyword(_env *LnsEnv, token *LnsTypes.T
     }
     return token
 }
-// 762: decl @lns.@Formatter.SimpleParser.getToken
+// 759: decl @lns.@Formatter.SimpleParser.getToken
 func (self *Formatter_SimpleParser) getToken(_env *LnsEnv) LnsAny {
     return self.FP.checkKeyword(_env, self.tokenizer.GetToken(_env))
 }
-// 766: decl @lns.@Formatter.SimpleParser.process
+// 763: decl @lns.@Formatter.SimpleParser.process
 func (self *Formatter_SimpleParser) process(_env *LnsEnv, token *LnsTypes.Types_Token) bool {
     __func__ := "@lns.@Formatter.SimpleParser.process"
     var nowParenInfo *Formatter_ParenInfo
@@ -629,11 +628,11 @@ func (self *Formatter_SimpleParser) process(_env *LnsEnv, token *LnsTypes.Types_
         if Formatter_termTxtSet.Has(token.Txt){
             var indent LnsInt
             indent = nowParenInfo.FP.Get_termIndent(_env)
-            _continue = self.FP.output(_env, token, nowParenInfo, 807, indent)
+            _continue = self.FP.output(_env, token, nowParenInfo, 804, indent)
         } else if Formatter_beginTxtSet.Has(token.Txt){
             var indent LnsInt
             indent = parenInfo.FP.Get_termIndent(_env)
-            _continue = self.FP.output(_env, token, nowParenInfo, 810, indent)
+            _continue = self.FP.output(_env, token, nowParenInfo, 807, indent)
         } else { 
             _continue = true
         }
@@ -645,7 +644,7 @@ func (self *Formatter_SimpleParser) process(_env *LnsEnv, token *LnsTypes.Types_
     }
     return _continue
 }
-// 824: decl @lns.@Formatter.SimpleParser.analyze
+// 821: decl @lns.@Formatter.SimpleParser.analyze
 func (self *Formatter_SimpleParser) Analyze(_env *LnsEnv) *Formatter_Line2Indent {
     for  {
         var token *LnsTypes.Types_Token
@@ -1025,7 +1024,7 @@ func (self *Formatter_ParenInfo) Get_depth(_env *LnsEnv) LnsInt{ return self.dep
 func (self *Formatter_ParenInfo) Get_startToken(_env *LnsEnv) *LnsTypes.Types_Token{ return self.startToken }
 func (self *Formatter_ParenInfo) Get_termTxt(_env *LnsEnv) string{ return self.termTxt }
 
-// 369: DeclConstr
+// 366: DeclConstr
 func (self *Formatter_ParenInfo) InitFormatter_ParenInfo(_env *LnsEnv, line2Indent *Formatter_Line2Indent,parentInfo LnsAny,depth LnsInt,startToken *LnsTypes.Types_Token) {
     self.line2Indent = line2Indent
     self.parentInfo = _env.PopVal( _env.IncStack() ||
@@ -1143,19 +1142,19 @@ func NewFormatter_ParseCodeHook(_env *LnsEnv, arg1 Code_CodeTokenizerIF, arg2 Ln
     obj.InitFormatter_ParseCodeHook(_env, arg1, arg2, arg3)
     return obj
 }
-// advertise -- 423
+// advertise -- 420
 func (self *Formatter_ParseCodeHook) GetPrevToken(_env *LnsEnv) *LnsTypes.Types_Token {
     return self.tokenizer. GetPrevToken( _env)
 }
-// advertise -- 423
+// advertise -- 420
 func (self *Formatter_ParseCodeHook) GetTailCommentList(_env *LnsEnv, arg1 *LnsTypes.Types_Token) LnsAny {
     return self.tokenizer. GetTailCommentList( _env, arg1)
 }
-// advertise -- 423
+// advertise -- 420
 func (self *Formatter_ParseCodeHook) Pushback(_env *LnsEnv) {
 self.tokenizer. Pushback( _env)
 }
-// 436: DeclConstr
+// 433: DeclConstr
 func (self *Formatter_ParseCodeHook) InitFormatter_ParseCodeHook(_env *LnsEnv, tokenizer Code_CodeTokenizerIF,startLineNo LnsInt,endLineNo LnsInt) {
     var line2Indent *Formatter_Line2Indent
     line2Indent = NewFormatter_Line2Indent(_env)
@@ -1219,7 +1218,7 @@ func NewFormatter_SimpleParser(_env *LnsEnv, arg1 Code_CodeTokenizerIF, arg2 Lns
     obj.InitFormatter_SimpleParser(_env, arg1, arg2, arg3)
     return obj
 }
-// 662: DeclConstr
+// 659: DeclConstr
 func (self *Formatter_SimpleParser) InitFormatter_SimpleParser(_env *LnsEnv, tokenizer Code_CodeTokenizerIF,startLineNo LnsInt,endLineNo LnsInt) {
     var line2Indent *Formatter_Line2Indent
     line2Indent = NewFormatter_Line2Indent(_env)

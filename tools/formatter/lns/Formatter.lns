@@ -263,9 +263,6 @@ pub class Line2Indent {
       json.endElement();
       json.endElement();
       json.endLayer();
-      
-      
-      os.exit(0);
    }
 }
 
