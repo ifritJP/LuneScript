@@ -7,61 +7,88 @@ import LnsDepend "github.com/ifritJP/LuneScript/src/lune/base"
 import LnsUtil "github.com/ifritJP/LuneScript/src/lune/base"
 var init_main bool
 var main__mod__ string
-func main_expTuple0_242(tuple *LnsTuple3[LnsInt,LnsInt,bool]) (LnsInt,LnsInt,bool) {
+func main_expTuple0_327(tuple *LnsTuple3[LnsInt,LnsInt,bool]) (LnsInt,LnsInt,bool) {
     return tuple.Val1,tuple.Val2,tuple.Val3
 }
-// for 215: ExpCast
-func conv2Form0_942( src func (_env *LnsEnv)) LnsForm {
+func main_expTuple0_412(tuple *LnsTuple3[LnsInt,LnsInt,bool]) (LnsInt,LnsInt,bool) {
+    return tuple.Val1,tuple.Val2,tuple.Val3
+}
+// for 238: ExpCast
+func conv2Form0_1065( src func (_env *LnsEnv)) LnsForm {
     return func (_env *LnsEnv,  argList []LnsAny) []LnsAny {
         src(_env)
         return []LnsAny{}
     }
 }
-// for 133
-func main_convExp0_550(arg1 []LnsAny) LnsAny {
+// for 156
+func main_convExp0_673(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
-// for 95
-func main_convExp0_247(arg1 []LnsAny) (LnsInt, LnsInt, bool) {
+// for 107
+func main_convExp0_332(arg1 []LnsAny) (LnsInt, LnsInt, bool) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(LnsInt), Lns_getFromMulti( arg1, 2 ).(bool)
 }
-// for 195
-func main_convExp0_793(arg1 []LnsAny) string {
+// for 129
+func main_convExp0_417(arg1 []LnsAny) (LnsInt, LnsInt) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(LnsInt)
+}
+// for 218
+func main_convExp0_916(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 196
-func main_convExp0_806(arg1 []LnsAny) string {
+// for 219
+func main_convExp0_929(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // 13: decl @lns.@main.createTokenizer
-func main_createTokenizer_0_(_env *LnsEnv) *LnsTokenizer.Tokenizer_Tokenizer {
+func main_createTokenizer_0_(_env *LnsEnv) LnsAny {
     var lnsCode string
     lnsCode = "{\n   if val.val2\n {\n   }\n\n\n\n\n   else {\n}\n\n\n}\nlet val = [ \n  a\n\n];\nmatch hoge {\n\n   case .a  {\n\n}\n}\n\nswitch hoge {\n    case .a {\n}\n    case .b,\n.c ___LNS___\n{ \n\n}\n"
-    return &LnsTokenizer.Tokenizer_StreamTokenizer_create(_env, &LnsTypes.Types_TokenizerSrc__LnsCode{lnsCode, "test", nil}, true, nil, nil).Tokenizer_Tokenizer
+    return &LnsTypes.Types_TokenizerSrc__LnsCode{lnsCode, "test", nil}
 }
 
-// 52: decl @lns.@main.createTokenizerFromFile
-func main_createTokenizerFromFile_1_(_env *LnsEnv, path string) *LnsTokenizer.Tokenizer_Tokenizer {
-    return &LnsTokenizer.Tokenizer_StreamTokenizer_create(_env, &LnsTypes.Types_TokenizerSrc__LnsPath{nil, path, "test", nil}, true, nil, nil).Tokenizer_Tokenizer
+// 51: decl @lns.@main.createTokenizerFromFile
+func main_createTokenizerFromFile_1_(_env *LnsEnv, path string) LnsAny {
+    return &LnsTypes.Types_TokenizerSrc__LnsPath{nil, path, "test", nil}
 }
 
-// 67: decl @lns.@main.format
-func main_format_3_(_env *LnsEnv, option *main_Option) bool {
-    var tokenizer *LnsTokenizer.Tokenizer_Tokenizer
+// 55: decl @lns.@main.getIndent
+func main_getIndent_2_(_env *LnsEnv, tokenizerSrc LnsAny,targetLineNo LnsInt,endLineNo LnsInt) *Formatter_Line2Indent {
+    var tokenizer *LnsTokenizer.Tokenizer_StreamTokenizer
+    tokenizer = LnsTokenizer.Tokenizer_StreamTokenizer_create(_env, tokenizerSrc, true, nil, nil)
+    var codeTokenizer Code_CodeTokenizerIF
+    codeTokenizer = NewCode_CodeTokenizer(_env, &tokenizer.Tokenizer_Tokenizer).FP
+    var codePicker *Formatter_CodePicker
+    codePicker = Formatter_CodePicker_createFrom(_env, codeTokenizer, targetLineNo, endLineNo)
+    var parser *Formatter_SimpleParser
+    parser = NewFormatter_SimpleParser(_env, codePicker.FP, targetLineNo, endLineNo)
+    return parser.FP.Analyze(_env)
+}
+
+// 71: decl @lns.@main.getIndentWithCode
+func Main_getIndentWithCode(_env *LnsEnv, lnsCode string,targetLineNo LnsInt,endLineNo LnsInt) string {
+    var line2indent *Formatter_Line2Indent
+    line2indent = main_getIndent_2_(_env, &LnsTypes.Types_TokenizerSrc__LnsCode{lnsCode, "code", nil}, targetLineNo, endLineNo)
+    var stream *LnsUtil.Util_memStream
+    stream = LnsUtil.NewUtil_memStream(_env)
+    line2indent.FP.OutputResult(_env, stream.FP)
+    return stream.FP.Get_txt(_env)
+}
+
+// 90: decl @lns.@main.format
+func main_format_5_(_env *LnsEnv, option *main_Option) bool {
+    var tokenizerSrc LnsAny
     if _switch0 := option.FP.Get_inpath(_env); _switch0 == "" {
-        tokenizer = main_createTokenizer_0_(_env)
+        tokenizerSrc = main_createTokenizer_0_(_env)
     } else if _switch0 == "@-" {
         var lnsCode string
         lnsCode = _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( Lns_io_stdin.Read(_env, "*a")) ||
             _env.SetStackVal( "") ).(string)
-        tokenizer = &LnsTokenizer.Tokenizer_StreamTokenizer_create(_env, &LnsTypes.Types_TokenizerSrc__LnsCode{lnsCode, "test", nil}, true, nil, nil).Tokenizer_Tokenizer
+        tokenizerSrc = &LnsTypes.Types_TokenizerSrc__LnsCode{lnsCode, "test", nil}
     } else {
-        tokenizer = main_createTokenizerFromFile_1_(_env, option.FP.Get_inpath(_env))
+        tokenizerSrc = main_createTokenizerFromFile_1_(_env, option.FP.Get_inpath(_env))
     }
-    var codeTokenizer Code_CodeTokenizerIF
-    codeTokenizer = NewCode_CodeTokenizer(_env, tokenizer).FP
-    var hookIf Code_ParseCodeHookIF
     {
         _lineNo := option.FP.Get_lineNo(_env)
         if !Lns_IsNil( _lineNo ) {
@@ -69,15 +96,27 @@ func main_format_3_(_env *LnsEnv, option *main_Option) bool {
             var targetLineNo LnsInt
             var endLineNo LnsInt
             var useEbnf bool
-            targetLineNo,endLineNo,useEbnf = main_expTuple0_242(lineNo)
-            var codePicker *Formatter_CodePicker
-            codePicker = Formatter_CodePicker_createFrom(_env, codeTokenizer, targetLineNo, endLineNo)
+            targetLineNo,endLineNo,useEbnf = main_expTuple0_327(lineNo)
             if Lns_op_not(useEbnf){
-                var parser *Formatter_SimpleParser
-                parser = NewFormatter_SimpleParser(_env, codePicker.FP, targetLineNo, endLineNo)
-                parser.FP.Analyze(_env)
+                var line2indent *Formatter_Line2Indent
+                line2indent = main_getIndent_2_(_env, tokenizerSrc, targetLineNo, endLineNo)
+                line2indent.FP.OutputResult(_env, Lns_io_stdout)
                 return true
             }
+        }
+    }
+    var tokenizer *LnsTokenizer.Tokenizer_StreamTokenizer
+    tokenizer = LnsTokenizer.Tokenizer_StreamTokenizer_create(_env, tokenizerSrc, true, nil, nil)
+    var codeTokenizer Code_CodeTokenizerIF
+    codeTokenizer = NewCode_CodeTokenizer(_env, &tokenizer.Tokenizer_Tokenizer).FP
+    var hookIf Code_ParseCodeHookIF
+    {
+        _lineNo := option.FP.Get_lineNo(_env)
+        if !Lns_IsNil( _lineNo ) {
+            lineNo := _lineNo.(*LnsTuple3[LnsInt,LnsInt,bool])
+            var targetLineNo LnsInt
+            var endLineNo LnsInt
+            targetLineNo,endLineNo = main_convExp0_417(Lns_2DDD(main_expTuple0_412(lineNo)))
             var hook *Formatter_ParseCodeHook
             hook = NewFormatter_ParseCodeHook(_env, codeTokenizer, targetLineNo, endLineNo)
             codeTokenizer = hook.FP
@@ -104,7 +143,7 @@ func main_format_3_(_env *LnsEnv, option *main_Option) bool {
         codeCore := _matchExp0.Val1
         Util_log(_env, Lns_2DDD("outputCode"))
         {
-            _fileObj := main_convExp0_550(Lns_2DDD(Lns_io_open(option.FP.Get_outpath(_env), "w")))
+            _fileObj := main_convExp0_673(Lns_2DDD(Lns_io_open(option.FP.Get_outpath(_env), "w")))
             if !Lns_IsNil( _fileObj ) {
                 fileObj := _fileObj.(Lns_luaStream)
                 var stream *LnsUtil.Util_memStream
@@ -125,15 +164,15 @@ func main_format_3_(_env *LnsEnv, option *main_Option) bool {
     return false
 }
 
-// 149: decl @lns.@main.usage
-func main_usage_4_(_env *LnsEnv, mess string) {
+// 172: decl @lns.@main.usage
+func main_usage_6_(_env *LnsEnv, mess string) {
     Lns_print(Lns_2DDD(mess))
     Lns_print(Lns_2DDD(""))
     Lns_print(Lns_2DDD("usage: command [-log] [-ebnf path] [-prof] [-i lineno] inpath outpath"))
     _env.GetVM().OS_exit(1)
 }
 
-// 156: decl @lns.@main.__main
+// 179: decl @lns.@main.__main
 func Main___main(_env *LnsEnv, argList *LnsList) LnsInt {
     Lns_main_init( _env )
     var optList *LnsList
@@ -151,7 +190,7 @@ func Main___main(_env *LnsEnv, argList *LnsList) LnsInt {
     var main_getNext func(_env *LnsEnv) string
     main_getNext = func(_env *LnsEnv) string {
         if index > argList.Len(){
-            main_usage_4_(_env, "illegal option")
+            main_usage_6_(_env, "illegal option")
         }
         var arg string
         arg = argList.GetAt(index).(string)
@@ -172,9 +211,9 @@ func Main___main(_env *LnsEnv, argList *LnsList) LnsInt {
             var nextArg string
             nextArg = main_getNext(_env)
             var pre string
-            pre = main_convExp0_793(Lns_2DDD(_env.GetVM().String_gsub(nextArg,":.*", "")))
+            pre = main_convExp0_916(Lns_2DDD(_env.GetVM().String_gsub(nextArg,":.*", "")))
             var post string
-            post = main_convExp0_806(Lns_2DDD(_env.GetVM().String_gsub(nextArg,".*:", "")))
+            post = main_convExp0_929(Lns_2DDD(_env.GetVM().String_gsub(nextArg,".*:", "")))
             var startLineNo LnsInt
             startLineNo = main___main__convInt_1_(_env, pre, _env.GetVM().String_format("%s is not number", Lns_2DDD(pre)))
             var endLineNo LnsInt
@@ -185,12 +224,12 @@ func Main___main(_env *LnsEnv, argList *LnsList) LnsInt {
         }
     }
     if optList.Len() < 3{
-        main_usage_4_(_env, "illegal argument")
+        main_usage_6_(_env, "illegal argument")
     }
     var exitCode LnsInt
     exitCode = 1
-    LnsDepend.Depend_profile(_env, prof, conv2Form0_942(func(_env *LnsEnv) {
-        if main_format_3_(_env, Newmain_Option(_env, optList.GetAt(2).(string), region, optList.GetAt(3).(string), ebnfPath, debugFlag)){
+    LnsDepend.Depend_profile(_env, prof, conv2Form0_1065(func(_env *LnsEnv) {
+        if main_format_5_(_env, Newmain_Option(_env, optList.GetAt(2).(string), region, optList.GetAt(3).(string), ebnfPath, debugFlag)){
             exitCode = 0
         }
     }), "prof")
@@ -198,7 +237,7 @@ func Main___main(_env *LnsEnv, argList *LnsList) LnsInt {
 }
 
 
-// 172: decl @lns.@main.__main.convInt
+// 195: decl @lns.@main.__main.convInt
 func main___main__convInt_1_(_env *LnsEnv, txt string,mess string) LnsInt {
     {
         _num := Lns_tonumber(txt, nil)
@@ -206,7 +245,7 @@ func main___main__convInt_1_(_env *LnsEnv, txt string,mess string) LnsInt {
             num := _num.(LnsReal)
             return (LnsInt)(num)
         } else {
-            main_usage_4_(_env, mess)
+            main_usage_6_(_env, mess)
         }
     }
 // insert a dummy

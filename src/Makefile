@@ -475,7 +475,11 @@ define cp_src_set
 	cp -au $2/lune/base/runtime_go $1/lune/base/runtime_go
 	cp -au $2/lune/base/binding_dummy.go $1/lune/base
 	cp -au $2/lune/base/DependLuaOnLns.go $1/lune/base
-	cp -au $2/misc $1/misc
+
+	mkdir -p $1/misc/go
+	cp -au $2/misc/go/binding $1/misc/go
+	mkdir -p $1/misc/go/main
+	cp -au $(MAIN_GO) $1/misc/go/main
 
 	$(call dump-lns-lua-ver,$(LNSC_GO),$1/ver_lns_lua)
 	$(call dump-lns-lua-ver,$(LNSC_LUA),$1/ver_lua)
@@ -1562,9 +1566,16 @@ setup-pkg-lua:
 # go mod tidy すると、 github.com/ifritJP/LuneScript/src/lune が取ってこれてしまうので、
 # 強制的に github.com/ifritJP/LuneScript/src/lune に置き換え。
 GOMODPAT="s@LuneScript/src/lune.*@LuneScript/src master@g"
+
+FORMATTER="github.com/ifritJP/LuneScript/tools/formatter"
+
 define buildGoSetup
 	(cd $1; go mod init $2)
 	(cd $1; echo "require github.com/ifritJP/LuneScript/src master" >> go.mod)
+	if [ $(GOARCH) = wasm ]; then \
+		echo "require $(FORMATTER) master" >> $1/go.mod;		\
+		echo "replace $(FORMATTER) => $(PWD)/../tools/formatter" >> $1/go.mod; \
+	fi
 	(cd $1; go mod tidy;sed -i $(GOMODPAT) go.mod; go mod tidy)
 endef
 
@@ -1828,7 +1839,7 @@ build-wasm:
 build-wasm-quick:
 	GOOS=js GOARCH=wasm $(MAKE) GOTAG=gopherlua build-wasm-quick-sub
 build-wasm-quick-sub:
-	-rm $(GO_WORK_DIR)/build/lnsc_main.go
+	-rm $(GO_WORK_DIR)/build/go.mod
 	$(call go-build-lns,$(GO_WORK_DIR)/build)
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) lnsc.wasm
 

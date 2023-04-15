@@ -684,7 +684,7 @@ pattern は  {, }, {{, }} のいずれか。
 	     (indent (1- (plist-get info :column)))
 	     (lineNo (plist-get info :lineNo))
 	     (same (plist-get info :same)))
-	(when (<= cur-line lineNo) 
+	(when (>= cur-line lineNo) 
 	  (goto-line lineNo)
 	  (if (eq same :json-true)
 	      (move-to-column indent)

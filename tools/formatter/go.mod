@@ -1,4 +1,4 @@
-module github.com/LuneScript/tools/formatter
+module github.com/ifritJP/LuneScript/tools/formatter
 
 go 1.18
 

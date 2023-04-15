@@ -29,11 +29,22 @@ import (
 
 	lnsc "github.com/ifritJP/LuneScript/src/lune/base"
 	. "github.com/ifritJP/LuneScript/src/lune/base/runtime_go"
+	formatter "github.com/ifritJP/LuneScript/tools/formatter/lns"
 )
 
 //import bind "github.com/ifritJP/LuneScript/src/lune"
 
 var JSNone interface{}
+
+func getIndent(this js.Value, args []js.Value) interface{} {
+	lnsCode := args[0].String()
+	targetLineNo := args[1].Int()
+	endLineNo := args[2].Int()
+
+	env := Lns_GetEnv()
+
+	return formatter.Main_getIndentWithCode(env, lnsCode, targetLineNo, endLineNo)
+}
 
 func lns2lua(this js.Value, args []js.Value) interface{} {
 
@@ -114,6 +125,7 @@ func setConsoleWriter(this js.Value, args []js.Value) interface{} {
 
 func Setup(this js.Value, args []js.Value) interface{} {
 	obj := map[string]interface{}{}
+	obj["getIndent"] = js.FuncOf(getIndent)
 	obj["lns2lua"] = js.FuncOf(lns2lua)
 	obj["exeLua"] = js.FuncOf(exeLua)
 	obj["setConsoleWriter"] = js.FuncOf(setConsoleWriter)
@@ -139,5 +151,4 @@ func main() {
 
 	js.Global().Set("__lnsc", js.FuncOf(Setup))
 	<-make(chan bool)
-
 }

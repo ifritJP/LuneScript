@@ -24,12 +24,12 @@ update_lns:
 	go get -u github.com/ifritJP/LuneScript/src@latest
 
 build-go:
-	go build -tags gopherlua
+	(cd entry; go build -tags gopherlua -o ../formatter)
 
 build:
 	@echo $(SRCS) | sed 's/ /\n/g' |	\
 		$(LNSC) @- save -langGo -noLua --main lns.main $(LNS_OPT)
-	$(LNSC) lns/main.lns mkmain entry.go
+	$(LNSC) lns/main.lns mkmain entry/entry.go
 	$(MAKE) build-go
 
 goprof:

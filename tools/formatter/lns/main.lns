@@ -10,7 +10,7 @@ import go/github:com.ifritJP.LuneScript.src.lune.base.Types as LnsTypes;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Depend as LnsDepend;
 import go/github:com.ifritJP.LuneScript.src.lune.base.Util as LnsUtil;
 
-fn createTokenizer() : LnsTokenizer.Tokenizer {
+fn createTokenizer() : LnsTypes.TokenizerSrc {
    let lnsCode = ```
 {
    if val.val2
@@ -45,13 +45,36 @@ switch hoge {
 
 }
 ```;
-   return LnsTokenizer.StreamTokenizer.create(
-      LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ), true, nil, nil );
+   return LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil );
 }
 
-fn createTokenizerFromFile( path:str ) : LnsTokenizer.Tokenizer {
-   return LnsTokenizer.StreamTokenizer.create(
-      LnsTypes.TokenizerSrc.LnsPath( nil, path, "test", nil), true, nil, nil );
+fn createTokenizerFromFile( path:str ) : LnsTypes.TokenizerSrc {
+   return LnsTypes.TokenizerSrc.LnsPath( nil, path, "test", nil);
+}
+
+fn getIndent( tokenizerSrc:LnsTypes.TokenizerSrc, targetLineNo:int, endLineNo:int ) :
+   &Formatter.Line2Indent
+{
+   let mut tokenizer = LnsTokenizer.StreamTokenizer.create(
+      tokenizerSrc, true, nil, nil );
+   
+   let mut codeTokenizer:Code.CodeTokenizerIF = new Code.CodeTokenizer( tokenizer );
+      
+   let mut codePicker = Formatter.CodePicker.createFrom(
+      codeTokenizer, targetLineNo, endLineNo );
+
+   let mut parser =
+      new Formatter.SimpleParser( codePicker, targetLineNo, endLineNo );
+   return parser.analyze();
+}
+
+pub fn getIndentWithCode( lnsCode:str, targetLineNo:int, endLineNo:int ) : str
+{
+   let line2indent = getIndent(
+      LnsTypes.TokenizerSrc.LnsCode( lnsCode, "code", nil ), targetLineNo, endLineNo );
+   let mut stream = new LnsUtil.memStream();
+   line2indent.outputResult( stream );
+   return stream.$txt;
 }
 
 
@@ -66,21 +89,32 @@ class Option {
 
 fn format( option:&Option ) : bool
 {
-   let mut tokenizer;
+   let tokenizerSrc;
    switch option.$inpath {
       case "" {
-         tokenizer = createTokenizer();
+         tokenizerSrc = createTokenizer();
       }
       case "@-" {
          let lnsCode = io.stdin.read( "*a" ) or "";
-         tokenizer = LnsTokenizer.StreamTokenizer.create(
-            LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil ),
-            true, nil, nil );
+         tokenizerSrc = LnsTypes.TokenizerSrc.LnsCode( lnsCode, "test", nil );
       }
       default {
-         tokenizer = createTokenizerFromFile( option.$inpath );
+         tokenizerSrc = createTokenizerFromFile( option.$inpath );
       }
    }
+
+   if! let lineNo = option.$lineNo {
+      let targetLineNo, endLineNo, useEbnf = lineNo...;
+      if not useEbnf {
+         let line2indent = getIndent( tokenizerSrc, targetLineNo, endLineNo );
+         line2indent.outputResult( io.stdout );
+         return true;
+      }
+   }
+
+   
+   let mut tokenizer = LnsTokenizer.StreamTokenizer.create(
+      tokenizerSrc, true, nil, nil );
    
    //let mut tokenizer = createTokenizer();
    // let mut tokenizer = createTokenizerFromFile( "lns/main.lns" );
@@ -92,18 +126,7 @@ fn format( option:&Option ) : bool
    let mut codeTokenizer:Code.CodeTokenizerIF = new Code.CodeTokenizer( tokenizer );
    let hookIf:Code.ParseCodeHookIF;
    if! let lineNo = option.$lineNo {
-      let targetLineNo, endLineNo, useEbnf = lineNo...;
-      
-      let mut codePicker = Formatter.CodePicker.createFrom(
-         codeTokenizer, targetLineNo, endLineNo );
-
-      if not useEbnf {
-         let mut parser =
-            new Formatter.SimpleParser( codePicker, targetLineNo, endLineNo );
-         parser.analyze();
-         return true;
-      }
-
+      let targetLineNo, endLineNo = lineNo...;
       
       let mut hook = new Formatter.ParseCodeHook(
          codeTokenizer, targetLineNo, endLineNo );

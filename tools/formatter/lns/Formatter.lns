@@ -202,7 +202,7 @@ pub class CodePicker extend Code.CodeTokenizerBase {
 
 let indentDelta = 3;
 
-class LineIndent {
+pub class LineIndent {
    let token:&LnsTypes.Token {pub};
    /** 行頭インデント */
    let indent:int {pub};
@@ -212,11 +212,13 @@ class LineIndent {
    let delta:int {pub};
 }
 
-class Line2Indent {
+pub class Line2Indent {
    let lineno2indent:Map<int,&LineIndent> {pub&};
    let indentList:List<&LineIndent>;
+   let mut latestLineIndent:&LineIndent!;
 
    pub fn __init() {
+      self.latestLineIndent = nil;
       self.lineno2indent = {};
       self.indentList = [];
       self.indentList.insert( new LineIndent( LnsTypes.noneToken, 1, 1, 0 ) );
@@ -236,6 +238,34 @@ class Line2Indent {
          return column;
       };
       return lineIndent.$delta + column;
+   }
+
+   pub fn outputResult( stream:oStream ) {
+      let mut json = new LnsWriter.JSON( stream );
+      json.startParent( "indent", false );
+
+      if! let latest = self.latestLineIndent {
+         json.startParent( "latest", false );
+         json.write( "debugLineNo", latest.$decidePos );
+         json.write( "column", latest.$indent );
+         json.endElement();
+      }
+      
+      json.startParent( "lines", true );
+      forsort lineIndent, line in self.$lineno2indent {
+         json.startParent( "%d" (line), false );
+         json.write( "debugLineNo", lineIndent.$decidePos );
+         json.write( "column", lineIndent.$indent );
+         json.write( "lineNo", line );
+         json.write( "same", lineIndent.$token.$pos.column == lineIndent.$indent );
+         json.endElement();
+      }
+      json.endElement();
+      json.endElement();
+      json.endLayer();
+      
+      
+      os.exit(0);
    }
 }
 
@@ -400,7 +430,6 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    let multiLine:bool;
    // 行番号 → インデント
    let line2Indent:Line2Indent;
-   let mut latestLineIndent:&LineIndent!;
    let parenInfoStack:List<ParenInfo>;
    
 
@@ -417,7 +446,6 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
       self.targetLineNo = startLineNo;
       self.endLineNo = endLineNo;
       self.multiLine = startLineNo ~= endLineNo;
-      self.latestLineIndent = nil;
    }
 
    pub fn prepare( elementName:str, depth:int, token:&LnsTypes.Token ) mut {
@@ -433,35 +461,6 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
       }
    }
 
-   pub fn outputResult( stream:oStream ) {
-      let mut json = new LnsWriter.JSON( stream );
-      json.startParent( "indent", false );
-
-      if! let latest = self.latestLineIndent {
-         json.startParent( "latest", false );
-         json.write( "debugLineNo", latest.$decidePos );
-         json.write( "column", latest.$indent );
-         json.endElement();
-      }
-      
-      json.startParent( "lines", true );
-      forsort lineIndent, line in self.line2Indent.$lineno2indent {
-         json.startParent( "%d" (line), false );
-         json.write( "debugLineNo", lineIndent.$decidePos );
-         json.write( "column", lineIndent.$indent );
-         json.write( "lineNo", line );
-         json.write( "same", lineIndent.$token.$pos.column == lineIndent.$indent );
-         json.endElement();
-      }
-      json.endElement();
-      json.endElement();
-      json.endLayer();
-      
-      
-      os.exit(0);
-   }
-   
-   
    fn output( token:&LnsTypes.Token, lineNo:int, indent:int ) mut {
       let pos = token.pos;
 
@@ -491,7 +490,6 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
       let lineIndent = new LineIndent( token, indent, lineNo, indent - pos.column );
       self.line2Indent.add( pos.lineNo, lineIndent );
       
-      self.latestLineIndent = lineIndent;
       self.targetLineNo = pos.lineNo + 1;
 
       
@@ -502,7 +500,7 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
          
      
       self.dump();
-      self.outputResult( io.stdout );
+      self.line2Indent.outputResult( io.stdout );
    }
 
    
@@ -635,7 +633,7 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
       }
 
       if depth == 0 {
-         self.outputResult( io.stdout );
+         self.line2Indent.outputResult( io.stdout );
       }
 
       
@@ -658,7 +656,6 @@ pub class SimpleParser {
    let endLineNo:int;
    // 行番号 → インデント
    let line2Indent:Line2Indent;
-   let mut latestLineIndent:&LineIndent!;
    let parenInfoStack:List<ParenInfo>;
    
 
@@ -674,7 +671,6 @@ pub class SimpleParser {
       self.tokenizer = tokenizer;
       self.targetLineNo = startLineNo;
       self.endLineNo = endLineNo;
-      self.latestLineIndent = nil;
    }
 
 
@@ -688,32 +684,6 @@ pub class SimpleParser {
       }
    }
 
-   pub fn outputResult( stream:oStream ) {
-      let mut json = new LnsWriter.JSON( stream );
-      json.startParent( "indent", false );
-
-      if! let latest = self.latestLineIndent {
-         json.startParent( "latest", false );
-         json.write( "debugLineNo", latest.$decidePos );
-         json.write( "column", latest.$indent );
-         json.endElement();
-      }
-      
-      json.startParent( "lines", true );
-      forsort lineIndent, line in self.line2Indent.$lineno2indent {
-         json.startParent( "%d" (line), false );
-         json.write( "debugLineNo", lineIndent.$decidePos );
-         json.write( "column", lineIndent.$indent );
-         json.write( "lineNo", line );
-         json.write( "same", lineIndent.$token.$pos.column == lineIndent.$indent );
-         json.endElement();
-      }
-      json.endElement();
-      json.endElement();
-      json.endLayer();
-   }
-   
-   
    fn output( token:&LnsTypes.Token, parenInfo:&ParenInfo,
               lineNo:int, indent:int ) mut : bool
    {
@@ -741,7 +711,6 @@ pub class SimpleParser {
       let lineIndent = new LineIndent( token, indent, lineNo, indent - pos.column );
       self.line2Indent.add( pos.lineNo, lineIndent );
       
-      self.latestLineIndent = lineIndent;
       self.targetLineNo = pos.lineNo + 1;
 
       
@@ -852,7 +821,7 @@ pub class SimpleParser {
       return continue;
    }
 
-   pub fn analyze() mut {
+   pub fn analyze() mut : &Line2Indent {
       while true {
          let! token = self.getToken() {
             break;
@@ -874,6 +843,6 @@ pub class SimpleParser {
             break;
          }
       }
-      self.outputResult(io.stdout);
+      return self.line2Indent;
    }
 }
