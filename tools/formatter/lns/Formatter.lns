@@ -253,7 +253,7 @@ pub class Line2Indent {
       
       json.startParent( "lines", true );
       forsort lineIndent, line in self.$lineno2indent {
-         json.startParent( "%d" (line), false );
+         json.startParent( "info", false );
          json.write( "debugLineNo", lineIndent.$decidePos );
          json.write( "column", lineIndent.$indent );
          json.write( "lineNo", line );

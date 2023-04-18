@@ -235,7 +235,7 @@ func (self *Formatter_Line2Indent) OutputResult(_env *LnsEnv, stream Lns_oStream
         for _, _line := range( __forsortSorted0.Items ) {
             lineIndent := __forsortCollection0.Items[ _line ]
             line := _line
-            json.FP.StartParent(_env, _env.GetVM().String_format("%d", Lns_2DDD(line)), false)
+            json.FP.StartParent(_env, "info", false)
             json.FP.Write(_env, "debugLineNo", lineIndent.FP.Get_decidePos(_env))
             json.FP.Write(_env, "column", lineIndent.FP.Get_indent(_env))
             json.FP.Write(_env, "lineNo", line)

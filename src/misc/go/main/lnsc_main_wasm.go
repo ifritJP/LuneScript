@@ -51,6 +51,27 @@ func getIndent(this js.Value, args []js.Value) interface{} {
 	return jsonTxt
 }
 
+func complete(this js.Value, args []js.Value) interface{} {
+	lnsCode := args[0].String()
+
+	cmdArgs := []string{}
+	for index := 1; index < len(args); index++ {
+		cmdArgs = append(cmdArgs, args[index].String())
+	}
+
+	env := Lns_GetEnv()
+
+	Lns_LockEnvSync(env, 0, func() {
+		option := lnsc.Option_analyze(env, NewLnsList2_[string](cmdArgs))
+		front := lnsc.NewFront_Front(env, option, nil)
+
+		mod := lnsc.Util_scriptPath2Module(env, option.ScriptPath)
+
+		front.CompleteFromCode(env, lnsCode, mod, nil)
+	})
+	return true
+}
+
 func lns2lua(this js.Value, args []js.Value) interface{} {
 
 	lnsCode := args[0].String()
@@ -131,6 +152,7 @@ func setConsoleWriter(this js.Value, args []js.Value) interface{} {
 func Setup(this js.Value, args []js.Value) interface{} {
 	obj := map[string]interface{}{}
 	obj["getIndent"] = js.FuncOf(getIndent)
+	obj["complete"] = js.FuncOf(complete)
 	obj["lns2lua"] = js.FuncOf(lns2lua)
 	obj["exeLua"] = js.FuncOf(exeLua)
 	obj["setConsoleWriter"] = js.FuncOf(setConsoleWriter)

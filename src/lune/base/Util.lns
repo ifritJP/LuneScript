@@ -44,6 +44,10 @@ class ConsoleAdapter extend (oStream) {
    }
 }
 
+pub fn getConsoleOStream() __noasync : oStream {
+   return consoleOStream;
+}
+
 pub fn setConsoleOStream( stream:oStream, streamErr:oStream ) {
    __asyncLock {
       consoleOStream = stream;

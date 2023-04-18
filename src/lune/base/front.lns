@@ -1299,13 +1299,19 @@ pub fn Front.checkDiag( tokenizerSrc:&Types.TokenizerSrc, mod:str,
                    tokenizerSrc, baseDir, mod, moduleId, nil, .Diag ## );
 }
 
-pub fn Front.complete( tokenizerSrc:&Types.TokenizerSrc, mod:str,
-                       moduleId:&frontInterface.ModuleId, baseDir:str! ) mut
+fn Front.complete( tokenizerSrc:&Types.TokenizerSrc, mod:str,
+                   moduleId:&frontInterface.ModuleId, baseDir:str! ) mut
 {
    self.createAst( new frontInterface.ImportModuleInfo(),
                    tokenizerSrc, baseDir, mod, moduleId,
                    self.option.analyzeModule, .Complete, self.option.analyzePos );
 }
+
+pub fn Front.completeFromCode( lnsCode:str, mod:str, baseDir:str! ) mut {
+   self.complete( .LnsCode( lnsCode, mod, nil ), mod,
+                  frontInterface.ModuleId.createId( 0.0, 0 ), baseDir );
+}
+
 
 pub fn Front.inquire( tokenizerSrc:&Types.TokenizerSrc, mod:str,
                       moduleId:&frontInterface.ModuleId, baseDir:str! ) mut

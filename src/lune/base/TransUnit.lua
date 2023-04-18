@@ -1528,20 +1528,23 @@ function TransUnit:isTargetToken( token )
 end
 function TransUnit:dumpSymbolType( accessMode, name, typeInfo )
 
-   local writer = Writer.JSON._new(io.stdout)
-   writer:startParent( "lunescript", false )
-   writer:startParent( "inquire", false )
-   writer:write( "access", Ast.accessMode2txt( accessMode ) )
-   writer:write( "name", name )
-   writer:write( "type", typeInfo:getTxt( self.typeNameCtrl ) )
-   writer:write( "typeKind", Ast.TypeInfoKind:_getTxt( typeInfo:get_kind())
-    )
-   writer:write( "static", string.format( "%s", typeInfo:get_staticFlag()) )
-   writer:write( "display", typeInfo:get_display_stirng_with( typeInfo:get_rawTxt(), nil ) )
-   writer:endElement(  )
-   writer:endElement(  )
-   writer:fin(  )
-   os.exit( 0 )
+   do
+      local writer = Writer.JSON._new(Util.getConsoleOStream(  ))
+      writer:startParent( "lunescript", false )
+      writer:startParent( "inquire", false )
+      writer:write( "access", Ast.accessMode2txt( accessMode ) )
+      writer:write( "name", name )
+      writer:write( "type", typeInfo:getTxt( self.typeNameCtrl ) )
+      writer:write( "typeKind", Ast.TypeInfoKind:_getTxt( typeInfo:get_kind())
+       )
+      writer:write( "static", string.format( "%s", typeInfo:get_staticFlag()) )
+      writer:write( "display", typeInfo:get_display_stirng_with( typeInfo:get_rawTxt(), nil ) )
+      writer:endElement(  )
+      writer:endElement(  )
+      writer:fin(  )
+      os.exit( 0 )
+   end
+   
 end
 function TransUnit:errorShadowingOp( pos, symbolInfo, errFlag )
 
@@ -10244,18 +10247,21 @@ function TransUnit:checkComp( token, callback )
       currentModule = currentModule:gsub( ".*/", "" )
       local target = self.analyzeModule:gsub( "[^%.]+%.", "" )
       if currentModule == target then
-         local jsonWriter = Writer.JSON._new(io.stdout)
-         jsonWriter:startParent( "lunescript", false )
-         local prefix = token.txt:gsub( "lune$", "" )
-         jsonWriter:write( "prefix", prefix )
-         jsonWriter:startParent( "candidateList", true )
+         do
+            local jsonWriter = Writer.JSON._new(Util.getConsoleOStream(  ))
+            jsonWriter:startParent( "lunescript", false )
+            local prefix = token.txt:gsub( "lune$", "" )
+            jsonWriter:write( "prefix", prefix )
+            jsonWriter:startParent( "candidateList", true )
+            
+            callback( jsonWriter, prefix )
+            
+            jsonWriter:endElement(  )
+            jsonWriter:endElement(  )
+            jsonWriter:fin(  )
+            os.exit( 0 )
+         end
          
-         callback( jsonWriter, prefix )
-         
-         jsonWriter:endElement(  )
-         jsonWriter:endElement(  )
-         jsonWriter:fin(  )
-         os.exit( 0 )
       end
       
    end

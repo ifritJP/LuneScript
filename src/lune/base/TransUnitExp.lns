@@ -2722,18 +2722,20 @@ fn TransUnit.checkComp( token:&Tokenizer.Token, callback:checkCompForm )
       currentModule = currentModule.gsub( ".*/", "" );
       let target = self.analyzeModule.gsub( "[^%.]+%.", "" );
       if currentModule == target {
-         let mut jsonWriter = new Writer.JSON( io.stdout );
-         jsonWriter.startParent( "lunescript", false );
-         let prefix = token.txt.gsub( "lune$", "" );
-         jsonWriter.write( "prefix", prefix );
-         jsonWriter.startParent( "candidateList", true );
+         __asyncLock {
+            let mut jsonWriter = new Writer.JSON( Util.getConsoleOStream() );
+            jsonWriter.startParent( "lunescript", false );
+            let prefix = token.txt.gsub( "lune$", "" );
+            jsonWriter.write( "prefix", prefix );
+            jsonWriter.startParent( "candidateList", true );
 
-         callback( jsonWriter, prefix );
+            callback( jsonWriter, prefix );
 
-         jsonWriter.endElement();
-         jsonWriter.endElement();
-         jsonWriter.fin();
-         os.exit( 0 );
+            jsonWriter.endElement();
+            jsonWriter.endElement();
+            jsonWriter.fin();
+            os.exit( 0 );
+         }
       }
    }
 }
