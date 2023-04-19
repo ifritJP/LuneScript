@@ -359,7 +359,8 @@ class ParenInfo {
             contToken.pos.column - self.parentInfo.$termIndent );
          self.termIndent = ParenInfoIndent.RelTermPos(
             self.parentInfo,
-            contToken.pos.column - self.parentInfo.$termIndent - indentDelta * 2);
+            //contToken.pos.column - self.parentInfo.$termIndent - indentDelta * 2);
+            contToken.pos.column - self.parentInfo.$termIndent - indentDelta );
       }
    }
 
@@ -528,7 +529,7 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
       
       if token.txt == "___LNS___" or
          ( token.pos.lineNo > self.targetLineNo or
-               token.pos.lineNo == self.targetLineNo ) and
+              token.pos.lineNo == self.targetLineNo ) and
          not termTxtSet.has( token.txt ) and
          not beginTxtSet.has( token.txt )
       //         token.txt ~= "{"
@@ -768,6 +769,7 @@ pub class SimpleParser {
 
       let mut isWaitingFront = false;
       if parenMap[ token.txt ] {
+         parenInfo.set_contToken( token );
          parenInfo = new ParenInfo(
             self.line2Indent,
             self.parenInfoStack[ #self.parenInfoStack ], depth, token );
