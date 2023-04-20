@@ -286,7 +286,7 @@ pub class Tokenizer extend Async.Pipe<AsyncItem> {
                return new Util.TxtStream( stdinFile.$txt ), "";
             }
          }
-         if! io.open( path, "r" ) {
+         if! Util.openRd( path ) {
             return _exp, "";
          }
          return nil, "%s: failed to open -- %s" (__func__, path);

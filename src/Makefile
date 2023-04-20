@@ -1572,7 +1572,7 @@ FORMATTER="github.com/ifritJP/LuneScript/tools/formatter"
 define buildGoSetup
 	(cd $1; go mod init $2)
 	(cd $1; echo "require github.com/ifritJP/LuneScript/src master" >> go.mod)
-	if [ $(GOARCH) = wasm ]; then \
+	if [ "$(GOARCH)" = "wasm" ]; then \
 		echo "require $(FORMATTER) master" >> $1/go.mod;		\
 		echo "replace $(FORMATTER) => $(PWD)/../tools/formatter" >> $1/go.mod; \
 	fi

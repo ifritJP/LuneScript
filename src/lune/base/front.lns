@@ -472,7 +472,7 @@ class MetaForBuildId extend (Mapping) {
 }
 
 pub static fn MetaForBuildId.LoadFromMeta( metaPath:str ): &MetaForBuildId!, str! {
-   if! let mut fileObj = io.open( metaPath## ) {
+   if! let mut fileObj = Util.openRd( metaPath ) {
       let luaCode = fileObj.read( "*a" );
       fileObj.close();
       when! luaCode {
@@ -837,7 +837,7 @@ fn Front.loadTokenizerToLuaCode(
             saveTxt = Converter.byteCompileFromLuaTxt( saveTxt, stripDebugInfo );
          }
          if not forceUpdateMeta and checkUpdate {
-            if! let mut fileObj = io.open( newpath ## ) {
+            if! let mut fileObj = Util.openRd( newpath ) {
                let oldTxt = fileObj.read( "*a" );
                fileObj.close();
                if saveTxt == oldTxt {
@@ -1949,13 +1949,6 @@ pub fn exec( args: &List<str> ) __noasync {
 
    front.exec();
 }
-
-// // frontInterface.setFront( self ); で front を確定させるため
-// // go の runtime_go/depend.go から、初期化処理として呼ぶ。
-// pub fn setFront( bindModuleList:&List<str> ) __noasync {
-//    let mut option = Option.createDefaultOption( ["dummy.lns"], nil );
-//    new Front( option, bindModuleList );
-// }
 
 pub fn __main( argList:&_List<str> ) __noasync : int {
    let list:List<str> = [];

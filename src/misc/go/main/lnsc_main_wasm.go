@@ -51,8 +51,8 @@ func getIndent(this js.Value, args []js.Value) interface{} {
 	return jsonTxt
 }
 
-func complete(this js.Value, args []js.Value) interface{} {
-	lnsCode := args[0].String()
+func runLnsc(this js.Value, args []js.Value) interface{} {
+	lnsCodeList := args[0]
 
 	cmdArgs := []string{}
 	for index := 1; index < len(args); index++ {
@@ -62,12 +62,22 @@ func complete(this js.Value, args []js.Value) interface{} {
 	env := Lns_GetEnv()
 
 	Lns_LockEnvSync(env, 0, func() {
-		option := lnsc.Option_analyze(env, NewLnsList2_[string](cmdArgs))
-		front := lnsc.NewFront_Front(env, option, nil)
 
-		mod := lnsc.Util_scriptPath2Module(env, option.ScriptPath)
+		// パスとコード文字列を紐付け
+		goPath2bin := map[string]string{}
+		for index := 0; index < lnsCodeList.Length(); index++ {
+			info := lnsCodeList.Index(index)
+			path := info.Index(0).String()
+			code := info.Index(1).String()
+			goPath2bin[path] = code
+		}
+		path2bin := NewLnsMap2_[string, string](goPath2bin)
+		// MappedFS を生成して登録
+		mappedFS := lnsc.NewUtil_MappedFS(env, path2bin)
+		lnsc.Util_setFS(env, mappedFS)
 
-		front.CompleteFromCode(env, lnsCode, mod, nil)
+		// 実行
+		lnsc.Front_exec(env, NewLnsList2_[string](cmdArgs))
 	})
 	return true
 }
@@ -152,7 +162,7 @@ func setConsoleWriter(this js.Value, args []js.Value) interface{} {
 func Setup(this js.Value, args []js.Value) interface{} {
 	obj := map[string]interface{}{}
 	obj["getIndent"] = js.FuncOf(getIndent)
-	obj["complete"] = js.FuncOf(complete)
+	obj["runLnsc"] = js.FuncOf(runLnsc)
 	obj["lns2lua"] = js.FuncOf(lns2lua)
 	obj["exeLua"] = js.FuncOf(exeLua)
 	obj["setConsoleWriter"] = js.FuncOf(setConsoleWriter)

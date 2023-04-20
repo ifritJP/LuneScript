@@ -857,7 +857,7 @@ end
 function MetaForBuildId.LoadFromMeta( metaPath )
 
    do
-      local fileObj = io.open( metaPath )
+      local fileObj = Util.openRd( metaPath )
       if fileObj ~= nil then
          local luaCode = fileObj:read( "*a" )
          fileObj:close(  )
@@ -1287,7 +1287,7 @@ function Front:loadTokenizerToLuaCode( importModuleInfo, tokenizerSrc, path, mod
          
          if not forceUpdateMeta and checkUpdate then
             do
-               local fileObj = io.open( newpath )
+               local fileObj = Util.openRd( newpath )
                if fileObj ~= nil then
                   local oldTxt = fileObj:read( "*a" )
                   fileObj:close(  )
@@ -1860,6 +1860,12 @@ function Front:complete( tokenizerSrc, mod, moduleId, baseDir )
 end
 
 
+function Front:completeFromCode( lnsCode, mod, baseDir )
+
+   self:complete( _lune.newAlge( Types.TokenizerSrc.LnsCode, {lnsCode,mod,nil}), mod, frontInterface.ModuleId.createId( 0.0, 0 ), baseDir )
+end
+
+
 function Front:inquire( tokenizerSrc, mod, moduleId, baseDir )
 
    self:createAst( frontInterface.ImportModuleInfo._new(), tokenizerSrc, baseDir, mod, moduleId, self.option.analyzeModule, TransUnit.AnalyzeMode.Inquire, self.option.analyzePos )
@@ -2280,7 +2286,7 @@ function Front:build( buildMode, astCallback )
                if _exp ~= nil then
                   astCallback( _exp )
                else
-                  Log.log( Log.Level.Err, __func__, 1693, function (  )
+                  Log.log( Log.Level.Err, __func__, 1699, function (  )
                   
                      return string.format( "not found AST -- %s", mod)
                   end )
@@ -2422,7 +2428,7 @@ function Front:executeLns( path, baseDir )
    
    local tokenizerSrc = _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,path,mod,nil})
    local _1, luaCode = self:loadTokenizerToLuaCode( frontInterface.ImportModuleInfo._new(), tokenizerSrc, path, mod, baseDir )
-   Log.log( Log.Level.Debug, __func__, 1772, function (  )
+   Log.log( Log.Level.Debug, __func__, 1778, function (  )
    
       return "luacode: " .. luaCode
    end )
@@ -2471,7 +2477,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1807, function (  )
+   Log.log( Log.Level.Trace, __func__, 1813, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2579,6 +2585,7 @@ local function exec( args )
    front:exec(  )
 end
 _moduleObj.exec = exec
+
 local function __main( argList )
 
    local list = {}

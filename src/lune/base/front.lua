@@ -856,7 +856,7 @@ end
 function MetaForBuildId.LoadFromMeta( metaPath )
 
    do
-      local fileObj = io.open( metaPath )
+      local fileObj = Util.openRd( metaPath )
       if fileObj ~= nil then
          local luaCode = fileObj:read( "*a" )
          fileObj:close(  )
@@ -1286,7 +1286,7 @@ function Front:loadTokenizerToLuaCode( importModuleInfo, tokenizerSrc, path, mod
          
          if not forceUpdateMeta and checkUpdate then
             do
-               local fileObj = io.open( newpath )
+               local fileObj = Util.openRd( newpath )
                if fileObj ~= nil then
                   local oldTxt = fileObj:read( "*a" )
                   fileObj:close(  )
@@ -2584,6 +2584,7 @@ local function exec( args )
    front:exec(  )
 end
 _moduleObj.exec = exec
+
 local function __main( argList )
 
    local list = {}

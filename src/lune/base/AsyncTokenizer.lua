@@ -532,7 +532,7 @@ function Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
       end
       
       do
-         local _exp = io.open( path, "r" )
+         local _exp = Util.openRd( path )
          if _exp ~= nil then
             return _exp, ""
          end

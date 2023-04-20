@@ -777,6 +777,87 @@ local function searchProjDir( dir )
 end
 _moduleObj.searchProjDir = searchProjDir
 
+local FSIF = {}
+_moduleObj.FSIF = FSIF
+function FSIF._setmeta( obj )
+  setmetatable( obj, { __index = FSIF  } )
+end
+function FSIF._new(  )
+   local obj = {}
+   FSIF._setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function FSIF:__init(  )
+
+end
+
+
+local FS = {}
+setmetatable( FS, { ifList = {FSIF,} } )
+_moduleObj.FS = FS
+function FS:openRd( path )
+
+   return (io.open( path ) )
+end
+function FS._setmeta( obj )
+  setmetatable( obj, { __index = FS  } )
+end
+function FS._new(  )
+   local obj = {}
+   FS._setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
+   end
+   return obj
+end
+function FS:__init(  )
+
+end
+
+
+local MappedFS = {}
+setmetatable( MappedFS, { ifList = {FSIF,} } )
+_moduleObj.MappedFS = MappedFS
+function MappedFS._new( path2bin )
+   local obj = {}
+   MappedFS._setmeta( obj )
+   if obj.__init then obj:__init( path2bin ); end
+   return obj
+end
+function MappedFS:__init(path2bin) 
+   self.path2bin = path2bin
+end
+function MappedFS:openRd( path )
+
+   local bin = self.path2bin[path]
+   if  nil == bin then
+      local _bin = bin
+   
+      return nil
+   end
+   
+   return TxtStream._new(bin)
+end
+function MappedFS._setmeta( obj )
+  setmetatable( obj, { __index = MappedFS  } )
+end
+
+
+local s_fs = FS._new()
+local function setFS( fs )
+
+   s_fs = fs
+end
+_moduleObj.setFS = setFS
+local function openRd( path )
+
+   return s_fs:openRd( path )
+end
+_moduleObj.openRd = openRd
+
 
 
 return _moduleObj

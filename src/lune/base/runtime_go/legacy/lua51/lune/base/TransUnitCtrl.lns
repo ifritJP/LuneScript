@@ -1029,7 +1029,7 @@ pub fn TransUnitCtrl.createAST(
 
    switch self.analyzeMode {
       case .Diag, .Complete, .Inquire {
-         os.exit( 0 );
+         os.exit( 0 ); // 要対応
       }
    }
    

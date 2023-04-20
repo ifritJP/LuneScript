@@ -44,6 +44,10 @@ class ConsoleAdapter extend (oStream) {
    }
 }
 
+pub fn getConsoleOStream() __noasync : oStream {
+   return consoleOStream;
+}
+
 pub fn setConsoleOStream( stream:oStream, streamErr:oStream ) {
    __asyncLock {
       consoleOStream = stream;
@@ -488,6 +492,41 @@ pub fn searchProjDir( dir:str ) : str! {
       work = parent;
    }
    return nil;
+}
+
+pub interface FSIF {
+   pub fn openRd( path:str ) : iStream!;
+}
+
+pub class FS extend (FSIF) {
+   pub fn openRd( path:str ) : iStream! {
+      return (io.open( path ## ));
+   }
+}
+
+pub class MappedFS extend (FSIF) {
+
+   let path2bin:&Map<str,str>;
+   
+   pub fn __init( path2bin:&Map<str,str> ) {
+      self.path2bin = path2bin;
+   }
+   
+   pub fn openRd( path:str ) : iStream! {
+      let! bin = self.path2bin[ path ] {
+         return nil;
+      };
+      return new TxtStream( bin );
+   }
+}
+
+
+let mut s_fs:&FSIF = new FS();
+pub fn setFS( fs:&FSIF ) {
+   s_fs = fs;
+}
+pub fn openRd( path:str ) : iStream! {
+   return s_fs.openRd( path );
 }
 
 

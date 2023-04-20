@@ -1142,19 +1142,21 @@ alias で置き換えている元の Type → alias の型
    }
 
    fn dumpSymbolType( accessMode:Ast.AccessMode, name:str, typeInfo:&Ast.TypeInfo ) {
-      let mut writer = new Writer.JSON( io.stdout );
-      writer.startParent( "lunescript", false );
-      writer.startParent( "inquire", false );
-      writer.write( "access", Ast.accessMode2txt( accessMode ) );
-      writer.write( "name", name );
-      writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
-      writer.write( "typeKind", typeInfo.$kind.$_txt );
-      writer.write( "static", "%s" (typeInfo.$staticFlag) );
-      writer.write( "display", typeInfo.$get_display_stirng_with( typeInfo.$rawTxt, nil ) );
-      writer.endElement();
-      writer.endElement();
-      writer.fin();
-      os.exit( 0 );
+      __asyncLock {
+         let mut writer = new Writer.JSON( Util.getConsoleOStream() );
+         writer.startParent( "lunescript", false );
+         writer.startParent( "inquire", false );
+         writer.write( "access", Ast.accessMode2txt( accessMode ) );
+         writer.write( "name", name );
+         writer.write( "type", typeInfo.getTxt( self.typeNameCtrl## ) );
+         writer.write( "typeKind", typeInfo.$kind.$_txt );
+         writer.write( "static", "%s" (typeInfo.$staticFlag) );
+         writer.write( "display", typeInfo.$get_display_stirng_with( typeInfo.$rawTxt, nil ) );
+         writer.endElement();
+         writer.endElement();
+         writer.fin();
+         os.exit( 0 );
+      }
    }
 
    pro fn errorShadowingOp(

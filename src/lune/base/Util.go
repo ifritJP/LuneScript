@@ -7,33 +7,34 @@ var Util_consoleOStream Lns_oStream
 var Util_errStream Lns_oStream
 var Util_debugFlag bool
 var Util_errorCode LnsInt
+var Util_s_fs Util_FSIF
 type Util_ConsoleWriter func (_env *LnsEnv, arg1 string)
 // for 456
-func Util_convExp0_1932(arg1 []LnsAny) string {
+func Util_convExp0_2011(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 473
-func Util_convExp0_2019(arg1 []LnsAny) string {
+func Util_convExp0_2098(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 432
-func Util_convExp0_1799(arg1 []LnsAny) LnsAny {
+func Util_convExp0_1878(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 444
-func Util_convExp0_1862(arg1 []LnsAny) string {
+func Util_convExp0_1941(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 475
-func Util_convExp0_2035(arg1 []LnsAny) string {
+func Util_convExp0_2114(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 488
-func Util_convExp0_2092(arg1 []LnsAny) string {
+func Util_convExp0_2171(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 66
-func Util_convExp0_747(arg1 []LnsAny) []LnsAny {
+func Util_convExp0_826(arg1 []LnsAny) []LnsAny {
     return Lns_2DDD( arg1[0:])
 }
 // 47: decl @lune.@base.@Util.getConsoleOStream
@@ -171,7 +172,7 @@ func Util_readFile(_env *LnsEnv, path string) LnsAny {
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Util_convExp0_1799(Lns_2DDD(Lns_io_open(path, nil)))
+        _fileObj := Util_convExp0_1878(Lns_2DDD(Lns_io_open(path, nil)))
         if _fileObj == nil{
             return nil
         } else {
@@ -190,21 +191,21 @@ func Util_scriptPath2Module(_env *LnsEnv, path string) string {
         Util_err(_env, "script must be relative-path -- " + path)
     }
     var mod string
-    mod = Util_convExp0_1862(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
+    mod = Util_convExp0_1941(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
     return Lns_car(_env.GetVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
 // 448: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
 func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny) string {
     if projDir != nil{
-        projDir_367 := projDir.(string)
+        projDir_396 := projDir.(string)
         var workpath string
-        if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_367,"/$", nil, nil))){
-            workpath = projDir_367 + "/"
+        if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_396,"/$", nil, nil))){
+            workpath = projDir_396 + "/"
         } else { 
-            workpath = projDir_367
+            workpath = projDir_396
         }
-        path = Util_convExp0_1932(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
+        path = Util_convExp0_2011(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
     }
     return Util_scriptPath2Module(_env, path)
 }
@@ -223,10 +224,10 @@ func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
 // 471: decl @lune.@base.@Util.parentPath
 func Util_parentPath(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-        path = Util_convExp0_2019(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
+        path = Util_convExp0_2098(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
     }
     var parent string
-    parent = Util_convExp0_2035(Lns_2DDD(_env.GetVM().String_gsub(path,"/[^/]+$", "")))
+    parent = Util_convExp0_2114(Lns_2DDD(_env.GetVM().String_gsub(path,"/[^/]+$", "")))
     if parent == path{
         return "./"
     }
@@ -242,13 +243,23 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
             return work
         }
         var parent string
-        parent = Util_convExp0_2092(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
+        parent = Util_convExp0_2171(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
         if parent == work{
             return nil
         }
         work = parent
     }
     return nil
+}
+
+// 525: decl @lune.@base.@Util.setFS
+func Util_setFS(_env *LnsEnv, fs Util_FSIF) {
+    Util_s_fs = fs
+}
+
+// 528: decl @lune.@base.@Util.openRd
+func Util_openRd(_env *LnsEnv, path string) LnsAny {
+    return Util_s_fs.OpenRd(_env, path)
 }
 
 
@@ -451,6 +462,24 @@ func (self *Util_SimpleSourceOStream) SwitchToHeader(_env *LnsEnv) {
 // 395: decl @lune.@base.@Util.SimpleSourceOStream.returnToSource
 func (self *Util_SimpleSourceOStream) ReturnToSource(_env *LnsEnv) {
     self.nowStream = self.srcStream
+}
+// 502: decl @lune.@base.@Util.FS.openRd
+func (self *Util_FS) OpenRd(_env *LnsEnv, path string) LnsAny {
+    return Lns_car(Lns_io_open(path, nil))
+}
+// 515: decl @lune.@base.@Util.MappedFS.openRd
+func (self *Util_MappedFS) OpenRd(_env *LnsEnv, path string) LnsAny {
+    var bin string
+    
+    {
+        _bin := self.path2bin.Get(path)
+        if _bin == nil{
+            return nil
+        } else {
+            bin = _bin.(string)
+        }
+    }
+    return NewUtil_TxtStream(_env, bin).FP
 }
 // declaration Class -- ConsoleAdapter
 type Util_ConsoleAdapterMtd interface {
@@ -867,6 +896,106 @@ func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv,
 }
 
 
+type Util_FSIF interface {
+        OpenRd(_env *LnsEnv, arg1 string) LnsAny
+}
+func Lns_cast2Util_FSIF( obj LnsAny ) LnsAny {
+    if _, ok := obj.(Util_FSIF); ok { 
+        return obj
+    }
+    return nil
+}
+
+// declaration Class -- FS
+type Util_FSMtd interface {
+    OpenRd(_env *LnsEnv, arg1 string) LnsAny
+}
+type Util_FS struct {
+    FP Util_FSMtd
+}
+func Util_FS2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Util_FS).FP
+}
+func Util_FS_toSlice(slice []LnsAny) []*Util_FS {
+    ret := make([]*Util_FS, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_FSDownCast).ToUtil_FS()
+    }
+    return ret
+}
+type Util_FSDownCast interface {
+    ToUtil_FS() *Util_FS
+}
+func Util_FSDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Util_FSDownCast)
+    if ok { return work.ToUtil_FS() }
+    return nil
+}
+func (obj *Util_FS) ToUtil_FS() *Util_FS {
+    return obj
+}
+func NewUtil_FS(_env *LnsEnv) *Util_FS {
+    obj := &Util_FS{}
+    obj.FP = obj
+    obj.InitUtil_FS(_env)
+    return obj
+}
+func (self *Util_FS) InitUtil_FS(_env *LnsEnv) {
+}
+
+// declaration Class -- MappedFS
+type Util_MappedFSMtd interface {
+    OpenRd(_env *LnsEnv, arg1 string) LnsAny
+}
+type Util_MappedFS struct {
+    path2bin *LnsMap2_[string,string]
+    FP Util_MappedFSMtd
+}
+func Util_MappedFS2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*Util_MappedFS).FP
+}
+func Util_MappedFS_toSlice(slice []LnsAny) []*Util_MappedFS {
+    ret := make([]*Util_MappedFS, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(Util_MappedFSDownCast).ToUtil_MappedFS()
+    }
+    return ret
+}
+type Util_MappedFSDownCast interface {
+    ToUtil_MappedFS() *Util_MappedFS
+}
+func Util_MappedFSDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(Util_MappedFSDownCast)
+    if ok { return work.ToUtil_MappedFS() }
+    return nil
+}
+func (obj *Util_MappedFS) ToUtil_MappedFS() *Util_MappedFS {
+    return obj
+}
+func NewUtil_MappedFS(_env *LnsEnv, arg1 *LnsMap2_[string,string]) *Util_MappedFS {
+    obj := &Util_MappedFS{}
+    obj.FP = obj
+    obj.InitUtil_MappedFS(_env, arg1)
+    return obj
+}
+// 511: DeclConstr
+func (self *Util_MappedFS) InitUtil_MappedFS(_env *LnsEnv, path2bin *LnsMap2_[string,string]) {
+    self.path2bin = path2bin
+}
+
+
 func Lns_Util_init(_env *LnsEnv) {
     if init_Util { return }
     init_Util = true
@@ -881,6 +1010,7 @@ func Lns_Util_init(_env *LnsEnv) {
     Util_debugFlag = true
     Util_errorCode = 1
     Util_SimpleSourceOStream____init_1_(_env)
+    Util_s_fs = NewUtil_FS(_env).FP
 }
 func init() {
     init_Util = false
