@@ -933,7 +933,7 @@ function Front:searchModuleFile( mod, suffix, baseDir, outputDir )
    lnsSearchPath = lnsSearchPath:gsub( "%.lua$", suffix )
    lnsSearchPath = lnsSearchPath:gsub( "%.lua;", suffix .. ";" )
    
-   local foundPath = Depend.searchpath( mod, lnsSearchPath )
+   local foundPath = Util.searchPath( mod, lnsSearchPath )
    if  nil == foundPath then
       local _foundPath = foundPath
    
@@ -947,7 +947,7 @@ function Front:searchModuleFile( mod, suffix, baseDir, outputDir )
       
       local latestProjSearchPath = Util.pathJoin( latestProjRoot, "?" .. suffix )
       do
-         local _exp = Depend.searchpath( mod, latestProjSearchPath )
+         local _exp = Util.searchPath( mod, latestProjSearchPath )
          if _exp ~= nil then
             foundPath = _exp
          else

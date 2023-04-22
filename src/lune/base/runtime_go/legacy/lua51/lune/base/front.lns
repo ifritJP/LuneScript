@@ -526,14 +526,14 @@ fn Front.searchModuleFile( mod:str, suffix:str, baseDir:str!, outputDir:str! ) m
    lnsSearchPath = lnsSearchPath.gsub( "%.lua$", suffix );
    lnsSearchPath = lnsSearchPath.gsub( "%.lua;", suffix .. ";" );
 
-   let! foundPath = Depend.searchpath( mod, lnsSearchPath ) {
+   let! foundPath = Util.searchPath( mod, lnsSearchPath ) {
       // 通常パスで検索してない場合、
       // gomodMap でアクセスした最後の proj からの相対で見つける
       let! latestProjRoot = self.gomodMap.getLatestProjRoot() {
          return nil;
       };
       let latestProjSearchPath = Util.pathJoin( latestProjRoot, "?" .. suffix );
-      if! Depend.searchpath( mod, latestProjSearchPath ) {
+      if! Util.searchPath( mod, latestProjSearchPath ) {
          foundPath = _exp;
       } else {
          Log._log2( .Err,

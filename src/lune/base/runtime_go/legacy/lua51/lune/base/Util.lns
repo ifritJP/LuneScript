@@ -496,11 +496,15 @@ pub fn searchProjDir( dir:str ) : str! {
 
 pub interface FSIF {
    pub fn openRd( path:str ) : iStream!;
+   pub fn searchPath( mod:str, pathPattern:str ) : str!;
 }
 
 pub class FS extend (FSIF) {
    pub fn openRd( path:str ) : iStream! {
       return (io.open( path ## ));
+   }
+   pub fn searchPath( mod:str, pathPattern:str ) : str! {
+      return Depend.searchpath( mod, pathPattern );
    }
 }
 
@@ -514,9 +518,16 @@ pub class MappedFS extend (FSIF) {
    
    pub fn openRd( path:str ) : iStream! {
       let! bin = self.path2bin[ path ] {
-         return nil;
+         return (io.open( path ## ));
       };
       return new TxtStream( bin );
+   }
+   pub fn searchPath( mod:str, pathPattern:str ) : str! {
+      let path = mod.gsub( "%.", "/" ) .. ".lns";
+      if self.path2bin[ path ] {
+         return path;
+      }
+      return Depend.searchpath( mod, pathPattern );
    }
 }
 
@@ -527,6 +538,9 @@ pub fn setFS( fs:&FSIF ) {
 }
 pub fn openRd( path:str ) : iStream! {
    return s_fs.openRd( path );
+}
+pub fn searchPath( mod:str, pathPattern:str ) : str! {
+   return s_fs.searchPath( mod, pathPattern );
 }
 
 

@@ -889,7 +889,7 @@ func (self *Front_Front) searchModuleFile(_env *LnsEnv, mod string,suffix string
     var foundPath string
     
     {
-        _foundPath := Depend_searchpath(_env, mod, lnsSearchPath)
+        _foundPath := Util_searchPath(_env, mod, lnsSearchPath)
         if _foundPath == nil{
             var latestProjRoot string
             
@@ -904,7 +904,7 @@ func (self *Front_Front) searchModuleFile(_env *LnsEnv, mod string,suffix string
             var latestProjSearchPath string
             latestProjSearchPath = Util_pathJoin(_env, latestProjRoot, "?" + suffix)
             {
-                __exp := Depend_searchpath(_env, mod, latestProjSearchPath)
+                __exp := Util_searchPath(_env, mod, latestProjSearchPath)
                 if !Lns_IsNil( __exp ) {
                     _exp := __exp.(string)
                     foundPath = _exp

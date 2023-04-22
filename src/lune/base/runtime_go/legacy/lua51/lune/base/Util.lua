@@ -802,6 +802,10 @@ function FS:openRd( path )
 
    return (io.open( path ) )
 end
+function FS:searchPath( mod, pathPattern )
+
+   return Depend.searchpath( mod, pathPattern )
+end
 function FS._setmeta( obj )
   setmetatable( obj, { __index = FS  } )
 end
@@ -836,10 +840,19 @@ function MappedFS:openRd( path )
    if  nil == bin then
       local _bin = bin
    
-      return nil
+      return (io.open( path ) )
    end
    
    return TxtStream._new(bin)
+end
+function MappedFS:searchPath( mod, pathPattern )
+
+   local path = mod:gsub( "%.", "/" ) .. ".lns"
+   if self.path2bin[path] then
+      return path
+   end
+   
+   return Depend.searchpath( mod, pathPattern )
 end
 function MappedFS._setmeta( obj )
   setmetatable( obj, { __index = MappedFS  } )
@@ -857,6 +870,11 @@ local function openRd( path )
    return s_fs:openRd( path )
 end
 _moduleObj.openRd = openRd
+local function searchPath( mod, pathPattern )
+
+   return s_fs:searchPath( mod, pathPattern )
+end
+_moduleObj.searchPath = searchPath
 
 
 

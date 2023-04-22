@@ -10,31 +10,31 @@ var Util_errorCode LnsInt
 var Util_s_fs Util_FSIF
 type Util_ConsoleWriter func (_env *LnsEnv, arg1 string)
 // for 456
-func Util_convExp0_2011(arg1 []LnsAny) string {
+func Util_convExp0_2051(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 473
-func Util_convExp0_2098(arg1 []LnsAny) string {
+func Util_convExp0_2138(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 432
-func Util_convExp0_1878(arg1 []LnsAny) LnsAny {
+func Util_convExp0_1918(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 444
-func Util_convExp0_1941(arg1 []LnsAny) string {
+func Util_convExp0_1981(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 475
-func Util_convExp0_2114(arg1 []LnsAny) string {
+func Util_convExp0_2154(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 488
-func Util_convExp0_2171(arg1 []LnsAny) string {
+func Util_convExp0_2211(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
 // for 66
-func Util_convExp0_826(arg1 []LnsAny) []LnsAny {
+func Util_convExp0_866(arg1 []LnsAny) []LnsAny {
     return Lns_2DDD( arg1[0:])
 }
 // 47: decl @lune.@base.@Util.getConsoleOStream
@@ -172,7 +172,7 @@ func Util_readFile(_env *LnsEnv, path string) LnsAny {
     var fileObj Lns_luaStream
     
     {
-        _fileObj := Util_convExp0_1878(Lns_2DDD(Lns_io_open(path, nil)))
+        _fileObj := Util_convExp0_1918(Lns_2DDD(Lns_io_open(path, nil)))
         if _fileObj == nil{
             return nil
         } else {
@@ -191,21 +191,21 @@ func Util_scriptPath2Module(_env *LnsEnv, path string) string {
         Util_err(_env, "script must be relative-path -- " + path)
     }
     var mod string
-    mod = Util_convExp0_1941(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
+    mod = Util_convExp0_1981(Lns_2DDD(_env.GetVM().String_gsub(Lns_car(_env.GetVM().String_gsub(path,"^./", "")).(string),"/", ".")))
     return Lns_car(_env.GetVM().String_gsub(mod, "%.lns$", "")).(string)
 }
 
 // 448: decl @lune.@base.@Util.scriptPath2ModuleFromProjDir
 func Util_scriptPath2ModuleFromProjDir(_env *LnsEnv, path string,projDir LnsAny) string {
     if projDir != nil{
-        projDir_396 := projDir.(string)
+        projDir_414 := projDir.(string)
         var workpath string
-        if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_396,"/$", nil, nil))){
-            workpath = projDir_396 + "/"
+        if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_414,"/$", nil, nil))){
+            workpath = projDir_414 + "/"
         } else { 
-            workpath = projDir_396
+            workpath = projDir_414
         }
-        path = Util_convExp0_2011(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
+        path = Util_convExp0_2051(Lns_2DDD(_env.GetVM().String_gsub(path,"^" + workpath, "")))
     }
     return Util_scriptPath2Module(_env, path)
 }
@@ -224,10 +224,10 @@ func Util_pathJoin(_env *LnsEnv, dir string,path string) string {
 // 471: decl @lune.@base.@Util.parentPath
 func Util_parentPath(_env *LnsEnv, path string) string {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(path,"/$", nil, nil))){
-        path = Util_convExp0_2098(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
+        path = Util_convExp0_2138(Lns_2DDD(_env.GetVM().String_gsub(path,"/$", "")))
     }
     var parent string
-    parent = Util_convExp0_2114(Lns_2DDD(_env.GetVM().String_gsub(path,"/[^/]+$", "")))
+    parent = Util_convExp0_2154(Lns_2DDD(_env.GetVM().String_gsub(path,"/[^/]+$", "")))
     if parent == path{
         return "./"
     }
@@ -243,7 +243,7 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
             return work
         }
         var parent string
-        parent = Util_convExp0_2171(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
+        parent = Util_convExp0_2211(Lns_2DDD(_env.GetVM().String_gsub(work,"/[^/]+$", "")))
         if parent == work{
             return nil
         }
@@ -252,14 +252,19 @@ func Util_searchProjDir(_env *LnsEnv, dir string) LnsAny {
     return nil
 }
 
-// 525: decl @lune.@base.@Util.setFS
+// 536: decl @lune.@base.@Util.setFS
 func Util_setFS(_env *LnsEnv, fs Util_FSIF) {
     Util_s_fs = fs
 }
 
-// 528: decl @lune.@base.@Util.openRd
+// 539: decl @lune.@base.@Util.openRd
 func Util_openRd(_env *LnsEnv, path string) LnsAny {
     return Util_s_fs.OpenRd(_env, path)
+}
+
+// 542: decl @lune.@base.@Util.searchPath
+func Util_searchPath(_env *LnsEnv, mod string,pathPattern string) LnsAny {
+    return Util_s_fs.SearchPath(_env, mod, pathPattern)
 }
 
 
@@ -463,23 +468,36 @@ func (self *Util_SimpleSourceOStream) SwitchToHeader(_env *LnsEnv) {
 func (self *Util_SimpleSourceOStream) ReturnToSource(_env *LnsEnv) {
     self.nowStream = self.srcStream
 }
-// 502: decl @lune.@base.@Util.FS.openRd
+// 503: decl @lune.@base.@Util.FS.openRd
 func (self *Util_FS) OpenRd(_env *LnsEnv, path string) LnsAny {
     return Lns_car(Lns_io_open(path, nil))
 }
-// 515: decl @lune.@base.@Util.MappedFS.openRd
+// 506: decl @lune.@base.@Util.FS.searchPath
+func (self *Util_FS) SearchPath(_env *LnsEnv, mod string,pathPattern string) LnsAny {
+    return Depend_searchpath(_env, mod, pathPattern)
+}
+// 519: decl @lune.@base.@Util.MappedFS.openRd
 func (self *Util_MappedFS) OpenRd(_env *LnsEnv, path string) LnsAny {
     var bin string
     
     {
         _bin := self.path2bin.Get(path)
         if _bin == nil{
-            return nil
+            return Lns_car(Lns_io_open(path, nil))
         } else {
             bin = _bin.(string)
         }
     }
     return NewUtil_TxtStream(_env, bin).FP
+}
+// 525: decl @lune.@base.@Util.MappedFS.searchPath
+func (self *Util_MappedFS) SearchPath(_env *LnsEnv, mod string,pathPattern string) LnsAny {
+    var path string
+    path = Lns_car(_env.GetVM().String_gsub(mod,"%.", "/")).(string) + ".lns"
+    if Lns_isCondTrue( self.path2bin.Get(path)){
+        return path
+    }
+    return Depend_searchpath(_env, mod, pathPattern)
 }
 // declaration Class -- ConsoleAdapter
 type Util_ConsoleAdapterMtd interface {
@@ -898,6 +916,7 @@ func (self *Util_SimpleSourceOStream) InitUtil_SimpleSourceOStream(_env *LnsEnv,
 
 type Util_FSIF interface {
         OpenRd(_env *LnsEnv, arg1 string) LnsAny
+        SearchPath(_env *LnsEnv, arg1 string, arg2 string) LnsAny
 }
 func Lns_cast2Util_FSIF( obj LnsAny ) LnsAny {
     if _, ok := obj.(Util_FSIF); ok { 
@@ -909,6 +928,7 @@ func Lns_cast2Util_FSIF( obj LnsAny ) LnsAny {
 // declaration Class -- FS
 type Util_FSMtd interface {
     OpenRd(_env *LnsEnv, arg1 string) LnsAny
+    SearchPath(_env *LnsEnv, arg1 string, arg2 string) LnsAny
 }
 type Util_FS struct {
     FP Util_FSMtd
@@ -952,6 +972,7 @@ func (self *Util_FS) InitUtil_FS(_env *LnsEnv) {
 // declaration Class -- MappedFS
 type Util_MappedFSMtd interface {
     OpenRd(_env *LnsEnv, arg1 string) LnsAny
+    SearchPath(_env *LnsEnv, arg1 string, arg2 string) LnsAny
 }
 type Util_MappedFS struct {
     path2bin *LnsMap2_[string,string]
@@ -990,7 +1011,7 @@ func NewUtil_MappedFS(_env *LnsEnv, arg1 *LnsMap2_[string,string]) *Util_MappedF
     obj.InitUtil_MappedFS(_env, arg1)
     return obj
 }
-// 511: DeclConstr
+// 515: DeclConstr
 func (self *Util_MappedFS) InitUtil_MappedFS(_env *LnsEnv, path2bin *LnsMap2_[string,string]) {
     self.path2bin = path2bin
 }
