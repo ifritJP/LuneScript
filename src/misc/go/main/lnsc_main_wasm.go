@@ -51,6 +51,19 @@ func getIndent(this js.Value, args []js.Value) interface{} {
 	return jsonTxt
 }
 
+func setFS(env *LnsEnv, goPath2bin map[string]string, lnsCodeList js.Value) {
+	for index := 0; index < lnsCodeList.Length(); index++ {
+		info := lnsCodeList.Index(index)
+		path := info.Index(0).String()
+		code := info.Index(1).String()
+		goPath2bin[path] = code
+	}
+	path2bin := NewLnsMap2_[string, string](goPath2bin)
+	// MappedFS を生成して登録
+	mappedFS := lnsc.NewUtil_MappedFS(env, path2bin)
+	lnsc.Util_setFS(env, mappedFS)
+}
+
 func runLnsc(this js.Value, args []js.Value) interface{} {
 	lnsCodeList := args[0]
 
@@ -62,19 +75,8 @@ func runLnsc(this js.Value, args []js.Value) interface{} {
 	env := Lns_GetEnv()
 
 	Lns_LockEnvSync(env, 0, func() {
-
-		// パスとコード文字列を紐付け
-		goPath2bin := map[string]string{}
-		for index := 0; index < lnsCodeList.Length(); index++ {
-			info := lnsCodeList.Index(index)
-			path := info.Index(0).String()
-			code := info.Index(1).String()
-			goPath2bin[path] = code
-		}
-		path2bin := NewLnsMap2_[string, string](goPath2bin)
-		// MappedFS を生成して登録
-		mappedFS := lnsc.NewUtil_MappedFS(env, path2bin)
-		lnsc.Util_setFS(env, mappedFS)
+		// パスとソースコードを紐付け
+		setFS(env, map[string]string{}, lnsCodeList)
 
 		// 実行
 		lnsc.Front_exec(env, NewLnsList2_[string](cmdArgs))
@@ -85,12 +87,15 @@ func runLnsc(this js.Value, args []js.Value) interface{} {
 func lns2lua(this js.Value, args []js.Value) interface{} {
 
 	lnsCode := args[0].String()
+	lnsCodeList := args[1]
 	path := "lnsc_frontend.lns"
 
 	env := Lns_GetEnv()
 
 	luaCode := ""
 	Lns_LockEnvSync(env, 0, func() {
+		setFS(env, map[string]string{}, lnsCodeList)
+
 		option := lnsc.Option_createDefaultOption(env, NewLnsList2_[string]([]string{path}), nil)
 		front := lnsc.NewFront_Front(env, option, nil)
 
