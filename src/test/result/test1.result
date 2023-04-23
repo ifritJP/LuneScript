@@ -508,415 +508,415 @@ a.b
 1	skip:
 aa	skip:
 /comp-2.lns
+      ],
+         {
+         {
+{
+            }
+            }
+         }
+   }
+}
+         },
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
                "displayTxt" : "func5(int): int",
                "displayTxt" : "val3: int",
+   "lunescript" : {
+      "prefix" : ""
                "type" : "SymbolKind.Mbr"
                "type" : "SymbolKind.Mtd"
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-         {
-         {
-         }
-         },
-      "candidateList" : [
-      "prefix" : ""
-      ],
-   "lunescript" : {
-   }
-{
-}
-/comp-3.lns
-               "displayTxt" : "$val2",
-               "type" : "SymbolKind.Mtd"
-            "candidate" : {
-            }
-         {
-         }
-      "candidateList" : [
-      "prefix" : ""
-      ],
-   "lunescript" : {
-   }
-{
-}
-/comp-4.lns
-               "displayTxt" : "byte(int!, int!): ...<int!>",
-               "displayTxt" : "find(str, int!, bool!): ...<int>",
-               "displayTxt" : "format(&...): str",
-               "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
-               "displayTxt" : "gsub(str, str): str, int",
-               "displayTxt" : "lower(): str",
-               "displayTxt" : "rep(int): str",
-               "displayTxt" : "replace(str, str): str",
-               "displayTxt" : "reverse(): str",
-               "displayTxt" : "sub(int, int!): str",
-               "displayTxt" : "upper(): str",
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         }
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-      "candidateList" : [
-      "prefix" : ""
-      ],
-   "lunescript" : {
-   }
-{
-}
-/comp-5.lns
-               "displayTxt" : "byte(int!, int!): ...<int!>",
-               "displayTxt" : "find(str, int!, bool!): ...<int>",
-               "displayTxt" : "format(&...): str",
-               "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
-               "displayTxt" : "gsub(str, str): str, int",
-               "displayTxt" : "lower(): str",
-               "displayTxt" : "rep(int): str",
-               "displayTxt" : "replace(str, str): str",
-               "displayTxt" : "reverse(): str",
-               "displayTxt" : "sub(int, int!): str",
-               "displayTxt" : "upper(): str",
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-            }
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         {
-         }
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-         },
-      "candidateList" : [
-      "prefix" : ""
-      ],
-   "lunescript" : {
-   }
-{
-}
-/comp-6.lns
-               "displayTxt" : "insert(T): ",
-               "displayTxt" : "remove(int!): T!",
-               "displayTxt" : "sort(__less!(T, T): bool)",
-               "displayTxt" : "unpack(): ...",
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-            }
-            }
-         {
-         {
-         {
-         {
-         }
-         },
-         },
-         },
-      "candidateList" : [
-      "prefix" : ""
-      ],
-   "lunescript" : {
-   }
-{
-}
-/comp.lns
-               "displayTxt" : "func1(int): int!",
-               "displayTxt" : "func2(int, int): int",
-               "displayTxt" : "func3(int): int",
-               "displayTxt" : "func4(int, int): int",
-               "displayTxt" : "get_val2(): int",
-               "displayTxt" : "val1: int",
-               "type" : "SymbolKind.Mbr"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-               "type" : "SymbolKind.Mtd"
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-            }
-            }
-            }
-            }
-         {
-         {
-         {
-         {
-         {
-         {
-         }
-         },
-         },
-         },
-         },
-         },
-      "candidateList" : [
-      "prefix" : ""
-      ],
-   "lunescript" : {
-   }
-{
-}
 /comp2.lns
+      ],
+         {
+         {
+         {
+         {
+         {
+         {
+{
+            }
+            }
+            }
+            }
+            }
+            }
+         }
+   }
+}
+         },
+         },
+         },
+         },
+         },
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
                "displayTxt" : "func1(int): int",
                "displayTxt" : "func2(int, int): int",
                "displayTxt" : "func3(int): int",
                "displayTxt" : "func4(int, int): int",
                "displayTxt" : "get_val2(): int",
                "displayTxt" : "val1: int",
+   "lunescript" : {
+      "prefix" : ""
                "type" : "SymbolKind.Mbr"
                "type" : "SymbolKind.Mtd"
                "type" : "SymbolKind.Mtd"
                "type" : "SymbolKind.Mtd"
                "type" : "SymbolKind.Mtd"
                "type" : "SymbolKind.Mtd"
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-            }
-            }
-            }
-            }
-         {
-         {
-         {
-         {
-         {
-         {
-         }
-         },
-         },
-         },
-         },
-         },
-      "candidateList" : [
-      "prefix" : ""
+/comp-3.lns
       ],
-   "lunescript" : {
-   }
+         {
 {
+            }
+         }
+   }
 }
+            "candidate" : {
+      "candidateList" : [
+               "displayTxt" : "$val2",
+   "lunescript" : {
+      "prefix" : ""
+               "type" : "SymbolKind.Mtd"
+/comp-4.lns
+      ],
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+{
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+         }
+   }
+}
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
+               "displayTxt" : "byte(int!, int!): ...<int!>",
+               "displayTxt" : "find(str, int!, bool!): ...<int>",
+               "displayTxt" : "format(&...): str",
+               "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
+               "displayTxt" : "gsub(str, str): str, int",
+               "displayTxt" : "lower(): str",
+               "displayTxt" : "rep(int): str",
+               "displayTxt" : "replace(str, str): str",
+               "displayTxt" : "reverse(): str",
+               "displayTxt" : "sub(int, int!): str",
+               "displayTxt" : "upper(): str",
+   "lunescript" : {
+      "prefix" : ""
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
 /comp4.lns
+      ],
+         {
+         {
+{
+            }
+            }
+         }
+   }
+}
+         },
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
                "displayTxt" : "val1: aaa",
                "displayTxt" : "val2: aaa",
-               "type" : "SymbolKind.Mbr"
-               "type" : "SymbolKind.Mbr"
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-         {
-         {
-         }
-         },
-      "candidateList" : [
-      "prefix" : ""
-      ],
    "lunescript" : {
-   }
+      "prefix" : ""
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mbr"
+/comp-5.lns
+      ],
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
+         {
 {
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+            }
+         }
+   }
 }
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+         },
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
+               "displayTxt" : "byte(int!, int!): ...<int!>",
+               "displayTxt" : "find(str, int!, bool!): ...<int>",
+               "displayTxt" : "format(&...): str",
+               "displayTxt" : "gmatch(str): Luaval<form>, stem!, stem!",
+               "displayTxt" : "gsub(str, str): str, int",
+               "displayTxt" : "lower(): str",
+               "displayTxt" : "rep(int): str",
+               "displayTxt" : "replace(str, str): str",
+               "displayTxt" : "reverse(): str",
+               "displayTxt" : "sub(int, int!): str",
+               "displayTxt" : "upper(): str",
+   "lunescript" : {
+      "prefix" : ""
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
 /comp5.lns
+      ],
+         {
+         {
+{
+            }
+            }
+         }
+   }
+}
+         },
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
                "displayTxt" : "val1: Hoge",
                "displayTxt" : "val2: Hoge",
-               "type" : "SymbolKind.Mbr"
-               "type" : "SymbolKind.Mbr"
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-         {
-         {
-         }
-         },
-      "candidateList" : [
+   "lunescript" : {
       "prefix" : ""
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mbr"
+/comp-6.lns
       ],
-   "lunescript" : {
-   }
-{
-}
-/comp6.lns
-               "displayTxt" : "Sub7",
-               "type" : "SymbolKind.Typ"
-            "candidate" : {
-            }
          {
-         }
-      "candidateList" : [
-      "prefix" : "Su"
-      ],
-   "lunescript" : {
-   }
+         {
+         {
+         {
 {
+            }
+            }
+            }
+            }
+         }
+   }
 }
+         },
+         },
+         },
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
+               "displayTxt" : "insert(T): ",
+               "displayTxt" : "remove(int!): T!",
+               "displayTxt" : "sort(__less!(T, T): bool)",
+               "displayTxt" : "unpack(): ...",
+   "lunescript" : {
+      "prefix" : ""
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+/comp6.lns
+      ],
+         {
+{
+            }
+         }
+   }
+}
+            "candidate" : {
+      "candidateList" : [
+               "displayTxt" : "Sub7",
+   "lunescript" : {
+      "prefix" : "Su"
+               "type" : "SymbolKind.Typ"
 /comp7.lns
+      ],
+         {
+         {
+{
+            }
+            }
+         }
+   }
+}
+         },
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
                "displayTxt" : "func1()",
                "displayTxt" : "func2()",
-               "type" : "SymbolKind.Fun"
-               "type" : "SymbolKind.Fun"
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-         {
-         {
-         }
-         },
-      "candidateList" : [
-      "prefix" : "fun"
-      ],
    "lunescript" : {
-   }
-{
-}
+      "prefix" : "fun"
+               "type" : "SymbolKind.Fun"
+               "type" : "SymbolKind.Fun"
 /comp8.lns
+      ],
+         {
+         {
+{
+            }
+            }
+         }
+   }
+}
+         },
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
                "displayTxt" : "val3: int",
                "displayTxt" : "val4: int",
+   "lunescript" : {
+      "prefix" : "val"
                "type" : "SymbolKind.Arg"
                "type" : "SymbolKind.Var"
-            "candidate" : {
-            "candidate" : {
-            }
-            }
-         {
-         {
-         }
-         },
-      "candidateList" : [
-      "prefix" : "val"
-      ],
-   "lunescript" : {
-   }
-{
-}
 /comp9.lns
-               "displayTxt" : "_test(int)",
-               "type" : "SymbolKind.Mac"
-            "candidate" : {
-            }
-         {
-         }
-      "candidateList" : [
-      "prefix" : "_te"
       ],
-   "lunescript" : {
-   }
+         {
 {
+            }
+         }
+   }
 }
+            "candidate" : {
+      "candidateList" : [
+               "displayTxt" : "_test(int)",
+   "lunescript" : {
+      "prefix" : "_te"
+               "type" : "SymbolKind.Mac"
+/comp.lns
+      ],
+         {
+         {
+         {
+         {
+         {
+         {
+{
+            }
+            }
+            }
+            }
+            }
+            }
+         }
+   }
+}
+         },
+         },
+         },
+         },
+         },
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+            "candidate" : {
+      "candidateList" : [
+               "displayTxt" : "func1(int): int!",
+               "displayTxt" : "func2(int, int): int",
+               "displayTxt" : "func3(int): int",
+               "displayTxt" : "func4(int, int): int",
+               "displayTxt" : "get_val2(): int",
+               "displayTxt" : "val1: int",
+   "lunescript" : {
+      "prefix" : ""
+               "type" : "SymbolKind.Mbr"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
+               "type" : "SymbolKind.Mtd"
 test/error/nilable1.lns:2:5: error: unmatch value type (index:1) int <- nil -- 
 test/error/nilable1.lns:6:9: error: = operator: exp(1) type mismatch int(26) <- nil(154): index 1 -- 
 test/error/nilable1.lns:10:15: error: no numeric type 'int!' or 'int'

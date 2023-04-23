@@ -708,7 +708,7 @@ test-error:
 
 define exeComp
 	echo lune | cat $3 - | $(call exeLune,$(LNSC),$1,$2,comp -i,$4) | \
-			json_pp --json_opt=canonical,pretty | sort
+			json_pp --json_opt=canonical,pretty | sort -b
 endef
 
 
