@@ -209,9 +209,12 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    }
 
    fn getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
-      switch typeInfo {
+      switch typeInfo.$genSrcTypeInfo {
          case self.builtinFunc.__ret_ {
             return "_lune.Result";
+         }
+         case self.builtinFunc.__lns_it_ {
+            return "_lune.__lns_it";
          }
       }
       

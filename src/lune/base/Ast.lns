@@ -3694,7 +3694,6 @@ pub class BoxTypeInfo extend TypeInfo {
    pub override fn get_extedType(): &TypeInfo {
       return self;
    }
-   
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(

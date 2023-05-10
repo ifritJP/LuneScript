@@ -502,6 +502,17 @@ false
 true
 -----	2139	-----
 a.b
+-----	2147	-----
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
 11
 12
 12
@@ -2197,7 +2208,7 @@ test/error/generics.lns:32:4: error: func<T1,T2>: over exp. expect: 2: actual: 3
 test/error/generics.lns:36:7: error: return: exp(1) type mismatch T2(TypeInfoKind.Alternate:1088) <- T1(TypeInfoKind.Alternate:1084)
 test/error/generics.lns:45:16: error: can't access this class(Test<T>) without '<>'.
 test/error/generics.lns:53:21: error: 'T' of Test<T> doesn't inherit 'Super'
-test/error/generics.lns:63:23: error: Sub.func: not support to override the method has generics at return type. -- func: func(str): str -- func(str): str
+test/error/generics.lns:63:23: error: Sub.func: not support to override the method has generics at return type. set the type parameter at the extend like '<T=str>'-- func: func(str): str -- func(str): str
 test/error/generics.lns:77:10: error: func: exp(1) type mismatch &T(1204) <- str(58): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
 test/error/generics.lns:87:11: error: func: exp(1) type mismatch T(1247) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics.lns:90:17: error: multiple Type -- T

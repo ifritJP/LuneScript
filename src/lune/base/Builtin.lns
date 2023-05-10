@@ -189,8 +189,23 @@ builtin 関数の TypeInfo を保持するクラス。
       }
       local fn registerClass( classInfo:&Ast.TypeInfo ) mut {
          self.allClass.insert( classInfo );
-         switch classInfo.$rawTxt {
+         let mut fullname;
+         if classInfo.$kind == .Box {
+            fullname = "Nilable";
+         } else {
+            if classInfo.$parentInfo ~= Ast.headTypeInfo {
+               fullname = classInfo.getParentFullName(
+                  Ast.defaultTypeNameCtrl ## ).gsub( "@", "" ).gsub( "%.", "_" );
+            } else {
+               fullname = "";
+            }
+            fullname = fullname .. classInfo.$rawTxt;
+         }
+         switch fullname {
             ,,classCaseList
+               default {
+                  Util.err( "unmatch class -- %s" (fullname) );
+            }
          }
       }
       local fn registerAlge( algeInfo:&Ast.TypeInfo ) mut {
@@ -308,6 +323,13 @@ _DefBuiltinFuncType( [
          "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
          "createProcesser": { "arg": [ "str" ], "ret": [ "__Processor"] },
          "_createPipe": { "type": ["macro"], "arg": [ "__exp", "int" ], "ret": [ "__pipe!"] },
+      },
+   },
+   {
+      "__lns.it<T>": {
+         "__attrib": { "type": [ "interface" ] },
+         "hasNext": { "type": [ "method" ], "arg": [], "ret": [ "bool" ] },
+         "next": { "type": [ "mut" ], "arg": [], "ret": [ "T" ] },
       },
    },
    {

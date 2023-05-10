@@ -3925,7 +3925,7 @@ function TransUnit:checkOverrideMethod( overrideType, typeInfo )
    for index, retType in ipairs( overrideType:get_retTypeInfoList() ) do
       if #typeInfo:get_retTypeInfoList() >= index then
          if retType:get_nonnilableType():get_kind() == Ast.TypeInfoKind.Alternate and typeInfo:get_retTypeInfoList()[index]:get_nonnilableType():get_kind() ~= Ast.TypeInfoKind.Alternate then
-            local mess = string.format( "not support to override the method has generics at return type. -- %s", funcName)
+            local mess = string.format( "not support to override the method has generics at return type. set the type parameter at the extend like '<T=%s>'-- %s", typeInfo:get_retTypeInfoList()[index]:getTxt(  ), funcName)
             addErr( mess )
          end
          

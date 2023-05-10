@@ -499,9 +499,11 @@ end
 function ConvFilter:getCanonicalName( typeInfo, localFlag )
 
    do
-      local _switchExp = typeInfo
+      local _switchExp = typeInfo:get_genSrcTypeInfo()
       if _switchExp == self.builtinFunc.__ret_ then
          return "_lune.Result"
+      elseif _switchExp == self.builtinFunc.__lns_it_ then
+         return "_lune.__lns_it"
       end
    end
    
@@ -1525,7 +1527,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1090, function (  )
+   Log.log( Log.Level.Log, __func__, 1093, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
    end )

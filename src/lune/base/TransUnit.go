@@ -278,7 +278,7 @@ var TransUnit_unsupportStatement *LnsSet2_[string]
 type TransUnit_checkImplicitCastCallback_10_ func (_env *LnsEnv, arg1 *Ast_TypeInfo,arg2 *Nodes_Node) LnsAny
 type TransUnit_ReadyExportInfo func (_env *LnsEnv, arg1 *FrontInterface_ExportInfo)
 type TransUnit_checkCompForm_32_ func (_env *LnsEnv, arg1 *Writer_JSON,arg2 string)
-func TransUnit_expTuple2_5428(tuple *LnsTuple3[*Types_Token,*TransUnitIF_NSInfo,*Nodes_ClassInheritInfo]) (*Types_Token,*TransUnitIF_NSInfo,*Nodes_ClassInheritInfo) {
+func TransUnit_expTuple2_5439(tuple *LnsTuple3[*Types_Token,*TransUnitIF_NSInfo,*Nodes_ClassInheritInfo]) (*Types_Token,*TransUnitIF_NSInfo,*Nodes_ClassInheritInfo) {
     return tuple.Val1,tuple.Val2,tuple.Val3
 }
 func TransUnit_expTuple3_534(tuple *LnsTuple3[*Types_Token,*TransUnitIF_NSInfo,*Nodes_ClassInheritInfo]) (*Types_Token,*TransUnitIF_NSInfo,*Nodes_ClassInheritInfo) {
@@ -351,43 +351,43 @@ func TransUnit_convExp2_1281(arg1 []LnsAny) *Ast_TypeInfo {
     return &Lns_getFromMulti( arg1, 0 ).(*Ast_GenericTypeInfo).Ast_TypeInfo
 }
 // for 1230
-func TransUnit_convExp2_4683(arg1 []LnsAny) (*Types_Token, LnsAny, LnsAny, *LnsMap2_[*Ast_TypeInfo,*Ast_TypeInfo], *Nodes_ClassInheritInfo) {
+func TransUnit_convExp2_4694(arg1 []LnsAny) (*Types_Token, LnsAny, LnsAny, *LnsMap2_[*Ast_TypeInfo,*Ast_TypeInfo], *Nodes_ClassInheritInfo) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*LnsMap2_[*Ast_TypeInfo,*Ast_TypeInfo]), Lns_getFromMulti( arg1, 4 ).(*Nodes_ClassInheritInfo)
 }
 // for 1315
-func TransUnit_convExp2_5105(arg1 []LnsAny) (*Types_Token, LnsAny, *LnsList2_[*Ast_TypeInfo]) {
+func TransUnit_convExp2_5116(arg1 []LnsAny) (*Types_Token, LnsAny, *LnsList2_[*Ast_TypeInfo]) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ), Lns_getFromMulti( arg1, 2 ).(*LnsList2_[*Ast_TypeInfo])
 }
 // for 1357
-func TransUnit_convExp2_5325(arg1 []LnsAny) (*Types_Token, *LnsList2_[*Ast_AlternateTypeInfo]) {
+func TransUnit_convExp2_5336(arg1 []LnsAny) (*Types_Token, *LnsList2_[*Ast_AlternateTypeInfo]) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_AlternateTypeInfo])
 }
 // for 1379
-func TransUnit_convExp2_5433(arg1 []LnsAny) (*Types_Token, *TransUnitIF_NSInfo, *Nodes_ClassInheritInfo) {
+func TransUnit_convExp2_5444(arg1 []LnsAny) (*Types_Token, *TransUnitIF_NSInfo, *Nodes_ClassInheritInfo) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*TransUnitIF_NSInfo), Lns_getFromMulti( arg1, 2 ).(*Nodes_ClassInheritInfo)
 }
 // for 1547
-func TransUnit_convExp2_6306(arg1 []LnsAny) (*Types_Token, *LnsList2_[*Ast_AlternateTypeInfo]) {
+func TransUnit_convExp2_6317(arg1 []LnsAny) (*Types_Token, *LnsList2_[*Ast_AlternateTypeInfo]) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_AlternateTypeInfo])
 }
 // for 1805
-func TransUnit_convExp2_7676(arg1 []LnsAny) (*Types_Token, *LnsList2_[*Ast_AlternateTypeInfo]) {
+func TransUnit_convExp2_7687(arg1 []LnsAny) (*Types_Token, *LnsList2_[*Ast_AlternateTypeInfo]) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_AlternateTypeInfo])
 }
 // for 1829
-func TransUnit_convExp2_7801(arg1 []LnsAny) (*Types_Token, LnsInt, LnsAny) {
+func TransUnit_convExp2_7812(arg1 []LnsAny) (*Types_Token, LnsInt, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*Types_Token), Lns_getFromMulti( arg1, 1 ).(LnsInt), Lns_getFromMulti( arg1, 2 )
 }
 // for 1834
-func TransUnit_convExp2_7849(arg1 []LnsAny) (*LnsList2_[*Ast_TypeInfo], *Types_Token, *LnsList2_[*Nodes_RefTypeNode]) {
+func TransUnit_convExp2_7860(arg1 []LnsAny) (*LnsList2_[*Ast_TypeInfo], *Types_Token, *LnsList2_[*Nodes_RefTypeNode]) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsList2_[*Ast_TypeInfo]), Lns_getFromMulti( arg1, 1 ).(*Types_Token), Lns_getFromMulti( arg1, 2 ).(*LnsList2_[*Nodes_RefTypeNode])
 }
 // for 2098
-func TransUnit_convExp2_9302(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
+func TransUnit_convExp2_9313(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*Ast_TypeInfo), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*Types_Token)
 }
 // for 2113
-func TransUnit_convExp2_9398(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
+func TransUnit_convExp2_9409(arg1 []LnsAny) (LnsInt, *Ast_TypeInfo, LnsAny, *Types_Token) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*Ast_TypeInfo), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(*Types_Token)
 }
 // for 2863
@@ -527,51 +527,51 @@ func TransUnit_convExp2_2340(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 1068
-func TransUnit_convExp2_3821(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_3832(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 1169
-func TransUnit_convExp2_4396(arg1 []LnsAny) (bool, LnsAny) {
+func TransUnit_convExp2_4407(arg1 []LnsAny) (bool, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(bool), Lns_getFromMulti( arg1, 1 )
 }
 // for 1319
-func TransUnit_convExp2_5135(arg1 []LnsAny) *Ast_AlternateTypeInfo {
+func TransUnit_convExp2_5146(arg1 []LnsAny) *Ast_AlternateTypeInfo {
     return Lns_getFromMulti( arg1, 0 ).(*Ast_AlternateTypeInfo)
 }
 // for 1437
-func TransUnit_convExp2_5731(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_5742(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 1520
-func TransUnit_convExp2_6181(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_6192(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 1570
-func TransUnit_convExp2_6430(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_6441(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 1624
-func TransUnit_convExp2_6775(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_6786(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 1682
-func TransUnit_convExp2_7134(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_7145(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 1857
-func TransUnit_convExp2_7980(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_7991(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2160
-func TransUnit_convExp2_9734(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_9745(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2597
-func TransUnit_convExp2_11609(arg1 []LnsAny) (LnsAny, LnsAny) {
+func TransUnit_convExp2_11620(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 2766
-func TransUnit_convExp2_12620(arg1 []LnsAny) (*LnsMap2_[*Ast_TypeInfo,*Ast_TypeInfo], LnsAny) {
+func TransUnit_convExp2_12631(arg1 []LnsAny) (*LnsMap2_[*Ast_TypeInfo,*Ast_TypeInfo], LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsMap2_[*Ast_TypeInfo,*Ast_TypeInfo]), Lns_getFromMulti( arg1, 1 )
 }
 // for 2898
@@ -724,11 +724,11 @@ func TransUnit_convExp0_13880(arg1 []LnsAny) (*Nodes_Node, bool) {
 }
 type TransUnit_DeclClassMode = TransUnitIF_DeclClassMode
 // for 1569
-func TransUnit_convExp2_6401(arg1 []LnsAny) []LnsAny {
+func TransUnit_convExp2_6412(arg1 []LnsAny) []LnsAny {
     return Lns_2DDD( arg1[0:])
 }
 // for 1855
-func TransUnit_convExp2_7948(arg1 []LnsAny) []LnsAny {
+func TransUnit_convExp2_7959(arg1 []LnsAny) []LnsAny {
     return Lns_2DDD( arg1[0:])
 }
 // for 3535
@@ -4898,7 +4898,7 @@ func (self *TransUnit_TransUnit) checkOverrideMethod(_env *LnsEnv, overrideType 
                 _env.SetStackVal( retType.FP.Get_nonnilableType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__Alternate) &&
                 _env.SetStackVal( typeInfo.FP.Get_retTypeInfoList(_env).GetAt(index).FP.Get_nonnilableType(_env).FP.Get_kind(_env) != Ast_TypeInfoKind__Alternate) ).(bool)){
                 var mess string
-                mess = _env.GetVM().String_format("not support to override the method has generics at return type. -- %s", Lns_2DDD(funcName))
+                mess = _env.GetVM().String_format("not support to override the method has generics at return type. set the type parameter at the extend like '<T=%s>'-- %s", Lns_2DDD(typeInfo.FP.Get_retTypeInfoList(_env).GetAt(index).FP.GetTxt(_env, nil, nil, nil), funcName))
                 TransUnit_addErr(_env, mess)
             }
         }
@@ -5346,10 +5346,10 @@ func (self *TransUnit_TransUnit) analyzeDeclAlternateType(_env *LnsEnv, belongCl
         var interfaceList *LnsList2_[*Ast_TypeInfo]
         interfaceList = NewLnsList2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
         if workToken.Txt == ":"{
-            workToken, baseTypeInfo, interfaceList = TransUnit_convExp2_5105(Lns_2DDD(self.FP.analyzeExtend(_env, accessMode, token.Pos)))
+            workToken, baseTypeInfo, interfaceList = TransUnit_convExp2_5116(Lns_2DDD(self.FP.analyzeExtend(_env, accessMode, token.Pos)))
         }
         var altType *Ast_AlternateTypeInfo
-        altType = TransUnit_convExp2_5135(Lns_2DDD(self.ProcessInfo.FP.CreateAlternate(_env, belongClassFlag, altIndex, genericSymToken.Txt, accessMode, self.moduleType, baseTypeInfo, interfaceList, nil)))
+        altType = TransUnit_convExp2_5146(Lns_2DDD(self.ProcessInfo.FP.CreateAlternate(_env, belongClassFlag, altIndex, genericSymToken.Txt, accessMode, self.moduleType, baseTypeInfo, interfaceList, nil)))
         altTypeList.Insert(altType)
         if workToken.Txt == ">"{
             nextToken = self.FP.GetToken(_env, nil)
@@ -5406,7 +5406,7 @@ func (self *TransUnit_TransUnit) analyzeDeclProto(_env *LnsEnv, accessMode LnsIn
         _cond1_ := self.FP.analyzePushClass(_env, true, declMode, finalFlag, abstractFlag, firstToken, name, false, nil, nil, accessMode, altTypeList)
         if _cond1_ == nil { return nil }
         _cond1 := _cond1_.(*LnsTuple3[*Types_Token,*TransUnitIF_NSInfo,*Nodes_ClassInheritInfo])
-        nextToken, nsInfo, inheritInfo = TransUnit_expTuple2_5428(_cond1)
+        nextToken, nsInfo, inheritInfo = TransUnit_expTuple2_5439(_cond1)
         classTypeInfo = nsInfo.FP.Get_typeInfo(_env)
         nsInfo.FP.Set_nobody(_env, true)
         self.FP.PopClass(_env)

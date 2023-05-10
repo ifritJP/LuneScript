@@ -702,8 +702,8 @@ fn TransUnit.checkOverrideMethod(
             typeInfo.$retTypeInfoList[ index ].$nonnilableType.$kind ~= .Alternate
          {
             let mess =
-               "not support to override the method has generics at return type. -- %s"
-                (funcName);
+               "not support to override the method has generics at return type. set the type parameter at the extend like '<T=%s>'-- %s"
+                (typeInfo.$retTypeInfoList[ index ].getTxt(##), funcName);
             addErr( mess );
          }
       }

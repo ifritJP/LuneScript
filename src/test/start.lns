@@ -2143,3 +2143,24 @@ __test {
    }
    _hoge( a.b );
 }
+{
+   Macro._section();
+   class Hoge2 extend(__lns.it<T=int>) {
+      let mut index:int;
+      pub fn __init() {
+         self.index = 0;
+      }
+      pub fn hasNext() __async : bool {
+         return self.index < 10;
+      }
+      pub fn next() __async mut : T {
+         self.index = self.index + 1;
+         return self.index;
+      }
+   }
+
+   let mut hoge2 = new Hoge2();
+   while hoge2.hasNext() {
+      print( hoge2.next() );
+   }
+}
