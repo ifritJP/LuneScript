@@ -10,7 +10,7 @@ include Makefile.local
 endif
 
 
-.PHONY: build
+.PHONY: build test
 
 
 help:

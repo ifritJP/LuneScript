@@ -13,6 +13,7 @@ help_sub: help
 
 test:
 	$(LNSC) lns/main.lns -shebang "$(INFILE)" dummy.lns
+	$(LNSC) lns/main.lns -shebang test/shebang.lns dummy2.lns
 
 test_log:
 	$(LNSC) lns/main.lns -shebang -log "$(INFILE)" dummy.lns

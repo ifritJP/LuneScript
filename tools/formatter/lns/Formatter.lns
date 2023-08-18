@@ -418,6 +418,10 @@ class ParenInfo {
 }
 
 
+/**
+EBNF の構造を認識して format する。
+構文エラーがある場合は使えない。
+*/
 pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
    let tokenizer:Code.CodeTokenizerIF;
    /** 処理対象の行番号 */
@@ -646,6 +650,10 @@ pub class ParseCodeHook extend (Code.ParseCodeHookIF,Code.CodeTokenizerIF) {
 
 
 
+/**
+EBNF の構造を認識せずに "(" や "{" 等の特定の区切り文字だけで format する。
+コーディング中などで構文エラーがある場合を想定。
+*/
 pub class SimpleParser {
    let tokenizer:Code.CodeTokenizerIF;
    /** 処理対象の行番号 */
@@ -655,9 +663,12 @@ pub class SimpleParser {
    // 行番号 → インデント
    let line2Indent:Line2Indent;
    let parenInfoStack:List<ParenInfo>;
-   
+
+   let mut shebangToken:&LnsTypes.Token!;
 
    pub fn __init( tokenizer:Code.CodeTokenizerIF, startLineNo:int, endLineNo:int ) {
+
+      self.shebangToken = nil;
 
       let mut line2Indent = new Line2Indent();
       self.line2Indent = line2Indent;
@@ -715,7 +726,6 @@ pub class SimpleParser {
       
       return pos.lineNo < self.endLineNo;
    }
-
    
    fn checkKeyword( token:&LnsTypes.Token ) mut : &LnsTypes.Token! {
       {
@@ -749,7 +759,7 @@ pub class SimpleParser {
          not beginTxtSet.has( token.txt )
       {
          if not self.output( token, self.parenInfoStack[ #self.parenInfoStack ],
-                             process()** ) {
+                                                       process()** ) {
             return nil;
          }
       }
@@ -793,7 +803,19 @@ pub class SimpleParser {
          if indentTermTxtSet.has( token.txt ) {
             isWaitingFront = true;
          } else {
-            parenInfo.set_contToken( token );
+            if token.kind == .Sheb {
+               self.shebangToken = token;
+               isWaitingFront = true;
+            } else {
+               if! let shebangToken = self.shebangToken {
+                  if shebangToken.pos.lineNo ~= token.pos.lineNo {
+                     self.shebangToken = nil;
+                  }
+               }
+            }
+            if not self.shebangToken {
+               parenInfo.set_contToken( token );
+            }
          }
       }
 
