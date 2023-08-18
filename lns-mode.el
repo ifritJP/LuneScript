@@ -214,7 +214,7 @@
       (if (equal dir "/")
 	  (setq dir nil)
 	(setq dir (file-name-directory (directory-file-name dir)))))
-    dir
+    (or dir default-directory)
     ))
 
 (defun lns-get-proj-dir ()
