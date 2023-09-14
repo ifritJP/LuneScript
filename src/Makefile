@@ -576,16 +576,23 @@ test-comp-with-go:
 LNS_TEST_SRCS := $(addprefix $(LOG_DIR)/testing/,$(addsuffix .testing,$(LNS_SRCS)))
 
 $(LOG_DIR)/testing/%.testing: %.lns
-	$(LNSC) $< --testing ast > $@ 2>&1 && rm $@;
+	$(LNSC) $< --testing ast > $@ 2>&1 && rm $@ || exit 1;
 
 _test-testing-para: $(LNS_TEST_SRCS)
+
+# 単体テストコードを確認する
 _test-testing-exe:
 	mkdir -p $(LOG_DIR)/testing/lune/base
 	$(MAKE) _test-testing-para
 test-testing:
 	$(MAKE) _test-testing-exe LOG_DIR=work/0/log
+ifeq ($(WITH_GO),y)
+TESTING_JOBS=-j
+else
+TESTING_JOBS=-j5
+endif
 _test-testing_new:
-	$(MAKE) _test-testing-exe LOG_DIR=work/3/log LNSC=work/3/lnsc
+	$(MAKE) $(TESTING_JOBS) -C work/3 _test-testing-exe LOG_DIR=log
 
 
 test-registered-rockspec:
