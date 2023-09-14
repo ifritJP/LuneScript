@@ -111,6 +111,10 @@ endif
 endif
 
 
+# sort コマンドに環境依存があるので、 sort コマンドを使わずにソートするスクリプト
+SORT:=python3 -c 'import sys; print( "".join( sorted( sys.stdin.readlines() ) ) )'
+
+
 ifneq "$(wildcard Makefile.local)" ""
 include Makefile.local
 endif
@@ -255,7 +259,7 @@ LNS_SRCS += base/OutputDepend
 LNS_SRCS += base/Converter
 LNS_SRCS += base/glueFilter
 LNS_SRCS += base/front
-LNS_SRCS := $(addprefix "lune/",$(LNS_SRCS))
+LNS_SRCS := $(addprefix lune/,$(LNS_SRCS))
 
 define selfhost_buildOp_batch
 	echo $(LNS_SRCS) | sed 's/$$/.lns\n/g' | sed 's/ /.lns\n/g' |	\
@@ -568,6 +572,22 @@ test-comp-with-go:
 	$(MAKE) test-comp LANG_KIND=go WITH_GO=y LANG_KIND=go
 
 
+
+LNS_TEST_SRCS := $(addprefix $(LOG_DIR)/testing/,$(addsuffix .testing,$(LNS_SRCS)))
+
+$(LOG_DIR)/testing/%.testing: %.lns
+	$(LNSC) $< --testing ast > $@ 2>&1 && rm $@;
+
+_test-testing-para: $(LNS_TEST_SRCS)
+_test-testing-exe:
+	mkdir -p $(LOG_DIR)/testing/lune/base
+	$(MAKE) _test-testing-para
+test-testing:
+	$(MAKE) _test-testing-exe LOG_DIR=work/0/log
+_test-testing_new:
+	$(MAKE) _test-testing-exe LOG_DIR=work/3/log LNSC=work/3/lnsc
+
+
 test-registered-rockspec:
 	curl https://luarocks.org/manifests/ifritjp/lunescript-main-1.rockspec -o work/rockspec
 	@diff ../lunescript-main-1.rockspec work/rockspec || echo "====== need upload rockspec ======" && echo "ok"
@@ -708,7 +728,7 @@ test-error:
 
 define exeComp
 	echo lune | cat $3 - | $(call exeLune,$(LNSC),$1,$2,comp -i,$4) | \
-			json_pp --json_opt=canonical,pretty | sort -b
+			json_pp --json_opt=canonical,pretty | $(SORT)
 endef
 
 
@@ -771,7 +791,7 @@ COMP_TARGETS += test/comp9.lns@1_test/comp9.lns@2_4.3.comp
 
 # コード補完のテスト
 test-cmpl: $(COMP_TARGETS)
-	(find $(LOG_DIR) -type f | sort | \
+	(find $(LOG_DIR) -type f | $(SORT) | \
 		xargs -n 1 bash -c 'echo $$0 | sed "s@$(LOG_DIR)@@g"; cat $$0') >> $(LOG_FILE)
 
 
@@ -982,6 +1002,7 @@ test-parallel: test-org test-org-proj \
 			test-comp-go-new-2 test-comp-go-org-2 \
 			test-new test-new-proj test-new2 \
 			test-comp-go-new test-comp-go-org \
+			_test-testing_new \
 			test-formatter
 
 
@@ -1120,8 +1141,8 @@ endif
 
 
 define check-rockspec-op
-	@grep 'lune\.' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | sort > work/$1.list
-	@(cd $2; find lune -iname '*.lua' ) | grep -v runtime_go | sed 's@^@$3@g' | sort > work/$1.2.list
+	@grep 'lune\.' ../$1 | sed 's@.*src/@@g' | sed 's@\.lua.*@.lua@g' | $(SORT) > work/$1.list
+	@(cd $2; find lune -iname '*.lua' ) | grep -v runtime_go | sed 's@^@$3@g' | $(SORT) > work/$1.2.list
 	diff work/$1.list work/$1.2.list
 	@rm work/$1.list work/$1.2.list
 endef

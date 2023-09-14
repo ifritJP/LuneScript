@@ -174,8 +174,8 @@ __test {
 __test case1(ctrl) {
    LuaVer.setCurVer( 53 );
 
-   let mut front = new Front();
-   frontInterface.setFront( front );
+   //let mut front = new Front();
+   //frontInterface.setFront( front );
    
    
    let code = ```
