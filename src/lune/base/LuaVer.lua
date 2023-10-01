@@ -153,6 +153,7 @@ end
 
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
 
+
 local BitOp = {}
 _moduleObj.BitOp = BitOp
 BitOp._val2NameMap = {}
@@ -278,15 +279,20 @@ end
 local ver51 = LuaVerInfo._new(VerKind.v51, BitOp.Cant, false, false, false, "loadstring51", false, LuaMod.CodeKind.LoadStr51, {["package.searchpath"] = true})
 _moduleObj.ver51 = ver51
 
+
 local ver52 = LuaVerInfo._new(VerKind.v52, BitOp.HasMod, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver52 = ver52
+
 
 local ver53 = LuaVerInfo._new(VerKind.v53, BitOp.HasOp, true, true, true, "loadstring52", true, LuaMod.CodeKind.LoadStr52, {})
 _moduleObj.ver53 = ver53
 
+
 local kind2verMap = {[VerKind.v51] = _moduleObj.ver51, [VerKind.v52] = _moduleObj.ver52, [VerKind.v53] = _moduleObj.ver53}
 
+
 local curVer = nil
+
 local function setCurVer( ver )
 
    local verKind = VerKind._from( ver )
@@ -299,10 +305,12 @@ local function setCurVer( ver )
    curVer = _lune.unwrap( kind2verMap[verKind])
 end
 _moduleObj.setCurVer = setCurVer
+
 local function getCurVer(  )
 
    return _lune.unwrap( curVer)
 end
 _moduleObj.getCurVer = getCurVer
+
 
 return _moduleObj

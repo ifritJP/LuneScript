@@ -133,6 +133,7 @@ end
 
 
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+
 local function getFileLastModifiedTime( path )
 
    local file = io.open( path )
@@ -144,8 +145,6 @@ local function getFileLastModifiedTime( path )
          return nil
       end
    end
-   
-   
    local val
    
    do
@@ -158,19 +157,17 @@ local function getFileLastModifiedTime( path )
             val = nil
          end
       end
-      
    end
-   
    do
       local _exp = val
       if _exp ~= nil then
          return tonumber( _exp )
       end
    end
-   
    return nil
 end
 _moduleObj.getFileLastModifiedTime = getFileLastModifiedTime
+
 
 local function searchpath51( mod, pathPattern )
 
@@ -190,20 +187,16 @@ local function searchpath51( mod, pathPattern )
                      break
                   end
                end
-               
             end
          end
-         
       end
-      
    end
-   
    if target ~= "" then
       return target
    end
-   
    return nil
 end
+
 
 local function getLoadedMod(  )
 
@@ -213,30 +206,24 @@ local function getLoadedMod(  )
       local loaded = _lune.unwrap( _lune.nilacc( _lune.loadstring51( "return package.loaded" ), nil, 'call' ))
       ret = loaded
    end
-   
    return ret
 end
 _moduleObj.getLoadedMod = getLoadedMod
+
 
 local function profile( validTest, func, path )
 
    if not validTest then
       return func(  )
    end
-   
-   
-   local ProFi = require( 'ProFi' )
-   
-   ProFi:start(  )
-   
+   local ProFi = require( 'ProFi' )ProFi:start(  )
    local result = func(  )
-   
    ProFi:stop(  )
    ProFi:writeReport( path )
-   
    return result
 end
 _moduleObj.profile = profile
+
 
 local function getStackTrace(  )
 
@@ -248,31 +235,30 @@ local function getStackTrace(  )
             txt = txt .. string.format( "-- %s %s %s\n", tostring( debugInfo['short_src']), tostring( debugInfo['currentline']), tostring( debugInfo['name']))
          end
       end
-      
    end
-   
    return txt
 end
 _moduleObj.getStackTrace = getStackTrace
 
+
 local lua_version = nil
+
 local function getLuaVersion(  )
 
    if lua_version ~= nil then
       return lua_version
    end
-   
    local version
    
    do
       local loaded = _lune.nilacc( _lune.loadstring51( "return _VERSION" ), nil, 'call' )
       version = (_lune.unwrap( loaded) )
    end
-   
    lua_version = version:gsub( "^[^%d]+", "" )
    return version
 end
 _moduleObj.getLuaVersion = getLuaVersion
+
 
 local function getCurrentVer(  )
 
@@ -282,11 +268,12 @@ local function getCurrentVer(  )
    elseif luaVer >= "5.2" then
       return LuaVer.ver52
    end
-   
    return LuaVer.ver51
 end
 
+
 local curVer = getCurrentVer(  )
+
 
 local function setup( func )
 
@@ -296,7 +283,9 @@ _moduleObj.setup = setup
 
 
 
+
 local searchpathForm = searchpath51
+
 if curVer:get_hasSearchPath() then
    searchpathForm = (_lune.unwrap( _lune.nilacc( _G['package'], nil, 'item', 'searchpath')) )
 end
@@ -307,6 +296,7 @@ local function searchpath( mod, pathPattern )
    return searchpathForm( mod, pathPattern )
 end
 _moduleObj.searchpath = searchpath
+
 
 local function existFile( path )
 
@@ -322,34 +312,35 @@ local function existFile( path )
 end
 _moduleObj.existFile = existFile
 
+
 local function canUseChannel(  )
 
    return false
 end
 _moduleObj.canUseChannel = canUseChannel
+
 local function canUseAsync(  )
 
    return false
 end
 _moduleObj.canUseAsync = canUseAsync
 
+
 local function runMain( mainFunc, argList )
 
    local ret
    
    do
-      
       if mainFunc ~= nil then
          ret = (mainFunc )( argList )
       else
          ret = 1
       end
-      
    end
-   
    return ret
 end
 _moduleObj.runMain = runMain
+
 
 local function setupShebang(  )
 
@@ -367,36 +358,32 @@ end
                (mod )(  )
             end
          end
-         
       else
          print( mess )
       end
-      
    end
-   
 end
 _moduleObj.setupShebang = setupShebang
 
+
 local function getGOPATH(  )
 
-   local OS = require( "os" )
-   do
+   local OS = require( "os" )do
       local path = OS.getenv( "GOPATH" )
       if path ~= nil then
          return path
       end
    end
-   
    do
       local home = OS.getenv( "HOME" )
       if home ~= nil then
          return home .. "/go"
       end
    end
-   
    return nil
 end
 _moduleObj.getGOPATH = getGOPATH
+
 
 local function getBindLns( mod )
 
@@ -404,22 +391,27 @@ local function getBindLns( mod )
 end
 _moduleObj.getBindLns = getBindLns
 
+
 local function setRuntimeLog( valid )
 
 end
 _moduleObj.setRuntimeLog = setRuntimeLog
 
+
 local function setRuntimeThreadLimit( limit )
 
 end
 _moduleObj.setRuntimeThreadLimit = setRuntimeThreadLimit
+
 local function setRunnerLog( limit )
 
 end
 _moduleObj.setRunnerLog = setRunnerLog
+
 local function dumpRunnerLog( stream )
 
 end
 _moduleObj.dumpRunnerLog = dumpRunnerLog
+
 
 return _moduleObj

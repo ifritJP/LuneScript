@@ -242,10 +242,14 @@ end
 
 
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local Async = _lune.loadModule( 'lune.base.Async' )
 
+
 local luaKeywordSet = {["if"] = true, ["else"] = true, ["elseif"] = true, ["while"] = true, ["for"] = true, ["in"] = true, ["return"] = true, ["break"] = true, ["nil"] = true, ["true"] = true, ["false"] = true, ["{"] = true, ["}"] = true, ["do"] = true, ["require"] = true, ["function"] = true, ["then"] = true, ["end"] = true, ["repeat"] = true, ["until"] = true, ["goto"] = true, ["local"] = true}
+
 
 local function isLuaKeyword( txt )
 
@@ -253,21 +257,18 @@ local function isLuaKeyword( txt )
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
 
+
 local function createReserveInfo( luaMode )
 
    local keywordSet = {}
    local typeSet = {}
    local builtInSet = {}
-   
    builtInSet["require"]= true
    for key, __val in pairs( luaKeywordSet ) do
       if not _lune._Set_has(builtInSet, key ) then
          keywordSet[key]= true
       end
-      
    end
-   
-   
    if not luaMode then
       keywordSet["null"]= true
       keywordSet["let"]= true
@@ -288,7 +289,6 @@ local function createReserveInfo( luaMode )
       keywordSet["!"]= true
       keywordSet["unwrap"]= true
       keywordSet["sync"]= true
-      
       typeSet["int"]= true
       typeSet["real"]= true
       typeSet["stem"]= true
@@ -296,13 +296,10 @@ local function createReserveInfo( luaMode )
       typeSet["Map"]= true
       typeSet["bool"]= true
    end
-   
-   
    local multiCharDelimitMap = {}
    multiCharDelimitMap["="] = {"=="}
    multiCharDelimitMap["<"] = {"<="}
    multiCharDelimitMap[">"] = {">="}
-   
    if not luaMode then
       multiCharDelimitMap["|"] = {"|<", "|>"}
       multiCharDelimitMap["|<"] = {"|<<"}
@@ -326,18 +323,20 @@ local function createReserveInfo( luaMode )
       multiCharDelimitMap["."] = {".."}
       multiCharDelimitMap["~"] = {"~="}
    end
-   
-   
    return keywordSet, typeSet, builtInSet, multiCharDelimitMap
 end
 
+
 local quotedCharSet = {['a'] = true, ['b'] = true, ['f'] = true, ['n'] = true, ['r'] = true, ['t'] = true, ['v'] = true, ['\\'] = true, ['"'] = true, ["'"] = true}
+
 
 local op2Set = {['+'] = true, ['-'] = true, ['*'] = true, ['/'] = true, ['^'] = true, ['%'] = true, ['&'] = true, ['~'] = true, ['|'] = true, ['|>>'] = true, ['|<<'] = true, ['..'] = true, ['<'] = true, ['<='] = true, ['>'] = true, ['>='] = true, ['=='] = true, ['~='] = true, ['and'] = true, ['or'] = true, ['@'] = true, ['@@'] = true, ['@@@'] = true, ['='] = true}
 _moduleObj.op2Set = op2Set
 
 
+
 local op1Set = {['-'] = true, ['not'] = true, ['#'] = true, ['~'] = true, ['`{'] = true, [',,'] = true, [',,,'] = true, [',,,,'] = true}
+
 
 local function isOp2( ope )
 
@@ -345,11 +344,13 @@ local function isOp2( ope )
 end
 _moduleObj.isOp2 = isOp2
 
+
 local function isOp1( ope )
 
    return _lune._Set_has(op1Set, ope )
 end
 _moduleObj.isOp1 = isOp1
+
 
 local AsyncItem = {}
 setmetatable( AsyncItem, { ifList = {__AsyncItem,Mapping,} } )
@@ -395,11 +396,13 @@ end
 
 
 local defaultPipeSize = 100
+
 local function setDefaultPipeSize( size )
 
    defaultPipeSize = size
 end
 _moduleObj.setDefaultPipeSize = setDefaultPipeSize
+
 
 local MultiLineToken = {}
 setmetatable( MultiLineToken, { __index = Types.Token } )
@@ -469,8 +472,6 @@ end
 function Tokenizer:__init(streamName, stream, luaMode, overridePos, pipeSize) 
    local _
    Async.Pipe.__init( self,nil)
-   
-   
    self.stream = stream
    self.lineList = {}
    self.streamName = streamName
@@ -479,28 +480,21 @@ function Tokenizer:__init(streamName, stream, luaMode, overridePos, pipeSize)
    self.lineNo = 0
    self.prevToken = Types.noneToken
    self.luaMode = luaMode
-   
    local keywordSet, typeSet, _1, multiCharDelimitMap = createReserveInfo( luaMode )
-   
    self.multiCharDelimitMap = multiCharDelimitMap
-   
    self.token2kind = {}
    for txt, __val in pairs( keywordSet ) do
       self.token2kind[txt] = Types.TokenKind.Kywd
    end
-   
    for txt, __val in pairs( typeSet ) do
       self.token2kind[txt] = Types.TokenKind.Type
    end
-   
    for txt, __val in pairs( op1Set ) do
       self.token2kind[txt] = Types.TokenKind.Ope
    end
-   
    for txt, __val in pairs( _moduleObj.op2Set ) do
       self.token2kind[txt] = Types.TokenKind.Ope
    end
-   
 end
 function Tokenizer:setup(  )
 
@@ -515,7 +509,6 @@ function Tokenizer:setup(  )
       
       table.insert( lineList, line )
    end
-   
    self.lineList = lineList
    self.stream:close(  )
 end
@@ -528,16 +521,13 @@ function Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
          if stdinFile:get_mod() == mod then
             return Util.TxtStream._new(stdinFile:get_txt()), ""
          end
-         
       end
-      
       do
          local _exp = Util.openRd( path )
          if _exp ~= nil then
             return _exp, ""
          end
       end
-      
       return nil, string.format( "%s: failed to open -- %s", __func__, path)
    end
    local function createStreamWithBaseDir( mod, baseDir, path )
@@ -547,9 +537,7 @@ function Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
       else
          return createStream( mod, path )
       end
-      
    end
-   
    local function createStreamFrom(  )
    
       do
@@ -578,14 +566,11 @@ function Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
             return path, luaMode, stream, mess, pipeSize
          end
       end
-      
    end
-   
    local streamName, luaMode, stream, mess, pipeSize = createStreamFrom(  )
    if stream ~= nil then
       return Tokenizer._new(streamName, stream, luaMode, overridePos, pipeSize), ""
    end
-   
    return nil, mess
 end
 function Tokenizer:access(  )
@@ -617,7 +602,6 @@ function Runner._new( tokenizerSrc, stdinFile, overridePos )
 end
 function Runner:__init(tokenizerSrc, stdinFile, overridePos) 
    self.tokenizer, self.errMess = Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
-   
    do
       local _exp = self.tokenizer
       if _exp ~= nil then
@@ -625,11 +609,8 @@ function Runner:__init(tokenizerSrc, stdinFile, overridePos)
          if not _lune._run(self, 2, string.format( "tokenizer - %s", _exp:get_streamName()) ) then
             _exp:stop(  )
          end
-         
-         
       end
    end
-   
 end
 function Runner:run(  )
 
@@ -639,7 +620,6 @@ function Runner:run(  )
          _exp:run(  )
       end
    end
-   
 end
 function Runner._setmeta( obj )
   setmetatable( obj, { __index = Runner  } )
@@ -658,16 +638,14 @@ local function create( tokenizerSrc, stdinFile, overridePos, async )
       local runner = Runner._new(tokenizerSrc, stdinFile, overridePos)
       return runner:get_tokenizer(), runner:get_errMess()
    end
-   
    local tokenizer, mess = Tokenizer.create( tokenizerSrc, stdinFile, overridePos )
    if tokenizer ~= nil then
-      
       tokenizer:stop(  )
    end
-   
    return tokenizer, mess
 end
 _moduleObj.create = create
+
 
 function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endColumn )
 
@@ -685,10 +663,7 @@ function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endCo
             tokenKind = kind
          end
       end
-      
    end
-   
-   
    local consecutive = false
    if self.prevToken.pos.lineNo == lineNo and self.prevToken.pos.column + #self.prevToken.txt == tokenColumn then
       consecutive = true
@@ -700,12 +675,9 @@ function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endCo
             if endPos.lineNo == lineNo and endPos.column + 1 == tokenColumn then
                consecutive = true
             end
-            
          end
       end
-      
    end
-   
    local newToken
    
    if tokenLineNo ~= nil and endColumn ~= nil then
@@ -713,7 +685,6 @@ function Tokenizer:createInfo( tokenKind, token, tokenColumn, tokenLineNo, endCo
    else
       newToken = Types.Token._new(tokenKind, token, Types.Position.create( lineNo, tokenColumn, self.streamName, self.overridePos ), consecutive, {})
    end
-   
    self.prevToken = newToken
    return newToken
 end
@@ -730,7 +701,6 @@ function Tokenizer:analyzeNumber( token, beginIndex )
    local intFlag = true
    local nonNumChar = string.byte( token, nonNumIndex )
    if nonNumChar == 46 then
-      
       intFlag = false
       nonNumIndex = token:find( '[^%d]', nonNumIndex + 1 )
       if  nil == nonNumIndex then
@@ -739,12 +709,9 @@ function Tokenizer:analyzeNumber( token, beginIndex )
          return #token, intFlag
       end
       
-      
       nonNumChar = string.byte( token, nonNumIndex )
    end
-   
    if nonNumChar == 88 or nonNumChar == 120 then
-      
       nonNumIndex = token:find( '[^%da-fA-F]', nonNumIndex + 1 )
       if  nil == nonNumIndex then
          local _nonNumIndex = nonNumIndex
@@ -754,13 +721,10 @@ function Tokenizer:analyzeNumber( token, beginIndex )
       
       nonNumChar = string.byte( token, nonNumIndex )
    end
-   
    if nonNumChar == 69 or nonNumChar == 101 then
-      
       intFlag = false
       local nextChar = string.byte( token, nonNumIndex + 1 )
       if nextChar == 45 or nextChar == 43 then
-         
          nonNumIndex = token:find( '[^%d]', nonNumIndex + 2 )
          if  nil == nonNumIndex then
             local _nonNumIndex = nonNumIndex
@@ -778,9 +742,7 @@ function Tokenizer:analyzeNumber( token, beginIndex )
          end
          
       end
-      
    end
-   
    return nonNumIndex - 1, intFlag
 end
 
@@ -790,10 +752,15 @@ function Tokenizer:readLine(  )
    if self.lineNo >= #self.lineList then
       return nil
    end
-   
    self.lineNo = self.lineNo + 1
    return self.lineList[self.lineNo]
 end
+
+local function getDelimitIndex( txt, index )
+
+   return (string.find( txt, '[^%w_]', index ) )
+end
+_moduleObj.getDelimitIndex = getDelimitIndex
 
 function Tokenizer:addVal( list, kind, val, column )
 
@@ -801,11 +768,8 @@ function Tokenizer:addVal( list, kind, val, column )
       table.insert( list, self:createInfo( kind, val, column ) )
       return 
    end
-   
-   
    local searchIndex = 1
    while true do
-      
       local tokenIndex, tokenEndIndex = string.find( val, "[%p%w]+", searchIndex )
       if  nil == tokenIndex or  nil == tokenEndIndex then
          local _tokenIndex = tokenIndex
@@ -820,28 +784,24 @@ function Tokenizer:addVal( list, kind, val, column )
       local subIndex = 1
       while #token >= subIndex do
          if token:find( '^[%d]', subIndex ) or string.byte( token, subIndex ) == 45 and token:find( '^[%d]', subIndex + 1 ) then
-            
             local checkIndex = subIndex
             if string.byte( token, checkIndex ) == 45 then
                checkIndex = checkIndex + 1
             end
-            
             local endIndex, intFlag = self:analyzeNumber( token, checkIndex )
             local info = self:createInfo( intFlag and Types.TokenKind.Int or Types.TokenKind.Real, token:sub( subIndex, endIndex ), columnIndex + subIndex )
             table.insert( list, info )
             subIndex = endIndex + 1
          else
           
-            
             do
-               local _exp = string.find( token, '[^%w_]', subIndex )
+               local _exp = getDelimitIndex( token, subIndex )
                if _exp ~= nil then
                   local index = _exp
                   if index > subIndex then
                      local info = self:createInfo( Types.TokenKind.Symb, token:sub( subIndex, index - 1 ), columnIndex + subIndex )
                      table.insert( list, info )
                   end
-                  
                   local delimit = token:sub( index, index )
                   local candidateList = self.multiCharDelimitMap[delimit]
                   while candidateList do
@@ -853,26 +813,19 @@ function Tokenizer:addVal( list, kind, val, column )
                            findFlag = true
                            break
                         end
-                        
                      end
-                     
                      if not findFlag then
                         break
                      end
-                     
                   end
-                  
                   subIndex = index + #delimit
-                  
                   local workKind = Types.TokenKind.Dlmt
                   if _lune._Set_has(_moduleObj.op2Set, delimit ) or _lune._Set_has(op1Set, delimit ) then
                      workKind = Types.TokenKind.Ope
                   end
-                  
                   if delimit == "..." then
                      workKind = Types.TokenKind.Symb
                   end
-                  
                   if delimit == "?" then
                      local nextChar = token:sub( index, subIndex )
                      table.insert( list, self:createInfo( Types.TokenKind.Char, nextChar, columnIndex + subIndex ) )
@@ -881,22 +834,16 @@ function Tokenizer:addVal( list, kind, val, column )
                    
                      table.insert( list, self:createInfo( workKind, delimit, columnIndex + index ) )
                   end
-                  
                else
                   if subIndex <= #token then
                      table.insert( list, self:createInfo( Types.TokenKind.Symb, token:sub( subIndex ), columnIndex + subIndex ) )
                   end
-                  
                   break
                end
             end
-            
          end
-         
       end
-      
    end
-   
 end
 
 
@@ -916,10 +863,7 @@ function Tokenizer:parse(  )
          local token = Types.Token._new(Types.TokenKind.Sheb, rawLine, Types.Position._new(self.lineNo, 1, self.streamName), false, {})
          return {token}
       end
-      
    end
-   
-   
    local function multiComment( comIndex, termStr )
    
       local searchIndex = comIndex
@@ -932,7 +876,6 @@ function Tokenizer:parse(  )
                return comment, termEndIndex + 1
             end
          end
-         
          comment = comment .. rawLine:sub( searchIndex ) .. "\n"
          searchIndex = 1
          do
@@ -943,27 +886,18 @@ function Tokenizer:parse(  )
                return comment, -1
             end
          end
-         
       end
-      
    end
-   
-   
    local startIndex = 1
-   
    local searchIndex = startIndex
-   
    local function getChar( index )
    
       if #rawLine >= index then
          return string.byte( rawLine, index )
       end
-      
       return 0
    end
-   
    local list = {}
-   
    while true do
       local syncIndexFlag = true
       local pattern = [==[[/%-%?"%'%`].]==]
@@ -971,15 +905,12 @@ function Tokenizer:parse(  )
       if  nil == index then
          local _index = index
       
-         
          self:addVal( list, Types.TokenKind.Symb, rawLine:sub( startIndex ), startIndex )
          return list
       end
       
-      
       local findChar = getChar( index )
       local nextChar = getChar( index + 1 )
-      
       if findChar == 45 and nextChar ~= 45 then
          searchIndex = index + 1
          syncIndexFlag = false
@@ -988,9 +919,7 @@ function Tokenizer:parse(  )
          if startIndex < index then
             self:addVal( list, Types.TokenKind.Symb, rawLine:sub( startIndex, index - 1 ), startIndex )
          end
-         
          if findChar == 39 or findChar == 34 then
-            
             local workIndex = index + 1
             local workPattern = '["\'\\]'
             while true do
@@ -998,43 +927,34 @@ function Tokenizer:parse(  )
                if  nil == endIndex then
                   local _endIndex = endIndex
                
-                  
                   Util.err( string.format( "%s:%d:%d: error: illegal string -- %s", self.streamName, self.lineNo, index, rawLine) )
                end
                
                local workChar = string.byte( rawLine, endIndex )
                if workChar == findChar then
-                  
                   self:addVal( list, Types.TokenKind.Str, rawLine:sub( index, endIndex ), index )
                   searchIndex = endIndex + 1
                   break
                elseif workChar == 92 then
-                  
                   workIndex = endIndex + 2
                else
                 
                   workIndex = endIndex + 1
                end
-               
             end
-            
          elseif findChar == 96 then
             if (nextChar == findChar and getChar( index + 2 ) == 96 ) then
-               
                local lineNo = self.lineNo
                local txt, nextIndex = multiComment( index + 3, '```' )
-               
                table.insert( list, self:createInfo( Types.TokenKind.Str, '```' .. txt, index, lineNo, nextIndex - 1 ) )
                if nextIndex == -1 then
                   return list
                end
-               
                searchIndex = nextIndex
             elseif nextChar == 123 then
                self:addVal( list, Types.TokenKind.Ope, '`{', index )
                searchIndex = index + 2
             end
-            
          elseif findChar == 63 then
             local codeChar = rawLine:sub( index + 1, index + 1 )
             if nextChar == 92 then
@@ -1045,35 +965,27 @@ function Tokenizer:parse(  )
                 
                   codeChar = quoted
                end
-               
                searchIndex = index + 3
             else
              
                searchIndex = index + 2
             end
-            
             self:addVal( list, Types.TokenKind.Char, codeChar, index )
          else
           
             if self.luaMode and findChar == 45 and nextChar == 45 then
-               
                self:addVal( list, Types.TokenKind.Cmnt, rawLine:sub( index ), index )
                searchIndex = #rawLine + 1
             elseif findChar == 47 then
-               
                if nextChar == 42 then
-                  
                   local lineNo = self.lineNo
                   local comment, nextIndex = multiComment( index + 2, "*/" )
-                  
                   table.insert( list, self:createInfo( Types.TokenKind.Cmnt, "/*" .. comment, index, lineNo, nextIndex - 1 ) )
                   if nextIndex == -1 then
                      return list
                   end
-                  
                   searchIndex = nextIndex
                elseif nextChar == 47 then
-                  
                   self:addVal( list, Types.TokenKind.Cmnt, rawLine:sub( index ), index )
                   searchIndex = #rawLine + 1
                else
@@ -1081,22 +993,16 @@ function Tokenizer:parse(  )
                   self:addVal( list, Types.TokenKind.Ope, "/", index )
                   searchIndex = index + 1
                end
-               
             else
              
                Util.err( string.format( "%s:%d:%d: error: illegal syntax -- %s", self.streamName, self.lineNo, index, rawLine) )
             end
-            
          end
-         
       end
-      
       if syncIndexFlag then
          startIndex = searchIndex
       end
-      
    end
-   
 end
 
 

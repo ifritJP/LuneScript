@@ -1311,6 +1311,9 @@ fn TransUnit.evalMacroOp(
    firstToken: &Tokenizer.Token, macroTypeInfo: &Ast.TypeInfo,
    expList: &Nodes.ExpListNode!, evalMacroCallback:Macro.EvalMacroCallback ) mut
 {
+   let prev = __lns.runtime.time();
+
+   
    let mut tokenizer, mess = self.macroCtrl.evalMacroOp(
       self.moduleType, self.tokenizer.getStreamName(),
       firstToken, macroTypeInfo, expList );
@@ -1344,6 +1347,9 @@ fn TransUnit.evalMacroOp(
                           "remain macro expand-statement token -- '%s'" (nextToken.txt) );
       }
    }
+
+
+   self.macroCtrl.addProcessMilliSec( __lns.runtime.time() - prev );
 }
 
 
@@ -4279,6 +4285,20 @@ fn TransUnit.analyzeExpOp2(
    }
 }
 
+/**
+マクロの stat `{} を解析する。
+
+具体的には、以下の `{print();} 部分を解析する。
+
+ex.
+macro _hoge() {
+{ let val = `{print();}; }
+,,val;
+}
+
+
+
+*/
 fn TransUnit.analyzeExpMacroStat( firstToken: &Tokenizer.Token ) mut : Nodes.ExpMacroStatNode {
    let mut expStrList: List<&Nodes.Node> = [];
 

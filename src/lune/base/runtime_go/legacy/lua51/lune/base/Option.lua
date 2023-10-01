@@ -201,24 +201,38 @@ end
 
 
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+
 local AsyncTokenizer = _lune.loadModule( 'lune.base.AsyncTokenizer' )
+
 local Json = _lune.loadModule( 'lune.base.Json' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local LuaMod = _lune.loadModule( 'lune.base.LuaMod' )
+
 local Ver = _lune.loadModule( 'lune.base.Ver' )
+
 local LuaVer = _lune.loadModule( 'lune.base.LuaVer' )
+
 local Depend = _lune.loadModule( 'lune.base.Depend' )
+
 local Log = _lune.loadModule( 'lune.base.Log' )
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
+
 
 
 
 local function getBuildCount(  )
 
-   return 13990
+   return 14029
 end
+
+
 
 
 local ModeKind = {}
@@ -310,6 +324,7 @@ local function getRuntimeModule(  )
    return string.format( "lune.base.runtime%d", Ver.luaModVersion)
 end
 _moduleObj.getRuntimeModule = getRuntimeModule
+
 
 local Int2strMode = {}
 _moduleObj.Int2strMode = Int2strMode
@@ -419,22 +434,18 @@ function Option:openDepend( relPath )
              
                filePath = string.format( "%s/%s", path, relPath)
             end
-            
          else
             filePath = path
          end
-         
          return (io.open( filePath, "w" ) )
       end
    end
-   
    do
       local path = self.dependsPath
       if path ~= nil then
          return (io.open( path, "w" ) )
       end
    end
-   
    return nil
 end
 function Option._setmeta( obj )
@@ -476,16 +487,13 @@ local function outputLuneMod( path )
       if path ~= "" then
          lune_path = path
       end
-      
    end
-   
    local fileObj = io.open( lune_path, "w" )
    if  nil == fileObj then
       local _fileObj = fileObj
    
       return string.format( "failed to open -- %s", lune_path)
    end
-   
    
    fileObj:write( [==[
 --[[
@@ -512,21 +520,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 ]==] )
-   
    for __index, kind in ipairs( LuaMod.CodeKind.get__allList() ) do
       fileObj:write( LuaMod.getCode( kind ) )
    end
-   
-   
    fileObj:close(  )
    return nil
 end
 _moduleObj.outputLuneMod = outputLuneMod
 
+
 local function analyze( argList )
    local __func__ = '@lune.@base.@Option.analyze'
 
-   
    local function printUsage( code )
    
       Util.println( [==[
@@ -592,18 +597,14 @@ usage:
 ]==] )
       os.exit( code )
    end
-   
    local option = Option._new()
    local useStdInFlag = false
    local lineNo = nil
    local column = nil
-   
    local index = 1
-   
    do
       local file = io.open( "lune.js", "r" )
       if file ~= nil then
-         
          local ProjInfo = {}
          setmetatable( ProjInfo, { ifList = {Mapping,} } )
          function ProjInfo._setmeta( obj )
@@ -637,41 +638,39 @@ end
 
          function ProjInfo._fromMapSub( obj, val )
             local memInfo = {}
-            table.insert( memInfo, { name = "cmd_option", func = _lune._toList, nilable = false, child = { { func = _lune._toStr, nilable = false, child = {} } } } )
+            table.insert( memInfo, { name = "cmd_option", func = _lune._toList, nilable = true, child = { { func = _lune._toStr, nilable = false, child = {} } } } )
             local result, mess = _lune._fromMap( obj, val, memInfo )
    if not result then
       return nil, mess
    end
    return obj
 end
-         
          local projInfo, mess = ProjInfo._fromStem( (Json.fromStr( file:read( "*a" ) or "" ) ) )
          if projInfo ~= nil then
             local workArgList = {}
-            for __index, arg in ipairs( projInfo.cmd_option ) do
-               table.insert( workArgList, arg )
+            do
+               local cmd_option = projInfo.cmd_option
+               if cmd_option ~= nil then
+                  for __index, arg in ipairs( cmd_option ) do
+                     table.insert( workArgList, arg )
+                  end
+               end
             end
-            
             for __index, arg in ipairs( argList ) do
                table.insert( workArgList, arg )
             end
-            
             argList = workArgList
          else
             print( "failed to load -- lune.js", mess )
          end
-         
          file:close(  )
       end
    end
-   
-   
    local function getNextOp(  )
    
       if #argList <= index then
          return nil
       end
-      
       index = index + 1
       return argList[index]
    end
@@ -683,10 +682,8 @@ end
             return nextOp
          end
       end
-      
       printUsage( 1 )
    end
-   
    local function getNextOpInt(  )
    
       do
@@ -695,16 +692,12 @@ end
             return math.floor(num)
          end
       end
-      
       printUsage( 1 )
    end
-   
    Util.setDebugFlag( false )
-   
    local uptodateOpt = nil
    while #argList >= index do
       local arg = argList[index]
-      
       if arg:find( "^-" ) then
          if option.mode ~= ModeKind.Shebang then
             do
@@ -733,19 +726,16 @@ end
                   if option.transCtrlInfo.threadPerUnitThread < 0 then
                      printUsage( 1 )
                   end
-                  
                elseif _switchExp == "--convGoRunnerNum" then
                   option.convGoRunnerNum = getNextOpInt(  )
                   if option.convGoRunnerNum < 0 then
                      printUsage( 1 )
                   end
-                  
                elseif _switchExp == "--macroAsyncParseStmtLen" then
                   option.transCtrlInfo.macroAsyncParseStmtLen = getNextOpInt(  )
                   if option.transCtrlInfo.macroAsyncParseStmtLen < 0 then
                      printUsage( 1 )
                   end
-                  
                elseif _switchExp == "--legacyNewName" then
                   option.legacyNewName = true
                elseif _switchExp == "--enableMacroAsync" then
@@ -760,6 +750,8 @@ end
                   option.transCtrlInfo.defaultGenInherit = false
                elseif _switchExp == "--defaultAsync" then
                   option.transCtrlInfo.defaultAsync = true
+               elseif _switchExp == "--disableAsyncTokenizer" then
+                  option.transCtrlInfo.asyncTokenizer = false
                elseif _switchExp == "--limitThread" then
                   local nextArg = getNextOp(  )
                   if  nil == nextArg then
@@ -790,7 +782,6 @@ end
                elseif _switchExp == "--builtin" then
                   local builtin = Builtin.Builtin._new(option.targetLuaVer, option.transCtrlInfo)
                   local builtinFunc = builtin:registBuiltInScope(  )
-                  
                   do
                      local __sorted = {}
                      local __map = Ast.getBuiltInTypeIdMap(  )
@@ -807,7 +798,6 @@ end
                         end
                      end
                   end
-                  
                   os.exit( 0 )
                elseif _switchExp == "-mklunemod" then
                   local path = getNextOp(  )
@@ -818,7 +808,6 @@ end
                         os.exit( 1 )
                      end
                   end
-                  
                   os.exit( 0 )
                elseif _switchExp == "--mkbuiltin" then
                   local path = getNextOp(  )
@@ -872,7 +861,6 @@ end
                            os.exit( 1 )
                      end
                   end
-                  
                elseif _switchExp == "--app" then
                   do
                      local _exp = getNextOp(  )
@@ -880,7 +868,6 @@ end
                         option.appName = _exp
                      end
                   end
-                  
                elseif _switchExp == "--main" then
                   do
                      local _exp = getNextOp(  )
@@ -888,7 +875,6 @@ end
                         option.mainModule = _exp
                      end
                   end
-                  
                elseif _switchExp == "--log" then
                   do
                      local txt = getNextOp(  )
@@ -901,10 +887,8 @@ end
                               Util.errorLog( string.format( "illegal level -- %s", txt) )
                            end
                         end
-                        
                      end
                   end
-                  
                elseif _switchExp == "--testing" then
                   option.testing = true
                   option.transCtrlInfo.testing = true
@@ -943,32 +927,26 @@ end
                               option.targetLuaVer = LuaVer.ver53
                            end
                         end
-                        
                      end
                   end
-                  
                elseif _switchExp == "-ob0" or _switchExp == "-ob1" then
                   option.byteCompile = true
                   if arg == "-ob0" then
                      option.stripDebugInfo = true
                   end
-                  
                else 
                   
                      Util.log( string.format( "unknown option -- '%s'", arg) )
                      os.exit( 1 )
                end
             end
-            
          else
           
             if #option.shebangArgList == 0 then
                table.insert( option.shebangArgList, option.scriptPath )
             end
-            
             table.insert( option.shebangArgList, arg )
          end
-         
       else
        
          if option.scriptPath == "" then
@@ -976,7 +954,6 @@ end
             if option.mode == ModeKind.Shebang then
                table.insert( option.shebangArgList, option.scriptPath )
             end
-            
          elseif option.mode == "" then
             do
                local mode = ModeKind._from( arg )
@@ -986,7 +963,6 @@ end
                   Util.err( string.format( "unknown mode -- %s", arg) )
                end
             end
-            
          else
           
             do
@@ -1000,30 +976,22 @@ end
                      column = math.floor((_lune.unwrapDefault( tonumber( arg ), 0) ))
                      option.analyzePos = Tokenizer.Position._new(_lune.unwrap( lineNo), _lune.unwrap( column), Util.scriptPath2Module( option.scriptPath ))
                   end
-                  
                elseif _switchExp == ModeKind.Save or _switchExp == ModeKind.SaveMeta or _switchExp == ModeKind.Glue then
                   option.outputDir = arg
                elseif _switchExp == ModeKind.Shebang then
                   if #option.shebangArgList == 0 then
                      table.insert( option.shebangArgList, option.scriptPath )
                   end
-                  
                   table.insert( option.shebangArgList, arg )
                else 
                   
                      option.outputDir = arg
                end
             end
-            
          end
-         
       end
-      
-      
       index = index + 1
    end
-   
-   
    if uptodateOpt ~= nil then
       do
          local _switchExp = uptodateOpt
@@ -1040,18 +1008,12 @@ end
                Util.errorLog( "illegal mode -- " .. uptodateOpt )
          end
       end
-      
    end
-   
-   
    if option.mode ~= ModeKind.Builtin then
       if option.scriptPath == "" or option.mode == ModeKind.Unknown then
          printUsage( (#argList == 0 or argList[1] == "" ) and 0 or 1 )
       end
-      
    end
-   
-   
    if useStdInFlag then
       local code = io.stdin:read( "*a" )
       if  nil == code then
@@ -1067,12 +1029,8 @@ end
          if option.scriptPath ~= "" then
             option.stdinFile = Types.StdinFile._new(Util.scriptPath2Module( option.scriptPath ), code)
          end
-         
       end
-      
    end
-   
-   
    if option.scriptPath == "@-" then
       while true do
          local line = io.stdin:read( "*l" )
@@ -1085,22 +1043,20 @@ end
          if #line > 0 then
             table.insert( option.batchList, line )
          end
-         
       end
-      
    end
-   
-   
-   Log.log( Log.Level.Log, __func__, 779, function (  )
+   Log.log( Log.Level.Log, __func__, 785, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )
-   end )
+   end
+    )
    
    
    return option
 end
 _moduleObj.analyze = analyze
+
 
 local function createDefaultOption( pathList, projDir )
 
@@ -1113,10 +1069,7 @@ local function createDefaultOption( pathList, projDir )
       for __index, path in ipairs( pathList ) do
          table.insert( option.batchList, path )
       end
-      
    end
-   
-   
    option.useLuneModule = getRuntimeModule(  )
    option.useIpairs = true
    if projDir ~= nil then
@@ -1127,14 +1080,12 @@ local function createDefaultOption( pathList, projDir )
           
             option.projDir = projDir
          end
-         
       end
-      
    end
-   
    return option
 end
 _moduleObj.createDefaultOption = createDefaultOption
+
 
 
 

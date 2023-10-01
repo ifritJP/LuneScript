@@ -525,6 +525,14 @@ test-comp:
 	@echo start to build 
 	@LANG= date
 
+# .# ファイルがあると途中でテストが失敗するので、最初に確認する。
+# なお、 .# ファイルは emacs の自動バックアップファイル
+	@if test "$$(find lune -iname '.#*.lns')" != ""; then	\
+		echo "error found invalid file file.";		\
+		exit 1;						\
+	fi
+
+
 	$(MAKE) build-countup
 	rm -rf work/*
 	mkdir -p work/glue
@@ -630,6 +638,7 @@ TEST_CASE += class7.lns
 TEST_CASE += class8.lns
 TEST_CASE += class9.lns
 TEST_CASE += class10.lns
+TEST_CASE += class11.lns
 TEST_CASE += depend.lns
 TEST_CASE += provide1.lns
 TEST_CASE += provide2.lns
@@ -1011,6 +1020,18 @@ test-parallel: test-org test-org-proj \
 			test-comp-go-new test-comp-go-org \
 			_test-testing_new \
 			test-formatter
+test-serial:
+	$(MAKE) test-org
+	$(MAKE) test-org-proj
+	$(MAKE) test-comp-go-new-2
+	$(MAKE) test-comp-go-org-2
+	$(MAKE) test-new
+	$(MAKE) test-new-proj
+	$(MAKE) test-new2
+	$(MAKE) test-comp-go-new
+	$(MAKE) test-comp-go-org
+	$(MAKE) _test-testing_new
+	$(MAKE) test-formatter
 
 
 # 元の lnsc で test-go を実行
@@ -1119,7 +1140,17 @@ endif
 	cp -a work/3 work/err_new
 
 
+ifndef TEST_SERIAL
 	$(MAKE) test-parallel
+else
+# -j で全てのテストを並列で実行すると、
+# エラーした際のエラー個所の特定が困難になる。
+# とはいえ、 -j 指定しないと今度はテストに時間がかかり過ぎる。
+# その場合に、   TEST_SERIAL=y を指定し、カテゴリの異なるテストは並列に行なわない
+# ように制御する。
+	$(MAKE) test-serial
+endif
+
 ifndef SKIP_PROJ_TEST
 	cat work/0/log/proj >> work/test1.result
 	cat work/3/log/proj >> work/test2.result
@@ -1999,6 +2030,17 @@ goprof-measure:
 goprof:
 	$(call test-buildlns-setup,work/go)
 	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
+	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
+	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
+
+PROF_ONE_SRC=lune/base/Nodes
+goprof-one:
+	$(call test-buildlns-setup,work/go)
+	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo)
+	touch work/go/$(PROF_ONE_SRC).*
+	echo $(PROF_ONE_SRC).lns | (cd .; $(LNSC_GO) @- SAVE work/go $(BYTECOMP)	\
+			--package lnsc $(COM_OPT) $(LOG_OPT) -prof)
+
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
 view-goprof:

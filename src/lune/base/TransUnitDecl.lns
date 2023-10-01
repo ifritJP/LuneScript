@@ -2009,170 +2009,169 @@ fn TransUnit.analyzeDeclMember(
    classTypeInfo: &Ast.TypeInfo, accessMode: Ast.AccessMode,
    staticFlag: bool, firstToken: &Tokenizer.Token ) mut: Nodes.DeclMemberNode
 {
-      let mut nextToken = self.getToken(##);
-      let mut mutMode = Ast.MutMode.IMut;
-      switch nextToken.txt {
-         case "mut" {
-            mutMode = .Mut;
-            nextToken = self.getToken(##);
+   let mut nextToken = self.getToken(##);
+   let mut mutMode = Ast.MutMode.IMut;
+   switch nextToken.txt {
+      case "mut" {
+         mutMode = .Mut;
+         nextToken = self.getToken(##);
+      }
+      case "allmut" {
+         mutMode = .AllMut;
+         nextToken = self.getToken(##);
+      }
+   }
+   let varName = self.checkSymbol( nextToken, .MustNot_ );
+   self.checkNextToken( ":" );
+   //let mut token = self.getToken(##);
+   let refType = self.analyzeRefType(
+      accessMode, false,
+      Ast.isPubToExternal( classTypeInfo.$accessMode ), false, false);
+   let mut token = self.getToken(##);
+
+   if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ## ) {
+      if mutMode ~= .IMut {
+         self.addErrMess(
+            varName.pos,
+            "__absimmut can't have mutable member. -- %s" (varName.txt));
+      }
+      if not Ast.TypeInfo.canBeAbsImmutMember( refType.$expType ) {
+         self.addErrMess(
+            refType.$pos,
+            "__absimmut can't have member of mutable type. -- %s"
+               (refType.$expType.getTxt(##)));
+      }
+   }
+      
+   if refType.$expType.$asyncMode == .Transient {
+      self.addErrMess( refType.$pos,
+                       "can't hold with the type of __trans. -- %s"
+                          (varName.txt) );
+   }
+
+   // accessor
+   let mut getterMode = Ast.AccessMode.None;
+   let mut getterRetType = refType.$expType;
+   let mut getterToken:&Types.Token! = nil;
+   let mut getterMutable = Ast.MutMode.Mut;
+   let mut setterMode = Ast.AccessMode.None;
+   let mut setterToken:&Types.Token! = nil;
+   if token.txt == "{" {
+      fn analyzeAccessorMode():
+         Ast.AccessMode, &Ast.TypeInfo, &Tokenizer.Token, &Tokenizer.Token
+      {
+         let mut retType = Ast.headTypeInfo;
+         let mut mode = Ast.AccessMode.None;
+         let mut accessorToken = self.getToken(##);
+         let mut workToken = accessorToken;
+         switch workToken.txt {
+            case "pub", "pri", "pro", "local" {
+               mode = unwrap Ast.txt2AccessMode( workToken.txt );
+               workToken = self.getToken(##);
+               if workToken.txt == "&" {
+                  getterMutable = .IMut;
+                  workToken = self.getToken(##);
+               }
+               if workToken.txt == ":" {
+                  let typeNode = self.analyzeRefType(
+                     mode, false,
+                     Ast.isPubToExternal( classTypeInfo.$accessMode ),
+                     false, false ); 
+                  retType = typeNode.$expType;
+                  workToken = self.getToken(##);
+               }
+            }
+            case "non" {
+               workToken = self.getToken(##);
+            }
+            default {
+               self.addErrMess( workToken.pos,
+                                "access mode is invalid -- %s" (workToken.txt) );
+            }
          }
-         case "allmut" {
-            mutMode = .AllMut;
-            nextToken = self.getToken(##);
+         return mode, retType, accessorToken, workToken;
+      }
+
+      {
+         let workRetType;
+         getterMode, workRetType, getterToken, nextToken = analyzeAccessorMode();
+         if workRetType ~= Ast.headTypeInfo {
+            if not workRetType.canEvalWith(
+               self.processInfo, getterRetType, .SetOp,
+               classTypeInfo.createAlt2typeMap( false ) )
+            {
+               self.addErrMess( firstToken.pos,
+                                "getter type mismatch -- %s <- %s"
+                                   (workRetType.getTxt(##), getterRetType.getTxt(##)));
+            }
+            getterRetType = workRetType;
          }
       }
-      let varName = self.checkSymbol( nextToken, .MustNot_ );
-      let mut token = self.getToken(##);
-      let refType = self.analyzeRefType(
-         accessMode, false,
-         Ast.isPubToExternal( classTypeInfo.$accessMode ), false, false);
-      token = self.getToken(##);
-
-      if classTypeInfo.isInheritFrom( self.processInfo, Ast.builtinTypeAbsImmut ## ) {
-         if mutMode ~= .IMut {
+      if nextToken.txt == "," {
+         let dummyRetType;
+         setterMode, dummyRetType, setterToken, nextToken = analyzeAccessorMode();
+         if setterMode ~= .None and mutMode == .IMut {
+            // immutable なメンバに setter 宣言は出来ない
             self.addErrMess(
                varName.pos,
-               "__absimmut can't have mutable member. -- %s" (varName.txt));
-         }
-         if not Ast.TypeInfo.canBeAbsImmutMember( refType.$expType ) {
-            self.addErrMess(
-               refType.$pos,
-               "__absimmut can't have member of mutable type. -- %s"
-               (refType.$expType.getTxt(##)));
-         }
-         
-      }
-      
-      if refType.$expType.$asyncMode == .Transient {
-         self.addErrMess( refType.$pos,
-                          "can't hold with the type of __trans. -- %s"
-                          (varName.txt) );
-      }
-
-      // accessor
-      let mut getterMode = Ast.AccessMode.None;
-      let mut getterRetType = refType.$expType;
-      let mut getterToken:&Types.Token! = nil;
-      let mut getterMutable = Ast.MutMode.Mut;
-      let mut setterMode = Ast.AccessMode.None;
-      let mut setterToken:&Types.Token! = nil;
-      if token.txt == "{" {
-
-         fn analyzeAccessorMode():
-         Ast.AccessMode, &Ast.TypeInfo, &Tokenizer.Token, &Tokenizer.Token
-         {
-            let mut retType = Ast.headTypeInfo;
-            let mut mode = Ast.AccessMode.None;
-            let mut accessorToken = self.getToken(##);
-            let mut workToken = accessorToken;
-            switch workToken.txt {
-               case "pub", "pri", "pro", "local" {
-                  mode = unwrap Ast.txt2AccessMode( workToken.txt );
-                  workToken = self.getToken(##);
-                  if workToken.txt == "&" {
-                     getterMutable = .IMut;
-                     workToken = self.getToken(##);
-                  }
-                  if workToken.txt == ":" {
-                     let typeNode = self.analyzeRefType(
-                        mode, false,
-                        Ast.isPubToExternal( classTypeInfo.$accessMode ),
-                        false, false ); 
-                     retType = typeNode.$expType;
-                     workToken = self.getToken(##);
-                  }
-               }
-               case "non" {
-                  workToken = self.getToken(##);
-               }
-               default {
-                  self.addErrMess( workToken.pos,
-                                   "access mode is invalid -- %s" (workToken.txt) );
-               }
-            }
-            return mode, retType, accessorToken, workToken;
-         }
-
-         {
-            let workRetType;
-            getterMode, workRetType, getterToken, nextToken = analyzeAccessorMode();
-            if workRetType ~= Ast.headTypeInfo {
-               if not workRetType.canEvalWith(
-                  self.processInfo, getterRetType, .SetOp,
-                  classTypeInfo.createAlt2typeMap( false ) )
-               {
-                  self.addErrMess( firstToken.pos,
-                                   "getter type mismatch -- %s <- %s"
-                                   (workRetType.getTxt(##), getterRetType.getTxt(##)));
-               }
-               getterRetType = workRetType;
-            }
-         }
-         if nextToken.txt == "," {
-            let dummyRetType;
-            setterMode, dummyRetType, setterToken, nextToken = analyzeAccessorMode();
-            if setterMode ~= .None and mutMode == .IMut {
-               // immutable なメンバに setter 宣言は出来ない
-               self.addErrMess(
-                  varName.pos,
-                  "This member can't have setter, this member is immutable. -- %s"
+               "This member can't have setter, this member is immutable. -- %s"
                   (varName.txt) );
-            }
-            // pending
-            Log._log2( .Debug, "%s" (dummyRetType) );
          }
-         self.checkToken( nextToken, "}" );
-         token = self.getToken(##);
+         // pending
+         Log._log2( .Debug, "%s" (dummyRetType) );
       }
-
-      self.checkToken( token, ";" );
-
-      let mut typeInfo = refType.$expType;
-      // if Ast.TypeInfo.isMut( typeInfo ) and mutMode == .IMut {
-      //    typeInfo = self.createModifier( typeInfo, .IMut );
-      // }
-      if self.ctrl_info.legacyMutableControl {
-         if Ast.TypeInfo.isMut( typeInfo ) and typeInfo.$mutMode ~= mutMode {
-            typeInfo = self.createModifier( typeInfo, mutMode );
-         }
-         if Ast.TypeInfo.isMut( getterRetType ) and getterRetType.$mutMode ~= mutMode {
-            getterRetType = self.createModifier( getterRetType, mutMode );
-         }
-      } else {
-         if Ast.TypeInfo.isMut( getterRetType ) {
-            if getterMutable == .AllMut {
-               getterRetType = self.createModifier( getterRetType, .AllMut );
-            } elseif getterMutable == .IMut {
-               getterRetType = self.createModifier( getterRetType, .IMut );
-            }
-         }
-      }
-
-      if Ast.isPubToExternal( classTypeInfo.$accessMode ) {
-         if Ast.isPubToExternal( accessMode ) or Ast.isPubToExternal( setterMode ) {
-            self.checkPublic( refType.$pos, typeInfo );
-         }
-         if Ast.isPubToExternal( getterMode ) {
-            self.checkPublic( refType.$pos, getterRetType );
-         }
-      }
-
-      let symbolInfo, shadowing = self.$scope.addMember(
-         self.processInfo, varName.txt, varName.pos,
-         typeInfo, accessMode, staticFlag, mutMode );
-
-      let workSym = unwrap (symbolInfo or shadowing);
-      when! shadowing {
-         self.errorShadowing( varName.pos, shadowing );
-      }
-
-      return Nodes.DeclMemberNode.create(
-         self.nodeManager, firstToken.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
-         varName, refType, workSym, classTypeInfo, 
-         staticFlag, accessMode, getterMutable ~= .IMut,
-         getterMode, getterToken, getterRetType, setterMode, setterToken );
+      self.checkToken( nextToken, "}" );
+      token = self.getToken(##);
    }
+
+   self.checkToken( token, ";" );
+
+   let mut typeInfo = refType.$expType;
+   // if Ast.TypeInfo.isMut( typeInfo ) and mutMode == .IMut {
+   //    typeInfo = self.createModifier( typeInfo, .IMut );
+   // }
+   if self.ctrl_info.legacyMutableControl {
+      if Ast.TypeInfo.isMut( typeInfo ) and typeInfo.$mutMode ~= mutMode {
+         typeInfo = self.createModifier( typeInfo, mutMode );
+      }
+      if Ast.TypeInfo.isMut( getterRetType ) and getterRetType.$mutMode ~= mutMode {
+         getterRetType = self.createModifier( getterRetType, mutMode );
+      }
+   } else {
+      if Ast.TypeInfo.isMut( getterRetType ) {
+         if getterMutable == .AllMut {
+            getterRetType = self.createModifier( getterRetType, .AllMut );
+         } elseif getterMutable == .IMut {
+            getterRetType = self.createModifier( getterRetType, .IMut );
+         }
+      }
+   }
+
+   if Ast.isPubToExternal( classTypeInfo.$accessMode ) {
+      if Ast.isPubToExternal( accessMode ) or Ast.isPubToExternal( setterMode ) {
+         self.checkPublic( refType.$pos, typeInfo );
+      }
+      if Ast.isPubToExternal( getterMode ) {
+         self.checkPublic( refType.$pos, getterRetType );
+      }
+   }
+
+   let symbolInfo, shadowing = self.$scope.addMember(
+      self.processInfo, varName.txt, varName.pos,
+      typeInfo, accessMode, staticFlag, mutMode );
+
+   let workSym = unwrap (symbolInfo or shadowing);
+   when! shadowing {
+      self.errorShadowing( varName.pos, shadowing );
+   }
+
+   return Nodes.DeclMemberNode.create(
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ typeInfo ],
+      varName, refType, workSym, classTypeInfo, 
+      staticFlag, accessMode, getterMutable ~= .IMut,
+      getterMode, getterToken, getterRetType, setterMode, setterToken );
+}
 
 fn TransUnit.analyzeDeclMethod(
    classTypeInfo: &Ast.TypeInfo, declFuncMode: DeclFuncMode,

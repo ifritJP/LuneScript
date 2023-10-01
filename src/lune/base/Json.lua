@@ -106,12 +106,15 @@ end
 
 
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 
 local function getRawTxt( token )
 
    return token.txt:sub( 2, -2 )
 end
+
 
 local function getVal( tokenizer )
 
@@ -138,34 +141,27 @@ local function getVal( tokenizer )
                               if key.kind ~= Tokenizer.TokenKind.Str then
                                  return nil, false
                               end
-                              
                            else 
                               
                                  return nil, false
                            end
                         end
-                        
                      else 
                         
                            return nil, false
                      end
                   end
-                  
                   if tokenizer:getTokenNoErr(  ).txt ~= ":" then
                      return nil, false
                   end
-                  
                   local val, ok = getVal( tokenizer )
                   if not ok then
                      return nil, false
                   end
-                  
                   if val ~= nil then
                      map[getRawTxt( key )] = val
                   end
-                  
                end
-               
             elseif _switchExp == "[" then
                local list = {}
                local count = 1
@@ -181,19 +177,15 @@ local function getVal( tokenizer )
                            tokenizer:pushback(  )
                      end
                   end
-                  
                   local val, ok = getVal( tokenizer )
                   if not ok then
                      return nil, false
                   end
-                  
                   list[count] = val
                   count = count + 1
                end
-               
             end
          end
-         
          return nil, false
       elseif _switchExp == Tokenizer.TokenKind.Int then
          local num = tonumber( token.txt )
@@ -226,13 +218,12 @@ local function getVal( tokenizer )
                return nil, true
             end
          end
-         
          return nil, false
       end
    end
-   
    return nil, false
 end
+
 local function fromStr( txt )
 
    local tokenizer = Tokenizer.DefaultPushbackTokenizer._new(Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,"json",nil}), false ))
@@ -240,10 +231,10 @@ local function fromStr( txt )
    if not ok then
       return nil, tokenizer:getLastPos(  )
    end
-   
    return val, nil
 end
 _moduleObj.fromStr = fromStr
+
 
 
 

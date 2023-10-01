@@ -120,6 +120,7 @@ CodeKind.__allList[21] = CodeKind.Finalize
 
 local codeMap
 
+
 local CastKind = {}
 _moduleObj.CastKind = CastKind
 CastKind._val2NameMap = {}
@@ -161,13 +162,11 @@ do
    work[CodeKind.Init] = [==[
 local _lune = {}
 ]==]
-   
    work[CodeKind.Unpack] = [==[
 if not table.unpack then
    table.unpack = unpack
 end
 ]==]
-   
    work[CodeKind.NilAcc] = [==[
 function _lune.nilacc( val, fieldName, access, ... )
    if not val then
@@ -211,7 +210,6 @@ function _lune.nilacc( val, fieldName, access, ... )
    error( string.format( "illegal access -- %s", access ) )
 end
 ]==]
-   
    work[CodeKind.Unwrap] = [==[
 function _lune.unwrap( val )
    if val == nil then
@@ -226,7 +224,6 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 ]==]
-   
    work[CodeKind.LoadModule] = [==[
 function _lune.loadModule( mod )
    if __luneScript and not package.preload[ mod ] then
@@ -235,7 +232,6 @@ function _lune.loadModule( mod )
    return require( mod )
 end
 ]==]
-   
    work[CodeKind.LoadStr51] = [==[
 function _lune.loadstring51( txt, env )
    local func = loadstring( txt )
@@ -245,7 +241,6 @@ function _lune.loadstring51( txt, env )
    return func
 end
 ]==]
-   
    work[CodeKind.LoadStr52] = [==[
 function _lune.loadstring52( txt, env )
    if not env then
@@ -254,7 +249,6 @@ function _lune.loadstring52( txt, env )
    return load( txt, "", "bt", env )
 end
 ]==]
-   
    work[CodeKind.Mapping] = [==[
 function _lune._toStem( val )
    return val
@@ -338,7 +332,6 @@ function _lune._fromMap( obj, map, memInfoList )
    return true
 end
 ]==]
-   
    work[CodeKind.SetOp] = [==[
 function _lune._Set_or( setObj, otherSet )
    for val in pairs( otherSet ) do
@@ -388,7 +381,6 @@ function _lune._Set_clone( setObj )
    return obj
 end
 ]==]
-   
    work[CodeKind.SetMapping] = [==[
 function _lune._toSet( val, toKeyInfo )
    if type( val ) == "table" then
@@ -412,7 +404,6 @@ function _lune._toSet( val, toKeyInfo )
    return nil
 end
 ]==]
-   
    work[CodeKind.AlgeMapping] = [==[
 function _lune._fromList( obj, list, memInfoList )
    if type( list ) ~= "table" then
@@ -443,7 +434,6 @@ function _lune._AlgeFrom( Alge, val )
    return { work[ 1 ], paramList }
 end
 ]==]
-   
    work[CodeKind.Alge] = [==[
 function _lune.newAlge( kind, vals )
    local memInfoList = kind[ 2 ]
@@ -453,7 +443,6 @@ function _lune.newAlge( kind, vals )
    return { kind[ 1 ], vals }
 end
 ]==]
-   
    work[CodeKind.InstanceOf] = [==[
 function _lune.__isInstanceOf( obj, class )
    while obj do
@@ -480,7 +469,6 @@ function _lune.__isInstanceOf( obj, class )
    return false
 end
 ]==]
-   
    work[CodeKind.Cast] = string.format( [==[
 function _lune.__Cast( obj, kind, class )
    if kind == %d then -- int
@@ -507,7 +495,6 @@ function _lune.__Cast( obj, kind, class )
    return nil
 end
 ]==], CastKind.Int, CastKind.Real, CastKind.Str, CastKind.Class)
-   
    work[CodeKind.LazyLoad] = [==[
 function _lune._lazyImport( modName )
   local mod
@@ -520,7 +507,6 @@ function _lune._lazyImport( modName )
   end
 end
 ]==]
-   
    work[CodeKind.LazyRequire] = [==[
 function _lune._lazyRequire( modName )
   local mod
@@ -533,7 +519,6 @@ function _lune._lazyRequire( modName )
   end
 end
 ]==]
-   
    work[CodeKind.Run] = [==[
 function _lune._run( runner, mod )
     if mod == 2 then
@@ -543,7 +528,6 @@ function _lune._run( runner, mod )
     return true
 end
 ]==]
-   
    work[CodeKind.StrReplace] = [==[
 function _lune.replace( txt, src, dst )
    local result = ""
@@ -564,7 +548,6 @@ function _lune.replace( txt, src, dst )
    return result
 end
 ]==]
-   
    work[CodeKind.Error] = [==[
 local LnsErr = {}
 _lune.LnsErr = LnsErr
@@ -589,7 +572,6 @@ function LnsErr.create( txt )
    return LnsErr._new( txt )
 end
 ]==]
-   
    work[CodeKind.Result] = [==[
 local Result = {}
 Result._name2Val = {}
@@ -611,7 +593,6 @@ Result._name2Val["Err"] = Result.Err
 Result.Ok = { "Ok", {{}}}
 Result._name2Val["Ok"] = Result.Ok
 ]==]
-   
    work[CodeKind.Finalize] = [==[
 return _lune
 ]==]
@@ -624,6 +605,7 @@ local function getCode( kind )
    return _lune.unwrap( codeMap[kind])
 end
 _moduleObj.getCode = getCode
+
 
 
 

@@ -140,6 +140,7 @@ pub alge Literal {
    ARRAY( val:&_List<&Literal> ),
    SET( val:&_List<&Literal> ),
    MAP( val:&_Map<&Literal,&Literal> ),
+   STAT( val:&_List<&Types.Token> ),
 }
 
 pub fn getLiteralObj( obj:&Literal ):stem! {
@@ -175,6 +176,9 @@ pub fn getLiteralObj( obj:&Literal ):stem! {
          return val;
       }     
       case .MAP( val ) {
+         return val;
+      }
+      case .STAT( val ) {
          return val;
       }
    }

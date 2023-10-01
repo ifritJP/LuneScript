@@ -123,11 +123,17 @@ end
 
 
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
+
 local TransUnitIF = _lune.loadModule( 'lune.base.TransUnitIF' )
+
 
 local TransUnit = {}
 _moduleObj.TransUnit = TransUnit
@@ -166,7 +172,6 @@ end
 function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
 
    local typeInfo = Ast.headTypeInfo
-   
    local modName
    
    if name:find( "^@" ) then
@@ -175,8 +180,6 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
     
       modName = string.format( "@%s", name)
    end
-   
-   
    do
       local _exp = self.scope:getTypeInfoChild( modName )
       if _exp ~= nil then
@@ -189,7 +192,6 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
                self:error( string.format( "not found scope -- %s", name) )
             end
          end
-         
       else
          local _
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
@@ -199,15 +201,12 @@ function TransUnit:pushModuleLow( processInfo, externalFlag, name, mutable )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )
-         
          local _1, existSym = parentScope:addClass( processInfo, modName, nil, typeInfo )
          if existSym ~= nil then
             self:error( string.format( "module symbols exist -- %s.%s -- %s.%s", existSym:get_namespaceTypeInfo():getTxt(  ), existSym:get_name(), parentInfo:getTxt(  ), modName) )
          end
-         
       end
    end
-   
    return typeInfo
 end
 function TransUnit:popModule(  )
@@ -231,10 +230,8 @@ function TransUnit:pushClassScope( errPos, classTypeInfo, scope )
             classParentTypeId = Ast.dummyIdInfo
          end
       end
-      
       self:error( string.format( "This class does not exist in this scope. -- %s -- %s(%d), %s(%d)", classTypeInfo:getTxt(  ), _lune.nilacc( self.scope:get_ownerTypeInfo(), 'getTxt', 'callmtd'  ), _lune.nilacc( _lune.nilacc( self.scope:get_ownerTypeInfo(), 'get_typeId', 'callmtd' ), "id" ) or -1, classParentName, classParentTypeId.id) )
    end
-   
    self.scope = scope
 end
 function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractFlag, baseInfo, interfaceList, genTypeList, externalFlag, name, allowMultiple, accessMode, defNamespace )
@@ -244,38 +241,27 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
    do
       local _exp = self.scope:getTypeInfo( name, self.scope, true, Ast.ScopeAccess.Normal )
       if _exp ~= nil then
-         
          typeInfo = _exp
-         
          if typeInfo:get_abstractFlag() ~= abstractFlag then
             self:error( string.format( "mismatch class(%s) abstract for prototype", typeInfo:getTxt(  )) )
          end
-         
          if typeInfo:get_finalFlag() ~= finalFlag then
             self:error( string.format( "mismatch class(%s) final for prototype. %s, %s", typeInfo:getTxt(  ), typeInfo:get_finalFlag(), finalFlag) )
          end
-         
          if typeInfo:get_accessMode() ~= accessMode then
             self:error( string.format( "mismatch class(%s) accessmode(%s) for prototype accessmode(%s)", typeInfo:getTxt(  ), Ast.AccessMode:_getTxt( accessMode)
             , Ast.AccessMode:_getTxt( typeInfo:get_accessMode())
             ) )
          end
-         
          if baseInfo ~= nil then
             if typeInfo:get_baseTypeInfo() ~= baseInfo then
                self:error( string.format( "mismatch class(%s) base class(%s) for prototype base class(%s)", typeInfo:getTxt(  ), baseInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
             end
-            
          else
             if typeInfo:hasBase(  ) then
                self:error( string.format( "mismatch class(%s) base class(None) for prototype base class(%s)", typeInfo:getTxt(  ), typeInfo:get_baseTypeInfo():getTxt(  )) )
             end
-            
          end
-         
-         
-         
-         
          do
             local typeList = _lune.unwrapDefault( interfaceList, {})
             if #typeInfo:get_interfaceList() == #typeList then
@@ -283,16 +269,12 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
                   if protoType ~= typeList[index] then
                      self:error( string.format( "mismatch class(%s) %s(%s) for prototype %s(%s)", typeInfo:getTxt(  ), "interface", typeList[index]:getTxt(  ), "interface", protoType:getTxt(  )) )
                   end
-                  
                end
-               
             else
              
                self:error( string.format( "mismatch class(%s) %s(%d) for prototype %s(%d)", typeInfo:getTxt(  ), "interface", #typeList, "interface", #typeInfo:get_interfaceList()) )
             end
-            
          end
-         
          
          
          do
@@ -302,16 +284,12 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
                   if protoType ~= typeList[index] then
                      self:error( string.format( "mismatch class(%s) %s(%s) for prototype %s(%s)", typeInfo:getTxt(  ), "generics", typeList[index]:getTxt(  ), "generics", protoType:getTxt(  )) )
                   end
-                  
                end
-               
             else
              
                self:error( string.format( "mismatch class(%s) %s(%d) for prototype %s(%d)", typeInfo:getTxt(  ), "generics", #typeList, "generics", #typeInfo:get_itemTypeInfoList()) )
             end
-            
          end
-         
          
          
          do
@@ -327,28 +305,22 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
                      self:error( string.format( "not find scope -- %s", name) )
                   end
                end
-               
             end
          end
-         
          do
             local _switchExp = (typeInfo:get_kind() )
             if _switchExp == Ast.TypeInfoKind.Class then
                if mode == TransUnitIF.DeclClassMode.Interface then
                   self:error( string.format( "define interface already -- %s", name) )
                end
-               
             elseif _switchExp == Ast.TypeInfoKind.IF then
                if mode ~= TransUnitIF.DeclClassMode.Interface then
                   self:error( string.format( "define class already -- %s", name) )
                end
-               
             end
          end
-         
       else
          local parentInfo = self:getCurrentNamespaceTypeInfo(  )
-         
          local parentScope = self.scope
          local scope = self:pushScope( Ast.ScopeKind.Class, baseInfo, interfaceList )
          local workGenTypeList
@@ -358,24 +330,18 @@ function TransUnit:pushClassLow( processInfo, errPos, mode, finalFlag, abstractF
          else
             workGenTypeList = {}
          end
-         
-         
          local newType = processInfo:createClassAsync( mode ~= TransUnitIF.DeclClassMode.Interface, finalFlag, abstractFlag, scope, baseInfo, interfaceList, workGenTypeList, parentInfo, parentInfo, externalFlag, accessMode, name )
          typeInfo = newType
          self.namespace2Scope[typeInfo] = scope
          Ast.addBuiltinMut( newType, scope )
-         
          parentScope:addClassLazy( processInfo, name, errPos, typeInfo, mode == TransUnitIF.DeclClassMode.LazyModule )
       end
    end
-   
    if genTypeList ~= nil then
       for __index, genType in ipairs( genTypeList ) do
          self.scope:addAlternate( processInfo, accessMode, genType:get_txt(), errPos, genType )
       end
-      
    end
-   
    return typeInfo
 end
 function TransUnit:popClass(  )

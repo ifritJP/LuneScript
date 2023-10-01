@@ -77,7 +77,9 @@ end
 
 
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 
 
 
@@ -87,11 +89,9 @@ local function runLuaOnLns( frontAccessor, luaCode, baseDir, async )
    for key, val in pairs( _G ) do
       newEnv[key] = val
    end
-   
    newEnv["_lnsLoad"] = function ( name, txt )
    
       local importModuleInfo = frontInterface.ImportModuleInfo._new()
-      
       local val = frontAccessor:loadFromLnsTxt( importModuleInfo, baseDir, name, txt )
       return val
    end
@@ -102,27 +102,22 @@ local function runLuaOnLns( frontAccessor, luaCode, baseDir, async )
       do
          loaded, err = _lune.loadstring51( luaCode, newEnv )
       end
-      
    else
     
       do
          loaded, err = _lune.loadstring51( luaCode, newEnv )
       end
-      
    end
-   
-   
    if loaded ~= nil then
       return loaded, ""
    end
-   
    if err ~= nil then
       return nil, err
    end
-   
    return nil, ""
 end
 _moduleObj.runLuaOnLns = runLuaOnLns
+
 function __luneGetLocal( varName )
 
    local index = 1
@@ -131,18 +126,15 @@ function __luneGetLocal( varName )
       if name == varName then
          return val
       end
-      
       if not name then
          break
       end
-      
-      
       index = index + 1
    end
-   
    Util.err( "not found -- " .. varName )
 end
 _moduleObj.__luneGetLocal = __luneGetLocal
+
 
 function __luneSym2Str( val )
 
@@ -152,20 +144,17 @@ function __luneSym2Str( val )
          if type( _exp ) ~= "table" then
             return string.format( "%s", tostring( _exp) )
          end
-         
-         
          local txt = ""
          for __index, item in ipairs( _exp ) do
             txt = txt .. item
          end
-         
          return txt
       end
    end
-   
    return nil
 end
 _moduleObj.__luneSym2Str = __luneSym2Str
+
 local function addGoModPath( list )
 
    do
@@ -184,20 +173,17 @@ end
                for __index, path in ipairs( list ) do
                   table.insert( luaPathList, Util.pathJoin( path, "?.lua" ) )
                end
-               
                (func )( luaPathList )
             else
                Util.err( "failed to load func" )
             end
          end
-         
       else
          Util.println( mess )
       end
-      
    end
-   
 end
 _moduleObj.addGoModPath = addGoModPath
+
 
 return _moduleObj

@@ -193,9 +193,13 @@ if not _lune8 then
    _lune8 = _lune
 end
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+
 local Runner = _lune.loadModule( 'lune.base.Runner' )
+
 
 
 
@@ -231,6 +235,7 @@ function ModuleId:get_idStr()
 end
 do
    ModuleId.tempId = ModuleId._new(0.0, 0)
+   
 end
 
 function ModuleId.createId( modTime, buildCount )
@@ -303,40 +308,51 @@ function LuneHelperInfo:__init()
 end
 function LuneHelperInfo:mergeFrom( src )
 
-   
-   
    self.useNilAccess = self.useNilAccess or src.useNilAccess
+   
    
    self.useUnwrapExp = self.useUnwrapExp or src.useUnwrapExp
    
+   
    self.hasMappingClassDef = self.hasMappingClassDef or src.hasMappingClassDef
+   
    
    self.useLoad = self.useLoad or src.useLoad
    
+   
    self.useUnpack = self.useUnpack or src.useUnpack
+   
    
    self.useAlge = self.useAlge or src.useAlge
    
+   
    self.useSet = self.useSet or src.useSet
+   
    
    self.callAnonymous = self.callAnonymous or src.callAnonymous
    
+   
    self.useLazyLoad = self.useLazyLoad or src.useLazyLoad
+   
    
    self.useLazyRequire = self.useLazyRequire or src.useLazyRequire
    
+   
    self.useRun = self.useRun or src.useRun
+   
    
    self.useStrReplace = self.useStrReplace or src.useStrReplace
    
+   
    self.useResult = self.useResult or src.useResult
    
+   
    self.useError = self.useError or src.useError
+   
    
    for val, __val in pairs( src.pragmaSet ) do
       self.pragmaSet[val]= true
    end
-   
 end
 function LuneHelperInfo._setmeta( obj )
   setmetatable( obj, { __index = LuneHelperInfo  } )
@@ -348,6 +364,7 @@ local function getRootDependModId(  )
    return -1
 end
 _moduleObj.getRootDependModId = getRootDependModId
+
 
 local ExportInfo = {}
 setmetatable( ExportInfo, { ifList = {Ast.ModuleInfoIF,} } )
@@ -368,12 +385,10 @@ function ExportInfo:__init(moduleTypeInfo, provideInfo, processInfo, globalSymbo
    self.fullName = fullName
    self.assignName = assignName
    self.streamName = streamName
-   
    local importId2localTypeInfoMap = {}
    for typeInfo, importId in pairs( idMap ) do
       importId2localTypeInfoMap[importId] = typeInfo
    end
-   
    self.importId2localTypeInfoMap = importId2localTypeInfoMap
 end
 function ExportInfo:get_modulePath(  )
@@ -388,7 +403,6 @@ function ExportInfo:getTypeInfo( localTypeId )
          return typeInfo
       end
    end
-   
    return nil
 end
 function ExportInfo._setmeta( obj )
@@ -587,7 +601,6 @@ function ImportModuleInfo:getFull(  )
    for __index, modulePath in ipairs( self.orderedSet:get_list() ) do
       txt = string.format( "%s -> %s", txt, modulePath)
    end
-   
    return txt
 end
 function ImportModuleInfo:clone(  )
@@ -596,7 +609,6 @@ function ImportModuleInfo:clone(  )
    for __index, mod in ipairs( self.orderedSet:get_list() ) do
       info:add( mod )
    end
-   
    return info
 end
 function ImportModuleInfo:len(  )
@@ -692,7 +704,6 @@ end
 
 local function dummyLoadModule( mod )
 
-   
    local modVal, moduleMeta
    
    do
@@ -704,14 +715,13 @@ local function dummyLoadModule( mod )
       else
          Util.err( "load error" )
       end
-      
       moduleMeta = ModuleMeta._new(mod:gsub( "%.", "/" ) .. ".lns", _lune.newAlge( MetaOrModule.MetaRaw, {emptyTable}))
       modVal = require( mod )
    end
-   
    return modVal, moduleMeta
 end
 _moduleObj.dummyLoadModule = dummyLoadModule
+
 
 local DummyFront = {}
 setmetatable( DummyFront, { ifList = {frontInterface,} } )
@@ -760,6 +770,7 @@ end
 
 local dummyFront = DummyFront._new()
 _moduleObj.dummyFront = dummyFront
+
 
 
 return _moduleObj

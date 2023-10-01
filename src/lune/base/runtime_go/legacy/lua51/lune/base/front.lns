@@ -1675,6 +1675,7 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
                   }
                }
             }
+
             forsort postProcess, index in postProcessMap {
                let prev = os.clock();
                let path = self.option.batchList[ index ];

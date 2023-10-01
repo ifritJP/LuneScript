@@ -148,9 +148,13 @@ end
 
 
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Depend = _lune.loadModule( 'lune.base.Depend' )
+
 local Log = _lune.loadModule( 'lune.base.Log' )
+
 
 local ModProjInfo = {}
 _moduleObj.ModProjInfo = ModProjInfo
@@ -214,12 +218,10 @@ _moduleObj.ModInfo = ModInfo
 function ModInfo:getGoModPath( ver, mod )
 
    local pathList = {}
-   
    do
       local gopath = Depend.getGOPATH(  )
       if gopath ~= nil then
          table.insert( pathList, Util.pathJoin( gopath, string.format( "src/%s", mod) ) )
-         
          local gomod = ""
          for __index, aChar in pairs( {mod:byte( 1, #mod )} ) do
             if aChar ~= nil then
@@ -229,17 +231,12 @@ function ModInfo:getGoModPath( ver, mod )
                 
                   gomod = string.format( "%s%c", gomod, aChar)
                end
-               
             end
-            
          end
-         
          gomod = string.format( "%s@%s", gomod, ver)
-         
          table.insert( pathList, Util.pathJoin( gopath, string.format( "pkg/mod/%s", gomod) ) )
       end
    end
-   
    return pathList
 end
 function ModInfo:getModPathList(  )
@@ -256,14 +253,10 @@ function ModInfo:getModPathList(  )
                   table.insert( list, path )
                   break
                end
-               
             end
-            
          end
       end
-      
    end
-   
    return list
 end
 function ModInfo._new( name, moduleMap, replaceMap )
@@ -279,18 +272,14 @@ function ModInfo:__init(name, moduleMap, replaceMap)
    self.goModDir2Path = {}
    self.path2modProjInfo = {}
    self.latestModProjInfo = nil
-   
    for mod, dst in pairs( replaceMap ) do
       self.goModDir2Path[dst] = mod
    end
-   
    for mod, ver in pairs( moduleMap ) do
       for __index, path in ipairs( self:getGoModPath( ver, mod ) ) do
          self.goModDir2Path[path] = mod
       end
-      
    end
-   
 end
 function ModInfo:getLatestProjRoot(  )
 
@@ -302,22 +291,17 @@ function ModInfo:getLocalModulePathList( path )
    for mod, ver in pairs( self.moduleMap ) do
       if path:find( mod, 1, true ) == 1 then
          local relativeName = path:sub( #mod + 2 )
-         
          do
             local replacePath = self.replaceMap[mod]
             if replacePath ~= nil then
-               
                table.insert( pathList, Util.pathJoin( replacePath, relativeName ) )
                break
             end
          end
-         
-         
          do
             local gopath = Depend.getGOPATH(  )
             if gopath ~= nil then
                table.insert( pathList, Util.pathJoin( gopath, string.format( "src/%s", path) ) )
-               
                local gomod = ""
                for __index, aChar in pairs( {mod:byte( 1, #mod )} ) do
                   if aChar ~= nil then
@@ -327,22 +311,15 @@ function ModInfo:getLocalModulePathList( path )
                       
                         gomod = string.format( "%s%c", gomod, aChar)
                      end
-                     
                   end
-                  
                end
-               
                gomod = string.format( "%s@%s", gomod, ver)
-               
                table.insert( pathList, Util.pathJoin( gopath, string.format( "pkg/mod/%s/%s", gomod, relativeName) ) )
             end
          end
-         
          break
       end
-      
    end
-   
    return pathList
 end
 function ModInfo:convPath( mod, suffix )
@@ -356,8 +333,6 @@ function ModInfo:getProjRootPath( mod, path )
    if projRoot ~= "/" then
       projRoot = projRoot:gsub( "/$", "" )
    end
-   
-   
    path = Util.parentPath( path )
    local modList = Util.splitStr( mod, "[^%.]+" )
    local startIndex = #modList
@@ -366,26 +341,19 @@ function ModInfo:getProjRootPath( mod, path )
          startIndex = modIndex
          break
       end
-      
       if path == projRoot then
          startIndex = modIndex
          break
       end
-      
-      
       path = Util.parentPath( path )
    end
-   
-   
    local convMod = ""
    for index = #modList - startIndex + 1, #modList do
       if convMod ~= "" then
          convMod = string.format( "%s.", convMod)
       end
-      
       convMod = convMod .. modList[index]
    end
-   
    return path, convMod
 end
 function ModInfo:convLocalModulePath( mod, suffix, baseDir )
@@ -398,24 +366,20 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          if goModDir ~= nil then
             mod = string.format( "go/%s.%s", goModDir:gsub( "%.", ":" ):gsub( "/", "." ), mod)
          end
-         
          if not goModDir then
             Log.log( Log.Level.Log, __func__, 220, function (  )
             
                return string.format( "not found baseDir -- %s", baseDir)
-            end )
+            end
+             )
+            
             
          end
-         
       else
          return _lune.newAlge( GoModResult.NotGo)
       end
-      
    end
-   
-   
    local workMod = self:convPath( mod, suffix )
-   
    do
       local _exp = self.path2modProjInfo[workMod]
       if _exp ~= nil then
@@ -423,18 +387,13 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          return _lune.newAlge( GoModResult.Found, {_exp})
       end
    end
-   
-   
    local pathList = self:getLocalModulePathList( workMod )
    if not mod:find( "^go/" ) then
       if baseDir ~= nil then
          table.insert( pathList, Util.pathJoin( baseDir, workMod ) )
       end
-      
    end
-   
    table.insert( pathList, Util.pathJoin( "vendor", workMod ) )
-   
    for __index, path in ipairs( pathList ) do
       if Depend.existFile( path ) then
          local projRoot, convMod = self:getProjRootPath( mod, path )
@@ -447,12 +406,12 @@ function ModInfo:convLocalModulePath( mod, suffix, baseDir )
          Log.log( Log.Level.Log, __func__, 254, function (  )
          
             return string.format( "not found %s", path)
-         end )
+         end
+          )
+         
          
       end
-      
    end
-   
    return _lune.newAlge( GoModResult.NotFound)
 end
 function ModInfo:getLuaModulePath( mod, baseDir )
@@ -473,8 +432,6 @@ function ModInfo:getLuaModulePath( mod, baseDir )
          info = workInfo
       end
    end
-   
-   
    return info:get_mod(), info:get_projRoot(), info:get_fullMod()
 end
 function ModInfo._setmeta( obj )
@@ -533,10 +490,9 @@ local function getReplace( map, tokenList, modIndex, gomodDir )
          map[tokenList[modIndex]] = Util.pathJoin( gomodDir, token )
          break
       end
-      
    end
-   
 end
+
 
 local function searchGoMod( path )
    local __func__ = '@lune.@base.@GoMod.searchGoMod'
@@ -546,21 +502,21 @@ local function searchGoMod( path )
       Log.log( Log.Level.Log, __func__, 313, function (  )
       
          return string.format( "gomodPath = %s", gomodPath)
-      end )
+      end
+       )
+      
       
       if Depend.existFile( gomodPath ) then
          return path
       end
-      
       local work = Util.parentPath( path )
       if work == path then
          return nil
       end
-      
       path = work
    end
-   
 end
+
 
 local function getGoMap( path )
    local __func__ = '@lune.@base.@GoMod.getGoMap'
@@ -574,7 +530,9 @@ local function getGoMap( path )
          Log.log( Log.Level.Log, __func__, 330, function (  )
          
             return string.format( "gomodDir = %s", gomodDir)
-         end )
+         end
+          )
+         
          
          local gomodPath = Util.pathJoin( gomodDir, "go.mod" )
          do
@@ -600,7 +558,6 @@ local function getGoMap( path )
                          
                            requireMap[tokenList[1]] = tokenList[2]
                         end
-                        
                      elseif _switchExp == BlockKind.Replace then
                         if line:find( "^%)" ) then
                            inBlock = BlockKind.None
@@ -608,7 +565,6 @@ local function getGoMap( path )
                          
                            getReplace( replaceMap, tokenList, 1, gomodDir )
                         end
-                        
                      elseif _switchExp == BlockKind.None then
                         if line:find( "^module%s+" ) then
                            name = tokenList[2]
@@ -616,7 +572,6 @@ local function getGoMap( path )
                            if #tokenList == 3 then
                               requireMap[tokenList[2]] = tokenList[3]
                            end
-                           
                         elseif line:find( "^require%s+%(" ) then
                            inBlock = BlockKind.Require
                         elseif line:find( "^replace%s+[^%(]" ) then
@@ -624,23 +579,18 @@ local function getGoMap( path )
                         elseif line:find( "^replace%s+%(" ) then
                            inBlock = BlockKind.Replace
                         end
-                        
                      end
                   end
-                  
                end
-               
                file:close(  )
             end
          end
-         
       end
    end
-   
-   
    local modInfo = ModInfo._new(name, requireMap, replaceMap)
    return modInfo
 end
 _moduleObj.getGoMap = getGoMap
+
 
 return _moduleObj

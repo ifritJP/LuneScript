@@ -230,11 +230,17 @@ end
 
 
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 
 local SimpleModuleInfoManager = {}
 setmetatable( SimpleModuleInfoManager, { ifList = {Ast.ModuleInfoManager,} } )
@@ -250,7 +256,6 @@ function SimpleModuleInfoManager:__init(moduleInfoManager)
    else
       self.moduleInfoManager = Ast.DummyModuleInfoManager.get_instance()
    end
-   
    self.moduleInfoManagerHist = {}
 end
 function SimpleModuleInfoManager:push( moduleInfoManager )
@@ -288,10 +293,8 @@ function Filter:__init(errorOnDefault, moduleTypeInfo, moduleInfoManager)
       if moduleTypeInfo ~= nil then
          return Ast.TypeNameCtrl._new(moduleTypeInfo)
       end
-      
       return Ast.defaultTypeNameCtrl
    end
-   
    self.typeNameCtrl = process(  )
    self.optStack = {}
 end
@@ -426,6 +429,8 @@ Literal.Real = { "Real", {{}}}
 Literal._name2Val["Real"] = Literal.Real
 Literal.SET = { "SET", {{}}}
 Literal._name2Val["SET"] = Literal.SET
+Literal.STAT = { "STAT", {{}}}
+Literal._name2Val["STAT"] = Literal.STAT
 Literal.Str = { "Str", {{}}}
 Literal._name2Val["Str"] = Literal.Str
 Literal.Symbol = { "Symbol", {{}}}
@@ -479,11 +484,15 @@ local function getLiteralObj( obj )
          local val = _matchExp[2][1]
       
          return val
+      elseif _matchExp[1] == Literal.STAT[1] then
+         local val = _matchExp[2][1]
+      
+         return val
       end
    end
-   
 end
 _moduleObj.getLiteralObj = getLiteralObj
+
 
 local Node = {}
 
@@ -536,19 +545,15 @@ function Node:comp( node )
    if self.managerId < node.managerId then
       return -1
    end
-   
    if self.managerId > node.managerId then
       return 1
    end
-   
    if self.id < node.id then
       return -1
    end
-   
    if self.id > node.id then
       return 1
    end
-   
    return 0
 end
 function Node:compUsingPos( node )
@@ -557,7 +562,6 @@ function Node:compUsingPos( node )
    if compRet ~= 0 then
       return compRet
    end
-   
    return self:comp( node )
 end
 function Node:getIdTxt(  )
@@ -608,20 +612,16 @@ function Node:addComment( commentList )
             self.commentList = workList
          end
       end
-      
       for __index, comment in ipairs( commentList ) do
          table.insert( workList, comment )
       end
-      
    end
-   
 end
 function Node:get_expType(  )
 
    if #self.expTypeList == 0 then
       return Ast.builtinTypeNone
    end
-   
    return self.expTypeList[1]
 end
 function Node:addTokenList( list, kind, txt )
@@ -706,7 +706,6 @@ function ExpNode._new( managerId, id, kind, pos, inTestBlock, macroArgFlag, expT
 end
 function ExpNode:__init(managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList) 
    Node.__init( self,managerId, id, kind, pos, inTestBlock, macroArgFlag, expTypeList)
-   
    self.isTailExp = false
 end
 function ExpNode:isIntermediate(  )
@@ -728,10 +727,10 @@ local function cloneNodeList( list )
    for __index, node in ipairs( list ) do
       table.insert( newList, node )
    end
-   
    return newList
 end
 _moduleObj.cloneNodeList = cloneNodeList
+
 
 local NamespaceInfo = {}
 _moduleObj.NamespaceInfo = NamespaceInfo
@@ -799,8 +798,11 @@ end
 
 
 local nodeKind2NameMapWork = {}
+
 local nodeKind2NameMap = nodeKind2NameMapWork
+
 local nodeKindSeed = 0
+
 
 local function regKind( name )
 
@@ -810,11 +812,13 @@ local function regKind( name )
    return kind
 end
 
+
 local function getNodeKindName( kind )
 
    return _lune.unwrap( nodeKind2NameMap[kind])
 end
 _moduleObj.getNodeKindName = getNodeKindName
+
 
 function Filter:defaultProcess( node, opt )
 
@@ -822,7 +826,6 @@ function Filter:defaultProcess( node, opt )
       local pos = node:get_pos():get_orgPos(  )
       Util.err( string.format( "not implement yet -- %s:%s:%d:%d", getNodeKindName( node:get_kind() ), pos.streamName, pos.lineNo, pos.column) )
    end
-   
 end
 
 local NodeManager = {}
@@ -841,9 +844,7 @@ function NodeManager:__init()
       if not self.nodeKind2NodeList[kind] then
          self.nodeKind2NodeList[kind] = {}
       end
-      
    end
-   
 end
 function NodeManager:nextId(  )
 
@@ -888,13 +889,10 @@ function NodeManager:delNode( node )
          findIndex = index
          break
       end
-      
    end
-   
    if findIndex ~= -1 then
       table.remove( list, findIndex )
    end
-   
 end
 function NodeManager:addFrom( nodeManager )
 
@@ -910,9 +908,7 @@ function NodeManager:addFrom( nodeManager )
       for __index, node in ipairs( list ) do
          table.insert( dstList, node )
       end
-      
    end
-   
 end
 function NodeManager._setmeta( obj )
   setmetatable( obj, { __index = NodeManager  } )
@@ -954,6 +950,7 @@ end
 
 local NoneNode = {}
 regKind( "None" )
+
 function Filter:processNone( node, opt )
 
    self:pushOpt( opt )
@@ -995,10 +992,6 @@ function NoneNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList 
 end
 function NoneNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
    Node.__init( self,managerId, id, 0, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
-   
 end
 function NoneNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
@@ -1008,7 +1001,6 @@ function NoneNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 end
 function NoneNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function NoneNode.sortList( list )
@@ -1016,12 +1008,14 @@ function NoneNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function NoneNode._setmeta( obj )
   setmetatable( obj, { __index = NoneNode  } )
 end
+
 
 
 
@@ -1033,6 +1027,7 @@ end
 
 local ShebangNode = {}
 regKind( "Shebang" )
+
 function Filter:processShebang( node, opt )
 
    self:pushOpt( opt )
@@ -1074,12 +1069,7 @@ function ShebangNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ShebangNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, cmd) 
    Node.__init( self,managerId, id, 1, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.cmd = cmd
-   
-   
 end
 function ShebangNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, cmd )
 
@@ -1089,7 +1079,6 @@ function ShebangNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, 
 end
 function ShebangNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ShebangNode.sortList( list )
@@ -1097,7 +1086,8 @@ function ShebangNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ShebangNode._setmeta( obj )
@@ -1109,6 +1099,7 @@ end
 
 
 
+
 function NodeKind.get_ConvStat(  )
 
    return 2
@@ -1117,6 +1108,7 @@ end
 
 local ConvStatNode = {}
 regKind( "ConvStat" )
+
 function Filter:processConvStat( node, opt )
 
    self:pushOpt( opt )
@@ -1158,12 +1150,7 @@ function ConvStatNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function ConvStatNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, txt) 
    Node.__init( self,managerId, id, 2, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.txt = txt
-   
-   
 end
 function ConvStatNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, txt )
 
@@ -1173,7 +1160,6 @@ function ConvStatNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList,
 end
 function ConvStatNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ConvStatNode.sortList( list )
@@ -1181,7 +1167,8 @@ function ConvStatNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ConvStatNode._setmeta( obj )
@@ -1193,6 +1180,7 @@ end
 
 
 
+
 function NodeKind.get_BlankLine(  )
 
    return 3
@@ -1201,6 +1189,7 @@ end
 
 local BlankLineNode = {}
 regKind( "BlankLine" )
+
 function Filter:processBlankLine( node, opt )
 
    self:pushOpt( opt )
@@ -1242,12 +1231,7 @@ function BlankLineNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function BlankLineNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, lineNum) 
    Node.__init( self,managerId, id, 3, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.lineNum = lineNum
-   
-   
 end
 function BlankLineNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, lineNum )
 
@@ -1257,7 +1241,6 @@ function BlankLineNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList
 end
 function BlankLineNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function BlankLineNode.sortList( list )
@@ -1265,7 +1248,8 @@ function BlankLineNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function BlankLineNode._setmeta( obj )
@@ -1276,6 +1260,7 @@ function BlankLineNode:get_lineNum()
 end
 
 
+
 function NodeKind.get_Subfile(  )
 
    return 4
@@ -1284,6 +1269,7 @@ end
 
 local SubfileNode = {}
 regKind( "Subfile" )
+
 function Filter:processSubfile( node, opt )
 
    self:pushOpt( opt )
@@ -1325,12 +1311,7 @@ function SubfileNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function SubfileNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, usePath) 
    Node.__init( self,managerId, id, 4, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.usePath = usePath
-   
-   
 end
 function SubfileNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, usePath )
 
@@ -1340,7 +1321,6 @@ function SubfileNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, 
 end
 function SubfileNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function SubfileNode.sortList( list )
@@ -1348,7 +1328,8 @@ function SubfileNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function SubfileNode._setmeta( obj )
@@ -1357,6 +1338,7 @@ end
 function SubfileNode:get_usePath()
    return self.usePath
 end
+
 
 
 local LazyLoad = {}
@@ -1445,6 +1427,7 @@ end
 
 local ImportNode = {}
 regKind( "Import" )
+
 function Filter:processImport( node, opt )
 
    self:pushOpt( opt )
@@ -1486,12 +1469,7 @@ function ImportNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function ImportNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, info) 
    Node.__init( self,managerId, id, 5, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.info = info
-   
-   
 end
 function ImportNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, info )
 
@@ -1501,7 +1479,6 @@ function ImportNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, i
 end
 function ImportNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ImportNode.sortList( list )
@@ -1509,7 +1486,8 @@ function ImportNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ImportNode._setmeta( obj )
@@ -1518,6 +1496,7 @@ end
 function ImportNode:get_info()
    return self.info
 end
+
 
 
 
@@ -1627,6 +1606,7 @@ end
 
 local RootNode = {}
 regKind( "Root" )
+
 function Filter:processRoot( node, opt )
 
    self:pushOpt( opt )
@@ -1668,9 +1648,6 @@ function RootNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList,
 end
 function RootNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap) 
    Node.__init( self,managerId, id, 6, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.children = children
    self.moduleScope = moduleScope
    self.globalScope = globalScope
@@ -1684,8 +1661,6 @@ function RootNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList
    self.importModule2moduleInfo = importModule2moduleInfo
    self.typeId2MacroInfo = typeId2MacroInfo
    self.typeId2ClassMap = typeId2ClassMap
-   
-   
 end
 function RootNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, children, moduleScope, globalScope, useModuleMacroSet, moduleId, processInfo, moduleTypeInfo, provideNode, luneHelperInfo, nodeManager, importModule2moduleInfo, typeId2MacroInfo, typeId2ClassMap )
 
@@ -1706,22 +1681,16 @@ function RootNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
    do
       do
          local child = self.provideNode
@@ -1734,24 +1703,17 @@ function RootNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function RootNode.sortList( list )
@@ -1759,7 +1721,8 @@ function RootNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function RootNode._setmeta( obj )
@@ -1807,6 +1770,7 @@ end
 
 
 
+
 function RootNode:set_provide( node )
 
    self.provideNode = node
@@ -1821,6 +1785,7 @@ end
 
 local RefTypeNode = {}
 regKind( "RefType" )
+
 function Filter:processRefType( node, opt )
 
    self:pushOpt( opt )
@@ -1862,16 +1827,11 @@ function RefTypeNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function RefTypeNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, typeNode, itemNodeList, itemIndex2alt, mutMode, array) 
    Node.__init( self,managerId, id, 7, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.typeNode = typeNode
    self.itemNodeList = itemNodeList
    self.itemIndex2alt = itemIndex2alt
    self.mutMode = mutMode
    self.array = array
-   
-   
 end
 function RefTypeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, typeNode, itemNodeList, itemIndex2alt, mutMode, array )
 
@@ -1891,19 +1851,15 @@ function RefTypeNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local list = self.itemNodeList
       for __index, child in ipairs( list ) do
@@ -1915,24 +1871,16 @@ function RefTypeNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function RefTypeNode.sortList( list )
@@ -1940,7 +1888,8 @@ function RefTypeNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function RefTypeNode._setmeta( obj )
@@ -1964,19 +1913,18 @@ end
 
 
 
+
 function RefTypeNode:checkValidGenerics(  )
 
    local typeInfo = self:get_expType():get_nonnilableType():get_srcTypeInfo()
    if typeInfo:get_kind() == Ast.TypeInfoKind.DDD or typeInfo:get_kind() == Ast.TypeInfoKind.Box then
       return true, ""
    end
-   
    local genTypeNum
    
    local dispType
    
    if self.typeNode:get_expType():get_kind() == Ast.TypeInfoKind.Ext then
-      
       genTypeNum = 1
       dispType = self.typeNode:get_expType()
    else
@@ -1984,12 +1932,10 @@ function RefTypeNode:checkValidGenerics(  )
       genTypeNum = #typeInfo:get_itemTypeInfoList()
       dispType = self:get_expType()
    end
-   
    if genTypeNum ~= #self.itemNodeList then
       local txt = string.format( "it's mismatch the number of generics type param -- %s: %d, %d", dispType:getTxt(  ), genTypeNum, #self.itemNodeList)
       return false, txt
    end
-   
    return true, ""
 end
 
@@ -2028,6 +1974,7 @@ end
 
 local DeclTupleNode = {}
 regKind( "DeclTuple" )
+
 function Filter:processDeclTuple( node, opt )
 
    self:pushOpt( opt )
@@ -2069,12 +2016,7 @@ function DeclTupleNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function DeclTupleNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, paramList) 
    Node.__init( self,managerId, id, 8, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.paramList = paramList
-   
-   
 end
 function DeclTupleNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, paramList )
 
@@ -2084,7 +2026,6 @@ function DeclTupleNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList
 end
 function DeclTupleNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclTupleNode.sortList( list )
@@ -2092,7 +2033,8 @@ function DeclTupleNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclTupleNode._setmeta( obj )
@@ -2101,6 +2043,7 @@ end
 function DeclTupleNode:get_paramList()
    return self.paramList
 end
+
 
 
 
@@ -2200,6 +2143,7 @@ end
 local BlockNode = {}
 regKind( "Block" )
 
+
 function NodeManager:getBlockNodeList(  )
 
    return self:getList( 9 )
@@ -2233,14 +2177,9 @@ function BlockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
 end
 function BlockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList) 
    Node.__init( self,managerId, id, 9, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.blockKind = blockKind
    self.scope = scope
    self.stmtList = stmtList
-   
-   
 end
 function BlockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList )
 
@@ -2261,24 +2200,16 @@ function BlockNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function BlockNode.sortList( list )
@@ -2286,7 +2217,8 @@ function BlockNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function BlockNode._setmeta( obj )
@@ -2301,6 +2233,7 @@ end
 function BlockNode:get_stmtList()
    return self.stmtList
 end
+
 
 
 
@@ -2338,6 +2271,7 @@ end
 
 local ScopeNode = {}
 regKind( "Scope" )
+
 function Filter:processScope( node, opt )
 
    self:pushOpt( opt )
@@ -2379,15 +2313,10 @@ function ScopeNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
 end
 function ScopeNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block) 
    Node.__init( self,managerId, id, 10, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.scopeKind = scopeKind
    self.scope = scope
    self.symbolList = symbolList
    self.block = block
-   
-   
 end
 function ScopeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, scopeKind, scope, symbolList, block )
 
@@ -2407,21 +2336,15 @@ function ScopeNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ScopeNode.sortList( list )
@@ -2429,7 +2352,8 @@ function ScopeNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ScopeNode._setmeta( obj )
@@ -2452,6 +2376,7 @@ end
 
 
 
+
 local function getBreakKindForStmtList( checkMode, stmtList )
 
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
@@ -2463,11 +2388,9 @@ local function getBreakKindForStmtList( checkMode, stmtList )
                if work == BreakKind.Return then
                   return BreakKind.Return
                end
-               
                if work == BreakKind.NeverRet then
                   return BreakKind.NeverRet
                end
-               
             else
              
                do
@@ -2477,42 +2400,32 @@ local function getBreakKindForStmtList( checkMode, stmtList )
                         if false then
                            return BreakKind.None
                         end
-                        
                      end
-                     
                   else 
                      
                         if kind == BreakKind.None or kind > work then
                            kind = work
                         end
-                        
                   end
                end
-               
             end
             
             
          end
-         
       end
-      
       return kind
    end
-   
-   
    if #stmtList > 0 then
       for index = #stmtList, 1, -1 do
          local stmt = stmtList[index]
          if stmt:get_kind() ~= NodeKind.get_BlankLine() then
             return stmt:getBreakKind( checkMode )
          end
-         
       end
-      
    end
-   
    return BreakKind.None
 end
+
 
 function BlockNode:getBreakKind( checkMode )
 
@@ -2561,6 +2474,7 @@ end
 
 local CondRetNode = {}
 regKind( "CondRet" )
+
 function Filter:processCondRet( node, opt )
 
    self:pushOpt( opt )
@@ -2602,14 +2516,9 @@ function CondRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function CondRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order) 
    ExpNode.__init( self,managerId, id, 11, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
    self.condKind = condKind
    self.order = order
-   
-   
 end
 function CondRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, condKind, order )
 
@@ -2629,21 +2538,15 @@ function CondRetNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function CondRetNode.sortList( list )
@@ -2651,7 +2554,8 @@ function CondRetNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function CondRetNode._setmeta( obj )
@@ -2666,6 +2570,8 @@ end
 function CondRetNode:get_order()
    return self.order
 end
+
+
 
 
 
@@ -2700,6 +2606,7 @@ end
 
 local CondRetListNode = {}
 regKind( "CondRetList" )
+
 function Filter:processCondRetList( node, opt )
 
    self:pushOpt( opt )
@@ -2741,13 +2648,8 @@ function CondRetListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function CondRetListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, info, exp) 
    ExpNode.__init( self,managerId, id, 12, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.info = info
    self.exp = exp
-   
-   
 end
 function CondRetListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, info, exp )
 
@@ -2767,21 +2669,15 @@ function CondRetListNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function CondRetListNode.sortList( list )
@@ -2789,7 +2685,8 @@ function CondRetListNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function CondRetListNode._setmeta( obj )
@@ -2801,6 +2698,8 @@ end
 function CondRetListNode:get_exp()
    return self.exp
 end
+
+
 
 
 
@@ -2879,6 +2778,7 @@ end
 
 local IfNode = {}
 regKind( "If" )
+
 function Filter:processIf( node, opt )
 
    self:pushOpt( opt )
@@ -2920,12 +2820,7 @@ function IfNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, s
 end
 function IfNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, stmtList) 
    Node.__init( self,managerId, id, 13, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.stmtList = stmtList
-   
-   
 end
 function IfNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, stmtList )
 
@@ -2935,7 +2830,6 @@ function IfNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, stmtL
 end
 function IfNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function IfNode.sortList( list )
@@ -2943,7 +2837,8 @@ function IfNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function IfNode._setmeta( obj )
@@ -2952,6 +2847,7 @@ end
 function IfNode:get_stmtList()
    return self.stmtList
 end
+
 
 
 
@@ -2965,11 +2861,9 @@ function IfNode:getBreakKind( checkMode )
          if work == BreakKind.Return then
             return BreakKind.Return
          end
-         
          if work == BreakKind.NeverRet then
             return BreakKind.NeverRet
          end
-         
       else
        
          do
@@ -2979,32 +2873,24 @@ function IfNode:getBreakKind( checkMode )
                   if true then
                      return BreakKind.None
                   end
-                  
                end
-               
             else 
                
                   if kind == BreakKind.None or kind > work then
                      kind = work
                   end
-                  
             end
          end
-         
       end
       
       
       if stmtInfo:get_kind() == IfKind.Else then
          hasElseFlag = true
       end
-      
    end
-   
    if hasElseFlag or (checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return ) then
       return kind
    end
-   
-   
    return BreakKind.None
 end
 
@@ -3020,13 +2906,11 @@ function IfNode:visitSub( visitor, depth, alreadySet )
                if not stmt:get_exp():visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
@@ -3038,18 +2922,15 @@ function IfNode:visitSub( visitor, depth, alreadySet )
                if not stmt:get_block():visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
    end
-   
    return true
 end
 
@@ -3088,6 +2969,7 @@ end
 
 local ExpListNode = {}
 regKind( "ExpList" )
+
 function Filter:processExpList( node, opt )
 
    self:pushOpt( opt )
@@ -3121,14 +3003,9 @@ function ExpListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ExpListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn) 
    ExpNode.__init( self,managerId, id, 14, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expList = expList
    self.mRetExp = mRetExp
    self.followOn = followOn
-   
-   
 end
 function ExpListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList, mRetExp, followOn )
 
@@ -3149,24 +3026,16 @@ function ExpListNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpListNode.sortList( list )
@@ -3174,7 +3043,8 @@ function ExpListNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpListNode._setmeta( obj )
@@ -3192,15 +3062,15 @@ end
 
 
 
+
+
 function ExpListNode:canBeLeft(  )
 
    for __index, expNode in ipairs( self:get_expList() ) do
       if not expNode:canBeLeft(  ) then
          return false
       end
-      
    end
-   
    return true
 end
 
@@ -3210,9 +3080,7 @@ function ExpListNode:canBeRight( processInfo )
       if not expNode:canBeRight( processInfo ) then
          return false
       end
-      
    end
-   
    return true
 end
 
@@ -3221,7 +3089,6 @@ function ExpListNode:setLValue(  )
    for __index, expNode in ipairs( self:get_expList() ) do
       expNode.isLValue = true
    end
-   
 end
 
 function ExpListNode:getDDD(  )
@@ -3235,15 +3102,12 @@ function ExpListNode:getDDD(  )
          if len == 1 then
             return nil
          end
-         
          if self:get_expList()[len - 1]:get_expType():get_kind() == Ast.TypeInfoKind.DDD then
             return self:get_expList()[len - 1]
          end
-         
          return nil
       end
    end
-   
    return nil
 end
 
@@ -3257,10 +3121,8 @@ function ExpListNode:getExpTypeAt( index )
             return dddTypeInfo:get_typeInfo():get_nilableTypeInfo()
          end
       end
-      
       return Ast.builtinTypeNil
    end
-   
    return self:get_expTypeList()[index]
 end
 
@@ -3274,14 +3136,11 @@ function ExpListNode:getExpTypeNoDDDAt( index )
             return dddTypeInfo:get_typeInfo():get_nilableTypeInfo()
          end
       end
-      
       if index == #self:get_expTypeList() then
          return lastExpType
       end
-      
       return Ast.builtinTypeNil
    end
-   
    return self:get_expTypeList()[index]
 end
 
@@ -3351,6 +3210,7 @@ end
 
 local SwitchNode = {}
 regKind( "Switch" )
+
 function Filter:processSwitch( node, opt )
 
    self:pushOpt( opt )
@@ -3392,9 +3252,6 @@ function SwitchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_) 
    Node.__init( self,managerId, id, 15, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.idInNS = idInNS
    self.exp = exp
    self.caseList = caseList
@@ -3402,8 +3259,6 @@ function SwitchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeLi
    self.caseKind = caseKind
    self.failSafeDefault = failSafeDefault
    self.is_ = is_
-   
-   
 end
 function SwitchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, exp, caseList, default, caseKind, failSafeDefault, is_ )
 
@@ -3423,19 +3278,15 @@ function SwitchNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.default
@@ -3448,24 +3299,17 @@ function SwitchNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function SwitchNode.sortList( list )
@@ -3473,7 +3317,8 @@ function SwitchNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function SwitchNode._setmeta( obj )
@@ -3503,6 +3348,7 @@ end
 
 
 
+
 function SwitchNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -3514,11 +3360,9 @@ function SwitchNode:getBreakKind( checkMode )
          if work == BreakKind.Return then
             return BreakKind.Return
          end
-         
          if work == BreakKind.NeverRet then
             return BreakKind.NeverRet
          end
-         
       else
        
          do
@@ -3528,23 +3372,18 @@ function SwitchNode:getBreakKind( checkMode )
                   if goNext then
                      return BreakKind.None
                   end
-                  
                end
-               
             else 
                
                   if kind == BreakKind.None or kind > work then
                      kind = work
                   end
-                  
             end
          end
-         
       end
       
       
    end
-   
    do
       local block = self.default
       if block ~= nil then
@@ -3553,11 +3392,9 @@ function SwitchNode:getBreakKind( checkMode )
             if work == BreakKind.Return then
                return BreakKind.Return
             end
-            
             if work == BreakKind.NeverRet then
                return BreakKind.NeverRet
             end
-            
          else
           
             do
@@ -3567,36 +3404,26 @@ function SwitchNode:getBreakKind( checkMode )
                      if true then
                         return BreakKind.None
                      end
-                     
                   end
-                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
                         kind = work
                      end
-                     
                end
             end
-            
          end
          
          
          return kind
       end
    end
-   
-   
    if fullCase then
       return kind
    end
-   
    if kind == BreakKind.Break then
-      
       return kind
    end
-   
-   
    return BreakKind.None
 end
 
@@ -3612,13 +3439,11 @@ function SwitchNode:visitSub( visitor, depth, alreadySet )
                if not caseInfo:get_expList():visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
@@ -3630,18 +3455,15 @@ function SwitchNode:visitSub( visitor, depth, alreadySet )
                if not caseInfo:get_block():visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
    end
-   
    return true
 end
 
@@ -3656,6 +3478,7 @@ end
 
 local WhileNode = {}
 regKind( "While" )
+
 function Filter:processWhile( node, opt )
 
    self:pushOpt( opt )
@@ -3697,14 +3520,9 @@ function WhileNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
 end
 function WhileNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block) 
    Node.__init( self,managerId, id, 16, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
    self.infinit = infinit
    self.block = block
-   
-   
 end
 function WhileNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, infinit, block )
 
@@ -3724,19 +3542,15 @@ function WhileNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.block
       if not _lune._Set_has(alreadySet, child ) then
@@ -3747,21 +3561,15 @@ function WhileNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function WhileNode.sortList( list )
@@ -3769,7 +3577,8 @@ function WhileNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function WhileNode._setmeta( obj )
@@ -3787,6 +3596,7 @@ end
 
 
 
+
 function NodeKind.get_Repeat(  )
 
    return 17
@@ -3795,6 +3605,7 @@ end
 
 local RepeatNode = {}
 regKind( "Repeat" )
+
 function Filter:processRepeat( node, opt )
 
    self:pushOpt( opt )
@@ -3836,13 +3647,8 @@ function RepeatNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function RepeatNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, block, exp) 
    Node.__init( self,managerId, id, 17, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.block = block
    self.exp = exp
-   
-   
 end
 function RepeatNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, block, exp )
 
@@ -3862,19 +3668,15 @@ function RepeatNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.exp
       if not _lune._Set_has(alreadySet, child ) then
@@ -3885,21 +3687,15 @@ function RepeatNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function RepeatNode.sortList( list )
@@ -3907,7 +3703,8 @@ function RepeatNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function RepeatNode._setmeta( obj )
@@ -3922,15 +3719,15 @@ end
 
 
 
+
 function RepeatNode:getBreakKind( checkMode )
 
-   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
-   
    return BreakKind.None
 end
+
 
 
 
@@ -3942,6 +3739,7 @@ end
 
 local ForNode = {}
 regKind( "For" )
+
 function Filter:processFor( node, opt )
 
    self:pushOpt( opt )
@@ -3983,17 +3781,12 @@ function ForNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, 
 end
 function ForNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta) 
    Node.__init( self,managerId, id, 18, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.idInNS = idInNS
    self.block = block
    self.val = val
    self.init = init
    self.to = to
    self.delta = delta
-   
-   
 end
 function ForNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, block, val, init, to, delta )
 
@@ -4013,19 +3806,15 @@ function ForNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.init
       if not _lune._Set_has(alreadySet, child ) then
@@ -4036,19 +3825,15 @@ function ForNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.to
       if not _lune._Set_has(alreadySet, child ) then
@@ -4059,19 +3844,15 @@ function ForNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.delta
@@ -4084,24 +3865,17 @@ function ForNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ForNode.sortList( list )
@@ -4109,7 +3883,8 @@ function ForNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ForNode._setmeta( obj )
@@ -4136,15 +3911,15 @@ end
 
 
 
+
 function ForNode:getBreakKind( checkMode )
 
-   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
-   
    return BreakKind.None
 end
+
 
 
 
@@ -4156,6 +3931,7 @@ end
 
 local ApplyNode = {}
 regKind( "Apply" )
+
 function Filter:processApply( node, opt )
 
    self:pushOpt( opt )
@@ -4197,15 +3973,10 @@ function ApplyNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
 end
 function ApplyNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block) 
    Node.__init( self,managerId, id, 19, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.idInNS = idInNS
    self.varList = varList
    self.expList = expList
    self.block = block
-   
-   
 end
 function ApplyNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, varList, expList, block )
 
@@ -4225,19 +3996,15 @@ function ApplyNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.block
       if not _lune._Set_has(alreadySet, child ) then
@@ -4248,21 +4015,15 @@ function ApplyNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ApplyNode.sortList( list )
@@ -4270,7 +4031,8 @@ function ApplyNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ApplyNode._setmeta( obj )
@@ -4291,15 +4053,15 @@ end
 
 
 
+
 function ApplyNode:getBreakKind( checkMode )
 
-   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
-   
    return BreakKind.None
 end
+
 
 
 
@@ -4311,6 +4073,7 @@ end
 
 local ForeachNode = {}
 regKind( "Foreach" )
+
 function Filter:processForeach( node, opt )
 
    self:pushOpt( opt )
@@ -4352,16 +4115,11 @@ function ForeachNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ForeachNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block) 
    Node.__init( self,managerId, id, 20, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.idInNS = idInNS
    self.val = val
    self.key = key
    self.exp = exp
    self.block = block
-   
-   
 end
 function ForeachNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block )
 
@@ -4381,19 +4139,15 @@ function ForeachNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.block
       if not _lune._Set_has(alreadySet, child ) then
@@ -4404,21 +4158,15 @@ function ForeachNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ForeachNode.sortList( list )
@@ -4426,7 +4174,8 @@ function ForeachNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ForeachNode._setmeta( obj )
@@ -4450,15 +4199,15 @@ end
 
 
 
+
 function ForeachNode:getBreakKind( checkMode )
 
-   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
-   
    return BreakKind.None
 end
+
 
 
 
@@ -4470,6 +4219,7 @@ end
 
 local ForsortNode = {}
 regKind( "Forsort" )
+
 function Filter:processForsort( node, opt )
 
    self:pushOpt( opt )
@@ -4511,17 +4261,12 @@ function ForsortNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ForsortNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort) 
    Node.__init( self,managerId, id, 21, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.idInNS = idInNS
    self.val = val
    self.key = key
    self.exp = exp
    self.block = block
    self.sort = sort
-   
-   
 end
 function ForsortNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, key, exp, block, sort )
 
@@ -4541,19 +4286,15 @@ function ForsortNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.block
       if not _lune._Set_has(alreadySet, child ) then
@@ -4564,21 +4305,15 @@ function ForsortNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ForsortNode.sortList( list )
@@ -4586,7 +4321,8 @@ function ForsortNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ForsortNode._setmeta( obj )
@@ -4613,15 +4349,15 @@ end
 
 
 
+
 function ForsortNode:getBreakKind( checkMode )
 
-   
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       return self.block:getBreakKind( checkMode )
    end
-   
    return BreakKind.None
 end
+
 
 
 
@@ -4633,6 +4369,7 @@ end
 
 local ReturnNode = {}
 regKind( "Return" )
+
 function Filter:processReturn( node, opt )
 
    self:pushOpt( opt )
@@ -4674,12 +4411,7 @@ function ReturnNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function ReturnNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
    Node.__init( self,managerId, id, 22, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expList = expList
-   
-   
 end
 function ReturnNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
@@ -4701,24 +4433,17 @@ function ReturnNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ReturnNode.sortList( list )
@@ -4726,7 +4451,8 @@ function ReturnNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ReturnNode._setmeta( obj )
@@ -4735,6 +4461,7 @@ end
 function ReturnNode:get_expList()
    return self.expList
 end
+
 
 
 function ReturnNode:getBreakKind( checkMode )
@@ -4751,6 +4478,7 @@ end
 
 local BreakNode = {}
 regKind( "Break" )
+
 function Filter:processBreak( node, opt )
 
    self:pushOpt( opt )
@@ -4792,10 +4520,6 @@ function BreakNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
 end
 function BreakNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
    Node.__init( self,managerId, id, 23, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
-   
 end
 function BreakNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
@@ -4805,7 +4529,6 @@ function BreakNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 end
 function BreakNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function BreakNode.sortList( list )
@@ -4813,12 +4536,14 @@ function BreakNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function BreakNode._setmeta( obj )
   setmetatable( obj, { __index = BreakNode  } )
 end
+
 
 
 
@@ -4836,6 +4561,7 @@ end
 
 local ProvideNode = {}
 regKind( "Provide" )
+
 function Filter:processProvide( node, opt )
 
    self:pushOpt( opt )
@@ -4877,12 +4603,7 @@ function ProvideNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ProvideNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbol) 
    Node.__init( self,managerId, id, 24, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.symbol = symbol
-   
-   
 end
 function ProvideNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symbol )
 
@@ -4892,7 +4613,6 @@ function ProvideNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, 
 end
 function ProvideNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ProvideNode.sortList( list )
@@ -4900,7 +4620,8 @@ function ProvideNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ProvideNode._setmeta( obj )
@@ -4912,6 +4633,7 @@ end
 
 
 
+
 function NodeKind.get_ExpNew(  )
 
    return 25
@@ -4920,6 +4642,7 @@ end
 
 local ExpNewNode = {}
 regKind( "ExpNew" )
+
 function Filter:processExpNew( node, opt )
 
    self:pushOpt( opt )
@@ -4961,14 +4684,9 @@ function ExpNewNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function ExpNewNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList) 
    ExpNode.__init( self,managerId, id, 25, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.symbol = symbol
    self.ctorTypeInfo = ctorTypeInfo
    self.argList = argList
-   
-   
 end
 function ExpNewNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symbol, ctorTypeInfo, argList )
 
@@ -4988,19 +4706,15 @@ function ExpNewNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.argList
@@ -5013,24 +4727,17 @@ function ExpNewNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpNewNode.sortList( list )
@@ -5038,7 +4745,8 @@ function ExpNewNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpNewNode._setmeta( obj )
@@ -5057,6 +4765,8 @@ end
 
 
 
+
+
 function NodeKind.get_ExpUnwrap(  )
 
    return 26
@@ -5065,6 +4775,7 @@ end
 
 local ExpUnwrapNode = {}
 regKind( "ExpUnwrap" )
+
 function Filter:processExpUnwrap( node, opt )
 
    self:pushOpt( opt )
@@ -5106,13 +4817,8 @@ function ExpUnwrapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function ExpUnwrapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, default) 
    ExpNode.__init( self,managerId, id, 26, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
    self.default = default
-   
-   
 end
 function ExpUnwrapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, default )
 
@@ -5132,19 +4838,15 @@ function ExpUnwrapNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.default
@@ -5157,24 +4859,17 @@ function ExpUnwrapNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpUnwrapNode.sortList( list )
@@ -5182,7 +4877,8 @@ function ExpUnwrapNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpUnwrapNode._setmeta( obj )
@@ -5198,6 +4894,8 @@ end
 
 
 
+
+
 function NodeKind.get_ExpRef(  )
 
    return 27
@@ -5206,6 +4904,7 @@ end
 
 local ExpRefNode = {}
 regKind( "ExpRef" )
+
 function Filter:processExpRef( node, opt )
 
    self:pushOpt( opt )
@@ -5239,12 +4938,7 @@ function ExpRefNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function ExpRefNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symbolInfo) 
    ExpNode.__init( self,managerId, id, 27, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.symbolInfo = symbolInfo
-   
-   
 end
 function ExpRefNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symbolInfo )
 
@@ -5254,7 +4948,6 @@ function ExpRefNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, s
 end
 function ExpRefNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpRefNode.sortList( list )
@@ -5262,7 +4955,8 @@ function ExpRefNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpRefNode._setmeta( obj )
@@ -5271,6 +4965,8 @@ end
 function ExpRefNode:get_symbolInfo()
    return self.symbolInfo
 end
+
+
 
 
 
@@ -5295,6 +4991,7 @@ end
 
 local ExpSetValNode = {}
 regKind( "ExpSetVal" )
+
 function Filter:processExpSetVal( node, opt )
 
    self:pushOpt( opt )
@@ -5336,16 +5033,11 @@ function ExpSetValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function ExpSetValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet) 
    Node.__init( self,managerId, id, 28, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp1 = exp1
    self.condRetInfo = condRetInfo
    self.exp2 = exp2
    self.LeftSymList = LeftSymList
    self.initSymSet = initSymSet
-   
-   
 end
 function ExpSetValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp1, condRetInfo, exp2, LeftSymList, initSymSet )
 
@@ -5365,19 +5057,15 @@ function ExpSetValNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.exp2
       if not _lune._Set_has(alreadySet, child ) then
@@ -5388,21 +5076,15 @@ function ExpSetValNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpSetValNode.sortList( list )
@@ -5410,7 +5092,8 @@ function ExpSetValNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpSetValNode._setmeta( obj )
@@ -5431,6 +5114,7 @@ end
 function ExpSetValNode:get_initSymSet()
    return self.initSymSet
 end
+
 
 
 
@@ -5463,6 +5147,7 @@ end
 
 local ExpSetItemNode = {}
 regKind( "ExpSetItem" )
+
 function Filter:processExpSetItem( node, opt )
 
    self:pushOpt( opt )
@@ -5504,15 +5189,10 @@ function ExpSetItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function ExpSetItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo) 
    Node.__init( self,managerId, id, 29, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.val = val
    self.index = index
    self.exp2 = exp2
    self.condRetInfo = condRetInfo
-   
-   
 end
 function ExpSetItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, index, exp2, condRetInfo )
 
@@ -5532,19 +5212,15 @@ function ExpSetItemNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.exp2
       if not _lune._Set_has(alreadySet, child ) then
@@ -5555,21 +5231,15 @@ function ExpSetItemNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpSetItemNode.sortList( list )
@@ -5577,7 +5247,8 @@ function ExpSetItemNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpSetItemNode._setmeta( obj )
@@ -5598,6 +5269,7 @@ end
 
 
 
+
 function NodeKind.get_ExpOp2(  )
 
    return 30
@@ -5606,6 +5278,7 @@ end
 
 local ExpOp2Node = {}
 regKind( "ExpOp2" )
+
 function Filter:processExpOp2( node, opt )
 
    self:pushOpt( opt )
@@ -5647,14 +5320,9 @@ function ExpOp2Node._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function ExpOp2Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2) 
    ExpNode.__init( self,managerId, id, 30, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.op = op
    self.exp1 = exp1
    self.exp2 = exp2
-   
-   
 end
 function ExpOp2Node.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, op, exp1, exp2 )
 
@@ -5674,19 +5342,15 @@ function ExpOp2Node:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.exp2
       if not _lune._Set_has(alreadySet, child ) then
@@ -5697,21 +5361,15 @@ function ExpOp2Node:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpOp2Node.sortList( list )
@@ -5719,7 +5377,8 @@ function ExpOp2Node.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpOp2Node._setmeta( obj )
@@ -5738,6 +5397,8 @@ end
 
 
 
+
+
 function NodeKind.get_UnwrapSet(  )
 
    return 31
@@ -5746,6 +5407,7 @@ end
 
 local UnwrapSetNode = {}
 regKind( "UnwrapSet" )
+
 function Filter:processUnwrapSet( node, opt )
 
    self:pushOpt( opt )
@@ -5787,14 +5449,9 @@ function UnwrapSetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function UnwrapSetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock) 
    Node.__init( self,managerId, id, 31, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.dstExpList = dstExpList
    self.srcExpList = srcExpList
    self.unwrapBlock = unwrapBlock
-   
-   
 end
 function UnwrapSetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, dstExpList, srcExpList, unwrapBlock )
 
@@ -5814,19 +5471,15 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.srcExpList
       if not _lune._Set_has(alreadySet, child ) then
@@ -5837,19 +5490,15 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.unwrapBlock
@@ -5862,24 +5511,17 @@ function UnwrapSetNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function UnwrapSetNode.sortList( list )
@@ -5887,7 +5529,8 @@ function UnwrapSetNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function UnwrapSetNode._setmeta( obj )
@@ -5905,6 +5548,7 @@ end
 
 
 
+
 function NodeKind.get_IfUnwrap(  )
 
    return 32
@@ -5913,6 +5557,7 @@ end
 
 local IfUnwrapNode = {}
 regKind( "IfUnwrap" )
+
 function Filter:processIfUnwrap( node, opt )
 
    self:pushOpt( opt )
@@ -5954,16 +5599,11 @@ function IfUnwrapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function IfUnwrapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, varSymList, condRetInfo, expList, block, nilBlock) 
    Node.__init( self,managerId, id, 32, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.varSymList = varSymList
    self.condRetInfo = condRetInfo
    self.expList = expList
    self.block = block
    self.nilBlock = nilBlock
-   
-   
 end
 function IfUnwrapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, varSymList, condRetInfo, expList, block, nilBlock )
 
@@ -5983,19 +5623,15 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.block
       if not _lune._Set_has(alreadySet, child ) then
@@ -6006,19 +5642,15 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.nilBlock
@@ -6031,24 +5663,17 @@ function IfUnwrapNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function IfUnwrapNode.sortList( list )
@@ -6056,7 +5681,8 @@ function IfUnwrapNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function IfUnwrapNode._setmeta( obj )
@@ -6080,6 +5706,7 @@ end
 
 
 
+
 function IfUnwrapNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
@@ -6088,11 +5715,9 @@ function IfUnwrapNode:getBreakKind( checkMode )
       if work == BreakKind.Return then
          return BreakKind.Return
       end
-      
       if work == BreakKind.NeverRet then
          return BreakKind.NeverRet
       end
-      
    else
     
       do
@@ -6102,18 +5727,14 @@ function IfUnwrapNode:getBreakKind( checkMode )
                if true then
                   return BreakKind.None
                end
-               
             end
-            
          else 
             
                if kind == BreakKind.None or kind > work then
                   kind = work
                end
-               
          end
       end
-      
    end
    
    
@@ -6125,11 +5746,9 @@ function IfUnwrapNode:getBreakKind( checkMode )
             if work == BreakKind.Return then
                return BreakKind.Return
             end
-            
             if work == BreakKind.NeverRet then
                return BreakKind.NeverRet
             end
-            
          else
           
             do
@@ -6139,25 +5758,20 @@ function IfUnwrapNode:getBreakKind( checkMode )
                      if true then
                         return BreakKind.None
                      end
-                     
                   end
-                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
                         kind = work
                      end
-                     
                end
             end
-            
          end
          
          
          return kind
       end
    end
-   
    return BreakKind.None
 end
 
@@ -6196,6 +5810,7 @@ end
 
 local WhenNode = {}
 regKind( "When" )
+
 function Filter:processWhen( node, opt )
 
    self:pushOpt( opt )
@@ -6237,14 +5852,9 @@ function WhenNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList,
 end
 function WhenNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock) 
    Node.__init( self,managerId, id, 33, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.symPairList = symPairList
    self.block = block
    self.elseBlock = elseBlock
-   
-   
 end
 function WhenNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, symPairList, block, elseBlock )
 
@@ -6264,19 +5874,15 @@ function WhenNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.elseBlock
@@ -6289,24 +5895,17 @@ function WhenNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function WhenNode.sortList( list )
@@ -6314,7 +5913,8 @@ function WhenNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function WhenNode._setmeta( obj )
@@ -6332,6 +5932,7 @@ end
 
 
 
+
 function WhenNode:getBreakKind( checkMode )
 
    local kind = self.block:getBreakKind( checkMode )
@@ -6340,11 +5941,9 @@ function WhenNode:getBreakKind( checkMode )
       if work == BreakKind.Return then
          return BreakKind.Return
       end
-      
       if work == BreakKind.NeverRet then
          return BreakKind.NeverRet
       end
-      
    else
     
       do
@@ -6354,18 +5953,14 @@ function WhenNode:getBreakKind( checkMode )
                if true then
                   return BreakKind.None
                end
-               
             end
-            
          else 
             
                if kind == BreakKind.None or kind > work then
                   kind = work
                end
-               
          end
       end
-      
    end
    
    
@@ -6377,11 +5972,9 @@ function WhenNode:getBreakKind( checkMode )
             if work == BreakKind.Return then
                return BreakKind.Return
             end
-            
             if work == BreakKind.NeverRet then
                return BreakKind.NeverRet
             end
-            
          else
           
             do
@@ -6391,25 +5984,20 @@ function WhenNode:getBreakKind( checkMode )
                      if true then
                         return BreakKind.None
                      end
-                     
                   end
-                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
                         kind = work
                      end
-                     
                end
             end
-            
          end
          
          
          return kind
       end
    end
-   
    return BreakKind.None
 end
 
@@ -6455,6 +6043,7 @@ end
 
 local ExpCastNode = {}
 regKind( "ExpCast" )
+
 function Filter:processExpCast( node, opt )
 
    self:pushOpt( opt )
@@ -6496,16 +6085,11 @@ function ExpCastNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ExpCastNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind) 
    ExpNode.__init( self,managerId, id, 34, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
    self.castType = castType
    self.castTypeNode = castTypeNode
    self.castOpe = castOpe
    self.castKind = castKind
-   
-   
 end
 function ExpCastNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp, castType, castTypeNode, castOpe, castKind )
 
@@ -6525,19 +6109,15 @@ function ExpCastNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.castTypeNode
@@ -6550,24 +6130,17 @@ function ExpCastNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpCastNode.sortList( list )
@@ -6575,7 +6148,8 @@ function ExpCastNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpCastNode._setmeta( obj )
@@ -6596,6 +6170,8 @@ end
 function ExpCastNode:get_castKind()
    return self.castKind
 end
+
+
 
 
 
@@ -6624,6 +6200,7 @@ end
 
 local ExpToDDDNode = {}
 regKind( "ExpToDDD" )
+
 function Filter:processExpToDDD( node, opt )
 
    self:pushOpt( opt )
@@ -6665,12 +6242,7 @@ function ExpToDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function ExpToDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
    ExpNode.__init( self,managerId, id, 35, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expList = expList
-   
-   
 end
 function ExpToDDDNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
@@ -6690,21 +6262,15 @@ function ExpToDDDNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpToDDDNode.sortList( list )
@@ -6712,7 +6278,8 @@ function ExpToDDDNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpToDDDNode._setmeta( obj )
@@ -6725,6 +6292,8 @@ end
 
 
 
+
+
 function NodeKind.get_ExpSubDDD(  )
 
    return 36
@@ -6733,6 +6302,7 @@ end
 
 local ExpSubDDDNode = {}
 regKind( "ExpSubDDD" )
+
 function Filter:processExpSubDDD( node, opt )
 
    self:pushOpt( opt )
@@ -6774,13 +6344,8 @@ function ExpSubDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function ExpSubDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex) 
    ExpNode.__init( self,managerId, id, 36, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.src = src
    self.remainIndex = remainIndex
-   
-   
 end
 function ExpSubDDDNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, src, remainIndex )
 
@@ -6800,21 +6365,15 @@ function ExpSubDDDNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpSubDDDNode.sortList( list )
@@ -6822,7 +6381,8 @@ function ExpSubDDDNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpSubDDDNode._setmeta( obj )
@@ -6834,6 +6394,8 @@ end
 function ExpSubDDDNode:get_remainIndex()
    return self.remainIndex
 end
+
+
 
 
 
@@ -6879,6 +6441,7 @@ end
 
 local ExpOp1Node = {}
 regKind( "ExpOp1" )
+
 function Filter:processExpOp1( node, opt )
 
    self:pushOpt( opt )
@@ -6920,14 +6483,9 @@ function ExpOp1Node._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function ExpOp1Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp) 
    ExpNode.__init( self,managerId, id, 37, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.op = op
    self.macroMode = macroMode
    self.exp = exp
-   
-   
 end
 function ExpOp1Node.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, op, macroMode, exp )
 
@@ -6947,21 +6505,15 @@ function ExpOp1Node:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpOp1Node.sortList( list )
@@ -6969,7 +6521,8 @@ function ExpOp1Node.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpOp1Node._setmeta( obj )
@@ -6988,6 +6541,8 @@ end
 
 
 
+
+
 function NodeKind.get_ExpRefItem(  )
 
    return 38
@@ -6996,6 +6551,7 @@ end
 
 local ExpRefItemNode = {}
 regKind( "ExpRefItem" )
+
 function Filter:processExpRefItem( node, opt )
 
    self:pushOpt( opt )
@@ -7037,15 +6593,10 @@ function ExpRefItemNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function ExpRefItemNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index) 
    ExpNode.__init( self,managerId, id, 38, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.val = val
    self.nilAccess = nilAccess
    self.symbol = symbol
    self.index = index
-   
-   
 end
 function ExpRefItemNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, val, nilAccess, symbol, index )
 
@@ -7065,19 +6616,15 @@ function ExpRefItemNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.index
@@ -7090,24 +6637,17 @@ function ExpRefItemNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpRefItemNode.sortList( list )
@@ -7115,7 +6655,8 @@ function ExpRefItemNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpRefItemNode._setmeta( obj )
@@ -7136,6 +6677,8 @@ end
 
 
 
+
+
 function ExpRefItemNode:getPrefix(  )
 
    return self.val
@@ -7147,8 +6690,6 @@ function ExpRefItemNode:canBeLeft(  )
    if self.val:get_expType() == Ast.builtinTypeStem then
       return false
    end
-   
-   
    return Ast.TypeInfo.isMut( self:get_val():get_expType() ) and not self.nilAccess
 end
 
@@ -7161,6 +6702,7 @@ end
 
 local ExpCallNode = {}
 regKind( "ExpCall" )
+
 function Filter:processExpCall( node, opt )
 
    self:pushOpt( opt )
@@ -7202,15 +6744,10 @@ function ExpCallNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ExpCallNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList) 
    ExpNode.__init( self,managerId, id, 39, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.func = func
    self.errorFunc = errorFunc
    self.nilAccess = nilAccess
    self.argList = argList
-   
-   
 end
 function ExpCallNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, func, errorFunc, nilAccess, argList )
 
@@ -7230,19 +6767,15 @@ function ExpCallNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.argList
@@ -7255,24 +6788,17 @@ function ExpCallNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpCallNode.sortList( list )
@@ -7280,7 +6806,8 @@ function ExpCallNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpCallNode._setmeta( obj )
@@ -7301,6 +6828,8 @@ end
 
 
 
+
+
 function ExpCallNode:get_effectivePos(  )
 
    return self.func:get_effectivePos()
@@ -7318,7 +6847,6 @@ function ExpCallNode:canBeRight( processInfo )
    if expType:equals( processInfo, Ast.builtinTypeNone ) or expType:equals( processInfo, Ast.builtinTypeNeverRet ) then
       return false
    end
-   
    return true
 end
 
@@ -7328,7 +6856,6 @@ function ExpCallNode:getBreakKind( checkMode )
    if self.errorFunc then
       return BreakKind.NeverRet
    end
-   
    return BreakKind.None
 end
 
@@ -7341,6 +6868,7 @@ end
 
 local ExpMRetNode = {}
 regKind( "ExpMRet" )
+
 function Filter:processExpMRet( node, opt )
 
    self:pushOpt( opt )
@@ -7382,12 +6910,7 @@ function ExpMRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ExpMRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mRet) 
    ExpNode.__init( self,managerId, id, 40, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.mRet = mRet
-   
-   
 end
 function ExpMRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mRet )
 
@@ -7407,21 +6930,15 @@ function ExpMRetNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpMRetNode.sortList( list )
@@ -7429,7 +6946,8 @@ function ExpMRetNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpMRetNode._setmeta( obj )
@@ -7438,6 +6956,8 @@ end
 function ExpMRetNode:get_mRet()
    return self.mRet
 end
+
+
 
 
 
@@ -7455,6 +6975,7 @@ end
 
 local ExpAccessMRetNode = {}
 regKind( "ExpAccessMRet" )
+
 function Filter:processExpAccessMRet( node, opt )
 
    self:pushOpt( opt )
@@ -7496,13 +7017,8 @@ function ExpAccessMRetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
 end
 function ExpAccessMRetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mRet, index) 
    ExpNode.__init( self,managerId, id, 41, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.mRet = mRet
    self.index = index
-   
-   
 end
 function ExpAccessMRetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mRet, index )
 
@@ -7522,21 +7038,15 @@ function ExpAccessMRetNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpAccessMRetNode.sortList( list )
@@ -7544,7 +7054,8 @@ function ExpAccessMRetNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpAccessMRetNode._setmeta( obj )
@@ -7556,6 +7067,8 @@ end
 function ExpAccessMRetNode:get_index()
    return self.index
 end
+
+
 
 
 
@@ -7573,6 +7086,7 @@ end
 
 local ExpMultiTo1Node = {}
 regKind( "ExpMultiTo1" )
+
 function Filter:processExpMultiTo1( node, opt )
 
    self:pushOpt( opt )
@@ -7614,12 +7128,7 @@ function ExpMultiTo1Node._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function ExpMultiTo1Node:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
    ExpNode.__init( self,managerId, id, 42, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
-   
-   
 end
 function ExpMultiTo1Node.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
@@ -7639,21 +7148,15 @@ function ExpMultiTo1Node:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpMultiTo1Node.sortList( list )
@@ -7661,7 +7164,8 @@ function ExpMultiTo1Node.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpMultiTo1Node._setmeta( obj )
@@ -7670,6 +7174,8 @@ end
 function ExpMultiTo1Node:get_exp()
    return self.exp
 end
+
+
 
 
 
@@ -7687,6 +7193,7 @@ end
 
 local ExpParenNode = {}
 regKind( "ExpParen" )
+
 function Filter:processExpParen( node, opt )
 
    self:pushOpt( opt )
@@ -7728,12 +7235,7 @@ function ExpParenNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function ExpParenNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
    ExpNode.__init( self,managerId, id, 43, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
-   
-   
 end
 function ExpParenNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
@@ -7753,21 +7255,15 @@ function ExpParenNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpParenNode.sortList( list )
@@ -7775,7 +7271,8 @@ function ExpParenNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpParenNode._setmeta( obj )
@@ -7784,6 +7281,8 @@ end
 function ExpParenNode:get_exp()
    return self.exp
 end
+
+
 
 
 
@@ -7807,6 +7306,7 @@ end
 
 local ExpMacroExpNode = {}
 regKind( "ExpMacroExp" )
+
 function Filter:processExpMacroExp( node, opt )
 
    self:pushOpt( opt )
@@ -7844,15 +7344,10 @@ function ExpMacroExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function ExpMacroExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList) 
    Node.__init( self,managerId, id, 44, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.macroRefNode = macroRefNode
    self.macroType = macroType
    self.expList = expList
    self.stmtList = stmtList
-   
-   
 end
 function ExpMacroExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, macroRefNode, macroType, expList, stmtList )
 
@@ -7872,19 +7367,15 @@ function ExpMacroExpNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.expList
@@ -7897,22 +7388,17 @@ function ExpMacroExpNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
    do
       local list = self.stmtList
       for __index, child in ipairs( list ) do
@@ -7924,24 +7410,16 @@ function ExpMacroExpNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpMacroExpNode.sortList( list )
@@ -7949,7 +7427,8 @@ function ExpMacroExpNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpMacroExpNode._setmeta( obj )
@@ -7967,6 +7446,7 @@ end
 function ExpMacroExpNode:get_stmtList()
    return self.stmtList
 end
+
 
 
 
@@ -8020,6 +7500,7 @@ end
 
 local ExpMacroStatNode = {}
 regKind( "ExpMacroStat" )
+
 function Filter:processExpMacroStat( node, opt )
 
    self:pushOpt( opt )
@@ -8061,12 +7542,7 @@ function ExpMacroStatNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
 end
 function ExpMacroStatNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expStrList) 
    Node.__init( self,managerId, id, 45, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expStrList = expStrList
-   
-   
 end
 function ExpMacroStatNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expStrList )
 
@@ -8087,24 +7563,16 @@ function ExpMacroStatNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpMacroStatNode.sortList( list )
@@ -8112,7 +7580,8 @@ function ExpMacroStatNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpMacroStatNode._setmeta( obj )
@@ -8124,6 +7593,7 @@ end
 
 
 
+
 function NodeKind.get_ExpMacroArgExp(  )
 
    return 46
@@ -8132,6 +7602,7 @@ end
 
 local ExpMacroArgExpNode = {}
 regKind( "ExpMacroArgExp" )
+
 function Filter:processExpMacroArgExp( node, opt )
 
    self:pushOpt( opt )
@@ -8173,13 +7644,8 @@ function ExpMacroArgExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag,
 end
 function ExpMacroArgExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp) 
    Node.__init( self,managerId, id, 46, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.codeTxt = codeTxt
    self.exp = exp
-   
-   
 end
 function ExpMacroArgExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, codeTxt, exp )
 
@@ -8199,21 +7665,15 @@ function ExpMacroArgExpNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpMacroArgExpNode.sortList( list )
@@ -8221,7 +7681,8 @@ function ExpMacroArgExpNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpMacroArgExpNode._setmeta( obj )
@@ -8236,6 +7697,7 @@ end
 
 
 
+
 function NodeKind.get_StmtExp(  )
 
    return 47
@@ -8244,6 +7706,7 @@ end
 
 local StmtExpNode = {}
 regKind( "StmtExp" )
+
 function Filter:processStmtExp( node, opt )
 
    self:pushOpt( opt )
@@ -8281,12 +7744,7 @@ function StmtExpNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function StmtExpNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
    ExpNode.__init( self,managerId, id, 47, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
-   
-   
 end
 function StmtExpNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
@@ -8306,21 +7764,15 @@ function StmtExpNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function StmtExpNode.sortList( list )
@@ -8328,7 +7780,8 @@ function StmtExpNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function StmtExpNode._setmeta( obj )
@@ -8337,6 +7790,8 @@ end
 function StmtExpNode:get_exp()
    return self.exp
 end
+
+
 
 
 
@@ -8360,6 +7815,7 @@ end
 
 local ExpMacroStatListNode = {}
 regKind( "ExpMacroStatList" )
+
 function Filter:processExpMacroStatList( node, opt )
 
    self:pushOpt( opt )
@@ -8401,12 +7857,7 @@ function ExpMacroStatListNode._new( managerId, id, pos, inTestBlock, macroArgFla
 end
 function ExpMacroStatListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
    Node.__init( self,managerId, id, 48, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
-   
-   
 end
 function ExpMacroStatListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
@@ -8426,21 +7877,15 @@ function ExpMacroStatListNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpMacroStatListNode.sortList( list )
@@ -8448,7 +7893,8 @@ function ExpMacroStatListNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpMacroStatListNode._setmeta( obj )
@@ -8460,6 +7906,7 @@ end
 
 
 
+
 function NodeKind.get_ExpOmitEnum(  )
 
    return 49
@@ -8468,6 +7915,7 @@ end
 
 local ExpOmitEnumNode = {}
 regKind( "ExpOmitEnum" )
+
 function Filter:processExpOmitEnum( node, opt )
 
    self:pushOpt( opt )
@@ -8509,15 +7957,10 @@ function ExpOmitEnumNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function ExpOmitEnumNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo) 
    ExpNode.__init( self,managerId, id, 49, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.valToken = valToken
    self.valInfo = valInfo
    self.aliasType = aliasType
    self.enumTypeInfo = enumTypeInfo
-   
-   
 end
 function ExpOmitEnumNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, valToken, valInfo, aliasType, enumTypeInfo )
 
@@ -8527,7 +7970,6 @@ function ExpOmitEnumNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLi
 end
 function ExpOmitEnumNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpOmitEnumNode.sortList( list )
@@ -8535,7 +7977,8 @@ function ExpOmitEnumNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpOmitEnumNode._setmeta( obj )
@@ -8557,6 +8000,8 @@ end
 
 
 
+
+
 function NodeKind.get_RefField(  )
 
    return 50
@@ -8565,6 +8010,7 @@ end
 
 local RefFieldNode = {}
 regKind( "RefField" )
+
 function Filter:processRefField( node, opt )
 
    self:pushOpt( opt )
@@ -8602,15 +8048,10 @@ function RefFieldNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function RefFieldNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix) 
    ExpNode.__init( self,managerId, id, 50, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.field = field
    self.symbolInfo = symbolInfo
    self.nilAccess = nilAccess
    self.prefix = prefix
-   
-   
 end
 function RefFieldNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix )
 
@@ -8630,21 +8071,15 @@ function RefFieldNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function RefFieldNode.sortList( list )
@@ -8652,7 +8087,8 @@ function RefFieldNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function RefFieldNode._setmeta( obj )
@@ -8673,6 +8109,8 @@ end
 
 
 
+
+
 function RefFieldNode:get_effectivePos(  )
 
    return self.field.pos
@@ -8685,15 +8123,12 @@ end
 
 function RefFieldNode:canBeLeft(  )
 
-   
    do
       local _exp = self:get_symbolInfo()
       if _exp ~= nil then
          return _exp:get_canBeLeft()
       end
    end
-   
-   
    return false
 end
 
@@ -8707,18 +8142,13 @@ function RefFieldNode:canBeRight( processInfo )
             local prefix = _lune.__Cast( self:get_prefix(), 3, ExpRefNode )
             if prefix ~= nil then
                if prefix:get_symbolInfo():get_name() == "self" then
-                  
                   return _exp:get_canBeRight() and _exp:get_hasValueFlag()
                end
-               
             end
          end
-         
          return _exp:get_canBeRight()
       end
    end
-   
-   
    return true
 end
 
@@ -8731,6 +8161,7 @@ end
 
 local GetFieldNode = {}
 regKind( "GetField" )
+
 function Filter:processGetField( node, opt )
 
    self:pushOpt( opt )
@@ -8776,16 +8207,11 @@ function GetFieldNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function GetFieldNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo) 
    ExpNode.__init( self,managerId, id, 51, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.field = field
    self.symbolInfo = symbolInfo
    self.nilAccess = nilAccess
    self.prefix = prefix
    self.getterTypeInfo = getterTypeInfo
-   
-   
 end
 function GetFieldNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, field, symbolInfo, nilAccess, prefix, getterTypeInfo )
 
@@ -8805,21 +8231,15 @@ function GetFieldNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function GetFieldNode.sortList( list )
@@ -8827,7 +8247,8 @@ function GetFieldNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function GetFieldNode._setmeta( obj )
@@ -8851,6 +8272,8 @@ end
 
 
 
+
+
 function GetFieldNode:get_effectivePos(  )
 
    return self.field.pos
@@ -8870,6 +8293,7 @@ end
 
 local AliasNode = {}
 regKind( "Alias" )
+
 function Filter:processAlias( node, opt )
 
    self:pushOpt( opt )
@@ -8911,14 +8335,9 @@ function AliasNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
 end
 function AliasNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo) 
    ExpNode.__init( self,managerId, id, 52, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.newSymbol = newSymbol
    self.srcNode = srcNode
    self.typeInfo = typeInfo
-   
-   
 end
 function AliasNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, newSymbol, srcNode, typeInfo )
 
@@ -8938,21 +8357,15 @@ function AliasNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function AliasNode.sortList( list )
@@ -8960,7 +8373,8 @@ function AliasNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function AliasNode._setmeta( obj )
@@ -8979,6 +8393,8 @@ end
 
 
 
+
+
 function NodeKind.get_ExpExpandTuple(  )
 
    return 53
@@ -8987,6 +8403,7 @@ end
 
 local ExpExpandTupleNode = {}
 regKind( "ExpExpandTuple" )
+
 function Filter:processExpExpandTuple( node, opt )
 
    self:pushOpt( opt )
@@ -9028,12 +8445,7 @@ function ExpExpandTupleNode._new( managerId, id, pos, inTestBlock, macroArgFlag,
 end
 function ExpExpandTupleNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
    ExpNode.__init( self,managerId, id, 53, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
-   
-   
 end
 function ExpExpandTupleNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
@@ -9053,21 +8465,15 @@ function ExpExpandTupleNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpExpandTupleNode.sortList( list )
@@ -9075,7 +8481,8 @@ function ExpExpandTupleNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpExpandTupleNode._setmeta( obj )
@@ -9084,6 +8491,8 @@ end
 function ExpExpandTupleNode:get_exp()
    return self.exp
 end
+
+
 
 
 
@@ -9156,6 +8565,7 @@ end
 
 local DeclVarNode = {}
 regKind( "DeclVar" )
+
 function Filter:processDeclVar( node, opt )
 
    self:pushOpt( opt )
@@ -9197,9 +8607,6 @@ function DeclVarNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock) 
    Node.__init( self,managerId, id, 54, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.mode = mode
    self.accessMode = accessMode
    self.staticFlag = staticFlag
@@ -9211,8 +8618,6 @@ function DeclVarNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeL
    self.unwrapFlag = unwrapFlag
    self.unwrapBlock = unwrapBlock
    self.thenBlock = thenBlock
-   
-   
 end
 function DeclVarNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, mode, accessMode, staticFlag, condRetInfo, varList, expList, symbolInfoList, typeInfoList, unwrapFlag, unwrapBlock, thenBlock )
 
@@ -9234,22 +8639,17 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
    do
       do
          local child = self.unwrapBlock
@@ -9262,22 +8662,17 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
    do
       do
          local child = self.thenBlock
@@ -9290,24 +8685,17 @@ function DeclVarNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclVarNode.sortList( list )
@@ -9315,7 +8703,8 @@ function DeclVarNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclVarNode._setmeta( obj )
@@ -9357,6 +8746,7 @@ end
 
 
 
+
 function DeclVarNode:getBreakKind( checkMode )
 
    local kind = BreakKind.None
@@ -9369,11 +8759,9 @@ function DeclVarNode:getBreakKind( checkMode )
             if work == BreakKind.Return then
                return BreakKind.Return
             end
-            
             if work == BreakKind.NeverRet then
                return BreakKind.NeverRet
             end
-            
          else
           
             do
@@ -9383,18 +8771,14 @@ function DeclVarNode:getBreakKind( checkMode )
                      if true then
                         return BreakKind.None
                      end
-                     
                   end
-                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
                         kind = work
                      end
-                     
                end
             end
-            
          end
          
          
@@ -9406,11 +8790,9 @@ function DeclVarNode:getBreakKind( checkMode )
                   if work == BreakKind.Return then
                      return BreakKind.Return
                   end
-                  
                   if work == BreakKind.NeverRet then
                      return BreakKind.NeverRet
                   end
-                  
                else
                 
                   do
@@ -9420,32 +8802,25 @@ function DeclVarNode:getBreakKind( checkMode )
                            if true then
                               return BreakKind.None
                            end
-                           
                         end
-                        
                      else 
                         
                            if kind == BreakKind.None or kind > work then
                               kind = work
                            end
-                           
                      end
                   end
-                  
                end
                
                
                return kind
             end
          end
-         
          if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
             return kind
          end
-         
       end
    end
-   
    return BreakKind.None
 end
 
@@ -9464,21 +8839,17 @@ function DeclVarNode:visitSub( visitor, depth, alreadySet )
                      if not refTypeNode:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
          end
       end
-      
    end
-   
    return true
 end
 
@@ -9630,6 +9001,7 @@ end
 
 local DeclFormNode = {}
 regKind( "DeclForm" )
+
 function Filter:processDeclForm( node, opt )
 
    self:pushOpt( opt )
@@ -9671,12 +9043,7 @@ function DeclFormNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function DeclFormNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
    Node.__init( self,managerId, id, 55, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.declInfo = declInfo
-   
-   
 end
 function DeclFormNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
@@ -9696,18 +9063,15 @@ function DeclFormNode:visit( visitor, depth, alreadySet )
                   if not argNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
@@ -9717,18 +9081,15 @@ function DeclFormNode:visit( visitor, depth, alreadySet )
                   if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -9740,23 +9101,17 @@ function DeclFormNode:visit( visitor, depth, alreadySet )
                      if not body:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclFormNode.sortList( list )
@@ -9764,7 +9119,8 @@ function DeclFormNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclFormNode._setmeta( obj )
@@ -9776,6 +9132,7 @@ end
 
 
 
+
 function NodeKind.get_DeclFunc(  )
 
    return 56
@@ -9784,6 +9141,7 @@ end
 
 local DeclFuncNode = {}
 regKind( "DeclFunc" )
+
 function Filter:processDeclFunc( node, opt )
 
    self:pushOpt( opt )
@@ -9817,12 +9175,7 @@ function DeclFuncNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function DeclFuncNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
    Node.__init( self,managerId, id, 56, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.declInfo = declInfo
-   
-   
 end
 function DeclFuncNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
@@ -9842,18 +9195,15 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
                   if not argNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
@@ -9863,18 +9213,15 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
                   if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -9886,23 +9233,17 @@ function DeclFuncNode:visit( visitor, depth, alreadySet )
                      if not body:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclFuncNode.sortList( list )
@@ -9910,7 +9251,8 @@ function DeclFuncNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclFuncNode._setmeta( obj )
@@ -9921,15 +9263,14 @@ function DeclFuncNode:get_declInfo()
 end
 
 
+
 function DeclFuncNode:canBeRight( processInfo )
 
-   
    return self.declInfo:get_name() == nil
 end
 
 function DeclFuncNode:canBeStatement(  )
 
-   
    return not (self.declInfo:get_name() == nil )
 end
 
@@ -9942,6 +9283,7 @@ end
 
 local DeclMethodNode = {}
 regKind( "DeclMethod" )
+
 function Filter:processDeclMethod( node, opt )
 
    self:pushOpt( opt )
@@ -9983,12 +9325,7 @@ function DeclMethodNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function DeclMethodNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
    Node.__init( self,managerId, id, 57, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.declInfo = declInfo
-   
-   
 end
 function DeclMethodNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
@@ -10008,18 +9345,15 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
                   if not argNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
@@ -10029,18 +9363,15 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
                   if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -10052,23 +9383,17 @@ function DeclMethodNode:visit( visitor, depth, alreadySet )
                      if not body:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclMethodNode.sortList( list )
@@ -10076,7 +9401,8 @@ function DeclMethodNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclMethodNode._setmeta( obj )
@@ -10088,6 +9414,7 @@ end
 
 
 
+
 function NodeKind.get_ProtoMethod(  )
 
    return 58
@@ -10096,6 +9423,7 @@ end
 
 local ProtoMethodNode = {}
 regKind( "ProtoMethod" )
+
 function Filter:processProtoMethod( node, opt )
 
    self:pushOpt( opt )
@@ -10137,12 +9465,7 @@ function ProtoMethodNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function ProtoMethodNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
    Node.__init( self,managerId, id, 58, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.declInfo = declInfo
-   
-   
 end
 function ProtoMethodNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
@@ -10162,18 +9485,15 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
                   if not argNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
@@ -10183,18 +9503,15 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
                   if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -10206,23 +9523,17 @@ function ProtoMethodNode:visit( visitor, depth, alreadySet )
                      if not body:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ProtoMethodNode.sortList( list )
@@ -10230,7 +9541,8 @@ function ProtoMethodNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ProtoMethodNode._setmeta( obj )
@@ -10242,6 +9554,7 @@ end
 
 
 
+
 function NodeKind.get_DeclConstr(  )
 
    return 59
@@ -10250,6 +9563,7 @@ end
 
 local DeclConstrNode = {}
 regKind( "DeclConstr" )
+
 function Filter:processDeclConstr( node, opt )
 
    self:pushOpt( opt )
@@ -10291,12 +9605,7 @@ function DeclConstrNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function DeclConstrNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
    Node.__init( self,managerId, id, 59, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.declInfo = declInfo
-   
-   
 end
 function DeclConstrNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
@@ -10316,18 +9625,15 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
                   if not argNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
@@ -10337,18 +9643,15 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
                   if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -10360,23 +9663,17 @@ function DeclConstrNode:visit( visitor, depth, alreadySet )
                      if not body:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclConstrNode.sortList( list )
@@ -10384,7 +9681,8 @@ function DeclConstrNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclConstrNode._setmeta( obj )
@@ -10396,6 +9694,7 @@ end
 
 
 
+
 function NodeKind.get_DeclDestr(  )
 
    return 60
@@ -10404,6 +9703,7 @@ end
 
 local DeclDestrNode = {}
 regKind( "DeclDestr" )
+
 function Filter:processDeclDestr( node, opt )
 
    self:pushOpt( opt )
@@ -10445,12 +9745,7 @@ function DeclDestrNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function DeclDestrNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
    Node.__init( self,managerId, id, 60, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.declInfo = declInfo
-   
-   
 end
 function DeclDestrNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
@@ -10470,18 +9765,15 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
                   if not argNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       for __index, retTypeNode in ipairs( self.declInfo:get_retTypeNodeList() ) do
          if not _lune._Set_has(alreadySet, retTypeNode ) then
             alreadySet[retTypeNode]= true
@@ -10491,18 +9783,15 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
                   if not retTypeNode:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
       do
          local body = self.declInfo:get_body()
          if body ~= nil then
@@ -10514,23 +9803,17 @@ function DeclDestrNode:visit( visitor, depth, alreadySet )
                      if not body:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclDestrNode.sortList( list )
@@ -10538,7 +9821,8 @@ function DeclDestrNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclDestrNode._setmeta( obj )
@@ -10550,6 +9834,7 @@ end
 
 
 
+
 function NodeKind.get_ExpCallSuperCtor(  )
 
    return 61
@@ -10558,6 +9843,7 @@ end
 
 local ExpCallSuperCtorNode = {}
 regKind( "ExpCallSuperCtor" )
+
 function Filter:processExpCallSuperCtor( node, opt )
 
    self:pushOpt( opt )
@@ -10599,14 +9885,9 @@ function ExpCallSuperCtorNode._new( managerId, id, pos, inTestBlock, macroArgFla
 end
 function ExpCallSuperCtorNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
    ExpNode.__init( self,managerId, id, 61, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.superType = superType
    self.methodType = methodType
    self.expList = expList
-   
-   
 end
 function ExpCallSuperCtorNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList )
 
@@ -10628,24 +9909,17 @@ function ExpCallSuperCtorNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpCallSuperCtorNode.sortList( list )
@@ -10653,7 +9927,8 @@ function ExpCallSuperCtorNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpCallSuperCtorNode._setmeta( obj )
@@ -10672,6 +9947,8 @@ end
 
 
 
+
+
 function NodeKind.get_ExpCallSuper(  )
 
    return 62
@@ -10680,6 +9957,7 @@ end
 
 local ExpCallSuperNode = {}
 regKind( "ExpCallSuper" )
+
 function Filter:processExpCallSuper( node, opt )
 
    self:pushOpt( opt )
@@ -10717,14 +9995,9 @@ function ExpCallSuperNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
 end
 function ExpCallSuperNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList) 
    ExpNode.__init( self,managerId, id, 62, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.superType = superType
    self.methodType = methodType
    self.expList = expList
-   
-   
 end
 function ExpCallSuperNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, superType, methodType, expList )
 
@@ -10746,24 +10019,17 @@ function ExpCallSuperNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ExpCallSuperNode.sortList( list )
@@ -10771,7 +10037,8 @@ function ExpCallSuperNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ExpCallSuperNode._setmeta( obj )
@@ -10786,6 +10053,8 @@ end
 function ExpCallSuperNode:get_expList()
    return self.expList
 end
+
+
 
 
 
@@ -10838,6 +10107,7 @@ end
 
 local AsyncLockNode = {}
 regKind( "AsyncLock" )
+
 function Filter:processAsyncLock( node, opt )
 
    self:pushOpt( opt )
@@ -10879,13 +10149,8 @@ function AsyncLockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function AsyncLockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block) 
    Node.__init( self,managerId, id, 63, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.lockKind = lockKind
    self.block = block
-   
-   
 end
 function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, lockKind, block )
 
@@ -10905,21 +10170,15 @@ function AsyncLockNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function AsyncLockNode.sortList( list )
@@ -10927,7 +10186,8 @@ function AsyncLockNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function AsyncLockNode._setmeta( obj )
@@ -10942,6 +10202,7 @@ end
 
 
 
+
 function NodeKind.get_Request(  )
 
    return 64
@@ -10950,6 +10211,7 @@ end
 
 local RequestNode = {}
 regKind( "Request" )
+
 function Filter:processRequest( node, opt )
 
    self:pushOpt( opt )
@@ -10991,13 +10253,8 @@ function RequestNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function RequestNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, processor, exp) 
    Node.__init( self,managerId, id, 64, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.processor = processor
    self.exp = exp
-   
-   
 end
 function RequestNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, processor, exp )
 
@@ -11017,19 +10274,15 @@ function RequestNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.exp
       if not _lune._Set_has(alreadySet, child ) then
@@ -11040,21 +10293,15 @@ function RequestNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function RequestNode.sortList( list )
@@ -11062,7 +10309,8 @@ function RequestNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function RequestNode._setmeta( obj )
@@ -11077,6 +10325,7 @@ end
 
 
 
+
 function NodeKind.get_DeclMember(  )
 
    return 65
@@ -11085,6 +10334,7 @@ end
 
 local DeclMemberNode = {}
 regKind( "DeclMember" )
+
 function Filter:processDeclMember( node, opt )
 
    self:pushOpt( opt )
@@ -11126,9 +10376,6 @@ function DeclMemberNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function DeclMemberNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken) 
    Node.__init( self,managerId, id, 65, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.name = name
    self.refType = refType
    self.symbolInfo = symbolInfo
@@ -11141,8 +10388,6 @@ function DeclMemberNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, ty
    self.getterRetType = getterRetType
    self.setterMode = setterMode
    self.setterToken = setterToken
-   
-   
 end
 function DeclMemberNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, refType, symbolInfo, classType, staticFlag, accessMode, getterMutable, getterMode, getterToken, getterRetType, setterMode, setterToken )
 
@@ -11162,21 +10407,15 @@ function DeclMemberNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclMemberNode.sortList( list )
@@ -11184,7 +10423,8 @@ function DeclMemberNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclMemberNode._setmeta( obj )
@@ -11229,12 +10469,12 @@ end
 
 
 
+
 function DeclMemberNode:getGetterSym(  )
 
    if self.getterMode ~= Ast.AccessMode.None then
       return _lune.nilacc( self.classType:get_scope(), 'getSymbolInfoChild', 'callmtd' , string.format( "get_%s", self.name.txt) )
    end
-   
    return nil
 end
 
@@ -11244,7 +10484,6 @@ function DeclMemberNode:getSetterSym(  )
    if self.setterMode ~= Ast.AccessMode.None then
       return _lune.nilacc( self.classType:get_scope(), 'getSymbolInfoChild', 'callmtd' , string.format( "set_%s", self.name.txt) )
    end
-   
    return nil
 end
 
@@ -11257,6 +10496,7 @@ end
 
 local DeclArgNode = {}
 regKind( "DeclArg" )
+
 function Filter:processDeclArg( node, opt )
 
    self:pushOpt( opt )
@@ -11298,14 +10538,9 @@ function DeclArgNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLi
 end
 function DeclArgNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType) 
    Node.__init( self,managerId, id, 66, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.name = name
    self.symbolInfo = symbolInfo
    self.argType = argType
-   
-   
 end
 function DeclArgNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, symbolInfo, argType )
 
@@ -11327,24 +10562,17 @@ function DeclArgNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclArgNode.sortList( list )
@@ -11352,7 +10580,8 @@ function DeclArgNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclArgNode._setmeta( obj )
@@ -11370,6 +10599,7 @@ end
 
 
 
+
 function NodeKind.get_DeclArgDDD(  )
 
    return 67
@@ -11378,6 +10608,7 @@ end
 
 local DeclArgDDDNode = {}
 regKind( "DeclArgDDD" )
+
 function Filter:processDeclArgDDD( node, opt )
 
    self:pushOpt( opt )
@@ -11419,10 +10650,6 @@ function DeclArgDDDNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function DeclArgDDDNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
    Node.__init( self,managerId, id, 67, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
-   
 end
 function DeclArgDDDNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
@@ -11432,7 +10659,6 @@ function DeclArgDDDNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLis
 end
 function DeclArgDDDNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclArgDDDNode.sortList( list )
@@ -11440,12 +10666,14 @@ function DeclArgDDDNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclArgDDDNode._setmeta( obj )
   setmetatable( obj, { __index = DeclArgDDDNode  } )
 end
+
 
 
 
@@ -11487,6 +10715,7 @@ end
 
 local DeclAdvertiseNode = {}
 regKind( "DeclAdvertise" )
+
 function Filter:processDeclAdvertise( node, opt )
 
    self:pushOpt( opt )
@@ -11528,12 +10757,7 @@ function DeclAdvertiseNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
 end
 function DeclAdvertiseNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, advInfo) 
    Node.__init( self,managerId, id, 68, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.advInfo = advInfo
-   
-   
 end
 function DeclAdvertiseNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, advInfo )
 
@@ -11543,7 +10767,6 @@ function DeclAdvertiseNode.create( nodeMan, pos, inTestBlock, macroArgFlag, type
 end
 function DeclAdvertiseNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclAdvertiseNode.sortList( list )
@@ -11551,7 +10774,8 @@ function DeclAdvertiseNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclAdvertiseNode._setmeta( obj )
@@ -11560,6 +10784,7 @@ end
 function DeclAdvertiseNode:get_advInfo()
    return self.advInfo
 end
+
 
 
 
@@ -11578,19 +10803,16 @@ function ClassInheritInfo:visit( parent, visitor, depth, alreadySet )
                   if not base:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
    end
-   
    for __index, ifTypeNode in ipairs( self.impliments ) do
       if not _lune._Set_has(alreadySet, ifTypeNode ) then
          alreadySet[ifTypeNode]= true
@@ -11600,18 +10822,15 @@ function ClassInheritInfo:visit( parent, visitor, depth, alreadySet )
                if not ifTypeNode:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
    end
-   
    return true
 end
 function ClassInheritInfo._setmeta( obj )
@@ -11646,6 +10865,7 @@ end
 
 local ProtoClassNode = {}
 regKind( "ProtoClass" )
+
 function Filter:processProtoClass( node, opt )
 
    self:pushOpt( opt )
@@ -11687,13 +10907,8 @@ function ProtoClassNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function ProtoClassNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo) 
    Node.__init( self,managerId, id, 69, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.name = name
    self.inheritInfo = inheritInfo
-   
-   
 end
 function ProtoClassNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, inheritInfo )
 
@@ -11703,7 +10918,6 @@ function ProtoClassNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLis
 end
 function ProtoClassNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function ProtoClassNode.sortList( list )
@@ -11711,7 +10925,8 @@ function ProtoClassNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function ProtoClassNode._setmeta( obj )
@@ -11723,6 +10938,7 @@ end
 function ProtoClassNode:get_inheritInfo()
    return self.inheritInfo
 end
+
 
 
 
@@ -11764,6 +10980,7 @@ end
 
 local DeclClassNode = {}
 regKind( "DeclClass" )
+
 function Filter:processDeclClass( node, opt )
 
    self:pushOpt( opt )
@@ -11805,9 +11022,6 @@ function DeclClassNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function DeclClassNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet) 
    Node.__init( self,managerId, id, 70, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.accessMode = accessMode
    self.name = name
    self.inheritInfo = inheritInfo
@@ -11827,8 +11041,6 @@ function DeclClassNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typ
    self.trustList = trustList
    self.uninitMemberList = uninitMemberList
    self.outerMethodSet = outerMethodSet
-   
-   
 end
 function DeclClassNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, accessMode, name, inheritInfo, hasPrototype, gluePrefix, moduleName, lang, lazyLoad, hasOldCtor, allStmtList, declStmtList, fieldList, memberList, scope, initBlock, advertiseList, trustList, uninitMemberList, outerMethodSet )
 
@@ -11849,22 +11061,16 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
    do
       local list = self.declStmtList
       for __index, child in ipairs( list ) do
@@ -11876,22 +11082,16 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
    do
       local list = self.fieldList
       for __index, child in ipairs( list ) do
@@ -11903,22 +11103,16 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
    do
       local list = self.memberList
       for __index, child in ipairs( list ) do
@@ -11930,24 +11124,16 @@ function DeclClassNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclClassNode.sortList( list )
@@ -11955,7 +11141,8 @@ function DeclClassNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclClassNode._setmeta( obj )
@@ -12021,6 +11208,7 @@ end
 
 
 
+
 function DeclClassNode:visitSub( visitor, depth, alreadySet )
 
    return self.inheritInfo:visit( self, visitor, depth, alreadySet )
@@ -12040,11 +11228,9 @@ function DeclClassNode:createMethodNameSetWithoutAdv(  )
          if field:get_kind() == NodeKind.get_DeclConstr() then
             methodNameSet["__init"]= true
          end
-         
          if field:get_kind() == NodeKind.get_DeclDestr() then
             methodNameSet["__free"]= true
          end
-         
          do
             local methodNode = _lune.__Cast( field, 3, DeclMethodNode )
             if methodNode ~= nil then
@@ -12052,23 +11238,17 @@ function DeclClassNode:createMethodNameSetWithoutAdv(  )
                methodNameSet[methodNameToken.txt]= true
             end
          end
-         
       end
-      
       for __index, memberNode in ipairs( self:get_memberList() ) do
          local memberName = memberNode:get_name().txt
          if memberNode:get_getterMode() ~= Ast.AccessMode.None then
             methodNameSet["get_" .. memberName]= true
          end
-         
          if memberNode:get_setterMode() ~= Ast.AccessMode.None then
             methodNameSet["set_" .. memberName]= true
          end
-         
       end
-      
    end
-   
    return methodNameSet
 end
 
@@ -12095,6 +11275,7 @@ end
 
 local DeclEnumNode = {}
 regKind( "DeclEnum" )
+
 function Filter:processDeclEnum( node, opt )
 
    self:pushOpt( opt )
@@ -12136,16 +11317,11 @@ function DeclEnumNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function DeclEnumNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope) 
    Node.__init( self,managerId, id, 71, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.enumType = enumType
    self.accessMode = accessMode
    self.name = name
    self.valueNameList = valueNameList
    self.scope = scope
-   
-   
 end
 function DeclEnumNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, enumType, accessMode, name, valueNameList, scope )
 
@@ -12155,7 +11331,6 @@ function DeclEnumNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList,
 end
 function DeclEnumNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclEnumNode.sortList( list )
@@ -12163,7 +11338,8 @@ function DeclEnumNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclEnumNode._setmeta( obj )
@@ -12184,6 +11360,7 @@ end
 function DeclEnumNode:get_scope()
    return self.scope
 end
+
 
 
 
@@ -12245,6 +11422,7 @@ end
 
 local DeclAlgeNode = {}
 regKind( "DeclAlge" )
+
 function Filter:processDeclAlge( node, opt )
 
    self:pushOpt( opt )
@@ -12286,16 +11464,11 @@ function DeclAlgeNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function DeclAlgeNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope) 
    Node.__init( self,managerId, id, 72, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.accessMode = accessMode
    self.algeType = algeType
    self.name = name
    self.algeValList = algeValList
    self.scope = scope
-   
-   
 end
 function DeclAlgeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, accessMode, algeType, name, algeValList, scope )
 
@@ -12305,7 +11478,6 @@ function DeclAlgeNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList,
 end
 function DeclAlgeNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclAlgeNode.sortList( list )
@@ -12313,7 +11485,8 @@ function DeclAlgeNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclAlgeNode._setmeta( obj )
@@ -12337,6 +11510,7 @@ end
 
 
 
+
 function DeclAlgeNode:visitSub( visitor, depth, alreadySet )
 
    for __index, valInfo in ipairs( self.algeValList ) do
@@ -12349,20 +11523,16 @@ function DeclAlgeNode:visitSub( visitor, depth, alreadySet )
                   if not paramInfo:get_typeRef():visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
       end
-      
    end
-   
    return true
 end
 
@@ -12375,6 +11545,7 @@ end
 
 local NewAlgeValNode = {}
 regKind( "NewAlgeVal" )
+
 function Filter:processNewAlgeVal( node, opt )
 
    self:pushOpt( opt )
@@ -12416,16 +11587,11 @@ function NewAlgeValNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function NewAlgeValNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList) 
    ExpNode.__init( self,managerId, id, 73, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.name = name
    self.prefix = prefix
    self.algeOrGen = algeOrGen
    self.valInfo = valInfo
    self.paramList = paramList
-   
-   
 end
 function NewAlgeValNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, prefix, algeOrGen, valInfo, paramList )
 
@@ -12447,22 +11613,17 @@ function NewAlgeValNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
    do
       local list = self.paramList
       for __index, child in ipairs( list ) do
@@ -12474,24 +11635,16 @@ function NewAlgeValNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function NewAlgeValNode.sortList( list )
@@ -12499,7 +11652,8 @@ function NewAlgeValNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function NewAlgeValNode._setmeta( obj )
@@ -12524,6 +11678,8 @@ end
 
 
 
+
+
 function NewAlgeValNode:get_algeTypeInfo(  )
 
    do
@@ -12541,11 +11697,9 @@ function NewAlgeValNode:get_algeTypeInfo(  )
                return algeTypeInfo
             end
          end
-         
          Util.err( string.format( "illegal genericTypeInfo -- %s", genericTypeInfo:getTxt(  )) )
       end
    end
-   
 end
 
 
@@ -12557,6 +11711,7 @@ end
 
 local LuneControlNode = {}
 regKind( "LuneControl" )
+
 function Filter:processLuneControl( node, opt )
 
    self:pushOpt( opt )
@@ -12598,12 +11753,7 @@ function LuneControlNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function LuneControlNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, pragma) 
    Node.__init( self,managerId, id, 74, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.pragma = pragma
-   
-   
 end
 function LuneControlNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, pragma )
 
@@ -12613,7 +11763,6 @@ function LuneControlNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLi
 end
 function LuneControlNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LuneControlNode.sortList( list )
@@ -12621,7 +11770,8 @@ function LuneControlNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LuneControlNode._setmeta( obj )
@@ -12630,6 +11780,7 @@ end
 function LuneControlNode:get_pragma()
    return self.pragma
 end
+
 
 
 
@@ -12675,6 +11826,7 @@ end
 
 local MatchNode = {}
 regKind( "Match" )
+
 function Filter:processMatch( node, opt )
 
    self:pushOpt( opt )
@@ -12716,9 +11868,6 @@ function MatchNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList
 end
 function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_) 
    Node.__init( self,managerId, id, 75, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.idInNS = idInNS
    self.val = val
    self.algeOrGen = algeOrGen
@@ -12727,8 +11876,6 @@ function MatchNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeLis
    self.caseKind = caseKind
    self.failSafeDefault = failSafeDefault
    self.is_ = is_
-   
-   
 end
 function MatchNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, idInNS, val, algeOrGen, caseList, defaultBlock, caseKind, failSafeDefault, is_ )
 
@@ -12748,19 +11895,15 @@ function MatchNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       do
          local child = self.defaultBlock
@@ -12773,24 +11916,17 @@ function MatchNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function MatchNode.sortList( list )
@@ -12798,7 +11934,8 @@ function MatchNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function MatchNode._setmeta( obj )
@@ -12831,6 +11968,7 @@ end
 
 
 
+
 function MatchNode:get_algeTypeInfo(  )
 
    do
@@ -12848,11 +11986,9 @@ function MatchNode:get_algeTypeInfo(  )
                return algeTypeInfo
             end
          end
-         
          Util.err( string.format( "illegal genericTypeInfo -- %s", genericTypeInfo:getTxt(  )) )
       end
    end
-   
 end
 
 
@@ -12867,11 +12003,9 @@ function MatchNode:getBreakKind( checkMode )
          if work == BreakKind.Return then
             return BreakKind.Return
          end
-         
          if work == BreakKind.NeverRet then
             return BreakKind.NeverRet
          end
-         
       else
        
          do
@@ -12881,23 +12015,18 @@ function MatchNode:getBreakKind( checkMode )
                   if goNext then
                      return BreakKind.None
                   end
-                  
                end
-               
             else 
                
                   if kind == BreakKind.None or kind > work then
                      kind = work
                   end
-                  
             end
          end
-         
       end
       
       
    end
-   
    do
       local block = self.defaultBlock
       if block ~= nil then
@@ -12906,11 +12035,9 @@ function MatchNode:getBreakKind( checkMode )
             if work == BreakKind.Return then
                return BreakKind.Return
             end
-            
             if work == BreakKind.NeverRet then
                return BreakKind.NeverRet
             end
-            
          else
           
             do
@@ -12920,30 +12047,23 @@ function MatchNode:getBreakKind( checkMode )
                      if true then
                         return BreakKind.None
                      end
-                     
                   end
-                  
                else 
                   
                      if kind == BreakKind.None or kind > work then
                         kind = work
                      end
-                     
                end
             end
-            
          end
          
          
          return kind
       end
    end
-   
-   
    if fullCase then
       return kind
    end
-   
    return BreakKind.None
 end
 
@@ -12959,13 +12079,11 @@ function MatchNode:visitSub( visitor, depth, alreadySet )
                if not caseInfo:get_valExpRef():visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
@@ -12977,18 +12095,15 @@ function MatchNode:visitSub( visitor, depth, alreadySet )
                if not caseInfo:get_block():visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
    end
-   
    return true
 end
 
@@ -13001,6 +12116,7 @@ end
 
 local LuneKindNode = {}
 regKind( "LuneKind" )
+
 function Filter:processLuneKind( node, opt )
 
    self:pushOpt( opt )
@@ -13042,12 +12158,7 @@ function LuneKindNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function LuneKindNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, exp) 
    ExpNode.__init( self,managerId, id, 76, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.exp = exp
-   
-   
 end
 function LuneKindNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, exp )
 
@@ -13067,21 +12178,15 @@ function LuneKindNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LuneKindNode.sortList( list )
@@ -13089,7 +12194,8 @@ function LuneKindNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LuneKindNode._setmeta( obj )
@@ -13102,6 +12208,8 @@ end
 
 
 
+
+
 function NodeKind.get_DeclMacro(  )
 
    return 77
@@ -13110,6 +12218,7 @@ end
 
 local DeclMacroNode = {}
 regKind( "DeclMacro" )
+
 function Filter:processDeclMacro( node, opt )
 
    self:pushOpt( opt )
@@ -13151,12 +12260,7 @@ function DeclMacroNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function DeclMacroNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, declInfo) 
    Node.__init( self,managerId, id, 77, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.declInfo = declInfo
-   
-   
 end
 function DeclMacroNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, declInfo )
 
@@ -13166,7 +12270,6 @@ function DeclMacroNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList
 end
 function DeclMacroNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function DeclMacroNode.sortList( list )
@@ -13174,7 +12277,8 @@ function DeclMacroNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function DeclMacroNode._setmeta( obj )
@@ -13183,6 +12287,7 @@ end
 function DeclMacroNode:get_declInfo()
    return self.declInfo
 end
+
 
 
 
@@ -13211,6 +12316,7 @@ end
 
 local TestCaseNode = {}
 regKind( "TestCase" )
+
 function Filter:processTestCase( node, opt )
 
    self:pushOpt( opt )
@@ -13252,15 +12358,10 @@ function TestCaseNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function TestCaseNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block) 
    Node.__init( self,managerId, id, 78, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.name = name
    self.impNode = impNode
    self.ctrlName = ctrlName
    self.block = block
-   
-   
 end
 function TestCaseNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, name, impNode, ctrlName, block )
 
@@ -13280,19 +12381,15 @@ function TestCaseNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
    do
       local child = self.block
       if not _lune._Set_has(alreadySet, child ) then
@@ -13303,21 +12400,15 @@ function TestCaseNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function TestCaseNode.sortList( list )
@@ -13325,7 +12416,8 @@ function TestCaseNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function TestCaseNode._setmeta( obj )
@@ -13346,6 +12438,7 @@ end
 
 
 
+
 function NodeKind.get_TestBlock(  )
 
    return 79
@@ -13354,6 +12447,7 @@ end
 
 local TestBlockNode = {}
 regKind( "TestBlock" )
+
 function Filter:processTestBlock( node, opt )
 
    self:pushOpt( opt )
@@ -13395,12 +12489,7 @@ function TestBlockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, type
 end
 function TestBlockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, stmtList) 
    Node.__init( self,managerId, id, 79, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.stmtList = stmtList
-   
-   
 end
 function TestBlockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, stmtList )
 
@@ -13421,24 +12510,16 @@ function TestBlockNode:visit( visitor, depth, alreadySet )
                   if not child:visit( visitor, depth + 1, alreadySet ) then
                      return false
                   end
-                  
                elseif _switchExp == NodeVisitMode.End then
                   return false
                elseif _switchExp == NodeVisitMode.Next then
                end
             end
-            
          end
          
          
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function TestBlockNode.sortList( list )
@@ -13446,7 +12527,8 @@ function TestBlockNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function TestBlockNode._setmeta( obj )
@@ -13458,12 +12540,12 @@ end
 
 
 
+
 function TestBlockNode:isInnerPos( pos )
 
    if self:get_pos().streamName == pos.streamName and self:get_pos().lineNo < pos.lineNo and #self:get_stmtList() > 0 and self:get_stmtList()[1]:get_pos().lineNo >= pos.lineNo then
       return true
    end
-   
    return false
 end
 
@@ -13476,6 +12558,7 @@ end
 
 local AbbrNode = {}
 regKind( "Abbr" )
+
 function Filter:processAbbr( node, opt )
 
    self:pushOpt( opt )
@@ -13517,10 +12600,6 @@ function AbbrNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList 
 end
 function AbbrNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
    Node.__init( self,managerId, id, 80, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
-   
 end
 function AbbrNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
@@ -13530,7 +12609,6 @@ function AbbrNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 end
 function AbbrNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function AbbrNode.sortList( list )
@@ -13538,12 +12616,14 @@ function AbbrNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function AbbrNode._setmeta( obj )
   setmetatable( obj, { __index = AbbrNode  } )
 end
+
 
 
 
@@ -13555,6 +12635,7 @@ end
 
 local BoxingNode = {}
 regKind( "Boxing" )
+
 function Filter:processBoxing( node, opt )
 
    self:pushOpt( opt )
@@ -13596,12 +12677,7 @@ function BoxingNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeLis
 end
 function BoxingNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src) 
    ExpNode.__init( self,managerId, id, 81, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.src = src
-   
-   
 end
 function BoxingNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, src )
 
@@ -13621,21 +12697,15 @@ function BoxingNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function BoxingNode.sortList( list )
@@ -13643,7 +12713,8 @@ function BoxingNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function BoxingNode._setmeta( obj )
@@ -13656,6 +12727,8 @@ end
 
 
 
+
+
 function NodeKind.get_Unboxing(  )
 
    return 82
@@ -13664,6 +12737,7 @@ end
 
 local UnboxingNode = {}
 regKind( "Unboxing" )
+
 function Filter:processUnboxing( node, opt )
 
    self:pushOpt( opt )
@@ -13705,12 +12779,7 @@ function UnboxingNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeL
 end
 function UnboxingNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, src) 
    ExpNode.__init( self,managerId, id, 82, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.src = src
-   
-   
 end
 function UnboxingNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, src )
 
@@ -13730,21 +12799,15 @@ function UnboxingNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function UnboxingNode.sortList( list )
@@ -13752,7 +12815,8 @@ function UnboxingNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function UnboxingNode._setmeta( obj )
@@ -13765,6 +12829,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralNil(  )
 
    return 83
@@ -13773,6 +12839,7 @@ end
 
 local LiteralNilNode = {}
 regKind( "LiteralNil" )
+
 function Filter:processLiteralNil( node, opt )
 
    self:pushOpt( opt )
@@ -13814,10 +12881,6 @@ function LiteralNilNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function LiteralNilNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
    ExpNode.__init( self,managerId, id, 83, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
-   
 end
 function LiteralNilNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
 
@@ -13827,7 +12890,6 @@ function LiteralNilNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLis
 end
 function LiteralNilNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralNilNode.sortList( list )
@@ -13835,12 +12897,15 @@ function LiteralNilNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralNilNode._setmeta( obj )
   setmetatable( obj, { __index = LiteralNilNode  } )
 end
+
+
 
 
 
@@ -13853,6 +12918,7 @@ end
 
 local LiteralCharNode = {}
 regKind( "LiteralChar" )
+
 function Filter:processLiteralChar( node, opt )
 
    self:pushOpt( opt )
@@ -13894,13 +12960,8 @@ function LiteralCharNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function LiteralCharNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
    ExpNode.__init( self,managerId, id, 84, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.token = token
    self.num = num
-   
-   
 end
 function LiteralCharNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, num )
 
@@ -13910,7 +12971,6 @@ function LiteralCharNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLi
 end
 function LiteralCharNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralCharNode.sortList( list )
@@ -13918,7 +12978,8 @@ function LiteralCharNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralCharNode._setmeta( obj )
@@ -13934,6 +12995,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralInt(  )
 
    return 85
@@ -13942,6 +13005,7 @@ end
 
 local LiteralIntNode = {}
 regKind( "LiteralInt" )
+
 function Filter:processLiteralInt( node, opt )
 
    self:pushOpt( opt )
@@ -13983,13 +13047,8 @@ function LiteralIntNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function LiteralIntNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
    ExpNode.__init( self,managerId, id, 85, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.token = token
    self.num = num
-   
-   
 end
 function LiteralIntNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, num )
 
@@ -13999,7 +13058,6 @@ function LiteralIntNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLis
 end
 function LiteralIntNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralIntNode.sortList( list )
@@ -14007,7 +13065,8 @@ function LiteralIntNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralIntNode._setmeta( obj )
@@ -14023,6 +13082,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralReal(  )
 
    return 86
@@ -14031,6 +13092,7 @@ end
 
 local LiteralRealNode = {}
 regKind( "LiteralReal" )
+
 function Filter:processLiteralReal( node, opt )
 
    self:pushOpt( opt )
@@ -14072,13 +13134,8 @@ function LiteralRealNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function LiteralRealNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, num) 
    ExpNode.__init( self,managerId, id, 86, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.token = token
    self.num = num
-   
-   
 end
 function LiteralRealNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, num )
 
@@ -14088,7 +13145,6 @@ function LiteralRealNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLi
 end
 function LiteralRealNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralRealNode.sortList( list )
@@ -14096,7 +13152,8 @@ function LiteralRealNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralRealNode._setmeta( obj )
@@ -14112,6 +13169,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralArray(  )
 
    return 87
@@ -14120,6 +13179,7 @@ end
 
 local LiteralArrayNode = {}
 regKind( "LiteralArray" )
+
 function Filter:processLiteralArray( node, opt )
 
    self:pushOpt( opt )
@@ -14161,12 +13221,7 @@ function LiteralArrayNode._new( managerId, id, pos, inTestBlock, macroArgFlag, t
 end
 function LiteralArrayNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
    ExpNode.__init( self,managerId, id, 87, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expList = expList
-   
-   
 end
 function LiteralArrayNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
@@ -14188,24 +13243,17 @@ function LiteralArrayNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralArrayNode.sortList( list )
@@ -14213,7 +13261,8 @@ function LiteralArrayNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralArrayNode._setmeta( obj )
@@ -14226,6 +13275,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralList(  )
 
    return 88
@@ -14234,6 +13285,7 @@ end
 
 local LiteralListNode = {}
 regKind( "LiteralList" )
+
 function Filter:processLiteralList( node, opt )
 
    self:pushOpt( opt )
@@ -14275,12 +13327,7 @@ function LiteralListNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function LiteralListNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
    ExpNode.__init( self,managerId, id, 88, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expList = expList
-   
-   
 end
 function LiteralListNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
@@ -14302,24 +13349,17 @@ function LiteralListNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralListNode.sortList( list )
@@ -14327,7 +13367,8 @@ function LiteralListNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralListNode._setmeta( obj )
@@ -14340,6 +13381,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralSet(  )
 
    return 89
@@ -14348,6 +13391,7 @@ end
 
 local LiteralSetNode = {}
 regKind( "LiteralSet" )
+
 function Filter:processLiteralSet( node, opt )
 
    self:pushOpt( opt )
@@ -14389,12 +13433,7 @@ function LiteralSetNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function LiteralSetNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
    ExpNode.__init( self,managerId, id, 89, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expList = expList
-   
-   
 end
 function LiteralSetNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
@@ -14416,24 +13455,17 @@ function LiteralSetNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralSetNode.sortList( list )
@@ -14441,7 +13473,8 @@ function LiteralSetNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralSetNode._setmeta( obj )
@@ -14450,6 +13483,8 @@ end
 function LiteralSetNode:get_expList()
    return self.expList
 end
+
+
 
 
 
@@ -14487,6 +13522,7 @@ end
 
 local LiteralMapNode = {}
 regKind( "LiteralMap" )
+
 function Filter:processLiteralMap( node, opt )
 
    self:pushOpt( opt )
@@ -14528,13 +13564,8 @@ function LiteralMapNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function LiteralMapNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, map, pairList) 
    ExpNode.__init( self,managerId, id, 90, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.map = map
    self.pairList = pairList
-   
-   
 end
 function LiteralMapNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, map, pairList )
 
@@ -14557,19 +13588,15 @@ function LiteralMapNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
-            
          end
-         
          do
             local child = val
             if not _lune._Set_has(alreadySet, child ) then
@@ -14580,26 +13607,17 @@ function LiteralMapNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
             
             
-            
          end
-         
       end
-      
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralMapNode.sortList( list )
@@ -14607,7 +13625,8 @@ function LiteralMapNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralMapNode._setmeta( obj )
@@ -14623,6 +13642,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralString(  )
 
    return 91
@@ -14631,6 +13652,7 @@ end
 
 local LiteralStringNode = {}
 regKind( "LiteralString" )
+
 function Filter:processLiteralString( node, opt )
 
    self:pushOpt( opt )
@@ -14672,14 +13694,9 @@ function LiteralStringNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
 end
 function LiteralStringNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam) 
    ExpNode.__init( self,managerId, id, 91, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.token = token
    self.orgParam = orgParam
    self.dddParam = dddParam
-   
-   
 end
 function LiteralStringNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token, orgParam, dddParam )
 
@@ -14701,22 +13718,17 @@ function LiteralStringNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
    do
       do
          local child = self.dddParam
@@ -14729,24 +13741,17 @@ function LiteralStringNode:visit( visitor, depth, alreadySet )
                      if not child:visit( visitor, depth + 1, alreadySet ) then
                         return false
                      end
-                     
                   elseif _switchExp == NodeVisitMode.End then
                      return false
                   elseif _switchExp == NodeVisitMode.Next then
                   end
                end
-               
             end
-            
             
             
          end
       end
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralStringNode.sortList( list )
@@ -14754,7 +13759,8 @@ function LiteralStringNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralStringNode._setmeta( obj )
@@ -14773,6 +13779,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralBool(  )
 
    return 92
@@ -14781,6 +13789,7 @@ end
 
 local LiteralBoolNode = {}
 regKind( "LiteralBool" )
+
 function Filter:processLiteralBool( node, opt )
 
    self:pushOpt( opt )
@@ -14822,12 +13831,7 @@ function LiteralBoolNode._new( managerId, id, pos, inTestBlock, macroArgFlag, ty
 end
 function LiteralBoolNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token) 
    ExpNode.__init( self,managerId, id, 92, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.token = token
-   
-   
 end
 function LiteralBoolNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token )
 
@@ -14837,7 +13841,6 @@ function LiteralBoolNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeLi
 end
 function LiteralBoolNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralBoolNode.sortList( list )
@@ -14845,7 +13848,8 @@ function LiteralBoolNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralBoolNode._setmeta( obj )
@@ -14858,6 +13862,8 @@ end
 
 
 
+
+
 function NodeKind.get_LiteralSymbol(  )
 
    return 93
@@ -14866,6 +13872,7 @@ end
 
 local LiteralSymbolNode = {}
 regKind( "LiteralSymbol" )
+
 function Filter:processLiteralSymbol( node, opt )
 
    self:pushOpt( opt )
@@ -14907,12 +13914,7 @@ function LiteralSymbolNode._new( managerId, id, pos, inTestBlock, macroArgFlag, 
 end
 function LiteralSymbolNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, token) 
    Node.__init( self,managerId, id, 93, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.token = token
-   
-   
 end
 function LiteralSymbolNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, token )
 
@@ -14922,7 +13924,6 @@ function LiteralSymbolNode.create( nodeMan, pos, inTestBlock, macroArgFlag, type
 end
 function LiteralSymbolNode:visit( visitor, depth, alreadySet )
 
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function LiteralSymbolNode.sortList( list )
@@ -14930,7 +13931,8 @@ function LiteralSymbolNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function LiteralSymbolNode._setmeta( obj )
@@ -14942,6 +13944,7 @@ end
 
 
 
+
 function NodeKind.get_TupleConst(  )
 
    return 94
@@ -14950,6 +13953,7 @@ end
 
 local TupleConstNode = {}
 regKind( "TupleConst" )
+
 function Filter:processTupleConst( node, opt )
 
    self:pushOpt( opt )
@@ -14991,12 +13995,7 @@ function TupleConstNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typ
 end
 function TupleConstNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, expList) 
    ExpNode.__init( self,managerId, id, 94, pos, inTestBlock, macroArgFlag, typeList)
-   
-   
-   
    self.expList = expList
-   
-   
 end
 function TupleConstNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, expList )
 
@@ -15016,21 +14015,15 @@ function TupleConstNode:visit( visitor, depth, alreadySet )
                if not child:visit( visitor, depth + 1, alreadySet ) then
                   return false
                end
-               
             elseif _switchExp == NodeVisitMode.End then
                return false
             elseif _switchExp == NodeVisitMode.Next then
             end
          end
-         
       end
       
       
-      
    end
-   
-   
-   
    return self:visitSub( visitor, depth + 1, alreadySet )
 end
 function TupleConstNode.sortList( list )
@@ -15038,7 +14031,8 @@ function TupleConstNode.sortList( list )
    table.sort( list, function ( node1, node2 )
    
       return node1:compUsingPos( node2 ) < 0
-   end )
+   end
+    )
    return list
 end
 function TupleConstNode._setmeta( obj )
@@ -15047,6 +14041,8 @@ end
 function TupleConstNode:get_expList()
    return self.expList
 end
+
+
 
 
 
@@ -15064,20 +14060,16 @@ function Node:getSymbolInfo(  )
                local refFieldNode = _lune.__Cast( node, 3, RefFieldNode )
                if refFieldNode ~= nil then
                   if refFieldNode:get_nilAccess() then
-                     
                      return {}
                   end
-                  
                   do
                      local _exp = refFieldNode:get_symbolInfo()
                      if _exp ~= nil then
                         return {_exp}
                      end
                   end
-                  
                end
             end
-            
          elseif _switchExp == NodeKind.get_ExpList() then
             do
                local expListNode = _lune.__Cast( node, 3, ExpListNode )
@@ -15088,22 +14080,17 @@ function Node:getSymbolInfo(  )
                         for __index, symbolInfo in ipairs( processExpNode( expNode ) ) do
                            table.insert( list, symbolInfo )
                         end
-                        
                      else
                       
                         for __index, symbolInfo in ipairs( processExpNode( expNode ) ) do
                            table.insert( list, symbolInfo )
                            break
                         end
-                        
                      end
-                     
                   end
-                  
                   return list
                end
             end
-            
          elseif _switchExp == NodeKind.get_RefType() then
             do
                local refTypeNode = _lune.__Cast( node, 3, RefTypeNode )
@@ -15111,10 +14098,8 @@ function Node:getSymbolInfo(  )
                   return refTypeNode:get_typeNode():getSymbolInfo(  )
                end
             end
-            
          end
       end
-      
       return {}
    end
    return processExpNode( self )
@@ -15132,11 +14117,9 @@ function WhileNode:getBreakKind( checkMode )
                if work == BreakKind.Return then
                   return BreakKind.Return
                end
-               
                if work == BreakKind.NeverRet then
                   return BreakKind.NeverRet
                end
-               
             else
              
                do
@@ -15146,40 +14129,29 @@ function WhileNode:getBreakKind( checkMode )
                         if false then
                            return BreakKind.None
                         end
-                        
                      end
-                     
                   else 
                      
                         if kind == BreakKind.None or kind > work then
                            kind = work
                         end
-                        
                   end
                end
-               
             end
             
             
          end
-         
       end
-      
       if kind == BreakKind.Break then
          return BreakKind.None
       end
-      
       return kind
    else
     
-      
       if not self.infinit then
          return BreakKind.None
       end
-      
-      
       local mode = CheckBreakMode.IgnoreFlow
-      
       local kind = BreakKind.None
       for __index, stmt in ipairs( self.block:get_stmtList() ) do
          if stmt:get_kind() ~= NodeKind.get_BlankLine() then
@@ -15188,11 +14160,9 @@ function WhileNode:getBreakKind( checkMode )
                if work == BreakKind.Return then
                   return BreakKind.Return
                end
-               
                if work == BreakKind.NeverRet then
                   return BreakKind.NeverRet
                end
-               
             else
              
                do
@@ -15202,36 +14172,27 @@ function WhileNode:getBreakKind( checkMode )
                         if false then
                            return BreakKind.None
                         end
-                        
                      end
-                     
                   else 
                      
                         if kind == BreakKind.None or kind > work then
                            kind = work
                         end
-                        
                   end
                end
-               
             end
             
             
          end
-         
       end
-      
       if kind == BreakKind.Break then
          return BreakKind.None
       end
-      
       if kind == BreakKind.Return then
          return BreakKind.Return
       end
-      
       return BreakKind.NeverRet
    end
-   
 end
 
 
@@ -15296,12 +14257,9 @@ function LiteralArrayNode:getLiteral(  )
             else
                return nil, mess
             end
-            
          end
-         
       end
    end
-   
    return _lune.newAlge( Literal.ARRAY, {literalList}), nil
 end
 
@@ -15316,16 +14274,12 @@ function LiteralArrayNode:setupLiteralTokenList( list )
             if index > 1 then
                self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
-            
             if not node:setupLiteralTokenList( list ) then
                return false
             end
-            
          end
-         
       end
    end
-   
    self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "]" )
    return true
 end
@@ -15344,12 +14298,9 @@ function LiteralListNode:getLiteral(  )
             else
                return nil, mess
             end
-            
          end
-         
       end
    end
-   
    return _lune.newAlge( Literal.LIST, {literalList}), nil
 end
 
@@ -15364,16 +14315,12 @@ function LiteralListNode:setupLiteralTokenList( list )
             if index > 1 then
                self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
-            
             if not node:setupLiteralTokenList( list ) then
                return false
             end
-            
          end
-         
       end
    end
-   
    self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "]" )
    return true
 end
@@ -15392,12 +14339,9 @@ function LiteralSetNode:getLiteral(  )
             else
                return nil, mess
             end
-            
          end
-         
       end
    end
-   
    return _lune.newAlge( Literal.SET, {literalList}), nil
 end
 
@@ -15412,16 +14356,12 @@ function LiteralSetNode:setupLiteralTokenList( list )
             if index > 1 then
                self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
-            
             if not node:setupLiteralTokenList( list ) then
                return false
             end
-            
          end
-         
       end
    end
-   
    self:addTokenList( list, Tokenizer.TokenKind.Dlmt, ")" )
    return true
 end
@@ -15439,15 +14379,11 @@ function LiteralMapNode:getLiteral(  )
          if not keyLiteral then
             return nil, keyMess
          end
-         
          if not valLiteral then
             return nil, valMess
          end
-         
       end
-      
    end
-   
    return _lune.newAlge( Literal.MAP, {litMap}), nil
 end
 
@@ -15455,7 +14391,6 @@ end
 function LiteralMapNode:setupLiteralTokenList( list )
 
    self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "{" )
-   
    local lit2valNode = {}
    for key, _1 in pairs( self.map ) do
       local literal = key:getLiteral(  )
@@ -15479,12 +14414,8 @@ function LiteralMapNode:setupLiteralTokenList( list )
                   return false
             end
          end
-         
       end
-      
    end
-   
-   
    do
       local __sorted = {}
       local __map = lit2valNode
@@ -15498,17 +14429,14 @@ function LiteralMapNode:setupLiteralTokenList( list )
             if not key:setupLiteralTokenList( list ) then
                return false
             end
-            
             self:addTokenList( list, Tokenizer.TokenKind.Dlmt, ":" )
             if not _lune.nilacc( self.map[key], 'setupLiteralTokenList', 'callmtd' , list ) then
                return false
             end
-            
             self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
          end
       end
    end
-   
    self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "}" )
    return true
 end
@@ -15523,13 +14451,10 @@ function LiteralStringNode:getLiteral(  )
     
       txt = txt:sub( 2, -2 )
    end
-   
-   
    do
       local param = self:get_orgParam()
       if param ~= nil then
          local argList = param:get_expList()
-         
          local paramList = {}
          for __index, argNode in ipairs( argList ) do
             local arg, mess = argNode:getLiteral(  )
@@ -15538,13 +14463,10 @@ function LiteralStringNode:getLiteral(  )
             else
                return nil, mess
             end
-            
          end
-         
          txt = string.format( txt, table.unpack( paramList ) )
       end
    end
-   
    return _lune.newAlge( Literal.Str, {txt}), nil
 end
 
@@ -15560,17 +14482,13 @@ function LiteralStringNode:setupLiteralTokenList( list )
             if index > 1 then
                self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "," )
             end
-            
             if not argNode:setupLiteralTokenList( list ) then
                return false
             end
-            
          end
-         
          self:addTokenList( list, Tokenizer.TokenKind.Dlmt, ")" )
       end
    end
-   
    return true
 end
 
@@ -15619,8 +14537,8 @@ local function enumLiteral2Literal( obj )
          return _lune.newAlge( Literal.Str, {val}), nil
       end
    end
-   
 end
+
 
 function RefFieldNode:getLiteral(  )
 
@@ -15632,11 +14550,8 @@ function RefFieldNode:getLiteral(  )
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.field.txt ))
             return enumLiteral2Literal( enumval:get_val() )
          end
-         
       end
    end
-   
-   
    local tokenList = {}
    local literal, mess = self.prefix:getLiteral(  )
    if literal ~= nil then
@@ -15652,25 +14567,21 @@ function RefFieldNode:getLiteral(  )
             for __index, symbol in ipairs( symList ) do
                table.insert( tokenList, symbol )
             end
-            
          else 
             
                return nil, string.format( "not support -- %s", Literal:_getTxt( literal)
                )
          end
       end
-      
       if self.nilAccess then
          table.insert( tokenList, "$." )
       else
        
          table.insert( tokenList, "." )
       end
-      
       table.insert( tokenList, self.field.txt )
       return _lune.newAlge( Literal.Field, {tokenList}), nil
    end
-   
    return nil, mess
 end
 
@@ -15689,13 +14600,10 @@ function ExpMacroStatNode:getLiteral(  )
                txt = string.format( "%s%s", txt, work)
             end
          end
-         
       else
          return nil, string.format( "illegal literal -- %s", getNodeKindName( token:get_kind() ))
       end
-      
    end
-   
    return _lune.newAlge( Literal.Str, {txt}), nil
 end
 
@@ -15712,23 +14620,18 @@ function ExpRefNode:getLiteral(  )
    do
       local enumTypeInfo = _lune.__Cast( typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo )
       if enumTypeInfo ~= nil then
-         
          if self.symbolInfo:get_kind() == Ast.SymbolKind.Mbr and self.symbolInfo:get_namespaceTypeInfo():get_kind() == Ast.TypeInfoKind.Enum then
             local enumval = _lune.unwrap( enumTypeInfo:getEnumValInfo( self.symbolInfo:get_name() ))
             return enumLiteral2Literal( enumval:get_val() )
          end
-         
       end
    end
-   
-   
    return nil, string.format( "unsupport refnode -- %s", typeInfo:getTxt(  ))
 end
 
 
 function ExpOmitEnumNode:getLiteral(  )
 
-   
    local enumval = self.valInfo
    return enumLiteral2Literal( enumval:get_val() )
 end
@@ -15736,10 +14639,8 @@ end
 
 function ExpOmitEnumNode:setupLiteralTokenList( list )
 
-   
    local enumval = self.valInfo
    self:addTokenList( list, Tokenizer.TokenKind.Dlmt, "." )
-   
    self:addTokenList( list, Tokenizer.TokenKind.Symb, (Ast.EnumLiteral:_getTxt( enumval:get_val())
    :gsub( ".*%.", "" ) ) )
    return true
@@ -15755,10 +14656,8 @@ function ExpOp2Node:getValType( node )
       return false, 0, 0.0, "", Ast.headTypeInfo
    end
    
-   
    local intVal, realVal, strVal = 0, 0.0, ""
    local retTypeInfo = Ast.builtinTypeNone
-   
    do
       local _matchExp = literal
       if _matchExp[1] == Literal.Int[1] then
@@ -15783,7 +14682,6 @@ function ExpOp2Node:getValType( node )
             return false, 0, 0.0, "", Ast.headTypeInfo
       end
    end
-   
    return true, intVal, realVal, strVal, retTypeInfo
 end
 
@@ -15811,74 +14709,57 @@ function ExpOp2Node:setupLiteralTokenList( list )
                return false
          end
       end
-      
       return true
    else
       return false
    end
-   
 end
 
 
 function ExpOp2Node:getLiteral(  )
 
-   
    local ret1, int1, real1, str1, type1 = self:getValType( self:get_exp1() )
    local ret2, int2, real2, str2, type2 = self:getValType( self:get_exp2() )
-   
    if not ret1 then
       return nil, string.format( "not support literal -- %s", getNodeKindName( self:get_exp1():get_kind() ))
    end
-   
    if not ret2 then
       return nil, string.format( "not support literal -- %s", getNodeKindName( self:get_exp2():get_kind() ))
    end
-   
-   
    if (type1 == Ast.builtinTypeInt or type1 == Ast.builtinTypeReal ) and (type2 == Ast.builtinTypeInt or type2 == Ast.builtinTypeReal ) then
       local retType = Ast.builtinTypeInt
       if type1 == Ast.builtinTypeReal or type2 == Ast.builtinTypeReal then
          retType = Ast.builtinTypeReal
       end
-      
-      
       do
          local _switchExp = (self.op.txt )
          if _switchExp == "+" then
             if retType == Ast.builtinTypeInt then
                return _lune.newAlge( Literal.Int, {int1 + int2}), nil
             end
-            
             return _lune.newAlge( Literal.Real, {real1 + real2}), nil
          elseif _switchExp == "-" then
             if retType == Ast.builtinTypeInt then
                return _lune.newAlge( Literal.Int, {int1 - int2}), nil
             end
-            
             return _lune.newAlge( Literal.Real, {real1 - real2}), nil
          elseif _switchExp == "*" then
             if retType == Ast.builtinTypeInt then
                return _lune.newAlge( Literal.Int, {int1 * int2}), nil
             end
-            
             return _lune.newAlge( Literal.Real, {real1 * real2}), nil
          elseif _switchExp == "/" then
             if retType == Ast.builtinTypeInt then
                return _lune.newAlge( Literal.Int, {math.floor(int1 / int2)}), nil
             end
-            
             return _lune.newAlge( Literal.Real, {real1 / real2}), nil
          end
       end
-      
    elseif type1 == Ast.builtinTypeString and type2 == Ast.builtinTypeString then
       if self.op.txt == ".." then
          return _lune.newAlge( Literal.Str, {str1 .. str2}), nil
       end
-      
    end
-   
-   
    local mess = string.format( "not support literal operation -- %s %s %s", type1:getTxt(  ), self.op.txt, type2:getTxt(  ))
    return nil, mess
 end
@@ -15907,7 +14788,6 @@ function DefMacroInfo._new( func, declInfo, symbol2MacroValInfoMap )
 end
 function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap) 
    MacroInfo.__init( self,func, symbol2MacroValInfoMap)
-   
    self.declInfo = declInfo
    self.argList = {}
    for __index, argNode in ipairs( declInfo:get_argList() ) do
@@ -15916,9 +14796,7 @@ function DefMacroInfo:__init(func, declInfo, symbol2MacroValInfoMap)
          local argName = argNode:get_name().txt
          table.insert( self.argList, MacroArgInfo._new(argName, argType) )
       end
-      
    end
-   
 end
 function DefMacroInfo._setmeta( obj )
   setmetatable( obj, { __index = DefMacroInfo  } )
@@ -15964,7 +14842,6 @@ function NodeManager:MultiTo1( node )
    elseif expType:get_kind() == Ast.TypeInfoKind.DDD then
       return ExpMultiTo1Node.create( self, node:get_pos(), node:get_inTestBlock(), node:get_macroArgFlag(), expType:get_itemTypeInfoList(), node )
    end
-   
    return node
 end
 
@@ -15977,9 +14854,7 @@ end
 function Filter:processBlock( node, opt )
 
    self.moduleInfoManager:push( node:get_scope() )
-   
    self:processBlockSub( node, opt )
-   
    self.moduleInfoManager:pop(  )
 end
 
@@ -15988,6 +14863,7 @@ local function hasMultiValNode( node )
    return #node:get_expTypeList() > 1 or node:get_expType():get_kind() == Ast.TypeInfoKind.DDD
 end
 _moduleObj.hasMultiValNode = hasMultiValNode
+
 
 
 local nodeKindEnum = {}
@@ -16300,6 +15176,7 @@ nodeKindEnum.__allList[95] = nodeKindEnum.TupleConst
 
 
 
+
 local function getUnwraped( node )
 
    do
@@ -16308,17 +15185,16 @@ local function getUnwraped( node )
          return getUnwraped( work:get_mRet() )
       end
    end
-   
    do
       local work = _lune.__Cast( node, 3, ExpParenNode )
       if work ~= nil then
          return getUnwraped( work:get_exp() )
       end
    end
-   
    return node
 end
 _moduleObj.getUnwraped = getUnwraped
+
 
 local function getCastUnwraped( node )
 
@@ -16328,10 +15204,10 @@ local function getCastUnwraped( node )
          return getUnwraped( work:get_exp() )
       end
    end
-   
    return node
 end
 _moduleObj.getCastUnwraped = getCastUnwraped
+
 
 
 

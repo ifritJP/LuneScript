@@ -3694,7 +3694,6 @@ pub class BoxTypeInfo extend TypeInfo {
    pub override fn get_extedType(): &TypeInfo {
       return self;
    }
-   
 
    /** この型の名前を取得する。 */
    pub override fn getTxt(
@@ -6220,6 +6219,8 @@ pub let builtinTypeSymbol:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
 pub let builtinTypeStat:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
+pub let builtinTypeStat2:&TypeInfo =
+   NormalTypeInfo.createBuiltin( "__Stat", "__stat" , .Prim## );
 pub let builtinTypeExp:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
 pub let builtinTypeMultiExp:&TypeInfo =

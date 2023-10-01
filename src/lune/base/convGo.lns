@@ -2062,6 +2062,8 @@ pro fn convFilter.setup() mut {
    builtin2runtime[ self.builtinFuncs.lns_type ] = "Lns_type";
    builtin2runtime[ self.builtinFuncs.lns_require ] = "Lns_require";
    builtin2runtime[ self.builtinFuncs.lns_tonumber ] = "Lns_tonumber";
+   builtin2runtime[ self.builtinFuncs.string__join ] = "Lns_string_Join";
+   builtin2runtime[ self.builtinFuncs.string___join ] = "Lns_string__Join";
    builtin2runtime[ self.builtinFuncs.lns__load ] = "GETVM.Load";
    builtin2runtime[ self.builtinFuncs.lns_loadfile ] = "GETVM.Loadfile";
    builtin2runtime[ self.builtinFuncs.lns_expandLuavalMap ] = "GETVM.ExpandLuavalMap";
@@ -2086,6 +2088,7 @@ pro fn convFilter.setup() mut {
    self.builtin2runtimeEnv = {
       self.builtinFuncs.__lns_runtime_log: "LnsLog",
       self.builtinFuncs.__lns_runtime_enableLog: "LnsStartRunnerLog",
+      self.builtinFuncs.__lns_runtime_time: "LnsGetTime",
       self.builtinFuncs.__lns_runtime_enableDebugLog: "LnsEnableDebugLog",
       self.builtinFuncs.__lns_runtime_dumpLog: "LnsDumpRunnerLog",
       self.builtinFuncs.__lns_sync_createFlag: "LnsCreateSyncFlag",

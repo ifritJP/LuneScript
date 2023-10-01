@@ -49,11 +49,15 @@ pub abstract class Tokenizer {
    // }
 }
 
+/** token を pushback した際に呼ばれる */
+pub form Pushbacked( token: &Token ) __trans;
+
 pub interface PushbackTokenizer {
    pub fn getTokenNoErr(skipFlag:bool!) mut : &Token;
    pub fn pushback() mut;
    pub fn pushbackToken( token: &Token ) mut;
-   pub fn pushbackStr( asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut;
+   pub fn pushbackStr( asyncParse:bool!, name:str, statement: str,
+                       pos:&Types.Position, pushbacked: Pushbacked! ) mut;
    pub fn newPushback( tokenList: List<&Token> ) mut;
    pub fn getStreamName(): str;
    pub fn createPosition( lineNo: int, column: int ) : &Position;
@@ -295,8 +299,8 @@ pub class DefaultPushbackTokenizer extend (PushbackTokenizer) {
    pub fn pushback() mut {
       self.pushbackToken( self.currentToken );
    }
-   pub fn pushbackStr(
-      asyncParse:bool!, name:str, statement: str, pos:&Types.Position ) mut
+   pub fn pushbackStr( asyncParse:bool!, name:str, statement: str,
+                       pos:&Types.Position, pushbacked: Pushbacked! ) mut
    {
       let mut tokenizer = new StreamTokenizer(
          Types.TokenizerSrc.LnsCode( statement, name, nil ),
@@ -313,6 +317,11 @@ pub class DefaultPushbackTokenizer extend (PushbackTokenizer) {
       }
       for index = #list, 1, -1  {
          self.pushbackToken( list[ index ] );
+      }
+      when! pushbacked {
+         for index = #list, 1, -1  {
+            pushbacked( list[ index ] );
+         }
       }
    }
    pub fn newPushback( tokenList: List<&Token> ) mut {

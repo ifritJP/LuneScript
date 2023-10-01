@@ -209,9 +209,12 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    }
 
    fn getCanonicalName( typeInfo:&Ast.TypeInfo, localFlag:bool ): str {
-      switch typeInfo {
+      switch typeInfo.$genSrcTypeInfo {
          case self.builtinFunc.__ret_ {
             return "_lune.Result";
+         }
+         case self.builtinFunc.__lns_it_ {
+            return "_lune.__lns_it";
          }
       }
       
@@ -325,6 +328,12 @@ fn ConvFilter.writeln( txt: str ) mut {
    self.needIndent = true;
 }
 
+fn ConvFilter.writeRawln( txt: str ) mut {
+   self.writeRaw( txt );
+   self.writeRaw( "\n" );
+   self.needIndent = true;
+}
+
 pub override fn ConvFilter.processNone(
    node: &Nodes.NoneNode, opt: Opt ) mut
 {
@@ -350,7 +359,7 @@ pub override fn ConvFilter.processImport(
          self.writeRaw( "_lazyImport" );
       }
    }
-   self.writeRaw( "( '%s' )" ( modulePath ) );
+   self.writeRawln( "( '%s' )" ( modulePath ) );
 };
 
 
@@ -1292,7 +1301,7 @@ pub override fn ConvFilter.processBlockSub(
    let stmtList = node.get_stmtList();
    foreach statement in stmtList {
       filter( statement, self, node );
-      self.writeln( "" );
+      //self.writeln( "" );
    }
 
    self.popIndent();
@@ -1393,6 +1402,7 @@ pub override fn ConvFilter.processStmtExp(
    };
    
    filter( node.$exp,  self, node );
+   self.writeln("");
 };
 
 pub override fn ConvFilter.processDeclEnum(
@@ -2567,6 +2577,7 @@ pub override fn ConvFilter.processDeclVar(
          self.macroVarSymSet.add( symbolInfo );
       }
    }
+   self.writeln( "" );
 };
 
 pub override fn ConvFilter.processDeclArg(
@@ -2623,6 +2634,7 @@ pub override fn ConvFilter.processDeclFunc(
             declInfo.get_accessMode(), node.get_expType() );
       }
    }
+   self.writeln( "" );
 };
 
 pub override fn ConvFilter.processRefType(
@@ -2770,6 +2782,7 @@ pub override fn ConvFilter.processRepeat(
    filter( node.get_block(),  self, node );
    self.writeRaw( "until " );
    filter( node.get_exp(),  self, node );
+   self.writeln( "" );
 };
 
 pub override fn ConvFilter.processFor(
@@ -2946,6 +2959,10 @@ pub override fn ConvFilter.processExpCall(
          {
             return false;
          }
+         case self.builtinFunc.__lns_runtime_time {
+            self.writeRaw( "math.floor( os.time() * 1000 )" );
+            return false;
+         }
          case self.builtinFunc.__lns_sync_createProcesser
          {
             self.writeRaw( "{}" );
@@ -2977,14 +2994,22 @@ pub override fn ConvFilter.processExpCall(
       // }
 
       let fieldTxt;
-      if node.$func.$expType.$nonnilableType == self.builtinFunc.str_replace {
-         wroteFuncFlag = true;
-         setArgFlag = true;
-         self.writeRaw( "_lune.replace( " );
-         filter( prefixNode, self, fieldNode );
-         return true;
-      } else {
-         fieldTxt = fieldNode.$field.txt;         
+      switch node.$func.$expType.$nonnilableType {
+         case self.builtinFunc.str_replace {
+            wroteFuncFlag = true;
+            setArgFlag = true;
+            self.writeRaw( "_lune.replace( " );
+            filter( prefixNode, self, fieldNode );
+            return true;
+         }
+         case self.builtinFunc.string__join, self.builtinFunc.string___join {
+            wroteFuncFlag = true;
+            self.writeRaw( "table.concat( " );
+            return true;
+         }
+         default {
+            fieldTxt = fieldNode.$field.txt;
+         }
       }
 
       fn processSet(): bool {
@@ -3624,6 +3649,7 @@ pub override fn ConvFilter.processReturn(
    if! node.$expList {
       filter( _exp,  self, node );
    }
+   self.writeln( "" );
 };
 
 pub override fn ConvFilter.processLuneKind( node: &Nodes.LuneKindNode, opt: Opt ) mut
@@ -3853,7 +3879,7 @@ pub override fn ConvFilter.processLiteralNil(
 pub override fn ConvFilter.processBreak(
    node: &Nodes.BreakNode, opt: Opt ) mut
 {
-   self.writeRaw( "break" );
+   self.writeRawln( "break" );
 };
 
 pub override fn ConvFilter.processLiteralSymbol(

@@ -66,35 +66,34 @@ local function startsWith( txt, ptn )
    return txt:find( ptn, 1, true ) ~= nil
 end
 _moduleObj.startsWith = startsWith
+
 local function endsWith( txt, ptn )
 
    return txt:find( ptn, #txt - #ptn + 1, true ) ~= nil
 end
 _moduleObj.endsWith = endsWith
+
 local function getLineList( txt )
 
    local list = {}
-   
    do
-      
       for line in string.gmatch( txt, "[^\n]*\n" ) do
          table.insert( list, line )
       end
-      
       for last in string.gmatch( txt, "[^\n]+$" ) do
          table.insert( list, last )
       end
-      
    end
-   
    return list
 end
 _moduleObj.getLineList = getLineList
+
 local function replace( txt, src, dst )
 
    return (txt:gsub( src, dst ) )
 end
 _moduleObj.replace = replace
+
 
 local Builder = {}
 _moduleObj.Builder = Builder
@@ -103,7 +102,6 @@ function Builder:get_txt(  )
    if #self.progress == 0 then
       return self.txt
    end
-   
    return self.txt .. self.progress
 end
 function Builder._new(  )
@@ -125,7 +123,6 @@ function Builder:add( val )
     
       self.progress = self.progress .. val
    end
-   
 end
 function Builder:len(  )
 
@@ -151,5 +148,6 @@ local function isValidStrBuilder(  )
    return false
 end
 _moduleObj.isValidStrBuilder = isValidStrBuilder
+
 
 return _moduleObj

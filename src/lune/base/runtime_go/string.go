@@ -627,3 +627,78 @@ func (luaVM *Lns_luaVM) String_dump(form *Lns_luaValue, flag LnsAny) string {
 	ret := luaVM.lua_call(top, 2, 1)
 	return ret[0].(string)
 }
+
+func Lns_stringJoin( listObj, sepNil, startNil, endNil LnsAny ) string {
+    if list, ok := listObj.(*LnsList); ok {
+        return Lns_string_Join( list, sepNil, startNil, endNil )
+    }
+    if list, ok := listObj.(*LnsList); ok {
+        return Lns_string_Join( list, sepNil, startNil, endNil )
+    }
+    panic( fmt.Sprintf( "illegal type -- %v", listObj ) )
+}
+
+func Lns_string_Join( list *LnsList, sepNil, startNil, endNil LnsAny ) string {
+    var sep string
+    if Lns_IsNil( sepNil ) {
+        sep = ""
+    } else {
+        sep = sepNil.(string)
+    }
+    start := 0
+    if !Lns_IsNil( startNil ) {
+        start = startNil.(LnsInt) - 1
+    }
+    end := len( list.Items ) - 1
+    if !Lns_IsNil( endNil ) {
+        end = endNil.(LnsInt) - 1
+    }
+    if end < start {
+        return ""
+    }
+    if end == start {
+        return list.Items[ start ].(string)
+    }
+    
+
+	var builder strings.Builder
+	for index, txtObj := range (list.Items) {
+        txt := txtObj.(string)
+        if start <= index {
+            builder.WriteString(txt)
+            if index >= end {
+                break
+            }
+            if len( sep ) != 0 {
+                builder.WriteString(sep)
+            }
+        }
+	}
+	return builder.String()
+}
+
+func Lns_string__Join( list *LnsList2_[string], sepNil, startNil, endNil LnsAny ) string {
+    var sep string
+    if Lns_IsNil( sepNil ) {
+        sep = ""
+    } else {
+        sep = sepNil.(string)
+    }
+    start := 0
+    if !Lns_IsNil( startNil ) {
+        start = startNil.(LnsInt) - 1
+    }
+    end := len( list.Items ) - 1
+    if !Lns_IsNil( endNil ) {
+        end = endNil.(LnsInt) - 1
+    }
+    if end < start {
+        return ""
+    }
+    if end == start {
+        return list.Items[ start ]
+    }
+
+    slice := list.Items[start:end+1]
+    return strings.Join( slice, sep )
+}

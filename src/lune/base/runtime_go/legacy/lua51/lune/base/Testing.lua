@@ -77,7 +77,6 @@ function Result:isTrue( val1, val1txt, msg, mod, lineNo )
       self.okNum = self.okNum + 1
       return true
    end
-   
    self:err( string.format( "not true -- %s:%s:[%s]\n", msg or "", val1txt, tostring( val1)), mod, lineNo )
    return false
 end
@@ -87,7 +86,6 @@ function Result:isNotTrue( val1, val1txt, msg, mod, lineNo )
       self.okNum = self.okNum + 1
       return true
    end
-   
    self:err( string.format( "is true -- %s:%s:[%s]\n", msg or "", val1txt, tostring( val1)), mod, lineNo )
    return false
 end
@@ -97,7 +95,6 @@ function Result:isNil( val1, val1txt, msg, mod, lineNo )
       self.okNum = self.okNum + 1
       return true
    end
-   
    self:err( string.format( "is not nil -- %s:%s:[%s]\n", msg or "", val1txt, tostring( val1)), mod, lineNo )
    return false
 end
@@ -107,7 +104,6 @@ function Result:isNotNil( val1, val1txt, msg, mod, lineNo )
       self.okNum = self.okNum + 1
       return true
    end
-   
    self:err( string.format( "is nil -- %s:%s:[%s]\n", msg or "", val1txt, tostring( val1)), mod, lineNo )
    return false
 end
@@ -117,7 +113,6 @@ function Result:checkEq( val1, val2, val1txt, val2txt, msg, mod, lineNo )
       self.okNum = self.okNum + 1
       return true
    end
-   
    self:err( string.format( "not equal -- %s:%s:[%s] != %s:[%s]\n", msg or "", val1txt, tostring( val1), val2txt, tostring( val2)), mod, lineNo )
    return false
 end
@@ -127,7 +122,6 @@ function Result:checkNotEq( val1, val2, val1txt, val2txt, msg, mod, lineNo )
       self.okNum = self.okNum + 1
       return true
    end
-   
    self:err( string.format( "equal -- %s:%s:[%s] == %s:[%s]\n", msg or "", val1txt, tostring( val1), val2txt, tostring( val2)), mod, lineNo )
    return false
 end
@@ -265,14 +259,12 @@ function TestModuleInfo:run(  )
          end
       end
    end
-   
 end
 function TestModuleInfo:outputResult( stream )
 
    if not self.runned then
       return 
    end
-   
    print( string.format( "module: %s %s", self.name, string.rep( "=", 30 )) )
    do
       local __sorted = {}
@@ -288,7 +280,6 @@ function TestModuleInfo:outputResult( stream )
          end
       end
    end
-   
 end
 function TestModuleInfo._setmeta( obj )
   setmetatable( obj, { __index = TestModuleInfo  } )
@@ -305,6 +296,7 @@ end
 
 local testModuleMap = {}
 
+
 local function registerTestcase( modName, caseName, testcase )
 
    local info = testModuleMap[modName]
@@ -319,6 +311,7 @@ local function registerTestcase( modName, caseName, testcase )
    info:addCase( caseName, TestCase._new(testcase, result) )
 end
 _moduleObj.registerTestcase = registerTestcase
+
 
 local function run( modPath )
 
@@ -335,13 +328,12 @@ local function run( modPath )
             if name == modPath then
                info:run(  )
             end
-            
          end
       end
    end
-   
 end
 _moduleObj.run = run
+
 local function runAll(  )
 
    do
@@ -358,9 +350,9 @@ local function runAll(  )
          end
       end
    end
-   
 end
 _moduleObj.runAll = runAll
+
 
 local function outputAllResult( stream )
 
@@ -378,10 +370,10 @@ local function outputAllResult( stream )
          end
       end
    end
-   
    stream:flush(  )
 end
 _moduleObj.outputAllResult = outputAllResult
+
 
 
 

@@ -31,6 +31,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
+    "time"
 )
 
 type LnsInt = int
@@ -158,6 +159,8 @@ type LnsRuntimeOpt struct {
 
 var lnsRuntimeOpt LnsRuntimeOpt
 
+var launchTime time.Time
+
 /*
 *
 各モジュールを初期化する際に実行する関数。
@@ -178,6 +181,8 @@ func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
 
 	// __asyncLock 用にロックしておく
 	sync_LnsEnvMutex.Lock()
+
+    launchTime = time.Now()
 }
 
 func Lns_IsNil(val LnsAny) bool {
@@ -634,3 +639,8 @@ var validRuntimeDebugLog = false
 func LnsEnableDebugLog(_env *LnsEnv, valid bool) {
 	validRuntimeDebugLog = valid
 }
+
+func LnsGetTime(_env *LnsEnv) LnsInt {
+	return LnsInt(time.Now().Sub( launchTime ).Milliseconds())
+}
+

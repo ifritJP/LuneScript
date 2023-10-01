@@ -619,7 +619,7 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Tokenizer.Pushbac
    local let builtinFunc:&Builtin.BuiltinFuncType;
 
    local let frontAccessor:frontInterface.FrontAccessor;
-   
+
    //===== 解析開始時に設定 ===
    
    /** true の場合は mut 制御が有効 */
@@ -659,6 +659,8 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Tokenizer.Pushbac
    pro fn setTokenizer( tokenizer:Tokenizer.DefaultPushbackTokenizer ) mut {
       self.tokenizer = tokenizer;
    }
+   
+   
    pro let mut scopeAccess:Ast.ScopeAccess;
 
    /** 引数解析中の static method の Scope */
@@ -674,6 +676,10 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Tokenizer.Pushbac
 
    /** __func__ シンボルを持つ関数 TypeInfo の set */
    pro let has__func__Symbol: Set<&Ast.TypeInfo>;
+
+
+   /** 解析中行番号。 ログ用。 */
+   pro let mut analyzingLineNo:int;
    
    // ==== 複数持ちしてマージ
    /** NodeKind -> Node[]  */
@@ -725,6 +731,11 @@ alias で置き換えている元の Type → alias の型
    //pro let importModuleInfo: frontInterface.ImportModuleInfo;
    
 
+
+   local fn getMacroTime() : int {
+      return self.macroCtrl.$processMilliSec;
+   }
+   
 
    local fn setup( src:&TransUnit ) mut
    {
@@ -846,6 +857,7 @@ alias で置き換えている元の Type → alias の型
    {
       super( TransUnit.getSuperParam( ctrl_info )** );
 
+      self.analyzingLineNo = 0;
       self.frontAccessor = frontAccessor;
 
       self.funcBlockInfoLinkNo = nil;
@@ -1069,7 +1081,8 @@ alias で置き換えている元の Type → alias の型
    }
 
 
-   pub fn pushbackStr( asyncParse:bool!, name: str, statement: str, pos:&Types.Position ) __async mut;
+   pub fn pushbackStr( asyncParse:bool!, name: str, statement: str,
+                       pos:&Types.Position, pushbacked: Tokenizer.Pushbacked! ) __async mut;
    pri fn analyzeDecl( accessMode: Ast.AccessMode, staticFlag:
                        bool, firstToken: &Tokenizer.Token,
                        token: &Tokenizer.Token ) mut: Nodes.Node!, bool;
@@ -1342,7 +1355,7 @@ pub override fn TransUnit.errorAt( pos:&Tokenizer.Position, mess: str ) __async 
    Util.err( "has error" ); // エラー
 }
 
-fn TransUnit.createNoneNode( pos: &Tokenizer.Position ) mut : Nodes.Node {
+pro fn TransUnit.createNoneNode( pos: &Tokenizer.Position ) mut : Nodes.Node {
    return Nodes.NoneNode.create(
       self.nodeManager, pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
@@ -1432,7 +1445,8 @@ pub fn TransUnit.pushback() __async mut {
 }
 
 pub fn TransUnit.pushbackStr(
-   asyncParse:bool!, name: str, statement: str, pos:&Types.Position ) __async mut
+   asyncParse:bool!, name: str, statement: str,
+   pos:&Types.Position, pushbacked: Tokenizer.Pushbacked! ) __async mut
 {
    let! async = asyncParse {
       if self.ctrl_info.macroAsyncParseStmtLen == 0 {
@@ -1442,7 +1456,7 @@ pub fn TransUnit.pushbackStr(
       }
    };
    
-   self.tokenizer.pushbackStr( async, name, statement, pos );
+   self.tokenizer.pushbackStr( async, name, statement, pos, pushbacked );
 }
 
 enum SymbolMode {
@@ -1667,6 +1681,17 @@ local fn TransUnit.analyzeStatementList(
       lastLineNo = getLastLineNo();
       let mut statement = self.analyzeStatement( termTxt );
       when! statement {
+         if not self.macroCtrl.isInExpandMode() and self.analyzePhase == .Meta {
+            // 解析中の行番号を出力。
+            // ログ削減のため 100 行単位の変化で出力する。
+            let nowLineNow = getLastLineNo();
+            if self.analyzingLineNo / 100 ~= nowLineNow / 100 {
+               __lns.runtime.log( "statementLineNo: %d %d" (nowLineNow, #stmtList) );
+               self.analyzingLineNo = nowLineNow;
+            }
+         }
+
+         
          if breakKind ~= .None {
             if statement.$kind ~= Nodes.NodeKind.$BlankLine {
                self.addErrMess(
@@ -1950,7 +1975,16 @@ local fn TransUnit.analyzeBlock(
    return node;
 }
 
-fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Tokenizer.Token> {
+/**
+Block を読み飛ばす。
+
+nextToken すると '{' が読み取れる状態にしておく。
+
+@param recordToken true の場合、読み飛ばした token をリストにして返す。
+  false の場合は空リストを返す。
+@return List<&Tokenizer.Token> 読み飛ばした token のリスト。
+*/
+pro fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Tokenizer.Token> {
    let mut blockDepth = 0;
    let mut tokenList:List<&Tokenizer.Token> = [];
    //tokenList = tokenList.__new( 1000 );

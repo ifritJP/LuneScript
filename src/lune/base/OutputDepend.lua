@@ -106,9 +106,13 @@ end
 
 
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
+
 
 local DependInfo = {}
 _moduleObj.DependInfo = DependInfo
@@ -138,11 +142,9 @@ function DependInfo:output( stream )
    for __index, mod in ipairs( self.importModuleList ) do
       stream:write( string.format( "  %s.meta \\\n", (mod:gsub( "%.", "/" ) )) )
    end
-   
    for __index, path in ipairs( self.subModList ) do
       stream:write( string.format( "  %s.lns \\\n", (path:gsub( "%.", "/" ) )) )
    end
-   
 end
 function DependInfo._setmeta( obj )
   setmetatable( obj, { __index = DependInfo  } )
@@ -159,7 +161,6 @@ function convFilter._new( stream )
 end
 function convFilter:__init(stream) 
    Nodes.Filter.__init( self,false, nil, nil)
-   
    self.stream = stream
 end
 function convFilter._setmeta( obj )
@@ -171,11 +172,9 @@ function convFilter:processRoot( node, dummy )
 
    local moduleFull = node:get_moduleTypeInfo():getFullName( self:get_typeNameCtrl(), Ast.DummyModuleInfoManager.get_instance() )
    local dependInfo = DependInfo._new(moduleFull)
-   
    for __index, impNode in ipairs( node:get_nodeManager():getImportNodeList(  ) ) do
       dependInfo:addImpotModule( impNode:get_info():get_modulePath() )
    end
-   
    for __index, subfileNode in ipairs( node:get_nodeManager():getSubfileNodeList(  ) ) do
       do
          local usePath = subfileNode:get_usePath()
@@ -183,10 +182,7 @@ function convFilter:processRoot( node, dummy )
             dependInfo:addSubMod( usePath )
          end
       end
-      
    end
-   
-   
    dependInfo:output( self.stream )
 end
 
@@ -197,6 +193,7 @@ local function createFilter( stream )
    return convFilter._new(stream)
 end
 _moduleObj.createFilter = createFilter
+
 
 
 

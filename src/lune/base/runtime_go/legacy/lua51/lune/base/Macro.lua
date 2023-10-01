@@ -321,15 +321,27 @@ end
 
 
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+
+local AsyncTokenizer = _lune.loadModule( 'lune.base.AsyncTokenizer' )
+
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local Formatter = _lune.loadModule( 'lune.base.Formatter' )
+
 local DependLuaOnLns = _lune.loadModule( 'lune.base.DependLuaOnLns' )
+
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
+
 local Log = _lune.loadModule( 'lune.base.Log' )
+
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+
 local function loadCode( code )
 
    local ret
@@ -342,20 +354,16 @@ local function loadCode( code )
             if obj ~= nil then
                ret = obj
             else
-               
                Util.err( "failed to load" )
             end
          end
-         
       else
-         
          Util.err( string.format( "%s -- %s", tostring( mess), code) )
       end
-      
    end
-   
    return ret
 end
+
 
 local function runLuaOnLns( frontAccessor, code, baseDir, async )
 
@@ -366,24 +374,20 @@ local function runLuaOnLns( frontAccessor, code, baseDir, async )
          do
             mod = loadFunc(  )
          end
-         
       else
        
          do
             mod = loadFunc(  )
          end
-         
       end
-      
       if mod ~= nil then
          return mod, ""
       end
-      
       return nil, "load error"
    end
-   
    return nil, err
 end
+
 
 local function runLuaOnLnsToMacroProc( frontAccessor, code, baseDir, async )
 
@@ -391,14 +395,15 @@ local function runLuaOnLnsToMacroProc( frontAccessor, code, baseDir, async )
    if luaObj ~= nil then
       return luaObj, ""
    end
-   
    return nil, err
 end
 
 
 
+
 local toLuavalNoasync = loadCode( "return function( val ) return val end" )
 _moduleObj.toLuavalNoasync = toLuavalNoasync
+
 
 
 local MacroMetaArgInfo = {}
@@ -506,7 +511,6 @@ function MacroTokenizer._new( tokenList, name, overridePos )
 end
 function MacroTokenizer:__init(tokenList, name, overridePos) 
    Tokenizer.Tokenizer.__init( self)
-   
    self.pos = 1
    self.tokenList = tokenList
    self.name = name
@@ -521,17 +525,14 @@ function MacroTokenizer:getToken(  )
    if #self.tokenList < self.pos then
       return nil
    end
-   
    local token = self.tokenList[self.pos]
    self.pos = self.pos + 1
-   
    do
       local _exp = self.overridePos
       if _exp ~= nil then
          return Types.Token._new(token.kind, token.txt, self:createPosition( token.pos.lineNo, token.pos.column ), token.consecutive, token:get_commentList())
       end
    end
-   
    return token
 end
 function MacroTokenizer:getStreamName(  )
@@ -541,7 +542,6 @@ end
 function MacroTokenizer._setmeta( obj )
   setmetatable( obj, { __index = MacroTokenizer  } )
 end
-
 
 local function getLiteralMacroVal( obj )
 
@@ -569,7 +569,6 @@ local function getLiteralMacroVal( obj )
       elseif _matchExp[1] == Nodes.Literal.Symbol[1] then
          local val = _matchExp[2][1]
       
-         
          local list = {val}
          return list
       elseif _matchExp[1] == Nodes.Literal.Field[1] then
@@ -583,7 +582,6 @@ local function getLiteralMacroVal( obj )
          for index, item in ipairs( list ) do
             newList[index] = getLiteralMacroVal( item )
          end
-         
          return newList
       elseif _matchExp[1] == Nodes.Literal.ARRAY[1] then
          local list = _matchExp[2][1]
@@ -592,7 +590,6 @@ local function getLiteralMacroVal( obj )
          for index, item in ipairs( list ) do
             newList[index] = getLiteralMacroVal( item )
          end
-         
          return newList
       elseif _matchExp[1] == Nodes.Literal.SET[1] then
          local list = _matchExp[2][1]
@@ -605,9 +602,7 @@ local function getLiteralMacroVal( obj )
                   newSet[_exp]= true
                end
             end
-            
          end
-         
          return newSet
       elseif _matchExp[1] == Nodes.Literal.MAP[1] then
          local map = _matchExp[2][1]
@@ -619,14 +614,20 @@ local function getLiteralMacroVal( obj )
             if keyObj ~= nil and valObj ~= nil then
                newMap[keyObj] = valObj
             end
-            
          end
-         
          return newMap
+      elseif _matchExp[1] == Nodes.Literal.STAT[1] then
+         local list = _matchExp[2][1]
+      
+         local tokenList = {}
+         for __index, token in ipairs( list ) do
+            table.insert( tokenList, token:_toMap(  ) )
+         end
+         return tokenList
       end
    end
-   
 end
+
 
 local ExtMacroInfo = {}
 setmetatable( ExtMacroInfo, { __index = Nodes.MacroInfo } )
@@ -646,7 +647,6 @@ function ExtMacroInfo._new( name, func, symbol2MacroValInfoMap, argList, tokenLi
 end
 function ExtMacroInfo:__init(name, func, symbol2MacroValInfoMap, argList, tokenList, baseDir) 
    Nodes.MacroInfo.__init( self,func, symbol2MacroValInfoMap)
-   
    self.name = name
    self.argList = argList
    self.tokenList = tokenList
@@ -691,7 +691,6 @@ function MacroAnalyzeInfo:getCurArgType(  )
    if #self.typeInfo:get_argTypeInfoList() < self.argIndex then
       return Ast.builtinTypeNone
    end
-   
    return self.typeInfo:get_argTypeInfoList()[self.argIndex]
 end
 function MacroAnalyzeInfo:nextArg(  )
@@ -770,8 +769,6 @@ function DefMacroInfoWithSrc._new( func, srcInfo, symbol2MacroValInfoMap )
 end
 function DefMacroInfoWithSrc:__init(func, srcInfo, symbol2MacroValInfoMap) 
    Nodes.DefMacroInfo.__init( self,func, srcInfo:get_declInfo(), symbol2MacroValInfoMap)
-   
-   
    self.srcInfo = srcInfo
 end
 function DefMacroInfoWithSrc._setmeta( obj )
@@ -779,6 +776,29 @@ function DefMacroInfoWithSrc._setmeta( obj )
 end
 function DefMacroInfoWithSrc:get_srcInfo()
    return self.srcInfo
+end
+
+
+local MacroExpandInfo = {}
+_moduleObj.MacroExpandInfo = MacroExpandInfo
+function MacroExpandInfo._new(  )
+   local obj = {}
+   MacroExpandInfo._setmeta( obj )
+   if obj.__init then obj:__init(  ); end
+   return obj
+end
+function MacroExpandInfo:__init() 
+   self.spendTime = 0
+   self.accessCount = 0
+end
+function MacroExpandInfo._setmeta( obj )
+  setmetatable( obj, { __index = MacroExpandInfo  } )
+end
+function MacroExpandInfo:get_spendTime()
+   return self.spendTime
+end
+function MacroExpandInfo:get_accessCount()
+   return self.accessCount
 end
 
 
@@ -794,14 +814,12 @@ function MacroCtrl:isUsing__var( macroType )
    if self.typeId2ImportedMacroInfo[typeId] then
       return false
    end
-   
    do
       local _exp = self.id2use___var[typeId]
       if _exp ~= nil then
          return _exp
       end
    end
-   
    Util.err( string.format( "unknown macro -- %s", macroType:getTxt(  )) )
 end
 function MacroCtrl:setUsing__var(  )
@@ -812,7 +830,10 @@ function MacroCtrl:setUsing__var(  )
          self.id2use___var[_exp:get_typeId()] = true
       end
    end
-   
+end
+function MacroCtrl:addProcessMilliSec( msec )
+
+   self.processMilliSec = self.processMilliSec + msec
 end
 function MacroCtrl._new( macroEval, validAsyncMacro, frontAccessor )
    local obj = {}
@@ -821,19 +842,18 @@ function MacroCtrl._new( macroEval, validAsyncMacro, frontAccessor )
    return obj
 end
 function MacroCtrl:__init(macroEval, validAsyncMacro, frontAccessor) 
+   self.expandType2Info = {}
+   self.expandSym2Info = {}
+   self.expandTxt2TokenList = {}
    self.id2use___var = {}
-   
+   self.processMilliSec = 0
    do
       for funcType, __val in pairs( Builtin.getBuiltinFunc(  ):get_allFuncTypeSet() ) do
          if funcType:get_kind() == Ast.TypeInfoKind.Macro then
             self.id2use___var[funcType:get_typeId()] = false
          end
-         
       end
-      
    end
-   
-   
    self.frontAccessor = frontAccessor
    self.validAsyncMacro = validAsyncMacro
    self.toLuavalLuaAsync = nil
@@ -849,37 +869,28 @@ function MacroCtrl:__init(macroEval, validAsyncMacro, frontAccessor)
    self.analyzeInfo = MacroAnalyzeInfo._new(Ast.builtinTypeNone, Nodes.MacroMode.None)
    self.macroCallLineNo = nil
    self.macroAnalyzeInfoStack = {self.analyzeInfo}
-   
    self.macroLocalVarMap = nil
 end
 function MacroCtrl:clone( frontAccessor )
 
    local obj = MacroCtrl._new(self.macroEval, self.validAsyncMacro, frontAccessor)
-   
    if not self.validAsyncMacro then
       obj.toLuavalLuaAsync = self.toLuavalLuaAsync
    end
-   
    obj.useLnsLoad = self.useLnsLoad
-   
-   
-   
    obj.tokenExpanding = self.tokenExpanding
    _lune._Set_or(obj.useModuleMacroSet, self.useModuleMacroSet )
    do
       for key, val in pairs( self.typeId2ImportedMacroInfo ) do
          obj.typeId2ImportedMacroInfo[key] = val
       end
-      
    end
-   
    
    
    do
       for key, val in pairs( self.declPubMacroInfoMap ) do
          obj.declPubMacroInfoMap[key] = val
       end
-      
    end
    
    
@@ -887,41 +898,31 @@ function MacroCtrl:clone( frontAccessor )
       for key, val in pairs( self.id2use___var ) do
          obj.id2use___var[key] = val
       end
-      
    end
    
    
-   
    if self.validAsyncMacro then
-      
       for key, defInfo in pairs( self.declMacroInfoMap ) do
          local srcInfo = defInfo:get_srcInfo()
          local stmtFunc
          
-         
          stmtFunc = nil
          obj.declMacroInfoMap[key] = DefMacroInfoWithSrc._new(stmtFunc, srcInfo, srcInfo:get_symbol2MacroValInfoMap())
       end
-      
    else
     
-      
       do
          for key, val in pairs( self.declMacroInfoMap ) do
             obj.declMacroInfoMap[key] = val
          end
-         
       end
       
       
    end
-   
-   
    do
       for key, val in pairs( self.symbol2ValueMapForMacro ) do
          obj.symbol2ValueMapForMacro[key] = val
       end
-      
    end
    
    
@@ -930,8 +931,6 @@ function MacroCtrl:clone( frontAccessor )
    for __index, val in ipairs( self.macroAnalyzeInfoStack ) do
       table.insert( obj.macroAnalyzeInfoStack, val )
    end
-   
-   
    return obj
 end
 function MacroCtrl:mergeFrom( macroCtrl )
@@ -943,7 +942,6 @@ function MacroCtrl:setToUseLnsLoad(  )
    if self.declaringType then
       self.useLnsLoad = true
    end
-   
 end
 function MacroCtrl._setmeta( obj )
   setmetatable( obj, { __index = MacroCtrl  } )
@@ -966,16 +964,25 @@ end
 function MacroCtrl:get_declaringType()
    return self.declaringType
 end
+function MacroCtrl:get_processMilliSec()
+   return self.processMilliSec
+end
+function MacroCtrl:get_expandType2Info()
+   return self.expandType2Info
+end
+function MacroCtrl:get_expandSym2Info()
+   return self.expandSym2Info
+end
 
 
 local function equalsType( typeInfo, builtinType )
 
    return typeInfo:get_srcTypeInfo() == builtinType
 end
+
 function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTypeInfo, expList )
 
    self.useModuleMacroSet[macroTypeInfo:getModule(  )]= true
-   
    if expList ~= nil then
       for __index, exp in ipairs( expList:get_expList() ) do
          local kind = exp:get_kind()
@@ -988,12 +995,8 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                   return nil, mess
             end
          end
-         
       end
-      
    end
-   
-   
    local macroInfo
    
    do
@@ -1010,44 +1013,30 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                   do
                      local luaCode = srcInfo:get_luaCode()
                      if luaCode ~= nil then
-                        
                         local stmtFunc = _lune.unwrap( runLuaOnLnsToMacroProc( self.frontAccessor, luaCode, srcInfo:get_baseDir(), srcInfo:get_asyncFlag() ))
                         defInfo:set_func( stmtFunc )
                      end
                   end
-                  
                end
-               
                macroInfo = defInfo
             else
                Util.err( string.format( "not found macroInfo -- %d", macroTypeInfo:get_typeId().id) )
             end
          end
-         
       end
    end
-   
-   
    local function process(  )
    
-      
       local argValMap = {}
       local macroArgNodeList = macroInfo:getArgList(  )
-      
       local macroArgName2ArgNode = {}
-      
       local errmess = nil
-      
       local innerMacro = macroTypeInfo:getModule(  ) == moduleTypeInfo
-      
       local asyncMacro = self.validAsyncMacro and innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
-      
       local valid__var = innerMacro and not Ast.isPubToExternal( macroTypeInfo:get_accessMode() )
-      
       local toLuaval
       
       if asyncMacro then
-         
          local work = self.toLuavalLuaAsync
          if  nil == work then
             local _work = work
@@ -1061,19 +1050,14 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
        
          toLuaval = _moduleObj.toLuavalNoasync
       end
-      
-      
       local macroArgValMap = {}
-      
       if asyncMacro then
-         
          do
             do
                do
                   local func = macroInfo:get_func()
                   if func ~= nil then
                      if expList ~= nil then
-                        
                         for index, argNode in ipairs( expList:get_expList() ) do
                            local declArgNode = macroArgNodeList[index]
                            macroArgName2ArgNode[declArgNode:get_name()] = argNode
@@ -1083,7 +1067,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                  local val = getLiteralMacroVal( literal )
                                  if val ~= nil then
                                     argValMap[index] = val
-                                    
                                     local argVal
                                     
                                     if argNode:get_expType() == Ast.builtinTypeSymbol then
@@ -1092,27 +1075,18 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                      
                                        argVal = toLuaval( val )
                                     end
-                                    
-                                    
                                     if argVal ~= nil then
                                        macroArgValMap[declArgNode:get_name()] = argVal
                                     end
-                                    
                                  end
                               end
-                              
                            else
                               errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), tostring( mess))
                               break
                            end
-                           
                         end
-                        
                      end
-                     
-                     
                      if not errmess then
-                        
                         local varMap = self.macroLocalVarMap
                         if  nil == varMap then
                            local _varMap = varMap
@@ -1124,15 +1098,10 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                         if valid__var then
                            macroArgValMap["__var"] = varMap
                         end
-                        
-                        
                         local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
-                        
                         if valid__var then
                            self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
                         end
-                        
-                        
                         for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
                            local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
                            if  nil == valInfo then
@@ -1142,7 +1111,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                            end
                            
                            local typeInfo = valInfo.typeInfo
-                           
                            local valMap
                            
                            do
@@ -1154,17 +1122,13 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                   
                                     valMap = val
                                  end
-                                 
                               else
                                  valMap = {}
                               end
                            end
-                           
                            self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo._new(valMap, typeInfo, nil)
                         end
-                        
                      end
-                     
                   else
                      if expList ~= nil then
                         for index, argNode in ipairs( expList:get_expList() ) do
@@ -1178,25 +1142,16 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                     argValMap[index] = val
                                  end
                               end
-                              
                            else
                               errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), tostring( mess))
                               break
                            end
-                           
                         end
-                        
                      end
-                     
                   end
                end
-               
             end
-            
-            
-            
          end
-         
       else
        
          do
@@ -1205,7 +1160,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                   local func = macroInfo:get_func()
                   if func ~= nil then
                      if expList ~= nil then
-                        
                         for index, argNode in ipairs( expList:get_expList() ) do
                            local declArgNode = macroArgNodeList[index]
                            macroArgName2ArgNode[declArgNode:get_name()] = argNode
@@ -1215,7 +1169,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                  local val = getLiteralMacroVal( literal )
                                  if val ~= nil then
                                     argValMap[index] = val
-                                    
                                     local argVal
                                     
                                     if argNode:get_expType() == Ast.builtinTypeSymbol then
@@ -1224,27 +1177,18 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                      
                                        argVal = toLuaval( val )
                                     end
-                                    
-                                    
                                     if argVal ~= nil then
                                        macroArgValMap[declArgNode:get_name()] = argVal
                                     end
-                                    
                                  end
                               end
-                              
                            else
                               errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), tostring( mess))
                               break
                            end
-                           
                         end
-                        
                      end
-                     
-                     
                      if not errmess then
-                        
                         local varMap = self.macroLocalVarMap
                         if  nil == varMap then
                            local _varMap = varMap
@@ -1256,15 +1200,10 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                         if valid__var then
                            macroArgValMap["__var"] = varMap
                         end
-                        
-                        
                         local macroVars = _lune.unwrap( (func( macroArgValMap ) ))
-                        
                         if valid__var then
                            self.macroLocalVarMap = _lune.unwrap( macroVars['__var'])
                         end
-                        
-                        
                         for __index, name in pairs( (_lune.unwrap( macroVars['__names']) ) ) do
                            local valInfo = macroInfo:get_symbol2MacroValInfoMap()[name]
                            if  nil == valInfo then
@@ -1274,7 +1213,6 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                            end
                            
                            local typeInfo = valInfo.typeInfo
-                           
                            local valMap
                            
                            do
@@ -1286,17 +1224,13 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                   
                                     valMap = val
                                  end
-                                 
                               else
                                  valMap = {}
                               end
                            end
-                           
                            self.symbol2ValueMapForMacro[name] = Nodes.MacroValInfo._new(valMap, typeInfo, nil)
                         end
-                        
                      end
-                     
                   else
                      if expList ~= nil then
                         for index, argNode in ipairs( expList:get_expList() ) do
@@ -1310,33 +1244,22 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
                                     argValMap[index] = val
                                  end
                               end
-                              
                            else
                               errmess = string.format( "not support node at arg(%d) -- %s:%s", index, Nodes.getNodeKindName( argNode:get_kind() ), tostring( mess))
                               break
                            end
-                           
                         end
-                        
                      end
-                     
                   end
                end
-               
             end
-            
-            
-            
          end
-         
       end
       
       
       if errmess ~= nil then
          return errmess
       end
-      
-      
       for index, arg in ipairs( macroInfo:getArgList(  ) ) do
          if arg:get_typeInfo():get_kind() ~= Ast.TypeInfoKind.DDD then
             local argType = arg:get_typeInfo()
@@ -1346,20 +1269,15 @@ function MacroCtrl:evalMacroOp( moduleTypeInfo, streamName, firstToken, macroTyp
           
             return "not support ... in macro"
          end
-         
       end
-      
       return nil
    end
-   
    do
       local mess = process(  )
       if mess ~= nil then
          return nil, mess
       end
    end
-   
-   
    return MacroTokenizer._new(macroInfo:getTokenList(  ), string.format( "%s:%d:%d: (macro %s)", streamName, firstToken.pos.lineNo, firstToken.pos.column, macroTypeInfo:getTxt(  )), firstToken.pos:get_orgPos()), nil
 end
 
@@ -1378,7 +1296,6 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
        
          Util.err( "macroInfo.pos is illegal" )
       end
-      
       local argList = {}
       local argNameList = {}
       local symbol2MacroValInfoMap = {}
@@ -1387,13 +1304,10 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
          table.insert( argList, Nodes.MacroArgInfo._new(argInfo.name, argTypeInfo) )
          table.insert( argNameList, argInfo.name )
       end
-      
       for __index, symInfo in ipairs( macroInfo.symList ) do
          local symTypeInfo = _lune.unwrap( typeId2TypeInfo[symInfo.typeId])
          symbol2MacroValInfoMap[symInfo.name] = Nodes.MacroValInfo._new(nil, symTypeInfo, nil)
       end
-      
-      
       local tokenList = {}
       local lineNo = 0
       local column = 1
@@ -1408,24 +1322,18 @@ function MacroCtrl:importMacro( processInfo, lnsPath, macroInfoStem, macroTypeIn
             table.insert( tokenList, Tokenizer.Token._new(_lune.unwrap( Tokenizer.TokenKind._from( math.floor(tokenInfo[1]) )), txt, pos, false) )
             column = column + #txt + 1
          end
-         
       end
-      
-      
       local luaCode = self.macroEval:evalFromCodeToLuaCode( processInfo, macroInfo.name, argNameList, macroInfo.stmtBlock )
       local stmtFunc
       
       stmtFunc, err = runLuaOnLnsToMacroProc( self.frontAccessor, luaCode, baseDir, false )
       if stmtFunc ~= nil then
          local extMacroInfo = ExtMacroInfo._new(macroInfo.name, stmtFunc, symbol2MacroValInfoMap, argList, tokenList, baseDir)
-         
          self.typeId2ImportedMacroInfo[macroTypeInfo:get_typeId()] = extMacroInfo
          importedMacroInfoMap[macroTypeInfo:get_typeId()] = extMacroInfo
          return 
       end
-      
    end
-   
    Util.errorLog( string.format( "macro load fail -- %s: %s ", macroTypeInfo:getTxt(  ), _lune.unwrapDefault( err, "")) )
 end
 
@@ -1435,7 +1343,6 @@ function MacroCtrl:importMacroInfo( importedMacroInfoMap )
    for typeId, macroInfo in pairs( importedMacroInfoMap ) do
       self.typeId2ImportedMacroInfo[typeId] = macroInfo
    end
-   
 end
 
 
@@ -1459,17 +1366,13 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
        
          ok = false
       end
-      
    else
     
       ok = true
       stmtFunc, err = nil, nil
       luaCode = nil
    end
-   
-   
    if ok then
-      
       local remap = {}
       for name, macroValInfo in pairs( self.symbol2ValueMapForMacro ) do
          if equalsType( macroValInfo.typeInfo, Ast.builtinTypeEmpty ) then
@@ -1481,15 +1384,11 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
                   remap[name] = macroValInfo
                end
             end
-            
          else
           
             remap[name] = macroValInfo
          end
-         
       end
-      
-      
       local srcInfo = DefMacroSrc._new(luaCode, node:get_declInfo(), remap, baseDir, asyncFlag)
       local macroInfo = DefMacroInfoWithSrc._new(stmtFunc, srcInfo, remap)
       if Ast.isPubToExternal( node:get_expType():get_accessMode() ) then
@@ -1498,18 +1397,12 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
        
          self.declMacroInfoMap[node:get_expType():get_typeId()] = macroInfo
       end
-      
    end
-   
-   
    if not self.id2use___var[node:get_expType():get_typeId()] then
       self.id2use___var[node:get_expType():get_typeId()] = false
    end
-   
-   
    self.symbol2ValueMapForMacro = {}
    self.declaringType = nil
-   
    return err
 end
 
@@ -1530,7 +1423,6 @@ local function expandVal( tokenList, workval, pos )
             if string.find( num, ".", 1, true ) then
                kind = Tokenizer.TokenKind.Real
             end
-            
             table.insert( tokenList, Tokenizer.Token._new(kind, num, pos, false) )
          elseif _switchExp == "string" then
             table.insert( tokenList, Tokenizer.Token._new(Tokenizer.TokenKind.Str, Tokenizer.quoteStr( val ), pos, false) )
@@ -1539,47 +1431,60 @@ local function expandVal( tokenList, workval, pos )
                return string.format( "not support ,, List -- %s", type( val ))
          end
       end
-      
    end
-   
    return nil
 end
-local function pushbackTxt( pushbackTokenizer, txtList, streamName, pos )
+
+local function pushbackTxt( expandTxt2TokenList, pushbackTokenizer, txtList, streamName, pos )
 
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
-      local tokenizer = Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
-      local workTokenizer = Tokenizer.DefaultPushbackTokenizer._new(tokenizer)
-      while true do
-         local worktoken = workTokenizer:getTokenNoErr(  )
-         if worktoken.kind == Tokenizer.TokenKind.Eof then
-            break
+      do
+         local _exp = expandTxt2TokenList[txt]
+         if _exp ~= nil then
+            for __index, token in ipairs( _exp ) do
+               table.insert( tokenList, Tokenizer.Token._new(Tokenizer.TokenKind.Symb, token, pos, false) )
+            end
+         else
+            local workList = {}
+            expandTxt2TokenList[txt] = workList
+            if AsyncTokenizer.getDelimitIndex( txt, 1 ) then
+               local tokenizer = Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
+               local workTokenizer = Tokenizer.DefaultPushbackTokenizer._new(tokenizer)
+               while true do
+                  local worktoken = workTokenizer:getTokenNoErr(  )
+                  if worktoken.kind == Tokenizer.TokenKind.Eof then
+                     break
+                  end
+                  table.insert( tokenList, Tokenizer.Token._new(worktoken.kind, worktoken.txt, pos, false) )
+                  table.insert( workList, worktoken.txt )
+               end
+            else
+             
+               table.insert( tokenList, Tokenizer.Token._new(Tokenizer.TokenKind.Symb, txt, pos, false) )
+               table.insert( workList, txt )
+            end
          end
-         
-         table.insert( tokenList, Tokenizer.Token._new(worktoken.kind, worktoken.txt, pos, false) )
       end
-      
    end
-   
    for index = #tokenList, 1, -1 do
       pushbackTokenizer:pushbackToken( tokenList[index] )
    end
-   
 end
+
 function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
    local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
 
-   Log.log( Log.Level.Trace, __func__, 979, function (  )
+   Log.log( Log.Level.Trace, __func__, 1038, function (  )
    
       return string.format( "start -- %s:%d:%s", token.pos:get_orgPos().streamName, token.pos:get_orgPos().lineNo, token.txt)
-   end )
+   end
+    )
    
    
    if self.tokenExpanding then
       return token
    end
-   
-   
    local function getToken(  )
    
       self.tokenExpanding = true
@@ -1587,7 +1492,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
       self.tokenExpanding = false
       return work
    end
-   
    local function macroVal2strList( name, macroVal )
    
       local val = macroVal.val
@@ -1598,10 +1502,8 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
       end
       
       if macroVal.argNode then
-         
          return val
       end
-      
       local list = {}
       do
          local __sorted = {}
@@ -1617,15 +1519,93 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
             end
          end
       end
-      
       return list
    end
+   local function pushbackStr( name, stmt, pos )
    
+      tokenizer:pushbackStr( nil, name, stmt, pos, nil )
+      do
+         local info = self.expandSym2Info[name]
+         if  nil == info then
+            local _info = info
+         
+            info = MacroExpandInfo._new()
+            self.expandSym2Info[name] = info
+         end
+         
+         info.accessCount = info.accessCount + 1
+         info.spendTime = info.spendTime + #stmt
+      end
+   end
+   local function expandDD( macroVal, nextToken )
+   
+      if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
+         local txtList = {}
+         for __index, txt in ipairs( macroVal2strList( nextToken.txt, macroVal ) ) do
+            table.insert( txtList, txt )
+         end
+         pushbackTxt( self.expandTxt2TokenList, tokenizer, txtList, nextToken.txt, nextToken.pos )
+      elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
+         local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
+         local txt = _lune.unwrapDefault( macroVal.val, "")
+         pushbackStr( string.format( "macroVal %s", nextToken.txt), txt, pos )
+      elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
+         local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
+         local txt = _lune.unwrapDefault( macroVal.val, "nil")
+         pushbackStr( string.format( "macroVal %s", nextToken.txt), txt, pos )
+      elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
+         if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
+            local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
+            local strList = macroVal2strList( nextToken.txt, macroVal )
+            pushbackStr( string.format( "macroVal %s", nextToken.txt), table.concat( strList, "\n" ), pos )
+         else
+          
+            local tokenList = {}
+            do
+               local argNode = macroVal.argNode
+               if argNode ~= nil then
+                  if not argNode:setupLiteralTokenList( tokenList ) then
+                     Util.err( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
+                  end
+               else
+                  Util.err( string.format( "not support ,, -- %s", nextToken.txt) )
+               end
+            end
+            tokenizer:newPushback( tokenList )
+         end
+      elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
+         local enumTypeInfo = _lune.unwrap( _lune.__Cast( macroVal.typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo ))
+         local fullname = macroVal.typeInfo:getFullName( typeNameCtrl, scope, true )
+         local nameList = Util.splitStr( fullname, "[^%.]+" )
+         local enumValInfo = _lune.unwrap( enumTypeInfo:get_val2EnumValInfo()[_lune.unwrap( macroVal.val)])
+         nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
+         tokenizer:pushbackToken( nextToken )
+         for index = #nameList, 1, -1 do
+            nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Dlmt, ".", nextToken.pos, false)
+            tokenizer:pushbackToken( nextToken )
+            nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Symb, nameList[index], nextToken.pos, false)
+            tokenizer:pushbackToken( nextToken )
+         end
+      else
+       
+         local tokenList = {}
+         do
+            local argNode = macroVal.argNode
+            if argNode ~= nil then
+               if not argNode:setupLiteralTokenList( tokenList ) then
+                  Util.err( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
+               end
+            else
+               expandVal( tokenList, macroVal.val, nextToken.pos )
+            end
+         end
+         tokenizer:newPushback( tokenList )
+      end
+      return nextToken
+   end
    local tokenTxt = token.txt
-   
    if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' then
       local nextToken = getToken(  )
-      
       local macroVal = self.symbol2ValueMapForMacro[nextToken.txt]
       if  nil == macroVal then
          local _macroVal = macroVal
@@ -1633,95 +1613,26 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
          Util.err( string.format( "unknown macro val -- %s", nextToken.txt) )
       end
       
-      
       if tokenTxt == ',,' then
+         local expandInfo = self.expandType2Info[macroVal.typeInfo:getTxt(  )]
+         if  nil == expandInfo then
+            local _expandInfo = expandInfo
          
-         if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
-            local txtList = {}
-            for __index, txt in ipairs( macroVal2strList( nextToken.txt, macroVal ) ) do
-               table.insert( txtList, txt )
-            end
-            
-            pushbackTxt( tokenizer, txtList, nextToken.txt, nextToken.pos )
-         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
-            local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
-            local txt = _lune.unwrapDefault( macroVal.val, "")
-            tokenizer:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
-         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
-            local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
-            local txt = _lune.unwrapDefault( macroVal.val, "nil")
-            tokenizer:pushbackStr( nil, string.format( "macroVal %s", nextToken.txt), txt, pos )
-         elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
-            if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
-               local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
-               local strList = macroVal2strList( nextToken.txt, macroVal )
-               for index = #strList, 1, -1 do
-                  tokenizer:pushbackStr( nil, string.format( "macroVal %s[%d]", nextToken.txt, index), strList[index], pos )
-               end
-               
-            else
-             
-               local tokenList = {}
-               
-               do
-                  local argNode = macroVal.argNode
-                  if argNode ~= nil then
-                     if not argNode:setupLiteralTokenList( tokenList ) then
-                        Util.err( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
-                     end
-                     
-                  else
-                     Util.err( string.format( "not support ,, -- %s", nextToken.txt) )
-                  end
-               end
-               
-               
-               tokenizer:newPushback( tokenList )
-            end
-            
-         elseif macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.Enum then
-            local enumTypeInfo = _lune.unwrap( _lune.__Cast( macroVal.typeInfo:get_aliasSrc(), 3, Ast.EnumTypeInfo ))
-            local fullname = macroVal.typeInfo:getFullName( typeNameCtrl, scope, true )
-            
-            local nameList = Util.splitStr( fullname, "[^%.]+" )
-            local enumValInfo = _lune.unwrap( enumTypeInfo:get_val2EnumValInfo()[_lune.unwrap( macroVal.val)])
-            nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Symb, enumValInfo:get_name(), nextToken.pos, false)
-            tokenizer:pushbackToken( nextToken )
-            for index = #nameList, 1, -1 do
-               nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Dlmt, ".", nextToken.pos, false)
-               tokenizer:pushbackToken( nextToken )
-               nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Symb, nameList[index], nextToken.pos, false)
-               tokenizer:pushbackToken( nextToken )
-            end
-            
-         else
-          
-            local tokenList = {}
-            
-            do
-               local argNode = macroVal.argNode
-               if argNode ~= nil then
-                  if not argNode:setupLiteralTokenList( tokenList ) then
-                     Util.err( string.format( "illegal macro val ,, -- %s", nextToken.txt) )
-                  end
-                  
-               else
-                  expandVal( tokenList, macroVal.val, nextToken.pos )
-               end
-            end
-            
-            
-            tokenizer:newPushback( tokenList )
+            expandInfo = MacroExpandInfo._new()
+            self.expandType2Info[macroVal.typeInfo:getTxt(  )] = expandInfo
          end
          
+         local prev = math.floor( os.time() * 1000 )
+         nextToken = expandDD( macroVal, nextToken )
+         expandInfo.spendTime = expandInfo.spendTime + math.floor( os.time() * 1000 ) - prev
+         expandInfo.accessCount = expandInfo.accessCount + 1
       elseif tokenTxt == ',,,' then
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) then
-            pushbackTxt( tokenizer, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
+            pushbackTxt( self.expandTxt2TokenList, tokenizer, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
          else
           
             Util.err( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )
          end
-         
       elseif tokenTxt == ',,,,' then
          if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) then
             local txtList = (_lune.unwrap( macroVal.val) )
@@ -1729,7 +1640,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
             for __index, txt in ipairs( txtList ) do
                newToken = string.format( "%s%s", newToken, txt)
             end
-            
             nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Str, string.format( "'%s'", newToken), nextToken.pos, false)
             tokenizer:pushbackToken( nextToken )
          elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
@@ -1737,31 +1647,22 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
             local rawTxt
             
             if txt:find( "^```" ) then
-               
                rawTxt = Tokenizer.quoteStr( txt )
             else
              
-               
                rawTxt = Tokenizer.quoteStr( txt )
             end
-            
             nextToken = Tokenizer.Token._new(Tokenizer.TokenKind.Str, rawTxt, nextToken.pos, false)
             tokenizer:pushbackToken( nextToken )
          else
           
             Util.err( string.format( "not support this symbol -- %s%s", tokenTxt, nextToken.txt) )
          end
-         
       end
-      
       nextToken = getToken(  )
-      
       token = nextToken
    end
-   
-   
    self.tokenExpanding = false
-   
    return token
 end
 
@@ -1785,17 +1686,13 @@ function ErrorMess:__init( pos, mess )
    self.mess = mess
 end
 
-
 function MacroCtrl:expandSymbol( tokenizer, inTestBlock, prefixToken, exp, nodeManager, errMessList )
 
    local nextToken = tokenizer:getTokenNoErr(  )
    if nextToken.txt ~= "~~" then
       tokenizer:pushbackToken( nextToken )
    end
-   
-   
    local format = prefixToken.txt == ",,," and "' %s '" or '"\'%s\'"'
-   
    if prefixToken.txt == ",," then
       do
          local refNode = _lune.__Cast( exp, 3, Nodes.ExpRefNode )
@@ -1816,26 +1713,19 @@ function MacroCtrl:expandSymbol( tokenizer, inTestBlock, prefixToken, exp, nodeM
                 
                   table.insert( errMessList, ErrorMess._new(_lune.unwrap( symbolInfo:get_pos()), string.format( "not support ,, -- %s", valType:getTxt(  ))) )
                end
-               
             else
                if equalsType( exp:get_expType(), Ast.builtinTypeInt ) or equalsType( exp:get_expType(), Ast.builtinTypeReal ) then
                   format = "' %s' "
                elseif equalsType( exp:get_expType(), Ast.builtinTypeSymbol ) or equalsType( exp:get_expType(), Ast.builtinTypeExp ) or equalsType( exp:get_expType(), Ast.builtinTypeMultiExp ) or equalsType( exp:get_expType(), Ast.builtinTypeBlockArg ) or equalsType( exp:get_expType(), Ast.builtinTypeStat ) then
                   format = "' %s '"
                end
-               
             end
-            
          end
       end
-      
    end
-   
    local newToken = Tokenizer.Token._new(Tokenizer.TokenKind.Str, format, prefixToken.pos, prefixToken.consecutive)
-   
    local expListNode = Nodes.ExpListNode.create( nodeManager, exp:get_pos(), inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {exp}, nil, false )
    local dddNode = Nodes.ExpToDDDNode.create( nodeManager, exp:get_pos(), inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), expListNode )
-   
    local literalStr = Nodes.LiteralStringNode.create( nodeManager, prefixToken.pos, inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, {Ast.builtinTypeString}, newToken, expListNode, Nodes.ExpListNode.create( nodeManager, exp:get_pos(), inTestBlock, self.analyzeInfo:get_mode() == Nodes.MacroMode.AnalyzeArg, exp:get_expTypeList(), {dddNode}, nil, false ) )
    return literalStr
 end
@@ -1846,7 +1736,6 @@ function MacroCtrl:registVar( symbolList )
       local info = Nodes.MacroValInfo._new(nil, symbolInfo:get_typeInfo(), nil)
       self.symbol2ValueMapForMacro[symbolInfo:get_name()] = info
    end
-   
 end
 
 
@@ -1872,9 +1761,7 @@ function MacroCtrl:startExpandMode( pos, typeInfo, callback )
    self.analyzeInfo = MacroAnalyzeInfo._new(typeInfo, Nodes.MacroMode.Expand)
    self.macroCallLineNo = pos
    table.insert( self.macroAnalyzeInfoStack, self.analyzeInfo )
-   
    callback(  )
-   
    self:finishMacroMode(  )
 end
 
@@ -1905,14 +1792,11 @@ function MacroCtrl:isInMode( mode )
    if #self.macroAnalyzeInfoStack == 0 then
       return false
    end
-   
    for __index, info in ipairs( self.macroAnalyzeInfoStack ) do
       if info:get_mode() == mode then
          return true
       end
-      
    end
-   
    return false
 end
 
@@ -1932,13 +1816,12 @@ local function nodeToCodeTxt( node, moduleTypeInfo )
    
    local memStream = Util.memStream._new()
    local formatter = Formatter.createFilter( moduleTypeInfo, memStream, true )
-   
    node:processFilter( formatter, Formatter.Opt._new(node) )
-   
    code = memStream:get_txt()
    return code
 end
 _moduleObj.nodeToCodeTxt = nodeToCodeTxt
+
 
 
 

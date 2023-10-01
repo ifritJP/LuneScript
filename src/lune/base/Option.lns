@@ -356,14 +356,16 @@ usage:
    if! let mut file = io.open( "lune.js", "r" ) {
       // プロジェクトファイルから追加のコマンドオプションを取得。
       class ProjInfo extend (Mapping) {
-         pub let cmd_option:&List<str>;
+         pub let cmd_option:&List<str>!;
       }
       let projInfo, mess = ProjInfo._fromStem(
          (Json.fromStr( file.read( "*a" ) or "" )) );
       when! projInfo {
          let mut workArgList:List<str> = [];
-         foreach arg in projInfo.cmd_option {
-            workArgList.insert( arg );
+         if! let cmd_option = projInfo.cmd_option {
+            foreach arg in cmd_option {
+               workArgList.insert( arg );
+            }
          }
          foreach arg in argList {
             workArgList.insert( arg );
@@ -473,6 +475,10 @@ usage:
                }
                case "--defaultAsync" {
                   option.transCtrlInfo.defaultAsync = true;
+               }
+               case "--disableAsyncTokenizer" {
+                  // tokenizer の非同期処理をやらない。
+                  option.transCtrlInfo.asyncTokenizer = false;
                }
                case "--limitThread" {
                   let! nextArg = getNextOp() {

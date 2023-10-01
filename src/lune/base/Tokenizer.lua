@@ -189,16 +189,22 @@ end
 
 
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Str = _lune.loadModule( 'lune.base.Str' )
+
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local Async = _lune.loadModule( 'lune.base.Async' )
+
 local AsyncTokenizer = _lune.loadModule( 'lune.base.AsyncTokenizer' )
+
 
 local function isLuaKeyword( txt )
 
    return AsyncTokenizer.isLuaKeyword( txt )
 end
 _moduleObj.isLuaKeyword = isLuaKeyword
+
 
 local TxtStream = Util.TxtStream
 _moduleObj.TxtStream = TxtStream
@@ -227,6 +233,7 @@ function Tokenizer:__init(  )
 end
 
 
+
 local PushbackTokenizer = {}
 _moduleObj.PushbackTokenizer = PushbackTokenizer
 function PushbackTokenizer._setmeta( obj )
@@ -248,12 +255,12 @@ end
 local noneToken = Types.noneToken
 _moduleObj.noneToken = noneToken
 
+
 local function convFromRawToStr( txt )
 
    if #txt == 0 then
       return txt
    end
-   
    do
       local _switchExp = string.byte( txt, 1 )
       if _switchExp == 39 or _switchExp == 34 then
@@ -262,7 +269,6 @@ local function convFromRawToStr( txt )
             return txt:sub( 4, #txt - 3 )
       end
    end
-   
    local findChar = string.byte( txt, 1 )
    local workTxt = txt
    local retTxt = ""
@@ -274,13 +280,11 @@ local function convFromRawToStr( txt )
       if  nil == endIndex then
          local _endIndex = endIndex
       
-         
          Util.err( string.format( "error: illegal string -- %s", workTxt) )
       end
       
       local workChar = string.byte( workTxt, endIndex )
       if workChar == findChar then
-         
          return retTxt .. workTxt:sub( setIndex, endIndex - 1 )
       elseif workChar == 92 then
          local quote = string.byte( workTxt, endIndex + 1 )
@@ -293,18 +297,16 @@ local function convFromRawToStr( txt )
                   retTxt = string.format( "%s%s", retTxt, workTxt:sub( setIndex, endIndex + 1 ))
             end
          end
-         
          workIndex = endIndex + 2
          setIndex = workIndex
       else
        
          workIndex = endIndex + 1
       end
-      
    end
-   
 end
 _moduleObj.convFromRawToStr = convFromRawToStr
+
 
 local TokenListTokenizer = {}
 setmetatable( TokenListTokenizer, { __index = Tokenizer } )
@@ -317,8 +319,6 @@ function TokenListTokenizer._new( tokenList, streamName, overridePos )
 end
 function TokenListTokenizer:__init(tokenList, streamName, overridePos) 
    Tokenizer.__init( self)
-   
-   
    self.index = 1
    self.tokenList = tokenList
    self.streamName = streamName
@@ -337,10 +337,8 @@ function TokenListTokenizer:getToken(  )
    if #self.tokenList < self.index then
       return nil
    end
-   
    local token = self.tokenList[self.index]
    self.index = self.index + 1
-   
    return token
 end
 function TokenListTokenizer._setmeta( obj )
@@ -364,12 +362,9 @@ function StreamTokenizer._new( tokenizerSrc, async, stdinFile, pos )
 end
 function StreamTokenizer:__init(tokenizerSrc, async, stdinFile, pos) 
    Tokenizer.__init( self)
-   
-   
    self.pos = 1
    self.lineTokenList = {}
    self.overridePos = pos
-   
    local asyncTokenizer, errMess = AsyncTokenizer.create( tokenizerSrc, stdinFile, pos, async )
    do
       local _exp = asyncTokenizer
@@ -377,10 +372,8 @@ function StreamTokenizer:__init(tokenizerSrc, async, stdinFile, pos)
          self.asyncTokenizer = _exp
       else
          Util.err( errMess )
-         
       end
    end
-   
    self.streamName = self.asyncTokenizer:get_streamName()
 end
 function StreamTokenizer:createPosition( lineNo, column )
@@ -410,13 +403,9 @@ function StreamTokenizer:getToken(  )
          
          self.lineTokenList = pipeItem:get_item().list
       end
-      
    end
-   
-   
    local token = self.lineTokenList[self.pos]
    self.pos = self.pos + 1
-   
    return token
 end
 function StreamTokenizer._setmeta( obj )
@@ -424,7 +413,9 @@ function StreamTokenizer._setmeta( obj )
 end
 do
    StreamTokenizer.stdinStreamModuleName = nil
+   
    StreamTokenizer.stdinTxt = ""
+   
 end
 
 
@@ -470,14 +461,10 @@ function DefaultPushbackTokenizer:getTokenNoErr( skipFlag )
             self.currentToken = Types.noneToken
          end
       end
-      
-      
    end
-   
    if self.currentToken.kind ~= Types.TokenKind.Eof then
       table.insert( self.usedTokenList, self.currentToken )
    end
-   
    return self.currentToken
 end
 function DefaultPushbackTokenizer:pushbackToken( token )
@@ -485,37 +472,31 @@ function DefaultPushbackTokenizer:pushbackToken( token )
    if token.kind ~= Types.TokenKind.Eof then
       table.insert( self.pushbackedList, token )
    end
-   
    if token == self.currentToken then
       if #self.usedTokenList > 0 then
          local used = self.usedTokenList[#self.usedTokenList]
          if used == token then
             table.remove( self.usedTokenList )
          end
-         
          if #self.usedTokenList > 0 then
             self.currentToken = self.usedTokenList[#self.usedTokenList]
          else
           
             self.currentToken = Types.noneToken
          end
-         
       else
        
          self.currentToken = Types.noneToken
       end
-      
    end
-   
 end
 function DefaultPushbackTokenizer:pushback(  )
 
    self:pushbackToken( self.currentToken )
 end
-function DefaultPushbackTokenizer:pushbackStr( asyncParse, name, statement, pos )
+function DefaultPushbackTokenizer:pushbackStr( asyncParse, name, statement, pos, pushbacked )
 
    local tokenizer = StreamTokenizer._new(_lune.newAlge( Types.TokenizerSrc.LnsCode, {statement,name,nil}), asyncParse == true, nil, pos)
-   
    local list = {}
    while true do
       do
@@ -526,20 +507,21 @@ function DefaultPushbackTokenizer:pushbackStr( asyncParse, name, statement, pos 
             break
          end
       end
-      
    end
-   
    for index = #list, 1, -1 do
       self:pushbackToken( list[index] )
    end
-   
+   if pushbacked ~= nil then
+      for index = #list, 1, -1 do
+         pushbacked( list[index] )
+      end
+   end
 end
 function DefaultPushbackTokenizer:newPushback( tokenList )
 
    for index = #tokenList, 1, -1 do
       self:pushbackToken( tokenList[index] )
    end
-   
 end
 function DefaultPushbackTokenizer:getLastPos(  )
 
@@ -552,9 +534,7 @@ function DefaultPushbackTokenizer:getLastPos(  )
          local token = self.usedTokenList[#self.usedTokenList]
          pos = token.pos
       end
-      
    end
-   
    return pos
 end
 function DefaultPushbackTokenizer:getNearCode(  )
@@ -569,11 +549,8 @@ function DefaultPushbackTokenizer:getNearCode(  )
           
             code = string.format( "%s %s", code, self.usedTokenList[index].txt)
          end
-         
       end
-      
    end
-   
    return string.format( "%s -- current '%s'", code, self.currentToken.txt)
 end
 function DefaultPushbackTokenizer:getStreamName(  )
@@ -594,17 +571,21 @@ local function isOp2( ope )
 end
 _moduleObj.isOp2 = isOp2
 
+
 local function isOp1( ope )
 
    return AsyncTokenizer.isOp1( ope )
 end
 _moduleObj.isOp1 = isOp1
+
 local eofToken = Token._new(Types.TokenKind.Eof, "<EOF>", Position._new(0, 0, "eof"), false, {})
+
 local function getEofToken(  )
 
    return eofToken
 end
 _moduleObj.getEofToken = getEofToken
+
 local DummyTokenizer = {}
 setmetatable( DummyTokenizer, { __index = Tokenizer } )
 _moduleObj.DummyTokenizer = DummyTokenizer
@@ -655,17 +636,14 @@ function CommentLayer:addDirect( commentList )
    for __index, comment in ipairs( commentList ) do
       table.insert( self.commentList, comment )
    end
-   
 end
 function CommentLayer:add( token )
 
    if not _lune._Set_has(self.tokenSet, token ) then
       self.tokenSet[token]= true
       table.insert( self.tokenList, token )
-      
       self:addDirect( token:get_commentList() )
    end
-   
 end
 function CommentLayer:clear(  )
 
@@ -674,7 +652,6 @@ function CommentLayer:clear(  )
       self.tokenSet = {}
       self.tokenList = {}
    end
-   
 end
 function CommentLayer:hasInvalidComment(  )
 
@@ -757,19 +734,19 @@ local function quoteStr( txt )
                part = part .. string.format( "%c", char)
          end
       end
-      
    end
-   
    work = part .. '"'
    return work
 end
 _moduleObj.quoteStr = quoteStr
+
 
 local function createTokenizerFrom( src, async, stdinFile )
 
    return StreamTokenizer._new(src, async, stdinFile, nil)
 end
 _moduleObj.createTokenizerFrom = createTokenizerFrom
+
 
 
 

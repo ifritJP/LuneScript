@@ -115,7 +115,8 @@ pub class AstCreater extend Runner.Runner {
          self.option.transCtrlInfo, self.builtinFunc );
 
       return transUnit.createAST(
-         tokenizerSrc, true, baseDir, stdinFile, false, self.mod,
+         tokenizerSrc, self.option.transCtrlInfo.asyncTokenizer,
+         baseDir, stdinFile, false, self.mod,
          fn ( exportInfo:&frontInterface.ExportInfo ) __trans {
             self.exportInfo = exportInfo;
             // exportInfo をセットしてから flag をセットする。

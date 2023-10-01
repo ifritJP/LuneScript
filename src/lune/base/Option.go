@@ -111,7 +111,7 @@ func Option_convExp0_70(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 356
-func Option_convExp0_963(arg1 []LnsAny) LnsAny {
+func Option_convExp0_968(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 243
@@ -170,7 +170,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
     var index LnsInt
     index = 1
     {
-        _file := Option_convExp0_963(Lns_2DDD(Lns_io_open("lune.js", "r")))
+        _file := Option_convExp0_968(Lns_2DDD(Lns_io_open("lune.js", "r")))
         if !Lns_IsNil( _file ) {
             file := _file.(Lns_luaStream)
             var projInfo LnsAny
@@ -182,9 +182,15 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
                 projInfo_175 := projInfo.(*Option_ProjInfo1208)
                 var workArgList *LnsList2_[string]
                 workArgList = NewLnsList2_[string]([]string{})
-                for _, _arg := range( projInfo_175.Cmd_option.Items ) {
-                    arg := _arg
-                    workArgList.Insert(arg)
+                {
+                    _cmd_option := projInfo_175.Cmd_option
+                    if !Lns_IsNil( _cmd_option ) {
+                        cmd_option := _cmd_option.(*LnsList2_[string])
+                        for _, _arg := range( cmd_option.Items ) {
+                            arg := _arg
+                            workArgList.Insert(arg)
+                        }
+                    }
                 }
                 for _, _arg := range( argList.Items ) {
                     arg := _arg
@@ -287,6 +293,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
                     option.TransCtrlInfo.DefaultGenInherit = false
                 } else if _switch2 == "--defaultAsync" {
                     option.TransCtrlInfo.DefaultAsync = true
+                } else if _switch2 == "--disableAsyncTokenizer" {
+                    option.TransCtrlInfo.AsyncTokenizer = false
                 } else if _switch2 == "--limitThread" {
                     var nextArg string
                     
@@ -529,8 +537,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
         index = index + 1
     }
     if uptodateOpt != nil{
-        uptodateOpt_319 := uptodateOpt.(string)
-        if _switch4 := uptodateOpt_319; _switch4 == "force" {
+        uptodateOpt_322 := uptodateOpt.(string)
+        if _switch4 := uptodateOpt_322; _switch4 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
         } else if _switch4 == "forceAll" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__ForceAll_Obj
@@ -539,7 +547,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
         } else if _switch4 == "touch" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_319)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_322)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -590,7 +598,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 779, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 785, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("mode is '%s'", Lns_2DDD(Option_ModeKind_getTxt( option.Mode)))
     }))
     
@@ -606,7 +614,7 @@ func Option_analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
 
 
 
-// 784: decl @lune.@base.@Option.createDefaultOption
+// 790: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -622,12 +630,12 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
     option.UseLuneModule = Option_getRuntimeModule(_env)
     option.UseIpairs = true
     if projDir != nil{
-        projDir_349 := projDir.(string)
-        if projDir_349 != "/"{
-            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_349,"/$", nil, nil))){
-                option.projDir = projDir_349 + "/"
+        projDir_352 := projDir.(string)
+        if projDir_352 != "/"{
+            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_352,"/$", nil, nil))){
+                option.projDir = projDir_352 + "/"
             } else { 
-                option.projDir = projDir_349
+                option.projDir = projDir_352
             }
         }
     }
@@ -636,7 +644,7 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
 
 // 55: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 14020
+    return 14030
 }
 
 
@@ -854,7 +862,7 @@ type Option_ProjInfo1208Mtd interface {
     ToMap() *LnsMap
 }
 type Option_ProjInfo1208 struct {
-    Cmd_option *LnsList2_[string]
+    Cmd_option LnsAny
     FP Option_ProjInfo1208Mtd
 }
 func Option_ProjInfo12082Stem( obj LnsAny ) LnsAny {
@@ -884,13 +892,13 @@ func Option_ProjInfo1208DownCastF( multi ...LnsAny ) LnsAny {
 func (obj *Option_ProjInfo1208) ToOption_ProjInfo1208() *Option_ProjInfo1208 {
     return obj
 }
-func NewOption_ProjInfo1208(_env *LnsEnv, arg1 *LnsList2_[string]) *Option_ProjInfo1208 {
+func NewOption_ProjInfo1208(_env *LnsEnv, arg1 LnsAny) *Option_ProjInfo1208 {
     obj := &Option_ProjInfo1208{}
     obj.FP = obj
     obj.InitOption_ProjInfo1208(_env, arg1)
     return obj
 }
-func (self *Option_ProjInfo1208) InitOption_ProjInfo1208(_env *LnsEnv, arg1 *LnsList2_[string]) {
+func (self *Option_ProjInfo1208) InitOption_ProjInfo1208(_env *LnsEnv, arg1 LnsAny) {
     self.Cmd_option = arg1
 }
 func (self *Option_ProjInfo1208) ToMapSetup( obj *LnsMap ) *LnsMap {
@@ -922,11 +930,11 @@ func Option_ProjInfo1208_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_T
     return Option_ProjInfo1208_FromMapMain( newObj, objMap, paramList )
 }
 func Option_ProjInfo1208_FromMapMain( newObj *Option_ProjInfo1208, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,conv,mess := Lns_ToList2Sub[string]( objMap.Items["cmd_option"], false, []Lns_ToObjParam{Lns_ToObjParam{
+    if ok,conv,mess := Lns_ToList2Sub[string]( objMap.Items["cmd_option"], true, []Lns_ToObjParam{Lns_ToObjParam{
             Lns_ToStrSub, false,nil}}); !ok {
        return false,nil,"cmd_option:" + mess.(string)
     } else {
-       newObj.Cmd_option = conv.(*LnsList2_[string])
+       newObj.Cmd_option = conv
     }
     return true, newObj, nil
 }

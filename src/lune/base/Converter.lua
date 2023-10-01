@@ -168,28 +168,44 @@ end
 
 
 local Runner = _lune.loadModule( 'lune.base.Runner' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local AstInfo = _lune.loadModule( 'lune.base.AstInfo' )
+
 local Option = _lune.loadModule( 'lune.base.Option' )
+
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
+
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local TransUnit = _lune.loadModule( 'lune.base.TransUnit' )
+
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+
 local convLua = _lune.loadModule( 'lune.base.convLua' )
+
 local convGo = _lune.loadModule( 'lune.base.convGo' )
+
 local convPython = _lune.loadModule( 'lune.base.convPython' )
+
 local Log = _lune.loadModule( 'lune.base.Log' )
+
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
+
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+
 local OutputDepend = _lune.loadModule( 'lune.base.OutputDepend' )
+
 
 local function createModuleInfo( ast, mod, moduleId )
 
-   
    local exportInfo = ast:get_exportInfo()
    return frontInterface.ModuleInfo._new(exportInfo)
 end
+
 
 local function ast2LuaMain( ast, streamName, stream, metaStream, convMode, inMacro, option )
 
@@ -198,6 +214,7 @@ local function ast2LuaMain( ast, streamName, stream, metaStream, convMode, inMac
    return conv
 end
 _moduleObj.ast2LuaMain = ast2LuaMain
+
 
 local function byteCompileFromLuaTxt( txt, stripDebugInfo )
 
@@ -210,12 +227,11 @@ local function byteCompileFromLuaTxt( txt, stripDebugInfo )
       else
          Util.err( _lune.unwrapDefault( err, "load error") )
       end
-      
    end
-   
    return ret
 end
 _moduleObj.byteCompileFromLuaTxt = byteCompileFromLuaTxt
+
 
 
 
@@ -225,19 +241,17 @@ _moduleObj.AstCreater = AstCreater
 function AstCreater:createAst( frontAccessor, importModuleInfo, tokenizerSrc, baseDir, stdinFile, analyzeModule, analyzeMode, pos )
 
    local transUnit = TransUnit.TransUnitCtrl._new(frontAccessor, self.moduleId, importModuleInfo, convLua.MacroEvalImp._new(self.builtinFunc), true, analyzeModule, analyzeMode, pos, self.option.targetLuaVer, self.option.transCtrlInfo, self.builtinFunc)
-   
-   return transUnit:createAST( tokenizerSrc, true, baseDir, stdinFile, false, self.mod, function ( exportInfo )
+   return transUnit:createAST( tokenizerSrc, self.option.transCtrlInfo.asyncTokenizer, baseDir, stdinFile, false, self.mod, function ( exportInfo )
    
       self.exportInfo = exportInfo
-      
       do
          local _exp = self.exportInfoReadyFlag
          if _exp ~= nil then
             _exp:set(  )
          end
       end
-      
-   end )
+   end
+    )
 end
 function AstCreater._new( frontAccessor, importModuleInfo, tokenizerSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option )
    local obj = {}
@@ -247,8 +261,6 @@ function AstCreater._new( frontAccessor, importModuleInfo, tokenizerSrc, mod, ba
 end
 function AstCreater:__init(frontAccessor, importModuleInfo, tokenizerSrc, mod, baseDir, moduleId, analyzeModule, analyzeMode, pos, builtinFunc, option) 
    Runner.Runner.__init( self)
-   
-   
    self.option = option
    self.builtinFunc = builtinFunc
    self.mod = mod
@@ -257,17 +269,18 @@ function AstCreater:__init(frontAccessor, importModuleInfo, tokenizerSrc, mod, b
    self.exportInfo = nil
    self.ast = nil
    self.exportInfoReadyFlag = nil
-   
    self.converter = function (  )
       local __func__ = '@lune.@base.@Converter.AstCreater.__init.<anonymous>'
    
       local ast = self:createAst( frontAccessor, importModuleInfo, tokenizerSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
       self.ast = ast
       self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId )
-      Log.log( Log.Level.Log, __func__, 153, function (  )
+      Log.log( Log.Level.Log, __func__, 154, function (  )
       
          return string.format( "generated AST -- %s", mod)
-      end )
+      end
+       )
+      
       
    end
    
@@ -297,10 +310,7 @@ function AstCreater:__init(frontAccessor, importModuleInfo, tokenizerSrc, mod, b
          lnsPath = path
       end
    end
-   
-   
    self:start( 0, string.format( "createAst - %s", lnsPath) )
-   
 end
 function AstCreater:runMain(  )
 
@@ -328,16 +338,15 @@ function AstCreater:getExportInfo(  )
          _exp:wait(  )
       end
    end
-   
    if not self.exportInfo then
-      Log.log( Log.Level.Err, __func__, 195, function (  )
+      Log.log( Log.Level.Err, __func__, 196, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.mod)
-      end )
+      end
+       )
+      
       
    end
-   
-   
    return self.exportInfo
 end
 function AstCreater._setmeta( obj )
@@ -380,8 +389,8 @@ local function getAstFromResult( result )
          return (creater:getAst(  ) )
       end
    end
-   
 end
+
 local function closeStreams( stream, metaStream, dependStream, metaPath, saveMetaFlag )
 
    local function txt2ModuleId( txt )
@@ -389,18 +398,12 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
       local buildIdTxt = txt:gsub( "^_moduleObj.__buildId = ", "" ):gsub( '"', "" )
       return frontInterface.ModuleId.createIdFromTxt( buildIdTxt )
    end
-   
    local function checkDiff( oldStream, newStream )
       local __func__ = '@lune.@base.@Converter.closeStreams.checkDiff'
    
-      
-      
       local headEndPos = 0
-      
       local tailBeginPos = 0
-      
       local oldBuildIdLine = ""
-      
       local newBuildIdLine = ""
       while true do
          local newLine = newStream:read( "*l" )
@@ -410,9 +413,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
                if oldLine:find( "^_moduleObj.__buildId" ) then
                   oldBuildIdLine = oldLine
                end
-               
             end
-            
          end
          
          
@@ -421,15 +422,11 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
                if newLine:find( "^_moduleObj.__buildId" ) then
                   newBuildIdLine = newLine
                end
-               
             end
-            
          end
          
          
-         
          if newLine ~= oldLine then
-            
             local cont = false
             if newLine ~= nil and oldLine ~= nil then
                if oldLine:find( "^_moduleObj.__buildId" ) then
@@ -437,67 +434,51 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
                      tailBeginPos = newStream:get_lineNo()
                      cont = true
                   end
-                  
                elseif oldLine:find( "^__dependModuleMap.*buildId =" ) and newLine:find( "^__dependModuleMap.*buildId =" ) then
                   local oldSub = oldLine:gsub( "buildId =.*", "" )
                   local newSub = newLine:gsub( "buildId =.*", "" )
                   if oldSub == newSub then
                      cont = true
                   end
-                  
                end
-               
             end
-            
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 291, function (  )
+               Log.log( Log.Level.Debug, __func__, 292, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
-               end )
+               end
+                )
+               
                
                return false, ""
             end
-            
          else
           
             if tailBeginPos == 0 then
                headEndPos = newStream:get_lineNo()
             end
-            
             if not oldLine then
-               
                if tailBeginPos == 0 then
                   return true, oldStream:get_txt()
                end
-               
-               
                local oldBuildId = txt2ModuleId( oldBuildIdLine )
                local newBuildId = txt2ModuleId( newBuildIdLine )
                local worlBuildId = frontInterface.ModuleId.createId( newBuildId:get_modTime(), oldBuildId:get_buildCount() )
                local buildIdLine = string.format( "_moduleObj.__buildId = %q", worlBuildId:get_idStr())
-               
                local txt = string.format( "%s%s\n%s", newStream:getSubstring( 1, headEndPos ), buildIdLine, newStream:getSubstring( tailBeginPos ))
                return true, txt
             end
-            
          end
-         
       end
-      
    end
-   
    if stream ~= nil then
       stream:close(  )
    end
-   
    if dependStream ~= nil then
       dependStream:close(  )
    end
-   
-   
    if metaStream ~= nil then
       if saveMetaFlag then
-         
          local newMetaTxt = metaStream:get_txt()
          local oldMetaTxt = ""
          do
@@ -507,10 +488,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
                oldFileObj:close(  )
             end
          end
-         
-         
          local sameFlag, txt = checkDiff( Tokenizer.TxtStream._new(oldMetaTxt), Tokenizer.TxtStream._new(newMetaTxt) )
-         
          local function saveMeta( meta )
          
             do
@@ -522,9 +500,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
                   Util.err( string.format( "failed to open -- %s", metaPath) )
                end
             end
-            
          end
-         
          if not sameFlag then
             saveMeta( newMetaTxt )
          else
@@ -532,15 +508,12 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
             if txt ~= "" then
                saveMeta( txt )
             end
-            
          end
-         
       end
-      
    end
-   
 end
 _moduleObj.closeStreams = closeStreams
+
 
 local LuaConverter = {}
 setmetatable( LuaConverter, { __index = Runner.Runner } )
@@ -553,8 +526,6 @@ function LuaConverter._new( luaPath, metaPath, dependsPath, astResult, convMode,
 end
 function LuaConverter:__init(luaPath, metaPath, dependsPath, astResult, convMode, path, byteCompile, stripDebugInfo, option) 
    Runner.Runner.__init( self)
-   
-   
    self.luaPath = luaPath
    self.metaPath = metaPath
    self.dependsPath = dependsPath
@@ -568,32 +539,25 @@ function LuaConverter:__init(luaPath, metaPath, dependsPath, astResult, convMode
    self.dependsStreamMem = Util.memStream._new()
    self.astResult = astResult
    self.filterInfo = nil
-   
    self.converterFunc = function (  )
    
       local stream = self.streamMem
       local metaStream = self.metaStreamMem
-      
       local outStream, oMetaStream = stream, metaStream
-      
       local ast = getAstFromResult( self.astResult )
-      
       local needDepends = option.dependsPath ~= nil
       if needDepends then
          ast:get_node():processFilter( OutputDepend.createFilter( self.dependsStreamMem ), 1 )
       end
-      
-      
       if byteCompile then
          outStream = self.byteStream
          oMetaStream = self.byteMetaStream
       end
-      
-      
       local filterInfo = ast2LuaMain( ast, path, outStream, oMetaStream, convMode, false, option )
       self.filterInfo = filterInfo
       filterInfo:outputLua( _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode )) )
    end
+   
    self:start( 1, string.format( "convlua -- %s", path) )
 end
 function LuaConverter:runMain(  )
@@ -603,17 +567,12 @@ end
 function LuaConverter:saveLua(  )
 
    
-   
    local ast = getAstFromResult( self.astResult )
    _lune.nilacc( self.filterInfo, 'outputMeta', 'callmtd' , _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode )) )
-   
    if self.byteCompile then
-      
       self.streamMem:write( byteCompileFromLuaTxt( self.byteStream:get_txt(), self.stripDebugInfo ) )
       self.metaStreamMem:write( byteCompileFromLuaTxt( self.byteMetaStream:get_txt(), true ) )
    end
-   
-   
    local luaCode = self.streamMem:get_txt()
    local metaTxt = self.metaStreamMem:get_txt()
    local dependTxt
@@ -625,8 +584,6 @@ function LuaConverter:saveLua(  )
     
       dependTxt = nil
    end
-   
-   
    local streamDst = io.open( self.luaPath, "w" )
    if  nil == streamDst then
       local _streamDst = streamDst
@@ -635,15 +592,12 @@ function LuaConverter:saveLua(  )
    end
    
    local dependsStreamDst = self.option:openDepend( self.dependsPath )
-   
    streamDst:write( luaCode )
    local metaMemStream = Util.memStream._new()
    metaMemStream:write( metaTxt )
    if dependsStreamDst ~= nil then
       dependsStreamDst:write( _lune.unwrap( dependTxt) )
    end
-   
-   
    closeStreams( streamDst, metaMemStream, dependsStreamDst, self.metaPath, self.option.mode == Option.ModeKind.SaveMeta )
 end
 function LuaConverter._setmeta( obj )
@@ -662,26 +616,19 @@ function GoConverter._new( scriptPath, astResult, mod, option, goOpt )
 end
 function GoConverter:__init(scriptPath, astResult, mod, option, goOpt) 
    Runner.Runner.__init( self)
-   
    self.validFlag = true
-   
    local path = mod:gsub( "%.", "/" ) .. ".go"
-   
    do
       local dir = option.outputDir
       if dir ~= nil then
          path = string.format( "%s/%s", dir, path)
       end
    end
-   
-   
    self.path = path
    self.memStream = Util.memStream._new()
-   
    self.converter = function (  )
    
       local ast = getAstFromResult( astResult )
-      
       local rootNode = _lune.__Cast( ast:get_node(), 3, Nodes.RootNode )
       if  nil == rootNode then
          local _rootNode = rootNode
@@ -699,16 +646,13 @@ function GoConverter:__init(scriptPath, astResult, mod, option, goOpt)
                   self.validFlag = false
                   return 
                end
-               
             end
          end
-         
       end
-      
-      
       local conv = convGo.createFilter( option.testing, scriptPath, self.memStream, ast, goOpt )
       ast:get_node():processFilter( conv, convGo.Opt._new(ast:get_node()) )
    end
+   
    self:start( 1, string.format( "convgo -- %s", scriptPath) )
 end
 function GoConverter:runMain(  )
@@ -718,12 +662,9 @@ end
 function GoConverter:saveGo(  )
 
    
-   
    if not self.validFlag then
       return 
    end
-   
-   
    local file = io.open( self.path, "w" )
    if  nil == file then
       local _file = file
@@ -731,9 +672,7 @@ function GoConverter:saveGo(  )
       Util.err( string.format( "can't open file -- %s", self.path) )
    end
    
-   
    file:write( self.memStream:get_txt() )
-   
    file:close(  )
 end
 function GoConverter._setmeta( obj )
@@ -752,26 +691,19 @@ function PythonConverter._new( scriptPath, astResult, mod, option, pythonOpt )
 end
 function PythonConverter:__init(scriptPath, astResult, mod, option, pythonOpt) 
    Runner.Runner.__init( self)
-   
    self.validFlag = true
-   
    local path = mod:gsub( "%.", "/" ) .. ".py"
-   
    do
       local dir = option.outputDir
       if dir ~= nil then
          path = string.format( "%s/%s", dir, path)
       end
    end
-   
-   
    self.path = path
    self.memStream = Util.memStream._new()
-   
    self.converter = function (  )
    
       local ast = getAstFromResult( astResult )
-      
       local rootNode = _lune.__Cast( ast:get_node(), 3, Nodes.RootNode )
       if  nil == rootNode then
          local _rootNode = rootNode
@@ -789,16 +721,13 @@ function PythonConverter:__init(scriptPath, astResult, mod, option, pythonOpt)
                   self.validFlag = false
                   return 
                end
-               
             end
          end
-         
       end
-      
-      
       local conv = convPython.createFilter( option.testing, scriptPath, self.memStream, ast, pythonOpt )
       ast:get_node():processFilter( conv, convPython.Opt._new(ast:get_node()) )
    end
+   
    self:start( 1, string.format( "convpython -- %s", scriptPath) )
 end
 function PythonConverter:runMain(  )
@@ -808,12 +737,9 @@ end
 function PythonConverter:savePython(  )
 
    
-   
    if not self.validFlag then
       return 
    end
-   
-   
    local file = io.open( self.path, "w" )
    if  nil == file then
       local _file = file
@@ -821,9 +747,7 @@ function PythonConverter:savePython(  )
       Util.err( string.format( "can't open file -- %s", self.path) )
    end
    
-   
    file:write( self.memStream:get_txt() )
-   
    file:close(  )
 end
 function PythonConverter._setmeta( obj )

@@ -120,9 +120,7 @@ function Pipe:getNext(  )
             return PipeItem._new(val)
          end
       end
-      
    end
-   
    return self:access(  )
 end
 function Pipe:run(  )
@@ -147,7 +145,6 @@ function Pipe:run(  )
       
       pipe:put( val:get_item() )
    end
-   
 end
 function Pipe:start(  )
 
@@ -159,7 +156,6 @@ function Pipe:stop(  )
    if not self.setuped then
       self:setup(  )
    end
-   
 end
 function Pipe._setmeta( obj )
   setmetatable( obj, { __index = Pipe  } )
@@ -183,14 +179,12 @@ function RunnerBase:run(  )
 
    self.artifact = self:runMain(  )
    self.ranFlag = true
-   
    do
       local pipe = self.pipe
       if pipe ~= nil then
          pipe:put( self )
       end
    end
-   
 end
 function RunnerBase._setmeta( obj )
   setmetatable( obj, { __index = RunnerBase  } )
@@ -226,7 +220,6 @@ function Waiter:startRunner( runner, mode, name )
       self.asyncNum = self.asyncNum - 1
       table.insert( self.finRunnerList, runner )
    end
-   
    return result
 end
 function Waiter:wait( func )
@@ -234,7 +227,6 @@ function Waiter:wait( func )
    for __index, runner in ipairs( self.finRunnerList ) do
       func( runner )
    end
-   
    do
       local pipe = self.pipe
       if pipe ~= nil then
@@ -248,10 +240,8 @@ function Waiter:wait( func )
             
             func( runner )
          end
-         
       end
    end
-   
 end
 function Waiter._setmeta( obj )
   setmetatable( obj, { __index = Waiter  } )

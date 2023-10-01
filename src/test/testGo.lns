@@ -3171,6 +3171,27 @@ alias AAAA = HogeAAAA;
    list1.insert( new AAAA() );
    list2.insert( new HogeAAAA() );
 }
+_section();
+{
+   {
+      let list:__List<str> = [ "a", "b", "c" ];
+      print( string.__join( list ## ) );
+      print( string.__join( list, "zz" ## ) );
+      print( string.__join( list, "zz", 2 ## ) );
+      print( string.__join( list, "zz", 1, 2 ) );
+      print( string.__join( list, "zz", 2, 1 ) );
+      print( string.__join( list, "zz", 2, 2 ) );
+   }
+   {
+      let list:_List<str> = [ "a", "b", "c" ];
+      print( string._join( list ## ) );
+      print( string._join( list, "zz" ## ) );
+      print( string._join( list, "zz", 2 ## ) );
+      print( string._join( list, "zz", 1, 2 ) );
+      print( string._join( list, "zz", 2, 1 ) );
+      print( string._join( list, "zz", 2, 2 ) );
+   }
+}
 // _section();
 // {
 //    class Super {

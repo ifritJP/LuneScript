@@ -51,16 +51,17 @@ local function format( id, mess )
 end
 _moduleObj.format = format
 
+
 local function isMessageOf( id, mess )
 
    local pat = string.format( "^%05d:", id)
    if mess:find( pat ) then
       return true
    end
-   
    return false
 end
 _moduleObj.isMessageOf = isMessageOf
+
 
 
 

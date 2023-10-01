@@ -121,7 +121,11 @@ pub class TransCtrlInfo {
    pub let mut useWaiter:bool;
    pub let mut defaultGenInherit:bool;
 
+   /** Tokenize 処理を非同期に行なうかどうか */
+   pub let mut asyncTokenizer:bool;
+
    pub fn __init() {
+      self.asyncTokenizer = true;
       self.defaultGenInherit = true;
       self.useWaiter = true;
       self.macroAsyncParseStmtLen = 500;
@@ -258,6 +262,10 @@ pub class Token extend (Mapping) {
    pub let consecutive: bool;
    pri let allmut commentList: &List<&Token> { pub };
 
+   /**
+   コメントが存在しない Token 用のコメントリスト。
+   毎回生成するのは無駄なので、 static に作っておいたものを再利用する。
+   */
    static let noneCommentList:&List<&Token>;
 
    __init {

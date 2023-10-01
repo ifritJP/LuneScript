@@ -52,7 +52,7 @@ class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockRes
    let transUnit:TransUnitForRunner {local};
    let srcTranUnit:&TransUnit;
    let alreadyToSetup:__lns.Sync.Flag!;
-   
+
    pub fn __init(
       pipe:__pipe<Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>>!,
       frontAccessor:frontInterface.FrontAccessor,
@@ -68,7 +68,7 @@ class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockRes
       managerId:int )
    {
       super(pipe);
-      
+
       self.transUnit = new TransUnitForRunner(
          frontAccessor, moduleId, importModuleInfo, macroEval, enableMultiPhase,
          analyzeModule, mode, pos, targetLuaVer, ctrl_info, builtinFunc,
@@ -104,6 +104,10 @@ class TransUnitRunner extend Async.RunnerBase<T=&Map<&FuncBlockInfo,FuncBlockRes
    pub fn get() mut : &Map<&FuncBlockInfo,FuncBlockResult> {
       __join( self );
       return self.transUnit.$resultMap;
+   }
+
+   pub fn getMacroTime() : int {
+      return self.transUnit.getMacroTime();
    }
 }
 
@@ -268,9 +272,14 @@ fn TransUnitCtrl.analyzeImportFor(
       nearCode,
       self.validMutControl,
       self.macroEval );
+   let prev = __lns.runtime.time();
    let mut moduleLoader = importObj.processImport(
       modulePath, moduleLoaderParam );
-
+   let past = (__lns.runtime.time() - prev) / 1000;
+   if past > 10 {
+      __lns.runtime.log( "end import -- %d:%s" (past, modulePath) );
+   }
+      
    let work, workErr;
    __asyncLock {
       work, workErr = importObj.loadModuleInfo( moduleLoader );
@@ -390,6 +399,7 @@ fn TransUnitCtrl.analyzeImport( opeToken: &Tokenizer.Token ) mut : Nodes.ImportN
    __asyncLock {
       node = self.analyzeImportFor(
          opeToken.pos, modulePath, assignName.txt, assigned, lazyLoad );
+      __lns.runtime.log( "imported %s -- %s" (self.inTestBlock, modulePath) );
    }
    when! node {
       self.importModuleSet.add( node.$expType );
@@ -458,15 +468,17 @@ fn TransUnitCtrl.analyzeTest( firstToken:&Tokenizer.Token ) mut : Nodes.Node
    }
    self.checkToken( nextToken, "{" );
 
-   self.inTestBlock = true;
+
+   // test 無効でも、 _test ブロックは meta 情報のために解析しておく。
    
+   self.inTestBlock = true;
+
    let mut stmtList:List<&Nodes.Node> = [];
    self.analyzeStatementList( stmtList, false, "}" );
    self.checkNextToken( "}" );
 
    self.inTestBlock = false;
    
-
    return Nodes.TestBlockNode.create(
       self.nodeManager, firstToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(),
@@ -626,6 +638,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
    let noRunnerList:List<List<&FuncBlockInfo>> = [];
    let noRunnerTypeSet:Set<&Ast.TypeInfo> = (@);
    let mut lastPartList:List<&FuncBlockInfo>! = nil;
+   
 
    if #self.funcBlockInfoList < 20 or self.totalFuncBlockTokenNum < 2000 {
       __lns.runtime.log(
@@ -735,7 +748,7 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
          waiter.wait(
             fn (runnerBase:Async.RunnerBase<&Map<&FuncBlockInfo,FuncBlockResult>>) __trans {
             });
-         
+
          foreach runner in runnerList {
             let workMap = runner.get();
             self.mergeFrom( runner.$transUnit, resultMap );
@@ -745,6 +758,12 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
          }
       }
 
+      let mut totalMacroTime = 0;
+      foreach runner in runnerList {
+         totalMacroTime = totalMacroTime + runner.getMacroTime();
+      }
+      __lns.runtime.log( "macro time -- %d" (totalMacroTime));
+      
 
       
       __lns.runtime.log( "merged AST." );
@@ -959,7 +978,25 @@ pub fn TransUnitCtrl.createAST(
       }
       exportInfo = createExportInfo(
          moduleSymboInfo, globalSymbolList, self.processInfo.duplicate() );
-      
+
+      {
+         let mut total = 0;
+         foreach val, key in self.macroCtrl.$expandType2Info {
+            __lns.runtime.log( "expandType2Info %s %d %d"
+                                  ( key, val.$spendTime, val.$accessCount ));
+            total = total + val.$spendTime;
+         }
+         __lns.runtime.log( "expandType2Info total %d" (total) );
+
+         let mut total2 = 0;
+         foreach val, key in self.macroCtrl.$expandSym2Info {
+            __lns.runtime.log( "$expandSym2Info %s %d %d"
+                                  (key, val.$accessCount, val.$spendTime ) );
+            total2 = total2 + val.$spendTime;
+         }
+         __lns.runtime.log( "expandType2Info total2 %d" (total2) );
+      }
+         
 
       self.processFuncBlock( streamName );
       
@@ -1032,6 +1069,7 @@ pub fn TransUnitCtrl.createAST(
          os.exit( 0 ); // 要対応
       }
    }
+
    
    return new AstInfo.ASTInfo(
       ast, exportInfo, tokenizer.getStreamName(), self.builtinFunc );

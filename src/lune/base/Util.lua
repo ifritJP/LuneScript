@@ -152,11 +152,16 @@ end
 
 
 local Depend = _lune.loadModule( 'lune.base.Depend' )
+
 local Log = _lune.loadModule( 'lune.base.Log' )
+
 local Str = _lune.loadModule( 'lune.base.Str' )
 
+
 local consoleOStream = io.stdout
+
 local errStream = io.stderr
+
 
 local ConsoleAdapter = {}
 setmetatable( ConsoleAdapter, { ifList = {oStream,} } )
@@ -194,21 +199,23 @@ local function getConsoleOStream(  )
 end
 _moduleObj.getConsoleOStream = getConsoleOStream
 
+
 local function setConsoleOStream( stream, streamErr )
 
    do
       consoleOStream = stream
       errStream = streamErr
    end
-   
 end
 _moduleObj.setConsoleOStream = setConsoleOStream
+
 
 local function setConsoleOStreamWithWriter( writer, errWriter )
 
    setConsoleOStream( ConsoleAdapter._new(writer), ConsoleAdapter._new(errWriter) )
 end
 _moduleObj.setConsoleOStreamWithWriter = setConsoleOStreamWithWriter
+
 
 local function println( ... )
 
@@ -222,26 +229,28 @@ local function println( ... )
           
             consoleOStream:write( "\n" )
          end
-         
       end
-      
    end
-   
 end
 _moduleObj.println = println
 
+
 local debugFlag = true
+
 local function setDebugFlag( flag )
 
    debugFlag = flag
 end
 _moduleObj.setDebugFlag = setDebugFlag
+
 local errorCode = 1
+
 local function setErrorCode( code )
 
    errorCode = code
 end
 _moduleObj.setErrorCode = setErrorCode
+
 
 local function debugLog( message )
 
@@ -249,31 +258,30 @@ local function debugLog( message )
       if debugFlag then
          errStream:write( message .. "\n" )
       end
-      
    end
-   
 end
 _moduleObj.debugLog = debugLog
+
 
 local function errorLog( message )
 
    do
       errStream:write( message .. "\n" )
    end
-   
 end
 _moduleObj.errorLog = errorLog
+
 
 local function err( message )
 
    if debugFlag then
       error( message )
    end
-   
    errorLog( message )
    os.exit( errorCode )
 end
 _moduleObj.err = err
+
 local function splitStr( txt, pattern )
 
    local list = {}
@@ -281,18 +289,18 @@ local function splitStr( txt, pattern )
       for token in string.gmatch( txt, pattern ) do
          table.insert( list, token )
       end
-      
    end
-   
    return list
 end
 _moduleObj.splitStr = splitStr
+
 
 local function splitModule( modPath )
 
    return splitStr( modPath, '[^%./:]+' )
 end
 _moduleObj.splitModule = splitModule
+
 
 local OrderedSet = {}
 _moduleObj.OrderedSet = OrderedSet
@@ -313,7 +321,6 @@ function OrderedSet:add( val )
       table.insert( self.list, val )
       return true
    end
-   
    return false
 end
 function OrderedSet:clone(  )
@@ -323,7 +330,6 @@ function OrderedSet:clone(  )
       obj.set[val]= true
       table.insert( obj.list, val )
    end
-   
    return obj
 end
 function OrderedSet:has( val )
@@ -335,7 +341,6 @@ function OrderedSet:removeLast(  )
    if #self.list == 0 then
       err( "empty" )
    end
-   
    self.set[self.list[#self.list]]= nil
    table.remove( self.list )
 end
@@ -370,10 +375,8 @@ function OrderdMap:add( key, val, overwrite )
       if overwrite then
          self.map[key] = val
       end
-      
       return 
    end
-   
    self.map[key] = val
    table.insert( self.keyList, key )
 end
@@ -447,10 +450,8 @@ function TxtStream:getSubstring( fromLineNo, toLineNo )
       if index < 1 or index > #self.lineList then
          break
       end
-      
       txt = string.format( "%s%s", txt, self.lineList[index])
    end
-   
    return txt
 end
 function TxtStream:read( mode )
@@ -458,17 +459,14 @@ function TxtStream:read( mode )
    if mode ~= '*l' then
       err( string.format( "not support -- %s", mode) )
    end
-   
    if self.lineNo > #self.lineList then
       return nil
    end
-   
    self.lineNo = self.lineNo + 1
    local line = self.lineList[self.lineNo - 1]
    if Str.endsWith( line, "\n" ) then
       return line:sub( 1, #line - 1 )
    end
-   
    return line
 end
 function TxtStream:close(  )
@@ -556,17 +554,14 @@ function SimpleSourceOStream:get_indent(  )
    if #self.indentQueue > 0 then
       return self.indentQueue[#self.indentQueue]
    end
-   
    return 0
 end
 function SimpleSourceOStream:writeRaw( txt )
 
    if self.needIndent then
-      
       self.nowStream:write( self.indentSpace )
       self.needIndent = false
    end
-   
    self.nowStream:write( txt )
 end
 function SimpleSourceOStream:write( txt )
@@ -575,23 +570,17 @@ function SimpleSourceOStream:write( txt )
       self:writeRaw( txt )
       return 
    end
-   
    local stream = self.nowStream
    for __index, line in ipairs( Str.getLineList( txt ) ) do
       if self.needIndent then
-         
          stream:write( self.indentSpace )
          self.needIndent = false
       end
-      
-      
       if #line > 0 and string.byte( line, #line ) == 10 then
          self.curLineNo = self.curLineNo + 1
       end
-      
       stream:write( line )
    end
-   
 end
 function SimpleSourceOStream:writeln( txt )
 
@@ -606,7 +595,6 @@ function SimpleSourceOStream:pushIndent( newIndent )
    if indent > #SimpleSourceOStream.indentSpaceList then
       err( string.format( "overflow indent -- %d", indent) )
    end
-   
    self.indentSpace = SimpleSourceOStream.indentSpaceList[indent + 1]
 end
 function SimpleSourceOStream:popIndent(  )
@@ -614,7 +602,6 @@ function SimpleSourceOStream:popIndent(  )
    if #self.indentQueue == 0 then
       err( "self.indentQueue == 0" )
    end
-   
    table.remove( self.indentQueue )
    self.indentSpace = SimpleSourceOStream.indentSpaceList[self:get_indent() + 1]
 end
@@ -634,13 +621,16 @@ function SimpleSourceOStream:get_stepIndent()
 end
 do
    local list = {}
+   
    local txt = ""
+   
    for _1 = 1, 100 do
       table.insert( list, txt )
       txt = txt .. " "
    end
    
    SimpleSourceOStream.indentSpaceList = list
+   
 end
 
 
@@ -649,15 +639,16 @@ local function log( message )
    if debugFlag then
       errorLog( message )
    end
-   
 end
 _moduleObj.log = log
+
 
 local function printStackTrace(  )
 
    errorLog( Depend.getStackTrace(  ) )
 end
 _moduleObj.printStackTrace = printStackTrace
+
 local function getReadyCode( depPath, tgtPath )
    local __func__ = '@lune.@base.@Util.getReadyCode'
 
@@ -666,22 +657,23 @@ local function getReadyCode( depPath, tgtPath )
       local _tgtTime = tgtTime
       local _depTime = depTime
    
-      
       return false
    end
    
    if tgtTime >= depTime then
       return true
    end
-   
    Log.log( Log.Level.Warn, __func__, 426, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
-   end )
+   end
+    )
+   
    
    return false
 end
 _moduleObj.getReadyCode = getReadyCode
+
 
 local function readFile( path )
 
@@ -698,16 +690,17 @@ local function readFile( path )
 end
 _moduleObj.readFile = readFile
 
+
 local function scriptPath2Module( path )
 
    if path:find( "^/" ) then
       err( "script must be relative-path -- " .. path )
    end
-   
    local mod = path:gsub( "^./", "" ):gsub( "/", "." )
    return (string.gsub( mod, "%.lns$", "" ) )
 end
 _moduleObj.scriptPath2Module = scriptPath2Module
+
 
 local function scriptPath2ModuleFromProjDir( path, projDir )
 
@@ -720,42 +713,39 @@ local function scriptPath2ModuleFromProjDir( path, projDir )
        
          workpath = projDir
       end
-      
       path = path:gsub( "^" .. workpath, "" )
    end
-   
    return scriptPath2Module( path )
 end
 _moduleObj.scriptPath2ModuleFromProjDir = scriptPath2ModuleFromProjDir
+
 
 local function pathJoin( dir, path )
 
    if path:find( "^/" ) then
       return path
    end
-   
    if dir:find( "/$" ) then
       return string.format( "%s%s", dir, path)
    end
-   
    return string.format( "%s/%s", dir, path)
 end
 _moduleObj.pathJoin = pathJoin
+
 
 local function parentPath( path )
 
    if path:find( "/$" ) then
       path = path:gsub( "/$", "" )
    end
-   
    local parent = path:gsub( "/[^/]+$", "" )
    if parent == path then
       return "./"
    end
-   
    return parent
 end
 _moduleObj.parentPath = parentPath
+
 
 local function searchProjDir( dir )
 
@@ -764,18 +754,16 @@ local function searchProjDir( dir )
       if Depend.existFile( pathJoin( work, "lune.js" ) ) then
          return work
       end
-      
       local parent = work:gsub( "/[^/]+$", "" )
       if parent == work then
          return nil
       end
-      
       work = parent
    end
-   
    return nil
 end
 _moduleObj.searchProjDir = searchProjDir
+
 
 local FSIF = {}
 _moduleObj.FSIF = FSIF
@@ -851,7 +839,6 @@ function MappedFS:searchPath( mod, pathPattern )
    if self.path2bin[path] then
       return path
    end
-   
    return Depend.searchpath( mod, pathPattern )
 end
 function MappedFS._setmeta( obj )
@@ -860,21 +847,25 @@ end
 
 
 local s_fs = FS._new()
+
 local function setFS( fs )
 
    s_fs = fs
 end
 _moduleObj.setFS = setFS
+
 local function openRd( path )
 
    return s_fs:openRd( path )
 end
 _moduleObj.openRd = openRd
+
 local function searchPath( mod, pathPattern )
 
    return s_fs:searchPath( mod, pathPattern )
 end
 _moduleObj.searchPath = searchPath
+
 
 
 

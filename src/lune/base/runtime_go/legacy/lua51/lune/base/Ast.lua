@@ -250,18 +250,27 @@ end
 
 
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Code = _lune.loadModule( 'lune.base.Code' )
+
 local Log = _lune.loadModule( 'lune.base.Log' )
+
 local Types = _lune.loadModule( 'lune.base.Types' )
+
 local builtinRootId = 0
 _moduleObj.builtinRootId = builtinRootId
 
+
 local builtinStartId = 1
+
 local userRootId = 1000
 _moduleObj.userRootId = userRootId
 
+
 local userStartId = 1001
+
 
 local IdProvider = {}
 _moduleObj.IdProvider = IdProvider
@@ -271,7 +280,6 @@ function IdProvider:getNewId(  )
    if self.id >= self.maxId then
       Util.err( "id is over" )
    end
-   
    return self.id
 end
 function IdProvider._setmeta( obj )
@@ -409,7 +417,9 @@ TypeInfoKind.__allList[28] = TypeInfoKind.Tuple
 
 
 local extStartId = 100000
+
 local extMaxId = 10000000
+
 
 local TypeDataAccessor = {}
 local TypeInfo = {}
@@ -493,7 +503,6 @@ function TypeData:addFrom( typeData )
    for __index, child in ipairs( typeData.children ) do
       table.insert( self.children, child )
    end
-   
 end
 function TypeData._setmeta( obj )
   setmetatable( obj, { __index = TypeData  } )
@@ -627,7 +636,9 @@ function ProcessInfo:switchIdProvier( idType )
    Log.log( Log.Level.Trace, __func__, 226, function (  )
    
       return "start"
-   end )
+   end
+    )
+   
    
    if idType == IdType.Base then
       self.idProv = self.idProvBase
@@ -635,7 +646,6 @@ function ProcessInfo:switchIdProvier( idType )
     
       self.idProv = self.idProvExt
    end
-   
 end
 function ProcessInfo._setmeta( obj )
   setmetatable( obj, { __index = ProcessInfo  } )
@@ -713,9 +723,7 @@ function IdInfo:equals( idInfo )
       if self.processInfo == idInfo.processInfo then
          return true
       end
-      
    end
-   
    return false
 end
 function IdInfo._setmeta( obj )
@@ -730,17 +738,21 @@ end
 
 
 local rootProcessInfo = ProcessInfo.createRoot(  )
+
 local rootProcessInfoRo = rootProcessInfo
+
 local function getRootProcessInfo(  )
 
    return rootProcessInfo
 end
 _moduleObj.getRootProcessInfo = getRootProcessInfo
+
 local function getRootProcessInfoRo(  )
 
    return rootProcessInfoRo
 end
 _moduleObj.getRootProcessInfoRo = getRootProcessInfoRo
+
 
 function ProcessInfo:newIdForRoot(  )
 
@@ -770,6 +782,7 @@ local rootTypeIdInfo = rootProcessInfo:newIdForRoot(  )
 _moduleObj.rootTypeIdInfo = rootTypeIdInfo
 
 
+
 local DummyModuleInfoManager = {}
 setmetatable( DummyModuleInfoManager, { ifList = {ModuleInfoManager,} } )
 _moduleObj.DummyModuleInfoManager = DummyModuleInfoManager
@@ -793,6 +806,7 @@ function DummyModuleInfoManager.get_instance()
 end
 do
    DummyModuleInfoManager.instance = DummyModuleInfoManager._new()
+   
 end
 
 
@@ -904,7 +918,9 @@ end
 local SymbolInfo = {}
 
 local sym2builtInTypeMapWork = {}
+
 local sym2builtInTypeMap = sym2builtInTypeMapWork
+
 
 local BuiltinTypeInfo = {}
 _moduleObj.BuiltinTypeInfo = BuiltinTypeInfo
@@ -937,18 +953,22 @@ end
 
 
 local builtInTypeIdSetWork = {}
+
 local builtInTypeIdSet = builtInTypeIdSetWork
+
 
 local function getSym2builtInTypeMap(  )
 
    return sym2builtInTypeMap
 end
 _moduleObj.getSym2builtInTypeMap = getSym2builtInTypeMap
+
 local function getBuiltInTypeIdMap(  )
 
    return builtInTypeIdSet
 end
 _moduleObj.getBuiltInTypeIdMap = getBuiltInTypeIdMap
+
 
 local SerializeKind = {}
 _moduleObj.SerializeKind = SerializeKind
@@ -1019,6 +1039,7 @@ local function isBuiltin( typeId )
 end
 _moduleObj.isBuiltin = isBuiltin
 
+
 local function isPubToExternal( mode )
 
    do
@@ -1027,24 +1048,28 @@ local function isPubToExternal( mode )
          return true
       end
    end
-   
    return false
 end
 _moduleObj.isPubToExternal = isPubToExternal
 
+
 local txt2AccessModeMap = {["none"] = AccessMode.None, ["pub"] = AccessMode.Pub, ["pro"] = AccessMode.Pro, ["pri"] = AccessMode.Pri, ["local"] = AccessMode.Local, ["global"] = AccessMode.Global}
+
 local function txt2AccessMode( accessMode )
 
    return txt2AccessModeMap[accessMode]
 end
 _moduleObj.txt2AccessMode = txt2AccessMode
 
+
 local accessMode2txtMap = {[AccessMode.None] = "none", [AccessMode.Pub] = "pub", [AccessMode.Pro] = "pro", [AccessMode.Pri] = "pri", [AccessMode.Local] = "local", [AccessMode.Global] = "global"}
+
 local function accessMode2txt( accessMode )
 
    return _lune.unwrap( accessMode2txtMap[accessMode])
 end
 _moduleObj.accessMode2txt = accessMode2txt
+
 local MutMode = {}
 _moduleObj.MutMode = MutMode
 MutMode._val2NameMap = {}
@@ -1091,10 +1116,10 @@ local function isMutable( mode )
          return true
       end
    end
-   
    return false
 end
 _moduleObj.isMutable = isMutable
+
 local TypeNameCtrl = {}
 _moduleObj.TypeNameCtrl = TypeNameCtrl
 function TypeNameCtrl._setmeta( obj )
@@ -1165,7 +1190,6 @@ function SymbolInfo:hasAccess(  )
    if self:get_posForModToRef() or self:get_posForLatestMod() ~= self:get_pos() then
       return true
    end
-   
    return false
 end
 function SymbolInfo:updateValue( pos )
@@ -1225,7 +1249,6 @@ function ClosureInfo:setClosure( symbol )
       table.insert( self.closureSymList, symbol )
       return true
    end
-   
    return false
 end
 function ClosureInfo:setRefPos(  )
@@ -1233,7 +1256,6 @@ function ClosureInfo:setRefPos(  )
    for __index, symInfo in ipairs( self.closureSymList ) do
       symInfo:set_posForModToRef( symInfo:get_posForLatestMod() )
    end
-   
 end
 function ClosureInfo._setmeta( obj )
   setmetatable( obj, { __index = ClosureInfo  } )
@@ -1295,9 +1317,7 @@ end
 function Scope:__init(processInfo, parent, scopeKind, inherit, ifScopeList) 
    self.scopeId = processInfo:get_idProvScope():getNewId(  )
    self.hasClosureAccess = false
-   
    self.closureInfo = ClosureInfo._new()
-   
    self.typeInfo2ModuleInfoMap = {}
    self.outerScope = _lune.unwrapDefault( parent, self)
    self.parent = self.outerScope
@@ -1318,7 +1338,6 @@ function Scope:set_ownerTypeInfo( owner )
    if not self.ownerTypeInfo then
       self.ownerTypeInfo = owner
    end
-   
 end
 function Scope:switchOwnerTypeInfo( owner )
 
@@ -1332,7 +1351,6 @@ function Scope:getTypeInfoChild( name )
          return _exp:get_typeInfo()
       end
    end
-   
    return nil
 end
 function Scope:getSymbolInfoChild( name )
@@ -1363,11 +1381,9 @@ function Scope:getModuleInfo( typeInfo )
          return moduleInfo
       end
    end
-   
    if self.parent ~= self then
       return self.parent:getModuleInfo( typeInfo )
    end
-   
    return nil
 end
 function Scope._setmeta( obj )
@@ -1408,8 +1424,11 @@ function Scope:set_validCheckingUnaccess( validCheckingUnaccess )
 end
 
 local rootScope = Scope._new(rootProcessInfo, nil, ScopeKind.Other, nil)
+
 local rootScopeRo = rootScope
+
 rootProcessInfo:set_topScope( rootScope )
+
 
 function SymbolInfo:get_namespaceTypeInfo(  )
 
@@ -1419,7 +1438,6 @@ function SymbolInfo:get_namespaceTypeInfo(  )
          return _exp
       end
    end
-   
    local work = self:get_scope():getNamespaceTypeInfo(  )
    self.namespaceTypeInfo = work
    return work
@@ -1430,16 +1448,13 @@ function Scope:isInnerOf( scope )
    if self == scope then
       return true
    end
-   
    local workScope = self
    while workScope:get_parent() ~= workScope do
       if workScope == scope then
          return true
       end
-      
       workScope = workScope.parent
    end
-   
    return false
 end
 
@@ -1455,7 +1470,6 @@ function ScopeWithRef._new( processInfo, outerScope, parent, scopeKind, inherit,
 end
 function ScopeWithRef:__init(processInfo, outerScope, parent, scopeKind, inherit, ifScopeList) 
    Scope.__init( self,processInfo, outerScope, scopeKind, inherit, ifScopeList)
-   
    self:set_parent( parent )
 end
 function ScopeWithRef._setmeta( obj )
@@ -1464,6 +1478,7 @@ end
 
 
 local dummyList = {}
+
 local CanEvalType = {}
 _moduleObj.CanEvalType = CanEvalType
 CanEvalType._val2NameMap = {}
@@ -1520,7 +1535,6 @@ function SerializeInfo:isValidChildren( idInfo )
 end
 function SerializeInfo:serializeId( idInfo )
 
-   
    local processId = _lune.unwrap( self.processInfo2Id[idInfo:get_processInfo()])
    return string.format( "{ id = %d, mod = %d }", idInfo:get_orgId(), processId)
 end
@@ -1608,10 +1622,8 @@ function TypeInfo:__init(scope, processInfo)
          _exp:set_ownerTypeInfo( self )
       end
    end
-   
    self.typeData = TypeData._new()
    self.processInfo = processInfo
-   
 end
 function TypeInfo:get_aliasSrc(  )
 
@@ -1690,7 +1702,6 @@ function TypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
    if checkModifer then
       return self == typeInfo
    end
-   
    return self == typeInfo:get_srcTypeInfo()
 end
 function TypeInfo:get_externalFlag(  )
@@ -1723,14 +1734,11 @@ function TypeInfo:hasRouteNamespaceFrom( other )
       if other == self then
          return true
       end
-      
       if other:get_parentInfo() == other then
          break
       end
-      
       other = other:get_parentInfo()
    end
-   
    return false
 end
 function TypeInfo:getModule(  )
@@ -1738,7 +1746,6 @@ function TypeInfo:getModule(  )
    if self:isModule(  ) then
       return self
    end
-   
    return self:get_parentInfo():getModule(  )
 end
 function TypeInfo:get_typeId(  )
@@ -1805,30 +1812,23 @@ function TypeInfo:serializeTypeInfoList( serializeInfo, name, list, onlyPub )
          if #work ~= #name then
             work = work .. ", "
          end
-         
          work = string.format( "%s%s", work, serializeInfo:serializeId( typeInfo:get_typeId() ))
       end
-      
    end
-   
    return work .. "}, "
 end
 function TypeInfo.createScope( processInfo, parent, scopeKind, baseInfo, interfaceList )
 
    local inheritScope = nil
    if baseInfo ~= nil then
-      
       inheritScope = _lune.unwrap( baseInfo:get_scope())
    end
-   
    local ifScopeList = {}
    if interfaceList ~= nil then
       for __index, ifType in ipairs( interfaceList ) do
          table.insert( ifScopeList, _lune.unwrap( ifType:get_scope()) )
       end
-      
    end
-   
    return Scope._new(processInfo, parent, scopeKind, inheritScope, ifScopeList)
 end
 function TypeInfo:get_generics_display_string( raw, alt2type )
@@ -1839,14 +1839,10 @@ function TypeInfo:get_generics_display_string( raw, alt2type )
          if index ~= 1 then
             txt = txt .. ","
          end
-         
          txt = txt .. typeInfo:get_display_stirng_with( typeInfo:get_rawTxt(), alt2type )
       end
-      
-      
       return txt .. ">"
    end
-   
    return raw
 end
 function TypeInfo:get_generics_txt( raw, typeNameCtrl, importInfo, localFlag )
@@ -1855,7 +1851,6 @@ function TypeInfo:get_generics_txt( raw, typeNameCtrl, importInfo, localFlag )
    if typeNameCtrl ~= nil then
       parentTxt = self:getParentFullName( typeNameCtrl, importInfo, localFlag )
    end
-   
    local name
    
    if #self:get_itemTypeInfoList() > 0 then
@@ -1864,18 +1859,13 @@ function TypeInfo:get_generics_txt( raw, typeNameCtrl, importInfo, localFlag )
          if index ~= 1 then
             txt = txt .. ","
          end
-         
          txt = txt .. typeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
       end
-      
-      
       name = parentTxt .. txt .. ">"
    else
     
       name = parentTxt .. raw
    end
-   
-   
    return name
 end
 function TypeInfo._setmeta( obj )
@@ -1935,10 +1925,10 @@ local function applyGenericDefault( processInfo, typeInfo, alt2typeMap, moduleTy
          return genType
       end
    end
-   
    return typeInfo
 end
 _moduleObj.applyGenericDefault = applyGenericDefault
+
 
 function SymbolInfo:getModule(  )
 
@@ -1989,7 +1979,6 @@ local function getAllNameForKind( classInfo, kind, symbolKind )
             process( inherit )
          end
       end
-      
       do
          local __sorted = {}
          local __map = scope:get_symbol2SymbolInfoMap()
@@ -2010,34 +1999,30 @@ local function getAllNameForKind( classInfo, kind, symbolKind )
                         if kind == MethodKind.All or kind == MethodKind.Static and staticFlag or kind == MethodKind.Object and not staticFlag then
                            nameSet:add( symbolInfo:get_name() )
                         end
-                        
                      end
-                     
                   end
                end
-               
             end
          end
       end
-      
    end
-   
    do
       local scope = classInfo:get_scope()
       if scope ~= nil then
          process( scope )
       end
    end
-   
    return nameSet
 end
 _moduleObj.getAllNameForKind = getAllNameForKind
+
 
 local function getAllMethodName( classInfo, kind )
 
    return getAllNameForKind( classInfo, kind, SymbolKind.Mtd )
 end
 _moduleObj.getAllMethodName = getAllMethodName
+
 
 function TypeNameCtrl:getModuleName( workTypeInfo, name, moduleInfoMan )
 
@@ -2050,10 +2035,8 @@ function TypeNameCtrl:getModuleName( workTypeInfo, name, moduleInfoMan )
          if self.moduleTypeInfo ~= workTypeInfo then
             return workTypeInfo:get_rawTxt() .. "." .. name
          end
-         
       end
    end
-   
    return name
 end
 
@@ -2062,7 +2045,6 @@ function TypeNameCtrl:getParentFullName( typeInfo, importInfo, localFlag )
 
    local workTypeInfo = typeInfo
    local name = ""
-   
    local moduleInfoMan = importInfo
    if  nil == moduleInfoMan then
       local _moduleInfoMan = moduleInfoMan
@@ -2070,25 +2052,20 @@ function TypeNameCtrl:getParentFullName( typeInfo, importInfo, localFlag )
       moduleInfoMan = DummyModuleInfoManager.get_instance()
    end
    
-   
    while true do
       workTypeInfo = workTypeInfo:get_parentInfo()
       local txt = workTypeInfo:get_rawTxt()
       if workTypeInfo == workTypeInfo:get_parentInfo() then
          break
       end
-      
       if localFlag then
          if workTypeInfo:isModule(  ) then
             name = self:getModuleName( workTypeInfo, name, moduleInfoMan )
             break
          end
-         
       end
-      
       name = txt .. "." .. name
    end
-   
    return name
 end
 
@@ -2098,10 +2075,10 @@ local function isExtId( typeInfo )
    if typeInfo:get_typeId().id >= extStartId then
       return true
    end
-   
    return false
 end
 _moduleObj.isExtId = isExtId
+
 
 local RootTypeInfo = {}
 setmetatable( RootTypeInfo, { __index = TypeInfo } )
@@ -2114,10 +2091,7 @@ function RootTypeInfo._new( processInfo, rootId )
 end
 function RootTypeInfo:__init(processInfo, rootId) 
    TypeInfo.__init( self,processInfo:get_topScope(), processInfo)
-   
-   
    self.typeId = rootId
-   
    processInfo:set_dummyParentType( self )
 end
 function RootTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
@@ -2125,7 +2099,6 @@ function RootTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
    if _lune.__Cast( typeInfo, 3, RootTypeInfo ) then
       return true
    end
-   
    return false
 end
 function RootTypeInfo:get_baseTypeInfo(  )
@@ -2167,10 +2140,13 @@ function RootTypeInfo:get_typeId()
 end
 
 local headTypeInfoMut = RootTypeInfo.create( rootProcessInfo, _moduleObj.rootTypeIdInfo )
+
 local headTypeInfo = headTypeInfoMut
 _moduleObj.headTypeInfo = headTypeInfo
 
+
 rootProcessInfo:setRootTypeInfo( _moduleObj.headTypeInfo:get_typeId().id, _moduleObj.headTypeInfo )
+
 
 function ProcessInfo.createUser( validCheckingMutable, validExtType, validDetailError, typeInfo2Map )
 
@@ -2179,13 +2155,13 @@ function ProcessInfo.createUser( validCheckingMutable, validExtType, validDetail
    processInfo:set_topScope( scope )
    local topType = RootTypeInfo.create( processInfo, processInfo:newIdForSubRoot(  ) )
    scope:set_ownerTypeInfo( topType )
-   
    return processInfo
 end
 
 
 local defaultTypeNameCtrl = TypeNameCtrl._new(_moduleObj.headTypeInfo)
 _moduleObj.defaultTypeNameCtrl = defaultTypeNameCtrl
+
 
 
 function TypeInfo:hasBase(  )
@@ -2210,7 +2186,6 @@ function Scope:getNamespaceTypeInfo(  )
             return _exp
          end
       end
-      
       scope = scope:get_parent()
    until scope:isRoot(  )
    return _lune.unwrap( scope:get_ownerTypeInfo())
@@ -2248,7 +2223,6 @@ function NormalSymbolInfo._new( processInfo, kind, canBeLeft, canBeRight, scope,
 end
 function NormalSymbolInfo:__init(processInfo, kind, canBeLeft, canBeRight, scope, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad) 
    SymbolInfo.__init( self)
-   
    self.convModuleParam = nil
    self.hasAccessFromClosure = false
    if hasValueFlag then
@@ -2257,7 +2231,6 @@ function NormalSymbolInfo:__init(processInfo, kind, canBeLeft, canBeRight, scope
     
       self.posForLatestMod = nil
    end
-   
    self.posForModToRef = nil
    self.kind = kind
    self.canBeLeft = canBeLeft
@@ -2347,27 +2320,20 @@ end
 function TypeInfo.isInherit( processInfo, typeInfo, other, alt2type )
 
    local baseTypeInfo = typeInfo:get_baseTypeInfo()
-   
    local otherTypeId = other:get_typeId()
    if typeInfo:get_typeId():equals( otherTypeId ) then
       return true
    end
-   
    if baseTypeInfo ~= _moduleObj.headTypeInfo then
       if baseTypeInfo:isInheritFrom( processInfo, other, alt2type ) then
          return true
       end
-      
    end
-   
-   
    for __index, ifType in ipairs( typeInfo:get_interfaceList() ) do
       if ifType:isInheritFrom( processInfo, other, alt2type ) then
          return true
       end
-      
    end
-   
    return false
 end
 
@@ -2383,7 +2349,6 @@ function ModifierTypeInfo._new( processInfo, srcTypeInfo, mutMode )
 end
 function ModifierTypeInfo:__init(processInfo, srcTypeInfo, mutMode) 
    TypeInfo.__init( self,nil, processInfo)
-   
    self.srcTypeInfo = srcTypeInfo
    self.typeId = processInfo:newId( self )
    self.mutMode = mutMode
@@ -2404,7 +2369,6 @@ function ModifierTypeInfo:addModifierTxt( txt )
          txt = "#" .. txt
       end
    end
-   
    return txt
 end
 function ModifierTypeInfo:get_canDealGenInherit(  )
@@ -2426,7 +2390,6 @@ function ModifierTypeInfo:get_display_stirng_with( raw, alt2type )
    if isMutable( self.mutMode ) then
       txt = "mut " .. txt
    end
-   
    return self:addModifierTxt( txt )
 end
 function ModifierTypeInfo:get_display_stirng(  )
@@ -2439,7 +2402,6 @@ function ModifierTypeInfo:serialize( stream, serializeInfo )
 end
 function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
-   
    if self.mutMode == MutMode.Depend then
       do
          local _switchExp = other:get_mutMode()
@@ -2452,30 +2414,23 @@ function ModifierTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type
                return false, mess
          end
       end
-      
    end
-   
-   
    local evalType
    
    if #self.srcTypeInfo:get_itemTypeInfoList() >= 1 then
       do
          local _switchExp = canEvalType
          if _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetEqEq or _switchExp == CanEvalType.SetOp then
-            
             evalType = CanEvalType.SetOpIMut
          else 
             
                evalType = canEvalType
          end
       end
-      
    else
     
       evalType = canEvalType
    end
-   
-   
    local result, mess = TypeInfo.canEvalWithBase( processInfo, self.srcTypeInfo, TypeInfo.isMut( self ), other:get_srcTypeInfo(), evalType, alt2type )
    return result, mess
 end
@@ -2485,9 +2440,7 @@ function ModifierTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer 
       if TypeInfo.isMut( self ) ~= TypeInfo.isMut( typeInfo ) then
          return false
       end
-      
    end
-   
    return self.srcTypeInfo:equals( processInfo, typeInfo:get_srcTypeInfo(), alt2type, checkModifer )
 end
 function ModifierTypeInfo._setmeta( obj )
@@ -2693,13 +2646,9 @@ function TypeInfo2Map:__init()
    self.DDDMap = {}
    self.ExtDDDMap = {}
    self.ExtMap = {}
-   
 end
 function TypeInfo2Map:clone(  )
 
-   
-   
-   
    local obj = TypeInfo2Map._new()
    for key, val in pairs( self.ImutModifierMap ) do
       obj.ImutModifierMap[key] = val
@@ -2736,7 +2685,6 @@ function TypeInfo2Map:clone(  )
    end
    
    
-   
    return obj
 end
 function TypeInfo2Map._setmeta( obj )
@@ -2768,37 +2716,35 @@ end
 function ProcessInfo:clone(  )
 
    local processInfo = ProcessInfo._new(self.validCheckingMutable, self.idProvBase:clone(  ), self.validExtType, self.validDetailError, (_lune.unwrap( self.typeInfo2Map) ):clone(  ))
-   
    processInfo.idProvExt = self.idProvExt:clone(  )
    processInfo.idProvSym = self.idProvSym:clone(  )
    processInfo.idProvScope = self.idProvScope:clone(  )
-   
    for key, val in pairs( self.id2TypeInfo ) do
       processInfo.id2TypeInfo[key] = val
    end
-   
    return processInfo
 end
 
 
 rootProcessInfo:set_typeInfo2Map( TypeInfo2Map._new() )
 
+
 local immutableTypeSetWork = {}
+
 local immutableTypeSet = immutableTypeSetWork
+
 function TypeInfo.isImmortal( typeInfo )
 
    typeInfo = typeInfo:get_nonnilableType()
    if _lune._Set_has(immutableTypeSet, typeInfo ) then
       return true
    end
-   
    do
       local _switchExp = typeInfo:get_kind()
       if _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Enum then
          return true
       end
    end
-   
    return false
 end
 
@@ -2807,7 +2753,6 @@ function TypeInfo.isMutableType( typeInfo )
    if TypeInfo.isImmortal( typeInfo ) then
       return false
    end
-   
    typeInfo = typeInfo:get_nonnilableType()
    return isMutable( typeInfo:get_mutMode() )
 end
@@ -2818,14 +2763,11 @@ function TypeInfo.canBeAbsImmutMember( typeInfo )
    if TypeInfo.isMutableType( typeInfo ) then
       return false
    end
-   
    for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
       if not TypeInfo.canBeAbsImmutMember( itemType ) then
          return false
       end
-      
    end
-   
    return true
 end
 
@@ -2836,8 +2778,6 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
    if not TypeInfo.isMutableType( srcTypeInfo ) then
       return srcTypeInfo
    end
-   
-   
    do
       local _switchExp = mutMode
       if _switchExp == MutMode.IMut then
@@ -2847,7 +2787,6 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
                return _exp
             end
          end
-         
       elseif _switchExp == MutMode.IMutRe then
          do
             local _exp = self:get_typeInfo2Map().ImutReModifierMap[srcTypeInfo]
@@ -2855,7 +2794,6 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
                return _exp
             end
          end
-         
       elseif _switchExp == MutMode.AllMut then
          do
             local _exp = self:get_typeInfo2Map().MutModifierMap[srcTypeInfo]
@@ -2863,15 +2801,11 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
                return _exp
             end
          end
-         
       end
    end
-   
-   
    local modifier
    
    if srcTypeInfo:get_nonnilableType():get_kind() == TypeInfoKind.Ext then
-      
       do
          local _matchExp = self:createLuaval( self:createModifier( srcTypeInfo:get_extedType(), mutMode ), false )
          if _matchExp[1] == LuavalResult.OK[1] then
@@ -2884,19 +2818,16 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
              
                modifier = workType
             end
-            
          elseif _matchExp[1] == LuavalResult.Err[1] then
             local err = _matchExp[2][1]
          
             Util.err( err )
          end
       end
-      
    else
     
       modifier = ModifierTypeInfo._new(self, srcTypeInfo, mutMode)
    end
-   
    do
       local _switchExp = mutMode
       if _switchExp == MutMode.IMut then
@@ -2907,7 +2838,6 @@ function ProcessInfo:createModifier( srcTypeInfo, mutMode )
          self:get_typeInfo2Map().MutModifierMap[srcTypeInfo] = modifier
       end
    end
-   
    return modifier
 end
 
@@ -2923,7 +2853,6 @@ function AutoBoxingInfo._new( processInfo )
 end
 function AutoBoxingInfo:__init(processInfo) 
    TypeInfo.__init( self,nil, processInfo)
-   
    self.count = 0
    self.imutType = _moduleObj.headTypeInfo
 end
@@ -2945,7 +2874,6 @@ function AutoBoxingInfo:get_kind(  )
 end
 function AutoBoxingInfo:inc(  )
 
-   
    local obj = self
    obj.count = obj.count + 1
 end
@@ -2976,12 +2904,12 @@ function ProcessInfo:setupImut( typeInfo )
    if nilable ~= typeInfo then
       nilable:set_imutType( self:createModifier( nilable, MutMode.IMut ) )
    end
-   
 end
 
 
 local dummyIdInfo = IdInfo._new(1, rootProcessInfo)
 _moduleObj.dummyIdInfo = dummyIdInfo
+
 
 local CanEvalCtrlTypeInfo = {}
 setmetatable( CanEvalCtrlTypeInfo, { __index = TypeInfo } )
@@ -2994,7 +2922,6 @@ function CanEvalCtrlTypeInfo._new(  )
 end
 function CanEvalCtrlTypeInfo:__init() 
    TypeInfo.__init( self,nil, rootProcessInfo)
-   
 end
 function CanEvalCtrlTypeInfo:get_kind(  )
 
@@ -3030,7 +2957,6 @@ function CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( detectFlag )
       map[CanEvalCtrlTypeInfo.detectAlt] = _moduleObj.headTypeInfo
       return map
    end
-   
    return {}
 end
 function CanEvalCtrlTypeInfo.isValidApply( alt2type )
@@ -3054,12 +2980,10 @@ function CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
                autoBoxingInfo:inc(  )
             end
          end
-         
       else
          Util.err( "no exist needAutoBoxing" )
       end
    end
-   
 end
 function CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2type )
 
@@ -3072,10 +2996,8 @@ function CanEvalCtrlTypeInfo.hasNeedAutoBoxing( alt2type )
                return autoBoxingInfo:get_count() ~= 0
             end
          end
-         
       end
    end
-   
    return false
 end
 function CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2type, count )
@@ -3090,10 +3012,8 @@ function CanEvalCtrlTypeInfo.finishNeedAutoBoxing( alt2type, count )
                return autoBoxingInfo:get_count() == count
             end
          end
-         
       end
    end
-   
    return false
 end
 function CanEvalCtrlTypeInfo.canAutoBoxing( dst, src )
@@ -3102,12 +3022,10 @@ function CanEvalCtrlTypeInfo.canAutoBoxing( dst, src )
    if dstSrc:get_kind() ~= TypeInfoKind.Box then
       return false
    end
-   
    local srcSrc = src:get_srcTypeInfo():get_nonnilableType()
    if srcSrc:get_kind() == TypeInfoKind.Box then
       return false
    end
-   
    return true
 end
 function CanEvalCtrlTypeInfo._setmeta( obj )
@@ -3115,8 +3033,11 @@ function CanEvalCtrlTypeInfo._setmeta( obj )
 end
 do
    CanEvalCtrlTypeInfo.detectAlt = CanEvalCtrlTypeInfo._new()
+   
    CanEvalCtrlTypeInfo.needAutoBoxing = CanEvalCtrlTypeInfo._new()
+   
    CanEvalCtrlTypeInfo.checkTypeTarget = CanEvalCtrlTypeInfo._new()
+   
 end
 
 
@@ -3131,7 +3052,6 @@ function NilableTypeInfo._new( processInfo, nonnilableType )
 end
 function NilableTypeInfo:__init(processInfo, nonnilableType) 
    TypeInfo.__init( self,nil, processInfo)
-   
    self.nonnilableType = nonnilableType
    self.typeId = processInfo:newId( self )
    self.imutType = _moduleObj.headTypeInfo
@@ -3169,7 +3089,6 @@ function NilableTypeInfo:get_display_stirng_with( raw, alt2type )
    if self.nonnilableType:get_kind() == TypeInfoKind.FormFunc then
       return self.nonnilableType:get_display_stirng_with( raw .. "!", alt2type )
    end
-   
    return self.nonnilableType:get_display_stirng_with( raw, alt2type ) .. "!"
 end
 function NilableTypeInfo:get_display_stirng(  )
@@ -3185,7 +3104,6 @@ function NilableTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
    if not typeInfo:get_nilable() then
       return false
    end
-   
    return self.nonnilableType:equals( processInfo, typeInfo:get_nonnilableType(), alt2type, checkModifer )
 end
 function NilableTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
@@ -3194,11 +3112,9 @@ function NilableTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo 
    if typeInfo == self.nonnilableType then
       return self
    end
-   
    if typeInfo ~= nil then
       return typeInfo:get_nilableTypeInfo()
    end
-   
    return nil
 end
 function NilableTypeInfo._setmeta( obj )
@@ -3397,7 +3313,6 @@ function AliasTypeInfo._new( processInfo, rawTxt, accessMode, parentInfo, aliasS
 end
 function AliasTypeInfo:__init(processInfo, rawTxt, accessMode, parentInfo, aliasSrcTypeInfo, externalFlag) 
    TypeInfo.__init( self,nil, processInfo)
-   
    self.imutType = _moduleObj.headTypeInfo
    self.rawTxt = rawTxt
    self.accessMode = accessMode
@@ -3462,7 +3377,6 @@ function AliasTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
    if typeInfo == self.aliasSrcTypeInfo then
       return self
    end
-   
    return nil
 end
 function AliasTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
@@ -3659,28 +3573,20 @@ function Scope:filterTypeInfoField( includeSelfFlag, fromScope, access, callback
                      if not callback( symbolInfo ) then
                         return false
                      end
-                     
                   end
-                  
                end
             end
          end
-         
       end
-      
       do
          local scope = self.inherit
          if scope ~= nil then
             if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
                return false
             end
-            
          end
       end
-      
    end
-   
-   
    return true
 end
 
@@ -3701,9 +3607,7 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope, access )
                return symbolInfo
             end
          end
-         
       end
-      
       do
          local scope = self.inherit
          if scope ~= nil then
@@ -3711,13 +3615,9 @@ function Scope:getSymbolInfoField( name, includeSelfFlag, fromScope, access )
             if symbolInfo then
                return symbolInfo
             end
-            
          end
       end
-      
    end
-   
-   
    return nil
 end
 
@@ -3731,12 +3631,8 @@ function Scope:getSymbolInfoIfField( name, fromScope, access )
                return symbolInfo
             end
          end
-         
       end
-      
    end
-   
-   
    do
       local scope = self.inherit
       if scope ~= nil then
@@ -3746,11 +3642,8 @@ function Scope:getSymbolInfoIfField( name, fromScope, access )
                return symbolInfo
             end
          end
-         
       end
    end
-   
-   
    return nil
 end
 
@@ -3760,21 +3653,15 @@ function Scope:filterSymbolInfoIfField( fromScope, access, callback )
       if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
          return false
       end
-      
    end
-   
-   
    do
       local scope = self.inherit
       if scope ~= nil then
          if not scope:filterSymbolInfoIfField( fromScope, access, callback ) then
             return false
          end
-         
       end
    end
-   
-   
    return true
 end
 
@@ -3788,7 +3675,6 @@ function Scope:getTypeInfoField( name, includeSelfFlag, fromScope, access )
          return _exp:get_typeInfo()
       end
    end
-   
    return nil
 end
 
@@ -3810,47 +3696,33 @@ function Scope:filterTypeInfoFieldAndIF( includeSelfFlag, fromScope, access, cal
                      if not callback( symbolInfo ) then
                         return false
                      end
-                     
                   end
-                  
                end
             end
          end
-         
       end
-      
       do
          local scope = self.inherit
          if scope ~= nil then
             if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
                return false
             end
-            
          end
       end
-      
    end
-   
-   
    for __index, scope in ipairs( self.ifScopeList ) do
       if not scope:filterTypeInfoField( true, fromScope, access, callback ) then
          return false
       end
-      
    end
-   
-   
    do
       local scope = self.inherit
       if scope ~= nil then
          if not scope:filterSymbolInfoIfField( fromScope, access, callback ) then
             return false
          end
-         
       end
    end
-   
-   
    return true
 end
 
@@ -3869,7 +3741,6 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
          return symbolInfo
       end
    end
-   
    if not onlySameNsFlag then
       do
          local scope = self.inherit
@@ -3878,20 +3749,15 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
             if symbolInfo then
                return symbolInfo
             end
-            
          end
       end
-      
    end
-   
-   
    if not onlySameNsFlag or not self.ownerTypeInfo then
       if self.parent ~= self then
          return self.parent:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
       elseif self ~= rootScopeRo then
          return rootScopeRo:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
       end
-      
    else
     
       local workScope = self.parent
@@ -3899,23 +3765,18 @@ function Scope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
          if _lune.nilacc( workScope.ownerTypeInfo, 'get_kind', 'callmtd' ) ~= TypeInfoKind.Class and _lune.nilacc( workScope.ownerTypeInfo, 'get_kind', 'callmtd' ) ~= TypeInfoKind.Module then
             return workScope:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
          end
-         
          workScope = workScope.parent
       end
-      
       if workScope ~= rootScopeRo then
          return rootScopeRo:getSymbolInfo( name, fromScope, onlySameNsFlag, access )
       end
-      
    end
-   
    do
       local _exp = sym2builtInTypeMap[name]
       if _exp ~= nil then
          return _exp
       end
    end
-   
    return nil
 end
 
@@ -3936,25 +3797,21 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
 
    local validThisScope = false
    local limitSymbol = false
-   
    do
       local _exp = self.ownerTypeInfo
       if _exp ~= nil then
          if _exp:get_kind() == TypeInfoKind.Func or _exp:get_kind() == TypeInfoKind.Method or _exp:get_kind() == TypeInfoKind.Module or self == moduleScope or self == rootScopeRo then
             validThisScope = true
          elseif _exp:get_kind() == TypeInfoKind.IF or _exp:get_kind() == TypeInfoKind.Class then
-            
             limitSymbol = true
             validThisScope = true
          elseif _exp:get_kind() == TypeInfoKind.Enum or _exp:get_kind() == TypeInfoKind.Alge then
             validThisScope = true
          end
-         
       else
          validThisScope = true
       end
    end
-   
    if validThisScope then
       do
          local symbolInfo = self.symbol2SymbolInfoMap[name]
@@ -3962,18 +3819,14 @@ function Scope:getSymbolTypeInfo( name, fromScope, moduleScope, access )
             if not limitSymbol or name == "self" or (symbolInfo:get_typeInfo():get_kind() == TypeInfoKind.Alternate and symbolInfo:get_kind() == SymbolKind.Typ ) then
                return symbolInfo:canAccess( fromScope, access )
             end
-            
          end
       end
-      
    end
-   
    if self.parent ~= self then
       return self.parent:getSymbolTypeInfo( name, fromScope, moduleScope, access )
    elseif self ~= rootScopeRo then
       return rootScopeRo:getSymbolTypeInfo( name, fromScope, moduleScope, access )
    end
-   
    return sym2builtInTypeMap[name]
 end
 
@@ -3987,26 +3840,19 @@ function Scope:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
             callback( _exp )
          end
       end
-      
    end
-   
    if self.scopeKind ~= ScopeKind.Class then
       for __index, symbolInfo in pairs( self.symbol2SymbolInfoMap ) do
          if not callback( symbolInfo ) then
             return 
          end
-         
       end
-      
    end
-   
-   
    if self.parent ~= self then
       self.parent:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
    elseif self ~= rootScopeRo then
       rootScopeRo:filterSymbolTypeInfo( fromScope, moduleScope, access, callback )
    end
-   
 end
 
 
@@ -4027,7 +3873,6 @@ function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInf
                 
                   existSymbol = self:getSymbolInfo( name, self, true, ScopeAccess.Full )
                end
-               
             elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Module then
                existSymbol = self:getSymbolInfoChild( name )
             else 
@@ -4035,23 +3880,17 @@ function Scope:add( processInfo, kind, canBeLeft, canBeRight, name, pos, typeInf
                   existSymbol = self:getSymbolInfo( name, self, true, ScopeAccess.Full )
             end
          end
-         
          if existSymbol ~= nil then
             if typeInfo:get_kind() ~= existSymbol:get_typeInfo():get_kind() or not isBuiltin( existSymbol:get_typeInfo():get_typeId().id ) then
                return nil, existSymbol
             end
-            
          end
-         
       elseif _switchExp == SymbolKind.Var then
          if typeInfo:get_kind() == TypeInfoKind.Module then
             ownerTypeInfo = typeInfo
          end
-         
       end
    end
-   
-   
    local symbolInfo = NormalSymbolInfo._new(processInfo, kind, canBeLeft, canBeRight, self, accessMode, staticFlag, name, pos, typeInfo, mutMode, hasValueFlag, isLazyLoad)
    symbolInfo:set_namespaceTypeInfo( ownerTypeInfo )
    self.symbol2SymbolInfoMap[name] = symbolInfo
@@ -4073,6 +3912,7 @@ end
 
 local dummySymbol = _lune.unwrap( rootScope:addLocalVar( rootProcessInfo, false, false, "$$", nil, _moduleObj.headTypeInfo, MutMode.IMut ))
 _moduleObj.dummySymbol = dummySymbol
+
 
 
 function Scope:addUnwrapedVar( processInfo, argFlag, canBeLeft, name, pos, typeInfo, mutable )
@@ -4181,9 +4021,7 @@ function Scope:addExtModule( processInfo, name, pos, typeInfo, lazy, lang )
             typeInfo = luavalTypeInfo
          end
       end
-      
    end
-   
    return self:add( processInfo, SymbolKind.Typ, false, false, name, pos, typeInfo, typeInfo:get_accessMode(), false, MutMode.Mut, true, lazy )
 end
 
@@ -4194,12 +4032,13 @@ local function dumpOuterScope( workScope, toScope, prefix )
    
       Util.log( string.format( "scope: %s, %s", prefix, symbolInfo:get_name()) )
       return true
-   end )
+   end
+    )
 end
 _moduleObj.dumpOuterScope = dumpOuterScope
+
 local function dumpScope( workscope, workprefix )
 
-   
    local function dumpScopeSub( scope, prefix, readyIdSet )
    
       do
@@ -4208,13 +4047,10 @@ local function dumpScope( workscope, workprefix )
             if _lune._Set_has(readyIdSet, _exp ) then
                return 
             end
-            
             readyIdSet[_exp]= true
             if #prefix > 20 then
                Util.err( "illegal" )
             end
-            
-            
             do
                local __sorted = {}
                local __map = _exp:get_symbol2SymbolInfoMap()
@@ -4232,20 +4068,16 @@ local function dumpScope( workscope, workprefix )
                            dumpScopeSub( subScope, prefix .. "  ", readyIdSet )
                         end
                      end
-                     
                   end
                end
             end
-            
          end
       end
-      
-      
    end
-   
    dumpScopeSub( workscope, workprefix, {} )
 end
 _moduleObj.dumpScope = dumpScope
+
 function Scope:setClosure( workSymbol )
 
    local function getFuncScope( scope )
@@ -4257,35 +4089,27 @@ function Scope:setClosure( workSymbol )
                if _exp:get_kind() == TypeInfoKind.Func then
                   return scope
                end
-               
             end
          end
-         
          scope = scope:get_outerScope()
       until scope:isRoot(  )
       return scope
    end
-   
    local symbol = workSymbol:getOrg(  )
    local targetFuncScope = _lune.unwrap( symbol:get_namespaceTypeInfo():get_scope())
    local funcScope = getFuncScope( self )
-   
    while not funcScope:isRoot(  ) do
       if not funcScope.closureInfo:setClosure( symbol ) then
          break
       end
-      
       funcScope = getFuncScope( funcScope.outerScope )
       if funcScope == targetFuncScope then
          break
       end
-      
    end
-   
    if not symbol:get_hasAccessFromClosure() then
       symbol:set_hasAccessFromClosure( true )
    end
-   
 end
 
 function Scope:isClosureAccess( moduleScope, symbol )
@@ -4302,36 +4126,26 @@ function Scope:isClosureAccess( moduleScope, symbol )
              
                return true
             end
-            
          else
           
-            
             local funcType = self:getNamespaceTypeInfo(  )
             if funcType ~= symbol:get_namespaceTypeInfo() then
-               
                return true
             end
-            
          end
-         
       end
    end
-   
    return false
 end
 
 function Scope:accessSymbol( moduleScope, symbol )
 
    if symbol:get_kind() == SymbolKind.Fun and self:getNamespaceTypeInfo(  ) == symbol:get_typeInfo() then
-      
       return 
    end
-   
-   
    if self:isClosureAccess( moduleScope, symbol ) then
       self:setClosure( symbol )
    end
-   
 end
 
 
@@ -4359,8 +4173,6 @@ function NilTypeInfo._new( processInfo )
 end
 function NilTypeInfo:__init(processInfo) 
    TypeInfo.__init( self,nil, processInfo)
-   
-   
    self.typeId = processInfo:newId( self )
 end
 function NilTypeInfo:isModule(  )
@@ -4380,7 +4192,6 @@ function NilTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    if not other:get_nilable() then
       return false, string.format( "%s is not nilable.", other:getTxt(  ))
    end
-   
    return other:get_nilable(), nil
 end
 function NilTypeInfo:get_display_stirng_with( raw, alt2type )
@@ -4452,17 +4263,13 @@ function Scope:getClassTypeInfo(  )
                   return owner
                end
             end
-            
          end
       end
-      
       if scope.parent == scope then
          break
       end
-      
       scope = scope.parent
    end
-   
    return _moduleObj.headTypeInfo
 end
 
@@ -4471,15 +4278,10 @@ function NormalSymbolInfo:canAccess( fromScope, access )
    if access == ScopeAccess.Full then
       return self
    end
-   
-   
    if self.scope == fromScope then
       return self
    end
-   
-   
    local processInfo = fromScope:getProcessInfo(  )
-   
    do
       local _switchExp = self:get_accessMode()
       if _switchExp == AccessMode.Pub or _switchExp == AccessMode.Global then
@@ -4490,28 +4292,22 @@ function NormalSymbolInfo:canAccess( fromScope, access )
          if fromClass:isInheritFrom( processInfo, nsClass, nil ) then
             return self
          end
-         
          return nil
       elseif _switchExp == AccessMode.Local then
-         
          local selfMod = self:getModule(  )
          if not TypeInfo.hasParent( selfMod ) or selfMod:equals( processInfo, fromScope:getModule(  ) ) then
             return self
          end
-         
          return nil
       elseif _switchExp == AccessMode.Pri then
-         
          if fromScope:isInnerOf( self.scope ) then
             return self
          end
-         
          return nil
       elseif _switchExp == AccessMode.None then
          Util.err( string.format( "illegl accessmode -- %s, %s", tostring( self:get_accessMode()), self:get_name()) )
       end
    end
-   
 end
 
 
@@ -4549,7 +4345,6 @@ function AccessSymbolInfo._new( processInfo, symbolInfo, overrideMut, overrideCa
 end
 function AccessSymbolInfo:__init(processInfo, symbolInfo, overrideMut, overrideCanBeLeft) 
    SymbolInfo.__init( self)
-   
    self.symbolInfo = symbolInfo
    self.overrideMut = overrideMut
    self.overrideCanBeLeft = overrideCanBeLeft
@@ -4572,19 +4367,16 @@ function AccessSymbolInfo:__init(processInfo, symbolInfo, overrideMut, overrideC
             else
                work = symType
             end
-            
          else
           
             work = symType
          end
-         
       elseif _matchExp[1] == OverrideMut.IMut[1] then
          local typeInfo = _matchExp[2][1]
       
          work = typeInfo
       end
    end
-   
    self.overrideTypeInfo = work
 end
 function AccessSymbolInfo:getOrg(  )
@@ -4596,7 +4388,6 @@ function AccessSymbolInfo:canAccess( fromScope, access )
    if self.symbolInfo:canAccess( fromScope, access ) then
       return self
    end
-   
    return nil
 end
 function AccessSymbolInfo:get_typeInfo(  )
@@ -4627,17 +4418,14 @@ function AccessSymbolInfo:get_mutMode(  )
                      return prefixTypeInfo:get_mutMode()
                   end
                end
-               
             end
          end
-         
       elseif _matchExp[1] == OverrideMut.IMut[1] then
          local _ = _matchExp[2][1]
       
          return MutMode.IMut
       end
    end
-   
    return self.symbolInfo:get_mutMode()
 end
 function AccessSymbolInfo:get_mutable(  )
@@ -4649,7 +4437,6 @@ function AccessSymbolInfo:get_canBeLeft(  )
    if not self.overrideCanBeLeft then
       return false
    end
-   
    return self.symbolInfo:get_canBeLeft()
 end
 function AccessSymbolInfo._setmeta( obj )
@@ -4775,7 +4562,6 @@ function AnonymousSymbolInfo._new( symbolInfo, id )
 end
 function AnonymousSymbolInfo:__init(symbolInfo, id) 
    SymbolInfo.__init( self)
-   
    self.symbolInfo = symbolInfo
    self.anonymousId = id
 end
@@ -4929,11 +4715,8 @@ function AlternateTypeInfo._new( processInfo, scope, belongClassFlag, altIndex, 
 end
 function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo) 
    TypeInfo.__init( self,scope, processInfo)
-   
-   
    self.canDealGenInherit = true
    self.typeId = processInfo:newId( self )
-   
    self.txt = txt
    self.accessMode = accessMode
    self.parentInfo = parentInfo
@@ -4950,7 +4733,6 @@ function AlternateTypeInfo.create( processInfo, belongClassFlag, altIndex, txt, 
    local scope = TypeInfo.createScope( processInfo, nil, ScopeKind.Class, baseTypeInfo, interfaceList )
    local newType = AlternateTypeInfo._new(processInfo, scope, belongClassFlag, altIndex, txt, accessMode, parentInfo, baseTypeInfo, interfaceList, refTypeInfo)
    processInfo:setupImut( newType )
-   
    return newType, scope
 end
 function AlternateTypeInfo:updateParentInfo( typeInfo )
@@ -4990,59 +4772,44 @@ function AlternateTypeInfo:isInheritFrom( processInfo, other, alt2type )
       if self == otherWork:get_srcTypeInfo() then
          return true
       end
-      
-      
       do
          local genType = alt2type[self]
          if genType ~= nil then
             return genType:isInheritFrom( processInfo, otherWork, alt2type )
          end
       end
-      
       if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
          workAlt2type = nil
       else
        
          workAlt2type = alt2type
       end
-      
    else
       workAlt2type = nil
    end
-   
    if self == other:get_srcTypeInfo() then
       return true
    end
-   
-   
    local function check(  )
    
       if self:hasBase(  ) then
          if self.baseTypeInfo:isInheritFrom( processInfo, other, workAlt2type ) then
             return true
          end
-         
       end
-      
-      
       for __index, ifType in ipairs( self.interfaceList ) do
          if ifType:isInheritFrom( processInfo, other, workAlt2type ) then
             return true
          end
-         
       end
-      
       return false
    end
-   
    if check(  ) then
       if workAlt2type ~= nil then
          workAlt2type[self] = other
       end
-      
       return true
    end
-   
    return false
 end
 function AlternateTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
@@ -5050,26 +4817,19 @@ function AlternateTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2typ
    if self == other:get_srcTypeInfo() then
       return true, nil
    end
-   
    if other:get_nilable() then
       return false, "is doesn't support nilable."
    end
-   
    if not self.belongClassFlag then
       do
          local altType = _lune.__Cast( other, 3, AlternateTypeInfo )
          if altType ~= nil then
             if not altType.belongClassFlag and altType.altIndex == self.altIndex then
-               
                return true, nil
             end
-            
          end
       end
-      
    end
-   
-   
    return self:canSetFrom( processInfo, other, canEvalType, alt2type ), nil
 end
 function AlternateTypeInfo:get_display_stirng_with( raw, alt2type )
@@ -5081,12 +4841,9 @@ function AlternateTypeInfo:get_display_stirng_with( raw, alt2type )
             if genType ~= self then
                return genType:get_display_stirng_with( genType:get_rawTxt(), alt2type )
             end
-            
          end
       end
-      
    end
-   
    return self:getTxtWithRaw( raw )
 end
 function AlternateTypeInfo:get_display_stirng(  )
@@ -5098,26 +4855,19 @@ function AlternateTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer
    if self == typeInfo then
       return true
    end
-   
    if not self.belongClassFlag then
       do
          local altType = _lune.__Cast( typeInfo, 3, AlternateTypeInfo )
          if altType ~= nil then
             if not altType.belongClassFlag and altType.altIndex == self.altIndex then
-               
                return true
             end
-            
          end
       end
-      
    end
-   
-   
    if alt2type ~= nil then
       return self:canSetFrom( processInfo, typeInfo, nil, alt2type )
    end
-   
    return false
 end
 function AlternateTypeInfo:hasRouteNamespaceFrom( other )
@@ -5144,7 +4894,6 @@ function AlternateTypeInfo:serialize( stream, serializeInfo )
 
    local parentId = self:getParentId(  )
    stream:write( string.format( '{ skind = %d, parentId = %d, typeId = %d, txt = %q, ', SerializeKind.Alternate, parentId.id, self.typeId.id, self.txt) .. string.format( 'accessMode = %d, baseId = %s, ', self.accessMode, serializeInfo:serializeId( self:get_baseId() )) .. string.format( 'belongClassFlag = %s, altIndex = %d, ', tostring( self.belongClassFlag), self.altIndex) )
-   
    stream:write( self:serializeTypeInfoList( serializeInfo, "ifList = {", self.interfaceList ) )
    stream:write( "}\n" )
 end
@@ -5195,7 +4944,9 @@ end
 
 local boxRootAltType
 
+
 boxRootAltType = AlternateTypeInfo.create( rootProcessInfo, true, 1, "_T", AccessMode.Pub, _moduleObj.headTypeInfo )
+
 
 local BoxTypeInfo = {}
 setmetatable( BoxTypeInfo, { __index = TypeInfo } )
@@ -5208,7 +4959,6 @@ function BoxTypeInfo._new( processInfo, scope, accessMode, boxingType )
 end
 function BoxTypeInfo:__init(processInfo, scope, accessMode, boxingType) 
    TypeInfo.__init( self,scope, processInfo)
-   
    self.boxingType = boxingType
    self.typeId = processInfo:newId( self )
    self.itemTypeInfoList = {boxingType}
@@ -5284,7 +5034,6 @@ function BoxTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
          return self.boxingType:equals( processInfo, boxType.boxingType, alt2type, checkModifer )
       end
    end
-   
    return false
 end
 function BoxTypeInfo:createAlt2typeMap( detectFlag )
@@ -5293,7 +5042,6 @@ function BoxTypeInfo:createAlt2typeMap( detectFlag )
    if self.boxingType ~= boxRootAltType then
       map[boxRootAltType] = self.boxingType
    end
-   
    return map
 end
 function BoxTypeInfo._setmeta( obj )
@@ -5480,18 +5228,14 @@ function GenericTypeInfo._new( processInfo, scope, genSrcTypeInfo, itemTypeInfoL
 end
 function GenericTypeInfo:__init(processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo) 
    TypeInfo.__init( self,scope, processInfo)
-   
    self.imutType = _moduleObj.headTypeInfo
    self.typeId = processInfo:newId( self )
    self.moduleTypeInfo = moduleTypeInfo
-   
    self.itemTypeInfoList = itemTypeInfoList
    self.genSrcTypeInfo = genSrcTypeInfo
-   
    if #genSrcTypeInfo:get_itemTypeInfoList() ~= #itemTypeInfoList then
       Util.err( string.format( "unmatch generic type number -- %d, %d, %s", #genSrcTypeInfo:get_itemTypeInfoList(), #itemTypeInfoList, genSrcTypeInfo:get_display_stirng(  )) )
    end
-   
    local alt2typeMap = {}
    local workAlt2typeMap = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
    local hasAlter = false
@@ -5501,9 +5245,7 @@ function GenericTypeInfo:__init(processInfo, scope, genSrcTypeInfo, itemTypeInfo
       if itemType:applyGeneric( processInfo, workAlt2typeMap, moduleTypeInfo ) ~= itemType then
          hasAlter = true
       end
-      
    end
-   
    self.hasAlter = hasAlter
    self.alt2typeMap = alt2typeMap
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
@@ -5513,7 +5255,6 @@ function GenericTypeInfo.create( processInfo, genSrcTypeInfo, itemTypeInfoList, 
    local scope = TypeInfo.createScope( processInfo, nil, ScopeKind.Class, genSrcTypeInfo, nil )
    local newType = GenericTypeInfo._new(processInfo, scope, genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo)
    processInfo:setupImut( newType )
-   
    return newType, scope
 end
 function GenericTypeInfo:getModule(  )
@@ -5523,18 +5264,13 @@ end
 function GenericTypeInfo:isInheritFrom( processInfo, other, alt2type )
 
    local otherSrc = other:get_genSrcTypeInfo()
-   
    if not self.genSrcTypeInfo:isInheritFrom( processInfo, otherSrc, alt2type ) then
-      
       return false
    end
-   
-   
    local genOther = _lune.__Cast( other, 3, GenericTypeInfo )
    if  nil == genOther then
       local _genOther = genOther
    
-      
       return true
    end
    
@@ -5546,7 +5282,6 @@ function GenericTypeInfo:isInheritFrom( processInfo, other, alt2type )
    end
    
    for __index, altType in ipairs( otherSrc:get_itemTypeInfoList() ) do
-      
       local genType = self.alt2typeMap[altType]
       if  nil == genType then
          local _genType = genType
@@ -5555,7 +5290,6 @@ function GenericTypeInfo:isInheritFrom( processInfo, other, alt2type )
       end
       
       local otherGenType = _lune.unwrap( genOther.alt2typeMap[altType])
-      
       local mode
       
       if self.genSrcTypeInfo:get_canDealGenInherit() then
@@ -5564,13 +5298,10 @@ function GenericTypeInfo:isInheritFrom( processInfo, other, alt2type )
        
          mode = CanEvalType.SetEqEq
       end
-      
       if not otherGenType:canEvalWith( processInfo, genType, mode, workAlt2type ) then
          return false
       end
-      
    end
-   
    return true
 end
 function GenericTypeInfo:get_aliasSrc(  )
@@ -5594,57 +5325,40 @@ function GenericTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type 
    if other:get_nilable() then
       return false, "GenericTypeInfo doesn't support nilable."
    end
-   
-   
    if TypeInfo.isMut( self ) and not TypeInfo.isMut( other ) then
       return false, "unmatch mutable"
    end
-   
-   
    local otherSrc = other:get_srcTypeInfo()
    if self == otherSrc then
       return true, nil
    end
-   
-   
    if self.genSrcTypeInfo:get_kind() == TypeInfoKind.FormFunc then
       for alt, genType in pairs( self.alt2typeMap ) do
          alt2type[alt] = genType
       end
-      
       return self.genSrcTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    end
-   
-   
    local work = otherSrc
    while true do
       if work == _moduleObj.headTypeInfo then
          return false, nil
       end
-      
       for altType, genType in pairs( work:createAlt2typeMap( false ) ) do
          alt2type[altType] = genType
       end
-      
       if self.genSrcTypeInfo:equals( processInfo, work:get_genSrcTypeInfo(), alt2type ) then
          break
       end
-      
       for __index, ifType in ipairs( work:get_interfaceList() ) do
          if self:canEvalWith( processInfo, ifType, canEvalType, alt2type ) then
             return true, nil
          end
-         
       end
-      
       work = work:get_baseTypeInfo()
    end
-   
-   
    do
       local otherGen = _lune.__Cast( work, 3, GenericTypeInfo )
       if otherGen ~= nil then
-         
          local evalType
          
          if canEvalType == CanEvalType.SetOp then
@@ -5654,25 +5368,19 @@ function GenericTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type 
              
                evalType = CanEvalType.SetEqEq
             end
-            
          else
           
             evalType = canEvalType
          end
-         
-         
          for key, val in pairs( self.alt2typeMap ) do
             local otherType = AlternateTypeInfo.getAssign( _lune.unwrap( otherGen.alt2typeMap[key]), alt2type )
             local ret, mess = val:canEvalWith( processInfo, otherType, evalType, alt2type )
             if not ret then
                return false, mess
             end
-            
          end
-         
       end
    end
-   
    return true, nil
 end
 function GenericTypeInfo:equals( processInfo, other, alt2type, checkModifer )
@@ -5680,43 +5388,32 @@ function GenericTypeInfo:equals( processInfo, other, alt2type, checkModifer )
    if self == other then
       return true
    end
-   
    if self:get_kind() ~= self:get_kind() or #self.itemTypeInfoList ~= #other:get_itemTypeInfoList() then
       return false
    end
-   
    if not (_lune.__Cast( other, 3, GenericTypeInfo ) ) then
       return false
    end
-   
-   
    if not self.genSrcTypeInfo:equals( processInfo, other:get_genSrcTypeInfo(), alt2type, checkModifer ) then
       return false
    end
-   
-   
    for index, otherItem in ipairs( other:get_itemTypeInfoList() ) do
       local typeInfo = self.itemTypeInfoList[index]
       if not typeInfo:equals( processInfo, otherItem, alt2type, checkModifer ) then
          return false
       end
-      
    end
-   
    return true
 end
 function GenericTypeInfo:serialize( stream, serializeInfo )
 
    stream:write( string.format( '{ skind = %d, typeId = %d, genSrcTypeId = %s, genTypeList = {', SerializeKind.Generic, self.typeId.id, serializeInfo:serializeId( self.genSrcTypeInfo:get_typeId() )) )
-   
    for index, itemType in ipairs( self.itemTypeInfoList ) do
       if index > 1 then
          stream:write( "," )
       end
-      
       stream:write( serializeInfo:serializeId( itemType:get_typeId() ) )
    end
-   
    stream:write( '} }\n' )
 end
 function GenericTypeInfo:createAlt2typeMap( detectFlag )
@@ -5725,7 +5422,6 @@ function GenericTypeInfo:createAlt2typeMap( detectFlag )
    for genType, typeInfo in pairs( self.alt2typeMap ) do
       map[genType] = typeInfo
    end
-   
    return map
 end
 function GenericTypeInfo._setmeta( obj )
@@ -5904,10 +5600,10 @@ local function isGenericType( typeInfo )
    if _lune.__Cast( typeInfo, 3, GenericTypeInfo ) then
       return true
    end
-   
    return false
 end
 _moduleObj.isGenericType = isGenericType
+
 
 local ModuleTypeInfo = {}
 setmetatable( ModuleTypeInfo, { __index = TypeInfo } )
@@ -5931,16 +5627,12 @@ function ModuleTypeInfo._new( processInfo, scope, externalFlag, txt, parentInfo,
 end
 function ModuleTypeInfo:__init(processInfo, scope, externalFlag, txt, parentInfo, mutable, typeDataAccessor) 
    TypeInfo.__init( self,scope, processInfo)
-   
-   
    self.externalFlag = externalFlag
    self.rawTxt = txt
    self.parentInfo = parentInfo
    self.typeId = processInfo:newId( self )
    self.mutable = mutable
-   
    typeDataAccessor:get_typeData():addChildren( self )
-   
    local parentFull = parentInfo:getParentFullName( _moduleObj.defaultTypeNameCtrl )
    local fullName = string.format( "%s.@%s", parentFull, txt)
    self.fullName = fullName
@@ -6067,9 +5759,9 @@ local function getEnumLiteralVal( obj )
          return val
       end
    end
-   
 end
 _moduleObj.getEnumLiteralVal = getEnumLiteralVal
+
 
 local EnumValInfo = {}
 _moduleObj.EnumValInfo = EnumValInfo
@@ -6119,8 +5811,6 @@ function EnumTypeInfo._new( processInfo, scope, externalFlag, accessMode, txt, p
 end
 function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, valTypeInfo) 
    TypeInfo.__init( self,scope, processInfo)
-   
-   
    self.externalFlag = externalFlag
    self.accessMode = accessMode
    self.rawTxt = txt
@@ -6128,16 +5818,11 @@ function EnumTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    self.typeId = processInfo:newId( self )
    self.name2EnumValInfo = {}
    self.valTypeInfo = valTypeInfo
-   
    self.val2EnumValInfo = {}
-   
    if typeDataAccessor ~= nil then
       typeDataAccessor:get_typeData():addChildren( self )
    end
-   
-   
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
-   
    scope:set_ownerTypeInfo( self )
 end
 function EnumTypeInfo:get_nilableTypeInfoMut(  )
@@ -6181,7 +5866,6 @@ function EnumTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    if self == other:get_srcTypeInfo():get_aliasSrc() then
       return true, nil
    end
-   
    return false, string.format( "%d != %d", self:get_typeId().id, other:get_srcTypeInfo():get_aliasSrc():get_typeId().id)
 end
 function EnumTypeInfo:addEnumValInfo( valInfo )
@@ -6250,8 +5934,6 @@ function AlgeTypeInfo._new( processInfo, scope, externalFlag, accessMode, txt, p
 end
 function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, parentInfo, typeDataAccessor, itemTypeInfoList) 
    TypeInfo.__init( self,scope, processInfo)
-   
-   
    self.itemTypeInfoList = itemTypeInfoList
    self.imutType = _moduleObj.headTypeInfo
    self.externalFlag = externalFlag
@@ -6261,14 +5943,10 @@ function AlgeTypeInfo:__init(processInfo, scope, externalFlag, accessMode, txt, 
    self.typeId = processInfo:newId( self )
    self.valInfoMap = {}
    self.valInfoNum = 0
-   
    if typeDataAccessor ~= nil then
       typeDataAccessor:get_typeData():addChildren( self )
    end
-   
-   
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
-   
    scope:set_ownerTypeInfo( self )
 end
 function AlgeTypeInfo:getValInfo( name )
@@ -6297,7 +5975,6 @@ function AlgeTypeInfo:getTxtWithRaw( rawTxt, typeNameCtrl, importInfo, localFlag
 end
 function AlgeTypeInfo:get_display_stirng_with( raw, alt2type )
 
-   
    return self:get_generics_display_string( raw, alt2type )
 end
 function AlgeTypeInfo:get_display_stirng(  )
@@ -6362,10 +6039,8 @@ function AlgeValInfo:serialize( stream, serializeInfo )
       if index > 1 then
          stream:write( ", " )
       end
-      
       stream:write( string.format( "%s", serializeInfo:serializeId( typeInfo:get_typeId() )) )
    end
-   
    stream:write( "} }" )
 end
 function AlgeValInfo._setmeta( obj )
@@ -6451,8 +6126,6 @@ function TupleTypeInfo._new( processInfo, externalFlag, accessMode, itemTypeInfo
 end
 function TupleTypeInfo:__init(processInfo, externalFlag, accessMode, itemTypeInfoList) 
    TypeInfo.__init( self,nil, processInfo)
-   
-   
    self.itemTypeInfoList = itemTypeInfoList
    self.imutType = _moduleObj.headTypeInfo
    self.externalFlag = externalFlag
@@ -6502,9 +6175,7 @@ function TupleTypeInfo:serialize( stream, serializeInfo )
    local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, 
 accessMode = %d, kind = %d, ]==], SerializeKind.Tuple, self:getParentId(  ).id, self.typeId.id, self.accessMode, TypeInfoKind.Tuple)
    stream:write( txt )
-   
    stream:write( self:serializeTypeInfoList( serializeInfo, "itemTypeId = {", self.itemTypeInfoList ) )
-   
    stream:write( "}\n" )
 end
 function TupleTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
@@ -6596,16 +6267,13 @@ function NormalTypeInfo:getOverridingType(  )
                      return typeInfo
                   end
                end
-               
             else
                self.overridingType = _lune.newAlge( OverridingType.NotOverride)
                return nil
             end
          end
-         
       end
    end
-   
 end
 function NormalTypeInfo:switchScopeTo( scope )
 
@@ -6619,25 +6287,18 @@ function NormalTypeInfo._new( processInfo, finalFlag, abstractFlag, scope, baseT
 end
 function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, baseTypeInfo, interfaceList, autoFlag, externalFlag, staticFlag, accessMode, txt, parentInfo, typeDataAccessor, kind, itemTypeInfoList, argTypeInfoList, retTypeInfoList, mutMode, moduleLang, asyncMode) 
    TypeInfo.__init( self,scope, processInfo)
-   
-   
    self.canDealGenInherit = true
    self.imutType = _moduleObj.headTypeInfo
    self.asyncMode = asyncMode
-   
    if type( kind ) ~= "number" then
       Util.printStackTrace(  )
    end
-   
-   
    if kind == TypeInfoKind.Method and _lune.nilacc( parentInfo, 'hasBase', 'callmtd'  ) then
       self.overridingType = _lune.newAlge( OverridingType.NoReady)
    else
     
       self.overridingType = _lune.newAlge( OverridingType.NotOverride)
    end
-   
-   
    self.requirePath = ""
    self.moduleLang = moduleLang
    self.abstractFlag = abstractFlag
@@ -6655,14 +6316,11 @@ function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, base
    self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
    self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
-   
    local function setupAlt2typeMap(  )
    
-      
       if self.baseTypeInfo == _moduleObj.headTypeInfo and #self.interfaceList == 0 then
          return {}
       end
-      
       local alt2typeMap = {}
       do
          local _switchExp = kind
@@ -6670,12 +6328,10 @@ function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, base
             if #self.itemTypeInfoList ~= #self.baseTypeInfo:get_itemTypeInfoList() then
                Util.err( string.format( "unmatch generic type number -- %d, %d", #self.itemTypeInfoList, #self.baseTypeInfo:get_itemTypeInfoList()) )
             end
-            
             for index, appyType in ipairs( self.itemTypeInfoList ) do
                local genType = self.baseTypeInfo:get_itemTypeInfoList()[index]
                alt2typeMap[genType] = appyType
             end
-            
          elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
             for __index, ifType in ipairs( self.interfaceList ) do
                do
@@ -6684,20 +6340,14 @@ function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, base
                      for altType, genType in pairs( genericType:createAlt2typeMap( false ) ) do
                         alt2typeMap[altType] = genType
                      end
-                     
                   end
                end
-               
             end
-            
          end
       end
-      
       return alt2typeMap
    end
-   
    self.alt2typeMap = setupAlt2typeMap(  )
-   
    self.typeId = processInfo:newId( self )
    if kind == TypeInfoKind.Root then
    else
@@ -6705,10 +6355,7 @@ function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, base
       if typeDataAccessor ~= nil then
          typeDataAccessor:get_typeData():addChildren( self )
       end
-      
-      
       local hasNilable = false
-      
       do
          local _switchExp = (kind )
          if _switchExp == TypeInfoKind.Prim or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set or _switchExp == TypeInfoKind.Map or _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.Stem or _switchExp == TypeInfoKind.Module or _switchExp == TypeInfoKind.IF then
@@ -6717,16 +6364,13 @@ function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, base
             hasNilable = true
          end
       end
-      
       if hasNilable then
          self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
       else
        
          self.nilableTypeInfo = self
       end
-      
    end
-   
 end
 function NormalTypeInfo:cloneForMeta( processInfo )
 
@@ -6740,7 +6384,6 @@ function NormalTypeInfo:createAlt2typeMap( detectFlag )
    for genType, typeInfo in pairs( self.alt2typeMap ) do
       map[genType] = typeInfo
    end
-   
    return map
 end
 function NormalTypeInfo:get_nilable(  )
@@ -6770,7 +6413,6 @@ end
 function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
 
    local name = self:get_generics_display_string( raw, alt2type )
-   
    do
       local _switchExp = self.kind
       if _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.Form or _switchExp == TypeInfoKind.FormFunc or _switchExp == TypeInfoKind.Method or _switchExp == TypeInfoKind.Macro then
@@ -6779,10 +6421,8 @@ function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
             if index ~= 1 then
                txt = txt .. ", "
             end
-            
             txt = txt .. argType:get_display_stirng_with( argType:get_rawTxt(), alt2type )
          end
-         
          txt = txt .. ")"
          for index, retType in ipairs( self.retTypeInfoList ) do
             if index == 1 then
@@ -6791,16 +6431,11 @@ function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
              
                txt = txt .. ", "
             end
-            
             txt = txt .. retType:get_display_stirng_with( retType:get_rawTxt(), alt2type )
          end
-         
-         
          name = txt
       end
    end
-   
-   
    return name
 end
 function NormalTypeInfo:get_display_stirng(  )
@@ -6812,10 +6447,7 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
    if self.typeId.id == _moduleObj.userRootId then
       return 
    end
-   
-   
    local parentId = self:getParentId(  )
-   
    local txt = string.format( [==[{ skind=%d, parentId = %d, typeId = %d, baseId = %s, txt = '%s',
   finalFlag = %s,
   abstractFlag = %s, staticFlag = %s, accessMode = %d, kind = %d, mutMode = %d,
@@ -6827,21 +6459,15 @@ function NormalTypeInfo:serialize( stream, serializeInfo )
          txt = txt .. string.format( 'moduleLang = %d, ', _exp)
       end
    end
-   
    if self.requirePath ~= "" then
       txt = txt .. string.format( 'requirePath = "%s", ', self.requirePath)
    end
-   
-   
    local children = {}
    for __index, child in ipairs( self:get_children() ) do
       if serializeInfo:isValidChildren( child:get_typeId() ) then
          table.insert( children, child )
       end
-      
    end
-   
-   
    stream:write( txt .. self:serializeTypeInfoList( serializeInfo, "itemTypeId = {", self.itemTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "ifList = {", self.interfaceList ) .. self:serializeTypeInfoList( serializeInfo, "argTypeId = {", self.argTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "retTypeId = {", self.retTypeInfoList ) .. self:serializeTypeInfoList( serializeInfo, "children = {", children, true ) .. "}\n" )
 end
 function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer )
@@ -6849,26 +6475,18 @@ function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer
    if self.typeId:equals( typeInfo:get_typeId() ) then
       return true
    end
-   
-   
    if typeInfo:get_kind() == TypeInfoKind.Alternate then
       return typeInfo:equals( processInfo, self, alt2type, checkModifer )
    end
-   
-   
    do
       local aliasType = _lune.__Cast( typeInfo, 3, AliasTypeInfo )
       if aliasType ~= nil then
          return aliasType:equals( processInfo, self, alt2type, checkModifer )
       end
    end
-   
-   
    if self.kind ~= typeInfo:get_kind() or self.staticFlag ~= typeInfo:get_staticFlag() or self.autoFlag ~= typeInfo:get_autoFlag() or self:get_nilable() ~= typeInfo:get_nilable() or self.rawTxt ~= typeInfo:get_rawTxt() or self.baseTypeInfo ~= typeInfo:get_baseTypeInfo() then
       return false
    end
-   
-   
    if self.accessMode ~= typeInfo:get_accessMode() or self.parentInfo ~= typeInfo:get_parentInfo() then
       do
          local _switchExp = self.kind
@@ -6878,40 +6496,27 @@ function NormalTypeInfo:equalsSub( processInfo, typeInfo, alt2type, checkModifer
                return false
          end
       end
-      
    end
-   
-   
    do
       if #self.itemTypeInfoList ~= #typeInfo:get_itemTypeInfoList() then
          return false
       end
-      
       for index, item in ipairs( self.itemTypeInfoList ) do
          if not item:equals( processInfo, typeInfo:get_itemTypeInfoList()[index], alt2type, checkModifer ) then
             return false
          end
-         
       end
-      
    end
-   
-   
    do
       if #self.retTypeInfoList ~= #typeInfo:get_retTypeInfoList() then
          return false
       end
-      
       for index, item in ipairs( self.retTypeInfoList ) do
          if not item:equals( processInfo, typeInfo:get_retTypeInfoList()[index], alt2type, checkModifer ) then
             return false
          end
-         
       end
-      
    end
-   
-   
    return true
 end
 function NormalTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
@@ -7001,12 +6606,10 @@ end
 function ProcessInfo:duplicate(  )
 
    local processInfo = ProcessInfo._new(self.validCheckingMutable, self.idProvBase:clone(  ), self.validExtType, self.validDetailError, (_lune.unwrap( self.typeInfo2Map) ):clone(  ))
-   
    processInfo.orgInfo = self
    processInfo.idProvExt = self.idProvExt:clone(  )
    processInfo.idProvSym = self.idProvSym:clone(  )
    processInfo.idProvScope = self.idProvScope:clone(  )
-   
    for typeId, typeInfo in pairs( self.id2TypeInfo ) do
       local dupTypeInfo
       
@@ -7021,16 +6624,13 @@ function ProcessInfo:duplicate(  )
                   dupTypeInfo = typeInfo
                end
             end
-            
          else 
             
                dupTypeInfo = typeInfo
          end
       end
-      
       processInfo.id2TypeInfo[typeId] = dupTypeInfo
    end
-   
    return processInfo
 end
 
@@ -7047,6 +6647,7 @@ local function isExtType( typeInfo )
 end
 _moduleObj.isExtType = isExtType
 
+
 function Scope:addOverrideImut( processInfo, symbolInfo )
 
    local typeInfo
@@ -7057,8 +6658,6 @@ function Scope:addOverrideImut( processInfo, symbolInfo )
     
       typeInfo = symbolInfo:get_typeInfo()
    end
-   
-   
    self.symbol2SymbolInfoMap[symbolInfo:get_name()] = AccessSymbolInfo._new(processInfo, symbolInfo, _lune.newAlge( OverrideMut.IMut, {typeInfo}), false)
 end
 
@@ -7068,19 +6667,21 @@ local function addBuiltin( typeInfo, scope )
    builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo._new(typeInfo, nil, scope)
 end
 _moduleObj.addBuiltin = addBuiltin
+
 local function addBuiltinMut( typeInfo, scope )
 
    builtInTypeIdSetWork[typeInfo:get_typeId().id] = BuiltinTypeInfo._new(typeInfo, typeInfo, scope)
 end
 _moduleObj.addBuiltinMut = addBuiltinMut
+
 addBuiltinMut( headTypeInfoMut, rootScope )
+
 
 function TypeInfo.getBuiltinInfo( typeInfo )
 
    if typeInfo:get_typeId():get_processInfo() ~= rootProcessInfoRo then
       Util.err( string.format( "not found builtinMut, mismatch processInfo-- %s (%d)", typeInfo:getTxt(  ), typeInfo:get_typeId().id) )
    end
-   
    local info = builtInTypeIdSetWork[typeInfo:get_typeId().id]
    if  nil == info then
       local _info = info
@@ -7106,6 +6707,7 @@ local function getBuiltinMut( typeInfo )
 end
 _moduleObj.getBuiltinMut = getBuiltinMut
 
+
 local function registBuiltin( idName, typeTxt, kind, worktypeInfo, typeInfoMut, nilableTypeInfo, scope )
 
    local typeInfo = worktypeInfo
@@ -7116,36 +6718,27 @@ local function registBuiltin( idName, typeTxt, kind, worktypeInfo, typeInfoMut, 
    end
    
    local registScope = scope ~= nil
-   
    sym2builtInTypeMapWork[typeTxt] = NormalSymbolInfo._new(rootProcessInfo, SymbolKind.Typ, false, false, rootScope, AccessMode.Pub, false, typeTxt, nil, typeInfo, MutMode.IMut, true, false)
    if nilableTypeInfo ~= _moduleObj.headTypeInfo then
       sym2builtInTypeMapWork[typeTxt .. "!"] = NormalSymbolInfo._new(rootProcessInfo, SymbolKind.Typ, false, kind == TypeInfoKind.Func, rootScope, AccessMode.Pub, false, typeTxt, nil, nilableTypeInfo, MutMode.IMut, true, false)
    end
-   
    addBuiltin( typeInfo, scope )
    if typeInfoMut ~= nil then
       addBuiltinMut( typeInfoMut, scope )
    end
-   
-   
    local imutType = rootProcessInfo:createModifier( typeInfo, MutMode.IMut )
    addBuiltin( imutType, scope )
-   
    if typeInfo:get_nilableTypeInfo() ~= _moduleObj.headTypeInfo and typeInfo:get_nilableTypeInfo() ~= typeInfo then
       addBuiltin( typeInfo:get_nilableTypeInfo(), scope )
-      
       local nilImutType = rootProcessInfo:createModifier( typeInfo:get_nilableTypeInfo(), MutMode.IMut )
       addBuiltin( nilImutType, scope )
    end
-   
-   
    if registScope then
       rootScope:addClass( rootProcessInfo, typeTxt, nil, typeInfo )
    end
-   
-   
    return typeInfo
 end
+
 
 function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
 
@@ -7159,10 +6752,7 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
             retTypeList = {_exp}
          end
       end
-      
    end
-   
-   
    local scope = nil
    do
       local _switchExp = kind
@@ -7180,12 +6770,9 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
                   scopeKind = ScopeKind.Other
             end
          end
-         
          scope = Scope._new(rootProcessInfo, rootScope, scopeKind, nil)
       end
    end
-   
-   
    local canDealGenInherit
    
    do
@@ -7197,8 +6784,6 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
             canDealGenInherit = true
       end
    end
-   
-   
    local genTypeList = {}
    do
       local _switchExp = kind
@@ -7207,21 +6792,17 @@ function NormalTypeInfo.createBuiltin( idName, typeTxt, kind, typeDDD, ifList )
          if not canDealGenInherit then
             alterType:set_canDealGenInherit( false )
          end
-         
          table.insert( genTypeList, alterType )
       elseif _switchExp == TypeInfoKind.Map then
          table.insert( genTypeList, (rootProcessInfo:createAlternate( true, 1, "K", AccessMode.Pri, _moduleObj.headTypeInfo ) ) )
          table.insert( genTypeList, (rootProcessInfo:createAlternate( true, 2, "V", AccessMode.Pri, _moduleObj.headTypeInfo ) ) )
       end
    end
-   
    local info = NormalTypeInfo._new(rootProcessInfo, kind ~= TypeInfoKind.IF, false, scope, nil, ifList, false, false, false, AccessMode.Pub, typeTxt, headTypeInfoMut, headTypeInfoMut, kind, genTypeList, argTypeList, retTypeList, MutMode.Mut, nil, Async.Async)
    rootProcessInfo:setupImut( info )
    if not canDealGenInherit then
       info:set_canDealGenInherit( false )
    end
-   
-   
    registBuiltin( idName, typeTxt, kind, info, info, _moduleObj.headTypeInfo, scope )
    return info
 end
@@ -7230,91 +6811,122 @@ end
 local builtinTypeNone = NormalTypeInfo.createBuiltin( "__None", "", TypeInfoKind.Prim )
 _moduleObj.builtinTypeNone = builtinTypeNone
 
+
 local builtinTypeEmpty = NormalTypeInfo.createBuiltin( "__Empty", "::", TypeInfoKind.Prim )
 _moduleObj.builtinTypeEmpty = builtinTypeEmpty
+
 
 local builtinTypeNeverRet = NormalTypeInfo.createBuiltin( "__NRet", "__", TypeInfoKind.Prim )
 _moduleObj.builtinTypeNeverRet = builtinTypeNeverRet
 
+
 local builtinTypeStem = NormalTypeInfo.createBuiltin( "Stem", "stem", TypeInfoKind.Stem )
 _moduleObj.builtinTypeStem = builtinTypeStem
+
 
 local builtinTypeStem_ = _moduleObj.builtinTypeStem:get_nilableTypeInfo()
 _moduleObj.builtinTypeStem_ = builtinTypeStem_
 
 
+
 local builtinTypeBool = NormalTypeInfo.createBuiltin( "Bool", "bool", TypeInfoKind.Prim )
 _moduleObj.builtinTypeBool = builtinTypeBool
+
 
 local builtinTypeInt = NormalTypeInfo.createBuiltin( "Int", "int", TypeInfoKind.Prim )
 _moduleObj.builtinTypeInt = builtinTypeInt
 
+
 local builtinTypeReal = NormalTypeInfo.createBuiltin( "Real", "real", TypeInfoKind.Prim )
 _moduleObj.builtinTypeReal = builtinTypeReal
+
 
 local builtinTypeChar = NormalTypeInfo.createBuiltin( "char", "__char", TypeInfoKind.Prim )
 _moduleObj.builtinTypeChar = builtinTypeChar
 
+
 local builtinTypeMapping = NormalTypeInfo.createBuiltin( "Mapping", "Mapping", TypeInfoKind.IF )
 _moduleObj.builtinTypeMapping = builtinTypeMapping
+
 
 local builtinTypeRunner = NormalTypeInfo.createBuiltin( "__Runner", "__Runner", TypeInfoKind.IF )
 _moduleObj.builtinTypeRunner = builtinTypeRunner
 
+
 local builtinTypeProcessor = NormalTypeInfo.createBuiltin( "__Processor", "__Processor", TypeInfoKind.IF, nil, {_moduleObj.builtinTypeRunner} )
 _moduleObj.builtinTypeProcessor = builtinTypeProcessor
+
 
 local builtinTypeAsyncItem = NormalTypeInfo.createBuiltin( "__AsyncItem", "__AsyncItem", TypeInfoKind.IF )
 _moduleObj.builtinTypeAsyncItem = builtinTypeAsyncItem
 
+
 local builtinTypeAbsImmut = NormalTypeInfo.createBuiltin( "__absimmut", "__absimmut", TypeInfoKind.IF )
 _moduleObj.builtinTypeAbsImmut = builtinTypeAbsImmut
+
 
 local builtinTypeString = NormalTypeInfo.createBuiltin( "String", "str", TypeInfoKind.Class, nil, {_moduleObj.builtinTypeMapping} )
 _moduleObj.builtinTypeString = builtinTypeString
 
+
 local builtinTypeMap = NormalTypeInfo.createBuiltin( "Map", "Map", TypeInfoKind.Map )
 _moduleObj.builtinTypeMap = builtinTypeMap
+
 
 local builtinTypeMap_ = NormalTypeInfo.createBuiltin( "_Map", "_Map", TypeInfoKind.Map )
 _moduleObj.builtinTypeMap_ = builtinTypeMap_
 
+
 local builtinTypeMap__ = NormalTypeInfo.createBuiltin( "__Map", "__Map", TypeInfoKind.Map )
 _moduleObj.builtinTypeMap__ = builtinTypeMap__
+
 
 local builtinTypeSet = NormalTypeInfo.createBuiltin( "Set", "Set", TypeInfoKind.Set )
 _moduleObj.builtinTypeSet = builtinTypeSet
 
+
 local builtinTypeList = NormalTypeInfo.createBuiltin( "List", "List", TypeInfoKind.List )
 _moduleObj.builtinTypeList = builtinTypeList
+
 
 local builtinTypeList_ = NormalTypeInfo.createBuiltin( "_List", "_List", TypeInfoKind.List )
 _moduleObj.builtinTypeList_ = builtinTypeList_
 
+
 local builtinTypeList__ = NormalTypeInfo.createBuiltin( "__List", "__List", TypeInfoKind.List )
 _moduleObj.builtinTypeList__ = builtinTypeList__
+
 
 local builtinTypeSet_ = NormalTypeInfo.createBuiltin( "_Set", "_Set", TypeInfoKind.Set )
 _moduleObj.builtinTypeSet_ = builtinTypeSet_
 
+
 local builtinTypeSet__ = NormalTypeInfo.createBuiltin( "__Set", "__Set", TypeInfoKind.Set )
 _moduleObj.builtinTypeSet__ = builtinTypeSet__
+
 
 local builtinTypeArray = NormalTypeInfo.createBuiltin( "Array", "Array", TypeInfoKind.Array )
 _moduleObj.builtinTypeArray = builtinTypeArray
 
 
+
 immutableTypeSetWork[_moduleObj.builtinTypeBool]= true
+
 immutableTypeSetWork[_moduleObj.builtinTypeInt]= true
+
 immutableTypeSetWork[_moduleObj.builtinTypeReal]= true
+
 immutableTypeSetWork[_moduleObj.builtinTypeChar]= true
+
 immutableTypeSetWork[_moduleObj.builtinTypeString]= true
+
 
 local function isClass( typeInfo )
 
    return typeInfo:get_kind() == TypeInfoKind.Class and typeInfo ~= _moduleObj.builtinTypeString
 end
 _moduleObj.isClass = isClass
+
 
 function TypeInfo.canBeAsyncParam( fromScope, typeInfo )
 
@@ -7324,17 +6936,13 @@ function TypeInfo.canBeAsyncParam( fromScope, typeInfo )
          if not srcType:get_finalFlag() then
             return false, string.format( "not use non final class -- %s", srcType:getTxt(  ))
          end
-         
          local classTypeInfo = fromScope:getNamespaceTypeInfo(  )
          while classTypeInfo:get_kind() ~= TypeInfoKind.Class do
             classTypeInfo = classTypeInfo:get_parentInfo()
          end
-         
          if classTypeInfo:get_typeId():equals( srcType:get_typeId() ) then
-            
             return false, string.format( "not use same class -- %s", classTypeInfo:getTxt(  ))
          end
-         
          do
             local scope = srcType:get_scope()
             if scope ~= nil then
@@ -7344,42 +6952,33 @@ function TypeInfo.canBeAsyncParam( fromScope, typeInfo )
                   do
                      local _switchExp = symbolInfo:get_kind()
                      if _switchExp == SymbolKind.Mbr then
-                        
                         cantBeAsync = string.format( "can''t have non private member -- %s", symbolInfo:get_name())
                         return false
                      elseif _switchExp == SymbolKind.Mtd then
                         if symbolInfo:get_name() ~= "__init" and symbolInfo:get_typeInfo():get_asyncMode() ~= Async.Noasync then
-                           
                            cantBeAsync = string.format( "can''t have non __noasync method -- %s", symbolInfo:get_typeInfo():getTxt(  ))
                            return false
                         end
-                        
                      end
                   end
-                  
                   return true
-               end )
+               end
+                )
                if cantBeAsync ~= nil then
                   return false, cantBeAsync
                end
-               
                return true, ""
             end
          end
-         
       end
-      
       return false, ""
    end
-   
    for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
       local result, mess = TypeInfo.canBeAsyncParam( fromScope, itemType )
       if not result then
          return false, mess
       end
-      
    end
-   
    return true, ""
 end
 
@@ -7396,7 +6995,6 @@ function AlternateTypeInfo:canSetFrom( processInfo, other, canEvalType, alt2type
    if self == otherWork then
       return true
    end
-   
    do
       local refTypeInfo = self.refTypeInfo
       if refTypeInfo ~= nil then
@@ -7404,80 +7002,58 @@ function AlternateTypeInfo:canSetFrom( processInfo, other, canEvalType, alt2type
             local ret = refTypeInfo:canEvalWith( processInfo, otherWork, canEvalType, alt2type )
             return ret
          end
-         
          return refTypeInfo:equals( processInfo, otherWork, alt2type )
       end
    end
-   
-   
    do
       local genType = alt2type[self]
       if genType ~= nil then
          if canEvalType ~= nil then
             return (genType:canEvalWith( processInfo, otherWork, canEvalType, alt2type ) )
          end
-         
          return genType:equals( processInfo, otherWork, alt2type )
       end
    end
-   
    local workAlt2type
    
    if not CanEvalCtrlTypeInfo.isValidApply( alt2type ) then
       if not isClass( otherWork ) and otherWork:get_kind() ~= TypeInfoKind.IF then
          return false
       end
-      
       workAlt2type = CanEvalCtrlTypeInfo.createDefaultAlt2typeMap( false )
-      
       local function checkInherit(  )
       
          if self:hasBase(  ) then
             if other:isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) then
                return true
             end
-            
          end
-         
-         
          for __index, ifType in ipairs( self.interfaceList ) do
             if other:isInheritFrom( processInfo, ifType, workAlt2type ) then
                return true
             end
-            
          end
-         
          return false
       end
-      
       if checkInherit(  ) then
          workAlt2type[self] = otherWork
          return true
       end
-      
       return false
    else
     
       workAlt2type = alt2type
    end
-   
-   
    if self:hasBase(  ) then
       if not other:isInheritFrom( processInfo, self.baseTypeInfo, workAlt2type ) then
          return false
       end
-      
    end
-   
-   
    for __index, ifType in ipairs( self.interfaceList ) do
       if not other:isInheritFrom( processInfo, ifType, workAlt2type ) then
          return false
       end
-      
    end
-   
-   
    workAlt2type[self] = otherWork
    return true
 end
@@ -7488,7 +7064,6 @@ function NormalSymbolInfo:set_typeInfo( typeInfo )
    if self.name == "_" then
       return 
    end
-   
    self.typeInfo = typeInfo
 end
 
@@ -7525,13 +7100,12 @@ LuavalConvKind.__allList[2] = LuavalConvKind.ToLua
 local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilTypeInfo._new(rootProcessInfo), _moduleObj.headTypeInfo, nil )
 _moduleObj.builtinTypeNil = builtinTypeNil
 
+
 local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
 
-   
    if isExtType( typeInfo ) then
       return nil, true
    end
-   
    local mess = string.format( "not support to use the type as Luaval -- %s", typeInfo:getTxt(  ))
    do
       local _switchExp = typeInfo:get_kind()
@@ -7543,11 +7117,9 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
          if not validToCheck then
             return nil, false
          end
-         
          if convFlag ~= LuavalConvKind.InLua then
             return mess, false
          end
-         
          return nil, false
       elseif _switchExp == TypeInfoKind.Stem then
          return nil, false
@@ -7556,36 +7128,28 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
             if not validToCheck then
                return nil, false
             end
-            
             if convFlag ~= LuavalConvKind.InLua then
                return mess, false
             end
-            
             return nil, false
          end
-         
          return nil, true
       elseif _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Map then
          if not validToCheck then
             return nil, false
          end
-         
          if convFlag ~= LuavalConvKind.ToLua and isMutable( typeInfo:get_mutMode() ) then
             return "not support mutable collecion. " .. mess, false
          end
-         
-         
          local canConv = true
          for __index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
             local err, work = failCreateLuavalWith( itemType, convFlag, validToCheck )
             if err ~= nil then
                return err, false
             end
-            
             if not work then
                canConv = false
             end
-            
          end
          
          
@@ -7595,26 +7159,21 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
          if not validToCheck then
             return nil, false
          end
-         
          if convFlag ~= LuavalConvKind.InLua then
             return mess, false
          end
-         
          if #typeInfo:get_itemTypeInfoList() ~= 0 then
             return mess, false
          end
-         
          local canConv = true
          for __index, itemType in ipairs( typeInfo:get_argTypeInfoList() ) do
             local err, work = failCreateLuavalWith( itemType, convFlag, validToCheck )
             if err ~= nil then
                return err, false
             end
-            
             if not work then
                canConv = false
             end
-            
          end
          
          
@@ -7623,11 +7182,9 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
             if err ~= nil then
                return err, false
             end
-            
             if not work then
                canConv = false
             end
-            
          end
          
          
@@ -7635,10 +7192,10 @@ local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
          return nil, canConv
       end
    end
-   
    return string.format( "not support -- %s:%s", typeInfo:getTxt(  ), TypeInfoKind:_getTxt( typeInfo:get_kind())
    ), false
 end
+
 
 function AlternateTypeInfo.getAssign( typeInfo, alt2type )
 
@@ -7655,8 +7212,6 @@ function AlternateTypeInfo.getAssign( typeInfo, alt2type )
          return refTypeInfo
       end
    end
-   
-   
    local otherWork = typeInfo
    while true do
       do
@@ -7668,14 +7223,11 @@ function AlternateTypeInfo.getAssign( typeInfo, alt2type )
              
                return otherWork
             end
-            
          else
             return otherWork
          end
       end
-      
    end
-   
 end
 
 
@@ -7687,22 +7239,21 @@ local function isStruct( typeInfo )
          if typeInfo == _moduleObj.builtinTypeString then
             return false
          end
-         
          if typeInfo:get_baseTypeInfo() ~= _moduleObj.headTypeInfo or #typeInfo:get_interfaceList() ~= 0 or #typeInfo:get_children() ~= 1 then
             return false
          end
-         
          return true
       end
    end
-   
    return false
 end
 _moduleObj.isStruct = isStruct
 
+
 local builtinTypeBox
 
 _moduleObj.builtinTypeBox = builtinTypeBox
+
 
 do
    local boxRootScope = Scope._new(rootProcessInfo, rootScope, ScopeKind.Class, nil)
@@ -7718,10 +7269,10 @@ local function isConditionalbe( processInfo, typeInfo )
    if typeInfo:get_nilable() or typeInfo:equals( processInfo, _moduleObj.builtinTypeBool, nil ) then
       return true
    end
-   
    return false
 end
 _moduleObj.isConditionalbe = isConditionalbe
+
 
 function ProcessInfo:createBox( accessMode, nonnilableType )
 
@@ -7731,11 +7282,8 @@ function ProcessInfo:createBox( accessMode, nonnilableType )
          return boxType
       end
    end
-   
-   
    local boxType = BoxTypeInfo._new(self, nil, accessMode, nonnilableType)
    self:setupImut( boxType )
-   
    self:get_typeInfo2Map().BoxMap[nonnilableType] = boxType
    return boxType
 end
@@ -7747,8 +7295,6 @@ function BoxTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
    if typeInfo == self.boxingType then
       return self
    end
-   
-   
    return nil
 end
 
@@ -7758,6 +7304,7 @@ end
 function ProcessInfo:createSet_( canDealGenInherit, accessMode, parentInfo, itemTypeInfo, mutMode )
 
    local tmpMutMode
+   
    
    if isMutable( mutMode ) then
       tmpMutMode = mutMode
@@ -7776,19 +7323,19 @@ function ProcessInfo:createSet_( canDealGenInherit, accessMode, parentInfo, item
        
          baseType = _moduleObj.builtinTypeSet__
       end
-      
-      
       local typeInfo = NormalTypeInfo._new(self, true, false, nil, baseType, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Set, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
       if not canDealGenInherit then
          typeInfo:set_canDealGenInherit( false )
       end
-      
       return typeInfo
    end
    
    
+   
    local typeInfo = newTypeFunc( tmpMutMode )
+   
    self:setupImut( typeInfo )
+   
    
    if isMutable( mutMode ) then
       return typeInfo
@@ -7796,11 +7343,13 @@ function ProcessInfo:createSet_( canDealGenInherit, accessMode, parentInfo, item
    
    return self:createModifier( typeInfo, mutMode )
    
+   
 end
 
 function ProcessInfo:createList_( canDealGenInherit, accessMode, parentInfo, itemTypeInfo, mutMode )
 
    local tmpMutMode
+   
    
    if isMutable( mutMode ) then
       tmpMutMode = mutMode
@@ -7819,19 +7368,19 @@ function ProcessInfo:createList_( canDealGenInherit, accessMode, parentInfo, ite
        
          baseType = _moduleObj.builtinTypeList__
       end
-      
-      
       local typeInfo = NormalTypeInfo._new(self, true, false, nil, baseType, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.List, itemTypeInfo, nil, nil, workMutMode, nil, Async.Async)
       if not canDealGenInherit then
          typeInfo:set_canDealGenInherit( false )
       end
-      
       return typeInfo
    end
    
    
+   
    local typeInfo = newTypeFunc( tmpMutMode )
+   
    self:setupImut( typeInfo )
+   
    
    if isMutable( mutMode ) then
       return typeInfo
@@ -7839,12 +7388,14 @@ function ProcessInfo:createList_( canDealGenInherit, accessMode, parentInfo, ite
    
    return self:createModifier( typeInfo, mutMode )
    
+   
 end
 
 
 function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode )
 
    local tmpMutMode
+   
    
    if isMutable( mutMode ) then
       tmpMutMode = mutMode
@@ -7859,8 +7410,11 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    end
    
    
+   
    local typeInfo = newTypeFunc( tmpMutMode )
+   
    self:setupImut( typeInfo )
+   
    
    if isMutable( mutMode ) then
       return typeInfo
@@ -7868,12 +7422,14 @@ function ProcessInfo:createArray( accessMode, parentInfo, itemTypeInfo, mutMode 
    
    return self:createModifier( typeInfo, mutMode )
    
+   
 end
 
 
 function ProcessInfo:createMap_( canDealGenInherit, accessMode, parentInfo, keyTypeInfo, valTypeInfo, mutMode )
 
    local tmpMutMode
+   
    
    if isMutable( mutMode ) then
       tmpMutMode = mutMode
@@ -7892,19 +7448,19 @@ function ProcessInfo:createMap_( canDealGenInherit, accessMode, parentInfo, keyT
        
          baseType = _moduleObj.builtinTypeMap__
       end
-      
-      
       local typeInfo = NormalTypeInfo._new(self, true, false, nil, baseType, nil, false, false, false, AccessMode.Pub, baseType:get_rawTxt(), self:get_dummyParentType(), self:get_dummyParentType(), TypeInfoKind.Map, {keyTypeInfo, valTypeInfo}, nil, nil, workMutMode, nil, Async.Async)
       if not canDealGenInherit then
          typeInfo:set_canDealGenInherit( false )
       end
-      
       return typeInfo
    end
    
    
+   
    local typeInfo = newTypeFunc( tmpMutMode )
+   
    self:setupImut( typeInfo )
+   
    
    if isMutable( mutMode ) then
       return typeInfo
@@ -7912,21 +7468,17 @@ function ProcessInfo:createMap_( canDealGenInherit, accessMode, parentInfo, keyT
    
    return self:createModifier( typeInfo, mutMode )
    
+   
 end
 
 
 function ProcessInfo:createModule( scope, parentInfo, typeDataAccessor, externalFlag, moduleName, mutable )
 
-   
    if Tokenizer.isLuaKeyword( moduleName ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", moduleName) )
    end
-   
-   
    local info = ModuleTypeInfo._new(self, scope, externalFlag, moduleName, parentInfo, mutable, typeDataAccessor)
-   
    self:setupImut( info )
-   
    return info
 end
 
@@ -7936,33 +7488,24 @@ function ProcessInfo:createClassAsync( classFlag, finalFlag, abstractFlag, scope
    if Tokenizer.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
-   
-   
    local itemTypeList = {}
    for __index, val in ipairs( genTypeList ) do
       table.insert( itemTypeList, val )
    end
-   
    local info = NormalTypeInfo._new(self, finalFlag, abstractFlag, scope, baseInfo, interfaceList, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, classFlag and TypeInfoKind.Class or TypeInfoKind.IF, itemTypeList, nil, nil, MutMode.Mut, nil, Async.Async)
    self:setupImut( info )
-   
    for __index, genType in ipairs( genTypeList ) do
       genType:updateParentInfo( info )
    end
-   
-   
    return info
 end
 
 
 function ProcessInfo:createExtModule( scope, parentInfo, typeDataAccessor, externalFlag, accessMode, className, moduleLang, requirePath )
 
-   
    if Tokenizer.isLuaKeyword( className ) then
       Util.err( string.format( "This symbol can not use for a class or script file. -- %s", className) )
    end
-   
-   
    local info = NormalTypeInfo._new(self, true, false, scope, nil, nil, false, externalFlag, false, accessMode, className, parentInfo, typeDataAccessor, TypeInfoKind.ExtModule, nil, nil, nil, MutMode.Mut, moduleLang, Async.Noasync)
    self:setupImut( info )
    info:set_requirePath( requirePath )
@@ -7975,11 +7518,8 @@ function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, pa
    if not builtinFlag and Tokenizer.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
    end
-   
-   
    local info = NormalTypeInfo._new(self, true, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutMode, nil, asyncMode)
    self:setupImut( info )
-   
    if altTypeList ~= nil then
       for __index, genType in ipairs( altTypeList ) do
          do
@@ -7988,12 +7528,8 @@ function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, pa
                _exp:updateParentInfo( info )
             end
          end
-         
       end
-      
    end
-   
-   
    return info
 end
 
@@ -8002,11 +7538,11 @@ local builtinTypeLnsLoad = rootProcessInfo:createFuncAsync( false, true, nil, Ty
 _moduleObj.builtinTypeLnsLoad = builtinTypeLnsLoad
 
 
+
 function ProcessInfo:createTuple( externalFlag, accessMode, itemTypeInfoList )
 
    local info = TupleTypeInfo.create( self, externalFlag, accessMode, itemTypeInfoList )
    self:setupImut( info )
-   
    return info
 end
 
@@ -8015,7 +7551,6 @@ function ProcessInfo:createDummyNameSpace( scope, parentInfo, asyncMode )
 
    local info = NormalTypeInfo._new(self, true, false, scope, nil, nil, true, false, true, AccessMode.Local, string.format( "__scope_%d", scope:get_scopeId()), parentInfo, self:get_dummyParentType(), TypeInfoKind.Func, {}, {}, {}, MutMode.IMut, nil, asyncMode)
    self:setupImut( info )
-   
    return info
 end
 
@@ -8032,8 +7567,6 @@ function ModifierTypeInfo:get_nonnilableType(  )
    if TypeInfo.isMut( self ) or not TypeInfo.isMut( orgType ) then
       return orgType
    end
-   
-   
    return orgType:get_imutType()
 end
 
@@ -8044,8 +7577,6 @@ function ModifierTypeInfo:get_nilableTypeInfo(  )
    if not TypeInfo.isMut( orgType ) then
       return orgType
    end
-   
-   
    return orgType:get_imutType()
 end
 
@@ -8080,8 +7611,6 @@ function Scope:addAliasForType( processInfo, name, pos, typeInfo )
          skind = SymbolKind.Mac
       end
    end
-   
-   
    return self:add( processInfo, skind, false, canBeRight, name, pos, typeInfo, typeInfo:get_accessMode(), true, MutMode.IMut, true, false )
 end
 
@@ -8116,9 +7645,7 @@ function DDDTypeInfo._new( processInfo, typeInfo, externalFlag, extOrgDDType )
 end
 function DDDTypeInfo:__init(processInfo, typeInfo, externalFlag, extOrgDDType) 
    TypeInfo.__init( self,nil, processInfo)
-   
    self.imutType = _moduleObj.headTypeInfo
-   
    self.typeId = processInfo:newId( self )
    self.typeInfo = typeInfo
    self.externalFlag = externalFlag
@@ -8132,7 +7659,6 @@ function DDDTypeInfo:__init(processInfo, typeInfo, externalFlag, extOrgDDType)
       extOrgType = self
       processInfo:get_typeInfo2Map().DDDMap[typeInfo] = self
    end
-   
    self.extedType = extOrgType
 end
 function DDDTypeInfo:isModule(  )
@@ -8171,7 +7697,6 @@ function DDDTypeInfo:get_kind(  )
 end
 function DDDTypeInfo:get_nilable(  )
 
-   
    return true
 end
 function DDDTypeInfo:get_nilableTypeInfo(  )
@@ -8192,7 +7717,6 @@ function DDDTypeInfo:get_srcTypeInfo(  )
 end
 function DDDTypeInfo:get_accessMode(  )
 
-   
    return AccessMode.Pub
 end
 function DDDTypeInfo._setmeta( obj )
@@ -8226,12 +7750,9 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
    if typeInfo:get_kind() == TypeInfoKind.DDD then
       typeInfo = typeInfo:get_itemTypeInfoList()[1]
    end
-   
    if not failCreateLuavalWith( typeInfo, LuavalConvKind.InLua, true ) and extTypeFlag then
       extTypeFlag = false
    end
-   
-   
    if typeInfo:get_nonnilableType():get_kind() ~= TypeInfoKind.Ext and extTypeFlag then
       do
          local _matchExp = self:createLuaval( typeInfo, true )
@@ -8246,10 +7767,7 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
             Util.err( mess )
          end
       end
-      
    end
-   
-   
    local dddMap
    
    if extTypeFlag then
@@ -8258,34 +7776,24 @@ function ProcessInfo:createDDD( typeInfo, externalFlag, extTypeFlag )
     
       dddMap = self:get_typeInfo2Map().DDDMap
    end
-   
    do
       local _exp = dddMap[typeInfo]
       if _exp ~= nil then
          if _exp:get_typeId().id < userStartId and typeInfo:get_typeId().id >= userStartId then
             Util.err( "on cache" )
          end
-         
          return _exp
       end
    end
-   
-   
    local dddType = DDDTypeInfo._new(self, typeInfo, externalFlag, nil)
    self:setupImut( dddType )
-   
    if failCreateLuavalWith( typeInfo, LuavalConvKind.InLua, true ) then
-      
       local extDDDType = DDDTypeInfo._new(self, typeInfo, externalFlag, dddType)
       self:setupImut( extDDDType )
-      
       if extTypeFlag then
          return extDDDType
       end
-      
    end
-   
-   
    return dddType
 end
 
@@ -8293,25 +7801,37 @@ local builtinTypeDDD = registBuiltin( "DDD", "...", TypeInfoKind.DDD, rootProces
 _moduleObj.builtinTypeDDD = builtinTypeDDD
 
 
+
 local builtinTypeForm = NormalTypeInfo.createBuiltin( "Form", "form", TypeInfoKind.Form, _moduleObj.builtinTypeDDD )
 _moduleObj.builtinTypeForm = builtinTypeForm
 
+
 immutableTypeSetWork[_moduleObj.builtinTypeForm]= true
+
 
 local builtinTypeSymbol = NormalTypeInfo.createBuiltin( "Symbol", "sym", TypeInfoKind.Prim )
 _moduleObj.builtinTypeSymbol = builtinTypeSymbol
 
+
 local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKind.Prim )
 _moduleObj.builtinTypeStat = builtinTypeStat
+
+
+local builtinTypeStat2 = NormalTypeInfo.createBuiltin( "__Stat", "__stat", TypeInfoKind.Prim )
+_moduleObj.builtinTypeStat2 = builtinTypeStat2
+
 
 local builtinTypeExp = NormalTypeInfo.createBuiltin( "Exp", "__exp", TypeInfoKind.Prim )
 _moduleObj.builtinTypeExp = builtinTypeExp
 
+
 local builtinTypeMultiExp = NormalTypeInfo.createBuiltin( "Exps", "__exps", TypeInfoKind.Prim )
 _moduleObj.builtinTypeMultiExp = builtinTypeMultiExp
 
+
 local builtinTypeBlockArg = NormalTypeInfo.createBuiltin( "Block", "__block", TypeInfoKind.Prim )
 _moduleObj.builtinTypeBlockArg = builtinTypeBlockArg
+
 
 
 local CombineType = {}
@@ -8327,7 +7847,6 @@ function CombineType:__init(typeInfo)
    for __index, iftype in ipairs( typeInfo:get_interfaceList() ) do
       self.ifSet[iftype]= true
    end
-   
    self.nilable = typeInfo:get_nilable()
    self.mutMode = typeInfo:get_mutMode()
 end
@@ -8337,9 +7856,7 @@ function CombineType:isInheritFrom( processInfo, other, alt2type )
       if ifType:isInheritFrom( processInfo, other, alt2type ) then
          return true
       end
-      
    end
-   
    return false
 end
 function CombineType:andIfSet( processInfo, ifSet, alt2type )
@@ -8354,13 +7871,9 @@ function CombineType:andIfSet( processInfo, ifSet, alt2type )
             if other:isInheritFrom( processInfo, ifType, alt2type ) then
                workSet[ifType]= true
             end
-            
          end
-         
       end
-      
    end
-   
    self.ifSet = workSet
 end
 function CombineType:createStem( processInfo )
@@ -8373,33 +7886,26 @@ function CombineType:createStem( processInfo )
     
       retType = _moduleObj.builtinTypeStem
    end
-   
    if isMutable( self.mutMode ) then
       return retType
    end
-   
    return processInfo:createModifier( retType, self.mutMode )
 end
 function CombineType:get_typeInfo( processInfo )
 
    if _lune._Set_len(self.ifSet ) ~= 1 then
-      
       return self:createStem( processInfo )
    end
-   
    for ifType, __val in pairs( self.ifSet ) do
       local work = ifType
       if self.nilable then
          work = work:get_nilableTypeInfo()
       end
-      
       if isMutable( self.mutMode ) then
          return work
       end
-      
       return processInfo:createModifier( work, self.mutMode )
    end
-   
    Util.err( "illegal" )
 end
 function CombineType._setmeta( obj )
@@ -8438,7 +7944,6 @@ function CombineType:andType( processInfo, other, alt2type )
          if not isMutable( comboInfo.mutMode ) then
             self.mutMode = comboInfo.mutMode
          end
-         
          return _lune.newAlge( CommonType.Combine, {self})
       elseif _matchExp[1] == CommonType.Normal[1] then
          local typeInfo = _matchExp[2][1]
@@ -8446,7 +7951,6 @@ function CombineType:andType( processInfo, other, alt2type )
          if not isMutable( typeInfo:get_mutMode() ) then
             self.mutMode = typeInfo:get_mutMode()
          end
-         
          local ifSet = {}
          if typeInfo:get_kind() == TypeInfoKind.IF then
             ifSet[typeInfo]= true
@@ -8455,25 +7959,19 @@ function CombineType:andType( processInfo, other, alt2type )
             for __index, iftype in ipairs( typeInfo:get_interfaceList() ) do
                ifSet[iftype]= true
             end
-            
          end
-         
          self:andIfSet( processInfo, ifSet, alt2type )
-         
          if _lune._Set_len(self.ifSet ) ~= 0 then
             return _lune.newAlge( CommonType.Combine, {self})
          end
-         
          return _lune.newAlge( CommonType.Normal, {self:createStem( processInfo )})
       end
    end
-   
 end
 
 function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2type )
 
    local typeInfo = _moduleObj.builtinTypeNone
-   
    do
       local _matchExp = commonType
       if _matchExp[1] == CommonType.Combine[1] then
@@ -8486,8 +7984,6 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
          typeInfo = workTypeInfo
       end
    end
-   
-   
    local other = _moduleObj.builtinTypeNone
    do
       local _matchExp = otherType
@@ -8501,52 +7997,36 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
          other = workTypeInfo
       end
    end
-   
-   
    local function getType( workType )
    
       if typeInfo:get_nilable() or other:get_nilable() then
          workType = workType:get_nilableTypeInfo()
       end
-      
       if not TypeInfo.isMut( typeInfo ) or not TypeInfo.isMut( other ) then
-         
          workType = processInfo:createModifier( workType, MutMode.IMut )
       end
-      
       return _lune.newAlge( CommonType.Normal, {workType})
    end
-   
    local type1 = typeInfo:get_nonnilableType():get_srcTypeInfo()
    local type2 = other:get_nonnilableType():get_srcTypeInfo()
-   
    if type1 == _moduleObj.builtinTypeNone then
       return otherType
    end
-   
    if type2 == _moduleObj.builtinTypeNone then
       return commonType
    end
-   
-   
    if type1 == _moduleObj.builtinTypeNil then
       return _lune.newAlge( CommonType.Normal, {other:get_nilableTypeInfo()})
    end
-   
    if type2 == _moduleObj.builtinTypeNil then
       return _lune.newAlge( CommonType.Normal, {typeInfo:get_nilableTypeInfo()})
    end
-   
-   
    if type1:canEvalWith( processInfo, type2, CanEvalType.SetOp, alt2type ) then
       return getType( type1 )
    end
-   
    if type2:canEvalWith( processInfo, type1, CanEvalType.SetOp, alt2type ) then
       return getType( type2 )
    end
-   
-   
    local mutMode
    
    if TypeInfo.isMut( typeInfo ) and TypeInfo.isMut( other ) then
@@ -8555,8 +8035,6 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
     
       mutMode = MutMode.IMut
    end
-   
-   
    if type1:get_kind() == type2:get_kind() and type1:get_canDealGenInherit() == type2:get_canDealGenInherit() then
       local function getCommon( workTypeInfo, workOther, workAlt2type )
       
@@ -8572,9 +8050,7 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
                return combine:get_typeInfo( processInfo )
             end
          end
-         
       end
-      
       do
          local _switchExp = type1:get_kind()
          if _switchExp == TypeInfoKind.List then
@@ -8587,30 +8063,20 @@ function TypeInfo.getCommonTypeCombo( processInfo, commonType, otherType, alt2ty
             return getType( processInfo:createMap_( type1:get_canDealGenInherit(), AccessMode.Local, _moduleObj.headTypeInfo, getCommon( type1:get_itemTypeInfoList()[1], type2:get_itemTypeInfoList()[1], alt2type ), getCommon( type1:get_itemTypeInfoList()[2], type2:get_itemTypeInfoList()[2], alt2type ), mutMode ) )
          end
       end
-      
    end
-   
-   
    local work = type1:get_baseTypeInfo()
-   
    while work ~= _moduleObj.headTypeInfo do
       if work:canEvalWith( processInfo, type2, CanEvalType.SetOp, alt2type ) then
-         
          if typeInfo:get_nilable() or other:get_nilable() then
             work = work:get_nilableTypeInfo()
          end
-         
          if not isMutable( mutMode ) then
             work = processInfo:createModifier( work, mutMode )
          end
-         
          return _lune.newAlge( CommonType.Normal, {work})
       end
-      
       work = work:get_baseTypeInfo()
    end
-   
-   
    local combine = CombineType._new(typeInfo)
    return combine:andType( processInfo, _lune.newAlge( CommonType.Normal, {other}), alt2type )
 end
@@ -8630,7 +8096,6 @@ function TypeInfo.getCommonType( processInfo, typeInfo, other, alt2type )
          return combine:get_typeInfo( processInfo )
       end
    end
-   
 end
 
 
@@ -8646,10 +8111,8 @@ function DDDTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
       if self:get_extTypeFlag() then
          return "Luaval<...>"
       end
-      
       return "..."
    end
-   
    local typeInfo
    
    if self:get_extTypeFlag() then
@@ -8658,12 +8121,10 @@ function DDDTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
     
       typeInfo = self.typeInfo
    end
-   
    local txt = string.format( "...<%s>", typeInfo:getTxt( typeNameCtrl, importInfo, localFlag ))
    if self:get_extTypeFlag() then
       return string.format( "Luaval<%s>", txt)
    end
-   
    return txt
 end
 
@@ -8685,16 +8146,14 @@ local function applyGenericList( processInfo, typeList, alt2typeMap, moduleTypeI
             if srcType ~= typeInfo then
                needNew = true
             end
-            
          else
             return nil, false
          end
       end
-      
    end
-   
    return typeInfoList, needNew
 end
+
 
 function GenericTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
 
@@ -8704,22 +8163,15 @@ function GenericTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo 
          if newFlag then
             return (processInfo:createGeneric( self.genSrcTypeInfo, itemTypeInfoList, moduleTypeInfo ) )
          end
-         
       end
-      
    end
-   
-   
    local genSrcTypeInfo = self.genSrcTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
    if genSrcTypeInfo == self.genSrcTypeInfo then
       return self
    end
-   
    if not self.hasAlter then
       return self
    end
-   
-   
    Util.errorLog( string.format( "no support nest generic -- %s", self:getTxt(  )) )
    return nil
 end
@@ -8759,8 +8211,6 @@ function AbbrTypeInfo._new( processInfo, rawTxt )
 end
 function AbbrTypeInfo:__init(processInfo, rawTxt) 
    TypeInfo.__init( self,nil, processInfo)
-   
-   
    self.typeId = processInfo:newId( self )
    self.rawTxt = rawTxt
 end
@@ -8830,8 +8280,10 @@ end
 local builtinTypeAbbr = AbbrTypeInfo._new(rootProcessInfo, "##")
 _moduleObj.builtinTypeAbbr = builtinTypeAbbr
 
+
 local builtinTypeAbbrNone = AbbrTypeInfo._new(rootProcessInfo, "[##]")
 _moduleObj.builtinTypeAbbrNone = builtinTypeAbbrNone
+
 
 
 local ExtTypeInfo = {}
@@ -8849,12 +8301,9 @@ function ExtTypeInfo._new( processInfo, extedType )
 end
 function ExtTypeInfo:__init(processInfo, extedType) 
    TypeInfo.__init( self,nil, processInfo)
-   
-   
    self.typeId = processInfo:newId( self )
    self.extedType = extedType
    self.imutType = _moduleObj.headTypeInfo
-   
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
 end
 function ExtTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
@@ -8873,11 +8322,9 @@ function ExtTypeInfo:equals( processInfo, typeInfo, alt2type, checkModifer )
          return self.extedType:equals( processInfo, extTypeInfo.extedType, alt2type, checkModifer )
       end
    end
-   
    if failCreateLuavalWith( self.extedType, LuavalConvKind.InLua, false ) then
       return false
    end
-   
    return self.extedType:equals( processInfo, typeInfo, alt2type, checkModifer )
 end
 function ExtTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
@@ -8893,23 +8340,18 @@ function ExtTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
           
             otherExtedType = extTypeInfo.extedType
          end
-         
          return self.extedType:canEvalWith( processInfo, otherExtedType, canEvalType, alt2type )
       end
    end
-   
    if other:get_nilable() then
       return false, nil
    end
-   
-   
    do
       local _exp = failCreateLuavalWith( other, LuavalConvKind.ToLua, true )
       if _exp ~= nil then
          return false, _exp
       end
    end
-   
    return true, nil
 end
 function ExtTypeInfo:serialize( stream, serializeInfo )
@@ -8958,7 +8400,6 @@ function ExtTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
    if typeInfo ~= self.extedType then
       Util.err( string.format( "not support generics -- %s", self.extedType:getTxt(  )) )
    end
-   
    return self
 end
 function ExtTypeInfo._setmeta( obj )
@@ -9134,38 +8575,29 @@ function ProcessInfo:createLuaval( luneType, validToCheck )
    if not self.validExtType then
       return _lune.newAlge( LuavalResult.OK, {luneType,true})
    end
-   
-   
    if luneType:get_kind() == TypeInfoKind.Method then
       return _lune.newAlge( LuavalResult.OK, {luneType,true})
    end
-   
    if isExtType( luneType ) then
       return _lune.newAlge( LuavalResult.OK, {luneType,true})
    end
-   
    do
       local extType = self:get_typeInfo2Map().ExtMap[luneType]
       if extType ~= nil then
          if extType:get_typeId().id < userStartId and luneType:get_typeId().id >= userStartId then
             Util.err( "on cache" )
          end
-         
          if extType:get_kind() == TypeInfoKind.Ext then
             return _lune.newAlge( LuavalResult.OK, {extType,false})
          end
-         
          return _lune.newAlge( LuavalResult.OK, {extType,true})
       end
    end
-   
-   
    local function updateCache( typeInfo )
    
       self:get_typeInfo2Map().ExtMap[luneType:get_nonnilableType()] = typeInfo:get_nonnilableType()
       self:get_typeInfo2Map().ExtMap[luneType:get_nilableTypeInfo()] = typeInfo:get_nilableTypeInfo()
    end
-   
    local function process(  )
    
       do
@@ -9184,30 +8616,23 @@ function ProcessInfo:createLuaval( luneType, validToCheck )
                   return _lune.newAlge( LuavalResult.OK, {self:createDDD( workType, dddType:get_externalFlag(), true ),false})
                end
             end
-            
          end
       end
-      
       local err, canConv
       
       err, canConv = failCreateLuavalWith( luneType, LuavalConvKind.InLua, validToCheck )
       if err ~= nil then
          return _lune.newAlge( LuavalResult.Err, {err})
       end
-      
       if canConv then
          return _lune.newAlge( LuavalResult.OK, {luneType,true})
       end
-      
       local extType = ExtTypeInfo._new(self, luneType:get_nonnilableType())
-      
       updateCache( extType )
       self:setupImut( extType )
-      
       if luneType:get_nilable() then
          return _lune.newAlge( LuavalResult.OK, {extType:get_nilableTypeInfo(),false})
       end
-      
       return _lune.newAlge( LuavalResult.OK, {extType,false})
    end
    local result = process(  )
@@ -9220,7 +8645,6 @@ function ProcessInfo:createLuaval( luneType, validToCheck )
          updateCache( typeInfo )
       end
    end
-   
    return result
 end
 
@@ -9228,6 +8652,7 @@ end
 local builtinTypeLua
 
 _moduleObj.builtinTypeLua = builtinTypeLua
+
 
 do
    local _matchExp = rootProcessInfo:createLuaval( _moduleObj.builtinTypeStem, true )
@@ -9239,15 +8664,17 @@ do
    else 
       
          Util.err( "illegal" )
-         
    end
 end
 
 registBuiltin( "Luaval", "Luaval", TypeInfoKind.Ext, _moduleObj.builtinTypeLua, nil, _moduleObj.headTypeInfo, nil )
+
 local builtinTypeDDDLua = rootProcessInfo:createDDD( _moduleObj.builtinTypeStem_, true, true )
 _moduleObj.builtinTypeDDDLua = builtinTypeDDDLua
 
+
 registBuiltin( "__LuaDDD", "__LuaDDD", TypeInfoKind.Ext, _moduleObj.builtinTypeDDDLua, nil, _moduleObj.headTypeInfo, nil )
+
 
 local function convToExtTypeList( processInfo, list )
 
@@ -9266,12 +8693,11 @@ local function convToExtTypeList( processInfo, list )
             return nil, err
          end
       end
-      
    end
-   
    return extList, ""
 end
 _moduleObj.convToExtTypeList = convToExtTypeList
+
 local AndExpTypeInfo = {}
 setmetatable( AndExpTypeInfo, { __index = TypeInfo } )
 _moduleObj.AndExpTypeInfo = AndExpTypeInfo
@@ -9283,7 +8709,6 @@ function AndExpTypeInfo._new( processInfo, exp1, exp2, result )
 end
 function AndExpTypeInfo:__init(processInfo, exp1, exp2, result) 
    TypeInfo.__init( self,nil, processInfo)
-   
    self.exp1 = exp1
    self.exp2 = exp2
    self.result = result
@@ -9536,32 +8961,28 @@ end
 
 local numberTypeSet = {[_moduleObj.builtinTypeInt] = true, [_moduleObj.builtinTypeChar] = true, [_moduleObj.builtinTypeReal] = true}
 
+
 local function isNumberType( typeInfo )
 
    return _lune._Set_has(numberTypeSet, typeInfo:get_srcTypeInfo() )
 end
 _moduleObj.isNumberType = isNumberType
 
+
 function ProcessInfo:createEnum( scope, parentInfo, typeDataAccessor, externalFlag, accessMode, enumName, valTypeInfo )
 
    if Tokenizer.isLuaKeyword( enumName ) then
       Util.err( string.format( "This symbol can not use for a enum. -- %s", enumName) )
    end
-   
-   
    local info = EnumTypeInfo._new(self, scope, externalFlag, accessMode, enumName, parentInfo, typeDataAccessor, valTypeInfo)
    self:setupImut( info )
-   
    local getEnumName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, MutMode.IMut )
    scope:addMethod( self, nil, getEnumName, AccessMode.Pub, false )
-   
    local fromVal = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "_from", Async.Async, nil, {self:createModifier( valTypeInfo, MutMode.IMut )}, {info:get_nilableTypeInfo()}, MutMode.IMut )
    scope:addMethod( self, nil, fromVal, AccessMode.Pub, true )
-   
    local allListType = self:createList_( true, AccessMode.Pub, info, {info}, MutMode.IMut )
    local allList = self:createFuncAsync( false, true, nil, TypeInfoKind.Func, info, info, true, externalFlag, true, AccessMode.Pub, "get__allList", Async.Async, nil, nil, {self:createModifier( allListType, MutMode.IMut )}, MutMode.IMut )
    scope:addMethod( self, nil, allList, AccessMode.Pub, true )
-   
    return info
 end
 
@@ -9571,7 +8992,6 @@ function EnumTypeInfo:serialize( stream, serializeInfo )
    local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getParentId(  ).id, self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Enum, self.valTypeInfo:get_typeId().id)
    stream:write( txt )
-   
    stream:write( "enumValList = {" )
    do
       local __sorted = {}
@@ -9600,11 +9020,9 @@ accessMode = %d, kind = %d, valTypeId = %d, ]==], SerializeKind.Enum, self:getPa
                   stream:write( string.format( "%q,", val) )
                end
             end
-            
          end
       end
    end
-   
    stream:write( "} }\n" )
 end
 
@@ -9614,14 +9032,10 @@ function ProcessInfo:createAlge( scope, parentInfo, typeDataAccessor, externalFl
    if Tokenizer.isLuaKeyword( algeName ) then
       Util.err( string.format( "This symbol can not use for a alge. -- %s", algeName) )
    end
-   
-   
    local info = AlgeTypeInfo.create( self, scope, parentInfo, typeDataAccessor, externalFlag, accessMode, algeName, itemTypeInfoList )
    self:setupImut( info )
-   
    local getAlgeName = self:createFuncAsync( false, true, nil, TypeInfoKind.Method, info, info, true, externalFlag, false, AccessMode.Pub, "get__txt", Async.Async, nil, nil, {_moduleObj.builtinTypeString}, MutMode.IMut )
    scope:addMethod( self, nil, getAlgeName, AccessMode.Pub, false )
-   
    return info
 end
 
@@ -9631,9 +9045,7 @@ function AlgeTypeInfo:serialize( stream, serializeInfo )
    local txt = string.format( [==[{ skind = %d, parentId = %d, typeId = %d, txt = '%s',
 accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ).id, self.typeId.id, self.rawTxt, self.accessMode, TypeInfoKind.Alge)
    stream:write( txt )
-   
    stream:write( self:serializeTypeInfoList( serializeInfo, "itemTypeId = {", self.itemTypeInfoList ) )
-   
    stream:write( "algeValList = {" )
    local firstFlag = true
    do
@@ -9652,12 +9064,10 @@ accessMode = %d, kind = %d, ]==], SerializeKind.Alge, self:getParentId(  ).id, s
              
                firstFlag = false
             end
-            
             algeValInfo:serialize( stream, serializeInfo )
          end
       end
    end
-   
    stream:write( "} }\n" )
 end
 
@@ -9666,7 +9076,6 @@ function BoxTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
    if self == other then
       return true, nil
    end
-   
    do
       local _switchExp = canEvalType
       if _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut or _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetEqEq then
@@ -9675,62 +9084,45 @@ function BoxTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
             return false, nil
       end
    end
-   
-   
    if other:get_nilable() then
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
       return true, nil
    end
-   
-   
    do
       local otherBoxType = _lune.__Cast( other, 3, BoxTypeInfo )
       if otherBoxType ~= nil then
          return self.boxingType:canEvalWith( processInfo, otherBoxType.boxingType, canEvalType, alt2type )
       end
    end
-   
-   
    if self.boxingType:canEvalWith( processInfo, other, canEvalType, alt2type ) then
       CanEvalCtrlTypeInfo.updateNeedAutoBoxing( alt2type )
       return true, nil
    end
-   
    return false, nil
 end
 
 
 function NilableTypeInfo:canEvalWith( processInfo, other, canEvalType, alt2type )
 
-   
    local otherSrc = other
-   
    if self == _moduleObj.builtinTypeStem_ then
       return true, nil
    end
-   
-   
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if self:get_nonnilableType():get_kind() == TypeInfoKind.Box then
          return self:get_nonnilableType():canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
       end
-      
       return true, nil
    end
-   
    if self.typeId:equals( otherSrc:get_typeId() ) then
       return true, nil
    end
-   
    if otherSrc:get_nilable() then
       if otherSrc:get_kind() == TypeInfoKind.DDD then
          return self:get_nonnilableType():canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[1], canEvalType, alt2type )
       end
-      
-      
       return self:get_nonnilableType():canEvalWith( processInfo, otherSrc:get_nonnilableType(), canEvalType, alt2type )
    end
-   
    return self:get_nonnilableType():canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
 end
 
@@ -9749,27 +9141,21 @@ function NormalTypeInfo.isAvailableMapping( processInfo, typeInfo, checkedTypeMa
             if isGenericType( typeInfo ) then
                return false, string.format( "The generics Alge isn't support mapping yet -- %s", typeInfo:getTxt(  ))
             end
-            
             local algeTypeInfo = _lune.unwrap( (_lune.__Cast( typeInfo, 3, AlgeTypeInfo ) ))
             for __index, valInfo in pairs( algeTypeInfo:get_valInfoMap() ) do
                for __index, paramType in ipairs( valInfo:get_typeList() ) do
                   if not NormalTypeInfo.isAvailableMapping( processInfo, paramType, checkedTypeMap ) then
                      return false, nil
                   end
-                  
                end
-               
             end
-            
             return true, nil
          elseif _switchExp == TypeInfoKind.Stem then
-            
             return true, nil
          elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
             if typeInfo:equals( processInfo, _moduleObj.builtinTypeString ) then
                return true, nil
             end
-            
             return typeInfo:isInheritFrom( processInfo, _moduleObj.builtinTypeMapping, nil ), nil
          elseif _switchExp == TypeInfoKind.Alternate then
             return typeInfo:isInheritFrom( processInfo, _moduleObj.builtinTypeMapping, nil ), nil
@@ -9782,9 +9168,7 @@ function NormalTypeInfo.isAvailableMapping( processInfo, typeInfo, checkedTypeMa
                if keyType:equals( processInfo, _moduleObj.builtinTypeString ) or keyType:get_kind() == TypeInfoKind.Prim or keyType:get_kind() == TypeInfoKind.Enum then
                   return true, nil
                end
-               
             end
-            
             return false, mess
          elseif _switchExp == TypeInfoKind.Nilable then
             return NormalTypeInfo.isAvailableMapping( processInfo, typeInfo:get_nonnilableType(), checkedTypeMap )
@@ -9793,9 +9177,7 @@ function NormalTypeInfo.isAvailableMapping( processInfo, typeInfo, checkedTypeMa
                return false, nil
          end
       end
-      
    end
-   
    typeInfo = typeInfo:get_srcTypeInfo()
    do
       local _exp = checkedTypeMap[typeInfo]
@@ -9803,8 +9185,6 @@ function NormalTypeInfo.isAvailableMapping( processInfo, typeInfo, checkedTypeMa
          return _exp, nil
       end
    end
-   
-   
    checkedTypeMap[typeInfo] = true
    local result, mess = isAvailableMappingSub(  )
    checkedTypeMap[typeInfo] = result
@@ -9816,26 +9196,25 @@ function NormalTypeInfo:isInheritFrom( processInfo, other, alt2type )
    if self:get_typeId():equals( other:get_typeId() ) then
       return true
    end
-   
    if (self:get_kind() ~= TypeInfoKind.Class and self:get_kind() ~= TypeInfoKind.IF ) or (other:get_kind() ~= TypeInfoKind.Class and other:get_kind() ~= TypeInfoKind.IF ) then
       if other == _moduleObj.builtinTypeMapping then
          return (NormalTypeInfo.isAvailableMapping( processInfo, self, {} ) )
       end
-      
       return false
    end
-   
    return TypeInfo.isInherit( processInfo, self, other, alt2type )
 end
 
 
 local builtinTypeInfo2Map = rootProcessInfo:get_typeInfo2Map():clone(  )
 
+
 local function createProcessInfo( validCheckingMutable, validExtType, validDetailError )
 
    return ProcessInfo.createUser( validCheckingMutable, validExtType, validDetailError, builtinTypeInfo2Map:clone(  ) )
 end
 _moduleObj.createProcessInfo = createProcessInfo
+
 
 function ProcessInfo:newUser(  )
 
@@ -9879,12 +9258,7 @@ MatchType.__allList[3] = MatchType.Error
 
 function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
 
-   
-   
-   
-   
    local warnMess = nil
-   
    local function checkDstTypeFrom( index, srcType, srcType2nd )
    
       local workExpType = srcType
@@ -9898,14 +9272,10 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
          elseif workExpType == _moduleObj.builtinTypeAbbrNone then
             return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of '%s'.", workDstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
          end
-         
-         
          workExpType = srcType2nd
       end
-      
       return MatchType.Match, ""
    end
-   
    local function checkSrcTypeFrom( index, dstType )
    
       for srcIndex = index, #expTypeList do
@@ -9918,27 +9288,19 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
              
                checkType = _moduleObj.builtinTypeStem_
             end
-            
          elseif srcIndex > index and expType:get_kind() == TypeInfoKind.Abbr then
-            
             return MatchType.Error, "must not use '##'"
          end
-         
-         
          local canEval, evalMess = dstType:canEvalWith( processInfo, checkType, CanEvalType.SetOp, alt2type )
          if not canEval then
             return MatchType.Error, string.format( "exp(%d) type mismatch %s <- %s: src: %d%s", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcIndex, (evalMess and string.format( " -- %s", tostring( evalMess)) or "" )
             )
          end
-         
-         
          if warnForFollowSrcIndex ~= nil then
-            
             if warnForFollowSrcIndex <= srcIndex then
                local workMess = string.format( "use '**' at arg(%d). %s <- %s", srcIndex, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                return MatchType.Warn, workMess
             end
-            
          end
          
          if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
@@ -9947,52 +9309,39 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
          
          
       end
-      
       return MatchType.Match, ""
    end
-   
    if #expTypeList > 0 then
       for index, expType in ipairs( expTypeList ) do
          if #dstTypeList == 0 then
             return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList)
          end
-         
          local dstType = dstTypeList[index]
          if #dstTypeList == index then
-            
             if dstType:get_srcTypeInfo():get_kind() ~= TypeInfoKind.DDD then
                local isMatch, msg = dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type )
                if not isMatch then
                   return MatchType.Error, mismatchErrMess( index, msg, dstType, expType, alt2type )
                end
-               
                if not allowDstShort and #dstTypeList < #expTypeList then
                   return MatchType.Error, string.format( "over exp. expect: %d: actual: %d", #dstTypeList, #expTypeList)
                end
-               
             else
              
-               
                local dddItemType = _moduleObj.builtinTypeStem_
                if #dstType:get_itemTypeInfoList() > 0 then
                   dddItemType = dstType:get_itemTypeInfoList()[1]
                end
-               
                local result, mess = checkSrcTypeFrom( index, dddItemType )
                if result ~= MatchType.Match then
                   return result, mess
                end
-               
             end
-            
-            
             if warnForFollowSrcIndex ~= nil then
-               
                if warnForFollowSrcIndex <= index then
                   local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                   return MatchType.Warn, workMess
                end
-               
             end
             
             if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
@@ -10002,10 +9351,8 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
             
             break
          elseif #expTypeList == index then
-            
             local srcType = expType
             local srcType2nd = _moduleObj.builtinTypeAbbrNone
-            
             if expType:get_kind() == TypeInfoKind.DDD then
                srcType = _moduleObj.builtinTypeStem_
                srcType2nd = _moduleObj.builtinTypeStem_
@@ -10013,24 +9360,18 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
                   srcType = expType:get_itemTypeInfoList()[1]:get_nilableTypeInfo()
                   srcType2nd = srcType
                end
-               
             elseif expType == _moduleObj.builtinTypeAbbr then
                srcType2nd = _moduleObj.builtinTypeAbbr
             end
-            
-            
             local result, mess = checkDstTypeFrom( index, srcType, srcType2nd )
             if result ~= MatchType.Match then
                return result, mess
             end
-            
             if warnForFollowSrcIndex ~= nil then
-               
                if warnForFollowSrcIndex <= index then
                   local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                   return MatchType.Warn, workMess
                end
-               
             end
             
             if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
@@ -10042,21 +9383,17 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
          else
           
             local canEval, evalMess = dstType:canEvalWith( processInfo, expType, CanEvalType.SetOp, alt2type )
-            
             if not canEval then
                return MatchType.Error, string.format( "exp(%d) type mismatch %s(%s:%d) <- %s(%s:%d)%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), TypeInfoKind:_getTxt( dstType:get_kind())
                , dstType:get_typeId().id, expType:getTxt( _moduleObj.defaultTypeNameCtrl ), TypeInfoKind:_getTxt( expType:get_kind())
                , expType:get_typeId().id, (evalMess and string.format( " -- %s", tostring( evalMess)) or "" )
                )
             end
-            
             if warnForFollowSrcIndex ~= nil then
-               
                if warnForFollowSrcIndex <= index then
                   local workMess = string.format( "use '**' at arg(%d). %s <- %s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), expType:getTxt( _moduleObj.defaultTypeNameCtrl ))
                   return MatchType.Warn, workMess
                end
-               
             end
             
             if dstType ~= _moduleObj.builtinTypeEmpty and not isExtType( dstType:get_srcTypeInfo():get_nonnilableType() ) and isExtType( expType:get_srcTypeInfo():get_nonnilableType() ) then
@@ -10065,26 +9402,18 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
             
             
          end
-         
       end
-      
    elseif not allowDstShort then
       for index, dstType in ipairs( dstTypeList ) do
          if not dstType:canEvalWith( processInfo, _moduleObj.builtinTypeNil, CanEvalType.SetOp, alt2type ) then
             return MatchType.Error, string.format( "exp(%d) type mismatch %s <- nil: short", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ))
          end
-         
          return MatchType.Warn, Code.format( Code.ID.nothing_define_abbr, string.format( "use '##', instate of '%s'.", dstType:getTxt( _moduleObj.defaultTypeNameCtrl )) )
       end
-      
    end
-   
-   
    if warnMess ~= nil then
       return MatchType.Warn, warnMess
    end
-   
-   
    return MatchType.Match, ""
 end
 
@@ -10093,7 +9422,6 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
 
    local function mismatchErrMess( index, errorMess, dstType, srcType, alt2typeWork )
    
-      
       local workProcessInfo = ProcessInfo.createUser( processInfo:get_validCheckingMutable(), processInfo:get_validExtType(), processInfo:get_validDetailError(), builtinTypeInfo2Map:clone(  ) )
       local workDstType = applyGenericDefault( workProcessInfo, dstType, alt2typeWork, dstType:getModule(  ) )
       local workDstId
@@ -10104,11 +9432,9 @@ function TypeInfo.checkMatchType( processInfo, dstTypeList, expTypeList, allowDs
        
          workDstId = dstType:get_typeId().id
       end
-      
       return string.format( "exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", index, workDstType:getTxt( _moduleObj.defaultTypeNameCtrl ), workDstId, srcType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcType:get_typeId().id, index, errorMess and string.format( " -- %s", tostring( errorMess)) or string.format( "(%s)", TypeInfoKind:_getTxt( dstType:get_kind())
       ))
    end
-   
    return TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
 end
 
@@ -10120,7 +9446,6 @@ function TypeInfo.checkMatchTypeAsync( processInfo, dstTypeList, expTypeList, al
       return string.format( "exp(%d) type mismatch %s(%d) <- %s(%d): index %d%s", index, dstType:getTxt( _moduleObj.defaultTypeNameCtrl ), dstType:get_typeId().id, srcType:getTxt( _moduleObj.defaultTypeNameCtrl ), srcType:get_typeId().id, index, errorMess and string.format( " -- %s", tostring( errorMess)) or string.format( "(%s)", TypeInfoKind:_getTxt( dstType:get_kind())
       ))
    end
-   
    return TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
 end
 
@@ -10134,45 +9459,33 @@ local function isSettableToForm( processInfo, typeInfo )
                if not dddType:get_typeInfo():get_nilableTypeInfo():equals( processInfo, _moduleObj.builtinTypeStem_ ) then
                   return false, string.format( "mismatch arg%d", index)
                end
-               
             else
                if not argType:get_srcTypeInfo():equals( processInfo, _moduleObj.builtinTypeStem_ ) then
                   return false, string.format( "mismatch arg%d", index)
                end
-               
             end
          end
-         
       end
-      
    end
-   
    return true, ""
 end
 
+
 function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalType, alt2type )
 
-   
-   
-   
    if dest ~= dest:get_aliasSrc() then
       return dest:get_aliasSrc():canEvalWith( processInfo, other, canEvalType, alt2type )
    end
-   
    if dest == _moduleObj.builtinTypeExp or dest == _moduleObj.builtinTypeMultiExp or dest == _moduleObj.builtinTypeBlockArg then
       if other == _moduleObj.builtinTypeMultiExp and dest ~= _moduleObj.builtinTypeMultiExp then
          return false, "can't eval from '__exp' to '__exps'."
       end
-      
       if other:equals( processInfo, _moduleObj.builtinTypeAbbr ) then
          return false, ""
          
       end
-      
-      
       return true, nil
    end
-   
    local otherMut = TypeInfo.isMut( other )
    local otherSrc = other:get_srcTypeInfo():get_aliasSrc()
    if otherSrc:get_kind() == TypeInfoKind.DDD then
@@ -10182,23 +9495,16 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
        
          otherSrc = _moduleObj.builtinTypeStem_
       end
-      
    end
-   
-   
    if otherSrc:get_kind() == TypeInfoKind.Alternate then
       if dest:get_kind() ~= TypeInfoKind.Alternate then
          otherSrc = AlternateTypeInfo.getAssign( otherSrc, alt2type ):get_srcTypeInfo()
       end
-      
    end
-   
-   
    do
       local _switchExp = canEvalType
       if _switchExp == CanEvalType.SetEqEq or _switchExp == CanEvalType.SetEq or _switchExp == CanEvalType.SetOp or _switchExp == CanEvalType.SetOpIMut then
          if dest == _moduleObj.builtinTypeEmpty then
-            
             do
                local _switchExp = otherSrc
                if _switchExp == _moduleObj.builtinTypeAbbr or _switchExp == _moduleObj.builtinTypeAbbrNone then
@@ -10206,17 +9512,13 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                   
                end
             end
-            
             if otherSrc:get_kind() == TypeInfoKind.Func then
-               
                return false, ""
                
             end
-            
             return true, nil
          elseif not otherMut and destMut then
             if processInfo:get_validCheckingMutable() then
-               
                local nonNilOtherType = otherSrc:get_nonnilableType()
                do
                   local _switchExp = nonNilOtherType:get_kind()
@@ -10228,136 +9530,96 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                         return false, ""
                         
                      end
-                     
                   elseif _switchExp == TypeInfoKind.Prim then
                      if _moduleObj.builtinTypeStem == nonNilOtherType then
                         return false, ""
                         
                      end
-                     
                   end
                end
-               
             end
-            
          end
-         
-         
          if otherSrc ~= _moduleObj.builtinTypeNil and otherSrc ~= _moduleObj.builtinTypeString and otherSrc:get_kind() ~= TypeInfoKind.Prim and otherSrc:get_kind() ~= TypeInfoKind.Func and otherSrc:get_kind() ~= TypeInfoKind.Method and otherSrc:get_kind() ~= TypeInfoKind.Form and otherSrc:get_kind() ~= TypeInfoKind.FormFunc and otherSrc:get_kind() ~= TypeInfoKind.Enum and otherSrc:get_kind() ~= TypeInfoKind.Abbr and otherSrc:get_kind() ~= TypeInfoKind.Alternate and otherSrc:get_kind() ~= TypeInfoKind.Box and not isGenericType( otherSrc ) and destMut and not otherMut then
             if processInfo:get_validCheckingMutable() then
                return false, ""
                
             end
-            
          end
-         
       end
    end
-   
-   
    if dest == _moduleObj.builtinTypeStem_ then
       if canEvalType ~= CanEvalType.SetEqEq then
          return true, nil
       end
-      
    end
-   
-   
    if dest:get_srcTypeInfo():get_kind() == TypeInfoKind.DDD then
       if #dest:get_itemTypeInfoList() > 0 then
          return dest:get_itemTypeInfoList()[1]:canEvalWith( processInfo, other, canEvalType, alt2type )
       end
-      
       return true, nil
    end
-   
    if not dest:get_nilable() and otherSrc:get_nilable() then
       if canEvalType ~= CanEvalType.Equal then
          if dest:get_kind() == TypeInfoKind.Box then
             return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
          end
-         
          return false, ""
          
       else
        
          otherSrc = otherSrc:get_nonnilableType()
       end
-      
    end
-   
    if dest == _moduleObj.builtinTypeStem and not otherSrc:get_nilable() then
       if canEvalType ~= CanEvalType.SetEqEq then
          return true, nil
       end
-      
    end
-   
    if dest == _moduleObj.builtinTypeForm and (otherSrc:get_kind() == TypeInfoKind.Func or otherSrc:get_kind() == TypeInfoKind.Form or otherSrc:get_kind() == TypeInfoKind.FormFunc ) then
       if isSettableToForm( processInfo, otherSrc ) then
          return true, nil
       end
-      
       return false, ""
       
    end
-   
    if otherSrc == _moduleObj.builtinTypeNil or otherSrc:get_kind() == TypeInfoKind.Abbr then
       if dest:get_kind() ~= TypeInfoKind.Nilable then
          return false, ""
          
       end
-      
       return true, nil
    end
-   
    if dest:get_typeId():equals( otherSrc:get_typeId() ) then
       return true, nil
    end
-   
-   
    if dest:get_kind() == TypeInfoKind.Ext then
       return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
    end
-   
    do
       local extTypeInfo = _lune.__Cast( otherSrc, 3, ExtTypeInfo )
       if extTypeInfo ~= nil then
          if canEvalType ~= CanEvalType.SetEq and canEvalType ~= CanEvalType.SetEqEq and not failCreateLuavalWith( extTypeInfo:get_extedType(), LuavalConvKind.ToLua, false ) then
             otherSrc = extTypeInfo:get_extedType()
          end
-         
       end
    end
-   
-   
    if otherSrc:get_asyncMode() == Async.Transient then
       if dest:get_asyncMode() ~= Async.Transient then
          return false, "mismatch __trans"
       end
-      
    end
-   
-   
    if otherSrc:get_typeId():equals( dest:get_typeId() ) then
       return true, nil
    end
-   
-   
    if dest:get_kind() ~= otherSrc:get_kind() then
       if otherSrc:get_kind() == TypeInfoKind.Alternate then
-         
          if otherSrc:hasBase(  ) then
             return TypeInfo.canEvalWithBase( processInfo, dest, destMut, otherSrc:get_baseTypeInfo(), canEvalType, alt2type )
          end
-         
          for __index, ifType in ipairs( otherSrc:get_interfaceList() ) do
             return TypeInfo.canEvalWithBase( processInfo, dest, destMut, ifType, canEvalType, alt2type )
          end
-         
       end
-      
-      
       if dest:get_kind() == TypeInfoKind.Nilable then
          local dstNonNil
          
@@ -10365,19 +9627,14 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             dstNonNil = dest:get_nonnilableType()
          else
           
-            
             dstNonNil = dest:get_nonnilableType():get_imutType()
          end
-         
-         
          if otherSrc:get_nilable() then
             if otherSrc:get_kind() == TypeInfoKind.DDD then
                return dstNonNil:canEvalWith( processInfo, otherSrc:get_itemTypeInfoList()[1], canEvalType, alt2type )
             end
-            
             return dstNonNil:canEvalWith( processInfo, otherSrc:get_nonnilableType(), canEvalType, alt2type )
          end
-         
          return dstNonNil:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
       elseif isGenericType( dest ) then
          return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
@@ -10387,10 +9644,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             if result then
                return result, nil
             end
-            
             return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
-         
          return false, ""
          
       elseif otherSrc:get_kind() == TypeInfoKind.Enum then
@@ -10409,12 +9664,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                if isSettableToForm( processInfo, otherSrc ) then
                   return true, nil
                end
-               
                return false, ""
                
             end
          end
-         
       elseif dest:get_kind() == TypeInfoKind.FormFunc then
          do
             local _switchExp = otherSrc:get_kind()
@@ -10424,79 +9677,58 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                   if result == MatchType.Error then
                      return false, mess
                   end
-                  
                end
-               
                do
                   local result, mess = TypeInfo.checkMatchTypeAsync( processInfo, otherSrc:get_argTypeInfoList(), dest:get_argTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
                      return false, mess
                   end
-                  
                end
-               
                do
                   local result, mess = TypeInfo.checkMatchTypeAsync( processInfo, dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
                      return false, mess
                   end
-                  
                end
-               
                do
                   local result, mess = TypeInfo.checkMatchTypeAsync( processInfo, otherSrc:get_retTypeInfoList(), dest:get_retTypeInfoList(), false, nil, alt2type )
                   if result == MatchType.Error then
                      return false, mess
                   end
-                  
                end
-               
                if #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
                   return false, string.format( "argNum %d != %d", #dest:get_retTypeInfoList(), #otherSrc:get_retTypeInfoList())
                end
-               
-               
                return true, nil
             end
          end
-         
       end
-      
       return false, string.format( "illegal type -- %s, %s", TypeInfoKind:_getTxt( dest:get_kind())
       , TypeInfoKind:_getTxt( otherSrc:get_kind())
       )
    end
-   
-   
    if dest:get_canDealGenInherit() ~= otherSrc:get_canDealGenInherit() then
       return false, string.format( "unmatch type generic -- %s, %s", dest:getTxt(  ), otherSrc:getTxt(  ))
    end
-   
    do
       local _switchExp = dest:get_kind()
       if _switchExp == TypeInfoKind.Prim then
          if dest == _moduleObj.builtinTypeInt and otherSrc == _moduleObj.builtinTypeChar or dest == _moduleObj.builtinTypeChar and otherSrc == _moduleObj.builtinTypeInt then
             return true, nil
          end
-         
-         
          return false, ""
          
       elseif _switchExp == TypeInfoKind.List or _switchExp == TypeInfoKind.Array or _switchExp == TypeInfoKind.Set then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone then
-            
             return true, nil
          end
-         
          if dest:get_canDealGenInherit() ~= otherSrc:get_canDealGenInherit() then
             return false, ""
             
          end
-         
          if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
             local workType1 = dest:get_itemTypeInfoList()[1]
             local workType2 = otherSrc:get_itemTypeInfoList()[1]
-            
             local evalMode
             
             if not dest:get_canDealGenInherit() then
@@ -10507,14 +9739,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
              
                evalMode = CanEvalType.SetOpIMut
             end
-            
             local ret, mess = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-            
-            
             if not ret then
                return false, mess
             end
-            
          else
           
             return false, nil
@@ -10524,16 +9752,13 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          return true, nil
       elseif _switchExp == TypeInfoKind.Map then
          if otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone and otherSrc:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
-            
             return true, nil
          end
-         
          local function check1(  )
          
             if #dest:get_itemTypeInfoList() >= 1 and #otherSrc:get_itemTypeInfoList() >= 1 then
                local workType1 = dest:get_itemTypeInfoList()[1]
                local workType2 = otherSrc:get_itemTypeInfoList()[1]
-               
                local evalMode
                
                if not dest:get_canDealGenInherit() then
@@ -10544,14 +9769,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                 
                   evalMode = CanEvalType.SetOpIMut
                end
-               
                local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-               
-               
                if not ret then
                   return false
                end
-               
             else
              
                return false
@@ -10565,7 +9786,6 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             if #dest:get_itemTypeInfoList() >= 2 and #otherSrc:get_itemTypeInfoList() >= 2 then
                local workType1 = dest:get_itemTypeInfoList()[2]
                local workType2 = otherSrc:get_itemTypeInfoList()[2]
-               
                local evalMode
                
                if not dest:get_canDealGenInherit() then
@@ -10576,14 +9796,10 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
                 
                   evalMode = CanEvalType.SetOpIMut
                end
-               
                local ret = workType1:canEvalWith( processInfo, workType2, evalMode, alt2type )
-               
-               
                if not ret then
                   return false
                end
-               
             else
              
                return false
@@ -10597,27 +9813,22 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
          if result1 and result2 then
             return true, nil
          end
-         
          if not result1 and otherSrc:get_itemTypeInfoList()[1] == _moduleObj.builtinTypeNone or not result2 and otherSrc:get_itemTypeInfoList()[2] == _moduleObj.builtinTypeNone then
             return true, nil
          end
-         
          return false, ""
          
       elseif _switchExp == TypeInfoKind.Class or _switchExp == TypeInfoKind.IF then
          if isGenericType( dest ) then
             return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
          end
-         
          if canEvalType == CanEvalType.SetOp or canEvalType == CanEvalType.SetOpIMut then
             local result = otherSrc:isInheritFrom( processInfo, dest, alt2type )
             if result then
                return result, nil
             end
-            
             return false, string.format( "not inherit %s(%d) <- %s(%d)", dest:getTxt(  ), dest:get_typeId():get_orgId(), otherSrc:getTxt(  ), otherSrc:get_typeId():get_orgId())
          end
-         
          return false, ""
          
       elseif _switchExp == TypeInfoKind.Tuple then
@@ -10625,70 +9836,57 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             return false, ""
             
          end
-         
          for index, dstItem in ipairs( dest:get_itemTypeInfoList() ) do
             local srcItem = otherSrc:get_itemTypeInfoList()[index]
             if not dstItem:equals( processInfo, srcItem, alt2type, true ) then
                return false, string.format( "umatch %s -- %s", dstItem:getTxt(  ), srcItem:getTxt(  ))
             end
-            
          end
-         
          return true, nil
       elseif _switchExp == TypeInfoKind.Form then
          if isSettableToForm( processInfo, otherSrc ) then
             return true, nil
          end
-         
          return false, ""
          
       elseif _switchExp == TypeInfoKind.Func or _switchExp == TypeInfoKind.FormFunc then
          if #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false, string.format( "argNum %d != %d", #dest:get_retTypeInfoList(), #otherSrc:get_retTypeInfoList())
          end
-         
          local argCheck, argMess = TypeInfo.checkMatchTypeAsync( processInfo, dest:get_argTypeInfoList(), otherSrc:get_argTypeInfoList(), false, nil, alt2type )
          if argCheck == MatchType.Error then
             return false, argMess
          end
-         
          local retCheck, retMess = TypeInfo.checkMatchTypeAsync( processInfo, dest:get_retTypeInfoList(), otherSrc:get_retTypeInfoList(), false, nil, alt2type )
          if retCheck == MatchType.Error then
             return false, retMess
          end
-         
          return true, nil
       elseif _switchExp == TypeInfoKind.Method then
          if #dest:get_argTypeInfoList() ~= #otherSrc:get_argTypeInfoList() or #dest:get_retTypeInfoList() ~= #otherSrc:get_retTypeInfoList() then
             return false, ""
             
          end
-         
          for index, argType in ipairs( dest:get_argTypeInfoList() ) do
             local otherArgType = otherSrc:get_argTypeInfoList()[index]
             if not argType:equals( processInfo, otherArgType, alt2type, true ) then
                local mess = string.format( "unmatch arg(%d) type -- %s, %s", index, argType:getTxt(  ), otherArgType:getTxt(  ))
                return false, mess
             end
-            
          end
-         
          for index, retType in ipairs( dest:get_retTypeInfoList() ) do
             local otherRetType = otherSrc:get_retTypeInfoList()[index]
             if not retType:equals( processInfo, otherRetType, alt2type, true ) then
                local mess = string.format( "unmatch ret(%d) type -- %s, %s, %s", index, retType:getTxt(  ), otherRetType:getTxt(  ), dest:getTxt(  ))
                return false, mess
             end
-            
          end
-         
          if dest:get_mutMode() ~= otherSrc:get_mutMode() then
             local mess = string.format( "unmatch mutable mode -- %s, %s", MutMode:_getTxt( dest:get_mutMode())
             , MutMode:_getTxt( otherSrc:get_mutMode())
             )
             return false, mess
          end
-         
          return true, nil
       elseif _switchExp == TypeInfoKind.Nilable then
          local dstNonNil
@@ -10697,10 +9895,8 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             dstNonNil = dest:get_nonnilableType()
          else
           
-            
             dstNonNil = dest:get_nonnilableType():get_imutType()
          end
-         
          return dstNonNil:canEvalWith( processInfo, otherSrc:get_nonnilableType(), canEvalType, alt2type )
       elseif _switchExp == TypeInfoKind.Alternate then
          return dest:canEvalWith( processInfo, otherSrc, canEvalType, alt2type )
@@ -10712,7 +9908,6 @@ function TypeInfo.canEvalWithBase( processInfo, dest, destMut, other, canEvalTyp
             
       end
    end
-   
 end
 
 
@@ -10728,11 +9923,9 @@ function ModifierTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo
    if typeInfo == self.srcTypeInfo then
       return self
    end
-   
    if typeInfo ~= nil then
       return processInfo:createModifier( typeInfo, MutMode.IMut )
    end
-   
    return nil
 end
 
@@ -10753,36 +9946,30 @@ function NormalTypeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
          if not needNew then
             return self
          end
-         
          return processInfo:createSet_( self:get_canDealGenInherit(), self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.List then
          if not needNew then
             return self
          end
-         
          return processInfo:createList_( self:get_canDealGenInherit(), self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Array then
          if not needNew then
             return self
          end
-         
          return processInfo:createArray( self.accessMode, self.parentInfo, itemTypeInfoList, self.mutMode )
       elseif _switchExp == TypeInfoKind.Map then
          if not needNew then
             return self
          end
-         
          return processInfo:createMap_( self:get_canDealGenInherit(), self.accessMode, self.parentInfo, itemTypeInfoList[1], itemTypeInfoList[2], self.mutMode )
       else 
          
             if #self.itemTypeInfoList == 0 then
                return self
             end
-            
             return nil
       end
    end
-   
 end
 
 
@@ -10791,7 +9978,6 @@ function TypeInfo:getFullName( typeNameCtrl, importInfo, localFlag )
    if localFlag and self:isModule(  ) then
       return typeNameCtrl:getModuleName( self, "", importInfo )
    end
-   
    return self:getParentFullName( typeNameCtrl, importInfo, localFlag ) .. self:get_rawTxt()
 end
 
@@ -10805,14 +9991,13 @@ local function isPrimitive( typeInfo )
          return true
       end
    end
-   
    if srcType == _moduleObj.builtinTypeString then
       return true
    end
-   
    return false
 end
 _moduleObj.isPrimitive = isPrimitive
+
 
 local BitOpKind = {}
 _moduleObj.BitOpKind = BitOpKind
@@ -10857,11 +10042,14 @@ local bitBinOpMap = {["&"] = BitOpKind.And, ["|"] = BitOpKind.Or, ["~"] = BitOpK
 _moduleObj.bitBinOpMap = bitBinOpMap
 
 
+
 local compOpSet = {["=="] = true, ["~="] = true}
 _moduleObj.compOpSet = compOpSet
 
+
 local mathCompOpSet = {["<"] = true, ["<="] = true, [">"] = true, [">="] = true}
 _moduleObj.mathCompOpSet = mathCompOpSet
+
 
 
 local RefTypeInfo = {}
@@ -10908,7 +10096,6 @@ function TypeAnalyzer:__init(processInfo, parentInfo, moduleType, moduleScope, s
    self.moduleScope = moduleScope
    self.scopeAccess = scopeAccess
    self.validMutControl = validMutControl
-   
    self.scope = rootScope
    self.accessMode = AccessMode.Local
    self.parentPub = false
@@ -10941,18 +10128,14 @@ function TypeAnalyzer:analyzeTypeSub( allowDDD )
       refFlag = true
       token = self.tokenizer:getTokenNoErr(  )
    end
-   
    local mutFlag = false
    if token.txt == "mut" then
       mutFlag = true
       token = self.tokenizer:getTokenNoErr(  )
    end
-   
-   
    local typeInfo
    
    if token.txt == "..." then
-      
       typeInfo = _moduleObj.builtinTypeDDD
    else
     
@@ -10966,10 +10149,8 @@ function TypeAnalyzer:analyzeTypeSub( allowDDD )
       if symbol:get_kind() ~= SymbolKind.Typ then
          return nil, token.pos, string.format( "illegal type -- %s", symbol:get_name())
       end
-      
       typeInfo = symbol:get_typeInfo()
    end
-   
    return self:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo, token.pos )
 end
 
@@ -10977,21 +10158,13 @@ end
 function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo, pos )
 
    if self.parentPub and isPubToExternal( self.accessMode ) and not isPubToExternal( typeInfo:get_accessMode() ) then
-      
       return nil, pos, string.format( "This type must be public. -- %s", typeInfo:getTxt(  ))
    end
-   
-   
    local token = self.tokenizer:getTokenNoErr(  )
-   
    if token.consecutive and token.txt == "!" then
       typeInfo = typeInfo:get_nilableTypeInfo()
       token = self.tokenizer:getTokenNoErr(  )
    end
-   
-   
-   
-   
    local genericRefList = {}
    while true do
       if token.txt == '[' or token.txt == '[@' then
@@ -11001,7 +10174,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
           
             typeInfo = self.processInfo:createArray( self.accessMode, self.parentInfo, {typeInfo}, MutMode.Mut )
          end
-         
          token = self.tokenizer:getTokenNoErr(  )
          if token.txt ~= ']' then
             return nil, token.pos, "not found -- ']'"
@@ -11017,15 +10189,11 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                table.insert( genericRefList, refType )
                table.insert( genericList, refType:get_typeInfo() )
             end
-            
             nextToken = self.tokenizer:getTokenNoErr(  )
          until nextToken.txt ~= ","
          if nextToken.txt ~= '>' then
             return nil, nextToken.pos, "not found -- ']'"
          end
-         
-         
-         
          
          
          do
@@ -11037,7 +10205,6 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                 
                   typeInfo = self.processInfo:createMap_( typeInfo:get_canDealGenInherit(), self.accessMode, self.parentInfo, genericList[1], genericList[2], MutMode.Mut )
                end
-               
             elseif _switchExp == TypeInfoKind.List then
                if #genericList ~= 1 then
                   return nil, pos, string.format( "generic type count is unmatch. -- %d", #genericList)
@@ -11077,9 +10244,7 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                      local mess = string.format( "can't use nilable type -- %s", itemType:getTxt(  ))
                      return nil, pos, mess
                   end
-                  
                end
-               
                typeInfo = self.processInfo:createGeneric( typeInfo, genericList, self.moduleType )
             elseif _switchExp == TypeInfoKind.Box then
                if #genericList ~= 1 then
@@ -11107,44 +10272,32 @@ function TypeAnalyzer:analyzeTypeItemList( allowDDD, refFlag, mutFlag, typeInfo,
                      return nil, pos, err
                   end
                end
-               
             else 
                
                   return nil, pos, string.format( "not support generic: %s", typeInfo:getTxt(  ))
             end
          end
-         
       else
        
          self.tokenizer:pushback(  )
          break
       end
-      
       token = self.tokenizer:getTokenNoErr(  )
    end
-   
    if token.txt == "!" then
       typeInfo = typeInfo:get_nilableTypeInfo(  )
       self.tokenizer:getTokenNoErr(  )
    end
-   
-   
    if not allowDDD then
       if typeInfo:get_kind() == TypeInfoKind.DDD then
          return nil, pos, string.format( "invalid type. -- '%s'", typeInfo:getTxt(  ))
       end
-      
    end
-   
-   
    if refFlag then
       if self.validMutControl then
          typeInfo = self.processInfo:createModifier( typeInfo, MutMode.IMut )
       end
-      
    end
-   
-   
    return RefTypeInfo._new(pos, genericRefList, typeInfo), nil, nil
 end
 

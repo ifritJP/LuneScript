@@ -70,6 +70,7 @@ end
 
 local Depend = _lune.loadModule( 'lune.base.Depend' )
 
+
 local Level = {}
 _moduleObj.Level = Level
 Level._val2NameMap = {}
@@ -118,6 +119,7 @@ Level.__allList[7] = Level.Trace
 local name2levelMap
 
 
+
 do
    local work = {}
    work["fatal"] = Level.Fatal
@@ -138,26 +140,26 @@ end
 _moduleObj.str2level = str2level
 
 
+
 local Control = {}
 function Control:log( level, funcName, lineNo, callback )
 
    local logStream = io.stderr
    if level <= self.level then
       local nowClock = os.clock(  )
-      
       logStream:write( string.format( "%6d:%s:%s:%d:", math.floor((nowClock * 1000 )), Level:_getTxt( level)
       , funcName, lineNo) )
       logStream:write( callback(  ) )
       logStream:write( "\n" )
    end
-   
 end
 function Control:direct( level, funcName, lineNo, mess )
 
    self:log( level, funcName, lineNo, function (  )
    
       return mess
-   end )
+   end
+    )
 end
 function Control._setmeta( obj )
   setmetatable( obj, { __index = Control  } )
@@ -181,15 +183,16 @@ end
 
 local control = Control._new(Level.Err)
 
+
 local function setLevel( level )
 
    control = Control._new(level)
    if level >= Level.Log then
       Depend.setRuntimeLog( true )
    end
-   
 end
 _moduleObj.setLevel = setLevel
+
 
 local function getLevel(  )
 
@@ -197,17 +200,20 @@ local function getLevel(  )
 end
 _moduleObj.getLevel = getLevel
 
+
 local function log( level, funcName, lineNo, callback )
 
    control:log( level, funcName, lineNo, callback )
 end
 _moduleObj.log = log
 
+
 local function direct( level, funcName, lineNo, mess )
 
    control:direct( level, funcName, lineNo, mess )
 end
 _moduleObj.direct = direct
+
 
 
 

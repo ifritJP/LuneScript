@@ -29,6 +29,7 @@ import lune.base.Util;
 import lune.base.Nodes;
 import lune.base.Ast;
 import lune.base.Tokenizer;
+import lune.base.AsyncTokenizer;
 import lune.base.Types;
 import lune.base.Formatter;
 import lune.base.DependLuaOnLns;
@@ -164,6 +165,9 @@ class MacroTokenizer extend Tokenizer.Tokenizer {
 }
 
 
+/**
+マクロの引数を macro-statement の処理に渡す値に変換する。
+*/
 fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
    _match obj {
       case .Nil {
@@ -222,6 +226,13 @@ fn getLiteralMacroVal( obj:Nodes.Literal ) : stem! {
             }
          }
          return newMap;
+      }
+      case .STAT( list ) {
+         let tokenList:_List<&stem> = [];
+         foreach token in list {
+            tokenList.insert( token._toMap() );
+         }
+         return tokenList;
       }
    }
 }
@@ -316,6 +327,15 @@ class DefMacroInfoWithSrc extend Nodes.DefMacroInfo {
    }
 }
 
+pub class MacroExpandInfo {
+   local let mut spendTime:int {pub};
+   local let mut accessCount:int {pub};
+
+   local fn __init() {
+      self.spendTime = 0;
+      self.accessCount = 0;
+   }
+}
 
 pub class MacroCtrl
 {
@@ -386,11 +406,30 @@ pub class MacroCtrl
 
    let frontAccessor:frontInterface.FrontAccessor;
 
+   /** マクロ処理にかかる時間 (ログ用) */
+   let mut processMilliSec:int {pub};
+   pub fn addProcessMilliSec( msec:int ) mut {
+      self.processMilliSec = self.processMilliSec + msec;
+   }
+
+   /** マクロ展開対象の型 → マクロ内の ,, 展開に掛る処理時間。 */
+   let expandType2Info:Map<str,MacroExpandInfo> {pub&};
+   /** マクロで展開するシンボル → 展開情報。 ログ用。 */
+   let expandSym2Info:Map<str,MacroExpandInfo> {pub&};
+
+   /** マクロでシンボル展開する txt → 展開後の Token */
+   let expandTxt2TokenList:Map<str,List<str>>;
+
 
    pub fn __init( macroEval: &Nodes.MacroEval, validAsyncMacro:bool,
                   frontAccessor:frontInterface.FrontAccessor )
    {
+      self.expandType2Info = {};
+      self.expandSym2Info = {};
+      self.expandTxt2TokenList = {};
+      
       self.id2use___var = {};
+      self.processMilliSec = 0;
 
       __asyncLock {
          // builtin マクロの情報を設定する
@@ -620,107 +659,109 @@ pub fn MacroCtrl.evalMacroOp(
             }
          }
       }
-      _callMacroState( {
-         if! let func = macroInfo.$func {
-            when! expList {
-               // マクロに渡す引数をセットする
-               foreach argNode, index in expList.$expList {
-                  let declArgNode = macroArgNodeList[ index ];
-                  macroArgName2ArgNode[ declArgNode.$name ] = argNode;
-                  let literal, mess = argNode.getLiteral();
-                  when! literal {
-                     if! let val = getLiteralMacroVal( literal ) {
-                        argValMap[ index ] = val;
+      _callMacroState(
+         {
+            if! let func = macroInfo.$func {
+               when! expList {
+                  // マクロに渡す引数をセットする
+                  foreach argNode, index in expList.$expList {
+                     let declArgNode = macroArgNodeList[ index ];
+                     macroArgName2ArgNode[ declArgNode.$name ] = argNode;
+                     let literal, mess = argNode.getLiteral();
+                     when! literal {
+                        if! let val = getLiteralMacroVal( literal ) {
+                           argValMap[ index ] = val;
 
-                        let argVal;
-                        if argNode.$expType == Ast.builtinTypeSymbol {
-                           argVal = toLuaval( val[ 1 ] );
-                        }
-                        else {
-                           argVal = toLuaval( val );
-                        }
-                        when! argVal {
-                           macroArgValMap[ declArgNode.$name ] = argVal;
+                           let argVal;
+                           if argNode.$expType == Ast.builtinTypeSymbol {
+                              argVal = toLuaval( val[ 1 ] );
+                           }
+                           else {
+                              argVal = toLuaval( val );
+                           }
+                           when! argVal {
+                              macroArgValMap[ declArgNode.$name ] = argVal;
+                           }
                         }
                      }
+                     else {
+                        errmess =
+                           "not support node at arg(%d) -- %s:%s"
+                           ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
+                        break;
+                     }
                   }
-                  else {
-                     errmess =
-                     "not support node at arg(%d) -- %s:%s"
-                     ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
-                     break;
-                  }
-               }
-            }
-
-            if not errmess {
-               // マクロ内共通変数 __var の設定
-               let! varMap = self.macroLocalVarMap {
-                  let toListEmpty =
-                     loadCode( "return function() return {} end" )@@toListEmptyLua;
-                  varMap = toListEmpty();
-               };
-               if valid__var {
-                  macroArgValMap[ "__var" ] = varMap;
                }
 
-               // マクロの macro-statment を実行
-               let mut macroVars = unwrap expandLuavalMap( func( macroArgValMap ) );
-
-               // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
-               // self.macroLocalVarMap に入れなおす。
-               if valid__var {
-                  self.macroLocalVarMap = unwrap macroVars.__var;
-               }
-
-               // macro-statment の実行結果から、
-               // symbol2ValueMapForMacro にシンボル名と値を紐付け。
-               // macroVars.__names には、
-               // macro-statment で定義された変数シンボル名が入る。
-               // これは convLua の processDeclVar() でセットしている。
-               foreach name in (unwrap macroVars.__names)@@_Map<int,str> {
-                  let! valInfo = macroInfo.$symbol2MacroValInfoMap[ name ] {
-                     Util.err( "not found macro symbol -- %s" (name) ); // バグ
+               if not errmess {
+                  // マクロ内共通変数 __var の設定
+                  let! varMap = self.macroLocalVarMap {
+                     let toListEmpty =
+                        loadCode( "return function() return {} end" )@@toListEmptyLua;
+                     varMap = toListEmpty();
                   };
-                  let typeInfo = valInfo.typeInfo;
-                  // macro-statment で定義する変数は、
-                  // expandLuavalMap 時に Lua の Table が Map として展開されるので、
-                  // List ではなく Map で登録してやる。
-                  let mut valMap:&stem;
-                  if! let mut val = macroVars[ name ] {
-                     if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
-                        valMap = { 1: val };
+                  if valid__var {
+                     macroArgValMap[ "__var" ] = varMap;
+                  }
+
+
+                  // マクロの macro-statment を実行
+                  let mut macroVars = unwrap expandLuavalMap( func( macroArgValMap ) );
+
+                  // macroVars.__var に、 macro-statment 内で実行した結果が入ってくるので
+                  // self.macroLocalVarMap に入れなおす。
+                  if valid__var {
+                     self.macroLocalVarMap = unwrap macroVars.__var;
+                  }
+
+                  // macro-statment の実行結果から、
+                  // symbol2ValueMapForMacro にシンボル名と値を紐付け。
+                  // macroVars.__names には、
+                  // macro-statment で定義された変数シンボル名が入る。
+                  // これは convLua の processDeclVar() でセットしている。
+                  foreach name in (unwrap macroVars.__names)@@_Map<int,str> {
+                     let! valInfo = macroInfo.$symbol2MacroValInfoMap[ name ] {
+                        Util.err( "not found macro symbol -- %s" (name) ); // バグ
+                     };
+                     let typeInfo = valInfo.typeInfo;
+                     // macro-statment で定義する変数は、
+                     // expandLuavalMap 時に Lua の Table が Map として展開されるので、
+                     // List ではなく Map で登録してやる。
+                     let mut valMap:&stem;
+                     if! let mut val = macroVars[ name ] {
+                        if equalsType( typeInfo, Ast.builtinTypeSymbol ) {
+                           valMap = { 1: val };
+                        } else {
+                           valMap = val;
+                        }
                      } else {
-                        valMap = val;
+                        valMap = {};
                      }
-                  } else {
-                     valMap = {};
-                  }
-                  self.symbol2ValueMapForMacro[ name ] =
-                     new Nodes.MacroValInfo( valMap, typeInfo, nil );
-               }
-            }
-         } else {
-            when! expList {
-               foreach argNode, index in expList.$expList {
-                  let declArgNode = macroArgNodeList[ index ];
-                  macroArgName2ArgNode[ declArgNode.$name ] = argNode;
-                  let literal, mess = argNode.getLiteral();
-                  when! literal {
-                     if! let val = getLiteralMacroVal( literal ) {
-                        argValMap[ index ] = val;
-                     }
-                  }
-                  else {
-                     errmess =
-                     "not support node at arg(%d) -- %s:%s"
-                     ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
-                     break;
+                     self.symbol2ValueMapForMacro[ name ] =
+                        new Nodes.MacroValInfo( valMap, typeInfo, nil );
                   }
                }
+            } else {
+               when! expList {
+                  foreach argNode, index in expList.$expList {
+                     let declArgNode = macroArgNodeList[ index ];
+                     macroArgName2ArgNode[ declArgNode.$name ] = argNode;
+                     let literal, mess = argNode.getLiteral();
+                     when! literal {
+                        if! let val = getLiteralMacroVal( literal ) {
+                           argValMap[ index ] = val;
+                        }
+                     }
+                     else {
+                        errmess =
+                           "not support node at arg(%d) -- %s:%s"
+                           ( index, Nodes.getNodeKindName( argNode.$kind ), mess );
+                        break;
+                     }
+                  }
+               }
             }
-         }
-      });
+         });
       when! errmess {
          return errmess;
       }
@@ -934,30 +975,48 @@ fn expandVal( tokenList:List<&Tokenizer.Token>,
 }
 
 /**
-txtList の文字列リストを parse して、
-pushbackTokenizer に pushback する。
+txtList の文字列リストから token を切り出して、
+symbol として pushbackTokenizer に pushback する。
+
 
 @param pushbackTokenizer PushbackTokenizer
 @param txtList 文字列リスト
 @param streamName ストリーム名
 @param pos parse したトークンの位置情報に置き換える値
 */
-fn pushbackTxt( pushbackTokenizer:Tokenizer.PushbackTokenizer,
+fn pushbackTxt( expandTxt2TokenList:Map<str,List<str>>,
+                pushbackTokenizer:Tokenizer.PushbackTokenizer,
                 txtList:&List<str>, streamName:str, pos:&Tokenizer.Position )
 {
-   let mut tokenList:List<&Tokenizer.Token> = [];
+   let tokenList:List<Tokenizer.Token> = [];
    foreach txt in txtList {
-      let mut tokenizer = Tokenizer.StreamTokenizer.create(
-         Types.TokenizerSrc.LnsCode(
-            txt, "macro symbol -- %s" (streamName), nil ), false, nil, pos.$RawOrgPos );
-      let mut workTokenizer = new Tokenizer.DefaultPushbackTokenizer( tokenizer );
-      while true {
-         let worktoken = workTokenizer.getTokenNoErr(##);
-         if worktoken.kind == .Eof {
-            break;
+      if! expandTxt2TokenList[ txt ] {
+         foreach token in _exp {
+            tokenList.insert( new Tokenizer.Token( .Symb, token, pos, false ## ) );
          }
-         tokenList.insert( new Tokenizer.Token(
-            worktoken.kind, worktoken.txt, pos, false ## ) );
+      } else {
+         let mut workList:List<str> = [];
+         expandTxt2TokenList[ txt ] = workList;
+         
+         if AsyncTokenizer.getDelimitIndex( txt, 1 ) {
+            let mut tokenizer = Tokenizer.StreamTokenizer.create(
+               Types.TokenizerSrc.LnsCode(
+                  txt, "macro symbol -- %s" (streamName), nil ),
+               false, nil, pos.$RawOrgPos );
+            let mut workTokenizer = new Tokenizer.DefaultPushbackTokenizer( tokenizer );
+            while true {
+               let worktoken = workTokenizer.getTokenNoErr(##);
+               if worktoken.kind == .Eof {
+                  break;
+               }
+               tokenList.insert( new Tokenizer.Token(
+                                    worktoken.kind, worktoken.txt, pos, false ## ) );
+               workList.insert( worktoken.txt );
+            }
+         } else {
+            tokenList.insert( new Tokenizer.Token( .Symb, txt, pos, false ## ) );
+            workList.insert( txt );
+         }
       }
    }
    for index = #tokenList, 1, -1 {
@@ -1006,91 +1065,59 @@ pub fn MacroCtrl.expandMacroVal(
       return list;
    }
 
-   
-   let tokenTxt = token.txt;
 
-   
-   if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
-      let mut nextToken = getToken();
+   fn pushbackStr( name:str, stmt:str, pos:&Types.Position ) __trans {
+      tokenizer.pushbackStr( nil, name, stmt, pos, nil );
 
-      let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
-         Util.err( "unknown macro val -- %s" (nextToken.txt) ); // 要対応
-      };
+      {
+         let! mut info = self.expandSym2Info[ name ] {
+            info = new MacroExpandInfo();
+            self.expandSym2Info[ name ] = info;
+         };
+         info.accessCount = info.accessCount + 1;
+         info.spendTime = info.spendTime + #stmt;
+      }
+   }
 
-      if tokenTxt == ',,' {
-         //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
-         if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
-            let mut txtList:List<str> = [];
-            foreach txt in macroVal2strList( nextToken.txt, macroVal ) {
-               txtList.insert( txt );
-            }
-            pushbackTxt( tokenizer, txtList, nextToken.txt, nextToken.pos ); 
+   fn expandDD( macroVal: &Nodes.MacroValInfo,
+                mut nextToken:&Tokenizer.Token ) __trans : &Tokenizer.Token
+   {
+      //Util.errorLog( "nextToken: %s" ( nextToken.txt ) );
+      if equalsType( macroVal.typeInfo, Ast.builtinTypeSymbol ) {
+         let mut txtList:List<str> = [];
+         foreach txt in macroVal2strList( nextToken.txt, macroVal ) {
+            txtList.insert( txt );
          }
-         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
-            equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg )
+         pushbackTxt( self.expandTxt2TokenList,
+                      tokenizer, txtList, nextToken.txt, nextToken.pos ); 
+      }
+      elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or
+         equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg )
+      {
+         let pos = macroVal.argNode$.$pos$.$RawOrgPos or
+            nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
+         let txt = unwrap macroVal.val default "";
+         pushbackStr( "macroVal %s" (nextToken.txt), txt@@str, pos );
+      }
+      elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
+         equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp )
+      {
+         let pos = macroVal.argNode$.$pos$.$RawOrgPos or
+            nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
+         let txt = unwrap macroVal.val default "nil";
+         pushbackStr( "macroVal %s" (nextToken.txt), txt@@str, pos );
+      }
+      elseif macroVal.typeInfo.$kind == .Array or
+         macroVal.typeInfo.get_kind() == .List
+      {
+         if equalsType( macroVal.typeInfo.$itemTypeInfoList[ 1 ],
+                        Ast.builtinTypeStat )
          {
             let pos = macroVal.argNode$.$pos$.$RawOrgPos or
                nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
-            let txt = unwrap macroVal.val default "";
-            tokenizer.pushbackStr( nil, "macroVal %s" (nextToken.txt), txt@@str, pos );
-         }
-         elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or
-            equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp )
-         {
-            let pos = macroVal.argNode$.$pos$.$RawOrgPos or
-               nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
-            let txt = unwrap macroVal.val default "nil";
-            tokenizer.pushbackStr( nil, "macroVal %s" (nextToken.txt), txt@@str, pos );
-         }
-         elseif macroVal.typeInfo.$kind == .Array or
-            macroVal.typeInfo.get_kind() == .List
-         {
-            if equalsType( macroVal.typeInfo.$itemTypeInfoList[ 1 ],
-                           Ast.builtinTypeStat )
-            {
-               let pos = macroVal.argNode$.$pos$.$RawOrgPos or
-                  nextToken.pos.$RawOrgPos or token.$pos.$orgPos;
-               let strList = macroVal2strList( nextToken.txt, macroVal );
-               for index = #strList, 1, -1 {
-                  tokenizer.pushbackStr(
-                     nil, "macroVal %s[%d]" (nextToken.txt, index),
-                     strList[ index ], pos );
-               }
-            }
-            else {
-               let mut tokenList: List<&Tokenizer.Token> = [];
-
-               if! let argNode = macroVal.argNode {
-                  if not argNode.setupLiteralTokenList( tokenList ) {
-                     Util.err( "illegal macro val ,, -- %s" (nextToken.txt) ); // 要対応
-                  }
-               }
-               else {
-                  Util.err( "not support ,, -- %s" (nextToken.txt) ); // 要対応
-               }
-
-               tokenizer.newPushback( tokenList );
-            }
-         }
-         elseif macroVal.typeInfo.get_kind() == .Enum {
-            let enumTypeInfo = unwrap macroVal.typeInfo.$aliasSrc@@@Ast.EnumTypeInfo;
-            let fullname = macroVal.typeInfo.getFullName( typeNameCtrl, scope, true );
-            // let mut nameList:List<str> = [];
-            // apply name of fullname.gmatch( "[^%.]+" ) {
-            //    nameList.insert( name );
-            // }
-            let nameList = Util.splitStr( fullname, "[^%.]+" );
-            let enumValInfo = unwrap enumTypeInfo.$val2EnumValInfo[ unwrap macroVal.val ];
-            nextToken = new Tokenizer.Token(
-               .Symb, enumValInfo.$name, nextToken.pos, false ## );
-            tokenizer.pushbackToken( nextToken );
-            for index = #nameList, 1, -1 {
-               nextToken = new Tokenizer.Token( .Dlmt, ".", nextToken.pos, false ## );
-               tokenizer.pushbackToken( nextToken );
-               nextToken = new Tokenizer.Token(
-                  .Symb, nameList[ index ], nextToken.pos, false ## );
-               tokenizer.pushbackToken( nextToken );
-            }
+            let strList = macroVal2strList( nextToken.txt, macroVal );
+            pushbackStr( "macroVal %s" (nextToken.txt),
+                            string._join( strList, "\n" ## ), pos );
          }
          else {
             let mut tokenList: List<&Tokenizer.Token> = [];
@@ -1101,15 +1128,74 @@ pub fn MacroCtrl.expandMacroVal(
                }
             }
             else {
-               expandVal( tokenList, macroVal.val, nextToken.pos );
+               Util.err( "not support ,, -- %s" (nextToken.txt) ); // 要対応
             }
 
             tokenizer.newPushback( tokenList );
          }
       }
+      elseif macroVal.typeInfo.get_kind() == .Enum {
+         let enumTypeInfo = unwrap macroVal.typeInfo.$aliasSrc@@@Ast.EnumTypeInfo;
+         let fullname = macroVal.typeInfo.getFullName( typeNameCtrl, scope, true );
+         // let mut nameList:List<str> = [];
+         // apply name of fullname.gmatch( "[^%.]+" ) {
+         //    nameList.insert( name );
+         // }
+         let nameList = Util.splitStr( fullname, "[^%.]+" );
+         let enumValInfo = unwrap enumTypeInfo.$val2EnumValInfo[ unwrap macroVal.val ];
+         nextToken = new Tokenizer.Token(
+            .Symb, enumValInfo.$name, nextToken.pos, false ## );
+         tokenizer.pushbackToken( nextToken );
+         for index = #nameList, 1, -1 {
+            nextToken = new Tokenizer.Token( .Dlmt, ".", nextToken.pos, false ## );
+            tokenizer.pushbackToken( nextToken );
+            nextToken = new Tokenizer.Token(
+               .Symb, nameList[ index ], nextToken.pos, false ## );
+            tokenizer.pushbackToken( nextToken );
+         }
+      }
+      else {
+         let mut tokenList: List<&Tokenizer.Token> = [];
+
+         if! let argNode = macroVal.argNode {
+            if not argNode.setupLiteralTokenList( tokenList ) {
+               Util.err( "illegal macro val ,, -- %s" (nextToken.txt) ); // 要対応
+            }
+         }
+         else {
+            expandVal( tokenList, macroVal.val, nextToken.pos );
+         }
+
+         tokenizer.newPushback( tokenList );
+      }
+
+      return nextToken;
+   }
+   
+   let tokenTxt = token.txt;
+   if tokenTxt == ',,' or tokenTxt == ',,,' or tokenTxt == ',,,,' {
+      let mut nextToken = getToken();
+
+      let! macroVal = self.symbol2ValueMapForMacro[ nextToken.txt ] {
+         Util.err( "unknown macro val -- %s" (nextToken.txt) ); // 要対応
+      };
+
+      if tokenTxt == ',,' {
+         let! mut expandInfo = self.expandType2Info[ macroVal.typeInfo.getTxt(##) ] {
+            expandInfo = new MacroExpandInfo();
+            self.expandType2Info[ macroVal.typeInfo.getTxt(##) ] = expandInfo;
+         };
+         let prev = __lns.runtime.time();
+         
+         nextToken = expandDD( macroVal, nextToken );
+
+         expandInfo.spendTime = expandInfo.spendTime + __lns.runtime.time() - prev;
+         expandInfo.accessCount = expandInfo.accessCount + 1;
+      }
       elseif tokenTxt == ',,,' {
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) {
-            pushbackTxt( tokenizer, [ (unwrap macroVal.val)@@str ],
+            pushbackTxt( self.expandTxt2TokenList,
+                         tokenizer, [ (unwrap macroVal.val)@@str ],
                          nextToken.txt, nextToken.pos );
          }
          else {
@@ -1167,6 +1253,28 @@ pub class ErrorMess {
    pub let mess:str;
 }
 
+/**
+マクロ定義内のシンボル展開処理。
+
+ex.
+macro _hoge() {
+{ let val = `{print();}; }
+,,val;
+}
+
+例えば上記の ,,val の処理を行なう。
+
+
+
+
+@param tokenizer このシンボル展開処理を解析している tokenizer
+@param inTestBlock テストブロック内かどうか？
+@param prefixToken 展開対象直前のトークン。 ",," など。
+@param exp 展開対象の Node。
+@param nodeManager 現在の Node を管理する NodeManager。
+@param errMessList エラー発生時のメッセージ格納リスト。
+@return LiteralStringNode 展開後の Node。
+*/
 pub fn MacroCtrl.expandSymbol(
    tokenizer:Tokenizer.PushbackTokenizer, inTestBlock:bool, prefixToken:&Tokenizer.Token,
    mut exp:&Nodes.Node, nodeManager:Nodes.NodeManager,
@@ -1295,7 +1403,9 @@ pub fn MacroCtrl.startExpandMode(
    self.macroCallLineNo = pos;
    self.macroAnalyzeInfoStack.insert( self.analyzeInfo );
 
+
    callback();
+   
 
    self.finishMacroMode();
 }

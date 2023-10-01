@@ -152,8 +152,11 @@ end
 
 
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 
 local NamespaceInfo = {}
 function NamespaceInfo._new( parent, nsType )
@@ -177,11 +180,9 @@ function NamespaceInfo:__init(parent, nsType)
       subId = 0
       depth = 0
    end
-   
    self.subId = subId
    self.depth = depth
    self.nsType = nsType
-   
    self.idProvMap = {}
 end
 function NamespaceInfo:getNewId( nodeKind )
@@ -208,12 +209,10 @@ function NamespaceInfo:getIdTxt(  )
           
             return string.format( "%s%s", parent:getIdTxt(  ), string.format( "_%d", self.subId))
          end
-         
       else
          return ""
       end
    end
-   
 end
 function NamespaceInfo._setmeta( obj )
   setmetatable( obj, { __index = NamespaceInfo  } )
@@ -229,6 +228,7 @@ function NamespaceInfo:get_nsType()
 end
 
 local declNameSpaceNodeKindSet = {[Nodes.NodeKind.get_DeclClass()] = true, [Nodes.NodeKind.get_DeclConstr()] = true, [Nodes.NodeKind.get_DeclFunc()] = true, [Nodes.NodeKind.get_ProtoMethod()] = true, [Nodes.NodeKind.get_DeclMethod()] = true, [Nodes.NodeKind.get_DeclEnum()] = true, [Nodes.NodeKind.get_DeclAlge()] = true, [Nodes.NodeKind.get_DeclMacro()] = true}
+
 
 local Index = {}
 _moduleObj.Index = Index
@@ -282,35 +282,26 @@ function Indexer:visit( targetNode, dept )
       if _lune._Set_has(self.targetNodeKindSet, node:get_kind() ) then
          self.node2Index[node] = Index._new(self.nsInfo, self.nsInfo:getNewId( node:get_kind() ))
       end
-      
-      
       if _lune._Set_has(declNameSpaceNodeKindSet, node:get_kind() ) then
          local bakNsInfo = self.nsInfo
          local parentNsInfo = self.nsInfo
-         
          do
             local declMethodNode = _lune.__Cast( node, 3, Nodes.DeclMethodNode )
             if declMethodNode ~= nil then
                if declMethodNode:get_declInfo():get_outsizeOfClass() then
                   parentNsInfo = _lune.unwrap( self.nsType2nsInfo[node:get_expType():get_parentInfo()])
                end
-               
             end
          end
-         
-         
          self.nsInfo = NamespaceInfo._new(parentNsInfo, node:get_expType())
          self.nsType2nsInfo[node:get_expType()] = self.nsInfo
-         
          self:visit( node, depth + 1 )
          self.nsInfo = bakNsInfo
-         
          return Nodes.NodeVisitMode.Next
       end
-      
-      
       return Nodes.NodeVisitMode.Child
-   end, 0, {} )
+   end
+   , 0, {} )
 end
 function Indexer:start( targetNode, targetNodeKindSet )
 
@@ -323,18 +314,15 @@ function Indexer:dump(  )
    for node, _1 in pairs( self.node2Index ) do
       table.insert( list, node )
    end
-   
    local function comp( node1, node2 )
    
       return node1:comp( node2 ) < 0
    end
    table.sort( list, comp )
-   
    for __index, node in ipairs( list ) do
       local index = _lune.unwrap( self.node2Index[node])
       Util.println( string.format( "%d:%d:", node:get_pos().lineNo, node:get_pos().column), index:getIdTxt(  ), Nodes.getNodeKindName( node:get_kind() ) )
    end
-   
 end
 function Indexer._setmeta( obj )
   setmetatable( obj, { __index = Indexer  } )

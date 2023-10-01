@@ -16,8 +16,11 @@ if not _lune8 then
    _lune8 = _lune
 end
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
+
 local frontInterface = _lune.loadModule( 'lune.base.frontInterface' )
+
 local Builtin = _lune.loadModule( 'lune.base.Builtin' )
+
 local ASTInfo = {}
 _moduleObj.ASTInfo = ASTInfo
 function ASTInfo._setmeta( obj )

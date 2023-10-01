@@ -153,6 +153,7 @@ end
 local Util = _lune.loadModule( 'lune.base.Util' )
 
 
+
 local AltBase = {}
 _moduleObj.AltBase = AltBase
 function AltBase._setmeta( obj )
@@ -244,6 +245,7 @@ function TransCtrlInfo._new(  )
    return obj
 end
 function TransCtrlInfo:__init() 
+   self.asyncTokenizer = true
    self.defaultGenInherit = true
    self.useWaiter = true
    self.macroAsyncParseStmtLen = 500
@@ -297,7 +299,6 @@ function Position:get_orgPos(  )
          return _exp:get_orgPos()
       end
    end
-   
    return self
 end
 function Position:get_RawOrgPos(  )
@@ -316,7 +317,6 @@ function Position:getDisplayTxt(  )
       local txt2 = string.format( "%s:%d:%d", orgPos.streamName, orgPos.lineNo, orgPos.column)
       return string.format( "%s: (%s)", txt2, txt)
    end
-   
    return txt
 end
 function Position:comp( other )
@@ -324,27 +324,21 @@ function Position:comp( other )
    if self.streamName < other.streamName then
       return -1
    end
-   
    if self.streamName > other.streamName then
       return 1
    end
-   
    if self.lineNo < other.lineNo then
       return -1
    end
-   
    if self.lineNo > other.lineNo then
       return 1
    end
-   
    if self.column < other.column then
       return -1
    end
-   
    if self.column > other.column then
       return 1
    end
-   
    local orgPos, otherOrgPos = self.orgPos, other.orgPos
    if  nil == orgPos or  nil == otherOrgPos then
       local _orgPos = orgPos
@@ -467,7 +461,6 @@ function Token:getExcludedDelimitTxt(  )
    if self.kind ~= TokenKind.Str then
       return self.txt
    end
-   
    do
       local _switchExp = string.byte( self.txt, 1 )
       if _switchExp == 39 or _switchExp == 34 then
@@ -476,8 +469,6 @@ function Token:getExcludedDelimitTxt(  )
          return self.txt:sub( 1 + 3, #self.txt - 3 )
       end
    end
-   
-   
    Util.err( string.format( "illegal delimit -- %s", self.txt) )
 end
 function Token:getLineCount(  )
@@ -487,9 +478,7 @@ function Token:getLineCount(  )
       for _1 in self.txt:gmatch( "\n" ) do
          count = count + 1
       end
-      
    end
-   
    return count
 end
 function Token:get_endLineNo(  )
@@ -504,6 +493,7 @@ function Token:get_commentList()
 end
 do
    Token.noneCommentList = {}
+   
 end
 function Token:_toMap()
   return self
@@ -538,8 +528,10 @@ end
 local nonePos = Position._new(0, -1, "eof")
 _moduleObj.nonePos = nonePos
 
+
 local noneToken = Token._new(TokenKind.Eof, "", _moduleObj.nonePos, false, {})
 _moduleObj.noneToken = noneToken
+
 
 
 local StdinFile = {}
@@ -593,6 +585,7 @@ TokenizerSrc._name2Val["Tokenizer"] = TokenizerSrc.Tokenizer
 
 local defaultTokenizerPipeSize = 100
 _moduleObj.defaultTokenizerPipeSize = defaultTokenizerPipeSize
+
 
 
 return _moduleObj

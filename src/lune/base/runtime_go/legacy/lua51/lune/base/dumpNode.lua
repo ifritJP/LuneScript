@@ -124,9 +124,13 @@ end
 
 
 local Ast = _lune.loadModule( 'lune.base.Ast' )
+
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
+
 local LuneControl = _lune.loadModule( 'lune.base.LuneControl' )
+
 local Util = _lune.loadModule( 'lune.base.Util' )
+
 
 local Opt = {}
 _moduleObj.Opt = Opt
@@ -153,7 +157,6 @@ function Opt:nextOpt(  )
          return _exp
       end
    end
-   
    local opt = Opt._new(self.prefix .. "  ", self.depth + 1)
    self.next = opt
    return opt
@@ -177,8 +180,6 @@ function dumpFilter:dump( opt, node, txt )
    if expType:equals( self.processInfo, Ast.builtinTypeNone ) then
       typeStr = string.format( "(%d:%s:%s)", expType:get_typeId().id, expType:getTxt(  ), tostring( expType:get_kind()))
    end
-   
-   
    local comment
    
    do
@@ -192,25 +193,18 @@ function dumpFilter:dump( opt, node, txt )
           
             comment = ""
          end
-         
       end
    end
-   
-   
    local attrib = ""
    if node:hasNilAccess(  ) then
       attrib = string.format( "%s %s", attrib, "nilacc")
    end
-   
    if node:isIntermediate(  ) then
       attrib = string.format( "%s %s", attrib, "inter")
    end
-   
    if #attrib ~= 0 then
       attrib = string.format( "[%s]", attrib)
    end
-   
-   
    self:writeln( opt, string.format( ": %s:%s(%d:%d) %s %s %s %s", Nodes.getNodeKindName( node:get_kind(  ) ), node:getIdTxt(  ), node:get_effectivePos().lineNo, node:get_effectivePos().column, attrib, txt, typeStr, comment) )
 end
 function dumpFilter._setmeta( obj )
@@ -238,10 +232,12 @@ local function createFilter( moduleTypeInfo, processInfo, stream )
 end
 _moduleObj.createFilter = createFilter
 
+
 local function filter( node, filter, opt )
 
    node:processFilter( filter, opt )
 end
+
 
 function dumpFilter:processNone( node, opt )
 
@@ -287,7 +283,6 @@ function dumpFilter:processRoot( node, opt )
    for __index, child in ipairs( node:get_children(  ) ) do
       filter( child, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -322,7 +317,6 @@ function dumpFilter:processBlockSub( node, opt )
    for __index, statement in ipairs( node:get_stmtList(  ) ) do
       filter( statement, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -367,11 +361,9 @@ function dumpFilter:processDeclEnum( node, opt )
             val = x
          end
       end
-      
       self:writeln( opt, string.format( "  %s: %s, %s", name.txt, Ast.EnumLiteral:_getTxt( valInfo:get_val())
       , tostring( val)) )
    end
-   
 end
 
 
@@ -393,7 +385,6 @@ function dumpFilter:processDeclAlge( node, opt )
          end
       end
    end
-   
 end
 
 
@@ -403,7 +394,6 @@ function dumpFilter:processNewAlgeVal( node, opt )
    for __index, exp in ipairs( node:get_paramList() ) do
       filter( exp, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -423,15 +413,12 @@ function dumpFilter:processDeclClass( node, opt )
          filter( baseNode, self, opt:nextOpt(  ) )
       end
    end
-   
    for __index, ifNode in ipairs( node:get_inheritInfo():get_impliments() ) do
       filter( ifNode, self, opt:nextOpt(  ) )
    end
-   
    for __index, field in ipairs( node:get_fieldList(  ) ) do
       filter( field, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -457,12 +444,10 @@ function dumpFilter:processExpMacroExp( node, opt )
          filter( expList, self, opt:nextOpt(  ) )
       end
    end
-   
    local stmtList = node:get_stmtList(  )
    for __index, stmt in ipairs( stmtList ) do
       filter( stmt, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -478,7 +463,6 @@ function dumpFilter:processExpMacroStat( node, opt )
    for __index, expStr in ipairs( node:get_expStrList(  ) ) do
       filter( expStr, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -488,11 +472,9 @@ function dumpFilter:processUnwrapSet( node, opt )
    self:dump( opt, node, "" )
    filter( node:get_dstExpList(), self, opt:nextOpt(  ) )
    filter( node:get_srcExpList(), self, opt:nextOpt(  ) )
-   
    if node:get_unwrapBlock() then
       filter( _lune.unwrap( node:get_unwrapBlock()), self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -500,12 +482,10 @@ function dumpFilter:processIfUnwrap( node, opt )
 
    self:dump( opt, node, "" )
    filter( node:get_expList(), self, opt:nextOpt(  ) )
-   
    filter( node:get_block(), self, opt:nextOpt(  ) )
    if node:get_nilBlock() then
       filter( _lune.unwrap( node:get_nilBlock()), self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -515,8 +495,6 @@ function dumpFilter:processWhen( node, opt )
    for __index, symPair in ipairs( node:get_symPairList() ) do
       symTxt = string.format( "%s %s", symTxt, symPair:get_src():get_name())
    end
-   
-   
    self:dump( opt, node, symTxt )
    filter( node:get_block(), self, opt:nextOpt(  ) )
    do
@@ -525,7 +503,6 @@ function dumpFilter:processWhen( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -543,16 +520,12 @@ function dumpFilter:processDeclVar( node, opt )
       if index > 1 then
          varName = varName .. ","
       end
-      
       varName = string.format( "%s %s", varName, var:get_name(  ).txt)
    end
-   
    if node:get_unwrapBlock() then
       varName = "!" .. varName
    end
-   
    varName = string.format( "%s %s", tostring( node:get_mode()), varName)
-   
    self:dump( opt, node, varName )
    for __index, var in ipairs( node:get_varList(  ) ) do
       do
@@ -561,30 +534,25 @@ function dumpFilter:processDeclVar( node, opt )
             filter( _exp, self, opt:nextOpt(  ) )
          end
       end
-      
    end
-   
    do
       local _exp = node:get_expList()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
    do
       local _exp = node:get_unwrapBlock()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
    do
       local _exp = node:get_thenBlock()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -627,24 +595,20 @@ function dumpFilter:processDeclFuncInfo( node, declInfo, opt )
    if Ast.TypeInfo.isMut( node:get_expType() ) then
       name = name .. " mut"
    end
-   
    if _lune.nilacc( node:get_expType():get_scope(), 'get_hasClosureAccess', 'callmtd' ) then
       name = name .. " closure"
    end
-   
    self:dump( opt, node, string.format( "%s -- stmt:%d", name, declInfo:get_stmtNum()) )
    local argList = declInfo:get_argList(  )
    for __index, arg in ipairs( argList ) do
       filter( arg, self, opt:nextOpt(  ) )
    end
-   
    do
       local _exp = declInfo:get_body(  )
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 function dumpFilter:processDeclFunc( node, opt )
@@ -708,10 +672,8 @@ function dumpFilter:processIf( node, opt )
       if stmt:get_exp():get_kind() ~= Nodes.nodeKindEnum.None then
          filter( stmt:get_exp(), self, opt:nextOpt(  ) )
       end
-      
       filter( stmt:get_block(), self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -724,14 +686,12 @@ function dumpFilter:processSwitch( node, opt )
       filter( caseInfo:get_expList(), self, opt:nextOpt(  ) )
       filter( caseInfo:get_block(), self, opt:nextOpt(  ) )
    end
-   
    do
       local _exp = node:get_default(  )
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -745,14 +705,12 @@ function dumpFilter:processMatch( node, opt )
       filter( caseInfo:get_valExpRef(), self, opt:nextOpt(  ) )
       filter( caseInfo:get_block(), self, Opt._new(prefix .. "  " .. caseInfo:get_valInfo():get_name(), depth + 1) )
    end
-   
    do
       local _exp = node:get_defaultBlock()
       if _exp ~= nil then
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -783,7 +741,6 @@ function dumpFilter:processFor( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
    filter( node:get_block(  ), self, opt:nextOpt(  ) )
 end
 
@@ -795,7 +752,6 @@ function dumpFilter:processApply( node, opt )
    for __index, var in ipairs( varList ) do
       varNames = varNames .. var:get_name() .. " "
    end
-   
    self:dump( opt, node, varNames )
    filter( node:get_expList(), self, opt:nextOpt(  ) )
    filter( node:get_block(), self, opt:nextOpt(  ) )
@@ -811,7 +767,6 @@ function dumpFilter:processForeach( node, opt )
          index = _exp:get_name()
       end
    end
-   
    self:dump( opt, node, node:get_val():get_name() .. " " .. index )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
    filter( node:get_block(  ), self, opt:nextOpt(  ) )
@@ -827,7 +782,6 @@ function dumpFilter:processForsort( node, opt )
          index = _exp:get_name()
       end
    end
-   
    self:dump( opt, node, node:get_val(  ):get_name() .. " " .. index )
    filter( node:get_exp(  ), self, opt:nextOpt(  ) )
    filter( node:get_block(  ), self, opt:nextOpt(  ) )
@@ -845,7 +799,6 @@ function dumpFilter:processExpUnwrap( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -856,12 +809,11 @@ local function getTypeListTxt( typeList )
       if index > 1 then
          txt = txt .. ", "
       end
-      
       txt = txt .. typeInfo:getTxt(  )
    end
-   
    return txt
 end
+
 
 function dumpFilter:processExpCall( node, opt )
 
@@ -874,7 +826,6 @@ function dumpFilter:processExpCall( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -891,18 +842,14 @@ function dumpFilter:processExpList( node, opt )
          mess = "noMRetExp: "
       end
    end
-   
    for __index, expType in ipairs( node:get_expTypeList() ) do
       mess = string.format( "%s %s", mess, expType:getTxt(  ))
    end
-   
-   
    self:dump( opt, node, mess )
    local expList = node:get_expList()
    for __index, exp in ipairs( expList ) do
       filter( exp, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -980,13 +927,11 @@ function dumpFilter:processExpSetItem( node, opt )
          indexSym = index
       end
    end
-   
    self:dump( opt, node, indexSym )
    filter( node:get_val(), self, opt:nextOpt(  ) )
    if indexNode ~= nil then
       filter( indexNode, self, opt:nextOpt(  ) )
    end
-   
    filter( node:get_exp2(), self, opt:nextOpt(  ) )
 end
 
@@ -1009,7 +954,6 @@ function dumpFilter:processExpNew( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -1029,7 +973,6 @@ function dumpFilter:processExpRefItem( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -1064,7 +1007,6 @@ function dumpFilter:processReturn( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -1110,7 +1052,6 @@ function dumpFilter:processTestBlock( node, opt )
    for __index, statement in ipairs( node:get_stmtList() ) do
       filter( statement, self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -1145,7 +1086,6 @@ function dumpFilter:processLiteralList( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -1158,7 +1098,6 @@ function dumpFilter:processLiteralSet( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -1170,7 +1109,6 @@ function dumpFilter:processLiteralMap( node, opt )
       filter( pair:get_key(  ), self, opt:nextOpt(  ) )
       filter( pair:get_val(  ), self, opt:nextOpt(  ) )
    end
-   
 end
 
 
@@ -1183,7 +1121,6 @@ function dumpFilter:processLiteralArray( node, opt )
          filter( _exp, self, opt:nextOpt(  ) )
       end
    end
-   
 end
 
 
@@ -1214,10 +1151,8 @@ function dumpFilter:processLiteralString( node, opt )
          for __index, param in ipairs( expList:get_expList() ) do
             filter( param, self, opt:nextOpt(  ) )
          end
-         
       end
    end
-   
 end
 
 

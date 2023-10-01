@@ -195,6 +195,7 @@ end
 
 local Util = _lune.loadModule( 'lune.base.Util' )
 
+
 local Writer = {}
 _moduleObj.Writer = Writer
 function Writer._setmeta( obj )
@@ -232,12 +233,9 @@ function XML.convertXmlTxt( val )
    if val == "" then
       return ""
    end
-   
-   
    if type( val ) == "number" then
       return string.format( "%g", val * 1.0)
    end
-   
    local txt = string.format( "%s", tostring( val))
    txt = string.gsub( txt, '&', "&amp;" )
    txt = string.gsub( txt, '>', "&gt;" )
@@ -266,7 +264,6 @@ function XML:endElement(  )
    elseif self.depth < 0 then
       Util.err( "illegal depth" )
    end
-   
 end
 function XML:writeValue( val )
 
@@ -352,7 +349,6 @@ _moduleObj.JSON = JSON
 function JSON:startLayer( arrayFlag, madeByArrayFlag )
 
    local info = JsonLayer._new(JsonLayerState.None, arrayFlag, self.prevName, madeByArrayFlag, {}, true, false)
-   
    table.insert( self.layerQueue, info )
    self.stream:write( arrayFlag and "[" or "{" )
 end
@@ -373,7 +369,6 @@ function JSON:getLayerInfo(  )
    if #self.layerQueue == 0 then
       return nil
    end
-   
    return self.layerQueue[#self.layerQueue]
 end
 function JSON:equalLayerState( state )
@@ -393,8 +388,6 @@ function JSON:endLayer(  )
    if #self.layerQueue == 0 then
       Util.err( "illegal depth" )
    end
-   
-   
    while #self.layerQueue > 0 do
       local info = _lune.unwrap( self:getLayerInfo(  ))
       if info.arrayFlag then
@@ -403,19 +396,15 @@ function JSON:endLayer(  )
        
          self.stream:write( '}' )
       end
-      
       table.remove( self.layerQueue )
       local parentInfo = self:getLayerInfo(  )
       if not _lune.nilacc( parentInfo, "madeByArrayFlag" ) then
          break
       end
-      
    end
-   
    if #self.layerQueue == 0 then
       self.stream:write( '\n' )
    end
-   
 end
 function JSON:getLayerName(  )
 
@@ -428,26 +417,19 @@ function JSON:addElementName( name )
    if not info.arrayFlag and _lune._Set_has(nameSet, name ) then
       Util.err( "exist same name: " .. name )
    end
-   
    nameSet[name]= true
 end
 function JSON:startParent( name, arrayFlag )
 
    self:addElementName( name )
-   
    if self:equalLayerState( JsonLayerState.Termed ) or self:equalLayerState( JsonLayerState.Named ) or self:equalLayerState( JsonLayerState.Valued ) then
       self.stream:write( "," )
    elseif self:equalLayerState( JsonLayerState.None ) then
-      
    end
-   
-   
    local parentInfo = self:getLayerInfo(  )
    if not arrayFlag and _lune.nilacc( parentInfo, "arrayFlag" ) then
       self:startLayer( false, true )
    end
-   
-   
    self.stream:write( string.format( '"%s": ', name) )
    self:startLayer( arrayFlag, false )
    self.prevName = name
@@ -455,28 +437,20 @@ end
 function JSON:startElement( name )
 
    self:addElementName( name )
-   
    if self:equalLayerState( JsonLayerState.Termed ) then
       self.stream:write( "," )
    elseif self:equalLayerState( JsonLayerState.Named ) then
       Util.err( 'illegal layer state' )
    elseif self:equalLayerState( JsonLayerState.None ) then
-      
    end
-   
    if self:isArrayLayer(  ) then
       self:startLayer( false, true )
    end
-   
-   
    local info = _lune.unwrap( self:getLayerInfo(  ))
-   
    if info.openElement then
       Util.err( 'illegal openElement' )
    end
-   
    info.openElement = true
-   
    self.stream:write( string.format( '"%s": ', name) )
    self:setLayerState( JsonLayerState.Named )
    self.prevName = name
@@ -490,16 +464,13 @@ function JSON:endElement(  )
       if info.openElement then
          info.openElement = false
       end
-      
       if _lune.nilacc( self:getLayerInfo(  ), "madeByArrayFlag" ) then
          self:endLayer(  )
       end
-      
    else
     
       Util.err( string.format( 'illegal layer state %s', self:getLayerName(  )) )
    end
-   
    self:setLayerState( JsonLayerState.Termed )
 end
 function JSON.convertJsonTxt( txt )
@@ -507,7 +478,6 @@ function JSON.convertJsonTxt( txt )
    if txt == "" then
       return ""
    end
-   
    txt = string.gsub( txt, '"', '\\"' )
    txt = string.gsub( txt, '\\', '\\\\' )
    txt = string.gsub( txt, '\n', '\\n' )
@@ -525,8 +495,6 @@ function JSON:writeValue( val )
     
       txt = string.format( '"%s"', JSON.convertJsonTxt( string.format( '%s', tostring( val)) ))
    end
-   
-   
    self.stream:write( txt )
    self:setLayerState( JsonLayerState.Valued )
 end
@@ -544,7 +512,6 @@ function JSON:fin(  )
     
       Util.err( 'illegal' )
    end
-   
 end
 function JSON._setmeta( obj )
   setmetatable( obj, { __index = JSON  } )

@@ -240,277 +240,281 @@ builtin 関数の TypeInfo を保持するクラス。
    }
 }
 
-_DefBuiltinFuncType( [
-   {
-      "__Er": {
-         "__attrib": { "type": [ "interface" ] },
-         "get_txt": { "type": [ "method" ], "arg": [ ], "ret": [ "str" ] },
+_DefBuiltinFuncType(
+   [
+      {
+         "__Er": {
+            "__attrib": { "type": [ "interface" ] },
+            "get_txt": { "type": [ "method" ], "arg": [ ], "ret": [ "str" ] },
+         },
       },
-   },
-   {
-      "": {
-         "type": { "arg": [ "&stem!" ], "ret": ["str"] },
-         "error": { "arg": [ "str" ], "ret": [ "__" ] },
-         "print": { "arg": [ "&..." ], "ret": [] },
-         "tonumber": { "arg": [ "str", "int!" ], "ret": ["real!"] },
-         "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
-         //"load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
-         "loadfile": { "arg": [ "str" ], "ret": ["Luaval<form>!", "str!"] },
-         "require": { "arg": [ "str" ], "ret": ["Luaval<stem>"] },
-         "collectgarbage": { "arg": [ ], "ret": [] },
-         "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
-         "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },
-         "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
-         "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
-         "__run": { "arg": [ "__Runner", "int", "str!" ], "ret":[ "bool" ] },
-         "__join": { "arg": [ "&__Runner" ], "ret":[ "" ] },
-         "__serr": { "arg": ["str"], "ret": [ "__Er"] },
+      {
+         "": {
+            "type": { "arg": [ "&stem!" ], "ret": ["str"] },
+            "error": { "arg": [ "str" ], "ret": [ "__" ] },
+            "print": { "arg": [ "&..." ], "ret": [] },
+            "tonumber": { "arg": [ "str", "int!" ], "ret": ["real!"] },
+            "tostring": { "arg": [ "&stem" ], "ret": ["str"] },
+            //"load": { "arg": [ "str", "str!", "str!", "stem!" ], "ret": ["form!", "str!"] },
+            "loadfile": { "arg": [ "str" ], "ret": ["Luaval<form>!", "str!"] },
+            "require": { "arg": [ "str" ], "ret": ["Luaval<stem>"] },
+            "collectgarbage": { "arg": [ ], "ret": [] },
+            "_fcall": { "arg": [ "form", "&..." ], "ret": [""] },
+            "_load": { "arg": [ "str", "stem!" ], "ret": ["Luaval<form>!", "str!"] },
+            "_kind": { "arg": [ "stem!" ], "ret":[ "int" ] },
+            "expandLuavalMap": { "arg": [ "Luaval<&stem>!" ], "ret":[ "&stem!" ] },
+            "__run": { "arg": [ "__Runner", "int", "str!" ], "ret":[ "bool" ] },
+            "__join": { "arg": [ "&__Runner" ], "ret":[ "" ] },
+            "__serr": { "arg": ["str"], "ret": [ "__Er"] },
+         },
       },
-   },
-   {
-      "iStream": {
-         "__attrib": { "type": [ "interface" ] },
-         "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
-         "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+      {
+         "iStream": {
+            "__attrib": { "type": [ "interface" ] },
+            "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+            "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+         },
       },
-   },
-   {
-      "oStream": {
-         "__attrib": { "type": [ "interface" ] },
-         "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!"] },
-         "close": { "type": [ "mut" ], "arg": [], "ret": [] },
-         "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
+      {
+         "oStream": {
+            "__attrib": { "type": [ "interface" ] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!"] },
+            "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+            "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
+         },
       },
-   },
-   {
-      "__pipe<T>": {
-         "put": { "type": [ "method" ], "arg": [ "T!" ], "ret": [ ] },
-         "get": { "type": [ "method" ], "arg": [], "ret": [ "T!" ] },
+      {
+         "__pipe<T>": {
+            "put": { "type": [ "method" ], "arg": [ "T!" ], "ret": [ ] },
+            "get": { "type": [ "method" ], "arg": [], "ret": [ "T!" ] },
+         },
       },
-   },
-   {
-      "__lns.runMode" : {
-         "__attrib": { "type": [ "class" ] },
-         "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
-         "Queue": { "type": [ "var" ], "typeInfo": ["int"] },
-         "Skip": { "type": [ "var" ], "typeInfo": ["int"] },
+      {
+         "__lns.runMode" : {
+            "__attrib": { "type": [ "class" ] },
+            "Sync": { "type": [ "var" ], "typeInfo": ["int"] },
+            "Queue": { "type": [ "var" ], "typeInfo": ["int"] },
+            "Skip": { "type": [ "var" ], "typeInfo": ["int"] },
+         },
       },
-   },
-   {
-      "__lns.runtime" : {
-         "log": { "arg": [ "str" ], "ret": [] },
-         "enableLog": { "arg": [ "bool" ], "ret": [] },
-         "enableDebugLog": { "arg": [ "bool" ], "ret": [] },
-         "dumpLog": { "arg": [ "oStream" ], "ret": [] },
+      {
+         "__lns.runtime" : {
+            "log": { "arg": [ "str" ], "ret": [] },
+            "enableLog": { "arg": [ "bool" ], "ret": [] },
+            "enableDebugLog": { "arg": [ "bool" ], "ret": [] },
+            "dumpLog": { "arg": [ "oStream" ], "ret": [] },
+            "time": { "arg": [], "ret": [ "int" ] },
+         },
       },
-   },
-   {
-      "__lns.capability" : {
-         // 非同期処理が可能かどうか。 lua 変換時は false。 go 変換時は true。
-         "async": { "type": [ "var" ], "typeInfo": ["bool"] },
+      {
+         "__lns.capability" : {
+            // 非同期処理が可能かどうか。 lua 変換時は false。 go 変換時は true。
+            "async": { "type": [ "var" ], "typeInfo": ["bool"] },
+         },
       },
-   },
-   {
-      "__lns.Sync.Flag" : {
-         "__attrib": { "type": [ "interface" ] },
-         "wait": { "type": [ "method" ], "arg": [ ], "ret": [] },
-         "set": { "type": [ "mut" ], "arg": [ ], "ret": [] },
+      {
+         "__lns.Sync.Flag" : {
+            "__attrib": { "type": [ "interface" ] },
+            "wait": { "type": [ "method" ], "arg": [ ], "ret": [] },
+            "set": { "type": [ "mut" ], "arg": [ ], "ret": [] },
+         },
       },
-   },
-   {
-      "__lns.Sync" : {
-         "__attrib": { "type": [ "class" ] },
-         "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
-         "createProcesser": { "arg": [ "str" ], "ret": [ "__Processor"] },
-         "_createPipe": { "type": ["macro"], "arg": [ "__exp", "int" ], "ret": [ "__pipe!"] },
+      {
+         "__lns.Sync" : {
+            "__attrib": { "type": [ "class" ] },
+            "createFlag": { "arg": [], "ret": [ "__lns.Sync.Flag!"] },
+            "createProcesser": { "arg": [ "str" ], "ret": [ "__Processor"] },
+            "_createPipe": { "type": ["macro"], "arg": [ "__exp", "int" ], "ret": [ "__pipe!"] },
+         },
       },
-   },
-   {
-      "__lns.it<T>": {
-         "__attrib": { "type": [ "interface" ] },
-         "hasNext": { "type": [ "method" ], "arg": [], "ret": [ "bool" ] },
-         "next": { "type": [ "mut" ], "arg": [], "ret": [ "T" ] },
+      {
+         "__lns.it<T>": {
+            "__attrib": { "type": [ "interface" ] },
+            "hasNext": { "type": [ "method" ], "arg": [], "ret": [ "bool" ] },
+            "next": { "type": [ "mut" ], "arg": [], "ret": [ "T" ] },
+         },
       },
-   },
-   {
-      "luaStream": {
-         "__attrib": { "type": [ "interface" ], "implements": [ "iStream", "oStream" ] },
-         "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
-         "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!" ] },
-         "close": { "type": [ "mut" ], "arg": [], "ret": [] },
-         "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
-         "seek": { "type": [ "mut" ], "arg": [ "str", "int"], "ret": [ "int!", "str!" ] },
+      {
+         "luaStream": {
+            "__attrib": { "type": [ "interface" ], "implements": [ "iStream", "oStream" ] },
+            "read": { "type": [ "mut" ], "arg": [ "stem!" ], "ret": [ "str!" ] },
+            "write": { "type": [ "mut" ], "arg": [ "str" ], "ret": [ "stem!", "str!" ] },
+            "close": { "type": [ "mut" ], "arg": [], "ret": [] },
+            "flush": { "type": [ "mut" ], "arg": [], "ret": [] },
+            "seek": { "type": [ "mut" ], "arg": [ "str", "int"], "ret": [ "int!", "str!" ] },
+         },
       },
-   },
-   {
-      "Mapping": {
-         "__attrib": { "type": [ "interface" ] },
-         "_toMap": { "type": [ "method" ], "arg": [], "ret": [ "&Map<str,&stem>" ] },
+      {
+         "Mapping": {
+            "__attrib": { "type": [ "interface" ] },
+            "_toMap": { "type": [ "method" ], "arg": [], "ret": [ "&Map<str,&stem>" ] },
+         },
       },
-   },
-   {
-      "__Runner": {
-         "__attrib": { "type": [ "interface" ] },
-         "run": { "type": [ "mut" ], "arg": [], "ret": [ ] },
+      {
+         "__Runner": {
+            "__attrib": { "type": [ "interface" ] },
+            "run": { "type": [ "mut" ], "arg": [], "ret": [ ] },
+         },
       },
-   },
-   {
-      "__Processor": {
-         "__attrib": { "type": [ "interface" ], "implements": [ "__Runner" ] },
-         "end": { "type": [ "mut" ], "arg": [], "ret": [ ] },
+      {
+         "__Processor": {
+            "__attrib": { "type": [ "interface" ], "implements": [ "__Runner" ] },
+            "end": { "type": [ "mut" ], "arg": [], "ret": [ ] },
+         },
       },
-   },
-   {
-      "io": {
-         "__attrib": { "type": [ "module" ] },
-         "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
-         "stdout": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
-         "stderr": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
-         "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!", "str!"] },
-         "popen": { "arg": [ "str" ], "ret": ["Luaval<luaStream>!"] },
+      {
+         "io": {
+            "__attrib": { "type": [ "module" ] },
+            "stdin": { "type": [ "var" ], "typeInfo": [ "iStream" ] },
+            "stdout": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
+            "stderr": { "type": [ "var" ], "typeInfo": [ "oStream" ] },
+            "open": { "arg": [ "str", "str!" ], "ret": ["luaStream!", "str!"] },
+            "popen": { "arg": [ "str" ], "ret": ["Luaval<luaStream>!"] },
+         },
       },
-   },
-   {
-      "package": {
-         "__attrib": { "type": [ "module" ] },
-         "path": { "type": [ "var" ], "typeInfo": [ "str" ] },
-         "searchpath": { "arg": [ "str", "str" ], "ret": ["str!"] },
+      {
+         "package": {
+            "__attrib": { "type": [ "module" ] },
+            "path": { "type": [ "var" ], "typeInfo": [ "str" ] },
+            "searchpath": { "arg": [ "str", "str" ], "ret": ["str!"] },
+         },
       },
-   },
-   {
+      {
 
-      "os": {
-         "__attrib": { "type": [ "module" ] },
-         "clock": { "arg": [], "ret": ["real"] },
-         "exit": { "arg": [ "int!" ], "ret": [ "__" ] },
-         "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
-         "date": {"arg": [ "str!", "stem!" ], "ret": [ "Luaval<stem>!"] },
-         "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
-         "difftime": {"arg": [ "&stem", "&stem" ], "ret": [ "int"] },
-         "rename": {"arg": [ "str", "str" ], "ret": [ "stem!", "str!"] },
+         "os": {
+            "__attrib": { "type": [ "module" ] },
+            "clock": { "arg": [], "ret": ["real"] },
+            "exit": { "arg": [ "int!" ], "ret": [ "__" ] },
+            "remove": {"arg": [ "str" ], "ret": [ "bool!", "str!"] },
+            "date": {"arg": [ "str!", "stem!" ], "ret": [ "Luaval<stem>!"] },
+            "time": {"arg": [ "stem!" ], "ret": [ "stem!"] },
+            "difftime": {"arg": [ "&stem", "&stem" ], "ret": [ "int"] },
+            "rename": {"arg": [ "str", "str" ], "ret": [ "stem!", "str!"] },
+         },
       },
-   },
-   {
-      "string": {
-         "__attrib": { "type": [ "module" ] },
-         "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["...<int>"] },
-         "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["...<int>"] },
-         "format": { "arg": [ "str", "&..." ], "ret": ["str"] },
-         "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
-         "gmatch": { "arg": [ "str", "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
-         "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },
-         "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
-         "dump": { "arg": [ "&Luaval<form>", "bool!" ], "ret": ["str"] },
-         "lower": { "arg": [ "str" ], "ret": ["str"] },
-         "upper": { "arg": [ "str" ], "ret": ["str"] },
-         "reverse": { "arg": [ "str" ], "ret": ["str"] },
+      {
+         "string": {
+            "__attrib": { "type": [ "module" ] },
+            "find": { "arg": [ "str", "str", "int!", "bool!" ], "ret": ["...<int>"] },
+            "byte": { "arg": [ "str", "int!", "int!" ], "ret": ["...<int>"] },
+            "format": { "arg": [ "str", "&..." ], "ret": ["str"] },
+            "rep": { "arg": [ "str", "int" ], "ret": ["str"] },
+            "gmatch": { "arg": [ "str", "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
+            "gsub": { "arg": [ "str", "str", "str" ], "ret": ["str", "int"] },
+            "sub": { "arg": [ "str", "int", "int!" ], "ret": ["str"] },
+            "dump": { "arg": [ "&Luaval<form>", "bool!" ], "ret": ["str"] },
+            "lower": { "arg": [ "str" ], "ret": ["str"] },
+            "upper": { "arg": [ "str" ], "ret": ["str"] },
+            "reverse": { "arg": [ "str" ], "ret": ["str"] },
+            "_join": { "arg": [ "&_List<str>", "str!", "int!", "int!" ], "ret": ["str"] },
+            "__join": { "arg": [ "&__List<str>", "str!", "int!", "int!" ], "ret": ["str"] },
+         },
       },
-   },
-   {
-      "str": {
-         "__attrib": { "implements": [ "Mapping" ] },
-         "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["...<int>"] },
-         "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int!>"] },
-         "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
-         "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
-         "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
-         "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str", "int"] },
-         "replace": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str" ] },
-         "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
-         "lower": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
-         "upper": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
-         "reverse": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+      {
+         "str": {
+            "__attrib": { "implements": [ "Mapping" ] },
+            "find": { "type": [ "method" ], "arg": [ "str", "int!", "bool!" ], "ret": ["...<int>"] },
+            "byte": { "type": [ "method" ], "arg": [ "int!","int!" ], "ret": ["...<int!>"] },
+            "format": { "type": [ "method" ], "arg": [ "&..." ], "ret": ["str"] },
+            "rep": { "type": [ "method" ], "arg": [ "int" ], "ret": ["str"] },
+            "gmatch": { "type": [ "method" ], "arg": [ "str" ], "ret": ["Luaval<form>", "stem!", "stem!"] },
+            "gsub": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str", "int"] },
+            "replace": { "type": [ "method" ], "arg": [ "str", "str" ], "ret": ["str" ] },
+            "sub": { "type": [ "method" ], "arg": [ "int", "int!" ], "ret": ["str"] },
+            "lower": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+            "upper": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+            "reverse": { "type": [ "method" ], "arg": [ ], "ret": ["str"] },
+         },
       },
-   },
-   {
-      "_List<T>": {
-         "__less": { "type": [ "formfunc" ],
+      {
+         "_List<T>": {
+            "__less": { "type": [ "formfunc" ],
                         "arg": [ "T", "T" ], "ret":[ "bool" ] },
-         "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
-         "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
-         "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
-         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
-         //"__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
+            "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
+            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
+            "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+            "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+            //"__new": { "type": [ "method" ], "arg": [ "int" ], "ret": ["List<T>"] },
+         },
       },
-   },
-   {
-      "__List<T>": {
-         "__less": { "type": [ "formfunc" ],
+      {
+         "__List<T>": {
+            "__less": { "type": [ "formfunc" ],
                         "arg": [ "T", "T" ], "ret":[ "bool" ] },
-         "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
-         "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
-         "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
-         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
-         //"create<M>": { "type": [ "STATIC" ] , "arg": [ "...<M>" ], "ret": [] },
+            "insert": { "type": [ "mut" ], "arg": [ "T" ], "ret": [""] },
+            "remove": { "type": [ "mut" ], "arg": [ "int!" ], "ret": ["T!"] },
+            "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+            "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+            //"create<M>": { "type": [ "STATIC" ] , "arg": [ "...<M>" ], "ret": [] },
+         },
       },
-   },
-   {
-      "Array<T>": {
-         "__less": { "type": [ "formfunc" ],
+      {
+         "Array<T>": {
+            "__less": { "type": [ "formfunc" ],
                         "arg": [ "T", "T" ], "ret":[ "bool" ] },
-         "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
-         "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+            "unpack": { "type": [ "method" ], "arg": [ ], "ret": ["..."] },
+            "sort": { "type": [ "mut" ], "arg": [ "__less!" ], "ret": [] },
+         },
       },
-   },
-   {
-      "_Set<T>": {
-         "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
-         "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
-         "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
-         "and": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
-         "or": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
-         "sub": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
-         "clone": { "type": [ "method" ], "arg": [], "ret": [ "_Set<T>" ] },
-         "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
+      {
+         "_Set<T>": {
+            "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+            "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+            "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
+            "and": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+            "or": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+            "sub": { "type": [ "mut" ], "arg": [ "&_Set<T>" ], "ret": [ "_Set<T>" ] },
+            "clone": { "type": [ "method" ], "arg": [], "ret": [ "_Set<T>" ] },
+            "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
+         },
       },
-   },
-   {
-      "__Set<T>": {
-         "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
-         "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
-         "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
-         "and": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
-         "or": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
-         "sub": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
-         "clone": { "type": [ "method" ], "arg": [], "ret": [ "__Set<T>" ] },
-         "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
+      {
+         "__Set<T>": {
+            "add": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+            "del": { "type": [ "mut" ], "arg": [ "T" ], "ret": [] },
+            "has": { "type": [ "method" ], "arg": [ "T" ], "ret": [ "bool" ] },
+            "and": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
+            "or": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
+            "sub": { "type": [ "mut" ], "arg": [ "&__Set<T>" ], "ret": [ "__Set<T>" ] },
+            "clone": { "type": [ "method" ], "arg": [], "ret": [ "__Set<T>" ] },
+            "len": { "type": [ "method" ], "arg": [], "ret": [ "int" ] },
+         },
       },
-   },
-   {
-      "math": {
-         "__attrib": { "type": [ "module" ] },
-         "random": { "arg": [ "int!", "int!" ], "ret": ["real"] },
-         "randomseed": { "arg": [ "int" ], "ret": [] },
+      {
+         "math": {
+            "__attrib": { "type": [ "module" ] },
+            "random": { "arg": [ "int!", "int!" ], "ret": ["real"] },
+            "randomseed": { "arg": [ "int" ], "ret": [] },
+         }
+      },
+      {
+         "debug": {
+            "__attrib": { "type": [ "module" ] },
+            "getinfo": { "arg": ["int"], "ret": ["Map<str,stem>!"] },
+            "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
+         },
+      },
+      {
+         "Nilable<_T>": {
+            "val": { "type": [ "method" ], "arg": [ ], "ret": [ "_T!" ] },
+         }
       }
-   },
-   {
-      "debug": {
-         "__attrib": { "type": [ "module" ] },
-         "getinfo": { "arg": ["int"], "ret": ["Map<str,stem>!"] },
-         "getlocal": { "arg": ["int", "int"], "ret": ["str!", "stem!"] },
-      },
-   },
-   {
-      "Nilable<_T>": {
-         "val": { "type": [ "method" ], "arg": [ ], "ret": [ "_T!" ] },
+      // {
+      //    "__lns.Err" : {
+      //       "__attrib": { "type": [ "class" ] },
+      //       "create": { "arg": ["str"], "ret": [ "__Er"] },
+      //    },
+      // }
+   ],
+   [
+      {
+         "__Ret<T1,T2>": [
+            { "Ok": [ "T1" ] },
+            { "Err": [ "T2" ] }
+         ]
       }
-   }
-   // {
-   //    "__lns.Err" : {
-   //       "__attrib": { "type": [ "class" ] },
-   //       "create": { "arg": ["str"], "ret": [ "__Er"] },
-   //    },
-   // }
-],
-[
-   {
-      "__Ret<T1,T2>": [
-         { "Ok": [ "T1" ] },
-         { "Err": [ "T2" ] }
-      ]
-   }
-]
- );
+   ]
+);
 
 pub fn BuiltinFuncType.isStrFormFunc( typeInfo:&Ast.TypeInfo ) __async :bool {
    if typeInfo.$srcTypeInfo == self.string_format {
@@ -583,6 +587,14 @@ fn Builtin.getTypeInfo( mut typeName:str, targetScope:&Ast.Scope! ) mut : &Ast.T
                return self.processInfo.createMap_(
                   typeInfo.$canDealGenInherit,
                   .Pub, typeInfo.$parentInfo, keyType, valType, typeInfo.$mutMode );
+            }
+            case .List {
+               if #genTypeList ~= 1 {
+                  Util.err( "illegal map param -- %d" (#genTypeList) ); // バグ
+               }
+               return self.processInfo.createList_(
+                  typeInfo.$canDealGenInherit,
+                  .Pub, typeInfo.$parentInfo, genTypeList, typeInfo.$mutMode );
             }
             case .Ext {
                self.hasLuaval = true;

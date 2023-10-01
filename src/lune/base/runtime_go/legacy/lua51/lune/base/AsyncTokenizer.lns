@@ -479,6 +479,17 @@ fn Tokenizer.readLine() mut : str! {
    return self.lineList[ self.lineNo ];
 }
 
+/**
+txt の index 以降から、区切り文字候補の個所を探す。
+
+@param txt 文字列
+@param index 区切り文字候補を探す txt 内のインデックス。 1 以降。
+@retrun 候補が見つかったインデックス。見つからなかった場合は nil。
+*/
+pub fn getDelimitIndex( txt:str, index:int ) : int! {
+   return ( string.find( txt, '[^%w_]', index ## ) );
+}
+
 /*
 ソースをコメント、文字列、その他(ステートメント候補)に
 カテゴライズした結果を登録する。
@@ -527,7 +538,7 @@ fn Tokenizer.addVal(
          }
          else {
             // 区切り文字を探す
-            if! string.find( token, '[^%w_]', subIndex ## ) {
+            if! getDelimitIndex( token, subIndex ) {
                let index = _exp;
                if index > subIndex {
                   let mut info = self.createInfo(
