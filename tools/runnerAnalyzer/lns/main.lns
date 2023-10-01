@@ -1,0 +1,369 @@
+// -*- coding: utf-8 -*-
+
+fn readFile( path:str ) : str! {
+   let mut fileObj = io.open( path## )!;
+   let txt = fileObj.read( "*a" );
+   fileObj.close();
+   return txt;
+}
+
+fn convInt( txt:str ) : int! {
+   let num = tonumber( txt## )!;
+   return num@@int;
+}
+
+
+enum THREAD_EVENT_KIND {
+   REQ,
+   START,
+   END,
+   LOG,
+   QUEUE_START,
+   START_FROM_SUITE,
+}
+
+class RunnerInfo {
+   let msec:int {pub};
+   let runnerId:int {pub};
+   let kind: THREAD_EVENT_KIND {pub};
+   let info1:int {pub};
+   let info2:int {pub};
+   let runnerCount:int {pub};
+   let name:str {pub};
+   let mess:str {pub};
+
+   _lune_control default__init;
+
+
+   pub static fn createFromStr( txt:str ) : &RunnerInfo! {
+      let mut tokenList:List<str> = [];
+      __luago {
+         apply token of txt.gmatch( "[^:]+") {
+            tokenList.insert( token );
+         }
+      }
+      if #tokenList < 7 {
+         return nil;
+      }
+      let msec = convInt( tokenList[ 1 ] )!;
+      let runnerId = convInt( tokenList[ 2 ] )!;
+      let kindInt = convInt( tokenList[ 3 ] )!;
+      let kind = THREAD_EVENT_KIND._from( kindInt )!;
+      let info1 = convInt( tokenList[ 4 ] )!;
+      let info2 = convInt( tokenList[ 5 ] )!;
+      let runnerCount = convInt( tokenList[ 6 ] )!;
+      let name = tokenList[ 7 ];
+      let mess;
+      if #tokenList >= 8 {
+         mess = tokenList[ 8 ];
+      } else {
+         mess = "";
+      }
+      return new RunnerInfo(
+         msec, runnerId, kind, info1, info2, runnerCount, name, mess );
+   }
+}
+
+enum LnscRunnerKind {
+   astMain = "astMain",
+   convGoField = "convGo Field",
+   convgo = "convgo",
+   convlua = "convlua",
+   createAst = "createAst",
+   tokenizer = "tokenizer",
+}
+
+class LnscRunnerInfo {
+   let runnerInfo:&RunnerInfo {pub};
+   let lnscRunnerKind:LnscRunnerKind {pub};
+   let file:str{pub};
+
+   advertise runnerInfo;
+}
+
+let dummyRunnerInfo = new RunnerInfo( 0, 0, .END, 0, 0, 0, "", "" );
+let dummyLnscRunnerInfo = new LnscRunnerInfo( dummyRunnerInfo, .astMain, "" );
+
+pub static fn LnscRunnerInfo.createFromStr( txt:str ) : LnscRunnerInfo! {
+   let info = RunnerInfo.createFromStr( txt )!;
+
+   foreach kind in LnscRunnerKind.$_allList {
+      let pattern = "^%s.*- " (kind);
+      if info.$name.find( pattern ## ) {
+         let path = info.$name.gsub( ".*- ", "" );
+         return new LnscRunnerInfo( info, kind, path );
+      }
+   }
+   return nil;
+}
+
+fn txt2LnscRunnerInfoList( txt:str ) : &List<&LnscRunnerInfo>! {
+   let list:List<&LnscRunnerInfo> = [];
+
+   let mut failed = false;
+   __luago {
+      apply line of txt.gmatch( "[^\n]+" ) {
+         if! let info = LnscRunnerInfo.createFromStr( line ) {
+            list.insert( info );
+         } else {
+            failed = true;
+            break;
+         }
+      }
+   }
+   if failed {
+      return nil;
+   }
+   return list;
+}
+
+
+
+class ModuleInfo {
+   // モジュールのファイルパス
+   let file:str {pub};
+   // createAST 開始
+   let mut start:&LnscRunnerInfo {pub};
+   // import 処理
+   let mut importedList:List<&LnscRunnerInfo> {pub&};
+   let mut lastImported:&LnscRunnerInfo! {pub};
+   // ready meta 発生 (ready meta が発生しない場合は nil)
+   let mut readyMeta:&LnscRunnerInfo! {pub};
+   // createAST 終了
+   let mut endAst:&LnscRunnerInfo {pub};
+
+   local fn __init( file:str ) {
+      self.file = file;
+      self.start = dummyLnscRunnerInfo;
+      self.importedList = [];
+      self.lastImported = nil;
+      self.readyMeta = nil;
+      self.endAst = dummyLnscRunnerInfo;
+   }
+
+   local fn update( info:&LnscRunnerInfo ) mut {
+      if info.$lnscRunnerKind == .createAst {
+         if info.$kind == .START {
+            self.start = info;
+         } elseif info.$mess.find( "^imported false"## ) {
+            if #self.importedList >= 1 {
+               let lastImported = self.importedList[ #self.importedList ];
+               if lastImported.$msec + 2 <= info.$msec {
+                  // グラフの関係上、一つ前のイベントの 2 秒以上後のものを利用する
+                  self.importedList.insert( info );
+               }
+            } else {
+               self.importedList.insert( info );
+            }
+            self.lastImported = info;
+         } elseif info.$mess.find( "^ready meta"## ) {
+            self.readyMeta = info;
+            if #self.importedList >= 1 {
+               let lastImported = self.importedList[ #self.importedList ];
+               if lastImported.$msec + 2 >= info.$msec {
+                  // グラフの関係上、最後の imported が 2 秒以内の場合は、削除
+                  self.importedList.remove(##);
+               }
+            }
+         } elseif info.$kind == .END {
+            self.endAst = info;
+         }
+      }
+   }
+
+   local fn getProcessMetaPhaseTime() : int {
+      let readyMeta = unwrap self.readyMeta;
+      if! let lastImported = self.lastImported {
+         return readyMeta.$msec - lastImported.$msec;
+      } else {
+         return readyMeta.$msec - self.start.$msec;
+      }
+   }
+
+   local fn getProcessAstTime() : int {
+      let readyMeta = unwrap self.readyMeta;
+      return self.endAst.$msec - readyMeta.$msec;
+   }
+
+   
+   local fn isAvailable() : bool {
+      return self.start ~= dummyLnscRunnerInfo and
+         self.readyMeta ~= nil and
+         self.endAst ~= dummyLnscRunnerInfo;
+   }
+}
+
+fn getFileSet( list:&List<&LnscRunnerInfo> ) : Set<str> {
+   let set:Set<str> = (@);
+   foreach info in list {
+      set.add( info.$file );
+   }
+   return set;
+}
+
+enum EVENT_KIND {
+   entry = "entry",
+   start = "開始",
+   readyMeta = "ready meta",
+   fin = "終了",
+}
+
+fn outputPlantUml( stream:oStream, moduleList:&List<&ModuleInfo> ) {
+
+   stream.write( "@startuml\n" );
+
+   // メモリのスケールを指定。
+   // 100 msecを 100 ピクセル間隔。
+   stream.write( "scale 100 as 100 pixels\n" );
+   
+   let time2event:Map<int,str> = {};
+
+   fn addEvent(msec:int, ID:str, state:EVENT_KIND, mess:str! ) {
+      let! mut event = time2event[ msec ] {
+         event = "";
+      };
+      event = '%s\n%s is "%s"' (event, ID, state);
+      when! mess {
+         event = "%s : %s" (event, mess);
+      }
+      time2event[ msec ] = event;
+   }
+   
+   foreach moduleInfo in moduleList {
+      let ID = "P%04d" (moduleInfo.$start.$runnerId);
+      stream.write( 'robust "%s" as %s\n' (moduleInfo.$file, ID ) );
+
+      addEvent( 0, ID, .entry## );
+      addEvent( moduleInfo.$start.$msec, ID, .start## );
+      let mut prevTime = moduleInfo.$start.$msec;
+      foreach imported, index in moduleInfo.$importedList {
+         let mess;
+         if index == #moduleInfo.$importedList {
+            mess = imported.$mess.gsub( ".*-- ", "" );
+         } else {
+            mess = "";
+         }
+         addEvent( imported.$msec, ID, .readyMeta, mess );
+         addEvent( imported.$msec + 1, ID, .start## );
+      }
+      if! let readyMeta = moduleInfo.$readyMeta {
+         addEvent( readyMeta.$msec, ID, .readyMeta,
+                   "%d" (moduleInfo.getProcessMetaPhaseTime()) );
+         prevTime = readyMeta.$msec;
+      }
+      let mut endTime = moduleInfo.$endAst.$msec;
+      if prevTime == endTime {
+         endTime = endTime + 1;
+      }
+      addEvent( endTime, ID, .fin, "%d" (moduleInfo.getProcessAstTime()) );
+   }
+
+
+   forsort event, msec in time2event {
+      stream.write( "@%d" ( msec ) );
+      stream.write( event );
+      stream.write( "\n" );
+   }
+
+   stream.write( "@enduml\n" );
+}
+
+fn readRunnerInfo( inStream:iStream ) : &List<&LnscRunnerInfo>! {
+   let txt = inStream.read("*a")!;
+   return txt2LnscRunnerInfoList( txt );
+}
+
+fn processStraem( list:&List<&LnscRunnerInfo>, outStream:oStream ) : int! {
+
+   // 全てのファイルの分の ModuleInfo を生成する
+   let file2ModuleInfo:Map<str,ModuleInfo> = {};
+   foreach file in getFileSet( list ) {
+      file2ModuleInfo[ file ] = new ModuleInfo( file );
+   }
+
+   // 各 ModuleInfo の情報を更新する
+   foreach info in list {
+      let mut moduleInfo = file2ModuleInfo[ info.$file ]!;
+      moduleInfo.update( info );
+   }
+
+   // ModuleInfo を解析開始順で並べる
+   let moduleList:List<&ModuleInfo> = [];
+   foreach moduleInfo in file2ModuleInfo {
+      if not moduleInfo.isAvailable() {
+         print( "unavailable", moduleInfo.$file );
+      } else {
+         moduleList.insert( moduleInfo );
+      }
+   }
+   moduleList.sort( fn ( mod1:&ModuleInfo, mod2:&ModuleInfo ) : bool {
+                       if! let ready1 = mod1.$readyMeta {
+                          if! let ready2 = mod2.$readyMeta {
+                             return ready1.$msec < ready2.$msec;
+                          }
+                          return true;
+                       } else {
+                          if mod2.$readyMeta {
+                             return false;
+                          }
+                       }
+                       return mod1.$start.$msec < mod2.$start.$msec;
+                    } );
+
+   // plantuml のタイミングチャートフォーマットに出力
+   outputPlantUml( outStream, moduleList );
+   
+   return 0;
+}
+
+fn process( path:str, outPath:str, outRunnerPath:str ) : int! {
+   let mut inStream = io.open( path## )!;
+   let mut outStream = io.open( outPath, "w" )!;
+   let mut outRunnerStream = io.open( outRunnerPath, "w" )!;
+
+   let list = readRunnerInfo( inStream )!;
+   
+   if not processStraem( list, outStream ) {
+      return nil;
+   }
+
+   foreach info in list {
+      outRunnerStream.write( "%d, %d\n" (info.$msec, info.$runnerCount ) );
+   }
+   return 0;
+}
+
+
+fn usage( mess:str ) : __ {
+   print( mess );
+   print( "" );
+   print( "usage: command infile outfile outfile2" );
+   os.exit( 1 );
+}
+
+pub fn __main( argList:&_List<str> ) : int {
+   let optList:List<str> = [];
+   let mut index = 1;
+
+   fn getNext() : str {
+      if index > #argList {
+         usage( "illegal option" );
+      }
+      let arg = argList[ index ];
+      index = index + 1;
+      return arg;
+   }
+   
+   while index <= #argList {
+      let arg = getNext();
+      optList.insert( arg );
+   }
+
+   if #optList < 4 {
+      usage( "illegal argument" );
+   }
+
+   process( optList[2], optList[3], optList[4] );
+   
+   return 0;
+}
