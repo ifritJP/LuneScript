@@ -487,6 +487,8 @@ function ModuleInfoManager:__init(  )
 end
 
 local Scope = {}
+local immutableTypeList = {}
+
 local TypeData = {}
 _moduleObj.TypeData = TypeData
 function TypeData._new(  )
@@ -633,7 +635,7 @@ end
 function ProcessInfo:switchIdProvier( idType )
    local __func__ = '@lune.@base.@Ast.ProcessInfo.switchIdProvier'
 
-   Log.log( Log.Level.Trace, __func__, 226, function (  )
+   Log.log( Log.Level.Trace, __func__, 229, function (  )
    
       return "start"
    end
@@ -4721,7 +4723,7 @@ function AlternateTypeInfo:__init(processInfo, scope, belongClassFlag, altIndex,
    self.accessMode = accessMode
    self.parentInfo = parentInfo
    self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
-   self.interfaceList = _lune.unwrapDefault( interfaceList, {})
+   self.interfaceList = _lune.unwrapDefault( interfaceList, immutableTypeList)
    self.belongClassFlag = belongClassFlag
    self.altIndex = altIndex
    self.nilableTypeInfo = NilableTypeInfo._new(processInfo, self)
@@ -6046,19 +6048,19 @@ end
 function AlgeValInfo._setmeta( obj )
   setmetatable( obj, { __index = AlgeValInfo  } )
 end
-function AlgeValInfo._new( name, typeList, algeTpye, symbolInfo )
+function AlgeValInfo._new( name, typeList, algeType, symbolInfo )
    local obj = {}
    AlgeValInfo._setmeta( obj )
    if obj.__init then
-      obj:__init( name, typeList, algeTpye, symbolInfo )
+      obj:__init( name, typeList, algeType, symbolInfo )
    end
    return obj
 end
-function AlgeValInfo:__init( name, typeList, algeTpye, symbolInfo )
+function AlgeValInfo:__init( name, typeList, algeType, symbolInfo )
 
    self.name = name
    self.typeList = typeList
-   self.algeTpye = algeTpye
+   self.algeType = algeType
    self.symbolInfo = symbolInfo
 end
 function AlgeValInfo:get_name()
@@ -6067,8 +6069,8 @@ end
 function AlgeValInfo:get_typeList()
    return self.typeList
 end
-function AlgeValInfo:get_algeTpye()
-   return self.algeTpye
+function AlgeValInfo:get_algeType()
+   return self.algeType
 end
 function AlgeValInfo:get_symbolInfo()
    return self.symbolInfo
@@ -6304,16 +6306,16 @@ function NormalTypeInfo:__init(processInfo, finalFlag, abstractFlag, scope, base
    self.abstractFlag = abstractFlag
    self.finalFlag = finalFlag
    self.baseTypeInfo = _lune.unwrapDefault( baseTypeInfo, _moduleObj.headTypeInfo)
-   self.interfaceList = _lune.unwrapDefault( interfaceList, {})
+   self.interfaceList = _lune.unwrapDefault( interfaceList, immutableTypeList)
    self.autoFlag = autoFlag
    self.externalFlag = externalFlag
    self.staticFlag = staticFlag
    self.accessMode = accessMode
    self.rawTxt = txt
    self.kind = kind
-   self.itemTypeInfoList = _lune.unwrapDefault( itemTypeInfoList, {})
-   self.argTypeInfoList = _lune.unwrapDefault( argTypeInfoList, {})
-   self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, {})
+   self.itemTypeInfoList = _lune.unwrapDefault( itemTypeInfoList, immutableTypeList)
+   self.argTypeInfoList = _lune.unwrapDefault( argTypeInfoList, immutableTypeList)
+   self.retTypeInfoList = _lune.unwrapDefault( retTypeInfoList, immutableTypeList)
    self.parentInfo = _lune.unwrapDefault( parentInfo, _moduleObj.headTypeInfo)
    self.mutMode = _lune.unwrapDefault( mutMode, MutMode.IMut)
    local function setupAlt2typeMap(  )
@@ -7518,7 +7520,7 @@ function ProcessInfo:createFuncAsync( abstractFlag, builtinFlag, scope, kind, pa
    if not builtinFlag and Tokenizer.isLuaKeyword( funcName ) then
       Util.err( string.format( "This symbol can not use for a function. -- %s", funcName) )
    end
-   local info = NormalTypeInfo._new(self, true, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, _lune.unwrapDefault( altTypeList, {}), _lune.unwrapDefault( argTypeList, {}), _lune.unwrapDefault( retTypeInfoList, {}), mutMode, nil, asyncMode)
+   local info = NormalTypeInfo._new(self, true, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag, accessMode, funcName, parentInfo, typeDataAccessor, kind, altTypeList, argTypeList, retTypeInfoList, mutMode, nil, asyncMode)
    self:setupImut( info )
    if altTypeList ~= nil then
       for __index, genType in ipairs( altTypeList ) do
@@ -7815,10 +7817,6 @@ _moduleObj.builtinTypeSymbol = builtinTypeSymbol
 
 local builtinTypeStat = NormalTypeInfo.createBuiltin( "Stat", "stat", TypeInfoKind.Prim )
 _moduleObj.builtinTypeStat = builtinTypeStat
-
-
-local builtinTypeStat2 = NormalTypeInfo.createBuiltin( "__Stat", "__stat", TypeInfoKind.Prim )
-_moduleObj.builtinTypeStat2 = builtinTypeStat2
 
 
 local builtinTypeExp = NormalTypeInfo.createBuiltin( "Exp", "__exp", TypeInfoKind.Prim )

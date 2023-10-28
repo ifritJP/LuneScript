@@ -208,7 +208,7 @@ pub fn isOp1( ope: str ) : bool {
    return op1Set.has( ope );
 }
 
-pub final class AsyncItem extend (__AsyncItem,Mapping) {
+pub final class AsyncItem extend (__AsyncItem) {
    pub let list : &List<&Types.Token>;
 }
 

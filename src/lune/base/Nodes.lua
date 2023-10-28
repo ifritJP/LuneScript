@@ -429,8 +429,6 @@ Literal.Real = { "Real", {{}}}
 Literal._name2Val["Real"] = Literal.Real
 Literal.SET = { "SET", {{}}}
 Literal._name2Val["SET"] = Literal.SET
-Literal.STAT = { "STAT", {{}}}
-Literal._name2Val["STAT"] = Literal.STAT
 Literal.Str = { "Str", {{}}}
 Literal._name2Val["Str"] = Literal.Str
 Literal.Symbol = { "Symbol", {{}}}
@@ -481,10 +479,6 @@ local function getLiteralObj( obj )
       
          return val
       elseif _matchExp[1] == Literal.MAP[1] then
-         local val = _matchExp[2][1]
-      
-         return val
-      elseif _matchExp[1] == Literal.STAT[1] then
          local val = _matchExp[2][1]
       
          return val

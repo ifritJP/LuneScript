@@ -6,6 +6,8 @@ SRCS=
 SRCS += $(shell find lns -iname '*.lns')
 GO_SRCS += $(patsubst %.lns,%.go,$(SRCS))
 
+RUNNER_LOG=../../src/@-.profirunner
+
 ifneq "$(wildcard Makefile.local)" ""
 include Makefile.local
 endif
@@ -38,5 +40,5 @@ clean:
 
 
 exec:
-	$(LNSC) lns/main.lns -shebang ../../src/@-.profirunner hoge.txt runner2.csv
+	$(LNSC) lns/main.lns -shebang $(RUNNER_LOG) hoge.txt runner2.csv
 	java -jar $(PLANTUML) hoge.txt -tsvg

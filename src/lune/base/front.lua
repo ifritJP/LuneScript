@@ -2146,6 +2146,7 @@ function Front:build( buildMode, astCallback )
             end
          end
       end
+      
    end
    , self.option.scriptPath .. ".profi" )
 end
@@ -2264,7 +2265,7 @@ function Front:executeLns( path, baseDir )
    local mod = Util.scriptPath2ModuleFromProjDir( path, baseDir )
    local tokenizerSrc = _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,path,mod,nil})
    local _1, luaCode = self:loadTokenizerToLuaCode( frontInterface.ImportModuleInfo._new(), tokenizerSrc, path, mod, baseDir )
-   Log.log( Log.Level.Debug, __func__, 1779, function (  )
+   Log.log( Log.Level.Debug, __func__, 1780, function (  )
    
       return "luacode: " .. luaCode
    end
@@ -2308,7 +2309,7 @@ end
 function Front:exec(  )
    local __func__ = '@lune.@base.@front.Front.exec'
 
-   Log.log( Log.Level.Trace, __func__, 1814, function (  )
+   Log.log( Log.Level.Trace, __func__, 1815, function (  )
    
       return Option.ModeKind:_getTxt( self.option.mode)
       
@@ -2408,6 +2409,9 @@ local function exec( args )
    local option = Option.analyze( args )
    local front = Front._new(option)
    front:exec(  )
+   if option.validProf then
+      Depend.setRuntimeLog( true )
+   end
 end
 _moduleObj.exec = exec
 

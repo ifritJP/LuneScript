@@ -2098,7 +2098,7 @@ test-formatter:
 
 work/formatter/apply/lune/base/%.lns: lune/base/%.lns
 	@echo formatter: "$< ==> $@"
-	@$(LNSC) ../tools/formatter/lns/main.lns -shebang $< $@ -log > $@.log
+	$(LNSC) ../tools/formatter/lns/main.lns -shebang $< $@ -log > $@.log
 
 FORMAT_SRCS := $(shell find lune/base -maxdepth 1 -iname '*.lns' )
 FORMAT_SRCS := $(addprefix work/formatter/apply/,$(FORMAT_SRCS))
@@ -2146,4 +2146,4 @@ diff-formatter:
 # formatter をかけた後のファイルとの比較
 	diff -r lune/base/ work/formatter/apply/lune/base/ \
 		-x '*.lua' -x '*.meta' -x '*~' -x '*.go' \
-		-x '*.lns.log' -x runtime_* -x '*.profi' -w -B
+		-x '*.lns.log' -x runtime_* -x '*.profi' -x '.#*' -w -B

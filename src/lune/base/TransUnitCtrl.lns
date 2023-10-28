@@ -631,6 +631,9 @@ local override fn TransUnitCtrl.addFuncBlockInfoList( funcBlockInfo:FuncBlockInf
    self.funcBlockInfoList.insert( funcBlockInfo );
 }
 
+/**
+funcBlockInfoList に保持してある各関数の処理を解析する。
+*/
 fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
    let mut waiter = new Async.Waiter<&Map<&FuncBlockInfo,FuncBlockResult>>(self.ctrl_info.threadPerUnitThread + 1);
    let runnerList:List<TransUnitRunner> = [];
@@ -722,8 +725,8 @@ fn TransUnitCtrl.processFuncBlock(streamName:str) mut {
       foreach runner in runnerList {
          runner.waitToSetup();
       }
-      // runner の setup が終るのを待ってからマージしないと、
-      // runner の setup とマージが競合する。
+      // runner の setup が終るのを待ってから processFuncBlockInfo、 マージしないと、
+      // runner の setup と processFuncBlockInfo、 マージが競合する。
       
       when! lastPartList {
          resultMap = self.processFuncBlockInfo(

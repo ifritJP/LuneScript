@@ -285,6 +285,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
                     option.TransCtrlInfo.ValidMacroAsync = true
                 } else if _switch2 == "--disableRunner" {
                     option.enableRunner = false
+                } else if _switch2 == "--disablePostponeExpandingMacro" {
+                    option.TransCtrlInfo.EnablePostponeExpandingMacro = false
                 } else if _switch2 == "--disablePostBuild" {
                     option.validPostBuild = false
                 } else if _switch2 == "--enableAsyncCtl" {
@@ -537,8 +539,8 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
         index = index + 1
     }
     if uptodateOpt != nil{
-        uptodateOpt_322 := uptodateOpt.(string)
-        if _switch4 := uptodateOpt_322; _switch4 == "force" {
+        uptodateOpt_323 := uptodateOpt.(string)
+        if _switch4 := uptodateOpt_323; _switch4 == "force" {
             option.TransCtrlInfo.UptodateMode = &Types_CheckingUptodateMode__Force1{Util_scriptPath2Module(_env, option.ScriptPath)}
         } else if _switch4 == "forceAll" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__ForceAll_Obj
@@ -547,7 +549,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
         } else if _switch4 == "touch" {
             option.TransCtrlInfo.UptodateMode = Types_CheckingUptodateMode__Touch_Obj
         } else {
-            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_322)
+            Util_errorLog(_env, "illegal mode -- " + uptodateOpt_323)
         }
     }
     if option.Mode != Option_ModeKind__Builtin{
@@ -598,7 +600,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 785, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 788, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("mode is '%s'", Lns_2DDD(Option_ModeKind_getTxt( option.Mode)))
     }))
     
@@ -614,7 +616,7 @@ func Option_analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
 
 
 
-// 790: decl @lune.@base.@Option.createDefaultOption
+// 793: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -630,12 +632,12 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
     option.UseLuneModule = Option_getRuntimeModule(_env)
     option.UseIpairs = true
     if projDir != nil{
-        projDir_352 := projDir.(string)
-        if projDir_352 != "/"{
-            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_352,"/$", nil, nil))){
-                option.projDir = projDir_352 + "/"
+        projDir_353 := projDir.(string)
+        if projDir_353 != "/"{
+            if Lns_op_not(Lns_car(_env.GetVM().String_find(projDir_353,"/$", nil, nil))){
+                option.projDir = projDir_353 + "/"
             } else { 
-                option.projDir = projDir_352
+                option.projDir = projDir_353
             }
         }
     }
@@ -644,7 +646,7 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
 
 // 55: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 14030
+    return 14127
 }
 
 

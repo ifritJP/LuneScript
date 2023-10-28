@@ -446,27 +446,6 @@ function DefaultPushbackTokenizer:createPosition( lineNo, column )
 
    return self.tokenizer:createPosition( lineNo, column )
 end
-function DefaultPushbackTokenizer:getTokenNoErr( skipFlag )
-
-   if #self.pushbackedList > 0 then
-      self.currentToken = self.pushbackedList[#self.pushbackedList]
-      table.remove( self.pushbackedList )
-   else
-    
-      do
-         local token = self.tokenizer:getToken(  )
-         if token ~= nil then
-            self.currentToken = token
-         else
-            self.currentToken = Types.noneToken
-         end
-      end
-   end
-   if self.currentToken.kind ~= Types.TokenKind.Eof then
-      table.insert( self.usedTokenList, self.currentToken )
-   end
-   return self.currentToken
-end
 function DefaultPushbackTokenizer:pushbackToken( token )
 
    if token.kind ~= Types.TokenKind.Eof then
@@ -522,6 +501,34 @@ function DefaultPushbackTokenizer:newPushback( tokenList )
    for index = #tokenList, 1, -1 do
       self:pushbackToken( tokenList[index] )
    end
+end
+function DefaultPushbackTokenizer:getTokenNoErr( skipFlag )
+
+   if #self.pushbackedList > 0 then
+      self.currentToken = self.pushbackedList[#self.pushbackedList]
+      table.remove( self.pushbackedList )
+   else
+    
+      do
+         local token = self.tokenizer:getToken(  )
+         if token ~= nil then
+            if token.kind == Types.TokenKind.Gen then
+               local generator = _lune.unwrap( token:get_generator())
+               self:newPushback( generator:getTokenList(  ) )
+               return self:getTokenNoErr( skipFlag )
+            else
+             
+               self.currentToken = token
+            end
+         else
+            self.currentToken = Types.noneToken
+         end
+      end
+   end
+   if self.currentToken.kind ~= Types.TokenKind.Eof then
+      table.insert( self.usedTokenList, self.currentToken )
+   end
+   return self.currentToken
 end
 function DefaultPushbackTokenizer:getLastPos(  )
 

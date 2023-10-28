@@ -31,7 +31,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
-    "time"
+	"time"
 )
 
 type LnsInt = int
@@ -135,6 +135,7 @@ func exitRuntime(code LnsInt) {
 		fmt.Printf("vmFreeMap = %d\n", len(lns_freeVMMap))
 		fmt.Printf("totalReqVM = %d\n", lns_countOfRequestToCreateVM)
 		lns_threadMgrInfo.dump(os.Stdout)
+		fmt.Printf("----------\n")
 	}
 	os.Exit(code)
 }
@@ -182,7 +183,7 @@ func Lns_InitModOnce(opts ...LnsRuntimeOpt) {
 	// __asyncLock 用にロックしておく
 	sync_LnsEnvMutex.Lock()
 
-    launchTime = time.Now()
+	launchTime = time.Now()
 }
 
 func Lns_IsNil(val LnsAny) bool {
@@ -641,6 +642,5 @@ func LnsEnableDebugLog(_env *LnsEnv, valid bool) {
 }
 
 func LnsGetTime(_env *LnsEnv) LnsInt {
-	return LnsInt(time.Now().Sub( launchTime ).Milliseconds())
+	return LnsInt(time.Now().Sub(launchTime).Milliseconds())
 }
-

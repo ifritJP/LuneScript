@@ -41,6 +41,7 @@ const Types_TokenKind__Char = 4
 const Types_TokenKind__Cmnt = 0
 const Types_TokenKind__Dlmt = 6
 const Types_TokenKind__Eof = 11
+const Types_TokenKind__Gen = 12
 const Types_TokenKind__Int = 2
 const Types_TokenKind__Kywd = 7
 const Types_TokenKind__Ope = 8
@@ -62,6 +63,7 @@ var Types_TokenKindList_ = NewLnsList( []LnsAny {
   Types_TokenKind__Type,
   Types_TokenKind__Sheb,
   Types_TokenKind__Eof,
+  Types_TokenKind__Gen,
 })
 func Types_TokenKind_get__allList(_env *LnsEnv) *LnsList{
     return Types_TokenKindList_
@@ -71,6 +73,7 @@ var Types_TokenKindMap_ = map[LnsInt]string {
   Types_TokenKind__Cmnt: "TokenKind.Cmnt",
   Types_TokenKind__Dlmt: "TokenKind.Dlmt",
   Types_TokenKind__Eof: "TokenKind.Eof",
+  Types_TokenKind__Gen: "TokenKind.Gen",
   Types_TokenKind__Int: "TokenKind.Int",
   Types_TokenKind__Kywd: "TokenKind.Kywd",
   Types_TokenKind__Ope: "TokenKind.Ope",
@@ -145,11 +148,11 @@ Val4 LnsAny
 func (self *Types_TokenizerSrc__Tokenizer) GetTxt() string {
 return "TokenizerSrc.Tokenizer"
 }
-// 151: decl @lune.@base.@Types.TransCtrlInfo.create_normal
+// 155: decl @lune.@base.@Types.TransCtrlInfo.create_normal
 func Types_TransCtrlInfo_create_normal(_env *LnsEnv) *Types_TransCtrlInfo {
     return NewTypes_TransCtrlInfo(_env)
 }
-// 177: decl @lune.@base.@Types.Position.get_orgPos
+// 181: decl @lune.@base.@Types.Position.get_orgPos
 func (self Types_Position) Get_orgPos(_env *LnsEnv) Types_Position {
     {
         __exp := self.OrgPos
@@ -160,15 +163,15 @@ func (self Types_Position) Get_orgPos(_env *LnsEnv) Types_Position {
     }
     return self
 }
-// 184: decl @lune.@base.@Types.Position.get_RawOrgPos
+// 188: decl @lune.@base.@Types.Position.get_RawOrgPos
 func (self Types_Position) Get_RawOrgPos(_env *LnsEnv) LnsAny {
     return self.OrgPos
 }
-// 188: decl @lune.@base.@Types.Position.create
+// 192: decl @lune.@base.@Types.Position.create
 func Types_Position_create(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) Types_Position {
     return NewTypes_Position(_env, lineNo, column, streamName, orgPos)
 }
-// 194: decl @lune.@base.@Types.Position.getDisplayTxt
+// 198: decl @lune.@base.@Types.Position.getDisplayTxt
 func (self Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     var txt string
     txt = _env.GetVM().String_format("%s:%d:%d", Lns_2DDD(self.StreamName, self.LineNo, self.Column))
@@ -181,7 +184,7 @@ func (self Types_Position) GetDisplayTxt(_env *LnsEnv) string {
     }
     return txt
 }
-// 204: decl @lune.@base.@Types.Position.comp
+// 208: decl @lune.@base.@Types.Position.comp
 func (self Types_Position) Comp(_env *LnsEnv, other Types_Position) LnsInt {
     if self.StreamName < other.StreamName{
         return -1
@@ -215,7 +218,14 @@ func (self Types_Position) Comp(_env *LnsEnv, other Types_Position) LnsInt {
     }
     return orgPos.Comp(_env, otherOrgPos)
 }
-// 285: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
+// 295: decl @lune.@base.@Types.Token.createWithGenerator
+func Types_Token_createWithGenerator(_env *LnsEnv, pos Types_Position,gen Types_TokenGenerator) *Types_Token {
+    var token *Types_Token
+    token = NewTypes_Token(_env, Types_TokenKind__Gen, "", pos, false, nil)
+    token.generator = gen
+    return token
+}
+// 302: decl @lune.@base.@Types.Token.getExcludedDelimitTxt
 func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
     if self.Kind != Types_TokenKind__Str{
         return self.Txt
@@ -229,7 +239,7 @@ func (self *Types_Token) GetExcludedDelimitTxt(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 305: decl @lune.@base.@Types.Token.getLineCount
+// 322: decl @lune.@base.@Types.Token.getLineCount
 func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
     var count LnsInt
     count = 1
@@ -244,7 +254,7 @@ func (self *Types_Token) GetLineCount(_env *LnsEnv) LnsInt {
         }
     return count
 }
-// 315: decl @lune.@base.@Types.Token.get_endLineNo
+// 332: decl @lune.@base.@Types.Token.get_endLineNo
 func (self *Types_Token) Get_endLineNo(_env *LnsEnv) LnsInt {
     return self.Pos.LineNo
 }
@@ -318,6 +328,7 @@ type Types_TransCtrlInfo struct {
     UseWaiter bool
     DefaultGenInherit bool
     AsyncTokenizer bool
+    EnablePostponeExpandingMacro bool
     FP Types_TransCtrlInfoMtd
 }
 func Types_TransCtrlInfo2Stem( obj LnsAny ) LnsAny {
@@ -353,8 +364,9 @@ func NewTypes_TransCtrlInfo(_env *LnsEnv) *Types_TransCtrlInfo {
     obj.InitTypes_TransCtrlInfo(_env)
     return obj
 }
-// 127: DeclConstr
+// 130: DeclConstr
 func (self *Types_TransCtrlInfo) InitTypes_TransCtrlInfo(_env *LnsEnv) {
+    self.EnablePostponeExpandingMacro = true
     self.AsyncTokenizer = true
     self.DefaultGenInherit = true
     self.UseWaiter = true
@@ -480,7 +492,7 @@ func Types_Position_FromMapMain( newObj Types_Position, objMap *LnsMap, paramLis
     }
     return true, newObj, nil
 }
-// 170: DeclConstr
+// 174: DeclConstr
 func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,column LnsInt,streamName string,orgPos LnsAny) {
     self.LineNo = lineNo
     self.Column = column
@@ -491,17 +503,17 @@ func (self *Types_Position) InitTypes_Position(_env *LnsEnv, lineNo LnsInt,colum
 
 // declaration Class -- Token
 var Types_Token__noneCommentList *LnsList2_[*Types_Token]
-// 257: decl @lune.@base.@Types.Token.___init
+// 265: decl @lune.@base.@Types.Token.___init
 func Types_Token____init_2_(_env *LnsEnv) {
     Types_Token__noneCommentList = NewLnsList2_[*Types_Token]([]*Types_Token{})
 }
 
 type Types_TokenMtd interface {
-    ToMap() *LnsMap
     GetExcludedDelimitTxt(_env *LnsEnv) string
     GetLineCount(_env *LnsEnv) LnsInt
     Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token]
     Get_endLineNo(_env *LnsEnv) LnsInt
+    Get_generator(_env *LnsEnv) LnsAny
 }
 type Types_Token struct {
     Kind LnsInt
@@ -509,6 +521,7 @@ type Types_Token struct {
     Pos Types_Position
     Consecutive bool
     commentList *LnsList2_[*Types_Token]
+    generator LnsAny
     noneCommentList *LnsList2_[*Types_Token]
     FP Types_TokenMtd
 }
@@ -546,76 +559,27 @@ func NewTypes_Token(_env *LnsEnv, arg1 LnsInt, arg2 string, arg3 Types_Position,
     return obj
 }
 func (self *Types_Token) Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token]{ return self.commentList }
-func (self *Types_Token) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["kind"] = Lns_ToCollection( self.Kind )
-    obj.Items["txt"] = Lns_ToCollection( self.Txt )
-    obj.Items["pos"] = Lns_ToCollection( self.Pos )
-    obj.Items["consecutive"] = Lns_ToCollection( self.Consecutive )
-    obj.Items["commentList"] = Lns_ToCollection( self.commentList )
-    return obj
-}
-func (self *Types_Token) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func Types_Token__fromMap(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Types_Token_FromMap( arg1, paramList )
-}
-func Types_Token__fromStem(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Types_Token_FromMap( arg1, paramList )
-}
-func Types_Token_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := Types_Token_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func Types_Token_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &Types_Token{}
-    newObj.FP = newObj
-    return Types_Token_FromMapMain( newObj, objMap, paramList )
-}
-func Types_Token_FromMapMain( newObj *Types_Token, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,conv,mess := Lns_ToIntSub( objMap.Items["kind"], false, nil); !ok {
-       return false,nil,"kind:" + mess.(string)
-    } else {
-       newObj.Kind = conv.(LnsInt)
-    }
-    if ok,conv,mess := Lns_ToStrSub( objMap.Items["txt"], false, nil); !ok {
-       return false,nil,"txt:" + mess.(string)
-    } else {
-       newObj.Txt = conv.(string)
-    }
-    if ok,conv,mess := Types_Position_FromMapSub( objMap.Items["pos"], false, nil); !ok {
-       return false,nil,"pos:" + mess.(string)
-    } else {
-       newObj.Pos = conv.(Types_Position)
-    }
-    if ok,conv,mess := Lns_ToBoolSub( objMap.Items["consecutive"], false, nil); !ok {
-       return false,nil,"consecutive:" + mess.(string)
-    } else {
-       newObj.Consecutive = conv.(bool)
-    }
-    if ok,conv,mess := Lns_ToList2Sub[*Types_Token]( objMap.Items["commentList"], false, []Lns_ToObjParam{Lns_ToObjParam{
-            Types_Token_FromMapSub, false,nil}}); !ok {
-       return false,nil,"commentList:" + mess.(string)
-    } else {
-       newObj.commentList = conv.(*LnsList2_[*Types_Token])
-    }
-    return true, newObj, nil
-}
-// 275: DeclConstr
+func (self *Types_Token) Get_generator(_env *LnsEnv) LnsAny{ return self.generator }
+// 284: DeclConstr
 func (self *Types_Token) InitTypes_Token(_env *LnsEnv, kind LnsInt,txt string,pos Types_Position,consecutive bool,commentList LnsAny) {
     self.Kind = kind
     self.Txt = txt
     self.Pos = pos
     self.Consecutive = consecutive
     self.commentList = Lns_unwrapDefault( commentList, Types_Token__noneCommentList).(*LnsList2_[*Types_Token])
+    self.generator = nil
 }
 
+
+type Types_TokenGenerator interface {
+        GetTokenList(_env *LnsEnv) *LnsList2_[*Types_Token]
+}
+func Lns_cast2Types_TokenGenerator( obj LnsAny ) LnsAny {
+    if _, ok := obj.(Types_TokenGenerator); ok { 
+        return obj
+    }
+    return nil
+}
 
 // declaration Class -- StdinFile
 type Types_StdinFileMtd interface {

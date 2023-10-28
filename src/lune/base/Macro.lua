@@ -615,14 +615,6 @@ local function getLiteralMacroVal( obj )
             end
          end
          return newMap
-      elseif _matchExp[1] == Nodes.Literal.STAT[1] then
-         local list = _matchExp[2][1]
-      
-         local tokenList = {}
-         for __index, token in ipairs( list ) do
-            table.insert( tokenList, token:_toMap(  ) )
-         end
-         return tokenList
       end
    end
 end
@@ -1434,36 +1426,26 @@ local function expandVal( tokenList, workval, pos )
    return nil
 end
 
-local function pushbackTxt( expandTxt2TokenList, pushbackTokenizer, txtList, streamName, pos )
+local function pushbackTxt( pushbackTokenizer, txtList, streamName, pos )
 
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do
-      do
-         local _exp = expandTxt2TokenList[txt]
-         if _exp ~= nil then
-            for __index, token in ipairs( _exp ) do
-               table.insert( tokenList, Tokenizer.Token._new(Tokenizer.TokenKind.Symb, token, pos, false) )
+      local workList = {}
+      if AsyncTokenizer.getDelimitIndex( txt, 1 ) then
+         local tokenizer = Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
+         local workTokenizer = Tokenizer.DefaultPushbackTokenizer._new(tokenizer)
+         while true do
+            local worktoken = workTokenizer:getTokenNoErr(  )
+            if worktoken.kind == Tokenizer.TokenKind.Eof then
+               break
             end
-         else
-            local workList = {}
-            expandTxt2TokenList[txt] = workList
-            if AsyncTokenizer.getDelimitIndex( txt, 1 ) then
-               local tokenizer = Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {txt,string.format( "macro symbol -- %s", streamName),nil}), false, nil, pos:get_RawOrgPos() )
-               local workTokenizer = Tokenizer.DefaultPushbackTokenizer._new(tokenizer)
-               while true do
-                  local worktoken = workTokenizer:getTokenNoErr(  )
-                  if worktoken.kind == Tokenizer.TokenKind.Eof then
-                     break
-                  end
-                  table.insert( tokenList, Tokenizer.Token._new(worktoken.kind, worktoken.txt, pos, false) )
-                  table.insert( workList, worktoken.txt )
-               end
-            else
-             
-               table.insert( tokenList, Tokenizer.Token._new(Tokenizer.TokenKind.Symb, txt, pos, false) )
-               table.insert( workList, txt )
-            end
+            table.insert( tokenList, Tokenizer.Token._new(worktoken.kind, worktoken.txt, pos, false) )
+            table.insert( workList, worktoken.txt )
          end
+      else
+       
+         table.insert( tokenList, Tokenizer.Token._new(Tokenizer.TokenKind.Symb, txt, pos, false) )
+         table.insert( workList, txt )
       end
    end
    for index = #tokenList, 1, -1 do
@@ -1471,10 +1453,59 @@ local function pushbackTxt( expandTxt2TokenList, pushbackTokenizer, txtList, str
    end
 end
 
-function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
-   local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
 
-   Log.log( Log.Level.Trace, __func__, 1038, function (  )
+
+
+
+
+local TokenGenerator = {}
+setmetatable( TokenGenerator, { ifList = {Types.TokenGenerator,} } )
+_moduleObj.TokenGenerator = TokenGenerator
+function TokenGenerator:getTokenList(  )
+
+   local streamTokenizer = Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsCode, {self.code,self.name,nil}), false, nil, self.pos )
+   local tokenizer = Tokenizer.DefaultPushbackTokenizer._new(streamTokenizer)
+   local function getToken(  )
+   
+      local work = tokenizer:getTokenNoErr(  )
+      return work
+   end
+   local list = {}
+   while true do
+      local token = tokenizer:getTokenNoErr(  )
+      if token.kind == Tokenizer.TokenKind.Eof then
+         break
+      end
+      local work = self.macroCtrl:expandMacroValSub( self.typeNameCtrl, self.scope, tokenizer, token, getToken, false )
+      table.insert( list, work )
+   end
+   return list
+end
+function TokenGenerator._setmeta( obj )
+  setmetatable( obj, { __index = TokenGenerator  } )
+end
+function TokenGenerator._new( name, code, pos, typeNameCtrl, scope, macroCtrl )
+   local obj = {}
+   TokenGenerator._setmeta( obj )
+   if obj.__init then
+      obj:__init( name, code, pos, typeNameCtrl, scope, macroCtrl )
+   end
+   return obj
+end
+function TokenGenerator:__init( name, code, pos, typeNameCtrl, scope, macroCtrl )
+
+   self.name = name
+   self.code = code
+   self.pos = pos
+   self.typeNameCtrl = typeNameCtrl
+   self.scope = scope
+   self.macroCtrl = macroCtrl
+end
+
+function MacroCtrl:expandMacroValSub( typeNameCtrl, scope, tokenizer, token, getToken, postpone )
+   local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroValSub'
+
+   Log.log( Log.Level.Trace, __func__, 1081, function (  )
    
       return string.format( "start -- %s:%d:%s", token.pos:get_orgPos().streamName, token.pos:get_orgPos().lineNo, token.txt)
    end
@@ -1483,13 +1514,6 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
    
    if self.tokenExpanding then
       return token
-   end
-   local function getToken(  )
-   
-      self.tokenExpanding = true
-      local work = tokenizer:getTokenNoErr(  )
-      self.tokenExpanding = false
-      return work
    end
    local function macroVal2strList( name, macroVal )
    
@@ -1520,20 +1544,14 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
       end
       return list
    end
-   local function pushbackStr( name, stmt, pos )
+   local function pushbackStr( name, stmt, pos, nextToken )
    
-      tokenizer:pushbackStr( nil, name, stmt, pos, nil )
-      do
-         local info = self.expandSym2Info[name]
-         if  nil == info then
-            local _info = info
-         
-            info = MacroExpandInfo._new()
-            self.expandSym2Info[name] = info
-         end
-         
-         info.accessCount = info.accessCount + 1
-         info.spendTime = info.spendTime + #stmt
+      if postpone then
+         local generator = TokenGenerator._new(name, stmt, pos, typeNameCtrl, scope, self)
+         tokenizer:pushbackToken( Types.Token.createWithGenerator( nextToken.pos, generator ) )
+      else
+       
+         tokenizer:pushbackStr( nil, name, stmt, pos, nil )
       end
    end
    local function expandDD( macroVal, nextToken )
@@ -1543,20 +1561,21 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
          for __index, txt in ipairs( macroVal2strList( nextToken.txt, macroVal ) ) do
             table.insert( txtList, txt )
          end
-         pushbackTxt( self.expandTxt2TokenList, tokenizer, txtList, nextToken.txt, nextToken.pos )
+         pushbackTxt( tokenizer, txtList, nextToken.txt, nextToken.pos )
       elseif equalsType( macroVal.typeInfo, Ast.builtinTypeStat ) or equalsType( macroVal.typeInfo, Ast.builtinTypeBlockArg ) then
          local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
          local txt = _lune.unwrapDefault( macroVal.val, "")
-         pushbackStr( string.format( "macroVal %s", nextToken.txt), txt, pos )
+         pushbackStr( string.format( "macroVal %s (%s) %s", nextToken.txt, #(txt ), nextToken.pos:getDisplayTxt(  )), txt, pos, nextToken )
       elseif equalsType( macroVal.typeInfo, Ast.builtinTypeExp ) or equalsType( macroVal.typeInfo, Ast.builtinTypeMultiExp ) then
          local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
          local txt = _lune.unwrapDefault( macroVal.val, "nil")
-         pushbackStr( string.format( "macroVal %s", nextToken.txt), txt, pos )
+         pushbackStr( string.format( "macroVal %s (%s) %s", nextToken.txt, #(txt ), nextToken.pos:getDisplayTxt(  )), txt, pos, nextToken )
       elseif macroVal.typeInfo:get_kind() == Ast.TypeInfoKind.Array or macroVal.typeInfo:get_kind(  ) == Ast.TypeInfoKind.List then
          if equalsType( macroVal.typeInfo:get_itemTypeInfoList()[1], Ast.builtinTypeStat ) then
             local pos = _lune.nilacc( _lune.nilacc( macroVal.argNode, 'get_pos', 'callmtd' ), 'get_RawOrgPos', 'callmtd' ) or nextToken.pos:get_RawOrgPos() or token.pos:get_orgPos()
             local strList = macroVal2strList( nextToken.txt, macroVal )
-            pushbackStr( string.format( "macroVal %s", nextToken.txt), table.concat( strList, "\n" ), pos )
+            local txt = table.concat( strList, "\n" )
+            pushbackStr( string.format( "macroVal %s (%s) %s", nextToken.txt, #(txt ), nextToken.pos:getDisplayTxt(  )), txt, pos, nextToken )
          else
           
             local tokenList = {}
@@ -1613,21 +1632,10 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
       end
       
       if tokenTxt == ',,' then
-         local expandInfo = self.expandType2Info[macroVal.typeInfo:getTxt(  )]
-         if  nil == expandInfo then
-            local _expandInfo = expandInfo
-         
-            expandInfo = MacroExpandInfo._new()
-            self.expandType2Info[macroVal.typeInfo:getTxt(  )] = expandInfo
-         end
-         
-         local prev = math.floor( os.time() * 1000 )
          nextToken = expandDD( macroVal, nextToken )
-         expandInfo.spendTime = expandInfo.spendTime + math.floor( os.time() * 1000 ) - prev
-         expandInfo.accessCount = expandInfo.accessCount + 1
       elseif tokenTxt == ',,,' then
          if equalsType( macroVal.typeInfo, Ast.builtinTypeString ) then
-            pushbackTxt( self.expandTxt2TokenList, tokenizer, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
+            pushbackTxt( tokenizer, {(_lune.unwrap( macroVal.val) )}, nextToken.txt, nextToken.pos )
          else
           
             Util.err( string.format( "',,,' does not support this type -- %s", macroVal.typeInfo:getTxt(  )) )
@@ -1661,8 +1669,28 @@ function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token )
       nextToken = getToken(  )
       token = nextToken
    end
-   self.tokenExpanding = false
    return token
+end
+
+
+function MacroCtrl:expandMacroVal( typeNameCtrl, scope, tokenizer, token, postpone )
+   local __func__ = '@lune.@base.@Macro.MacroCtrl.expandMacroVal'
+
+   Log.log( Log.Level.Trace, __func__, 1287, function (  )
+   
+      return string.format( "start -- %s:%d:%s", token.pos:get_orgPos().streamName, token.pos:get_orgPos().lineNo, token.txt)
+   end
+    )
+   
+   
+   local function getToken(  )
+   
+      self.tokenExpanding = true
+      local work = tokenizer:getTokenNoErr(  )
+      self.tokenExpanding = false
+      return work
+   end
+   return self:expandMacroValSub( typeNameCtrl, scope, tokenizer, token, getToken, postpone )
 end
 
 

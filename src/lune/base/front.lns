@@ -1701,6 +1701,7 @@ pub fn Front.build( buildMode:BuildMode, astCallback:AstCallback! ) mut {
                }
             }
          }
+         __lns.runtime.log( "end profile" );
       }, self.option.scriptPath .. ".profi" );
 }
 
@@ -1949,6 +1950,11 @@ pub fn exec( args: &List<str> ) __noasync {
    let mut front = new Front( option ## );
 
    front.exec();
+
+   if option.validProf {
+      // 終了時のランタイムログを有効にする
+      Depend.setRuntimeLog( true );
+   }
 }
 
 pub fn __main( argList:&_List<str> ) __noasync : int {

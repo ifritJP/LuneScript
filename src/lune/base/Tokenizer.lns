@@ -255,24 +255,6 @@ pub class DefaultPushbackTokenizer extend (PushbackTokenizer) {
       return self.tokenizer.createPosition( lineNo, column );
    }
 
-   pub fn getTokenNoErr(skipFlag:bool!) mut : &Token {
-      if #self.pushbackedList > 0 {
-         self.currentToken = self.pushbackedList[ #self.pushbackedList ];
-         self.pushbackedList.remove(##);
-      }
-      else {
-         if! let token = self.tokenizer.getToken() {
-            self.currentToken = token;
-         }
-         else {
-            self.currentToken = Types.noneToken;
-         };
-      }
-      if self.currentToken.kind ~= .Eof {
-         self.usedTokenList.insert( self.currentToken );
-      }
-      return self.currentToken;
-   }
    pub fn pushbackToken( token: &Token ) mut
    {
       if token.kind ~= .Eof {
@@ -324,11 +306,37 @@ pub class DefaultPushbackTokenizer extend (PushbackTokenizer) {
          }
       }
    }
-   pub fn newPushback( tokenList: List<&Token> ) mut {
+   pub fn newPushback( tokenList: &List<&Token> ) mut {
       for index = #tokenList, 1, -1  {
          self.pushbackToken( tokenList[ index ] );
       }
    }
+
+   pub fn getTokenNoErr(skipFlag:bool!) mut : &Token {
+      if #self.pushbackedList > 0 {
+         self.currentToken = self.pushbackedList[ #self.pushbackedList ];
+         self.pushbackedList.remove(##);
+      }
+      else {
+         if! let token = self.tokenizer.getToken() {
+            if token.kind == .Gen {
+               let generator = unwrap token.$generator;
+               self.newPushback( generator.getTokenList() );
+               return self.getTokenNoErr( skipFlag );
+            } else {
+               self.currentToken = token;
+            }
+         }
+         else {
+            self.currentToken = Types.noneToken;
+         };
+      }
+      if self.currentToken.kind ~= .Eof {
+         self.usedTokenList.insert( self.currentToken );
+      }
+      return self.currentToken;
+   }
+   
 
    pub fn getLastPos() : &Position {
       let mut pos:&Position = self.tokenizer.createPosition( 0, 0 );

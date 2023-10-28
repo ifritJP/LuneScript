@@ -245,6 +245,7 @@ function TransCtrlInfo._new(  )
    return obj
 end
 function TransCtrlInfo:__init() 
+   self.enablePostponeExpandingMacro = true
    self.asyncTokenizer = true
    self.defaultGenInherit = true
    self.useWaiter = true
@@ -438,10 +439,14 @@ TokenKind.__allList[11] = TokenKind.Sheb
 TokenKind.Eof = 11
 TokenKind._val2NameMap[11] = 'Eof'
 TokenKind.__allList[12] = TokenKind.Eof
+TokenKind.Gen = 12
+TokenKind._val2NameMap[12] = 'Gen'
+TokenKind.__allList[13] = TokenKind.Gen
 
+
+local TokenGenerator = {}
 
 local Token = {}
-setmetatable( Token, { ifList = {Mapping,} } )
 _moduleObj.Token = Token
 function Token._new( kind, txt, pos, consecutive, commentList )
    local obj = {}
@@ -455,6 +460,13 @@ function Token:__init(kind, txt, pos, consecutive, commentList)
    self.pos = pos
    self.consecutive = consecutive
    self.commentList = _lune.unwrapDefault( commentList, Token.noneCommentList)
+   self.generator = nil
+end
+function Token.createWithGenerator( pos, gen )
+
+   local token = Token._new(TokenKind.Gen, "", pos, false, nil)
+   token.generator = gen
+   return token
 end
 function Token:getExcludedDelimitTxt(  )
 
@@ -491,37 +503,29 @@ end
 function Token:get_commentList()
    return self.commentList
 end
+function Token:get_generator()
+   return self.generator
+end
 do
    Token.noneCommentList = {}
    
 end
-function Token:_toMap()
-  return self
-end
-function Token._fromMap( val )
-  local obj, mes = Token._fromMapSub( {}, val )
-  if obj then
-     Token._setmeta( obj )
-  end
-  return obj, mes
-end
-function Token._fromStem( val )
-  return Token._fromMap( val )
-end
 
-function Token._fromMapSub( obj, val )
-   local memInfo = {}
-   table.insert( memInfo, { name = "kind", func = TokenKind._from, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "txt", func = _lune._toStr, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "pos", func = Position._fromMap, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "consecutive", func = _lune._toBool, nilable = false, child = {} } )
-   table.insert( memInfo, { name = "commentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
-   table.insert( memInfo, { name = "noneCommentList", func = _lune._toList, nilable = false, child = { { func = Token._fromMap, nilable = false, child = {} } } } )
-   local result, mess = _lune._fromMap( obj, val, memInfo )
-   if not result then
-      return nil, mess
+
+_moduleObj.TokenGenerator = TokenGenerator
+function TokenGenerator._setmeta( obj )
+  setmetatable( obj, { __index = TokenGenerator  } )
+end
+function TokenGenerator._new(  )
+   local obj = {}
+   TokenGenerator._setmeta( obj )
+   if obj.__init then
+      obj:__init(  )
    end
    return obj
+end
+function TokenGenerator:__init(  )
+
 end
 
 

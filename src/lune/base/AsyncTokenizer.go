@@ -9,75 +9,75 @@ var AsyncTokenizer_op2Set *LnsSet2_[string]
 var AsyncTokenizer_op1Set *LnsSet2_[string]
 var AsyncTokenizer_defaultPipeSize LnsInt
 // for 627
-func AsyncTokenizer_convExp0_3114(arg1 []LnsAny) (LnsAny, LnsAny) {
+func AsyncTokenizer_convExp0_3112(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 344
-func AsyncTokenizer_convExp0_591(arg1 []LnsAny) (LnsAny, string) {
+func AsyncTokenizer_convExp0_589(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 256
-func AsyncTokenizer_convExp0_427(arg1 []LnsAny) (*LnsSet2_[string], *LnsSet2_[string], *LnsSet2_[string], *LnsMap2_[string,*LnsList]) {
+func AsyncTokenizer_convExp0_425(arg1 []LnsAny) (*LnsSet2_[string], *LnsSet2_[string], *LnsSet2_[string], *LnsMap2_[string,*LnsList]) {
     return Lns_getFromMulti( arg1, 0 ).(*LnsSet2_[string]), Lns_getFromMulti( arg1, 1 ).(*LnsSet2_[string]), Lns_getFromMulti( arg1, 2 ).(*LnsSet2_[string]), Lns_getFromMulti( arg1, 3 ).(*LnsMap2_[string,*LnsList])
 }
 // for 309
-func AsyncTokenizer_convExp0_1690(arg1 []LnsAny) (LnsAny, string) {
+func AsyncTokenizer_convExp0_1688(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 313
-func AsyncTokenizer_convExp0_1716(arg1 []LnsAny) (LnsAny, string) {
+func AsyncTokenizer_convExp0_1714(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 319
-func AsyncTokenizer_convExp0_1744(arg1 []LnsAny) (string, bool, LnsAny, string, LnsAny) {
+func AsyncTokenizer_convExp0_1742(arg1 []LnsAny) (string, bool, LnsAny, string, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(bool), Lns_getFromMulti( arg1, 2 ), Lns_getFromMulti( arg1, 3 ).(string), Lns_getFromMulti( arg1, 4 )
 }
 // for 370
-func AsyncTokenizer_convExp0_1857(arg1 []LnsAny) (LnsAny, string) {
+func AsyncTokenizer_convExp0_1855(arg1 []LnsAny) (LnsAny, string) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 ).(string)
 }
 // for 434
-func AsyncTokenizer_convExp0_2132(arg1 []LnsAny) LnsAny {
+func AsyncTokenizer_convExp0_2130(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 442
-func AsyncTokenizer_convExp0_2183(arg1 []LnsAny) LnsAny {
+func AsyncTokenizer_convExp0_2181(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 450
-func AsyncTokenizer_convExp0_2234(arg1 []LnsAny) LnsAny {
+func AsyncTokenizer_convExp0_2232(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 461
-func AsyncTokenizer_convExp0_2314(arg1 []LnsAny) LnsAny {
+func AsyncTokenizer_convExp0_2312(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 466
-func AsyncTokenizer_convExp0_2344(arg1 []LnsAny) LnsAny {
+func AsyncTokenizer_convExp0_2342(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 515
-func AsyncTokenizer_convExp0_2467(arg1 []LnsAny) (LnsAny, LnsAny) {
+func AsyncTokenizer_convExp0_2465(arg1 []LnsAny) (LnsAny, LnsAny) {
     return Lns_getFromMulti( arg1, 0 ), Lns_getFromMulti( arg1, 1 )
 }
 // for 532
-func AsyncTokenizer_convExp0_2585(arg1 []LnsAny) (LnsInt, bool) {
+func AsyncTokenizer_convExp0_2583(arg1 []LnsAny) (LnsInt, bool) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(bool)
 }
 // for 662
-func AsyncTokenizer_convExp0_3267(arg1 []LnsAny) LnsAny {
+func AsyncTokenizer_convExp0_3265(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 685
-func AsyncTokenizer_convExp0_3412(arg1 []LnsAny) LnsAny {
+func AsyncTokenizer_convExp0_3410(arg1 []LnsAny) LnsAny {
     return Lns_getFromMulti( arg1, 0 )
 }
 // for 710
-func AsyncTokenizer_convExp0_3537(arg1 []LnsAny) (string, LnsInt) {
+func AsyncTokenizer_convExp0_3535(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // for 754
-func AsyncTokenizer_convExp0_3822(arg1 []LnsAny) (string, LnsInt) {
+func AsyncTokenizer_convExp0_3820(arg1 []LnsAny) (string, LnsInt) {
     return Lns_getFromMulti( arg1, 0 ).(string), Lns_getFromMulti( arg1, 1 ).(LnsInt)
 }
 // 60: decl @lune.@base.@AsyncTokenizer.isLuaKeyword
@@ -186,8 +186,8 @@ func AsyncTokenizer_create(_env *LnsEnv, tokenizerSrc LnsAny,stdinFile LnsAny,ov
     var mess string
     tokenizer,mess = AsyncTokenizer_Tokenizer_create_3_(_env, tokenizerSrc, stdinFile, overridePos)
     if tokenizer != nil{
-        tokenizer_229 := tokenizer.(*AsyncTokenizer_Tokenizer)
-        tokenizer_229.FP.Stop(_env)
+        tokenizer_223 := tokenizer.(*AsyncTokenizer_Tokenizer)
+        tokenizer_223.FP.Stop(_env)
     }
     return tokenizer, mess
 }
@@ -229,9 +229,9 @@ func AsyncTokenizer_Tokenizer_create_3_(_env *LnsEnv, tokenizerSrc LnsAny,stdinF
     AsyncTokenizer_createStream = func(_env *LnsEnv, mod string,path string)(LnsAny, string) {
         __func__ := "@lune.@base.@AsyncTokenizer.Tokenizer.create.createStream"
         if stdinFile != nil{
-            stdinFile_175 := stdinFile.(*Types_StdinFile)
-            if stdinFile_175.FP.Get_mod(_env) == mod{
-                return NewUtil_TxtStream(_env, stdinFile_175.FP.Get_txt(_env)).FP, ""
+            stdinFile_169 := stdinFile.(*Types_StdinFile)
+            if stdinFile_169.FP.Get_mod(_env) == mod{
+                return NewUtil_TxtStream(_env, stdinFile_169.FP.Get_txt(_env)).FP, ""
             }
         }
         {
@@ -246,8 +246,8 @@ func AsyncTokenizer_Tokenizer_create_3_(_env *LnsEnv, tokenizerSrc LnsAny,stdinF
     var AsyncTokenizer_createStreamWithBaseDir func(_env *LnsEnv, mod string,baseDir LnsAny,path string)(LnsAny, string)
     AsyncTokenizer_createStreamWithBaseDir = func(_env *LnsEnv, mod string,baseDir LnsAny,path string)(LnsAny, string) {
         if baseDir != nil{
-            baseDir_186 := baseDir.(string)
-            return AsyncTokenizer_createStream(_env, mod, Util_pathJoin(_env, baseDir_186, path))
+            baseDir_180 := baseDir.(string)
+            return AsyncTokenizer_createStream(_env, mod, Util_pathJoin(_env, baseDir_180, path))
         } else {
             return AsyncTokenizer_createStream(_env, mod, path)
         }
@@ -291,8 +291,8 @@ func AsyncTokenizer_Tokenizer_create_3_(_env *LnsEnv, tokenizerSrc LnsAny,stdinF
     var pipeSize LnsAny
     streamName,luaMode,stream,mess,pipeSize = AsyncTokenizer_createStreamFrom(_env)
     if stream != nil{
-        stream_215 := stream.(Lns_iStream)
-        return NewAsyncTokenizer_Tokenizer(_env, streamName, stream_215, luaMode, overridePos, pipeSize), ""
+        stream_209 := stream.(Lns_iStream)
+        return NewAsyncTokenizer_Tokenizer(_env, streamName, stream_209, luaMode, overridePos, pipeSize), ""
     }
     return nil, mess
 }
@@ -354,8 +354,8 @@ func (self *AsyncTokenizer_Tokenizer) createInfo(_env *LnsEnv, tokenKind LnsInt,
     }
     var newToken *Types_Token
     if tokenLineNo != nil && endColumn != nil{
-        endColumn_247 := endColumn.(LnsInt)
-        newToken = &NewAsyncTokenizer_MultiLineToken(_env, tokenKind, token, Types_Position_create(_env, lineNo, tokenColumn, self.streamName, self.overridePos), consecutive, NewLnsList2_[*Types_Token]([]*Types_Token{}), Types_Position_create(_env, self.lineNo, endColumn_247, self.streamName, self.overridePos)).Types_Token
+        endColumn_241 := endColumn.(LnsInt)
+        newToken = &NewAsyncTokenizer_MultiLineToken(_env, tokenKind, token, Types_Position_create(_env, lineNo, tokenColumn, self.streamName, self.overridePos), consecutive, NewLnsList2_[*Types_Token]([]*Types_Token{}), Types_Position_create(_env, self.lineNo, endColumn_241, self.streamName, self.overridePos)).Types_Token
     } else {
         newToken = NewTypes_Token(_env, tokenKind, token, Types_Position_create(_env, lineNo, tokenColumn, self.streamName, self.overridePos), consecutive, NewLnsList2_[*Types_Token]([]*Types_Token{}))
     }
@@ -367,7 +367,7 @@ func (self *AsyncTokenizer_Tokenizer) analyzeNumber(_env *LnsEnv, token string,b
     var nonNumIndex LnsInt
     
     {
-        _nonNumIndex := AsyncTokenizer_convExp0_2132(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", beginIndex, nil)))
+        _nonNumIndex := AsyncTokenizer_convExp0_2130(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", beginIndex, nil)))
         if _nonNumIndex == nil{
             return len(token), true
         } else {
@@ -382,7 +382,7 @@ func (self *AsyncTokenizer_Tokenizer) analyzeNumber(_env *LnsEnv, token string,b
         intFlag = false
         {
             var _nonNumIndex LnsAny
-            _nonNumIndex = AsyncTokenizer_convExp0_2183(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 1, nil)))
+            _nonNumIndex = AsyncTokenizer_convExp0_2181(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 1, nil)))
             if Lns_IsNil( _nonNumIndex ) {
                 return len(token), intFlag
             }
@@ -395,7 +395,7 @@ func (self *AsyncTokenizer_Tokenizer) analyzeNumber(_env *LnsEnv, token string,b
         _env.SetStackVal( nonNumChar == 120) ).(bool){
         {
             var _nonNumIndex LnsAny
-            _nonNumIndex = AsyncTokenizer_convExp0_2234(Lns_2DDD(_env.GetVM().String_find(token,"[^%da-fA-F]", nonNumIndex + 1, nil)))
+            _nonNumIndex = AsyncTokenizer_convExp0_2232(Lns_2DDD(_env.GetVM().String_find(token,"[^%da-fA-F]", nonNumIndex + 1, nil)))
             if Lns_IsNil( _nonNumIndex ) {
                 return len(token), intFlag
             }
@@ -414,7 +414,7 @@ func (self *AsyncTokenizer_Tokenizer) analyzeNumber(_env *LnsEnv, token string,b
             _env.SetStackVal( nextChar == 43) ).(bool){
             {
                 var _nonNumIndex LnsAny
-                _nonNumIndex = AsyncTokenizer_convExp0_2314(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 2, nil)))
+                _nonNumIndex = AsyncTokenizer_convExp0_2312(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 2, nil)))
                 if Lns_IsNil( _nonNumIndex ) {
                     return len(token), intFlag
                 }
@@ -423,7 +423,7 @@ func (self *AsyncTokenizer_Tokenizer) analyzeNumber(_env *LnsEnv, token string,b
         } else { 
             {
                 var _nonNumIndex LnsAny
-                _nonNumIndex = AsyncTokenizer_convExp0_2344(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 1, nil)))
+                _nonNumIndex = AsyncTokenizer_convExp0_2342(Lns_2DDD(_env.GetVM().String_find(token,"[^%d]", nonNumIndex + 1, nil)))
                 if Lns_IsNil( _nonNumIndex ) {
                     return len(token), intFlag
                 }
@@ -454,7 +454,7 @@ func (self *AsyncTokenizer_Tokenizer) addVal(_env *LnsEnv, list *LnsList2_[*Type
         var tokenEndIndex LnsInt
         
         {
-            _tokenIndex, _tokenEndIndex := AsyncTokenizer_convExp0_2467(Lns_2DDD(_env.GetVM().String_find(val, "[%p%w]+", searchIndex, nil)))
+            _tokenIndex, _tokenEndIndex := AsyncTokenizer_convExp0_2465(Lns_2DDD(_env.GetVM().String_find(val, "[%p%w]+", searchIndex, nil)))
             if _tokenIndex == nil || _tokenEndIndex == nil{
                 break
             } else {
@@ -579,7 +579,7 @@ func (self *AsyncTokenizer_Tokenizer) Parse(_env *LnsEnv) LnsAny {
         comment = ""
         for  {
             {
-                _, _termEndIndex := AsyncTokenizer_convExp0_3114(Lns_2DDD(_env.GetVM().String_find(rawLine, termStr, searchIndex, true)))
+                _, _termEndIndex := AsyncTokenizer_convExp0_3112(Lns_2DDD(_env.GetVM().String_find(rawLine, termStr, searchIndex, true)))
                 if !Lns_IsNil( _termEndIndex ) {
                     termEndIndex := _termEndIndex.(LnsInt)
                     comment = comment + _env.GetVM().String_sub(rawLine,searchIndex, termEndIndex)
@@ -622,7 +622,7 @@ func (self *AsyncTokenizer_Tokenizer) Parse(_env *LnsEnv) LnsAny {
         var index LnsInt
         
         {
-            _index := AsyncTokenizer_convExp0_3267(Lns_2DDD(_env.GetVM().String_find(rawLine, pattern, searchIndex, nil)))
+            _index := AsyncTokenizer_convExp0_3265(Lns_2DDD(_env.GetVM().String_find(rawLine, pattern, searchIndex, nil)))
             if _index == nil{
                 self.FP.addVal(_env, list, Types_TokenKind__Symb, _env.GetVM().String_sub(rawLine,startIndex, nil), startIndex)
                 return list
@@ -654,7 +654,7 @@ func (self *AsyncTokenizer_Tokenizer) Parse(_env *LnsEnv) LnsAny {
                     var endIndex LnsInt
                     
                     {
-                        _endIndex := AsyncTokenizer_convExp0_3412(Lns_2DDD(_env.GetVM().String_find(rawLine, workPattern, workIndex, nil)))
+                        _endIndex := AsyncTokenizer_convExp0_3410(Lns_2DDD(_env.GetVM().String_find(rawLine, workPattern, workIndex, nil)))
                         if _endIndex == nil{
                             Util_err(_env, _env.GetVM().String_format("%s:%d:%d: error: illegal string -- %s", Lns_2DDD(self.streamName, self.lineNo, index, rawLine)))
                         } else {
@@ -757,7 +757,6 @@ func (self *AsyncTokenizer_Runner) Run(_env *LnsEnv) {
 }
 // declaration Class -- AsyncItem
 type AsyncTokenizer_AsyncItemMtd interface {
-    ToMap() *LnsMap
 }
 type AsyncTokenizer_AsyncItem struct {
     List *LnsList2_[*Types_Token]
@@ -799,52 +798,15 @@ func NewAsyncTokenizer_AsyncItem(_env *LnsEnv, arg1 *LnsList2_[*Types_Token]) *A
 func (self *AsyncTokenizer_AsyncItem) InitAsyncTokenizer_AsyncItem(_env *LnsEnv, arg1 *LnsList2_[*Types_Token]) {
     self.List = arg1
 }
-func (self *AsyncTokenizer_AsyncItem) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["list"] = Lns_ToCollection( self.List )
-    return obj
-}
-func (self *AsyncTokenizer_AsyncItem) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func AsyncTokenizer_AsyncItem__fromMap(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return AsyncTokenizer_AsyncItem_FromMap( arg1, paramList )
-}
-func AsyncTokenizer_AsyncItem__fromStem(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return AsyncTokenizer_AsyncItem_FromMap( arg1, paramList )
-}
-func AsyncTokenizer_AsyncItem_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := AsyncTokenizer_AsyncItem_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func AsyncTokenizer_AsyncItem_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &AsyncTokenizer_AsyncItem{}
-    newObj.FP = newObj
-    return AsyncTokenizer_AsyncItem_FromMapMain( newObj, objMap, paramList )
-}
-func AsyncTokenizer_AsyncItem_FromMapMain( newObj *AsyncTokenizer_AsyncItem, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,conv,mess := Lns_ToList2Sub[*Types_Token]( objMap.Items["list"], false, []Lns_ToObjParam{Lns_ToObjParam{
-            Types_Token_FromMapSub, false,nil}}); !ok {
-       return false,nil,"list:" + mess.(string)
-    } else {
-       newObj.List = conv.(*LnsList2_[*Types_Token])
-    }
-    return true, newObj, nil
-}
 
 // declaration Class -- MultiLineToken
 type AsyncTokenizer_MultiLineTokenMtd interface {
-    ToMap() *LnsMap
     GetExcludedDelimitTxt(_env *LnsEnv) string
     GetLineCount(_env *LnsEnv) LnsInt
     Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token]
     Get_endLineNo(_env *LnsEnv) LnsInt
     Get_endPos(_env *LnsEnv) Types_Position
+    Get_generator(_env *LnsEnv) LnsAny
 }
 type AsyncTokenizer_MultiLineToken struct {
     Types_Token
@@ -890,46 +852,6 @@ func (self *AsyncTokenizer_MultiLineToken) InitAsyncTokenizer_MultiLineToken(_en
     self.endPos = arg6
 }
 func (self *AsyncTokenizer_MultiLineToken) Get_endPos(_env *LnsEnv) Types_Position{ return self.endPos }
-func (self *AsyncTokenizer_MultiLineToken) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["endPos"] = Lns_ToCollection( self.endPos )
-    return self.Types_Token.ToMapSetup( obj )
-}
-func (self *AsyncTokenizer_MultiLineToken) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func AsyncTokenizer_MultiLineToken__fromMap(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return AsyncTokenizer_MultiLineToken_FromMap( arg1, paramList )
-}
-func AsyncTokenizer_MultiLineToken__fromStem(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return AsyncTokenizer_MultiLineToken_FromMap( arg1, paramList )
-}
-func AsyncTokenizer_MultiLineToken_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := AsyncTokenizer_MultiLineToken_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func AsyncTokenizer_MultiLineToken_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &AsyncTokenizer_MultiLineToken{}
-    newObj.FP = newObj
-    newObj.Types_Token.FP = newObj
-    return AsyncTokenizer_MultiLineToken_FromMapMain( newObj, objMap, paramList )
-}
-func AsyncTokenizer_MultiLineToken_FromMapMain( newObj *AsyncTokenizer_MultiLineToken, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,_,mess := Types_Token_FromMapMain( &newObj.Types_Token, objMap, paramList ); !ok {
-        return false,nil,mess
-    }
-    if ok,conv,mess := Types_Position_FromMapSub( objMap.Items["endPos"], false, nil); !ok {
-       return false,nil,"endPos:" + mess.(string)
-    } else {
-       newObj.endPos = conv.(Types_Position)
-    }
-    return true, newObj, nil
-}
 
 // declaration Class -- Tokenizer
 type AsyncTokenizer_TokenizerMtd interface {

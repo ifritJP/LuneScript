@@ -1865,7 +1865,7 @@ func (self *convGo_convFilter) getFuncSymbol(_env *LnsEnv, typeInfo *Ast_TypeInf
 }
 // 709: decl @lune.@base.@convGo.convFilter.getAlgeSymbol
 func (self *convGo_convFilter) getAlgeSymbol(_env *LnsEnv, valInfo *Ast_AlgeValInfo) string {
-    return self.FP.getSymbol(_env, &convGo_SymbolKind__Static{&valInfo.FP.Get_algeTpye(_env).Ast_TypeInfo}, valInfo.FP.Get_name(_env))
+    return self.FP.getSymbol(_env, &convGo_SymbolKind__Static{&valInfo.FP.Get_algeType(_env).Ast_TypeInfo}, valInfo.FP.Get_name(_env))
 }
 // 713: decl @lune.@base.@convGo.convFilter.getSymbolSym
 func (self *convGo_convFilter) getSymbolSym(_env *LnsEnv, symbolInfo *Ast_SymbolInfo) string {

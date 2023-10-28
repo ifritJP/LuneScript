@@ -88,88 +88,6 @@ function _lune.unwrapDefault( val, defval )
    return val
 end
 
-function _lune._toStem( val )
-   return val
-end
-function _lune._toInt( val )
-   if type( val ) == "number" then
-      return math.floor( val )
-   end
-   return nil
-end
-function _lune._toReal( val )
-   if type( val ) == "number" then
-      return val
-   end
-   return nil
-end
-function _lune._toBool( val )
-   if type( val ) == "boolean" then
-      return val
-   end
-   return nil
-end
-function _lune._toStr( val )
-   if type( val ) == "string" then
-      return val
-   end
-   return nil
-end
-function _lune._toList( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toValInfo = toValInfoList[ 1 ]
-      for index, mem in ipairs( val ) do
-         local memval, mess = toValInfo.func( mem, toValInfo.child )
-         if memval == nil and not toValInfo.nilable then
-            if mess then
-              return nil, string.format( "%d.%s", index, mess )
-            end
-            return nil, index
-         end
-         tbl[ index ] = memval
-      end
-      return tbl
-   end
-   return nil
-end
-function _lune._toMap( val, toValInfoList )
-   if type( val ) == "table" then
-      local tbl = {}
-      local toKeyInfo = toValInfoList[ 1 ]
-      local toValInfo = toValInfoList[ 2 ]
-      for key, mem in pairs( val ) do
-         local mapKey, keySub = toKeyInfo.func( key, toKeyInfo.child )
-         local mapVal, valSub = toValInfo.func( mem, toValInfo.child )
-         if mapKey == nil or mapVal == nil then
-            if mapKey == nil then
-               return nil
-            end
-            if keySub == nil then
-               return nil, mapKey
-            end
-            return nil, string.format( "%s.%s", mapKey, keySub)
-         end
-         tbl[ mapKey ] = mapVal
-      end
-      return tbl
-   end
-   return nil
-end
-function _lune._fromMap( obj, map, memInfoList )
-   if type( map ) ~= "table" then
-      return false
-   end
-   for index, memInfo in ipairs( memInfoList ) do
-      local val, key = memInfo.func( map[ memInfo.name ], memInfo.child )
-      if val == nil and not memInfo.nilable then
-         return false, key and string.format( "%s.%s", memInfo.name, key) or memInfo.name
-      end
-      obj[ memInfo.name ] = val
-   end
-   return true
-end
-
 function _lune.loadModule( mod )
    if __luneScript and not package.preload[ mod ] then
       return  __luneScript:loadModule( mod )
@@ -353,7 +271,7 @@ _moduleObj.isOp1 = isOp1
 
 
 local AsyncItem = {}
-setmetatable( AsyncItem, { ifList = {__AsyncItem,Mapping,} } )
+setmetatable( AsyncItem, { ifList = {__AsyncItem,} } )
 _moduleObj.AsyncItem = AsyncItem
 function AsyncItem._setmeta( obj )
   setmetatable( obj, { __index = AsyncItem  } )
@@ -369,29 +287,6 @@ end
 function AsyncItem:__init( list )
 
    self.list = list
-end
-function AsyncItem:_toMap()
-  return self
-end
-function AsyncItem._fromMap( val )
-  local obj, mes = AsyncItem._fromMapSub( {}, val )
-  if obj then
-     AsyncItem._setmeta( obj )
-  end
-  return obj, mes
-end
-function AsyncItem._fromStem( val )
-  return AsyncItem._fromMap( val )
-end
-
-function AsyncItem._fromMapSub( obj, val )
-   local memInfo = {}
-   table.insert( memInfo, { name = "list", func = _lune._toList, nilable = false, child = { { func = Types.Token._fromMap, nilable = false, child = {} } } } )
-   local result, mess = _lune._fromMap( obj, val, memInfo )
-   if not result then
-      return nil, mess
-   end
-   return obj
 end
 
 
@@ -429,34 +324,6 @@ function MultiLineToken:__init( __superarg1, __superarg2, __superarg3, __superar
 end
 function MultiLineToken:get_endPos()
    return self.endPos
-end
-function MultiLineToken:_toMap()
-  return self
-end
-function MultiLineToken._fromMap( val )
-  local obj, mes = MultiLineToken._fromMapSub( {}, val )
-  if obj then
-     MultiLineToken._setmeta( obj )
-  end
-  return obj, mes
-end
-function MultiLineToken._fromStem( val )
-  return MultiLineToken._fromMap( val )
-end
-
-function MultiLineToken._fromMapSub( obj, val )
-   local result, mes = Types.Token._fromMapSub( obj, val )
-   if not result then
-      return nil, mes
-   end
-
-   local memInfo = {}
-   table.insert( memInfo, { name = "endPos", func = Types.Position._fromMap, nilable = false, child = {} } )
-   local result, mess = _lune._fromMap( obj, val, memInfo )
-   if not result then
-      return nil, mess
-   end
-   return obj
 end
 
 

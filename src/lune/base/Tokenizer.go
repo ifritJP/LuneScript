@@ -77,22 +77,22 @@ func Tokenizer_convFromRawToStr(_env *LnsEnv, txt string) string {
     return ""
 }
 
-// 369: decl @lune.@base.@Tokenizer.isOp2
+// 377: decl @lune.@base.@Tokenizer.isOp2
 func Tokenizer_isOp2(_env *LnsEnv, ope string) bool {
     return AsyncTokenizer_isOp2(_env, ope)
 }
 
-// 373: decl @lune.@base.@Tokenizer.isOp1
+// 381: decl @lune.@base.@Tokenizer.isOp1
 func Tokenizer_isOp1(_env *LnsEnv, ope string) bool {
     return AsyncTokenizer_isOp1(_env, ope)
 }
 
-// 382: decl @lune.@base.@Tokenizer.getEofToken
+// 390: decl @lune.@base.@Tokenizer.getEofToken
 func Tokenizer_getEofToken(_env *LnsEnv) *Types_Token {
     return Tokenizer_eofToken
 }
 
-// 472: decl @lune.@base.@Tokenizer.quoteStr
+// 480: decl @lune.@base.@Tokenizer.quoteStr
 func Tokenizer_quoteStr(_env *LnsEnv, txt string) string {
     var work string
     work = txt
@@ -124,7 +124,7 @@ func Tokenizer_quoteStr(_env *LnsEnv, txt string) string {
     return work
 }
 
-// 502: decl @lune.@base.@Tokenizer.createTokenizerFrom
+// 510: decl @lune.@base.@Tokenizer.createTokenizerFrom
 func Tokenizer_createTokenizerFrom(_env *LnsEnv, src LnsAny,async bool,stdinFile LnsAny) *Tokenizer_Tokenizer {
     return &NewTokenizer_StreamTokenizer(_env, src, async, stdinFile, nil).Tokenizer_Tokenizer
 }
@@ -200,28 +200,7 @@ func Tokenizer_DefaultPushbackTokenizer_createFromLnsCode(_env *LnsEnv, code str
 func (self *Tokenizer_DefaultPushbackTokenizer) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) Types_Position {
     return self.tokenizer.FP.CreatePosition(_env, lineNo, column)
 }
-// 258: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getTokenNoErr
-func (self *Tokenizer_DefaultPushbackTokenizer) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *Types_Token {
-    if self.pushbackedList.Len() > 0{
-        self.currentToken = self.pushbackedList.GetAt(self.pushbackedList.Len())
-        self.pushbackedList.Remove(nil)
-    } else { 
-        {
-            _token := self.tokenizer.FP.GetToken(_env)
-            if !Lns_IsNil( _token ) {
-                token := _token.(*Types_Token)
-                self.currentToken = token
-            } else {
-                self.currentToken = Types_noneToken
-            }
-        }
-    }
-    if self.currentToken.Kind != Types_TokenKind__Eof{
-        self.usedTokenList.Insert(self.currentToken)
-    }
-    return self.currentToken
-}
-// 276: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.pushbackToken
+// 258: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.pushbackToken
 func (self *Tokenizer_DefaultPushbackTokenizer) PushbackToken(_env *LnsEnv, token *Types_Token) {
     if token.Kind != Types_TokenKind__Eof{
         self.pushbackedList.Insert(token)
@@ -243,11 +222,11 @@ func (self *Tokenizer_DefaultPushbackTokenizer) PushbackToken(_env *LnsEnv, toke
         }
     }
 }
-// 299: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.pushback
+// 281: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.pushback
 func (self *Tokenizer_DefaultPushbackTokenizer) Pushback(_env *LnsEnv) {
     self.FP.PushbackToken(_env, self.currentToken)
 }
-// 302: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.pushbackStr
+// 284: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.pushbackStr
 func (self *Tokenizer_DefaultPushbackTokenizer) PushbackStr(_env *LnsEnv, asyncParse LnsAny,name string,statement string,pos Types_Position,pushbacked LnsAny) {
     var tokenizer *Tokenizer_StreamTokenizer
     tokenizer = NewTokenizer_StreamTokenizer(_env, &Types_TokenizerSrc__LnsCode{statement, name, nil}, asyncParse == true, nil, pos)
@@ -281,7 +260,7 @@ func (self *Tokenizer_DefaultPushbackTokenizer) PushbackStr(_env *LnsEnv, asyncP
         }
     }
     if pushbacked != nil{
-        pushbacked_323 := pushbacked.(Tokenizer_Pushbacked)
+        pushbacked_316 := pushbacked.(Tokenizer_Pushbacked)
         {
             var _forFrom1 LnsInt = list.Len()
             var _forTo1 LnsInt = 1
@@ -294,13 +273,13 @@ func (self *Tokenizer_DefaultPushbackTokenizer) PushbackStr(_env *LnsEnv, asyncP
                    if _forWork1 < _forTo1 { break }
                 }
                 index := _forWork1
-                pushbacked_323(_env, list.GetAt(index))
+                pushbacked_316(_env, list.GetAt(index))
                 _forWork1 += _forDelta1
             }
         }
     }
 }
-// 327: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.newPushback
+// 309: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.newPushback
 func (self *Tokenizer_DefaultPushbackTokenizer) NewPushback(_env *LnsEnv, tokenList *LnsList2_[*Types_Token]) {
     {
         var _forFrom0 LnsInt = tokenList.Len()
@@ -319,7 +298,35 @@ func (self *Tokenizer_DefaultPushbackTokenizer) NewPushback(_env *LnsEnv, tokenL
         }
     }
 }
-// 333: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getLastPos
+// 315: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getTokenNoErr
+func (self *Tokenizer_DefaultPushbackTokenizer) GetTokenNoErr(_env *LnsEnv, skipFlag LnsAny) *Types_Token {
+    if self.pushbackedList.Len() > 0{
+        self.currentToken = self.pushbackedList.GetAt(self.pushbackedList.Len())
+        self.pushbackedList.Remove(nil)
+    } else { 
+        {
+            _token := self.tokenizer.FP.GetToken(_env)
+            if !Lns_IsNil( _token ) {
+                token := _token.(*Types_Token)
+                if token.Kind == Types_TokenKind__Gen{
+                    var generator Types_TokenGenerator
+                    generator = Lns_unwrap( token.FP.Get_generator(_env)).(Types_TokenGenerator)
+                    self.FP.NewPushback(_env, generator.GetTokenList(_env))
+                    return self.FP.GetTokenNoErr(_env, skipFlag)
+                } else { 
+                    self.currentToken = token
+                }
+            } else {
+                self.currentToken = Types_noneToken
+            }
+        }
+    }
+    if self.currentToken.Kind != Types_TokenKind__Eof{
+        self.usedTokenList.Insert(self.currentToken)
+    }
+    return self.currentToken
+}
+// 341: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getLastPos
 func (self *Tokenizer_DefaultPushbackTokenizer) GetLastPos(_env *LnsEnv) Types_Position {
     var pos Types_Position
     pos = self.tokenizer.FP.CreatePosition(_env, 0, 0)
@@ -334,7 +341,7 @@ func (self *Tokenizer_DefaultPushbackTokenizer) GetLastPos(_env *LnsEnv) Types_P
     }
     return pos
 }
-// 349: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getNearCode
+// 357: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getNearCode
 func (self *Tokenizer_DefaultPushbackTokenizer) GetNearCode(_env *LnsEnv) string {
     var code string
     code = ""
@@ -356,30 +363,30 @@ func (self *Tokenizer_DefaultPushbackTokenizer) GetNearCode(_env *LnsEnv) string
     }
     return _env.GetVM().String_format("%s -- current '%s'", Lns_2DDD(code, self.currentToken.Txt))
 }
-// 364: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getStreamName
+// 372: decl @lune.@base.@Tokenizer.DefaultPushbackTokenizer.getStreamName
 func (self *Tokenizer_DefaultPushbackTokenizer) GetStreamName(_env *LnsEnv) string {
     return self.tokenizer.FP.GetStreamName(_env)
 }
-// 386: decl @lune.@base.@Tokenizer.DummyTokenizer.getToken
+// 394: decl @lune.@base.@Tokenizer.DummyTokenizer.getToken
 func (self *Tokenizer_DummyTokenizer) GetToken(_env *LnsEnv) LnsAny {
     return Tokenizer_eofToken
 }
-// 389: decl @lune.@base.@Tokenizer.DummyTokenizer.getStreamName
+// 397: decl @lune.@base.@Tokenizer.DummyTokenizer.getStreamName
 func (self *Tokenizer_DummyTokenizer) GetStreamName(_env *LnsEnv) string {
     return "dummy"
 }
-// 392: decl @lune.@base.@Tokenizer.DummyTokenizer.createPosition
+// 400: decl @lune.@base.@Tokenizer.DummyTokenizer.createPosition
 func (self *Tokenizer_DummyTokenizer) CreatePosition(_env *LnsEnv, lineNo LnsInt,column LnsInt) Types_Position {
     return Types_Position_create(_env, lineNo, column, self.FP.GetStreamName(_env), nil)
 }
-// 411: decl @lune.@base.@Tokenizer.CommentLayer.addDirect
+// 419: decl @lune.@base.@Tokenizer.CommentLayer.addDirect
 func (self *Tokenizer_CommentLayer) AddDirect(_env *LnsEnv, commentList *LnsList2_[*Types_Token]) {
     for _, _comment := range( commentList.Items ) {
         comment := _comment
         self.commentList.Insert(comment)
     }
 }
-// 417: decl @lune.@base.@Tokenizer.CommentLayer.add
+// 425: decl @lune.@base.@Tokenizer.CommentLayer.add
 func (self *Tokenizer_CommentLayer) Add(_env *LnsEnv, token *Types_Token) {
     if Lns_op_not(self.tokenSet.Has(token)){
         self.tokenSet.Add(token)
@@ -387,7 +394,7 @@ func (self *Tokenizer_CommentLayer) Add(_env *LnsEnv, token *Types_Token) {
         self.FP.AddDirect(_env, token.FP.Get_commentList(_env))
     }
 }
-// 426: decl @lune.@base.@Tokenizer.CommentLayer.clear
+// 434: decl @lune.@base.@Tokenizer.CommentLayer.clear
 func (self *Tokenizer_CommentLayer) Clear(_env *LnsEnv) {
     if self.commentList.Len() != 0{
         self.commentList = NewLnsList2_[*Types_Token]([]*Types_Token{})
@@ -395,19 +402,19 @@ func (self *Tokenizer_CommentLayer) Clear(_env *LnsEnv) {
         self.tokenList = NewLnsList2_[*Types_Token]([]*Types_Token{})
     }
 }
-// 442: decl @lune.@base.@Tokenizer.CommentLayer.hasInvalidComment
+// 450: decl @lune.@base.@Tokenizer.CommentLayer.hasInvalidComment
 func (self *Tokenizer_CommentLayer) HasInvalidComment(_env *LnsEnv) LnsAny {
     return _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( self.tokenList.Len() > 1) &&
         _env.SetStackVal( self.tokenList.GetAt(2).FP.Get_commentList(_env).GetAt(1)) ||
         _env.SetStackVal( nil) )
 }
-// 456: decl @lune.@base.@Tokenizer.CommentCtrl.push
+// 464: decl @lune.@base.@Tokenizer.CommentCtrl.push
 func (self *Tokenizer_CommentCtrl) Push(_env *LnsEnv) {
     self.layer = NewTokenizer_CommentLayer(_env)
     self.layerStack.Insert(self.layer)
 }
-// 461: decl @lune.@base.@Tokenizer.CommentCtrl.pop
+// 469: decl @lune.@base.@Tokenizer.CommentCtrl.pop
 func (self *Tokenizer_CommentCtrl) Pop(_env *LnsEnv) {
     self.layer = self.layerStack.GetAt(self.layerStack.Len())
     self.layerStack.Remove(nil)
@@ -769,7 +776,7 @@ func NewTokenizer_CommentLayer(_env *LnsEnv) *Tokenizer_CommentLayer {
     return obj
 }
 func (self *Tokenizer_CommentLayer) Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token]{ return self.commentList }
-// 405: DeclConstr
+// 413: DeclConstr
 func (self *Tokenizer_CommentLayer) InitTokenizer_CommentLayer(_env *LnsEnv) {
     self.commentList = NewLnsList2_[*Types_Token]([]*Types_Token{})
     self.tokenSet = NewLnsSet2_[*Types_Token]([]*Types_Token{})
@@ -825,27 +832,27 @@ func NewTokenizer_CommentCtrl(_env *LnsEnv) *Tokenizer_CommentCtrl {
     obj.InitTokenizer_CommentCtrl(_env)
     return obj
 }
-// advertise -- 447
+// advertise -- 455
 func (self *Tokenizer_CommentCtrl) Add(_env *LnsEnv, arg1 *Types_Token) {
 self.layer. FP.Add( _env, arg1)
 }
-// advertise -- 447
+// advertise -- 455
 func (self *Tokenizer_CommentCtrl) AddDirect(_env *LnsEnv, arg1 *LnsList2_[*Types_Token]) {
 self.layer. FP.AddDirect( _env, arg1)
 }
-// advertise -- 447
+// advertise -- 455
 func (self *Tokenizer_CommentCtrl) Clear(_env *LnsEnv) {
 self.layer. FP.Clear( _env)
 }
-// advertise -- 447
+// advertise -- 455
 func (self *Tokenizer_CommentCtrl) Get_commentList(_env *LnsEnv) *LnsList2_[*Types_Token] {
     return self.layer. FP.Get_commentList( _env)
 }
-// advertise -- 447
+// advertise -- 455
 func (self *Tokenizer_CommentCtrl) HasInvalidComment(_env *LnsEnv) LnsAny {
     return self.layer. FP.HasInvalidComment( _env)
 }
-// 451: DeclConstr
+// 459: DeclConstr
 func (self *Tokenizer_CommentCtrl) InitTokenizer_CommentCtrl(_env *LnsEnv) {
     self.layer = NewTokenizer_CommentLayer(_env)
     self.layerStack = NewLnsList2_[*Tokenizer_CommentLayer](Lns_2DDDGen[*Tokenizer_CommentLayer](self.layer))

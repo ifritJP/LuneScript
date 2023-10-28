@@ -1657,7 +1657,7 @@ function TransUnit:isValidBlockWithoutTesting(  )
 end
 
 
-function TransUnit:getTokenNoErr( skipFlag )
+function TransUnit:getTokenNoErrPostpone( expandMacroPostpone, skipFlag )
 
    local token
    
@@ -1674,7 +1674,7 @@ function TransUnit:getTokenNoErr( skipFlag )
    if workToken.kind ~= Tokenizer.TokenKind.Eof then
       token = workToken
       if self.macroCtrl:get_analyzeInfo():get_mode() ~= Nodes.MacroMode.None and (not skipFlag or self:isValidBlockWithoutTesting(  ) ) then
-         token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self:get_scope(), self, token )
+         token = self.macroCtrl:expandMacroVal( self.typeNameCtrl, self:get_scope(), self, token, expandMacroPostpone )
       end
       if not self.ctrl_info.compatComment then
          if commentList ~= nil then
@@ -1692,6 +1692,12 @@ function TransUnit:getTokenNoErr( skipFlag )
       self.commentCtrl:add( token )
    end
    return token
+end
+
+
+function TransUnit:getTokenNoErr( skipFlag )
+
+   return self:getTokenNoErrPostpone( false, skipFlag )
 end
 
 
@@ -2165,7 +2171,7 @@ function TransUnit:skipBlock( recordToken )
    local blockDepth = 0
    local tokenList = {}
    while true do
-      local token = self:getTokenNoErr( not recordToken )
+      local token = self:getTokenNoErrPostpone( self.ctrl_info.enablePostponeExpandingMacro and self.analyzePhase == AnalyzePhase.Meta, not recordToken )
       if recordToken then
          table.insert( tokenList, token )
       end
@@ -2504,7 +2510,7 @@ function TransUnit:analyzeMatch( firstToken )
          firstFlag = false
       end
       self:popScope(  )
-      local valRefNode = Nodes.ExpRefNode.create( self.nodeManager, valNameToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {valInfo:get_algeTpye()}, valInfo:get_symbolInfo() )
+      local valRefNode = Nodes.ExpRefNode.create( self.nodeManager, valNameToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {valInfo:get_algeType()}, valInfo:get_symbolInfo() )
       local matchCase = Nodes.MatchCase._new(valInfo, valRefNode, valParamNameList, block)
       table.insert( caseList, matchCase )
       nextToken = self:getToken(  )
@@ -3527,7 +3533,7 @@ end
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
-   Log.log( Log.Level.Trace, __func__, 872, function (  )
+   Log.log( Log.Level.Trace, __func__, 873, function (  )
    
       return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
    end
@@ -4439,7 +4445,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          if setterMode ~= Ast.AccessMode.None and mutMode == Ast.MutMode.IMut then
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
-         Log.log( Log.Level.Debug, __func__, 2121, function (  )
+         Log.log( Log.Level.Debug, __func__, 2122, function (  )
          
             return string.format( "%s", dummyRetType)
          end
@@ -7188,6 +7194,9 @@ function TransUnit:evalMacro( firstToken, macroRefNode, expList )
 
    local macroTypeInfo = macroRefNode:get_expType():get_nonnilableType()
    local stmtList = {}
+   if self.analyzePhase == AnalyzePhase.Meta then
+      
+   end
    self:evalMacroOp( firstToken, macroTypeInfo, expList, function (  )
    
       if #macroTypeInfo:get_retTypeInfoList() == 0 then
@@ -7198,6 +7207,9 @@ function TransUnit:evalMacro( firstToken, macroRefNode, expList )
       end
    end
     )
+   if self.analyzePhase == AnalyzePhase.Meta then
+      
+   end
    local expTypeList = macroTypeInfo:get_retTypeInfoList()
    if #macroTypeInfo:get_retTypeInfoList() > 0 then
       local macroRetTypeList = macroTypeInfo:get_retTypeInfoList()
@@ -10678,7 +10690,6 @@ function TransUnitCtrl:addFuncBlockInfoList( funcBlockInfo )
    table.insert( self.funcBlockInfoList, funcBlockInfo )
 end
 
-
 function TransUnitCtrl:processFuncBlock( streamName )
 
    local waiter = Async.Waiter._new(self.ctrl_info.threadPerUnitThread + 1)
@@ -10812,7 +10823,7 @@ function TransUnitCtrl:createAST( tokenizerSrc, asyncParse, baseDir, stdinFile, 
    local streamName = tokenizer:getStreamName(  )
    self.stdinFile = stdinFile
    self.baseDir = baseDir
-   Log.log( Log.Level.Log, __func__, 807, function (  )
+   Log.log( Log.Level.Log, __func__, 810, function (  )
       local __func__ = '@lune.@base.@TransUnit.TransUnitCtrl.createAST.<anonymous>'
    
       return string.format( "%s start -- %s on %s, macroFlag:%s, %s, testing:%s", __func__, tokenizer:getStreamName(  ), baseDir, macroFlag, AnalyzePhase:_getTxt( self.analyzePhase)
@@ -10868,7 +10879,7 @@ function TransUnitCtrl:createAST( tokenizerSrc, asyncParse, baseDir, stdinFile, 
       end
       local workExportInfo = Nodes.ExportInfo._new(moduleTypeInfo, provideInfo, processInfo, globalSymbolList, importedAliasMap, self.moduleId, self.moduleName, moduleTypeInfo:get_rawTxt(), streamName, {}, self.macroCtrl:get_declPubMacroInfoMap())
       
-      Log.log( Log.Level.Log, __func__, 883, function (  )
+      Log.log( Log.Level.Log, __func__, 886, function (  )
       
          return string.format( "ready meta -- %s, %d, %s, %s", streamName, self.tokenizer:getUsedTokenListLen(  ), moduleTypeInfo, moduleTypeInfo:get_scope())
       end

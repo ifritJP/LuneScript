@@ -904,7 +904,7 @@ end
 
 function convFilter:getAlgeSymbol( valInfo )
 
-   return self:getSymbol( _lune.newAlge( SymbolKind.Static, {valInfo:get_algeTpye()}), valInfo:get_name() )
+   return self:getSymbol( _lune.newAlge( SymbolKind.Static, {valInfo:get_algeType()}), valInfo:get_name() )
 end
 
 

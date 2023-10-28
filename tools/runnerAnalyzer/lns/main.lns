@@ -71,6 +71,7 @@ enum LnscRunnerKind {
    convlua = "convlua",
    createAst = "createAst",
    tokenizer = "tokenizer",
+   main = "main",
 }
 
 class LnscRunnerInfo {
@@ -88,10 +89,14 @@ pub static fn LnscRunnerInfo.createFromStr( txt:str ) : LnscRunnerInfo! {
    let info = RunnerInfo.createFromStr( txt )!;
 
    foreach kind in LnscRunnerKind.$_allList {
-      let pattern = "^%s.*- " (kind);
-      if info.$name.find( pattern ## ) {
-         let path = info.$name.gsub( ".*- ", "" );
-         return new LnscRunnerInfo( info, kind, path );
+      if info.$name ~= "main" {
+         let pattern = "^%s.*- " (kind);
+         if info.$name.find( pattern ## ) {
+            let path = info.$name.gsub( ".*- ", "" );
+            return new LnscRunnerInfo( info, kind, path );
+         }
+      } else {
+         return new LnscRunnerInfo( info, .main, "" );
       }
    }
    return nil;
@@ -204,6 +209,7 @@ fn getFileSet( list:&List<&LnscRunnerInfo> ) : Set<str> {
 enum EVENT_KIND {
    entry = "entry",
    start = "開始",
+   import = "import",
    readyMeta = "ready meta",
    fin = "終了",
 }
@@ -243,7 +249,7 @@ fn outputPlantUml( stream:oStream, moduleList:&List<&ModuleInfo> ) {
          } else {
             mess = "";
          }
-         addEvent( imported.$msec, ID, .readyMeta, mess );
+         addEvent( imported.$msec, ID, .import, mess );
          addEvent( imported.$msec + 1, ID, .start## );
       }
       if! let readyMeta = moduleInfo.$readyMeta {

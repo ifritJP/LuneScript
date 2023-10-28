@@ -680,7 +680,7 @@ pub abstract class TransUnit extend TransUnitIF.TransUnitBase (Tokenizer.Pushbac
 
    /** 解析中行番号。 ログ用。 */
    pro let mut analyzingLineNo:int;
-   
+
    // ==== 複数持ちしてマージ
    /** NodeKind -> Node[]  */
    pro let nodeManager: Nodes.NodeManager;
@@ -1383,7 +1383,8 @@ fn TransUnit.isValidBlockWithoutTesting(): bool {
    return not self.inTestBlock or self.ctrl_info.testing;
 }
 
-pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Tokenizer.Token
+pub fn TransUnit.getTokenNoErrPostpone(
+   expandMacroPostpone:bool, skipFlag:bool!) __async mut : &Tokenizer.Token
 {
    let mut token;
 
@@ -1404,7 +1405,9 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Tokenizer.Token
       {
          // テストブロック内のマクロ展開は、テストが有効な時に行なう。
          token = self.macroCtrl.expandMacroVal(
-            self.typeNameCtrl, self.$scope, self, token );
+            self.typeNameCtrl, self.$scope, self, token,
+            expandMacroPostpone );
+            //false );
       }
       if not self.ctrl_info.compatComment {
          when! commentList {
@@ -1424,6 +1427,13 @@ pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Tokenizer.Token
    }
 
    return token;
+}
+
+
+
+pub fn TransUnit.getTokenNoErr(skipFlag:bool!) __async mut : &Tokenizer.Token
+{
+   return self.getTokenNoErrPostpone( false, skipFlag );
 }
 
 
@@ -1978,7 +1988,7 @@ local fn TransUnit.analyzeBlock(
 /**
 Block を読み飛ばす。
 
-nextToken すると '{' が読み取れる状態にしておく。
+getToken すると '{' が読み取れる状態にしておく。
 
 @param recordToken true の場合、読み飛ばした token をリストにして返す。
   false の場合は空リストを返す。
@@ -1989,7 +1999,10 @@ pro fn TransUnit.skipBlock( recordToken:bool ) mut : List<&Tokenizer.Token> {
    let mut tokenList:List<&Tokenizer.Token> = [];
    //tokenList = tokenList.__new( 1000 );
    while true {
-      let token = self.getTokenNoErr( not recordToken );
+      let token = self.getTokenNoErrPostpone(
+         self.ctrl_info.enablePostponeExpandingMacro and
+            self.analyzePhase == .Meta,
+         not recordToken );
       if recordToken {
          tokenList.insert( token );
       }
@@ -2419,7 +2432,7 @@ fn TransUnit.analyzeMatch( firstToken: &Tokenizer.Token ) mut : Nodes.MatchNode 
       self.popScope();
       let valRefNode = Nodes.ExpRefNode.create(
          self.nodeManager, valNameToken.pos, self.inTestBlock,
-         self.macroCtrl.isInAnalyzeArgMode(), [ valInfo.$algeTpye ],
+         self.macroCtrl.isInAnalyzeArgMode(), [ valInfo.$algeType ],
          valInfo.$symbolInfo );
       let matchCase = new Nodes.MatchCase( valInfo, valRefNode, valParamNameList, block );
 

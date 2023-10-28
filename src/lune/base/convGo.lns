@@ -707,7 +707,7 @@ fn convFilter.getFuncSymbol( typeInfo:&Ast.TypeInfo ) mut : str {
 }
 
 fn convFilter.getAlgeSymbol( valInfo:&Ast.AlgeValInfo ) mut : str {
-   return self.getSymbol( .Static( valInfo.$algeTpye ), valInfo.$name );
+   return self.getSymbol( .Static( valInfo.$algeType ), valInfo.$name );
 }
 
 fn convFilter.getSymbolSym( symbolInfo:&Ast.SymbolInfo ) mut : str {

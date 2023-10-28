@@ -121,8 +121,10 @@ let ebnf = ```
 
 
   <decl_sym_list> ::= <decl_sym> { "," <decl_sym> }
-  <decl_sym> ::= [<decl_sym_mut>] <sym> [":" <reftype>]
+  <decl_sym> ::= [<decl_sym_mut>] <sym> [":" <membertype>]
   <decl_sym_mut> ::= "mut" | "allmut"
+
+  <membertype> ::= [ "allmut" ] <reftype>
 
 
   <reftype_list> ::= <reftype> { "," <reftype> }

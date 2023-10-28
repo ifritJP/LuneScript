@@ -25,6 +25,7 @@ SOFTWARE.
 package runtimelns
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path"
@@ -74,24 +75,30 @@ func printMemInfo(mess string) {
 func depend_profileSub(
 	_env *LnsEnv, validTest bool, path string, work func() LnsAny) LnsAny {
 	if validTest {
-		// start cpu profile
-		prof, err := os.Create(path)
-		if err != nil {
-			panic(err)
-		}
-		if err := pprof.StartCPUProfile(prof); err != nil {
-			panic(err)
-		}
-		defer pprof.StopCPUProfile()
-
 		{
-			LnsStartRunnerLog(_env, true)
-			profRunner, err := os.Create(path + "runner")
+			// start cpu profile
+			profWriter, err := os.Create(path)
 			if err != nil {
 				panic(err)
 			}
+			if err := pprof.StartCPUProfile(profWriter); err != nil {
+				panic(err)
+			}
+			defer pprof.StopCPUProfile()
+		}
+
+		{
+			LnsStartRunnerLog(_env, true)
+			profRunnerWriter, err := os.Create(path + "runner")
+			if err != nil {
+				panic(err)
+			}
+			defer profRunnerWriter.Close()
+			bufWriter := bufio.NewWriter(profRunnerWriter)
+			defer bufWriter.Flush()
+
 			defer lns_threadMgrInfo.dumpEventLog(func(txt string) {
-				profRunner.Write([]byte(txt))
+				bufWriter.Write([]byte(txt))
 			})
 		}
 

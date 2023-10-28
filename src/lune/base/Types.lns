@@ -124,7 +124,11 @@ pub class TransCtrlInfo {
    /** Tokenize 処理を非同期に行なうかどうか */
    pub let mut asyncTokenizer:bool;
 
+   /** マクロ定義内のシンボル展開を延期するかどうか */
+   pub let mut enablePostponeExpandingMacro:bool;
+
    pub fn __init() {
+      self.enablePostponeExpandingMacro = true;
       self.asyncTokenizer = true;
       self.defaultGenInherit = true;
       self.useWaiter = true;
@@ -252,15 +256,20 @@ pub enum TokenKind {
    Sheb,
    /** EOF */
    Eof,
+   /** Generator */
+   Gen,
 }
 
-pub class Token extend (Mapping) {
+pub proto interface TokenGenerator;
+
+pub class Token {
    pub let kind: TokenKind;
    pub let txt: str;
    pub let pos: &Position;
    /** 直前のトークンと連続しているトークンかどうか。 true の場合連続。 */
    pub let consecutive: bool;
    pri let allmut commentList: &List<&Token> { pub };
+   pri let mut generator:&TokenGenerator! {pub};
 
    /**
    コメントが存在しない Token 用のコメントリスト。
@@ -280,6 +289,14 @@ pub class Token extend (Mapping) {
       self.pos = pos;
       self.consecutive = consecutive;
       self.commentList = unwrap commentList default Token.noneCommentList;
+      self.generator = nil;
+   }
+
+   pub static fn createWithGenerator( pos: &Position, gen:&TokenGenerator ) : Token
+   {
+      let mut token = new Token( .Gen, "", pos, false, nil );
+      token.generator = gen;
+      return token;
    }
 
    pub fn getExcludedDelimitTxt() : str {
@@ -315,6 +332,10 @@ pub class Token extend (Mapping) {
    pub fn get_endLineNo():int {
       return self.pos.lineNo;
    }
+}
+
+pub interface TokenGenerator {
+   pub abstract fn getTokenList() : &List<&Token>;
 }
 
 pub let nonePos = new Position( 0, -1, "eof" ## );

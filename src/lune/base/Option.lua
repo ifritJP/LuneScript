@@ -229,7 +229,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 14030
+   return 14127
 end
 
 
@@ -742,6 +742,8 @@ end
                   option.transCtrlInfo.validMacroAsync = true
                elseif _switchExp == "--disableRunner" then
                   option.enableRunner = false
+               elseif _switchExp == "--disablePostponeExpandingMacro" then
+                  option.transCtrlInfo.enablePostponeExpandingMacro = false
                elseif _switchExp == "--disablePostBuild" then
                   option.validPostBuild = false
                elseif _switchExp == "--enableAsyncCtl" then
@@ -1045,7 +1047,7 @@ end
          end
       end
    end
-   Log.log( Log.Level.Log, __func__, 785, function (  )
+   Log.log( Log.Level.Log, __func__, 788, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

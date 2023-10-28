@@ -464,6 +464,9 @@ usage:
                case "--disableRunner" {
                   option.enableRunner = false;
                }
+               case "--disablePostponeExpandingMacro" {
+                  option.transCtrlInfo.enablePostponeExpandingMacro = false;
+               }
                case "--disablePostBuild" {
                   option.validPostBuild = false;
                }

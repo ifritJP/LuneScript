@@ -1359,7 +1359,10 @@ fn TransUnit.evalMacro(
 {
    let macroTypeInfo = macroRefNode.$expType.$nonnilableType;
    let mut stmtList:List<&Nodes.Node> = [];
-   
+
+   if self.analyzePhase == .Meta {
+      __lns.runtime.log( "start evalMacroOp -- %s" (firstToken.pos.getDisplayTxt() ) );
+   }
    self.evalMacroOp( firstToken, macroTypeInfo, expList,
                      fn () __trans {
                         if #macroTypeInfo.$retTypeInfoList == 0 {
@@ -1370,6 +1373,10 @@ fn TransUnit.evalMacro(
                               self.analyzeExp( false, false, false, false ## ) );
                         }
                      } );
+   if self.analyzePhase == .Meta {
+      __lns.runtime.log( "end evalMacroOp -- %s" (firstToken.pos.getDisplayTxt() ) );
+   }
+   
 
    // return self.createNode(
    //     nodeKindExpMacroExp, firstToken.pos, builtinTypeNone, stmtList );

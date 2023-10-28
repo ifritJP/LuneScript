@@ -129,6 +129,9 @@ pub interface ModuleInfoManager {
 }
 pub proto class Scope extend(ModuleInfoManager);
 
+// TypeInfo の空リスト生成の時間を省くため、事前に作成しておく
+let immutableTypeList:&List<&TypeInfo> = [];
+
 /**
 TypeInfo の付随した情報で、かつ mutable な情報。
 */
@@ -3389,7 +3392,7 @@ pub class AlternateTypeInfo extend TypeInfo {
       self.accessMode = accessMode;
       self.parentInfo = parentInfo;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
-      self.interfaceList = unwrap interfaceList default [];
+      self.interfaceList = unwrap interfaceList default immutableTypeList;
       self.belongClassFlag = belongClassFlag;
       self.altIndex = altIndex;
 
@@ -4449,7 +4452,7 @@ pub class AlgeTypeInfo extend TypeInfo {
 pub class AlgeValInfo {
    pri let name: str {pub};
    pri let typeList:&List<&TypeInfo> {pub};
-   pri let algeTpye:&AlgeTypeInfo {pub};
+   pri let algeType:&AlgeTypeInfo {pub};
    pri let symbolInfo:&SymbolInfo {pub};
 
    pub fn serialize( stream: oStream, serializeInfo:&SerializeInfo ) {
@@ -4726,16 +4729,16 @@ pub class NormalTypeInfo extend TypeInfo {
       self.abstractFlag = abstractFlag;
       self.finalFlag = finalFlag;
       self.baseTypeInfo = unwrap baseTypeInfo default headTypeInfo;
-      self.interfaceList = unwrap interfaceList default [];
+      self.interfaceList = unwrap interfaceList default immutableTypeList;
       self.autoFlag = autoFlag;
       self.externalFlag = externalFlag;
       self.staticFlag = staticFlag;
       self.accessMode = accessMode;
       self.rawTxt = txt;
       self.kind = kind;
-      self.itemTypeInfoList = unwrap itemTypeInfoList default [];
-      self.argTypeInfoList = unwrap argTypeInfoList default [];
-      self.retTypeInfoList = unwrap retTypeInfoList default [];
+      self.itemTypeInfoList = unwrap itemTypeInfoList default immutableTypeList;
+      self.argTypeInfoList = unwrap argTypeInfoList default immutableTypeList;
+      self.retTypeInfoList = unwrap retTypeInfoList default immutableTypeList;
       self.parentInfo = unwrap parentInfo default headTypeInfo;
       self.mutMode = unwrap mutMode default MutMode.IMut;
 
@@ -5904,8 +5907,8 @@ pub fn ProcessInfo.createFuncAsync(
    let mut info = new NormalTypeInfo(
       self, true, abstractFlag, scope, nil, nil, autoFlag, externalFlag, staticFlag,
       accessMode, funcName, parentInfo, typeDataAccessor,
-      kind, unwrap altTypeList default [], unwrap argTypeList default [],
-      unwrap retTypeInfoList default [], mutMode, nil, asyncMode );
+      kind, altTypeList, argTypeList,
+      retTypeInfoList, mutMode, nil, asyncMode );
    self.setupImut( info );
 
    when! altTypeList {
@@ -6219,8 +6222,6 @@ pub let builtinTypeSymbol:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Symbol", "sym" , .Prim## );
 pub let builtinTypeStat:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Stat", "stat" , .Prim## );
-pub let builtinTypeStat2:&TypeInfo =
-   NormalTypeInfo.createBuiltin( "__Stat", "__stat" , .Prim## );
 pub let builtinTypeExp:&TypeInfo =
    NormalTypeInfo.createBuiltin( "Exp", "__exp" , .Prim## );
 pub let builtinTypeMultiExp:&TypeInfo =
