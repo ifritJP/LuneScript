@@ -1,0 +1,153 @@
+fn splitStr(txt:str, pattern:str) : &List<str> {
+   let list:List<str> = [];
+   apply line of txt.gmatch( pattern ) {
+      list.insert( line );
+    }
+   return list;
+}
+
+
+fn splitLines(txt:str) : &List<str> {
+   return splitStr( txt, "[^\n]+" );
+}
+
+fn exec( command:str ) : str! {
+   let mut proc = io.popen( command )!;
+   let txt;
+   txt = proc.read( "*a" );
+   proc.close();
+   return txt;
+}
+
+fn execMake( command:str ) : &List<str> {
+   let! txt = exec( "make -f Makefile.prof %s" (command) ) {
+      return [];
+   };
+   
+   let list:List<str> = [];
+   foreach line in splitLines( txt ) {
+      if not line.find( "^make%["## ) {
+         list.insert( line );
+      }
+   }
+   return list;
+}
+
+class RevInfo {
+   let hash:str {pub};
+   let date:str {pub};
+}
+
+fn getLog() : &List<&RevInfo>! {
+   let list:List<&RevInfo> = [];
+   foreach line in execMake( "goprof-history" ) {
+      let hash = line.gsub( "/.*", "" );
+      let date = line.gsub( ".*/", "" );
+      list.insert( new RevInfo( hash, date ) );
+    }
+   return list;
+}
+
+fn execGoProf() : (real, real)! {
+   foreach line in execMake( "-C work/src goprof-test" ) {
+      if line.find( "^lua:"## ) {
+         let list = splitStr( line.gsub( "^lua:", "" ), "[^/]+" );
+         if #list ~= 3 {
+            return nil;
+         }
+         let exeTime, usrTime = tonumber( list[ 1 ] ## )!, tonumber( list[ 2 ] ## )!;
+         return (= exeTime, usrTime );
+      }
+   }
+   return nil;
+}
+
+fn execGoProfAve( count:int ) : (real, real)! {
+   let mut exeTime = 0.0;
+   let mut usrTime = 0.0;
+   for index = 1, count {
+      print( "%d/%d" ( index, count ) ); 
+      let workExeTime, workUsrTime = execGoProf()!...;
+      exeTime = exeTime + workExeTime;
+      usrTime = usrTime + workUsrTime;
+   }
+   return (= exeTime / count, usrTime / count );
+}
+
+class Perform {
+   let exeTime:real {pub};
+   let usrTime:real {pub};
+   let lineNum:int {pub};
+   let revInfo:&RevInfo {pub};
+}
+
+fn getLnsLines() : int! {
+   let lines = execMake( "goprof-lines" );
+   if #lines == 0 {
+      return nil;
+   }
+   let num = tonumber( lines[1], 10 )!;
+   return num@@int;
+}
+
+fn checkPerformance( rev:&RevInfo ) : &Perform! {
+   print( "check -- %s" ( rev.$hash ) );
+   execMake( "goprof-checkout REV=%s" (rev.$hash)  );
+   print( "----- build" );
+   execMake( "-C work/src goprof-build" );
+   print( "----- go" );
+   let exeTime, usrTime = execGoProfAve( 5 )!...;
+   let lineNum = getLnsLines()!;
+   return new Perform( exeTime, usrTime, lineNum, rev );
+}
+
+fn process() : &List<&Perform>! {
+   if #execMake( "goprof-init" ) == 0 {
+      return nil;
+   }
+   let list:List<&Perform> = [];
+   let revList = getLog()!;
+   let mut prevDate = "";
+   foreach rev in revList {
+      let date = rev.$date.gsub( "T.*", "" );
+      if date ~= prevDate {
+         prevDate = date;
+
+         let perform = checkPerformance( rev )!;
+         list.insert( perform );
+         print( perform.$revInfo.$date, perform.$lineNum,
+             perform.$exeTime, perform.$usrTime );
+      } else {
+         print( "skip:", rev.$date, rev.$hash );
+      }
+      if rev.$hash == "30ffb992cf4fa9942de6faa53e7ee45986ee116c" {
+         //if rev.$hash == "88bb3acb2dc19f179cf65ce75c242791cfb71f4a" {
+         break;
+      }
+   }
+
+   let mut fileObj = io.open( "history.csv", "w" )!;
+   fileObj.write( "date,hash,lineNum,exeTime,usrTime\n" );
+
+   foreach perform in list {
+      let date = perform.$revInfo.$date.gsub( "T.*", "" );
+      fileObj.write( "%s,%s,%s,%s,%s\n"
+                        ( date, perform.$revInfo.$hash, 
+                          perform.$lineNum, perform.$exeTime, perform.$usrTime ) );
+   }
+   fileObj.close();
+   
+   return list;
+}
+
+pub fn __main( args:&_List<str> ) : int {
+   // if! let val = execGoProfAve( 5 ) {
+   //    let time1, time2 = val...;
+   //    print( time1, time2 );
+   // }
+   if not process() {
+      print( "error" );
+      return 1;
+   }
+   return 0;
+}

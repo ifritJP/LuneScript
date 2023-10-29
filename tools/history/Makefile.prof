@@ -1,0 +1,52 @@
+# -*-makefile-*-
+
+.PHONY: goprof-test goprof-test-main
+
+WORKDIR=work
+
+
+ifneq "$(wildcard work/src/Makefile)" ""
+include $(WORKDIR)/src/Makefile
+else
+include Makefile
+endif
+
+
+
+#ref 30ffb992 〜
+
+
+goprof-test-main:
+	$(call selfhost_buildOp_batch,.,$(LNSC_GO),work/2,--depends work/2/ -langGo )
+
+goprof-test:
+	$(call test-buildlns-setup,work/2)
+	/usr/bin/time -f 'lua:%e/%U/%S:$2' $(MAKE) -f Makefile.prof goprof-test-main 2>&1
+
+goprof-build:
+	$(MAKE) go-build NO_TEST=y || \
+		(cd $(GO_WORK_DIR)/test; go mod tidy; go build)
+	if [ -f $(GO_WORK_DIR)/test/lnsc ]; then	\
+		cp $(GO_WORK_DIR)/test/lnsc . ;		\
+	fi
+
+goprof-checkout:
+ifeq ($(REV),)
+	@echo REV is none
+	@exit 1
+endif
+	(cd $(WORKDIR); git checkout $(REV))
+
+goprof-init:
+	@if ! [ -d $(WORKDIR) ]; then \
+		git clone https://github.com/ifritJP/LuneScript.git $(WORKDIR); \
+	fi
+	(cd $(WORKDIR); git checkout master)
+	@cp Makefile.prof $(WORKDIR)/src/Makefile.prof
+
+goprof-history:
+	@(cd $(WORKDIR); git log --pretty=%H/%aI)
+
+goprof-lines:
+	@(cd work/src/lune/base; \
+		ls *.lns  | xargs wc -l | tail -n 1 | gawk '//{print $$1}')

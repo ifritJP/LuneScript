@@ -3533,7 +3533,7 @@ end
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
-   Log.log( Log.Level.Trace, __func__, 873, function (  )
+   Log.log( Log.Level.Trace, __func__, 872, function (  )
    
       return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
    end
@@ -4445,7 +4445,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          if setterMode ~= Ast.AccessMode.None and mutMode == Ast.MutMode.IMut then
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
-         Log.log( Log.Level.Debug, __func__, 2122, function (  )
+         Log.log( Log.Level.Debug, __func__, 2121, function (  )
          
             return string.format( "%s", dummyRetType)
          end
