@@ -1,0 +1,150 @@
+fn str2int(txt:str) : int! {
+   let val = tonumber( txt, 10 )!;
+   return val@@int;
+}
+
+fn splitStr(txt:str, pattern:str) : &List<str> {
+   let list:List<str> = [];
+   apply line of txt.gmatch( pattern ) {
+      list.insert( line );
+    }
+   return list;
+}
+
+
+fn splitLines(txt:str) : &List<str> {
+   return splitStr( txt, "[^\n]+" );
+}
+
+fn exec( command:str ) : str! {
+   let mut proc = io.popen( command )!;
+   let txt;
+   txt = proc.read( "*a" );
+   proc.close();
+   return txt;
+}
+
+fn execMake( command:str ) : &List<str> {
+   let! txt = exec( "make %s" (command) ) {
+      return [];
+   };
+   
+   let list:List<str> = [];
+   foreach line in splitLines( txt ) {
+      if not line.find( "^make%["## ) {
+         list.insert( line );
+      }
+   }
+   return list;
+}
+
+class ScheduleInfo extend (Mapping) {
+   let time:int;
+   // アイドル状態になっているプロセッサ数
+   let idleprocs:int;
+   // 使用しているスレッド数
+   let threads:int;
+   // spinning 状態のスレッド数
+   let spinningthreads:int;
+   // 
+   let needspinning:int;
+   // アイドル状態のスレッド数
+   let idlethreads:int;
+   // グローバルキュー内にある G 数
+   let runqueue:int;
+
+   pub fn toStr() : str {
+      let txt = "%dms: idleprocs=%d threads=%d spinningthreads=%d needspinning=%d idlethreads=%d runqueue=%d" (
+         self.time, self.idleprocs, self.threads, self.spinningthreads,
+         self.needspinning, self.idlethreads, self.runqueue );
+      return txt;
+   }
+   pub fn toCsvLine() : str {
+      let txt = "%d,%d,%d,%d,%d,%d,%d" (
+         self.time, self.idleprocs, self.threads, self.spinningthreads,
+         self.needspinning, self.idlethreads, self.runqueue );
+      return txt;
+   }
+}
+
+fn splitLine( line:str ) : ScheduleInfo! {
+   if not line.find( '^SCHED.*ms:.*' ## ) {
+      return nil;
+   }
+   let valsTxt = line.gsub( "%[.*", "" ).gsub( "SCHED ", "" );
+   let ms = str2int( (valsTxt.gsub( "ms: .*", "" )) )!;
+   let list = splitStr( valsTxt.gsub( ".*: ", "" ), "%g+" );
+   if #list ~= 7 {
+      return nil;
+   }
+
+
+   let map:Map<str,int> = { "time":ms };
+   foreach val in list {
+      let itemVal = splitStr( val, "[^=]+" );
+      if #itemVal ~= 2 {
+         return nil;
+      }
+      map[ itemVal[ 1 ] ] = str2int( itemVal[ 2 ] )!;
+   }
+   return (ScheduleInfo._fromStem( map ));
+}
+
+fn process(): int! {
+   let list:List<&ScheduleInfo> = [ new ScheduleInfo(0,0,0,0,0,0,0) ];
+   foreach line in execMake( "raw_prof" ) {
+      if! let info = splitLine( line ) {
+         list.insert( info );
+      }
+   }
+   foreach info in list {
+      print( info.toCsvLine() );
+   }
+   return 0;
+}
+
+class RunnerItem {
+   let time:int {pub};
+   let mod:str {pub};
+}
+
+fn splitRunnerLine( line:str ) : RunnerItem! {
+   if not line.find( "ready meta --"## ) {
+      return nil;
+   }
+   let time = str2int( splitStr( line, "%d+" )[1] )!;
+   let mod = line.gsub( ":ready meta.*", "" ).gsub( ":createAst - ", "" );
+   return new RunnerItem( time, (mod.gsub( ".*/", "" )) );
+}
+
+fn processRunner(): int! {
+   let list:List<&RunnerItem> = [];
+   {
+      let mut fileObj = io.open( "../../src/@-.profirunner"## )!;
+      let txt = fileObj.read( "*a" );
+      fileObj.close();
+      when! txt {
+         foreach line in splitLines( txt ) {
+            if! let item = splitRunnerLine( line ) {
+               list.insert( item );
+            }
+         }
+      }
+   }
+
+   {
+      let mut fileObj = io.open( "runner.csv", "w" )!;
+      foreach item, index in list {
+         fileObj.write( "%d,%d,%s\n" (index, item.$time, item.$mod));
+      }
+      fileObj.close();
+   }
+   return 0;
+}
+
+
+pub fn __main(args:&List<str>) : int {
+   processRunner();
+   process();
+   return 0;
+}

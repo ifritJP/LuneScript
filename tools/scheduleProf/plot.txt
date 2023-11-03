@@ -1,0 +1,28 @@
+set datafile separator ","
+set ytics 0,5,35
+set grid
+set mxtics 5
+set nomxtics
+
+# 凡例位置
+#set key right top
+set key below
+
+# # サイズ比
+# set size ratio 0.5
+
+# # svg 保存
+# set term svg
+# set output 'history.svg'
+
+#plot "schedule.csv" using 1:2 with linespoints linewidth 2 title "idleprocs"
+plot "schedule.csv" using 1:3 with linespoints linewidth 2 title "threads"
+replot "schedule.csv" using 1:($3-$6) with linespoints linewidth 2 title "active threads"
+#replot "schedule.csv" using 1:4 with linespoints linewidth 2 title "spinningthreads"
+#replot "schedule.csv" using 1:5 with linespoints linewidth 2 title "needspinning"
+#replot "schedule.csv" using 1:6 with linespoints linewidth 2 title "idlethreads"
+replot "schedule.csv" using 1:7 with linespoints linewidth 2 title "runqueue"
+replot "runner.csv" using 2:1 with linespoints linewidth 2 title "ready meta"
+
+# 保存する場合は pause の意味がない
+pause -1

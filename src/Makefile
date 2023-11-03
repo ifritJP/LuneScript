@@ -2027,11 +2027,35 @@ goprof-measure:
 		index=$$((index+1));							\
 	done
 
+
+ifndef SKIP_PROF
+PROF_OP=-prof
+endif
+goprof-main:
+	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo $(PROF_OP))
+
+ifdef PROF_SCHE
+# 10msec 毎に go のスケジューラー情報をダンプ
+GODEBUG:=schedtrace=$(PROF_SCHE)
+endif
+ifdef PROF_GC
+ifdef GODEBUG
+# GC 毎に go の GC 情報をダンプ
+GODEBUG:=$(GODEBUG),gctrace=1
+else
+GODEBUG:=gctrace=1
+endif
+endif
+
 goprof:
 	$(call test-buildlns-setup,work/go)
-	$(call selfhost_buildOp_batch,.,/usr/bin/time -f 'go:%e/%U/%S:$2' $(LNSC_GO),work/go,-langGo -prof)
+	GODEBUG=$(GODEBUG) $(MAKE) goprof-main
+ifndef SKIP_PROF
 	(cd .; go tool pprof -dot @-.profi  ) | dot -Tsvg -odump.svg
 	(cd .; go tool pprof -dot @-.profimem  ) | dot -Tsvg -odumpmem.svg
+endif
+
+
 
 PROF_ONE_SRC=lune/base/Nodes
 goprof-one:
