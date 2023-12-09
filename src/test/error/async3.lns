@@ -137,7 +137,7 @@ let globalVal2:&List<int> = [];
          __asyncLock {
             foreach val in list {
                if val == 0 {
-                  return; // error
+//                  return; // error
                }
                break;
             }

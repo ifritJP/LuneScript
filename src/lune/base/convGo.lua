@@ -1210,16 +1210,22 @@ function convFilter:type2gotype( typeInfo )
 end
 
 
-function convFilter:tuple2gotype( typeInfo )
+function convFilter:tuple2gotypeWithTypeList( typeList )
 
-   local txt = string.format( "*LnsTuple%d[", #typeInfo:get_itemTypeInfoList())
-   for index, itemType in ipairs( typeInfo:get_itemTypeInfoList() ) do
+   local txt = string.format( "*LnsTuple%d[", #typeList)
+   for index, itemType in ipairs( typeList ) do
       txt = txt .. self:type2gotypeOrg( itemType, ClassAsterMode.Normal )
-      if index ~= #typeInfo:get_itemTypeInfoList() then
+      if index ~= #typeList then
          txt = txt .. ","
       end
    end
    return txt .. "]"
+end
+
+
+function convFilter:tuple2gotype( typeInfo )
+
+   return self:tuple2gotypeWithTypeList( typeInfo:get_itemTypeInfoList() )
 end
 
 
@@ -3005,17 +3011,72 @@ end
 
 
 
+local asyncLockBreakSym = "_break"
+
+local asyncLockReturnSym = "_goret"
+
+
 function convFilter:processAsyncLock( node, opt )
 
    do
       local _switchExp = node:get_lockKind()
       if _switchExp == Nodes.LockKind.AsyncLock or _switchExp == Nodes.LockKind.LuaLock then
-         self:writeln( string.format( "Lns_LockEnvSync( %s, %d, func () {", self.env:getEnv(  ), node:get_pos().lineNo) )
-         filter( node:get_block(), self, node )
-         self:writeln( "})" )
+         do
+            local returnTypeList = node:get_returnTypeList()
+            if returnTypeList ~= nil then
+               local tupleTypeStr = self:tuple2gotypeWithTypeList( returnTypeList )
+               self:writeln( "{" )
+               self:pushIndent(  )
+               self:writeln( string.format( "__ret := Lns_LockEnvSyncRet[%s]( %s, %d, func () *LnsTuple1[%s] {", tupleTypeStr, self.env:getEnv(  ), node:get_pos().lineNo, tupleTypeStr) )
+               self:pushIndent(  )
+               self:writeln( string.format( "%s := true", asyncLockReturnSym) )
+               self:write( "_callback := func() (" )
+               for index, typeInfo in ipairs( returnTypeList ) do
+                  if index > 1 then
+                     self:writeRaw( "," )
+                  end
+                  self:writeRaw( string.format( " _ret%d %s", index, self:type2gotype( typeInfo )) )
+               end
+               self:writeln( ") {" )
+               self:pushIndent(  )
+               filter( node:get_block(), self, node )
+               if node:get_block():getBreakKind( Nodes.CheckBreakMode.Return ) ~= Nodes.BreakKind.Return then
+                  self:writeln( string.format( "%s = false", asyncLockReturnSym) )
+                  self:writeln( "return" )
+               end
+               self:popIndent(  )
+               self:writeln( "}" )
+               self:write( string.format( "__ret2 := Lns_CreateLnsTuple%d[", #returnTypeList) )
+               for index, typeInfo in ipairs( returnTypeList ) do
+                  if index > 1 then
+                     self:writeRaw( "," )
+                  end
+                  self:writeRaw( string.format( " %s", self:type2gotype( typeInfo )) )
+               end
+               self:writeln( "]( _callback() )" )
+               self:writeln( string.format( "if %s { return &LnsTuple1[%s]{ &__ret2 } }", asyncLockReturnSym, tupleTypeStr) )
+               self:writeln( "return nil" )
+               self:popIndent(  )
+               self:writeln( "})" )
+               self:writeln( "if __ret != nil {" )
+               self:pushIndent(  )
+               self:writeln( "return __ret.Val1.Val1, __ret.Val1.Val2" )
+               self:popIndent(  )
+               self:writeln( "}" )
+               self:popIndent(  )
+               self:writeln( "}" )
+            else
+               self:writeln( string.format( "Lns_LockEnvSync( %s, %d, func () {", self.env:getEnv(  ), node:get_pos().lineNo) )
+               filter( node:get_block(), self, node )
+               self:writeln( "})" )
+            end
+         end
       elseif _switchExp == Nodes.LockKind.LuaDepend or _switchExp == Nodes.LockKind.LuaGo then
          filter( node:get_block(), self, node )
       end
+   end
+   if node:get_hasAsyncLockBreak() then
+      self:writeln( string.format( "if %s { break }", asyncLockBreakSym) )
    end
 end
 
@@ -3030,6 +3091,9 @@ function convFilter:processBlockSub( node, opt )
    end
    self:pushProcessMode( ProcessMode.Main )
    self:pushIndent(  )
+   if node:get_hasAsyncLockBreak() then
+      self:writeln( string.format( "%s := false", asyncLockBreakSym) )
+   end
    for __index, child in ipairs( node:get_stmtList() ) do
       if not _lune._Set_has(self.ignoreNodeInInnerBlockSet, child:get_kind() ) then
          filter( child, self, node )
@@ -6946,8 +7010,15 @@ end
 
 function convFilter:processBreak( node, opt )
 
-   self:writeRaw( "break" )
-   self:writeln( "" )
+   if node:get_asyncLockBreak() then
+      self:writeln( string.format( "%s = false", asyncLockReturnSym) )
+      self:writeln( string.format( "%s = true", asyncLockBreakSym) )
+      self:writeln( "return" )
+   else
+    
+      self:writeRaw( "break" )
+      self:writeln( "" )
+   end
 end
 
 

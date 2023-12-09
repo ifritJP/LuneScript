@@ -92,6 +92,17 @@ pub enum StmtKind {
    Apply
 }
 
+/** ループ処理情報 */
+pub class LoopInfo {
+   /** ループ内のスコープ */
+   let scope:&Ast.Scope {pub};
+   /** ループ内に __asyncLock を脱出する break があるかどうか？ */ 
+   let mut hasAsyncLockBreak:bool {pub,pub};
+   pub fn __init( scope:&Ast.Scope ) {
+      self.scope = scope;
+      self.hasAsyncLockBreak = false;
+   }
+}
 
 pub class NSInfo {
    /** 関数の本体宣言がないか。 true の場合宣言なし。 */
@@ -103,7 +114,20 @@ pub class NSInfo {
    let pos:&Tokenizer.Position {pub};
 
    /** この名前空間で処理しているループ系制御構文(for 等)の Scope */
-   let mut loopScopeQueue: List<&Ast.Scope> {pub};
+   let mut loopScopeQueue: List<LoopInfo>;
+   pub fn pushLoopScope( scope:&Ast.Scope ) mut {
+      self.loopScopeQueue.insert( new LoopInfo( scope ) );
+   }
+   pub fn popLoopScope() mut {
+      self.loopScopeQueue.remove(##);
+   }
+   pub fn hasAsyncLockBreak() : bool {
+      if #self.loopScopeQueue > 0 {
+         let loopInfo = self.loopScopeQueue[ #self.loopScopeQueue ];
+         return loopInfo.$hasAsyncLockBreak;
+      }
+      return false;
+   }
    
    /** __asyncLock した時の loopScopeQueue の長さ */
    let mut lockedAsyncStack:List<&LockedAsyncInfo>;
@@ -211,14 +235,43 @@ __asyncLock されている場合、
 lockedAsyncStack に格納されている情報よりも、今のループ数の方が多い場合は break 可能。
    */ 
    pub fn canBreak() : bool {
-      let len = #self.lockedAsyncStack;
-      let loopQueueLen = #self.loopScopeQueue;
-      if len == 0 {
-         return loopQueueLen > 0;
-      }
-      return self.lockedAsyncStack[ len ].$loopLen < loopQueueLen;
+      // let len = #self.lockedAsyncStack;
+      // let loopQueueLen = #self.loopScopeQueue;
+      // if len == 0 {
+      //    return loopQueueLen > 0;
+      // }
+      // return self.lockedAsyncStack[ len ].$loopLen < loopQueueLen;
+      return #self.loopScopeQueue > 0;
    }
 
+   /**
+   break すると、 __asyncLock のブロックを抜けるかどうか調べる。
+   
+   次のようなケースに true。
+   
+   | while cond {
+   |   __asyncLock {
+   |     if val {
+   |       break;  // <<---- ここは true
+   |     }
+   |   }
+   | }
+   */ 
+   pub fn setAsyncLockBreak() : bool {
+      let len = #self.lockedAsyncStack;
+      if len == 0 {
+         return false;
+      }
+      let loopQueueLen = #self.loopScopeQueue;
+      if loopQueueLen > 0 and self.lockedAsyncStack[ len ].$loopLen >= loopQueueLen {
+         let mut loopInfo = self.loopScopeQueue[ loopQueueLen ];
+         loopInfo.set_hasAsyncLockBreak( true );
+         return true;
+      }
+      return false;
+   }
+
+   
    /**
 現在の状態で __noasync にアクセス可能かどうか。
 */

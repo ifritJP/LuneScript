@@ -1011,6 +1011,9 @@ pub enum BlockKind {
 _declNodeClass( "Block", Node, false, false, true,
                 [ { "blockKind": "BlockKind" },
                   { "scope": "&Ast.Scope" },
+                  // この block がループの block の時、
+                  // stmtList 内に __asyncLock を脱出する break を持つかどうか。
+                  { "hasAsyncLockBreak": "bool" },
                   { "stmtList": "List<&Node>" } ]
 );
 
@@ -1404,7 +1407,12 @@ pub override fn ReturnNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Return;
 }
 
-_declNodeClass( "Break", Node, false, false, true, [] );
+_declNodeClass( "Break", Node, false, false, true,
+                [
+                   // __asyncLock を脱出する break
+                   { "asyncLockBreak":"bool"}
+                ]
+             );
 
 pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Break;
@@ -1977,8 +1985,24 @@ pub enum LockKind {
 }
 _declNodeClass( "AsyncLock", Node, false, false, true,
                 [ { "lockKind": "LockKind" },
+                  // block 文に return 文が含まれている場合、
+                  /// その return している値の型。
+                  { "returnTypeList" : "&List<&Ast.TypeInfo>!" },
+                  // この block が loop 内にあって、
+                  // その loop に asyncLock を脱出する break があるかどうか？
+                  { "hasAsyncLockBreak" : "bool" },
                   { "block": "&BlockNode" } ]
-);
+             );
+pub override fn AsyncLockNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind
+{
+   if self.returnTypeList {
+      return self.block.getBreakKind( checkMode );
+   }
+   return super( checkMode );
+}
+
+
+
 
 _declNodeClass( "Request", Node, false, true, true,
                 [ { "processor": "&Node" },

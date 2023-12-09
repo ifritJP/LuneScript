@@ -965,7 +965,7 @@ fn TransUnit.analyzeDeclMacroSub(
          stmtNode = Nodes.BlockNode.create(
             self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(),
-            [ Ast.builtinTypeNone ], .Macro, macroScope, stmtList );
+            [ Ast.builtinTypeNone ], .Macro, macroScope, false, stmtList );
       }
 
       self.checkNextToken( "}" );

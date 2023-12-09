@@ -3192,6 +3192,36 @@ _section();
       print( string._join( list, "zz", 2, 2 ) );
    }
 }
+_section();
+{
+   fn func(val:int ) __async : int, str {
+      while ( val > 0 ) {
+         __asyncLock {
+            if val == 1 {
+               return 0, "abc";
+            }
+            if val == 2 {
+               break;
+            }
+         }
+         __asyncLock {
+            if val == 3 {
+               return 2, "abc";
+            }
+            if val == 4 {
+               break;
+            }
+            return 3, "xyz";
+         }
+      }
+      return 1, "AAA";
+   }
+   print( func( 1 )** );
+   print( func( 2 )** );
+   print( func( 3 )** );
+   print( func( 4 )** );
+   print( func( 5 )** );
+}
 // _section();
 // {
 //    class Super {

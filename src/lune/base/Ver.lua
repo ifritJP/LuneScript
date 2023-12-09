@@ -17,7 +17,7 @@ if not _lune8 then
 end
 
 
-local version = "1.6.0"
+local version = "1.6.1"
 _moduleObj.version = version
 
 

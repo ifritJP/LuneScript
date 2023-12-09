@@ -303,8 +303,8 @@ end
 
 function dumpFilter:processAsyncLock( node, opt )
 
-   self:dump( opt, node, Nodes.LockKind:_getTxt( node:get_lockKind())
-    )
+   self:dump( opt, node, string.format( "%s, hasReturn = %s", Nodes.LockKind:_getTxt( node:get_lockKind())
+   , node:get_returnTypeList() ~= nil) )
    filter( node:get_block(), self, opt:nextOpt(  ) )
 end
 
@@ -312,8 +312,9 @@ end
 
 function dumpFilter:processBlockSub( node, opt )
 
-   self:dump( opt, node, string.format( "kind = %s", Nodes.BlockKind:_getTxt( node:get_blockKind())
-   ) )
+   self:dump( opt, node, string.format( "%s, %s, hasAsyncLockBreak:%s", Nodes.BlockKind:_getTxt( node:get_blockKind())
+   , Nodes.BreakKind:_getTxt( node:getBreakKind( Nodes.CheckBreakMode.Return ))
+   , node:get_hasAsyncLockBreak()) )
    for __index, statement in ipairs( node:get_stmtList(  ) ) do
       filter( statement, self, opt:nextOpt(  ) )
    end

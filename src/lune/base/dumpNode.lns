@@ -170,14 +170,17 @@ pub override fn dumpFilter.processRequest(
 pub override fn dumpFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt:Opt ) mut
 {
-   self.dump( opt, node, node.$lockKind.$_txt );
+   self.dump( opt, node, "%s, hasReturn = %s"
+                 (node.$lockKind.$_txt, node.$returnTypeList ~= nil ) );
    filter( node.$block, self, opt.nextOpt() );
 };
 
 pub override fn dumpFilter.processBlockSub(
    node: &Nodes.BlockNode, opt:Opt ) mut
 {
-   self.dump( opt, node, "kind = %s" ( node.$blockKind.$_txt ) );
+   self.dump( opt, node, "%s, %s, hasAsyncLockBreak:%s"
+                 ( node.$blockKind.$_txt, node.getBreakKind( .Return ).$_txt,
+                   node.$hasAsyncLockBreak ) );
    foreach statement in node.get_stmtList() {
       filter( statement, self, opt.nextOpt() );
    }	

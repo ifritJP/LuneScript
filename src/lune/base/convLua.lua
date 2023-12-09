@@ -1474,9 +1474,30 @@ end
 
 
 
+local asyncLockBreakSym = "_break"
+
+
 function ConvFilter:processAsyncLock( node, opt )
 
-   filter( node:get_block(), self, node )
+   if node:get_returnTypeList() then
+      self:writeln( "do" )
+      self:pushIndent(  )
+      self:writeln( "function _lock()" )
+      self:pushIndent(  )
+      filter( node:get_block(), self, node )
+      self:popIndent(  )
+      self:writeln( "end" )
+      self:writeln( "local _val = { _lock() }" )
+      self:writeln( "if #_val ~= 0 then return table.unpack( _val ) end" )
+      self:popIndent(  )
+      self:writeln( "end" )
+   else
+    
+      filter( node:get_block(), self, node )
+   end
+   if node:get_hasAsyncLockBreak() then
+      self:writeln( string.format( "if %s then break end", asyncLockBreakSym) )
+   end
 end
 
 
@@ -1517,6 +1538,9 @@ function ConvFilter:processBlockSub( node, opt )
    end
    self:writeln( word )
    self:pushIndent(  )
+   if node:get_hasAsyncLockBreak() then
+      self:writeln( string.format( "local %s = false", asyncLockBreakSym) )
+   end
    if _lune.nilacc( node:get_scope():getSymbolInfoChild( "_" ), 'get_posForLatestMod', 'callmtd' ) then
       self:writeln( "local _" )
    end
@@ -3997,7 +4021,13 @@ end
 
 function ConvFilter:processBreak( node, opt )
 
-   self:writeRawln( "break" )
+   if node:get_asyncLockBreak() then
+      self:writeRawln( string.format( "%s = true", asyncLockBreakSym) )
+      self:writeRawln( "return" )
+   else
+    
+      self:writeRawln( "break" )
+   end
 end
 
 

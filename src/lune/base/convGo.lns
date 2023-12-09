@@ -887,15 +887,19 @@ fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
    return self.type2gotypeOrg( typeInfo, .Normal );
 }
 
-fn convFilter.tuple2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
-   let mut txt = "*LnsTuple%d[" (#typeInfo.$itemTypeInfoList);
-   foreach itemType, index in typeInfo.$itemTypeInfoList {
+fn convFilter.tuple2gotypeWithTypeList( typeList:&List<&Ast.TypeInfo>) mut : str {
+   let mut txt = "*LnsTuple%d[" (#typeList);
+   foreach itemType, index in typeList {
       txt = txt .. self.type2gotypeOrg( itemType, .Normal );
-      if index ~= #typeInfo.$itemTypeInfoList {
+      if index ~= #typeList {
          txt = txt .. ",";
       }
    }
    return txt .. "]";
+}
+
+fn convFilter.tuple2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
+   return self.tuple2gotypeWithTypeList( typeInfo.$itemTypeInfoList );
 }
 
 fn getExpType( expListNode:&Nodes.ExpListNode, index:int ) : &Ast.TypeInfo {
@@ -2614,21 +2618,73 @@ pub override fn convFilter.processRequest(
    self.writeRaw( "}()" );   
 };
 
+let asyncLockBreakSym = "_break";
+let asyncLockReturnSym = "_goret";
+
 pub override fn convFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
    _switch node.$lockKind {
       case .AsyncLock, .LuaLock {
-         self.writeln( "Lns_LockEnvSync( %s, %d, func () {"
-            ( self.env.getEnv(), node.$pos.lineNo ) );
+         if! let returnTypeList = node.$returnTypeList {
+            let tupleTypeStr = self.tuple2gotypeWithTypeList( returnTypeList );
+            self.writeln( "{" );
+            self.pushIndent(##);
+            self.writeln( "__ret := Lns_LockEnvSyncRet[%s]( %s, %d, func () *LnsTuple1[%s] {"
+                             ( tupleTypeStr, self.env.getEnv(), node.$pos.lineNo,
+                               tupleTypeStr ) );
+            self.pushIndent(##);
+            self.writeln( "%s := true" (asyncLockReturnSym));
+            self.write( "_callback := func() (" );
+            foreach typeInfo, index in returnTypeList {
+               if index > 1 {
+                  self.writeRaw( "," );
+               }
+               self.writeRaw( " _ret%d %s" (index,self.type2gotype( typeInfo )) );
+            }
+            self.writeln( ") {" );
+            self.pushIndent(##);
 
-         filter( node.$block, self, node );
-
-         self.writeln( "})" );
+            filter( node.$block, self, node );
+            if node.$block.getBreakKind( .Return ) ~= .Return {
+               self.writeln( "%s = false" (asyncLockReturnSym));
+               self.writeln( "return" );
+            }
+            self.popIndent();
+            self.writeln( "}" );
+            self.write( "__ret2 := Lns_CreateLnsTuple%d[" (#returnTypeList) );
+            foreach typeInfo, index in returnTypeList {
+               if index > 1 {
+                  self.writeRaw( "," );
+               }
+               self.writeRaw( " %s" (self.type2gotype( typeInfo )) );
+            }
+            self.writeln( "]( _callback() )" );
+            self.writeln( "if %s { return &LnsTuple1[%s]{ &__ret2 } }"
+                             (asyncLockReturnSym,tupleTypeStr) );
+            self.writeln( "return nil" );
+            self.popIndent();
+            self.writeln( "})" );
+            self.writeln( "if __ret != nil {" );
+            self.pushIndent(##);
+            self.writeln( "return __ret.Val1.Val1, __ret.Val1.Val2" );
+            self.popIndent();
+            self.writeln( "}" );
+            self.popIndent();
+            self.writeln( "}" );
+         } else {
+            self.writeln( "Lns_LockEnvSync( %s, %d, func () {"
+                             ( self.env.getEnv(), node.$pos.lineNo ) );
+            filter( node.$block, self, node );
+            self.writeln( "})" );
+         }
       }
       case .LuaDepend, .LuaGo {
          filter( node.$block, self, node );
       }
+   }
+   if node.$hasAsyncLockBreak {
+      self.writeln( "if %s { break }" (asyncLockBreakSym) );
    }
 }
 
@@ -2643,6 +2699,11 @@ pub override fn convFilter.processBlockSub(
 
    self.pushProcessMode( .Main );
    self.pushIndent(##);
+
+   if node.$hasAsyncLockBreak {
+      self.writeln( "%s := false" (asyncLockBreakSym) );
+   }
+   
    foreach child in node.$stmtList {
       if not self.ignoreNodeInInnerBlockSet.has( child.$kind ) {
          filter( child, self, node );
@@ -6651,8 +6712,14 @@ pub override fn convFilter.processLiteralNil(
 pub override fn convFilter.processBreak(
    node: &Nodes.BreakNode, opt: Opt ) mut
 {
-   self.writeRaw( "break" );
-   self.writeln( "" );
+   if node.$asyncLockBreak {
+      self.writeln( "%s = false" (asyncLockReturnSym) );
+      self.writeln( "%s = true" (asyncLockBreakSym) );
+      self.writeln( "return" );
+   } else {
+      self.writeRaw( "break" );
+      self.writeln( "" );
+   }
 }
 
 pub override fn convFilter.processLiteralSymbol(

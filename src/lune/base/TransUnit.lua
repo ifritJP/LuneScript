@@ -2133,7 +2133,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
       local _switchExp = blockKind
       if _switchExp == Nodes.BlockKind.For or _switchExp == Nodes.BlockKind.Apply or _switchExp == Nodes.BlockKind.While or _switchExp == Nodes.BlockKind.Repeat or _switchExp == Nodes.BlockKind.Foreach then
          loopFlag = true
-         table.insert( nsInfo:get_loopScopeQueue(), self:get_scope() )
+         nsInfo:pushLoopScope( self:get_scope() )
       end
    end
    local stmtList = {}
@@ -2141,15 +2141,21 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
    self:analyzeStatementList( stmtList, false, "}" )
    nsInfo:addStmtNum( #stmtList )
    self:checkNextToken( "}" )
+   local hasAsyncLockBreak
+   
    if loopFlag then
-      table.remove( nsInfo:get_loopScopeQueue() )
+      hasAsyncLockBreak = nsInfo:hasAsyncLockBreak(  )
+      nsInfo:popLoopScope(  )
+   else
+    
+      hasAsyncLockBreak = false
    end
    if scope ~= nil then
       self:setScope( backScope, TransUnitIF.SetNSInfo.FromScope )
    else
       self:popScope(  )
    end
-   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blockKind, blockScope, stmtList )
+   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blockKind, blockScope, hasAsyncLockBreak, stmtList )
    if node:getBreakKind( Nodes.CheckBreakMode.Normal ) ~= Nodes.BreakKind.None then
       self.tentativeSymbol:skip(  )
    end
@@ -2207,7 +2213,7 @@ function TransUnit:skipAndCreateDummyBlock(  )
    local stmtList = {}
    self:popScope(  )
    self:skipBlock( false )
-   return Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, stmtList )
+   return Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, false, stmtList )
 end
 
 
@@ -2244,7 +2250,16 @@ function TransUnit:analyzeAsyncLock( asyncToken, lockKind )
    nsInfo:incLock( lockKind )
    local block = self:analyzeBlock( Nodes.BlockKind.AsyncLock, TentativeMode.Simple, nil, nil )
    nsInfo:decLock(  )
-   return Nodes.AsyncLockNode.create( self.nodeManager, asyncToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, lockKind, block )
+   local retTypeList
+   
+   if block:getBreakKind( Nodes.CheckBreakMode.IgnoreFlowReturn ) == Nodes.BreakKind.Return then
+      local funcTypeInfo = self:getCurrentNamespaceTypeInfo(  )
+      retTypeList = funcTypeInfo:get_retTypeInfoList()
+   else
+    
+      retTypeList = nil
+   end
+   return Nodes.AsyncLockNode.create( self.nodeManager, asyncToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, lockKind, retTypeList, nsInfo:hasAsyncLockBreak(  ), block )
 end
 
 
@@ -3597,7 +3612,7 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
       self:prepareTentativeSymbol( self:get_scope(), false, nil )
       self:analyzeStatementList( stmtList, false, "}" )
       if #stmtList > 0 then
-         stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, stmtList )
+         stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, false, stmtList )
       end
       self:checkNextToken( "}" )
       self:finishTentativeSymbol( true )
@@ -7852,11 +7867,6 @@ function TransUnit:canReturnFromHere( pos )
       self:addErrMess( pos, "'return' could not use here" )
       available = false
    end
-   local nsInfo = self:getNSInfo( funcTypeInfo )
-   if nsInfo:isLockedAsync(  ) then
-      self:addErrMess( pos, "can't use 'return' in the __asyncLock." )
-      available = false
-   end
    if funcTypeInfo:getTxt(  ) == "__init" then
       self:addErrMess( pos, "__init method can't return" )
       available = false
@@ -10121,8 +10131,9 @@ function TransUnit:analyzeStatement( termTxt )
          statement = self:analyzeReturn( token )
       elseif token.txt == "break" then
          self:checkNextToken( ";" )
-         statement = Nodes.BreakNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone} )
-         if not self:get_curNsInfo():canBreak(  ) then
+         local nsInfo = self:get_curNsInfo()
+         statement = Nodes.BreakNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:setAsyncLockBreak(  ) )
+         if not nsInfo:canBreak(  ) then
             self:addErrMess( token.pos, "no loop syntax." )
          end
       elseif token.txt == "unwrap" then

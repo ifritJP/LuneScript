@@ -2462,8 +2462,6 @@ test/error/async3.lns:117:20: error: can't access noasync function in async. -- 
 test/error/async3.lns:118:19: error: can't access noasync function in async. -- get_val2 on func
 test/error/async3.lns:130:17: error: can't access mutable method. -- &Val.func
 test/error/async3.lns:137:10: error: can't use __asyncLock on __noasync. -- func
-test/error/async3.lns:140:19: error: can't use 'return' in the __asyncLock.
-test/error/async3.lns:144:13: error: no loop syntax.
 test/error/async3.lns:157:22: error: can't access noasync function in async. -- get_val on __init
 test/error/async3.lns:161:20: error: __Runner can't have the mutable argument with public method. -- 1: Foo, not use non final class -- Foo
 test/error/async3.lns:163:21: error: __Runner can't have the mutable argument with public method. -- 1: _List<Foo>, 

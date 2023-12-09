@@ -294,9 +294,50 @@ StmtKind.Apply = 6
 StmtKind._val2NameMap[6] = 'Apply'
 StmtKind.__allList[6] = StmtKind.Apply
 
+local LoopInfo = {}
+_moduleObj.LoopInfo = LoopInfo
+function LoopInfo._new( scope )
+   local obj = {}
+   LoopInfo._setmeta( obj )
+   if obj.__init then obj:__init( scope ); end
+   return obj
+end
+function LoopInfo:__init(scope) 
+   self.scope = scope
+   self.hasAsyncLockBreak = false
+end
+function LoopInfo._setmeta( obj )
+  setmetatable( obj, { __index = LoopInfo  } )
+end
+function LoopInfo:get_scope()
+   return self.scope
+end
+function LoopInfo:get_hasAsyncLockBreak()
+   return self.hasAsyncLockBreak
+end
+function LoopInfo:set_hasAsyncLockBreak( hasAsyncLockBreak )
+   self.hasAsyncLockBreak = hasAsyncLockBreak
+end
+
 
 local NSInfo = {}
 _moduleObj.NSInfo = NSInfo
+function NSInfo:pushLoopScope( scope )
+
+   table.insert( self.loopScopeQueue, LoopInfo._new(scope) )
+end
+function NSInfo:popLoopScope(  )
+
+   table.remove( self.loopScopeQueue )
+end
+function NSInfo:hasAsyncLockBreak(  )
+
+   if #self.loopScopeQueue > 0 then
+      local loopInfo = self.loopScopeQueue[#self.loopScopeQueue]
+      return loopInfo:get_hasAsyncLockBreak()
+   end
+   return false
+end
 function NSInfo:addStmtNum( num )
 
    self.stmtNum = self.stmtNum + num
@@ -366,12 +407,21 @@ function NSInfo:decLock(  )
 end
 function NSInfo:canBreak(  )
 
+   return #self.loopScopeQueue > 0
+end
+function NSInfo:setAsyncLockBreak(  )
+
    local len = #self.lockedAsyncStack
-   local loopQueueLen = #self.loopScopeQueue
    if len == 0 then
-      return loopQueueLen > 0
+      return false
    end
-   return self.lockedAsyncStack[len]:get_loopLen() < loopQueueLen
+   local loopQueueLen = #self.loopScopeQueue
+   if loopQueueLen > 0 and self.lockedAsyncStack[len]:get_loopLen() >= loopQueueLen then
+      local loopInfo = self.loopScopeQueue[loopQueueLen]
+      loopInfo:set_hasAsyncLockBreak( true )
+      return true
+   end
+   return false
 end
 function NSInfo:canAccessNoasync(  )
 
@@ -428,9 +478,6 @@ function NSInfo:get_typeDataAccessor()
 end
 function NSInfo:get_pos()
    return self.pos
-end
-function NSInfo:get_loopScopeQueue()
-   return self.loopScopeQueue
 end
 function NSInfo:get_condRetNodeList()
    return self.condRetNodeList

@@ -1935,7 +1935,7 @@ local fn TransUnit.analyzeBlock(
    switch blockKind {
       case .For, .Apply, .While, .Repeat, .Foreach {
          loopFlag = true;
-         nsInfo.$loopScopeQueue.insert( self.$scope );
+         nsInfo.pushLoopScope( self.$scope );
       }
    }
 
@@ -1948,9 +1948,12 @@ local fn TransUnit.analyzeBlock(
 
    self.checkNextToken( "}" );
 
-   
+   let hasAsyncLockBreak;
    if loopFlag {
-      nsInfo.$loopScopeQueue.remove(##);
+      hasAsyncLockBreak = nsInfo.hasAsyncLockBreak();
+      nsInfo.popLoopScope();
+   } else {
+      hasAsyncLockBreak = false;
    }
    
 
@@ -1965,7 +1968,7 @@ local fn TransUnit.analyzeBlock(
    let mut node = Nodes.BlockNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      blockKind, blockScope, stmtList );
+      blockKind, blockScope, hasAsyncLockBreak, stmtList );
 
    if node.getBreakKind( .Normal ) ~= .None {
       self.tentativeSymbol.skip();
@@ -2042,7 +2045,7 @@ local fn TransUnit.skipAndCreateDummyBlock() mut : Nodes.BlockNode {
    return Nodes.BlockNode.create(
       self.nodeManager, blockToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      .Func, blockScope, stmtList );
+      .Func, blockScope, false, stmtList );
 }
 
 
@@ -2099,11 +2102,19 @@ fn TransUnit.analyzeAsyncLock(
    let block = self.analyzeBlock( .AsyncLock, .Simple, nil, nil );
 
    nsInfo.decLock();
+
+   let retTypeList:&List<&Ast.TypeInfo>!;
+   if block.getBreakKind( .IgnoreFlowReturn ) == .Return {
+      let funcTypeInfo = self.getCurrentNamespaceTypeInfo();
+      retTypeList = funcTypeInfo.$retTypeInfoList;
+   } else {
+      retTypeList = nil;
+   }
    
    return Nodes.AsyncLockNode.create(
       self.nodeManager, asyncToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      lockKind, block );
+      lockKind, retTypeList, nsInfo.hasAsyncLockBreak(), block );
 }
 
 fn TransUnit.analyzeIf(

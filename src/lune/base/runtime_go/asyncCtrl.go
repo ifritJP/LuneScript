@@ -420,7 +420,14 @@ func (self *Lns_ThreadMgrInfo) changeRunNum(delta int) {
 	}
 }
 
-func Lns_LockEnvSync(_env *LnsEnv, lineNo int, callback func()) {
+func Lns_LockEnvSync(_env *LnsEnv, lineNo int, callback func() ) {
+    Lns_LockEnvSyncRet[int](_env, lineNo, func() *LnsTuple1[int] {
+        callback()
+        return nil
+    })
+}
+
+func Lns_LockEnvSyncRet[T any](_env *LnsEnv, lineNo int, callback func() *LnsTuple1[T]) *LnsTuple1[T]{
 	if _env.async {
 		// __noasync が待ちになるまで待つために lock する
 		var prev time.Time
@@ -445,12 +452,14 @@ func Lns_LockEnvSync(_env *LnsEnv, lineNo int, callback func()) {
 			sync_LnsEnvMutex.Unlock()
 		}()
 
-		callback()
+		return callback()
 
 	} else {
-		callback()
+		return callback()
 	}
 }
+
+
 
 type G__lns_Flag interface {
 	Set(_env *LnsEnv)

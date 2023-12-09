@@ -2234,11 +2234,11 @@ fn TransUnit.canReturnFromHere( pos:&Types.Position ) mut : bool {
       self.addErrMess( pos, "'return' could not use here" );
       available = false;
    }
-   let nsInfo = self.getNSInfo( funcTypeInfo );
-   if nsInfo.isLockedAsync() {
-      self.addErrMess( pos, "can't use 'return' in the __asyncLock." );
-      available = false;
-   }
+   // let nsInfo = self.getNSInfo( funcTypeInfo );
+   // if nsInfo.isLockedAsync() {
+   //    self.addErrMess( pos, "can't use 'return' in the __asyncLock." );
+   //    available = false;
+   // }
 
    if funcTypeInfo.getTxt(##) == "__init" {
       // フロー解析するのが面倒なので、 __init 内では return を禁止。

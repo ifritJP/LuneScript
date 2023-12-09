@@ -2163,21 +2163,22 @@ function BlockNode:canBeStatement(  )
 
    return true
 end
-function BlockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList )
+function BlockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, hasAsyncLockBreak, stmtList )
    local obj = {}
    BlockNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, hasAsyncLockBreak, stmtList ); end
    return obj
 end
-function BlockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList) 
+function BlockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, hasAsyncLockBreak, stmtList) 
    Node.__init( self,managerId, id, 9, pos, inTestBlock, macroArgFlag, typeList)
    self.blockKind = blockKind
    self.scope = scope
+   self.hasAsyncLockBreak = hasAsyncLockBreak
    self.stmtList = stmtList
 end
-function BlockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList )
+function BlockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, hasAsyncLockBreak, stmtList )
 
-   local node = BlockNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, stmtList)
+   local node = BlockNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, blockKind, scope, hasAsyncLockBreak, stmtList)
    nodeMan:addNode( node )
    return node
 end
@@ -2223,6 +2224,9 @@ function BlockNode:get_blockKind()
 end
 function BlockNode:get_scope()
    return self.scope
+end
+function BlockNode:get_hasAsyncLockBreak()
+   return self.hasAsyncLockBreak
 end
 function BlockNode:get_stmtList()
    return self.stmtList
@@ -4506,18 +4510,19 @@ function BreakNode:canBeStatement(  )
 
    return true
 end
-function BreakNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList )
+function BreakNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, asyncLockBreak )
    local obj = {}
    BreakNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, asyncLockBreak ); end
    return obj
 end
-function BreakNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList) 
+function BreakNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, asyncLockBreak) 
    Node.__init( self,managerId, id, 23, pos, inTestBlock, macroArgFlag, typeList)
+   self.asyncLockBreak = asyncLockBreak
 end
-function BreakNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList )
+function BreakNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, asyncLockBreak )
 
-   local node = BreakNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList)
+   local node = BreakNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, asyncLockBreak)
    nodeMan:addNode( node )
    return node
 end
@@ -4536,6 +4541,9 @@ function BreakNode.sortList( list )
 end
 function BreakNode._setmeta( obj )
   setmetatable( obj, { __index = BreakNode  } )
+end
+function BreakNode:get_asyncLockBreak()
+   return self.asyncLockBreak
 end
 
 
@@ -10135,20 +10143,22 @@ function AsyncLockNode:canBeStatement(  )
 
    return true
 end
-function AsyncLockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block )
+function AsyncLockNode._new( managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, returnTypeList, hasAsyncLockBreak, block )
    local obj = {}
    AsyncLockNode._setmeta( obj )
-   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block ); end
+   if obj.__init then obj:__init( managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, returnTypeList, hasAsyncLockBreak, block ); end
    return obj
 end
-function AsyncLockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, block) 
+function AsyncLockNode:__init(managerId, id, pos, inTestBlock, macroArgFlag, typeList, lockKind, returnTypeList, hasAsyncLockBreak, block) 
    Node.__init( self,managerId, id, 63, pos, inTestBlock, macroArgFlag, typeList)
    self.lockKind = lockKind
+   self.returnTypeList = returnTypeList
+   self.hasAsyncLockBreak = hasAsyncLockBreak
    self.block = block
 end
-function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, lockKind, block )
+function AsyncLockNode.create( nodeMan, pos, inTestBlock, macroArgFlag, typeList, lockKind, returnTypeList, hasAsyncLockBreak, block )
 
-   local node = AsyncLockNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, lockKind, block)
+   local node = AsyncLockNode._new(nodeMan:get_managerId(), nodeMan:nextId(  ), pos, inTestBlock, macroArgFlag, typeList, lockKind, returnTypeList, hasAsyncLockBreak, block)
    nodeMan:addNode( node )
    return node
 end
@@ -10190,11 +10200,25 @@ end
 function AsyncLockNode:get_lockKind()
    return self.lockKind
 end
+function AsyncLockNode:get_returnTypeList()
+   return self.returnTypeList
+end
+function AsyncLockNode:get_hasAsyncLockBreak()
+   return self.hasAsyncLockBreak
+end
 function AsyncLockNode:get_block()
    return self.block
 end
 
 
+
+function AsyncLockNode:getBreakKind( checkMode )
+
+   if self.returnTypeList then
+      return self.block:getBreakKind( checkMode )
+   end
+   return Node.getBreakKind( self,checkMode)
+end
 
 
 function NodeKind.get_Request(  )

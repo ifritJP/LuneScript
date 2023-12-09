@@ -1235,10 +1235,29 @@ pub override fn ConvFilter.processRequest(
    filter( node.$exp, self, node );
 };
 
+let asyncLockBreakSym = "_break";
+
 pub override fn ConvFilter.processAsyncLock(
    node: &Nodes.AsyncLockNode, opt: Opt ) mut
 {
-   filter( node.$block, self, node );
+   if node.$returnTypeList {
+      self.writeln( "do" );
+      self.pushIndent(##);
+      self.writeln( "function _lock()" );
+      self.pushIndent( ## );
+      filter( node.$block, self, node );
+      self.popIndent();
+      self.writeln( "end" );
+      self.writeln( "local _val = { _lock() }" );
+      self.writeln( "if #_val ~= 0 then return table.unpack( _val ) end" );
+      self.popIndent();
+      self.writeln( "end" );
+   } else {
+      filter( node.$block, self, node );
+   }
+   if node.$hasAsyncLockBreak {
+      self.writeln( "if %s then break end" (asyncLockBreakSym) );
+   }
 }
 
 
@@ -1292,6 +1311,11 @@ pub override fn ConvFilter.processBlockSub(
    }
    self.writeln( word );
    self.pushIndent(##);
+
+   if node.$hasAsyncLockBreak {
+      self.writeln( "local %s = false" (asyncLockBreakSym) );
+   }
+   
 
    if node.$scope.getSymbolInfoChild( "_" )$.$posForLatestMod {
       self.writeln( "local _" );
@@ -3879,7 +3903,12 @@ pub override fn ConvFilter.processLiteralNil(
 pub override fn ConvFilter.processBreak(
    node: &Nodes.BreakNode, opt: Opt ) mut
 {
-   self.writeRawln( "break" );
+   if node.$asyncLockBreak {
+      self.writeRawln( "%s = true" (asyncLockBreakSym));
+      self.writeRawln( "return" );
+   } else {
+      self.writeRawln( "break" );
+   }
 };
 
 pub override fn ConvFilter.processLiteralSymbol(

@@ -180,11 +180,14 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          self.checkNextToken( ";" );
          // statement = self.createNode(
          //     nodeKindBreak, token.pos, [ builtinTypeNone ], nil );}
+
+         let mut nsInfo = self.$curNsInfo;
          statement = Nodes.BreakNode.create(
             self.nodeManager, token.pos, self.inTestBlock,
-            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
+            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+            nsInfo.setAsyncLockBreak() );
          
-         if not self.$curNsInfo.canBreak() {
+         if not nsInfo.canBreak() {
             self.addErrMess( token.pos, "no loop syntax." );
          } 
       }
