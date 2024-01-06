@@ -414,12 +414,12 @@ func Lns_cast2Code_CodeTokenizerIF( obj LnsAny ) LnsAny {
 
 // declaration Class -- WithTailCommentToken
 type Code_WithTailCommentTokenMtd interface {
-    ToMap() *LnsMap
     Add(_env *LnsEnv, arg1 *LnsTypes.Types_Token)
     GetExcludedDelimitTxt(_env *LnsEnv) string
     GetLineCount(_env *LnsEnv) LnsInt
     Get_commentList(_env *LnsEnv) *LnsList2_[*LnsTypes.Types_Token]
     Get_endLineNo(_env *LnsEnv) LnsInt
+    Get_generator(_env *LnsEnv) LnsAny
     Get_tailCommentList(_env *LnsEnv) *LnsList
 }
 type Code_WithTailCommentToken struct {
@@ -462,47 +462,6 @@ func NewCode_WithTailCommentToken(_env *LnsEnv, arg1 *LnsTypes.Types_Token) *Cod
     return obj
 }
 func (self *Code_WithTailCommentToken) Get_tailCommentList(_env *LnsEnv) *LnsList{ return self.tailCommentList }
-func (self *Code_WithTailCommentToken) ToMapSetup( obj *LnsMap ) *LnsMap {
-    obj.Items["tailCommentList"] = Lns_ToCollection( self.tailCommentList )
-    return self.Types_Token.ToMapSetup( obj )
-}
-func (self *Code_WithTailCommentToken) ToMap() *LnsMap {
-    return self.ToMapSetup( NewLnsMap( map[LnsAny]LnsAny{} ) )
-}
-func Code_WithTailCommentToken__fromMap_4_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Code_WithTailCommentToken_FromMap( arg1, paramList )
-}
-func Code_WithTailCommentToken__fromStem_5_(_env,  arg1 LnsAny, paramList []Lns_ToObjParam)(LnsAny, LnsAny){
-   return Code_WithTailCommentToken_FromMap( arg1, paramList )
-}
-func Code_WithTailCommentToken_FromMap( obj LnsAny, paramList []Lns_ToObjParam ) (LnsAny, LnsAny) {
-    _,conv,mess := Code_WithTailCommentToken_FromMapSub(obj,false, paramList);
-    return conv,mess
-}
-func Code_WithTailCommentToken_FromMapSub( obj LnsAny, nilable bool, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    var objMap *LnsMap
-    if work, ok := obj.(*LnsMap); !ok {
-       return false, nil, "no map -- " + Lns_ToString(obj)
-    } else {
-       objMap = work
-    }
-    newObj := &Code_WithTailCommentToken{}
-    newObj.FP = newObj
-    newObj.Types_Token.FP = newObj
-    return Code_WithTailCommentToken_FromMapMain( newObj, objMap, paramList )
-}
-func Code_WithTailCommentToken_FromMapMain( newObj *Code_WithTailCommentToken, objMap *LnsMap, paramList []Lns_ToObjParam ) (bool, LnsAny, LnsAny) {
-    if ok,_,mess := LnsTypes.Types_Token_FromMapMain( &newObj.Types_Token, objMap, paramList ); !ok {
-        return false,nil,mess
-    }
-    if ok,conv,mess := Lns_ToListSub( objMap.Items["tailCommentList"], false, []Lns_ToObjParam{Lns_ToObjParam{
-            LnsTypes.Types_Token_FromMapSub, false,nil}}); !ok {
-       return false,nil,"tailCommentList:" + mess.(string)
-    } else {
-       newObj.tailCommentList = conv.(*LnsList)
-    }
-    return true, newObj, nil
-}
 // 34: DeclConstr
 func (self *Code_WithTailCommentToken) InitCode_WithTailCommentToken(_env *LnsEnv, token *LnsTypes.Types_Token) {
     self.InitTypes_Token(_env, token.Kind, token.Txt, token.Pos, token.Consecutive, token.FP.Get_commentList(_env))

@@ -3,8 +3,6 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5P
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da h1:oI5xCqsCo564l8iNU+DwB5epxmsaqB+rhGL0m5jtYqE=
 github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da/go.mod h1:cIg4eruTrX1D+g88fzRXU5OdNfaM+9IcxsU14FzY7Hc=
-github.com/ifritJP/LuneScript/src v0.0.0-20230409073752-33f3ab0a6b08 h1:MCP+4jAFpGoBfcaLLoA6onmWvkRYqV7ShqVlJibl7JY=
-github.com/ifritJP/LuneScript/src v0.0.0-20230409073752-33f3ab0a6b08/go.mod h1:DswlbmisPZvOh5fa36m1AZznVOjoSyggshgZY6Kz2T8=
 github.com/yuin/gopher-lua v0.0.0-20220413183635-c841877397d8 h1:YZGz13Wg1lXFpptej1c6fX22klQk4S9NaC6fiiu+kC0=
 github.com/yuin/gopher-lua v0.0.0-20220413183635-c841877397d8/go.mod h1:E1AXubJBdNmFERAOucpDIxNzeGfLzg0mYh+UfMWdChA=
 golang.org/x/sys v0.0.0-20190204203706-41f3e6584952/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
