@@ -5,7 +5,8 @@
 結果が一致すること (不動点) と、新旧コンパイラでテスト結果が一致することを確認する。
 **全テストに合格すると、生成物 (`lune/base/*.lua` 等) を新しいものに自動で置き換える。**
 
-> 行番号は `src/Makefile` (ブランチ `dev_with_llm`, `87ebeb68`) のもの。
+> 行番号は分割前の `src/Makefile` (ブランチ `dev_with_llm`, `87ebeb68`) のもの。
+> 分割後の `src/Makefile` は `src/mk/*.mk` に分かれている。行番号から分割後のファイルを探すには [makefile_split_plan.md](makefile_split_plan.md) の 8.1 の表を参照。
 
 ## 1. 全体像
 

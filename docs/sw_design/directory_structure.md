@@ -48,7 +48,8 @@ lnsc 呼び出し (`lns-command.el`, `lns-dispatch.el`, `lns-inq.el`)、設定 (
 
 ```
 src/
-├── Makefile            ビルド・セルフホスト・テストの全ターゲット
+├── Makefile            ビルド・セルフホスト・テストの入口 (実体は mk/*.mk を include)
+├── mk/                 Makefile から分割したターゲット群 (config, selfhost, test-*, go など)
 ├── Makefile.ccc        C 変換系の実験用 Makefile
 ├── lnsc.lua            Lua 版 lnsc のエントリ (lune.base.base を require)
 ├── setup.lua           インストール用セットアップ

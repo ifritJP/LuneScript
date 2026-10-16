@@ -2,7 +2,8 @@
 
 約 2,200 行ある `src/Makefile` を、**動作を変えずに** 複数のファイルに分割するための計画と検証方法をまとめる。
 
-> 調査対象: ブランチ `dev_with_llm`。行番号は `NO_ACCEPT` 追加後の作業ツリーの `src/Makefile` のもの。
+> 調査対象: ブランチ `dev_with_llm`。行番号は分割前 (`5a665062`) の `src/Makefile` のもの。
+> フェーズ 1 は実施済み。結果は 8 章を参照。
 > GNU Make 4.4.1 で確認した。
 
 ## 1. 方針
@@ -58,7 +59,17 @@ make は Makefile を上から順に読み、`ifeq` / `ifdef` / `:=` / `$(shell 
 `include Makefile.local` (119 行)、`include lune.mk` (64 行)、`include $(DEPENDS)` (95 行) は、
 カレントディレクトリからの相対パスである。分割後もこのまま (書き換えない) にする。
 
-### 2.5 特殊な機能は使っていない
+### 2.5 Makefile をテキストとして読んでいるコードがある (実施時に判明)
+
+`misc/go/binding/bind.lns` は `<dir>/Makefile` を **テキストとして読み**、`LNS_SRCS +=` で始まる行から
+Go 版 lnsc に埋め込むモジュールの一覧を作る (35–48 行)。`LNS_SRCS` を `mk/` に移すと、
+`binding.go` にモジュールが埋め込まれなくなる。その結果、単体バイナリの lnsc が `lune.base.Testing` などを読み込めなくなり、
+`check_singleBin` (`test-new` の最後) で失敗する。
+
+make の動作の検証 (A〜C) では検出できず、実際のビルド (D) で見つかった。
+→ `LNS_SRCS` の定義ブロックは `Makefile` 本体に残す (順序は変わらない)。
+
+### 2.6 特殊な機能は使っていない
 
 `.ONESHELL`、`.SECONDEXPANSION`、`export`、`override`、`vpath`、`+` で始まるレシピ行などは使われていない。
 分割による影響を受ける特殊な機能はない。
@@ -247,3 +258,60 @@ make -C src go-build NO_ACCEPT=y                         # テスト付き
 | 箇所 | 内容 |
 |---|---|
 | `diff-result` (1224 行) | `RUNTIME_ORG_VER` / `RUNTIME_NEW_VER` を定義前に参照しているため、ランタイムのバージョンによらず `.meta` の比較が常に行われる。意図した動作かどうかを確認する |
+| `test/proj` のテスト (`test-org-proj`, `test-new-proj`) | `-j` で実行すると、`test/proj` のサブ make が「副次 make で -j1 を強制指定しました」という警告を出し、さらに `Mod1`〜`Mod4` の出力順序が実行ごとに変わる。そのため `diff test/result/test1.result work/test2.result` で失敗し、`make -j24 test-comp-with-go` が分割前から失敗する (`SKIP_PROJ_TEST=y` なら成功する) |
+
+## 8. 実施結果 (フェーズ 1)
+
+### 8.1 分割後の構成
+
+分割は [split_makefile.py](split_makefile.py) で機械的に行った (`python3 split_makefile.py src`)。
+
+| ファイル | 分割前の行 | 内容 |
+|---|---|---|
+| `Makefile` | — | `LNS_MK_DIR` の定義と include |
+| `mk/config.mk` | 1–131 | Lua / lnsc の設定、`depend_on` 時のビルド、`Makefile.local`、`.PHONY` |
+| `mk/help.mk` | 132–170 | `help`, `exec` |
+| `mk/exec.mk` | 171–214 | lnsc 実行用の共通マクロ (`exeLune`, `cmd_exec_trans` など) |
+| `Makefile` (本体) | 215–263 | `LNS_SRCS` (2.5 のため本体に残す) |
+| `mk/selfhost.mk` | 264–491 | セルフホストビルド、`build-testcode`、`luarocks-check`、`cp_src_set` |
+| `mk/test-comp.mk` | 492–610 | `test-global`, `test-comp`, `--testing` 関連 |
+| `mk/test-cases.mk` | 611–813 | `test-etc`、エラーテスト、補完テスト |
+| `mk/test-stages.mk` | 814–1238 | `test-org`, `test-new*`, `test-comp2*`, `diff-result` |
+| `mk/test-lua51.mk` | 1239–1305 | Lua 5.1 クロスコンパイルテスト |
+| `mk/release.mk` | 1306–1430 | `accept-package`、Docker テスト、形式確認、`build-glue`、`install` |
+| `mk/conv-c.mk` | 1431–1605 | C 変換関連 |
+| `mk/go.mk` | 1606–1959 | Go のビルド設定、`test-go`、`go-build` |
+| `mk/prof.mk` | 1960–2099 | `test-govslua`、`goprof`、`luaprof` |
+| `mk/tools.mk` | 2100–2179 | `test-reference`、`update-lnstags`、フォーマッタ |
+
+元の Makefile に対する変更は、次の追加だけである (削除・変更した行はない)。
+
+- `LNS_MK_DIR` の定義と include 行、説明コメント
+- `mk/` をコピーする 3 行 (`cp_src_set`、`go-build`、`test-formatter-prepare`)
+
+### 8.2 検証結果
+
+すべて `git worktree` で隔離した作業ツリーで行った (Go 1.27.1, GNU Make 4.4.1, Lua 5.3.6)。
+
+| # | 検証 | 結果 |
+|---|---|---|
+| A | include を展開して元と比較 | 削除行 0。追加行は 8.1 の追加分だけ |
+| B | `make -pq` の比較 (11 通りの条件) | 一致 (`mk/*.mk` 自体の項目・統計行・項目の並び順を除く) |
+| C | 全 98 ターゲット × 2 条件 (既定 / `LANG_KIND=go WITH_GO=y`) の `make -n` の比較 | 一致 (追加したコピー行、エラー位置の表示、時間計測、並列実行による出力の混ざりを除く) |
+| — | `bind.lns` が生成する `binding.go` の比較 | 一致 (`go:embed` 44 件) |
+| D | 実ビルド 5 種類の比較 (下表) | 終了コードと結果ファイルが一致 (`DIFF_IGNORE` の時間計測行を除く) |
+| E | `make -C src`、`src` 内での `make`、別ディレクトリから `make -f`、`tools/history/Makefile.prof` からの include | いずれも `mk/` を正しく見つける |
+
+D で実行したコマンド (いずれも `NO_ACCEPT=y`、実行後に `git status` で成果物が変わっていないことも確認):
+
+| コマンド | 分割前 | 分割後 |
+|---|---|---|
+| `make -j24 test-comp-with-go` | 失敗 (7 章の `test/proj` の問題) | 同じ箇所で失敗 |
+| `make -j24 test-comp-with-go SKIP_PROJ_TEST=y` | 成功 | 成功 |
+| `make -j24 test-comp LUA=lua5.3 LUA51= SKIP_CHECKING_TESTING=y SKIP_PROJ_TEST=y` (CI と同じ) | 成功 | 成功 |
+| `make go-build NO_TEST=y` | 成功 | 成功 |
+| `make go-build` (テスト付き) | 成功 | 成功 |
+| `make -j1 test-comp-with-go` (参考) | — | 成功。`-j24` での失敗は並列実行が原因であることを確認 |
+
+検証の過程で、`LNS_SRCS` を `mk/` に移した最初の案は D で失敗した (2.5)。
+`LNS_SRCS` を本体に残す形に直し、A〜E をすべてやり直した。
