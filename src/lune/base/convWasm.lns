@@ -1,0 +1,1245 @@
+// -*- coding:utf-8; -*-
+/*
+MIT License
+
+Copyright (c) 2018,2020 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/*
+LuneScript の AST を wasm (WasmGC) に変換する。
+
+M0 (基盤) の段階で、次の範囲だけを扱う。それ以外のノードはエラーにする。
+
+- 型: int (i64), real (f64), bool (i32), str (バイト配列への参照)
+- モジュールレベルの関数、モジュールレベルの変数 (wasm のグローバル変数)
+- let, 代入, if, while, repeat, for, return, break
+- 算術・比較・論理演算、文字列の連結・比較・長さ、print
+
+生成する wasm は、ホスト (misc/wasm/lnswasm.mjs) から import する関数で出力を行なう。
+モジュールの初期化処理 (トップレベルの文) は "main" として export する。
+*/
+
+_lune_control default_async_all;
+_lune_control default_strict_generics;
+
+import lune.base.Ast;
+import lune.base.Nodes;
+import lune.base.Util;
+import lune.base.AstInfo;
+import lune.base.Builtin;
+import lune.base.WasmBin as W;
+
+pub class Opt {
+   pub let parent:&Nodes.Node;
+   pub fn __init( parent:&Nodes.Node ) {
+      self.parent = parent;
+   }
+}
+
+pub class Option {
+   pub fn __init() {
+   }
+}
+
+/** wasm のオペコード */
+let opI32Eqz = 0x45;
+let opI32Eq = 0x46;
+let opI32Ne = 0x47;
+let opI32LtS = 0x48;
+let opI32GtS = 0x4a;
+let opI32LeS = 0x4c;
+let opI32GeS = 0x4e;
+let opI32Add = 0x6a;
+let opI32Sub = 0x6b;
+let opI32And = 0x71;
+let opI64Eqz = 0x50;
+let opI64Eq = 0x51;
+let opI64Ne = 0x52;
+let opI64LtS = 0x53;
+let opI64GtS = 0x55;
+let opI64LeS = 0x57;
+let opI64GeS = 0x59;
+let opI64Add = 0x7c;
+let opI64Sub = 0x7d;
+let opI64Mul = 0x7e;
+let opI64DivS = 0x7f;
+let opI64RemS = 0x81;
+let opI64And = 0x83;
+let opI64Or = 0x84;
+let opI64Xor = 0x85;
+let opI64Shl = 0x86;
+let opI64ShrU = 0x88;
+let opF64Eq = 0x61;
+let opF64Ne = 0x62;
+let opF64Lt = 0x63;
+let opF64Gt = 0x64;
+let opF64Le = 0x65;
+let opF64Ge = 0x66;
+let opF64Neg = 0x9a;
+let opF64Floor = 0x9c;
+let opF64Add = 0xa0;
+let opF64Sub = 0xa1;
+let opF64Mul = 0xa2;
+let opF64Div = 0xa3;
+let opI64ExtendI32U = 0xad;
+let opF64ConvertI64S = 0xb9;
+let opI64TruncF64S = 0xb0;
+let opRefNull = 0xd0;
+
+/** 比較演算子 → 文字列比較の結果 (i32) と 0 を比べる命令 */
+let strCmpOpMap = {
+   "~=": opI32Ne, "<": opI32LtS, "<=": opI32LeS, ">": opI32GtS, ">=": opI32GeS };
+let i64CmpOpMap = {
+   "==": opI64Eq, "~=": opI64Ne, "<": opI64LtS, "<=": opI64LeS, ">": opI64GtS, ">=": opI64GeS };
+let f64CmpOpMap = {
+   "==": opF64Eq, "~=": opF64Ne, "<": opF64Lt, "<=": opF64Le, ">": opF64Gt, ">=": opF64Ge };
+
+/** GC 命令 (0xfb の後のサブオペコード) */
+let gcArrayNewData = 0x09;
+let gcArrayNewDefault = 0x07;
+let gcArrayGetU = 0x0d;
+let gcArrayLen = 0x0f;
+let gcArrayCopy = 0x11;
+
+/** 値の種類 */
+enum Kind {
+   Int,
+   Real,
+   Bool,
+   Str,
+   Nil,
+   /** 値なし */
+   Void,
+}
+
+fn plain( code:int, args:&List<&W.Ins> ) : &W.Ins {
+   return W.op( W.byte( code ), args );
+}
+
+class convFilter extend Nodes.Filter<Opt> {
+   let streamName:str;
+   let mut stream:oStream;
+   let processInfo:Ast.ProcessInfo;
+   let builtinFuncs:&Builtin.BuiltinFuncType;
+   let moduleScope:&Ast.Scope;
+
+   let mut mod:W.Module;
+   /** 文字列 (array (mut i8)) の型インデックス */
+   let strTypeIdx:int;
+   let strType:&W.ValType;
+
+   // ホストから import する関数
+   let fnPrintI64:int;
+   let fnPrintF64:int;
+   let fnPrintBool:int;
+   let fnPrintStr:int;
+   let fnPrintNil:int;
+   let fnPrintSep:int;
+   let fnPrintEnd:int;
+
+   // 組み込みのランタイム関数
+   let mut fnStrConcat:int;
+   let mut fnStrEq:int;
+   let mut fnStrCmp:int;
+   let mut fnDivI64:int;
+   let mut fnModI64:int;
+   let mut fnModF64:int;
+
+   let mut sym2func:Map<&Ast.SymbolInfo,int>;
+   let mut sym2global:Map<&Ast.SymbolInfo,int>;
+   let mut sym2local:Map<&Ast.SymbolInfo,int>;
+   /** 変換中の関数 */
+   let mut curFunc:W.Func!;
+   /** 変換中の位置の制御構造 (block/loop/if) の入れ子の深さ */
+   let mut depth:int;
+   /** ループを抜けるための block の深さのスタック */
+   let mut breakDepthList:List<int>;
+
+   pub fn __init( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo )
+   {
+      super( true, ast.$exportInfo.$moduleTypeInfo,
+             ast.$exportInfo.$moduleTypeInfo.$scope );
+
+      self.streamName = streamName;
+      self.stream = stream;
+      self.processInfo = ast.$exportInfo.$processInfo.clone();
+      self.builtinFuncs = ast.$builtinFunc;
+      self.moduleScope = unwrap ast.$exportInfo.$moduleTypeInfo.$scope;
+
+      let mut mod = new W.Module();
+      self.strTypeIdx = mod.addByteArrayType();
+      self.strType = new W.ValType( .Ref, self.strTypeIdx, true );
+
+      self.fnPrintI64 = mod.importFunc( "lns", "print_i64", [ W.typeI64 ], [] );
+      self.fnPrintF64 = mod.importFunc( "lns", "print_f64", [ W.typeF64 ], [] );
+      self.fnPrintBool = mod.importFunc( "lns", "print_bool", [ W.typeI32 ], [] );
+      self.fnPrintStr = mod.importFunc( "lns", "print_str", [ self.strType ], [] );
+      self.fnPrintNil = mod.importFunc( "lns", "print_nil", [], [] );
+      self.fnPrintSep = mod.importFunc( "lns", "print_sep", [], [] );
+      self.fnPrintEnd = mod.importFunc( "lns", "print_end", [], [] );
+      self.mod = mod;
+
+      self.fnStrConcat = 0;
+      self.fnStrEq = 0;
+      self.fnStrCmp = 0;
+      self.fnDivI64 = 0;
+      self.fnModI64 = 0;
+      self.fnModF64 = 0;
+
+      self.sym2func = {};
+      self.sym2global = {};
+      self.sym2local = {};
+      self.curFunc = nil;
+      self.depth = 0;
+      self.breakDepthList = [];
+   }
+}
+
+/** node の位置を付けてエラーを出す。 */
+fn convFilter.error( node:&Nodes.Node, mess:str ) : __ {
+   Util.err( "%s:%d:%d: wasm: %s"
+             ( self.streamName, node.$pos.lineNo, node.$pos.column, mess ) );
+}
+
+fn convFilter.notSupport( node:&Nodes.Node ) : __ {
+   self.error( node, "not support -- %s" ( Nodes.getNodeKindName( node.$kind ) ) );
+}
+
+fn convFilter.getKind( node:&Nodes.Node, typeInfo:&Ast.TypeInfo ) : Kind {
+   if typeInfo.equals( self.processInfo, Ast.builtinTypeInt ## ) {
+      return .Int;
+   }
+   if typeInfo.equals( self.processInfo, Ast.builtinTypeReal ## ) {
+      return .Real;
+   }
+   if typeInfo.equals( self.processInfo, Ast.builtinTypeBool ## ) {
+      return .Bool;
+   }
+   if typeInfo.equals( self.processInfo, Ast.builtinTypeString ## ) {
+      return .Str;
+   }
+   if typeInfo.equals( self.processInfo, Ast.builtinTypeNil ## ) {
+      return .Nil;
+   }
+   self.error( node, "not support type -- %s" ( typeInfo.getTxt( ## ) ) );
+}
+
+fn convFilter.getValType( node:&Nodes.Node, kind:Kind ) : &W.ValType {
+   switch kind {
+      case .Int {
+         return W.typeI64;
+      }
+      case .Real {
+         return W.typeF64;
+      }
+      case .Bool {
+         return W.typeI32;
+      }
+      case .Str {
+         return self.strType;
+      }
+   }
+   self.error( node, "not support type -- %s" ( kind.$_txt ) );
+}
+
+/** 型の既定値 */
+fn convFilter.getDefaultVal( kind:Kind ) : &W.Ins {
+   switch kind {
+      case .Real {
+         return W.f64Const( 0.0 );
+      }
+      case .Bool {
+         return W.i32Const( 0 );
+      }
+      case .Str {
+         // ref.null は GC の命令 (0xfb) ではない
+         return W.op( W.byte( opRefNull ) .. W.sleb( self.strTypeIdx ), [] );
+      }
+   }
+   return W.i64Const( 0 );
+}
+
+/** 現在変換中の関数 */
+fn convFilter.getCurFunc( node:&Nodes.Node ) mut : W.Func {
+   let! mut func = self.curFunc {
+      self.error( node, "no function" );
+   };
+   return func;
+}
+
+/** 組み込みのランタイム関数を定義する。 */
+fn convFilter.setupRuntime() mut {
+   let i64 = W.typeI64;
+   let f64 = W.typeF64;
+   let i32 = W.typeI32;
+   let strType = self.strType;
+   let strIdx = W.uleb( self.strTypeIdx );
+
+   // 床関数の除算 (Lua の math.floor( a / b ) と同じ)
+   {
+      let index, mut func = self.mod.addFunc( [ i64, i64 ], [ i64 ] );
+      let q = func.addLocal( i64 );
+      func.setBody( [
+         W.localSet( q, plain( opI64DivS, [ W.localGet( 0 ), W.localGet( 1 ) ] ) ),
+         // 割り切れず、符号が異なる場合は 1 引く
+         W.ifElse(
+            plain( opI32And,
+                   [ plain( opI64Ne, [ plain( opI64RemS, [ W.localGet( 0 ), W.localGet( 1 ) ] ),
+                                       W.i64Const( 0 ) ] ),
+                     plain( opI32Ne, [ plain( opI64LtS, [ W.localGet( 0 ), W.i64Const( 0 ) ] ),
+                                       plain( opI64LtS, [ W.localGet( 1 ), W.i64Const( 0 ) ] ) ] ) ] ),
+            [ W.localSet( q, plain( opI64Sub, [ W.localGet( q ), W.i64Const( 1 ) ] ) ) ], nil, nil ),
+         W.localGet( q ) ] );
+      self.fnDivI64 = index;
+   }
+   // 剰余 (結果の符号は除数と同じ)
+   {
+      let index, mut func = self.mod.addFunc( [ i64, i64 ], [ i64 ] );
+      let r = func.addLocal( i64 );
+      func.setBody( [
+         W.localSet( r, plain( opI64RemS, [ W.localGet( 0 ), W.localGet( 1 ) ] ) ),
+         W.ifElse(
+            plain( opI32And,
+                   [ plain( opI64Ne, [ W.localGet( r ), W.i64Const( 0 ) ] ),
+                     plain( opI32Ne, [ plain( opI64LtS, [ W.localGet( r ), W.i64Const( 0 ) ] ),
+                                       plain( opI64LtS, [ W.localGet( 1 ), W.i64Const( 0 ) ] ) ] ) ] ),
+            [ W.localSet( r, plain( opI64Add, [ W.localGet( r ), W.localGet( 1 ) ] ) ) ], nil, nil ),
+         W.localGet( r ) ] );
+      self.fnModI64 = index;
+   }
+   // real の剰余 a - floor( a / b ) * b
+   {
+      let index, mut func = self.mod.addFunc( [ f64, f64 ], [ f64 ] );
+      func.setBody( [
+         plain( opF64Sub,
+                [ W.localGet( 0 ),
+                  plain( opF64Mul,
+                         [ plain( opF64Floor,
+                                  [ plain( opF64Div, [ W.localGet( 0 ), W.localGet( 1 ) ] ) ] ),
+                           W.localGet( 1 ) ] ) ] ) ] );
+      self.fnModF64 = index;
+   }
+   // 文字列の連結
+   {
+      let index, mut func = self.mod.addFunc( [ strType, strType ], [ strType ] );
+      let lenA = func.addLocal( i32 );
+      let lenB = func.addLocal( i32 );
+      let work = func.addLocal( strType );
+      func.setBody( [
+         W.localSet( lenA, W.gcOp( gcArrayLen, "", [ W.localGet( 0 ) ] ) ),
+         W.localSet( lenB, W.gcOp( gcArrayLen, "", [ W.localGet( 1 ) ] ) ),
+         W.localSet( work, W.gcOp( gcArrayNewDefault, strIdx,
+                                   [ plain( opI32Add,
+                                            [ W.localGet( lenA ), W.localGet( lenB ) ] ) ] ) ),
+         W.gcOp( gcArrayCopy, strIdx .. strIdx,
+                 [ W.localGet( work ), W.i32Const( 0 ),
+                   W.localGet( 0 ), W.i32Const( 0 ), W.localGet( lenA ) ] ),
+         W.gcOp( gcArrayCopy, strIdx .. strIdx,
+                 [ W.localGet( work ), W.localGet( lenA ),
+                   W.localGet( 1 ), W.i32Const( 0 ), W.localGet( lenB ) ] ),
+         W.localGet( work ) ] );
+      self.fnStrConcat = index;
+   }
+   // 文字列の比較。a < b なら負、a == b なら 0、a > b なら正 (バイト単位の比較)
+   {
+      let index, mut func = self.mod.addFunc( [ strType, strType ], [ i32 ] );
+      let lenA = func.addLocal( i32 );
+      let lenB = func.addLocal( i32 );
+      let pos = func.addLocal( i32 );
+      let diff = func.addLocal( i32 );
+      func.setBody( [
+         W.localSet( lenA, W.gcOp( gcArrayLen, "", [ W.localGet( 0 ) ] ) ),
+         W.localSet( lenB, W.gcOp( gcArrayLen, "", [ W.localGet( 1 ) ] ) ),
+         W.block( [
+            W.loop( [
+               // どちらかの終端に達したら抜ける
+               W.brIf( 1, plain( opI32GeS, [ W.localGet( pos ), W.localGet( lenA ) ] ) ),
+               W.brIf( 1, plain( opI32GeS, [ W.localGet( pos ), W.localGet( lenB ) ] ) ),
+               W.localSet( diff, plain( opI32Sub,
+                                        [ W.gcOp( gcArrayGetU, strIdx,
+                                                  [ W.localGet( 0 ), W.localGet( pos ) ] ),
+                                          W.gcOp( gcArrayGetU, strIdx,
+                                                  [ W.localGet( 1 ), W.localGet( pos ) ] ) ] ) ),
+               W.ifElse( W.localGet( diff ), [ W.ret( [ W.localGet( diff ) ] ) ], nil, nil ),
+               W.localSet( pos, plain( opI32Add, [ W.localGet( pos ), W.i32Const( 1 ) ] ) ),
+               W.br( 0 ) ], nil ) ], nil ),
+         plain( opI32Sub, [ W.localGet( lenA ), W.localGet( lenB ) ] ) ] );
+      self.fnStrCmp = index;
+   }
+   // 文字列の一致
+   {
+      let index, mut func = self.mod.addFunc( [ strType, strType ], [ i32 ] );
+      func.setBody( [
+         plain( opI32Eqz, [ W.call( self.fnStrCmp, [ W.localGet( 0 ), W.localGet( 1 ) ] ) ] ) ] );
+      self.fnStrEq = index;
+   }
+   // ホストが文字列を読むための関数
+   {
+      let index, mut func = self.mod.addFunc( [ strType ], [ i32 ] );
+      func.setBody( [ W.gcOp( gcArrayLen, "", [ W.localGet( 0 ) ] ) ] );
+      self.mod.exportFunc( "lns_str_len", index );
+   }
+   {
+      let index, mut func = self.mod.addFunc( [ strType, i32 ], [ i32 ] );
+      func.setBody( [ W.gcOp( gcArrayGetU, strIdx, [ W.localGet( 0 ), W.localGet( 1 ) ] ) ] );
+      self.mod.exportFunc( "lns_str_get", index );
+   }
+}
+
+/** 文字列リテラルのトークンを、バイト列に変換する。 */
+fn convFilter.decodeString( node:&Nodes.Node, txt:str ) : str {
+   let quote = txt.sub( 1, 1 );
+   if quote == "`" {
+      // ```...``` 形式
+      return txt.sub( 4, #txt - 3 );
+   }
+   let body = txt.sub( 2, #txt - 1 );
+   let mut result = "";
+   let mut pos = 1;
+   while pos <= #body {
+      let ch = body.sub( pos, pos );
+      if ch ~= "\\" {
+         result = result .. ch;
+         pos = pos + 1;
+      } else {
+         let next = body.sub( pos + 1, pos + 1 );
+         pos = pos + 2;
+         switch next {
+            case "n" {
+               result = result .. "\n";
+            }
+            case "t" {
+               result = result .. "\t";
+            }
+            case "r" {
+               result = result .. "\r";
+            }
+            case "a" {
+               result = result .. W.byte( 7 );
+            }
+            case "b" {
+               result = result .. W.byte( 8 );
+            }
+            case "f" {
+               result = result .. W.byte( 12 );
+            }
+            case "v" {
+               result = result .. W.byte( 11 );
+            }
+            case "\\", "\"", "'" {
+               result = result .. next;
+            }
+            case "x" {
+               let hex = body.sub( pos, pos + 1 );
+               let! val = tonumber( hex, 16 ) {
+                  self.error( node, "illegal escape -- %s" (txt) );
+               };
+               result = result .. W.byte( val@@int );
+               pos = pos + 2;
+            }
+            default {
+               // \ddd (10 進数、最大 3 桁)
+               let mut val = 0;
+               let mut count = 0;
+               pos = pos - 1;
+               while count < 3 {
+                  let! code = body.byte( pos ## ) {
+                     break;
+                  };
+                  if code < 0x30 or code > 0x39 {
+                     break;
+                  }
+                  val = val * 10 + code - 0x30;
+                  count = count + 1;
+                  pos = pos + 1;
+               }
+               if count == 0 {
+                  self.error( node, "illegal escape -- %s" (txt) );
+               }
+               result = result .. W.byte( val );
+            }
+         }
+      }
+   }
+   return result;
+}
+
+/**
+整数リテラルの値を、トークンの文字列から求める。
+
+LiteralIntNode.$num は tonumber() の結果を int にキャストした値で、
+go 版の lnsc では float64 を経由するため、2^53 を超える値の精度が落ちる。
+*/
+fn convFilter.parseIntLiteral( node:&Nodes.Node, txt:str ) : int {
+   let mut val = 0;
+   let mut base = 10;
+   let mut pos = 1;
+   let mut negative = false;
+   if txt.sub( 1, 1 ) == "-" {
+      // 負の数のリテラルは、トークンに "-" が含まれる場合がある
+      negative = true;
+      pos = 2;
+   }
+   let prefix = txt.sub( pos, pos + 1 );
+   if prefix == "0x" or prefix == "0X" {
+      base = 16;
+      pos = pos + 2;
+   }
+   while pos <= #txt {
+      let! code = txt.byte( pos ## ) {
+         break;
+      };
+      let mut digit;
+      if code >= 0x30 and code <= 0x39 {
+         digit = code - 0x30;
+      } elseif base == 16 and code >= 0x61 and code <= 0x66 {
+         digit = code - 0x61 + 10;
+      } elseif base == 16 and code >= 0x41 and code <= 0x46 {
+         digit = code - 0x41 + 10;
+      } else {
+         self.error( node, "illegal int literal -- %s" (txt) );
+      }
+      val = val * base + digit;
+      pos = pos + 1;
+   }
+   if negative {
+      return 0 - val;
+   }
+   return val;
+}
+
+/** 式の値の種類 */
+fn convFilter.getExpKind( node:&Nodes.Node ) : Kind {
+   if! let castNode = node@@@Nodes.ExpCastNode {
+      // 暗黙のキャストでは expType がキャスト前の型なので、キャスト後の型を使う
+      return self.getKind( node, castNode.$castType );
+   }
+   if node.$kind == Nodes.NodeKind.$ExpCall {
+      let! callNode = node@@@Nodes.ExpCallNode {
+         self.error( node, "cast" );
+      };
+      let funcType = callNode.$func.$expType;
+      let retList = funcType.$retTypeInfoList;
+      if #retList == 0 {
+         return .Void;
+      }
+      if #retList > 1 {
+         self.error( node, "not support multiple return values" );
+      }
+      return self.getKind( node, retList[ 1 ] );
+   }
+   return self.getKind( node, node.$expType );
+}
+
+/** 式を real に変換する。 */
+fn convFilter.toReal( node:&Nodes.Node ) mut : &W.Ins {
+   let ins = self.lowerExp( node );
+   if self.getExpKind( node ) == .Int {
+      return plain( opF64ConvertI64S, [ ins ] );
+   }
+   return ins;
+}
+
+/** 二項演算 */
+fn convFilter.lowerOp2( node:&Nodes.ExpOp2Node ) mut : &W.Ins {
+   let opTxt = node.$op.txt;
+   let kind1 = self.getExpKind( node.$exp1 );
+   let kind2 = self.getExpKind( node.$exp2 );
+
+   switch opTxt {
+      case "and", "or" {
+         if kind1 ~= .Bool or kind2 ~= .Bool {
+            self.error( node, "not support non bool %s" (opTxt) );
+         }
+         let exp1 = self.lowerExp( node.$exp1 );
+         self.depth = self.depth + 1;
+         let exp2 = self.lowerExp( node.$exp2 );
+         self.depth = self.depth - 1;
+         if opTxt == "and" {
+            return W.ifElse( exp1, [ exp2 ], [ W.i32Const( 0 ) ], W.typeI32 );
+         }
+         return W.ifElse( exp1, [ W.i32Const( 1 ) ], [ exp2 ], W.typeI32 );
+      }
+      case ".." {
+         return W.call( self.fnStrConcat,
+                        [ self.lowerExp( node.$exp1 ), self.lowerExp( node.$exp2 ) ] );
+      }
+   }
+
+   // 比較
+   switch opTxt {
+      case "==", "~=", "<", "<=", ">", ">=" {
+         if kind1 == .Str and kind2 == .Str {
+            let cmp = W.call( self.fnStrCmp,
+                              [ self.lowerExp( node.$exp1 ), self.lowerExp( node.$exp2 ) ] );
+            if opTxt == "==" {
+               return plain( opI32Eqz, [ cmp ] );
+            }
+            let! code = strCmpOpMap[ opTxt ] {
+               self.error( node, "illegal op -- %s" (opTxt) );
+            };
+            return plain( code, [ cmp, W.i32Const( 0 ) ] );
+         }
+         if kind1 == .Bool and kind2 == .Bool {
+            let mut code;
+            switch opTxt {
+               case "==" { code = opI32Eq; }
+               case "~=" { code = opI32Ne; }
+               default {
+                  self.error( node, "not support bool %s" (opTxt) );
+               }
+            }
+            return plain( code, [ self.lowerExp( node.$exp1 ), self.lowerExp( node.$exp2 ) ] );
+         }
+         if kind1 == .Int and kind2 == .Int {
+            let! code = i64CmpOpMap[ opTxt ] {
+               self.error( node, "illegal op -- %s" (opTxt) );
+            };
+            return plain( code, [ self.lowerExp( node.$exp1 ), self.lowerExp( node.$exp2 ) ] );
+         }
+         if ( kind1 == .Int or kind1 == .Real ) and ( kind2 == .Int or kind2 == .Real ) {
+            let! code = f64CmpOpMap[ opTxt ] {
+               self.error( node, "illegal op -- %s" (opTxt) );
+            };
+            return plain( code, [ self.toReal( node.$exp1 ), self.toReal( node.$exp2 ) ] );
+         }
+         self.error( node, "not support compare -- %s %s %s"
+                     ( kind1.$_txt, opTxt, kind2.$_txt ) );
+      }
+   }
+
+   // 算術演算・ビット演算
+   let resultKind = self.getKind( node, node.$expType );
+   if resultKind == .Int {
+      let exp1 = self.lowerExp( node.$exp1 );
+      let exp2 = self.lowerExp( node.$exp2 );
+      switch opTxt {
+         case "+" { return plain( opI64Add, [ exp1, exp2 ] ); }
+         case "-" { return plain( opI64Sub, [ exp1, exp2 ] ); }
+         case "*" { return plain( opI64Mul, [ exp1, exp2 ] ); }
+         case "/" { return W.call( self.fnDivI64, [ exp1, exp2 ] ); }
+         case "%" { return W.call( self.fnModI64, [ exp1, exp2 ] ); }
+         case "&" { return plain( opI64And, [ exp1, exp2 ] ); }
+         case "|" { return plain( opI64Or, [ exp1, exp2 ] ); }
+         case "~" { return plain( opI64Xor, [ exp1, exp2 ] ); }
+         case "|<<" { return plain( opI64Shl, [ exp1, exp2 ] ); }
+         // Lua と同じく論理シフトにする
+         case "|>>" { return plain( opI64ShrU, [ exp1, exp2 ] ); }
+      }
+   }
+   if resultKind == .Real {
+      let exp1 = self.toReal( node.$exp1 );
+      let exp2 = self.toReal( node.$exp2 );
+      switch opTxt {
+         case "+" { return plain( opF64Add, [ exp1, exp2 ] ); }
+         case "-" { return plain( opF64Sub, [ exp1, exp2 ] ); }
+         case "*" { return plain( opF64Mul, [ exp1, exp2 ] ); }
+         case "/" { return plain( opF64Div, [ exp1, exp2 ] ); }
+         case "%" { return W.call( self.fnModF64, [ exp1, exp2 ] ); }
+      }
+   }
+   self.error( node, "not support op -- %s (%s)" ( opTxt, resultKind.$_txt ) );
+}
+
+/** 単項演算 */
+fn convFilter.lowerOp1( node:&Nodes.ExpOp1Node ) mut : &W.Ins {
+   let opTxt = node.$op.txt;
+   let kind = self.getExpKind( node.$exp );
+   let exp = self.lowerExp( node.$exp );
+   switch opTxt {
+      case "-" {
+         if kind == .Int {
+            return plain( opI64Sub, [ W.i64Const( 0 ), exp ] );
+         }
+         if kind == .Real {
+            return plain( opF64Neg, [ exp ] );
+         }
+      }
+      case "not" {
+         if kind == .Bool {
+            return plain( opI32Eqz, [ exp ] );
+         }
+      }
+      case "#" {
+         if kind == .Str {
+            return plain( opI64ExtendI32U, [ W.gcOp( gcArrayLen, "", [ exp ] ) ] );
+         }
+      }
+      case "~" {
+         if kind == .Int {
+            return plain( opI64Xor, [ exp, W.i64Const( -1 ) ] );
+         }
+      }
+   }
+   self.error( node, "not support op -- %s (%s)" ( opTxt, kind.$_txt ) );
+}
+
+/** 関数呼び出しの引数 */
+fn convFilter.lowerArgs( node:&Nodes.ExpCallNode ) mut : &List<&W.Ins> {
+   let mut list:List<&W.Ins> = [];
+   if! let argList = node.$argList {
+      if argList.$mRetExp {
+         self.error( node, "not support multiple return values in args" );
+      }
+      foreach arg in argList.$expList {
+         list.insert( self.lowerExp( arg ) );
+      }
+   }
+   return list;
+}
+
+/**
+可変長引数 (...) に渡す実引数のリストを返す。
+
+実引数は ExpToDDD ノードにまとめられているので、展開する。
+*/
+fn convFilter.getDDDArgs( node:&Nodes.ExpCallNode ) : &List<&Nodes.Node> {
+   let mut list:List<&Nodes.Node> = [];
+   if! let argList = node.$argList {
+      if argList.$mRetExp {
+         self.error( node, "not support multiple return values in args" );
+      }
+      foreach arg in argList.$expList {
+         if! let toDDD = arg@@@Nodes.ExpToDDDNode {
+            foreach exp in toDDD.$expList.$expList {
+               list.insert( exp );
+            }
+         } else {
+            list.insert( arg );
+         }
+      }
+   }
+   return list;
+}
+
+/** print */
+fn convFilter.lowerPrint( node:&Nodes.ExpCallNode ) mut : &W.Ins {
+   let mut list:List<&W.Ins> = [];
+   {
+      foreach arg, index in self.getDDDArgs( node ) {
+         if index > 1 {
+            list.insert( W.call( self.fnPrintSep, [] ) );
+         }
+         let kind = self.getExpKind( arg );
+         _switch kind {
+            case .Int {
+               list.insert( W.call( self.fnPrintI64, [ self.lowerExp( arg ) ] ) );
+            }
+            case .Real {
+               list.insert( W.call( self.fnPrintF64, [ self.lowerExp( arg ) ] ) );
+            }
+            case .Bool {
+               list.insert( W.call( self.fnPrintBool, [ self.lowerExp( arg ) ] ) );
+            }
+            case .Str {
+               list.insert( W.call( self.fnPrintStr, [ self.lowerExp( arg ) ] ) );
+            }
+            case .Nil {
+               list.insert( W.call( self.fnPrintNil, [] ) );
+            }
+            case .Void {
+               self.error( arg, "void value" );
+            }
+         }
+      }
+   }
+   list.insert( W.call( self.fnPrintEnd, [] ) );
+   return W.seq( list );
+}
+
+fn convFilter.lowerCall( node:&Nodes.ExpCallNode ) mut : &W.Ins {
+   if node.$func.$expType.equals( self.processInfo, self.builtinFuncs.lns_print ## ) {
+      return self.lowerPrint( node );
+   }
+   let! refNode = node.$func@@@Nodes.ExpRefNode {
+      self.error( node, "not support func -- %s" ( Nodes.getNodeKindName( node.$func.$kind ) ) );
+   };
+   let! funcIndex = self.sym2func[ refNode.$symbolInfo.getOrg() ] {
+      self.error( node, "not support func -- %s" ( refNode.$symbolInfo.$name ) );
+   };
+   return W.call( funcIndex, self.lowerArgs( node ) );
+}
+
+/** 変数の参照 */
+fn convFilter.lowerRef( node:&Nodes.ExpRefNode ) mut : &W.Ins {
+   let symbol = node.$symbolInfo.getOrg();
+   if! let index = self.sym2local[ symbol ] {
+      return W.localGet( index );
+   }
+   if! let index = self.sym2global[ symbol ] {
+      return W.globalGet( index );
+   }
+   self.error( node, "not support symbol -- %s" ( symbol.$name ) );
+}
+
+/** 変数への代入 */
+fn convFilter.lowerSetSym( node:&Nodes.Node, symbol:&Ast.SymbolInfo, val:&W.Ins ) mut : &W.Ins {
+   let orgSym = symbol.getOrg();
+   if! let index = self.sym2local[ orgSym ] {
+      return W.localSet( index, val );
+   }
+   if! let index = self.sym2global[ orgSym ] {
+      return W.globalSet( index, val );
+   }
+   self.error( node, "not support symbol -- %s" ( symbol.$name ) );
+}
+
+/** 式 */
+fn convFilter.lowerExp( node:&Nodes.Node ) mut : &W.Ins {
+   switch node.$kind {
+      case Nodes.NodeKind.$LiteralInt {
+         let! literal = node@@@Nodes.LiteralIntNode {
+            self.error( node, "cast" );
+         };
+         return W.i64Const( self.parseIntLiteral( node, literal.$token.txt ) );
+      }
+      case Nodes.NodeKind.$LiteralReal {
+         let! literal = node@@@Nodes.LiteralRealNode {
+            self.error( node, "cast" );
+         };
+         return W.f64Const( literal.$num );
+      }
+      case Nodes.NodeKind.$LiteralBool {
+         let! literal = node@@@Nodes.LiteralBoolNode {
+            self.error( node, "cast" );
+         };
+         if literal.$token.txt == "true" {
+            return W.i32Const( 1 );
+         }
+         return W.i32Const( 0 );
+      }
+      case Nodes.NodeKind.$LiteralString {
+         let! literal = node@@@Nodes.LiteralStringNode {
+            self.error( node, "cast" );
+         };
+         if literal.$orgParam {
+            self.error( node, "not support format string" );
+         }
+         let data = self.decodeString( node, literal.$token.txt );
+         let dataIdx = self.mod.addData( data );
+         return W.gcOp( gcArrayNewData, W.uleb( self.strTypeIdx ) .. W.uleb( dataIdx ),
+                        [ W.i32Const( 0 ), W.i32Const( #data ) ] );
+      }
+      case Nodes.NodeKind.$ExpRef {
+         let! refNode = node@@@Nodes.ExpRefNode {
+            self.error( node, "cast" );
+         };
+         return self.lowerRef( refNode );
+      }
+      case Nodes.NodeKind.$ExpParen {
+         let! parenNode = node@@@Nodes.ExpParenNode {
+            self.error( node, "cast" );
+         };
+         return self.lowerExp( parenNode.$exp );
+      }
+      case Nodes.NodeKind.$ExpOp2 {
+         let! op2Node = node@@@Nodes.ExpOp2Node {
+            self.error( node, "cast" );
+         };
+         return self.lowerOp2( op2Node );
+      }
+      case Nodes.NodeKind.$ExpOp1 {
+         let! op1Node = node@@@Nodes.ExpOp1Node {
+            self.error( node, "cast" );
+         };
+         return self.lowerOp1( op1Node );
+      }
+      case Nodes.NodeKind.$ExpCall {
+         let! callNode = node@@@Nodes.ExpCallNode {
+            self.error( node, "cast" );
+         };
+         return self.lowerCall( callNode );
+      }
+      case Nodes.NodeKind.$ExpCast {
+         let! castNode = node@@@Nodes.ExpCastNode {
+            self.error( node, "cast" );
+         };
+         let srcKind = self.getExpKind( castNode.$exp );
+         let dstKind = self.getKind( node, castNode.$castType );
+         let exp = self.lowerExp( castNode.$exp );
+         if srcKind == dstKind {
+            return exp;
+         }
+         if srcKind == .Int and dstKind == .Real {
+            return plain( opF64ConvertI64S, [ exp ] );
+         }
+         if srcKind == .Real and dstKind == .Int {
+            return plain( opI64TruncF64S, [ exp ] );
+         }
+         self.error( node, "not support cast -- %s -> %s" ( srcKind.$_txt, dstKind.$_txt ) );
+      }
+   }
+   self.notSupport( node );
+}
+
+/** ブロック内の文を変換する。 */
+fn convFilter.lowerBlock( node:&Nodes.BlockNode ) mut : &List<&W.Ins> {
+   let mut list:List<&W.Ins> = [];
+   foreach stmt in node.$stmtList {
+      self.lowerStmt( stmt, list );
+   }
+   return list;
+}
+
+/**
+ループに入る。
+
+ループは、break で抜けるための block と、ループ自体の loop で囲む。
+ループの本体を変換する前に呼ぶ。
+*/
+fn convFilter.enterLoop() mut {
+   self.depth = self.depth + 1;
+   self.breakDepthList.insert( self.depth );
+   self.depth = self.depth + 1;
+}
+
+/** ループを出る。ループの本体を受け取り、block と loop で囲んだ命令を返す。 */
+fn convFilter.exitLoop( body:&List<&W.Ins> ) mut : &W.Ins {
+   self.depth = self.depth - 2;
+   self.breakDepthList.remove(##);
+   return W.block( [ W.loop( body, nil ) ], nil );
+}
+
+fn convFilter.lowerDeclVar( node:&Nodes.DeclVarNode, mut out:List<&W.Ins> ) mut {
+   if node.$unwrapFlag or node.$condRetInfo {
+      self.error( node, "not support let!" );
+   }
+   let mut expList:List<&Nodes.Node> = [];
+   if! let expListNode = node.$expList {
+      if expListNode.$mRetExp {
+         self.error( node, "not support multiple return values" );
+      }
+      foreach exp in expListNode.$expList {
+         expList.insert( exp );
+      }
+   }
+   foreach symbol, index in node.$symbolInfoList {
+      let orgSym = symbol.getOrg();
+      let kind = self.getKind( node, symbol.$typeInfo );
+      let valType = self.getValType( node, kind );
+      if self.curFunc == nil {
+         self.error( node, "no function" );
+      }
+      if symbol.$scope == self.moduleScope {
+         // モジュールレベルの変数はグローバル変数にする
+         self.sym2global[ orgSym ] = self.mod.addGlobal( valType, self.getDefaultVal( kind ) );
+      } else {
+         let mut func = self.getCurFunc( node );
+         self.sym2local[ orgSym ] = func.addLocal( valType );
+      }
+      if index <= #expList {
+         out.insert( self.lowerSetSym( node, orgSym, self.lowerExp( expList[ index ] ) ) );
+      }
+   }
+}
+
+fn convFilter.lowerIf( node:&Nodes.IfNode ) mut : &W.Ins {
+   // if / elseif / else を、入れ子の if/else にする
+   fn process( index:int ) mut : &List<&W.Ins> {
+      let stmt = node.$stmtList[ index ];
+      if stmt.$kind == .Else {
+         return self.lowerBlock( stmt.$block );
+      }
+      let cond = self.lowerExp( stmt.$exp );
+      self.depth = self.depth + 1;
+      let thenBody = self.lowerBlock( stmt.$block );
+      let mut elseBody:&List<&W.Ins>! = nil;
+      if index < #node.$stmtList {
+         elseBody = process( index + 1 );
+      }
+      self.depth = self.depth - 1;
+      return [ W.ifElse( cond, thenBody, elseBody, nil ) ];
+   }
+   return W.seq( process( 1 ) );
+}
+
+fn convFilter.lowerFor( node:&Nodes.ForNode ) mut : &W.Ins {
+   if self.getKind( node, node.$val.$typeInfo ) ~= .Int {
+      self.error( node, "not support non int for" );
+   }
+   let mut func = self.getCurFunc( node );
+   let valIdx = func.addLocal( W.typeI64 );
+   self.sym2local[ node.$val.getOrg() ] = valIdx;
+   let toIdx = func.addLocal( W.typeI64 );
+   let stepIdx = func.addLocal( W.typeI64 );
+
+   let mut list:List<&W.Ins> = [];
+   list.insert( W.localSet( valIdx, self.lowerExp( node.$init ) ) );
+   list.insert( W.localSet( toIdx, self.lowerExp( node.$to ) ) );
+   if! let delta = node.$delta {
+      list.insert( W.localSet( stepIdx, self.lowerExp( delta ) ) );
+   } else {
+      list.insert( W.localSet( stepIdx, W.i64Const( 1 ) ) );
+   }
+   self.enterLoop();
+   {
+         let mut body:List<&W.Ins> = [];
+         // step >= 0 なら val > to、そうでなければ val < to で抜ける
+         self.depth = self.depth + 1;
+         let exitCond = W.ifElse(
+            plain( opI64GeS, [ W.localGet( stepIdx ), W.i64Const( 0 ) ] ),
+            [ plain( opI64GtS, [ W.localGet( valIdx ), W.localGet( toIdx ) ] ) ],
+            [ plain( opI64LtS, [ W.localGet( valIdx ), W.localGet( toIdx ) ] ) ], W.typeI32 );
+         self.depth = self.depth - 1;
+         body.insert( W.brIf( 1, exitCond ) );
+         foreach ins in self.lowerBlock( node.$block ) {
+            body.insert( ins );
+         }
+         body.insert( W.localSet( valIdx, plain( opI64Add, [ W.localGet( valIdx ),
+                                                              W.localGet( stepIdx ) ] ) ) );
+         body.insert( W.br( 0 ) );
+         list.insert( self.exitLoop( body ) );
+   }
+   return W.seq( list );
+}
+
+/** 文 */
+fn convFilter.lowerStmt( node:&Nodes.Node, mut out:List<&W.Ins> ) mut {
+   switch node.$kind {
+      case Nodes.NodeKind.$None, Nodes.NodeKind.$BlankLine, Nodes.NodeKind.$Shebang,
+         Nodes.NodeKind.$LuneControl
+      {
+         return;
+      }
+      case Nodes.NodeKind.$DeclFunc {
+         // モジュールレベルの関数は別に処理する
+         if self.depth == 0 {
+            return;
+         }
+      }
+      case Nodes.NodeKind.$StmtExp {
+         let! stmtNode = node@@@Nodes.StmtExpNode {
+            self.error( node, "cast" );
+         };
+         if stmtNode.$exp.$kind == Nodes.NodeKind.$ExpSetVal {
+            self.lowerStmt( stmtNode.$exp, out );
+            return;
+         }
+         let ins = self.lowerExp( stmtNode.$exp );
+         if self.getExpKind( stmtNode.$exp ) == .Void {
+            out.insert( ins );
+         } else {
+            out.insert( W.drop( ins ) );
+         }
+         return;
+      }
+      case Nodes.NodeKind.$DeclVar {
+         let! declNode = node@@@Nodes.DeclVarNode {
+            self.error( node, "cast" );
+         };
+         self.lowerDeclVar( declNode, out );
+         return;
+      }
+      case Nodes.NodeKind.$ExpSetVal {
+         let! setNode = node@@@Nodes.ExpSetValNode {
+            self.error( node, "cast" );
+         };
+         if #setNode.$LeftSymList ~= 1 or #setNode.$exp2.$expList ~= 1 {
+            self.error( node, "not support multiple assign" );
+         }
+         out.insert( self.lowerSetSym(
+            node, setNode.$LeftSymList[ 1 ], self.lowerExp( setNode.$exp2.$expList[ 1 ] ) ) );
+         return;
+      }
+      case Nodes.NodeKind.$If {
+         let! ifNode = node@@@Nodes.IfNode {
+            self.error( node, "cast" );
+         };
+         out.insert( self.lowerIf( ifNode ) );
+         return;
+      }
+      case Nodes.NodeKind.$While {
+         let! whileNode = node@@@Nodes.WhileNode {
+            self.error( node, "cast" );
+         };
+         self.enterLoop();
+         {
+               let mut body:List<&W.Ins> = [];
+               if not whileNode.$infinit {
+                  body.insert( W.brIf( 1, plain( opI32Eqz,
+                                                 [ self.lowerExp( whileNode.$exp ) ] ) ) );
+               }
+               foreach ins in self.lowerBlock( whileNode.$block ) {
+                  body.insert( ins );
+               }
+               body.insert( W.br( 0 ) );
+               out.insert( self.exitLoop( body ) );
+         }
+         return;
+      }
+      case Nodes.NodeKind.$Repeat {
+         let! repeatNode = node@@@Nodes.RepeatNode {
+            self.error( node, "cast" );
+         };
+         self.enterLoop();
+         {
+               let mut body:List<&W.Ins> = [];
+               foreach ins in self.lowerBlock( repeatNode.$block ) {
+                  body.insert( ins );
+               }
+               // 条件が偽ならループの先頭に戻る
+               body.insert( W.brIf( 0, plain( opI32Eqz,
+                                              [ self.lowerExp( repeatNode.$exp ) ] ) ) );
+               out.insert( self.exitLoop( body ) );
+         }
+         return;
+      }
+      case Nodes.NodeKind.$For {
+         let! forNode = node@@@Nodes.ForNode {
+            self.error( node, "cast" );
+         };
+         out.insert( self.lowerFor( forNode ) );
+         return;
+      }
+      case Nodes.NodeKind.$Break {
+         if #self.breakDepthList == 0 {
+            self.error( node, "break outside loop" );
+         }
+         out.insert( W.br( self.depth - self.breakDepthList[ #self.breakDepthList ] ) );
+         return;
+      }
+      case Nodes.NodeKind.$Return {
+         let! retNode = node@@@Nodes.ReturnNode {
+            self.error( node, "cast" );
+         };
+         let mut vals:List<&W.Ins> = [];
+         if! let expList = retNode.$expList {
+            foreach exp in expList.$expList {
+               vals.insert( self.lowerExp( exp ) );
+            }
+         }
+         out.insert( W.ret( vals ) );
+         return;
+      }
+      case Nodes.NodeKind.$Scope {
+         let! scopeNode = node@@@Nodes.ScopeNode {
+            self.error( node, "cast" );
+         };
+         foreach ins in self.lowerBlock( scopeNode.$block ) {
+            out.insert( ins );
+         }
+         return;
+      }
+      case Nodes.NodeKind.$Block {
+         let! blockNode = node@@@Nodes.BlockNode {
+            self.error( node, "cast" );
+         };
+         foreach ins in self.lowerBlock( blockNode ) {
+            out.insert( ins );
+         }
+         return;
+      }
+   }
+   self.notSupport( node );
+}
+
+/** モジュールレベルの関数を登録する。 */
+fn convFilter.registerFunc( node:&Nodes.DeclFuncNode ) mut : W.Func {
+   let declInfo = node.$declInfo;
+   if declInfo.$classTypeInfo {
+      self.error( node, "not support method" );
+   }
+   let! symbol = declInfo.$symbol {
+      self.error( node, "not support anonymous function" );
+   };
+   let mut params:List<&W.ValType> = [];
+   foreach arg in declInfo.$argList {
+      let! argNode = arg@@@Nodes.DeclArgNode {
+         self.error( arg, "not support arg -- %s" ( Nodes.getNodeKindName( arg.$kind ) ) );
+      };
+      params.insert( self.getValType( arg, self.getKind( arg, argNode.$symbolInfo.$typeInfo ) ) );
+   }
+   let mut results:List<&W.ValType> = [];
+   foreach retType in declInfo.$retTypeInfoList {
+      results.insert( self.getValType( node, self.getKind( node, retType ) ) );
+   }
+   let index, mut func = self.mod.addFunc( params, results );
+   self.sym2func[ symbol.getOrg() ] = index;
+   return func;
+}
+
+/** 関数の本体を変換する。 */
+fn convFilter.lowerFunc( node:&Nodes.DeclFuncNode, mut func:W.Func ) mut {
+   let declInfo = node.$declInfo;
+   foreach arg, index in declInfo.$argList {
+      let! argNode = arg@@@Nodes.DeclArgNode {
+         self.error( arg, "cast" );
+      };
+      self.sym2local[ argNode.$symbolInfo.getOrg() ] = index - 1;
+   }
+   self.curFunc = func;
+   self.depth = 1;
+   let mut body:List<&W.Ins> = [];
+   if! let block = declInfo.$body {
+      foreach ins in self.lowerBlock( block ) {
+         body.insert( ins );
+      }
+   }
+   if #declInfo.$retTypeInfoList > 0 {
+      // 戻り値がある関数は、最後に必ず return している
+      body.insert( W.unreachable() );
+   }
+   func.setBody( body );
+   self.curFunc = nil;
+   self.depth = 0;
+}
+
+pub override fn convFilter.processRoot( node: &Nodes.RootNode, opt: Opt ) mut
+{
+   self.setupRuntime();
+
+   // 関数を先に登録する (前方参照のため)
+   let mut funcList:List<&Nodes.DeclFuncNode> = [];
+   let mut wasmFuncList:List<W.Func> = [];
+   foreach child in node.$children {
+      if child.$kind == Nodes.NodeKind.$DeclFunc {
+         let! declNode = child@@@Nodes.DeclFuncNode {
+            self.error( child, "cast" );
+         };
+         funcList.insert( declNode );
+         wasmFuncList.insert( self.registerFunc( declNode ) );
+      }
+   }
+
+   // トップレベルの文を main 関数にする
+   let mainIndex, mut mainFunc = self.mod.addFunc( [], [] );
+   self.curFunc = mainFunc;
+   self.depth = 0;
+   let mut body:List<&W.Ins> = [];
+   foreach child in node.$children {
+      self.lowerStmt( child, body );
+   }
+   mainFunc.setBody( body );
+   self.curFunc = nil;
+   self.mod.exportFunc( "main", mainIndex );
+
+   // 関数の本体 (モジュールレベルの変数がすべて登録された後で変換する)
+   foreach declNode, index in funcList {
+      self.lowerFunc( declNode, wasmFuncList[ index ] );
+   }
+
+   self.stream.write( self.mod.encode() );
+}
+
+pub fn createFilter( streamName:str, stream:oStream, ast:&AstInfo.ASTInfo ) : Nodes.Filter<Opt>
+{
+   return new convFilter( streamName, stream, ast );
+}

@@ -229,7 +229,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 14193
+   return 14196
 end
 
 
@@ -557,6 +557,7 @@ usage:
   -langC: transcompile to c-lang.
   -langGo: transcompile to golang.
   -langPython: transcompile to python.
+  -langWasm: transcompile to wasm (WasmGC).
   -noLua: no transcompile to lua.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
@@ -915,6 +916,10 @@ end
                   option.convTo = Types.Lang.Python
                   option.transCtrlInfo.validLuaval = false
                   option.transCtrlInfo.validAsyncCtrl = false
+               elseif _switchExp == "-langWasm" then
+                  option.convTo = Types.Lang.Wasm
+                  option.transCtrlInfo.validLuaval = false
+                  option.transCtrlInfo.validAsyncCtrl = false
                elseif _switchExp == "-ol" then
                   do
                      local txt = getNextOp(  )
@@ -1047,7 +1052,7 @@ end
          end
       end
    end
-   Log.log( Log.Level.Log, __func__, 788, function (  )
+   Log.log( Log.Level.Log, __func__, 794, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

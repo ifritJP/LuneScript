@@ -1,0 +1,512 @@
+// -*- coding:utf-8; -*-
+/*
+MIT License
+
+Copyright (c) 2018,2020 ifritJP
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+
+/*
+wasm (WasmGC) のバイナリを生成するためのモジュール。
+
+- wasm の命令を木構造で持つ中間表現 (Ins) と、
+  モジュール (Module) をバイナリに変換する処理を提供する。
+- 文字列はバイト列として扱う。各バイトは "%c" で生成する。
+*/
+
+_lune_control default_async_all;
+_lune_control default_strict_generics;
+
+/** 1 バイトの文字列を返す。 */
+pub fn byte( val:int ) : str {
+   return "%c" ( val & 0xff );
+}
+
+/** 符号なし LEB128 */
+pub fn uleb( val:int ) : str {
+   let mut work = val;
+   let mut txt = "";
+   while true {
+      let mut bt = work & 0x7f;
+      work = work |>> 7;
+      if work ~= 0 {
+         bt = bt | 0x80;
+      }
+      txt = txt .. byte( bt );
+      if work == 0 {
+         break;
+      }
+   }
+   return txt;
+}
+
+/** 符号付き LEB128 */
+pub fn sleb( val:int ) : str {
+   let mut work = val;
+   let mut txt = "";
+   while true {
+      let bt = work & 0x7f;
+      // |>> は論理シフトなので、負の場合は上位ビットを 1 で埋める (算術シフト)
+      work = work |>> 7;
+      if val < 0 {
+         work = work | ( -1 |<< 57 );
+      }
+      let done;
+      if ( work == 0 and bt & 0x40 == 0 ) or ( work == -1 and bt & 0x40 ~= 0 ) {
+         done = true;
+      } else {
+         done = false;
+      }
+      if done {
+         txt = txt .. byte( bt );
+         break;
+      }
+      txt = txt .. byte( bt | 0x80 );
+   }
+   return txt;
+}
+
+/** 64 bit 整数をリトルエンディアンの 8 バイトにする。 */
+pub fn int64LE( val:int ) : str {
+   let mut work = val;
+   let mut txt = "";
+   for _ = 1, 8 {
+      txt = txt .. byte( work & 0xff );
+      work = work |>> 8;
+   }
+   return txt;
+}
+
+/**
+real の IEEE 754 倍精度のビット列を int で返す。
+
+2 倍・1/2 倍の操作は浮動小数点で誤差が出ないので、それを使って指数と仮数を求める。
+*/
+pub fn f64bits( val:real ) : int {
+   if val ~= val {
+      // NaN
+      return 0x7ff8000000000000;
+   }
+   let mut work = val;
+   let mut sign = 0;
+   if work < 0.0 or ( work == 0.0 and 1.0 / work < 0.0 ) {
+      sign = 1;
+      // フォーマッタ (tools/formatter) が "-work" を解析できないため、0.0 から引く
+      work = 0.0 - work;
+   }
+   if work == 0.0 {
+      return sign |<< 63;
+   }
+   if work > 1.7976931348623157e308 {
+      // inf
+      return ( sign |<< 63 ) | ( 0x7ff |<< 52 );
+   }
+   let mut exp = 0;
+   while work >= 2.0 {
+      work = work / 2.0;
+      exp = exp + 1;
+   }
+   // 条件に and を使うと NeverRet と誤判定されるため、break で抜ける
+   while work < 1.0 {
+      if exp <= -1022 {
+         break;
+      }
+      work = work * 2.0;
+      exp = exp - 1;
+   }
+   let two52 = 4503599627370496.0;
+   if work < 1.0 {
+      // 非正規化数
+      let mant = ( work * two52 )@@int;
+      return ( sign |<< 63 ) | mant;
+   }
+   let mant = ( ( work - 1.0 ) * two52 )@@int;
+   return ( sign |<< 63 ) | ( ( exp + 1023 ) |<< 52 ) | mant;
+}
+
+/** wasm の名前 (長さ + バイト列) */
+pub fn name( txt:str ) : str {
+   return uleb( #txt ) .. txt;
+}
+
+/** wasm の vector (要素数 + 要素) */
+pub fn vec( list:&List<str> ) : str {
+   let mut txt = uleb( #list );
+   foreach item in list {
+      txt = txt .. item;
+   }
+   return txt;
+}
+
+/** セクション */
+pub fn section( id:int, body:str ) : str {
+   return byte( id ) .. uleb( #body ) .. body;
+}
+
+/** 値の型の種類 */
+pub enum ValKind {
+   I32,
+   I64,
+   F64,
+   /** 参照型 (typeIdx の型への参照) */
+   Ref,
+}
+
+/** 値の型 */
+pub class ValType {
+   pri let kind:ValKind {pub};
+   /** Ref の場合の参照先の型インデックス */
+   pri let typeIdx:int {pub};
+   /** Ref の場合に null を許すかどうか */
+   pri let nullable:bool {pub};
+
+   pub fn encode() : str {
+      _switch self.kind {
+         case .I32 {
+            return byte( 0x7f );
+         }
+         case .I64 {
+            return byte( 0x7e );
+         }
+         case .F64 {
+            return byte( 0x7c );
+         }
+         case .Ref {
+            if self.nullable {
+               return byte( 0x63 ) .. sleb( self.typeIdx );
+            }
+            return byte( 0x64 ) .. sleb( self.typeIdx );
+         }
+      }
+   }
+}
+
+pub let typeI32 = new ValType( .I32, 0, false );
+pub let typeI64 = new ValType( .I64, 0, false );
+pub let typeF64 = new ValType( .F64, 0, false );
+
+/** 命令の種類 */
+pub enum InsKind {
+   /** args を評価した後に code を出力する */
+   Plain,
+   /** body を順に出力する */
+   Seq,
+   Block,
+   Loop,
+   /** args (条件) を評価した後に if/else を出力する */
+   If,
+}
+
+/**
+wasm の命令の木。
+
+子 (args) を評価してスタックに積んだ後に、自分の命令 (code) を実行する。
+最適化は、この木を対象に行う想定。
+*/
+pub class Ins {
+   pri let kind:InsKind {pub};
+   /** 命令のオペコードと即値 (Plain の場合) */
+   pri let code:str {pub};
+   /** オペランド */
+   pri let args:&List<&Ins> {pub};
+   /** Seq / Block / Loop / If の本体 */
+   pri let body:&List<&Ins> {pub};
+   /** If の else 部 */
+   pri let elseBody:&List<&Ins>! {pub};
+   /** Block / Loop / If の結果の型 (block type)。結果なしの場合 nil */
+   pri let result:&ValType! {pub};
+
+   pub fn encode() : str {
+      let mut txt = "";
+      foreach arg in self.args {
+         txt = txt .. arg.encode();
+      }
+      let blockType;
+      if! let result = self.result {
+         blockType = result.encode();
+      } else {
+         blockType = byte( 0x40 );
+      }
+      _switch self.kind {
+         case .Plain {
+            txt = txt .. self.code;
+         }
+         case .Seq {
+            foreach ins in self.body {
+               txt = txt .. ins.encode();
+            }
+         }
+         case .Block, .Loop {
+            if self.kind == .Block {
+               txt = txt .. byte( 0x02 );
+            } else {
+               txt = txt .. byte( 0x03 );
+            }
+            txt = txt .. blockType;
+            foreach ins in self.body {
+               txt = txt .. ins.encode();
+            }
+            txt = txt .. byte( 0x0b );
+         }
+         case .If {
+            txt = txt .. byte( 0x04 ) .. blockType;
+            foreach ins in self.body {
+               txt = txt .. ins.encode();
+            }
+            if! let elseBody = self.elseBody {
+               txt = txt .. byte( 0x05 );
+               foreach ins in elseBody {
+                  txt = txt .. ins.encode();
+               }
+            }
+            txt = txt .. byte( 0x0b );
+         }
+      }
+      return txt;
+   }
+}
+
+/** 命令を生成する。 */
+pub fn op( code:str, args:&List<&Ins> ) : &Ins {
+   return new Ins( .Plain, code, args, [], nil, nil );
+}
+pub fn seq( body:&List<&Ins> ) : &Ins {
+   return new Ins( .Seq, "", [], body, nil, nil );
+}
+pub fn block( body:&List<&Ins>, result:&ValType! ) : &Ins {
+   return new Ins( .Block, "", [], body, nil, result );
+}
+pub fn loop( body:&List<&Ins>, result:&ValType! ) : &Ins {
+   return new Ins( .Loop, "", [], body, nil, result );
+}
+pub fn ifElse( cond:&Ins, thenBody:&List<&Ins>, elseBody:&List<&Ins>!,
+               result:&ValType! ) : &Ins
+{
+   return new Ins( .If, "", [ cond ], thenBody, elseBody, result );
+}
+
+pub fn i32Const( val:int ) : &Ins {
+   return op( byte( 0x41 ) .. sleb( val ), [] );
+}
+pub fn i64Const( val:int ) : &Ins {
+   return op( byte( 0x42 ) .. sleb( val ), [] );
+}
+pub fn f64Const( val:real ) : &Ins {
+   return op( byte( 0x44 ) .. int64LE( f64bits( val ) ), [] );
+}
+pub fn localGet( index:int ) : &Ins {
+   return op( byte( 0x20 ) .. uleb( index ), [] );
+}
+pub fn localSet( index:int, val:&Ins ) : &Ins {
+   return op( byte( 0x21 ) .. uleb( index ), [ val ] );
+}
+pub fn globalGet( index:int ) : &Ins {
+   return op( byte( 0x23 ) .. uleb( index ), [] );
+}
+pub fn globalSet( index:int, val:&Ins ) : &Ins {
+   return op( byte( 0x24 ) .. uleb( index ), [ val ] );
+}
+pub fn call( funcIndex:int, args:&List<&Ins> ) : &Ins {
+   return op( byte( 0x10 ) .. uleb( funcIndex ), args );
+}
+pub fn br( depth:int ) : &Ins {
+   return op( byte( 0x0c ) .. uleb( depth ), [] );
+}
+pub fn brIf( depth:int, cond:&Ins ) : &Ins {
+   return op( byte( 0x0d ) .. uleb( depth ), [ cond ] );
+}
+pub fn ret( vals:&List<&Ins> ) : &Ins {
+   return op( byte( 0x0f ), vals );
+}
+pub fn drop( val:&Ins ) : &Ins {
+   return op( byte( 0x1a ), [ val ] );
+}
+pub fn unreachable() : &Ins {
+   return op( byte( 0x00 ), [] );
+}
+/** 0xfb で始まる GC の命令 */
+pub fn gcOp( sub:int, imm:str, args:&List<&Ins> ) : &Ins {
+   return op( byte( 0xfb ) .. uleb( sub ) .. imm, args );
+}
+
+/** 関数 */
+pub class Func {
+   pri let typeIdx:int {pub};
+   pri let mut localTypes:List<&ValType> {pub};
+   pri let mut body:List<&Ins> {pub};
+   /** 引数の数 */
+   pri let paramNum:int {pub};
+
+   pub fn __init( typeIdx:int, paramNum:int ) {
+      self.typeIdx = typeIdx;
+      self.paramNum = paramNum;
+      self.localTypes = [];
+      self.body = [];
+   }
+
+   /** 局所変数を追加し、そのインデックスを返す。 */
+   pub fn addLocal( valType:&ValType ) mut : int {
+      self.localTypes.insert( valType );
+      return self.paramNum + #self.localTypes - 1;
+   }
+
+   pub fn setBody( body:List<&Ins> ) mut {
+      self.body = body;
+   }
+
+   pub fn encode() : str {
+      let mut localList:List<str> = [];
+      foreach localType in self.localTypes {
+         localList.insert( uleb( 1 ) .. localType.encode() );
+      }
+      let mut txt = vec( localList );
+      foreach ins in self.body {
+         txt = txt .. ins.encode();
+      }
+      txt = txt .. byte( 0x0b );
+      return uleb( #txt ) .. txt;
+   }
+}
+
+/** モジュール */
+pub class Module {
+   /** 型定義 (エンコード済み) */
+   let mut typeList:List<str>;
+   /** 関数型のエンコード結果 → 型インデックス */
+   let mut funcTypeMap:Map<str,int>;
+   let mut importList:List<str>;
+   let mut importFuncNum:int {pub};
+   let mut funcList:List<Func>;
+   let mut globalList:List<str>;
+   let mut exportList:List<str>;
+   let mut dataList:List<str>;
+
+   pub fn __init() {
+      self.typeList = [];
+      self.funcTypeMap = {};
+      self.importList = [];
+      self.importFuncNum = 0;
+      self.funcList = [];
+      self.globalList = [];
+      self.exportList = [];
+      self.dataList = [];
+   }
+
+   /** 型を追加し、型インデックスを返す。 */
+   pub fn addType( encoded:str ) mut : int {
+      self.typeList.insert( encoded );
+      return #self.typeList - 1;
+   }
+   /** (array (mut i8)) */
+   pub fn addByteArrayType() mut : int {
+      return self.addType( byte( 0x5e ) .. byte( 0x78 ) .. byte( 0x01 ) );
+   }
+
+   /** 関数型を登録し、型インデックスを返す。同じ型は共有する。 */
+   pub fn getFuncType( params:&List<&ValType>, results:&List<&ValType> ) mut : int {
+      let mut paramList:List<str> = [];
+      foreach param in params {
+         paramList.insert( param.encode() );
+      }
+      let mut resultList:List<str> = [];
+      foreach result in results {
+         resultList.insert( result.encode() );
+      }
+      let encoded = byte( 0x60 ) .. vec( paramList ) .. vec( resultList );
+      if! let index = self.funcTypeMap[ encoded ] {
+         return index;
+      }
+      let index = self.addType( encoded );
+      self.funcTypeMap[ encoded ] = index;
+      return index;
+   }
+
+   /**
+   関数を import し、関数インデックスを返す。
+
+   import は、関数を定義する前に行なう必要がある。
+   */
+   pub fn importFunc( modName:str, funcName:str,
+                      params:&List<&ValType>, results:&List<&ValType> ) mut : int
+   {
+      if #self.funcList ~= 0 {
+         error( "import after func" );
+      }
+      let typeIdx = self.getFuncType( params, results );
+      self.importList.insert(
+         name( modName ) .. name( funcName ) .. byte( 0x00 ) .. uleb( typeIdx ) );
+      self.importFuncNum = self.importFuncNum + 1;
+      return self.importFuncNum - 1;
+   }
+
+   /** 関数を定義し、関数インデックスと関数を返す。 */
+   pub fn addFunc( params:&List<&ValType>, results:&List<&ValType> ) mut : int, Func {
+      let typeIdx = self.getFuncType( params, results );
+      let mut func = new Func( typeIdx, #params );
+      self.funcList.insert( func );
+      return self.importFuncNum + #self.funcList - 1, func;
+   }
+
+   /** 可変のグローバル変数を追加し、インデックスを返す。 */
+   pub fn addGlobal( valType:&ValType, init:&Ins ) mut : int {
+      self.globalList.insert( valType.encode() .. byte( 0x01 ) .. init.encode() .. byte( 0x0b ) );
+      return #self.globalList - 1;
+   }
+
+   pub fn exportFunc( exportName:str, funcIndex:int ) mut {
+      self.exportList.insert( name( exportName ) .. byte( 0x00 ) .. uleb( funcIndex ) );
+   }
+
+   /** passive なデータセグメントを追加し、インデックスを返す。 */
+   pub fn addData( data:str ) mut : int {
+      self.dataList.insert( byte( 0x01 ) .. uleb( #data ) .. data );
+      return #self.dataList - 1;
+   }
+
+   pub fn encode() : str {
+      let mut txt = "%sasm%s" ( byte( 0 ), byte( 1 ) .. byte( 0 ) .. byte( 0 ) .. byte( 0 ) );
+      txt = txt .. section( 1, vec( self.typeList ) );
+      if #self.importList > 0 {
+         txt = txt .. section( 2, vec( self.importList ) );
+      }
+      let mut funcTypeList:List<str> = [];
+      let mut codeList:List<str> = [];
+      foreach func in self.funcList {
+         funcTypeList.insert( uleb( func.$typeIdx ) );
+         codeList.insert( func.encode() );
+      }
+      txt = txt .. section( 3, vec( funcTypeList ) );
+      if #self.globalList > 0 {
+         txt = txt .. section( 6, vec( self.globalList ) );
+      }
+      if #self.exportList > 0 {
+         txt = txt .. section( 7, vec( self.exportList ) );
+      }
+      if #self.dataList > 0 {
+         // DataCount セクション (array.new_data のために code より前に必要)
+         txt = txt .. section( 12, uleb( #self.dataList ) );
+      }
+      txt = txt .. section( 10, vec( codeList ) );
+      if #self.dataList > 0 {
+         txt = txt .. section( 11, vec( self.dataList ) );
+      }
+      return txt;
+   }
+}

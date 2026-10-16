@@ -210,6 +210,9 @@ Lang.__allList[4] = Lang.Python
 Lang.C = 4
 Lang._val2NameMap[4] = 'C'
 Lang.__allList[5] = Lang.C
+Lang.Wasm = 5
+Lang._val2NameMap[5] = 'Wasm'
+Lang.__allList[6] = Lang.Wasm
 
 local CheckingUptodateMode = {}
 CheckingUptodateMode._name2Val = {}

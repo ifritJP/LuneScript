@@ -32,6 +32,7 @@ import lune.base.Tokenizer;
 import lune.base.convLua;
 import lune.base.convGo;
 import lune.base.convPython;
+import lune.base.convWasm;
 import lune.base.AstInfo;
 import lune.base.TransUnit;
 import lune.base.Util;
@@ -799,6 +800,10 @@ fn Front.convertToLanguage(ast:&AstInfo.ASTInfo, stream:oStream, path:str )
             self.option.testing, path, stream, ast, self.createPythonOption( path ) );
          ast.$node.processFilter( conv, new convPython.Opt( ast.$node ) );
       }
+      case .Wasm {
+         let mut conv = convWasm.createFilter( path, stream, ast );
+         ast.$node.processFilter( conv, new convWasm.Opt( ast.$node ) );
+      }
    }
 }
 
@@ -874,6 +879,9 @@ fn Front.loadTokenizerToLuaCode(
                }
                case .C {
                   suffix = ".c";
+               }
+               case .Wasm {
+                  suffix = ".wasm";
                }
             }
             when! suffix {
@@ -1389,6 +1397,16 @@ Converter.PythonConverter!
 
 
 /**
+wasm に変換しファイルに書き込む
+*/
+local fn Front.saveToWasm(
+   scriptPath:str, astResult:&Converter.CreateAstResult, mod:str ) mut :
+Converter.WasmConverter!
+{
+   return new Converter.WasmConverter( scriptPath, astResult, mod, self.option );
+}
+
+/**
 C に変換しファイルに書き込む
 */
 pub fn Front.saveToC( scriptPath:str, ast:&AstInfo.ASTInfo ) mut {
@@ -1488,12 +1506,16 @@ fn Front.saveToLua( updateInfo:UpdateInfo, baseDir:str! ) mut : Converter.Conver
 
          let mut goConv:Converter.GoConverter! = nil;
          let mut pyConv:Converter.PythonConverter! = nil;
+         let mut wasmConv:Converter.WasmConverter! = nil;
          switch self.option.convTo {
             // case .C {
             //    self.saveToC( scriptPath,  );
             // }
             case .Python {
                pyConv = self.saveToPython( scriptPath, result, mod );
+            }
+            case .Wasm {
+               wasmConv = self.saveToWasm( scriptPath, result, mod );
             }
             case .Go {
                goConv = self.saveToGo( scriptPath, result, mod );
@@ -1503,6 +1525,7 @@ fn Front.saveToLua( updateInfo:UpdateInfo, baseDir:str! ) mut : Converter.Conver
             luaConv$.saveLua$();
             goConv$.saveGo$();
             pyConv$.savePython$();
+            wasmConv$.saveWasm$();
          };
       }
       case .Uptodate( metaInfo ) {

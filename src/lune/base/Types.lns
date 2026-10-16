@@ -64,6 +64,7 @@ pub enum Lang {
    Go,
    Python,
    C,
+   Wasm,
 }
 
 /** meta ファイルの更新必要性チェックモード */

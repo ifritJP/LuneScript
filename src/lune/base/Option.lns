@@ -304,6 +304,7 @@ usage:
   -langC: transcompile to c-lang.
   -langGo: transcompile to golang.
   -langPython: transcompile to python.
+  -langWasm: transcompile to wasm (WasmGC).
   -noLua: no transcompile to lua.
   -oc: output path of the source code transcompiled to c-lang .
   --depends: output dependfile
@@ -645,6 +646,11 @@ usage:
                }
                case "-langPython" {
                   option.convTo = .Python;
+                  option.transCtrlInfo.validLuaval = false;
+                  option.transCtrlInfo.validAsyncCtrl = false;
+               }
+               case "-langWasm" {
+                  option.convTo = .Wasm;
                   option.transCtrlInfo.validLuaval = false;
                   option.transCtrlInfo.validAsyncCtrl = false;
                }

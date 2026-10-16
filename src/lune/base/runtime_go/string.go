@@ -266,6 +266,18 @@ func String_formatGo(format string, ddd []LnsAny) (string, bool) {
 		case "v":
 			txt := fmt.Sprintf(info.part+info.formType, Lns_ToString(info.arg))
 			goformat.WriteString(txt)
+		case "c":
+			// Lua の %c は 1 バイトを出力する。
+			// go の %c は rune を UTF-8 で出力するため、128 以上が 2 バイト以上になってしまう。
+			goformat.WriteString(info.part[:len(info.part)-1])
+			switch val := info.arg.(type) {
+			case LnsInt:
+				goformat.WriteByte(byte(val))
+			case LnsReal:
+				goformat.WriteByte(byte(int(val)))
+			default:
+				goformat.WriteString(fmt.Sprintf("%c", info.arg))
+			}
 		default:
 			txt := fmt.Sprintf(info.part+info.formType, info.arg)
 			goformat.WriteString(txt)

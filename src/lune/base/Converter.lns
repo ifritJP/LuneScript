@@ -37,6 +37,7 @@ import lune.base.Tokenizer;
 import lune.base.convLua;
 import lune.base.convGo;
 import lune.base.convPython;
+import lune.base.convWasm;
 import lune.base.Log;
 import lune.base.Nodes;
 import lune.base.LuneControl;
@@ -610,6 +611,51 @@ pub class PythonConverter extend Runner.Runner {
          Util.err( "can't open file -- %s" (self.path) ); // 要対応
       };
       
+      file.write( self.memStream.$txt );
+
+      file.close();
+   }
+}
+
+
+pub class WasmConverter extend Runner.Runner {
+   let mut memStream:Util.memStream;
+   let path:str;
+   let converter:ConverterFunc;
+
+   pub fn __init( scriptPath:str, astResult:&CreateAstResult, mod:str,
+                  option:&Option.Option ) __async
+   {
+      super();
+
+      let mut path = mod.gsub( "%.", "/" ) .. ".wasm";
+
+      if! let dir = option.outputDir {
+         path = "%s/%s" (dir,path);
+      }
+
+      self.path = path;
+      self.memStream = new Util.memStream();
+
+      self.converter = fn () {
+         let ast = getAstFromResult( astResult );
+         let mut conv = convWasm.createFilter( scriptPath, self.memStream, ast );
+         ast.$node.processFilter( conv, new convWasm.Opt( ast.$node ) );
+      };
+      self.start( __lns.runMode.Queue, "convwasm -- %s" (scriptPath) );
+   }
+
+   pro override fn runMain() __async mut {
+      self.converter();
+   }
+
+   pub fn saveWasm() mut {
+      __join( self );
+
+      let! mut file = io.open( self.path, "w" ) {
+         Util.err( "can't open file -- %s" (self.path) ); // 要対応
+      };
+
       file.write( self.memStream.$txt );
 
       file.close();

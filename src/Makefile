@@ -59,6 +59,8 @@ LNS_SRCS += base/dumpNode
 #LNS_SRCS += base/convCC
 LNS_SRCS += base/convGo
 LNS_SRCS += base/convPython
+LNS_SRCS += base/WasmBin
+LNS_SRCS += base/convWasm
 LNS_SRCS += base/OutputDepend
 LNS_SRCS += base/Converter
 LNS_SRCS += base/glueFilter
@@ -85,3 +87,5 @@ include $(LNS_MK_DIR)mk/go.mk
 include $(LNS_MK_DIR)mk/prof.mk
 # test-reference、lnstags、フォーマッタ
 include $(LNS_MK_DIR)mk/tools.mk
+# wasm (WasmGC) への直接変換のテスト
+include $(LNS_MK_DIR)mk/wasm.mk

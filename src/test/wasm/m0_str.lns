@@ -1,0 +1,13 @@
+// M0: 文字列
+let hello = "hello";
+let world = 'world';
+let msg = hello .. ", " .. world .. "!";
+print( msg, #msg );
+print( "tab\there", "quote\"s", 'single\'s', "back\\slash", "\65\066C" );
+print( hello == "hello", hello ~= "hello", hello < world, "abc" < "abd", "ab" < "abc", "b" > "abc" );
+print( "", #"", "x" .. "" );
+let mut acc = "";
+for _ = 1, 5 {
+   acc = acc .. "*";
+}
+print( acc );

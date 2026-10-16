@@ -191,6 +191,8 @@ local convGo = _lune.loadModule( 'lune.base.convGo' )
 
 local convPython = _lune.loadModule( 'lune.base.convPython' )
 
+local convWasm = _lune.loadModule( 'lune.base.convWasm' )
+
 local Log = _lune.loadModule( 'lune.base.Log' )
 
 local Nodes = _lune.loadModule( 'lune.base.Nodes' )
@@ -275,7 +277,7 @@ function AstCreater:__init(frontAccessor, importModuleInfo, tokenizerSrc, mod, b
       local ast = self:createAst( frontAccessor, importModuleInfo, tokenizerSrc, baseDir, option:get_stdinFile(), analyzeModule, analyzeMode, pos )
       self.ast = ast
       self.moduleInfo = createModuleInfo( ast, self.mod, self.moduleId )
-      Log.log( Log.Level.Log, __func__, 154, function (  )
+      Log.log( Log.Level.Log, __func__, 155, function (  )
       
          return string.format( "generated AST -- %s", mod)
       end
@@ -339,7 +341,7 @@ function AstCreater:getExportInfo(  )
       end
    end
    if not self.exportInfo then
-      Log.log( Log.Level.Err, __func__, 196, function (  )
+      Log.log( Log.Level.Err, __func__, 197, function (  )
       
          return string.format( "exportInfo is nil -- %s", self.mod)
       end
@@ -443,7 +445,7 @@ local function closeStreams( stream, metaStream, dependStream, metaPath, saveMet
                end
             end
             if not cont then
-               Log.log( Log.Level.Debug, __func__, 292, function (  )
+               Log.log( Log.Level.Debug, __func__, 293, function (  )
                
                   return string.format( "<%s>, <%s>", oldLine, newLine)
                end
@@ -752,6 +754,57 @@ function PythonConverter:savePython(  )
 end
 function PythonConverter._setmeta( obj )
   setmetatable( obj, { __index = PythonConverter  } )
+end
+
+
+local WasmConverter = {}
+setmetatable( WasmConverter, { __index = Runner.Runner } )
+_moduleObj.WasmConverter = WasmConverter
+function WasmConverter._new( scriptPath, astResult, mod, option )
+   local obj = {}
+   WasmConverter._setmeta( obj )
+   if obj.__init then obj:__init( scriptPath, astResult, mod, option ); end
+   return obj
+end
+function WasmConverter:__init(scriptPath, astResult, mod, option) 
+   Runner.Runner.__init( self)
+   local path = mod:gsub( "%.", "/" ) .. ".wasm"
+   do
+      local dir = option.outputDir
+      if dir ~= nil then
+         path = string.format( "%s/%s", dir, path)
+      end
+   end
+   self.path = path
+   self.memStream = Util.memStream._new()
+   self.converter = function (  )
+   
+      local ast = getAstFromResult( astResult )
+      local conv = convWasm.createFilter( scriptPath, self.memStream, ast )
+      ast:get_node():processFilter( conv, convWasm.Opt._new(ast:get_node()) )
+   end
+   
+   self:start( 1, string.format( "convwasm -- %s", scriptPath) )
+end
+function WasmConverter:runMain(  )
+
+   self.converter(  )
+end
+function WasmConverter:saveWasm(  )
+
+   
+   local file = io.open( self.path, "w" )
+   if  nil == file then
+      local _file = file
+   
+      Util.err( string.format( "can't open file -- %s", self.path) )
+   end
+   
+   file:write( self.memStream:get_txt() )
+   file:close(  )
+end
+function WasmConverter._setmeta( obj )
+  setmetatable( obj, { __index = WasmConverter  } )
 end
 
 

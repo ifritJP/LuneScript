@@ -1,0 +1,22 @@
+// M0: モジュール変数と関数の前方参照
+let mut counter = 0;
+let scale = 3;
+
+fn inc( val:int ) {
+   counter = counter + val * scale;
+}
+
+fn helper( val:int ):int {
+   inc( val );
+   return val + 1;
+}
+
+fn twice( val:int ):int {
+   return helper( val ) * 2;
+}
+
+print( twice( 5 ), counter );
+inc( 10 );
+print( counter );
+let flag = counter > 40;
+print( flag );
