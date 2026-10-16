@@ -156,6 +156,7 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local getDelimitIndex
 
 
 
@@ -623,7 +624,7 @@ function Tokenizer:readLine(  )
    return self.lineList[self.lineNo]
 end
 
-local function getDelimitIndex( txt, index )
+function getDelimitIndex( txt, index )
 
    return (string.find( txt, '[^%w_]', index ) )
 end

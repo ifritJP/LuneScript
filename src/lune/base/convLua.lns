@@ -132,6 +132,9 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut pubVarName2InfoMap: Map<str,PubVerInfo>;
    // public 関数名 → 関数情報
    pri let mut pubFuncName2InfoMap: Map<str,PubFuncInfo>;
+   /** 宣言より前で参照されている、モジュールレベルのローカル関数 */
+   pri let mut forwardRefFuncSet: Set<&Ast.SymbolInfo>;
+   pri let mut forwardRefFuncList: List<&Ast.SymbolInfo>;
    pri let mut needIndent: bool;
    pri let mut macroDepth: int;
    pri let mut macroVarSymSet: Set<&Ast.SymbolInfo>;
@@ -185,6 +188,8 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
       self.classId2MemberList = {};
       self.pubVarName2InfoMap = {};
       self.pubFuncName2InfoMap = {};
+      self.forwardRefFuncSet = (@);
+      self.forwardRefFuncList = [];
       self.pubEnumId2EnumTypeInfo = {};
       self.pubAlgeId2AlgeTypeInfo = {};
       self.needIndent = false;
@@ -1199,6 +1204,44 @@ end``` (luneSymbol, luneSymbol) );
    }
    
    let children:&List<&Nodes.Node> = node.$children;
+
+   // モジュールレベルのローカル関数を、宣言より前 (前の関数の中など) で参照している場合、
+   // "local function f" の宣言より前の時点では f が未定義になる。
+   // そのような関数は、先頭で "local f" と宣言しておき、定義時に代入する。
+   {
+      let mut funcDeclIndexMap:Map<&Ast.SymbolInfo,int> = {};
+      foreach child, index in children {
+         if! let declNode = child@@@Nodes.DeclFuncNode {
+            if declNode.$declInfo.$accessMode ~= .Global {
+               if! let symbol = declNode.$declInfo.$symbol {
+                  funcDeclIndexMap[ symbol.getOrg() ] = index;
+               }
+            }
+         }
+      }
+      let declIndexMap:&Map<&Ast.SymbolInfo,int> = funcDeclIndexMap;
+      foreach child, index in children {
+         let mut alreadySet:Set<&Nodes.Node> = (@);
+         child.visit(
+            fn ( workNode:&Nodes.Node, parent:&Nodes.Node,
+                 relation:str, depth:int ): Nodes.NodeVisitMode
+            {
+               if! let refNode = workNode@@@Nodes.ExpRefNode {
+                  let symbol = refNode.$symbolInfo.getOrg();
+                  if! let declIndex = declIndexMap[ symbol ] {
+                     if declIndex > index and not self.forwardRefFuncSet.has( symbol ) {
+                        self.forwardRefFuncSet.add( symbol );
+                        self.forwardRefFuncList.insert( symbol );
+                     }
+                  }
+               }
+               return .Child;
+            }, 0, alreadySet );
+      }
+      foreach symbol in self.forwardRefFuncList {
+         self.writeln( "local %s" ( symbol.$name ) );
+      }
+   }
 
    foreach child in children {
       filter( child, self, node );
@@ -2630,6 +2673,12 @@ pub override fn ConvFilter.processDeclFunc(
    let mut letTxt = "";
    if declInfo.get_accessMode() ~= .Global and #name ~= 0 {
       letTxt = "local ";
+      if! let symbol = declInfo.$symbol {
+         if self.forwardRefFuncSet.has( symbol.getOrg() ) {
+            // 先頭で local 宣言済み
+            letTxt = "";
+         }
+      }
    }
    self.writeRaw( string.format( "%sfunction %s( ", letTxt, name ) );
 

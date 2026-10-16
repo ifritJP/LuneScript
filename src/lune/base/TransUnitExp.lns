@@ -4942,7 +4942,8 @@ fn TransUnit.analyzeExpSub(
       exp = Nodes.LiteralIntNode.create(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
-         token, (unwrap tonumber( token.txt ## ) default 0)@@int );
+         token, Util.parseIntLiteral( token.txt ) or
+                (unwrap tonumber( token.txt ## ) default 0)@@int );
    }  
    elseif token.kind == Tokenizer.TokenKind.Real {
       exp = Nodes.LiteralRealNode.create(

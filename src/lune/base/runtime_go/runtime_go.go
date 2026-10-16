@@ -36,6 +36,31 @@ import (
 
 type LnsInt = int
 type LnsReal = float64
+
+// Lns_shiftL は LuneScript の |<< 。Lua と同じ動作にする。
+// (シフト量が 64 以上なら 0、負なら逆方向に論理シフトする)
+func Lns_shiftL(val LnsInt, count LnsInt) LnsInt {
+	if count <= -64 || count >= 64 {
+		return 0
+	}
+	if count < 0 {
+		return LnsInt(uint64(val) >> uint(-count))
+	}
+	return LnsInt(uint64(val) << uint(count))
+}
+
+// Lns_shiftR は LuneScript の |>> 。Lua と同じく論理シフトにする。
+// (シフト量が 64 以上なら 0、負なら逆方向にシフトする)
+func Lns_shiftR(val LnsInt, count LnsInt) LnsInt {
+	if count <= -64 || count >= 64 {
+		return 0
+	}
+	if count < 0 {
+		return LnsInt(uint64(val) << uint(-count))
+	}
+	return LnsInt(uint64(val) >> uint(count))
+}
+
 type LnsAny = interface{}
 
 var LnsNone interface{} = nil

@@ -78,6 +78,8 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local getFuncName
+local getDeclFuncInfo
 
 
 
@@ -146,7 +148,7 @@ function glueGenerator:getArgInfo( argNode )
 end
 
 
-local function getDeclFuncInfo( node )
+function getDeclFuncInfo( node )
 
    do
       local work = _lune.__Cast( node, 3, Nodes.DeclConstrNode )
@@ -176,7 +178,7 @@ local function getDeclFuncInfo( node )
 end
 
 
-local function getFuncName( name )
+function getFuncName( name )
 
    if name == "__free" then
       return "__gc"

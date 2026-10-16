@@ -316,6 +316,14 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local createPaser
+local ast2Lua
+local loadFromLuaTxt
+local getMetaInfo
+local getModuleId
+local outputDependInfo
+local getBaseDir
+local getParseSrcAndBaseDir
 
 
 
@@ -598,7 +606,7 @@ function Front:loadLua( path )
 end
 
 
-local function createPaser( baseDir, path, mod, stdinFile )
+function createPaser( baseDir, path, mod, stdinFile )
 
    return Tokenizer.StreamTokenizer.create( _lune.newAlge( Types.TokenizerSrc.LnsPath, {baseDir,path,mod,nil}), false, stdinFile, nil )
 end
@@ -692,7 +700,7 @@ function Front:createAst( importModuleInfo, tokenizerSrc, baseDir, mod, moduleId
 end
 
 
-local function ast2Lua( ast, streamName, stream, metaStream, convMode, inMacro, option )
+function ast2Lua( ast, streamName, stream, metaStream, convMode, inMacro, option )
 
    local conv = Converter.ast2LuaMain( ast, streamName, stream, metaStream, convMode, inMacro, option )
    conv:outputLuaAndMeta( _lune.unwrap( _lune.__Cast( ast:get_node(), 3, Nodes.RootNode )) )
@@ -724,7 +732,7 @@ local function loadFromChunk( chunk, err )
 end
 
 
-local function loadFromLuaTxt( txt )
+function loadFromLuaTxt( txt )
 
    local chunk, err
    
@@ -873,7 +881,7 @@ function MetaForBuildId.LoadFromMeta( metaPath )
 end
 
 
-local function getMetaInfo( lnsPath, mod, outdir )
+function getMetaInfo( lnsPath, mod, outdir )
 
    local moduleMetaPath = lnsPath
    if outdir ~= nil then
@@ -953,7 +961,7 @@ function Front:searchModuleFile( mod, suffix, baseDir, outputDir )
    return (foundPath:gsub( "^./", "" ) )
 end
 
-local function getModuleId( lnsPath, mod, outdir, metaInfo )
+function getModuleId( lnsPath, mod, outdir, metaInfo )
 
    local buildCount = 0
    local fileTime = Depend.getFileLastModifiedTime( lnsPath )
@@ -1776,7 +1784,7 @@ function Front:createGlue( tokenizerSrc, mod, moduleId, baseDir )
 end
 
 
-local function outputDependInfo( stream, metaInfo, mod )
+function outputDependInfo( stream, metaInfo, mod )
 
    if stream ~= nil then
       local dependInfo = OutputDepend.DependInfo._new(mod)
@@ -1974,7 +1982,7 @@ end
 _moduleObj.convertLnsCode2LuaCode = convertLnsCode2LuaCode
 
 
-local function getBaseDir( path, userProjDir )
+function getBaseDir( path, userProjDir )
 
    local projDir
    
@@ -2008,7 +2016,7 @@ local function getBaseDir( path, userProjDir )
 end
 
 
-local function getParseSrcAndBaseDir( path, userProjDir )
+function getParseSrcAndBaseDir( path, userProjDir )
 
    local workPath, projDir = getBaseDir( path, userProjDir )
    local mod = Util.scriptPath2ModuleFromProjDir( workPath, projDir )

@@ -246,6 +246,15 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local isMutable
+local failCreateLuavalWith
+local isExtType
+local isClass
+local applyGenericDefault
+local isGenericType
+local isSettableToForm
+local applyGenericList
+local registBuiltin
 
 
 
@@ -1110,7 +1119,7 @@ MutMode.Depend = 4
 MutMode._val2NameMap[4] = 'Depend'
 MutMode.__allList[5] = MutMode.Depend
 
-local function isMutable( mode )
+function isMutable( mode )
 
    do
       local _switchExp = mode
@@ -1919,7 +1928,7 @@ LuavalResult._name2Val["OK"] = LuavalResult.OK
 
 
 
-local function applyGenericDefault( processInfo, typeInfo, alt2typeMap, moduleTypeInfo )
+function applyGenericDefault( processInfo, typeInfo, alt2typeMap, moduleTypeInfo )
 
    do
       local genType = typeInfo:applyGeneric( processInfo, alt2typeMap, moduleTypeInfo )
@@ -5597,7 +5606,7 @@ end
 
 
 
-local function isGenericType( typeInfo )
+function isGenericType( typeInfo )
 
    if _lune.__Cast( typeInfo, 3, GenericTypeInfo ) then
       return true
@@ -6643,7 +6652,7 @@ function ProcessInfo:createAlternate( belongClassFlag, altIndex, txt, accessMode
 end
 
 
-local function isExtType( typeInfo )
+function isExtType( typeInfo )
 
    return typeInfo:get_kind() == TypeInfoKind.Ext or (typeInfo:get_kind() == TypeInfoKind.DDD and typeInfo:get_extedType() ~= typeInfo )
 end
@@ -6710,7 +6719,7 @@ end
 _moduleObj.getBuiltinMut = getBuiltinMut
 
 
-local function registBuiltin( idName, typeTxt, kind, worktypeInfo, typeInfoMut, nilableTypeInfo, scope )
+function registBuiltin( idName, typeTxt, kind, worktypeInfo, typeInfoMut, nilableTypeInfo, scope )
 
    local typeInfo = worktypeInfo
    if  nil == typeInfo then
@@ -6923,7 +6932,7 @@ immutableTypeSetWork[_moduleObj.builtinTypeChar]= true
 immutableTypeSetWork[_moduleObj.builtinTypeString]= true
 
 
-local function isClass( typeInfo )
+function isClass( typeInfo )
 
    return typeInfo:get_kind() == TypeInfoKind.Class and typeInfo ~= _moduleObj.builtinTypeString
 end
@@ -7103,7 +7112,7 @@ local builtinTypeNil = registBuiltin( "Nil", "nil", TypeInfoKind.Prim, nil, NilT
 _moduleObj.builtinTypeNil = builtinTypeNil
 
 
-local function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
+function failCreateLuavalWith( typeInfo, convFlag, validToCheck )
 
    if isExtType( typeInfo ) then
       return nil, true
@@ -8132,7 +8141,7 @@ function ProcessInfo:createGeneric( genSrcTypeInfo, itemTypeInfoList, moduleType
 end
 
 
-local function applyGenericList( processInfo, typeList, alt2typeMap, moduleTypeInfo )
+function applyGenericList( processInfo, typeList, alt2typeMap, moduleTypeInfo )
 
    local typeInfoList = {}
    local needNew = false
@@ -9447,7 +9456,7 @@ function TypeInfo.checkMatchTypeAsync( processInfo, dstTypeList, expTypeList, al
    return TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, allowDstShort, warnForFollowSrcIndex, alt2type, mismatchErrMess )
 end
 
-local function isSettableToForm( processInfo, typeInfo )
+function isSettableToForm( processInfo, typeInfo )
 
    if #typeInfo:get_argTypeInfoList() > 0 then
       for index, argType in ipairs( typeInfo:get_argTypeInfoList() ) do

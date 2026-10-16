@@ -234,6 +234,8 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local filter
+local isGenericType
 
 
 
@@ -487,6 +489,8 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.classId2MemberList = {}
    self.pubVarName2InfoMap = {}
    self.pubFuncName2InfoMap = {}
+   self.forwardRefFuncSet = {}
+   self.forwardRefFuncList = {}
    self.pubEnumId2EnumTypeInfo = {}
    self.pubAlgeId2AlgeTypeInfo = {}
    self.needIndent = false
@@ -572,7 +576,7 @@ function ConvFilter._setmeta( obj )
 end
 
 
-local function filter( node, filter, parent )
+function filter( node, filter, parent )
 
    node:processFilter( filter, Opt._new(parent) )
 end
@@ -1349,7 +1353,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1099, function (  )
+   Log.log( Log.Level.Log, __func__, 1104, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
    end
@@ -1440,6 +1444,51 @@ end]==], luneSymbol, luneSymbol) )
       self:writeln( "local _" )
    end
    local children = node:get_children()
+   do
+      local funcDeclIndexMap = {}
+      for index, child in ipairs( children ) do
+         do
+            local declNode = _lune.__Cast( child, 3, Nodes.DeclFuncNode )
+            if declNode ~= nil then
+               if declNode:get_declInfo():get_accessMode() ~= Ast.AccessMode.Global then
+                  do
+                     local symbol = declNode:get_declInfo():get_symbol()
+                     if symbol ~= nil then
+                        funcDeclIndexMap[symbol:getOrg(  )] = index
+                     end
+                  end
+               end
+            end
+         end
+      end
+      local declIndexMap = funcDeclIndexMap
+      for index, child in ipairs( children ) do
+         local alreadySet = {}
+         child:visit( function ( workNode, parent, relation, depth )
+         
+            do
+               local refNode = _lune.__Cast( workNode, 3, Nodes.ExpRefNode )
+               if refNode ~= nil then
+                  local symbol = refNode:get_symbolInfo():getOrg(  )
+                  do
+                     local declIndex = declIndexMap[symbol]
+                     if declIndex ~= nil then
+                        if declIndex > index and not _lune._Set_has(self.forwardRefFuncSet, symbol ) then
+                           self.forwardRefFuncSet[symbol]= true
+                           table.insert( self.forwardRefFuncList, symbol )
+                        end
+                     end
+                  end
+               end
+            end
+            return Nodes.NodeVisitMode.Child
+         end
+         , 0, alreadySet )
+      end
+      for __index, symbol in ipairs( self.forwardRefFuncList ) do
+         self:writeln( string.format( "local %s", symbol:get_name()) )
+      end
+   end
    for __index, child in ipairs( children ) do
       filter( child, self, node )
       self:writeln( "" )
@@ -1717,7 +1766,7 @@ end
 end
 
 
-local function isGenericType( typeInfo )
+function isGenericType( typeInfo )
 
    if Ast.isGenericType( typeInfo ) then
       return true
@@ -2765,6 +2814,14 @@ function ConvFilter:processDeclFunc( node, opt )
    local letTxt = ""
    if declInfo:get_accessMode(  ) ~= Ast.AccessMode.Global and #name ~= 0 then
       letTxt = "local "
+      do
+         local symbol = declInfo:get_symbol()
+         if symbol ~= nil then
+            if _lune._Set_has(self.forwardRefFuncSet, symbol:getOrg(  ) ) then
+               letTxt = ""
+            end
+         end
+      end
    end
    self:writeRaw( string.format( "%sfunction %s( ", letTxt, name ) )
    local argList = declInfo:get_argList(  )

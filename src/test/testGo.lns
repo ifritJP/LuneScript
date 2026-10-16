@@ -3252,3 +3252,16 @@ _section();
    //       print( key, val.$val );
    //    }
    // }
+
+// ビット演算 (Lua と同じ動作になること。|>> は論理シフト、シフト量が 64 以上なら 0、負なら逆方向)
+/*nolua51*/_section();
+/*nolua51*/{
+/*nolua51*/   let val = -8;
+/*nolua51*/   let mut cnt = 1;
+/*nolua51*/   print( val |>> cnt, val |<< cnt, 1 |<< 63, ( 1 |<< 63 ) |>> 63 );
+/*nolua51*/   cnt = 64;
+/*nolua51*/   print( val |>> cnt, val |<< cnt );
+/*nolua51*/   cnt = -2;
+/*nolua51*/   print( val |>> cnt, 16 |<< cnt );
+/*nolua51*/   print( 6 ~ 3, val ~ 1 );
+/*nolua51*/}

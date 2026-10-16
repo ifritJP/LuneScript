@@ -2482,7 +2482,10 @@ fn TransUnit.analyzeWhile( token: &Tokenizer.Token ) mut : Nodes.WhileNode {
    
    let cond = self.analyzeExpOneRVal( false, false## );
    let mut infinit = false;
-   if cond.$expType == Ast.builtinTypeBool {
+   // 型の比較は equals で行なう。
+   // "a and b" の型は builtinTypeBool と同じ型でも別オブジェクトの場合があり、
+   // == で比較すると無限ループと誤判定していた。
+   if cond.$expType.equals( self.processInfo, Ast.builtinTypeBool ## ) {
       if! let literal = cond.getLiteral() {
          match literal {
             case .Bool( val ) {

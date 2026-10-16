@@ -294,6 +294,70 @@ local function splitStr( txt, pattern )
 end
 _moduleObj.splitStr = splitStr
 
+local function parseIntLiteral( txt )
+
+   local val = 0
+   local pos = 1
+   local base = 10
+   local negative = false
+   if txt:sub( 1, 1 ) == "-" then
+      negative = true
+      pos = 2
+   end
+   local prefix = txt:sub( pos, pos + 1 )
+   if prefix == "0x" or prefix == "0X" then
+      base = 16
+      pos = pos + 2
+   end
+   if pos > #txt then
+      return nil
+   end
+   while pos <= #txt do
+      local code = txt:byte( pos )
+      if  nil == code then
+         local _code = code
+      
+         return nil
+      end
+      
+      local digit
+      
+      if code >= 0x30 and code <= 0x39 then
+         digit = code - 0x30
+      elseif base == 16 and code >= 0x61 and code <= 0x66 then
+         digit = code - 0x61 + 10
+      elseif base == 16 and code >= 0x41 and code <= 0x46 then
+         digit = code - 0x41 + 10
+      else
+       
+         return nil
+      end
+      if base == 10 then
+         if negative then
+            if val < -922337203685477580 or (val == -922337203685477580 and digit > 8 ) then
+               return nil
+            end
+            val = val * 10 - digit
+         else
+          
+            if val > 922337203685477580 or (val == 922337203685477580 and digit > 7 ) then
+               return nil
+            end
+            val = val * 10 + digit
+         end
+      else
+       
+         val = (val << 4 ) | digit
+      end
+      pos = pos + 1
+   end
+   if negative and base == 16 then
+      return 0 - val
+   end
+   return val
+end
+_moduleObj.parseIntLiteral = parseIntLiteral
+
 
 local function splitModule( modPath )
 
@@ -663,7 +727,7 @@ local function getReadyCode( depPath, tgtPath )
    if tgtTime >= depTime then
       return true
    end
-   Log.log( Log.Level.Warn, __func__, 426, function (  )
+   Log.log( Log.Level.Warn, __func__, 493, function (  )
    
       return string.format( "not ready %g < %g : %s, %s", tgtTime, depTime, tgtPath, depPath)
    end
