@@ -144,6 +144,8 @@ local opI32Sub = 0x6b
 
 local opI32And = 0x71
 
+local opI32Or = 0x72
+
 local opI64Eqz = 0x50
 
 local opI64Eq = 0x51
@@ -305,6 +307,8 @@ function convFilter:__init(streamName, stream, ast)
    self.fnDivI64 = 0
    self.fnModI64 = 0
    self.fnModF64 = 0
+   self.fnShiftL = 0
+   self.fnShiftR = 0
    self.sym2func = {}
    self.sym2global = {}
    self.sym2local = {}
@@ -419,6 +423,18 @@ function convFilter:setupRuntime(  )
       self.fnModF64 = index
    end
    do
+      local indexL, funcL = self.mod:addFunc( {i64, i64}, {i64} )
+      local indexR, funcR = self.mod:addFunc( {i64, i64}, {i64} )
+      local function makeBody( code, revCode )
+      
+         return {W.ifElse( plain( opI32Or, {plain( opI64LeS, {W.localGet( 1 ), W.i64Const( -64 )} ), plain( opI64GeS, {W.localGet( 1 ), W.i64Const( 64 )} )} ), {W.ret( {W.i64Const( 0 )} )}, nil, nil ), W.ifElse( plain( opI64LtS, {W.localGet( 1 ), W.i64Const( 0 )} ), {W.ret( {plain( revCode, {W.localGet( 0 ), plain( opI64Sub, {W.i64Const( 0 ), W.localGet( 1 )} )} )} )}, nil, nil ), plain( code, {W.localGet( 0 ), W.localGet( 1 )} )}
+      end
+      funcL:setBody( makeBody( opI64Shl, opI64ShrU ) )
+      funcR:setBody( makeBody( opI64ShrU, opI64Shl ) )
+      self.fnShiftL = indexL
+      self.fnShiftR = indexR
+   end
+   do
       local index, func = self.mod:addFunc( {strType, strType}, {strType} )
       local lenA = func:addLocal( i32 )
       local lenB = func:addLocal( i32 )
@@ -528,50 +544,6 @@ function convFilter:decodeString( node, txt )
       end
    end
    return result
-end
-
-function convFilter:parseIntLiteral( node, txt )
-
-   local val = 0
-   local base = 10
-   local pos = 1
-   local negative = false
-   if txt:sub( 1, 1 ) == "-" then
-      negative = true
-      pos = 2
-   end
-   local prefix = txt:sub( pos, pos + 1 )
-   if prefix == "0x" or prefix == "0X" then
-      base = 16
-      pos = pos + 2
-   end
-   while pos <= #txt do
-      local code = txt:byte( pos )
-      if  nil == code then
-         local _code = code
-      
-         break
-      end
-      
-      local digit
-      
-      if code >= 0x30 and code <= 0x39 then
-         digit = code - 0x30
-      elseif base == 16 and code >= 0x61 and code <= 0x66 then
-         digit = code - 0x61 + 10
-      elseif base == 16 and code >= 0x41 and code <= 0x46 then
-         digit = code - 0x41 + 10
-      else
-       
-         self:error( node, string.format( "illegal int literal -- %s", txt) )
-      end
-      val = val * base + digit
-      pos = pos + 1
-   end
-   if negative then
-      return 0 - val
-   end
-   return val
 end
 
 function convFilter:getExpKind( node )
@@ -716,9 +688,9 @@ function convFilter:lowerOp2( node )
          elseif _switchExp == "~" then
             return plain( opI64Xor, {exp1, exp2} )
          elseif _switchExp == "|<<" then
-            return plain( opI64Shl, {exp1, exp2} )
+            return W.call( self.fnShiftL, {exp1, exp2} )
          elseif _switchExp == "|>>" then
-            return plain( opI64ShrU, {exp1, exp2} )
+            return W.call( self.fnShiftR, {exp1, exp2} )
          end
       end
    end
@@ -921,7 +893,7 @@ function convFilter:lowerExp( node )
             self:error( node, "cast" )
          end
          
-         return W.i64Const( self:parseIntLiteral( node, literal:get_token().txt ) )
+         return W.i64Const( literal:get_num() )
       elseif _switchExp == Nodes.NodeKind.get_LiteralReal() then
          local literal = _lune.__Cast( node, 3, Nodes.LiteralRealNode )
          if  nil == literal then

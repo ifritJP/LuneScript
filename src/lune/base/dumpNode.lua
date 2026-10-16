@@ -120,6 +120,8 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local filter
+local getTypeListTxt
 
 
 
@@ -233,7 +235,7 @@ end
 _moduleObj.createFilter = createFilter
 
 
-local function filter( node, filter, opt )
+function filter( node, filter, opt )
 
    node:processFilter( filter, opt )
 end
@@ -803,7 +805,7 @@ function dumpFilter:processExpUnwrap( node, opt )
 end
 
 
-local function getTypeListTxt( typeList )
+function getTypeListTxt( typeList )
 
    local txt = ""
    for index, typeInfo in ipairs( typeList ) do

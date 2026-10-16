@@ -6,7 +6,7 @@ import LnsTypes "github.com/ifritJP/LuneScript/src/lune/base"
 var init_Ebnf bool
 var Ebnf__mod__ string
 var Ebnf_defaultEbnfPath string
-// 445: decl @lns.@Ebnf.isElement
+// 446: decl @lns.@Ebnf.isElement
 func Ebnf_isElement(_env *LnsEnv, token *LnsTypes.Types_Token) bool {
     return _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( token.Kind == LnsTypes.Types_TokenKind__Type) &&
@@ -175,7 +175,9 @@ func (self *Ebnf_TokenCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokeniz
     var token *LnsTypes.Types_Token
     token = tokenizer.GetToken(_env)
     Util_log(_env, Lns_2DDD(__func__, self.token.Txt, token.Txt, LnsTypes.Types_TokenKind_getTxt( token.Kind)))
-    if token.Txt == self.rawTxt{
+    if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( token.Txt == self.rawTxt) &&
+        _env.SetStackVal( token.Kind != LnsTypes.Types_TokenKind__Char) ).(bool)){
         Util_log(_env, Lns_2DDD(__func__, "detect", token.Txt, _env.GetVM().String_format("%d:%d", Lns_2DDD(token.Pos.LineNo, token.Pos.Column))))
         return &Code_ParseCodeRet__Detect{NewCode_CodeCoreToken(_env, token).FP}
     }
@@ -185,11 +187,11 @@ func (self *Ebnf_TokenCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokeniz
     }
     return Code_ParseCodeRet__Unmatch_Obj
 }
-// 261: decl @lns.@Ebnf.BuiltinTokenKindCore.setupCandidate
+// 262: decl @lns.@Ebnf.BuiltinTokenKindCore.setupCandidate
 func (self *Ebnf_BuiltinTokenKindCore) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,usedCoreSet *LnsSet) *Ebnf_Candidate {
     return self.candidate
 }
-// 264: decl @lns.@Ebnf.BuiltinTokenKindCore.parseCode
+// 265: decl @lns.@Ebnf.BuiltinTokenKindCore.parseCode
 func (self *Ebnf_BuiltinTokenKindCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
     __func__ := "@lns.@Ebnf.BuiltinTokenKindCore.parseCode"
     var token *LnsTypes.Types_Token
@@ -201,11 +203,11 @@ func (self *Ebnf_BuiltinTokenKindCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtr
     tokenizer.Pushback(_env)
     return Code_ParseCodeRet__Unmatch_Obj
 }
-// 291: decl @lns.@Ebnf.BuiltinTokenCore.setupCandidate
+// 292: decl @lns.@Ebnf.BuiltinTokenCore.setupCandidate
 func (self *Ebnf_BuiltinTokenCore) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,usedCoreSet *LnsSet) *Ebnf_Candidate {
     return self.candidate
 }
-// 294: decl @lns.@Ebnf.BuiltinTokenCore.parseCode
+// 295: decl @lns.@Ebnf.BuiltinTokenCore.parseCode
 func (self *Ebnf_BuiltinTokenCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
     __func__ := "@lns.@Ebnf.BuiltinTokenCore.parseCode"
     var token *LnsTypes.Types_Token
@@ -217,11 +219,11 @@ func (self *Ebnf_BuiltinTokenCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,
     tokenizer.Pushback(_env)
     return Code_ParseCodeRet__Unmatch_Obj
 }
-// 320: decl @lns.@Ebnf.BuiltinStatCore.setupCandidate
+// 321: decl @lns.@Ebnf.BuiltinStatCore.setupCandidate
 func (self *Ebnf_BuiltinStatCore) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,usedCoreSet *LnsSet) *Ebnf_Candidate {
     return self.candidate
 }
-// 323: decl @lns.@Ebnf.BuiltinStatCore.parseCode
+// 324: decl @lns.@Ebnf.BuiltinStatCore.parseCode
 func (self *Ebnf_BuiltinStatCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
     var list *LnsList
     list = NewLnsList([]LnsAny{})
@@ -247,18 +249,18 @@ func (self *Ebnf_BuiltinStatCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,t
     tokenizer.Pushback(_env)
     return &Code_ParseCodeRet__Detect{NewCode_CodeCoreStat(_env, list).FP}
 }
-// 387: decl @lns.@Ebnf.BuiltinCore.get
+// 388: decl @lns.@Ebnf.BuiltinCore.get
 func Ebnf_BuiltinCore_get_1_(_env *LnsEnv, elementName string) LnsAny {
     return Ebnf_BuiltinCore__elementNameMap.Get(elementName)
 }
-// 406: decl @lns.@Ebnf.ElementCore.create
+// 407: decl @lns.@Ebnf.ElementCore.create
 func Ebnf_ElementCore_create(_env *LnsEnv, elementName2Core *LnsMap,elementName string) Ebnf_Core {
     var core Ebnf_Core
     
     {
         _core := elementName2Core.Get(elementName)
         if _core == nil{
-            Lns_LockEnvSync( _env, 410, func () {
+            Lns_LockEnvSync( _env, 411, func () {
                 {
                     __exp := Ebnf_BuiltinCore_get_1_(_env, elementName)
                     if !Lns_IsNil( __exp ) {
@@ -276,7 +278,7 @@ func Ebnf_ElementCore_create(_env *LnsEnv, elementName2Core *LnsMap,elementName 
     }
     return core
 }
-// 421: decl @lns.@Ebnf.ElementCore.setupCandidate
+// 422: decl @lns.@Ebnf.ElementCore.setupCandidate
 func (self *Ebnf_ElementCore) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,usedCoreSet *LnsSet) *Ebnf_Candidate {
     __func__ := "@lns.@Ebnf.ElementCore.setupCandidate"
     Util_log(_env, Lns_2DDD(__func__, self.elementName))
@@ -296,7 +298,7 @@ func (self *Ebnf_ElementCore) SetupCandidate(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,
     }
     return self.candidate
 }
-// 435: decl @lns.@Ebnf.ElementCore.parseCode
+// 436: decl @lns.@Ebnf.ElementCore.parseCode
 func (self *Ebnf_ElementCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,tokenizer Code_CodeTokenizerIF,hook Code_ParseCodeHookIF,depth LnsInt) LnsAny {
     var ruleList Ebnf_RuleListIF
     
@@ -310,7 +312,7 @@ func (self *Ebnf_ElementCore) ParseCode(_env *LnsEnv, ctrl Ebnf_EbnfCtrlIF,token
     }
     return ruleList.ParseCode(_env, ctrl, tokenizer, hook, depth + 1)
 }
-// 463: decl @lns.@Ebnf.DeclTokenizer.getToken
+// 464: decl @lns.@Ebnf.DeclTokenizer.getToken
 func (self *Ebnf_DeclTokenizer) GetToken(_env *LnsEnv) LnsAny {
     var nextToken *LnsTypes.Types_Token
     nextToken = self.tokenizer.FP.GetToken(_env)
@@ -336,7 +338,7 @@ func (self *Ebnf_DeclTokenizer) GetToken(_env *LnsEnv) LnsAny {
     self.prevToken = nextToken
     return nextToken
 }
-// 487: decl @lns.@Ebnf.DeclTokenizer.err
+// 488: decl @lns.@Ebnf.DeclTokenizer.err
 func (self *Ebnf_DeclTokenizer) Err(_env *LnsEnv, mess string) {
     Util_log(_env, Lns_2DDD(_env.GetVM().String_format("%d:%d:", Lns_2DDD(self.prevToken.Pos.LineNo, self.prevToken.Pos.Column)), mess))
     _env.GetVM().OS_exit(1)
@@ -613,7 +615,7 @@ func NewEbnf_BuiltinTokenKindCore(_env *LnsEnv, arg1 string, arg2 *LnsSet2_[LnsI
     return obj
 }
 func (self *Ebnf_BuiltinTokenKindCore) Get_candidate(_env *LnsEnv) *Ebnf_Candidate{ return self.candidate }
-// 252: DeclConstr
+// 253: DeclConstr
 func (self *Ebnf_BuiltinTokenKindCore) InitEbnf_BuiltinTokenKindCore(_env *LnsEnv, elementName string,tokenKindSet *LnsSet2_[LnsInt]) {
     self.elementName = elementName
     self.tokenKindSet = tokenKindSet
@@ -670,7 +672,7 @@ func NewEbnf_BuiltinTokenCore(_env *LnsEnv, arg1 string, arg2 *LnsSet2_[string])
     return obj
 }
 func (self *Ebnf_BuiltinTokenCore) Get_candidate(_env *LnsEnv) *Ebnf_Candidate{ return self.candidate }
-// 282: DeclConstr
+// 283: DeclConstr
 func (self *Ebnf_BuiltinTokenCore) InitEbnf_BuiltinTokenCore(_env *LnsEnv, elementName string,excludeTxtSet *LnsSet2_[string]) {
     self.elementName = elementName
     self.candidate = NewEbnf_Candidate(_env, false, false)
@@ -725,7 +727,7 @@ func NewEbnf_BuiltinStatCore(_env *LnsEnv) *Ebnf_BuiltinStatCore {
     return obj
 }
 func (self *Ebnf_BuiltinStatCore) Get_candidate(_env *LnsEnv) *Ebnf_Candidate{ return self.candidate }
-// 314: DeclConstr
+// 315: DeclConstr
 func (self *Ebnf_BuiltinStatCore) InitEbnf_BuiltinStatCore(_env *LnsEnv) {
     self.candidate = NewEbnf_Candidate(_env, false, true)
     self.candidate.FP.AddExcludeTxt(_env, "")
@@ -734,7 +736,7 @@ func (self *Ebnf_BuiltinStatCore) InitEbnf_BuiltinStatCore(_env *LnsEnv) {
 
 // declaration Class -- BuiltinCore
 var Ebnf_BuiltinCore__elementNameMap *LnsMap
-// 355: decl @lns.@Ebnf.BuiltinCore.___init
+// 356: decl @lns.@Ebnf.BuiltinCore.___init
 func Ebnf_BuiltinCore____init_0_(_env *LnsEnv) {
     Ebnf_BuiltinCore__elementNameMap = NewLnsMap( map[LnsAny]LnsAny{})
     {
@@ -845,7 +847,7 @@ func NewEbnf_ElementCore(_env *LnsEnv, arg1 string) *Ebnf_ElementCore {
     return obj
 }
 func (self *Ebnf_ElementCore) Get_candidate(_env *LnsEnv) *Ebnf_Candidate{ return self.candidate }
-// 402: DeclConstr
+// 403: DeclConstr
 func (self *Ebnf_ElementCore) InitEbnf_ElementCore(_env *LnsEnv, elementName string) {
     self.elementName = elementName
     self.candidate = NewEbnf_Candidate(_env, true, false)
@@ -896,7 +898,7 @@ func NewEbnf_DeclTokenizer(_env *LnsEnv, arg1 *Ebnf_EbnfTokenizer, arg2 *LnsType
     obj.InitEbnf_DeclTokenizer(_env, arg1, arg2, arg3)
     return obj
 }
-// 455: DeclConstr
+// 456: DeclConstr
 func (self *Ebnf_DeclTokenizer) InitEbnf_DeclTokenizer(_env *LnsEnv, tokenizer *Ebnf_EbnfTokenizer,prevToken *LnsTypes.Types_Token,allElementSet *LnsSet) {
     self.tokenizer = tokenizer
     self.prevToken = prevToken

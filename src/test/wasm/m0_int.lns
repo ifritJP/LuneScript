@@ -16,3 +16,12 @@ for i = 1, 100 {
    total = total + i;
 }
 print( "sum", total );
+// シフトは Lua と同じ動作 (論理シフト、シフト量が 64 以上なら 0、負なら逆方向)
+let val = -8;
+let mut cnt = 1;
+print( val |>> cnt, val |<< cnt, 1 |<< 63, ( 1 |<< 63 ) |>> 63 );
+cnt = 64;
+print( val |>> cnt, val |<< cnt );
+cnt = -2;
+print( val |>> cnt, 16 |<< cnt );
+print( 6 ~ 3, val ~ 1 );

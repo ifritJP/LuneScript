@@ -316,6 +316,9 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local equalsType
+local pushbackTxt
+local expandVal
 
 
 
@@ -966,7 +969,7 @@ function MacroCtrl:get_expandSym2Info()
 end
 
 
-local function equalsType( typeInfo, builtinType )
+function equalsType( typeInfo, builtinType )
 
    return typeInfo:get_srcTypeInfo() == builtinType
 end
@@ -1398,7 +1401,7 @@ function MacroCtrl:regist( processInfo, node, macroScope, baseDir )
 end
 
 
-local function expandVal( tokenList, workval, pos )
+function expandVal( tokenList, workval, pos )
 
    if workval ~= nil then
       local val = workval
@@ -1426,7 +1429,7 @@ local function expandVal( tokenList, workval, pos )
    return nil
 end
 
-local function pushbackTxt( pushbackTokenizer, txtList, streamName, pos )
+function pushbackTxt( pushbackTokenizer, txtList, streamName, pos )
 
    local tokenList = {}
    for __index, txt in ipairs( txtList ) do

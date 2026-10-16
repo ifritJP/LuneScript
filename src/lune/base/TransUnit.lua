@@ -246,6 +246,11 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local getFirstStmt
+local getAnalyzingState
+local findForm
+local isMatchStringFormatType
+local getClassTypeFor
 
 
 
@@ -2554,7 +2559,7 @@ function TransUnit:analyzeWhile( token )
    local refAccessSymPosList = clearThePosForModToRef( self:get_scope(), self.moduleScope )
    local cond = self:analyzeExpOneRVal( false, false )
    local infinit = false
-   if cond:get_expType() == Ast.builtinTypeBool then
+   if cond:get_expType():equals( self.processInfo, Ast.builtinTypeBool ) then
       do
          local literal = cond:getLiteral(  )
          if literal ~= nil then
@@ -3489,7 +3494,7 @@ function TransUnit:checkOverriededMethodOfAllClass(  )
 end
 
 
-local function getAnalyzingState( typeInfo )
+function getAnalyzingState( typeInfo )
 
    if typeInfo:get_rawTxt() == "__init" and typeInfo:get_kind() == Ast.TypeInfoKind.Method then
       return AnalyzingState.Constructor
@@ -3502,7 +3507,7 @@ local function getAnalyzingState( typeInfo )
 end
 
 
-local function getFirstStmt( stmtList )
+function getFirstStmt( stmtList )
 
    for __index, stmt in ipairs( stmtList ) do
       do
@@ -7262,7 +7267,7 @@ function TransUnit:evalMacro( firstToken, macroRefNode, expList )
    return Nodes.ExpMacroExpNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, macroRefNode, macroTypeInfo, expList, stmtList )
 end
 
-local function findForm( format )
+function findForm( format )
 
    local remain = _lune.replace( format, "%%", "" )
    local opList = {}
@@ -7327,7 +7332,7 @@ FormType._val2NameMap[2] = 'Unmatch'
 FormType.__allList[3] = FormType.Unmatch
 
 
-local function isMatchStringFormatType( opKind, argType, luaVer )
+function isMatchStringFormatType( opKind, argType, luaVer )
 
    do
       local enumType = _lune.__Cast( argType:get_srcTypeInfo():get_aliasSrc(), 3, Ast.EnumTypeInfo )
@@ -8054,7 +8059,7 @@ function TransUnit:analyzeExpCont( firstToken, exp, skipFlag, canLeftExp, canCon
 end
 
 
-local function getClassTypeFor( classTypeInfo )
+function getClassTypeFor( classTypeInfo )
 
    do
       local _switchExp = classTypeInfo:get_kind(  )
@@ -9940,7 +9945,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
       exp = workExp
    end
    if token.kind == Tokenizer.TokenKind.Int then
-      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, token, math.floor((_lune.unwrapDefault( tonumber( token.txt ), 0) )) )
+      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, token, Util.parseIntLiteral( token.txt ) or math.floor((_lune.unwrapDefault( tonumber( token.txt ), 0) )) )
    elseif token.kind == Tokenizer.TokenKind.Real then
       exp = Nodes.LiteralRealNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeReal}, token, (_lune.unwrapDefault( tonumber( token.txt ), 0.0) ) )
    elseif token.kind == Tokenizer.TokenKind.Char then

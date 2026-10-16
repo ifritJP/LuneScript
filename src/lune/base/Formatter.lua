@@ -120,6 +120,7 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local filter
 
 
 
@@ -224,7 +225,7 @@ function FormatterFilter:outputHeadComment( node )
 end
 
 
-local function filter( node, filter, opt )
+function filter( node, filter, opt )
 
    filter:outputHeadComment( node )
    node:processFilter( filter, opt )

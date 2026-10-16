@@ -81,7 +81,7 @@ func WasmBin_uleb(_env *LnsEnv, val LnsInt) string {
     for  {
         var bt LnsInt
         bt = work & 0x7f
-        work = work >> 7
+        work = Lns_shiftR(work, 7)
         if work != 0{
             bt = bt | 0x80
         }
@@ -102,9 +102,9 @@ func WasmBin_sleb(_env *LnsEnv, val LnsInt) string {
     for  {
         var bt LnsInt
         bt = work & 0x7f
-        work = work >> 7
+        work = Lns_shiftR(work, 7)
         if val < 0{
-            work = work | (-1 << 57)
+            work = work | (Lns_shiftL(-1, 57))
         }
         var done bool
         if _env.PopVal( _env.IncStack() ||
@@ -138,7 +138,7 @@ func WasmBin_int64LE(_env *LnsEnv, val LnsInt) string {
         var _forTo0 LnsInt = 8
         for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
             txt = txt + WasmBin_byte(_env, work & 0xff)
-            work = work >> 8
+            work = Lns_shiftR(work, 8)
         }
     }
     return txt
@@ -159,13 +159,13 @@ func WasmBin_f64bits(_env *LnsEnv, val LnsReal) LnsInt {
             _env.SetStackVal( work == 0.0) &&
             _env.SetStackVal( 1.0 / work < 0.0) ).(bool))) ).(bool){
         sign = 1
-        work = 0.0 - work
+        work = -work
     }
     if work == 0.0{
-        return sign << 63
+        return Lns_shiftL(sign, 63)
     }
     if work > 1.7976931348623157e308{
-        return (sign << 63) | (0x7ff << 52)
+        return (Lns_shiftL(sign, 63)) | (Lns_shiftL(0x7ff, 52))
     }
     var exp LnsInt
     exp = 0
@@ -173,10 +173,9 @@ func WasmBin_f64bits(_env *LnsEnv, val LnsReal) LnsInt {
         work = work / 2.0
         exp = exp + 1
     }
-    for work < 1.0 {
-        if exp <= -1022{
-            break
-        }
+    for Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( work < 1.0) &&
+        _env.SetStackVal( exp > -1022) ).(bool)) {
         work = work * 2.0
         exp = exp - 1
     }
@@ -185,19 +184,19 @@ func WasmBin_f64bits(_env *LnsEnv, val LnsReal) LnsInt {
     if work < 1.0{
         var mant LnsInt
         mant = (LnsInt)((work * two52))
-        return (sign << 63) | mant
+        return (Lns_shiftL(sign, 63)) | mant
     }
     var mant LnsInt
     mant = (LnsInt)(((work - 1.0) * two52))
-    return (sign << 63) | ((exp + 1023) << 52) | mant
+    return (Lns_shiftL(sign, 63)) | (Lns_shiftL((exp + 1023), 52)) | mant
 }
 
-// 145: decl @lune.@base.@WasmBin.name
+// 140: decl @lune.@base.@WasmBin.name
 func WasmBin_name(_env *LnsEnv, txt string) string {
     return WasmBin_uleb(_env, len(txt)) + txt
 }
 
-// 150: decl @lune.@base.@WasmBin.vec
+// 145: decl @lune.@base.@WasmBin.vec
 func WasmBin_vec(_env *LnsEnv, list *LnsList2_[string]) string {
     var txt string
     txt = WasmBin_uleb(_env, list.Len())
@@ -208,107 +207,107 @@ func WasmBin_vec(_env *LnsEnv, list *LnsList2_[string]) string {
     return txt
 }
 
-// 159: decl @lune.@base.@WasmBin.section
+// 154: decl @lune.@base.@WasmBin.section
 func WasmBin_section(_env *LnsEnv, id LnsInt,body string) string {
     return WasmBin_byte(_env, id) + WasmBin_uleb(_env, len(body)) + body
 }
 
-// 287: decl @lune.@base.@WasmBin.op
+// 282: decl @lune.@base.@WasmBin.op
 func WasmBin_op(_env *LnsEnv, code string,args *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
     return NewWasmBin_Ins(_env, WasmBin_InsKind__Plain, code, args, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}), nil, nil)
 }
 
-// 290: decl @lune.@base.@WasmBin.seq
+// 285: decl @lune.@base.@WasmBin.seq
 func WasmBin_seq(_env *LnsEnv, body *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
     return NewWasmBin_Ins(_env, WasmBin_InsKind__Seq, "", NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}), body, nil, nil)
 }
 
-// 293: decl @lune.@base.@WasmBin.block
+// 288: decl @lune.@base.@WasmBin.block
 func WasmBin_block(_env *LnsEnv, body *LnsList2_[*WasmBin_Ins],result LnsAny) *WasmBin_Ins {
     return NewWasmBin_Ins(_env, WasmBin_InsKind__Block, "", NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}), body, nil, result)
 }
 
-// 296: decl @lune.@base.@WasmBin.loop
+// 291: decl @lune.@base.@WasmBin.loop
 func WasmBin_loop(_env *LnsEnv, body *LnsList2_[*WasmBin_Ins],result LnsAny) *WasmBin_Ins {
     return NewWasmBin_Ins(_env, WasmBin_InsKind__Loop, "", NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}), body, nil, result)
 }
 
-// 299: decl @lune.@base.@WasmBin.ifElse
+// 294: decl @lune.@base.@WasmBin.ifElse
 func WasmBin_ifElse(_env *LnsEnv, cond *WasmBin_Ins,thenBody *LnsList2_[*WasmBin_Ins],elseBody LnsAny,result LnsAny) *WasmBin_Ins {
     return NewWasmBin_Ins(_env, WasmBin_InsKind__If, "", NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](cond)), thenBody, elseBody, result)
 }
 
-// 305: decl @lune.@base.@WasmBin.i32Const
+// 300: decl @lune.@base.@WasmBin.i32Const
 func WasmBin_i32Const(_env *LnsEnv, val LnsInt) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x41) + WasmBin_sleb(_env, val), NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
 }
 
-// 308: decl @lune.@base.@WasmBin.i64Const
+// 303: decl @lune.@base.@WasmBin.i64Const
 func WasmBin_i64Const(_env *LnsEnv, val LnsInt) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x42) + WasmBin_sleb(_env, val), NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
 }
 
-// 311: decl @lune.@base.@WasmBin.f64Const
+// 306: decl @lune.@base.@WasmBin.f64Const
 func WasmBin_f64Const(_env *LnsEnv, val LnsReal) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x44) + WasmBin_int64LE(_env, WasmBin_f64bits(_env, val)), NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
 }
 
-// 314: decl @lune.@base.@WasmBin.localGet
+// 309: decl @lune.@base.@WasmBin.localGet
 func WasmBin_localGet(_env *LnsEnv, index LnsInt) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x20) + WasmBin_uleb(_env, index), NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
 }
 
-// 317: decl @lune.@base.@WasmBin.localSet
+// 312: decl @lune.@base.@WasmBin.localSet
 func WasmBin_localSet(_env *LnsEnv, index LnsInt,val *WasmBin_Ins) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x21) + WasmBin_uleb(_env, index), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](val)))
 }
 
-// 320: decl @lune.@base.@WasmBin.globalGet
+// 315: decl @lune.@base.@WasmBin.globalGet
 func WasmBin_globalGet(_env *LnsEnv, index LnsInt) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x23) + WasmBin_uleb(_env, index), NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
 }
 
-// 323: decl @lune.@base.@WasmBin.globalSet
+// 318: decl @lune.@base.@WasmBin.globalSet
 func WasmBin_globalSet(_env *LnsEnv, index LnsInt,val *WasmBin_Ins) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x24) + WasmBin_uleb(_env, index), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](val)))
 }
 
-// 326: decl @lune.@base.@WasmBin.call
+// 321: decl @lune.@base.@WasmBin.call
 func WasmBin_call(_env *LnsEnv, funcIndex LnsInt,args *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x10) + WasmBin_uleb(_env, funcIndex), args)
 }
 
-// 329: decl @lune.@base.@WasmBin.br
+// 324: decl @lune.@base.@WasmBin.br
 func WasmBin_br(_env *LnsEnv, depth LnsInt) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x0c) + WasmBin_uleb(_env, depth), NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
 }
 
-// 332: decl @lune.@base.@WasmBin.brIf
+// 327: decl @lune.@base.@WasmBin.brIf
 func WasmBin_brIf(_env *LnsEnv, depth LnsInt,cond *WasmBin_Ins) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x0d) + WasmBin_uleb(_env, depth), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](cond)))
 }
 
-// 335: decl @lune.@base.@WasmBin.ret
+// 330: decl @lune.@base.@WasmBin.ret
 func WasmBin_ret(_env *LnsEnv, vals *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x0f), vals)
 }
 
-// 338: decl @lune.@base.@WasmBin.drop
+// 333: decl @lune.@base.@WasmBin.drop
 func WasmBin_drop(_env *LnsEnv, val *WasmBin_Ins) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x1a), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](val)))
 }
 
-// 341: decl @lune.@base.@WasmBin.unreachable
+// 336: decl @lune.@base.@WasmBin.unreachable
 func WasmBin_unreachable(_env *LnsEnv) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0x00), NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
 }
 
-// 345: decl @lune.@base.@WasmBin.gcOp
+// 340: decl @lune.@base.@WasmBin.gcOp
 func WasmBin_gcOp(_env *LnsEnv, sub LnsInt,imm string,args *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
     return WasmBin_op(_env, WasmBin_byte(_env, 0xfb) + WasmBin_uleb(_env, sub) + imm, args)
 }
 
-// 180: decl @lune.@base.@WasmBin.ValType.encode
+// 175: decl @lune.@base.@WasmBin.ValType.encode
 func (self *WasmBin_ValType) Encode(_env *LnsEnv) string {
     if _switch0 := self.kind; _switch0 == WasmBin_ValKind__I32 {
         return WasmBin_byte(_env, 0x7f)
@@ -325,7 +324,7 @@ func (self *WasmBin_ValType) Encode(_env *LnsEnv) string {
 // insert a dummy
     return ""
 }
-// 236: decl @lune.@base.@WasmBin.Ins.encode
+// 231: decl @lune.@base.@WasmBin.Ins.encode
 func (self *WasmBin_Ins) Encode(_env *LnsEnv) string {
     var txt string
     txt = ""
@@ -383,16 +382,16 @@ func (self *WasmBin_Ins) Encode(_env *LnsEnv) string {
     }
     return txt
 }
-// 365: decl @lune.@base.@WasmBin.Func.addLocal
+// 360: decl @lune.@base.@WasmBin.Func.addLocal
 func (self *WasmBin_Func) AddLocal(_env *LnsEnv, valType *WasmBin_ValType) LnsInt {
     self.localTypes.Insert(valType)
     return self.paramNum + self.localTypes.Len() - 1
 }
-// 370: decl @lune.@base.@WasmBin.Func.setBody
+// 365: decl @lune.@base.@WasmBin.Func.setBody
 func (self *WasmBin_Func) SetBody(_env *LnsEnv, body *LnsList2_[*WasmBin_Ins]) {
     self.body = body
 }
-// 374: decl @lune.@base.@WasmBin.Func.encode
+// 369: decl @lune.@base.@WasmBin.Func.encode
 func (self *WasmBin_Func) Encode(_env *LnsEnv) string {
     var localList *LnsList2_[string]
     localList = NewLnsList2_[string]([]string{})
@@ -409,16 +408,16 @@ func (self *WasmBin_Func) Encode(_env *LnsEnv) string {
     txt = txt + WasmBin_byte(_env, 0x0b)
     return WasmBin_uleb(_env, len(txt)) + txt
 }
-// 413: decl @lune.@base.@WasmBin.Module.addType
+// 408: decl @lune.@base.@WasmBin.Module.addType
 func (self *WasmBin_Module) AddType(_env *LnsEnv, encoded string) LnsInt {
     self.typeList.Insert(encoded)
     return self.typeList.Len() - 1
 }
-// 418: decl @lune.@base.@WasmBin.Module.addByteArrayType
+// 413: decl @lune.@base.@WasmBin.Module.addByteArrayType
 func (self *WasmBin_Module) AddByteArrayType(_env *LnsEnv) LnsInt {
     return self.FP.AddType(_env, WasmBin_byte(_env, 0x5e) + WasmBin_byte(_env, 0x78) + WasmBin_byte(_env, 0x01))
 }
-// 423: decl @lune.@base.@WasmBin.Module.getFuncType
+// 418: decl @lune.@base.@WasmBin.Module.getFuncType
 func (self *WasmBin_Module) GetFuncType(_env *LnsEnv, params *LnsList2_[*WasmBin_ValType],results *LnsList2_[*WasmBin_ValType]) LnsInt {
     var paramList *LnsList2_[string]
     paramList = NewLnsList2_[string]([]string{})
@@ -446,7 +445,7 @@ func (self *WasmBin_Module) GetFuncType(_env *LnsEnv, params *LnsList2_[*WasmBin
     self.funcTypeMap.Set(encoded,index)
     return index
 }
-// 446: decl @lune.@base.@WasmBin.Module.importFunc
+// 441: decl @lune.@base.@WasmBin.Module.importFunc
 func (self *WasmBin_Module) ImportFunc(_env *LnsEnv, modName string,funcName string,params *LnsList2_[*WasmBin_ValType],results *LnsList2_[*WasmBin_ValType]) LnsInt {
     if self.funcList.Len() != 0{
         panic("import after func")
@@ -457,7 +456,7 @@ func (self *WasmBin_Module) ImportFunc(_env *LnsEnv, modName string,funcName str
     self.importFuncNum = self.importFuncNum + 1
     return self.importFuncNum - 1
 }
-// 460: decl @lune.@base.@WasmBin.Module.addFunc
+// 455: decl @lune.@base.@WasmBin.Module.addFunc
 func (self *WasmBin_Module) AddFunc(_env *LnsEnv, params *LnsList2_[*WasmBin_ValType],results *LnsList2_[*WasmBin_ValType])(LnsInt, *WasmBin_Func) {
     var typeIdx LnsInt
     typeIdx = self.FP.GetFuncType(_env, params, results)
@@ -466,21 +465,21 @@ func (self *WasmBin_Module) AddFunc(_env *LnsEnv, params *LnsList2_[*WasmBin_Val
     self.funcList.Insert(_func)
     return self.importFuncNum + self.funcList.Len() - 1, _func
 }
-// 468: decl @lune.@base.@WasmBin.Module.addGlobal
+// 463: decl @lune.@base.@WasmBin.Module.addGlobal
 func (self *WasmBin_Module) AddGlobal(_env *LnsEnv, valType *WasmBin_ValType,init *WasmBin_Ins) LnsInt {
     self.globalList.Insert(valType.FP.Encode(_env) + WasmBin_byte(_env, 0x01) + init.FP.Encode(_env) + WasmBin_byte(_env, 0x0b))
     return self.globalList.Len() - 1
 }
-// 473: decl @lune.@base.@WasmBin.Module.exportFunc
+// 468: decl @lune.@base.@WasmBin.Module.exportFunc
 func (self *WasmBin_Module) ExportFunc(_env *LnsEnv, exportName string,funcIndex LnsInt) {
     self.exportList.Insert(WasmBin_name(_env, exportName) + WasmBin_byte(_env, 0x00) + WasmBin_uleb(_env, funcIndex))
 }
-// 478: decl @lune.@base.@WasmBin.Module.addData
+// 473: decl @lune.@base.@WasmBin.Module.addData
 func (self *WasmBin_Module) AddData(_env *LnsEnv, data string) LnsInt {
     self.dataList.Insert(WasmBin_byte(_env, 0x01) + WasmBin_uleb(_env, len(data)) + data)
     return self.dataList.Len() - 1
 }
-// 483: decl @lune.@base.@WasmBin.Module.encode
+// 478: decl @lune.@base.@WasmBin.Module.encode
 func (self *WasmBin_Module) Encode(_env *LnsEnv) string {
     var txt string
     txt = _env.GetVM().String_format("%sasm%s", Lns_2DDD(WasmBin_byte(_env, 0), WasmBin_byte(_env, 1) + WasmBin_byte(_env, 0) + WasmBin_byte(_env, 0) + WasmBin_byte(_env, 0)))
@@ -689,7 +688,7 @@ func (self *WasmBin_Func) Get_typeIdx(_env *LnsEnv) LnsInt{ return self.typeIdx 
 func (self *WasmBin_Func) Get_localTypes(_env *LnsEnv) *LnsList2_[*WasmBin_ValType]{ return self.localTypes }
 func (self *WasmBin_Func) Get_body(_env *LnsEnv) *LnsList2_[*WasmBin_Ins]{ return self.body }
 func (self *WasmBin_Func) Get_paramNum(_env *LnsEnv) LnsInt{ return self.paramNum }
-// 357: DeclConstr
+// 352: DeclConstr
 func (self *WasmBin_Func) InitWasmBin_Func(_env *LnsEnv, typeIdx LnsInt,paramNum LnsInt) {
     self.typeIdx = typeIdx
     self.paramNum = paramNum
@@ -756,7 +755,7 @@ func NewWasmBin_Module(_env *LnsEnv) *WasmBin_Module {
     return obj
 }
 func (self *WasmBin_Module) Get_importFuncNum(_env *LnsEnv) LnsInt{ return self.importFuncNum }
-// 401: DeclConstr
+// 396: DeclConstr
 func (self *WasmBin_Module) InitWasmBin_Module(_env *LnsEnv) {
     self.typeList = NewLnsList2_[string]([]string{})
     self.funcTypeMap = NewLnsMap2_[string,LnsInt]( map[string]LnsInt{})

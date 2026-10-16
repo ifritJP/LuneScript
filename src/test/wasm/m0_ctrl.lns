@@ -48,3 +48,12 @@ while k < 3 {
    k = k + 1;
 }
 print( "k", k );
+// 条件に and を使った while (到達不能と誤判定されないこと)
+fn countUp( limit:int ):int {
+   let mut num = 0;
+   while num < 100 and num < limit {
+      num = num + 1;
+   }
+   return num;
+}
+print( "countUp", countUp( 7 ) );

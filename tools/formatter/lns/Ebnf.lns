@@ -231,7 +231,8 @@ pub class TokenCore extend (Core) {
    {
       let token = tokenizer.getToken();
       Util.log( __func__, self.token.txt, token.txt, token.kind.$_txt );
-      if token.txt == self.rawTxt {
+      // 文字リテラル (?- など) は、文字列が終端記号と同じでも終端記号として扱わない
+      if token.txt == self.rawTxt and token.kind ~= .Char {
          Util.log( __func__, "detect", token.txt,
                    "%d:%d" (token.pos.lineNo, token.pos.column ) );
          return .Detect( new Code.CodeCoreToken( token ) );

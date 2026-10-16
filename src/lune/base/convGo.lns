@@ -6172,11 +6172,23 @@ pub override fn convFilter.processExpOp2(
          if! Ast.bitBinOpMap[ opTxt ] {
             // ビット演算の処理
             switch _exp {
-               case .LShift {
-                  opTxt = "<<";
+               case .LShift, .RShift {
+                  // シフトは Lua と同じ動作にするため、ランタイムの関数で処理する。
+                  // (論理シフト。シフト量が 64 以上なら 0、負なら逆方向にシフトする)
+                  if _exp == .LShift {
+                     self.writeRaw( "Lns_shiftL(" );
+                  } else {
+                     self.writeRaw( "Lns_shiftR(" );
+                  }
+                  filter( node.$exp1, self, node );
+                  self.writeRaw( ", " );
+                  filter( node.$exp2, self, node );
+                  self.writeRaw( ")" );
+                  return;
                }
-               case .RShift {
-                  opTxt = ">>";
+               case .Xor {
+                  // go の排他的論理和は ^
+                  opTxt = "^";
                }
             }
             //self.accessPrimVal( node.$exp1, node );

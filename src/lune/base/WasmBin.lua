@@ -134,7 +134,7 @@ local function f64bits( val )
    local sign = 0
    if work < 0.0 or (work == 0.0 and 1.0 / work < 0.0 ) then
       sign = 1
-      work = 0.0 - work
+      work = -work
    end
    if work == 0.0 then
       return sign << 63
@@ -147,10 +147,7 @@ local function f64bits( val )
       work = work / 2.0
       exp = exp + 1
    end
-   while work < 1.0 do
-      if exp <= -1022 then
-         break
-      end
+   while work < 1.0 and exp > -1022 do
       work = work * 2.0
       exp = exp - 1
    end

@@ -128,6 +128,73 @@ pub fn splitStr( txt:str, pattern:str ) : List<str> {
    return list;
 }
 
+/**
+整数リテラルの文字列 (10 進数または 0x で始まる 16 進数) の値を返す。
+先頭に - が付いている場合は負の数とする。
+
+tonumber() は real を返すため、int にキャストすると、
+go 版では float64 を経由して 2^53 を超える値の精度が落ちる。
+これを避けるため、文字列から直接値を求める。
+
+16 進数は、Lua と同じく 2^64 を法として扱う。
+10 進数で int の範囲を超える場合と、不正な文字列の場合は nil を返す。
+*/
+pub fn parseIntLiteral( txt:str ) : int! {
+   let mut val = 0;
+   let mut pos = 1;
+   let mut base = 10;
+   let mut negative = false;
+   if txt.sub( 1, 1 ) == "-" {
+      negative = true;
+      pos = 2;
+   }
+   let prefix = txt.sub( pos, pos + 1 );
+   if prefix == "0x" or prefix == "0X" {
+      base = 16;
+      pos = pos + 2;
+   }
+   if pos > #txt {
+      return nil;
+   }
+   while pos <= #txt {
+      let! code = txt.byte( pos ## ) {
+         return nil;
+      };
+      let mut digit;
+      if code >= 0x30 and code <= 0x39 {
+         digit = code - 0x30;
+      } elseif base == 16 and code >= 0x61 and code <= 0x66 {
+         digit = code - 0x61 + 10;
+      } elseif base == 16 and code >= 0x41 and code <= 0x46 {
+         digit = code - 0x41 + 10;
+      } else {
+         return nil;
+      }
+      if base == 10 {
+         // int の範囲 (-9223372036854775808 〜 9223372036854775807) を超えないか確認する。
+         // 最小値を表せるように、負の数は負の方向に積み上げる。
+         if negative {
+            if val < -922337203685477580 or ( val == -922337203685477580 and digit > 8 ) {
+               return nil;
+            }
+            val = val * 10 - digit;
+         } else {
+            if val > 922337203685477580 or ( val == 922337203685477580 and digit > 7 ) {
+               return nil;
+            }
+            val = val * 10 + digit;
+         }
+      } else {
+         val = ( val |<< 4 ) | digit;
+      }
+      pos = pos + 1;
+   }
+   if negative and base == 16 {
+      return 0 - val;
+   }
+   return val;
+}
+
 pub fn splitModule( modPath:str ) : List<str> {
    return splitStr( modPath, '[^%./:]+' );
 }

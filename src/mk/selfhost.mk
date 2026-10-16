@@ -159,6 +159,10 @@ release-check:
 	$(MAKE) test-registered-rockspec
 
 
+# LNSDIR は make install 時に lune.mk (setup.lua が生成) で設定される。
+# 未設定のまま make build すると "cd ;" (ホームディレクトリへの移動) になるので、既定値を . にする。
+LNSDIR ?= .
+
 build:
 	$(call selfhost_build,$(LNSC),$(LNSDIR),.)
 

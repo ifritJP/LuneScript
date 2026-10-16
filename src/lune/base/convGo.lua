@@ -235,6 +235,18 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local concatGLSym
+local normalizeSym
+local isInnerDeclType
+local isClosure
+local isAnyType
+local getOrgTypeInfo
+local filter
+local getExpListKind
+local getAddEnvArg
+local isRetGenerics
+local str2gostr
+local getLnsItemKind
 
 
 
@@ -562,7 +574,7 @@ function convFilter:getEnvArgDecl( argLen )
 end
 
 
-local function getAddEnvArg( argLen, addEnvArg )
+function getAddEnvArg( argLen, addEnvArg )
 
    if addEnvArg then
       local txt = "_env"
@@ -575,13 +587,13 @@ local function getAddEnvArg( argLen, addEnvArg )
 end
 
 
-local function filter( node, filter, parent )
+function filter( node, filter, parent )
 
    node:processFilter( filter, Opt._new(parent) )
 end
 
 
-local function isAnyType( typeInfo )
+function isAnyType( typeInfo )
 
    local work = typeInfo:get_srcTypeInfo()
    if typeInfo:get_nilable() or work == Ast.builtinTypeStem then
@@ -606,7 +618,7 @@ local function isAnyType( typeInfo )
 end
 
 
-local function isClosure( typeInfo )
+function isClosure( typeInfo )
 
    local scope = typeInfo:get_scope()
    if  nil == scope then
@@ -652,7 +664,7 @@ SymbolKind.Var = { "Var", {{}}}
 SymbolKind._name2Val["Var"] = SymbolKind.Var
 
 
-local function concatGLSym( name, external )
+function concatGLSym( name, external )
 
    if external then
       local frontChar = string.byte( name, 1 )
@@ -735,7 +747,7 @@ func main() {
 end
 _moduleObj.outputGoMain = outputGoMain
 
-local function isInnerDeclType( typeInfo )
+function isInnerDeclType( typeInfo )
 
    if typeInfo:get_kind() == Ast.TypeInfoKind.FormFunc then
       return typeInfo:get_parentInfo():get_kind() ~= Ast.TypeInfoKind.Module
@@ -835,7 +847,7 @@ function convFilter:needPrefix( typeInfo )
 end
 
 
-local function normalizeSym( name )
+function normalizeSym( name )
 
    if _lune._Set_has(golanKeywordSet, name ) then
       return string.format( "_%s", name)
@@ -1070,7 +1082,7 @@ function convFilter:getModuleSym( moduleTypeInfo, addDot )
    return ""
 end
 
-local function str2gostr( txt )
+function str2gostr( txt )
 
    local work = txt
    if string.find( work, '^```' ) then
@@ -1084,7 +1096,7 @@ local function str2gostr( txt )
 end
 
 
-local function getOrgTypeInfo( typeInfo )
+function getOrgTypeInfo( typeInfo )
 
    do
       local enumType = _lune.__Cast( typeInfo:get_srcTypeInfo():get_nonnilableType():get_aliasSrc(), 3, Ast.EnumTypeInfo )
@@ -1524,7 +1536,7 @@ ExpListKind._val2NameMap[2] = 'Conv'
 ExpListKind.__allList[3] = ExpListKind.Conv
 
 
-local function getExpListKind( dstTypeList, node, addEnvArg )
+function getExpListKind( dstTypeList, node, addEnvArg )
 
    if addEnvArg and node:get_mRetExp() then
       return ExpListKind.Conv
@@ -1828,7 +1840,7 @@ func lns_NilAccFinCall_%s( ret LnsAny ) (%s) {
 end
 
 
-local function isRetGenerics( node )
+function isRetGenerics( node )
 
    local funcType = node:get_func():get_expType()
    for index, retType in ipairs( funcType:get_retTypeInfoList() ) do
@@ -4729,7 +4741,7 @@ end
 local type2LnsItemKindMap = {[Ast.builtinTypeInt] = "LnsItemKindInt", [Ast.builtinTypeReal] = "LnsItemKindReal", [Ast.builtinTypeString] = "LnsItemKindStr"}
 
 
-local function getLnsItemKind( typeInfo )
+function getLnsItemKind( typeInfo )
 
    do
       local kind = type2LnsItemKindMap[typeInfo]
@@ -6389,10 +6401,20 @@ function convFilter:processExpOp2( node, opt )
                if _exp ~= nil then
                   do
                      local _switchExp = _exp
-                     if _switchExp == Ast.BitOpKind.LShift then
-                        opTxt = "<<"
-                     elseif _switchExp == Ast.BitOpKind.RShift then
-                        opTxt = ">>"
+                     if _switchExp == Ast.BitOpKind.LShift or _switchExp == Ast.BitOpKind.RShift then
+                        if _exp == Ast.BitOpKind.LShift then
+                           self:writeRaw( "Lns_shiftL(" )
+                        else
+                         
+                           self:writeRaw( "Lns_shiftR(" )
+                        end
+                        filter( node:get_exp1(), self, node )
+                        self:writeRaw( ", " )
+                        filter( node:get_exp2(), self, node )
+                        self:writeRaw( ")" )
+                        return 
+                     elseif _switchExp == Ast.BitOpKind.Xor then
+                        opTxt = "^"
                      end
                   end
                   filter( node:get_exp1(), self, node )

@@ -70,6 +70,7 @@ let opI32GeS = 0x4e;
 let opI32Add = 0x6a;
 let opI32Sub = 0x6b;
 let opI32And = 0x71;
+let opI32Or = 0x72;
 let opI64Eqz = 0x50;
 let opI64Eq = 0x51;
 let opI64Ne = 0x52;
@@ -162,6 +163,8 @@ class convFilter extend Nodes.Filter<Opt> {
    let mut fnDivI64:int;
    let mut fnModI64:int;
    let mut fnModF64:int;
+   let mut fnShiftL:int;
+   let mut fnShiftR:int;
 
    let mut sym2func:Map<&Ast.SymbolInfo,int>;
    let mut sym2global:Map<&Ast.SymbolInfo,int>;
@@ -203,6 +206,8 @@ class convFilter extend Nodes.Filter<Opt> {
       self.fnDivI64 = 0;
       self.fnModI64 = 0;
       self.fnModF64 = 0;
+      self.fnShiftL = 0;
+      self.fnShiftR = 0;
 
       self.sym2func = {};
       self.sym2global = {};
@@ -336,6 +341,29 @@ fn convFilter.setupRuntime() mut {
                                   [ plain( opF64Div, [ W.localGet( 0 ), W.localGet( 1 ) ] ) ] ),
                            W.localGet( 1 ) ] ) ] ) ] );
       self.fnModF64 = index;
+   }
+   // シフト (Lua と同じ動作。論理シフトで、シフト量が 64 以上なら 0、負なら逆方向)
+   {
+      let indexL, mut funcL = self.mod.addFunc( [ i64, i64 ], [ i64 ] );
+      let indexR, mut funcR = self.mod.addFunc( [ i64, i64 ], [ i64 ] );
+      fn makeBody( code:int, revCode:int ) : List<&W.Ins> {
+         return [
+            W.ifElse( plain( opI32Or,
+                             [ plain( opI64LeS, [ W.localGet( 1 ), W.i64Const( -64 ) ] ),
+                               plain( opI64GeS, [ W.localGet( 1 ), W.i64Const( 64 ) ] ) ] ),
+                      [ W.ret( [ W.i64Const( 0 ) ] ) ], nil, nil ),
+            W.ifElse( plain( opI64LtS, [ W.localGet( 1 ), W.i64Const( 0 ) ] ),
+                      [ W.ret( [ plain( revCode,
+                                        [ W.localGet( 0 ),
+                                          plain( opI64Sub, [ W.i64Const( 0 ),
+                                                             W.localGet( 1 ) ] ) ] ) ] ) ],
+                      nil, nil ),
+            plain( code, [ W.localGet( 0 ), W.localGet( 1 ) ] ) ];
+      }
+      funcL.setBody( makeBody( opI64Shl, opI64ShrU ) );
+      funcR.setBody( makeBody( opI64ShrU, opI64Shl ) );
+      self.fnShiftL = indexL;
+      self.fnShiftR = indexR;
    }
    // 文字列の連結
    {
@@ -482,50 +510,6 @@ fn convFilter.decodeString( node:&Nodes.Node, txt:str ) : str {
    return result;
 }
 
-/**
-整数リテラルの値を、トークンの文字列から求める。
-
-LiteralIntNode.$num は tonumber() の結果を int にキャストした値で、
-go 版の lnsc では float64 を経由するため、2^53 を超える値の精度が落ちる。
-*/
-fn convFilter.parseIntLiteral( node:&Nodes.Node, txt:str ) : int {
-   let mut val = 0;
-   let mut base = 10;
-   let mut pos = 1;
-   let mut negative = false;
-   if txt.sub( 1, 1 ) == "-" {
-      // 負の数のリテラルは、トークンに "-" が含まれる場合がある
-      negative = true;
-      pos = 2;
-   }
-   let prefix = txt.sub( pos, pos + 1 );
-   if prefix == "0x" or prefix == "0X" {
-      base = 16;
-      pos = pos + 2;
-   }
-   while pos <= #txt {
-      let! code = txt.byte( pos ## ) {
-         break;
-      };
-      let mut digit;
-      if code >= 0x30 and code <= 0x39 {
-         digit = code - 0x30;
-      } elseif base == 16 and code >= 0x61 and code <= 0x66 {
-         digit = code - 0x61 + 10;
-      } elseif base == 16 and code >= 0x41 and code <= 0x46 {
-         digit = code - 0x41 + 10;
-      } else {
-         self.error( node, "illegal int literal -- %s" (txt) );
-      }
-      val = val * base + digit;
-      pos = pos + 1;
-   }
-   if negative {
-      return 0 - val;
-   }
-   return val;
-}
-
 /** 式の値の種類 */
 fn convFilter.getExpKind( node:&Nodes.Node ) : Kind {
    if! let castNode = node@@@Nodes.ExpCastNode {
@@ -640,9 +624,9 @@ fn convFilter.lowerOp2( node:&Nodes.ExpOp2Node ) mut : &W.Ins {
          case "&" { return plain( opI64And, [ exp1, exp2 ] ); }
          case "|" { return plain( opI64Or, [ exp1, exp2 ] ); }
          case "~" { return plain( opI64Xor, [ exp1, exp2 ] ); }
-         case "|<<" { return plain( opI64Shl, [ exp1, exp2 ] ); }
-         // Lua と同じく論理シフトにする
-         case "|>>" { return plain( opI64ShrU, [ exp1, exp2 ] ); }
+         // Lua と同じ動作にするため、ランタイムの関数で処理する
+         case "|<<" { return W.call( self.fnShiftL, [ exp1, exp2 ] ); }
+         case "|>>" { return W.call( self.fnShiftR, [ exp1, exp2 ] ); }
       }
    }
    if resultKind == .Real {
@@ -809,7 +793,7 @@ fn convFilter.lowerExp( node:&Nodes.Node ) mut : &W.Ins {
          let! literal = node@@@Nodes.LiteralIntNode {
             self.error( node, "cast" );
          };
-         return W.i64Const( self.parseIntLiteral( node, literal.$token.txt ) );
+         return W.i64Const( literal.$num );
       }
       case Nodes.NodeKind.$LiteralReal {
          let! literal = node@@@Nodes.LiteralRealNode {

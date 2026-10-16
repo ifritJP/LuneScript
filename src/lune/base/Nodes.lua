@@ -227,6 +227,9 @@ end
 if not _lune8 then
    _lune8 = _lune
 end
+local getNodeKindName
+local getBreakKindForStmtList
+local enumLiteral2Literal
 
 
 local Tokenizer = _lune.loadModule( 'lune.base.Tokenizer' )
@@ -807,7 +810,7 @@ local function regKind( name )
 end
 
 
-local function getNodeKindName( kind )
+function getNodeKindName( kind )
 
    return _lune.unwrap( nodeKind2NameMap[kind])
 end
@@ -2375,7 +2378,7 @@ end
 
 
 
-local function getBreakKindForStmtList( checkMode, stmtList )
+function getBreakKindForStmtList( checkMode, stmtList )
 
    if checkMode ~= CheckBreakMode.Normal and checkMode ~= CheckBreakMode.Return then
       local kind = BreakKind.None
@@ -14537,7 +14540,7 @@ function LiteralSymbolNode:setupLiteralTokenList( list )
 end
 
 
-local function enumLiteral2Literal( obj )
+function enumLiteral2Literal( obj )
 
    do
       local _matchExp = obj

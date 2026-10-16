@@ -6,13 +6,14 @@ fn inc( val:int ) {
    counter = counter + val * scale;
 }
 
+// 後で定義する関数 (helper) を参照する
+fn twice( val:int ):int {
+   return helper( val ) * 2;
+}
+
 fn helper( val:int ):int {
    inc( val );
    return val + 1;
-}
-
-fn twice( val:int ):int {
-   return helper( val ) * 2;
 }
 
 print( twice( 5 ), counter );
