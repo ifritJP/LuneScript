@@ -132,8 +132,8 @@ endif
 help:
 	@echo usage:
 	@echo "  make install"
-	@echo "  make test-comp"
-	@echo "  make test-comp-with-go"
+	@echo "  make test-comp [NO_ACCEPT=y]"
+	@echo "  make test-comp-with-go [NO_ACCEPT=y]"
 	@echo "  make test-global"
 	@echo "  make release-check"
 	@echo "  make accept-package [WITH_GO=y]"
@@ -153,7 +153,7 @@ help:
 	@echo "  make test-miniGo [NO_TEST=y] [NO_LUA_DIFF=y]"
 	@echo "  make scratch-go"
 	@echo "  make test-tutorial-go"
-	@echo "  make go-build [GOTAG=gopherlua] [NO_TEST=y]"
+	@echo "  make go-build [GOTAG=gopherlua] [NO_TEST=y] [NO_ACCEPT=y]"
 	@echo "  make setup-pkg-lua"
 	@echo "  make test-govslua [NO_BATCH=y] [ONLY_CONV=y]"
 	@echo "  make goprof [LNSC_OP=]"
@@ -577,7 +577,7 @@ endif
 
 
 test-comp-with-go:
-	$(MAKE) test-comp LANG_KIND=go WITH_GO=y LANG_KIND=go
+	$(MAKE) test-comp LANG_KIND=go WITH_GO=y
 
 
 
@@ -1064,7 +1064,10 @@ else
 endif
 # diff で、修正前と修正後の差分がないことを確認
 	$(MAKE) diff-result
-ifdef LUA51
+# NO_ACCEPT=y の場合はテストのみ行ない、成果物を上書きしない
+ifdef NO_ACCEPT
+	@echo skip accept-package
+else ifdef LUA51
 	$(MAKE) accept-package ACCEPT=y ENABLE_LUA51=$(shell which $(LUA51))
 else
 	$(MAKE) accept-package ACCEPT=y
@@ -1938,7 +1941,10 @@ ifndef NO_TEST
 	diff work/test1.result work/test2.result -I 'Entering directory' -I 'Leaving directory'
 endif
 
-ifneq ($(GOARCH),wasm)
+# NO_ACCEPT=y の場合は $(GO_WORK_DIR)/build に残し、カレントの lnsc を上書きしない
+ifdef NO_ACCEPT
+	@echo skip copying $(GO_WORK_DIR)/build/$(LNSC_GO)
+else ifneq ($(GOARCH),wasm)
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) .
 else
 	cp $(GO_WORK_DIR)/build/$(LNSC_GO) lnsc.wasm
