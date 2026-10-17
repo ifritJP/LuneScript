@@ -7,9 +7,19 @@
 // wasm にした Lua (lnslua.wasm、lnslua.c から生成) を読み込んで渡す。
 // lnslua.wasm のパスは環境変数 LNS_WASM_LUA で指定できる。
 // 出力は Lua 5.3 の print と同じ形式にする。
+//
+//
+// 変換した wasm は、最初から最適化コンパイラ (TurboFan) でコンパイルする (V8 の --no-liftoff)。
+// V8 の wasm には実行中の関数を最適化版に切り替える仕組み (OSR) が無く、
+// 1 回しか呼ばれない関数 (main など) の中の重いループが、
+// ベースラインのコンパイラ (Liftoff) のコードのまま動いてしまうため。
+// lnslua.wasm は、何度も呼ばれる関数が多く段階的な最適化で十分なので、
+// --no-liftoff を設定する前に読み込んで初期化する (初期化が遅くならないように)。
+// 環境変数 LNS_WASM_LIFTOFF=1 で、V8 の標準の動作 (Liftoff から段階的に最適化) にする。
 
 import { readFileSync, writeSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { setFlagsFromString } from 'node:v8';
 
 const outBuf = [];
 let outLen = 0;
@@ -57,6 +67,68 @@ async function loadLua() {
   return instance.exports;
 }
 
+/** LEB128 (符号なし) を読み、値と次の位置を返す */
+function readUleb(bin, pos) {
+  let val = 0;
+  let shift = 0;
+  for (;;) {
+    const byte = bin[pos++];
+    val += (byte & 0x7f) * 2 ** shift;
+    if ((byte & 0x80) === 0) {
+      return [val, pos];
+    }
+    shift += 7;
+  }
+}
+
+/**
+wasm の import セクションから、import しているモジュール名の Set を返す。
+
+コンパイルする前に、Lua (lnslua.wasm) が必要かどうかを知るために使う。
+*/
+function getImportModules(bin) {
+  const modules = new Set();
+  let pos = 8;
+  while (pos < bin.length) {
+    const id = bin[pos++];
+    let size;
+    [size, pos] = readUleb(bin, pos);
+    if (id === 2) {
+      let num;
+      let work = pos;
+      [num, work] = readUleb(bin, work);
+      for (let index = 0; index < num; index++) {
+        let len;
+        [len, work] = readUleb(bin, work);
+        modules.add(bin.toString('utf8', work, work + len));
+        work += len;
+        [len, work] = readUleb(bin, work);
+        work += len;
+        const kind = bin[work++];
+        switch (kind) {
+          case 0x00: // func: 型インデックス
+            [, work] = readUleb(bin, work);
+            break;
+          case 0x02: { // memory: limits
+            const flag = bin[work++];
+            [, work] = readUleb(bin, work);
+            if (flag & 1) {
+              [, work] = readUleb(bin, work);
+            }
+            break;
+          }
+          default:
+            // 変換した wasm が import するのは func と memory だけ
+            throw new Error(`unsupported import kind: ${kind}`);
+        }
+      }
+      return modules;
+    }
+    pos += size;
+  }
+  return modules;
+}
+
 export async function run(wasmPath) {
   let exports = null;
 
@@ -83,10 +155,14 @@ export async function run(wasmPath) {
   };
 
   const bin = readFileSync(wasmPath);
-  const module = await WebAssembly.compile(bin);
-  if (WebAssembly.Module.imports(module).some((item) => item.module === 'lua')) {
+  if (getImportModules(bin).has('lua')) {
     imports.lua = await loadLua();
   }
+  if (process.env.LNS_WASM_LIFTOFF !== '1') {
+    // 変換した wasm をコンパイルする前に設定する必要がある
+    setFlagsFromString('--no-liftoff');
+  }
+  const module = await WebAssembly.compile(bin);
   const instance = await WebAssembly.instantiate(module, imports);
   exports = instance.exports;
   try {
