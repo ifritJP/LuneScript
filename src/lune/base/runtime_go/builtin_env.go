@@ -27,5 +27,7 @@ func Lns_RunMainNoExit(mainFunc func(_env *LnsEnv, args *LnsList) LnsInt) LnsInt
 		args = append(args, arg)
 	}
 
-	return mainFunc(Lns_GetEnv(), NewLnsList(args))
+	return runMainWithLuaError(func() LnsInt {
+		return mainFunc(Lns_GetEnv(), NewLnsList(args))
+	})
 }

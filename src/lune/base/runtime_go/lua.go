@@ -579,7 +579,12 @@ func (luaVM *Lns_luaVM) setupFromStack(index int, passTable bool) LnsAny {
 func (luaVM *Lns_luaVM) lua_call(stackBase int, argNum int, retNum int) []LnsAny {
 
 	argTop := int(lua_gettop(luaVM.vm)) - argNum
-	lua_callk(luaVM.vm, argNum, cLUA_MULTRET)
+	// Lua のエラーで C の abort() にならないように、保護して呼び出す。
+	// エラーの場合は LnsLuaError で panic する (go 版の error() と同じく panic にする)。
+	if err := lua_pcallk(luaVM.vm, argNum, cLUA_MULTRET); err != nil {
+		lua_settop(luaVM.vm, stackBase)
+		panic(&LnsLuaError{Message: err.Error()})
+	}
 
 	lastRet := int(lua_gettop(luaVM.vm))
 
