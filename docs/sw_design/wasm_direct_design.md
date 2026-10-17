@@ -193,6 +193,7 @@ Lua を使う場合の注意点:
 - **wasm の妥当性**: 出力した wasm を `WebAssembly.validate` (と、あれば `wasm-opt --validate`) で検証する。
 - **指標の計測**: Go 経由版を基準に、wasm のサイズ (gzip 後も)、ロード時間 (`WebAssembly.compile` / `instantiate`)、
   ヒープの使用量 (Node.js の `--trace-gc` やメモリ使用量)、実行速度を測る。
+  go 版のネイティブ実行との速度・GC の比較は `make bench-wasm` で測り、結果を `wasm_benchmark.md` に記録する。
 - **セルフホスト (M4)**: `test-comp` と同じく、wasm 版 lnsc で 2 世代の出力が一致すること、および Lua 版 / Go 版 lnsc と同じ出力になることを確認する。
 
 ## 12. リスク

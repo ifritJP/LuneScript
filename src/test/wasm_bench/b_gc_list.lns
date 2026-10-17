@@ -1,0 +1,18 @@
+// GC: 多数の小さな List・Map を生成し、一部を保持する
+class Item {
+   let name:str {pub};
+   let vals:List<int> {pub};
+}
+let mut keep:List<Item> = [];
+let mut total = 0;
+for i = 1, 4000000 {
+   let mut vals = [ i, i + 1, i + 2 ];
+   let mut item = new Item( "n", vals );
+   total = total + item.$vals[ 2 ];
+   if i % 100 == 0 {
+      keep.insert( item );
+   }
+   let map = { "a":i, "b":i + 1 };
+   total = total + ( map.a or 0 ) % 3;
+}
+print( total, #keep );

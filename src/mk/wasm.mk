@@ -63,3 +63,8 @@ test-wasm: $(WASM_LUA)
 			$(WASM_WORK_DIR)/$$name.wasm.result || exit 1;		\
 		echo "ok -- $$name ($$(stat -c %s $(WASM_WORK_DIR)/$$dir/$$name.wasm) bytes)"; \
 	done
+
+# go 版のネイティブ実行と wasm 実行の速度を比べる (docs/sw_design/wasm_benchmark.md)
+# WASM_OPT に Binaryen の wasm-opt を指定すると、wasm-opt -O3 した wasm も測る
+bench-wasm: $(WASM_LUA)
+	WASM_OPT=$(WASM_OPT) misc/wasm/bench.sh

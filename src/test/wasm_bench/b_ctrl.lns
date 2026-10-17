@@ -1,0 +1,42 @@
+// 制御文 (while / if / switch / match)
+alge Op {
+   Add( int ),
+   Mul( int ),
+   Neg,
+}
+fn apply( op:&Op, val:int ) : int {
+   match op {
+      case .Add( n ) {
+         return val + n;
+      }
+      case .Mul( n ) {
+         return ( val * n ) % 1000003;
+      }
+      case .Neg {
+         return -val;
+      }
+   }
+}
+let ops = [ Op.Add( 3 ), Op.Mul( 7 ), Op.Neg, Op.Add( 11 ) ];
+let mut total = 0;
+for n = 1, 5000000 {
+   // collatz
+   let mut val = n;
+   let mut steps = 0;
+   while val ~= 1 {
+      if val % 2 == 0 {
+         val = val / 2;
+      } else {
+         val = val * 3 + 1;
+      }
+      steps = steps + 1;
+   }
+   switch steps % 4 {
+      case 0 { total = total + 1; }
+      case 1 { total = total + steps; }
+      case 2 { total = total - 2; }
+      default { total = total + 3; }
+   }
+   total = apply( ops[ n % 4 + 1 ], total );
+}
+print( total );

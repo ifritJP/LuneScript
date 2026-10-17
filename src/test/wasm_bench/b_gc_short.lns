@@ -1,0 +1,17 @@
+// GC: 短命なインスタンスを大量に生成する
+class Vec {
+   let x:int {pub};
+   let y:int {pub};
+   pub fn add( other:&Vec ) : Vec {
+      return new Vec( self.x + other.$x, self.y + other.$y );
+   }
+}
+let mut acc = new Vec( 0, 0 );
+for i = 1, 40000000 {
+   let tmp = new Vec( i % 10, i % 7 );
+   acc = acc.add( tmp );
+   if acc.$x > 1000000 {
+      acc = new Vec( acc.$x % 1000, acc.$y % 1000 );
+   }
+}
+print( acc.$x, acc.$y );

@@ -1,0 +1,68 @@
+// クラス (継承・オーバーライド・インタフェース・アクセッサ)
+interface Shape {
+   pub fn area() : int;
+   pub fn scale( factor:int ) mut;
+}
+abstract class Base extend (Shape) {
+   let mut id:int {pub};
+   pub abstract fn area() : int;
+   pub abstract fn scale( factor:int ) mut;
+   pub fn kind() : int {
+      return 0;
+   }
+}
+class Rect extend Base {
+   let mut w:int {pub};
+   let mut h:int;
+   pub fn __init( id:int, w:int, h:int ) {
+      super( id );
+      self.w = w;
+      self.h = h;
+   }
+   pub override fn area() : int {
+      return self.w * self.h;
+   }
+   pub override fn scale( factor:int ) mut {
+      self.w = ( self.w * factor ) % 101 + 1;
+      self.h = ( self.h + factor ) % 97 + 1;
+   }
+   pub override fn kind() : int {
+      return 1;
+   }
+}
+class Circle extend Base {
+   let mut r:int;
+   pub fn __init( id:int, r:int ) {
+      super( id );
+      self.r = r;
+   }
+   pub override fn area() : int {
+      return 3 * self.r * self.r;
+   }
+   pub override fn scale( factor:int ) mut {
+      self.r = ( self.r * factor ) % 89 + 1;
+   }
+}
+let mut shapes:List<Shape> = [];
+let mut bases:List<Base> = [];
+for i = 1, 100 {
+   if i % 2 == 0 {
+      let mut rect = new Rect( i, i % 13 + 1, i % 7 + 1 );
+      shapes.insert( rect );
+      bases.insert( rect );
+   } else {
+      let mut circle = new Circle( i, i % 11 + 1 );
+      shapes.insert( circle );
+      bases.insert( circle );
+   }
+}
+let mut total = 0;
+for loop = 1, 4000000 {
+   foreach shape in shapes {
+      total = total + shape.area();
+      shape.scale( loop % 5 + 1 );
+   }
+   let base = bases[ loop % 100 + 1 ];
+   total = total + base.kind() + base.$id;
+}
+print( total );

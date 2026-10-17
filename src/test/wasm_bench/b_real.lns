@@ -1,0 +1,8 @@
+// 実数演算
+let mut sum = 0.0;
+let mut x = 0.5;
+for i = 1, 300000000 {
+   x = x * 3.7 * ( 1.0 - x );
+   sum = sum + x / ( 1.0 + i@@real ) - x * 0.25;
+}
+print( "%.6f %.6f" ( sum, x ) );

@@ -1,0 +1,27 @@
+// クロージャ・高階関数
+form CountFn() : int;
+fn makeCounter( step:int ) : CountFn {
+   let mut count = 0;
+   return fn () : int {
+      count = count + step;
+      return count;
+   };
+}
+form IntFn( x:int ) : int;
+fn compose( f:IntFn, g:IntFn ) : IntFn {
+   return fn ( x:int ) : int {
+      return f( g( x ) );
+   };
+}
+let inc = fn ( x:int ) : int { return x + 1; };
+let dbl = fn ( x:int ) : int { return ( x * 2 ) % 1000007; };
+let both = compose( inc, dbl );
+let mut total = 0;
+for i = 1, 200000000 {
+   total = both( total + i );
+}
+let counter = makeCounter( 3 );
+for _ = 1, 50000000 {
+   counter();
+}
+print( total, counter() );

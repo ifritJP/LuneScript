@@ -1,0 +1,33 @@
+// GC: 二分木の生成と破棄 (binary-trees)。長命な木と短命な木が混在する
+class Node {
+   let left:Node! {pub};
+   let right:Node! {pub};
+}
+fn make( depth:int ) : Node {
+   if depth == 0 {
+      return new Node( nil, nil );
+   }
+   return new Node( make( depth - 1 ), make( depth - 1 ) );
+}
+fn check( node:&Node ) : int {
+   let mut count = 1;
+   if! let left = node.$left {
+      count = count + check( left );
+   }
+   if! let right = node.$right {
+      count = count + check( right );
+   }
+   return count;
+}
+let maxDepth = 18;
+let longLived = make( maxDepth );
+let mut total = 0;
+let mut depth = 4;
+while depth <= maxDepth {
+   let iterations = 1 |<< ( maxDepth - depth + 4 );
+   for _ = 1, iterations {
+      total = total + check( make( depth ) );
+   }
+   depth = depth + 2;
+}
+print( total, check( longLived ) );

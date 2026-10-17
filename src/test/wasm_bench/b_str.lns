@@ -1,0 +1,17 @@
+// 文字列 (連結・部分文字列・比較・format・find)
+let mut total = 0;
+let mut txt = "";
+for i = 1, 3000000 {
+   let work = "item%d" ( i % 1000 );
+   txt = txt .. work.sub( 1, 3 );
+   if #txt > 1000 {
+      txt = "";
+   }
+   if work < "item5" {
+      total = total + #work;
+   }
+   if! let pos = work.find( "9", 1, true ) {
+      total = total + pos;
+   }
+}
+print( total, #txt );

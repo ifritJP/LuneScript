@@ -1,0 +1,32 @@
+// コレクション (List・Map・Set)
+let mut list:List<int> = [];
+for i = 1, 1000000 {
+   list.insert( ( i * 7919 ) % 1000003 );
+}
+let mut total = 0;
+for _ = 1, 40 {
+   foreach val in list {
+      total = total + val % 7;
+   }
+}
+let mut map:Map<int,int> = {};
+for i = 1, 1000000 {
+   map[ i % 50021 ] = ( map[ i % 50021 ] or 0 ) + i;
+}
+foreach val, key in map {
+   total = total + ( val % 13 ) * ( key % 3 );
+}
+let mut strMap:Map<str,int> = {};
+for i = 1, 800000 {
+   let key = "k%d" ( i % 5003 );
+   strMap[ key ] = ( strMap[ key ] or 0 ) + 1;
+}
+let mut set:Set<int> = (@);
+for i = 1, 1000000 {
+   set.add( ( i * 31 ) % 65537 );
+}
+let mut keyNum = 0;
+foreach val in strMap {
+   keyNum = keyNum + val % 2 + 1;
+}
+print( total, keyNum, set.len() );
