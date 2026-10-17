@@ -129,7 +129,7 @@ define test-lua-error
 	code=$$?;								\
 	if [ $$code -ne 1 ] ||							\
 	   ! grep -q '^before$$' work/result-luaError.txt ||			\
-	   ! grep -q '^lua[0-9.]*: .*luaError: expected error' work/result-luaError-err.txt; then \
+	   ! grep -q '^lua[0-9.]*: test/luaError.lns:6: .*:[0-9]*: luaError: expected error' work/result-luaError-err.txt; then \
 		echo "NG: test-lua-error (exit code = $$code)";		\
 		cat work/result-luaError.txt work/result-luaError-err.txt;	\
 		exit 1;							\

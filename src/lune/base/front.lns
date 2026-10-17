@@ -162,6 +162,11 @@ import 済みのモジュール → Lua コードのマップ。
 regConvertedMap() メソッドを使用して登録する。
 */
    let convertedMap:Map<str,str>;
+   /**
+exe で変換した lns のパス → 出力した Lua の行番号と lns の行番号の対応 (convLua.FilterInfo.getLineMap())。
+Lua の実行時エラーの位置を lns の位置に対応付けるのに使う。
+*/
+   let luaLineMap:Map<str,&List<int>>;
    let mut gomodMap:GoMod.ModInfo;
 
    let mut bindModuleSet:Set<str>;
@@ -214,6 +219,7 @@ loadedMap で管理する前にシステムにロードされているため、
       self.loadedMap = {};
       self.loadedMapTest = {};
       self.convertedMap = {};
+      self.luaLineMap = {};
 
       {
          let mut builtin = new Builtin.Builtin(
@@ -384,13 +390,17 @@ fn Front.createAst(
 }
 
 
+/**
+@return 出力した Lua の行番号 → lns の行番号のリスト
+*/
 fn ast2Lua(
    ast:&AstInfo.ASTInfo, streamName:str, stream:oStream, metaStream:oStream,
-   convMode:convLua.ConvMode, inMacro:bool, option:&Option.Option )
+   convMode:convLua.ConvMode, inMacro:bool, option:&Option.Option ) : &List<int>
 {
    let mut conv = Converter.ast2LuaMain(
       ast, streamName, stream, metaStream, convMode, inMacro, option );
    conv.outputLuaAndMeta( unwrap ast.$node@@@Nodes.RootNode );
+   return conv.getLineMap();
 }
 
 fn loadFromChunk( chunk:Luaval<form>!, err:str! ): Luaval<&stem>! {
@@ -422,15 +432,20 @@ pub fn loadFromLuaTxt( txt:str ): Luaval<&stem>! {
    return loadFromChunk( chunk, err );
 }
 
+/**
+@return meta のコード
+@return Lua のコード
+@return Lua の行番号 → lns の行番号のリスト
+*/
 fn Front.convertFromAst(
-   ast:&AstInfo.ASTInfo, streamName:str, mode:convLua.ConvMode ) : str, str
+   ast:&AstInfo.ASTInfo, streamName:str, mode:convLua.ConvMode ) : str, str, &List<int>
 {
    let mut stream = new Util.memStream();
    let mut metaStream = new Util.memStream();
 
-   ast2Lua( ast, streamName, stream, metaStream, mode, false, self.option );
+   let lineMap = ast2Lua( ast, streamName, stream, metaStream, mode, false, self.option );
 
-   return metaStream.$txt, stream.$txt;
+   return metaStream.$txt, stream.$txt, lineMap;
 }
 
 /**
@@ -822,8 +837,13 @@ fn Front.loadTokenizerToLuaCode(
    let mut ast = self.createAst(
       importModuleInfo, tokenizerSrc, baseDir, mod, moduleId, nil, .Compile, nil );
 
-   let mut metaTxt, luaTxt = self.convertFromAst( ast, path, .ConvMeta );
+   let mut metaTxt, luaTxt, lineMap = self.convertFromAst( ast, path, .ConvMeta );
    Log._log2( .Trace, "Meta = %s" (metaTxt) );
+   switch self.option.mode {
+      case .Exec, .Shebang {
+         self.luaLineMap[ path ] = lineMap;
+      }
+   }
 
 
    if self.option.updateOnLoad {
@@ -1789,6 +1809,108 @@ end
    } );
 }
 
+/**
+exe で変換した Lua のコード luaCode を実行する。
+
+実行時エラーが起きた場合は、メッセージとトレースバックを "lua: <メッセージ>" の形式で
+標準エラーに出力し、終了コード 1 で終了する。
+その際、Lua の位置 ([string "--xxx.lns..."]:<行>) に対応する lns の位置が分かれば、
+"xxx.lns:<行>: [string "--xxx.lns..."]:<行>" のように、lns の位置を前に付ける。
+
+@return luaCode を実行した結果 (モジュール)
+*/
+fn Front.execLuaTxt( luaCode:str ) : Luaval<&stem>! {
+   let code = ```
+return function( code, lineMapMap )
+   -- chunk の名前 ([string "..."] の中身) と Lua の行番号から、lns の位置を返す。
+   -- Lua のコードの 1 行目は "--<lns のパス>" で、chunk の名前はそれを切り詰めたもの。
+   local function getLnsPos( chunkName, luaLine )
+      local prefix = chunkName:gsub( "%.%.%.$", "" )
+      local path, lineMap
+      if lineMapMap[ prefix:sub( 3 ) ] then
+         path = prefix:sub( 3 )
+         lineMap = lineMapMap[ path ]
+      else
+         for workPath, workMap in pairs( lineMapMap ) do
+            if ("--" .. workPath):sub( 1, #prefix ) == prefix then
+               if path then
+                  -- 切り詰めた名前が複数のパスに一致する場合は分からない
+                  return nil
+               end
+               path, lineMap = workPath, workMap
+            end
+         end
+         if not path then
+            return nil
+         end
+      end
+      for line = math.min( luaLine, #lineMap ), 1, -1 do
+         if lineMap[ line ] ~= 0 then
+            return string.format( "%s:%d", path, lineMap[ line ] )
+         end
+      end
+      return nil
+   end
+   local function convPos( txt )
+      return (txt:gsub(
+         '(%[string "([^"]*)"%]:(%d+))',
+         function( luaPos, chunkName, luaLine )
+            local lnsPos = getLnsPos( chunkName, tonumber( luaLine ) )
+            if lnsPos then
+               return lnsPos .. ": " .. luaPos
+            end
+            return luaPos
+      end ))
+   end
+   local function handler( err )
+      local mess = tostring( err )
+      if debug and debug.traceback then
+         mess = debug.traceback( mess, 2 )
+         -- xpcall より外側は lnsc の処理なので省く
+         local pos = mess:find( "\n[^\n]*%[C%]: in function 'xpcall'" )
+         if pos then
+            mess = mess:sub( 1, pos - 1 )
+         end
+      end
+      return convPos( mess )
+   end
+
+   local loadFunc = loadstring or load -- lua5.1 and lua5.2
+   local chunk, mess = loadFunc( code )
+   if not chunk then
+      return nil, mess
+   end
+   local ok, ret = xpcall( chunk, handler )
+   if not ok then
+      return nil, ret
+   end
+   return ret, nil
+end
+```;
+   let ret:Luaval<&stem>!;
+   let errMess:stem!;
+   __luaLock {
+      let! loaded = _load( code ## ) {
+         Util.err( "failed to load the exec code" ); // バグ
+      };
+      let! execFunc = loaded(##) {
+         Util.err( "failed to execFunc" ); // バグ
+      };
+      let work:stem!;
+      work, errMess = (execFunc@@form)( luaCode, self.luaLineMap );
+      if! let mut val = work {
+         ret = val@@Luaval<stem>;
+      } else {
+         ret = nil;
+      }
+   }
+   when! errMess {
+      io.stderr.write( "lua: %s\n" ( errMess ) );
+      os.exit( 1 );
+   }
+   return ret;
+}
+
 fn Front.executeLns( path:str, baseDir:str! ) mut : Luaval<&stem>!, str {
    // // LuneScript の runtime をロードするために runLuaOnLns() を実行。
    // DependLuaOnLns.runLuaOnLns( "", nil, false );
@@ -1806,7 +1928,7 @@ fn Front.executeLns( path:str, baseDir:str! ) mut : Luaval<&stem>!, str {
    
    // path の luacode を実行する。
    // preload を設定しているので 変換済みの submod の lua がロードされる。
-   return loadFromLuaTxt( luaCode ), mod;
+   return self.execLuaTxt( luaCode ), mod;
 }
 
 fn Front.executeLnsAndTest( path:str, baseDir:str! ) mut {

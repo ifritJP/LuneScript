@@ -3430,3 +3430,15 @@ _section();
    let count:NoArg = fn () : int { return 5; };
    print( normal( ## ), count( ## ), count() );
 }
+
+// 型を書かずに宣言した変数に、... を返す関数の値を多値で代入する
+_section();
+{
+   fn mret( ... ) : ... {
+      return ...;
+   }
+   let work;
+   let mess:stem!;
+   work, mess = mret( 1, "a" );
+   print( work, mess );
+}

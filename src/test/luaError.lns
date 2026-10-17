@@ -1,5 +1,6 @@
 // lnsc ... exe の実行中にエラーが起きた場合に、
 // メッセージを標準エラーに出力し、終了コード 1 で終わることを確認する。
 // (mk/go.mk の test-lua-error。go 版の lnsc では Lua のエラーが abort になっていた)
+// エラーの位置は、Lua の位置の前に lns の位置 (このファイルの 6 行目) が付く。
 print( "before" );
 error( "luaError: expected error" );

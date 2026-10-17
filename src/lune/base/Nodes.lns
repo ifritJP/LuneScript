@@ -1273,7 +1273,13 @@ pub fn ExpListNode.getExpTypeNoDDDAt( index:int ) : &Ast.TypeInfo {
       }
       return Ast.builtinTypeNil;
    }
-   return self.$expTypeList[ index ];
+   let expType = self.$expTypeList[ index ];
+   // a, b = f() では、ExpMRetNode (型は f の戻り値の DDD) の後ろに、
+   // 値ごとの ExpCastNode が続くので、index 番目が DDD になることがある。
+   if! let dddTypeInfo = expType@@@Ast.DDDTypeInfo {
+      return dddTypeInfo.$typeInfo.$nilableTypeInfo;
+   }
+   return expType;
 }
 
 pub class CaseInfo {
