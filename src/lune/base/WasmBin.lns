@@ -160,15 +160,25 @@ pub enum ValKind {
    I32,
    I64,
    F64,
-   /** 参照型 (typeIdx の型への参照) */
+   /** 参照型 */
    Ref,
 }
+
+// 抽象ヒープ型。s33 の負の値としてエンコードする。
+pub let htAny = -18;
+pub let htEq = -19;
+pub let htI31 = -20;
+pub let htStruct = -21;
+pub let htArray = -22;
+pub let htFunc = -16;
+pub let htExtern = -17;
+pub let htNone = -15;
 
 /** 値の型 */
 pub class ValType {
    pri let kind:ValKind {pub};
-   /** Ref の場合の参照先の型インデックス */
-   pri let typeIdx:int {pub};
+   /** Ref の場合のヒープ型。0 以上は型インデックス、負は抽象ヒープ型 */
+   pri let heapType:int {pub};
    /** Ref の場合に null を許すかどうか */
    pri let nullable:bool {pub};
 
@@ -185,17 +195,140 @@ pub class ValType {
          }
          case .Ref {
             if self.nullable {
-               return byte( 0x63 ) .. sleb( self.typeIdx );
+               return byte( 0x63 ) .. sleb( self.heapType );
             }
-            return byte( 0x64 ) .. sleb( self.typeIdx );
+            return byte( 0x64 ) .. sleb( self.heapType );
          }
       }
+   }
+
+   pub fn isRef() : bool {
+      return self.kind == .Ref;
+   }
+
+   pub fn equalsType( other:&ValType ) : bool {
+      return self.kind == other.kind and self.heapType == other.heapType and
+          self.nullable == other.nullable;
    }
 }
 
 pub let typeI32 = new ValType( .I32, 0, false );
 pub let typeI64 = new ValType( .I64, 0, false );
 pub let typeF64 = new ValType( .F64, 0, false );
+
+/** null を許す参照型 */
+pub fn refType( heapType:int ) : &ValType {
+   return new ValType( .Ref, heapType, true );
+}
+pub let typeAnyRef = refType( htAny );
+pub let typeEqRef = refType( htEq );
+
+/** struct / array のフィールドの型 */
+pub class FieldType {
+   /** packed (i8) の場合は nil */
+   pri let valType:&ValType! {pub};
+   pri let packedI8:bool {pub};
+   pri let mutable:bool {pub};
+
+   pub fn encode() : str {
+      let mut txt;
+      if! let valType = self.valType {
+         txt = valType.encode();
+      } else {
+         txt = byte( 0x78 );
+      }
+      if self.mutable {
+         return txt .. byte( 0x01 );
+      }
+      return txt .. byte( 0x00 );
+   }
+}
+
+pub fn field( valType:&ValType, mutable:bool ) : &FieldType {
+   return new FieldType( valType, false, mutable );
+}
+pub fn fieldI8( mutable:bool ) : &FieldType {
+   return new FieldType( nil, true, mutable );
+}
+
+// 命令のオペコード
+pub let opUnreachable = 0x00;
+pub let opNop = 0x01;
+pub let opDrop = 0x1a;
+pub let opSelect = 0x1b;
+pub let opI32Eqz = 0x45;
+pub let opI32Eq = 0x46;
+pub let opI32Ne = 0x47;
+pub let opI32LtS = 0x48;
+pub let opI32LtU = 0x49;
+pub let opI32GtS = 0x4a;
+pub let opI32GtU = 0x4b;
+pub let opI32LeS = 0x4c;
+pub let opI32LeU = 0x4d;
+pub let opI32GeS = 0x4e;
+pub let opI32GeU = 0x4f;
+pub let opI64Eqz = 0x50;
+pub let opI64Eq = 0x51;
+pub let opI64Ne = 0x52;
+pub let opI64LtS = 0x53;
+pub let opI64LtU = 0x54;
+pub let opI64GtS = 0x55;
+pub let opI64GtU = 0x56;
+pub let opI64LeS = 0x57;
+pub let opI64LeU = 0x58;
+pub let opI64GeS = 0x59;
+pub let opI64GeU = 0x5a;
+pub let opF64Eq = 0x61;
+pub let opF64Ne = 0x62;
+pub let opF64Lt = 0x63;
+pub let opF64Gt = 0x64;
+pub let opF64Le = 0x65;
+pub let opF64Ge = 0x66;
+pub let opI32Add = 0x6a;
+pub let opI32Sub = 0x6b;
+pub let opI32Mul = 0x6c;
+pub let opI32DivS = 0x6d;
+pub let opI32DivU = 0x6e;
+pub let opI32RemS = 0x6f;
+pub let opI32RemU = 0x70;
+pub let opI32And = 0x71;
+pub let opI32Or = 0x72;
+pub let opI32Xor = 0x73;
+pub let opI32Shl = 0x74;
+pub let opI32ShrS = 0x75;
+pub let opI32ShrU = 0x76;
+pub let opI64Add = 0x7c;
+pub let opI64Sub = 0x7d;
+pub let opI64Mul = 0x7e;
+pub let opI64DivS = 0x7f;
+pub let opI64DivU = 0x80;
+pub let opI64RemS = 0x81;
+pub let opI64RemU = 0x82;
+pub let opI64And = 0x83;
+pub let opI64Or = 0x84;
+pub let opI64Xor = 0x85;
+pub let opI64Shl = 0x86;
+pub let opI64ShrS = 0x87;
+pub let opI64ShrU = 0x88;
+pub let opF64Abs = 0x99;
+pub let opF64Neg = 0x9a;
+pub let opF64Ceil = 0x9b;
+pub let opF64Floor = 0x9c;
+pub let opF64Trunc = 0x9d;
+pub let opF64Sqrt = 0x9f;
+pub let opF64Add = 0xa0;
+pub let opF64Sub = 0xa1;
+pub let opF64Mul = 0xa2;
+pub let opF64Div = 0xa3;
+pub let opI32WrapI64 = 0xa7;
+pub let opI64ExtendI32S = 0xac;
+pub let opI64ExtendI32U = 0xad;
+pub let opI64TruncF64S = 0xb0;
+pub let opF64ConvertI64S = 0xb9;
+pub let opI64ReinterpretF64 = 0xbd;
+pub let opF64ReinterpretI64 = 0xbf;
+pub let opRefIsNull = 0xd1;
+pub let opRefEq = 0xd3;
 
 /** 命令の種類 */
 pub enum InsKind {
@@ -207,6 +340,12 @@ pub enum InsKind {
    Loop,
    /** args (条件) を評価した後に if/else を出力する */
    If,
+   /**
+   args を評価した後に code と関数インデックスを出力する (call / ref.func)。
+
+   関数インデックスは、Module が割り当てた ID で保持し、エンコード時に変換する。
+   */
+   FuncRef,
 }
 
 /**
@@ -227,11 +366,17 @@ pub class Ins {
    pri let elseBody:&List<&Ins>! {pub};
    /** Block / Loop / If の結果の型 (block type)。結果なしの場合 nil */
    pri let result:&ValType! {pub};
+   /** FuncRef の関数の ID */
+   pri let funcId:int {pub};
 
-   pub fn encode() : str {
-      let mut txt = "";
+   /**
+   stream に出力する。
+
+   @param funcIndexList 関数の ID + 1 → 関数インデックス
+   */
+   pub fn encodeTo( mut stream:oStream, funcIndexList:&List<int> ) {
       foreach arg in self.args {
-         txt = txt .. arg.encode();
+         arg.encodeTo( stream, funcIndexList );
       }
       let blockType;
       if! let result = self.result {
@@ -241,64 +386,75 @@ pub class Ins {
       }
       _switch self.kind {
          case .Plain {
-            txt = txt .. self.code;
+            stream.write( self.code );
+         }
+         case .FuncRef {
+            stream.write( self.code .. uleb( funcIndexList[ self.funcId + 1 ] ) );
          }
          case .Seq {
             foreach ins in self.body {
-               txt = txt .. ins.encode();
+               ins.encodeTo( stream, funcIndexList );
             }
          }
          case .Block, .Loop {
             if self.kind == .Block {
-               txt = txt .. byte( 0x02 );
+               stream.write( byte( 0x02 ) );
             } else {
-               txt = txt .. byte( 0x03 );
+               stream.write( byte( 0x03 ) );
             }
-            txt = txt .. blockType;
+            stream.write( blockType );
             foreach ins in self.body {
-               txt = txt .. ins.encode();
+               ins.encodeTo( stream, funcIndexList );
             }
-            txt = txt .. byte( 0x0b );
+            stream.write( byte( 0x0b ) );
          }
          case .If {
-            txt = txt .. byte( 0x04 ) .. blockType;
+            stream.write( byte( 0x04 ) .. blockType );
             foreach ins in self.body {
-               txt = txt .. ins.encode();
+               ins.encodeTo( stream, funcIndexList );
             }
             if! let elseBody = self.elseBody {
-               txt = txt .. byte( 0x05 );
+               stream.write( byte( 0x05 ) );
                foreach ins in elseBody {
-                  txt = txt .. ins.encode();
+                  ins.encodeTo( stream, funcIndexList );
                }
             }
-            txt = txt .. byte( 0x0b );
+            stream.write( byte( 0x0b ) );
          }
       }
-      return txt;
    }
 }
 
 /** 命令を生成する。 */
 pub fn op( code:str, args:&List<&Ins> ) : &Ins {
-   return new Ins( .Plain, code, args, [], nil, nil );
+   return new Ins( .Plain, code, args, [], nil, nil, 0 );
+}
+/** 1 バイトのオペコードの命令を生成する。 */
+pub fn plain( code:int, args:&List<&Ins> ) : &Ins {
+   return new Ins( .Plain, byte( code ), args, [], nil, nil, 0 );
 }
 pub fn seq( body:&List<&Ins> ) : &Ins {
-   return new Ins( .Seq, "", [], body, nil, nil );
+   return new Ins( .Seq, "", [], body, nil, nil, 0 );
 }
 pub fn block( body:&List<&Ins>, result:&ValType! ) : &Ins {
-   return new Ins( .Block, "", [], body, nil, result );
+   return new Ins( .Block, "", [], body, nil, result, 0 );
 }
 pub fn loop( body:&List<&Ins>, result:&ValType! ) : &Ins {
-   return new Ins( .Loop, "", [], body, nil, result );
+   return new Ins( .Loop, "", [], body, nil, result, 0 );
 }
 pub fn ifElse( cond:&Ins, thenBody:&List<&Ins>, elseBody:&List<&Ins>!,
                result:&ValType! ) : &Ins
 {
-   return new Ins( .If, "", [ cond ], thenBody, elseBody, result );
+   return new Ins( .If, "", [ cond ], thenBody, elseBody, result, 0 );
 }
 
 pub fn i32Const( val:int ) : &Ins {
-   return op( byte( 0x41 ) .. sleb( val ), [] );
+   // 32 bit の符号付き整数にする
+   let mut work = val & 0xffffffff;
+   if work >= 0x80000000 {
+      work = work - 0x100000000;
+   }
+   return op( byte( 0x41 ) .. sleb( work ), [] );
 }
 pub fn i64Const( val:int ) : &Ins {
    return op( byte( 0x42 ) .. sleb( val ), [] );
@@ -312,14 +468,22 @@ pub fn localGet( index:int ) : &Ins {
 pub fn localSet( index:int, val:&Ins ) : &Ins {
    return op( byte( 0x21 ) .. uleb( index ), [ val ] );
 }
+pub fn localTee( index:int, val:&Ins ) : &Ins {
+   return op( byte( 0x22 ) .. uleb( index ), [ val ] );
+}
 pub fn globalGet( index:int ) : &Ins {
    return op( byte( 0x23 ) .. uleb( index ), [] );
 }
 pub fn globalSet( index:int, val:&Ins ) : &Ins {
    return op( byte( 0x24 ) .. uleb( index ), [ val ] );
 }
-pub fn call( funcIndex:int, args:&List<&Ins> ) : &Ins {
-   return op( byte( 0x10 ) .. uleb( funcIndex ), args );
+/** 関数の呼び出し。funcId は Module が割り当てた関数の ID */
+pub fn call( funcId:int, args:&List<&Ins> ) : &Ins {
+   return new Ins( .FuncRef, byte( 0x10 ), args, [], nil, nil, funcId );
+}
+/** 関数参照の呼び出し。args の最後が関数参照 */
+pub fn callRef( funcTypeIdx:int, args:&List<&Ins> ) : &Ins {
+   return op( byte( 0x14 ) .. uleb( funcTypeIdx ), args );
 }
 pub fn br( depth:int ) : &Ins {
    return op( byte( 0x0c ) .. uleb( depth ), [] );
@@ -336,9 +500,119 @@ pub fn drop( val:&Ins ) : &Ins {
 pub fn unreachable() : &Ins {
    return op( byte( 0x00 ), [] );
 }
+pub fn nop() : &Ins {
+   return op( "", [] );
+}
+/** cond が真なら val1、偽なら val2 */
+pub fn select( val1:&Ins, val2:&Ins, cond:&Ins ) : &Ins {
+   return op( byte( 0x1b ), [ val1, val2, cond ] );
+}
+pub fn refNull( heapType:int ) : &Ins {
+   return op( byte( 0xd0 ) .. sleb( heapType ), [] );
+}
+pub fn refIsNull( val:&Ins ) : &Ins {
+   return op( byte( 0xd1 ), [ val ] );
+}
+pub fn refEq( val1:&Ins, val2:&Ins ) : &Ins {
+   return op( byte( 0xd3 ), [ val1, val2 ] );
+}
 /** 0xfb で始まる GC の命令 */
 pub fn gcOp( sub:int, imm:str, args:&List<&Ins> ) : &Ins {
    return op( byte( 0xfb ) .. uleb( sub ) .. imm, args );
+}
+pub fn structNew( typeIdx:int, args:&List<&Ins> ) : &Ins {
+   return gcOp( 0x00, uleb( typeIdx ), args );
+}
+pub fn structNewDefault( typeIdx:int ) : &Ins {
+   return gcOp( 0x01, uleb( typeIdx ), [] );
+}
+pub fn structGet( typeIdx:int, fieldIdx:int, obj:&Ins ) : &Ins {
+   return gcOp( 0x02, uleb( typeIdx ) .. uleb( fieldIdx ), [ obj ] );
+}
+pub fn structSet( typeIdx:int, fieldIdx:int, obj:&Ins, val:&Ins ) : &Ins {
+   return gcOp( 0x05, uleb( typeIdx ) .. uleb( fieldIdx ), [ obj, val ] );
+}
+pub fn arrayNew( typeIdx:int, init:&Ins, len:&Ins ) : &Ins {
+   return gcOp( 0x06, uleb( typeIdx ), [ init, len ] );
+}
+pub fn arrayNewDefault( typeIdx:int, len:&Ins ) : &Ins {
+   return gcOp( 0x07, uleb( typeIdx ), [ len ] );
+}
+pub fn arrayNewFixed( typeIdx:int, vals:&List<&Ins> ) : &Ins {
+   return gcOp( 0x08, uleb( typeIdx ) .. uleb( #vals ), vals );
+}
+pub fn arrayNewData( typeIdx:int, dataIdx:int, offset:&Ins, len:&Ins ) : &Ins {
+   return gcOp( 0x09, uleb( typeIdx ) .. uleb( dataIdx ), [ offset, len ] );
+}
+pub fn arrayGet( typeIdx:int, arr:&Ins, index:&Ins ) : &Ins {
+   return gcOp( 0x0b, uleb( typeIdx ), [ arr, index ] );
+}
+pub fn arrayGetU( typeIdx:int, arr:&Ins, index:&Ins ) : &Ins {
+   return gcOp( 0x0d, uleb( typeIdx ), [ arr, index ] );
+}
+pub fn arraySet( typeIdx:int, arr:&Ins, index:&Ins, val:&Ins ) : &Ins {
+   return gcOp( 0x0e, uleb( typeIdx ), [ arr, index, val ] );
+}
+pub fn arrayLen( arr:&Ins ) : &Ins {
+   return gcOp( 0x0f, "", [ arr ] );
+}
+pub fn arrayCopy( dstType:int, srcType:int, dst:&Ins, dstIndex:&Ins,
+                  src:&Ins, srcIndex:&Ins, len:&Ins ) : &Ins
+{
+   return gcOp( 0x11, uleb( dstType ) .. uleb( srcType ),
+                [ dst, dstIndex, src, srcIndex, len ] );
+}
+/** val が heapType の値かどうか (null は偽) */
+pub fn refTest( heapType:int, val:&Ins ) : &Ins {
+   return gcOp( 0x14, sleb( heapType ), [ val ] );
+}
+/** val を heapType に cast する (null は null のまま) */
+pub fn refCast( heapType:int, val:&Ins ) : &Ins {
+   return gcOp( 0x17, sleb( heapType ), [ val ] );
+}
+
+/** 線形メモリ (memory 0) の addr の 1 バイトを読む (i32.load8_u) */
+pub fn i32Load8U( addr:&Ins ) : &Ins {
+   return op( byte( 0x2d ) .. uleb( 0 ) .. uleb( 0 ), [ addr ] );
+}
+/** 線形メモリ (memory 0) の addr に val の下位 1 バイトを書く (i32.store8) */
+pub fn i32Store8( addr:&Ins, val:&Ins ) : &Ins {
+   return op( byte( 0x3a ) .. uleb( 0 ) .. uleb( 0 ), [ addr, val ] );
+}
+
+/** バイト列を溜める出力ストリーム */
+pub class memStream extend (oStream) {
+   let mut list:List<str>;
+   let mut work:str;
+   pub fn __init() {
+      self.list = [];
+      self.work = "";
+   }
+   pub fn get_txt() mut : str {
+      self.flush();
+      let mut txt = "";
+      foreach item in self.list {
+         txt = txt .. item;
+      }
+      self.list = [ txt ];
+      return txt;
+   }
+   pub fn write( val: str ) mut : stem!, str! {
+      self.work = self.work .. val;
+      if #self.work > 4000 {
+         self.flush();
+      }
+      return self, nil;
+   }
+   pub fn close() mut {
+      self.flush();
+   }
+   pub fn flush() mut {
+      if #self.work > 0 {
+         self.list.insert( self.work );
+         self.work = "";
+      }
+   }
 }
 
 /** 関数 */
@@ -348,12 +622,15 @@ pub class Func {
    pri let mut body:List<&Ins> {pub};
    /** 引数の数 */
    pri let paramNum:int {pub};
+   /** 本体を設定済みかどうか */
+   pri let mut hasBody:bool {pub};
 
    pub fn __init( typeIdx:int, paramNum:int ) {
       self.typeIdx = typeIdx;
       self.paramNum = paramNum;
       self.localTypes = [];
       self.body = [];
+      self.hasBody = false;
    }
 
    /** 局所変数を追加し、そのインデックスを返す。 */
@@ -364,109 +641,211 @@ pub class Func {
 
    pub fn setBody( body:List<&Ins> ) mut {
       self.body = body;
+      self.hasBody = true;
    }
 
-   pub fn encode() : str {
+   pub fn encode( funcIndexList:&List<int> ) : str {
       let mut localList:List<str> = [];
       foreach localType in self.localTypes {
          localList.insert( uleb( 1 ) .. localType.encode() );
       }
-      let mut txt = vec( localList );
+      let mut stream = new memStream();
+      stream.write( vec( localList ) );
       foreach ins in self.body {
-         txt = txt .. ins.encode();
+         ins.encodeTo( stream, funcIndexList );
       }
-      txt = txt .. byte( 0x0b );
+      if not self.hasBody {
+         // 本体の無い関数 (呼ばれない関数) は unreachable にする
+         stream.write( byte( 0x00 ) );
+      }
+      stream.write( byte( 0x0b ) );
+      let txt = stream.$txt;
       return uleb( #txt ) .. txt;
    }
 }
 
+/** 関数型 (func) をエンコードする */
+fn encodeFuncType( params:&List<&ValType>, results:&List<&ValType> ) : str {
+   let mut paramList:List<str> = [];
+   foreach param in params {
+      paramList.insert( param.encode() );
+   }
+   let mut resultList:List<str> = [];
+   foreach result in results {
+      resultList.insert( result.encode() );
+   }
+   return byte( 0x60 ) .. vec( paramList ) .. vec( resultList );
+}
+
 /** モジュール */
 pub class Module {
-   /** 型定義 (エンコード済み) */
+   /** 型定義 (エンコード済みの subtype)。全て 1 つの rec group に入れる */
    let mut typeList:List<str>;
    /** 関数型のエンコード結果 → 型インデックス */
    let mut funcTypeMap:Map<str,int>;
+   /** 関数の import (モジュール名と名前のエンコード結果) */
    let mut importList:List<str>;
-   let mut importFuncNum:int {pub};
+   /** importList の各要素の関数型 (エンコード結果) */
+   let mut importTypeList:List<str>;
+   /** importList の各要素の関数の ID */
+   let mut importIdList:List<int>;
+   /** memory の import (エンコード済み) */
+   let mut importMemList:List<str>;
    let mut funcList:List<Func>;
-   let mut globalList:List<str>;
-   let mut exportList:List<str>;
+   /** funcList の各要素の関数の ID */
+   let mut funcIdList:List<int>;
+   /** 関数の ID → 定義した関数 */
+   let mut id2func:Map<int,Func>;
+   /** 次に割り当てる関数の ID */
+   let mut nextFuncId:int;
+   let mut globalList:List<&ValType>;
+   let mut globalInitList:List<&Ins>;
+   /** export する関数 (名前と関数の ID) */
+   let mut exportNameList:List<str>;
+   let mut exportIdList:List<int>;
    let mut dataList:List<str>;
+   /** 関数の名前 (デバッグ用の name セクション) */
+   let mut funcNameMap:Map<int,str>;
+   /** ref.func で参照する関数 */
+   let mut refFuncSet:Set<int>;
+   let mut refFuncList:List<int>;
 
    pub fn __init() {
       self.typeList = [];
       self.funcTypeMap = {};
       self.importList = [];
-      self.importFuncNum = 0;
+      self.importTypeList = [];
+      self.importIdList = [];
+      self.importMemList = [];
       self.funcList = [];
+      self.funcIdList = [];
+      self.id2func = {};
+      self.nextFuncId = 0;
       self.globalList = [];
-      self.exportList = [];
+      self.globalInitList = [];
+      self.exportNameList = [];
+      self.exportIdList = [];
       self.dataList = [];
+      self.refFuncSet = (@);
+      self.refFuncList = [];
+      self.funcNameMap = {};
    }
 
-   /** 型を追加し、型インデックスを返す。 */
-   pub fn addType( encoded:str ) mut : int {
-      self.typeList.insert( encoded );
+   /** 関数の名前を設定する (name セクションに出力する) */
+   pub fn setFuncName( funcId:int, funcName:str ) mut {
+      self.funcNameMap[ funcId ] = funcName;
+   }
+
+   /** 型を予約し、型インデックスを返す。後で defineXXX で定義する。 */
+   pub fn reserveType() mut : int {
+      self.typeList.insert( "" );
       return #self.typeList - 1;
    }
-   /** (array (mut i8)) */
-   pub fn addByteArrayType() mut : int {
-      return self.addType( byte( 0x5e ) .. byte( 0x78 ) .. byte( 0x01 ) );
+   fn defineType( index:int, superIdx:int!, comp:str ) mut {
+      let mut superList:List<str> = [];
+      when! superIdx {
+         superList.insert( uleb( superIdx ) );
+      }
+      // 0x50: 継承可能な subtype
+      self.typeList[ index + 1 ] = byte( 0x50 ) .. vec( superList ) .. comp;
+   }
+   pub fn defineStructType( index:int, superIdx:int!, fields:&List<&FieldType> ) mut {
+      let mut list:List<str> = [];
+      foreach fieldType in fields {
+         list.insert( fieldType.encode() );
+      }
+      self.defineType( index, superIdx, byte( 0x5f ) .. vec( list ) );
+   }
+   pub fn addStructType( superIdx:int!, fields:&List<&FieldType> ) mut : int {
+      let index = self.reserveType();
+      self.defineStructType( index, superIdx, fields );
+      return index;
+   }
+   pub fn addArrayType( fieldType:&FieldType ) mut : int {
+      let index = self.reserveType();
+      self.defineType( index, nil, byte( 0x5e ) .. fieldType.encode() );
+      return index;
    }
 
    /** 関数型を登録し、型インデックスを返す。同じ型は共有する。 */
    pub fn getFuncType( params:&List<&ValType>, results:&List<&ValType> ) mut : int {
-      let mut paramList:List<str> = [];
-      foreach param in params {
-         paramList.insert( param.encode() );
-      }
-      let mut resultList:List<str> = [];
-      foreach result in results {
-         resultList.insert( result.encode() );
-      }
-      let encoded = byte( 0x60 ) .. vec( paramList ) .. vec( resultList );
+      let encoded = encodeFuncType( params, results );
       if! let index = self.funcTypeMap[ encoded ] {
          return index;
       }
-      let index = self.addType( encoded );
+      let index = self.reserveType();
+      self.defineType( index, nil, encoded );
       self.funcTypeMap[ encoded ] = index;
       return index;
    }
 
    /**
-   関数を import し、関数インデックスを返す。
+   関数を import し、関数の ID を返す。
 
-   import は、関数を定義する前に行なう必要がある。
+   関数の ID は、命令 (call など) で関数を指定するのに使う。
+   wasm の関数インデックス (import した関数が先) へは、エンコード時に変換するので、
+   import は関数を定義した後に行なっても良い。
    */
    pub fn importFunc( modName:str, funcName:str,
                       params:&List<&ValType>, results:&List<&ValType> ) mut : int
    {
-      if #self.funcList ~= 0 {
-         error( "import after func" );
-      }
-      let typeIdx = self.getFuncType( params, results );
-      self.importList.insert(
-         name( modName ) .. name( funcName ) .. byte( 0x00 ) .. uleb( typeIdx ) );
-      self.importFuncNum = self.importFuncNum + 1;
-      return self.importFuncNum - 1;
+      // import する関数の型は、rec group の外に置く。
+      // rec group 内の型は、他のモジュールの同じ構造の関数型と一致しないため。
+      self.importList.insert( name( modName ) .. name( funcName ) );
+      self.importTypeList.insert( encodeFuncType( params, results ) );
+      let funcId = self.nextFuncId;
+      self.nextFuncId = self.nextFuncId + 1;
+      self.importIdList.insert( funcId );
+      return funcId;
    }
 
-   /** 関数を定義し、関数インデックスと関数を返す。 */
+   /** memory (memory 0) を import する */
+   pub fn importMemory( modName:str, memName:str ) mut {
+      // 0x02: memory, 0x00: 最大値なし, 最小 0 page
+      self.importMemList.insert(
+         name( modName ) .. name( memName ) .. byte( 0x02 ) .. byte( 0x00 ) .. uleb( 0 ) );
+   }
+
+   /** 関数を定義し、関数の ID と関数を返す。 */
    pub fn addFunc( params:&List<&ValType>, results:&List<&ValType> ) mut : int, Func {
       let typeIdx = self.getFuncType( params, results );
-      let mut func = new Func( typeIdx, #params );
+      return self.addFuncWithType( typeIdx, #params )**;
+   }
+   /** 関数型を指定して関数を定義し、関数の ID と関数を返す。 */
+   pub fn addFuncWithType( typeIdx:int, paramNum:int ) mut : int, Func {
+      let mut func = new Func( typeIdx, paramNum );
+      let funcId = self.nextFuncId;
+      self.nextFuncId = self.nextFuncId + 1;
       self.funcList.insert( func );
-      return self.importFuncNum + #self.funcList - 1, func;
+      self.funcIdList.insert( funcId );
+      self.id2func[ funcId ] = func;
+      return funcId, func;
+   }
+
+   /** 定義した関数を返す */
+   pub fn getFunc( funcId:int ) mut : Func {
+      return unwrap self.id2func[ funcId ];
+   }
+
+   /** 関数参照 (ref.func) */
+   pub fn refFunc( funcId:int ) mut : &Ins {
+      if not self.refFuncSet.has( funcId ) {
+         self.refFuncSet.add( funcId );
+         self.refFuncList.insert( funcId );
+      }
+      return new Ins( .FuncRef, byte( 0xd2 ), [], [], nil, nil, funcId );
    }
 
    /** 可変のグローバル変数を追加し、インデックスを返す。 */
    pub fn addGlobal( valType:&ValType, init:&Ins ) mut : int {
-      self.globalList.insert( valType.encode() .. byte( 0x01 ) .. init.encode() .. byte( 0x0b ) );
+      self.globalList.insert( valType );
+      self.globalInitList.insert( init );
       return #self.globalList - 1;
    }
 
-   pub fn exportFunc( exportName:str, funcIndex:int ) mut {
-      self.exportList.insert( name( exportName ) .. byte( 0x00 ) .. uleb( funcIndex ) );
+   pub fn exportFunc( exportName:str, funcId:int ) mut {
+      self.exportNameList.insert( exportName );
+      self.exportIdList.insert( funcId );
    }
 
    /** passive なデータセグメントを追加し、インデックスを返す。 */
@@ -475,33 +854,99 @@ pub class Module {
       return #self.dataList - 1;
    }
 
-   pub fn encode() : str {
-      let mut txt = "%sasm%s" ( byte( 0 ), byte( 1 ) .. byte( 0 ) .. byte( 0 ) .. byte( 0 ) );
-      txt = txt .. section( 1, vec( self.typeList ) );
-      if #self.importList > 0 {
-         txt = txt .. section( 2, vec( self.importList ) );
+   pub fn encode() mut : str {
+      // 関数の ID → 関数インデックス (import した関数が先)
+      let mut funcIndexList:List<int> = [];
+      for _ = 1, self.nextFuncId {
+         funcIndexList.insert( 0 );
+      }
+      foreach funcId, index in self.importIdList {
+         funcIndexList[ funcId + 1 ] = index - 1;
+      }
+      foreach funcId, index in self.funcIdList {
+         funcIndexList[ funcId + 1 ] = #self.importIdList + index - 1;
+      }
+
+      let mut stream = new memStream();
+      stream.write( "%sasm%s" ( byte( 0 ), byte( 1 ) .. byte( 0 ) .. byte( 0 ) .. byte( 0 ) ) );
+      // 全ての型を 1 つの rec group に入れる。
+      // import する関数の型は、その後に rec group の外で定義する。
+      let mut typeEntryList:List<str> = [ byte( 0x4e ) .. vec( self.typeList ) ];
+      let mut importTypeMap:Map<str,int> = {};
+      let mut importList:List<str> = [];
+      foreach entry, index in self.importList {
+         let funcType = self.importTypeList[ index ];
+         let typeIdx;
+         if! let work = importTypeMap[ funcType ] {
+            typeIdx = work;
+         } else {
+            typeIdx = #self.typeList + #typeEntryList - 1;
+            importTypeMap[ funcType ] = typeIdx;
+            typeEntryList.insert( funcType );
+         }
+         importList.insert( entry .. byte( 0x00 ) .. uleb( typeIdx ) );
+      }
+      stream.write( section( 1, vec( typeEntryList ) ) );
+      foreach entry in self.importMemList {
+         importList.insert( entry );
+      }
+      if #importList > 0 {
+         stream.write( section( 2, vec( importList ) ) );
       }
       let mut funcTypeList:List<str> = [];
       let mut codeList:List<str> = [];
       foreach func in self.funcList {
          funcTypeList.insert( uleb( func.$typeIdx ) );
-         codeList.insert( func.encode() );
+         codeList.insert( func.encode( funcIndexList ) );
       }
-      txt = txt .. section( 3, vec( funcTypeList ) );
+      stream.write( section( 3, vec( funcTypeList ) ) );
       if #self.globalList > 0 {
-         txt = txt .. section( 6, vec( self.globalList ) );
+         let mut globalList:List<str> = [];
+         foreach valType, index in self.globalList {
+            let mut initStream = new memStream();
+            self.globalInitList[ index ].encodeTo( initStream, funcIndexList );
+            globalList.insert(
+               valType.encode() .. byte( 0x01 ) .. initStream.$txt .. byte( 0x0b ) );
+         }
+         stream.write( section( 6, vec( globalList ) ) );
       }
-      if #self.exportList > 0 {
-         txt = txt .. section( 7, vec( self.exportList ) );
+      if #self.exportNameList > 0 {
+         let mut exportList:List<str> = [];
+         foreach exportName, index in self.exportNameList {
+            exportList.insert(
+               name( exportName ) .. byte( 0x00 ) .. uleb( funcIndexList[ self.exportIdList[ index ] + 1 ] ) );
+         }
+         stream.write( section( 7, vec( exportList ) ) );
+      }
+      if #self.refFuncList > 0 {
+         // 宣言用の要素セグメント (ref.func で参照する関数を宣言する)
+         let mut idxList:List<str> = [];
+         foreach funcId in self.refFuncList {
+            idxList.insert( uleb( funcIndexList[ funcId + 1 ] ) );
+         }
+         stream.write( section( 9, uleb( 1 ) .. byte( 0x03 ) .. byte( 0x00 ) .. vec( idxList ) ) );
       }
       if #self.dataList > 0 {
          // DataCount セクション (array.new_data のために code より前に必要)
-         txt = txt .. section( 12, uleb( #self.dataList ) );
+         stream.write( section( 12, uleb( #self.dataList ) ) );
       }
-      txt = txt .. section( 10, vec( codeList ) );
+      stream.write( section( 10, vec( codeList ) ) );
       if #self.dataList > 0 {
-         txt = txt .. section( 11, vec( self.dataList ) );
+         stream.write( section( 11, vec( self.dataList ) ) );
       }
-      return txt;
+      // name セクション (関数名)。関数インデックスの昇順に並べる
+      let mut index2name:Map<int,str> = {};
+      foreach funcName, funcId in self.funcNameMap {
+         index2name[ funcIndexList[ funcId + 1 ] ] = funcName;
+      }
+      let mut nameList:List<str> = [];
+      forsort funcName, funcIndex in index2name {
+         nameList.insert( uleb( funcIndex ) .. name( funcName ) );
+      }
+      if #nameList > 0 {
+         let funcNames = vec( nameList );
+         stream.write( section( 0, name( "name" ) .. byte( 1 ) .. uleb( #funcNames ) .. funcNames ) );
+      }
+      return stream.$txt;
    }
 }

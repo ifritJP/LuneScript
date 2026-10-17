@@ -60,6 +60,7 @@ LNS_SRCS += base/dumpNode
 LNS_SRCS += base/convGo
 LNS_SRCS += base/convPython
 LNS_SRCS += base/WasmBin
+LNS_SRCS += base/WasmRt
 LNS_SRCS += base/convWasm
 LNS_SRCS += base/OutputDepend
 LNS_SRCS += base/Converter

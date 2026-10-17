@@ -72,6 +72,7 @@ build = {
       [ "lune.base.convGo" ] = "src/lune/base/convGo.lua",
       [ "lune.base.convPython" ] = "src/lune/base/convPython.lua",
       [ "lune.base.WasmBin" ] = "src/lune/base/WasmBin.lua",
+      [ "lune.base.WasmRt" ] = "src/lune/base/WasmRt.lua",
       [ "lune.base.convWasm" ] = "src/lune/base/convWasm.lua",
       [ "lune.base.dumpNode" ] = "src/lune/base/dumpNode.lua",
       [ "lune.base.Formatter" ] = "src/lune/base/Formatter.lua",

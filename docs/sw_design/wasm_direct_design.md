@@ -116,23 +116,52 @@ C や Rust は WasmGC の参照型を直接扱えないので、GC のオブジ�
 
 | 段階 | GC のオブジェクトを扱う部分 (文字列、コレクションなど) | ホストとのやり取り (入出力など) |
 |---|---|---|
-| 初期 (M0〜M2) | **convWasm の中に、IR で書いた組み込み関数として持つ** (lnsc が wasm 出力と同時に生成する) | **JavaScript** (Node.js / ブラウザ用の薄い層)。`string.format` や Lua のパターンのような複雑な処理も、初期は JavaScript で書いてよい |
+| 初期 (M0〜M2) | **convWasm の中に、IR で書いた組み込み関数として持つ** (lnsc が wasm 出力と同時に生成する) | **JavaScript** (Node.js / ブラウザ用の薄い層) |
 | 中期 (M3〜M4) | 同上 | WASI に対応する (ファイルアクセスなど、セルフホストに必要なもの) |
 | 最終 (M5) | **LuneScript で書く**。メモリや wasm 命令を直接使うための最小限の組み込み関数 (intrinsic) を用意する | ホストとの境界の薄い層と、C の Lua だけを例外として残す |
 
-Lua 互換の文字列処理 (`string.format`、パターン) は、M3 で取り込む C の Lua の `lstrlib.c` を使う手もある。
-結果が Lua と完全に一致する利点があるが、線形メモリとの間で文字列をコピーする必要がある。
+Lua 互換の処理 (`string.format`、パターンなど) は、互換性を優先して C の Lua をそのまま使う (7.3)。
+
+### 7.3 Lua のランタイムを使う処理と自前で実装する処理
+
+Lua のランタイムの動作を前提にしている処理は、wasm にした C の Lua (`lnslua.wasm`) をそのまま使う。
+ただし、Lua を使えない処理や、Lua を使う利点が無い処理は自前で実装する。
+
+| 機能 | 実装 | 理由 |
+|---|---|---|
+| `string.format` (`"%s" (x)` 構文も含む) | **Lua** | 書式の細部 (`%g` / `%q` / 幅・精度・エラー) まで一致する。コンパイラ自身で 1,400 箇所近く使う構文なので、性能が問題になったら `%s` / `%d` だけの書式を自前で処理する (go 版と同じ二段構え) |
+| 実数の文字列化 (`%.14g`) | **Lua** | 正確な丸めを自前で実装するのは難しい |
+| `find` (パターン)・`gsub`・`gmatch`・`match` | **Lua** | lstrlib そのものを使えば移植による差が無い。`find` の `plain` 指定は自前の単純な検索で良い |
+| `tonumber` | **Lua** | 16 進・指数・空白などの解釈規則が多く、実数は `strtod` の正確な丸めが必要 |
+| `_load`・`require` (Lua のモジュール)・`Luaval`・`string.dump` | **Lua** (必須) | Lua そのもの |
+| `error()` | 自前 | wasm の例外処理で実装する。Lua の `pcall` 経由では GC ヒープ側の状態を巻き戻せない |
+| 等価・大小・ハッシュ (int と real の同一視など)、`//`・`%`・シフト、`@@@int` | 自前 | 言語の意味そのもので、全ての演算に関わる。Lua を呼ぶと遅すぎる |
+| `print`・オブジェクトの `tostring` (`table: 0x...`) | 自前 | 実数の部分だけ Lua を呼ぶ |
+| `sort` | 自前 | Lua 側から GC の List を扱えない。Lua の `table.sort` は不安定ソートで、同値の要素の順序は Lua でも決まっていない |
+| 文字列の比較 | 自前 | C ロケールの `strcoll` (バイト比較) と同じ |
+| `byte`・`rep`・`lower`・`upper`・`reverse`・`sub` | 自前 | 数行で書ける (Lua も C ロケールでは ASCII のみ)。呼び出しごとの文字列のコピーの方が高くつく |
+| `math.floor` など | 自前 | wasm の命令で済む |
+| `math.random` | 自前 | Lua でも libc 依存で、結果の一致は期待されていない |
+| `io.*`・`os.*` | ホスト (Node.js、後に WASI) | Lua ではなく OS の機能。wasm の Lua の io ライブラリも結局 WASI が必要になる。`io.popen` はホストでのみ対応する |
+
+Lua を使う場合の注意点:
+
+- 呼び出しごとに、GC ヒープの文字列と Lua の線形メモリとの間でコピーが必要になる。
+  `AsyncTokenizer.lns` のように同じ文字列に開始位置を変えて何度も `find` するコードでは、
+  直前にコピーした文字列を再利用する仕組みが必要になる (未対応)。
+- Lua を使うプログラムは `lnslua.wasm` (約 190KB) を読み込む。どの関数を使うかはコンパイル時にわかるので、
+  Lua の関数を使う場合だけ import する。ただし、`print` で `stem` を出力するだけでも実数の文字列化のために Lua を import する。
 
 ## 8. Lua 連携の設計 (M3)
 
 | 項目 | 方針 |
 |---|---|
-| Lua の取り込み | C の Lua 5.3 (または 5.4) を clang (wasi-sdk) で wasm にコンパイルする。線形メモリを使う別モジュール `lua.wasm` になる |
+| Lua の取り込み | C の Lua 5.3 を clang (wasi-sdk) で wasm にコンパイルする。線形メモリを使う別モジュール `lnslua.wasm` になる (14.4 で実装した) |
 | 結合 | ホストが 2 つのモジュールをインスタンス化して、互いの関数を import / export でつなぐ。配布を 1 ファイルにしたい場合は Binaryen の `wasm-merge` でまとめる |
 | LuneScript → Lua の値 | Lua 側のレジストリの参照番号 (`luaL_ref`) を持つ struct で表す (`Luaval`) |
 | Lua → LuneScript の値 | LuneScript 側のハンドル表 (GC オブジェクトの参照を入れる配列) の添字を、Lua の userdata に入れる |
-| 文字列の受け渡し | Lua の線形メモリと WasmGC のバイト配列の間でコピーする |
-| Lua のエラー処理 | Lua の C 実装は `setjmp` / `longjmp` を使う。wasm では例外処理 (exception handling) の提案を使ってコンパイルする必要がある (clang の `-mllvm -wasm-enable-sjlj` など)。実行環境の対応を確認する |
+| 文字列の受け渡し | Lua の線形メモリと WasmGC のバイト配列の間でコピーする。変換した wasm が Lua の memory を import し、`i32.load8_u` / `i32.store8` で直接コピーする (JavaScript を経由しない) |
+| Lua のエラー処理 | Lua の C 実装は `setjmp` / `longjmp` を使う。clang の `-mllvm -wasm-enable-sjlj` と `-lsetjmp` で wasm の例外処理にコンパイルし、Node.js v22 で動くことを確認した |
 | GC をまたぐ循環参照 | Lua の GC と WasmGC をまたいで循環した参照は回収されない。lnsc のように短時間で終わるプロセスでは問題になりにくい。長時間動くアプリでは注意が必要 |
 
 ## 9. 必要なツール
@@ -141,7 +170,7 @@ Lua 互換の文字列処理 (`string.format`、パターン) は、M3 で取り
 |---|---|---|
 | Node.js (V8 11.9 以降) | WasmGC の実行・テスト | あり (v22.22.1)。動作確認済み |
 | Binaryen (`wasm-opt`、`wasm-dis`、`wasm-merge`) | GC 対応の検証・逆アセンブル・最適化・モジュールの結合 | なし。デバッグのために早めに入れることを推奨 |
-| wasi-sdk (clang + wasi-libc) | C の Lua を wasm にコンパイル (M3) | なし |
+| wasi-sdk (clang + wasi-libc) | C の Lua を wasm にコンパイル | あり (wasi-sdk 34、`~/opt/wasi-sdk-34.0-x86_64-linux`。`make` の `WASI_SDK` で変更できる) |
 | wasmtime (GC 対応版) | WASI での実行 (M4 以降) | なし。GC 対応の状況を確認する |
 
 ## 10. 進め方
@@ -150,8 +179,8 @@ Lua 互換の文字列処理 (`string.format`、パターン) は、M3 で取り
 |---|---|---|
 | **M0. 基盤** | wasm バイナリの出力 (LEB128、セクション、GC の命令)、IR の骨組み、デバッグ用ダンプ、Node.js で動かすための JavaScript の層と実行スクリプト。`-langWasm` オプション | `int` / `real` / `bool`、関数、`if` / `while` / `for`、`print` を使う `fib` などが動き、Lua 版と同じ出力になる |
 | **M1. 簡単なテスト** | クラス (継承・メソッド)、文字列、List / Map / Set、nilable、`foreach` / `forsort`、ジェネリクス (型消去)、クロージャ、interface | `test/tutorial/*.lns` (20 件) が Lua 版と同じ出力になる |
-| **M2. make のテスト** | alge / `match`、Mapping、多値、標準ライブラリ (`string.format`、Lua のパターンなど)、複数モジュールの import、`__Runner` (1 スレッド) | `test/testGo.lns` (+ `subGoPkg`) と、`test/start.lns` のうち Lua 連携を使わない部分が、Lua 版と同じ出力になる。`make test-wasm` を追加する |
-| **M3. Lua 連携** | C の Lua の wasm 化と結合、`Luaval`、`__luago`、`_load` | `test/start.lns` の Lua 連携の部分も合格する |
+| **M2. make のテスト** | 前半で C の Lua を wasm にして取り込み、Lua 互換の処理を切り替える (7.3、M3 から前倒し)。alge / `match`、Mapping、多値、標準ライブラリ、複数モジュールの import、`__Runner` (1 スレッド) | `test/testGo.lns` (+ `subGoPkg`) と、`test/start.lns` のうち Lua 連携を使わない部分が、Lua 版と同じ出力になる。`make test-wasm` を追加する |
+| **M3. Lua 連携** | `Luaval`、`__luago`、`_load` (C の Lua の wasm 化と結合は M2 の前半で行う) | `test/start.lns` の Lua 連携の部分も合格する |
 | **M4. セルフホスト** | lnsc (`lune/base` の 42 モジュール) を wasm に変換し、wasm 版の lnsc で自分自身をコンパイルする。WASI によるファイルアクセス、ランタイムの Lua ファイルの埋め込み | wasm 版の lnsc で `test-comp` と同じ確認 (2 世代の出力が一致する不動点の確認と、テスト結果の一致) に合格する |
 | **M5. ランタイムのセルフホスト化** | ランタイム (IR の組み込み関数、JavaScript) を LuneScript で書き直す | ブートストラップ、ホストとの境界、C の Lua 以外が LuneScript で書かれている |
 
@@ -202,7 +231,46 @@ Lua 互換の文字列処理 (`string.format`、パターン) は、M3 で取り
 - 変換後の wasm のサイズは 630〜1,226 バイト (Go 経由版の hello は 7.5 MB)。
 - `make -j1 test-comp-with-go` (セルフホストの確認) に合格した。
 
-### 14.2 M0 の作業中に見つかった既存の問題
+### 14.2 M1 (簡単なテスト) — 完了
+
+`test/tutorial/*.lns` (Lua 版でもコンパイルエラーになる `class1.lns` を除く 19 件) が Lua 版と同じ出力になった。
+`make test-wasm` に追加した (M0 のテストと合わせて 24 件)。
+
+構成:
+
+| ファイル | 内容 |
+|---|---|
+| `src/lune/base/WasmBin.lns` | 型を 1 つの rec group にまとめて出力する (struct / array / func、部分型)。GC の命令、`call_ref`、`ref.func` 用の宣言セグメント、デバッグ用の `name` セクション (関数名) |
+| `src/lune/base/WasmRt.lns` (新規) | ランタイムの型 (文字列、箱、List、Map/Set、オブジェクト、vtable、クロージャ、セル) と、IR で組み立てる関数 (文字列の連結・比較・部分文字列、数値の文字列化、Lua と同じ等価比較・大小比較・ハッシュ、ハッシュ表、List の操作、shell sort、print)。使われた関数だけを生成する |
+| `src/lune/base/convWasm.lns` | 全面的に書き直した。値の表現の変換 (箱詰め・cast・関数型が異なるクロージャのアダプタ)、クラス (継承・vtable・コンストラクタ・アクセッサ)、インタフェース (itable)、クロージャ (セルによる変数の共有)、generics (型消去)、alge / match、enum、Mapping、多値・`...`、`let!` / `if!` / `when!` / `unwrap!`、List / Set / Map / str のメソッド |
+| `src/misc/wasm/lnswasm.mjs` | ホストの関数 (出力、実数の文字列化、`string.format`、`error`、`find` / `gsub`)。実数の文字列化・`string.format`・`find` / `gsub` は 14.4 で Lua に切り替えた |
+| `src/misc/wasm/luapattern.mjs` (新規) | Lua のパターンマッチ (lstrlib.c の移植)。14.4 で削除した |
+
+値の表現:
+
+| LuneScript | wasm |
+|---|---|
+| int / char / int の enum | `i64` |
+| real | `f64` |
+| bool | `i32` |
+| str | `(ref null $Str)` (バイト配列) |
+| stem、nilable のスカラー、generics の型パラメータ | `anyref` (スカラーは箱に入れる) |
+| List / Array / `...` | `$List` (要素は anyref) |
+| Map / Set | `$Map` (オープンアドレス法のハッシュ表。Set は値にキーを入れる) |
+| クラス | `$Obj` の部分型 (先頭に vtable) |
+| インタフェース | `$Obj` (itable は vtable が持つ配列からインタフェースの番号で引く) |
+| 関数 | `$Clo` の部分型 (関数参照と、捕捉した変数のセル) |
+| alge | 値ごとの部分型 (tag で分岐する。パラメータの無い値はシングルトン) |
+
+M2 以降の課題 (未対応):
+
+- import (複数モジュール)、Lua 連携 (`Luaval` など、M3)
+- 例外処理 (`error()` はホストで停止する)
+- `gmatch`、`string.byte` (複数)、`lower` / `upper` などの文字列の関数の多く
+- generics の型パラメータを特殊化する最適化を入れる場合、インタフェースのメソッドと実装するクラスのメソッドとで、wasm 上の関数型 (箱に入れた `anyref` か、`i64` などか) が異なり得る。そのときは itable にアダプタ (箱詰め・取り出し) を登録する必要がある。現状は型パラメータを常に `anyref` で表現しており、LuneScript の型検査でもメソッドの型の一致が求められるため、このずれは起きない (`finalizeClasses()` で検出したらエラーにしている)
+- 最適化 (6 章)。現状は generics・コレクションの要素を全て箱に入れている
+
+### 14.3 M0 の作業中に見つかった既存の問題
 
 すべて `dev_with_llm` で修正した。
 
@@ -223,3 +291,29 @@ Lua 互換の文字列処理 (`string.format`、パターン) は、M3 で取り
   2 段階で行った (修正前のコンパイラで修正後のコンパイラを作って正式版にした後、修正を前提にしたコードとテストを追加して再度確認)。
 - `test/testGo.lns` にシフトと排他的論理和のテストを追加 (go 版と Lua 版の結果が一致することを `test-go` で確認)。
 - `test/wasm/m0_*.lns` にシフト、`and` を条件にした `while`、後で定義する関数の参照のテストを追加。`make test-wasm` で、Lua 版・go 版どちらの lnsc で変換しても合格。
+
+### 14.4 M2 前半: Lua のランタイムの取り込み — 完了
+
+7.3 の方針に従い、C の Lua 5.3.6 を wasm にして取り込み、JavaScript で実装していた Lua 互換の処理を切り替えた。
+`make test-wasm` の 24 件が Lua 版・go 版の lnsc の両方で合格し、セルフホストのテスト (`make -j1 test-comp-with-go`) も合格した。
+
+| ファイル | 内容 |
+|---|---|
+| `src/misc/wasm/lnslua.c` (新規) | Lua を呼び出すための関数を export する (スタック操作の API。builtin の関数を番号で push し、`lua_pcall` で呼び出す) |
+| `src/mk/wasm.mk` | `make wasm-lua` で `work/wasm-lua/lnslua.wasm` を作る (lua.org から取得し、sha256 を確認してから wasi-sdk でコンパイルする)。`test-wasm` はこれに依存する |
+| `src/lune/base/WasmBin.lns` | 関数を ID で指定し、エンコード時に関数インデックスに変換するようにした (関数を定義した後でも import できる)。memory の import、`i32.load8_u` / `i32.store8`。import する関数の型を rec group の外に出力する |
+| `src/lune/base/WasmRt.lns` | Lua の関数を使う時だけ import する。値の受け渡し (`luaPushAny` / `luaGetAny`)、builtin の呼び出し (`luaCall`、Lua のエラーはそのメッセージでエラーにする)。実数の文字列化・`format`・`find`・`gsub` を Lua で実装した |
+| `src/misc/wasm/lnswasm.mjs` | 変換した wasm が Lua を import している場合だけ `lnslua.wasm` を読み込んで渡す。JavaScript の `format` / 実数の文字列化 / パターンマッチを削除した |
+
+作業中にわかったこと:
+
+- WasmGC では、rec group の中の関数型は、別のモジュールの同じ構造の関数型と一致しない (型は rec group 単位で比べる)。
+  そのため、他の wasm から import する関数の型は rec group の外に定義する必要がある。
+- `lnslua.wasm` は `-Os` で約 190KB。WASI の関数を import するが、io・os ライブラリを開いていないのでほぼ使わない。
+- 多値を返す `find` を引数の途中に書いた場合 (`print( s.find( a ), s.find( b ) )`) に、全ての値を展開していた問題を直した
+  (`ExpMultiTo1` で `...` の先頭の要素を取り出す)。
+
+Lua 版との既知の差:
+
+- Lua の関数でのエラーのメッセージが少し異なる。Lua 版は `[string "..."]:75: bad argument #2 to 'format' ...` だが、
+  wasm 版は位置が無く、関数名が `'string.format'` になる (C から呼んでいるので呼び出し元の名前が無い)。

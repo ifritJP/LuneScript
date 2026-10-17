@@ -72,6 +72,7 @@ build = {
       [ "lune.base.convGo" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/convGo.lua",
       [ "lune.base.convPython" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/convPython.lua",
       [ "lune.base.WasmBin" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/WasmBin.lua",
+      [ "lune.base.WasmRt" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/WasmRt.lua",
       [ "lune.base.convWasm" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/convWasm.lua",
       [ "lune.base.dumpNode" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/dumpNode.lua",
       [ "lune.base.Formatter" ] = "src/lune/base/runtime_go/legacy/lua51/lune/base/Formatter.lua",

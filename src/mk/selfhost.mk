@@ -45,6 +45,7 @@ define selfhost_buildOp
 	$(call $5,$1,$2,$3,$4,base/convGo)
 	$(call $5,$1,$2,$3,$4,base/convPython)
 	$(call $5,$1,$2,$3,$4,base/WasmBin)
+	$(call $5,$1,$2,$3,$4,base/WasmRt)
 	$(call $5,$1,$2,$3,$4,base/convWasm)
 	$(call $5,$1,$2,$3,$4,base/OutputDepend)
 	$(call $5,$1,$2,$3,$4,base/Converter)
