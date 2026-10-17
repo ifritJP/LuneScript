@@ -23,5 +23,7 @@ func Lns_RunMain(mainFunc func(args *LnsList) LnsInt) {
 		args = append(args, arg)
 	}
 
-	exitRuntime(mainFunc(NewLnsList(args)))
+	exitRuntime(runMainWithLuaError(func() LnsInt {
+		return mainFunc(NewLnsList(args))
+	}))
 }

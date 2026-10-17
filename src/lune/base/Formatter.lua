@@ -977,6 +977,32 @@ end
 
 
 
+function FormatterFilter:processRefTypeFunc( node, opt )
+
+   self:write( "fn(" )
+   for index, argNode in ipairs( node:get_argTypeNodeList() ) do
+      if index ~= 1 then
+         self:write( "," )
+      end
+      self:write( " " )
+      filter( argNode, self, opt:nextOpt( node ) )
+   end
+   if #node:get_argTypeNodeList() > 0 then
+      self:write( " " )
+   end
+   self:write( ")" )
+   for index, retNode in ipairs( node:get_retTypeNodeList() ) do
+      if index == 1 then
+         self:write( " : " )
+      else
+       
+         self:write( ", " )
+      end
+      filter( retNode, self, opt:nextOpt( node ) )
+   end
+end
+
+
 function FormatterFilter:processRefType( node, opt )
 
    do
@@ -1613,6 +1639,12 @@ end
 function FormatterFilter:processLiteralNil( node, opt )
 
    self:write( "nil" )
+end
+
+
+function FormatterFilter:processContinue( node, opt )
+
+   self:writeln( "continue;" )
 end
 
 

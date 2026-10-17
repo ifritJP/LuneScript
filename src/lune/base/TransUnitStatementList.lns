@@ -67,6 +67,18 @@ pro fn TransUnit.analyzeStatementToken( token:&Tokenizer.Token ) mut : Nodes.Nod
 }
 
 
+/**
+continue が continue 文かどうか。
+
+continue は予約語ではないので、直後が ";" の場合だけ continue 文とする
+(continue という名前の変数などと区別する)。
+*/
+fn TransUnit.isContinueStatement() mut : bool {
+   let nextToken = self.getToken(##);
+   self.pushback();
+   return nextToken.txt == ";";
+}
+
 fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
 {
    self.commentCtrl.push();
@@ -190,6 +202,15 @@ fn TransUnit.analyzeStatement( termTxt: str! ) mut : Nodes.Node!
          if not nsInfo.canBreak() {
             self.addErrMess( token.pos, "no loop syntax." );
          } 
+      }
+      elseif token.txt == "continue" and self.isContinueStatement() {
+         self.checkNextToken( ";" );
+         statement = Nodes.ContinueNode.create(
+            self.nodeManager, token.pos, self.inTestBlock,
+            self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ] );
+         if! let mess = self.$curNsInfo.setContinue() {
+            self.addErrMess( token.pos, mess );
+         }
       }
       elseif token.txt == "unwrap" {
          statement = self.analyzeUnwrap( token );

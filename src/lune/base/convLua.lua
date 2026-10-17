@@ -494,6 +494,8 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.pubEnumId2EnumTypeInfo = {}
    self.pubAlgeId2AlgeTypeInfo = {}
    self.needIndent = false
+   self.continueIdList = {}
+   self.continueIdCounter = 0
    self.moduleTypeInfo = moduleTypeInfo
    self.useLuneRuntime = useLuneRuntime
    self.targetLuaVer = targetLuaVer
@@ -1353,7 +1355,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1104, function (  )
+   Log.log( Log.Level.Log, __func__, 1112, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
    end
@@ -1545,13 +1547,68 @@ function ConvFilter:processAsyncLock( node, opt )
       filter( node:get_block(), self, node )
    end
    if node:get_hasAsyncLockBreak() then
-      self:writeln( string.format( "if %s then break end", asyncLockBreakSym) )
+      local continueId = self:getContinueId(  )
+      if continueId ~= 0 and self:useRepeatForContinue(  ) then
+         self:writeln( string.format( "if %s then __break%d = true break end", asyncLockBreakSym, continueId) )
+      else
+       
+         self:writeln( string.format( "if %s then break end", asyncLockBreakSym) )
+      end
+   end
+end
+
+
+function ConvFilter:getContinueId(  )
+
+   if #self.continueIdList == 0 then
+      return 0
+   end
+   return self.continueIdList[#self.continueIdList]
+end
+
+function ConvFilter:useRepeatForContinue(  )
+
+   return self.targetLuaVer:get_verKind() == LuaVer.VerKind.v51
+end
+
+function ConvFilter:writeLoopBreak(  )
+
+   local continueId = self:getContinueId(  )
+   if continueId ~= 0 and self:useRepeatForContinue(  ) then
+      self:writeRawln( string.format( "__break%d = true", continueId) )
+   end
+   self:writeRawln( "break" )
+end
+
+
+function ConvFilter:processContinue( node, opt )
+
+   if self:useRepeatForContinue(  ) then
+      self:writeRawln( "break" )
+   else
+    
+      self:writeRawln( string.format( "goto __continue%d", self:getContinueId(  )) )
    end
 end
 
 
 function ConvFilter:processBlockSub( node, opt )
 
+   local isLoop = false
+   do
+      local _switchExp = node:get_blockKind()
+      if _switchExp == Nodes.BlockKind.While or _switchExp == Nodes.BlockKind.Repeat or _switchExp == Nodes.BlockKind.For or _switchExp == Nodes.BlockKind.Apply or _switchExp == Nodes.BlockKind.Foreach then
+         isLoop = true
+      end
+   end
+   local continueId = 0
+   if isLoop then
+      if node:get_hasContinue() then
+         self.continueIdCounter = self.continueIdCounter + 1
+         continueId = self.continueIdCounter
+      end
+      table.insert( self.continueIdList, continueId )
+   end
    local word = ""
    do
       local _switchExp = node:get_blockKind(  )
@@ -1593,9 +1650,33 @@ function ConvFilter:processBlockSub( node, opt )
    if _lune.nilacc( node:get_scope():getSymbolInfoChild( "_" ), 'get_posForLatestMod', 'callmtd' ) then
       self:writeln( "local _" )
    end
+   if continueId ~= 0 then
+      if self:useRepeatForContinue(  ) then
+         self:writeln( string.format( "local __break%d = false", continueId) )
+         self:writeln( "repeat" )
+      else
+       
+         self:writeln( "do" )
+      end
+      self:pushIndent(  )
+   end
    local stmtList = node:get_stmtList(  )
    for __index, statement in ipairs( stmtList ) do
       filter( statement, self, node )
+   end
+   if continueId ~= 0 then
+      self:popIndent(  )
+      if self:useRepeatForContinue(  ) then
+         self:writeln( "until true" )
+         self:writeln( string.format( "if __break%d then break end", continueId) )
+      else
+       
+         self:writeln( "end" )
+         self:writeln( string.format( "::__continue%d::", continueId) )
+      end
+   end
+   if isLoop then
+      table.remove( self.continueIdList )
    end
    self:popIndent(  )
    do
@@ -3473,6 +3554,10 @@ function ConvFilter:processExpOp1( node, opt )
          filter( node:get_exp(), self, node )
          self:writeRaw( " )" )
       end
+   elseif op == "#" and node:get_exp():get_expType():get_kind() == Ast.TypeInfoKind.Map then
+      self:writeRaw( "_lune._Set_len( " )
+      filter( node:get_exp(), self, node )
+      self:writeRaw( " )" )
    else
     
       if op == "not" then
@@ -4083,7 +4168,7 @@ function ConvFilter:processBreak( node, opt )
       self:writeRawln( "return" )
    else
     
-      self:writeRawln( "break" )
+      self:writeLoopBreak(  )
    end
 end
 

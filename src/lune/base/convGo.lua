@@ -684,6 +684,61 @@ function concatGLSym( name, external )
    return name
 end
 
+local function outputGoMod( appName, mainPath, lnsRef )
+
+   local dir = "."
+   if mainPath ~= nil then
+      if mainPath:find( "/", 1, true ) then
+         dir = mainPath:gsub( "/[^/]*$", "" )
+      end
+   end
+   local gomodPath = string.format( "%s/go.mod", dir)
+   do
+      local fileObj = io.open( gomodPath, "r" )
+      if fileObj ~= nil then
+         fileObj:close(  )
+         return nil
+      end
+   end
+   local lnsModule = "github.com/ifritJP/LuneScript/src"
+   local moduleName = appName
+   if moduleName == "" then
+      moduleName = "lnsapp"
+   end
+   local code = string.format( [==[// lnsc mkmain --gomod で生成した。
+// 依存するモジュールは go mod tidy で取得する。
+module %s
+
+go 1.20
+
+]==], moduleName)
+   local isDir = false
+   do
+      local fileObj = io.open( string.format( "%s/go.mod", lnsRef), "r" )
+      if fileObj ~= nil then
+         fileObj:close(  )
+         isDir = true
+      end
+   end
+   if isDir then
+      code = code .. string.format( "require %s v0.0.0\n\nreplace %s => %s\n", lnsModule, lnsModule, lnsRef)
+   else
+    
+      code = code .. string.format( "require %s %s\n", lnsModule, lnsRef)
+   end
+   local fileObj = io.open( gomodPath, "w" )
+   if  nil == fileObj then
+      local _fileObj = fileObj
+   
+      return string.format( "failed to open -- %s", gomodPath)
+   end
+   
+   fileObj:write( code )
+   fileObj:close(  )
+   return nil
+end
+_moduleObj.outputGoMod = outputGoMod
+
 
 local function outputGoMain( appName, mod, testing, path, opt )
 
@@ -1187,6 +1242,9 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
       elseif _switchExp == Ast.TypeInfoKind.Form then
          return "LnsForm"
       elseif _switchExp == Ast.TypeInfoKind.FormFunc then
+         if typeInfo:get_rawTxt() == "" then
+            return self:funcType2gotype( typeInfo )
+         end
          return self:getFuncSymbol( typeInfo )
       elseif _switchExp == Ast.TypeInfoKind.Class then
          if typeInfo:get_genSrcTypeInfo() == self.builtinFuncs.__pipe_ then
@@ -1214,6 +1272,43 @@ function convFilter:type2gotypeOrg( typeInfo, mode )
       return "LnsAny"
    end
    Util.err( string.format( "not support yet -- %s", typeInfo:getTxt(  )) )
+end
+
+function convFilter:funcType2gotype( typeInfo )
+
+   local argTypeList = typeInfo:get_argTypeInfoList()
+   local txt = "func ("
+   if self.option:get_addEnvArg() then
+      txt = txt .. self:getEnvArgDecl( #argTypeList )
+   end
+   for index, argType in ipairs( argTypeList ) do
+      if index ~= 1 then
+         txt = txt .. ","
+      end
+      txt = txt .. string.format( "arg%d %s", index, self:type2gotype( argType ))
+   end
+   txt = txt .. ")"
+   local retTypeList = typeInfo:get_retTypeInfoList()
+   do
+      local _switchExp = #retTypeList
+      if _switchExp == 0 then
+      elseif _switchExp == 1 then
+         if retTypeList[1] ~= Ast.builtinTypeNeverRet then
+            txt = txt .. " " .. self:type2gotype( retTypeList[1] )
+         end
+      else 
+         
+            txt = txt .. "("
+            for index, retType in ipairs( retTypeList ) do
+               if index ~= 1 then
+                  txt = txt .. ", "
+               end
+               txt = txt .. self:type2gotype( retType )
+            end
+            txt = txt .. ")"
+      end
+   end
+   return txt
 end
 
 
@@ -1438,6 +1533,10 @@ function convFilter:outputImplicitCast( castType, node, parent )
             self:writeRaw( string.format( "%s(", self:getConv2formName( parent )) )
             filter( node, self, parent )
             self:writeRaw( ")" )
+         elseif castType:get_rawTxt() == "" then
+            self:writeRaw( string.format( "(%s)(", self:funcType2gotype( castType )) )
+            filter( node, self, parent )
+            self:writeRaw( ")" )
          else
           
             self:writeRaw( string.format( "%s(", self:getTypeSymbol( castType )) )
@@ -1541,6 +1640,9 @@ function getExpListKind( dstTypeList, node, addEnvArg )
 
    if addEnvArg and node:get_mRetExp() then
       return ExpListKind.Conv
+   end
+   if #dstTypeList == 0 then
+      return ExpListKind.Direct
    end
    if #dstTypeList < #node:get_expList() then
       if dstTypeList[#dstTypeList]:get_kind() ~= Ast.TypeInfoKind.DDD then
@@ -4387,7 +4489,12 @@ function convFilter:processFor( node, opt )
          self:writeRaw( string.format( "%s := ", deltaSym) )
          filter( delta, self, node )
          self:writeln( "" )
-         self:writeln( "for {" )
+         if node:get_block():get_hasContinue() then
+            self:writeln( string.format( "for ; ; %s += %s {", workSym, deltaSym) )
+         else
+          
+            self:writeln( "for {" )
+         end
          self:pushIndent(  )
          self:writeln( string.format( "if %s > 0 {", deltaSym) )
          self:writeln( string.format( "   if %s > %s { break }", workSym, toSym) )
@@ -4405,7 +4512,7 @@ function convFilter:processFor( node, opt )
    end
    self:popIndent(  )
    filter( node:get_block(), self, node )
-   if node:get_delta() then
+   if node:get_delta() and not node:get_block():get_hasContinue() then
       self:pushIndent(  )
       self:writeln( string.format( "%s += %s", workSym, deltaSym) )
       self:popIndent(  )
@@ -6163,6 +6270,10 @@ function convFilter:processExpOp1( node, opt )
             if _switchExp == Ast.TypeInfoKind.List then
                filter( node:get_exp(), self, node )
                self:writeRaw( ".Len()" )
+            elseif _switchExp == Ast.TypeInfoKind.Map then
+               self:writeRaw( "len(" )
+               filter( node:get_exp(), self, node )
+               self:writeRaw( ".Items)" )
             elseif _switchExp == Ast.TypeInfoKind.Ext then
                do
                   local _switchExp = node:get_exp():get_expType():get_extedType():get_kind()
@@ -7048,6 +7159,12 @@ end
 function convFilter:processLiteralNil( node, opt )
 
    self:writeRaw( "nil" )
+end
+
+
+function convFilter:processContinue( node, opt )
+
+   self:writeln( "continue" )
 end
 
 

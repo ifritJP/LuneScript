@@ -19,7 +19,9 @@ fn func( val:int! ) {
 
 {
    let map:Map<int,int> = {};
-   let size = #map; // error
+   let size = #map; // warning (Lua では要素数に比例した時間がかかる)
+   let set:Set<int> = (@);
+   let size2 = #set; // error
 }
 
 print( 1 < 2 );

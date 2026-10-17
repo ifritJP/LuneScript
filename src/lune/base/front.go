@@ -631,7 +631,7 @@ func front_Front_exec___anonymous_2_(_env *LnsEnv, ast *AstInfo_ASTInfo) {
     indexer.FP.Start(_env, ast.FP.Get_node(_env), NewLnsSet2_[LnsInt](Lns_2DDDGen[LnsInt](Nodes_NodeKind_get_Switch(_env), Nodes_NodeKind_get_Match(_env), Nodes_NodeKind_get_For(_env), Nodes_NodeKind_get_Apply(_env))))
     indexer.FP.Dump(_env)
 }
-// 1961: decl @lune.@base.@front.exec
+// 1968: decl @lune.@base.@front.exec
 func Front_exec(_env *LnsEnv, args *LnsList2_[string]) {
     var version LnsReal
     version = Lns_unwrapDefault( Lns_tonumber(Lns_car(_env.GetVM().String_gsub(Depend_getLuaVersion(_env),"^[^%d]+", "")).(string), nil), 0.0).(LnsReal)
@@ -649,7 +649,7 @@ func Front_exec(_env *LnsEnv, args *LnsList2_[string]) {
     }
 }
 
-// 1983: decl @lune.@base.@front.__main
+// 1990: decl @lune.@base.@front.__main
 func Front___main(_env *LnsEnv, argList *LnsList) LnsInt {
     Lns_front_init( _env )
     var list *LnsList2_[string]
@@ -2137,6 +2137,19 @@ func (self *Front_Front) Exec(_env *LnsEnv) {
             if !Lns_IsNil( _mess ) {
                 mess := _mess.(string)
                 Util_errorLog(_env, mess)
+            }
+        }
+        {
+            _lnsRef := self.option.GomodLnsRef
+            if !Lns_IsNil( _lnsRef ) {
+                lnsRef := _lnsRef.(string)
+                {
+                    _mess := ConvGo_outputGoMod(_env, self.FP.getGoAppName(_env), self.option.OutputDir, lnsRef)
+                    if !Lns_IsNil( _mess ) {
+                        mess := _mess.(string)
+                        Util_errorLog(_env, mess)
+                    }
+                }
             }
         }
     } else if _switch0 == Option_ModeKind__Indexer {

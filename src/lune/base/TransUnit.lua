@@ -248,6 +248,7 @@ if not _lune8 then
 end
 local getFirstStmt
 local getAnalyzingState
+local getImmutableVarHint
 local findForm
 local isMatchStringFormatType
 local getClassTypeFor
@@ -2138,7 +2139,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
       local _switchExp = blockKind
       if _switchExp == Nodes.BlockKind.For or _switchExp == Nodes.BlockKind.Apply or _switchExp == Nodes.BlockKind.While or _switchExp == Nodes.BlockKind.Repeat or _switchExp == Nodes.BlockKind.Foreach then
          loopFlag = true
-         nsInfo:pushLoopScope( self:get_scope() )
+         nsInfo:pushLoopScope( self:get_scope(), blockKind == Nodes.BlockKind.Repeat )
       end
    end
    local stmtList = {}
@@ -2148,19 +2149,23 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
    self:checkNextToken( "}" )
    local hasAsyncLockBreak
    
+   local hasContinue
+   
    if loopFlag then
       hasAsyncLockBreak = nsInfo:hasAsyncLockBreak(  )
+      hasContinue = nsInfo:hasContinue(  )
       nsInfo:popLoopScope(  )
    else
     
       hasAsyncLockBreak = false
+      hasContinue = false
    end
    if scope ~= nil then
       self:setScope( backScope, TransUnitIF.SetNSInfo.FromScope )
    else
       self:popScope(  )
    end
-   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blockKind, blockScope, hasAsyncLockBreak, stmtList )
+   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blockKind, blockScope, hasAsyncLockBreak, hasContinue, stmtList )
    if node:getBreakKind( Nodes.CheckBreakMode.Normal ) ~= Nodes.BreakKind.None then
       self.tentativeSymbol:skip(  )
    end
@@ -2218,7 +2223,7 @@ function TransUnit:skipAndCreateDummyBlock(  )
    local stmtList = {}
    self:popScope(  )
    self:skipBlock( false )
-   return Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, false, stmtList )
+   return Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, false, false, stmtList )
 end
 
 
@@ -2265,6 +2270,23 @@ function TransUnit:analyzeAsyncLock( asyncToken, lockKind )
       retTypeList = nil
    end
    return Nodes.AsyncLockNode.create( self.nodeManager, asyncToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, lockKind, retTypeList, nsInfo:hasAsyncLockBreak(  ), block )
+end
+
+function TransUnit:analyzeElseIfBlock( elseifToken )
+
+   local blockScope = self:pushScope( Ast.ScopeKind.Other )
+   blockScope:addIgnoredVar( self.processInfo )
+   self:mergeTentativeSymbol( blockScope )
+   local ifNode = self:analyzeIf( elseifToken )
+   local stmtList = {ifNode}
+   self:get_curNsInfo():addStmtNum( #stmtList )
+   self:popScope(  )
+   local node = Nodes.BlockNode.create( self.nodeManager, elseifToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Else, blockScope, false, false, stmtList )
+   if node:getBreakKind( Nodes.CheckBreakMode.Normal ) ~= Nodes.BreakKind.None then
+      self.tentativeSymbol:skip(  )
+   end
+   self:finishTentativeSymbol( true )
+   return node
 end
 
 
@@ -2946,11 +2968,67 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
    return Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, declTupleNode, {}, {}, Ast.MutMode.IMut, "no" )
 end
 
+function TransUnit:analyzeRefTypeFunc( firstToken, accessMode, parentPub )
+
+   local _
+   self:checkNextToken( "(" )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
+   local argTypeNodeList = {}
+   local argTypeList = {}
+   local nextToken = self:getToken(  )
+   if nextToken.txt ~= ")" then
+      self:pushback(  )
+      while true do
+         do
+            local work = self:getToken(  )
+            if work.kind == Tokenizer.TokenKind.Symb then
+               if self:getToken(  ).txt ~= ":" then
+                  self:pushback(  )
+                  self:pushback(  )
+               end
+            else
+             
+               self:pushback(  )
+            end
+         end
+         local refTypeNode = self:analyzeRefType( accessMode, true, parentPub, false, false )
+         table.insert( argTypeNodeList, refTypeNode )
+         table.insert( argTypeList, refTypeNode:get_expType() )
+         nextToken = self:getToken(  )
+         if nextToken.txt ~= "," then
+            break
+         end
+      end
+      self:checkToken( nextToken, ")" )
+   end
+   local asyncMode
+   
+   nextToken, _, asyncMode = self:getMutableAsync( self:getToken(  ) )
+   local retTypeList = {}
+   local retTypeNodeList = {}
+   if nextToken.txt == ":" then
+      local retTypeNode = self:analyzeRefType( accessMode, true, parentPub, false, false )
+      table.insert( retTypeNodeList, retTypeNode )
+      table.insert( retTypeList, retTypeNode:get_expType() )
+   else
+    
+      self:pushback(  )
+   end
+   self:popScope(  )
+   local parentNsInfo = self:get_curNsInfo()
+   local formType = self.processInfo:createFuncAsync( false, false, scope, Ast.TypeInfoKind.FormFunc, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), false, false, true, accessMode, "", self:getDefaultAsync( Ast.TypeInfoKind.FormFunc, self:getCurrentClass(  ), asyncMode ), {}, argTypeList, retTypeList, Ast.MutMode.IMut )
+   local funcNode = Nodes.RefTypeFuncNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {formType}, argTypeNodeList, retTypeNodeList )
+   return Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {formType}, funcNode, {}, {}, nil, "no" )
+end
+
 function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
 
    local firstToken = self:getToken(  )
    if firstToken.txt == "(" then
       return self:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
+   end
+   if firstToken.txt == "fn" then
+      return self:analyzeRefTypeFunc( firstToken, accessMode, parentPub )
    end
    local token = firstToken
    local mutMode
@@ -3553,7 +3631,7 @@ end
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
-   Log.log( Log.Level.Trace, __func__, 872, function (  )
+   Log.log( Log.Level.Trace, __func__, 960, function (  )
    
       return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
    end
@@ -3617,7 +3695,7 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
       self:prepareTentativeSymbol( self:get_scope(), false, nil )
       self:analyzeStatementList( stmtList, false, "}" )
       if #stmtList > 0 then
-         stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, false, stmtList )
+         stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, false, false, stmtList )
       end
       self:checkNextToken( "}" )
       self:finishTentativeSymbol( true )
@@ -4465,7 +4543,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          if setterMode ~= Ast.AccessMode.None and mutMode == Ast.MutMode.IMut then
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
-         Log.log( Log.Level.Debug, __func__, 2121, function (  )
+         Log.log( Log.Level.Debug, __func__, 2209, function (  )
          
             return string.format( "%s", dummyRetType)
          end
@@ -6190,6 +6268,8 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    nextToken = self:getToken( true )
    if nextToken.txt == "else" then
       elseBlock = self:analyzeBlock( Nodes.BlockKind.Else, TentativeMode.Finish )
+   elseif nextToken.txt == "elseif" then
+      elseBlock = self:analyzeElseIfBlock( nextToken )
    else
     
       self:finishTentativeSymbol( false )
@@ -6254,7 +6334,7 @@ function TransUnit:analyzeWhen( firstToken )
                self:addErrMess( expNode:get_pos(), string.format( "This type isn't nilable. -- %s", expNode:get_expType():getTxt(  )) )
             end
          else
-            self:addErrMess( expNode:get_pos(), "'when' support only local variables or arguments." )
+            self:addErrMess( expNode:get_pos(), "'when' support only local variables or arguments. use 'if! let val = exp { }' for other expressions." )
          end
       end
    end
@@ -6699,6 +6779,26 @@ function TransUnit:checkImplicitCast( alt2typeMap, validCastToGen, dstTypeList, 
    return Nodes.ExpListNode.create( self.nodeManager, expListNode:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, newExpNodeList, newMRetExp, expListNode:get_followOn() )
 end
 
+function getImmutableVarHint( dstTypeList, expNodeList )
+
+   for index, expNode in ipairs( expNodeList ) do
+      if index > #dstTypeList then
+         break
+      end
+      do
+         local refNode = _lune.__Cast( expNode, 3, Nodes.ExpRefNode )
+         if refNode ~= nil then
+            local symbolInfo = refNode:get_symbolInfo()
+            if symbolInfo:get_kind() == Ast.SymbolKind.Var and not symbolInfo:get_mutable() and symbolInfo:get_typeInfo():get_mutMode() == Ast.MutMode.IMutRe and not Ast.isMutable( expNode:get_expType():get_mutMode() ) and Ast.isMutable( dstTypeList[index]:get_mutMode() ) then
+               return string.format( ". '%s' is immutable because it is declared without 'mut'. declare it as 'let mut %s'", symbolInfo:get_name(), symbolInfo:get_name())
+            end
+         end
+      end
+   end
+   return ""
+end
+
+
 function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allowDstShort, warnForFollow, workAlt2typeMap, validImplicitCast )
 
    local expNodeList = _lune.nilacc( expListNode, 'get_expList', 'callmtd' )
@@ -6758,7 +6858,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
    do
       local _switchExp = result
       if _switchExp == Ast.MatchType.Error then
-         self:addErrMess( pos, string.format( "%s: %s", message, mess) )
+         self:addErrMess( pos, string.format( "%s: %s%s", message, mess, getImmutableVarHint( dstTypeList, workExpNodeList )) )
       elseif _switchExp == Ast.MatchType.Warn then
          if not self.ctrl_info.checkingDefineAbbr and Code.isMessageOf( Code.ID.nothing_define_abbr, mess ) then
          else
@@ -7773,7 +7873,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
          end
       end
    end
-   if funcTypeInfo:get_rawTxt() == "" then
+   if funcTypeInfo:get_rawTxt() == "" and funcTypeInfo:get_kind() ~= Ast.TypeInfoKind.FormFunc then
       self:addErrMess( funcExp:get_pos(), "can't directly call the declared function." )
    end
    local exp
@@ -9847,8 +9947,11 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
             end
             typeInfo = expType
          elseif _switchExp == "#" then
-            if expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.List and expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.Array and not Ast.builtinTypeString:canEvalWith( self.processInfo, expType, Ast.CanEvalType.SetOp, {} ) then
+            if expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.List and expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.Array and expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.Map and not Ast.builtinTypeString:canEvalWith( self.processInfo, expType, Ast.CanEvalType.SetOp, {} ) then
                self:addErrMess( token.pos, string.format( 'unmatch type for "#" -- %s', expType:getTxt(  )) )
+            end
+            if expType:get_extedType():get_kind() == Ast.TypeInfoKind.Map and self.ctrl_info.outputLua then
+               self:addWarnMess( token.pos, string.format( '"#" for Map counts the keys each time in Lua (the time is proportional to the number of elements) -- %s', expType:getTxt(  )) )
             end
             if expType:get_kind() == Ast.TypeInfoKind.Ext then
                if not self.macroCtrl:get_analyzeInfo():isAnalyzingBlockArg(  ) and not self:get_curNsInfo():canAccessLuaval(  ) then
@@ -10048,6 +10151,13 @@ function TransUnit:analyzeStatementToken( token )
    return nil, true
 end
 
+function TransUnit:isContinueStatement(  )
+
+   local nextToken = self:getToken(  )
+   self:pushback(  )
+   return nextToken.txt == ";"
+end
+
 
 function TransUnit:analyzeStatement( termTxt )
 
@@ -10140,6 +10250,15 @@ function TransUnit:analyzeStatement( termTxt )
          statement = Nodes.BreakNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:setAsyncLockBreak(  ) )
          if not nsInfo:canBreak(  ) then
             self:addErrMess( token.pos, "no loop syntax." )
+         end
+      elseif token.txt == "continue" and self:isContinueStatement(  ) then
+         self:checkNextToken( ";" )
+         statement = Nodes.ContinueNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone} )
+         do
+            local mess = self:get_curNsInfo():setContinue(  )
+            if mess ~= nil then
+               self:addErrMess( token.pos, mess )
+            end
          end
       elseif token.txt == "unwrap" then
          statement = self:analyzeUnwrap( token )

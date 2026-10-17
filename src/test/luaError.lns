@@ -1,0 +1,5 @@
+// lnsc ... exe の実行中にエラーが起きた場合に、
+// メッセージを標準エラーに出力し、終了コード 1 で終わることを確認する。
+// (mk/go.mk の test-lua-error。go 版の lnsc では Lua のエラーが abort になっていた)
+print( "before" );
+error( "luaError: expected error" );

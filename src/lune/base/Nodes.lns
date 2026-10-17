@@ -949,6 +949,16 @@ _declNodeClass( "RefType", Node, false, false, false,
                    { "array": "str" } ]
 );
 
+/**
+型の位置に書いた関数型 ( fn( int, str ) : int )。
+
+RefTypeNode の typeNode に入れる。expType は名前の無い FormFunc 型。
+*/
+_declNodeClass( "RefTypeFunc", Node, false, false, false,
+                [ { "argTypeNodeList": "&List<&RefTypeNode>" },
+                  { "retTypeNodeList": "&List<&RefTypeNode>" } ]
+);
+
 pub fn RefTypeNode.checkValidGenerics() : bool, str {
    let typeInfo = self.$expType.$nonnilableType.$srcTypeInfo;
    if typeInfo.$kind == .DDD or typeInfo.$kind == .Box {
@@ -1014,6 +1024,8 @@ _declNodeClass( "Block", Node, false, false, true,
                   // この block がループの block の時、
                   // stmtList 内に __asyncLock を脱出する break を持つかどうか。
                   { "hasAsyncLockBreak": "bool" },
+                  // この block がループの block の時、このループの continue を持つかどうか。
+                  { "hasContinue": "bool" },
                   { "stmtList": "List<&Node>" } ]
 );
 
@@ -1416,6 +1428,16 @@ _declNodeClass( "Break", Node, false, false, true,
 
 pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Break;
+}
+
+_declNodeClass( "Continue", Node, false, false, true, [] );
+
+/**
+continue の後の文には遷移しない。
+ループを抜けないので、ループとしては繰り返しが続く (無条件ループは終わらない)。
+*/
+pub override fn ContinueNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   return .NeverRet;
 }
 
 _declNodeClass( "Provide", Node, false, false, true,

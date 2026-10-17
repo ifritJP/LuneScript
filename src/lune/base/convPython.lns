@@ -5974,6 +5974,13 @@ pub override fn convFilter.processLiteralNil(
    self.writeRaw( literalNil );
 }
 
+pub override fn convFilter.processContinue(
+   node: &Nodes.ContinueNode, opt: Opt ) mut
+{
+   self.writeRaw( "continue" );
+   self.writeln( "" );
+}
+
 pub override fn convFilter.processBreak(
    node: &Nodes.BreakNode, opt: Opt ) mut
 {

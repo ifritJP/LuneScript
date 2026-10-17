@@ -154,6 +154,36 @@ func createEnv(async bool, runnerName string, runnerId int) *LnsEnv {
 	return env
 }
 
+/** Lua の関数の実行中に発生したエラー */
+type LnsLuaError struct {
+	Message string
+}
+
+func (self *LnsLuaError) Error() string {
+	return self.Message
+}
+
+/*
+*
+mainFunc を実行する。
+
+Lua のエラー (LnsLuaError) で終了した場合は、Lua 版と同じくメッセージを
+"lua: <メッセージ>" の形式で標準エラーに出力し、1 を返す。
+*/
+func runMainWithLuaError(mainFunc func() LnsInt) (code LnsInt) {
+	defer func() {
+		if err := recover(); err != nil {
+			if luaErr, ok := err.(*LnsLuaError); ok {
+				fmt.Fprintf(os.Stderr, "lua: %s\n", luaErr.Message)
+				code = 1
+				return
+			}
+			panic(err)
+		}
+	}()
+	return mainFunc()
+}
+
 func exitRuntime(code LnsInt) {
 	if validRuntimeLog {
 		fmt.Printf("----------\n")

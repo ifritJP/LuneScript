@@ -386,6 +386,62 @@ fn concatGLSym( name:str, external:bool ) : str {
    //return (external and "G" or "l") .. name;
 }
 
+/**
+mkmain で出力した main.go と同じディレクトリに、go.mod を出力する。
+
+既に go.mod がある場合は何もしない。
+
+@param mainPath main.go のパス (nil なら main.go)
+@param lnsRef LuneScript のランタイムの参照先。
+   ディレクトリなら、その LuneScript のソース (src) を replace で参照する。
+   それ以外は、require するバージョン (master など) とする。
+@return エラーメッセージ。正常時は nil
+*/
+pub fn outputGoMod( appName:str, mainPath:str!, lnsRef:str ) : str! {
+   let mut dir = ".";
+   when! mainPath {
+      if mainPath.find( "/", 1, true ) {
+         dir = mainPath.gsub( "/[^/]*$", "" );
+      }
+   }
+   let gomodPath = "%s/go.mod" (dir);
+   if! let mut fileObj = io.open( gomodPath, "r" ) {
+      fileObj.close();
+      return nil;
+   }
+
+   let lnsModule = "github.com/ifritJP/LuneScript/src";
+   let mut moduleName = appName;
+   if moduleName == "" {
+      moduleName = "lnsapp";
+   }
+   let mut code = ```// lnsc mkmain --gomod で生成した。
+// 依存するモジュールは go mod tidy で取得する。
+module %s
+
+go 1.20
+
+``` (moduleName);
+   // lnsRef がディレクトリかどうかは、その下の go.mod を開けるかで判断する
+   let mut isDir = false;
+   if! let mut fileObj = io.open( "%s/go.mod" (lnsRef), "r" ) {
+      fileObj.close();
+      isDir = true;
+   }
+   if isDir {
+      code = code .. "require %s v0.0.0\n\nreplace %s => %s\n" (lnsModule, lnsModule, lnsRef);
+   } else {
+      code = code .. "require %s %s\n" (lnsModule, lnsRef);
+   }
+
+   let! mut fileObj = io.open( gomodPath, "w" ) {
+      return "failed to open -- %s" ( gomodPath );
+   };
+   fileObj.write( code );
+   fileObj.close();
+   return nil;
+}
+
 pub fn outputGoMain( appName:str, mod:str, testing:bool, path:str!,
                      opt:&LnsOpt.RuntimeOpt ):str!
 {
@@ -851,6 +907,11 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          return "LnsForm";
       }
       case .FormFunc {
+         if typeInfo.$rawTxt == "" {
+            // 型の位置に書いた関数型 ( fn( int ) : int )。
+            // 宣言が無いので、go の関数型をそのまま書く。
+            return self.funcType2gotype( typeInfo );
+         }
          return self.getFuncSymbol( typeInfo );
       }
       case .Class {
@@ -881,6 +942,47 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
       return "LnsAny";
    }
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) ); // バグ
+}
+
+/**
+関数型を go の関数型 ( func (_env *LnsEnv, arg1 LnsInt) LnsInt ) にする。
+
+outputDeclFunc( .Type( typeInfo ) ) と同じ形式。
+*/
+fn convFilter.funcType2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
+   let argTypeList = typeInfo.$argTypeInfoList;
+   let mut txt = "func (";
+   if self.option.$addEnvArg {
+      txt = txt .. self.getEnvArgDecl( #argTypeList );
+   }
+   foreach argType, index in argTypeList {
+      if index ~= 1 {
+         txt = txt .. ",";
+      }
+      txt = txt .. "arg%d %s" (index, self.type2gotype( argType ) );
+   }
+   txt = txt .. ")";
+   let retTypeList = typeInfo.$retTypeInfoList;
+   switch #retTypeList {
+      case 0 {
+      }
+      case 1 {
+         if retTypeList[ 1 ] ~= Ast.builtinTypeNeverRet {
+            txt = txt .. " " .. self.type2gotype( retTypeList[ 1 ] );
+         }
+      }
+      default {
+         txt = txt .. "(";
+         foreach retType, index in retTypeList {
+            if index ~= 1 {
+               txt = txt .. ", ";
+            }
+            txt = txt .. self.type2gotype( retType );
+         }
+         txt = txt .. ")";
+      }
+   }
+   return txt;
 }
 
 fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
@@ -1134,6 +1236,13 @@ fn convFilter.outputImplicitCast(
             filter( node, self, parent );
             self.writeRaw( ")");
          }
+         elseif castType.$rawTxt == "" {
+            // 型の位置に書いた関数型 ( fn( int ) : int ) への変換。
+            // 型名が無いので、go の関数型で変換する。
+            self.writeRaw( "(%s)(" (self.funcType2gotype( castType )) );
+            filter( node, self, parent );
+            self.writeRaw( ")");
+         }
          else {
             self.writeRaw( "%s(" (self.getTypeSymbol( castType )) );
             filter( node, self, parent );
@@ -1226,6 +1335,10 @@ fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
       return .Conv;
    }
    
+   if #dstTypeList == 0 {
+      // 引数の無い関数を f( ## ) で呼び出す場合。## (AbbrNode) だけなので変換不要
+      return .Direct;
+   }
    if #dstTypeList < #node.$expList {
       if dstTypeList[ #dstTypeList ].$kind ~= .DDD {
          return .Conv;
@@ -4049,7 +4162,12 @@ pub override fn convFilter.processFor(
       filter( delta, self, node );
       self.writeln( "" );
 
-      self.writeln( "for {" );
+      if node.$block.$hasContinue {
+         // continue しても増分を加えるように、for の後処理で加える
+         self.writeln( "for ; ; %s += %s {" (workSym, deltaSym) );
+      } else {
+         self.writeln( "for {" );
+      }
 
       self.pushIndent( ## );
       self.writeln( "if %s > 0 {" (deltaSym) );
@@ -4073,7 +4191,7 @@ pub override fn convFilter.processFor(
 
    filter( node.$block, self, node );
 
-   if node.$delta {
+   if node.$delta and not node.$block.$hasContinue {
       self.pushIndent( ## );
       self.writeln( "%s += %s" (workSym, deltaSym) );
       self.popIndent();
@@ -5929,6 +6047,12 @@ pub override fn convFilter.processExpOp1(
                filter( node.$exp, self, node );
                self.writeRaw( ".Len()" );
             }
+            case .Map {
+               // Map の要素数。nil を設定した要素は削除しているので、Items の数と一致する
+               self.writeRaw( "len(" );
+               filter( node.$exp, self, node );
+               self.writeRaw( ".Items)" );
+            }
             case .Ext {
                switch node.$exp.$expType.$extedType.$kind {
                   case .List {
@@ -6742,6 +6866,12 @@ pub override fn convFilter.processLiteralNil(
    node: &Nodes.LiteralNilNode, opt: Opt ) mut
 {
    self.writeRaw( "nil" );
+}
+
+pub override fn convFilter.processContinue(
+   node: &Nodes.ContinueNode, opt: Opt ) mut
+{
+   self.writeln( "continue" );
 }
 
 pub override fn convFilter.processBreak(

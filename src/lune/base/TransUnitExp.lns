@@ -611,6 +611,38 @@ fn TransUnit.checkImplicitCast(
 @return Map<&Ast.TypeInfo,&Ast.TypeInfo>  AlternateTypeInfo → 実型パラメータのマップ
 @return 
 */
+/**
+型の不一致の原因が、mut の無い let で宣言した変数を
+mutable な値として渡したことであれば、その対処方法のヒントを返す。
+
+`let rect = new Rect()` の rect は immutable (&Rect) になるので、
+mutable な Rect を要求する引数などには渡せない。
+*/
+fn getImmutableVarHint(
+   dstTypeList:&List<&Ast.TypeInfo>, expNodeList:&List<&Nodes.Node> ) : str
+{
+   foreach expNode, index in expNodeList {
+      if index > #dstTypeList {
+         break;
+      }
+      if! let refNode = expNode@@@Nodes.ExpRefNode {
+         let symbolInfo = refNode.$symbolInfo;
+         // 型を省略し、mut を付けずに宣言した変数は、初期値の型を IMutRe にした型になる
+         // (analyzeLetAndInitExp)。
+         // let val:&Hoge のように型で immutable を指定している場合は、mut を付けても解決しない。
+         if symbolInfo.$kind == .Var and not symbolInfo.$mutable and
+            symbolInfo.$typeInfo.$mutMode == .IMutRe and
+            not Ast.isMutable( expNode.$expType.$mutMode ) and
+            Ast.isMutable( dstTypeList[ index ].$mutMode )
+         {
+            return ". '%s' is immutable because it is declared without 'mut'. declare it as 'let mut %s'"
+               ( symbolInfo.$name, symbolInfo.$name );
+         }
+      }
+   }
+   return "";
+}
+
 fn TransUnit.checkMatchType(
    mut message:str, pos: &Tokenizer.Position, dstTypeList: &List<&Ast.TypeInfo>,
    expListNode: &Nodes.ExpListNode!, allowDstShort:bool, warnForFollow:bool,
@@ -690,7 +722,9 @@ Ast.MatchType, Map<&Ast.TypeInfo,&Ast.TypeInfo>, Nodes.ExpListNode!, &List<&Ast.
    //Ast.AlternateTypeInfo.createAlt2typeMap( applyGeneric ) ); 
    switch result {
       case .Error {
-         self.addErrMess( pos, "%s: %s" (message, mess ) );
+         self.addErrMess(
+            pos, "%s: %s%s"
+            (message, mess, getImmutableVarHint( dstTypeList, workExpNodeList ) ) );
       }
       case .Warn {
          if not self.ctrl_info.checkingDefineAbbr and
@@ -2076,7 +2110,9 @@ fn TransUnit.analyzeExpCall(
       }
    }
 
-   if funcTypeInfo.$rawTxt == "" {
+   // 型の位置に書いた関数型 ( fn( int ) : int ) は名前の無い FormFunc 型なので、
+   // その型の値は呼び出せる。
+   if funcTypeInfo.$rawTxt == "" and funcTypeInfo.$kind ~= .FormFunc {
       self.addErrMess( funcExp.$pos, "can't directly call the declared function." );
    }
 
@@ -4793,14 +4829,23 @@ fn TransUnit.analyzeExpSub(
             typeInfo = expType;
          }
          case "#" {
+            // Map は要素数 (キーの数) を返す
             if expType.$extedType.$kind ~= .List and
                expType.$extedType.$kind ~= .Array and
+               expType.$extedType.$kind ~= .Map and
                not Ast.builtinTypeString.canEvalWith(
                   self.processInfo, expType, .SetOp, {} )
             {  
                self.addErrMess(
                   token.pos,
                   'unmatch type for "#" -- %s' ( expType.getTxt(##) ) );
+            }
+            if expType.$extedType.$kind == .Map and self.ctrl_info.outputLua {
+               // Lua では Map の要素数を直接取得できないので、キーを数える
+               self.addWarnMess(
+                  token.pos,
+                  '"#" for Map counts the keys each time in Lua (the time is proportional to the number of elements) -- %s'
+                  ( expType.getTxt(##) ) );
             }
             if expType.$kind == .Ext {
                if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and

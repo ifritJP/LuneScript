@@ -90,6 +90,91 @@ fn TransUnit.analyzeRefTypeTuple(
 }
 
 /**
+型の位置に書いた関数型を解析する。
+
+fn( int, str ) : int のように書く。引数名は書いても良い ( fn( val:int ) : int )。
+form を宣言した場合と同じく、同じ引数・戻り値の関数の値を代入できる。
+
+次の場合は form を宣言して使う。
+- 戻り値が複数の場合 (引数リストなどの "," と区別できないため、戻り値は 1 つだけ書ける)
+- 関数型自体を nilable にする場合 ( fn( int ) : int! は戻り値の int! になる )
+
+@param firstToken fn のトークン
+*/
+fn TransUnit.analyzeRefTypeFunc(
+   firstToken:&Types.Token, accessMode: Ast.AccessMode, parentPub:bool ) mut
+   : Nodes.RefTypeNode
+{
+   self.checkNextToken( "(" );
+   let mut scope = self.pushScope( .Other ## );
+
+   let mut argTypeNodeList:List<&Nodes.RefTypeNode> = [];
+   let mut argTypeList:List<&Ast.TypeInfo> = [];
+   let mut nextToken = self.getToken(##);
+   if nextToken.txt ~= ")" {
+      self.pushback();
+      while true {
+         // 引数名は省略できる
+         {
+            let work = self.getToken(##);
+            if work.kind == .Symb {
+               if self.getToken(##).txt ~= ":" {
+                  self.pushback();
+                  self.pushback();
+               }
+            } else {
+               self.pushback();
+            }
+         }
+         let refTypeNode = self.analyzeRefType( accessMode, true, parentPub, false, false );
+         argTypeNodeList.insert( refTypeNode );
+         argTypeList.insert( refTypeNode.$expType );
+         nextToken = self.getToken(##);
+         if nextToken.txt ~= "," {
+            break;
+         }
+      }
+      self.checkToken( nextToken, ")" );
+   }
+
+   let asyncMode;
+   nextToken, _, asyncMode = self.getMutableAsync( self.getToken(##) );
+
+   // 戻り値の型は 1 つだけにする。
+   // fn( int ) : int, int とすると、引数リストや型引数の中の "," と区別できないため。
+   // 戻り値が複数の関数型は form を宣言して使う。
+   let mut retTypeList:List<&Ast.TypeInfo> = [];
+   let mut retTypeNodeList:List<&Nodes.RefTypeNode> = [];
+   if nextToken.txt == ":" {
+      let retTypeNode = self.analyzeRefType( accessMode, true, parentPub, false, false );
+      retTypeNodeList.insert( retTypeNode );
+      retTypeList.insert( retTypeNode.$expType );
+   } else {
+      self.pushback();
+   }
+
+   self.popScope();
+
+   let mut parentNsInfo = self.$curNsInfo;
+   let formType = self.processInfo.createFuncAsync(
+      false, false, scope, .FormFunc,
+      parentNsInfo.$typeInfo, parentNsInfo.$typeDataAccessor,
+      false, false, true, accessMode, "",
+      self.getDefaultAsync( .FormFunc, self.getCurrentClass(), asyncMode ),
+      [], argTypeList, retTypeList, .IMut );
+
+   let funcNode = Nodes.RefTypeFuncNode.create(
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ formType ],
+      argTypeNodeList, retTypeNodeList );
+
+   return Nodes.RefTypeNode.create(
+      self.nodeManager, firstToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ formType ],
+      funcNode, [], {}, nil, "no" );
+}
+
+/**
 参照する型情報を解析する。
 
 @param accessMode この型のアクセス制御
@@ -107,6 +192,9 @@ fn TransUnit.analyzeRefType(
    if firstToken.txt == "(" {
       return self.analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parentPub,
                                        allowOmitTypeParamFlag, allowToSetAlt );
+   }
+   if firstToken.txt == "fn" {
+      return self.analyzeRefTypeFunc( firstToken, accessMode, parentPub );
    }
 
    
@@ -965,7 +1053,7 @@ fn TransUnit.analyzeDeclMacroSub(
          stmtNode = Nodes.BlockNode.create(
             self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(),
-            [ Ast.builtinTypeNone ], .Macro, macroScope, false, stmtList );
+            [ Ast.builtinTypeNone ], .Macro, macroScope, false, false, stmtList );
       }
 
       self.checkNextToken( "}" );
@@ -4560,6 +4648,10 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Tokenizer.Token ) mut : Nodes.IfUnwra
    if nextToken.txt == "else" {
       elseBlock = self.analyzeBlock( .Else, .Finish ## );
    }
+   elseif nextToken.txt == "elseif" {
+      // if! ... elseif cond { } は、if! ... else { if cond { } } と同じに扱う
+      elseBlock = self.analyzeElseIfBlock( nextToken );
+   }
    else {
       self.finishTentativeSymbol( false );
       self.pushback();
@@ -4642,8 +4734,9 @@ fn TransUnit.analyzeWhen( firstToken: &Tokenizer.Token ) mut : Nodes.Node
          }
       }
       else {
-         self.addErrMess( expNode.$pos,
-                          "'when' support only local variables or arguments." );
+         self.addErrMess(
+            expNode.$pos,
+            "'when' support only local variables or arguments. use 'if! let val = exp { }' for other expressions." );
       }
    }
 

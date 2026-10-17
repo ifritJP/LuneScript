@@ -120,6 +120,22 @@ define test-go-some-setup
 endef
 
 
+# lnsc ... exe の実行中に Lua のエラーが起きた場合に、
+# メッセージを標準エラーに出力し、終了コード 1 で終わることを確認する。
+#
+# $1: lnsc
+define test-lua-error
+	$1 test/luaError.lns exe > work/result-luaError.txt 2> work/result-luaError-err.txt; \
+	code=$$?;								\
+	if [ $$code -ne 1 ] ||							\
+	   ! grep -q '^before$$' work/result-luaError.txt ||			\
+	   ! grep -q '^lua[0-9.]*: .*luaError: expected error' work/result-luaError-err.txt; then \
+		echo "NG: test-lua-error (exit code = $$code)";		\
+		cat work/result-luaError.txt work/result-luaError-err.txt;	\
+		exit 1;							\
+	fi
+endef
+
 define test-go-some
 	$(call test-go-one-exec,$1,$2,$3,$4,$5,$6 --uptodate forceAll)
 endef
@@ -162,6 +178,7 @@ endif
 	-rm $(GO_WORK_DIR)/test/*.c
 	$(call test-go-some-setup,$(LNSC),$(GO_WORK_DIR),SubPkg,test/subGoPkg,--app testgo)
 	$(call test-go-some,$(LNSC),$(GO_WORK_DIR),testGo,test,test.testGo,--app testgo $(INT2STR))
+	$(call test-lua-error,$(LNSC))
 
 
 test-tutorial-go:

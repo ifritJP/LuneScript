@@ -1935,7 +1935,7 @@ local fn TransUnit.analyzeBlock(
    switch blockKind {
       case .For, .Apply, .While, .Repeat, .Foreach {
          loopFlag = true;
-         nsInfo.pushLoopScope( self.$scope );
+         nsInfo.pushLoopScope( self.$scope, blockKind == .Repeat );
       }
    }
 
@@ -1949,11 +1949,14 @@ local fn TransUnit.analyzeBlock(
    self.checkNextToken( "}" );
 
    let hasAsyncLockBreak;
+   let hasContinue;
    if loopFlag {
       hasAsyncLockBreak = nsInfo.hasAsyncLockBreak();
+      hasContinue = nsInfo.hasContinue();
       nsInfo.popLoopScope();
    } else {
       hasAsyncLockBreak = false;
+      hasContinue = false;
    }
    
 
@@ -1968,7 +1971,7 @@ local fn TransUnit.analyzeBlock(
    let mut node = Nodes.BlockNode.create(
       self.nodeManager, token.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      blockKind, blockScope, hasAsyncLockBreak, stmtList );
+      blockKind, blockScope, hasAsyncLockBreak, hasContinue, stmtList );
 
    if node.getBreakKind( .Normal ) ~= .None {
       self.tentativeSymbol.skip();
@@ -2045,7 +2048,7 @@ local fn TransUnit.skipAndCreateDummyBlock() mut : Nodes.BlockNode {
    return Nodes.BlockNode.create(
       self.nodeManager, blockToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
-      .Func, blockScope, false, stmtList );
+      .Func, blockScope, false, false, stmtList );
 }
 
 
@@ -2115,6 +2118,39 @@ fn TransUnit.analyzeAsyncLock(
       self.nodeManager, asyncToken.pos, self.inTestBlock,
       self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
       lockKind, retTypeList, nsInfo.hasAsyncLockBreak(), block );
+}
+
+/**
+if! の後の elseif を、else ブロックとして解析する。
+
+`if! let a = exp { } elseif cond { } else { }` を、
+`if! let a = exp { } else { if cond { } else { } }` と同じに扱う。
+elseifToken の次から、if 文 (elseif! なら if! 文) として解析する。
+*/
+fn TransUnit.analyzeElseIfBlock( elseifToken: &Tokenizer.Token ) mut : Nodes.BlockNode
+{
+   let mut blockScope = self.pushScope( .Other ## );
+   blockScope.addIgnoredVar( self.processInfo );
+   // else ブロック (analyzeBlock( .Else, .Finish ) と同じ)
+   self.mergeTentativeSymbol( blockScope );
+
+   let ifNode = self.analyzeIf( elseifToken );
+   let stmtList:List<&Nodes.Node> = [ ifNode ];
+   self.$curNsInfo.addStmtNum( #stmtList );
+
+   self.popScope();
+
+   let mut node = Nodes.BlockNode.create(
+      self.nodeManager, elseifToken.pos, self.inTestBlock,
+      self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeNone ],
+      .Else, blockScope, false, false, stmtList );
+
+   if node.getBreakKind( .Normal ) ~= .None {
+      self.tentativeSymbol.skip();
+   }
+   self.finishTentativeSymbol( true );
+
+   return node;
 }
 
 fn TransUnit.analyzeIf(

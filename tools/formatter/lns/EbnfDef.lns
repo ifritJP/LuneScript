@@ -23,7 +23,7 @@ let ebnf = ```
   <stmt> ::= <decl_access> <declaration> | <test> | <block> | <super> |
 	   <asynclock> | <if> | <if_unwrap> | <when> | <switch> | <match> | <while> |
 	     <repeat> | <for> | <apply> | <foreach> | <forsort> | <return> |
-	     <break> | <unwrap_stmt> | <scope> | <lune_control> |
+	     <break> | <continue> | <unwrap_stmt> | <scope> | <lune_control> |
              <test_block> |
 	     <none> | <stmt_exp>
 
@@ -85,8 +85,11 @@ let ebnf = ```
   <if_base> ::= "if" <exp> <block>
   <if_elseif> ::= "elseif" <exp> <block>
   <if_else> ::= "else" <block>
-  <if_unwrap> ::= <if_unwrap_base> [ <if_else> ]
+  <if_unwrap> ::= <if_unwrap_base> [ <if_unwrap_next> ]
   <if_unwrap_base> ::= "if" "!" [ "let" <decl_sym_list> "=" ] <exp_list> <block>
+  <if_unwrap_next> ::= <if_unwrap_elseif_unwrap> | <if_unwrap_elseif> | <if_else>
+  <if_unwrap_elseif_unwrap> ::= "elseif" "!" [ "let" <decl_sym_list> "=" ] <exp_list> <block> [ <if_unwrap_next> ]
+  <if_unwrap_elseif> ::= "elseif" <exp> <block> { <if_elseif> } [ <if_else> ]
   <sym_list> ::= <sym> { "," <sym> }
   <when> ::= "when" "!" <exp_list> <block> [ "else" <block> ]
   <switch> ::= <switch_keyword> <exp> "{" { <switch_case> }
@@ -110,6 +113,7 @@ let ebnf = ```
   <forsort> ::= "forsort" <sym_list> "in" <exp> <block>
   <return> ::= "return" [<exp_list>] ";"
   <break> ::= "break" ";"
+  <continue> ::= "continue" ";"
   <unwrap_stmt> ::= "unwrap" "!" <sym_list> "=" <exp_list> <block> ";"
   <scope> ::= "__scope" "root" "(" <sym_list> ")" <block>
   <lune_control> ::= "_lune_control" <sym> <anytoken> ";"

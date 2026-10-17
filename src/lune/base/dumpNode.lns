@@ -915,6 +915,11 @@ pub override fn dumpFilter.processLiteralNil(
 {
    self.dump( opt, node, "" );
 };
+pub override fn dumpFilter.processContinue(
+   node: &Nodes.ContinueNode, opt:Opt ) mut
+{
+   self.dump( opt, node, "" );
+};
 pub override fn dumpFilter.processBreak(
    node: &Nodes.BreakNode, opt:Opt ) mut
 {
