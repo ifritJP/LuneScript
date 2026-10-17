@@ -10065,7 +10065,7 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
       exp = self:analyzeStrConst( firstToken, token )
    elseif token.kind == Tokenizer.TokenKind.Symb and token.txt == "__line__" then
       local pos = self:getLineNo( token )
-      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, Tokenizer.Token._new(Tokenizer.TokenKind.Int, string.format( "%d", pos.lineNo), token.pos, false, nil), token.pos.lineNo )
+      exp = Nodes.LiteralIntNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeInt}, Tokenizer.Token._new(Tokenizer.TokenKind.Int, string.format( "%d", pos.lineNo), token.pos, false, nil), pos.lineNo )
    elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "fn" then
       exp = self:analyzeExpSymbol( firstToken, token, ExpSymbolMode.Fn, nil, false, false, false )
    elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "unwrap" then

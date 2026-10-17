@@ -5017,7 +5017,7 @@ fn TransUnit.analyzeExpSub(
          self.nodeManager, firstToken.pos, self.inTestBlock,
          self.macroCtrl.isInAnalyzeArgMode(), [ Ast.builtinTypeInt ],
          new Tokenizer.Token( .Int, "%d" (pos.lineNo),
-                           token.pos, false, nil ), token.pos.lineNo );
+                           token.pos, false, nil ), pos.lineNo );
    }
    elseif token.kind == Tokenizer.TokenKind.Kywd and token.txt == "fn" {
       // anonymous 関数 (lambda)
