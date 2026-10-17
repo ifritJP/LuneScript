@@ -6019,6 +6019,13 @@ function convFilter:processLiteralNil( node, opt )
 end
 
 
+function convFilter:processContinue( node, opt )
+
+   self:writeRaw( "continue" )
+   self:writeln( "" )
+end
+
+
 function convFilter:processBreak( node, opt )
 
    self:writeRaw( "break" )

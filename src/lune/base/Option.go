@@ -460,13 +460,16 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
                     option.NoLua = true
                 } else if _switch2 == "-langC" {
                     option.ConvTo = Types_Lang__C
+                    option.TransCtrlInfo.OutputLua = false
                     option.TransCtrlInfo.ValidLuaval = true
                 } else if _switch2 == "-langGo" {
                     option.ConvTo = Types_Lang__Go
+                    option.TransCtrlInfo.OutputLua = false
                     option.TransCtrlInfo.ValidLuaval = true
                     option.TransCtrlInfo.ValidAsyncCtrl = true
                 } else if _switch2 == "-langPython" {
                     option.ConvTo = Types_Lang__Python
+                    option.TransCtrlInfo.OutputLua = false
                     option.TransCtrlInfo.ValidLuaval = false
                     option.TransCtrlInfo.ValidAsyncCtrl = false
                 } else if _switch2 == "-ol" {
@@ -600,7 +603,7 @@ func Option_analyze(_env *LnsEnv, argList *LnsList2_[string]) *Option_Option {
             }
         }
     }
-    Log_log(_env, Log_Level__Log, __func__, 788, Log_CreateMessage(func(_env *LnsEnv) string {
+    Log_log(_env, Log_Level__Log, __func__, 791, Log_CreateMessage(func(_env *LnsEnv) string {
         return _env.GetVM().String_format("mode is '%s'", Lns_2DDD(Option_ModeKind_getTxt( option.Mode)))
     }))
     
@@ -616,7 +619,7 @@ func Option_analyze__printUsage_0_(_env *LnsEnv, code LnsInt) {
 
 
 
-// 793: decl @lune.@base.@Option.createDefaultOption
+// 796: decl @lune.@base.@Option.createDefaultOption
 func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDir LnsAny) *Option_Option {
     var option *Option_Option
     option = NewOption_Option(_env)
@@ -646,7 +649,7 @@ func Option_createDefaultOption(_env *LnsEnv, pathList *LnsList2_[string],projDi
 
 // 55: decl @lune.@base.@Option.getBuildCount
 func Option_getBuildCount_1_(_env *LnsEnv) LnsInt {
-    return 14202
+    return 14205
 }
 
 

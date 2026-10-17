@@ -2139,7 +2139,7 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
       local _switchExp = blockKind
       if _switchExp == Nodes.BlockKind.For or _switchExp == Nodes.BlockKind.Apply or _switchExp == Nodes.BlockKind.While or _switchExp == Nodes.BlockKind.Repeat or _switchExp == Nodes.BlockKind.Foreach then
          loopFlag = true
-         nsInfo:pushLoopScope( self:get_scope() )
+         nsInfo:pushLoopScope( self:get_scope(), blockKind == Nodes.BlockKind.Repeat )
       end
    end
    local stmtList = {}
@@ -2149,19 +2149,23 @@ function TransUnit:analyzeBlock( blockKind, tentativeMode, scope, refAccessSymPo
    self:checkNextToken( "}" )
    local hasAsyncLockBreak
    
+   local hasContinue
+   
    if loopFlag then
       hasAsyncLockBreak = nsInfo:hasAsyncLockBreak(  )
+      hasContinue = nsInfo:hasContinue(  )
       nsInfo:popLoopScope(  )
    else
     
       hasAsyncLockBreak = false
+      hasContinue = false
    end
    if scope ~= nil then
       self:setScope( backScope, TransUnitIF.SetNSInfo.FromScope )
    else
       self:popScope(  )
    end
-   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blockKind, blockScope, hasAsyncLockBreak, stmtList )
+   local node = Nodes.BlockNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, blockKind, blockScope, hasAsyncLockBreak, hasContinue, stmtList )
    if node:getBreakKind( Nodes.CheckBreakMode.Normal ) ~= Nodes.BreakKind.None then
       self.tentativeSymbol:skip(  )
    end
@@ -2219,7 +2223,7 @@ function TransUnit:skipAndCreateDummyBlock(  )
    local stmtList = {}
    self:popScope(  )
    self:skipBlock( false )
-   return Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, false, stmtList )
+   return Nodes.BlockNode.create( self.nodeManager, blockToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Func, blockScope, false, false, stmtList )
 end
 
 
@@ -2266,6 +2270,23 @@ function TransUnit:analyzeAsyncLock( asyncToken, lockKind )
       retTypeList = nil
    end
    return Nodes.AsyncLockNode.create( self.nodeManager, asyncToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, lockKind, retTypeList, nsInfo:hasAsyncLockBreak(  ), block )
+end
+
+function TransUnit:analyzeElseIfBlock( elseifToken )
+
+   local blockScope = self:pushScope( Ast.ScopeKind.Other )
+   blockScope:addIgnoredVar( self.processInfo )
+   self:mergeTentativeSymbol( blockScope )
+   local ifNode = self:analyzeIf( elseifToken )
+   local stmtList = {ifNode}
+   self:get_curNsInfo():addStmtNum( #stmtList )
+   self:popScope(  )
+   local node = Nodes.BlockNode.create( self.nodeManager, elseifToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Else, blockScope, false, false, stmtList )
+   if node:getBreakKind( Nodes.CheckBreakMode.Normal ) ~= Nodes.BreakKind.None then
+      self.tentativeSymbol:skip(  )
+   end
+   self:finishTentativeSymbol( true )
+   return node
 end
 
 
@@ -3618,7 +3639,7 @@ function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macro
       self:prepareTentativeSymbol( self:get_scope(), false, nil )
       self:analyzeStatementList( stmtList, false, "}" )
       if #stmtList > 0 then
-         stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, false, stmtList )
+         stmtNode = Nodes.BlockNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, Nodes.BlockKind.Macro, macroScope, false, false, stmtList )
       end
       self:checkNextToken( "}" )
       self:finishTentativeSymbol( true )
@@ -6191,6 +6212,8 @@ function TransUnit:analyzeIfUnwrap( firstToken )
    nextToken = self:getToken( true )
    if nextToken.txt == "else" then
       elseBlock = self:analyzeBlock( Nodes.BlockKind.Else, TentativeMode.Finish )
+   elseif nextToken.txt == "elseif" then
+      elseBlock = self:analyzeElseIfBlock( nextToken )
    else
     
       self:finishTentativeSymbol( false )
@@ -9868,8 +9891,11 @@ function TransUnit:analyzeExpSub( allowNoneType, skipOp2Flag, canLeftExp, canCon
             end
             typeInfo = expType
          elseif _switchExp == "#" then
-            if expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.List and expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.Array and not Ast.builtinTypeString:canEvalWith( self.processInfo, expType, Ast.CanEvalType.SetOp, {} ) then
+            if expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.List and expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.Array and expType:get_extedType():get_kind() ~= Ast.TypeInfoKind.Map and not Ast.builtinTypeString:canEvalWith( self.processInfo, expType, Ast.CanEvalType.SetOp, {} ) then
                self:addErrMess( token.pos, string.format( 'unmatch type for "#" -- %s', expType:getTxt(  )) )
+            end
+            if expType:get_extedType():get_kind() == Ast.TypeInfoKind.Map and self.ctrl_info.outputLua then
+               self:addWarnMess( token.pos, string.format( '"#" for Map counts the keys each time in Lua (the time is proportional to the number of elements) -- %s', expType:getTxt(  )) )
             end
             if expType:get_kind() == Ast.TypeInfoKind.Ext then
                if not self.macroCtrl:get_analyzeInfo():isAnalyzingBlockArg(  ) and not self:get_curNsInfo():canAccessLuaval(  ) then
@@ -10069,6 +10095,13 @@ function TransUnit:analyzeStatementToken( token )
    return nil, true
 end
 
+function TransUnit:isContinueStatement(  )
+
+   local nextToken = self:getToken(  )
+   self:pushback(  )
+   return nextToken.txt == ";"
+end
+
 
 function TransUnit:analyzeStatement( termTxt )
 
@@ -10161,6 +10194,15 @@ function TransUnit:analyzeStatement( termTxt )
          statement = Nodes.BreakNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone}, nsInfo:setAsyncLockBreak(  ) )
          if not nsInfo:canBreak(  ) then
             self:addErrMess( token.pos, "no loop syntax." )
+         end
+      elseif token.txt == "continue" and self:isContinueStatement(  ) then
+         self:checkNextToken( ";" )
+         statement = Nodes.ContinueNode.create( self.nodeManager, token.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {Ast.builtinTypeNone} )
+         do
+            local mess = self:get_curNsInfo():setContinue(  )
+            if mess ~= nil then
+               self:addErrMess( token.pos, mess )
+            end
          end
       elseif token.txt == "unwrap" then
          statement = self:analyzeUnwrap( token )

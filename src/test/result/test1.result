@@ -1755,22 +1755,24 @@ test/error/operand.lns:2:8: warning: 'val' var isn't accessed
 test/error/operand.lns:11:10: warning: this value never be 'false' -- int
 test/error/operand.lns:12:10: warning: this value never be 'false'
 test/error/operand.lns:22:8: warning: 'size' var isn't accessed
-test/error/operand.lns:35:7: warning: this operation is deprecated.
+test/error/operand.lns:22:15: warning: "#" for Map counts the keys each time in Lua (the time is proportional to the number of elements) -- _Map<int,int>
+test/error/operand.lns:24:8: warning: 'size2' var isn't accessed
 test/error/operand.lns:37:7: warning: this operation is deprecated.
 test/error/operand.lns:39:7: warning: this operation is deprecated.
 test/error/operand.lns:41:7: warning: this operation is deprecated.
-test/error/operand.lns:69:11: warning: 'val' var isn't accessed
-test/error/operand.lns:70:11: warning: 'val2' var isn't accessed
-test/error/operand.lns:71:11: warning: 'val3' var isn't accessed
+test/error/operand.lns:43:7: warning: this operation is deprecated.
+test/error/operand.lns:71:11: warning: 'val' var isn't accessed
+test/error/operand.lns:72:11: warning: 'val2' var isn't accessed
+test/error/operand.lns:73:11: warning: 'val3' var isn't accessed
 test/error/operand.lns:2:14: error: this 'not' operand never be false
-test/error/operand.lns:5:4: error: This symbol is shadowed from 68:7 -- func
+test/error/operand.lns:5:4: error: This symbol is shadowed from 70:7 -- func
 test/error/operand.lns:17:19: error: this value never be 'true'
-test/error/operand.lns:22:15: error: unmatch type for "#" -- _Map<int,int>
-test/error/operand.lns:29:12: error: no numeric type 'str' or 'real'
-test/error/operand.lns:30:10: error: no numeric type 'int' or 'str'
-test/error/operand.lns:68:7: error: shadowing symbol of 5:4 -- func
-test/error/operand.lns:69:21: error: no numeric type 'stem!' or 'int'
-test/error/operand.lns:71:18: error: unmatch type for "#" -- stem!
+test/error/operand.lns:24:16: error: unmatch type for "#" -- _Set<int>
+test/error/operand.lns:31:12: error: no numeric type 'str' or 'real'
+test/error/operand.lns:32:10: error: no numeric type 'int' or 'str'
+test/error/operand.lns:70:7: error: shadowing symbol of 5:4 -- func
+test/error/operand.lns:71:21: error: no numeric type 'stem!' or 'int'
+test/error/operand.lns:73:18: error: unmatch type for "#" -- stem!
 test/error/operand2.lns:1:1: error: illegal exp
 test/error/loop.lns:2:7: warning: 'func' var isn't accessed
 test/error/loop.lns:4:10: warning: 'switch' should have 'case' blocks.

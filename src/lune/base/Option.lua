@@ -229,7 +229,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 14202
+   return 14205
 end
 
 
@@ -906,13 +906,16 @@ end
                   option.noLua = true
                elseif _switchExp == "-langC" then
                   option.convTo = Types.Lang.C
+                  option.transCtrlInfo.outputLua = false
                   option.transCtrlInfo.validLuaval = true
                elseif _switchExp == "-langGo" then
                   option.convTo = Types.Lang.Go
+                  option.transCtrlInfo.outputLua = false
                   option.transCtrlInfo.validLuaval = true
                   option.transCtrlInfo.validAsyncCtrl = true
                elseif _switchExp == "-langPython" then
                   option.convTo = Types.Lang.Python
+                  option.transCtrlInfo.outputLua = false
                   option.transCtrlInfo.validLuaval = false
                   option.transCtrlInfo.validAsyncCtrl = false
                elseif _switchExp == "-ol" then
@@ -1047,7 +1050,7 @@ end
          end
       end
    end
-   Log.log( Log.Level.Log, __func__, 788, function (  )
+   Log.log( Log.Level.Log, __func__, 791, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

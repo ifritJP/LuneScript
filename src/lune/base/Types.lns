@@ -127,7 +127,15 @@ pub class TransCtrlInfo {
    /** マクロ定義内のシンボル展開を延期するかどうか */
    pub let mut enablePostponeExpandingMacro:bool;
 
+   /**
+   Lua に出力するかどうか (-langGo などの指定が無い場合)。
+
+   Lua 固有の注意 (Map の要素数の取得など) の warning を出すかどうかに使う。
+   */
+   pub let mut outputLua:bool;
+
    pub fn __init() {
+      self.outputLua = true;
       self.enablePostponeExpandingMacro = true;
       self.asyncTokenizer = true;
       self.defaultGenInherit = true;

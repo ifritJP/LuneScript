@@ -4387,7 +4387,12 @@ function convFilter:processFor( node, opt )
          self:writeRaw( string.format( "%s := ", deltaSym) )
          filter( delta, self, node )
          self:writeln( "" )
-         self:writeln( "for {" )
+         if node:get_block():get_hasContinue() then
+            self:writeln( string.format( "for ; ; %s += %s {", workSym, deltaSym) )
+         else
+          
+            self:writeln( "for {" )
+         end
          self:pushIndent(  )
          self:writeln( string.format( "if %s > 0 {", deltaSym) )
          self:writeln( string.format( "   if %s > %s { break }", workSym, toSym) )
@@ -4405,7 +4410,7 @@ function convFilter:processFor( node, opt )
    end
    self:popIndent(  )
    filter( node:get_block(), self, node )
-   if node:get_delta() then
+   if node:get_delta() and not node:get_block():get_hasContinue() then
       self:pushIndent(  )
       self:writeln( string.format( "%s += %s", workSym, deltaSym) )
       self:popIndent(  )
@@ -6163,6 +6168,10 @@ function convFilter:processExpOp1( node, opt )
             if _switchExp == Ast.TypeInfoKind.List then
                filter( node:get_exp(), self, node )
                self:writeRaw( ".Len()" )
+            elseif _switchExp == Ast.TypeInfoKind.Map then
+               self:writeRaw( "len(" )
+               filter( node:get_exp(), self, node )
+               self:writeRaw( ".Items)" )
             elseif _switchExp == Ast.TypeInfoKind.Ext then
                do
                   local _switchExp = node:get_exp():get_expType():get_extedType():get_kind()
@@ -7048,6 +7057,12 @@ end
 function convFilter:processLiteralNil( node, opt )
 
    self:writeRaw( "nil" )
+end
+
+
+function convFilter:processContinue( node, opt )
+
+   self:writeln( "continue" )
 end
 
 

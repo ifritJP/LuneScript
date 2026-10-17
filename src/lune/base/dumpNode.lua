@@ -1171,6 +1171,12 @@ function dumpFilter:processLiteralNil( node, opt )
 end
 
 
+function dumpFilter:processContinue( node, opt )
+
+   self:dump( opt, node, "" )
+end
+
+
 function dumpFilter:processBreak( node, opt )
 
    self:dump( opt, node, "" )

@@ -4049,7 +4049,12 @@ pub override fn convFilter.processFor(
       filter( delta, self, node );
       self.writeln( "" );
 
-      self.writeln( "for {" );
+      if node.$block.$hasContinue {
+         // continue しても増分を加えるように、for の後処理で加える
+         self.writeln( "for ; ; %s += %s {" (workSym, deltaSym) );
+      } else {
+         self.writeln( "for {" );
+      }
 
       self.pushIndent( ## );
       self.writeln( "if %s > 0 {" (deltaSym) );
@@ -4073,7 +4078,7 @@ pub override fn convFilter.processFor(
 
    filter( node.$block, self, node );
 
-   if node.$delta {
+   if node.$delta and not node.$block.$hasContinue {
       self.pushIndent( ## );
       self.writeln( "%s += %s" (workSym, deltaSym) );
       self.popIndent();
@@ -5929,6 +5934,12 @@ pub override fn convFilter.processExpOp1(
                filter( node.$exp, self, node );
                self.writeRaw( ".Len()" );
             }
+            case .Map {
+               // Map の要素数。nil を設定した要素は削除しているので、Items の数と一致する
+               self.writeRaw( "len(" );
+               filter( node.$exp, self, node );
+               self.writeRaw( ".Items)" );
+            }
             case .Ext {
                switch node.$exp.$expType.$extedType.$kind {
                   case .List {
@@ -6742,6 +6753,12 @@ pub override fn convFilter.processLiteralNil(
    node: &Nodes.LiteralNilNode, opt: Opt ) mut
 {
    self.writeRaw( "nil" );
+}
+
+pub override fn convFilter.processContinue(
+   node: &Nodes.ContinueNode, opt: Opt ) mut
+{
+   self.writeln( "continue" );
 }
 
 pub override fn convFilter.processBreak(

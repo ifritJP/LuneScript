@@ -136,6 +136,12 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    pri let mut forwardRefFuncSet: Set<&Ast.SymbolInfo>;
    pri let mut forwardRefFuncList: List<&Ast.SymbolInfo>;
    pri let mut needIndent: bool;
+   /**
+   処理中のループの continue の番号のスタック (continue が無いループは 0)。
+   continue のラベル (__continueN) と、Lua 5.1 の break 用のフラグ (__breakN) に使う。
+   */
+   pri let mut continueIdList: List<int>;
+   pri let mut continueIdCounter: int;
    pri let mut macroDepth: int;
    pri let mut macroVarSymSet: Set<&Ast.SymbolInfo>;
    pri let moduleTypeInfo: &Ast.TypeInfo;
@@ -193,6 +199,8 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
       self.pubEnumId2EnumTypeInfo = {};
       self.pubAlgeId2AlgeTypeInfo = {};
       self.needIndent = false;
+      self.continueIdList = [];
+      self.continueIdCounter = 0;
       self.moduleTypeInfo = moduleTypeInfo;
       self.useLuneRuntime = useLuneRuntime;
       self.targetLuaVer = targetLuaVer;
@@ -1299,14 +1307,73 @@ pub override fn ConvFilter.processAsyncLock(
       filter( node.$block, self, node );
    }
    if node.$hasAsyncLockBreak {
-      self.writeln( "if %s then break end" (asyncLockBreakSym) );
+      let continueId = self.getContinueId();
+      if continueId ~= 0 and self.useRepeatForContinue() {
+         // Lua 5.1 で continue があるループでは、本体を repeat で囲んでいる (writeLoopBreak)
+         self.writeln( "if %s then __break%d = true break end"
+                       (asyncLockBreakSym, continueId) );
+      } else {
+         self.writeln( "if %s then break end" (asyncLockBreakSym) );
+      }
    }
 }
 
 
+/** 処理中のループの continue の番号。continue が無い場合は 0 */
+fn ConvFilter.getContinueId() : int {
+   if #self.continueIdList == 0 {
+      return 0;
+   }
+   return self.continueIdList[ #self.continueIdList ];
+}
+
+/** goto が無いので、continue を repeat ... until true の break で実現するかどうか */
+fn ConvFilter.useRepeatForContinue() : bool {
+   return self.targetLuaVer.$verKind == .v51;
+}
+
+/**
+ループを抜ける break を出力する。
+
+Lua 5.1 で continue があるループの場合、本体を repeat ... until true で囲むので、
+フラグを立ててから repeat を抜け、ループの側でフラグを確認して抜ける。
+*/
+fn ConvFilter.writeLoopBreak() mut {
+   let continueId = self.getContinueId();
+   if continueId ~= 0 and self.useRepeatForContinue() {
+      self.writeRawln( "__break%d = true" (continueId) );
+   }
+   self.writeRawln( "break" );
+}
+
+pub override fn ConvFilter.processContinue(
+   node: &Nodes.ContinueNode, opt: Opt ) mut
+{
+   if self.useRepeatForContinue() {
+      self.writeRawln( "break" );
+   } else {
+      self.writeRawln( "goto __continue%d" (self.getContinueId()) );
+   }
+}
+
 pub override fn ConvFilter.processBlockSub(
    node: &Nodes.BlockNode, opt: Opt ) mut
 {
+   let mut isLoop = false;
+   switch node.$blockKind {
+      case .While, .Repeat, .For, .Apply, .Foreach {
+         isLoop = true;
+      }
+   }
+   let mut continueId = 0;
+   if isLoop {
+      if node.$hasContinue {
+         self.continueIdCounter = self.continueIdCounter + 1;
+         continueId = self.continueIdCounter;
+      }
+      self.continueIdList.insert( continueId );
+   }
+
    let mut word = "";
    switch node.get_blockKind() {
       case .If, .Elseif {
@@ -1364,11 +1431,36 @@ pub override fn ConvFilter.processBlockSub(
       self.writeln( "local _" );
    }
    
+   // continue があるループの場合、本体を囲み、continue で本体の末尾に移れるようにする。
+   // Lua 5.2 以降は goto で、Lua 5.1 は repeat ... until true の break で実現する。
+   if continueId ~= 0 {
+      if self.useRepeatForContinue() {
+         self.writeln( "local __break%d = false" (continueId) );
+         self.writeln( "repeat" );
+      } else {
+         self.writeln( "do" );
+      }
+      self.pushIndent(##);
+   }
    
    let stmtList = node.get_stmtList();
    foreach statement in stmtList {
       filter( statement, self, node );
       //self.writeln( "" );
+   }
+
+   if continueId ~= 0 {
+      self.popIndent();
+      if self.useRepeatForContinue() {
+         self.writeln( "until true" );
+         self.writeln( "if __break%d then break end" (continueId) );
+      } else {
+         self.writeln( "end" );
+         self.writeln( "::__continue%d::" (continueId) );
+      }
+   }
+   if isLoop {
+      self.continueIdList.remove(##);
    }
 
    self.popIndent();
@@ -3366,6 +3458,12 @@ pub override fn ConvFilter.processExpOp1(
          self.writeRaw( " )" );
       }
    }
+   elseif op == "#" and node.$exp.$expType.$kind == .Map {
+      // Map の要素数。Lua の # は Map (ハッシュ部) の要素数を返さないので、キーを数える
+      self.writeRaw( "_lune._Set_len( " );
+      filter( node.$exp,  self, node );
+      self.writeRaw( " )" );
+   }
    else {
       if op == "not" {
          op = op .. " ";
@@ -3956,7 +4054,7 @@ pub override fn ConvFilter.processBreak(
       self.writeRawln( "%s = true" (asyncLockBreakSym));
       self.writeRawln( "return" );
    } else {
-      self.writeRawln( "break" );
+      self.writeLoopBreak();
    }
 };
 

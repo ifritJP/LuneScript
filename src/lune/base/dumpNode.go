@@ -968,17 +968,22 @@ func (self *dumpNode_dumpFilter) ProcessLiteralNil(_env *LnsEnv, node *Nodes_Lit
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
 }
-// 918: decl @lune.@base.@dumpNode.dumpFilter.processBreak
+// 918: decl @lune.@base.@dumpNode.dumpFilter.processContinue
+func (self *dumpNode_dumpFilter) ProcessContinue(_env *LnsEnv, node *Nodes_ContinueNode,_opt LnsAny) {
+    opt := _opt.(*DumpNode_Opt)
+    self.FP.dump(_env, opt, &node.Nodes_Node, "")
+}
+// 923: decl @lune.@base.@dumpNode.dumpFilter.processBreak
 func (self *dumpNode_dumpFilter) ProcessBreak(_env *LnsEnv, node *Nodes_BreakNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "")
 }
-// 923: decl @lune.@base.@dumpNode.dumpFilter.processLiteralSymbol
+// 928: decl @lune.@base.@dumpNode.dumpFilter.processLiteralSymbol
 func (self *dumpNode_dumpFilter) ProcessLiteralSymbol(_env *LnsEnv, node *Nodes_LiteralSymbolNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, _env.GetVM().String_format("%s: %s", Lns_2DDD(node.FP.Get_token(_env).Txt, node.FP.Get_expType(_env).FP.GetTxt(_env, nil, nil, nil))))
 }
-// 929: decl @lune.@base.@dumpNode.dumpFilter.processAbbr
+// 934: decl @lune.@base.@dumpNode.dumpFilter.processAbbr
 func (self *dumpNode_dumpFilter) ProcessAbbr(_env *LnsEnv, node *Nodes_AbbrNode,_opt LnsAny) {
     opt := _opt.(*DumpNode_Opt)
     self.FP.dump(_env, opt, &node.Nodes_Node, "##")
@@ -1054,6 +1059,7 @@ type dumpNode_dumpFilterMtd interface {
     ProcessBreak(_env *LnsEnv, arg1 *Nodes_BreakNode, arg2 LnsAny)
     ProcessCondRet(_env *LnsEnv, arg1 *Nodes_CondRetNode, arg2 LnsAny)
     ProcessCondRetList(_env *LnsEnv, arg1 *Nodes_CondRetListNode, arg2 LnsAny)
+    ProcessContinue(_env *LnsEnv, arg1 *Nodes_ContinueNode, arg2 LnsAny)
     ProcessConvStat(_env *LnsEnv, arg1 *Nodes_ConvStatNode, arg2 LnsAny)
     ProcessDeclAdvertise(_env *LnsEnv, arg1 *Nodes_DeclAdvertiseNode, arg2 LnsAny)
     ProcessDeclAlge(_env *LnsEnv, arg1 *Nodes_DeclAlgeNode, arg2 LnsAny)

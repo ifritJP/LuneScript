@@ -965,7 +965,7 @@ fn TransUnit.analyzeDeclMacroSub(
          stmtNode = Nodes.BlockNode.create(
             self.nodeManager, firstToken.pos, self.inTestBlock,
             self.macroCtrl.isInAnalyzeArgMode(),
-            [ Ast.builtinTypeNone ], .Macro, macroScope, false, stmtList );
+            [ Ast.builtinTypeNone ], .Macro, macroScope, false, false, stmtList );
       }
 
       self.checkNextToken( "}" );
@@ -4559,6 +4559,10 @@ fn TransUnit.analyzeIfUnwrap( firstToken: &Tokenizer.Token ) mut : Nodes.IfUnwra
    nextToken = self.getToken( true );
    if nextToken.txt == "else" {
       elseBlock = self.analyzeBlock( .Else, .Finish ## );
+   }
+   elseif nextToken.txt == "elseif" {
+      // if! ... elseif cond { } は、if! ... else { if cond { } } と同じに扱う
+      elseBlock = self.analyzeElseIfBlock( nextToken );
    }
    else {
       self.finishTentativeSymbol( false );

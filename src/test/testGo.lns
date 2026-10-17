@@ -3289,3 +3289,100 @@ _section();
    counter( ## );
    print( counter( ## ) );
 }
+
+// continue
+_section();
+{
+   let mut num = 0;
+   let mut total = 0;
+   while num < 10 {
+      num = num + 1;
+      if num % 2 == 0 {
+         continue;
+      }
+      if num > 7 {
+         break;
+      }
+      total = total + num;
+   }
+   print( "while", total );
+
+   // 増分の指定がある for では、continue しても増分を加える
+   let mut list:List<int> = [];
+   for index = 10, 1, -3 {
+      if index == 7 {
+         continue;
+      }
+      list.insert( index );
+   }
+   print( "for", list.unpack() );
+
+   foreach val in [ 1, 2, 3 ] {
+      if val == 2 {
+         continue;
+      }
+      foreach val2 in [ 10, 20, 30 ] {
+         if val2 == 20 {
+            continue;
+         }
+         print( "foreach", val, val2 );
+      }
+   }
+
+   let map = { "a":1, "b":2, "c":3 };
+   forsort val, key in map {
+      let work = val * 10;
+      if key == "b" {
+         continue;
+      }
+      print( "forsort", key, work );
+   }
+
+   fn find( items:&List<int>, target:int ) : int {
+      let mut index = 0;
+      while true {
+         index = index + 1;
+         if items[ index ] ~= target {
+            continue;
+         }
+         return index;
+      }
+   }
+   print( "find", find( [ 5, 6, 7 ], 7 ) );
+
+   // continue は予約語ではないので、変数名にも使える
+   let continue = 3;
+   print( "continue", continue );
+}
+
+// if! ... elseif
+_section();
+{
+   fn test( val:int!, val2:int!, flag:bool ) : str {
+      let txt:str;
+      if! let work = val {
+         txt = "val=%d" (work);
+      } elseif! let work2 = val2 {
+         txt = "val2=%d" (work2);
+      } elseif flag {
+         txt = "flag";
+      } else {
+         txt = "else";
+      }
+      return txt;
+   }
+   print( test( 1, 2, true ), test( nil, 2, true ), test( nil, nil, true ),
+          test( nil, nil, false ) );
+}
+
+// Map の要素数
+_section();
+{
+   let mut map:Map<str,int> = { "a":1, "b":2, "c":3 };
+   print( #map );
+   map.b = nil;
+   map[ "d" ] = 4;
+   print( #map );
+   let empty:Map<int,int> = {};
+   print( #empty );
+}

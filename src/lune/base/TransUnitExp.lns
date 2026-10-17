@@ -4827,14 +4827,23 @@ fn TransUnit.analyzeExpSub(
             typeInfo = expType;
          }
          case "#" {
+            // Map は要素数 (キーの数) を返す
             if expType.$extedType.$kind ~= .List and
                expType.$extedType.$kind ~= .Array and
+               expType.$extedType.$kind ~= .Map and
                not Ast.builtinTypeString.canEvalWith(
                   self.processInfo, expType, .SetOp, {} )
             {  
                self.addErrMess(
                   token.pos,
                   'unmatch type for "#" -- %s' ( expType.getTxt(##) ) );
+            }
+            if expType.$extedType.$kind == .Map and self.ctrl_info.outputLua {
+               // Lua では Map の要素数を直接取得できないので、キーを数える
+               self.addWarnMess(
+                  token.pos,
+                  '"#" for Map counts the keys each time in Lua (the time is proportional to the number of elements) -- %s'
+                  ( expType.getTxt(##) ) );
             }
             if expType.$kind == .Ext {
                if not self.macroCtrl.$analyzeInfo.isAnalyzingBlockArg() and

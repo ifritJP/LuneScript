@@ -1014,6 +1014,8 @@ _declNodeClass( "Block", Node, false, false, true,
                   // この block がループの block の時、
                   // stmtList 内に __asyncLock を脱出する break を持つかどうか。
                   { "hasAsyncLockBreak": "bool" },
+                  // この block がループの block の時、このループの continue を持つかどうか。
+                  { "hasContinue": "bool" },
                   { "stmtList": "List<&Node>" } ]
 );
 
@@ -1416,6 +1418,16 @@ _declNodeClass( "Break", Node, false, false, true,
 
 pub override fn BreakNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
    return .Break;
+}
+
+_declNodeClass( "Continue", Node, false, false, true, [] );
+
+/**
+continue の後の文には遷移しない。
+ループを抜けないので、ループとしては繰り返しが続く (無条件ループは終わらない)。
+*/
+pub override fn ContinueNode.getBreakKind( checkMode:CheckBreakMode ): BreakKind {
+   return .NeverRet;
 }
 
 _declNodeClass( "Provide", Node, false, false, true,

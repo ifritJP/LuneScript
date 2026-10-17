@@ -245,6 +245,7 @@ function TransCtrlInfo._new(  )
    return obj
 end
 function TransCtrlInfo:__init() 
+   self.outputLua = true
    self.enablePostponeExpandingMacro = true
    self.asyncTokenizer = true
    self.defaultGenInherit = true

@@ -1616,6 +1616,12 @@ function FormatterFilter:processLiteralNil( node, opt )
 end
 
 
+function FormatterFilter:processContinue( node, opt )
+
+   self:writeln( "continue;" )
+end
+
+
 function FormatterFilter:processBreak( node, opt )
 
    self:writeln( "break;" )

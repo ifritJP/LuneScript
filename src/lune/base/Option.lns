@@ -636,15 +636,18 @@ usage:
                }
                case "-langC" {
                   option.convTo = .C;
+                  option.transCtrlInfo.outputLua = false;
                   option.transCtrlInfo.validLuaval = true;
                }
                case "-langGo" {
                   option.convTo = .Go;
+                  option.transCtrlInfo.outputLua = false;
                   option.transCtrlInfo.validLuaval = true;
                   option.transCtrlInfo.validAsyncCtrl = true;
                }
                case "-langPython" {
                   option.convTo = .Python;
+                  option.transCtrlInfo.outputLua = false;
                   option.transCtrlInfo.validLuaval = false;
                   option.transCtrlInfo.validAsyncCtrl = false;
                }

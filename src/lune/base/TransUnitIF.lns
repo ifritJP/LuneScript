@@ -98,9 +98,15 @@ pub class LoopInfo {
    let scope:&Ast.Scope {pub};
    /** ループ内に __asyncLock を脱出する break があるかどうか？ */ 
    let mut hasAsyncLockBreak:bool {pub,pub};
-   pub fn __init( scope:&Ast.Scope ) {
+   /** repeat のループかどうか */
+   let isRepeat:bool {pub};
+   /** このループの continue があるかどうか */
+   let mut hasContinue:bool {pub,pub};
+   pub fn __init( scope:&Ast.Scope, isRepeat:bool ) {
       self.scope = scope;
       self.hasAsyncLockBreak = false;
+      self.isRepeat = isRepeat;
+      self.hasContinue = false;
    }
 }
 
@@ -115,11 +121,18 @@ pub class NSInfo {
 
    /** この名前空間で処理しているループ系制御構文(for 等)の Scope */
    let mut loopScopeQueue: List<LoopInfo>;
-   pub fn pushLoopScope( scope:&Ast.Scope ) mut {
-      self.loopScopeQueue.insert( new LoopInfo( scope ) );
+   pub fn pushLoopScope( scope:&Ast.Scope, isRepeat:bool ) mut {
+      self.loopScopeQueue.insert( new LoopInfo( scope, isRepeat ) );
    }
    pub fn popLoopScope() mut {
       self.loopScopeQueue.remove(##);
+   }
+   /** 今のループに continue があるかどうか */
+   pub fn hasContinue() : bool {
+      if #self.loopScopeQueue > 0 {
+         return self.loopScopeQueue[ #self.loopScopeQueue ].$hasContinue;
+      }
+      return false;
    }
    pub fn hasAsyncLockBreak() : bool {
       if #self.loopScopeQueue > 0 {
@@ -257,6 +270,30 @@ lockedAsyncStack に格納されている情報よりも、今のループ数の
    |   }
    | }
    */ 
+   /**
+   今のループに continue があることを記録する。
+
+   continue できない場合は、そのエラーメッセージを返す。
+   */
+   pub fn setContinue() : str! {
+      let loopQueueLen = #self.loopScopeQueue;
+      if loopQueueLen == 0 {
+         return "no loop syntax.";
+      }
+      let mut loopInfo = self.loopScopeQueue[ loopQueueLen ];
+      if loopInfo.$isRepeat {
+         // repeat の条件式はブロック内のシンボルを参照できるので、
+         // ブロックの途中から条件式に移ると、初期化していないシンボルを参照し得る。
+         return "'continue' can't be used in 'repeat'.";
+      }
+      let len = #self.lockedAsyncStack;
+      if len > 0 and self.lockedAsyncStack[ len ].$loopLen >= loopQueueLen {
+         return "'continue' can't be used in '__asyncLock' inside the loop.";
+      }
+      loopInfo.set_hasContinue( true );
+      return nil;
+   }
+
    pub fn setAsyncLockBreak() : bool {
       let len = #self.lockedAsyncStack;
       if len == 0 {

@@ -296,15 +296,17 @@ StmtKind.__allList[6] = StmtKind.Apply
 
 local LoopInfo = {}
 _moduleObj.LoopInfo = LoopInfo
-function LoopInfo._new( scope )
+function LoopInfo._new( scope, isRepeat )
    local obj = {}
    LoopInfo._setmeta( obj )
-   if obj.__init then obj:__init( scope ); end
+   if obj.__init then obj:__init( scope, isRepeat ); end
    return obj
 end
-function LoopInfo:__init(scope) 
+function LoopInfo:__init(scope, isRepeat) 
    self.scope = scope
    self.hasAsyncLockBreak = false
+   self.isRepeat = isRepeat
+   self.hasContinue = false
 end
 function LoopInfo._setmeta( obj )
   setmetatable( obj, { __index = LoopInfo  } )
@@ -318,17 +320,33 @@ end
 function LoopInfo:set_hasAsyncLockBreak( hasAsyncLockBreak )
    self.hasAsyncLockBreak = hasAsyncLockBreak
 end
+function LoopInfo:get_isRepeat()
+   return self.isRepeat
+end
+function LoopInfo:get_hasContinue()
+   return self.hasContinue
+end
+function LoopInfo:set_hasContinue( hasContinue )
+   self.hasContinue = hasContinue
+end
 
 
 local NSInfo = {}
 _moduleObj.NSInfo = NSInfo
-function NSInfo:pushLoopScope( scope )
+function NSInfo:pushLoopScope( scope, isRepeat )
 
-   table.insert( self.loopScopeQueue, LoopInfo._new(scope) )
+   table.insert( self.loopScopeQueue, LoopInfo._new(scope, isRepeat) )
 end
 function NSInfo:popLoopScope(  )
 
    table.remove( self.loopScopeQueue )
+end
+function NSInfo:hasContinue(  )
+
+   if #self.loopScopeQueue > 0 then
+      return self.loopScopeQueue[#self.loopScopeQueue]:get_hasContinue()
+   end
+   return false
 end
 function NSInfo:hasAsyncLockBreak(  )
 
@@ -408,6 +426,23 @@ end
 function NSInfo:canBreak(  )
 
    return #self.loopScopeQueue > 0
+end
+function NSInfo:setContinue(  )
+
+   local loopQueueLen = #self.loopScopeQueue
+   if loopQueueLen == 0 then
+      return "no loop syntax."
+   end
+   local loopInfo = self.loopScopeQueue[loopQueueLen]
+   if loopInfo:get_isRepeat() then
+      return "'continue' can't be used in 'repeat'."
+   end
+   local len = #self.lockedAsyncStack
+   if len > 0 and self.lockedAsyncStack[len]:get_loopLen() >= loopQueueLen then
+      return "'continue' can't be used in '__asyncLock' inside the loop."
+   end
+   loopInfo:set_hasContinue( true )
+   return nil
 end
 function NSInfo:setAsyncLockBreak(  )
 
