@@ -121,4 +121,16 @@
 1 は `dev_with_llm` の `f137d8ba` で修正した。
 2〜5 は `dev_with_llm` の `0095f45a`・`dbbcb6e5`・`209b91bb`・`3a6c3d6c` で対応した
 (5 では、runtime_go を独立したモジュールにする代わりに、mkmain の `--gomod` と手順の文書 `docs/go_build.md` で対応した)。
+6 は `dev_with_llm` の `4d79434c` で対応した。
+`exe` で Lua の実行時エラーが起きた場合、メッセージとトレースバックの Lua の位置の前に、lns の位置を付けて次のように表示する。
+対応表は変換の際にメモリ上に作るので、`.lua` を変換せずにそのまま読み込んだモジュールは、Lua の位置だけを表示する。
+
+```
+lua: sub/mod1.lns:3: [string "--sub/mod1.lns..."]:14: attempt to perform arithmetic on a nil value (local 'val')
+stack traceback:
+	sub/mod1.lns:3: [string "--sub/mod1.lns..."]:14: in function 'sub.mod1.foo'
+	err4.lns:3: [string "--err4.lns..."]:22: in local 'bar'
+	err4.lns:5: [string "--err4.lns..."]:25: in main chunk
+```
+
 7 の共通の比較テストができれば、8 の洗い出しに使える。
