@@ -817,6 +817,31 @@ pub override fn FormatterFilter.processExpCallSuper(
    self.writeln( ")" );
 };
 
+pub override fn FormatterFilter.processRefTypeFunc(
+   node: &Nodes.RefTypeFuncNode, opt:Opt ) mut
+{
+   self.write( "fn(" );
+   foreach argNode, index in node.$argTypeNodeList {
+      if index ~= 1 {
+         self.write( "," );
+      }
+      self.write( " " );
+      filter( argNode, self, opt.nextOpt( node ) );
+   }
+   if #node.$argTypeNodeList > 0 {
+      self.write( " " );
+   }
+   self.write( ")" );
+   foreach retNode, index in node.$retTypeNodeList {
+      if index == 1 {
+         self.write( " : " );
+      } else {
+         self.write( ", " );
+      }
+      filter( retNode, self, opt.nextOpt( node ) );
+   }
+}
+
 pub override fn FormatterFilter.processRefType(
    node: &Nodes.RefTypeNode, opt:Opt ) mut
 {

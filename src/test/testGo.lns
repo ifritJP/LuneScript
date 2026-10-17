@@ -3386,3 +3386,47 @@ _section();
    let empty:Map<int,int> = {};
    print( #empty );
 }
+
+// 型の位置に書いた関数型 ( fn( int ) : int )
+_section();
+{
+   fn compose( f:fn( int ) : int, g:fn( val:int ) : int ) : fn( int ) : int {
+      return fn ( x:int ) : int {
+         return f( g( x ) );
+      };
+   }
+   let inc = fn ( x:int ) : int { return x + 1; };
+   let dbl = fn ( x:int ) : int { return x * 2; };
+   let incDbl = compose( inc, dbl );
+   print( incDbl( 5 ) );
+
+   // 宣言した form との間で代入できる
+   form IntFn( x:int ) : int;
+   let named:IntFn = compose( inc, inc );
+   let direct:fn( int ) : int = named;
+   print( named( 1 ), direct( 2 ) );
+
+   fn callAll( list:&List<fn()> ) {
+      foreach func in list {
+         func();
+      }
+   }
+   callAll( [ fn () { print( "a" ); }, fn () { print( "b" ); } ] );
+
+   class Holder {
+      let func:fn( str ) : str {pub};
+   }
+   let holder = new Holder( fn ( txt:str ) : str { return txt .. "!"; } );
+   print( holder.$func( "hi" ) );
+}
+
+// 引数の無い関数も ## で呼び出せる
+_section();
+{
+   fn normal() : int {
+      return 1;
+   }
+   form NoArg() : int;
+   let count:NoArg = fn () : int { return 5; };
+   print( normal( ## ), count( ## ), count() );
+}

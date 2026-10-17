@@ -2968,11 +2968,67 @@ function TransUnit:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parent
    return Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {tupleTypeInfo}, declTupleNode, {}, {}, Ast.MutMode.IMut, "no" )
 end
 
+function TransUnit:analyzeRefTypeFunc( firstToken, accessMode, parentPub )
+
+   local _
+   self:checkNextToken( "(" )
+   local scope = self:pushScope( Ast.ScopeKind.Other )
+   local argTypeNodeList = {}
+   local argTypeList = {}
+   local nextToken = self:getToken(  )
+   if nextToken.txt ~= ")" then
+      self:pushback(  )
+      while true do
+         do
+            local work = self:getToken(  )
+            if work.kind == Tokenizer.TokenKind.Symb then
+               if self:getToken(  ).txt ~= ":" then
+                  self:pushback(  )
+                  self:pushback(  )
+               end
+            else
+             
+               self:pushback(  )
+            end
+         end
+         local refTypeNode = self:analyzeRefType( accessMode, true, parentPub, false, false )
+         table.insert( argTypeNodeList, refTypeNode )
+         table.insert( argTypeList, refTypeNode:get_expType() )
+         nextToken = self:getToken(  )
+         if nextToken.txt ~= "," then
+            break
+         end
+      end
+      self:checkToken( nextToken, ")" )
+   end
+   local asyncMode
+   
+   nextToken, _, asyncMode = self:getMutableAsync( self:getToken(  ) )
+   local retTypeList = {}
+   local retTypeNodeList = {}
+   if nextToken.txt == ":" then
+      local retTypeNode = self:analyzeRefType( accessMode, true, parentPub, false, false )
+      table.insert( retTypeNodeList, retTypeNode )
+      table.insert( retTypeList, retTypeNode:get_expType() )
+   else
+    
+      self:pushback(  )
+   end
+   self:popScope(  )
+   local parentNsInfo = self:get_curNsInfo()
+   local formType = self.processInfo:createFuncAsync( false, false, scope, Ast.TypeInfoKind.FormFunc, parentNsInfo:get_typeInfo(), parentNsInfo:get_typeDataAccessor(), false, false, true, accessMode, "", self:getDefaultAsync( Ast.TypeInfoKind.FormFunc, self:getCurrentClass(  ), asyncMode ), {}, argTypeList, retTypeList, Ast.MutMode.IMut )
+   local funcNode = Nodes.RefTypeFuncNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {formType}, argTypeNodeList, retTypeNodeList )
+   return Nodes.RefTypeNode.create( self.nodeManager, firstToken.pos, self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), {formType}, funcNode, {}, {}, nil, "no" )
+end
+
 function TransUnit:analyzeRefType( accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
 
    local firstToken = self:getToken(  )
    if firstToken.txt == "(" then
       return self:analyzeRefTypeTuple( firstToken, accessMode, allowDDD, parentPub, allowOmitTypeParamFlag, allowToSetAlt )
+   end
+   if firstToken.txt == "fn" then
+      return self:analyzeRefTypeFunc( firstToken, accessMode, parentPub )
    end
    local token = firstToken
    local mutMode
@@ -3575,7 +3631,7 @@ end
 function TransUnit:analyzeDeclMacroSub( accessMode, firstToken, nameToken, macroScope, parentType, typeDataAccessor, workArgList )
    local __func__ = '@lune.@base.@TransUnit.TransUnit.analyzeDeclMacroSub'
 
-   Log.log( Log.Level.Trace, __func__, 872, function (  )
+   Log.log( Log.Level.Trace, __func__, 960, function (  )
    
       return string.format( "start -- %s:%d:%d", firstToken.pos.streamName, firstToken.pos.lineNo, firstToken.pos.column)
    end
@@ -4487,7 +4543,7 @@ function TransUnit:analyzeDeclMember( classTypeInfo, accessMode, staticFlag, fir
          if setterMode ~= Ast.AccessMode.None and mutMode == Ast.MutMode.IMut then
             self:addErrMess( varName.pos, string.format( "This member can't have setter, this member is immutable. -- %s", varName.txt) )
          end
-         Log.log( Log.Level.Debug, __func__, 2121, function (  )
+         Log.log( Log.Level.Debug, __func__, 2209, function (  )
          
             return string.format( "%s", dummyRetType)
          end
@@ -7817,7 +7873,7 @@ function TransUnit:analyzeExpCall( firstToken, funcExp, nextToken )
          end
       end
    end
-   if funcTypeInfo:get_rawTxt() == "" then
+   if funcTypeInfo:get_rawTxt() == "" and funcTypeInfo:get_kind() ~= Ast.TypeInfoKind.FormFunc then
       self:addErrMess( funcExp:get_pos(), "can't directly call the declared function." )
    end
    local exp

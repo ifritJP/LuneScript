@@ -851,6 +851,11 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
          return "LnsForm";
       }
       case .FormFunc {
+         if typeInfo.$rawTxt == "" {
+            // 型の位置に書いた関数型 ( fn( int ) : int )。
+            // 宣言が無いので、go の関数型をそのまま書く。
+            return self.funcType2gotype( typeInfo );
+         }
          return self.getFuncSymbol( typeInfo );
       }
       case .Class {
@@ -881,6 +886,47 @@ fn convFilter.type2gotypeOrg( typeInfo:&Ast.TypeInfo, mode:ClassAsterMode ) mut 
       return "LnsAny";
    }
    Util.err( "not support yet -- %s" (typeInfo.getTxt(##) ) ); // バグ
+}
+
+/**
+関数型を go の関数型 ( func (_env *LnsEnv, arg1 LnsInt) LnsInt ) にする。
+
+outputDeclFunc( .Type( typeInfo ) ) と同じ形式。
+*/
+fn convFilter.funcType2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
+   let argTypeList = typeInfo.$argTypeInfoList;
+   let mut txt = "func (";
+   if self.option.$addEnvArg {
+      txt = txt .. self.getEnvArgDecl( #argTypeList );
+   }
+   foreach argType, index in argTypeList {
+      if index ~= 1 {
+         txt = txt .. ",";
+      }
+      txt = txt .. "arg%d %s" (index, self.type2gotype( argType ) );
+   }
+   txt = txt .. ")";
+   let retTypeList = typeInfo.$retTypeInfoList;
+   switch #retTypeList {
+      case 0 {
+      }
+      case 1 {
+         if retTypeList[ 1 ] ~= Ast.builtinTypeNeverRet {
+            txt = txt .. " " .. self.type2gotype( retTypeList[ 1 ] );
+         }
+      }
+      default {
+         txt = txt .. "(";
+         foreach retType, index in retTypeList {
+            if index ~= 1 {
+               txt = txt .. ", ";
+            }
+            txt = txt .. self.type2gotype( retType );
+         }
+         txt = txt .. ")";
+      }
+   }
+   return txt;
 }
 
 fn convFilter.type2gotype( typeInfo:&Ast.TypeInfo ) mut : str {
@@ -1134,6 +1180,13 @@ fn convFilter.outputImplicitCast(
             filter( node, self, parent );
             self.writeRaw( ")");
          }
+         elseif castType.$rawTxt == "" {
+            // 型の位置に書いた関数型 ( fn( int ) : int ) への変換。
+            // 型名が無いので、go の関数型で変換する。
+            self.writeRaw( "(%s)(" (self.funcType2gotype( castType )) );
+            filter( node, self, parent );
+            self.writeRaw( ")");
+         }
          else {
             self.writeRaw( "%s(" (self.getTypeSymbol( castType )) );
             filter( node, self, parent );
@@ -1226,6 +1279,10 @@ fn getExpListKind( dstTypeList:&List<&Ast.TypeInfo>,
       return .Conv;
    }
    
+   if #dstTypeList == 0 {
+      // 引数の無い関数を f( ## ) で呼び出す場合。## (AbbrNode) だけなので変換不要
+      return .Direct;
+   }
    if #dstTypeList < #node.$expList {
       if dstTypeList[ #dstTypeList ].$kind ~= .DDD {
          return .Conv;

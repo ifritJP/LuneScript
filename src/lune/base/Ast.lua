@@ -6419,6 +6419,26 @@ function NormalTypeInfo:getTxt( typeNameCtrl, importInfo, localFlag )
 end
 function NormalTypeInfo:getTxtWithRaw( raw, typeNameCtrl, importInfo, localFlag )
 
+   if self.kind == TypeInfoKind.FormFunc and raw == "" then
+      local txt = "fn("
+      for index, argType in ipairs( self.argTypeInfoList ) do
+         if index ~= 1 then
+            txt = txt .. ", "
+         end
+         txt = txt .. argType:getTxt( typeNameCtrl, importInfo, localFlag )
+      end
+      txt = txt .. ")"
+      for index, retType in ipairs( self.retTypeInfoList ) do
+         if index == 1 then
+            txt = txt .. ": "
+         else
+          
+            txt = txt .. ", "
+         end
+         txt = txt .. retType:getTxt( typeNameCtrl, importInfo, localFlag )
+      end
+      return txt
+   end
    return self:get_generics_txt( raw, typeNameCtrl, importInfo, localFlag )
 end
 function NormalTypeInfo:get_display_stirng_with( raw, alt2type )
@@ -9321,6 +9341,9 @@ function TypeInfo.checkMatchTypeMain( processInfo, dstTypeList, expTypeList, all
    if #expTypeList > 0 then
       for index, expType in ipairs( expTypeList ) do
          if #dstTypeList == 0 then
+            if #expTypeList == 1 and expType == _moduleObj.builtinTypeAbbr then
+               return MatchType.Match, ""
+            end
             return MatchType.Error, string.format( "over exp. expect:0, actual:%d", #expTypeList)
          end
          local dstType = dstTypeList[index]

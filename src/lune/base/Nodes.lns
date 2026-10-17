@@ -949,6 +949,16 @@ _declNodeClass( "RefType", Node, false, false, false,
                    { "array": "str" } ]
 );
 
+/**
+型の位置に書いた関数型 ( fn( int, str ) : int )。
+
+RefTypeNode の typeNode に入れる。expType は名前の無い FormFunc 型。
+*/
+_declNodeClass( "RefTypeFunc", Node, false, false, false,
+                [ { "argTypeNodeList": "&List<&RefTypeNode>" },
+                  { "retTypeNodeList": "&List<&RefTypeNode>" } ]
+);
+
 pub fn RefTypeNode.checkValidGenerics() : bool, str {
    let typeInfo = self.$expType.$nonnilableType.$srcTypeInfo;
    if typeInfo.$kind == .DDD or typeInfo.$kind == .Box {

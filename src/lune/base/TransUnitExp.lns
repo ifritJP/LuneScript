@@ -2110,7 +2110,9 @@ fn TransUnit.analyzeExpCall(
       }
    }
 
-   if funcTypeInfo.$rawTxt == "" {
+   // 型の位置に書いた関数型 ( fn( int ) : int ) は名前の無い FormFunc 型なので、
+   // その型の値は呼び出せる。
+   if funcTypeInfo.$rawTxt == "" and funcTypeInfo.$kind ~= .FormFunc {
       self.addErrMess( funcExp.$pos, "can't directly call the declared function." );
    }
 

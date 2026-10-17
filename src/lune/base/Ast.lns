@@ -4862,6 +4862,28 @@ pub class NormalTypeInfo extend TypeInfo {
       mut raw:str, typeNameCtrl:&TypeNameCtrl!,
       importInfo:&ModuleInfoManager!, localFlag:bool! ) : str
    {
+      if self.kind == .FormFunc and raw == "" {
+         // 型の位置に書いた関数型 ( fn( int ) : int ) は名前が無いので、
+         // 引数と戻り値の型で表示する。
+         let mut txt = "fn(";
+         foreach argType, index in self.argTypeInfoList {
+            if index ~= 1 {
+               txt = txt .. ", ";
+            }
+            txt = txt .. argType.getTxt( typeNameCtrl, importInfo, localFlag );
+         }
+         txt = txt .. ")";
+         foreach retType, index in self.retTypeInfoList {
+            if index == 1 {
+               txt = txt .. ": ";
+            }
+            else {
+               txt = txt .. ", ";
+            }
+            txt = txt .. retType.getTxt( typeNameCtrl, importInfo, localFlag );
+         }
+         return txt;
+      }
       return self.get_generics_txt( raw, typeNameCtrl, importInfo, localFlag );
    }
 
@@ -7494,6 +7516,12 @@ static fn TypeInfo.checkMatchTypeMain(
    if #expTypeList > 0 {   
       foreach expType, index in expTypeList {
          if #dstTypeList == 0 {  
+            if #expTypeList == 1 and expType == builtinTypeAbbr {
+               // 引数の無い関数を f( ## ) で呼び出す場合。
+               // ## は残りの引数の省略を明示するもので、省略する引数が無くても良い。
+               // (form のように引数を持つ関数型と、呼び出し方を揃えられるようにする)
+               return .Match, "";
+            }
             return .Error, "over exp. expect:0, actual:%d" ( #expTypeList);
          }
          let dstType = dstTypeList[ index ];
