@@ -17,13 +17,13 @@ jobs:
     timeout-minutes: 15 # 15分で強制停止
     
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v5
       with:
-        python-version: 3.8
+        python-version: '3.12'
     - name: Set up Go 1.x
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
         go-version: ^1.20
     - name: Install dependencies
@@ -34,6 +34,7 @@ jobs:
         pwd
         source here/bin/activate
         luarocks install luacheck
+        sudo apt-get update
         sudo apt-get install -y liblua5.3-dev lua5.3
     - name: Test
       run: |
@@ -43,7 +44,7 @@ jobs:
         make -C src go-build LUA=lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
     - name: 'Upload Artifact'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: test-result
         path: src/work/test*.result
@@ -55,7 +56,7 @@ jobs:
     timeout-minutes: 8 # 8分で強制停止
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Build the Docker image
       run: |
         docker build src/test/docker/compose/linux/build --tag linux_lns
@@ -73,7 +74,7 @@ jobs:
     timeout-minutes: 8 # 8分で強制停止
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Build the Docker image
       run: |
         docker build src/test/docker/compose/alpine/build --tag alpine_lns
@@ -101,7 +102,7 @@ jobs:
 #     timeout-minutes: 8 # 8分で強制停止
 #     
 #     steps:
-#     - uses: actions/checkout@v2
+#     - uses: actions/checkout@v4
 #     - name: Build the Docker image
 #       run: |
 #         docker build src/test/docker/compose/centos8/build --tag cent8_lns
@@ -132,7 +133,7 @@ jobs:
 #    timeout-minutes: 8 # 8分で強制停止
 #    
 #    steps:
-#    - uses: actions/checkout@v2
+#    - uses: actions/checkout@v4
 #    - name: Build the Docker image
 #      run: |
 #        docker build src/test/docker/compose/centos7/test --tag cent7_lns
