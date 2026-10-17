@@ -1112,10 +1112,52 @@ fn convFilter.lowerValList( expList:&Nodes.ExpListNode, mut pre:List<&W.Ins> ) m
    } else {
       mRetIndex = 0;
    }
+   // 暗黙の cast で包まれた多値 (a, b = f(); の各値)。同じ多値の式を値ごとに cast している
+   let mut castMRet:&Nodes.Node! = nil;
+   let mut castMRetVals:&List<&Val> = [];
+   let mut castMRetPos = 0;
    foreach exp, index in expList.$expList {
-      if exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
+      let mut mretInCast:&Nodes.Node! = nil;
+      let mut castType = exp.$expType;
+      if! let castNode = exp@@@Nodes.ExpCastNode {
+         if castNode.$castKind == .Implicit and
+            castNode.$exp.$kind == Nodes.NodeKind.$ExpMRet
+         {
+            mretInCast = castNode.$exp;
+            // Implicit の cast の expType は cast 前の型なので、cast 後の型を使う
+            castType = castNode.$castType;
+         }
+      }
+      if mretInCast {
+         let mret = unwrap mretInCast;
+         if castMRet ~= mret {
+            castMRet = mret;
+            // 同じ多値の式を参照している cast の数だけ値を取り出す
+            let mut num = 0;
+            foreach other in expList.$expList {
+               if! let otherCast = other@@@Nodes.ExpCastNode {
+                  if otherCast.$exp == mret {
+                     num = num + 1;
+                  }
+               }
+            }
+            castMRetVals = self.expandDDD( self.lowerMulti( mret, pre ), num, pre );
+            castMRetPos = 0;
+         }
+         castMRetPos = castMRetPos + 1;
+         let val;
+         if castMRetPos <= #castMRetVals {
+            val = castMRetVals[ castMRetPos ];
+         } else {
+            val = new Val( W.refNull( W.htAny ), W.typeAnyRef, Ast.builtinTypeNil );
+         }
+         vals.insert( new Val( self.coerceVal( val, castType ),
+                               self.getRep( castType ), castType ) );
+      } elseif exp.$kind == Nodes.NodeKind.$ExpAccessMRet {
          // 多値の 2 番目以降の値は、lowerMulti で展開済み
-      } elseif index == mRetIndex {
+      } elseif index == mRetIndex or
+         ( index == #expList.$expList and exp.$kind == Nodes.NodeKind.$ExpMRet )
+      {
          foreach val in self.lowerMulti( exp, pre ) {
             vals.insert( val );
          }
@@ -2933,6 +2975,30 @@ fn convFilter.spillVal( val:&Val, mut pre:List<&W.Ins> ) mut : &Val {
    return new Val( lg( work ), val.$rep, val.$typeInfo );
 }
 
+/**
+値のリストの末尾が ... の値 (List) の場合、num 個の値になるように、その要素に展開する。
+
+let a, b = ...; のように、... の値を複数の変数で受け取る場合に使う。
+*/
+fn convFilter.expandDDD( vals:&List<&Val>, num:int, mut pre:List<&W.Ins> ) mut : &List<&Val> {
+   if #vals == 0 or #vals > num or
+      self.normType( vals[ #vals ].$typeInfo ).$kind ~= .DDD
+   {
+      return vals;
+   }
+   let mut work:List<&Val> = [];
+   for index = 1, #vals - 1 {
+      work.insert( vals[ index ] );
+   }
+   let list = self.spillVal( vals[ #vals ], pre );
+   for index = 1, num - #vals + 1 {
+      work.insert( self.spillVal(
+         new Val( W.call( self.rt.fnListGet(), [ list.$ins, W.i64Const( index ) ] ),
+                  W.typeAnyRef, Ast.builtinTypeStem_ ), pre ) );
+   }
+   return work;
+}
+
 /** 値のリストを評価して局所変数に入れる (nilable を外す前の値) */
 fn convFilter.lowerRawValList( expList:&Nodes.ExpListNode, mut pre:List<&W.Ins> ) mut
    : &List<&Val>
@@ -2967,7 +3033,8 @@ fn convFilter.lowerDeclVar( node:&Nodes.DeclVarNode, mut out:List<&W.Ins> ) mut 
       let base = self.ctx.$depth;
       let mut vals:&List<&Val> = [];
       if! let expList = node.$expList {
-         vals = self.lowerRawValList( expList, out );
+         vals = self.expandDDD( self.lowerRawValList( expList, out ),
+                                #node.$symbolInfoList, out );
       }
       foreach symbol in node.$symbolInfoList {
          out.insert( self.declareVar( symbol, nil ) );
@@ -2993,7 +3060,7 @@ fn convFilter.lowerDeclVar( node:&Nodes.DeclVarNode, mut out:List<&W.Ins> ) mut 
    }
    let mut vals:&List<&Val> = [];
    if! let expList = node.$expList {
-      vals = self.lowerValList( expList, out );
+      vals = self.expandDDD( self.lowerValList( expList, out ), #node.$symbolInfoList, out );
    }
    foreach symbol, index in node.$symbolInfoList {
       if index <= #vals {
@@ -3007,7 +3074,8 @@ fn convFilter.lowerDeclVar( node:&Nodes.DeclVarNode, mut out:List<&W.Ins> ) mut 
 fn convFilter.lowerIfUnwrap( node:&Nodes.IfUnwrapNode ) mut : &W.Ins {
    let base = self.ctx.$depth;
    let mut pre:List<&W.Ins> = [];
-   let vals = self.lowerRawValList( node.$expList, pre );
+   let vals = self.expandDDD( self.lowerRawValList( node.$expList, pre ),
+                              #node.$varSymList, pre );
    self.ctx.set_depth( base + 1 );
    let mut thenBody:List<&W.Ins> = [];
    foreach symbol, index in node.$varSymList {
@@ -3056,7 +3124,8 @@ fn convFilter.lowerWhen( node:&Nodes.WhenNode ) mut : &W.Ins {
 
 fn convFilter.lowerUnwrapSet( node:&Nodes.UnwrapSetNode, mut out:List<&W.Ins> ) mut {
    let base = self.ctx.$depth;
-   let vals = self.lowerRawValList( node.$srcExpList, out );
+   let vals = self.expandDDD( self.lowerRawValList( node.$srcExpList, out ),
+                              #node.$dstExpList.$expList, out );
    self.ctx.set_depth( base + 1 );
    let mut nilBody:List<&W.Ins> = [];
    if! let block = node.$unwrapBlock {
@@ -3171,7 +3240,7 @@ fn convFilter.lowerSetVal( node:&Nodes.ExpSetValNode, mut out:List<&W.Ins> ) mut
    } else {
       dstList.insert( node.$exp1 );
    }
-   let mut vals = self.lowerValList( node.$exp2, out );
+   let mut vals = self.expandDDD( self.lowerValList( node.$exp2, out ), #dstList, out );
    if #dstList > 1 {
       // 全ての値を評価してから代入する
       let mut work:List<&Val> = [];

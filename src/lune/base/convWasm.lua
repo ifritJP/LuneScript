@@ -1514,9 +1514,51 @@ function convFilter:lowerValList( expList, pre )
          mRetIndex = 0
       end
    end
+   local castMRet = nil
+   local castMRetVals = {}
+   local castMRetPos = 0
    for index, exp in ipairs( expList:get_expList() ) do
-      if exp:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
-      elseif index == mRetIndex then
+      local mretInCast = nil
+      local castType = exp:get_expType()
+      do
+         local castNode = _lune.__Cast( exp, 3, Nodes.ExpCastNode )
+         if castNode ~= nil then
+            if castNode:get_castKind() == Nodes.CastKind.Implicit and castNode:get_exp():get_kind() == Nodes.NodeKind.get_ExpMRet() then
+               mretInCast = castNode:get_exp()
+               castType = castNode:get_castType()
+            end
+         end
+      end
+      if mretInCast then
+         local mret = _lune.unwrap( mretInCast)
+         if castMRet ~= mret then
+            castMRet = mret
+            local num = 0
+            for __index, other in ipairs( expList:get_expList() ) do
+               do
+                  local otherCast = _lune.__Cast( other, 3, Nodes.ExpCastNode )
+                  if otherCast ~= nil then
+                     if otherCast:get_exp() == mret then
+                        num = num + 1
+                     end
+                  end
+               end
+            end
+            castMRetVals = self:expandDDD( self:lowerMulti( mret, pre ), num, pre )
+            castMRetPos = 0
+         end
+         castMRetPos = castMRetPos + 1
+         local val
+         
+         if castMRetPos <= #castMRetVals then
+            val = castMRetVals[castMRetPos]
+         else
+          
+            val = Val._new(W.refNull( W.htAny ), W.typeAnyRef, Ast.builtinTypeNil)
+         end
+         table.insert( vals, Val._new(self:coerceVal( val, castType ), self:getRep( castType ), castType) )
+      elseif exp:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
+      elseif index == mRetIndex or (index == #expList:get_expList() and exp:get_kind() == Nodes.NodeKind.get_ExpMRet() ) then
          for __index, val in ipairs( self:lowerMulti( exp, pre ) ) do
             table.insert( vals, val )
          end
@@ -3350,6 +3392,22 @@ function convFilter:spillVal( val, pre )
    return Val._new(lg( work ), val:get_rep(), val:get_typeInfo())
 end
 
+function convFilter:expandDDD( vals, num, pre )
+
+   if #vals == 0 or #vals > num or self:normType( vals[#vals]:get_typeInfo() ):get_kind() ~= Ast.TypeInfoKind.DDD then
+      return vals
+   end
+   local work = {}
+   for index = 1, #vals - 1 do
+      table.insert( work, vals[index] )
+   end
+   local list = self:spillVal( vals[#vals], pre )
+   for index = 1, num - #vals + 1 do
+      table.insert( work, self:spillVal( Val._new(W.call( self.rt:fnListGet(  ), {list:get_ins(), W.i64Const( index )} ), W.typeAnyRef, Ast.builtinTypeStem_), pre ) )
+   end
+   return work
+end
+
 function convFilter:lowerRawValList( expList, pre )
 
    local vals = {}
@@ -3386,7 +3444,7 @@ function convFilter:lowerDeclVar( node, out )
       do
          local expList = node:get_expList()
          if expList ~= nil then
-            vals = self:lowerRawValList( expList, out )
+            vals = self:expandDDD( self:lowerRawValList( expList, out ), #node:get_symbolInfoList(), out )
          end
       end
       for __index, symbol in ipairs( node:get_symbolInfoList() ) do
@@ -3420,7 +3478,7 @@ function convFilter:lowerDeclVar( node, out )
    do
       local expList = node:get_expList()
       if expList ~= nil then
-         vals = self:lowerValList( expList, out )
+         vals = self:expandDDD( self:lowerValList( expList, out ), #node:get_symbolInfoList(), out )
       end
    end
    for index, symbol in ipairs( node:get_symbolInfoList() ) do
@@ -3438,7 +3496,7 @@ function convFilter:lowerIfUnwrap( node )
 
    local base = self.ctx:get_depth()
    local pre = {}
-   local vals = self:lowerRawValList( node:get_expList(), pre )
+   local vals = self:expandDDD( self:lowerRawValList( node:get_expList(), pre ), #node:get_varSymList(), pre )
    self.ctx:set_depth( base + 1 )
    local thenBody = {}
    for index, symbol in ipairs( node:get_varSymList() ) do
@@ -3493,7 +3551,7 @@ end
 function convFilter:lowerUnwrapSet( node, out )
 
    local base = self.ctx:get_depth()
-   local vals = self:lowerRawValList( node:get_srcExpList(), out )
+   local vals = self:expandDDD( self:lowerRawValList( node:get_srcExpList(), out ), #node:get_dstExpList():get_expList(), out )
    self.ctx:set_depth( base + 1 )
    local nilBody = {}
    do
@@ -3635,7 +3693,7 @@ function convFilter:lowerSetVal( node, out )
          table.insert( dstList, node:get_exp1() )
       end
    end
-   local vals = self:lowerValList( node:get_exp2(), out )
+   local vals = self:expandDDD( self:lowerValList( node:get_exp2(), out ), #dstList, out )
    if #dstList > 1 then
       local work = {}
       for __index, val in ipairs( vals ) do
