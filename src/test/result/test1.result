@@ -1023,7 +1023,7 @@ test/error/access5.lns:32:29: error: This type must be public. -- Test
 test/error/access5.lns:46:19: error: can't access mutable method. -- &Val.func
 test/error/access5.lns:47:20: error: can't access mutable method. -- &Val.func
 test/error/access5.lns:49:20: error: can't access mutable method. -- &Val.func
-test/error/access5.lns:50:10: error: return: exp(1) type mismatch @test.@error.@access5.Val(1107) <- &@test.@error.@access5.Val(1109): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/access5.lns:50:10: error: return: exp(1) type mismatch @test.@error.@access5.Val(1107) <- &@test.@error.@access5.Val(1109): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/access5.lns:56:20: error: can't access mutable method. -- &Val.func
 test/error/access5.lns:62:17: error: can't access mutable method. -- &Val.func
 test/error/access5.lns:63:18: error: can't access mutable method. -- &Val.func
@@ -1057,7 +1057,7 @@ test/error/list.lns:128:12: error: can't access mutable method. -- &Imp.func
 test/error/list.lns:131:12: error: can't access mutable method. -- &Imp.func
 test/error/list.lns:174:8: error: When left-value includes 'list[i]', left-value must be single.
 test/error/list.lns:178:7: error: When left-value includes 'list[i]', left-value must be single.
-test/error/list.lns:185:4: error: sort: exp(1) type mismatch sort!(1486) <- @test.@error.@list.(1482): index 1 -- exp(1) type mismatch @test.@error.@list.Hoge(TypeInfoKind.Class:1461) <- &@test.@error.@list.Hoge(TypeInfoKind.Class:1463) -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/list.lns:185:4: error: sort: exp(1) type mismatch sort!(1486) <- @test.@error.@list.(1482): index 1 -- exp(1) type mismatch @test.@error.@list.Hoge(TypeInfoKind.Class:1461) <- &@test.@error.@list.Hoge(TypeInfoKind.Class:1463) -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/list.lns:191:8: error: illegal type -- _List<int>!, TypeInfoKind.Nilable
 test/error/list.lns:3:13: warning: 'val2' var isn't accessed
 test/error/list.lns:8:13: warning: 'val2' var isn't accessed
@@ -1086,7 +1086,7 @@ test/error/map.lns:64:14: error: = operator: exp(1) type mismatch int!(27) <- re
 test/error/map.lns:65:14: error: = operator: exp(1) type mismatch int!(27) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/map.lns:87:9: error: This node can't use index
 test/error/map.lns:87:9: error: unmatch index type -- str, 
-test/error/map.lns:96:7: error: return: exp(1) type mismatch &__Map<int,int>(1141) <- &_Map<int,int>(1121): index 1 -- unmatch type generic -- __Map<int,int>, _Map<int,int>. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/map.lns:96:7: error: return: exp(1) type mismatch &__Map<int,int>(1141) <- &_Map<int,int>(1121): index 1 -- unmatch type generic -- __Map<int,int>, _Map<int,int>. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/map.lns:101:22: error: this node can not be l-value. -- ExpRefItem
 test/error/map.lns:102:13: error: illegal type -- stem!, TypeInfoKind.Nilable
 test/error/map.lns:3:13: warning: 'val2' var isn't accessed
@@ -1126,9 +1126,9 @@ test/error/set.lns:36:8: error: can't access mutable method. -- &_Set<int>.and
 test/error/set.lns:37:8: error: can't access mutable method. -- &_Set<int>.sub
 test/error/set.lns:44:4: error: add: exp(1) type mismatch int(26) <- int!(27): index 1 -- is doesn't support nilable.
 test/error/set.lns:44:13: error: set can't add nilable
-test/error/set.lns:46:4: error: or: exp(1) type mismatch &_Set<str>(136) <- _Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/set.lns:47:4: error: and: exp(1) type mismatch &_Set<str>(136) <- _Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/set.lns:48:4: error: sub: exp(1) type mismatch &_Set<str>(136) <- _Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/set.lns:46:4: error: or: exp(1) type mismatch &_Set<str>(136) <- _Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/set.lns:47:4: error: and: exp(1) type mismatch &_Set<str>(136) <- _Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/set.lns:48:4: error: sub: exp(1) type mismatch &_Set<str>(136) <- _Set<int>(1093): index 1(TypeInfoKind.Set). if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/set.lns:65:12: error: can't access mutable method. -- &Imp.func
 test/error/set.lns:68:12: error: can't access mutable method. -- &Imp.func
 test/error/set.lns:71:12: error: can't access mutable method. -- &Imp.func
@@ -1162,7 +1162,7 @@ test/error/func.lns:105:4: error: unmatch value type (index:1) @test.@error.@fun
 test/error/func.lns:109:18: error: Argument exists after '...'.
 test/error/func.lns:112:7: error: shadowing symbol of 66:14 -- func2
 test/error/func.lns:112:26: error: Type exists after '...'.
-test/error/func.lns:123:4: error: func: exp(1) type mismatch @test.@error.@func.TestFunc(1103) <- @test.@error.@func.(1111): index 1 -- exp(1) type mismatch _List<int>(1099) <- &_List<int>(1109): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/func.lns:123:4: error: func: exp(1) type mismatch @test.@error.@func.TestFunc(1103) <- @test.@error.@func.(1111): index 1 -- exp(1) type mismatch _List<int>(1099) <- &_List<int>(1109): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/func.lns:128:9: error: = operator: exp(1) type mismatch ::(10) <- @test.@error.@func.(1114): index 1 -- 
 test/error/func.lns:129:8: error: shadowing symbol of 66:14 -- func2
 test/error/func.lns:130:4: error: must set the type of variable for function. -- func3
@@ -1230,7 +1230,7 @@ test/error/class.lns:28:9: error: can't access mutable method. -- &Test__a.func
 test/error/class.lns:29:16: error: This arg can't be r-value. -- RefType
 test/error/class.lns:29:16: error: this node(1) can not be r-value. -- RefType
 test/error/class.lns:30:4: error: this node can not be l-value. -- RefType
-test/error/class.lns:30:12: error: = operator: exp(1) type mismatch @test.@error.@class.Test__a(1008) <- &@test.@error.@class.Test__a(1044): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/class.lns:30:12: error: = operator: exp(1) type mismatch @test.@error.@class.Test__a(1008) <- &@test.@error.@class.Test__a(1044): index 1 -- . 'test' is immutable because it is declared without 'mut'. declare it as 'let mut test'. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/class.lns:31:4: error: this node can not be l-value. -- RefType
 test/error/class.lns:31:12: error: = operator: exp(1) type mismatch @test.@error.@class.Test__a(1008) <- (6): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim
 test/error/class.lns:31:14: error: The type of exp(1) is None!!
@@ -1361,8 +1361,8 @@ test/error/class.lns:507:22: error: This arg can't be r-value. -- RefField
 test/error/class.lns:507:22: error: this node can't be r-value. -- RefField
 test/error/class.lns:518:7: error: Mapping class has not the interface type member. -- val
 test/error/class.lns:519:7: error: Mapping class has not the abstract class member. -- val2
-test/error/class.lns:542:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2269) <- &@test.@error.@class.Hoge(2271): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/class.lns:550:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2269) <- &@test.@error.@class.Hoge(2271): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/class.lns:542:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2269) <- &@test.@error.@class.Hoge(2271): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/class.lns:550:10: error: func: exp(1) type mismatch @test.@error.@class.Hoge(2269) <- &@test.@error.@class.Hoge(2271): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/class.lns:557:21: error: final class can't extend -- (Super)
 test/error/class.lns:568:1: error: Sub.hoge3: mismatch method type -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func: hoge3() -- hoge3()
 test/error/class.lns:568:1: error: Sub.hoge3: mismatch method type -- illegal type -- TypeInfoKind.Method, TypeInfoKind.Func: hoge3() -- hoge3()
@@ -1382,7 +1382,7 @@ test/error/class3.lns:4:7: error: not found type -- self
 test/error/class4.lns:2:11: error: This function doesn't have body. -- func
 test/error/class4.lns:8:12: error: It can't call prototype function from static -- func
 test/error/class5.lns:13:4: error: getter type mismatch -- int <- Sub
-test/error/class5.lns:14:4: error: getter type mismatch -- Super <- &Sub. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/class5.lns:14:4: error: getter type mismatch -- Super <- &Sub. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/class5.lns:18:20: error: 'new' can't use this type -- str
 test/error/class6.lns:5:1: error: The type must be 'pub' becaue using in __init(). -- Sub:AccessMode.Pri
 test/error/class6.lns:9:1: error: unmatch value type (index:1) &@test.@error.@class6.Sub <- &@test.@error.@class6.Test -- not inherit Sub(1018) <- Test(1008)
@@ -1399,9 +1399,9 @@ test/error/class10.lns:3:4: error: The super class's constructor is unknown. -- 
 test/error/class10.lns:3:24: error: illegal statement
 test/error/class11.lns:2:11: error: not found -- ':'. actually ';'
 test/error/depend.lns:22:11: warning: 'hoge2' var isn't accessed
-test/error/depend.lns:18:7: error: return: exp(1) type mismatch #@test.@error.@depend.Hoge(1049) <- &@test.@error.@depend.Hoge(1010): index 1 -- mismatch MutMode.Depend, MutMode.IMut. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/depend.lns:18:7: error: return: exp(1) type mismatch #@test.@error.@depend.Hoge(1049) <- &@test.@error.@depend.Hoge(1010): index 1 -- mismatch MutMode.Depend, MutMode.IMut. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/depend.lns:22:7: error: unmatch value type (index:1) #@test.@error.@depend.Hoge <- &@test.@error.@depend.Hoge -- mismatch MutMode.Depend, MutMode.IMutRe
-test/error/depend.lns:23:7: error: return: exp(1) type mismatch @test.@error.@depend.Hoge(1008) <- &@test.@error.@depend.Hoge(1010): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/depend.lns:23:7: error: return: exp(1) type mismatch @test.@error.@depend.Hoge(1008) <- &@test.@error.@depend.Hoge(1010): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/depend.lns:33:22: error: can't access mutable method. -- &Hoge.set
 test/error/depend.lns:38:22: error: can't access mutable method. -- &Hoge.set
 test/error/depend.lns:53:9: error: can't access mutable method. -- &Hoge.set
@@ -1504,13 +1504,13 @@ test/error/mutable.lns:89:6: error: can't access mutable method. -- &Test.func1
 test/error/mutable.lns:90:6: error: can't access mutable method. -- &Test.func2
 test/error/mutable.lns:93:12: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:94:10: error: this node can not be l-value. -- ExpRefItem
-test/error/mutable.lns:100:9: error: = operator: exp(1) type mismatch _List<int>(1141) <- &_List<int>(1046): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:100:9: error: = operator: exp(1) type mismatch _List<int>(1141) <- &_List<int>(1046): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/mutable.lns:104:9: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:118:17: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:124:11: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:128:4: error: unmatch value type (index:1) _List<int> <- &_List<int> -- 
 test/error/mutable.lns:130:11: error: can't access mutable method. -- &_List<int>.insert
-test/error/mutable.lns:136:4: error: return: exp(1) type mismatch @test.@error.@mutable.Test2!(1221) <- &@test.@error.@mutable.Test2!(1223): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:136:4: error: return: exp(1) type mismatch @test.@error.@mutable.Test2!(1221) <- &@test.@error.@mutable.Test2!(1223): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/mutable.lns:168:17: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:169:17: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:170:17: error: can't access mutable method. -- &_List<int>.insert
@@ -1541,7 +1541,7 @@ test/error/mutable.lns:225:15: error: can't access mutable method. -- &_List<int
 test/error/mutable.lns:228:12: error: can't access mutable method. -- &_List<&_List<int>>.insert
 test/error/mutable.lns:229:15: error: can't access mutable method. -- &_List<int>.insert
 test/error/mutable.lns:258:4: error: func: exp(1) type mismatch _List<@test.@error.@mutable.Super>(1534) <- _List<@test.@error.@mutable.Sub1>(1573): index 1 -- 
-test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &_List<_List<@test.@error.@mutable.Super>>(1554) <- _List<_List<@test.@error.@mutable.Sub1>>(1588): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/mutable.lns:262:4: error: func3: exp(1) type mismatch &_List<_List<@test.@error.@mutable.Super>>(1554) <- _List<_List<@test.@error.@mutable.Sub1>>(1588): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/var.lns:2:8: warning: 'val' var isn't accessed
 test/error/var.lns:4:8: warning: 'val2' var isn't accessed
 test/error/var.lns:8:8: warning: 'val1' var isn't accessed
@@ -1739,9 +1739,9 @@ test/error/unwrap.lns:42:17: error: this is not mutable variable. -- val
 test/error/unwrap.lns:43:18: error: this is not mutable variable. -- val2
 test/error/unwrap.lns:47:24: error: no numeric type 'int!' or 'int'
 test/error/unwrap.lns:49:10: error: This statement is not reached -- BreakKind.Return
-test/error/unwrap.lns:49:16: error: 'when' support only local variables or arguments.
-test/error/unwrap.lns:52:16: error: 'when' support only local variables or arguments.
-test/error/unwrap.lns:55:16: error: 'when' support only local variables or arguments.
+test/error/unwrap.lns:49:16: error: 'when' support only local variables or arguments. use 'if! let val = exp { }' for other expressions.
+test/error/unwrap.lns:52:16: error: 'when' support only local variables or arguments. use 'if! let val = exp { }' for other expressions.
+test/error/unwrap.lns:55:16: error: 'when' support only local variables or arguments. use 'if! let val = exp { }' for other expressions.
 test/error/unwrap.lns:58:16: error: This type isn't nilable. -- int
 test/error/unwrap.lns:66:11: error: this is not mutable variable. -- val
 test/error/unwrap.lns:71:16: error: not found type -- val2
@@ -2216,14 +2216,14 @@ test/error/static.lns:8:14: error: not found TypeInfo -- func
 test/error/generics.lns:3:7: error: return: exp(1) type mismatch T!(1009) <- int(26): index 1(TypeInfoKind.Nilable)
 test/error/generics.lns:8:7: error: return: exp(1) type mismatch T(1019) <- _Map<int,T>(1023): index 1(TypeInfoKind.Alternate)
 test/error/generics.lns:13:7: error: return: exp(1) type mismatch T(1030) <- T!(1031): index 1 -- is doesn't support nilable.
-test/error/generics.lns:27:7: error: return: exp(1) type mismatch T1(1063) <- &T1(1077): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics.lns:27:7: error: return: exp(1) type mismatch T1(1063) <- &T1(1077): index 1(TypeInfoKind.Alternate). 'val4' is immutable because it is declared without 'mut'. declare it as 'let mut val4'. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics.lns:30:4: error: func<T1,T2>: exp(2) type mismatch T2 <- [##]: dst 2 -- is doesn't support nilable.
 test/error/generics.lns:32:4: error: func<T1,T2>: over exp. expect: 2: actual: 3
 test/error/generics.lns:36:7: error: return: exp(1) type mismatch T2(TypeInfoKind.Alternate:1088) <- T1(TypeInfoKind.Alternate:1084)
 test/error/generics.lns:45:16: error: can't access this class(Test<T>) without '<>'.
 test/error/generics.lns:53:21: error: 'T' of Test<T> doesn't inherit 'Super'
 test/error/generics.lns:63:23: error: Sub.func: not support to override the method has generics at return type. set the type parameter at the extend like '<T=str>'-- func: func(str): str -- func(str): str
-test/error/generics.lns:77:10: error: func: exp(1) type mismatch &T(1204) <- str(58): index 1(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics.lns:77:10: error: func: exp(1) type mismatch &T(1204) <- str(58): index 1(TypeInfoKind.Alternate). if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics.lns:87:11: error: func: exp(1) type mismatch T(1247) <- int(26): index 1(TypeInfoKind.Alternate)
 test/error/generics.lns:90:17: error: multiple Type -- T
 test/error/generics.lns:91:19: error: shadowing Type -- T
@@ -2239,18 +2239,18 @@ test/error/generics.lns:35:7: warning: 'sub' var isn't accessed
 test/error/generics.lns:102:11: warning: 'test' var isn't accessed
 test/error/generics.lns:103:11: warning: 'test2' var isn't accessed
 test/error/generics2.lns:184:8: warning: 'hoge' var isn't accessed
-test/error/generics2.lns:10:7: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:14:4: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:10:7: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/generics2.lns:14:4: error: dump: exp(1) type mismatch stem <- &T: src: 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics2.lns:14:27: error: this exp is not nilable -- T
-test/error/generics2.lns:36:4: error: func: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1044) <- &@test.@error.@generics2.Test<T>(1095): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class. if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:42:4: error: func: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1044) <- &@test.@error.@generics2.Test<T>(1111): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:52:4: error: func2: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1115) <- &@test.@error.@generics2.Test<T>(1103): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:36:4: error: func: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1044) <- &@test.@error.@generics2.Test<T>(1095): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class. if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/generics2.lns:42:4: error: func: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1044) <- &@test.@error.@generics2.Test<T>(1111): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/generics2.lns:52:4: error: func2: exp(1) type mismatch &@test.@error.@generics2.Test<T>(1115) <- &@test.@error.@generics2.Test<T>(1103): index 1 -- illegal type -- TypeInfoKind.Class, TypeInfoKind.Prim. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics2.lns:60:4: error: func3: exp(1) type mismatch @test.@error.@generics2.Test<T>(1120) <- @test.@error.@generics2.Test<T>(1137): index 1 -- 
 test/error/generics2.lns:76:4: error: func: exp(1) type mismatch int(26) <- str(58): index 1 -- illegal type -- TypeInfoKind.Prim, TypeInfoKind.Class
 test/error/generics2.lns:88:4: error: func: exp(1) type mismatch int(26) <- str(58): index 1(TypeInfoKind.Alternate)
 test/error/generics2.lns:92:4: error: func: exp(1) type mismatch str(58) <- int(26): index 1(TypeInfoKind.Alternate)
-test/error/generics2.lns:125:1: error: process<T>: exp(2) type mismatch @test.@error.@generics2.Data(1278) <- &@test.@error.@generics2.Data(1299): index 2(TypeInfoKind.Alternate). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:127:1: error: process<T>: exp(1) type mismatch @test.@error.@generics2.Super2<T>(TypeInfoKind.Class:1282) <- &@test.@error.@generics2.Test2(TypeInfoKind.Class:1304) -- unmatch mutable. if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:125:1: error: process<T>: exp(2) type mismatch @test.@error.@generics2.Data(1278) <- &@test.@error.@generics2.Data(1299): index 2(TypeInfoKind.Alternate). 'data' is immutable because it is declared without 'mut'. declare it as 'let mut data'. if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/generics2.lns:127:1: error: process<T>: exp(1) type mismatch @test.@error.@generics2.Super2<T>(TypeInfoKind.Class:1282) <- &@test.@error.@generics2.Test2(TypeInfoKind.Class:1304) -- unmatch mutable. 'test' is immutable because it is declared without 'mut'. declare it as 'let mut test'. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics2.lns:129:1: error: process<T>: exp(2) type mismatch str(58) <- int(26): index 2(TypeInfoKind.Alternate)
 test/error/generics2.lns:142:15: error: can't access mutable method. -- &Hoge.func
 test/error/generics2.lns:153:15: error: can't access mutable method. -- &Hoge.func
@@ -2261,12 +2261,12 @@ test/error/generics2.lns:174:7: error: member type is not Mapping -- HogeHoge<T>
 test/error/generics2.lns:184:19: error: 'T' of Hoge<T> doesn't inherit 'IF1'
 test/error/generics2.lns:197:17: error: not compatible type '&@test.@error.@generics2.Test3<T>!' or '@test.@error.@generics2.Test3<T>'
 test/error/generics2.lns:215:19: error: return: exp(1) type mismatch _List<@test.@error.@generics2.Val>!(1578) <- _List<&@test.@error.@generics2.Val>(1605): index 1(TypeInfoKind.Nilable)
-test/error/generics2.lns:219:19: error: return: exp(1) type mismatch _List<@test.@error.@generics2.Val>!(1578) <- &_List<@test.@error.@generics2.Val>(1617): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:240:19: error: return: exp(1) type mismatch _List<&@test.@error.@generics2.Val>!(1637) <- &_List<@test.@error.@generics2.Val>(1676): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
-test/error/generics2.lns:257:19: error: return: exp(1) type mismatch &_List<@test.@error.@generics2.Val>!(1696) <- _List<&@test.@error.@generics2.Val>(1723): index 1(TypeInfoKind.Nilable). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics2.lns:219:19: error: return: exp(1) type mismatch _List<@test.@error.@generics2.Val>!(1578) <- &_List<@test.@error.@generics2.Val>(1617): index 1(TypeInfoKind.Nilable). if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/generics2.lns:240:19: error: return: exp(1) type mismatch _List<&@test.@error.@generics2.Val>!(1637) <- &_List<@test.@error.@generics2.Val>(1676): index 1(TypeInfoKind.Nilable). if your code is the old style, use the option '--legacy-mutable-control'.
+test/error/generics2.lns:257:19: error: return: exp(1) type mismatch &_List<@test.@error.@generics2.Val>!(1696) <- _List<&@test.@error.@generics2.Val>(1723): index 1(TypeInfoKind.Nilable). if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics3.lns:50:8: warning: 'test3' var isn't accessed
 test/error/generics3.lns:13:21: error: can't access mutable method. -- &_Set<int>.add
-test/error/generics3.lns:42:4: error: sub2: exp(1) type mismatch &@test.@error.@generics3.IF2<T2>(1115) <- @test.@error.@generics3.Test2<T>(1136): index 1(TypeInfoKind.IF). if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics3.lns:42:4: error: sub2: exp(1) type mismatch &@test.@error.@generics3.IF2<T2>(1115) <- @test.@error.@generics3.Test2<T>(1136): index 1(TypeInfoKind.IF). if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics3.lns:50:16: error: Can't new generic class. -- Test3<T1,T2>
 test/error/generics4.lns:28:19: error: can't use this type without <T>. please use Test<T>.
 test/error/generics4.lns:28:19: error: it's mismatch the number of generics type param -- &Test<T>: 1, 0
@@ -2284,7 +2284,7 @@ test/error/generics4.lns:51:11: error: Can't new generic class. -- Test2<T>
 test/error/generics4.lns:51:15: error: __init: exp(1) type mismatch T(1103) <- @test.@error.@generics4.SubSub(1036): index 1(TypeInfoKind.Alternate)
 test/error/generics4.lns:53:11: error: Can't new generic class. -- Test2<T>
 test/error/generics4.lns:53:15: error: __init: exp(1) type mismatch T(1103) <- int(26): index 1(TypeInfoKind.Alternate)
-test/error/generics4.lns:69:13: error: = operator: exp(1) type mismatch &@test.@error.@generics4.Test3<T>!(1173) <- @test.@error.@generics4.Test3<T>(1204): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/generics4.lns:69:13: error: = operator: exp(1) type mismatch &@test.@error.@generics4.Test3<T>!(1173) <- @test.@error.@generics4.Test3<T>(1204): index 1 -- . if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/generics4.lns:92:4: error: func: exp(1) type mismatch _List<@test.@error.@generics4.Super>(1247) <- _List<@test.@error.@generics4.Sub1>(1261): index 1 -- 
 test/error/box.lns:6:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- real(30): index 1(TypeInfoKind.Box)
 test/error/box.lns:7:4: error: func: exp(1) type mismatch Nilable<int>(1008) <- str(58): index 1(TypeInfoKind.Box)
@@ -2505,7 +2505,7 @@ test/error/tuple.lns:18:7: warning: 'func' var isn't accessed
 test/error/tuple.lns:22:7: warning: 'sub' var isn't accessed
 test/error/tuple.lns:2:4: error: return: over exp. expect: 1: actual: 2
 test/error/tuple.lns:10:11: error: = operator: exp(1) type mismatch __tuple<int,str!>(1033) <- __tuple<int,str>(1039): index 1 -- umatch str! -- str
-test/error/tuple.lns:20:14: error: tuple: exp(1) type mismatch @test.@error.@tuple.Hoge(1047) <- &@test.@error.@tuple.Hoge(1075): index 1 -- . if your code is the old style, use the opiton '--legacy-mutable-control'.
+test/error/tuple.lns:20:14: error: tuple: exp(1) type mismatch @test.@error.@tuple.Hoge(1047) <- &@test.@error.@tuple.Hoge(1075): index 1 -- . 'hoge' is immutable because it is declared without 'mut'. declare it as 'let mut hoge'. if your code is the old style, use the option '--legacy-mutable-control'.
 test/error/tuple.lns:23:14: error: tuple: exp(1) type mismatch @test.@error.@tuple.Sub(1057) <- @test.@error.@tuple.Hoge(1047): index 1 -- not inherit Sub(1057) <- Hoge(1047)
 test/error/tuple2.lns:2:8: warning: 'val1' var isn't accessed
 test/error/tuple2.lns:2:14: warning: 'val2' var isn't accessed

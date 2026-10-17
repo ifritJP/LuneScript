@@ -4642,8 +4642,9 @@ fn TransUnit.analyzeWhen( firstToken: &Tokenizer.Token ) mut : Nodes.Node
          }
       }
       else {
-         self.addErrMess( expNode.$pos,
-                          "'when' support only local variables or arguments." );
+         self.addErrMess(
+            expNode.$pos,
+            "'when' support only local variables or arguments. use 'if! let val = exp { }' for other expressions." );
       }
    }
 

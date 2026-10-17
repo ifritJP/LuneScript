@@ -248,6 +248,7 @@ if not _lune8 then
 end
 local getFirstStmt
 local getAnalyzingState
+local getImmutableVarHint
 local findForm
 local isMatchStringFormatType
 local getClassTypeFor
@@ -6254,7 +6255,7 @@ function TransUnit:analyzeWhen( firstToken )
                self:addErrMess( expNode:get_pos(), string.format( "This type isn't nilable. -- %s", expNode:get_expType():getTxt(  )) )
             end
          else
-            self:addErrMess( expNode:get_pos(), "'when' support only local variables or arguments." )
+            self:addErrMess( expNode:get_pos(), "'when' support only local variables or arguments. use 'if! let val = exp { }' for other expressions." )
          end
       end
    end
@@ -6699,6 +6700,26 @@ function TransUnit:checkImplicitCast( alt2typeMap, validCastToGen, dstTypeList, 
    return Nodes.ExpListNode.create( self.nodeManager, expListNode:get_pos(), self.inTestBlock, self.macroCtrl:isInAnalyzeArgMode(  ), expTypeList, newExpNodeList, newMRetExp, expListNode:get_followOn() )
 end
 
+function getImmutableVarHint( dstTypeList, expNodeList )
+
+   for index, expNode in ipairs( expNodeList ) do
+      if index > #dstTypeList then
+         break
+      end
+      do
+         local refNode = _lune.__Cast( expNode, 3, Nodes.ExpRefNode )
+         if refNode ~= nil then
+            local symbolInfo = refNode:get_symbolInfo()
+            if symbolInfo:get_kind() == Ast.SymbolKind.Var and not symbolInfo:get_mutable() and symbolInfo:get_typeInfo():get_mutMode() == Ast.MutMode.IMutRe and not Ast.isMutable( expNode:get_expType():get_mutMode() ) and Ast.isMutable( dstTypeList[index]:get_mutMode() ) then
+               return string.format( ". '%s' is immutable because it is declared without 'mut'. declare it as 'let mut %s'", symbolInfo:get_name(), symbolInfo:get_name())
+            end
+         end
+      end
+   end
+   return ""
+end
+
+
 function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allowDstShort, warnForFollow, workAlt2typeMap, validImplicitCast )
 
    local expNodeList = _lune.nilacc( expListNode, 'get_expList', 'callmtd' )
@@ -6758,7 +6779,7 @@ function TransUnit:checkMatchType( message, pos, dstTypeList, expListNode, allow
    do
       local _switchExp = result
       if _switchExp == Ast.MatchType.Error then
-         self:addErrMess( pos, string.format( "%s: %s", message, mess) )
+         self:addErrMess( pos, string.format( "%s: %s%s", message, mess, getImmutableVarHint( dstTypeList, workExpNodeList )) )
       elseif _switchExp == Ast.MatchType.Warn then
          if not self.ctrl_info.checkingDefineAbbr and Code.isMessageOf( Code.ID.nothing_define_abbr, mess ) then
          else

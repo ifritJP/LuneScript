@@ -490,7 +490,7 @@ curNsInfo が nil になる。
 
    pro fn addErrMess( pos: &Tokenizer.Position, mut mess: str ) __async mut {
       if mess.find( "type mismatch.*<- &" ##) {
-         mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'.";
+         mess = mess .. ". if your code is the old style, use the option '--legacy-mutable-control'.";
       }
       self.errMessList.insert(
          new ErrMess( "%s: error: %s" ( pos.getDisplayTxt(), mess ), pos ) );

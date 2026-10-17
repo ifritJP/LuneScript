@@ -676,7 +676,7 @@ end
 function TransUnitBase:addErrMess( pos, mess )
 
    if mess:find( "type mismatch.*<- &" ) then
-      mess = mess .. ". if your code is the old style, use the opiton '--legacy-mutable-control'."
+      mess = mess .. ". if your code is the old style, use the option '--legacy-mutable-control'."
    end
    table.insert( self.errMessList, ErrMess._new(string.format( "%s: error: %s", pos:getDisplayTxt(  ), mess), pos) )
 end

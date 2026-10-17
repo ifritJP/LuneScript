@@ -331,7 +331,7 @@ func (self *TransUnitIF_TransUnitBase) SetScope(_env *LnsEnv, scope *Ast_Scope,s
 // 491: decl @lune.@base.@TransUnitIF.TransUnitBase.addErrMess
 func (self *TransUnitIF_TransUnitBase) AddErrMess(_env *LnsEnv, pos Types_Position,mess string) {
     if Lns_isCondTrue( Lns_car(_env.GetVM().String_find(mess,"type mismatch.*<- &", nil, nil))){
-        mess = mess + ". if your code is the old style, use the opiton '--legacy-mutable-control'."
+        mess = mess + ". if your code is the old style, use the option '--legacy-mutable-control'."
     }
     self.ErrMessList.Insert(NewTransUnitIF_ErrMess(_env, _env.GetVM().String_format("%s: error: %s", Lns_2DDD(pos.GetDisplayTxt(_env), mess)), pos))
 }
