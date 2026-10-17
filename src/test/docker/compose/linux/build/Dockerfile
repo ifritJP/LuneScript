@@ -1,4 +1,4 @@
-FROM golang:1.20-buster
+FROM golang:1.20-bookworm
 
 ARG PROXY=""
 
