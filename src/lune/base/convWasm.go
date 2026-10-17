@@ -33,112 +33,165 @@ Val1 LnsInt
 func (self *convWasm_VarLoc__Local) GetTxt() string {
 return "VarLoc.Local"
 }
-// for 287
-func convWasm_convExp0_1015(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+type convWasm_ArgGetter_18_ func (_env *LnsEnv, arg1 LnsInt,arg2 *WasmBin_ValType) *WasmBin_Ins
+// for 318
+func convWasm_convExp0_1101(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 550
-func convWasm_convExp1_1230(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 587
+func convWasm_convExp1_1245(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 564
-func convWasm_convExp1_1377(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 601
+func convWasm_convExp1_1392(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 574
-func convWasm_convExp1_1457(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 632
+func convWasm_convExp1_1606(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 943
-func convWasm_convExp1_3658(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 649
+func convWasm_convExp1_1761(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1025
-func convWasm_convExp1_4459(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 697
+func convWasm_convExp1_2131(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1188
-func convWasm_convExp2_534(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
-    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
-}
-// for 1261
-func convWasm_convExp2_1034(arg1 []LnsAny) LnsAny {
-    return Lns_getFromMulti( arg1, 0 )
-}
-// for 1518
-func convWasm_convExp2_3274(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 1538
-func convWasm_convExp2_3529(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 1558
-func convWasm_convExp2_3767(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 1584
-func convWasm_convExp2_3951(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 1648
-func convWasm_convExp2_4649(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 1964
-func convWasm_convExp3_1801(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
-    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
-}
-// for 2023
-func convWasm_convExp3_2358(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
-    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
-}
-// for 2238
-func convWasm_convExp3_3765(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 2356
-func convWasm_convExp3_4735(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 2369
-func convWasm_convExp3_4847(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 2603
-func convWasm_convExp4_1914(arg1 []LnsAny) string {
+// for 939
+func convWasm_convExp1_3725(arg1 []LnsAny) string {
     return Lns_getFromMulti( arg1, 0 ).(string)
 }
-// for 2690
-func convWasm_convExp4_2487(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1069
+func convWasm_convExp1_4407(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 2711
-func convWasm_convExp4_2664(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1151
+func convWasm_convExp1_5208(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 2730
-func convWasm_convExp4_2826(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 2752
-func convWasm_convExp4_2985(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 2776
-func convWasm_convExp4_3189(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
-    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
-}
-// for 3421
-func convWasm_convExp0_6144(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+// for 1353
+func convWasm_convExp1_6439(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
 }
-// for 3429
-func convWasm_convExp0_6196(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+// for 1433
+func convWasm_convExp1_7004(arg1 []LnsAny) LnsAny {
+    return Lns_getFromMulti( arg1, 0 )
+}
+// for 1696
+func convWasm_convExp2_2186(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 1716
+func convWasm_convExp2_2441(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 1736
+func convWasm_convExp2_2679(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 1762
+func convWasm_convExp2_2863(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 1826
+func convWasm_convExp2_3561(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 2234
+func convWasm_convExp2_6656(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
 }
-// for 3609
-func convWasm_convExp0_7422(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 2293
+func convWasm_convExp2_7213(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
+}
+// for 2418
+func convWasm_convExp3_735(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
+}
+// for 2543
+func convWasm_convExp3_1701(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 2704
+func convWasm_convExp3_3031(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 2725
+func convWasm_convExp3_3275(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 2747
+func convWasm_convExp3_3548(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 2760
+func convWasm_convExp3_3660(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 2971
+func convWasm_convExp3_5337(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3134
+func convWasm_convExp3_6914(arg1 []LnsAny) string {
+    return Lns_getFromMulti( arg1, 0 ).(string)
+}
+// for 3153
+func convWasm_convExp3_7070(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
+}
+// for 3233
+func convWasm_convExp4_174(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3254
+func convWasm_convExp4_351(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3273
+func convWasm_convExp4_513(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3342
+func convWasm_convExp4_861(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3414
+func convWasm_convExp4_1721(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3444
+func convWasm_convExp4_1959(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3580
+func convWasm_convExp4_3881(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 3782
+func convWasm_convExp4_5456(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
+}
+// for 4502
+func convWasm_convExp0_7877(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
+}
+// for 4517
+func convWasm_convExp0_7996(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*Ast_TypeInfo])
+}
+// for 4722
+func convWasm_convExp0_9380(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+    return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
+}
+// for 5029
+func convWasm_convExp0_11438(arg1 []LnsAny) (*WasmBin_Ins, *LnsList2_[*WasmBin_ValType], *LnsList2_[*WasmBin_ValType]) {
+    return Lns_getFromMulti( arg1, 0 ).(*WasmBin_Ins), Lns_getFromMulti( arg1, 1 ).(*LnsList2_[*WasmBin_ValType]), Lns_getFromMulti( arg1, 2 ).(*LnsList2_[*WasmBin_ValType])
+}
+// for 5153
+func convWasm_convExp0_12269(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
 // 74: decl @lune.@base.@convWasm.lg
@@ -156,13 +209,13 @@ func convWasm_p_4_(_env *LnsEnv, code LnsInt,args *LnsList2_[*WasmBin_Ins]) *Was
     return WasmBin_plain(_env, code, args)
 }
 
-// 348: decl @lune.@base.@convWasm.isScalar
-func convWasm_isScalar_13_(_env *LnsEnv, rep *WasmBin_ValType) bool {
+// 383: decl @lune.@base.@convWasm.isScalar
+func convWasm_isScalar_14_(_env *LnsEnv, rep *WasmBin_ValType) bool {
     return Lns_op_not(rep.FP.IsRef(_env))
 }
 
-// 461: decl @lune.@base.@convWasm.isMethodSym
-func convWasm_isMethodSym_14_(_env *LnsEnv, symbol *Ast_SymbolInfo) bool {
+// 497: decl @lune.@base.@convWasm.isMethodSym
+func convWasm_isMethodSym_15_(_env *LnsEnv, symbol *Ast_SymbolInfo) bool {
     return _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( symbol.FP.Get_kind(_env) == Ast_SymbolKind__Mtd) &&
         _env.SetStackVal( Lns_op_not(symbol.FP.Get_staticFlag(_env))) &&
@@ -170,16 +223,26 @@ func convWasm_isMethodSym_14_(_env *LnsEnv, symbol *Ast_SymbolInfo) bool {
         _env.SetStackVal( symbol.FP.Get_name(_env) != "__free") ).(bool)
 }
 
-// 2081: decl @lune.@base.@convWasm.append
-func convWasm_append_15_(_env *LnsEnv, list *LnsList2_[*WasmBin_Ins],items *LnsList2_[*WasmBin_Ins]) {
+// 2351: decl @lune.@base.@convWasm.append
+func convWasm_append_16_(_env *LnsEnv, list *LnsList2_[*WasmBin_Ins],items *LnsList2_[*WasmBin_Ins]) {
     for _, _item := range( items.Items ) {
         item := _item
         list.Insert(item)
     }
 }
 
-// 2865: decl @lune.@base.@convWasm.makeIfChain
-func convWasm_makeIfChain_16_(_env *LnsEnv, conds *LnsList2_[*WasmBin_Ins],bodies *LnsList2_[*LnsList2_[*WasmBin_Ins]],elseBody LnsAny) *WasmBin_Ins {
+
+
+
+// 3451: decl @lune.@base.@convWasm.convFilter.fnFromConv.ok.ifThen
+func convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env *LnsEnv, cond *WasmBin_Ins,body *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
+    return WasmBin_ifElse(_env, cond, body, nil, nil)
+}
+
+
+
+// 3817: decl @lune.@base.@convWasm.makeIfChain
+func convWasm_makeIfChain_17_(_env *LnsEnv, conds *LnsList2_[*WasmBin_Ins],bodies *LnsList2_[*LnsList2_[*WasmBin_Ins]],elseBody LnsAny) *WasmBin_Ins {
     var acc LnsAny
     acc = elseBody
     {
@@ -199,14 +262,16 @@ func convWasm_makeIfChain_16_(_env *LnsEnv, conds *LnsList2_[*WasmBin_Ins],bodie
         }
     }
     if acc != nil{
-        acc_216 := acc.(*LnsList2_[*WasmBin_Ins])
-        return WasmBin_seq(_env, acc_216)
+        acc_269 := acc.(*LnsList2_[*WasmBin_Ins])
+        return WasmBin_seq(_env, acc_269)
     }
     return WasmBin_nop(_env)
 }
 
 
-// 4018: decl @lune.@base.@convWasm.createFilter
+
+
+// 5284: decl @lune.@base.@convWasm.createFilter
 func ConvWasm_createFilter(_env *LnsEnv, streamName string,stream Lns_oStream,ast *AstInfo_ASTInfo) *Nodes_Filter {
     return &NewconvWasm_convFilter(_env, streamName, stream, ast).Nodes_Filter
 }
@@ -415,12 +480,76 @@ func (self *convWasm_SlotInfo) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ retur
 func (self *convWasm_SlotInfo) Get_impl(_env *LnsEnv) LnsInt{ return self.impl }
 func (self *convWasm_SlotInfo) Set_impl(_env *LnsEnv, arg1 LnsInt){ self.impl = arg1 }
 
+// declaration Class -- AdvertiseMethod
+type convWasm_AdvertiseMethodMtd interface {
+    Get_impl(_env *LnsEnv) LnsInt
+    Get_memberName(_env *LnsEnv) string
+    Get_memberType(_env *LnsEnv) *Ast_TypeInfo
+    Get_methodName(_env *LnsEnv) string
+    Get_methodType(_env *LnsEnv) *Ast_TypeInfo
+}
+type convWasm_AdvertiseMethod struct {
+    memberName string
+    memberType *Ast_TypeInfo
+    methodName string
+    methodType *Ast_TypeInfo
+    impl LnsInt
+    FP convWasm_AdvertiseMethodMtd
+}
+func convWasm_AdvertiseMethod2Stem( obj LnsAny ) LnsAny {
+    if obj == nil {
+        return nil
+    }
+    return obj.(*convWasm_AdvertiseMethod).FP
+}
+func convWasm_AdvertiseMethod_toSlice(slice []LnsAny) []*convWasm_AdvertiseMethod {
+    ret := make([]*convWasm_AdvertiseMethod, len(slice))
+    for index, val := range slice {
+        ret[index] = val.(convWasm_AdvertiseMethodDownCast).ToconvWasm_AdvertiseMethod()
+    }
+    return ret
+}
+type convWasm_AdvertiseMethodDownCast interface {
+    ToconvWasm_AdvertiseMethod() *convWasm_AdvertiseMethod
+}
+func convWasm_AdvertiseMethodDownCastF( multi ...LnsAny ) LnsAny {
+    if len( multi ) == 0 { return nil }
+    obj := multi[ 0 ]
+    if ddd, ok := multi[ 0 ].([]LnsAny); ok { obj = ddd[0] }
+    work, ok := obj.(convWasm_AdvertiseMethodDownCast)
+    if ok { return work.ToconvWasm_AdvertiseMethod() }
+    return nil
+}
+func (obj *convWasm_AdvertiseMethod) ToconvWasm_AdvertiseMethod() *convWasm_AdvertiseMethod {
+    return obj
+}
+func NewconvWasm_AdvertiseMethod(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo, arg3 string, arg4 *Ast_TypeInfo, arg5 LnsInt) *convWasm_AdvertiseMethod {
+    obj := &convWasm_AdvertiseMethod{}
+    obj.FP = obj
+    obj.InitconvWasm_AdvertiseMethod(_env, arg1, arg2, arg3, arg4, arg5)
+    return obj
+}
+func (self *convWasm_AdvertiseMethod) InitconvWasm_AdvertiseMethod(_env *LnsEnv, arg1 string, arg2 *Ast_TypeInfo, arg3 string, arg4 *Ast_TypeInfo, arg5 LnsInt) {
+    self.memberName = arg1
+    self.memberType = arg2
+    self.methodName = arg3
+    self.methodType = arg4
+    self.impl = arg5
+}
+func (self *convWasm_AdvertiseMethod) Get_memberName(_env *LnsEnv) string{ return self.memberName }
+func (self *convWasm_AdvertiseMethod) Get_memberType(_env *LnsEnv) *Ast_TypeInfo{ return self.memberType }
+func (self *convWasm_AdvertiseMethod) Get_methodName(_env *LnsEnv) string{ return self.methodName }
+func (self *convWasm_AdvertiseMethod) Get_methodType(_env *LnsEnv) *Ast_TypeInfo{ return self.methodType }
+func (self *convWasm_AdvertiseMethod) Get_impl(_env *LnsEnv) LnsInt{ return self.impl }
+
 // declaration Class -- ClassInfo
 type convWasm_ClassInfoMtd interface {
+    Get_advertiseList(_env *LnsEnv) *LnsList2_[*convWasm_AdvertiseMethod]
     Get_ctorFunc(_env *LnsEnv) LnsInt
     Get_ctorFuncType(_env *LnsEnv) LnsInt
     Get_fieldNames(_env *LnsEnv) *LnsList2_[string]
     Get_fieldReps(_env *LnsEnv) *LnsList2_[*WasmBin_ValType]
+    Get_fieldTypes(_env *LnsEnv) *LnsList2_[*Ast_TypeInfo]
     Get_ifList(_env *LnsEnv) *LnsList2_[*Ast_TypeInfo]
     Get_name2field(_env *LnsEnv) *LnsMap2_[string,LnsInt]
     Get_name2slot(_env *LnsEnv) *LnsMap2_[string,LnsInt]
@@ -441,11 +570,13 @@ type convWasm_ClassInfo struct {
     parent LnsAny
     fieldNames *LnsList2_[string]
     fieldReps *LnsList2_[*WasmBin_ValType]
+    fieldTypes *LnsList2_[*Ast_TypeInfo]
     name2field *LnsMap2_[string,LnsInt]
     slotList *LnsList2_[*convWasm_SlotInfo]
     name2slot *LnsMap2_[string,LnsInt]
     ifList *LnsList2_[*Ast_TypeInfo]
     ctorFunc LnsInt
+    advertiseList *LnsList2_[*convWasm_AdvertiseMethod]
     ctorFuncType LnsInt
     FP convWasm_ClassInfoMtd
 }
@@ -489,15 +620,17 @@ func (self *convWasm_ClassInfo) Get_vtGlobal(_env *LnsEnv) LnsInt{ return self.v
 func (self *convWasm_ClassInfo) Get_parent(_env *LnsEnv) LnsAny{ return self.parent }
 func (self *convWasm_ClassInfo) Get_fieldNames(_env *LnsEnv) *LnsList2_[string]{ return self.fieldNames }
 func (self *convWasm_ClassInfo) Get_fieldReps(_env *LnsEnv) *LnsList2_[*WasmBin_ValType]{ return self.fieldReps }
+func (self *convWasm_ClassInfo) Get_fieldTypes(_env *LnsEnv) *LnsList2_[*Ast_TypeInfo]{ return self.fieldTypes }
 func (self *convWasm_ClassInfo) Get_name2field(_env *LnsEnv) *LnsMap2_[string,LnsInt]{ return self.name2field }
 func (self *convWasm_ClassInfo) Get_slotList(_env *LnsEnv) *LnsList2_[*convWasm_SlotInfo]{ return self.slotList }
 func (self *convWasm_ClassInfo) Get_name2slot(_env *LnsEnv) *LnsMap2_[string,LnsInt]{ return self.name2slot }
 func (self *convWasm_ClassInfo) Get_ifList(_env *LnsEnv) *LnsList2_[*Ast_TypeInfo]{ return self.ifList }
 func (self *convWasm_ClassInfo) Get_ctorFunc(_env *LnsEnv) LnsInt{ return self.ctorFunc }
 func (self *convWasm_ClassInfo) Set_ctorFunc(_env *LnsEnv, arg1 LnsInt){ self.ctorFunc = arg1 }
+func (self *convWasm_ClassInfo) Get_advertiseList(_env *LnsEnv) *LnsList2_[*convWasm_AdvertiseMethod]{ return self.advertiseList }
 func (self *convWasm_ClassInfo) Get_ctorFuncType(_env *LnsEnv) LnsInt{ return self.ctorFuncType }
 func (self *convWasm_ClassInfo) Set_ctorFuncType(_env *LnsEnv, arg1 LnsInt){ self.ctorFuncType = arg1 }
-// 135: DeclConstr
+// 150: DeclConstr
 func (self *convWasm_ClassInfo) InitconvWasm_ClassInfo(_env *LnsEnv, typeInfo *Ast_TypeInfo,structType LnsInt,vtType LnsInt,vtGlobal LnsInt,parent LnsAny) {
     self.typeInfo = typeInfo
     self.structType = structType
@@ -506,37 +639,43 @@ func (self *convWasm_ClassInfo) InitconvWasm_ClassInfo(_env *LnsEnv, typeInfo *A
     self.parent = parent
     self.fieldNames = NewLnsList2_[string]([]string{})
     self.fieldReps = NewLnsList2_[*WasmBin_ValType]([]*WasmBin_ValType{})
+    self.fieldTypes = NewLnsList2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
     self.name2field = NewLnsMap2_[string,LnsInt]( map[string]LnsInt{})
     self.slotList = NewLnsList2_[*convWasm_SlotInfo]([]*convWasm_SlotInfo{})
     self.name2slot = NewLnsMap2_[string,LnsInt]( map[string]LnsInt{})
     self.ifList = NewLnsList2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
     self.ctorFunc = -1
+    self.advertiseList = NewLnsList2_[*convWasm_AdvertiseMethod]([]*convWasm_AdvertiseMethod{})
     self.ctorFuncType = -1
     if parent != nil{
-        parent_102 := parent.(*convWasm_ClassInfo)
-        for _, _name := range( parent_102.FP.Get_fieldNames(_env).Items ) {
+        parent_118 := parent.(*convWasm_ClassInfo)
+        for _, _name := range( parent_118.FP.Get_fieldNames(_env).Items ) {
             name := _name
             self.fieldNames.Insert(name)
         }
-        for _, _rep := range( parent_102.FP.Get_fieldReps(_env).Items ) {
+        for _, _rep := range( parent_118.FP.Get_fieldReps(_env).Items ) {
             rep := _rep
             self.fieldReps.Insert(rep)
         }
-        for _name, _index := range( parent_102.FP.Get_name2field(_env).Items ) {
+        for _, _fieldType := range( parent_118.FP.Get_fieldTypes(_env).Items ) {
+            fieldType := _fieldType
+            self.fieldTypes.Insert(fieldType)
+        }
+        for _name, _index := range( parent_118.FP.Get_name2field(_env).Items ) {
             name := _name
             index := _index
             self.name2field.Set(name,index)
         }
-        for _, _slot := range( parent_102.FP.Get_slotList(_env).Items ) {
+        for _, _slot := range( parent_118.FP.Get_slotList(_env).Items ) {
             slot := _slot
             self.slotList.Insert(NewconvWasm_SlotInfo(_env, slot.FP.Get_name(_env), slot.FP.Get_funcType(_env), slot.FP.Get_methodType(_env), slot.FP.Get_impl(_env)))
         }
-        for _name, _index := range( parent_102.FP.Get_name2slot(_env).Items ) {
+        for _name, _index := range( parent_118.FP.Get_name2slot(_env).Items ) {
             name := _name
             index := _index
             self.name2slot.Set(name,index)
         }
-        for _, _ifType := range( parent_102.FP.Get_ifList(_env).Items ) {
+        for _, _ifType := range( parent_118.FP.Get_ifList(_env).Items ) {
             ifType := _ifType
             self.ifList.Insert(ifType)
         }
@@ -760,7 +899,7 @@ func (self *convWasm_FuncCtx) Get_selfLocal(_env *LnsEnv) LnsInt{ return self.se
 func (self *convWasm_FuncCtx) Set_selfLocal(_env *LnsEnv, arg1 LnsInt){ self.selfLocal = arg1 }
 func (self *convWasm_FuncCtx) Get_selfClass(_env *LnsEnv) LnsAny{ return self.selfClass }
 func (self *convWasm_FuncCtx) Set_selfClass(_env *LnsEnv, arg1 LnsAny){ self.selfClass = arg1 }
-// 216: DeclConstr
+// 236: DeclConstr
 func (self *convWasm_FuncCtx) InitconvWasm_FuncCtx(_env *LnsEnv, _func *WasmBin_Func,retReps *LnsList2_[*WasmBin_ValType],retTypes *LnsList2_[*Ast_TypeInfo]) {
     self._func = _func
     self.sym2loc = NewLnsMap2_[*Ast_SymbolInfo,LnsAny]( map[*Ast_SymbolInfo]LnsAny{})
@@ -779,10 +918,12 @@ func (self *convWasm_FuncCtx) InitconvWasm_FuncCtx(_env *LnsEnv, _func *WasmBin_
 type convWasm_convFilterMtd interface {
     adaptClosure(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 *Ast_TypeInfo, arg3 *Ast_TypeInfo) *WasmBin_Ins
     addInterface(_env *LnsEnv, arg1 *convWasm_ClassInfo, arg2 *Ast_TypeInfo)
+    algeTxt(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Ast_TypeInfo) *WasmBin_Ins
     anyNil(_env *LnsEnv, arg1 *LnsList2_[*convWasm_Val], arg2 LnsInt) *WasmBin_Ins
     assignItem(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node, arg3 *convWasm_Val, arg4 *convWasm_Val, arg5 *LnsList2_[*WasmBin_Ins])
     buildList(_env *LnsEnv, arg1 *LnsList2_[*convWasm_Val]) *WasmBin_Ins
     callClosure(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 *Ast_TypeInfo, arg3 LnsAny, arg4 *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins
+    callMethodDyn(_env *LnsEnv, arg1 *Nodes_Node, arg2 *WasmBin_Ins, arg3 *WasmBin_ValType, arg4 *Ast_TypeInfo, arg5 string, arg6 convWasm_ArgGetter_18_, arg7 *WasmBin_Func)(*WasmBin_Ins, *LnsList2_[*WasmBin_ValType], *LnsList2_[*WasmBin_ValType])
     cellGet(_env *LnsEnv, arg1 *WasmBin_ValType, arg2 *WasmBin_Ins) *WasmBin_Ins
     coerce(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 *Ast_TypeInfo, arg3 *Ast_TypeInfo) *WasmBin_Ins
     coerceRep(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 *WasmBin_ValType, arg3 *WasmBin_ValType) *WasmBin_Ins
@@ -790,6 +931,7 @@ type convWasm_convFilterMtd interface {
     collectDecl(_env *LnsEnv, arg1 *Nodes_Node)
     collectIfMethods(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *LnsMap2_[string,*Ast_TypeInfo])
     compileAccessors(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 *convWasm_ClassInfo)
+    compileAdvertise(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 *convWasm_ClassInfo)
     compileDefaultCtor(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 *convWasm_ClassInfo)
     compileFunc(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_DeclFuncInfo, arg3 *Ast_TypeInfo, arg4 LnsInt) *WasmBin_Ins
     compileMethod(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_DeclFuncInfo, arg3 *Ast_TypeInfo, arg4 LnsInt, arg5 *convWasm_ClassInfo, arg6 *LnsList2_[*WasmBin_ValType])
@@ -810,20 +952,26 @@ type convWasm_convFilterMtd interface {
     fnEnumAllList(_env *LnsEnv, arg1 *Ast_EnumTypeInfo) LnsInt
     fnEnumFrom(_env *LnsEnv, arg1 *Ast_EnumTypeInfo) LnsInt
     fnEnumTxt(_env *LnsEnv, arg1 *Ast_EnumTypeInfo) LnsInt
+    fnFromConv(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Ast_TypeInfo) LnsInt
     fnFromMap(_env *LnsEnv, arg1 *Nodes_Node, arg2 *convWasm_ClassInfo) LnsInt
     fnIntOrDefault(_env *LnsEnv, arg1 LnsInt) LnsInt
     fnIntOrMinus1(_env *LnsEnv) LnsInt
     fnIntOrZero(_env *LnsEnv) LnsInt
     fnIsIntVal(_env *LnsEnv) LnsInt
+    fnLuaType(_env *LnsEnv) LnsInt
     fnModF64(_env *LnsEnv) LnsInt
     fnModI64(_env *LnsEnv) LnsInt
     fnShift(_env *LnsEnv, arg1 bool) LnsInt
+    fnStemIndex(_env *LnsEnv) LnsInt
+    fnStrJoin(_env *LnsEnv) LnsInt
     fnToMap(_env *LnsEnv, arg1 *Nodes_Node, arg2 *convWasm_ClassInfo) LnsInt
+    fnToMapConv(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Ast_TypeInfo) LnsInt
     fnTruthy(_env *LnsEnv) LnsInt
     getAlgeInfo(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny
     getCaptureSyms(_env *LnsEnv, arg1 *Ast_TypeInfo) *LnsList2_[*Ast_SymbolInfo]
     getCellRef(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Ast_SymbolInfo) *WasmBin_Ins
     getClassInfo(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsAny
+    getCondRetInfo(_env *LnsEnv, arg1 *Nodes_Node) LnsAny
     getCtorType(_env *LnsEnv, arg1 *Ast_TypeInfo) *Ast_TypeInfo
     getDefaultVal(_env *LnsEnv, arg1 *WasmBin_ValType) *WasmBin_Ins
     getEnumFuncName(_env *LnsEnv, arg1 *Ast_EnumTypeInfo, arg2 string) string
@@ -837,20 +985,26 @@ type convWasm_convFilterMtd interface {
     getLessFormType(_env *LnsEnv, arg1 *Nodes_ExpCallNode) *Ast_TypeInfo
     getMemberType(_env *LnsEnv, arg1 *convWasm_ClassInfo, arg2 string) *Ast_TypeInfo
     getMethodFuncType(_env *LnsEnv, arg1 *Ast_TypeInfo) LnsInt
+    getNilAccPrefix(_env *LnsEnv, arg1 *Nodes_Node) LnsAny
     getObjType(_env *LnsEnv, arg1 *Ast_TypeInfo) *Ast_TypeInfo
     getRep(_env *LnsEnv, arg1 *Ast_TypeInfo) *WasmBin_ValType
     getRepList(_env *LnsEnv, arg1 *LnsList2_[*Ast_TypeInfo]) *LnsList2_[*WasmBin_ValType]
+    getSerrInfo(_env *LnsEnv) *convWasm_ClassInfo
     getSlotRetReps(_env *LnsEnv, arg1 *convWasm_ClassInfo, arg2 *Ast_TypeInfo) *LnsList2_[*WasmBin_ValType]
     getStdStream(_env *LnsEnv, arg1 bool) LnsInt
+    getStringModuleFuncMap(_env *LnsEnv) *LnsMap2_[*Ast_TypeInfo,LnsInt]
     Get_moduleInfoManager(_env *LnsEnv) Ast_ModuleInfoManager
     Get_optStack(_env *LnsEnv) *LnsList
     Get_typeNameCtrl(_env *LnsEnv) *Ast_TypeNameCtrl
+    isAccessOf(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node) bool
     isFuncType(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
     isGlobalSym(_env *LnsEnv, arg1 *Ast_SymbolInfo) bool
     isStreamType(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
     isType(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *Ast_TypeInfo) bool
     lowerAndOr(_env *LnsEnv, arg1 *Nodes_ExpOp2Node) *convWasm_Val
     lowerAnonymousFunc(_env *LnsEnv, arg1 *Nodes_DeclFuncNode) *convWasm_Val
+    lowerApply(_env *LnsEnv, arg1 *Nodes_ApplyNode) *WasmBin_Ins
+    lowerApplyGmatch(_env *LnsEnv, arg1 *Nodes_ApplyNode, arg2 *Nodes_ExpCallNode, arg3 *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins
     lowerArgAny(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsInt) *WasmBin_Ins
     lowerArgAs(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsInt, arg3 *Ast_TypeInfo) *WasmBin_Ins
     lowerArgs(_env *LnsEnv, arg1 LnsAny, arg2 *LnsList2_[*Ast_TypeInfo], arg3 *LnsList2_[*WasmBin_Ins]) *LnsList2_[*WasmBin_Ins]
@@ -865,6 +1019,7 @@ type convWasm_convFilterMtd interface {
     lowerCast(_env *LnsEnv, arg1 *Nodes_ExpCastNode) *convWasm_Val
     lowerCompare(_env *LnsEnv, arg1 *Nodes_Node, arg2 string, arg3 *convWasm_Val, arg4 *convWasm_Val) *WasmBin_Ins
     lowerCond(_env *LnsEnv, arg1 *Nodes_Node) *WasmBin_Ins
+    lowerCondRetOf(_env *LnsEnv, arg1 *Nodes_Node, arg2 *LnsList2_[*WasmBin_Ins])
     lowerDeclClass(_env *LnsEnv, arg1 *Nodes_DeclClassNode, arg2 *LnsList2_[*WasmBin_Ins])
     lowerDeclVar(_env *LnsEnv, arg1 *Nodes_DeclVarNode, arg2 *LnsList2_[*WasmBin_Ins])
     lowerEnumVal(_env *LnsEnv, arg1 *Ast_EnumTypeInfo, arg2 *Ast_EnumValInfo) *convWasm_Val
@@ -875,17 +1030,21 @@ type convWasm_convFilterMtd interface {
     lowerForeach(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Ast_SymbolInfo, arg3 LnsAny, arg4 *Nodes_Node, arg5 *Nodes_BlockNode, arg6 bool) *WasmBin_Ins
     lowerGetField(_env *LnsEnv, arg1 *Nodes_GetFieldNode) *convWasm_Val
     lowerIf(_env *LnsEnv, arg1 *Nodes_IfNode) *WasmBin_Ins
+    lowerIfMethodCall(_env *LnsEnv, arg1 *Nodes_Node, arg2 string, arg3 *LnsList2_[*WasmBin_Ins], arg4 LnsAny)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo])
     lowerIfUnwrap(_env *LnsEnv, arg1 *Nodes_IfUnwrapNode) *WasmBin_Ins
     lowerListMethod(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 *Nodes_Node, arg3 string)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo])
     lowerLiteralColl(_env *LnsEnv, arg1 *Nodes_Node, arg2 LnsAny, arg3 bool) *convWasm_Val
     lowerLiteralMap(_env *LnsEnv, arg1 *Nodes_LiteralMapNode) *convWasm_Val
     lowerLiteralString(_env *LnsEnv, arg1 *Nodes_LiteralStringNode) *WasmBin_Ins
+    lowerLuaCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 LnsInt, arg3 *LnsList2_[*WasmBin_Ins])(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo])
     lowerMatch(_env *LnsEnv, arg1 *Nodes_MatchNode) *WasmBin_Ins
     lowerMemberRef(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node, arg3 string) *convWasm_Val
     lowerMethodCall(_env *LnsEnv, arg1 *Nodes_ExpCallNode, arg2 *Nodes_Node, arg3 string, arg4 *LnsList2_[*WasmBin_Ins])(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo])
     lowerMulti(_env *LnsEnv, arg1 *Nodes_Node, arg2 *LnsList2_[*WasmBin_Ins]) *LnsList2_[*convWasm_Val]
     lowerNew(_env *LnsEnv, arg1 *Nodes_ExpNewNode) *convWasm_Val
     lowerNewAlgeVal(_env *LnsEnv, arg1 *Nodes_NewAlgeValNode) *convWasm_Val
+    lowerNilAcc(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node) *convWasm_Val
+    lowerObjMethodCall(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Nodes_Node, arg3 string, arg4 *LnsList2_[*WasmBin_Ins], arg5 LnsAny)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo])
     lowerOp1(_env *LnsEnv, arg1 *Nodes_ExpOp1Node) *convWasm_Val
     lowerOp2(_env *LnsEnv, arg1 *Nodes_ExpOp2Node) *convWasm_Val
     lowerPrint(_env *LnsEnv, arg1 *Nodes_ExpCallNode) *WasmBin_Ins
@@ -909,6 +1068,9 @@ type convWasm_convFilterMtd interface {
     lowerVal(_env *LnsEnv, arg1 *Nodes_Node) *convWasm_Val
     lowerValList(_env *LnsEnv, arg1 *Nodes_ExpListNode, arg2 *LnsList2_[*WasmBin_Ins]) *LnsList2_[*convWasm_Val]
     lowerWhen(_env *LnsEnv, arg1 *Nodes_WhenNode) *WasmBin_Ins
+    makeIfAdapter(_env *LnsEnv, arg1 *Ast_TypeInfo, arg2 *Ast_TypeInfo, arg3 LnsInt) LnsInt
+    mapConvKey(_env *LnsEnv, arg1 *Ast_TypeInfo) string
+    needToMapConv(_env *LnsEnv, arg1 *Ast_TypeInfo) bool
     newVal(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 *Ast_TypeInfo) *convWasm_Val
     normType(_env *LnsEnv, arg1 *Ast_TypeInfo) *Ast_TypeInfo
     notSupport(_env *LnsEnv, arg1 *Nodes_Node)
@@ -1019,6 +1181,7 @@ type convWasm_convFilterMtd interface {
     tempLocal(_env *LnsEnv, arg1 *WasmBin_ValType) LnsInt
     toAny(_env *LnsEnv, arg1 *convWasm_Val) *WasmBin_Ins
     toCond(_env *LnsEnv, arg1 *convWasm_Val) *WasmBin_Ins
+    toMapVal(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Ast_TypeInfo, arg3 *WasmBin_Ins) *WasmBin_Ins
     toStr(_env *LnsEnv, arg1 *convWasm_Val) *WasmBin_Ins
     writeSym(_env *LnsEnv, arg1 *Nodes_Node, arg2 *Ast_SymbolInfo, arg3 *WasmBin_Ins) *WasmBin_Ins
 }
@@ -1039,6 +1202,7 @@ type convWasm_convFilter struct {
     classType2decl *LnsMap2_[*Ast_TypeInfo,*Nodes_DeclClassNode]
     class2info *LnsMap2_[*Ast_TypeInfo,*convWasm_ClassInfo]
     classInfoList *LnsList2_[*convWasm_ClassInfo]
+    serrInfo LnsAny
     if2info *LnsMap2_[*Ast_TypeInfo,*convWasm_IfInfo]
     ifInfoList *LnsList2_[*convWasm_IfInfo]
     algeType2decl *LnsMap2_[*Ast_TypeInfo,*Nodes_DeclAlgeNode]
@@ -1047,6 +1211,9 @@ type convWasm_convFilter struct {
     enumType2decl *LnsMap2_[*Ast_TypeInfo,*Nodes_DeclEnumNode]
     declaredMethodSet *LnsSet2_[*Ast_TypeInfo]
     adapterMap *LnsMap2_[string,LnsInt]
+    node2val *LnsMap2_[*Nodes_Node,*convWasm_Val]
+    nilAccDoneSet *LnsSet2_[*Nodes_Node]
+    funcSym2name *LnsMap2_[*Ast_SymbolInfo,string]
     prologue *LnsList2_[*WasmBin_Ins]
     stdoutGlobal LnsInt
     stderrGlobal LnsInt
@@ -1088,7 +1255,7 @@ func NewconvWasm_convFilter(_env *LnsEnv, arg1 string, arg2 Lns_oStream, arg3 *A
     obj.InitconvWasm_convFilter(_env, arg1, arg2, arg3)
     return obj
 }
-// 272: DeclConstr
+// 303: DeclConstr
 func (self *convWasm_convFilter) InitconvWasm_convFilter(_env *LnsEnv, streamName string,stream Lns_oStream,ast *AstInfo_ASTInfo) {
     self.InitNodes_Filter(_env, true, ast.FP.Get_exportInfo(_env).FP.Get_moduleTypeInfo(_env), ast.FP.Get_exportInfo(_env).FP.Get_moduleTypeInfo(_env).FP.Get_scope(_env))
     self.streamName = streamName
@@ -1114,6 +1281,7 @@ func (self *convWasm_convFilter) InitconvWasm_convFilter(_env *LnsEnv, streamNam
     self.classType2decl = NewLnsMap2_[*Ast_TypeInfo,*Nodes_DeclClassNode]( map[*Ast_TypeInfo]*Nodes_DeclClassNode{})
     self.class2info = NewLnsMap2_[*Ast_TypeInfo,*convWasm_ClassInfo]( map[*Ast_TypeInfo]*convWasm_ClassInfo{})
     self.classInfoList = NewLnsList2_[*convWasm_ClassInfo]([]*convWasm_ClassInfo{})
+    self.serrInfo = nil
     self.if2info = NewLnsMap2_[*Ast_TypeInfo,*convWasm_IfInfo]( map[*Ast_TypeInfo]*convWasm_IfInfo{})
     self.ifInfoList = NewLnsList2_[*convWasm_IfInfo]([]*convWasm_IfInfo{})
     self.algeType2decl = NewLnsMap2_[*Ast_TypeInfo,*Nodes_DeclAlgeNode]( map[*Ast_TypeInfo]*Nodes_DeclAlgeNode{})
@@ -1122,6 +1290,9 @@ func (self *convWasm_convFilter) InitconvWasm_convFilter(_env *LnsEnv, streamNam
     self.enumType2decl = NewLnsMap2_[*Ast_TypeInfo,*Nodes_DeclEnumNode]( map[*Ast_TypeInfo]*Nodes_DeclEnumNode{})
     self.declaredMethodSet = NewLnsSet2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
     self.adapterMap = NewLnsMap2_[string,LnsInt]( map[string]LnsInt{})
+    self.node2val = NewLnsMap2_[*Nodes_Node,*convWasm_Val]( map[*Nodes_Node]*convWasm_Val{})
+    self.nilAccDoneSet = NewLnsSet2_[*Nodes_Node]([]*Nodes_Node{})
+    self.funcSym2name = NewLnsMap2_[*Ast_SymbolInfo,string]( map[*Ast_SymbolInfo]string{})
     self.prologue = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
     self.stdoutGlobal = -1
     self.stderrGlobal = -1
@@ -1148,19 +1319,19 @@ func Lns_convWasm_init(_env *LnsEnv) {
 func init() {
     init_convWasm = false
 }
-// 228: decl @lune.@base.@convWasm.FuncCtx.addLocal
+// 248: decl @lune.@base.@convWasm.FuncCtx.addLocal
 func (self *convWasm_FuncCtx) AddLocal(_env *LnsEnv, valType *WasmBin_ValType) LnsInt {
     return self._func.FP.AddLocal(_env, valType)
 }
-// 313: decl @lune.@base.@convWasm.convFilter.error
+// 348: decl @lune.@base.@convWasm.convFilter.error
 func (self *convWasm_convFilter) error(_env *LnsEnv, node *Nodes_Node,mess string) {
     Util_err(_env, _env.GetVM().String_format("%s:%d:%d: wasm: %s", Lns_2DDD(self.streamName, node.FP.Get_pos(_env).LineNo, node.FP.Get_pos(_env).Column, mess)))
 }
-// 318: decl @lune.@base.@convWasm.convFilter.notSupport
+// 353: decl @lune.@base.@convWasm.convFilter.notSupport
 func (self *convWasm_convFilter) notSupport(_env *LnsEnv, node *Nodes_Node) {
     self.FP.error(_env, node, _env.GetVM().String_format("not support -- %s", Lns_2DDD(Nodes_getNodeKindName(_env, node.FP.Get_kind(_env)))))
 }
-// 325: decl @lune.@base.@convWasm.convFilter.normType
+// 360: decl @lune.@base.@convWasm.convFilter.normType
 func (self *convWasm_convFilter) normType(_env *LnsEnv, typeInfo *Ast_TypeInfo) *Ast_TypeInfo {
     var work *Ast_TypeInfo
     work = typeInfo.FP.Get_aliasSrc(_env).FP.Get_srcTypeInfo(_env)
@@ -1169,7 +1340,7 @@ func (self *convWasm_convFilter) normType(_env *LnsEnv, typeInfo *Ast_TypeInfo) 
     }
     return work
 }
-// 334: decl @lune.@base.@convWasm.convFilter.getGenSrc
+// 369: decl @lune.@base.@convWasm.convFilter.getGenSrc
 func (self *convWasm_convFilter) getGenSrc(_env *LnsEnv, typeInfo *Ast_TypeInfo) *Ast_TypeInfo {
     var work *Ast_TypeInfo
     work = self.FP.normType(_env, typeInfo)
@@ -1180,11 +1351,11 @@ func (self *convWasm_convFilter) getGenSrc(_env *LnsEnv, typeInfo *Ast_TypeInfo)
     }
     return work
 }
-// 343: decl @lune.@base.@convWasm.convFilter.isType
+// 378: decl @lune.@base.@convWasm.convFilter.isType
 func (self *convWasm_convFilter) isType(_env *LnsEnv, typeInfo *Ast_TypeInfo,builtin *Ast_TypeInfo) bool {
     return self.FP.normType(_env, typeInfo).FP.Equals(_env, self.processInfo, builtin, nil, nil)
 }
-// 353: decl @lune.@base.@convWasm.convFilter.getRep
+// 388: decl @lune.@base.@convWasm.convFilter.getRep
 func (self *convWasm_convFilter) getRep(_env *LnsEnv, typeInfo *Ast_TypeInfo) *WasmBin_ValType {
     var orgType *Ast_TypeInfo
     orgType = typeInfo.FP.Get_aliasSrc(_env).FP.Get_srcTypeInfo(_env)
@@ -1194,7 +1365,7 @@ func (self *convWasm_convFilter) getRep(_env *LnsEnv, typeInfo *Ast_TypeInfo) *W
         _env.SetStackVal( orgType.FP.Get_nonnilableType(_env) != orgType) ).(bool)){
         var rep *WasmBin_ValType
         rep = self.FP.getRep(_env, orgType.FP.Get_nonnilableType(_env))
-        if convWasm_isScalar_13_(_env, rep){
+        if convWasm_isScalar_14_(_env, rep){
             return WasmBin_typeAnyRef
         }
         return rep
@@ -1225,7 +1396,7 @@ func (self *convWasm_convFilter) getRep(_env *LnsEnv, typeInfo *Ast_TypeInfo) *W
                 return self.FP.getRep(_env, enumType.FP.Get_valTypeInfo(_env))
             }
         }
-    } else if _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array || _switch0 == Ast_TypeInfoKind__DDD {
+    } else if _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array || _switch0 == Ast_TypeInfoKind__DDD || _switch0 == Ast_TypeInfoKind__Tuple {
         return self.rt.FP.Get_listType(_env)
     } else if _switch0 == Ast_TypeInfoKind__Map || _switch0 == Ast_TypeInfoKind__Set {
         return self.rt.FP.Get_mapType(_env)
@@ -1253,7 +1424,7 @@ func (self *convWasm_convFilter) getRep(_env *LnsEnv, typeInfo *Ast_TypeInfo) *W
     }
     return WasmBin_typeAnyRef
 }
-// 416: decl @lune.@base.@convWasm.convFilter.getRepList
+// 452: decl @lune.@base.@convWasm.convFilter.getRepList
 func (self *convWasm_convFilter) getRepList(_env *LnsEnv, typeList *LnsList2_[*Ast_TypeInfo]) *LnsList2_[*WasmBin_ValType] {
     var list *LnsList2_[*WasmBin_ValType]
     list = NewLnsList2_[*WasmBin_ValType]([]*WasmBin_ValType{})
@@ -1263,13 +1434,13 @@ func (self *convWasm_convFilter) getRepList(_env *LnsEnv, typeList *LnsList2_[*A
     }
     return list
 }
-// 425: decl @lune.@base.@convWasm.convFilter.getFuncCloInfo
+// 461: decl @lune.@base.@convWasm.convFilter.getFuncCloInfo
 func (self *convWasm_convFilter) getFuncCloInfo(_env *LnsEnv, funcType *Ast_TypeInfo) *WasmRt_CloInfo {
     var work *Ast_TypeInfo
     work = self.FP.normType(_env, funcType)
     return self.rt.FP.GetCloInfo(_env, self.FP.getRepList(_env, work.FP.Get_argTypeInfoList(_env)), self.FP.getRepList(_env, work.FP.Get_retTypeInfoList(_env)))
 }
-// 432: decl @lune.@base.@convWasm.convFilter.getMethodFuncType
+// 468: decl @lune.@base.@convWasm.convFilter.getMethodFuncType
 func (self *convWasm_convFilter) getMethodFuncType(_env *LnsEnv, methodType *Ast_TypeInfo) LnsInt {
     var params *LnsList2_[*WasmBin_ValType]
     params = NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.rt.FP.Get_objType(_env)))
@@ -1279,7 +1450,7 @@ func (self *convWasm_convFilter) getMethodFuncType(_env *LnsEnv, methodType *Ast
     }
     return self.mod.FP.GetFuncType(_env, params, self.FP.getRepList(_env, methodType.FP.Get_retTypeInfoList(_env)))
 }
-// 441: decl @lune.@base.@convWasm.convFilter.getDefaultVal
+// 477: decl @lune.@base.@convWasm.convFilter.getDefaultVal
 func (self *convWasm_convFilter) getDefaultVal(_env *LnsEnv, rep *WasmBin_ValType) *WasmBin_Ins {
     if _switch0 := rep.FP.Get_kind(_env); _switch0 == WasmBin_ValKind__I64 {
         return WasmBin_i64Const(_env, 0)
@@ -1293,7 +1464,7 @@ func (self *convWasm_convFilter) getDefaultVal(_env *LnsEnv, rep *WasmBin_ValTyp
 // insert a dummy
     return nil
 }
-// 469: decl @lune.@base.@convWasm.convFilter.getClassInfo
+// 505: decl @lune.@base.@convWasm.convFilter.getClassInfo
 func (self *convWasm_convFilter) getClassInfo(_env *LnsEnv, typeInfo *Ast_TypeInfo) LnsAny {
     var classType *Ast_TypeInfo
     classType = self.FP.getGenSrc(_env, typeInfo)
@@ -1316,7 +1487,7 @@ func (self *convWasm_convFilter) getClassInfo(_env *LnsEnv, typeInfo *Ast_TypeIn
     }
     return self.FP.registerClass(_env, declNode)
 }
-// 481: decl @lune.@base.@convWasm.convFilter.registerClass
+// 517: decl @lune.@base.@convWasm.convFilter.registerClass
 func (self *convWasm_convFilter) registerClass(_env *LnsEnv, declNode *Nodes_DeclClassNode) *convWasm_ClassInfo {
     var classType *Ast_TypeInfo
     classType = self.FP.getGenSrc(_env, declNode.FP.Get_expType(_env))
@@ -1371,6 +1542,7 @@ func (self *convWasm_convFilter) registerClass(_env *LnsEnv, declNode *Nodes_Dec
             name = memberNode.FP.Get_name(_env).Txt
             info.FP.Get_fieldNames(_env).Insert(name)
             info.FP.Get_fieldReps(_env).Insert(self.FP.getRep(_env, memberNode.FP.Get_symbolInfo(_env).FP.Get_typeInfo(_env)))
+            info.FP.Get_fieldTypes(_env).Insert(memberNode.FP.Get_symbolInfo(_env).FP.Get_typeInfo(_env))
             info.FP.Get_name2field(_env).Set(name,info.FP.Get_fieldNames(_env).Len() + 1)
         }
     }
@@ -1403,7 +1575,7 @@ func (self *convWasm_convFilter) registerClass(_env *LnsEnv, declNode *Nodes_Dec
                     _env.SetStackVal( Lns_op_not(self.declaredMethodSet.Has(methodType))) &&
                     _env.SetStackVal( Lns_op_not(autoMethodSet.Has(name))) ).(bool))) ||
                 _env.SetStackVal( convWasm_mappingMethodSet.Has(name)) ).(bool){
-            } else if convWasm_isMethodSym_14_(_env, symbol){
+            } else if convWasm_isMethodSym_15_(_env, symbol){
                 var impl LnsInt
                 impl = -1
                 if Lns_op_not(methodType.FP.Get_abstractFlag(_env)){
@@ -1443,6 +1615,61 @@ func (self *convWasm_convFilter) registerClass(_env *LnsEnv, declNode *Nodes_Dec
             }
         }
     }
+    for _, _advertiseInfo := range( declNode.FP.Get_advertiseList(_env).Items ) {
+        advertiseInfo := _advertiseInfo
+        var memberType *Ast_TypeInfo
+        memberType = advertiseInfo.FP.Get_member(_env).FP.Get_expType(_env)
+        var mbrScope *Ast_Scope
+        mbrScope = Lns_unwrap( self.FP.getGenSrc(_env, memberType).FP.Get_scope(_env)).(*Ast_Scope)
+        for _, _mtdName := range( Ast_getAllMethodName(_env, self.FP.getGenSrc(_env, memberType), Ast_MethodKind__Object).FP.Get_list(_env).Items ) {
+            mtdName := _mtdName.(string)
+            var child *Ast_TypeInfo
+            child = Lns_unwrap( mbrScope.FP.GetTypeInfoField(_env, mtdName, true, mbrScope, Ast_ScopeAccess__Normal)).(*Ast_TypeInfo)
+            if child.FP.Get_accessMode(_env) == Ast_AccessMode__Pri{
+                continue
+            }
+            var name string
+            name = advertiseInfo.FP.Get_prefix(_env) + mtdName
+            var methodType *Ast_TypeInfo
+            methodType = child
+            {
+                _symbol := scope.FP.Get_symbol2SymbolInfoMap(_env).Get(name)
+                if !Lns_IsNil( _symbol ) {
+                    symbol := _symbol.(*Ast_SymbolInfo)
+                    if _env.PopVal( _env.IncStack() ||
+                        _env.SetStackVal( self.declaredMethodSet.Has(symbol.FP.Get_typeInfo(_env))) ||
+                        _env.SetStackVal( autoMethodSet.Has(name)) ).(bool){
+                        continue
+                    }
+                    methodType = symbol.FP.Get_typeInfo(_env)
+                }
+            }
+            var funcType LnsInt
+            {
+                _slotIndex := info.FP.Get_name2slot(_env).Get(name)
+                if !Lns_IsNil( _slotIndex ) {
+                    slotIndex := _slotIndex.(LnsInt)
+                    funcType = info.FP.Get_slotList(_env).GetAt(slotIndex).FP.Get_funcType(_env)
+                } else {
+                    funcType = self.FP.getMethodFuncType(_env, methodType)
+                }
+            }
+            var impl LnsInt
+            impl,_ = self.mod.FP.AddFuncWithType(_env, funcType, 1 + methodType.FP.Get_argTypeInfoList(_env).Len())
+            self.mod.FP.SetFuncName(_env, impl, _env.GetVM().String_format("%s.%s", Lns_2DDD(classType.FP.GetTxt(_env, nil, nil, nil), name)))
+            {
+                _slotIndex := info.FP.Get_name2slot(_env).Get(name)
+                if !Lns_IsNil( _slotIndex ) {
+                    slotIndex := _slotIndex.(LnsInt)
+                    info.FP.Get_slotList(_env).GetAt(slotIndex).FP.Set_impl(_env, impl)
+                } else {
+                    info.FP.Get_slotList(_env).Insert(NewconvWasm_SlotInfo(_env, name, funcType, methodType, impl))
+                    info.FP.Get_name2slot(_env).Set(name,info.FP.Get_slotList(_env).Len())
+                }
+            }
+            info.FP.Get_advertiseList(_env).Insert(NewconvWasm_AdvertiseMethod(_env, advertiseInfo.FP.Get_member(_env).FP.Get_name(_env).Txt, memberType, mtdName, methodType, impl))
+        }
+    }
     {
         _initSym := scope.FP.Get_symbol2SymbolInfoMap(_env).Get("__init")
         if !Lns_IsNil( _initSym ) {
@@ -1477,7 +1704,48 @@ func (self *convWasm_convFilter) registerClass(_env *LnsEnv, declNode *Nodes_Dec
     self.mod.FP.DefineStructType(_env, vtType, superVt, vtFields)
     return info
 }
-// 601: decl @lune.@base.@convWasm.convFilter.addInterface
+// 681: decl @lune.@base.@convWasm.convFilter.getSerrInfo
+func (self *convWasm_convFilter) getSerrInfo(_env *LnsEnv) *convWasm_ClassInfo {
+    {
+        _info := self.serrInfo
+        if !Lns_IsNil( _info ) {
+            info := _info.(*convWasm_ClassInfo)
+            return info
+        }
+    }
+    var erType *Ast_TypeInfo
+    erType = self.FP.getGenSrc(_env, self.builtinFuncs.Lns___serr.FP.Get_retTypeInfoList(_env).GetAt(1))
+    var structType LnsInt
+    structType = self.mod.FP.ReserveType(_env)
+    var vtType LnsInt
+    vtType = self.mod.FP.ReserveType(_env)
+    var vtGlobal LnsInt
+    vtGlobal = self.mod.FP.AddGlobal(_env, WasmBin_refType(_env, vtType), WasmBin_refNull(_env, vtType))
+    var info *convWasm_ClassInfo
+    info = NewconvWasm_ClassInfo(_env, erType, structType, vtType, vtGlobal, nil)
+    info.FP.Get_fieldNames(_env).Insert("txt")
+    info.FP.Get_fieldReps(_env).Insert(self.rt.FP.Get_strType(_env))
+    info.FP.Get_fieldTypes(_env).Insert(Ast_builtinTypeString)
+    info.FP.Get_name2field(_env).Set("txt",2)
+    var methodType *Ast_TypeInfo
+    methodType = Lns_unwrap( self.FP.getIfMethodType(_env, erType, "get_txt")).(*Ast_TypeInfo)
+    var funcType LnsInt
+    funcType = self.FP.getMethodFuncType(_env, methodType)
+    var impl LnsInt
+    var _func *WasmBin_Func
+    impl,_func = self.mod.FP.AddFuncWithType(_env, funcType, 1)
+    self.mod.FP.SetFuncName(_env, impl, "LnsErr.get_txt")
+    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, structType, 2, WasmBin_refCast(_env, structType, convWasm_lg_2_(_env, 0))))))
+    info.FP.Get_slotList(_env).Insert(NewconvWasm_SlotInfo(_env, "get_txt", funcType, methodType, impl))
+    info.FP.Get_name2slot(_env).Set("get_txt",1)
+    self.FP.addInterface(_env, info, erType)
+    self.mod.FP.DefineStructType(_env, structType, self.rt.FP.Get_tObj(_env), NewLnsList2_[*WasmBin_FieldType](Lns_2DDDGen[*WasmBin_FieldType](WasmBin_field(_env, WasmBin_typeI32, true), WasmBin_field(_env, WasmBin_refType(_env, vtType), false), WasmBin_field(_env, self.rt.FP.Get_strType(_env), true))))
+    self.mod.FP.DefineStructType(_env, vtType, self.rt.FP.Get_tVT(_env), NewLnsList2_[*WasmBin_FieldType](Lns_2DDDGen[*WasmBin_FieldType](WasmBin_field(_env, self.rt.FP.Get_anyArrType(_env), false), WasmBin_field(_env, WasmBin_refType(_env, funcType), false))))
+    self.classInfoList.Insert(info)
+    self.serrInfo = info
+    return info
+}
+// 716: decl @lune.@base.@convWasm.convFilter.addInterface
 func (self *convWasm_convFilter) addInterface(_env *LnsEnv, info *convWasm_ClassInfo,ifType *Ast_TypeInfo) {
     var work *Ast_TypeInfo
     work = self.FP.getGenSrc(_env, ifType)
@@ -1493,7 +1761,7 @@ func (self *convWasm_convFilter) addInterface(_env *LnsEnv, info *convWasm_Class
         self.FP.addInterface(_env, info, parentIf)
     }
 }
-// 615: decl @lune.@base.@convWasm.convFilter.collectIfMethods
+// 730: decl @lune.@base.@convWasm.convFilter.collectIfMethods
 func (self *convWasm_convFilter) collectIfMethods(_env *LnsEnv, ifType *Ast_TypeInfo,_map *LnsMap2_[string,*Ast_TypeInfo]) {
     for _, _parentIf := range( ifType.FP.Get_interfaceList(_env).Items ) {
         parentIf := _parentIf
@@ -1506,14 +1774,14 @@ func (self *convWasm_convFilter) collectIfMethods(_env *LnsEnv, ifType *Ast_Type
             for _name, _symbol := range( scope.FP.Get_symbol2SymbolInfoMap(_env).Items ) {
                 name := _name
                 symbol := _symbol
-                if convWasm_isMethodSym_14_(_env, symbol){
+                if convWasm_isMethodSym_15_(_env, symbol){
                     _map.Set(name,symbol.FP.Get_typeInfo(_env))
                 }
             }
         }
     }
 }
-// 628: decl @lune.@base.@convWasm.convFilter.getIfInfo
+// 743: decl @lune.@base.@convWasm.convFilter.getIfInfo
 func (self *convWasm_convFilter) getIfInfo(_env *LnsEnv, ifType *Ast_TypeInfo) *convWasm_IfInfo {
     var work *Ast_TypeInfo
     work = self.FP.getGenSrc(_env, ifType)
@@ -1558,7 +1826,7 @@ func (self *convWasm_convFilter) getIfInfo(_env *LnsEnv, ifType *Ast_TypeInfo) *
     self.ifInfoList.Insert(info)
     return info
 }
-// 654: decl @lune.@base.@convWasm.convFilter.getFieldIndex
+// 769: decl @lune.@base.@convWasm.convFilter.getFieldIndex
 func (self *convWasm_convFilter) getFieldIndex(_env *LnsEnv, node *Nodes_Node,info *convWasm_ClassInfo,name string) LnsInt {
     var index LnsInt
     
@@ -1572,7 +1840,7 @@ func (self *convWasm_convFilter) getFieldIndex(_env *LnsEnv, node *Nodes_Node,in
     }
     return index
 }
-// 663: decl @lune.@base.@convWasm.convFilter.getAlgeInfo
+// 778: decl @lune.@base.@convWasm.convFilter.getAlgeInfo
 func (self *convWasm_convFilter) getAlgeInfo(_env *LnsEnv, algeType *Ast_TypeInfo) LnsAny {
     {
         _info := self.alge2info.Get(algeType)
@@ -1655,11 +1923,11 @@ func (self *convWasm_convFilter) getAlgeInfo(_env *LnsEnv, algeType *Ast_TypeInf
     self.algeInfoList.Insert(info)
     return info
 }
-// 720: decl @lune.@base.@convWasm.convFilter.isGlobalSym
+// 835: decl @lune.@base.@convWasm.convFilter.isGlobalSym
 func (self *convWasm_convFilter) isGlobalSym(_env *LnsEnv, symbol *Ast_SymbolInfo) bool {
     return symbol.FP.Get_scope(_env) == self.moduleScope
 }
-// 725: decl @lune.@base.@convWasm.convFilter.cellGet
+// 840: decl @lune.@base.@convWasm.convFilter.cellGet
 func (self *convWasm_convFilter) cellGet(_env *LnsEnv, rep *WasmBin_ValType,cell *WasmBin_Ins) *WasmBin_Ins {
     var cellType LnsInt
     cellType = self.rt.FP.GetCellType(_env, rep)
@@ -1672,7 +1940,7 @@ func (self *convWasm_convFilter) cellGet(_env *LnsEnv, rep *WasmBin_ValType,cell
     }
     return val
 }
-// 740: decl @lune.@base.@convWasm.convFilter.declareVar
+// 855: decl @lune.@base.@convWasm.convFilter.declareVar
 func (self *convWasm_convFilter) declareVar(_env *LnsEnv, symbol *Ast_SymbolInfo,init LnsAny) *WasmBin_Ins {
     var orgSym *Ast_SymbolInfo
     orgSym = symbol.FP.GetOrg(_env)
@@ -1680,8 +1948,8 @@ func (self *convWasm_convFilter) declareVar(_env *LnsEnv, symbol *Ast_SymbolInfo
     rep = self.FP.getRep(_env, orgSym.FP.Get_typeInfo(_env))
     var val *WasmBin_Ins
     if init != nil{
-        init_201 := init.(*WasmBin_Ins)
-        val = init_201
+        init_235 := init.(*WasmBin_Ins)
+        val = init_235
     } else {
         val = self.FP.getDefaultVal(_env, rep)
     }
@@ -1718,7 +1986,7 @@ func (self *convWasm_convFilter) declareVar(_env *LnsEnv, symbol *Ast_SymbolInfo
     self.ctx.FP.Get_sym2loc(_env).Set(orgSym,&convWasm_VarLoc__Local{index})
     return convWasm_ls_3_(_env, index, val)
 }
-// 777: decl @lune.@base.@convWasm.convFilter.findLoc
+// 892: decl @lune.@base.@convWasm.convFilter.findLoc
 func (self *convWasm_convFilter) findLoc(_env *LnsEnv, symbol *Ast_SymbolInfo) LnsAny {
     var orgSym *Ast_SymbolInfo
     orgSym = symbol.FP.GetOrg(_env)
@@ -1731,11 +1999,11 @@ func (self *convWasm_convFilter) findLoc(_env *LnsEnv, symbol *Ast_SymbolInfo) L
     }
     return self.globalSym2loc.Get(orgSym)
 }
-// 785: decl @lune.@base.@convWasm.convFilter.envGet
+// 900: decl @lune.@base.@convWasm.convFilter.envGet
 func (self *convWasm_convFilter) envGet(_env *LnsEnv, field LnsInt) *WasmBin_Ins {
     return WasmBin_structGet(_env, self.ctx.FP.Get_envType(_env), field, convWasm_lg_2_(_env, self.ctx.FP.Get_envLocal(_env)))
 }
-// 790: decl @lune.@base.@convWasm.convFilter.readSym
+// 905: decl @lune.@base.@convWasm.convFilter.readSym
 func (self *convWasm_convFilter) readSym(_env *LnsEnv, node *Nodes_Node,symbol *Ast_SymbolInfo) *WasmBin_Ins {
     var orgSym *Ast_SymbolInfo
     orgSym = symbol.FP.GetOrg(_env)
@@ -1774,12 +2042,25 @@ func (self *convWasm_convFilter) readSym(_env *LnsEnv, node *Nodes_Node,symbol *
     }
     if _switch0 := orgSym.FP.Get_name(_env); _switch0 == "__mod__" {
         return self.rt.FP.StrLiteral(_env, self.moduleTypeInfo.FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), false))
+    } else if _switch0 == "__func__" {
+        var funcType *Ast_TypeInfo
+        funcType = orgSym.FP.Get_namespaceTypeInfo(_env)
+        var nameSpace string
+        nameSpace = convWasm_convExp1_3725(Lns_2DDD(_env.GetVM().String_gsub(funcType.FP.Get_parentInfo(_env).FP.GetFullName(_env, self.FP.Get_typeNameCtrl(_env), self.FP.Get_moduleInfoManager(_env), false),"&", "")))
+        var funcName string
+        funcName = _env.PopVal( _env.IncStack() ||
+            _env.SetStackVal( self.funcSym2name.Get(orgSym)) ||
+            _env.SetStackVal( "") ).(string)
+        if funcName == ""{
+            funcName = "<anonymous>"
+        }
+        return self.rt.FP.StrLiteral(_env, _env.GetVM().String_format("%s.%s", Lns_2DDD(nameSpace, funcName)))
     }
     self.FP.error(_env, node, _env.GetVM().String_format("not support symbol -- %s", Lns_2DDD(orgSym.FP.Get_name(_env))))
 // insert a dummy
     return nil
 }
-// 826: decl @lune.@base.@convWasm.convFilter.writeSym
+// 952: decl @lune.@base.@convWasm.convFilter.writeSym
 func (self *convWasm_convFilter) writeSym(_env *LnsEnv, node *Nodes_Node,symbol *Ast_SymbolInfo,val *WasmBin_Ins) *WasmBin_Ins {
     var orgSym *Ast_SymbolInfo
     orgSym = symbol.FP.GetOrg(_env)
@@ -1812,20 +2093,20 @@ func (self *convWasm_convFilter) writeSym(_env *LnsEnv, node *Nodes_Node,symbol 
 // insert a dummy
     return nil
 }
-// 850: decl @lune.@base.@convWasm.convFilter.isFuncType
+// 976: decl @lune.@base.@convWasm.convFilter.isFuncType
 func (self *convWasm_convFilter) isFuncType(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     if _switch0 := self.FP.normType(_env, typeInfo).FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__Func || _switch0 == Ast_TypeInfoKind__Form || _switch0 == Ast_TypeInfoKind__FormFunc {
         return true
     }
     return false
 }
-// 860: decl @lune.@base.@convWasm.convFilter.coerceRep
+// 986: decl @lune.@base.@convWasm.convFilter.coerceRep
 func (self *convWasm_convFilter) coerceRep(_env *LnsEnv, ins *WasmBin_Ins,fromRep *WasmBin_ValType,toRep *WasmBin_ValType) *WasmBin_Ins {
     if fromRep.FP.EqualsType(_env, toRep){
         return ins
     }
-    if convWasm_isScalar_13_(_env, fromRep){
-        if convWasm_isScalar_13_(_env, toRep){
+    if convWasm_isScalar_14_(_env, fromRep){
+        if convWasm_isScalar_14_(_env, toRep){
             if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( fromRep.FP.Get_kind(_env) == WasmBin_ValKind__I64) &&
                 _env.SetStackVal( toRep.FP.Get_kind(_env) == WasmBin_ValKind__F64) ).(bool)){
@@ -1848,7 +2129,7 @@ func (self *convWasm_convFilter) coerceRep(_env *LnsEnv, ins *WasmBin_Ins,fromRe
         }
         return boxed
     }
-    if convWasm_isScalar_13_(_env, toRep){
+    if convWasm_isScalar_14_(_env, toRep){
         if _switch1 := toRep.FP.Get_kind(_env); _switch1 == WasmBin_ValKind__I64 {
             return self.rt.FP.UnboxI64(_env, ins)
         } else if _switch1 == WasmBin_ValKind__F64 {
@@ -1862,7 +2143,7 @@ func (self *convWasm_convFilter) coerceRep(_env *LnsEnv, ins *WasmBin_Ins,fromRe
     }
     return WasmBin_refCast(_env, toRep.FP.Get_heapType(_env), ins)
 }
-// 908: decl @lune.@base.@convWasm.convFilter.coerce
+// 1034: decl @lune.@base.@convWasm.convFilter.coerce
 func (self *convWasm_convFilter) coerce(_env *LnsEnv, ins *WasmBin_Ins,fromType *Ast_TypeInfo,toType *Ast_TypeInfo) *WasmBin_Ins {
     var fromRep *WasmBin_ValType
     fromRep = self.FP.getRep(_env, fromType)
@@ -1878,11 +2159,11 @@ func (self *convWasm_convFilter) coerce(_env *LnsEnv, ins *WasmBin_Ins,fromType 
     }
     return self.FP.coerceRep(_env, ins, fromRep, toRep)
 }
-// 920: decl @lune.@base.@convWasm.convFilter.coerceVal
+// 1046: decl @lune.@base.@convWasm.convFilter.coerceVal
 func (self *convWasm_convFilter) coerceVal(_env *LnsEnv, val *convWasm_Val,toType *Ast_TypeInfo) *WasmBin_Ins {
     return self.FP.coerce(_env, val.FP.Get_ins(_env), val.FP.Get_typeInfo(_env), toType)
 }
-// 929: decl @lune.@base.@convWasm.convFilter.adaptClosure
+// 1055: decl @lune.@base.@convWasm.convFilter.adaptClosure
 func (self *convWasm_convFilter) adaptClosure(_env *LnsEnv, ins *WasmBin_Ins,fromType *Ast_TypeInfo,toType *Ast_TypeInfo) *WasmBin_Ins {
     var fromInfo *WasmRt_CloInfo
     fromInfo = self.FP.getFuncCloInfo(_env, fromType)
@@ -2006,11 +2287,11 @@ func (self *convWasm_convFilter) adaptClosure(_env *LnsEnv, ins *WasmBin_Ins,fro
     funcIndex = Lns_unwrap( self.adapterMap.Get(key + ":func")).(LnsInt)
     return WasmBin_structNew(_env, adaptType, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 0), self.mod.FP.RefFunc(_env, funcIndex), WasmBin_refCast(_env, fromInfo.FP.Get_cloType(_env), ins))))
 }
-// 1016: decl @lune.@base.@convWasm.convFilter.toAny
+// 1142: decl @lune.@base.@convWasm.convFilter.toAny
 func (self *convWasm_convFilter) toAny(_env *LnsEnv, val *convWasm_Val) *WasmBin_Ins {
     return self.FP.coerceRep(_env, val.FP.Get_ins(_env), val.FP.Get_rep(_env), WasmBin_typeAnyRef)
 }
-// 1021: decl @lune.@base.@convWasm.convFilter.fnTruthy
+// 1147: decl @lune.@base.@convWasm.convFilter.fnTruthy
 func (self *convWasm_convFilter) fnTruthy(_env *LnsEnv) LnsInt {
     {
         _index := self.adapterMap.Get("truthy")
@@ -2026,7 +2307,7 @@ func (self *convWasm_convFilter) fnTruthy(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 0)))))), nil, nil), WasmBin_ifElse(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxBool(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.UnboxBool(_env, convWasm_lg_2_(_env, 0))))))), nil, nil), WasmBin_i32Const(_env, 1))))
     return index
 }
-// 1036: decl @lune.@base.@convWasm.convFilter.toCond
+// 1162: decl @lune.@base.@convWasm.convFilter.toCond
 func (self *convWasm_convFilter) toCond(_env *LnsEnv, val *convWasm_Val) *WasmBin_Ins {
     if _switch0 := val.FP.Get_rep(_env).FP.Get_kind(_env); _switch0 == WasmBin_ValKind__I32 {
         return val.FP.Get_ins(_env)
@@ -2041,11 +2322,11 @@ func (self *convWasm_convFilter) toCond(_env *LnsEnv, val *convWasm_Val) *WasmBi
 // insert a dummy
     return nil
 }
-// 1053: decl @lune.@base.@convWasm.convFilter.lowerCond
+// 1179: decl @lune.@base.@convWasm.convFilter.lowerCond
 func (self *convWasm_convFilter) lowerCond(_env *LnsEnv, node *Nodes_Node) *WasmBin_Ins {
     return self.FP.toCond(_env, self.FP.lowerVal(_env, node))
 }
-// 1060: decl @lune.@base.@convWasm.convFilter.expTypeOf
+// 1186: decl @lune.@base.@convWasm.convFilter.expTypeOf
 func (self *convWasm_convFilter) expTypeOf(_env *LnsEnv, node *Nodes_Node) *Ast_TypeInfo {
     {
         _castNode := Nodes_ExpCastNodeDownCastF(node.FP)
@@ -2056,23 +2337,23 @@ func (self *convWasm_convFilter) expTypeOf(_env *LnsEnv, node *Nodes_Node) *Ast_
     }
     return node.FP.Get_expType(_env)
 }
-// 1067: decl @lune.@base.@convWasm.convFilter.newVal
+// 1193: decl @lune.@base.@convWasm.convFilter.newVal
 func (self *convWasm_convFilter) newVal(_env *LnsEnv, ins *WasmBin_Ins,typeInfo *Ast_TypeInfo) *convWasm_Val {
     return NewconvWasm_Val(_env, ins, self.FP.getRep(_env, typeInfo), typeInfo)
 }
-// 1072: decl @lune.@base.@convWasm.convFilter.lowerExp
+// 1198: decl @lune.@base.@convWasm.convFilter.lowerExp
 func (self *convWasm_convFilter) lowerExp(_env *LnsEnv, node *Nodes_Node) *WasmBin_Ins {
     return self.FP.coerceVal(_env, self.FP.lowerVal(_env, node), self.FP.expTypeOf(_env, node))
 }
-// 1077: decl @lune.@base.@convWasm.convFilter.lowerExpAs
+// 1203: decl @lune.@base.@convWasm.convFilter.lowerExpAs
 func (self *convWasm_convFilter) lowerExpAs(_env *LnsEnv, node *Nodes_Node,typeInfo *Ast_TypeInfo) *WasmBin_Ins {
     return self.FP.coerceVal(_env, self.FP.lowerVal(_env, node), typeInfo)
 }
-// 1082: decl @lune.@base.@convWasm.convFilter.tempLocal
+// 1208: decl @lune.@base.@convWasm.convFilter.tempLocal
 func (self *convWasm_convFilter) tempLocal(_env *LnsEnv, rep *WasmBin_ValType) LnsInt {
     return self.ctx.FP.AddLocal(_env, rep)
 }
-// 1087: decl @lune.@base.@convWasm.convFilter.buildList
+// 1213: decl @lune.@base.@convWasm.convFilter.buildList
 func (self *convWasm_convFilter) buildList(_env *LnsEnv, vals *LnsList2_[*convWasm_Val]) *WasmBin_Ins {
     var list LnsInt
     list = self.FP.tempLocal(_env, self.rt.FP.Get_listType(_env))
@@ -2089,7 +2370,7 @@ func (self *convWasm_convFilter) buildList(_env *LnsEnv, vals *LnsList2_[*convWa
     body.Insert(convWasm_lg_2_(_env, list))
     return WasmBin_seq(_env, body)
 }
-// 1107: decl @lune.@base.@convWasm.convFilter.lowerValList
+// 1233: decl @lune.@base.@convWasm.convFilter.lowerValList
 func (self *convWasm_convFilter) lowerValList(_env *LnsEnv, expList *Nodes_ExpListNode,pre *LnsList2_[*WasmBin_Ins]) *LnsList2_[*convWasm_Val] {
     var vals *LnsList2_[*convWasm_Val]
     vals = NewLnsList2_[*convWasm_Val]([]*convWasm_Val{})
@@ -2116,6 +2397,8 @@ func (self *convWasm_convFilter) lowerValList(_env *LnsEnv, expList *Nodes_ExpLi
         mretInCast = nil
         var castType *Ast_TypeInfo
         castType = exp.FP.Get_expType(_env)
+        var isRawMRet bool
+        isRawMRet = false
         {
             _castNode := Nodes_ExpCastNodeDownCastF(exp.FP)
             if !Lns_IsNil( _castNode ) {
@@ -2125,6 +2408,22 @@ func (self *convWasm_convFilter) lowerValList(_env *LnsEnv, expList *Nodes_ExpLi
                     _env.SetStackVal( castNode.FP.Get_exp(_env).FP.Get_kind(_env) == Nodes_NodeKind_get_ExpMRet(_env)) ).(bool)){
                     mretInCast = castNode.FP.Get_exp(_env)
                     castType = castNode.FP.Get_castType(_env)
+                }
+            } else {
+                if exp.FP.Get_kind(_env) == Nodes_NodeKind_get_ExpMRet(_env){
+                    for _, _other := range( expList.FP.Get_expList(_env).Items ) {
+                        other := _other
+                        {
+                            _otherCast := Nodes_ExpCastNodeDownCastF(other.FP)
+                            if !Lns_IsNil( _otherCast ) {
+                                otherCast := _otherCast.(*Nodes_ExpCastNode)
+                                if otherCast.FP.Get_exp(_env) == exp{
+                                    mretInCast = exp
+                                    isRawMRet = true
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -2144,6 +2443,12 @@ func (self *convWasm_convFilter) lowerValList(_env *LnsEnv, expList *Nodes_ExpLi
                             if otherCast.FP.Get_exp(_env) == mret{
                                 num = num + 1
                             }
+                        } else {
+                            if _env.PopVal( _env.IncStack() ||
+                                _env.SetStackVal( other == mret) ||
+                                _env.SetStackVal( self.FP.isAccessOf(_env, other, mret)) ).(bool){
+                                num = num + 1
+                            }
                         }
                     }
                 }
@@ -2157,7 +2462,20 @@ func (self *convWasm_convFilter) lowerValList(_env *LnsEnv, expList *Nodes_ExpLi
             } else { 
                 val = NewconvWasm_Val(_env, WasmBin_refNull(_env, WasmBin_htAny), WasmBin_typeAnyRef, Ast_builtinTypeNil)
             }
-            vals.Insert(NewconvWasm_Val(_env, self.FP.coerceVal(_env, val, castType), self.FP.getRep(_env, castType), castType))
+            if isRawMRet{
+                vals.Insert(val)
+            } else { 
+                vals.Insert(NewconvWasm_Val(_env, self.FP.coerceVal(_env, val, castType), self.FP.getRep(_env, castType), castType))
+            }
+        } else if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+            _env.SetStackVal( castMRet) &&
+            _env.SetStackVal( self.FP.isAccessOf(_env, exp, Lns_unwrap( castMRet).(*Nodes_Node))) )){
+            castMRetPos = castMRetPos + 1
+            if castMRetPos <= castMRetVals.Len(){
+                vals.Insert(castMRetVals.GetAt(castMRetPos))
+            } else { 
+                vals.Insert(NewconvWasm_Val(_env, WasmBin_refNull(_env, WasmBin_htAny), WasmBin_typeAnyRef, Ast_builtinTypeNil))
+            }
         } else if exp.FP.Get_kind(_env) == Nodes_NodeKind_get_ExpAccessMRet(_env){
         } else if _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( index == mRetIndex) ||
@@ -2181,7 +2499,31 @@ func (self *convWasm_convFilter) lowerValList(_env *LnsEnv, expList *Nodes_ExpLi
     }
     return vals
 }
-// 1177: decl @lune.@base.@convWasm.convFilter.lowerMulti
+// 1328: decl @lune.@base.@convWasm.convFilter.isAccessOf
+func (self *convWasm_convFilter) isAccessOf(_env *LnsEnv, node *Nodes_Node,mret *Nodes_Node) bool {
+    var accessNode *Nodes_ExpAccessMRetNode
+    
+    {
+        _accessNode := Nodes_ExpAccessMRetNodeDownCastF(node.FP)
+        if _accessNode == nil{
+            return false
+        } else {
+            accessNode = _accessNode.(*Nodes_ExpAccessMRetNode)
+        }
+    }
+    if accessNode.FP.Get_mRet(_env) == mret{
+        return true
+    }
+    {
+        _mretNode := Nodes_ExpMRetNodeDownCastF(mret.FP)
+        if !Lns_IsNil( _mretNode ) {
+            mretNode := _mretNode.(*Nodes_ExpMRetNode)
+            return accessNode.FP.Get_mRet(_env) == mretNode.FP.Get_mRet(_env)
+        }
+    }
+    return false
+}
+// 1342: decl @lune.@base.@convWasm.convFilter.lowerMulti
 func (self *convWasm_convFilter) lowerMulti(_env *LnsEnv, node *Nodes_Node,pre *LnsList2_[*WasmBin_Ins]) *LnsList2_[*convWasm_Val] {
     var work *Nodes_Node
     work = node
@@ -2242,12 +2584,22 @@ func (self *convWasm_convFilter) lowerMulti(_env *LnsEnv, node *Nodes_Node,pre *
     }
     return vals
 }
-// 1205: decl @lune.@base.@convWasm.convFilter.decodeString
+// 1370: decl @lune.@base.@convWasm.convFilter.decodeString
 func (self *convWasm_convFilter) decodeString(_env *LnsEnv, node *Nodes_Node,txt string) string {
     var quote string
     quote = _env.GetVM().String_sub(txt,1, 1)
     if quote == "`"{
-        return _env.GetVM().String_sub(txt,4, len(txt) - 3)
+        var body string
+        body = _env.GetVM().String_sub(txt,4, len(txt) - 3)
+        if _env.GetVM().String_sub(body,1, 2) == "\r\n"{
+            return _env.GetVM().String_sub(body,3, nil)
+        }
+        if _env.PopVal( _env.IncStack() ||
+            _env.SetStackVal( _env.GetVM().String_sub(body,1, 1) == "\n") ||
+            _env.SetStackVal( _env.GetVM().String_sub(body,1, 1) == "\r") ).(bool){
+            return _env.GetVM().String_sub(body,2, nil)
+        }
+        return body
     }
     var body string
     body = _env.GetVM().String_sub(txt,2, len(txt) - 1)
@@ -2306,7 +2658,7 @@ func (self *convWasm_convFilter) decodeString(_env *LnsEnv, node *Nodes_Node,txt
                     var code LnsInt
                     
                     {
-                        _code := convWasm_convExp2_1034(Lns_2DDD(_env.GetVM().String_byte(body,pos, nil)))
+                        _code := convWasm_convExp1_7004(Lns_2DDD(_env.GetVM().String_byte(body,pos, nil)))
                         if _code == nil{
                             break
                         } else {
@@ -2331,7 +2683,7 @@ func (self *convWasm_convFilter) decodeString(_env *LnsEnv, node *Nodes_Node,txt
     }
     return result
 }
-// 1282: decl @lune.@base.@convWasm.convFilter.lowerLiteralString
+// 1454: decl @lune.@base.@convWasm.convFilter.lowerLiteralString
 func (self *convWasm_convFilter) lowerLiteralString(_env *LnsEnv, node *Nodes_LiteralStringNode) *WasmBin_Ins {
     var data string
     data = self.FP.decodeString(_env, &node.Nodes_Node, node.FP.Get_token(_env).Txt)
@@ -2351,15 +2703,15 @@ func (self *convWasm_convFilter) lowerLiteralString(_env *LnsEnv, node *Nodes_Li
     }
     return fmt
 }
-// 1295: decl @lune.@base.@convWasm.convFilter.lowerEqVals
+// 1467: decl @lune.@base.@convWasm.convFilter.lowerEqVals
 func (self *convWasm_convFilter) lowerEqVals(_env *LnsEnv, val1 *convWasm_Val,val2 *convWasm_Val) *WasmBin_Ins {
     var rep1 *WasmBin_ValType
     rep1 = val1.FP.Get_rep(_env)
     var rep2 *WasmBin_ValType
     rep2 = val2.FP.Get_rep(_env)
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
-        _env.SetStackVal( convWasm_isScalar_13_(_env, rep1)) &&
-        _env.SetStackVal( convWasm_isScalar_13_(_env, rep2)) ).(bool)){
+        _env.SetStackVal( convWasm_isScalar_14_(_env, rep1)) &&
+        _env.SetStackVal( convWasm_isScalar_14_(_env, rep2)) ).(bool)){
         if _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( rep1.FP.Get_kind(_env) == WasmBin_ValKind__I32) ||
             _env.SetStackVal( rep2.FP.Get_kind(_env) == WasmBin_ValKind__I32) ).(bool){
@@ -2389,7 +2741,7 @@ func (self *convWasm_convFilter) lowerEqVals(_env *LnsEnv, val1 *convWasm_Val,va
     }
     return WasmBin_call(_env, self.rt.FP.FnEqAny(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.toAny(_env, val1), self.FP.toAny(_env, val2))))
 }
-// 1321: decl @lune.@base.@convWasm.convFilter.lowerCompare
+// 1493: decl @lune.@base.@convWasm.convFilter.lowerCompare
 func (self *convWasm_convFilter) lowerCompare(_env *LnsEnv, node *Nodes_Node,opTxt string,val1 *convWasm_Val,val2 *convWasm_Val) *WasmBin_Ins {
     var rep1 *WasmBin_ValType
     rep1 = val1.FP.Get_rep(_env)
@@ -2433,7 +2785,7 @@ func (self *convWasm_convFilter) lowerCompare(_env *LnsEnv, node *Nodes_Node,opT
 // insert a dummy
     return nil
 }
-// 1358: decl @lune.@base.@convWasm.convFilter.lowerAndOr
+// 1530: decl @lune.@base.@convWasm.convFilter.lowerAndOr
 func (self *convWasm_convFilter) lowerAndOr(_env *LnsEnv, node *Nodes_ExpOp2Node) *convWasm_Val {
     var opTxt string
     opTxt = node.FP.Get_op(_env).Txt
@@ -2469,7 +2821,7 @@ func (self *convWasm_convFilter) lowerAndOr(_env *LnsEnv, node *Nodes_ExpOp2Node
     }
     return NewconvWasm_Val(_env, WasmBin_seq(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, work, val1.FP.Get_ins(_env)), ins))), resultRep, resultType)
 }
-// 1388: decl @lune.@base.@convWasm.convFilter.toStr
+// 1560: decl @lune.@base.@convWasm.convFilter.toStr
 func (self *convWasm_convFilter) toStr(_env *LnsEnv, val *convWasm_Val) *WasmBin_Ins {
     if val.FP.Get_rep(_env).FP.EqualsType(_env, self.rt.FP.Get_strType(_env)){
         return val.FP.Get_ins(_env)
@@ -2486,7 +2838,7 @@ func (self *convWasm_convFilter) toStr(_env *LnsEnv, val *convWasm_Val) *WasmBin
 // insert a dummy
     return nil
 }
-// 1410: decl @lune.@base.@convWasm.convFilter.lowerOp2
+// 1582: decl @lune.@base.@convWasm.convFilter.lowerOp2
 func (self *convWasm_convFilter) lowerOp2(_env *LnsEnv, node *Nodes_ExpOp2Node) *convWasm_Val {
     var opTxt string
     opTxt = node.FP.Get_op(_env).Txt
@@ -2537,8 +2889,8 @@ func (self *convWasm_convFilter) lowerOp2(_env *LnsEnv, node *Nodes_ExpOp2Node) 
             ins = WasmBin_call(_env, self.FP.fnShift(_env, false), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](exp1, exp2)))
         }
         if ins != nil{
-            ins_166 := ins.(*WasmBin_Ins)
-            return NewconvWasm_Val(_env, ins_166, resultRep, resultType)
+            ins_76 := ins.(*WasmBin_Ins)
+            return NewconvWasm_Val(_env, ins_76, resultRep, resultType)
         }
     }
     if resultRep.FP.Get_kind(_env) == WasmBin_ValKind__F64{
@@ -2560,15 +2912,15 @@ func (self *convWasm_convFilter) lowerOp2(_env *LnsEnv, node *Nodes_ExpOp2Node) 
             ins = WasmBin_call(_env, self.FP.fnModF64(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](exp1, exp2)))
         }
         if ins != nil{
-            ins_177 := ins.(*WasmBin_Ins)
-            return NewconvWasm_Val(_env, ins_177, resultRep, resultType)
+            ins_87 := ins.(*WasmBin_Ins)
+            return NewconvWasm_Val(_env, ins_87, resultRep, resultType)
         }
     }
     self.FP.error(_env, &node.Nodes_Node, _env.GetVM().String_format("not support op -- %s (%s)", Lns_2DDD(opTxt, resultType.FP.GetTxt(_env, nil, nil, nil))))
 // insert a dummy
     return nil
 }
-// 1478: decl @lune.@base.@convWasm.convFilter.lowerOp1
+// 1650: decl @lune.@base.@convWasm.convFilter.lowerOp1
 func (self *convWasm_convFilter) lowerOp1(_env *LnsEnv, node *Nodes_ExpOp1Node) *convWasm_Val {
     var opTxt string
     opTxt = node.FP.Get_op(_env).Txt
@@ -2592,6 +2944,9 @@ func (self *convWasm_convFilter) lowerOp1(_env *LnsEnv, node *Nodes_ExpOp1Node) 
         if val.FP.Get_rep(_env).FP.EqualsType(_env, self.rt.FP.Get_listType(_env)){
             return self.FP.newVal(_env, convWasm_p_4_(_env, WasmBin_opI64ExtendI32U, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListLen, val.FP.Get_ins(_env))))), resultType)
         }
+        if val.FP.Get_rep(_env).FP.EqualsType(_env, self.rt.FP.Get_mapType(_env)){
+            return self.FP.newVal(_env, convWasm_p_4_(_env, WasmBin_opI64ExtendI32U, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, self.rt.FP.Get_tMap(_env), WasmRt_fMapCount, val.FP.Get_ins(_env))))), resultType)
+        }
     } else if _switch0 == "~" {
         if val.FP.Get_rep(_env).FP.Get_kind(_env) == WasmBin_ValKind__I64{
             return self.FP.newVal(_env, convWasm_p_4_(_env, WasmBin_opI64Xor, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](val.FP.Get_ins(_env), WasmBin_i64Const(_env, -1)))), resultType)
@@ -2601,7 +2956,7 @@ func (self *convWasm_convFilter) lowerOp1(_env *LnsEnv, node *Nodes_ExpOp1Node) 
 // insert a dummy
     return nil
 }
-// 1514: decl @lune.@base.@convWasm.convFilter.fnDivI64
+// 1692: decl @lune.@base.@convWasm.convFilter.fnDivI64
 func (self *convWasm_convFilter) fnDivI64(_env *LnsEnv) LnsInt {
     {
         _index := self.adapterMap.Get("divI64")
@@ -2619,7 +2974,7 @@ func (self *convWasm_convFilter) fnDivI64(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, q, convWasm_p_4_(_env, WasmBin_opI64DivS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), convWasm_lg_2_(_env, 1))))), WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32And, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64Ne, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64RemS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), convWasm_lg_2_(_env, 1)))), WasmBin_i64Const(_env, 0)))), convWasm_p_4_(_env, WasmBin_opI32Ne, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), WasmBin_i64Const(_env, 0)))), convWasm_p_4_(_env, WasmBin_opI64LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 1), WasmBin_i64Const(_env, 0)))))))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, q, convWasm_p_4_(_env, WasmBin_opI64Sub, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, q), WasmBin_i64Const(_env, 1))))))), nil, nil), convWasm_lg_2_(_env, q))))
     return index
 }
-// 1534: decl @lune.@base.@convWasm.convFilter.fnModI64
+// 1712: decl @lune.@base.@convWasm.convFilter.fnModI64
 func (self *convWasm_convFilter) fnModI64(_env *LnsEnv) LnsInt {
     {
         _index := self.adapterMap.Get("modI64")
@@ -2637,7 +2992,7 @@ func (self *convWasm_convFilter) fnModI64(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, r, convWasm_p_4_(_env, WasmBin_opI64RemS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), convWasm_lg_2_(_env, 1))))), WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32And, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64Ne, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, r), WasmBin_i64Const(_env, 0)))), convWasm_p_4_(_env, WasmBin_opI32Ne, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, r), WasmBin_i64Const(_env, 0)))), convWasm_p_4_(_env, WasmBin_opI64LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 1), WasmBin_i64Const(_env, 0)))))))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, r, convWasm_p_4_(_env, WasmBin_opI64Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, r), convWasm_lg_2_(_env, 1))))))), nil, nil), convWasm_lg_2_(_env, r))))
     return index
 }
-// 1554: decl @lune.@base.@convWasm.convFilter.fnModF64
+// 1732: decl @lune.@base.@convWasm.convFilter.fnModF64
 func (self *convWasm_convFilter) fnModF64(_env *LnsEnv) LnsInt {
     {
         _index := self.adapterMap.Get("modF64")
@@ -2653,7 +3008,7 @@ func (self *convWasm_convFilter) fnModF64(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opF64Sub, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), convWasm_p_4_(_env, WasmBin_opF64Mul, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opF64Floor, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opF64Div, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), convWasm_lg_2_(_env, 1))))))), convWasm_lg_2_(_env, 1))))))))))
     return index
 }
-// 1568: decl @lune.@base.@convWasm.convFilter.fnShift
+// 1746: decl @lune.@base.@convWasm.convFilter.fnShift
 func (self *convWasm_convFilter) fnShift(_env *LnsEnv, left bool) LnsInt {
     var name string
     var code LnsInt
@@ -2681,7 +3036,7 @@ func (self *convWasm_convFilter) fnShift(_env *LnsEnv, left bool) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32Or, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64LeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 1), WasmBin_i64Const(_env, -64)))), convWasm_p_4_(_env, WasmBin_opI64GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 1), WasmBin_i64Const(_env, 64))))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i64Const(_env, 0)))))), nil, nil), WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI64LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 1), WasmBin_i64Const(_env, 0)))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, revCode, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), convWasm_p_4_(_env, WasmBin_opI64Sub, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i64Const(_env, 0), convWasm_lg_2_(_env, 1)))))))))))), nil, nil), convWasm_p_4_(_env, code, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0), convWasm_lg_2_(_env, 1)))))))
     return index
 }
-// 1599: decl @lune.@base.@convWasm.convFilter.lowerCast
+// 1777: decl @lune.@base.@convWasm.convFilter.lowerCast
 func (self *convWasm_convFilter) lowerCast(_env *LnsEnv, node *Nodes_ExpCastNode) *convWasm_Val {
     var castType *Ast_TypeInfo
     castType = node.FP.Get_castType(_env)
@@ -2727,7 +3082,7 @@ func (self *convWasm_convFilter) lowerCast(_env *LnsEnv, node *Nodes_ExpCastNode
     }
     return NewconvWasm_Val(_env, self.FP.coerce(_env, val.FP.Get_ins(_env), val.FP.Get_typeInfo(_env), castType), castRep, castType)
 }
-// 1644: decl @lune.@base.@convWasm.convFilter.fnIsIntVal
+// 1822: decl @lune.@base.@convWasm.convFilter.fnIsIntVal
 func (self *convWasm_convFilter) fnIsIntVal(_env *LnsEnv) LnsInt {
     {
         _index := self.adapterMap.Get("isIntVal")
@@ -2745,7 +3100,7 @@ func (self *convWasm_convFilter) fnIsIntVal(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxI64(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 1)))))), nil, nil), WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refTest(_env, self.rt.FP.Get_tBoxF64(_env), convWasm_lg_2_(_env, 0))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 0)))))), nil, nil), convWasm_ls_3_(_env, fval, self.rt.FP.UnboxF64(_env, convWasm_lg_2_(_env, 0))), convWasm_p_4_(_env, WasmBin_opI32And, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opF64Eq, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opF64Trunc, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, fval)))), convWasm_lg_2_(_env, fval)))), convWasm_p_4_(_env, WasmBin_opF64Lt, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opF64Abs, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, fval)))), WasmBin_f64Const(_env, 9.2e18))))))))))
     return index
 }
-// 1662: decl @lune.@base.@convWasm.convFilter.lowerUnwrap
+// 1840: decl @lune.@base.@convWasm.convFilter.lowerUnwrap
 func (self *convWasm_convFilter) lowerUnwrap(_env *LnsEnv, node *Nodes_ExpUnwrapNode) *convWasm_Val {
     var resultType *Ast_TypeInfo
     resultType = node.FP.Get_expType(_env)
@@ -2767,15 +3122,15 @@ func (self *convWasm_convFilter) lowerUnwrap(_env *LnsEnv, node *Nodes_ExpUnwrap
     }
     return NewconvWasm_Val(_env, WasmBin_seq(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, work, val.FP.Get_ins(_env)), WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, work)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](elseBody)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.coerce(_env, convWasm_lg_2_(_env, work), val.FP.Get_typeInfo(_env), resultType))), resultRep)))), resultRep, resultType)
 }
-// 1683: decl @lune.@base.@convWasm.convFilter.lowerLiteralColl
+// 1861: decl @lune.@base.@convWasm.convFilter.lowerLiteralColl
 func (self *convWasm_convFilter) lowerLiteralColl(_env *LnsEnv, node *Nodes_Node,expList LnsAny,isSet bool) *convWasm_Val {
     var pre *LnsList2_[*WasmBin_Ins]
     pre = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
     var vals *LnsList2_[*convWasm_Val]
     vals = NewLnsList2_[*convWasm_Val]([]*convWasm_Val{})
     if expList != nil{
-        expList_258 := expList.(*Nodes_ExpListNode)
-        vals = self.FP.lowerValList(_env, expList_258, pre)
+        expList_169 := expList.(*Nodes_ExpListNode)
+        vals = self.FP.lowerValList(_env, expList_169, pre)
     }
     if isSet{
         var set LnsInt
@@ -2794,7 +3149,7 @@ func (self *convWasm_convFilter) lowerLiteralColl(_env *LnsEnv, node *Nodes_Node
     }
     return self.FP.newVal(_env, WasmBin_seq(_env, pre), node.FP.Get_expType(_env))
 }
-// 1706: decl @lune.@base.@convWasm.convFilter.lowerLiteralMap
+// 1884: decl @lune.@base.@convWasm.convFilter.lowerLiteralMap
 func (self *convWasm_convFilter) lowerLiteralMap(_env *LnsEnv, node *Nodes_LiteralMapNode) *convWasm_Val {
     var _map LnsInt
     _map = self.FP.tempLocal(_env, self.rt.FP.Get_mapType(_env))
@@ -2807,7 +3162,7 @@ func (self *convWasm_convFilter) lowerLiteralMap(_env *LnsEnv, node *Nodes_Liter
     body.Insert(convWasm_lg_2_(_env, _map))
     return self.FP.newVal(_env, WasmBin_seq(_env, body), node.FP.Get_expType(_env))
 }
-// 1719: decl @lune.@base.@convWasm.convFilter.getObjType
+// 1897: decl @lune.@base.@convWasm.convFilter.getObjType
 func (self *convWasm_convFilter) getObjType(_env *LnsEnv, typeInfo *Ast_TypeInfo) *Ast_TypeInfo {
     var work *Ast_TypeInfo
     work = self.FP.normType(_env, typeInfo)
@@ -2818,7 +3173,7 @@ func (self *convWasm_convFilter) getObjType(_env *LnsEnv, typeInfo *Ast_TypeInfo
     }
     return work
 }
-// 1728: decl @lune.@base.@convWasm.convFilter.lowerMemberRef
+// 1906: decl @lune.@base.@convWasm.convFilter.lowerMemberRef
 func (self *convWasm_convFilter) lowerMemberRef(_env *LnsEnv, node *Nodes_Node,prefix *Nodes_Node,name string) *convWasm_Val {
     var objType *Ast_TypeInfo
     objType = self.FP.getObjType(_env, prefix.FP.Get_expType(_env))
@@ -2842,7 +3197,7 @@ func (self *convWasm_convFilter) lowerMemberRef(_env *LnsEnv, node *Nodes_Node,p
     memberType = self.FP.getMemberType(_env, info, name)
     return NewconvWasm_Val(_env, WasmBin_structGet(_env, info.FP.Get_structType(_env), fieldIndex, WasmBin_refCast(_env, info.FP.Get_structType(_env), obj)), rep, memberType)
 }
-// 1742: decl @lune.@base.@convWasm.convFilter.getMemberType
+// 1920: decl @lune.@base.@convWasm.convFilter.getMemberType
 func (self *convWasm_convFilter) getMemberType(_env *LnsEnv, info *convWasm_ClassInfo,name string) *Ast_TypeInfo {
     var work LnsAny
     work = info
@@ -2874,7 +3229,7 @@ func (self *convWasm_convFilter) getMemberType(_env *LnsEnv, info *convWasm_Clas
     }
     return Ast_builtinTypeStem_
 }
-// 1759: decl @lune.@base.@convWasm.convFilter.lowerRefField
+// 1937: decl @lune.@base.@convWasm.convFilter.lowerRefField
 func (self *convWasm_convFilter) lowerRefField(_env *LnsEnv, node *Nodes_RefFieldNode) *convWasm_Val {
     var prefix *Nodes_Node
     prefix = node.FP.Get_prefix(_env)
@@ -2888,6 +3243,20 @@ func (self *convWasm_convFilter) lowerRefField(_env *LnsEnv, node *Nodes_RefFiel
             symbol := _symbol.(*Ast_SymbolInfo)
             var orgSym *Ast_SymbolInfo
             orgSym = symbol.FP.GetOrg(_env)
+            var builtin *Builtin_BuiltinFuncType
+            builtin = self.builtinFuncs
+            var builtinConstMap *LnsMap2_[*Ast_SymbolInfo,LnsInt]
+            builtinConstMap = NewLnsMap2_[*Ast_SymbolInfo,LnsInt]( map[*Ast_SymbolInfo]LnsInt{builtin.G__lns_runmode_Sync_sym:0,builtin.G__lns_runmode_Queue_sym:1,builtin.G__lns_runmode_Skip_sym:2,})
+            {
+                _val := builtinConstMap.Get(orgSym)
+                if !Lns_IsNil( _val ) {
+                    val := _val.(LnsInt)
+                    return self.FP.newVal(_env, WasmBin_i64Const(_env, val), Ast_builtinTypeInt)
+                }
+            }
+            if orgSym == builtin.G__lns_capability_async_sym{
+                return self.FP.newVal(_env, WasmBin_i32Const(_env, 0), Ast_builtinTypeBool)
+            }
             {
                 __ := self.globalSym2loc.Get(orgSym)
                 if !Lns_IsNil( __ ) {
@@ -2929,7 +3298,7 @@ func (self *convWasm_convFilter) lowerRefField(_env *LnsEnv, node *Nodes_RefFiel
 // insert a dummy
     return nil
 }
-// 1799: decl @lune.@base.@convWasm.convFilter.lowerEnumVal
+// 1991: decl @lune.@base.@convWasm.convFilter.lowerEnumVal
 func (self *convWasm_convFilter) lowerEnumVal(_env *LnsEnv, enumType *Ast_EnumTypeInfo,valInfo *Ast_EnumValInfo) *convWasm_Val {
     switch _matchExp0 := valInfo.FP.Get_val(_env).(type) {
     case *Ast_EnumLiteral__Int:
@@ -2945,7 +3314,7 @@ func (self *convWasm_convFilter) lowerEnumVal(_env *LnsEnv, enumType *Ast_EnumTy
 // insert a dummy
     return nil
 }
-// 1814: decl @lune.@base.@convWasm.convFilter.getStdStream
+// 2006: decl @lune.@base.@convWasm.convFilter.getStdStream
 func (self *convWasm_convFilter) getStdStream(_env *LnsEnv, isStdout bool) LnsInt {
     if self.stdoutGlobal < 0{
         self.stdoutGlobal = self.mod.FP.AddGlobal(_env, self.rt.FP.Get_objType(_env), WasmBin_refNull(_env, self.rt.FP.Get_tObj(_env)))
@@ -2960,7 +3329,7 @@ func (self *convWasm_convFilter) getStdStream(_env *LnsEnv, isStdout bool) LnsIn
     }
     return self.stderrGlobal
 }
-// 1831: decl @lune.@base.@convWasm.convFilter.lowerRefItem
+// 2023: decl @lune.@base.@convWasm.convFilter.lowerRefItem
 func (self *convWasm_convFilter) lowerRefItem(_env *LnsEnv, node *Nodes_ExpRefItemNode) *convWasm_Val {
     var valType *Ast_TypeInfo
     valType = self.FP.normType(_env, node.FP.Get_val(_env).FP.Get_expType(_env))
@@ -2988,6 +3357,9 @@ func (self *convWasm_convFilter) lowerRefItem(_env *LnsEnv, node *Nodes_ExpRefIt
     } else if _switch0 == Ast_TypeInfoKind__Map {
         return NewconvWasm_Val(_env, WasmBin_call(_env, self.rt.FP.FnMapGet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.lowerExp(_env, node.FP.Get_val(_env)), self.FP.toAny(_env, self.FP.lowerVal(_env, index))))), WasmBin_typeAnyRef, Ast_builtinTypeStem_)
     }
+    if self.FP.isType(_env, valType, Ast_builtinTypeStem){
+        return NewconvWasm_Val(_env, WasmBin_call(_env, self.FP.fnStemIndex(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.lowerExp(_env, node.FP.Get_val(_env)), self.FP.toAny(_env, self.FP.lowerVal(_env, index))))), WasmBin_typeAnyRef, Ast_builtinTypeStem_)
+    }
     if self.FP.isType(_env, valType, Ast_builtinTypeString){
         var strVal LnsInt
         strVal = self.FP.tempLocal(_env, self.rt.FP.Get_strType(_env))
@@ -2997,7 +3369,7 @@ func (self *convWasm_convFilter) lowerRefItem(_env *LnsEnv, node *Nodes_ExpRefIt
 // insert a dummy
     return nil
 }
-// 1873: decl @lune.@base.@convWasm.convFilter.lowerNewAlgeVal
+// 2071: decl @lune.@base.@convWasm.convFilter.lowerNewAlgeVal
 func (self *convWasm_convFilter) lowerNewAlgeVal(_env *LnsEnv, node *Nodes_NewAlgeValNode) *convWasm_Val {
     var algeType *Ast_TypeInfo
     algeType = self.FP.getGenSrc(_env, &node.FP.Get_valInfo(_env).FP.Get_algeType(_env).Ast_TypeInfo)
@@ -3031,7 +3403,7 @@ func (self *convWasm_convFilter) lowerNewAlgeVal(_env *LnsEnv, node *Nodes_NewAl
     }
     return NewconvWasm_Val(_env, WasmBin_structNew(_env, valType, args), WasmBin_refType(_env, info.FP.Get_baseType(_env)), algeType)
 }
-// 1891: decl @lune.@base.@convWasm.convFilter.lowerAnonymousFunc
+// 2089: decl @lune.@base.@convWasm.convFilter.lowerAnonymousFunc
 func (self *convWasm_convFilter) lowerAnonymousFunc(_env *LnsEnv, node *Nodes_DeclFuncNode) *convWasm_Val {
     var funcType *Ast_TypeInfo
     funcType = node.FP.Get_expType(_env)
@@ -3039,11 +3411,119 @@ func (self *convWasm_convFilter) lowerAnonymousFunc(_env *LnsEnv, node *Nodes_De
     funcIndex = self.FP.registerFunc(_env, node.FP.Get_declInfo(_env), funcType)
     return self.FP.newVal(_env, self.FP.compileFunc(_env, &node.Nodes_Node, node.FP.Get_declInfo(_env), funcType, funcIndex), funcType)
 }
-// 1898: decl @lune.@base.@convWasm.convFilter.lowerVal
+// 2099: decl @lune.@base.@convWasm.convFilter.getNilAccPrefix
+func (self *convWasm_convFilter) getNilAccPrefix(_env *LnsEnv, node *Nodes_Node) LnsAny {
+    if self.nilAccDoneSet.Has(node){
+        return nil
+    }
+    {
+        _refNode := Nodes_RefFieldNodeDownCastF(node.FP)
+        if !Lns_IsNil( _refNode ) {
+            refNode := _refNode.(*Nodes_RefFieldNode)
+            if refNode.FP.Get_nilAccess(_env){
+                return refNode.FP.Get_prefix(_env)
+            }
+        } else {
+            {
+                _getNode := Nodes_GetFieldNodeDownCastF(node.FP)
+                if !Lns_IsNil( _getNode ) {
+                    getNode := _getNode.(*Nodes_GetFieldNode)
+                    if getNode.FP.Get_nilAccess(_env){
+                        return getNode.FP.Get_prefix(_env)
+                    }
+                } else {
+                    {
+                        _itemNode := Nodes_ExpRefItemNodeDownCastF(node.FP)
+                        if !Lns_IsNil( _itemNode ) {
+                            itemNode := _itemNode.(*Nodes_ExpRefItemNode)
+                            if itemNode.FP.Get_nilAccess(_env){
+                                return itemNode.FP.Get_val(_env)
+                            }
+                        } else {
+                            {
+                                _callNode := Nodes_ExpCallNodeDownCastF(node.FP)
+                                if !Lns_IsNil( _callNode ) {
+                                    callNode := _callNode.(*Nodes_ExpCallNode)
+                                    if callNode.FP.Get_nilAccess(_env){
+                                        {
+                                            _funcNode := Nodes_RefFieldNodeDownCastF(callNode.FP.Get_func(_env).FP)
+                                            if !Lns_IsNil( _funcNode ) {
+                                                funcNode := _funcNode.(*Nodes_RefFieldNode)
+                                                if funcNode.FP.Get_nilAccess(_env){
+                                                    return funcNode.FP.Get_prefix(_env)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return nil
+}
+// 2131: decl @lune.@base.@convWasm.convFilter.lowerNilAcc
+func (self *convWasm_convFilter) lowerNilAcc(_env *LnsEnv, node *Nodes_Node,prefix *Nodes_Node) *convWasm_Val {
+    var prefixVal *convWasm_Val
+    prefixVal = self.FP.lowerVal(_env, prefix)
+    var work LnsInt
+    work = self.FP.tempLocal(_env, prefixVal.FP.Get_rep(_env))
+    var pre *LnsList2_[*WasmBin_Ins]
+    pre = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, work, prefixVal.FP.Get_ins(_env))))
+    self.node2val.Set(prefix,NewconvWasm_Val(_env, convWasm_lg_2_(_env, work), prefixVal.FP.Get_rep(_env), prefixVal.FP.Get_typeInfo(_env)))
+    self.nilAccDoneSet.Add(node)
+    {
+        _callNode := Nodes_ExpCallNodeDownCastF(node.FP)
+        if !Lns_IsNil( _callNode ) {
+            callNode := _callNode.(*Nodes_ExpCallNode)
+            self.nilAccDoneSet.Add(callNode.FP.Get_func(_env))
+        }
+    }
+    var resultType *Ast_TypeInfo
+    resultType = node.FP.Get_expType(_env)
+    var resultRep *WasmBin_ValType
+    resultRep = self.FP.getRep(_env, resultType)
+    var accessIns *WasmBin_Ins
+    accessIns = self.FP.coerceVal(_env, self.FP.lowerVal(_env, node), resultType)
+    self.node2val.Set(prefix,nil)
+    pre.Insert(WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, work)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.getDefaultVal(_env, resultRep))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](accessIns)), resultRep))
+    return self.FP.newVal(_env, WasmBin_seq(_env, pre), resultType)
+}
+// 2149: decl @lune.@base.@convWasm.convFilter.lowerVal
 func (self *convWasm_convFilter) lowerVal(_env *LnsEnv, node *Nodes_Node) *convWasm_Val {
+    {
+        _val := self.node2val.Get(node)
+        if !Lns_IsNil( _val ) {
+            val := _val.(*convWasm_Val)
+            return val
+        }
+    }
+    {
+        _prefix := self.FP.getNilAccPrefix(_env, node)
+        if !Lns_IsNil( _prefix ) {
+            prefix := _prefix.(*Nodes_Node)
+            return self.FP.lowerNilAcc(_env, node, prefix)
+        }
+    }
     var expType *Ast_TypeInfo
     expType = node.FP.Get_expType(_env)
-    if _switch0 := node.FP.Get_kind(_env); _switch0 == Nodes_NodeKind_get_LiteralInt(_env) {
+    if _switch0 := node.FP.Get_kind(_env); _switch0 == Nodes_NodeKind_get_TupleConst(_env) {
+        var tupleNode *Nodes_TupleConstNode
+        tupleNode = Lns_unwrap( Nodes_TupleConstNodeDownCastF(node.FP)).(*Nodes_TupleConstNode)
+        var pre *LnsList2_[*WasmBin_Ins]
+        pre = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+        var vals *LnsList2_[*convWasm_Val]
+        vals = self.FP.lowerValList(_env, tupleNode.FP.Get_expList(_env), pre)
+        pre.Insert(self.FP.buildList(_env, vals))
+        return self.FP.newVal(_env, WasmBin_seq(_env, pre), expType)
+    } else if _switch0 == Nodes_NodeKind_get_ExpExpandTuple(_env) {
+        var expandNode *Nodes_ExpExpandTupleNode
+        expandNode = Lns_unwrap( Nodes_ExpExpandTupleNodeDownCastF(node.FP)).(*Nodes_ExpExpandTupleNode)
+        return NewconvWasm_Val(_env, self.FP.lowerExpAs(_env, expandNode.FP.Get_exp(_env), expandNode.FP.Get_exp(_env).FP.Get_expType(_env)), self.rt.FP.Get_listType(_env), Ast_builtinTypeDDD)
+    } else if _switch0 == Nodes_NodeKind_get_LiteralInt(_env) {
         var literal *Nodes_LiteralIntNode
         literal = Lns_unwrap( Nodes_LiteralIntNodeDownCastF(node.FP)).(*Nodes_LiteralIntNode)
         return self.FP.newVal(_env, WasmBin_i64Const(_env, literal.FP.Get_num(_env)), Ast_builtinTypeInt)
@@ -3173,13 +3653,13 @@ func (self *convWasm_convFilter) lowerVal(_env *LnsEnv, node *Nodes_Node) *convW
 // insert a dummy
     return nil
 }
-// 2050: decl @lune.@base.@convWasm.convFilter.lowerArgs
+// 2320: decl @lune.@base.@convWasm.convFilter.lowerArgs
 func (self *convWasm_convFilter) lowerArgs(_env *LnsEnv, argList LnsAny,paramTypes *LnsList2_[*Ast_TypeInfo],pre *LnsList2_[*WasmBin_Ins]) *LnsList2_[*WasmBin_Ins] {
     var vals *LnsList2_[*convWasm_Val]
     vals = NewLnsList2_[*convWasm_Val]([]*convWasm_Val{})
     if argList != nil{
-        argList_141 := argList.(*Nodes_ExpListNode)
-        vals = self.FP.lowerValList(_env, argList_141, pre)
+        argList_3 := argList.(*Nodes_ExpListNode)
+        vals = self.FP.lowerValList(_env, argList_3, pre)
     }
     var args *LnsList2_[*WasmBin_Ins]
     args = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
@@ -3214,7 +3694,7 @@ func (self *convWasm_convFilter) lowerArgs(_env *LnsEnv, argList LnsAny,paramTyp
     }
     return args
 }
-// 2088: decl @lune.@base.@convWasm.convFilter.callClosure
+// 2358: decl @lune.@base.@convWasm.convFilter.callClosure
 func (self *convWasm_convFilter) callClosure(_env *LnsEnv, cloVal *WasmBin_Ins,funcType *Ast_TypeInfo,argList LnsAny,pre *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
     var info *WasmRt_CloInfo
     info = self.FP.getFuncCloInfo(_env, funcType)
@@ -3223,11 +3703,11 @@ func (self *convWasm_convFilter) callClosure(_env *LnsEnv, cloVal *WasmBin_Ins,f
     pre.Insert(convWasm_ls_3_(_env, work, WasmBin_refCast(_env, info.FP.Get_cloType(_env), cloVal)))
     var args *LnsList2_[*WasmBin_Ins]
     args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, work)))
-    convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, argList, self.FP.normType(_env, funcType).FP.Get_argTypeInfoList(_env), pre))
+    convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, argList, self.FP.normType(_env, funcType).FP.Get_argTypeInfoList(_env), pre))
     args.Insert(WasmBin_structGet(_env, info.FP.Get_cloType(_env), WasmRt_fCloCode, convWasm_lg_2_(_env, work)))
     return WasmBin_callRef(_env, info.FP.Get_funcType(_env), args)
 }
-// 2101: decl @lune.@base.@convWasm.convFilter.lowerPrint
+// 2371: decl @lune.@base.@convWasm.convFilter.lowerPrint
 func (self *convWasm_convFilter) lowerPrint(_env *LnsEnv, node *Nodes_ExpCallNode) *WasmBin_Ins {
     var pre *LnsList2_[*WasmBin_Ins]
     pre = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
@@ -3255,7 +3735,7 @@ func (self *convWasm_convFilter) lowerPrint(_env *LnsEnv, node *Nodes_ExpCallNod
     pre.Insert(WasmBin_call(_env, self.rt.FP.FnPrintList(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.buildList(_env, vals)))))
     return WasmBin_seq(_env, pre)
 }
-// 2120: decl @lune.@base.@convWasm.convFilter.lowerCallRef
+// 2390: decl @lune.@base.@convWasm.convFilter.lowerCallRef
 func (self *convWasm_convFilter) lowerCallRef(_env *LnsEnv, node *Nodes_ExpCallNode,refNode *Nodes_ExpRefNode,pre *LnsList2_[*WasmBin_Ins])(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var symbol *Ast_SymbolInfo
     symbol = refNode.FP.Get_symbolInfo(_env).FP.GetOrg(_env)
@@ -3285,6 +3765,42 @@ func (self *convWasm_convFilter) lowerCallRef(_env *LnsEnv, node *Nodes_ExpCallN
         pre.Insert(self.FP.toStr(_env, vals.GetAt(1)))
         return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeString))
     }
+    if funcType.FP.Equals(_env, self.processInfo, builtin.Lns___run, nil, nil){
+        var argList *Nodes_ExpListNode
+        argList = Lns_unwrap( node.FP.Get_argList(_env)).(*Nodes_ExpListNode)
+        var mode LnsInt
+        mode = self.FP.tempLocal(_env, WasmBin_typeI64)
+        pre.Insert(convWasm_ls_3_(_env, mode, self.FP.lowerExpAs(_env, argList.FP.Get_expList(_env).GetAt(2), Ast_builtinTypeInt)))
+        var callPre *LnsList2_[*WasmBin_Ins]
+        callPre = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+        var callIns *WasmBin_Ins
+        var retTypes *LnsList2_[*Ast_TypeInfo]
+        callIns,retTypes = self.FP.lowerObjMethodCall(_env, &node.Nodes_Node, argList.FP.Get_expList(_env).GetAt(1), "run", callPre, nil)
+        var body *LnsList2_[*WasmBin_Ins]
+        body = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](callIns))
+        for range( retTypes.Items ) {
+            body.Insert(WasmBin_drop(_env, WasmBin_nop(_env)))
+        }
+        body.Insert(WasmBin_i32Const(_env, 1))
+        pre.Insert(WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI64Eq, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, mode), WasmBin_i64Const(_env, 2)))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 0))), body, WasmBin_typeI32))
+        return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeBool))
+    }
+    if funcType.FP.Equals(_env, self.processInfo, builtin.Lns___join, nil, nil){
+        return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo]([]*Ast_TypeInfo{})
+    }
+    if funcType.FP.Equals(_env, self.processInfo, builtin.Lns___serr, nil, nil){
+        var info *convWasm_ClassInfo
+        info = self.FP.getSerrInfo(_env)
+        pre.Insert(WasmBin_structNew(_env, info.FP.Get_structType(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 0), WasmBin_globalGet(_env, info.FP.Get_vtGlobal(_env)), self.FP.lowerArgAs(_env, node, 1, Ast_builtinTypeString)))))
+        return WasmBin_seq(_env, pre), funcType.FP.Get_retTypeInfoList(_env)
+    }
+    if funcType.FP.Equals(_env, self.processInfo, builtin.Lns_tonumber, nil, nil){
+        return self.FP.lowerLuaCall(_env, node, WasmRt_luaTonumber, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
+    }
+    if funcType.FP.Equals(_env, self.processInfo, builtin.Lns_type, nil, nil){
+        pre.Insert(WasmBin_call(_env, self.FP.fnLuaType(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.lowerArgAs(_env, node, 1, Ast_builtinTypeStem_)))))
+        return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeString))
+    }
     if symbol.FP.Get_kind(_env) == Ast_SymbolKind__Fun{
         {
             _funcIndex := self.func2index.Get(funcType)
@@ -3298,7 +3814,7 @@ func (self *convWasm_convFilter) lowerCallRef(_env *LnsEnv, node *Nodes_ExpCallN
                 }
                 var args *LnsList2_[*WasmBin_Ins]
                 args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](cloArg))
-                convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), funcType.FP.Get_argTypeInfoList(_env), pre))
+                convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), funcType.FP.Get_argTypeInfoList(_env), pre))
                 pre.Insert(WasmBin_call(_env, funcIndex, args))
                 return WasmBin_seq(_env, pre), funcType.FP.Get_retTypeInfoList(_env)
             }
@@ -3307,13 +3823,13 @@ func (self *convWasm_convFilter) lowerCallRef(_env *LnsEnv, node *Nodes_ExpCallN
     pre.Insert(self.FP.callClosure(_env, self.FP.readSym(_env, &refNode.Nodes_Node, symbol), funcType, node.FP.Get_argList(_env), pre))
     return WasmBin_seq(_env, pre), self.FP.normType(_env, funcType).FP.Get_retTypeInfoList(_env)
 }
-// 2161: decl @lune.@base.@convWasm.convFilter.lowerArgAny
+// 2466: decl @lune.@base.@convWasm.convFilter.lowerArgAny
 func (self *convWasm_convFilter) lowerArgAny(_env *LnsEnv, node *Nodes_ExpCallNode,index LnsInt) *WasmBin_Ins {
     var argList *Nodes_ExpListNode
     argList = Lns_unwrap( node.FP.Get_argList(_env)).(*Nodes_ExpListNode)
     return self.FP.toAny(_env, self.FP.lowerVal(_env, argList.FP.Get_expList(_env).GetAt(index)))
 }
-// 2165: decl @lune.@base.@convWasm.convFilter.lowerArgAs
+// 2470: decl @lune.@base.@convWasm.convFilter.lowerArgAs
 func (self *convWasm_convFilter) lowerArgAs(_env *LnsEnv, node *Nodes_ExpCallNode,index LnsInt,typeInfo *Ast_TypeInfo) *WasmBin_Ins {
     var argList *Nodes_ExpListNode
     
@@ -3330,7 +3846,7 @@ func (self *convWasm_convFilter) lowerArgAs(_env *LnsEnv, node *Nodes_ExpCallNod
     }
     return self.FP.lowerExpAs(_env, argList.FP.Get_expList(_env).GetAt(index), typeInfo)
 }
-// 2178: decl @lune.@base.@convWasm.convFilter.lowerListMethod
+// 2483: decl @lune.@base.@convWasm.convFilter.lowerListMethod
 func (self *convWasm_convFilter) lowerListMethod(_env *LnsEnv, node *Nodes_ExpCallNode,prefix *Nodes_Node,name string)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var list *WasmBin_Ins
     list = self.FP.lowerExp(_env, prefix)
@@ -3372,7 +3888,7 @@ func (self *convWasm_convFilter) lowerListMethod(_env *LnsEnv, node *Nodes_ExpCa
 // insert a dummy
     return nil,nil
 }
-// 2220: decl @lune.@base.@convWasm.convFilter.getLessFormType
+// 2525: decl @lune.@base.@convWasm.convFilter.getLessFormType
 func (self *convWasm_convFilter) getLessFormType(_env *LnsEnv, node *Nodes_ExpCallNode) *Ast_TypeInfo {
     var funcType *Ast_TypeInfo
     funcType = self.FP.normType(_env, node.FP.Get_func(_env).FP.Get_expType(_env))
@@ -3395,7 +3911,7 @@ func (self *convWasm_convFilter) getLessFormType(_env *LnsEnv, node *Nodes_ExpCa
     }
     return funcType.FP.Get_argTypeInfoList(_env).GetAt(1)
 }
-// 2234: decl @lune.@base.@convWasm.convFilter.fnIntOrZero
+// 2539: decl @lune.@base.@convWasm.convFilter.fnIntOrZero
 func (self *convWasm_convFilter) fnIntOrZero(_env *LnsEnv) LnsInt {
     {
         _index := self.adapterMap.Get("intOrZero")
@@ -3411,7 +3927,7 @@ func (self *convWasm_convFilter) fnIntOrZero(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i64Const(_env, 0)))))), nil, nil), self.rt.FP.UnboxI64(_env, convWasm_lg_2_(_env, 0)))))
     return index
 }
-// 2247: decl @lune.@base.@convWasm.convFilter.lowerSetMethod
+// 2552: decl @lune.@base.@convWasm.convFilter.lowerSetMethod
 func (self *convWasm_convFilter) lowerSetMethod(_env *LnsEnv, node *Nodes_ExpCallNode,prefix *Nodes_Node,name string)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var set *WasmBin_Ins
     set = self.FP.lowerExp(_env, prefix)
@@ -3441,7 +3957,7 @@ func (self *convWasm_convFilter) lowerSetMethod(_env *LnsEnv, node *Nodes_ExpCal
 // insert a dummy
     return nil,nil
 }
-// 2289: decl @lune.@base.@convWasm.convFilter.lowerStrMethod
+// 2594: decl @lune.@base.@convWasm.convFilter.lowerStrMethod
 func (self *convWasm_convFilter) lowerStrMethod(_env *LnsEnv, node *Nodes_ExpCallNode,prefix *Nodes_Node,name string)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var strVal *WasmBin_Ins
     strVal = self.FP.lowerExpAs(_env, prefix, Ast_builtinTypeString)
@@ -3512,11 +4028,96 @@ func (self *convWasm_convFilter) lowerStrMethod(_env *LnsEnv, node *Nodes_ExpCal
         pre.Insert(WasmBin_call(_env, self.rt.FP.FnFormat(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, work), self.FP.buildList(_env, vals)))))
         return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeString))
     }
+    var luaIdMap *LnsMap2_[string,LnsInt]
+    luaIdMap = NewLnsMap2_[string,LnsInt]( map[string]LnsInt{"byte":WasmRt_luaByte,"rep":WasmRt_luaRep,"lower":WasmRt_luaLower,"upper":WasmRt_luaUpper,"reverse":WasmRt_luaReverse,"len":WasmRt_luaLen,"replace":WasmRt_luaReplace,})
+    {
+        _luaId := luaIdMap.Get(name)
+        if !Lns_IsNil( _luaId ) {
+            luaId := _luaId.(LnsInt)
+            return self.FP.lowerLuaCall(_env, node, luaId, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](strVal)))
+        }
+    }
     self.FP.error(_env, &node.Nodes_Node, _env.GetVM().String_format("not support str method -- %s", Lns_2DDD(name)))
 // insert a dummy
     return nil,nil
 }
-// 2351: decl @lune.@base.@convWasm.convFilter.fnIntOrDefault
+// 2668: decl @lune.@base.@convWasm.convFilter.lowerLuaCall
+func (self *convWasm_convFilter) lowerLuaCall(_env *LnsEnv, node *Nodes_ExpCallNode,luaId LnsInt,headArgs *LnsList2_[*WasmBin_Ins])(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    var pre *LnsList2_[*WasmBin_Ins]
+    pre = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+    var args LnsInt
+    args = self.FP.tempLocal(_env, self.rt.FP.Get_listType(_env))
+    pre.Insert(convWasm_ls_3_(_env, args, WasmBin_call(_env, self.rt.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 4))))))
+    for _, _ins := range( headArgs.Items ) {
+        ins := _ins
+        pre.Insert(WasmBin_call(_env, self.rt.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, args), ins))))
+    }
+    {
+        _argList := node.FP.Get_argList(_env)
+        if !Lns_IsNil( _argList ) {
+            argList := _argList.(*Nodes_ExpListNode)
+            for _, _exp := range( argList.FP.Get_expList(_env).Items ) {
+                exp := _exp
+                var argIns *WasmBin_Ins
+                if exp.FP.Get_kind(_env) == Nodes_NodeKind_get_Abbr(_env){
+                    argIns = WasmBin_refNull(_env, WasmBin_htAny)
+                } else { 
+                    argIns = self.FP.lowerExpAs(_env, exp, Ast_builtinTypeStem_)
+                }
+                pre.Insert(WasmBin_call(_env, self.rt.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, args), argIns))))
+            }
+        }
+    }
+    var result *WasmBin_Ins
+    result = WasmBin_call(_env, self.rt.FP.FnLuaCall(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, luaId), convWasm_lg_2_(_env, args))))
+    var retTypeList *LnsList2_[*Ast_TypeInfo]
+    retTypeList = node.FP.Get_func(_env).FP.Get_expType(_env).FP.Get_retTypeInfoList(_env)
+    if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( retTypeList.Len() == 1) &&
+        _env.SetStackVal( retTypeList.GetAt(1).FP.Get_kind(_env) != Ast_TypeInfoKind__DDD) ).(bool)){
+        pre.Insert(self.FP.coerce(_env, self.rt.FP.ListItem(_env, result, 0), Ast_builtinTypeStem_, retTypeList.GetAt(1)))
+        return WasmBin_seq(_env, pre), retTypeList
+    }
+    pre.Insert(result)
+    return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeDDD))
+}
+// 2700: decl @lune.@base.@convWasm.convFilter.fnLuaType
+func (self *convWasm_convFilter) fnLuaType(_env *LnsEnv) LnsInt {
+    {
+        _index := self.adapterMap.Get("luaType")
+        if !Lns_IsNil( _index ) {
+            index := _index.(LnsInt)
+            return index
+        }
+    }
+    var index LnsInt
+    var _func *WasmBin_Func
+    index,_func = self.mod.FP.AddFunc(_env, NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.rt.FP.Get_strType(_env))))
+    self.adapterMap.Set("luaType",index)
+    var convWasm_check func(_env *LnsEnv, cond *WasmBin_Ins,name string) *WasmBin_Ins
+    convWasm_check = func(_env *LnsEnv, cond *WasmBin_Ins,name string) *WasmBin_Ins {
+        return WasmBin_ifElse(_env, cond, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.StrLiteral(_env, name)))))), nil, nil)
+    }
+    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_check(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 0)), "nil"), convWasm_check(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxI64(_env), convWasm_lg_2_(_env, 0)), "number"), convWasm_check(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxF64(_env), convWasm_lg_2_(_env, 0)), "number"), convWasm_check(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxBool(_env), convWasm_lg_2_(_env, 0)), "boolean"), convWasm_check(_env, WasmBin_refTest(_env, self.rt.FP.Get_tStr(_env), convWasm_lg_2_(_env, 0)), "string"), convWasm_check(_env, WasmBin_refTest(_env, self.rt.FP.Get_tClo(_env), convWasm_lg_2_(_env, 0)), "function"), self.rt.FP.StrLiteral(_env, "table"))))
+    return index
+}
+// 2721: decl @lune.@base.@convWasm.convFilter.fnStemIndex
+func (self *convWasm_convFilter) fnStemIndex(_env *LnsEnv) LnsInt {
+    {
+        _index := self.adapterMap.Get("stemIndex")
+        if !Lns_IsNil( _index ) {
+            index := _index.(LnsInt)
+            return index
+        }
+    }
+    var index LnsInt
+    var _func *WasmBin_Func
+    index,_func = self.mod.FP.AddFunc(_env, NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef, WasmBin_typeAnyRef)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef)))
+    self.adapterMap.Set("stemIndex",index)
+    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refTest(_env, self.rt.FP.Get_tList(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxI64(_env), convWasm_lg_2_(_env, 1)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, self.rt.FP.FnListGet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refCast(_env, self.rt.FP.Get_tList(_env), convWasm_lg_2_(_env, 0)), self.rt.FP.UnboxI64(_env, convWasm_lg_2_(_env, 1)))))))))), nil, nil), WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refNull(_env, WasmBin_htAny)))))), nil, nil), WasmBin_ifElse(_env, WasmBin_refTest(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, self.rt.FP.FnMapGet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refCast(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0)), convWasm_lg_2_(_env, 1))))))))), nil, nil), self.rt.FP.Error(_env, self.rt.FP.StrLiteral(_env, "attempt to index a non-table value")))))
+    return index
+}
+// 2742: decl @lune.@base.@convWasm.convFilter.fnIntOrDefault
 func (self *convWasm_convFilter) fnIntOrDefault(_env *LnsEnv, defVal LnsInt) LnsInt {
     var name string
     name = _env.GetVM().String_format("intOr:%d", Lns_2DDD(defVal))
@@ -3534,7 +4135,7 @@ func (self *convWasm_convFilter) fnIntOrDefault(_env *LnsEnv, defVal LnsInt) Lns
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i64Const(_env, defVal)))))), nil, nil), self.rt.FP.UnboxI64(_env, convWasm_lg_2_(_env, 0)))))
     return index
 }
-// 2365: decl @lune.@base.@convWasm.convFilter.fnIntOrMinus1
+// 2756: decl @lune.@base.@convWasm.convFilter.fnIntOrMinus1
 func (self *convWasm_convFilter) fnIntOrMinus1(_env *LnsEnv) LnsInt {
     {
         _index := self.adapterMap.Get("intOrMinus1")
@@ -3550,7 +4151,7 @@ func (self *convWasm_convFilter) fnIntOrMinus1(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i64Const(_env, -1)))))), nil, nil), self.rt.FP.UnboxI64(_env, convWasm_lg_2_(_env, 0)))))
     return index
 }
-// 2378: decl @lune.@base.@convWasm.convFilter.lowerStreamMethod
+// 2769: decl @lune.@base.@convWasm.convFilter.lowerStreamMethod
 func (self *convWasm_convFilter) lowerStreamMethod(_env *LnsEnv, node *Nodes_ExpCallNode,prefix *Nodes_Node,name string)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var obj LnsInt
     obj = self.FP.tempLocal(_env, self.rt.FP.Get_objType(_env))
@@ -3571,7 +4172,7 @@ func (self *convWasm_convFilter) lowerStreamMethod(_env *LnsEnv, node *Nodes_Exp
 // insert a dummy
     return nil,nil
 }
-// 2403: decl @lune.@base.@convWasm.convFilter.isStreamType
+// 2794: decl @lune.@base.@convWasm.convFilter.isStreamType
 func (self *convWasm_convFilter) isStreamType(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
     var work *Ast_TypeInfo
     work = self.FP.getGenSrc(_env, typeInfo)
@@ -3582,43 +4183,68 @@ func (self *convWasm_convFilter) isStreamType(_env *LnsEnv, typeInfo *Ast_TypeIn
         _env.SetStackVal( work == self.FP.getGenSrc(_env, builtin.Istream_)) ||
         _env.SetStackVal( work == self.FP.getGenSrc(_env, builtin.Luastream_)) ).(bool)
 }
-// 2412: decl @lune.@base.@convWasm.convFilter.lowerMethodCall
+// 2803: decl @lune.@base.@convWasm.convFilter.lowerIfMethodCall
+func (self *convWasm_convFilter) lowerIfMethodCall(_env *LnsEnv, prefix *Nodes_Node,name string,pre *LnsList2_[*WasmBin_Ins],argList LnsAny)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    var objType *Ast_TypeInfo
+    objType = self.FP.getObjType(_env, prefix.FP.Get_expType(_env))
+    var ifInfo *convWasm_IfInfo
+    ifInfo = self.FP.getIfInfo(_env, objType)
+    var methodIndex LnsInt
+    
+    {
+        _methodIndex := ifInfo.FP.Get_name2index(_env).Get(name)
+        if _methodIndex == nil{
+            self.FP.error(_env, prefix, _env.GetVM().String_format("not found method -- %s", Lns_2DDD(name)))
+        } else {
+            methodIndex = _methodIndex.(LnsInt)
+        }
+    }
+    var methodType *Ast_TypeInfo
+    methodType = Lns_unwrap( self.FP.getIfMethodType(_env, objType, name)).(*Ast_TypeInfo)
+    var obj LnsInt
+    obj = self.FP.tempLocal(_env, self.rt.FP.Get_objType(_env))
+    pre.Insert(convWasm_ls_3_(_env, obj, self.FP.lowerExpAs(_env, prefix, objType)))
+    var args *LnsList2_[*WasmBin_Ins]
+    args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, obj)))
+    convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, argList, methodType.FP.Get_argTypeInfoList(_env), pre))
+    var itab *WasmBin_Ins
+    itab = WasmBin_refCast(_env, ifInfo.FP.Get_itType(_env), WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_structGet(_env, self.rt.FP.Get_tVT(_env), WasmRt_fVtItabs, WasmBin_structGet(_env, self.rt.FP.Get_tObj(_env), WasmRt_fObjVt, convWasm_lg_2_(_env, obj))), WasmBin_i32Const(_env, ifInfo.FP.Get_ifId(_env))))
+    args.Insert(WasmBin_structGet(_env, ifInfo.FP.Get_itType(_env), methodIndex, itab))
+    pre.Insert(WasmBin_callRef(_env, ifInfo.FP.Get_methodFuncTypes(_env).GetAt(methodIndex + 1), args))
+    return WasmBin_seq(_env, pre), methodType.FP.Get_retTypeInfoList(_env)
+}
+// 2829: decl @lune.@base.@convWasm.convFilter.lowerMethodCall
 func (self *convWasm_convFilter) lowerMethodCall(_env *LnsEnv, node *Nodes_ExpCallNode,prefix *Nodes_Node,name string,pre *LnsList2_[*WasmBin_Ins])(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var objType *Ast_TypeInfo
     objType = self.FP.getObjType(_env, prefix.FP.Get_expType(_env))
-    if objType.FP.Get_kind(_env) == Ast_TypeInfoKind__IF{
-        var ifInfo *convWasm_IfInfo
-        ifInfo = self.FP.getIfInfo(_env, objType)
-        var methodIndex LnsInt
-        
-        {
-            _methodIndex := ifInfo.FP.Get_name2index(_env).Get(name)
-            if _methodIndex == nil{
-                self.FP.error(_env, &node.Nodes_Node, _env.GetVM().String_format("not found method -- %s", Lns_2DDD(name)))
-            } else {
-                methodIndex = _methodIndex.(LnsInt)
-            }
+    if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( objType.FP.Get_kind(_env) != Ast_TypeInfoKind__IF) &&
+        _env.SetStackVal( Lns_op_not(self.FP.getClassInfo(_env, objType))) &&
+        _env.SetStackVal( Ast_isBuiltin(_env, self.FP.getGenSrc(_env, objType).FP.Get_typeId(_env).Id)) ).(bool)){
+        pre.Insert(WasmBin_drop(_env, self.FP.toAny(_env, self.FP.lowerVal(_env, prefix))))
+        var retTypes *LnsList2_[*Ast_TypeInfo]
+        retTypes = node.FP.Get_func(_env).FP.Get_expType(_env).FP.Get_retTypeInfoList(_env)
+        for _, _retType := range( retTypes.Items ) {
+            retType := _retType
+            pre.Insert(self.FP.getDefaultVal(_env, self.FP.getRep(_env, retType)))
         }
-        var methodType *Ast_TypeInfo
-        methodType = Lns_unwrap( self.FP.getIfMethodType(_env, objType, name)).(*Ast_TypeInfo)
-        var obj LnsInt
-        obj = self.FP.tempLocal(_env, self.rt.FP.Get_objType(_env))
-        pre.Insert(convWasm_ls_3_(_env, obj, self.FP.lowerExpAs(_env, prefix, objType)))
-        var args *LnsList2_[*WasmBin_Ins]
-        args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, obj)))
-        convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), methodType.FP.Get_argTypeInfoList(_env), pre))
-        var itab *WasmBin_Ins
-        itab = WasmBin_refCast(_env, ifInfo.FP.Get_itType(_env), WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_structGet(_env, self.rt.FP.Get_tVT(_env), WasmRt_fVtItabs, WasmBin_structGet(_env, self.rt.FP.Get_tObj(_env), WasmRt_fObjVt, convWasm_lg_2_(_env, obj))), WasmBin_i32Const(_env, ifInfo.FP.Get_ifId(_env))))
-        args.Insert(WasmBin_structGet(_env, ifInfo.FP.Get_itType(_env), methodIndex, itab))
-        pre.Insert(WasmBin_callRef(_env, ifInfo.FP.Get_methodFuncTypes(_env).GetAt(methodIndex + 1), args))
-        return WasmBin_seq(_env, pre), methodType.FP.Get_retTypeInfoList(_env)
+        return WasmBin_seq(_env, pre), retTypes
+    }
+    return self.FP.lowerObjMethodCall(_env, &node.Nodes_Node, prefix, name, pre, node.FP.Get_argList(_env))
+}
+// 2849: decl @lune.@base.@convWasm.convFilter.lowerObjMethodCall
+func (self *convWasm_convFilter) lowerObjMethodCall(_env *LnsEnv, errNode *Nodes_Node,prefix *Nodes_Node,name string,pre *LnsList2_[*WasmBin_Ins],argList LnsAny)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
+    var objType *Ast_TypeInfo
+    objType = self.FP.getObjType(_env, prefix.FP.Get_expType(_env))
+    if objType.FP.Get_kind(_env) == Ast_TypeInfoKind__IF{
+        return self.FP.lowerIfMethodCall(_env, prefix, name, pre, argList)
     }
     var info *convWasm_ClassInfo
     
     {
         _info := self.FP.getClassInfo(_env, objType)
         if _info == nil{
-            self.FP.error(_env, &node.Nodes_Node, _env.GetVM().String_format("not found class -- %s", Lns_2DDD(objType.FP.GetTxt(_env, nil, nil, nil))))
+            self.FP.error(_env, errNode, _env.GetVM().String_format("not found class -- %s", Lns_2DDD(objType.FP.GetTxt(_env, nil, nil, nil))))
         } else {
             info = _info.(*convWasm_ClassInfo)
         }
@@ -3628,7 +4254,7 @@ func (self *convWasm_convFilter) lowerMethodCall(_env *LnsEnv, node *Nodes_ExpCa
     {
         _slotIndex := info.FP.Get_name2slot(_env).Get(name)
         if _slotIndex == nil{
-            self.FP.error(_env, &node.Nodes_Node, _env.GetVM().String_format("not found method -- %s", Lns_2DDD(name)))
+            self.FP.error(_env, errNode, _env.GetVM().String_format("not found method -- %s", Lns_2DDD(name)))
         } else {
             slotIndex = _slotIndex.(LnsInt)
         }
@@ -3640,19 +4266,19 @@ func (self *convWasm_convFilter) lowerMethodCall(_env *LnsEnv, node *Nodes_ExpCa
     pre.Insert(convWasm_ls_3_(_env, obj, self.FP.lowerExpAs(_env, prefix, info.FP.Get_typeInfo(_env))))
     var args *LnsList2_[*WasmBin_Ins]
     args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, obj)))
-    convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), slot.FP.Get_methodType(_env).FP.Get_argTypeInfoList(_env), pre))
+    convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, argList, slot.FP.Get_methodType(_env).FP.Get_argTypeInfoList(_env), pre))
     args.Insert(WasmBin_structGet(_env, info.FP.Get_vtType(_env), slotIndex, WasmBin_structGet(_env, info.FP.Get_structType(_env), WasmRt_fObjVt, convWasm_lg_2_(_env, obj))))
     pre.Insert(WasmBin_callRef(_env, slot.FP.Get_funcType(_env), args))
     return WasmBin_seq(_env, pre), slot.FP.Get_methodType(_env).FP.Get_retTypeInfoList(_env)
 }
-// 2454: decl @lune.@base.@convWasm.convFilter.getIfMethodType
+// 2875: decl @lune.@base.@convWasm.convFilter.getIfMethodType
 func (self *convWasm_convFilter) getIfMethodType(_env *LnsEnv, ifType *Ast_TypeInfo,name string) LnsAny {
     var _map *LnsMap2_[string,*Ast_TypeInfo]
     _map = NewLnsMap2_[string,*Ast_TypeInfo]( map[string]*Ast_TypeInfo{})
     self.FP.collectIfMethods(_env, self.FP.getGenSrc(_env, ifType), _map)
     return _map.Get(name)
 }
-// 2461: decl @lune.@base.@convWasm.convFilter.lowerCallField
+// 2882: decl @lune.@base.@convWasm.convFilter.lowerCallField
 func (self *convWasm_convFilter) lowerCallField(_env *LnsEnv, node *Nodes_ExpCallNode,fieldNode *Nodes_RefFieldNode,pre *LnsList2_[*WasmBin_Ins])(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var prefix *Nodes_Node
     prefix = fieldNode.FP.Get_prefix(_env)
@@ -3705,11 +4331,35 @@ func (self *convWasm_convFilter) lowerCallField(_env *LnsEnv, node *Nodes_ExpCal
             var methodType *Ast_TypeInfo
             methodType = symbol.FP.GetOrg(_env).FP.Get_typeInfo(_env)
             if _env.PopVal( _env.IncStack() ||
+                _env.SetStackVal( symbol.FP.Get_kind(_env) == Ast_SymbolKind__Mbr) ||
+                _env.SetStackVal( symbol.FP.Get_kind(_env) == Ast_SymbolKind__Var) ).(bool){
+                var cloVal *convWasm_Val
+                cloVal = self.FP.lowerVal(_env, &fieldNode.Nodes_Node)
+                pre.Insert(self.FP.callClosure(_env, cloVal.FP.Get_ins(_env), methodType, node.FP.Get_argList(_env), pre))
+                return WasmBin_seq(_env, pre), self.FP.normType(_env, methodType).FP.Get_retTypeInfoList(_env)
+            }
+            if _env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( methodType.FP.Get_staticFlag(_env)) ||
                 _env.SetStackVal( symbol.FP.Get_kind(_env) == Ast_SymbolKind__Fun) ).(bool){
                 return self.FP.lowerStaticCall(_env, node, prefix, name, methodType, pre)
             }
         }
+    }
+    {
+        _enumType := Ast_EnumTypeInfoDownCastF(prefixType.FP)
+        if !Lns_IsNil( _enumType ) {
+            enumType := _enumType.(*Ast_EnumTypeInfo)
+            if name == "get__txt"{
+                pre.Insert(WasmBin_call(_env, self.FP.fnEnumTxt(_env, enumType), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.lowerExp(_env, prefix)))))
+                return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeString))
+            }
+        }
+    }
+    if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( prefixType.FP.Get_kind(_env) == Ast_TypeInfoKind__Alge) &&
+        _env.SetStackVal( name == "get__txt") ).(bool)){
+        pre.Insert(self.FP.algeTxt(_env, prefix, prefixType))
+        return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeString))
     }
     if name == "_toMap"{
         {
@@ -3723,7 +4373,43 @@ func (self *convWasm_convFilter) lowerCallField(_env *LnsEnv, node *Nodes_ExpCal
     }
     return self.FP.lowerMethodCall(_env, node, prefix, name, pre)
 }
-// 2514: decl @lune.@base.@convWasm.convFilter.lowerStaticCall
+// 2952: decl @lune.@base.@convWasm.convFilter.getStringModuleFuncMap
+func (self *convWasm_convFilter) getStringModuleFuncMap(_env *LnsEnv) *LnsMap2_[*Ast_TypeInfo,LnsInt] {
+    var builtin *Builtin_BuiltinFuncType
+    builtin = self.builtinFuncs
+    return NewLnsMap2_[*Ast_TypeInfo,LnsInt]( map[*Ast_TypeInfo]LnsInt{builtin.String_find:WasmRt_luaFind,builtin.String_byte:WasmRt_luaByte,builtin.String_rep:WasmRt_luaRep,builtin.String_gsub:WasmRt_luaGsub,builtin.String_lower:WasmRt_luaLower,builtin.String_upper:WasmRt_luaUpper,builtin.String_reverse:WasmRt_luaReverse,builtin.String_sub:WasmRt_luaSub,})
+}
+// 2967: decl @lune.@base.@convWasm.convFilter.fnStrJoin
+func (self *convWasm_convFilter) fnStrJoin(_env *LnsEnv) LnsInt {
+    {
+        _index := self.adapterMap.Get("strJoin")
+        if !Lns_IsNil( _index ) {
+            index := _index.(LnsInt)
+            return index
+        }
+    }
+    var index LnsInt
+    var _func *WasmBin_Func
+    index,_func = self.mod.FP.AddFunc(_env, NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef, WasmBin_typeAnyRef, WasmBin_typeAnyRef, WasmBin_typeAnyRef)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.rt.FP.Get_strType(_env))))
+    self.adapterMap.Set("strJoin",index)
+    var list LnsInt
+    list = _func.FP.AddLocal(_env, self.rt.FP.Get_listType(_env))
+    var sep LnsInt
+    sep = _func.FP.AddLocal(_env, self.rt.FP.Get_strType(_env))
+    var pos LnsInt
+    pos = _func.FP.AddLocal(_env, WasmBin_typeI32)
+    var last LnsInt
+    last = _func.FP.AddLocal(_env, WasmBin_typeI32)
+    var result LnsInt
+    result = _func.FP.AddLocal(_env, self.rt.FP.Get_strType(_env))
+    var convWasm_toI32 func(_env *LnsEnv, val *WasmBin_Ins) *WasmBin_Ins
+    convWasm_toI32 = func(_env *LnsEnv, val *WasmBin_Ins) *WasmBin_Ins {
+        return convWasm_p_4_(_env, WasmBin_opI32WrapI64, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.UnboxI64(_env, val))))
+    }
+    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, list, WasmBin_refCast(_env, self.rt.FP.Get_tList(_env), convWasm_lg_2_(_env, 0))), convWasm_ls_3_(_env, sep, WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 1)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.StrLiteral(_env, ""))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refCast(_env, self.rt.FP.Get_tStr(_env), convWasm_lg_2_(_env, 1)))), self.rt.FP.Get_strType(_env))), convWasm_ls_3_(_env, pos, WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 2)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 1))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_toI32(_env, convWasm_lg_2_(_env, 2)))), WasmBin_typeI32)), convWasm_ls_3_(_env, last, WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 3)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListLen, convWasm_lg_2_(_env, list)))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_toI32(_env, convWasm_lg_2_(_env, 3)))), WasmBin_typeI32)), convWasm_ls_3_(_env, result, self.rt.FP.StrLiteral(_env, "")), WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_brIf(_env, 1, convWasm_p_4_(_env, WasmBin_opI32GtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), convWasm_lg_2_(_env, last))))), convWasm_ls_3_(_env, result, WasmBin_call(_env, self.rt.FP.FnStrConcat(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, result), WasmBin_refCast(_env, self.rt.FP.Get_tStr(_env), WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListItems, convWasm_lg_2_(_env, list)), convWasm_p_4_(_env, WasmBin_opI32Sub, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1)))))))))), WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), convWasm_lg_2_(_env, last)))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, result, WasmBin_call(_env, self.rt.FP.FnStrConcat(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, result), convWasm_lg_2_(_env, sep))))))), nil, nil), convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1))))), WasmBin_br(_env, 0))), nil))), nil), convWasm_lg_2_(_env, result))))
+    return index
+}
+// 3011: decl @lune.@base.@convWasm.convFilter.lowerStaticCall
 func (self *convWasm_convFilter) lowerStaticCall(_env *LnsEnv, node *Nodes_ExpCallNode,prefix *Nodes_Node,name string,methodType *Ast_TypeInfo,pre *LnsList2_[*WasmBin_Ins])(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     {
         _funcIndex := self.func2index.Get(methodType)
@@ -3731,10 +4417,42 @@ func (self *convWasm_convFilter) lowerStaticCall(_env *LnsEnv, node *Nodes_ExpCa
             funcIndex := _funcIndex.(LnsInt)
             var args *LnsList2_[*WasmBin_Ins]
             args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refNull(_env, self.rt.FP.Get_tClo(_env))))
-            convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), methodType.FP.Get_argTypeInfoList(_env), pre))
+            convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), methodType.FP.Get_argTypeInfoList(_env), pre))
             pre.Insert(WasmBin_call(_env, funcIndex, args))
             return WasmBin_seq(_env, pre), methodType.FP.Get_retTypeInfoList(_env)
         }
+    }
+    var builtin *Builtin_BuiltinFuncType
+    builtin = self.builtinFuncs
+    for _strFunc, _luaId := range( self.FP.getStringModuleFuncMap(_env).Items ) {
+        strFunc := _strFunc
+        luaId := _luaId
+        if methodType.FP.Equals(_env, self.processInfo, strFunc, nil, nil){
+            return self.FP.lowerLuaCall(_env, node, luaId, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))
+        }
+    }
+    if _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( methodType.FP.Equals(_env, self.processInfo, builtin.G__lns_sync_createFlag, nil, nil)) ||
+        _env.SetStackVal( methodType.FP.Equals(_env, self.processInfo, builtin.G__lns_sync__createPipe, nil, nil)) ).(bool){
+        pre.Insert(WasmBin_refNull(_env, WasmBin_htAny))
+        return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeStem.FP.Get_nilableTypeInfo(_env)))
+    }
+    if _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( methodType.FP.Equals(_env, self.processInfo, builtin.String__join, nil, nil)) ||
+        _env.SetStackVal( methodType.FP.Equals(_env, self.processInfo, builtin.String___join, nil, nil)) ).(bool){
+        var args *LnsList2_[*WasmBin_Ins]
+        args = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+        args.Insert(self.FP.lowerArgAs(_env, node, 1, Ast_builtinTypeStem_))
+        {
+            var _forFrom0 LnsInt = 2
+            var _forTo0 LnsInt = 4
+            for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+                index := _forWork0
+                args.Insert(self.FP.lowerArgAs(_env, node, index, Ast_builtinTypeStem_))
+            }
+        }
+        pre.Insert(WasmBin_call(_env, self.FP.fnStrJoin(_env), args))
+        return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](Ast_builtinTypeString))
     }
     var classType *Ast_TypeInfo
     classType = self.FP.getGenSrc(_env, prefix.FP.Get_expType(_env))
@@ -3748,13 +4466,14 @@ func (self *convWasm_convFilter) lowerStaticCall(_env *LnsEnv, node *Nodes_ExpCa
             }
         }
     }
-    if name == "_fromMap"{
+    if _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( name == "_fromMap") ||
+        _env.SetStackVal( name == "_fromStem") ).(bool){
         {
             _info := self.FP.getClassInfo(_env, classType)
             if !Lns_IsNil( _info ) {
                 info := _info.(*convWasm_ClassInfo)
                 pre.Insert(WasmBin_call(_env, self.FP.fnFromMap(_env, &node.Nodes_Node, info), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.lowerArgAs(_env, node, 1, Ast_builtinTypeStem_)))))
-                pre.Insert(WasmBin_refNull(_env, self.rt.FP.Get_tStr(_env)))
                 return WasmBin_seq(_env, pre), NewLnsList2_[*Ast_TypeInfo](Lns_2DDDGen[*Ast_TypeInfo](info.FP.Get_typeInfo(_env).FP.Get_nilableTypeInfo(_env), Ast_builtinTypeString.FP.Get_nilableTypeInfo(_env)))
             }
         }
@@ -3763,7 +4482,7 @@ func (self *convWasm_convFilter) lowerStaticCall(_env *LnsEnv, node *Nodes_ExpCa
 // insert a dummy
     return nil,nil
 }
-// 2545: decl @lune.@base.@convWasm.convFilter.lowerCall
+// 3066: decl @lune.@base.@convWasm.convFilter.lowerCall
 func (self *convWasm_convFilter) lowerCall(_env *LnsEnv, node *Nodes_ExpCallNode)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var pre *LnsList2_[*WasmBin_Ins]
     pre = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
@@ -3788,7 +4507,7 @@ func (self *convWasm_convFilter) lowerCall(_env *LnsEnv, node *Nodes_ExpCallNode
     pre.Insert(self.FP.callClosure(_env, funcVal.FP.Get_ins(_env), funcVal.FP.Get_typeInfo(_env), node.FP.Get_argList(_env), pre))
     return WasmBin_seq(_env, pre), self.FP.normType(_env, funcVal.FP.Get_typeInfo(_env)).FP.Get_retTypeInfoList(_env)
 }
-// 2560: decl @lune.@base.@convWasm.convFilter.lowerCallSuper
+// 3081: decl @lune.@base.@convWasm.convFilter.lowerCallSuper
 func (self *convWasm_convFilter) lowerCallSuper(_env *LnsEnv, node *Nodes_ExpCallSuperNode)(*WasmBin_Ins, *LnsList2_[*Ast_TypeInfo]) {
     var methodType *Ast_TypeInfo
     methodType = node.FP.Get_methodType(_env)
@@ -3806,11 +4525,11 @@ func (self *convWasm_convFilter) lowerCallSuper(_env *LnsEnv, node *Nodes_ExpCal
     pre = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
     var args *LnsList2_[*WasmBin_Ins]
     args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, self.ctx.FP.Get_selfLocal(_env))))
-    convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_expList(_env), methodType.FP.Get_argTypeInfoList(_env), pre))
+    convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_expList(_env), methodType.FP.Get_argTypeInfoList(_env), pre))
     pre.Insert(WasmBin_call(_env, funcIndex, args))
     return WasmBin_seq(_env, pre), methodType.FP.Get_retTypeInfoList(_env)
 }
-// 2573: decl @lune.@base.@convWasm.convFilter.lowerNew
+// 3094: decl @lune.@base.@convWasm.convFilter.lowerNew
 func (self *convWasm_convFilter) lowerNew(_env *LnsEnv, node *Nodes_ExpNewNode) *convWasm_Val {
     var info *convWasm_ClassInfo
     
@@ -3838,25 +4557,33 @@ func (self *convWasm_convFilter) lowerNew(_env *LnsEnv, node *Nodes_ExpNewNode) 
     ctorType = self.FP.getCtorType(_env, info.FP.Get_typeInfo(_env))
     var args *LnsList2_[*WasmBin_Ins]
     args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, obj)))
-    convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), ctorType.FP.Get_argTypeInfoList(_env), pre))
+    convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_argList(_env), ctorType.FP.Get_argTypeInfoList(_env), pre))
     pre.Insert(WasmBin_call(_env, info.FP.Get_ctorFunc(_env), args))
     pre.Insert(convWasm_lg_2_(_env, obj))
     return NewconvWasm_Val(_env, WasmBin_seq(_env, pre), objRep, node.FP.Get_expType(_env))
 }
-// 2593: decl @lune.@base.@convWasm.convFilter.getCtorType
+// 3114: decl @lune.@base.@convWasm.convFilter.algeTxt
+func (self *convWasm_convFilter) algeTxt(_env *LnsEnv, prefix *Nodes_Node,prefixType *Ast_TypeInfo) *WasmBin_Ins {
+    var algeType *Ast_TypeInfo
+    algeType = self.FP.getGenSrc(_env, prefixType)
+    var info *convWasm_AlgeInfo
+    info = Lns_unwrap( self.FP.getAlgeInfo(_env, algeType)).(*convWasm_AlgeInfo)
+    return WasmBin_refCast(_env, self.rt.FP.Get_tStr(_env), WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_globalGet(_env, info.FP.Get_namesGlobal(_env)), WasmBin_structGet(_env, info.FP.Get_baseType(_env), 1, self.FP.lowerExpAs(_env, prefix, algeType))))
+}
+// 3124: decl @lune.@base.@convWasm.convFilter.getCtorType
 func (self *convWasm_convFilter) getCtorType(_env *LnsEnv, classType *Ast_TypeInfo) *Ast_TypeInfo {
     var scope *Ast_Scope
     scope = Lns_unwrap( classType.FP.Get_scope(_env)).(*Ast_Scope)
     return (Lns_unwrap( scope.FP.Get_symbol2SymbolInfoMap(_env).Get("__init")).(*Ast_SymbolInfo)).FP.Get_typeInfo(_env)
 }
-// 2599: decl @lune.@base.@convWasm.convFilter.lowerGetField
+// 3130: decl @lune.@base.@convWasm.convFilter.lowerGetField
 func (self *convWasm_convFilter) lowerGetField(_env *LnsEnv, node *Nodes_GetFieldNode) *convWasm_Val {
     var prefix *Nodes_Node
     prefix = node.FP.Get_prefix(_env)
     var getterType *Ast_TypeInfo
     getterType = node.FP.Get_getterTypeInfo(_env)
     var fieldName string
-    fieldName = convWasm_convExp4_1914(Lns_2DDD(_env.GetVM().String_gsub(node.FP.Get_field(_env).Txt,"^%$", "")))
+    fieldName = convWasm_convExp3_6914(Lns_2DDD(_env.GetVM().String_gsub(node.FP.Get_field(_env).Txt,"^%$", "")))
     var getterName string
     getterName = "get_" + fieldName
     var prefixType *Ast_TypeInfo
@@ -3875,11 +4602,36 @@ func (self *convWasm_convFilter) lowerGetField(_env *LnsEnv, node *Nodes_GetFiel
     if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( prefixType.FP.Get_kind(_env) == Ast_TypeInfoKind__Alge) &&
         _env.SetStackVal( getterName == "get__txt") ).(bool)){
-        var algeType *Ast_TypeInfo
-        algeType = self.FP.getGenSrc(_env, prefixType)
-        var info *convWasm_AlgeInfo
-        info = Lns_unwrap( self.FP.getAlgeInfo(_env, algeType)).(*convWasm_AlgeInfo)
-        return self.FP.newVal(_env, WasmBin_refCast(_env, self.rt.FP.Get_tStr(_env), WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_globalGet(_env, info.FP.Get_namesGlobal(_env)), WasmBin_structGet(_env, info.FP.Get_baseType(_env), 1, self.FP.lowerExpAs(_env, prefix, algeType)))), Ast_builtinTypeString)
+        return self.FP.newVal(_env, self.FP.algeTxt(_env, prefix, prefixType), Ast_builtinTypeString)
+    }
+    if self.FP.getObjType(_env, prefix.FP.Get_expType(_env)).FP.Get_kind(_env) == Ast_TypeInfoKind__IF{
+        var ins *WasmBin_Ins
+        var retTypes *LnsList2_[*Ast_TypeInfo]
+        ins,retTypes = self.FP.lowerIfMethodCall(_env, prefix, getterName, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}), nil)
+        return self.FP.newVal(_env, ins, retTypes.GetAt(1))
+    }
+    if Lns_isCondTrue( _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( getterType.FP.Get_staticFlag(_env)) &&
+        _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
+            _env.SetStackVal( getterType.FP.Get_autoFlag(_env)) ||
+            _env.SetStackVal( Lns_op_not(self.declaredMethodSet.Has(getterType))) ).(bool))) ).(bool)){
+        {
+            _scope := self.FP.getGenSrc(_env, prefix.FP.Get_expType(_env)).FP.Get_scope(_env)
+            if !Lns_IsNil( _scope ) {
+                scope := _scope.(*Ast_Scope)
+                {
+                    _symbol := scope.FP.Get_symbol2SymbolInfoMap(_env).Get(fieldName)
+                    if !Lns_IsNil( _symbol ) {
+                        symbol := _symbol.(*Ast_SymbolInfo)
+                        var orgSym *Ast_SymbolInfo
+                        orgSym = symbol.FP.GetOrg(_env)
+                        if Lns_isCondTrue( self.globalSym2loc.Get(orgSym)){
+                            return NewconvWasm_Val(_env, self.FP.readSym(_env, &node.Nodes_Node, orgSym), self.FP.getRep(_env, orgSym.FP.Get_typeInfo(_env)), orgSym.FP.Get_typeInfo(_env))
+                        }
+                    }
+                }
+            }
+        }
     }
     if _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( getterType.FP.Get_autoFlag(_env)) ||
@@ -3916,7 +4668,7 @@ func (self *convWasm_convFilter) lowerGetField(_env *LnsEnv, node *Nodes_GetFiel
     retType = slot.FP.Get_methodType(_env).FP.Get_retTypeInfoList(_env).GetAt(1)
     return self.FP.newVal(_env, WasmBin_seq(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, obj, self.FP.lowerExpAs(_env, prefix, info.FP.Get_typeInfo(_env))), WasmBin_callRef(_env, slot.FP.Get_funcType(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, obj), WasmBin_structGet(_env, info.FP.Get_vtType(_env), slotIndex, WasmBin_structGet(_env, info.FP.Get_structType(_env), WasmRt_fObjVt, convWasm_lg_2_(_env, obj))))))))), retType)
 }
-// 2655: decl @lune.@base.@convWasm.convFilter.getEnumValList
+// 3198: decl @lune.@base.@convWasm.convFilter.getEnumValList
 func (self *convWasm_convFilter) getEnumValList(_env *LnsEnv, enumType *Ast_EnumTypeInfo) *LnsList2_[*Ast_EnumValInfo] {
     var list *LnsList2_[*Ast_EnumValInfo]
     list = NewLnsList2_[*Ast_EnumValInfo]([]*Ast_EnumValInfo{})
@@ -3948,17 +4700,17 @@ func (self *convWasm_convFilter) getEnumValList(_env *LnsEnv, enumType *Ast_Enum
     }
     return list
 }
-// 2671: decl @lune.@base.@convWasm.convFilter.getEnumFuncName
+// 3214: decl @lune.@base.@convWasm.convFilter.getEnumFuncName
 func (self *convWasm_convFilter) getEnumFuncName(_env *LnsEnv, enumType *Ast_EnumTypeInfo,kind string) string {
     return _env.GetVM().String_format("enum%s:%d", Lns_2DDD(kind, enumType.FP.Get_typeId(_env).Id))
 }
-// 2676: decl @lune.@base.@convWasm.convFilter.enumEq
+// 3219: decl @lune.@base.@convWasm.convFilter.enumEq
 func (self *convWasm_convFilter) enumEq(_env *LnsEnv, enumType *Ast_EnumTypeInfo,val *WasmBin_Ins,valInfo *Ast_EnumValInfo) *WasmBin_Ins {
     var literal *convWasm_Val
     literal = self.FP.lowerEnumVal(_env, enumType, valInfo)
     return self.FP.lowerEqVals(_env, NewconvWasm_Val(_env, val, literal.FP.Get_rep(_env), &enumType.Ast_TypeInfo), literal)
 }
-// 2684: decl @lune.@base.@convWasm.convFilter.fnEnumTxt
+// 3227: decl @lune.@base.@convWasm.convFilter.fnEnumTxt
 func (self *convWasm_convFilter) fnEnumTxt(_env *LnsEnv, enumType *Ast_EnumTypeInfo) LnsInt {
     var name string
     name = self.FP.getEnumFuncName(_env, enumType, "txt")
@@ -3985,7 +4737,7 @@ func (self *convWasm_convFilter) fnEnumTxt(_env *LnsEnv, enumType *Ast_EnumTypeI
     _func.FP.SetBody(_env, body)
     return index
 }
-// 2705: decl @lune.@base.@convWasm.convFilter.fnEnumFrom
+// 3248: decl @lune.@base.@convWasm.convFilter.fnEnumFrom
 func (self *convWasm_convFilter) fnEnumFrom(_env *LnsEnv, enumType *Ast_EnumTypeInfo) LnsInt {
     var name string
     name = self.FP.getEnumFuncName(_env, enumType, "from")
@@ -4012,7 +4764,7 @@ func (self *convWasm_convFilter) fnEnumFrom(_env *LnsEnv, enumType *Ast_EnumType
     _func.FP.SetBody(_env, body)
     return index
 }
-// 2725: decl @lune.@base.@convWasm.convFilter.fnEnumAllList
+// 3268: decl @lune.@base.@convWasm.convFilter.fnEnumAllList
 func (self *convWasm_convFilter) fnEnumAllList(_env *LnsEnv, enumType *Ast_EnumTypeInfo) LnsInt {
     var name string
     name = self.FP.getEnumFuncName(_env, enumType, "all")
@@ -4042,7 +4794,120 @@ func (self *convWasm_convFilter) fnEnumAllList(_env *LnsEnv, enumType *Ast_EnumT
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](ins)))
     return index
 }
-// 2747: decl @lune.@base.@convWasm.convFilter.fnToMap
+// 3295: decl @lune.@base.@convWasm.convFilter.needToMapConv
+func (self *convWasm_convFilter) needToMapConv(_env *LnsEnv, typeInfo *Ast_TypeInfo) bool {
+    var work *Ast_TypeInfo
+    work = self.FP.normType(_env, typeInfo)
+    if _switch0 := work.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array || _switch0 == Ast_TypeInfoKind__Map {
+        for _, _item := range( work.FP.Get_itemTypeInfoList(_env).Items ) {
+            item := _item
+            if self.FP.needToMapConv(_env, item){
+                return true
+            }
+        }
+        return false
+    } else if _switch0 == Ast_TypeInfoKind__Class {
+        if self.FP.isType(_env, work, Ast_builtinTypeString){
+            return false
+        }
+        return convWasm_ClassInfo2Stem(self.FP.getClassInfo(_env, work)) != nil
+    }
+    return false
+}
+// 3317: decl @lune.@base.@convWasm.convFilter.mapConvKey
+func (self *convWasm_convFilter) mapConvKey(_env *LnsEnv, typeInfo *Ast_TypeInfo) string {
+    var work *Ast_TypeInfo
+    work = self.FP.normType(_env, typeInfo)
+    var key string
+    key = _env.GetVM().String_format("%d", Lns_2DDD(self.FP.getGenSrc(_env, work).FP.Get_typeId(_env).Id))
+    if work.FP.Get_itemTypeInfoList(_env).Len() > 0{
+        key = key + "<"
+        for _index, _item := range( work.FP.Get_itemTypeInfoList(_env).Items ) {
+            index := _index + 1
+            item := _item
+            if index > 1{
+                key = key + ","
+            }
+            key = key + self.FP.mapConvKey(_env, item)
+            if item.FP.Get_nilable(_env){
+                key = key + "!"
+            }
+        }
+        key = key + ">"
+    }
+    return key
+}
+// 3337: decl @lune.@base.@convWasm.convFilter.fnToMapConv
+func (self *convWasm_convFilter) fnToMapConv(_env *LnsEnv, node *Nodes_Node,typeInfo *Ast_TypeInfo) LnsInt {
+    var name string
+    name = "toMapConv:" + self.FP.mapConvKey(_env, typeInfo)
+    {
+        _index := self.adapterMap.Get(name)
+        if !Lns_IsNil( _index ) {
+            index := _index.(LnsInt)
+            return index
+        }
+    }
+    var index LnsInt
+    var _func *WasmBin_Func
+    index,_func = self.mod.FP.AddFunc(_env, NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef)))
+    self.adapterMap.Set(name,index)
+    var work *Ast_TypeInfo
+    work = self.FP.normType(_env, typeInfo)
+    var body *LnsList2_[*WasmBin_Ins]
+    body = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refNull(_env, WasmBin_htAny)))))), nil, nil)))
+    if _switch0 := work.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array {
+        var elemType *Ast_TypeInfo
+        elemType = work.FP.Get_itemTypeInfoList(_env).GetAt(1)
+        var src LnsInt
+        src = _func.FP.AddLocal(_env, self.rt.FP.Get_listType(_env))
+        var result LnsInt
+        result = _func.FP.AddLocal(_env, self.rt.FP.Get_listType(_env))
+        var pos LnsInt
+        pos = _func.FP.AddLocal(_env, WasmBin_typeI32)
+        body.Insert(convWasm_ls_3_(_env, src, WasmBin_refCast(_env, self.rt.FP.Get_tList(_env), convWasm_lg_2_(_env, 0))))
+        body.Insert(convWasm_ls_3_(_env, result, WasmBin_call(_env, self.rt.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListLen, convWasm_lg_2_(_env, src)))))))
+        body.Insert(WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_brIf(_env, 1, convWasm_p_4_(_env, WasmBin_opI32GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListLen, convWasm_lg_2_(_env, src)))))), WasmBin_call(_env, self.rt.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, result), self.FP.toMapVal(_env, node, elemType, WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListItems, convWasm_lg_2_(_env, src)), convWasm_lg_2_(_env, pos)))))), convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1))))), WasmBin_br(_env, 0))), nil))), nil))
+        body.Insert(convWasm_lg_2_(_env, result))
+    } else if _switch0 == Ast_TypeInfoKind__Map {
+        var keyType *Ast_TypeInfo
+        keyType = work.FP.Get_itemTypeInfoList(_env).GetAt(1)
+        var valType *Ast_TypeInfo
+        valType = work.FP.Get_itemTypeInfoList(_env).GetAt(2)
+        var src LnsInt
+        src = _func.FP.AddLocal(_env, self.rt.FP.Get_mapType(_env))
+        var result LnsInt
+        result = _func.FP.AddLocal(_env, self.rt.FP.Get_mapType(_env))
+        var pos LnsInt
+        pos = _func.FP.AddLocal(_env, WasmBin_typeI32)
+        body.Insert(convWasm_ls_3_(_env, src, WasmBin_refCast(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0))))
+        body.Insert(convWasm_ls_3_(_env, result, self.rt.FP.NewMap(_env)))
+        body.Insert(WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, pos, WasmBin_call(_env, self.rt.FP.FnMapNext(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, src), convWasm_lg_2_(_env, pos))))), WasmBin_brIf(_env, 1, convWasm_p_4_(_env, WasmBin_opI32LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 0))))), WasmBin_call(_env, self.rt.FP.FnMapSet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, result), self.FP.toMapVal(_env, node, keyType, self.rt.FP.MapKeyAt(_env, convWasm_lg_2_(_env, src), convWasm_lg_2_(_env, pos))), self.FP.toMapVal(_env, node, valType, self.rt.FP.MapValAt(_env, convWasm_lg_2_(_env, src), convWasm_lg_2_(_env, pos)))))), convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1))))), WasmBin_br(_env, 0))), nil))), nil))
+        body.Insert(convWasm_lg_2_(_env, result))
+    } else {
+        var info *convWasm_ClassInfo
+        
+        {
+            _info := self.FP.getClassInfo(_env, work)
+            if _info == nil{
+                self.FP.error(_env, node, _env.GetVM().String_format("not support _toMap -- %s", Lns_2DDD(typeInfo.FP.GetTxt(_env, nil, nil, nil))))
+            } else {
+                info = _info.(*convWasm_ClassInfo)
+            }
+        }
+        body.Insert(WasmBin_call(_env, self.FP.fnToMap(_env, node, info), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refCast(_env, info.FP.Get_structType(_env), convWasm_lg_2_(_env, 0))))))
+    }
+    _func.FP.SetBody(_env, body)
+    return index
+}
+// 3401: decl @lune.@base.@convWasm.convFilter.toMapVal
+func (self *convWasm_convFilter) toMapVal(_env *LnsEnv, node *Nodes_Node,typeInfo *Ast_TypeInfo,val *WasmBin_Ins) *WasmBin_Ins {
+    if Lns_op_not(self.FP.needToMapConv(_env, typeInfo)){
+        return val
+    }
+    return WasmBin_call(_env, self.FP.fnToMapConv(_env, node, typeInfo), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](val)))
+}
+// 3409: decl @lune.@base.@convWasm.convFilter.fnToMap
 func (self *convWasm_convFilter) fnToMap(_env *LnsEnv, node *Nodes_Node,info *convWasm_ClassInfo) LnsInt {
     var name string
     name = _env.GetVM().String_format("toMap:%d", Lns_2DDD(info.FP.Get_structType(_env)))
@@ -4066,13 +4931,149 @@ func (self *convWasm_convFilter) fnToMap(_env *LnsEnv, node *Nodes_Node,info *co
         fieldName := _fieldName
         var rep *WasmBin_ValType
         rep = info.FP.Get_fieldReps(_env).GetAt(fieldIndex)
-        body.Insert(WasmBin_call(_env, self.rt.FP.FnMapSet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, _map), self.rt.FP.StrLiteral(_env, fieldName), self.FP.coerceRep(_env, WasmBin_structGet(_env, info.FP.Get_structType(_env), fieldIndex + 1, convWasm_lg_2_(_env, 0)), rep, WasmBin_typeAnyRef)))))
+        var val *WasmBin_Ins
+        val = self.FP.coerceRep(_env, WasmBin_structGet(_env, info.FP.Get_structType(_env), fieldIndex + 1, convWasm_lg_2_(_env, 0)), rep, WasmBin_typeAnyRef)
+        body.Insert(WasmBin_call(_env, self.rt.FP.FnMapSet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, _map), self.rt.FP.StrLiteral(_env, fieldName), self.FP.toMapVal(_env, node, info.FP.Get_fieldTypes(_env).GetAt(fieldIndex), val)))))
     }
     body.Insert(convWasm_lg_2_(_env, _map))
     _func.FP.SetBody(_env, body)
     return index
 }
-// 2770: decl @lune.@base.@convWasm.convFilter.fnFromMap
+// 3437: decl @lune.@base.@convWasm.convFilter.fnFromConv
+func (self *convWasm_convFilter) fnFromConv(_env *LnsEnv, node *Nodes_Node,typeInfo *Ast_TypeInfo) LnsInt {
+    var name string
+    name = "fromConv:" + self.FP.mapConvKey(_env, typeInfo)
+    {
+        _index := self.adapterMap.Get(name)
+        if !Lns_IsNil( _index ) {
+            index := _index.(LnsInt)
+            return index
+        }
+    }
+    var strNull *WasmBin_Ins
+    strNull = WasmBin_refNull(_env, self.rt.FP.Get_tStr(_env))
+    var anyNull *WasmBin_Ins
+    anyNull = WasmBin_refNull(_env, WasmBin_htAny)
+    var index LnsInt
+    var _func *WasmBin_Func
+    index,_func = self.mod.FP.AddFunc(_env, NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef, self.rt.FP.Get_strType(_env))))
+    self.adapterMap.Set(name,index)
+    var work *Ast_TypeInfo
+    work = self.FP.normType(_env, typeInfo)
+    var fail *WasmBin_Ins
+    fail = WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](anyNull, strNull)))
+    var convWasm_ok func(_env *LnsEnv, val *WasmBin_Ins) *WasmBin_Ins
+    convWasm_ok = func(_env *LnsEnv, val *WasmBin_Ins) *WasmBin_Ins {
+        return WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](val, strNull)))
+    }
+    var body *LnsList2_[*WasmBin_Ins]
+    body = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+    var convWasm_posMess func(_env *LnsEnv, posTxt *WasmBin_Ins,mess *WasmBin_Ins,messLocal LnsInt) *WasmBin_Ins
+    convWasm_posMess = func(_env *LnsEnv, posTxt *WasmBin_Ins,mess *WasmBin_Ins,messLocal LnsInt) *WasmBin_Ins {
+        return WasmBin_ifElse(_env, WasmBin_refIsNull(_env, mess), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](posTxt)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, self.rt.FP.FnStrConcat(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](posTxt, WasmBin_call(_env, self.rt.FP.FnStrConcat(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.StrLiteral(_env, "."), convWasm_lg_2_(_env, messLocal))))))))), self.rt.FP.Get_strType(_env))
+    }
+    if _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.FP.isType(_env, work, Ast_builtinTypeInt)) ||
+        _env.SetStackVal( work.FP.Get_kind(_env) == Ast_TypeInfoKind__Enum) ).(bool){
+        if work.FP.Get_kind(_env) == Ast_TypeInfoKind__Enum{
+            self.FP.error(_env, node, _env.GetVM().String_format("not support _fromMap for enum -- %s", Lns_2DDD(typeInfo.FP.GetTxt(_env, nil, nil, nil))))
+        }
+        body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxI64(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ok(_env, convWasm_lg_2_(_env, 0))))))
+        body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxF64(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ok(_env, self.rt.FP.BoxI64(_env, convWasm_p_4_(_env, WasmBin_opI64TruncF64S, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opF64Floor, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.UnboxF64(_env, convWasm_lg_2_(_env, 0))))))))))))))
+        body.Insert(fail)
+    } else if self.FP.isType(_env, work, Ast_builtinTypeReal){
+        body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxF64(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ok(_env, convWasm_lg_2_(_env, 0))))))
+        body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxI64(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ok(_env, self.rt.FP.BoxF64(_env, convWasm_p_4_(_env, WasmBin_opF64ConvertI64S, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.UnboxI64(_env, convWasm_lg_2_(_env, 0)))))))))))
+        body.Insert(fail)
+    } else if self.FP.isType(_env, work, Ast_builtinTypeBool){
+        body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refTest(_env, self.rt.FP.Get_tBoxBool(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ok(_env, convWasm_lg_2_(_env, 0))))))
+        body.Insert(fail)
+    } else if self.FP.isType(_env, work, Ast_builtinTypeString){
+        body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refTest(_env, self.rt.FP.Get_tStr(_env), convWasm_lg_2_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ok(_env, convWasm_lg_2_(_env, 0))))))
+        body.Insert(fail)
+    } else if _env.PopVal( _env.IncStack() ||
+        _env.SetStackVal( self.FP.isType(_env, work, Ast_builtinTypeStem)) ||
+        _env.SetStackVal( work.FP.Get_kind(_env) == Ast_TypeInfoKind__Alternate) ).(bool){
+        body.Insert(convWasm_ok(_env, convWasm_lg_2_(_env, 0)))
+    } else { 
+        if _switch0 := work.FP.Get_kind(_env); _switch0 == Ast_TypeInfoKind__List || _switch0 == Ast_TypeInfoKind__Array {
+            var elemType *Ast_TypeInfo
+            elemType = work.FP.Get_itemTypeInfoList(_env).GetAt(1)
+            var src LnsInt
+            src = _func.FP.AddLocal(_env, self.rt.FP.Get_listType(_env))
+            var result LnsInt
+            result = _func.FP.AddLocal(_env, self.rt.FP.Get_listType(_env))
+            var pos LnsInt
+            pos = _func.FP.AddLocal(_env, WasmBin_typeI32)
+            var val LnsInt
+            val = _func.FP.AddLocal(_env, WasmBin_typeAnyRef)
+            var mess LnsInt
+            mess = _func.FP.AddLocal(_env, self.rt.FP.Get_strType(_env))
+            body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refTest(_env, self.rt.FP.Get_tList(_env), convWasm_lg_2_(_env, 0))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](fail))))
+            body.Insert(convWasm_ls_3_(_env, src, WasmBin_refCast(_env, self.rt.FP.Get_tList(_env), convWasm_lg_2_(_env, 0))))
+            body.Insert(convWasm_ls_3_(_env, result, WasmBin_call(_env, self.rt.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListLen, convWasm_lg_2_(_env, src)))))))
+            var loopBody *LnsList2_[*WasmBin_Ins]
+            loopBody = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_brIf(_env, 1, convWasm_p_4_(_env, WasmBin_opI32GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListLen, convWasm_lg_2_(_env, src)))))), WasmBin_call(_env, self.FP.fnFromConv(_env, node, elemType), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListItems, convWasm_lg_2_(_env, src)), convWasm_lg_2_(_env, pos))))), convWasm_ls_3_(_env, mess, WasmBin_nop(_env)), convWasm_ls_3_(_env, val, WasmBin_nop(_env)), convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1)))))))
+            if Lns_op_not(elemType.FP.Get_nilable(_env)){
+                loopBody.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, val)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](anyNull, convWasm_posMess(_env, WasmBin_call(_env, self.rt.FP.FnI64ToStr(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64ExtendI32S, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos))))))), convWasm_lg_2_(_env, mess), mess))))))))
+            }
+            loopBody.Insert(WasmBin_call(_env, self.rt.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, result), convWasm_lg_2_(_env, val)))))
+            loopBody.Insert(WasmBin_br(_env, 0))
+            body.Insert(WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, loopBody, nil))), nil))
+            body.Insert(convWasm_ok(_env, convWasm_lg_2_(_env, result)))
+        } else if _switch0 == Ast_TypeInfoKind__Map || _switch0 == Ast_TypeInfoKind__Set {
+            var isSet bool
+            isSet = work.FP.Get_kind(_env) == Ast_TypeInfoKind__Set
+            var keyType *Ast_TypeInfo
+            keyType = work.FP.Get_itemTypeInfoList(_env).GetAt(1)
+            var src LnsInt
+            src = _func.FP.AddLocal(_env, self.rt.FP.Get_mapType(_env))
+            var result LnsInt
+            result = _func.FP.AddLocal(_env, self.rt.FP.Get_mapType(_env))
+            var pos LnsInt
+            pos = _func.FP.AddLocal(_env, WasmBin_typeI32)
+            var key LnsInt
+            key = _func.FP.AddLocal(_env, WasmBin_typeAnyRef)
+            var val LnsInt
+            val = _func.FP.AddLocal(_env, WasmBin_typeAnyRef)
+            var mess LnsInt
+            mess = _func.FP.AddLocal(_env, self.rt.FP.Get_strType(_env))
+            body.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refTest(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](fail))))
+            body.Insert(convWasm_ls_3_(_env, src, WasmBin_refCast(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0))))
+            body.Insert(convWasm_ls_3_(_env, result, self.rt.FP.NewMap(_env)))
+            var loopBody *LnsList2_[*WasmBin_Ins]
+            loopBody = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, pos, WasmBin_call(_env, self.rt.FP.FnMapNext(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, src), convWasm_lg_2_(_env, pos))))), WasmBin_brIf(_env, 1, convWasm_p_4_(_env, WasmBin_opI32LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 0))))), WasmBin_call(_env, self.FP.fnFromConv(_env, node, keyType), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.MapKeyAt(_env, convWasm_lg_2_(_env, src), convWasm_lg_2_(_env, pos))))), WasmBin_drop(_env, WasmBin_nop(_env)), convWasm_ls_3_(_env, key, WasmBin_nop(_env)), convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, key)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](fail)))))
+            if isSet{
+                loopBody.Insert(convWasm_ls_3_(_env, val, convWasm_lg_2_(_env, key)))
+            } else { 
+                loopBody.Insert(WasmBin_call(_env, self.FP.fnFromConv(_env, node, work.FP.Get_itemTypeInfoList(_env).GetAt(2)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.MapValAt(_env, convWasm_lg_2_(_env, src), convWasm_lg_2_(_env, pos))))))
+                loopBody.Insert(convWasm_ls_3_(_env, mess, WasmBin_nop(_env)))
+                loopBody.Insert(convWasm_ls_3_(_env, val, WasmBin_nop(_env)))
+                loopBody.Insert(convWasm_convFilter_fnFromConv_ok__ifThen_1_(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, val)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](anyNull, WasmBin_call(_env, self.rt.FP.FnToStr(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, key)))))))))))
+            }
+            loopBody.Insert(WasmBin_call(_env, self.rt.FP.FnMapSet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, result), convWasm_lg_2_(_env, key), convWasm_lg_2_(_env, val)))))
+            loopBody.Insert(convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1))))))
+            loopBody.Insert(WasmBin_br(_env, 0))
+            body.Insert(WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, loopBody, nil))), nil))
+            body.Insert(convWasm_ok(_env, convWasm_lg_2_(_env, result)))
+        } else {
+            var info *convWasm_ClassInfo
+            
+            {
+                _info := self.FP.getClassInfo(_env, work)
+                if _info == nil{
+                    self.FP.error(_env, node, _env.GetVM().String_format("not support _fromMap -- %s", Lns_2DDD(typeInfo.FP.GetTxt(_env, nil, nil, nil))))
+                } else {
+                    info = _info.(*convWasm_ClassInfo)
+                }
+            }
+            body.Insert(WasmBin_call(_env, self.FP.fnFromMap(_env, node, info), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0)))))
+        }
+    }
+    _func.FP.SetBody(_env, body)
+    return index
+}
+// 3574: decl @lune.@base.@convWasm.convFilter.fnFromMap
 func (self *convWasm_convFilter) fnFromMap(_env *LnsEnv, node *Nodes_Node,info *convWasm_ClassInfo) LnsInt {
     var name string
     name = _env.GetVM().String_format("fromMap:%d", Lns_2DDD(info.FP.Get_structType(_env)))
@@ -4087,10 +5088,16 @@ func (self *convWasm_convFilter) fnFromMap(_env *LnsEnv, node *Nodes_Node,info *
     objRep = WasmBin_refType(_env, info.FP.Get_structType(_env))
     var index LnsInt
     var _func *WasmBin_Func
-    index,_func = self.mod.FP.AddFunc(_env, NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](objRep)))
+    index,_func = self.mod.FP.AddFunc(_env, NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](WasmBin_typeAnyRef)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](objRep, self.rt.FP.Get_strType(_env))))
     self.adapterMap.Set(name,index)
     var _map LnsInt
     _map = _func.FP.AddLocal(_env, self.rt.FP.Get_mapType(_env))
+    var val LnsInt
+    val = _func.FP.AddLocal(_env, WasmBin_typeAnyRef)
+    var mess LnsInt
+    mess = _func.FP.AddLocal(_env, self.rt.FP.Get_strType(_env))
+    var body *LnsList2_[*WasmBin_Ins]
+    body = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refTest(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refNull(_env, info.FP.Get_structType(_env)), WasmBin_refNull(_env, self.rt.FP.Get_tStr(_env))))))), nil, nil), convWasm_ls_3_(_env, _map, WasmBin_refCast(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0)))))
     var fields *LnsList2_[*WasmBin_Ins]
     fields = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, 0), WasmBin_globalGet(_env, info.FP.Get_vtGlobal(_env))))
     for _fieldIndex, _fieldName := range( info.FP.Get_fieldNames(_env).Items ) {
@@ -4098,12 +5105,27 @@ func (self *convWasm_convFilter) fnFromMap(_env *LnsEnv, node *Nodes_Node,info *
         fieldName := _fieldName
         var rep *WasmBin_ValType
         rep = info.FP.Get_fieldReps(_env).GetAt(fieldIndex)
-        fields.Insert(self.FP.coerceRep(_env, WasmBin_call(_env, self.rt.FP.FnMapGet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, _map), self.rt.FP.StrLiteral(_env, fieldName)))), WasmBin_typeAnyRef, rep))
+        var fieldType *Ast_TypeInfo
+        fieldType = info.FP.Get_fieldTypes(_env).GetAt(fieldIndex)
+        var fieldLocal LnsInt
+        fieldLocal = _func.FP.AddLocal(_env, rep)
+        body.Insert(WasmBin_call(_env, self.FP.fnFromConv(_env, node, fieldType), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, self.rt.FP.FnMapGet(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, _map), self.rt.FP.StrLiteral(_env, fieldName))))))))
+        body.Insert(convWasm_ls_3_(_env, mess, WasmBin_nop(_env)))
+        body.Insert(convWasm_ls_3_(_env, val, WasmBin_nop(_env)))
+        if Lns_op_not(fieldType.FP.Get_nilable(_env)){
+            var nameTxt *WasmBin_Ins
+            nameTxt = self.rt.FP.StrLiteral(_env, fieldName)
+            body.Insert(WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, val)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refNull(_env, info.FP.Get_structType(_env)), WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, mess)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](nameTxt)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, self.rt.FP.FnStrConcat(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.StrLiteral(_env, fieldName + "."), convWasm_lg_2_(_env, mess)))))), self.rt.FP.Get_strType(_env))))))), nil, nil))
+        }
+        body.Insert(convWasm_ls_3_(_env, fieldLocal, self.FP.coerceRep(_env, convWasm_lg_2_(_env, val), WasmBin_typeAnyRef, rep)))
+        fields.Insert(convWasm_lg_2_(_env, fieldLocal))
     }
-    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refTest(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refNull(_env, info.FP.Get_structType(_env))))))), nil, nil), convWasm_ls_3_(_env, _map, WasmBin_refCast(_env, self.rt.FP.Get_tMap(_env), convWasm_lg_2_(_env, 0))), WasmBin_structNew(_env, info.FP.Get_structType(_env), fields))))
+    body.Insert(WasmBin_structNew(_env, info.FP.Get_structType(_env), fields))
+    body.Insert(WasmBin_refNull(_env, self.rt.FP.Get_tStr(_env)))
+    _func.FP.SetBody(_env, body)
     return index
 }
-// 2797: decl @lune.@base.@convWasm.convFilter.lowerStmtList
+// 3621: decl @lune.@base.@convWasm.convFilter.lowerStmtList
 func (self *convWasm_convFilter) lowerStmtList(_env *LnsEnv, stmtList *LnsList2_[*Nodes_Node]) *LnsList2_[*WasmBin_Ins] {
     var list *LnsList2_[*WasmBin_Ins]
     list = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
@@ -4117,11 +5139,11 @@ func (self *convWasm_convFilter) lowerStmtList(_env *LnsEnv, stmtList *LnsList2_
     }
     return list
 }
-// 2809: decl @lune.@base.@convWasm.convFilter.lowerBlock
+// 3633: decl @lune.@base.@convWasm.convFilter.lowerBlock
 func (self *convWasm_convFilter) lowerBlock(_env *LnsEnv, node *Nodes_BlockNode) *LnsList2_[*WasmBin_Ins] {
     return self.FP.lowerStmtList(_env, node.FP.Get_stmtList(_env))
 }
-// 2814: decl @lune.@base.@convWasm.convFilter.lowerBlockAt
+// 3638: decl @lune.@base.@convWasm.convFilter.lowerBlockAt
 func (self *convWasm_convFilter) lowerBlockAt(_env *LnsEnv, node *Nodes_BlockNode,depth LnsInt) *LnsList2_[*WasmBin_Ins] {
     var saved LnsInt
     saved = self.ctx.FP.Get_depth(_env)
@@ -4131,7 +5153,7 @@ func (self *convWasm_convFilter) lowerBlockAt(_env *LnsEnv, node *Nodes_BlockNod
     self.ctx.FP.Set_depth(_env, saved)
     return list
 }
-// 2823: decl @lune.@base.@convWasm.convFilter.preDeclare
+// 3647: decl @lune.@base.@convWasm.convFilter.preDeclare
 func (self *convWasm_convFilter) preDeclare(_env *LnsEnv, stmt *Nodes_Node,out *LnsList2_[*WasmBin_Ins]) {
     {
         _declNode := Nodes_DeclFuncNodeDownCastF(stmt.FP)
@@ -4163,19 +5185,182 @@ func (self *convWasm_convFilter) preDeclare(_env *LnsEnv, stmt *Nodes_Node,out *
         }
     }
 }
-// 2847: decl @lune.@base.@convWasm.convFilter.enterLoop
+// 3671: decl @lune.@base.@convWasm.convFilter.enterLoop
 func (self *convWasm_convFilter) enterLoop(_env *LnsEnv) {
     self.ctx.FP.Set_depth(_env, self.ctx.FP.Get_depth(_env) + 1)
     self.ctx.FP.Get_breakDepthList(_env).Insert(LnsInt(self.ctx.FP.Get_depth(_env)))
     self.ctx.FP.Set_depth(_env, self.ctx.FP.Get_depth(_env) + 1)
 }
-// 2854: decl @lune.@base.@convWasm.convFilter.exitLoop
+// 3678: decl @lune.@base.@convWasm.convFilter.exitLoop
 func (self *convWasm_convFilter) exitLoop(_env *LnsEnv, body *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
     self.ctx.FP.Set_depth(_env, self.ctx.FP.Get_depth(_env) - 2)
     self.ctx.FP.Get_breakDepthList(_env).Remove(nil)
     return WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, body, nil))), nil)
 }
-// 2878: decl @lune.@base.@convWasm.convFilter.lowerIf
+// 3691: decl @lune.@base.@convWasm.convFilter.lowerApply
+func (self *convWasm_convFilter) lowerApply(_env *LnsEnv, node *Nodes_ApplyNode) *WasmBin_Ins {
+    var expList *Nodes_ExpListNode
+    expList = node.FP.Get_expList(_env)
+    var builtin *Builtin_BuiltinFuncType
+    builtin = self.builtinFuncs
+    var list *LnsList2_[*WasmBin_Ins]
+    list = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+    if expList.FP.Get_expList(_env).Len() >= 1{
+        var callNode LnsAny
+        callNode = nil
+        {
+            _mretNode := Nodes_ExpMRetNodeDownCastF(expList.FP.Get_expList(_env).GetAt(1).FP)
+            if !Lns_IsNil( _mretNode ) {
+                mretNode := _mretNode.(*Nodes_ExpMRetNode)
+                callNode = Nodes_ExpCallNodeDownCastF(mretNode.FP.Get_mRet(_env).FP)
+            }
+        }
+        if callNode != nil{
+            callNode_209 := callNode.(*Nodes_ExpCallNode)
+            var funcType *Ast_TypeInfo
+            funcType = callNode_209.FP.Get_func(_env).FP.Get_expType(_env)
+            var headArgs *LnsList2_[*WasmBin_Ins]
+            headArgs = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+            var isGmatch bool
+            isGmatch = false
+            if funcType.FP.Equals(_env, self.processInfo, builtin.Str_gmatch, nil, nil){
+                {
+                    _fieldNode := Nodes_RefFieldNodeDownCastF(callNode_209.FP.Get_func(_env).FP)
+                    if !Lns_IsNil( _fieldNode ) {
+                        fieldNode := _fieldNode.(*Nodes_RefFieldNode)
+                        headArgs.Insert(self.FP.lowerExpAs(_env, fieldNode.FP.Get_prefix(_env), Ast_builtinTypeString))
+                        isGmatch = true
+                    }
+                }
+            } else if funcType.FP.Equals(_env, self.processInfo, builtin.String_gmatch, nil, nil){
+                isGmatch = true
+            }
+            if isGmatch{
+                return self.FP.lowerApplyGmatch(_env, node, callNode_209, headArgs)
+            }
+        }
+    }
+    var vals *LnsList2_[*convWasm_Val]
+    vals = self.FP.lowerValList(_env, expList, list)
+    var funcType *Ast_TypeInfo
+    funcType = self.FP.normType(_env, expList.FP.Get_expTypeList(_env).GetAt(1))
+    var cloInfo *WasmRt_CloInfo
+    cloInfo = self.FP.getFuncCloInfo(_env, funcType)
+    var clo LnsInt
+    clo = self.FP.tempLocal(_env, WasmBin_refType(_env, cloInfo.FP.Get_cloType(_env)))
+    var state LnsInt
+    state = self.FP.tempLocal(_env, WasmBin_typeAnyRef)
+    var ctrl LnsInt
+    ctrl = self.FP.tempLocal(_env, WasmBin_typeAnyRef)
+    list.Insert(convWasm_ls_3_(_env, clo, WasmBin_refCast(_env, cloInfo.FP.Get_cloType(_env), vals.GetAt(1).FP.Get_ins(_env))))
+    var convWasm_getAny func(_env *LnsEnv, index LnsInt) *WasmBin_Ins
+    convWasm_getAny = func(_env *LnsEnv, index LnsInt) *WasmBin_Ins {
+        if index <= vals.Len(){
+            return self.FP.coerceVal(_env, vals.GetAt(index), Ast_builtinTypeStem_)
+        }
+        return WasmBin_refNull(_env, WasmBin_htAny)
+    }
+    list.Insert(convWasm_ls_3_(_env, state, convWasm_getAny(_env, 2)))
+    list.Insert(convWasm_ls_3_(_env, ctrl, convWasm_getAny(_env, 3)))
+    var argTypes *LnsList2_[*Ast_TypeInfo]
+    argTypes = funcType.FP.Get_argTypeInfoList(_env)
+    var retTypes *LnsList2_[*Ast_TypeInfo]
+    retTypes = funcType.FP.Get_retTypeInfoList(_env)
+    self.FP.enterLoop(_env)
+    var body *LnsList2_[*WasmBin_Ins]
+    body = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+    var args *LnsList2_[*WasmBin_Ins]
+    args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, clo)))
+    for _index, _argType := range( argTypes.Items ) {
+        index := _index + 1
+        argType := _argType
+        var argIns *WasmBin_Ins
+        if index == 1{
+            argIns = convWasm_lg_2_(_env, state)
+        } else if index == 2{
+            argIns = convWasm_lg_2_(_env, ctrl)
+        } else { 
+            argIns = WasmBin_refNull(_env, WasmBin_htAny)
+        }
+        args.Insert(self.FP.coerce(_env, argIns, Ast_builtinTypeStem_, argType))
+    }
+    args.Insert(WasmBin_structGet(_env, cloInfo.FP.Get_cloType(_env), WasmRt_fCloCode, convWasm_lg_2_(_env, clo)))
+    body.Insert(WasmBin_callRef(_env, cloInfo.FP.Get_funcType(_env), args))
+    var locals *LnsList2_[LnsInt]
+    locals = NewLnsList2_[LnsInt]([]LnsInt{})
+    for _, _retType := range( retTypes.Items ) {
+        retType := _retType
+        locals.Insert(LnsInt(self.FP.tempLocal(_env, self.FP.getRep(_env, retType))))
+    }
+    {
+        var _forFrom0 LnsInt = locals.Len()
+        var _forTo0 LnsInt = 1
+        _forWork0 := _forFrom0
+        _forDelta0 := -1
+        for {
+            if _forDelta0 > 0 {
+               if _forWork0 > _forTo0 { break }
+            } else {
+               if _forWork0 < _forTo0 { break }
+            }
+            index := _forWork0
+            body.Insert(convWasm_ls_3_(_env, locals.GetAt(index), WasmBin_nop(_env)))
+            _forWork0 += _forDelta0
+        }
+    }
+    body.Insert(convWasm_ls_3_(_env, ctrl, self.FP.coerce(_env, convWasm_lg_2_(_env, locals.GetAt(1)), retTypes.GetAt(1), Ast_builtinTypeStem_)))
+    body.Insert(WasmBin_brIf(_env, 1, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, ctrl))))
+    for _index, _varSym := range( node.FP.Get_varList(_env).Items ) {
+        index := _index + 1
+        varSym := _varSym
+        var valIns *WasmBin_Ins
+        if index <= retTypes.Len(){
+            valIns = self.FP.coerce(_env, convWasm_lg_2_(_env, locals.GetAt(index)), retTypes.GetAt(index), varSym.FP.Get_typeInfo(_env))
+        } else { 
+            valIns = self.FP.getDefaultVal(_env, self.FP.getRep(_env, varSym.FP.Get_typeInfo(_env)))
+        }
+        body.Insert(self.FP.declareVar(_env, varSym, valIns))
+    }
+    convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
+    body.Insert(WasmBin_br(_env, 0))
+    list.Insert(self.FP.exitLoop(_env, body))
+    return WasmBin_seq(_env, list)
+}
+// 3778: decl @lune.@base.@convWasm.convFilter.lowerApplyGmatch
+func (self *convWasm_convFilter) lowerApplyGmatch(_env *LnsEnv, node *Nodes_ApplyNode,callNode *Nodes_ExpCallNode,headArgs *LnsList2_[*WasmBin_Ins]) *WasmBin_Ins {
+    var list *LnsList2_[*WasmBin_Ins]
+    list = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+    var ins *WasmBin_Ins
+    ins,_ = self.FP.lowerLuaCall(_env, callNode, WasmRt_luaGmatchAll, headArgs)
+    var result LnsInt
+    result = self.FP.tempLocal(_env, self.rt.FP.Get_listType(_env))
+    list.Insert(convWasm_ls_3_(_env, result, ins))
+    var num LnsInt
+    num = self.FP.tempLocal(_env, WasmBin_typeI32)
+    list.Insert(convWasm_ls_3_(_env, num, convWasm_p_4_(_env, WasmBin_opI32WrapI64, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.rt.FP.UnboxI64(_env, self.rt.FP.ListItem(_env, convWasm_lg_2_(_env, result), 0)))))))
+    var pos LnsInt
+    pos = self.FP.tempLocal(_env, WasmBin_typeI32)
+    list.Insert(convWasm_ls_3_(_env, pos, WasmBin_i32Const(_env, 1)))
+    self.FP.enterLoop(_env)
+    var body *LnsList2_[*WasmBin_Ins]
+    body = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+    body.Insert(WasmBin_brIf(_env, 1, convWasm_p_4_(_env, WasmBin_opI32GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListLen, convWasm_lg_2_(_env, result)))))))
+    for _index, _varSym := range( node.FP.Get_varList(_env).Items ) {
+        index := _index + 1
+        varSym := _varSym
+        var item *WasmBin_Ins
+        item = WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_structGet(_env, self.rt.FP.Get_tList(_env), WasmRt_fListItems, convWasm_lg_2_(_env, result)), convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, index - 1)))))
+        var valIns *WasmBin_Ins
+        valIns = WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_i32Const(_env, index - 1), convWasm_lg_2_(_env, num)))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](item)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refNull(_env, WasmBin_htAny))), WasmBin_typeAnyRef)
+        body.Insert(self.FP.declareVar(_env, varSym, self.FP.coerce(_env, valIns, Ast_builtinTypeStem_, varSym.FP.Get_typeInfo(_env))))
+    }
+    body.Insert(convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), convWasm_lg_2_(_env, num))))))
+    convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
+    body.Insert(WasmBin_br(_env, 0))
+    list.Insert(self.FP.exitLoop(_env, body))
+    return WasmBin_seq(_env, list)
+}
+// 3830: decl @lune.@base.@convWasm.convFilter.lowerIf
 func (self *convWasm_convFilter) lowerIf(_env *LnsEnv, node *Nodes_IfNode) *WasmBin_Ins {
     var base LnsInt
     base = self.ctx.FP.Get_depth(_env)
@@ -4196,9 +5381,9 @@ func (self *convWasm_convFilter) lowerIf(_env *LnsEnv, node *Nodes_IfNode) *Wasm
         }
     }
     self.ctx.FP.Set_depth(_env, base)
-    return convWasm_makeIfChain_16_(_env, conds, bodies, elseBody)
+    return convWasm_makeIfChain_17_(_env, conds, bodies, elseBody)
 }
-// 2896: decl @lune.@base.@convWasm.convFilter.lowerSwitch
+// 3848: decl @lune.@base.@convWasm.convFilter.lowerSwitch
 func (self *convWasm_convFilter) lowerSwitch(_env *LnsEnv, node *Nodes_SwitchNode) *WasmBin_Ins {
     var base LnsInt
     base = self.ctx.FP.Get_depth(_env)
@@ -4242,9 +5427,9 @@ func (self *convWasm_convFilter) lowerSwitch(_env *LnsEnv, node *Nodes_SwitchNod
             elseBody = self.FP.lowerBlockAt(_env, defBlock, base + conds.Len())
         }
     }
-    return WasmBin_seq(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, work, val.FP.Get_ins(_env)), convWasm_makeIfChain_16_(_env, conds, bodies, elseBody))))
+    return WasmBin_seq(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, work, val.FP.Get_ins(_env)), convWasm_makeIfChain_17_(_env, conds, bodies, elseBody))))
 }
-// 2923: decl @lune.@base.@convWasm.convFilter.lowerMatch
+// 3875: decl @lune.@base.@convWasm.convFilter.lowerMatch
 func (self *convWasm_convFilter) lowerMatch(_env *LnsEnv, node *Nodes_MatchNode) *WasmBin_Ins {
     var base LnsInt
     base = self.ctx.FP.Get_depth(_env)
@@ -4287,7 +5472,7 @@ func (self *convWasm_convFilter) lowerMatch(_env *LnsEnv, node *Nodes_MatchNode)
             paramVal = WasmBin_structGet(_env, valType, index + 1, WasmBin_refCast(_env, valType, convWasm_lg_2_(_env, algeVal)))
             body.Insert(self.FP.declareVar(_env, symbol, self.FP.coerce(_env, paramVal, paramType, symbol.FP.Get_typeInfo(_env))))
         }
-        convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, caseInfo.FP.Get_block(_env)))
+        convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, caseInfo.FP.Get_block(_env)))
         bodies.Insert(body)
     }
     var elseBody LnsAny
@@ -4304,9 +5489,9 @@ func (self *convWasm_convFilter) lowerMatch(_env *LnsEnv, node *Nodes_MatchNode)
         }
     }
     self.ctx.FP.Set_depth(_env, base)
-    return WasmBin_seq(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, algeVal, self.FP.lowerExpAs(_env, node.FP.Get_val(_env), algeType)), convWasm_ls_3_(_env, tag, WasmBin_structGet(_env, info.FP.Get_baseType(_env), 1, convWasm_lg_2_(_env, algeVal))), convWasm_makeIfChain_16_(_env, conds, bodies, elseBody))))
+    return WasmBin_seq(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, algeVal, self.FP.lowerExpAs(_env, node.FP.Get_val(_env), algeType)), convWasm_ls_3_(_env, tag, WasmBin_structGet(_env, info.FP.Get_baseType(_env), 1, convWasm_lg_2_(_env, algeVal))), convWasm_makeIfChain_17_(_env, conds, bodies, elseBody))))
 }
-// 2962: decl @lune.@base.@convWasm.convFilter.lowerRawVal
+// 3914: decl @lune.@base.@convWasm.convFilter.lowerRawVal
 func (self *convWasm_convFilter) lowerRawVal(_env *LnsEnv, node *Nodes_Node) *convWasm_Val {
     {
         _castNode := Nodes_ExpCastNodeDownCastF(node.FP)
@@ -4321,14 +5506,14 @@ func (self *convWasm_convFilter) lowerRawVal(_env *LnsEnv, node *Nodes_Node) *co
     }
     return self.FP.lowerVal(_env, node)
 }
-// 2972: decl @lune.@base.@convWasm.convFilter.spillVal
+// 3924: decl @lune.@base.@convWasm.convFilter.spillVal
 func (self *convWasm_convFilter) spillVal(_env *LnsEnv, val *convWasm_Val,pre *LnsList2_[*WasmBin_Ins]) *convWasm_Val {
     var work LnsInt
     work = self.FP.tempLocal(_env, val.FP.Get_rep(_env))
     pre.Insert(convWasm_ls_3_(_env, work, val.FP.Get_ins(_env)))
     return NewconvWasm_Val(_env, convWasm_lg_2_(_env, work), val.FP.Get_rep(_env), val.FP.Get_typeInfo(_env))
 }
-// 2983: decl @lune.@base.@convWasm.convFilter.expandDDD
+// 3935: decl @lune.@base.@convWasm.convFilter.expandDDD
 func (self *convWasm_convFilter) expandDDD(_env *LnsEnv, vals *LnsList2_[*convWasm_Val],num LnsInt,pre *LnsList2_[*WasmBin_Ins]) *LnsList2_[*convWasm_Val] {
     if _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( vals.Len() == 0) ||
@@ -4358,7 +5543,7 @@ func (self *convWasm_convFilter) expandDDD(_env *LnsEnv, vals *LnsList2_[*convWa
     }
     return work
 }
-// 3003: decl @lune.@base.@convWasm.convFilter.lowerRawValList
+// 3955: decl @lune.@base.@convWasm.convFilter.lowerRawValList
 func (self *convWasm_convFilter) lowerRawValList(_env *LnsEnv, expList *Nodes_ExpListNode,pre *LnsList2_[*WasmBin_Ins]) *LnsList2_[*convWasm_Val] {
     var vals *LnsList2_[*convWasm_Val]
     vals = NewLnsList2_[*convWasm_Val]([]*convWasm_Val{})
@@ -4375,7 +5560,7 @@ func (self *convWasm_convFilter) lowerRawValList(_env *LnsEnv, expList *Nodes_Ex
     }
     return vals
 }
-// 3020: decl @lune.@base.@convWasm.convFilter.anyNil
+// 3972: decl @lune.@base.@convWasm.convFilter.anyNil
 func (self *convWasm_convFilter) anyNil(_env *LnsEnv, vals *LnsList2_[*convWasm_Val],num LnsInt) *WasmBin_Ins {
     var cond *WasmBin_Ins
     cond = WasmBin_i32Const(_env, 0)
@@ -4390,7 +5575,7 @@ func (self *convWasm_convFilter) anyNil(_env *LnsEnv, vals *LnsList2_[*convWasm_
     }
     return cond
 }
-// 3030: decl @lune.@base.@convWasm.convFilter.lowerDeclVar
+// 3982: decl @lune.@base.@convWasm.convFilter.lowerDeclVar
 func (self *convWasm_convFilter) lowerDeclVar(_env *LnsEnv, node *Nodes_DeclVarNode,out *LnsList2_[*WasmBin_Ins]) {
     if node.FP.Get_unwrapFlag(_env){
         var base LnsInt
@@ -4415,7 +5600,7 @@ func (self *convWasm_convFilter) lowerDeclVar(_env *LnsEnv, node *Nodes_DeclVarN
             _block := node.FP.Get_unwrapBlock(_env)
             if !Lns_IsNil( _block ) {
                 block := _block.(*Nodes_BlockNode)
-                convWasm_append_15_(_env, nilBody, self.FP.lowerBlock(_env, block))
+                convWasm_append_16_(_env, nilBody, self.FP.lowerBlock(_env, block))
             }
         }
         var thenBody *LnsList2_[*WasmBin_Ins]
@@ -4431,7 +5616,7 @@ func (self *convWasm_convFilter) lowerDeclVar(_env *LnsEnv, node *Nodes_DeclVarN
             _block := node.FP.Get_thenBlock(_env)
             if !Lns_IsNil( _block ) {
                 block := _block.(*Nodes_BlockNode)
-                convWasm_append_15_(_env, thenBody, self.FP.lowerBlock(_env, block))
+                convWasm_append_16_(_env, thenBody, self.FP.lowerBlock(_env, block))
             }
         }
         self.ctx.FP.Set_depth(_env, base)
@@ -4457,7 +5642,7 @@ func (self *convWasm_convFilter) lowerDeclVar(_env *LnsEnv, node *Nodes_DeclVarN
         }
     }
 }
-// 3074: decl @lune.@base.@convWasm.convFilter.lowerIfUnwrap
+// 4026: decl @lune.@base.@convWasm.convFilter.lowerIfUnwrap
 func (self *convWasm_convFilter) lowerIfUnwrap(_env *LnsEnv, node *Nodes_IfUnwrapNode) *WasmBin_Ins {
     var base LnsInt
     base = self.ctx.FP.Get_depth(_env)
@@ -4475,7 +5660,7 @@ func (self *convWasm_convFilter) lowerIfUnwrap(_env *LnsEnv, node *Nodes_IfUnwra
             thenBody.Insert(self.FP.declareVar(_env, symbol, self.FP.coerceVal(_env, vals.GetAt(index), symbol.FP.Get_typeInfo(_env))))
         }
     }
-    convWasm_append_15_(_env, thenBody, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
+    convWasm_append_16_(_env, thenBody, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
     var elseBody LnsAny
     elseBody = nil
     {
@@ -4494,7 +5679,7 @@ func (self *convWasm_convFilter) lowerIfUnwrap(_env *LnsEnv, node *Nodes_IfUnwra
     pre.Insert(WasmBin_ifElse(_env, self.FP.anyNil(_env, vals, checkNum), Lns_unwrapDefault( elseBody, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})).(*LnsList2_[*WasmBin_Ins]), thenBody, nil))
     return WasmBin_seq(_env, pre)
 }
-// 3102: decl @lune.@base.@convWasm.convFilter.lowerWhen
+// 4054: decl @lune.@base.@convWasm.convFilter.lowerWhen
 func (self *convWasm_convFilter) lowerWhen(_env *LnsEnv, node *Nodes_WhenNode) *WasmBin_Ins {
     var base LnsInt
     base = self.ctx.FP.Get_depth(_env)
@@ -4514,7 +5699,7 @@ func (self *convWasm_convFilter) lowerWhen(_env *LnsEnv, node *Nodes_WhenNode) *
         pair := _pair
         thenBody.Insert(self.FP.declareVar(_env, pair.FP.Get_dst(_env), self.FP.coerceVal(_env, vals.GetAt(index), pair.FP.Get_dst(_env).FP.Get_typeInfo(_env))))
     }
-    convWasm_append_15_(_env, thenBody, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
+    convWasm_append_16_(_env, thenBody, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
     var elseBody LnsAny
     elseBody = nil
     {
@@ -4527,7 +5712,7 @@ func (self *convWasm_convFilter) lowerWhen(_env *LnsEnv, node *Nodes_WhenNode) *
     self.ctx.FP.Set_depth(_env, base)
     return WasmBin_ifElse(_env, self.FP.anyNil(_env, vals, vals.Len()), Lns_unwrapDefault( elseBody, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})).(*LnsList2_[*WasmBin_Ins]), thenBody, nil)
 }
-// 3125: decl @lune.@base.@convWasm.convFilter.lowerUnwrapSet
+// 4077: decl @lune.@base.@convWasm.convFilter.lowerUnwrapSet
 func (self *convWasm_convFilter) lowerUnwrapSet(_env *LnsEnv, node *Nodes_UnwrapSetNode,out *LnsList2_[*WasmBin_Ins]) {
     var base LnsInt
     base = self.ctx.FP.Get_depth(_env)
@@ -4540,7 +5725,7 @@ func (self *convWasm_convFilter) lowerUnwrapSet(_env *LnsEnv, node *Nodes_Unwrap
         _block := node.FP.Get_unwrapBlock(_env)
         if !Lns_IsNil( _block ) {
             block := _block.(*Nodes_BlockNode)
-            convWasm_append_15_(_env, nilBody, self.FP.lowerBlock(_env, block))
+            convWasm_append_16_(_env, nilBody, self.FP.lowerBlock(_env, block))
         }
     }
     var thenBody *LnsList2_[*WasmBin_Ins]
@@ -4555,7 +5740,7 @@ func (self *convWasm_convFilter) lowerUnwrapSet(_env *LnsEnv, node *Nodes_Unwrap
     self.ctx.FP.Set_depth(_env, base)
     out.Insert(WasmBin_ifElse(_env, self.FP.anyNil(_env, vals, node.FP.Get_dstExpList(_env).FP.Get_expList(_env).Len()), nilBody, thenBody, nil))
 }
-// 3145: decl @lune.@base.@convWasm.convFilter.lowerAssign
+// 4097: decl @lune.@base.@convWasm.convFilter.lowerAssign
 func (self *convWasm_convFilter) lowerAssign(_env *LnsEnv, dst *Nodes_Node,val *convWasm_Val,out *LnsList2_[*WasmBin_Ins]) {
     {
         _refNode := Nodes_ExpRefNodeDownCastF(dst.FP)
@@ -4629,7 +5814,7 @@ func (self *convWasm_convFilter) lowerAssign(_env *LnsEnv, dst *Nodes_Node,val *
     }
     self.FP.error(_env, dst, _env.GetVM().String_format("not support assign -- %s", Lns_2DDD(Nodes_getNodeKindName(_env, dst.FP.Get_kind(_env)))))
 }
-// 3193: decl @lune.@base.@convWasm.convFilter.assignItem
+// 4145: decl @lune.@base.@convWasm.convFilter.assignItem
 func (self *convWasm_convFilter) assignItem(_env *LnsEnv, node *Nodes_Node,collNode *Nodes_Node,index *convWasm_Val,val *convWasm_Val,out *LnsList2_[*WasmBin_Ins]) {
     var collType *Ast_TypeInfo
     collType = self.FP.normType(_env, collNode.FP.Get_expType(_env))
@@ -4644,7 +5829,7 @@ func (self *convWasm_convFilter) assignItem(_env *LnsEnv, node *Nodes_Node,collN
     }
     self.FP.error(_env, node, _env.GetVM().String_format("not support assign -- %s", Lns_2DDD(collType.FP.GetTxt(_env, nil, nil, nil))))
 }
-// 3214: decl @lune.@base.@convWasm.convFilter.lowerSetItem
+// 4166: decl @lune.@base.@convWasm.convFilter.lowerSetItem
 func (self *convWasm_convFilter) lowerSetItem(_env *LnsEnv, node *Nodes_ExpSetItemNode,out *LnsList2_[*WasmBin_Ins]) {
     var index *convWasm_Val
     switch _matchExp0 := node.FP.Get_index(_env).(type) {
@@ -4669,7 +5854,7 @@ func (self *convWasm_convFilter) lowerSetItem(_env *LnsEnv, node *Nodes_ExpSetIt
     }
     self.FP.assignItem(_env, &node.Nodes_Node, node.FP.Get_val(_env), index, val, out)
 }
-// 3234: decl @lune.@base.@convWasm.convFilter.lowerSetVal
+// 4186: decl @lune.@base.@convWasm.convFilter.lowerSetVal
 func (self *convWasm_convFilter) lowerSetVal(_env *LnsEnv, node *Nodes_ExpSetValNode,out *LnsList2_[*WasmBin_Ins]) {
     var dstList *LnsList2_[*Nodes_Node]
     dstList = NewLnsList2_[*Nodes_Node]([]*Nodes_Node{})
@@ -4706,7 +5891,7 @@ func (self *convWasm_convFilter) lowerSetVal(_env *LnsEnv, node *Nodes_ExpSetVal
         }
     }
 }
-// 3262: decl @lune.@base.@convWasm.convFilter.lowerReturn
+// 4214: decl @lune.@base.@convWasm.convFilter.lowerReturn
 func (self *convWasm_convFilter) lowerReturn(_env *LnsEnv, node *Nodes_ReturnNode,out *LnsList2_[*WasmBin_Ins]) {
     var vals *LnsList2_[*convWasm_Val]
     vals = NewLnsList2_[*convWasm_Val]([]*convWasm_Val{})
@@ -4754,39 +5939,69 @@ func (self *convWasm_convFilter) lowerReturn(_env *LnsEnv, node *Nodes_ReturnNod
     }
     out.Insert(WasmBin_ret(_env, rets))
 }
-// 3291: decl @lune.@base.@convWasm.convFilter.lowerFor
+// 4243: decl @lune.@base.@convWasm.convFilter.lowerFor
 func (self *convWasm_convFilter) lowerFor(_env *LnsEnv, node *Nodes_ForNode) *WasmBin_Ins {
+    var isReal bool
+    isReal = self.FP.isType(_env, node.FP.Get_val(_env).FP.Get_typeInfo(_env), Ast_builtinTypeReal)
+    var rep *WasmBin_ValType
+    var numType *Ast_TypeInfo
+    var ge LnsInt
+    ge = WasmBin_opI64GeS
+    var gt LnsInt
+    gt = WasmBin_opI64GtS
+    var lt LnsInt
+    lt = WasmBin_opI64LtS
+    var add LnsInt
+    add = WasmBin_opI64Add
+    var zero *WasmBin_Ins
+    if isReal{
+        rep = WasmBin_typeF64
+        numType = Ast_builtinTypeReal
+        ge = WasmBin_opF64Ge
+        gt = WasmBin_opF64Gt
+        lt = WasmBin_opF64Lt
+        add = WasmBin_opF64Add
+        zero = WasmBin_f64Const(_env, 0.0)
+    } else { 
+        rep = WasmBin_typeI64
+        numType = Ast_builtinTypeInt
+        zero = WasmBin_i64Const(_env, 0)
+    }
     var counter LnsInt
-    counter = self.FP.tempLocal(_env, WasmBin_typeI64)
+    counter = self.FP.tempLocal(_env, rep)
     var toIdx LnsInt
-    toIdx = self.FP.tempLocal(_env, WasmBin_typeI64)
+    toIdx = self.FP.tempLocal(_env, rep)
     var stepIdx LnsInt
-    stepIdx = self.FP.tempLocal(_env, WasmBin_typeI64)
+    stepIdx = self.FP.tempLocal(_env, rep)
     var list *LnsList2_[*WasmBin_Ins]
     list = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
-    list.Insert(convWasm_ls_3_(_env, counter, self.FP.lowerExpAs(_env, node.FP.Get_init(_env), Ast_builtinTypeInt)))
-    list.Insert(convWasm_ls_3_(_env, toIdx, self.FP.lowerExpAs(_env, node.FP.Get_to(_env), Ast_builtinTypeInt)))
+    list.Insert(convWasm_ls_3_(_env, counter, self.FP.lowerExpAs(_env, node.FP.Get_init(_env), numType)))
+    list.Insert(convWasm_ls_3_(_env, toIdx, self.FP.lowerExpAs(_env, node.FP.Get_to(_env), numType)))
     {
         _delta := node.FP.Get_delta(_env)
         if !Lns_IsNil( _delta ) {
             delta := _delta.(*Nodes_Node)
-            list.Insert(convWasm_ls_3_(_env, stepIdx, self.FP.lowerExpAs(_env, delta, Ast_builtinTypeInt)))
+            list.Insert(convWasm_ls_3_(_env, stepIdx, self.FP.lowerExpAs(_env, delta, numType)))
         } else {
-            list.Insert(convWasm_ls_3_(_env, stepIdx, WasmBin_i64Const(_env, 1)))
+            if isReal{
+                list.Insert(convWasm_ls_3_(_env, stepIdx, WasmBin_f64Const(_env, 1.0)))
+            } else { 
+                list.Insert(convWasm_ls_3_(_env, stepIdx, WasmBin_i64Const(_env, 1)))
+            }
         }
     }
     self.FP.enterLoop(_env)
     var body *LnsList2_[*WasmBin_Ins]
     body = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
-    body.Insert(WasmBin_brIf(_env, 1, WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI64GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, stepIdx), WasmBin_i64Const(_env, 0)))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64GtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, counter), convWasm_lg_2_(_env, toIdx)))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, WasmBin_opI64LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, counter), convWasm_lg_2_(_env, toIdx)))))), WasmBin_typeI32)))
-    body.Insert(self.FP.declareVar(_env, node.FP.Get_val(_env), self.FP.coerceRep(_env, convWasm_lg_2_(_env, counter), WasmBin_typeI64, self.FP.getRep(_env, node.FP.Get_val(_env).FP.Get_typeInfo(_env)))))
-    body.Insert(convWasm_ls_3_(_env, counter, convWasm_p_4_(_env, WasmBin_opI64Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, counter), convWasm_lg_2_(_env, stepIdx))))))
-    convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
+    body.Insert(WasmBin_brIf(_env, 1, WasmBin_ifElse(_env, convWasm_p_4_(_env, ge, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, stepIdx), zero))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, gt, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, counter), convWasm_lg_2_(_env, toIdx)))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_p_4_(_env, lt, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, counter), convWasm_lg_2_(_env, toIdx)))))), WasmBin_typeI32)))
+    body.Insert(self.FP.declareVar(_env, node.FP.Get_val(_env), self.FP.coerceRep(_env, convWasm_lg_2_(_env, counter), rep, self.FP.getRep(_env, node.FP.Get_val(_env).FP.Get_typeInfo(_env)))))
+    body.Insert(convWasm_ls_3_(_env, counter, convWasm_p_4_(_env, add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, counter), convWasm_lg_2_(_env, stepIdx))))))
+    convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, node.FP.Get_block(_env)))
     body.Insert(WasmBin_br(_env, 0))
     list.Insert(self.FP.exitLoop(_env, body))
     return WasmBin_seq(_env, list)
 }
-// 3320: decl @lune.@base.@convWasm.convFilter.lowerForeach
+// 4296: decl @lune.@base.@convWasm.convFilter.lowerForeach
 func (self *convWasm_convFilter) lowerForeach(_env *LnsEnv, node *Nodes_Node,valSym *Ast_SymbolInfo,keySym LnsAny,exp *Nodes_Node,block *Nodes_BlockNode,sort bool) *WasmBin_Ins {
     var expType *Ast_TypeInfo
     expType = self.FP.normType(_env, exp.FP.Get_expType(_env))
@@ -4808,10 +6023,10 @@ func (self *convWasm_convFilter) lowerForeach(_env *LnsEnv, node *Nodes_Node,val
         body.Insert(self.FP.declareVar(_env, valSym, self.FP.coerceRep(_env, item, WasmBin_typeAnyRef, self.FP.getRep(_env, valSym.FP.Get_typeInfo(_env)))))
         body.Insert(convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1))))))
         if keySym != nil{
-            keySym_1045 := keySym.(*Ast_SymbolInfo)
-            body.Insert(self.FP.declareVar(_env, keySym_1045, convWasm_p_4_(_env, WasmBin_opI64ExtendI32U, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos))))))
+            keySym_1227 := keySym.(*Ast_SymbolInfo)
+            body.Insert(self.FP.declareVar(_env, keySym_1227, convWasm_p_4_(_env, WasmBin_opI64ExtendI32U, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos))))))
         }
-        convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, block))
+        convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, block))
         body.Insert(WasmBin_br(_env, 0))
         list.Insert(self.FP.exitLoop(_env, body))
         return WasmBin_seq(_env, list)
@@ -4842,10 +6057,10 @@ func (self *convWasm_convFilter) lowerForeach(_env *LnsEnv, node *Nodes_Node,val
             }
             body.Insert(self.FP.declareVar(_env, valSym, self.FP.coerceRep(_env, valIns, WasmBin_typeAnyRef, self.FP.getRep(_env, valSym.FP.Get_typeInfo(_env)))))
             if keySym != nil{
-                keySym_1057 := keySym.(*Ast_SymbolInfo)
-                body.Insert(self.FP.declareVar(_env, keySym_1057, self.FP.coerceRep(_env, convWasm_lg_2_(_env, key), WasmBin_typeAnyRef, self.FP.getRep(_env, keySym_1057.FP.Get_typeInfo(_env)))))
+                keySym_1239 := keySym.(*Ast_SymbolInfo)
+                body.Insert(self.FP.declareVar(_env, keySym_1239, self.FP.coerceRep(_env, convWasm_lg_2_(_env, key), WasmBin_typeAnyRef, self.FP.getRep(_env, keySym_1239.FP.Get_typeInfo(_env)))))
             }
-            convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, block))
+            convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, block))
             body.Insert(WasmBin_br(_env, 0))
             list.Insert(self.FP.exitLoop(_env, body))
             return WasmBin_seq(_env, list)
@@ -4865,11 +6080,11 @@ func (self *convWasm_convFilter) lowerForeach(_env *LnsEnv, node *Nodes_Node,val
         }
         body.Insert(self.FP.declareVar(_env, valSym, self.FP.coerceRep(_env, valIns, WasmBin_typeAnyRef, self.FP.getRep(_env, valSym.FP.Get_typeInfo(_env)))))
         if keySym != nil{
-            keySym_1064 := keySym.(*Ast_SymbolInfo)
-            body.Insert(self.FP.declareVar(_env, keySym_1064, self.FP.coerceRep(_env, keyIns, WasmBin_typeAnyRef, self.FP.getRep(_env, keySym_1064.FP.Get_typeInfo(_env)))))
+            keySym_1246 := keySym.(*Ast_SymbolInfo)
+            body.Insert(self.FP.declareVar(_env, keySym_1246, self.FP.coerceRep(_env, keyIns, WasmBin_typeAnyRef, self.FP.getRep(_env, keySym_1246.FP.Get_typeInfo(_env)))))
         }
         body.Insert(convWasm_ls_3_(_env, pos, convWasm_p_4_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, pos), WasmBin_i32Const(_env, 1))))))
-        convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, block))
+        convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, block))
         body.Insert(WasmBin_br(_env, 0))
         list.Insert(self.FP.exitLoop(_env, body))
         return WasmBin_seq(_env, list)
@@ -4878,7 +6093,151 @@ func (self *convWasm_convFilter) lowerForeach(_env *LnsEnv, node *Nodes_Node,val
 // insert a dummy
     return nil
 }
-// 3415: decl @lune.@base.@convWasm.convFilter.lowerStmtExp
+// 4391: decl @lune.@base.@convWasm.convFilter.getCondRetInfo
+func (self *convWasm_convFilter) getCondRetInfo(_env *LnsEnv, node *Nodes_Node) LnsAny {
+    {
+        _work := Nodes_DeclVarNodeDownCastF(node.FP)
+        if !Lns_IsNil( _work ) {
+            work := _work.(*Nodes_DeclVarNode)
+            return work.FP.Get_condRetInfo(_env)
+        } else {
+            {
+                _work := Nodes_ExpSetValNodeDownCastF(node.FP)
+                if !Lns_IsNil( _work ) {
+                    work := _work.(*Nodes_ExpSetValNode)
+                    return work.FP.Get_condRetInfo(_env)
+                } else {
+                    {
+                        _work := Nodes_ExpSetItemNodeDownCastF(node.FP)
+                        if !Lns_IsNil( _work ) {
+                            work := _work.(*Nodes_ExpSetItemNode)
+                            return work.FP.Get_condRetInfo(_env)
+                        } else {
+                            {
+                                _work := Nodes_IfUnwrapNodeDownCastF(node.FP)
+                                if !Lns_IsNil( _work ) {
+                                    work := _work.(*Nodes_IfUnwrapNode)
+                                    return work.FP.Get_condRetInfo(_env)
+                                } else {
+                                    {
+                                        _work := Nodes_IfNodeDownCastF(node.FP)
+                                        if !Lns_IsNil( _work ) {
+                                            work := _work.(*Nodes_IfNode)
+                                            return work.FP.Get_stmtList(_env).GetAt(1).FP.Get_condRetInfo(_env)
+                                        } else {
+                                            {
+                                                _work := Nodes_StmtExpNodeDownCastF(node.FP)
+                                                if !Lns_IsNil( _work ) {
+                                                    work := _work.(*Nodes_StmtExpNode)
+                                                    {
+                                                        _condRetList := Nodes_CondRetListNodeDownCastF(work.FP.Get_exp(_env).FP)
+                                                        if !Lns_IsNil( _condRetList ) {
+                                                            condRetList := _condRetList.(*Nodes_CondRetListNode)
+                                                            return condRetList.FP.Get_info(_env)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return nil
+}
+// 4416: decl @lune.@base.@convWasm.convFilter.lowerCondRetOf
+func (self *convWasm_convFilter) lowerCondRetOf(_env *LnsEnv, node *Nodes_Node,out *LnsList2_[*WasmBin_Ins]) {
+    var info *Nodes_CondRetInfo
+    
+    {
+        _info := self.FP.getCondRetInfo(_env, node)
+        if _info == nil{
+            return 
+        } else {
+            info = _info.(*Nodes_CondRetInfo)
+        }
+    }
+    var retReps *LnsList2_[*WasmBin_ValType]
+    retReps = self.ctx.FP.Get_retReps(_env)
+    var convWasm_retWith func(_env *LnsEnv, first LnsAny) *WasmBin_Ins
+    convWasm_retWith = func(_env *LnsEnv, first LnsAny) *WasmBin_Ins {
+        var vals *LnsList2_[*WasmBin_Ins]
+        vals = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+        for _index, _rep := range( retReps.Items ) {
+            index := _index + 1
+            rep := _rep
+            if first != nil{
+                first_1280 := first.(*WasmBin_Ins)
+                if index == 1{
+                    vals.Insert(first_1280)
+                    continue
+                }
+            }
+            vals.Insert(self.FP.getDefaultVal(_env, rep))
+        }
+        return WasmBin_ret(_env, vals)
+    }
+    for _, _condRet := range( info.FP.Get_list(_env).Items ) {
+        condRet := _condRet
+        if _switch0 := condRet.FP.Get_condKind(_env); _switch0 == Nodes_CondRetKind__Nilable {
+            var val *convWasm_Val
+            val = self.FP.lowerVal(_env, condRet.FP.Get_exp(_env))
+            var work LnsInt
+            work = self.FP.tempLocal(_env, val.FP.Get_rep(_env))
+            out.Insert(convWasm_ls_3_(_env, work, val.FP.Get_ins(_env)))
+            out.Insert(WasmBin_ifElse(_env, WasmBin_refIsNull(_env, convWasm_lg_2_(_env, work)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_retWith(_env, nil))), nil, nil))
+            self.node2val.Set(&condRet.Nodes_Node,NewconvWasm_Val(_env, convWasm_lg_2_(_env, work), val.FP.Get_rep(_env), val.FP.Get_typeInfo(_env)))
+        } else if _switch0 == Nodes_CondRetKind__Ret {
+            var algeType *Ast_TypeInfo
+            algeType = self.FP.getGenSrc(_env, condRet.FP.Get_exp(_env).FP.Get_expType(_env))
+            var algeInfo *convWasm_AlgeInfo
+            
+            {
+                _algeInfo := self.FP.getAlgeInfo(_env, algeType)
+                if _algeInfo == nil{
+                    self.FP.error(_env, &condRet.Nodes_Node, _env.GetVM().String_format("not found alge -- %s", Lns_2DDD(algeType.FP.GetTxt(_env, nil, nil, nil))))
+                } else {
+                    algeInfo = _algeInfo.(*convWasm_AlgeInfo)
+                }
+            }
+            var algeRep *WasmBin_ValType
+            algeRep = WasmBin_refType(_env, algeInfo.FP.Get_baseType(_env))
+            var work LnsInt
+            work = self.FP.tempLocal(_env, algeRep)
+            out.Insert(convWasm_ls_3_(_env, work, self.FP.lowerExpAs(_env, condRet.FP.Get_exp(_env), algeType)))
+            out.Insert(WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32Eq, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, algeInfo.FP.Get_baseType(_env), 1, convWasm_lg_2_(_env, work)), WasmBin_i32Const(_env, Lns_unwrap( algeInfo.FP.Get_name2tag(_env).Get("Err")).(LnsInt))))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_retWith(_env, self.FP.coerceRep(_env, convWasm_lg_2_(_env, work), algeRep, retReps.GetAt(1))))), nil, nil))
+            var okType LnsInt
+            okType = Lns_unwrap( algeInfo.FP.Get_name2type(_env).Get("Ok")).(LnsInt)
+            self.node2val.Set(&condRet.Nodes_Node,NewconvWasm_Val(_env, WasmBin_structGet(_env, okType, 2, WasmBin_refCast(_env, okType, convWasm_lg_2_(_env, work))), WasmBin_typeAnyRef, Ast_builtinTypeStem_))
+        } else if _switch0 == Nodes_CondRetKind__Two {
+            var vals *LnsList2_[*convWasm_Val]
+            vals = self.FP.lowerMulti(_env, condRet.FP.Get_exp(_env), out)
+            var val *convWasm_Val
+            val = vals.GetAt(1)
+            var errVal *convWasm_Val
+            errVal = vals.GetAt(2)
+            var retVals *LnsList2_[*WasmBin_Ins]
+            retVals = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+            for _index, _rep := range( retReps.Items ) {
+                index := _index + 1
+                rep := _rep
+                if index == 2{
+                    retVals.Insert(self.FP.coerceRep(_env, self.FP.coerceVal(_env, errVal, Ast_builtinTypeStem_), WasmBin_typeAnyRef, rep))
+                } else { 
+                    retVals.Insert(self.FP.getDefaultVal(_env, rep))
+                }
+            }
+            out.Insert(WasmBin_ifElse(_env, WasmBin_refIsNull(_env, val.FP.Get_ins(_env)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, retVals))), nil, nil))
+            self.node2val.Set(&condRet.Nodes_Node,val)
+        }
+    }
+}
+// 4484: decl @lune.@base.@convWasm.convFilter.lowerStmtExp
 func (self *convWasm_convFilter) lowerStmtExp(_env *LnsEnv, exp *Nodes_Node,out *LnsList2_[*WasmBin_Ins]) {
     if _env.PopVal( _env.IncStack() ||
         _env.SetStackVal( exp.FP.Get_kind(_env) == Nodes_NodeKind_get_ExpSetVal(_env)) ||
@@ -4890,12 +6249,35 @@ func (self *convWasm_convFilter) lowerStmtExp(_env *LnsEnv, exp *Nodes_Node,out 
         _callNode := Nodes_ExpCallNodeDownCastF(exp.FP)
         if !Lns_IsNil( _callNode ) {
             callNode := _callNode.(*Nodes_ExpCallNode)
+            var prefix LnsAny
+            prefix = self.FP.getNilAccPrefix(_env, &callNode.Nodes_Node)
+            var work *LnsList2_[*WasmBin_Ins]
+            work = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+            var prefixLocal LnsInt
+            prefixLocal = -1
+            if prefix != nil{
+                prefix_1314 := prefix.(*Nodes_Node)
+                var prefixVal *convWasm_Val
+                prefixVal = self.FP.lowerVal(_env, prefix_1314)
+                prefixLocal = self.FP.tempLocal(_env, prefixVal.FP.Get_rep(_env))
+                out.Insert(convWasm_ls_3_(_env, prefixLocal, prefixVal.FP.Get_ins(_env)))
+                self.node2val.Set(prefix_1314,NewconvWasm_Val(_env, convWasm_lg_2_(_env, prefixLocal), prefixVal.FP.Get_rep(_env), prefixVal.FP.Get_typeInfo(_env)))
+                self.nilAccDoneSet.Add(&callNode.Nodes_Node)
+                self.nilAccDoneSet.Add(callNode.FP.Get_func(_env))
+            }
             var ins *WasmBin_Ins
             var retTypes *LnsList2_[*Ast_TypeInfo]
             ins,retTypes = self.FP.lowerCall(_env, callNode)
-            out.Insert(ins)
+            work.Insert(ins)
             for range( retTypes.Items ) {
-                out.Insert(WasmBin_drop(_env, WasmBin_nop(_env)))
+                work.Insert(WasmBin_drop(_env, WasmBin_nop(_env)))
+            }
+            if prefix != nil{
+                prefix_1321 := prefix.(*Nodes_Node)
+                self.node2val.Set(prefix_1321,nil)
+                out.Insert(WasmBin_ifElse(_env, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_refIsNull(_env, convWasm_lg_2_(_env, prefixLocal))))), work, nil, nil))
+            } else {
+                convWasm_append_16_(_env, out, work)
             }
             return 
         }
@@ -4941,7 +6323,7 @@ func (self *convWasm_convFilter) lowerStmtExp(_env *LnsEnv, exp *Nodes_Node,out 
         out.Insert(WasmBin_drop(_env, val.FP.Get_ins(_env)))
     }
 }
-// 3455: decl @lune.@base.@convWasm.convFilter.lowerCallSuperCtor
+// 4543: decl @lune.@base.@convWasm.convFilter.lowerCallSuperCtor
 func (self *convWasm_convFilter) lowerCallSuperCtor(_env *LnsEnv, node *Nodes_ExpCallSuperCtorNode,out *LnsList2_[*WasmBin_Ins]) {
     var info *convWasm_ClassInfo
     
@@ -4955,12 +6337,13 @@ func (self *convWasm_convFilter) lowerCallSuperCtor(_env *LnsEnv, node *Nodes_Ex
     }
     var args *LnsList2_[*WasmBin_Ins]
     args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, self.ctx.FP.Get_selfLocal(_env))))
-    convWasm_append_15_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_expList(_env), self.FP.getCtorType(_env, info.FP.Get_typeInfo(_env)).FP.Get_argTypeInfoList(_env), out))
+    convWasm_append_16_(_env, args, self.FP.lowerArgs(_env, node.FP.Get_expList(_env), self.FP.getCtorType(_env, info.FP.Get_typeInfo(_env)).FP.Get_argTypeInfoList(_env), out))
     out.Insert(WasmBin_call(_env, info.FP.Get_ctorFunc(_env), args))
 }
-// 3466: decl @lune.@base.@convWasm.convFilter.lowerStmt
+// 4554: decl @lune.@base.@convWasm.convFilter.lowerStmt
 func (self *convWasm_convFilter) lowerStmt(_env *LnsEnv, node *Nodes_Node,out *LnsList2_[*WasmBin_Ins]) {
-    if _switch0 := node.FP.Get_kind(_env); _switch0 == Nodes_NodeKind_get_None(_env) || _switch0 == Nodes_NodeKind_get_BlankLine(_env) || _switch0 == Nodes_NodeKind_get_Shebang(_env) || _switch0 == Nodes_NodeKind_get_LuneControl(_env) || _switch0 == Nodes_NodeKind_get_DeclMacro(_env) || _switch0 == Nodes_NodeKind_get_TestBlock(_env) || _switch0 == Nodes_NodeKind_get_DeclForm(_env) || _switch0 == Nodes_NodeKind_get_ProtoClass(_env) || _switch0 == Nodes_NodeKind_get_DeclEnum(_env) || _switch0 == Nodes_NodeKind_get_DeclAlge(_env) || _switch0 == Nodes_NodeKind_get_ProtoMethod(_env) || _switch0 == Nodes_NodeKind_get_Subfile(_env) {
+    self.FP.lowerCondRetOf(_env, node, out)
+    if _switch0 := node.FP.Get_kind(_env); _switch0 == Nodes_NodeKind_get_None(_env) || _switch0 == Nodes_NodeKind_get_BlankLine(_env) || _switch0 == Nodes_NodeKind_get_Shebang(_env) || _switch0 == Nodes_NodeKind_get_LuneControl(_env) || _switch0 == Nodes_NodeKind_get_DeclMacro(_env) || _switch0 == Nodes_NodeKind_get_TestBlock(_env) || _switch0 == Nodes_NodeKind_get_DeclForm(_env) || _switch0 == Nodes_NodeKind_get_ProtoClass(_env) || _switch0 == Nodes_NodeKind_get_DeclEnum(_env) || _switch0 == Nodes_NodeKind_get_DeclAlge(_env) || _switch0 == Nodes_NodeKind_get_ProtoMethod(_env) || _switch0 == Nodes_NodeKind_get_Subfile(_env) || _switch0 == Nodes_NodeKind_get_Alias(_env) {
         return 
     } else if _switch0 == Nodes_NodeKind_get_DeclFunc(_env) {
         var declNode *Nodes_DeclFuncNode
@@ -4988,7 +6371,16 @@ func (self *convWasm_convFilter) lowerStmt(_env *LnsEnv, node *Nodes_Node,out *L
         self.FP.compileMethodNode(_env, node, declNode.FP.Get_declInfo(_env))
         return 
     } else if _switch0 == Nodes_NodeKind_get_StmtExp(_env) {
-        self.FP.lowerStmtExp(_env, (Lns_unwrap( Nodes_StmtExpNodeDownCastF(node.FP)).(*Nodes_StmtExpNode)).FP.Get_exp(_env), out)
+        var exp *Nodes_Node
+        exp = (Lns_unwrap( Nodes_StmtExpNodeDownCastF(node.FP)).(*Nodes_StmtExpNode)).FP.Get_exp(_env)
+        {
+            _condRetList := Nodes_CondRetListNodeDownCastF(exp.FP)
+            if !Lns_IsNil( _condRetList ) {
+                condRetList := _condRetList.(*Nodes_CondRetListNode)
+                exp = condRetList.FP.Get_exp(_env)
+            }
+        }
+        self.FP.lowerStmtExp(_env, exp, out)
         return 
     } else if _switch0 == Nodes_NodeKind_get_ExpCall(_env) || _switch0 == Nodes_NodeKind_get_ExpCallSuperCtor(_env) || _switch0 == Nodes_NodeKind_get_ExpMacroExp(_env) {
         self.FP.lowerStmtExp(_env, node, out)
@@ -5029,7 +6421,7 @@ func (self *convWasm_convFilter) lowerStmt(_env *LnsEnv, node *Nodes_Node,out *L
         if Lns_op_not(whileNode.FP.Get_infinit(_env)){
             body.Insert(WasmBin_brIf(_env, 1, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.lowerCond(_env, whileNode.FP.Get_exp(_env)))))))
         }
-        convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, whileNode.FP.Get_block(_env)))
+        convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, whileNode.FP.Get_block(_env)))
         body.Insert(WasmBin_br(_env, 0))
         out.Insert(self.FP.exitLoop(_env, body))
         return 
@@ -5039,7 +6431,7 @@ func (self *convWasm_convFilter) lowerStmt(_env *LnsEnv, node *Nodes_Node,out *L
         self.FP.enterLoop(_env)
         var body *LnsList2_[*WasmBin_Ins]
         body = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
-        convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, repeatNode.FP.Get_block(_env)))
+        convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, repeatNode.FP.Get_block(_env)))
         body.Insert(WasmBin_brIf(_env, 0, convWasm_p_4_(_env, WasmBin_opI32Eqz, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.lowerCond(_env, repeatNode.FP.Get_exp(_env)))))))
         out.Insert(self.FP.exitLoop(_env, body))
         return 
@@ -5056,6 +6448,14 @@ func (self *convWasm_convFilter) lowerStmt(_env *LnsEnv, node *Nodes_Node,out *L
         forsortNode = Lns_unwrap( Nodes_ForsortNodeDownCastF(node.FP)).(*Nodes_ForsortNode)
         out.Insert(self.FP.lowerForeach(_env, node, forsortNode.FP.Get_val(_env), forsortNode.FP.Get_key(_env), forsortNode.FP.Get_exp(_env), forsortNode.FP.Get_block(_env), true))
         return 
+    } else if _switch0 == Nodes_NodeKind_get_Continue(_env) {
+        var breakList *LnsList2_[LnsInt]
+        breakList = self.ctx.FP.Get_breakDepthList(_env)
+        if breakList.Len() == 0{
+            self.FP.error(_env, node, "continue outside loop")
+        }
+        out.Insert(WasmBin_br(_env, self.ctx.FP.Get_depth(_env) - (breakList.GetAt(breakList.Len()) + 1)))
+        return 
     } else if _switch0 == Nodes_NodeKind_get_Break(_env) {
         var breakList *LnsList2_[LnsInt]
         breakList = self.ctx.FP.Get_breakDepthList(_env)
@@ -5068,15 +6468,21 @@ func (self *convWasm_convFilter) lowerStmt(_env *LnsEnv, node *Nodes_Node,out *L
         self.FP.lowerReturn(_env, Lns_unwrap( Nodes_ReturnNodeDownCastF(node.FP)).(*Nodes_ReturnNode), out)
         return 
     } else if _switch0 == Nodes_NodeKind_get_Scope(_env) {
-        convWasm_append_15_(_env, out, self.FP.lowerBlock(_env, (Lns_unwrap( Nodes_ScopeNodeDownCastF(node.FP)).(*Nodes_ScopeNode)).FP.Get_block(_env)))
+        convWasm_append_16_(_env, out, self.FP.lowerBlock(_env, (Lns_unwrap( Nodes_ScopeNodeDownCastF(node.FP)).(*Nodes_ScopeNode)).FP.Get_block(_env)))
+        return 
+    } else if _switch0 == Nodes_NodeKind_get_Apply(_env) {
+        out.Insert(self.FP.lowerApply(_env, Lns_unwrap( Nodes_ApplyNodeDownCastF(node.FP)).(*Nodes_ApplyNode)))
+        return 
+    } else if _switch0 == Nodes_NodeKind_get_AsyncLock(_env) {
+        convWasm_append_16_(_env, out, self.FP.lowerBlock(_env, (Lns_unwrap( Nodes_AsyncLockNodeDownCastF(node.FP)).(*Nodes_AsyncLockNode)).FP.Get_block(_env)))
         return 
     } else if _switch0 == Nodes_NodeKind_get_Block(_env) {
-        convWasm_append_15_(_env, out, self.FP.lowerBlock(_env, Lns_unwrap( Nodes_BlockNodeDownCastF(node.FP)).(*Nodes_BlockNode)))
+        convWasm_append_16_(_env, out, self.FP.lowerBlock(_env, Lns_unwrap( Nodes_BlockNodeDownCastF(node.FP)).(*Nodes_BlockNode)))
         return 
     }
     self.FP.notSupport(_env, node)
 }
-// 3604: decl @lune.@base.@convWasm.convFilter.registerFunc
+// 4717: decl @lune.@base.@convWasm.convFilter.registerFunc
 func (self *convWasm_convFilter) registerFunc(_env *LnsEnv, declInfo *Nodes_DeclFuncInfo,funcType *Ast_TypeInfo) LnsInt {
     {
         _index := self.func2index.Get(funcType)
@@ -5093,7 +6499,7 @@ func (self *convWasm_convFilter) registerFunc(_env *LnsEnv, declInfo *Nodes_Decl
     self.mod.FP.SetFuncName(_env, index, funcType.FP.GetTxt(_env, nil, nil, nil))
     return index
 }
-// 3616: decl @lune.@base.@convWasm.convFilter.getCaptureSyms
+// 4729: decl @lune.@base.@convWasm.convFilter.getCaptureSyms
 func (self *convWasm_convFilter) getCaptureSyms(_env *LnsEnv, funcType *Ast_TypeInfo) *LnsList2_[*Ast_SymbolInfo] {
     var list *LnsList2_[*Ast_SymbolInfo]
     list = NewLnsList2_[*Ast_SymbolInfo]([]*Ast_SymbolInfo{})
@@ -5113,7 +6519,7 @@ func (self *convWasm_convFilter) getCaptureSyms(_env *LnsEnv, funcType *Ast_Type
     }
     return list
 }
-// 3630: decl @lune.@base.@convWasm.convFilter.getCellRef
+// 4743: decl @lune.@base.@convWasm.convFilter.getCellRef
 func (self *convWasm_convFilter) getCellRef(_env *LnsEnv, node *Nodes_Node,symbol *Ast_SymbolInfo) *WasmBin_Ins {
     var loc LnsAny
     
@@ -5143,8 +6549,39 @@ func (self *convWasm_convFilter) getCellRef(_env *LnsEnv, node *Nodes_Node,symbo
 // insert a dummy
     return nil
 }
-// 3653: decl @lune.@base.@convWasm.convFilter.setupParams
+// 4766: decl @lune.@base.@convWasm.convFilter.setupParams
 func (self *convWasm_convFilter) setupParams(_env *LnsEnv, declInfo *Nodes_DeclFuncInfo,funcType *Ast_TypeInfo,body *LnsList2_[*WasmBin_Ins]) {
+    if declInfo.FP.Get_has__func__Symbol(_env){
+        {
+            _block := declInfo.FP.Get_body(_env)
+            if !Lns_IsNil( _block ) {
+                block := _block.(*Nodes_BlockNode)
+                var scope *Ast_Scope
+                scope = block.FP.Get_scope(_env)
+                {
+                    var _forFrom0 LnsInt = 1
+                    var _forTo0 LnsInt = 3
+                    for _forWork0 := _forFrom0; _forWork0 <= _forTo0; _forWork0++ {
+                        {
+                            _funcSym := scope.FP.Get_symbol2SymbolInfoMap(_env).Get("__func__")
+                            if !Lns_IsNil( _funcSym ) {
+                                funcSym := _funcSym.(*Ast_SymbolInfo)
+                                {
+                                    _name := declInfo.FP.Get_name(_env)
+                                    if !Lns_IsNil( _name ) {
+                                        name := _name.(*Types_Token)
+                                        self.funcSym2name.Set(funcSym,name.Txt)
+                                    }
+                                }
+                                break
+                            }
+                        }
+                        scope = scope.FP.Get_parent(_env)
+                    }
+                }
+            }
+        }
+    }
     for _index, _arg := range( declInfo.FP.Get_argList(_env).Items ) {
         index := _index + 1
         arg := _arg
@@ -5178,7 +6615,7 @@ func (self *convWasm_convFilter) setupParams(_env *LnsEnv, declInfo *Nodes_DeclF
         }
     }
 }
-// 3680: decl @lune.@base.@convWasm.convFilter.compileFunc
+// 4808: decl @lune.@base.@convWasm.convFilter.compileFunc
 func (self *convWasm_convFilter) compileFunc(_env *LnsEnv, node *Nodes_Node,declInfo *Nodes_DeclFuncInfo,funcType *Ast_TypeInfo,funcIndex LnsInt) *WasmBin_Ins {
     var info *WasmRt_CloInfo
     info = self.FP.getFuncCloInfo(_env, funcType)
@@ -5232,7 +6669,7 @@ func (self *convWasm_convFilter) compileFunc(_env *LnsEnv, node *Nodes_Node,decl
         _block := declInfo.FP.Get_body(_env)
         if !Lns_IsNil( _block ) {
             block := _block.(*Nodes_BlockNode)
-            convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, block))
+            convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, block))
         }
     }
     if retTypes.Len() > 0{
@@ -5242,7 +6679,7 @@ func (self *convWasm_convFilter) compileFunc(_env *LnsEnv, node *Nodes_Node,decl
     self.ctx = saved
     return cloIns
 }
-// 3732: decl @lune.@base.@convWasm.convFilter.compileMethod
+// 4860: decl @lune.@base.@convWasm.convFilter.compileMethod
 func (self *convWasm_convFilter) compileMethod(_env *LnsEnv, node *Nodes_Node,declInfo *Nodes_DeclFuncInfo,methodType *Ast_TypeInfo,funcIndex LnsInt,info *convWasm_ClassInfo,retReps *LnsList2_[*WasmBin_ValType]) {
     if self.compiledFuncSet.Has(LnsInt(funcIndex)){
         return 
@@ -5282,7 +6719,7 @@ func (self *convWasm_convFilter) compileMethod(_env *LnsEnv, node *Nodes_Node,de
         _block := declInfo.FP.Get_body(_env)
         if !Lns_IsNil( _block ) {
             block := _block.(*Nodes_BlockNode)
-            convWasm_append_15_(_env, body, self.FP.lowerBlock(_env, block))
+            convWasm_append_16_(_env, body, self.FP.lowerBlock(_env, block))
         }
     }
     if retReps.Len() > 0{
@@ -5291,7 +6728,7 @@ func (self *convWasm_convFilter) compileMethod(_env *LnsEnv, node *Nodes_Node,de
     self.ctx.FP.Get_func(_env).FP.SetBody(_env, body)
     self.ctx = saved
 }
-// 3770: decl @lune.@base.@convWasm.convFilter.getSlotRetReps
+// 4898: decl @lune.@base.@convWasm.convFilter.getSlotRetReps
 func (self *convWasm_convFilter) getSlotRetReps(_env *LnsEnv, info *convWasm_ClassInfo,methodType *Ast_TypeInfo) *LnsList2_[*WasmBin_ValType] {
     {
         _slotIndex := info.FP.Get_name2slot(_env).Get(methodType.FP.Get_rawTxt(_env))
@@ -5302,7 +6739,7 @@ func (self *convWasm_convFilter) getSlotRetReps(_env *LnsEnv, info *convWasm_Cla
     }
     return self.FP.getRepList(_env, methodType.FP.Get_retTypeInfoList(_env))
 }
-// 3778: decl @lune.@base.@convWasm.convFilter.compileMethodNode
+// 4906: decl @lune.@base.@convWasm.convFilter.compileMethodNode
 func (self *convWasm_convFilter) compileMethodNode(_env *LnsEnv, node *Nodes_Node,declInfo *Nodes_DeclFuncInfo) {
     var classType *Ast_TypeInfo
     
@@ -5350,7 +6787,7 @@ func (self *convWasm_convFilter) compileMethodNode(_env *LnsEnv, node *Nodes_Nod
     }
     self.FP.compileMethod(_env, node, declInfo, methodType, funcIndex, info, self.FP.getSlotRetReps(_env, info, methodType))
 }
-// 3806: decl @lune.@base.@convWasm.convFilter.compileDefaultCtor
+// 4934: decl @lune.@base.@convWasm.convFilter.compileDefaultCtor
 func (self *convWasm_convFilter) compileDefaultCtor(_env *LnsEnv, node *Nodes_DeclClassNode,info *convWasm_ClassInfo) {
     if self.compiledFuncSet.Has(LnsInt(info.FP.Get_ctorFunc(_env))){
         return 
@@ -5404,7 +6841,7 @@ func (self *convWasm_convFilter) compileDefaultCtor(_env *LnsEnv, node *Nodes_De
     }
     _func.FP.SetBody(_env, body)
 }
-// 3848: decl @lune.@base.@convWasm.convFilter.compileAccessors
+// 4976: decl @lune.@base.@convWasm.convFilter.compileAccessors
 func (self *convWasm_convFilter) compileAccessors(_env *LnsEnv, node *Nodes_DeclClassNode,info *convWasm_ClassInfo) {
     var scope *Ast_Scope
     scope = Lns_unwrap( info.FP.Get_typeInfo(_env).FP.Get_scope(_env)).(*Ast_Scope)
@@ -5451,7 +6888,138 @@ func (self *convWasm_convFilter) compileAccessors(_env *LnsEnv, node *Nodes_Decl
         }
     }
 }
-// 3885: decl @lune.@base.@convWasm.convFilter.lowerDeclClass
+// 5017: decl @lune.@base.@convWasm.convFilter.compileAdvertise
+func (self *convWasm_convFilter) compileAdvertise(_env *LnsEnv, node *Nodes_DeclClassNode,info *convWasm_ClassInfo) {
+    for _, _adv := range( info.FP.Get_advertiseList(_env).Items ) {
+        adv := _adv
+        if self.compiledFuncSet.Has(LnsInt(adv.FP.Get_impl(_env))){
+            continue
+        }
+        self.compiledFuncSet.Add(LnsInt(adv.FP.Get_impl(_env)))
+        var _func *WasmBin_Func
+        _func = self.mod.FP.GetFunc(_env, adv.FP.Get_impl(_env))
+        var fieldIndex LnsInt
+        fieldIndex = self.FP.getFieldIndex(_env, &node.Nodes_Node, info, adv.FP.Get_memberName(_env))
+        var member *WasmBin_Ins
+        member = WasmBin_structGet(_env, info.FP.Get_structType(_env), fieldIndex, WasmBin_refCast(_env, info.FP.Get_structType(_env), convWasm_lg_2_(_env, 0)))
+        var argReps *LnsList2_[*WasmBin_ValType]
+        argReps = self.FP.getRepList(_env, adv.FP.Get_methodType(_env).FP.Get_argTypeInfoList(_env))
+        var retReps *LnsList2_[*WasmBin_ValType]
+        retReps = self.FP.getSlotRetReps(_env, info, adv.FP.Get_methodType(_env))
+        var ins *WasmBin_Ins
+        var calleeRetReps *LnsList2_[*WasmBin_ValType]
+        ins,_,calleeRetReps = self.FP.callMethodDyn(_env, &node.Nodes_Node, member, info.FP.Get_fieldReps(_env).GetAt(fieldIndex - 1), adv.FP.Get_memberType(_env), adv.FP.Get_methodName(_env), convWasm_ArgGetter_18_(func(_env *LnsEnv, index LnsInt,rep *WasmBin_ValType) *WasmBin_Ins {
+            return self.FP.coerceRep(_env, convWasm_lg_2_(_env, index), argReps.GetAt(index), rep)
+        }), _func)
+        var body *LnsList2_[*WasmBin_Ins]
+        body = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](ins))
+        if calleeRetReps.Len() > 0{
+            var locals *LnsList2_[LnsInt]
+            locals = NewLnsList2_[LnsInt]([]LnsInt{})
+            for _, _rep := range( calleeRetReps.Items ) {
+                rep := _rep
+                locals.Insert(LnsInt(_func.FP.AddLocal(_env, rep)))
+            }
+            {
+                var _forFrom0 LnsInt = locals.Len()
+                var _forTo0 LnsInt = 1
+                _forWork0 := _forFrom0
+                _forDelta0 := -1
+                for {
+                    if _forDelta0 > 0 {
+                       if _forWork0 > _forTo0 { break }
+                    } else {
+                       if _forWork0 < _forTo0 { break }
+                    }
+                    index := _forWork0
+                    body.Insert(convWasm_ls_3_(_env, locals.GetAt(index), WasmBin_nop(_env)))
+                    _forWork0 += _forDelta0
+                }
+            }
+            for _index, _rep := range( retReps.Items ) {
+                index := _index + 1
+                rep := _rep
+                body.Insert(self.FP.coerceRep(_env, convWasm_lg_2_(_env, locals.GetAt(index)), calleeRetReps.GetAt(index), rep))
+            }
+        }
+        _func.FP.SetBody(_env, body)
+    }
+}
+// 5057: decl @lune.@base.@convWasm.convFilter.callMethodDyn
+func (self *convWasm_convFilter) callMethodDyn(_env *LnsEnv, node *Nodes_Node,obj *WasmBin_Ins,objRep *WasmBin_ValType,objType *Ast_TypeInfo,name string,getArg convWasm_ArgGetter_18_,_func *WasmBin_Func)(*WasmBin_Ins, *LnsList2_[*WasmBin_ValType], *LnsList2_[*WasmBin_ValType]) {
+    var work *Ast_TypeInfo
+    work = self.FP.getObjType(_env, objType)
+    var objLocal LnsInt
+    objLocal = _func.FP.AddLocal(_env, self.rt.FP.Get_objType(_env))
+    var pre *LnsList2_[*WasmBin_Ins]
+    pre = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_ls_3_(_env, objLocal, self.FP.coerceRep(_env, obj, objRep, self.rt.FP.Get_objType(_env)))))
+    var methodType *Ast_TypeInfo
+    var args *LnsList2_[*WasmBin_Ins]
+    args = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
+    var callFuncType LnsInt
+    var funcRef *WasmBin_Ins
+    if work.FP.Get_kind(_env) == Ast_TypeInfoKind__IF{
+        var ifInfo *convWasm_IfInfo
+        ifInfo = self.FP.getIfInfo(_env, work)
+        var methodIndex LnsInt
+        
+        {
+            _methodIndex := ifInfo.FP.Get_name2index(_env).Get(name)
+            if _methodIndex == nil{
+                self.FP.error(_env, node, _env.GetVM().String_format("not found method -- %s", Lns_2DDD(name)))
+            } else {
+                methodIndex = _methodIndex.(LnsInt)
+            }
+        }
+        methodType = Lns_unwrap( self.FP.getIfMethodType(_env, work, name)).(*Ast_TypeInfo)
+        args.Insert(convWasm_lg_2_(_env, objLocal))
+        callFuncType = ifInfo.FP.Get_methodFuncTypes(_env).GetAt(methodIndex + 1)
+        var itab *WasmBin_Ins
+        itab = WasmBin_refCast(_env, ifInfo.FP.Get_itType(_env), WasmBin_arrayGet(_env, self.rt.FP.Get_tAnyArr(_env), WasmBin_structGet(_env, self.rt.FP.Get_tVT(_env), WasmRt_fVtItabs, WasmBin_structGet(_env, self.rt.FP.Get_tObj(_env), WasmRt_fObjVt, convWasm_lg_2_(_env, objLocal))), WasmBin_i32Const(_env, ifInfo.FP.Get_ifId(_env))))
+        funcRef = WasmBin_structGet(_env, ifInfo.FP.Get_itType(_env), methodIndex, itab)
+    } else { 
+        var info *convWasm_ClassInfo
+        
+        {
+            _info := self.FP.getClassInfo(_env, work)
+            if _info == nil{
+                self.FP.error(_env, node, _env.GetVM().String_format("not found class -- %s", Lns_2DDD(work.FP.GetTxt(_env, nil, nil, nil))))
+            } else {
+                info = _info.(*convWasm_ClassInfo)
+            }
+        }
+        var slotIndex LnsInt
+        
+        {
+            _slotIndex := info.FP.Get_name2slot(_env).Get(name)
+            if _slotIndex == nil{
+                self.FP.error(_env, node, _env.GetVM().String_format("not found method -- %s", Lns_2DDD(name)))
+            } else {
+                slotIndex = _slotIndex.(LnsInt)
+            }
+        }
+        var slot *convWasm_SlotInfo
+        slot = info.FP.Get_slotList(_env).GetAt(slotIndex)
+        methodType = slot.FP.Get_methodType(_env)
+        var objWork LnsInt
+        objWork = _func.FP.AddLocal(_env, WasmBin_refType(_env, info.FP.Get_structType(_env)))
+        pre.Insert(convWasm_ls_3_(_env, objWork, WasmBin_refCast(_env, info.FP.Get_structType(_env), convWasm_lg_2_(_env, objLocal))))
+        args.Insert(convWasm_lg_2_(_env, objWork))
+        callFuncType = slot.FP.Get_funcType(_env)
+        funcRef = WasmBin_structGet(_env, info.FP.Get_vtType(_env), slotIndex, WasmBin_structGet(_env, info.FP.Get_structType(_env), WasmRt_fObjVt, convWasm_lg_2_(_env, objWork)))
+    }
+    var argReps *LnsList2_[*WasmBin_ValType]
+    argReps = self.FP.getRepList(_env, methodType.FP.Get_argTypeInfoList(_env))
+    for _index, _rep := range( argReps.Items ) {
+        index := _index + 1
+        rep := _rep
+        args.Insert(getArg(_env, index, rep))
+    }
+    args.Insert(funcRef)
+    pre.Insert(WasmBin_callRef(_env, callFuncType, args))
+    return WasmBin_seq(_env, pre), argReps, self.FP.getRepList(_env, methodType.FP.Get_retTypeInfoList(_env))
+}
+// 5108: decl @lune.@base.@convWasm.convFilter.lowerDeclClass
 func (self *convWasm_convFilter) lowerDeclClass(_env *LnsEnv, node *Nodes_DeclClassNode,out *LnsList2_[*WasmBin_Ins]) {
     if node.FP.Get_expType(_env).FP.Get_kind(_env) == Ast_TypeInfoKind__IF{
         self.FP.getIfInfo(_env, node.FP.Get_expType(_env))
@@ -5471,6 +7039,7 @@ func (self *convWasm_convFilter) lowerDeclClass(_env *LnsEnv, node *Nodes_DeclCl
         self.FP.compileDefaultCtor(_env, node, info)
     }
     self.FP.compileAccessors(_env, node, info)
+    self.FP.compileAdvertise(_env, node, info)
     {
         _initFunc := node.FP.Get_initBlock(_env).FP.Get_func(_env)
         if !Lns_IsNil( _initFunc ) {
@@ -5479,13 +7048,73 @@ func (self *convWasm_convFilter) lowerDeclClass(_env *LnsEnv, node *Nodes_DeclCl
                 _block := initFunc.FP.Get_declInfo(_env).FP.Get_body(_env)
                 if !Lns_IsNil( _block ) {
                     block := _block.(*Nodes_BlockNode)
-                    convWasm_append_15_(_env, out, self.FP.lowerBlock(_env, block))
+                    convWasm_append_16_(_env, out, self.FP.lowerBlock(_env, block))
                 }
             }
         }
     }
 }
-// 3914: decl @lune.@base.@convWasm.convFilter.finalizeClasses
+// 5142: decl @lune.@base.@convWasm.convFilter.makeIfAdapter
+func (self *convWasm_convFilter) makeIfAdapter(_env *LnsEnv, ifMethodType *Ast_TypeInfo,implMethodType *Ast_TypeInfo,impl LnsInt) LnsInt {
+    var ifArgReps *LnsList2_[*WasmBin_ValType]
+    ifArgReps = self.FP.getRepList(_env, ifMethodType.FP.Get_argTypeInfoList(_env))
+    var ifRetReps *LnsList2_[*WasmBin_ValType]
+    ifRetReps = self.FP.getRepList(_env, ifMethodType.FP.Get_retTypeInfoList(_env))
+    var implArgReps *LnsList2_[*WasmBin_ValType]
+    implArgReps = self.FP.getRepList(_env, implMethodType.FP.Get_argTypeInfoList(_env))
+    var implRetReps *LnsList2_[*WasmBin_ValType]
+    implRetReps = self.FP.getRepList(_env, implMethodType.FP.Get_retTypeInfoList(_env))
+    var params *LnsList2_[*WasmBin_ValType]
+    params = NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.rt.FP.Get_objType(_env)))
+    for _, _rep := range( ifArgReps.Items ) {
+        rep := _rep
+        params.Insert(rep)
+    }
+    var index LnsInt
+    var _func *WasmBin_Func
+    index,_func = self.mod.FP.AddFunc(_env, params, ifRetReps)
+    var args *LnsList2_[*WasmBin_Ins]
+    args = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](convWasm_lg_2_(_env, 0)))
+    for _argIndex, _rep := range( implArgReps.Items ) {
+        argIndex := _argIndex + 1
+        rep := _rep
+        args.Insert(self.FP.coerceRep(_env, convWasm_lg_2_(_env, argIndex), ifArgReps.GetAt(argIndex), rep))
+    }
+    var body *LnsList2_[*WasmBin_Ins]
+    body = NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, impl, args)))
+    if implRetReps.Len() > 0{
+        var locals *LnsList2_[LnsInt]
+        locals = NewLnsList2_[LnsInt]([]LnsInt{})
+        for _, _rep := range( implRetReps.Items ) {
+            rep := _rep
+            locals.Insert(LnsInt(_func.FP.AddLocal(_env, rep)))
+        }
+        {
+            var _forFrom0 LnsInt = locals.Len()
+            var _forTo0 LnsInt = 1
+            _forWork0 := _forFrom0
+            _forDelta0 := -1
+            for {
+                if _forDelta0 > 0 {
+                   if _forWork0 > _forTo0 { break }
+                } else {
+                   if _forWork0 < _forTo0 { break }
+                }
+                retIndex := _forWork0
+                body.Insert(convWasm_ls_3_(_env, locals.GetAt(retIndex), WasmBin_nop(_env)))
+                _forWork0 += _forDelta0
+            }
+        }
+        for _retIndex, _rep := range( ifRetReps.Items ) {
+            retIndex := _retIndex + 1
+            rep := _rep
+            body.Insert(self.FP.coerceRep(_env, convWasm_lg_2_(_env, locals.GetAt(retIndex)), implRetReps.GetAt(retIndex), rep))
+        }
+    }
+    _func.FP.SetBody(_env, body)
+    return index
+}
+// 5176: decl @lune.@base.@convWasm.convFilter.finalizeClasses
 func (self *convWasm_convFilter) finalizeClasses(_env *LnsEnv) {
     for _, _info := range( self.classInfoList.Items ) {
         info := _info
@@ -5526,9 +7155,12 @@ func (self *convWasm_convFilter) finalizeClasses(_env *LnsEnv) {
                             slot = info.FP.Get_slotList(_env).GetAt(slotIndex)
                             if slot.FP.Get_impl(_env) >= 0{
                                 if slot.FP.Get_funcType(_env) != funcType{
-                                    Util_err(_env, _env.GetVM().String_format("%s: wasm: not support interface method type -- %s.%s", Lns_2DDD(self.streamName, info.FP.Get_typeInfo(_env).FP.GetTxt(_env, nil, nil, nil), name)))
+                                    var ifMethodType *Ast_TypeInfo
+                                    ifMethodType = Lns_unwrap( self.FP.getIfMethodType(_env, ifInfo.FP.Get_typeInfo(_env), name)).(*Ast_TypeInfo)
+                                    ins = self.mod.FP.RefFunc(_env, self.FP.makeIfAdapter(_env, ifMethodType, slot.FP.Get_methodType(_env), slot.FP.Get_impl(_env)))
+                                } else { 
+                                    ins = self.mod.FP.RefFunc(_env, slot.FP.Get_impl(_env))
                                 }
-                                ins = self.mod.FP.RefFunc(_env, slot.FP.Get_impl(_env))
                             }
                         }
                     }
@@ -5552,7 +7184,7 @@ func (self *convWasm_convFilter) finalizeClasses(_env *LnsEnv) {
         self.prologue.Insert(WasmBin_globalSet(_env, info.FP.Get_vtGlobal(_env), WasmBin_structNew(_env, info.FP.Get_vtType(_env), vals)))
     }
 }
-// 3964: decl @lune.@base.@convWasm.convFilter.collectDecl
+// 5230: decl @lune.@base.@convWasm.convFilter.collectDecl
 func (self *convWasm_convFilter) collectDecl(_env *LnsEnv, node *Nodes_Node) {
     var alreadySet *LnsSet2_[*Nodes_Node]
     alreadySet = NewLnsSet2_[*Nodes_Node]([]*Nodes_Node{})
@@ -5584,7 +7216,7 @@ func (self *convWasm_convFilter) collectDecl(_env *LnsEnv, node *Nodes_Node) {
         return Nodes_NodeVisitMode__Child
     }), 0, alreadySet)
 }
-// 3990: decl @lune.@base.@convWasm.convFilter.processRoot
+// 5256: decl @lune.@base.@convWasm.convFilter.processRoot
 func (self *convWasm_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,_opt LnsAny) {
     self.FP.collectDecl(_env, &node.Nodes_Node)
     for _, _child := range( node.FP.Get_children(_env).Items ) {
@@ -5611,8 +7243,8 @@ func (self *convWasm_convFilter) ProcessRoot(_env *LnsEnv, node *Nodes_RootNode,
     self.FP.finalizeClasses(_env)
     var body *LnsList2_[*WasmBin_Ins]
     body = NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})
-    convWasm_append_15_(_env, body, self.prologue)
-    convWasm_append_15_(_env, body, mainBody)
+    convWasm_append_16_(_env, body, self.prologue)
+    convWasm_append_16_(_env, body, mainBody)
     var mainFunc *WasmBin_Func
     mainFunc = self.mod.FP.GetFunc(_env, self.mainIndex)
     mainFunc.FP.SetBody(_env, body)

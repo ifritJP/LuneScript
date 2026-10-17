@@ -345,6 +345,42 @@ function SlotInfo:set_impl( impl )
    self.impl = impl
 end
 
+local AdvertiseMethod = {}
+function AdvertiseMethod._setmeta( obj )
+  setmetatable( obj, { __index = AdvertiseMethod  } )
+end
+function AdvertiseMethod._new( memberName, memberType, methodName, methodType, impl )
+   local obj = {}
+   AdvertiseMethod._setmeta( obj )
+   if obj.__init then
+      obj:__init( memberName, memberType, methodName, methodType, impl )
+   end
+   return obj
+end
+function AdvertiseMethod:__init( memberName, memberType, methodName, methodType, impl )
+
+   self.memberName = memberName
+   self.memberType = memberType
+   self.methodName = methodName
+   self.methodType = methodType
+   self.impl = impl
+end
+function AdvertiseMethod:get_memberName()
+   return self.memberName
+end
+function AdvertiseMethod:get_memberType()
+   return self.memberType
+end
+function AdvertiseMethod:get_methodName()
+   return self.methodName
+end
+function AdvertiseMethod:get_methodType()
+   return self.methodType
+end
+function AdvertiseMethod:get_impl()
+   return self.impl
+end
+
 local ClassInfo = {}
 function ClassInfo._new( typeInfo, structType, vtType, vtGlobal, parent )
    local obj = {}
@@ -360,11 +396,13 @@ function ClassInfo:__init(typeInfo, structType, vtType, vtGlobal, parent)
    self.parent = parent
    self.fieldNames = {}
    self.fieldReps = {}
+   self.fieldTypes = {}
    self.name2field = {}
    self.slotList = {}
    self.name2slot = {}
    self.ifList = {}
    self.ctorFunc = -1
+   self.advertiseList = {}
    self.ctorFuncType = -1
    if parent ~= nil then
       for __index, name in ipairs( parent:get_fieldNames() ) do
@@ -372,6 +410,9 @@ function ClassInfo:__init(typeInfo, structType, vtType, vtGlobal, parent)
       end
       for __index, rep in ipairs( parent:get_fieldReps() ) do
          table.insert( self.fieldReps, rep )
+      end
+      for __index, fieldType in ipairs( parent:get_fieldTypes() ) do
+         table.insert( self.fieldTypes, fieldType )
       end
       for name, index in pairs( parent:get_name2field() ) do
          self.name2field[name] = index
@@ -411,6 +452,9 @@ end
 function ClassInfo:get_fieldReps()
    return self.fieldReps
 end
+function ClassInfo:get_fieldTypes()
+   return self.fieldTypes
+end
 function ClassInfo:get_name2field()
    return self.name2field
 end
@@ -428,6 +472,9 @@ function ClassInfo:get_ctorFunc()
 end
 function ClassInfo:set_ctorFunc( ctorFunc )
    self.ctorFunc = ctorFunc
+end
+function ClassInfo:get_advertiseList()
+   return self.advertiseList
 end
 function ClassInfo:get_ctorFuncType()
    return self.ctorFuncType
@@ -623,6 +670,7 @@ function convFilter:__init(streamName, stream, ast)
    self.classType2decl = {}
    self.class2info = {}
    self.classInfoList = {}
+   self.serrInfo = nil
    self.if2info = {}
    self.ifInfoList = {}
    self.algeType2decl = {}
@@ -631,6 +679,9 @@ function convFilter:__init(streamName, stream, ast)
    self.enumType2decl = {}
    self.declaredMethodSet = {}
    self.adapterMap = {}
+   self.node2val = {}
+   self.nilAccDoneSet = {}
+   self.funcSym2name = {}
    self.prologue = {}
    self.stdoutGlobal = -1
    self.stderrGlobal = -1
@@ -714,7 +765,7 @@ function convFilter:getRep( typeInfo )
                return self:getRep( enumType:get_valTypeInfo() )
             end
          end
-      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.DDD then
+      elseif _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.DDD or _switchExp == Ast.TypeInfoKind.Tuple then
          return self.rt:get_listType()
       elseif _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set then
          return self.rt:get_mapType()
@@ -850,6 +901,7 @@ function convFilter:registerClass( declNode )
          local name = memberNode:get_name().txt
          table.insert( info:get_fieldNames(), name )
          table.insert( info:get_fieldReps(), self:getRep( memberNode:get_symbolInfo():get_typeInfo() ) )
+         table.insert( info:get_fieldTypes(), memberNode:get_symbolInfo():get_typeInfo() )
          info:get_name2field()[name] = #info:get_fieldNames() + 1
       end
    end
@@ -914,12 +966,59 @@ function convFilter:registerClass( declNode )
          end
       end
    end
+   for __index, advertiseInfo in ipairs( declNode:get_advertiseList() ) do
+      local memberType = advertiseInfo:get_member():get_expType()
+      local mbrScope = _lune.unwrap( self:getGenSrc( memberType ):get_scope())
+      for __index, mtdName in ipairs( Ast.getAllMethodName( self:getGenSrc( memberType ), Ast.MethodKind.Object ):get_list() ) do
+         local _
+         do
+            local child = _lune.unwrap( mbrScope:getTypeInfoField( mtdName, true, mbrScope, Ast.ScopeAccess.Normal ))
+            if child:get_accessMode() == Ast.AccessMode.Pri then
+               goto __continue1
+            end
+            local name = advertiseInfo:get_prefix() .. mtdName
+            local methodType = child
+            do
+               local symbol = scope:get_symbol2SymbolInfoMap()[name]
+               if symbol ~= nil then
+                  if _lune._Set_has(self.declaredMethodSet, symbol:get_typeInfo() ) or _lune._Set_has(autoMethodSet, name ) then
+                     goto __continue1
+                  end
+                  methodType = symbol:get_typeInfo()
+               end
+            end
+            local funcType
+            
+            do
+               local slotIndex = info:get_name2slot()[name]
+               if slotIndex ~= nil then
+                  funcType = info:get_slotList()[slotIndex]:get_funcType()
+               else
+                  funcType = self:getMethodFuncType( methodType )
+               end
+            end
+            local impl, _3 = self.mod:addFuncWithType( funcType, 1 + #methodType:get_argTypeInfoList() )
+            self.mod:setFuncName( impl, string.format( "%s.%s", classType:getTxt(  ), name) )
+            do
+               local slotIndex = info:get_name2slot()[name]
+               if slotIndex ~= nil then
+                  info:get_slotList()[slotIndex]:set_impl( impl )
+               else
+                  table.insert( info:get_slotList(), SlotInfo._new(name, funcType, methodType, impl) )
+                  info:get_name2slot()[name] = #info:get_slotList()
+               end
+            end
+            table.insert( info:get_advertiseList(), AdvertiseMethod._new(advertiseInfo:get_member():get_name().txt, memberType, mtdName, methodType, impl) )
+         end
+         ::__continue1::
+      end
+   end
    do
       local initSym = scope:get_symbol2SymbolInfoMap()["__init"]
       if initSym ~= nil then
          local _
          local ctorType = self:getMethodFuncType( initSym:get_typeInfo() )
-         local ctor, _3 = self.mod:addFuncWithType( ctorType, 1 + #initSym:get_typeInfo():get_argTypeInfoList() )
+         local ctor, _4 = self.mod:addFuncWithType( ctorType, 1 + #initSym:get_typeInfo():get_argTypeInfoList() )
          self.func2index[initSym:get_typeInfo()] = ctor
          self.mod:setFuncName( ctor, string.format( "%s.__init", classType:getTxt(  )) )
          info:set_ctorFunc( ctor )
@@ -939,6 +1038,38 @@ function convFilter:registerClass( declNode )
       table.insert( vtFields, W.field( W.refType( slot:get_funcType() ), false ) )
    end
    self.mod:defineStructType( vtType, superVt, vtFields )
+   return info
+end
+
+function convFilter:getSerrInfo(  )
+
+   do
+      local info = self.serrInfo
+      if info ~= nil then
+         return info
+      end
+   end
+   local erType = self:getGenSrc( self.builtinFuncs.lns___serr:get_retTypeInfoList()[1] )
+   local structType = self.mod:reserveType(  )
+   local vtType = self.mod:reserveType(  )
+   local vtGlobal = self.mod:addGlobal( W.refType( vtType ), W.refNull( vtType ) )
+   local info = ClassInfo._new(erType, structType, vtType, vtGlobal, nil)
+   table.insert( info:get_fieldNames(), "txt" )
+   table.insert( info:get_fieldReps(), self.rt:get_strType() )
+   table.insert( info:get_fieldTypes(), Ast.builtinTypeString )
+   info:get_name2field()["txt"] = 2
+   local methodType = _lune.unwrap( self:getIfMethodType( erType, "get_txt" ))
+   local funcType = self:getMethodFuncType( methodType )
+   local impl, func = self.mod:addFuncWithType( funcType, 1 )
+   self.mod:setFuncName( impl, "LnsErr.get_txt" )
+   func:setBody( {W.structGet( structType, 2, W.refCast( structType, lg( 0 ) ) )} )
+   table.insert( info:get_slotList(), SlotInfo._new("get_txt", funcType, methodType, impl) )
+   info:get_name2slot()["get_txt"] = 1
+   self:addInterface( info, erType )
+   self.mod:defineStructType( structType, self.rt:get_tObj(), {W.field( W.typeI32, true ), W.field( W.refType( vtType ), false ), W.field( self.rt:get_strType(), true )} )
+   self.mod:defineStructType( vtType, self.rt:get_tVT(), {W.field( self.rt:get_anyArrType(), false ), W.field( W.refType( funcType ), false )} )
+   table.insert( self.classInfoList, info )
+   self.serrInfo = info
    return info
 end
 
@@ -1219,6 +1350,14 @@ function convFilter:readSym( node, symbol )
       local _switchExp = orgSym:get_name()
       if _switchExp == "__mod__" then
          return self.rt:strLiteral( self.moduleTypeInfo:getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), false ) )
+      elseif _switchExp == "__func__" then
+         local funcType = orgSym:get_namespaceTypeInfo()
+         local nameSpace = funcType:get_parentInfo():getFullName( self:get_typeNameCtrl(), self:get_moduleInfoManager(), false ):gsub( "&", "" )
+         local funcName = self.funcSym2name[orgSym] or ""
+         if funcName == "" then
+            funcName = "<anonymous>"
+         end
+         return self.rt:strLiteral( string.format( "%s.%s", nameSpace, funcName) )
       end
    end
    self:error( node, string.format( "not support symbol -- %s", orgSym:get_name()) )
@@ -1520,12 +1659,27 @@ function convFilter:lowerValList( expList, pre )
    for index, exp in ipairs( expList:get_expList() ) do
       local mretInCast = nil
       local castType = exp:get_expType()
+      local isRawMRet = false
       do
          local castNode = _lune.__Cast( exp, 3, Nodes.ExpCastNode )
          if castNode ~= nil then
             if castNode:get_castKind() == Nodes.CastKind.Implicit and castNode:get_exp():get_kind() == Nodes.NodeKind.get_ExpMRet() then
                mretInCast = castNode:get_exp()
                castType = castNode:get_castType()
+            end
+         else
+            if exp:get_kind() == Nodes.NodeKind.get_ExpMRet() then
+               for __index, other in ipairs( expList:get_expList() ) do
+                  do
+                     local otherCast = _lune.__Cast( other, 3, Nodes.ExpCastNode )
+                     if otherCast ~= nil then
+                        if otherCast:get_exp() == exp then
+                           mretInCast = exp
+                           isRawMRet = true
+                        end
+                     end
+                  end
+               end
             end
          end
       end
@@ -1539,6 +1693,10 @@ function convFilter:lowerValList( expList, pre )
                   local otherCast = _lune.__Cast( other, 3, Nodes.ExpCastNode )
                   if otherCast ~= nil then
                      if otherCast:get_exp() == mret then
+                        num = num + 1
+                     end
+                  else
+                     if other == mret or self:isAccessOf( other, mret ) then
                         num = num + 1
                      end
                   end
@@ -1556,7 +1714,20 @@ function convFilter:lowerValList( expList, pre )
           
             val = Val._new(W.refNull( W.htAny ), W.typeAnyRef, Ast.builtinTypeNil)
          end
-         table.insert( vals, Val._new(self:coerceVal( val, castType ), self:getRep( castType ), castType) )
+         if isRawMRet then
+            table.insert( vals, val )
+         else
+          
+            table.insert( vals, Val._new(self:coerceVal( val, castType ), self:getRep( castType ), castType) )
+         end
+      elseif castMRet and self:isAccessOf( exp, _lune.unwrap( castMRet) ) then
+         castMRetPos = castMRetPos + 1
+         if castMRetPos <= #castMRetVals then
+            table.insert( vals, castMRetVals[castMRetPos] )
+         else
+          
+            table.insert( vals, Val._new(W.refNull( W.htAny ), W.typeAnyRef, Ast.builtinTypeNil) )
+         end
       elseif exp:get_kind() == Nodes.NodeKind.get_ExpAccessMRet() then
       elseif index == mRetIndex or (index == #expList:get_expList() and exp:get_kind() == Nodes.NodeKind.get_ExpMRet() ) then
          for __index, val in ipairs( self:lowerMulti( exp, pre ) ) do
@@ -1573,6 +1744,27 @@ function convFilter:lowerValList( expList, pre )
       end
    end
    return vals
+end
+
+function convFilter:isAccessOf( node, mret )
+
+   local accessNode = _lune.__Cast( node, 3, Nodes.ExpAccessMRetNode )
+   if  nil == accessNode then
+      local _accessNode = accessNode
+   
+      return false
+   end
+   
+   if accessNode:get_mRet() == mret then
+      return true
+   end
+   do
+      local mretNode = _lune.__Cast( mret, 3, Nodes.ExpMRetNode )
+      if mretNode ~= nil then
+         return accessNode:get_mRet() == mretNode:get_mRet()
+      end
+   end
+   return false
 end
 
 function convFilter:lowerMulti( node, pre )
@@ -1614,7 +1806,14 @@ function convFilter:decodeString( node, txt )
 
    local quote = txt:sub( 1, 1 )
    if quote == "`" then
-      return txt:sub( 4, #txt - 3 )
+      local body = txt:sub( 4, #txt - 3 )
+      if body:sub( 1, 2 ) == "\r\n" then
+         return body:sub( 3 )
+      end
+      if body:sub( 1, 1 ) == "\n" or body:sub( 1, 1 ) == "\r" then
+         return body:sub( 2 )
+      end
+      return body
    end
    local body = txt:sub( 2, #txt - 1 )
    local result = ""
@@ -1910,6 +2109,9 @@ function convFilter:lowerOp1( node )
          if val:get_rep():equalsType( self.rt:get_listType() ) then
             return self:newVal( p( W.opI64ExtendI32U, {W.structGet( self.rt:get_tList(), Rt.fListLen, val:get_ins() )} ), resultType )
          end
+         if val:get_rep():equalsType( self.rt:get_mapType() ) then
+            return self:newVal( p( W.opI64ExtendI32U, {W.structGet( self.rt:get_tMap(), Rt.fMapCount, val:get_ins() )} ), resultType )
+         end
       elseif _switchExp == "~" then
          if val:get_rep():get_kind() == W.ValKind.I64 then
             return self:newVal( p( W.opI64Xor, {val:get_ins(), W.i64Const( -1 )} ), resultType )
@@ -2164,6 +2366,17 @@ function convFilter:lowerRefField( node )
       local symbol = node:get_symbolInfo()
       if symbol ~= nil then
          local orgSym = symbol:getOrg(  )
+         local builtin = self.builtinFuncs
+         local builtinConstMap = {[builtin.__lns_runmode_Sync_sym] = 0, [builtin.__lns_runmode_Queue_sym] = 1, [builtin.__lns_runmode_Skip_sym] = 2}
+         do
+            local val = builtinConstMap[orgSym]
+            if val ~= nil then
+               return self:newVal( W.i64Const( val ), Ast.builtinTypeInt )
+            end
+         end
+         if orgSym == builtin.__lns_capability_async_sym then
+            return self:newVal( W.i32Const( 0 ), Ast.builtinTypeBool )
+         end
          do
             local _exp = self.globalSym2loc[orgSym]
             if _exp ~= nil then
@@ -2262,6 +2475,9 @@ function convFilter:lowerRefItem( node )
          return Val._new(W.call( self.rt:fnMapGet(  ), {self:lowerExp( node:get_val() ), self:toAny( self:lowerVal( index ) )} ), W.typeAnyRef, Ast.builtinTypeStem_)
       end
    end
+   if self:isType( valType, Ast.builtinTypeStem ) then
+      return Val._new(W.call( self:fnStemIndex(  ), {self:lowerExp( node:get_val() ), self:toAny( self:lowerVal( index ) )} ), W.typeAnyRef, Ast.builtinTypeStem_)
+   end
    if self:isType( valType, Ast.builtinTypeString ) then
       local strVal = self:tempLocal( self.rt:get_strType() )
       return self:newVal( W.seq( {ls( strVal, self:lowerExp( node:get_val() ) ), p( W.opI64ExtendI32U, {W.arrayGetU( self.rt:get_tStr(), lg( strVal ), p( W.opI32WrapI64, {p( W.opI64Sub, {self:lowerExpAs( index, Ast.builtinTypeInt ), W.i64Const( 1 )} )} ) )} )} ), Ast.builtinTypeInt )
@@ -2301,12 +2517,105 @@ function convFilter:lowerAnonymousFunc( node )
    return self:newVal( self:compileFunc( node, node:get_declInfo(), funcType, funcIndex ), funcType )
 end
 
+function convFilter:getNilAccPrefix( node )
+
+   if _lune._Set_has(self.nilAccDoneSet, node ) then
+      return nil
+   end
+   do
+      local refNode = _lune.__Cast( node, 3, Nodes.RefFieldNode )
+      if refNode ~= nil then
+         if refNode:get_nilAccess() then
+            return refNode:get_prefix()
+         end
+      else
+         do
+            local getNode = _lune.__Cast( node, 3, Nodes.GetFieldNode )
+            if getNode ~= nil then
+               if getNode:get_nilAccess() then
+                  return getNode:get_prefix()
+               end
+            else
+               do
+                  local itemNode = _lune.__Cast( node, 3, Nodes.ExpRefItemNode )
+                  if itemNode ~= nil then
+                     if itemNode:get_nilAccess() then
+                        return itemNode:get_val()
+                     end
+                  else
+                     do
+                        local callNode = _lune.__Cast( node, 3, Nodes.ExpCallNode )
+                        if callNode ~= nil then
+                           if callNode:get_nilAccess() then
+                              do
+                                 local funcNode = _lune.__Cast( callNode:get_func(), 3, Nodes.RefFieldNode )
+                                 if funcNode ~= nil then
+                                    if funcNode:get_nilAccess() then
+                                       return funcNode:get_prefix()
+                                    end
+                                 end
+                              end
+                           end
+                        end
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+   return nil
+end
+
+function convFilter:lowerNilAcc( node, prefix )
+
+   local prefixVal = self:lowerVal( prefix )
+   local work = self:tempLocal( prefixVal:get_rep() )
+   local pre = {ls( work, prefixVal:get_ins() )}
+   self.node2val[prefix] = Val._new(lg( work ), prefixVal:get_rep(), prefixVal:get_typeInfo())
+   self.nilAccDoneSet[node]= true
+   do
+      local callNode = _lune.__Cast( node, 3, Nodes.ExpCallNode )
+      if callNode ~= nil then
+         self.nilAccDoneSet[callNode:get_func()]= true
+      end
+   end
+   local resultType = node:get_expType()
+   local resultRep = self:getRep( resultType )
+   local accessIns = self:coerceVal( self:lowerVal( node ), resultType )
+   self.node2val[prefix] = nil
+   table.insert( pre, W.ifElse( W.refIsNull( lg( work ) ), {self:getDefaultVal( resultRep )}, {accessIns}, resultRep ) )
+   return self:newVal( W.seq( pre ), resultType )
+end
+
+
 function convFilter:lowerVal( node )
 
+   do
+      local val = self.node2val[node]
+      if val ~= nil then
+         return val
+      end
+   end
+   do
+      local prefix = self:getNilAccPrefix( node )
+      if prefix ~= nil then
+         return self:lowerNilAcc( node, prefix )
+      end
+   end
    local expType = node:get_expType()
    do
       local _switchExp = node:get_kind()
-      if _switchExp == Nodes.NodeKind.get_LiteralInt() then
+      if _switchExp == Nodes.NodeKind.get_TupleConst() then
+         local tupleNode = _lune.unwrap( _lune.__Cast( node, 3, Nodes.TupleConstNode ))
+         local pre = {}
+         local vals = self:lowerValList( tupleNode:get_expList(), pre )
+         table.insert( pre, self:buildList( vals ) )
+         return self:newVal( W.seq( pre ), expType )
+      elseif _switchExp == Nodes.NodeKind.get_ExpExpandTuple() then
+         local expandNode = _lune.unwrap( _lune.__Cast( node, 3, Nodes.ExpExpandTupleNode ))
+         return Val._new(self:lowerExpAs( expandNode:get_exp(), expandNode:get_exp():get_expType() ), self.rt:get_listType(), Ast.builtinTypeDDD)
+      elseif _switchExp == Nodes.NodeKind.get_LiteralInt() then
          local literal = _lune.unwrap( _lune.__Cast( node, 3, Nodes.LiteralIntNode ))
          return self:newVal( W.i64Const( literal:get_num() ), Ast.builtinTypeInt )
       elseif _switchExp == Nodes.NodeKind.get_LiteralChar() then
@@ -2515,6 +2824,35 @@ function convFilter:lowerCallRef( node, refNode, pre )
       table.insert( pre, self:toStr( vals[1] ) )
       return W.seq( pre ), {Ast.builtinTypeString}
    end
+   if funcType:equals( self.processInfo, builtin.lns___run ) then
+      local argList = _lune.unwrap( node:get_argList())
+      local mode = self:tempLocal( W.typeI64 )
+      table.insert( pre, ls( mode, self:lowerExpAs( argList:get_expList()[2], Ast.builtinTypeInt ) ) )
+      local callPre = {}
+      local callIns, retTypes = self:lowerObjMethodCall( node, argList:get_expList()[1], "run", callPre, nil )
+      local body = {callIns}
+      for __index, _1 in ipairs( retTypes ) do
+         table.insert( body, W.drop( W.nop(  ) ) )
+      end
+      table.insert( body, W.i32Const( 1 ) )
+      table.insert( pre, W.ifElse( p( W.opI64Eq, {lg( mode ), W.i64Const( 2 )} ), {W.i32Const( 0 )}, body, W.typeI32 ) )
+      return W.seq( pre ), {Ast.builtinTypeBool}
+   end
+   if funcType:equals( self.processInfo, builtin.lns___join ) then
+      return W.seq( pre ), {}
+   end
+   if funcType:equals( self.processInfo, builtin.lns___serr ) then
+      local info = self:getSerrInfo(  )
+      table.insert( pre, W.structNew( info:get_structType(), {W.i32Const( 0 ), W.globalGet( info:get_vtGlobal() ), self:lowerArgAs( node, 1, Ast.builtinTypeString )} ) )
+      return W.seq( pre ), funcType:get_retTypeInfoList()
+   end
+   if funcType:equals( self.processInfo, builtin.lns_tonumber ) then
+      return self:lowerLuaCall( node, Rt.luaTonumber, {} )
+   end
+   if funcType:equals( self.processInfo, builtin.lns_type ) then
+      table.insert( pre, W.call( self:fnLuaType(  ), {self:lowerArgAs( node, 1, Ast.builtinTypeStem_ )} ) )
+      return W.seq( pre ), {Ast.builtinTypeString}
+   end
    if symbol:get_kind() == Ast.SymbolKind.Fun then
       do
          local funcIndex = self.func2index[funcType]
@@ -2717,7 +3055,80 @@ function convFilter:lowerStrMethod( node, prefix, name )
          return W.seq( pre ), {Ast.builtinTypeString}
       end
    end
+   local luaIdMap = {["byte"] = Rt.luaByte, ["rep"] = Rt.luaRep, ["lower"] = Rt.luaLower, ["upper"] = Rt.luaUpper, ["reverse"] = Rt.luaReverse, ["len"] = Rt.luaLen, ["replace"] = Rt.luaReplace}
+   do
+      local luaId = luaIdMap[name]
+      if luaId ~= nil then
+         return self:lowerLuaCall( node, luaId, {strVal} )
+      end
+   end
    self:error( node, string.format( "not support str method -- %s", name) )
+end
+
+function convFilter:lowerLuaCall( node, luaId, headArgs )
+
+   local pre = {}
+   local args = self:tempLocal( self.rt:get_listType() )
+   table.insert( pre, ls( args, W.call( self.rt:fnListNew(  ), {W.i32Const( 4 )} ) ) )
+   for __index, ins in ipairs( headArgs ) do
+      table.insert( pre, W.call( self.rt:fnListPush(  ), {lg( args ), ins} ) )
+   end
+   do
+      local argList = node:get_argList()
+      if argList ~= nil then
+         for __index, exp in ipairs( argList:get_expList() ) do
+            local argIns
+            
+            if exp:get_kind() == Nodes.NodeKind.get_Abbr() then
+               argIns = W.refNull( W.htAny )
+            else
+             
+               argIns = self:lowerExpAs( exp, Ast.builtinTypeStem_ )
+            end
+            table.insert( pre, W.call( self.rt:fnListPush(  ), {lg( args ), argIns} ) )
+         end
+      end
+   end
+   local result = W.call( self.rt:fnLuaCall(  ), {W.i32Const( luaId ), lg( args )} )
+   local retTypeList = node:get_func():get_expType():get_retTypeInfoList()
+   if #retTypeList == 1 and retTypeList[1]:get_kind() ~= Ast.TypeInfoKind.DDD then
+      table.insert( pre, self:coerce( self.rt:listItem( result, 0 ), Ast.builtinTypeStem_, retTypeList[1] ) )
+      return W.seq( pre ), retTypeList
+   end
+   table.insert( pre, result )
+   return W.seq( pre ), {Ast.builtinTypeDDD}
+end
+
+function convFilter:fnLuaType(  )
+
+   do
+      local index = self.adapterMap["luaType"]
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self.mod:addFunc( {W.typeAnyRef}, {self.rt:get_strType()} )
+   self.adapterMap["luaType"] = index
+   local function check( cond, name )
+   
+      return W.ifElse( cond, {W.ret( {self.rt:strLiteral( name )} )}, nil, nil )
+   end
+   func:setBody( {check( W.refIsNull( lg( 0 ) ), "nil" ), check( W.refTest( self.rt:get_tBoxI64(), lg( 0 ) ), "number" ), check( W.refTest( self.rt:get_tBoxF64(), lg( 0 ) ), "number" ), check( W.refTest( self.rt:get_tBoxBool(), lg( 0 ) ), "boolean" ), check( W.refTest( self.rt:get_tStr(), lg( 0 ) ), "string" ), check( W.refTest( self.rt:get_tClo(), lg( 0 ) ), "function" ), self.rt:strLiteral( "table" )} )
+   return index
+end
+
+function convFilter:fnStemIndex(  )
+
+   do
+      local index = self.adapterMap["stemIndex"]
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self.mod:addFunc( {W.typeAnyRef, W.typeAnyRef}, {W.typeAnyRef} )
+   self.adapterMap["stemIndex"] = index
+   func:setBody( {W.ifElse( W.refTest( self.rt:get_tList(), lg( 0 ) ), {W.ifElse( W.refTest( self.rt:get_tBoxI64(), lg( 1 ) ), {W.ret( {W.call( self.rt:fnListGet(  ), {W.refCast( self.rt:get_tList(), lg( 0 ) ), self.rt:unboxI64( lg( 1 ) )} )} )}, nil, nil ), W.ret( {W.refNull( W.htAny )} )}, nil, nil ), W.ifElse( W.refTest( self.rt:get_tMap(), lg( 0 ) ), {W.ret( {W.call( self.rt:fnMapGet(  ), {W.refCast( self.rt:get_tMap(), lg( 0 ) ), lg( 1 )} )} )}, nil, nil ), self.rt:error( self.rt:strLiteral( "attempt to index a non-table value" ) )} )
+   return index
 end
 
 function convFilter:fnIntOrDefault( defVal )
@@ -2776,47 +3187,67 @@ function convFilter:isStreamType( typeInfo )
    return work == self:getGenSrc( builtin.ostream_ ) or work == self:getGenSrc( builtin.istream_ ) or work == self:getGenSrc( builtin.luastream_ )
 end
 
+function convFilter:lowerIfMethodCall( prefix, name, pre, argList )
+
+   local objType = self:getObjType( prefix:get_expType() )
+   local ifInfo = self:getIfInfo( objType )
+   local methodIndex = ifInfo:get_name2index()[name]
+   if  nil == methodIndex then
+      local _methodIndex = methodIndex
+   
+      self:error( prefix, string.format( "not found method -- %s", name) )
+   end
+   
+   local methodType = _lune.unwrap( self:getIfMethodType( objType, name ))
+   local obj = self:tempLocal( self.rt:get_objType() )
+   table.insert( pre, ls( obj, self:lowerExpAs( prefix, objType ) ) )
+   local args = {lg( obj )}
+   append( args, self:lowerArgs( argList, methodType:get_argTypeInfoList(), pre ) )
+   local itab = W.refCast( ifInfo:get_itType(), W.arrayGet( self.rt:get_tAnyArr(), W.structGet( self.rt:get_tVT(), Rt.fVtItabs, W.structGet( self.rt:get_tObj(), Rt.fObjVt, lg( obj ) ) ), W.i32Const( ifInfo:get_ifId() ) ) )
+   table.insert( args, W.structGet( ifInfo:get_itType(), methodIndex, itab ) )
+   table.insert( pre, W.callRef( ifInfo:get_methodFuncTypes()[methodIndex + 1], args ) )
+   return W.seq( pre ), methodType:get_retTypeInfoList()
+end
+
 function convFilter:lowerMethodCall( node, prefix, name, pre )
 
    local objType = self:getObjType( prefix:get_expType() )
-   if objType:get_kind() == Ast.TypeInfoKind.IF then
-      local ifInfo = self:getIfInfo( objType )
-      local methodIndex = ifInfo:get_name2index()[name]
-      if  nil == methodIndex then
-         local _methodIndex = methodIndex
-      
-         self:error( node, string.format( "not found method -- %s", name) )
+   if objType:get_kind() ~= Ast.TypeInfoKind.IF and not self:getClassInfo( objType ) and Ast.isBuiltin( self:getGenSrc( objType ):get_typeId().id ) then
+      table.insert( pre, W.drop( self:toAny( self:lowerVal( prefix ) ) ) )
+      local retTypes = node:get_func():get_expType():get_retTypeInfoList()
+      for __index, retType in ipairs( retTypes ) do
+         table.insert( pre, self:getDefaultVal( self:getRep( retType ) ) )
       end
-      
-      local methodType = _lune.unwrap( self:getIfMethodType( objType, name ))
-      local obj = self:tempLocal( self.rt:get_objType() )
-      table.insert( pre, ls( obj, self:lowerExpAs( prefix, objType ) ) )
-      local args = {lg( obj )}
-      append( args, self:lowerArgs( node:get_argList(), methodType:get_argTypeInfoList(), pre ) )
-      local itab = W.refCast( ifInfo:get_itType(), W.arrayGet( self.rt:get_tAnyArr(), W.structGet( self.rt:get_tVT(), Rt.fVtItabs, W.structGet( self.rt:get_tObj(), Rt.fObjVt, lg( obj ) ) ), W.i32Const( ifInfo:get_ifId() ) ) )
-      table.insert( args, W.structGet( ifInfo:get_itType(), methodIndex, itab ) )
-      table.insert( pre, W.callRef( ifInfo:get_methodFuncTypes()[methodIndex + 1], args ) )
-      return W.seq( pre ), methodType:get_retTypeInfoList()
+      return W.seq( pre ), retTypes
+   end
+   return self:lowerObjMethodCall( node, prefix, name, pre, node:get_argList() )
+end
+
+function convFilter:lowerObjMethodCall( errNode, prefix, name, pre, argList )
+
+   local objType = self:getObjType( prefix:get_expType() )
+   if objType:get_kind() == Ast.TypeInfoKind.IF then
+      return self:lowerIfMethodCall( prefix, name, pre, argList )
    end
    local info = self:getClassInfo( objType )
    if  nil == info then
       local _info = info
    
-      self:error( node, string.format( "not found class -- %s", objType:getTxt(  )) )
+      self:error( errNode, string.format( "not found class -- %s", objType:getTxt(  )) )
    end
    
    local slotIndex = info:get_name2slot()[name]
    if  nil == slotIndex then
       local _slotIndex = slotIndex
    
-      self:error( node, string.format( "not found method -- %s", name) )
+      self:error( errNode, string.format( "not found method -- %s", name) )
    end
    
    local slot = info:get_slotList()[slotIndex]
    local obj = self:tempLocal( W.refType( info:get_structType() ) )
    table.insert( pre, ls( obj, self:lowerExpAs( prefix, info:get_typeInfo() ) ) )
    local args = {lg( obj )}
-   append( args, self:lowerArgs( node:get_argList(), slot:get_methodType():get_argTypeInfoList(), pre ) )
+   append( args, self:lowerArgs( argList, slot:get_methodType():get_argTypeInfoList(), pre ) )
    table.insert( args, W.structGet( info:get_vtType(), slotIndex, W.structGet( info:get_structType(), Rt.fObjVt, lg( obj ) ) ) )
    table.insert( pre, W.callRef( slot:get_funcType(), args ) )
    return W.seq( pre ), slot:get_methodType():get_retTypeInfoList()
@@ -2869,10 +3300,28 @@ function convFilter:lowerCallField( node, fieldNode, pre )
       local symbol = fieldNode:get_symbolInfo()
       if symbol ~= nil then
          local methodType = symbol:getOrg(  ):get_typeInfo()
+         if symbol:get_kind() == Ast.SymbolKind.Mbr or symbol:get_kind() == Ast.SymbolKind.Var then
+            local cloVal = self:lowerVal( fieldNode )
+            table.insert( pre, self:callClosure( cloVal:get_ins(), methodType, node:get_argList(), pre ) )
+            return W.seq( pre ), self:normType( methodType ):get_retTypeInfoList()
+         end
          if methodType:get_staticFlag() or symbol:get_kind() == Ast.SymbolKind.Fun then
             return self:lowerStaticCall( node, prefix, name, methodType, pre )
          end
       end
+   end
+   do
+      local enumType = _lune.__Cast( prefixType, 3, Ast.EnumTypeInfo )
+      if enumType ~= nil then
+         if name == "get__txt" then
+            table.insert( pre, W.call( self:fnEnumTxt( enumType ), {self:lowerExp( prefix )} ) )
+            return W.seq( pre ), {Ast.builtinTypeString}
+         end
+      end
+   end
+   if prefixType:get_kind() == Ast.TypeInfoKind.Alge and name == "get__txt" then
+      table.insert( pre, self:algeTxt( prefix, prefixType ) )
+      return W.seq( pre ), {Ast.builtinTypeString}
    end
    if name == "_toMap" then
       do
@@ -2886,6 +3335,35 @@ function convFilter:lowerCallField( node, fieldNode, pre )
    return self:lowerMethodCall( node, prefix, name, pre )
 end
 
+function convFilter:getStringModuleFuncMap(  )
+
+   local builtin = self.builtinFuncs
+   return {[builtin.string_find] = Rt.luaFind, [builtin.string_byte] = Rt.luaByte, [builtin.string_rep] = Rt.luaRep, [builtin.string_gsub] = Rt.luaGsub, [builtin.string_lower] = Rt.luaLower, [builtin.string_upper] = Rt.luaUpper, [builtin.string_reverse] = Rt.luaReverse, [builtin.string_sub] = Rt.luaSub}
+end
+
+function convFilter:fnStrJoin(  )
+
+   do
+      local index = self.adapterMap["strJoin"]
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self.mod:addFunc( {W.typeAnyRef, W.typeAnyRef, W.typeAnyRef, W.typeAnyRef}, {self.rt:get_strType()} )
+   self.adapterMap["strJoin"] = index
+   local list = func:addLocal( self.rt:get_listType() )
+   local sep = func:addLocal( self.rt:get_strType() )
+   local pos = func:addLocal( W.typeI32 )
+   local last = func:addLocal( W.typeI32 )
+   local result = func:addLocal( self.rt:get_strType() )
+   local function toI32( val )
+   
+      return p( W.opI32WrapI64, {self.rt:unboxI64( val )} )
+   end
+   func:setBody( {ls( list, W.refCast( self.rt:get_tList(), lg( 0 ) ) ), ls( sep, W.ifElse( W.refIsNull( lg( 1 ) ), {self.rt:strLiteral( "" )}, {W.refCast( self.rt:get_tStr(), lg( 1 ) )}, self.rt:get_strType() ) ), ls( pos, W.ifElse( W.refIsNull( lg( 2 ) ), {W.i32Const( 1 )}, {toI32( lg( 2 ) )}, W.typeI32 ) ), ls( last, W.ifElse( W.refIsNull( lg( 3 ) ), {W.structGet( self.rt:get_tList(), Rt.fListLen, lg( list ) )}, {toI32( lg( 3 ) )}, W.typeI32 ) ), ls( result, self.rt:strLiteral( "" ) ), W.block( {W.loop( {W.brIf( 1, p( W.opI32GtS, {lg( pos ), lg( last )} ) ), ls( result, W.call( self.rt:fnStrConcat(  ), {lg( result ), W.refCast( self.rt:get_tStr(), W.arrayGet( self.rt:get_tAnyArr(), W.structGet( self.rt:get_tList(), Rt.fListItems, lg( list ) ), p( W.opI32Sub, {lg( pos ), W.i32Const( 1 )} ) ) )} ) ), W.ifElse( p( W.opI32LtS, {lg( pos ), lg( last )} ), {ls( result, W.call( self.rt:fnStrConcat(  ), {lg( result ), lg( sep )} ) )}, nil, nil ), ls( pos, p( W.opI32Add, {lg( pos ), W.i32Const( 1 )} ) ), W.br( 0 )}, nil )}, nil ), lg( result )} )
+   return index
+end
+
 function convFilter:lowerStaticCall( node, prefix, name, methodType, pre )
 
    do
@@ -2897,6 +3375,25 @@ function convFilter:lowerStaticCall( node, prefix, name, methodType, pre )
          return W.seq( pre ), methodType:get_retTypeInfoList()
       end
    end
+   local builtin = self.builtinFuncs
+   for strFunc, luaId in pairs( self:getStringModuleFuncMap(  ) ) do
+      if methodType:equals( self.processInfo, strFunc ) then
+         return self:lowerLuaCall( node, luaId, {} )
+      end
+   end
+   if methodType:equals( self.processInfo, builtin.__lns_sync_createFlag ) or methodType:equals( self.processInfo, builtin.__lns_sync__createPipe ) then
+      table.insert( pre, W.refNull( W.htAny ) )
+      return W.seq( pre ), {Ast.builtinTypeStem:get_nilableTypeInfo()}
+   end
+   if methodType:equals( self.processInfo, builtin.string__join ) or methodType:equals( self.processInfo, builtin.string___join ) then
+      local args = {}
+      table.insert( args, self:lowerArgAs( node, 1, Ast.builtinTypeStem_ ) )
+      for index = 2, 4 do
+         table.insert( args, self:lowerArgAs( node, index, Ast.builtinTypeStem_ ) )
+      end
+      table.insert( pre, W.call( self:fnStrJoin(  ), args ) )
+      return W.seq( pre ), {Ast.builtinTypeString}
+   end
    local classType = self:getGenSrc( prefix:get_expType() )
    do
       local enumType = _lune.__Cast( classType, 3, Ast.EnumTypeInfo )
@@ -2907,12 +3404,11 @@ function convFilter:lowerStaticCall( node, prefix, name, methodType, pre )
          end
       end
    end
-   if name == "_fromMap" then
+   if name == "_fromMap" or name == "_fromStem" then
       do
          local info = self:getClassInfo( classType )
          if info ~= nil then
             table.insert( pre, W.call( self:fnFromMap( node, info ), {self:lowerArgAs( node, 1, Ast.builtinTypeStem_ )} ) )
-            table.insert( pre, W.refNull( self.rt:get_tStr() ) )
             return W.seq( pre ), {info:get_typeInfo():get_nilableTypeInfo(), Ast.builtinTypeString:get_nilableTypeInfo()}
          end
       end
@@ -2982,6 +3478,13 @@ function convFilter:lowerNew( node )
    return Val._new(W.seq( pre ), objRep, node:get_expType())
 end
 
+function convFilter:algeTxt( prefix, prefixType )
+
+   local algeType = self:getGenSrc( prefixType )
+   local info = _lune.unwrap( self:getAlgeInfo( algeType ))
+   return W.refCast( self.rt:get_tStr(), W.arrayGet( self.rt:get_tAnyArr(), W.globalGet( info:get_namesGlobal() ), W.structGet( info:get_baseType(), 1, self:lowerExpAs( prefix, algeType ) ) ) )
+end
+
 function convFilter:getCtorType( classType )
 
    local scope = _lune.unwrap( classType:get_scope())
@@ -3009,9 +3512,27 @@ function convFilter:lowerGetField( node )
       end
    end
    if prefixType:get_kind() == Ast.TypeInfoKind.Alge and getterName == "get__txt" then
-      local algeType = self:getGenSrc( prefixType )
-      local info = _lune.unwrap( self:getAlgeInfo( algeType ))
-      return self:newVal( W.refCast( self.rt:get_tStr(), W.arrayGet( self.rt:get_tAnyArr(), W.globalGet( info:get_namesGlobal() ), W.structGet( info:get_baseType(), 1, self:lowerExpAs( prefix, algeType ) ) ) ), Ast.builtinTypeString )
+      return self:newVal( self:algeTxt( prefix, prefixType ), Ast.builtinTypeString )
+   end
+   if self:getObjType( prefix:get_expType() ):get_kind() == Ast.TypeInfoKind.IF then
+      local ins, retTypes = self:lowerIfMethodCall( prefix, getterName, {}, nil )
+      return self:newVal( ins, retTypes[1] )
+   end
+   if getterType:get_staticFlag() and (getterType:get_autoFlag() or not _lune._Set_has(self.declaredMethodSet, getterType ) ) then
+      do
+         local scope = self:getGenSrc( prefix:get_expType() ):get_scope()
+         if scope ~= nil then
+            do
+               local symbol = scope:get_symbol2SymbolInfoMap()[fieldName]
+               if symbol ~= nil then
+                  local orgSym = symbol:getOrg(  )
+                  if self.globalSym2loc[orgSym] then
+                     return Val._new(self:readSym( node, orgSym ), self:getRep( orgSym:get_typeInfo() ), orgSym:get_typeInfo())
+                  end
+               end
+            end
+         end
+      end
    end
    if getterType:get_autoFlag() or not _lune._Set_has(self.declaredMethodSet, getterType ) then
       return self:lowerMemberRef( node, prefix, fieldName )
@@ -3148,6 +3669,106 @@ function convFilter:fnEnumAllList( enumType )
    return index
 end
 
+function convFilter:needToMapConv( typeInfo )
+
+   local work = self:normType( typeInfo )
+   do
+      local _switchExp = work:get_kind()
+      if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array or _switchExp == Ast.TypeInfoKind.Map then
+         for __index, item in ipairs( work:get_itemTypeInfoList() ) do
+            if self:needToMapConv( item ) then
+               return true
+            end
+         end
+         return false
+      elseif _switchExp == Ast.TypeInfoKind.Class then
+         if self:isType( work, Ast.builtinTypeString ) then
+            return false
+         end
+         return self:getClassInfo( work ) ~= nil
+      end
+   end
+   return false
+end
+
+function convFilter:mapConvKey( typeInfo )
+
+   local work = self:normType( typeInfo )
+   local key = string.format( "%d", self:getGenSrc( work ):get_typeId().id)
+   if #work:get_itemTypeInfoList() > 0 then
+      key = key .. "<"
+      for index, item in ipairs( work:get_itemTypeInfoList() ) do
+         if index > 1 then
+            key = key .. ","
+         end
+         key = key .. self:mapConvKey( item )
+         if item:get_nilable() then
+            key = key .. "!"
+         end
+      end
+      key = key .. ">"
+   end
+   return key
+end
+
+function convFilter:fnToMapConv( node, typeInfo )
+
+   local name = "toMapConv:" .. self:mapConvKey( typeInfo )
+   do
+      local index = self.adapterMap[name]
+      if index ~= nil then
+         return index
+      end
+   end
+   local index, func = self.mod:addFunc( {W.typeAnyRef}, {W.typeAnyRef} )
+   self.adapterMap[name] = index
+   local work = self:normType( typeInfo )
+   local body = {W.ifElse( W.refIsNull( lg( 0 ) ), {W.ret( {W.refNull( W.htAny )} )}, nil, nil )}
+   do
+      local _switchExp = work:get_kind()
+      if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+         local elemType = work:get_itemTypeInfoList()[1]
+         local src = func:addLocal( self.rt:get_listType() )
+         local result = func:addLocal( self.rt:get_listType() )
+         local pos = func:addLocal( W.typeI32 )
+         table.insert( body, ls( src, W.refCast( self.rt:get_tList(), lg( 0 ) ) ) )
+         table.insert( body, ls( result, W.call( self.rt:fnListNew(  ), {W.structGet( self.rt:get_tList(), Rt.fListLen, lg( src ) )} ) ) )
+         table.insert( body, W.block( {W.loop( {W.brIf( 1, p( W.opI32GeS, {lg( pos ), W.structGet( self.rt:get_tList(), Rt.fListLen, lg( src ) )} ) ), W.call( self.rt:fnListPush(  ), {lg( result ), self:toMapVal( node, elemType, W.arrayGet( self.rt:get_tAnyArr(), W.structGet( self.rt:get_tList(), Rt.fListItems, lg( src ) ), lg( pos ) ) )} ), ls( pos, p( W.opI32Add, {lg( pos ), W.i32Const( 1 )} ) ), W.br( 0 )}, nil )}, nil ) )
+         table.insert( body, lg( result ) )
+      elseif _switchExp == Ast.TypeInfoKind.Map then
+         local keyType = work:get_itemTypeInfoList()[1]
+         local valType = work:get_itemTypeInfoList()[2]
+         local src = func:addLocal( self.rt:get_mapType() )
+         local result = func:addLocal( self.rt:get_mapType() )
+         local pos = func:addLocal( W.typeI32 )
+         table.insert( body, ls( src, W.refCast( self.rt:get_tMap(), lg( 0 ) ) ) )
+         table.insert( body, ls( result, self.rt:newMap(  ) ) )
+         table.insert( body, W.block( {W.loop( {ls( pos, W.call( self.rt:fnMapNext(  ), {lg( src ), lg( pos )} ) ), W.brIf( 1, p( W.opI32LtS, {lg( pos ), W.i32Const( 0 )} ) ), W.call( self.rt:fnMapSet(  ), {lg( result ), self:toMapVal( node, keyType, self.rt:mapKeyAt( lg( src ), lg( pos ) ) ), self:toMapVal( node, valType, self.rt:mapValAt( lg( src ), lg( pos ) ) )} ), ls( pos, p( W.opI32Add, {lg( pos ), W.i32Const( 1 )} ) ), W.br( 0 )}, nil )}, nil ) )
+         table.insert( body, lg( result ) )
+      else 
+         
+            local info = self:getClassInfo( work )
+            if  nil == info then
+               local _info = info
+            
+               self:error( node, string.format( "not support _toMap -- %s", typeInfo:getTxt(  )) )
+            end
+            
+            table.insert( body, W.call( self:fnToMap( node, info ), {W.refCast( info:get_structType(), lg( 0 ) )} ) )
+      end
+   end
+   func:setBody( body )
+   return index
+end
+
+function convFilter:toMapVal( node, typeInfo, val )
+
+   if not self:needToMapConv( typeInfo ) then
+      return val
+   end
+   return W.call( self:fnToMapConv( node, typeInfo ), {val} )
+end
+
 function convFilter:fnToMap( node, info )
 
    local name = string.format( "toMap:%d", info:get_structType())
@@ -3163,9 +3784,123 @@ function convFilter:fnToMap( node, info )
    local body = {ls( map, self.rt:newMap(  ) )}
    for fieldIndex, fieldName in ipairs( info:get_fieldNames() ) do
       local rep = info:get_fieldReps()[fieldIndex]
-      table.insert( body, W.call( self.rt:fnMapSet(  ), {lg( map ), self.rt:strLiteral( fieldName ), self:coerceRep( W.structGet( info:get_structType(), fieldIndex + 1, lg( 0 ) ), rep, W.typeAnyRef )} ) )
+      local val = self:coerceRep( W.structGet( info:get_structType(), fieldIndex + 1, lg( 0 ) ), rep, W.typeAnyRef )
+      table.insert( body, W.call( self.rt:fnMapSet(  ), {lg( map ), self.rt:strLiteral( fieldName ), self:toMapVal( node, info:get_fieldTypes()[fieldIndex], val )} ) )
    end
    table.insert( body, lg( map ) )
+   func:setBody( body )
+   return index
+end
+
+function convFilter:fnFromConv( node, typeInfo )
+
+   local name = "fromConv:" .. self:mapConvKey( typeInfo )
+   do
+      local index = self.adapterMap[name]
+      if index ~= nil then
+         return index
+      end
+   end
+   local strNull = W.refNull( self.rt:get_tStr() )
+   local anyNull = W.refNull( W.htAny )
+   local index, func = self.mod:addFunc( {W.typeAnyRef}, {W.typeAnyRef, self.rt:get_strType()} )
+   self.adapterMap[name] = index
+   local work = self:normType( typeInfo )
+   local fail = W.ret( {anyNull, strNull} )
+   local function ok( val )
+   
+      return W.ret( {val, strNull} )
+   end
+   local function ifThen( cond, body )
+   
+      return W.ifElse( cond, body, nil, nil )
+   end
+   local body = {}
+   local function posMess( posTxt, mess, messLocal )
+   
+      return W.ifElse( W.refIsNull( mess ), {posTxt}, {W.call( self.rt:fnStrConcat(  ), {posTxt, W.call( self.rt:fnStrConcat(  ), {self.rt:strLiteral( "." ), lg( messLocal )} )} )}, self.rt:get_strType() )
+   end
+   if self:isType( work, Ast.builtinTypeInt ) or work:get_kind() == Ast.TypeInfoKind.Enum then
+      if work:get_kind() == Ast.TypeInfoKind.Enum then
+         self:error( node, string.format( "not support _fromMap for enum -- %s", typeInfo:getTxt(  )) )
+      end
+      table.insert( body, ifThen( W.refTest( self.rt:get_tBoxI64(), lg( 0 ) ), {ok( lg( 0 ) )} ) )
+      table.insert( body, ifThen( W.refTest( self.rt:get_tBoxF64(), lg( 0 ) ), {ok( self.rt:boxI64( p( W.opI64TruncF64S, {p( W.opF64Floor, {self.rt:unboxF64( lg( 0 ) )} )} ) ) )} ) )
+      table.insert( body, fail )
+   elseif self:isType( work, Ast.builtinTypeReal ) then
+      table.insert( body, ifThen( W.refTest( self.rt:get_tBoxF64(), lg( 0 ) ), {ok( lg( 0 ) )} ) )
+      table.insert( body, ifThen( W.refTest( self.rt:get_tBoxI64(), lg( 0 ) ), {ok( self.rt:boxF64( p( W.opF64ConvertI64S, {self.rt:unboxI64( lg( 0 ) )} ) ) )} ) )
+      table.insert( body, fail )
+   elseif self:isType( work, Ast.builtinTypeBool ) then
+      table.insert( body, ifThen( W.refTest( self.rt:get_tBoxBool(), lg( 0 ) ), {ok( lg( 0 ) )} ) )
+      table.insert( body, fail )
+   elseif self:isType( work, Ast.builtinTypeString ) then
+      table.insert( body, ifThen( W.refTest( self.rt:get_tStr(), lg( 0 ) ), {ok( lg( 0 ) )} ) )
+      table.insert( body, fail )
+   elseif self:isType( work, Ast.builtinTypeStem ) or work:get_kind() == Ast.TypeInfoKind.Alternate then
+      table.insert( body, ok( lg( 0 ) ) )
+   else
+    
+      do
+         local _switchExp = work:get_kind()
+         if _switchExp == Ast.TypeInfoKind.List or _switchExp == Ast.TypeInfoKind.Array then
+            local elemType = work:get_itemTypeInfoList()[1]
+            local src = func:addLocal( self.rt:get_listType() )
+            local result = func:addLocal( self.rt:get_listType() )
+            local pos = func:addLocal( W.typeI32 )
+            local val = func:addLocal( W.typeAnyRef )
+            local mess = func:addLocal( self.rt:get_strType() )
+            table.insert( body, ifThen( p( W.opI32Eqz, {W.refTest( self.rt:get_tList(), lg( 0 ) )} ), {fail} ) )
+            table.insert( body, ls( src, W.refCast( self.rt:get_tList(), lg( 0 ) ) ) )
+            table.insert( body, ls( result, W.call( self.rt:fnListNew(  ), {W.structGet( self.rt:get_tList(), Rt.fListLen, lg( src ) )} ) ) )
+            local loopBody = {W.brIf( 1, p( W.opI32GeS, {lg( pos ), W.structGet( self.rt:get_tList(), Rt.fListLen, lg( src ) )} ) ), W.call( self:fnFromConv( node, elemType ), {W.arrayGet( self.rt:get_tAnyArr(), W.structGet( self.rt:get_tList(), Rt.fListItems, lg( src ) ), lg( pos ) )} ), ls( mess, W.nop(  ) ), ls( val, W.nop(  ) ), ls( pos, p( W.opI32Add, {lg( pos ), W.i32Const( 1 )} ) )}
+            if not elemType:get_nilable() then
+               table.insert( loopBody, ifThen( W.refIsNull( lg( val ) ), {W.ret( {anyNull, posMess( W.call( self.rt:fnI64ToStr(  ), {p( W.opI64ExtendI32S, {lg( pos )} )} ), lg( mess ), mess )} )} ) )
+            end
+            table.insert( loopBody, W.call( self.rt:fnListPush(  ), {lg( result ), lg( val )} ) )
+            table.insert( loopBody, W.br( 0 ) )
+            table.insert( body, W.block( {W.loop( loopBody, nil )}, nil ) )
+            table.insert( body, ok( lg( result ) ) )
+         elseif _switchExp == Ast.TypeInfoKind.Map or _switchExp == Ast.TypeInfoKind.Set then
+            local isSet = work:get_kind() == Ast.TypeInfoKind.Set
+            local keyType = work:get_itemTypeInfoList()[1]
+            local src = func:addLocal( self.rt:get_mapType() )
+            local result = func:addLocal( self.rt:get_mapType() )
+            local pos = func:addLocal( W.typeI32 )
+            local key = func:addLocal( W.typeAnyRef )
+            local val = func:addLocal( W.typeAnyRef )
+            local mess = func:addLocal( self.rt:get_strType() )
+            table.insert( body, ifThen( p( W.opI32Eqz, {W.refTest( self.rt:get_tMap(), lg( 0 ) )} ), {fail} ) )
+            table.insert( body, ls( src, W.refCast( self.rt:get_tMap(), lg( 0 ) ) ) )
+            table.insert( body, ls( result, self.rt:newMap(  ) ) )
+            local loopBody = {ls( pos, W.call( self.rt:fnMapNext(  ), {lg( src ), lg( pos )} ) ), W.brIf( 1, p( W.opI32LtS, {lg( pos ), W.i32Const( 0 )} ) ), W.call( self:fnFromConv( node, keyType ), {self.rt:mapKeyAt( lg( src ), lg( pos ) )} ), W.drop( W.nop(  ) ), ls( key, W.nop(  ) ), ifThen( W.refIsNull( lg( key ) ), {fail} )}
+            if isSet then
+               table.insert( loopBody, ls( val, lg( key ) ) )
+            else
+             
+               table.insert( loopBody, W.call( self:fnFromConv( node, work:get_itemTypeInfoList()[2] ), {self.rt:mapValAt( lg( src ), lg( pos ) )} ) )
+               table.insert( loopBody, ls( mess, W.nop(  ) ) )
+               table.insert( loopBody, ls( val, W.nop(  ) ) )
+               table.insert( loopBody, ifThen( W.refIsNull( lg( val ) ), {W.ret( {anyNull, W.call( self.rt:fnToStr(  ), {lg( key )} )} )} ) )
+            end
+            table.insert( loopBody, W.call( self.rt:fnMapSet(  ), {lg( result ), lg( key ), lg( val )} ) )
+            table.insert( loopBody, ls( pos, p( W.opI32Add, {lg( pos ), W.i32Const( 1 )} ) ) )
+            table.insert( loopBody, W.br( 0 ) )
+            table.insert( body, W.block( {W.loop( loopBody, nil )}, nil ) )
+            table.insert( body, ok( lg( result ) ) )
+         else 
+            
+               local info = self:getClassInfo( work )
+               if  nil == info then
+                  local _info = info
+               
+                  self:error( node, string.format( "not support _fromMap -- %s", typeInfo:getTxt(  )) )
+               end
+               
+               table.insert( body, W.call( self:fnFromMap( node, info ), {lg( 0 )} ) )
+         end
+      end
+   end
    func:setBody( body )
    return index
 end
@@ -3180,15 +3915,30 @@ function convFilter:fnFromMap( node, info )
       end
    end
    local objRep = W.refType( info:get_structType() )
-   local index, func = self.mod:addFunc( {W.typeAnyRef}, {objRep} )
+   local index, func = self.mod:addFunc( {W.typeAnyRef}, {objRep, self.rt:get_strType()} )
    self.adapterMap[name] = index
    local map = func:addLocal( self.rt:get_mapType() )
+   local val = func:addLocal( W.typeAnyRef )
+   local mess = func:addLocal( self.rt:get_strType() )
+   local body = {W.ifElse( p( W.opI32Eqz, {W.refTest( self.rt:get_tMap(), lg( 0 ) )} ), {W.ret( {W.refNull( info:get_structType() ), W.refNull( self.rt:get_tStr() )} )}, nil, nil ), ls( map, W.refCast( self.rt:get_tMap(), lg( 0 ) ) )}
    local fields = {W.i32Const( 0 ), W.globalGet( info:get_vtGlobal() )}
    for fieldIndex, fieldName in ipairs( info:get_fieldNames() ) do
       local rep = info:get_fieldReps()[fieldIndex]
-      table.insert( fields, self:coerceRep( W.call( self.rt:fnMapGet(  ), {lg( map ), self.rt:strLiteral( fieldName )} ), W.typeAnyRef, rep ) )
+      local fieldType = info:get_fieldTypes()[fieldIndex]
+      local fieldLocal = func:addLocal( rep )
+      table.insert( body, W.call( self:fnFromConv( node, fieldType ), {W.call( self.rt:fnMapGet(  ), {lg( map ), self.rt:strLiteral( fieldName )} )} ) )
+      table.insert( body, ls( mess, W.nop(  ) ) )
+      table.insert( body, ls( val, W.nop(  ) ) )
+      if not fieldType:get_nilable() then
+         local nameTxt = self.rt:strLiteral( fieldName )
+         table.insert( body, W.ifElse( W.refIsNull( lg( val ) ), {W.ret( {W.refNull( info:get_structType() ), W.ifElse( W.refIsNull( lg( mess ) ), {nameTxt}, {W.call( self.rt:fnStrConcat(  ), {self.rt:strLiteral( fieldName .. "." ), lg( mess )} )}, self.rt:get_strType() )} )}, nil, nil ) )
+      end
+      table.insert( body, ls( fieldLocal, self:coerceRep( lg( val ), W.typeAnyRef, rep ) ) )
+      table.insert( fields, lg( fieldLocal ) )
    end
-   func:setBody( {W.ifElse( p( W.opI32Eqz, {W.refTest( self.rt:get_tMap(), lg( 0 ) )} ), {W.ret( {W.refNull( info:get_structType() )} )}, nil, nil ), ls( map, W.refCast( self.rt:get_tMap(), lg( 0 ) ) ), W.structNew( info:get_structType(), fields )} )
+   table.insert( body, W.structNew( info:get_structType(), fields ) )
+   table.insert( body, W.refNull( self.rt:get_tStr() ) )
+   func:setBody( body )
    return index
 end
 
@@ -3258,6 +4008,127 @@ function convFilter:exitLoop( body )
    self.ctx:set_depth( self.ctx:get_depth() - 2 )
    table.remove( self.ctx:get_breakDepthList() )
    return W.block( {W.loop( body, nil )}, nil )
+end
+
+function convFilter:lowerApply( node )
+
+   local expList = node:get_expList()
+   local builtin = self.builtinFuncs
+   local list = {}
+   if #expList:get_expList() >= 1 then
+      local callNode = nil
+      do
+         local mretNode = _lune.__Cast( expList:get_expList()[1], 3, Nodes.ExpMRetNode )
+         if mretNode ~= nil then
+            callNode = _lune.__Cast( mretNode:get_mRet(), 3, Nodes.ExpCallNode )
+         end
+      end
+      if callNode ~= nil then
+         local funcType = callNode:get_func():get_expType()
+         local headArgs = {}
+         local isGmatch = false
+         if funcType:equals( self.processInfo, builtin.str_gmatch ) then
+            do
+               local fieldNode = _lune.__Cast( callNode:get_func(), 3, Nodes.RefFieldNode )
+               if fieldNode ~= nil then
+                  table.insert( headArgs, self:lowerExpAs( fieldNode:get_prefix(), Ast.builtinTypeString ) )
+                  isGmatch = true
+               end
+            end
+         elseif funcType:equals( self.processInfo, builtin.string_gmatch ) then
+            isGmatch = true
+         end
+         if isGmatch then
+            return self:lowerApplyGmatch( node, callNode, headArgs )
+         end
+      end
+   end
+   local vals = self:lowerValList( expList, list )
+   local funcType = self:normType( expList:get_expTypeList()[1] )
+   local cloInfo = self:getFuncCloInfo( funcType )
+   local clo = self:tempLocal( W.refType( cloInfo:get_cloType() ) )
+   local state = self:tempLocal( W.typeAnyRef )
+   local ctrl = self:tempLocal( W.typeAnyRef )
+   table.insert( list, ls( clo, W.refCast( cloInfo:get_cloType(), vals[1]:get_ins() ) ) )
+   local function getAny( index )
+   
+      if index <= #vals then
+         return self:coerceVal( vals[index], Ast.builtinTypeStem_ )
+      end
+      return W.refNull( W.htAny )
+   end
+   table.insert( list, ls( state, getAny( 2 ) ) )
+   table.insert( list, ls( ctrl, getAny( 3 ) ) )
+   local argTypes = funcType:get_argTypeInfoList()
+   local retTypes = funcType:get_retTypeInfoList()
+   self:enterLoop(  )
+   local body = {}
+   local args = {lg( clo )}
+   for index, argType in ipairs( argTypes ) do
+      local argIns
+      
+      if index == 1 then
+         argIns = lg( state )
+      elseif index == 2 then
+         argIns = lg( ctrl )
+      else
+       
+         argIns = W.refNull( W.htAny )
+      end
+      table.insert( args, self:coerce( argIns, Ast.builtinTypeStem_, argType ) )
+   end
+   table.insert( args, W.structGet( cloInfo:get_cloType(), Rt.fCloCode, lg( clo ) ) )
+   table.insert( body, W.callRef( cloInfo:get_funcType(), args ) )
+   local locals = {}
+   for __index, retType in ipairs( retTypes ) do
+      table.insert( locals, self:tempLocal( self:getRep( retType ) ) )
+   end
+   for index = #locals, 1, -1 do
+      table.insert( body, ls( locals[index], W.nop(  ) ) )
+   end
+   table.insert( body, ls( ctrl, self:coerce( lg( locals[1] ), retTypes[1], Ast.builtinTypeStem_ ) ) )
+   table.insert( body, W.brIf( 1, W.refIsNull( lg( ctrl ) ) ) )
+   for index, varSym in ipairs( node:get_varList() ) do
+      local valIns
+      
+      if index <= #retTypes then
+         valIns = self:coerce( lg( locals[index] ), retTypes[index], varSym:get_typeInfo() )
+      else
+       
+         valIns = self:getDefaultVal( self:getRep( varSym:get_typeInfo() ) )
+      end
+      table.insert( body, self:declareVar( varSym, valIns ) )
+   end
+   append( body, self:lowerBlock( node:get_block() ) )
+   table.insert( body, W.br( 0 ) )
+   table.insert( list, self:exitLoop( body ) )
+   return W.seq( list )
+end
+
+function convFilter:lowerApplyGmatch( node, callNode, headArgs )
+
+   local _
+   local list = {}
+   local ins, _1 = self:lowerLuaCall( callNode, Rt.luaGmatchAll, headArgs )
+   local result = self:tempLocal( self.rt:get_listType() )
+   table.insert( list, ls( result, ins ) )
+   local num = self:tempLocal( W.typeI32 )
+   table.insert( list, ls( num, p( W.opI32WrapI64, {self.rt:unboxI64( self.rt:listItem( lg( result ), 0 ) )} ) ) )
+   local pos = self:tempLocal( W.typeI32 )
+   table.insert( list, ls( pos, W.i32Const( 1 ) ) )
+   self:enterLoop(  )
+   local body = {}
+   table.insert( body, W.brIf( 1, p( W.opI32GeS, {lg( pos ), W.structGet( self.rt:get_tList(), Rt.fListLen, lg( result ) )} ) ) )
+   for index, varSym in ipairs( node:get_varList() ) do
+      local item = W.arrayGet( self.rt:get_tAnyArr(), W.structGet( self.rt:get_tList(), Rt.fListItems, lg( result ) ), p( W.opI32Add, {lg( pos ), W.i32Const( index - 1 )} ) )
+      local valIns = W.ifElse( p( W.opI32LtS, {W.i32Const( index - 1 ), lg( num )} ), {item}, {W.refNull( W.htAny )}, W.typeAnyRef )
+      table.insert( body, self:declareVar( varSym, self:coerce( valIns, Ast.builtinTypeStem_, varSym:get_typeInfo() ) ) )
+   end
+   table.insert( body, ls( pos, p( W.opI32Add, {lg( pos ), lg( num )} ) ) )
+   append( body, self:lowerBlock( node:get_block() ) )
+   table.insert( body, W.br( 0 ) )
+   table.insert( list, self:exitLoop( body ) )
+   return W.seq( list )
 end
 
 function makeIfChain( conds, bodies, elseBody )
@@ -3749,25 +4620,55 @@ end
 
 function convFilter:lowerFor( node )
 
-   local counter = self:tempLocal( W.typeI64 )
-   local toIdx = self:tempLocal( W.typeI64 )
-   local stepIdx = self:tempLocal( W.typeI64 )
+   local isReal = self:isType( node:get_val():get_typeInfo(), Ast.builtinTypeReal )
+   local rep
+   
+   local numType
+   
+   local ge = W.opI64GeS
+   local gt = W.opI64GtS
+   local lt = W.opI64LtS
+   local add = W.opI64Add
+   local zero
+   
+   if isReal then
+      rep = W.typeF64
+      numType = Ast.builtinTypeReal
+      ge = W.opF64Ge
+      gt = W.opF64Gt
+      lt = W.opF64Lt
+      add = W.opF64Add
+      zero = W.f64Const( 0.0 )
+   else
+    
+      rep = W.typeI64
+      numType = Ast.builtinTypeInt
+      zero = W.i64Const( 0 )
+   end
+   local counter = self:tempLocal( rep )
+   local toIdx = self:tempLocal( rep )
+   local stepIdx = self:tempLocal( rep )
    local list = {}
-   table.insert( list, ls( counter, self:lowerExpAs( node:get_init(), Ast.builtinTypeInt ) ) )
-   table.insert( list, ls( toIdx, self:lowerExpAs( node:get_to(), Ast.builtinTypeInt ) ) )
+   table.insert( list, ls( counter, self:lowerExpAs( node:get_init(), numType ) ) )
+   table.insert( list, ls( toIdx, self:lowerExpAs( node:get_to(), numType ) ) )
    do
       local delta = node:get_delta()
       if delta ~= nil then
-         table.insert( list, ls( stepIdx, self:lowerExpAs( delta, Ast.builtinTypeInt ) ) )
+         table.insert( list, ls( stepIdx, self:lowerExpAs( delta, numType ) ) )
       else
-         table.insert( list, ls( stepIdx, W.i64Const( 1 ) ) )
+         if isReal then
+            table.insert( list, ls( stepIdx, W.f64Const( 1.0 ) ) )
+         else
+          
+            table.insert( list, ls( stepIdx, W.i64Const( 1 ) ) )
+         end
       end
    end
    self:enterLoop(  )
    local body = {}
-   table.insert( body, W.brIf( 1, W.ifElse( p( W.opI64GeS, {lg( stepIdx ), W.i64Const( 0 )} ), {p( W.opI64GtS, {lg( counter ), lg( toIdx )} )}, {p( W.opI64LtS, {lg( counter ), lg( toIdx )} )}, W.typeI32 ) ) )
-   table.insert( body, self:declareVar( node:get_val(), self:coerceRep( lg( counter ), W.typeI64, self:getRep( node:get_val():get_typeInfo() ) ) ) )
-   table.insert( body, ls( counter, p( W.opI64Add, {lg( counter ), lg( stepIdx )} ) ) )
+   table.insert( body, W.brIf( 1, W.ifElse( p( ge, {lg( stepIdx ), zero} ), {p( gt, {lg( counter ), lg( toIdx )} )}, {p( lt, {lg( counter ), lg( toIdx )} )}, W.typeI32 ) ) )
+   table.insert( body, self:declareVar( node:get_val(), self:coerceRep( lg( counter ), rep, self:getRep( node:get_val():get_typeInfo() ) ) ) )
+   table.insert( body, ls( counter, p( add, {lg( counter ), lg( stepIdx )} ) ) )
    append( body, self:lowerBlock( node:get_block() ) )
    table.insert( body, W.br( 0 ) )
    table.insert( list, self:exitLoop( body ) )
@@ -3857,6 +4758,128 @@ function convFilter:lowerForeach( node, valSym, keySym, exp, block, sort )
    self:error( node, string.format( "not support foreach -- %s", expType:getTxt(  )) )
 end
 
+function convFilter:getCondRetInfo( node )
+
+   do
+      local work = _lune.__Cast( node, 3, Nodes.DeclVarNode )
+      if work ~= nil then
+         return work:get_condRetInfo()
+      else
+         do
+            local work = _lune.__Cast( node, 3, Nodes.ExpSetValNode )
+            if work ~= nil then
+               return work:get_condRetInfo()
+            else
+               do
+                  local work = _lune.__Cast( node, 3, Nodes.ExpSetItemNode )
+                  if work ~= nil then
+                     return work:get_condRetInfo()
+                  else
+                     do
+                        local work = _lune.__Cast( node, 3, Nodes.IfUnwrapNode )
+                        if work ~= nil then
+                           return work:get_condRetInfo()
+                        else
+                           do
+                              local work = _lune.__Cast( node, 3, Nodes.IfNode )
+                              if work ~= nil then
+                                 return work:get_stmtList()[1]:get_condRetInfo()
+                              else
+                                 do
+                                    local work = _lune.__Cast( node, 3, Nodes.StmtExpNode )
+                                    if work ~= nil then
+                                       do
+                                          local condRetList = _lune.__Cast( work:get_exp(), 3, Nodes.CondRetListNode )
+                                          if condRetList ~= nil then
+                                             return condRetList:get_info()
+                                          end
+                                       end
+                                    end
+                                 end
+                              end
+                           end
+                        end
+                     end
+                  end
+               end
+            end
+         end
+      end
+   end
+   return nil
+end
+
+function convFilter:lowerCondRetOf( node, out )
+
+   local info = self:getCondRetInfo( node )
+   if  nil == info then
+      local _info = info
+   
+      return 
+   end
+   
+   local retReps = self.ctx:get_retReps()
+   local function retWith( first )
+   
+      local vals = {}
+      for index, rep in ipairs( retReps ) do
+         do
+            if first ~= nil then
+               if index == 1 then
+                  table.insert( vals, first )
+                  goto __continue2
+               end
+            end
+            table.insert( vals, self:getDefaultVal( rep ) )
+         end
+         ::__continue2::
+      end
+      return W.ret( vals )
+   end
+   for __index, condRet in ipairs( info:get_list() ) do
+      do
+         local _switchExp = condRet:get_condKind()
+         if _switchExp == Nodes.CondRetKind.Nilable then
+            local val = self:lowerVal( condRet:get_exp() )
+            local work = self:tempLocal( val:get_rep() )
+            table.insert( out, ls( work, val:get_ins() ) )
+            table.insert( out, W.ifElse( W.refIsNull( lg( work ) ), {retWith( nil )}, nil, nil ) )
+            self.node2val[condRet] = Val._new(lg( work ), val:get_rep(), val:get_typeInfo())
+         elseif _switchExp == Nodes.CondRetKind.Ret then
+            local algeType = self:getGenSrc( condRet:get_exp():get_expType() )
+            local algeInfo = self:getAlgeInfo( algeType )
+            if  nil == algeInfo then
+               local _algeInfo = algeInfo
+            
+               self:error( condRet, string.format( "not found alge -- %s", algeType:getTxt(  )) )
+            end
+            
+            local algeRep = W.refType( algeInfo:get_baseType() )
+            local work = self:tempLocal( algeRep )
+            table.insert( out, ls( work, self:lowerExpAs( condRet:get_exp(), algeType ) ) )
+            table.insert( out, W.ifElse( p( W.opI32Eq, {W.structGet( algeInfo:get_baseType(), 1, lg( work ) ), W.i32Const( _lune.unwrap( algeInfo:get_name2tag()["Err"]) )} ), {retWith( self:coerceRep( lg( work ), algeRep, retReps[1] ) )}, nil, nil ) )
+            local okType = _lune.unwrap( algeInfo:get_name2type()["Ok"])
+            self.node2val[condRet] = Val._new(W.structGet( okType, 2, W.refCast( okType, lg( work ) ) ), W.typeAnyRef, Ast.builtinTypeStem_)
+         elseif _switchExp == Nodes.CondRetKind.Two then
+            local vals = self:lowerMulti( condRet:get_exp(), out )
+            local val = vals[1]
+            local errVal = vals[2]
+            local retVals = {}
+            for index, rep in ipairs( retReps ) do
+               if index == 2 then
+                  table.insert( retVals, self:coerceRep( self:coerceVal( errVal, Ast.builtinTypeStem_ ), W.typeAnyRef, rep ) )
+               else
+                
+                  table.insert( retVals, self:getDefaultVal( rep ) )
+               end
+            end
+            table.insert( out, W.ifElse( W.refIsNull( val:get_ins() ), {W.ret( retVals )}, nil, nil ) )
+            self.node2val[condRet] = val
+         end
+      end
+   end
+end
+
 function convFilter:lowerStmtExp( exp, out )
 
    if exp:get_kind() == Nodes.NodeKind.get_ExpSetVal() or exp:get_kind() == Nodes.NodeKind.get_ExpSetItem() then
@@ -3866,10 +4889,27 @@ function convFilter:lowerStmtExp( exp, out )
    do
       local callNode = _lune.__Cast( exp, 3, Nodes.ExpCallNode )
       if callNode ~= nil then
+         local prefix = self:getNilAccPrefix( callNode )
+         local work = {}
+         local prefixLocal = -1
+         if prefix ~= nil then
+            local prefixVal = self:lowerVal( prefix )
+            prefixLocal = self:tempLocal( prefixVal:get_rep() )
+            table.insert( out, ls( prefixLocal, prefixVal:get_ins() ) )
+            self.node2val[prefix] = Val._new(lg( prefixLocal ), prefixVal:get_rep(), prefixVal:get_typeInfo())
+            self.nilAccDoneSet[callNode]= true
+            self.nilAccDoneSet[callNode:get_func()]= true
+         end
          local ins, retTypes = self:lowerCall( callNode )
-         table.insert( out, ins )
+         table.insert( work, ins )
          for __index, _1 in ipairs( retTypes ) do
-            table.insert( out, W.drop( W.nop(  ) ) )
+            table.insert( work, W.drop( W.nop(  ) ) )
+         end
+         if prefix ~= nil then
+            self.node2val[prefix] = nil
+            table.insert( out, W.ifElse( p( W.opI32Eqz, {W.refIsNull( lg( prefixLocal ) )} ), work, nil, nil ) )
+         else
+            append( out, work )
          end
          return 
       end
@@ -3926,9 +4966,10 @@ end
 
 function convFilter:lowerStmt( node, out )
 
+   self:lowerCondRetOf( node, out )
    do
       local _switchExp = node:get_kind()
-      if _switchExp == Nodes.NodeKind.get_None() or _switchExp == Nodes.NodeKind.get_BlankLine() or _switchExp == Nodes.NodeKind.get_Shebang() or _switchExp == Nodes.NodeKind.get_LuneControl() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() or _switchExp == Nodes.NodeKind.get_DeclForm() or _switchExp == Nodes.NodeKind.get_ProtoClass() or _switchExp == Nodes.NodeKind.get_DeclEnum() or _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_ProtoMethod() or _switchExp == Nodes.NodeKind.get_Subfile() then
+      if _switchExp == Nodes.NodeKind.get_None() or _switchExp == Nodes.NodeKind.get_BlankLine() or _switchExp == Nodes.NodeKind.get_Shebang() or _switchExp == Nodes.NodeKind.get_LuneControl() or _switchExp == Nodes.NodeKind.get_DeclMacro() or _switchExp == Nodes.NodeKind.get_TestBlock() or _switchExp == Nodes.NodeKind.get_DeclForm() or _switchExp == Nodes.NodeKind.get_ProtoClass() or _switchExp == Nodes.NodeKind.get_DeclEnum() or _switchExp == Nodes.NodeKind.get_DeclAlge() or _switchExp == Nodes.NodeKind.get_ProtoMethod() or _switchExp == Nodes.NodeKind.get_Subfile() or _switchExp == Nodes.NodeKind.get_Alias() then
          return 
       elseif _switchExp == Nodes.NodeKind.get_DeclFunc() then
          local declNode = _lune.unwrap( _lune.__Cast( node, 3, Nodes.DeclFuncNode ))
@@ -3951,7 +4992,14 @@ function convFilter:lowerStmt( node, out )
          self:compileMethodNode( node, declNode:get_declInfo() )
          return 
       elseif _switchExp == Nodes.NodeKind.get_StmtExp() then
-         self:lowerStmtExp( (_lune.unwrap( _lune.__Cast( node, 3, Nodes.StmtExpNode )) ):get_exp(), out )
+         local exp = (_lune.unwrap( _lune.__Cast( node, 3, Nodes.StmtExpNode )) ):get_exp()
+         do
+            local condRetList = _lune.__Cast( exp, 3, Nodes.CondRetListNode )
+            if condRetList ~= nil then
+               exp = condRetList:get_exp()
+            end
+         end
+         self:lowerStmtExp( exp, out )
          return 
       elseif _switchExp == Nodes.NodeKind.get_ExpCall() or _switchExp == Nodes.NodeKind.get_ExpCallSuperCtor() or _switchExp == Nodes.NodeKind.get_ExpMacroExp() then
          self:lowerStmtExp( node, out )
@@ -4013,6 +5061,13 @@ function convFilter:lowerStmt( node, out )
          local forsortNode = _lune.unwrap( _lune.__Cast( node, 3, Nodes.ForsortNode ))
          table.insert( out, self:lowerForeach( node, forsortNode:get_val(), forsortNode:get_key(), forsortNode:get_exp(), forsortNode:get_block(), true ) )
          return 
+      elseif _switchExp == Nodes.NodeKind.get_Continue() then
+         local breakList = self.ctx:get_breakDepthList()
+         if #breakList == 0 then
+            self:error( node, "continue outside loop" )
+         end
+         table.insert( out, W.br( self.ctx:get_depth() - (breakList[#breakList] + 1 ) ) )
+         return 
       elseif _switchExp == Nodes.NodeKind.get_Break() then
          local breakList = self.ctx:get_breakDepthList()
          if #breakList == 0 then
@@ -4025,6 +5080,12 @@ function convFilter:lowerStmt( node, out )
          return 
       elseif _switchExp == Nodes.NodeKind.get_Scope() then
          append( out, self:lowerBlock( (_lune.unwrap( _lune.__Cast( node, 3, Nodes.ScopeNode )) ):get_block() ) )
+         return 
+      elseif _switchExp == Nodes.NodeKind.get_Apply() then
+         table.insert( out, self:lowerApply( _lune.unwrap( _lune.__Cast( node, 3, Nodes.ApplyNode )) ) )
+         return 
+      elseif _switchExp == Nodes.NodeKind.get_AsyncLock() then
+         append( out, self:lowerBlock( (_lune.unwrap( _lune.__Cast( node, 3, Nodes.AsyncLockNode )) ):get_block() ) )
          return 
       elseif _switchExp == Nodes.NodeKind.get_Block() then
          append( out, self:lowerBlock( _lune.unwrap( _lune.__Cast( node, 3, Nodes.BlockNode )) ) )
@@ -4101,6 +5162,29 @@ end
 
 function convFilter:setupParams( declInfo, funcType, body )
 
+   if declInfo:get_has__func__Symbol() then
+      do
+         local block = declInfo:get_body()
+         if block ~= nil then
+            local scope = block:get_scope()
+            for _1 = 1, 3 do
+               do
+                  local funcSym = scope:get_symbol2SymbolInfoMap()["__func__"]
+                  if funcSym ~= nil then
+                     do
+                        local name = declInfo:get_name()
+                        if name ~= nil then
+                           self.funcSym2name[funcSym] = name.txt
+                        end
+                     end
+                     break
+                  end
+               end
+               scope = scope:get_parent()
+            end
+         end
+      end
+   end
    for index, arg in ipairs( declInfo:get_argList() ) do
       if arg:get_kind() == Nodes.NodeKind.get_DeclArgDDD() then
          do
@@ -4359,6 +5443,104 @@ function convFilter:compileAccessors( node, info )
 end
 
 
+function convFilter:compileAdvertise( node, info )
+
+   for __index, adv in ipairs( info:get_advertiseList() ) do
+      local _
+      do
+         if _lune._Set_has(self.compiledFuncSet, adv:get_impl() ) then
+            goto __continue3
+         end
+         self.compiledFuncSet[adv:get_impl()]= true
+         local func = self.mod:getFunc( adv:get_impl() )
+         local fieldIndex = self:getFieldIndex( node, info, adv:get_memberName() )
+         local member = W.structGet( info:get_structType(), fieldIndex, W.refCast( info:get_structType(), lg( 0 ) ) )
+         local argReps = self:getRepList( adv:get_methodType():get_argTypeInfoList() )
+         local retReps = self:getSlotRetReps( info, adv:get_methodType() )
+         local ins, _1, calleeRetReps = self:callMethodDyn( node, member, info:get_fieldReps()[fieldIndex - 1], adv:get_memberType(), adv:get_methodName(), function ( index, rep )
+         
+            return self:coerceRep( lg( index ), argReps[index], rep )
+         end
+         , func )
+         local body = {ins}
+         if #calleeRetReps > 0 then
+            local locals = {}
+            for __index, rep in ipairs( calleeRetReps ) do
+               table.insert( locals, func:addLocal( rep ) )
+            end
+            for index = #locals, 1, -1 do
+               table.insert( body, ls( locals[index], W.nop(  ) ) )
+            end
+            for index, rep in ipairs( retReps ) do
+               table.insert( body, self:coerceRep( lg( locals[index] ), calleeRetReps[index], rep ) )
+            end
+         end
+         func:setBody( body )
+      end
+      ::__continue3::
+   end
+end
+
+function convFilter:callMethodDyn( node, obj, objRep, objType, name, getArg, func )
+
+   local work = self:getObjType( objType )
+   local objLocal = func:addLocal( self.rt:get_objType() )
+   local pre = {ls( objLocal, self:coerceRep( obj, objRep, self.rt:get_objType() ) )}
+   local methodType
+   
+   local args = {}
+   local callFuncType
+   
+   local funcRef
+   
+   if work:get_kind() == Ast.TypeInfoKind.IF then
+      local ifInfo = self:getIfInfo( work )
+      local methodIndex = ifInfo:get_name2index()[name]
+      if  nil == methodIndex then
+         local _methodIndex = methodIndex
+      
+         self:error( node, string.format( "not found method -- %s", name) )
+      end
+      
+      methodType = _lune.unwrap( self:getIfMethodType( work, name ))
+      table.insert( args, lg( objLocal ) )
+      callFuncType = ifInfo:get_methodFuncTypes()[methodIndex + 1]
+      local itab = W.refCast( ifInfo:get_itType(), W.arrayGet( self.rt:get_tAnyArr(), W.structGet( self.rt:get_tVT(), Rt.fVtItabs, W.structGet( self.rt:get_tObj(), Rt.fObjVt, lg( objLocal ) ) ), W.i32Const( ifInfo:get_ifId() ) ) )
+      funcRef = W.structGet( ifInfo:get_itType(), methodIndex, itab )
+   else
+    
+      local info = self:getClassInfo( work )
+      if  nil == info then
+         local _info = info
+      
+         self:error( node, string.format( "not found class -- %s", work:getTxt(  )) )
+      end
+      
+      local slotIndex = info:get_name2slot()[name]
+      if  nil == slotIndex then
+         local _slotIndex = slotIndex
+      
+         self:error( node, string.format( "not found method -- %s", name) )
+      end
+      
+      local slot = info:get_slotList()[slotIndex]
+      methodType = slot:get_methodType()
+      local objWork = func:addLocal( W.refType( info:get_structType() ) )
+      table.insert( pre, ls( objWork, W.refCast( info:get_structType(), lg( objLocal ) ) ) )
+      table.insert( args, lg( objWork ) )
+      callFuncType = slot:get_funcType()
+      funcRef = W.structGet( info:get_vtType(), slotIndex, W.structGet( info:get_structType(), Rt.fObjVt, lg( objWork ) ) )
+   end
+   local argReps = self:getRepList( methodType:get_argTypeInfoList() )
+   for index, rep in ipairs( argReps ) do
+      table.insert( args, getArg( index, rep ) )
+   end
+   table.insert( args, funcRef )
+   table.insert( pre, W.callRef( callFuncType, args ) )
+   return W.seq( pre ), argReps, self:getRepList( methodType:get_retTypeInfoList() )
+end
+
+
 function convFilter:lowerDeclClass( node, out )
 
    if node:get_expType():get_kind() == Ast.TypeInfoKind.IF then
@@ -4380,6 +5562,7 @@ function convFilter:lowerDeclClass( node, out )
       self:compileDefaultCtor( node, info )
    end
    self:compileAccessors( node, info )
+   self:compileAdvertise( node, info )
    do
       local initFunc = node:get_initBlock():get_func()
       if initFunc ~= nil then
@@ -4391,6 +5574,38 @@ function convFilter:lowerDeclClass( node, out )
          end
       end
    end
+end
+
+function convFilter:makeIfAdapter( ifMethodType, implMethodType, impl )
+
+   local ifArgReps = self:getRepList( ifMethodType:get_argTypeInfoList() )
+   local ifRetReps = self:getRepList( ifMethodType:get_retTypeInfoList() )
+   local implArgReps = self:getRepList( implMethodType:get_argTypeInfoList() )
+   local implRetReps = self:getRepList( implMethodType:get_retTypeInfoList() )
+   local params = {self.rt:get_objType()}
+   for __index, rep in ipairs( ifArgReps ) do
+      table.insert( params, rep )
+   end
+   local index, func = self.mod:addFunc( params, ifRetReps )
+   local args = {lg( 0 )}
+   for argIndex, rep in ipairs( implArgReps ) do
+      table.insert( args, self:coerceRep( lg( argIndex ), ifArgReps[argIndex], rep ) )
+   end
+   local body = {W.call( impl, args )}
+   if #implRetReps > 0 then
+      local locals = {}
+      for __index, rep in ipairs( implRetReps ) do
+         table.insert( locals, func:addLocal( rep ) )
+      end
+      for retIndex = #locals, 1, -1 do
+         table.insert( body, ls( locals[retIndex], W.nop(  ) ) )
+      end
+      for retIndex, rep in ipairs( ifRetReps ) do
+         table.insert( body, self:coerceRep( lg( locals[retIndex] ), implRetReps[retIndex], rep ) )
+      end
+   end
+   func:setBody( body )
+   return index
 end
 
 function convFilter:finalizeClasses(  )
@@ -4420,9 +5635,12 @@ function convFilter:finalizeClasses(  )
                      local slot = info:get_slotList()[slotIndex]
                      if slot:get_impl() >= 0 then
                         if slot:get_funcType() ~= funcType then
-                           Util.err( string.format( "%s: wasm: not support interface method type -- %s.%s", self.streamName, info:get_typeInfo():getTxt(  ), name) )
+                           local ifMethodType = _lune.unwrap( self:getIfMethodType( ifInfo:get_typeInfo(), name ))
+                           ins = self.mod:refFunc( self:makeIfAdapter( ifMethodType, slot:get_methodType(), slot:get_impl() ) )
+                        else
+                         
+                           ins = self.mod:refFunc( slot:get_impl() )
                         end
-                        ins = self.mod:refFunc( slot:get_impl() )
                      end
                   end
                end

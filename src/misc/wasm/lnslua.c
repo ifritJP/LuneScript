@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include <string.h>
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
@@ -40,6 +41,50 @@ static const char * s_builtinList[][ 2 ] = {
     { "string", "gmatch" },
     { "string", "match" },
     { NULL, "tonumber" },
+    { "string", "byte" },
+    { "string", "rep" },
+    { "string", "lower" },
+    { "string", "upper" },
+    { "string", "reverse" },
+    { "string", "len" },
+    { "string", "char" },
+    /*
+      gmatch の全ての一致を返す (apply ... of str.gmatch() 用)。
+      戻り値: 1 回の一致の値の数、全ての一致の値 (一致の順)
+    */
+    { "=", "return function( s, p )\n"
+           "  local it = string.gmatch( s, p )\n"
+           "  local result, n, num = {}, 0, nil\n"
+           "  local function add( ... )\n"
+           "    local cnt = select( '#', ... )\n"
+           "    if cnt == 0 or (...) == nil then return false end\n"
+           "    num = cnt\n"
+           "    for i = 1, cnt do n = n + 1; result[ n ] = (select( i, ... )) end\n"
+           "    return true\n"
+           "  end\n"
+           "  while add( it() ) do end\n"
+           "  return num or 1, table.unpack( result, 1, n )\n"
+           "end\n" },
+    /* str.replace (runtime.lua の _lune.replace と同じ) */
+    { "=", "return function( txt, src, dst )\n"
+           "  local result = ''\n"
+           "  local index = 1\n"
+           "  while index <= #txt do\n"
+           "    local findIndex = string.find( txt, src, index, true )\n"
+           "    if not findIndex then\n"
+           "      result = result .. string.sub( txt, index )\n"
+           "      break\n"
+           "    end\n"
+           "    if findIndex ~= index then\n"
+           "      result = result .. (string.sub( txt, index, findIndex - 1 ) .. dst)\n"
+           "    else\n"
+           "      result = result .. dst\n"
+           "    end\n"
+           "    index = findIndex + #src\n"
+           "  end\n"
+           "  return result\n"
+           "end\n" },
+    { "string", "sub" },
 };
 #define BUILTIN_NUM (int)(sizeof( s_builtinList ) / sizeof( s_builtinList[ 0 ] ))
 
@@ -65,7 +110,15 @@ void EXPORT(lnsl_init)( void )
 
     lua_createtable( s_lua, BUILTIN_NUM, 0 );
     for ( int index = 0; index < BUILTIN_NUM; index++ ) {
-        if ( s_builtinList[ index ][ 0 ] != NULL ) {
+        if ( s_builtinList[ index ][ 0 ] != NULL &&
+             strcmp( s_builtinList[ index ][ 0 ], "=" ) == 0 )
+        {
+            /* Lua で書いた関数 */
+            if ( luaL_dostring( s_lua, s_builtinList[ index ][ 1 ] ) != LUA_OK ) {
+                abort();
+            }
+        }
+        else if ( s_builtinList[ index ][ 0 ] != NULL ) {
             lua_getglobal( s_lua, s_builtinList[ index ][ 0 ] );
             lua_getfield( s_lua, -1, s_builtinList[ index ][ 1 ] );
             lua_remove( s_lua, -2 );

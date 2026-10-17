@@ -318,3 +318,43 @@ Lua 版との既知の差:
 
 - Lua の関数でのエラーのメッセージが少し異なる。Lua 版は `[string "..."]:75: bad argument #2 to 'format' ...` だが、
   wasm 版は位置が無く、関数名が `'string.format'` になる (C から呼んでいるので呼び出し元の名前が無い)。
+
+### 14.5 M2 後半: `test/testGo.lns` — 作業中
+
+`test/testGo.lns` の section (`_section();` で区切った部分) のうち、
+Lua 連携・ファイル入出力を使う 17 個を除いた部分が、Lua 版と同じ出力 (1,065 行) になった。
+確認は、import (`test.subGoPkg.SubPkg`) と、それを使う 2 行を除いたコピーで行っている (import は未対応)。
+
+対応した機能:
+
+| 機能 | wasm での実現方法 |
+|---|---|
+| `$.` / `$[` (nil なら nil になるアクセス) | prefix を局所変数に入れ、null なら nil、そうでなければ通常のアクセス。式文の `obj$.func()` は null でなければ呼び出す |
+| `!` (CondRet) | 文の前に値を局所変数に入れ、nil (`__Ret` は `Err`) なら関数から戻る。nilable と `__Ret`、エラー情報を伴う 2 値の 3 種類 |
+| タプル (`(= a, b)`、`tuple...`) | Lua 版と同じく値のリスト (`$List`) で表し、`...` として展開する |
+| `__serr` / `__Er` | `__Er` を実装し、メッセージ (`txt`) を持つクラスを生成する (Lua 版のランタイムの `LnsErr` に相当) |
+| `apply` | `str.gmatch()` は Lua で全ての一致を求めてから処理する。それ以外は Lua の汎用の for と同じく、関数・状態・制御変数で繰り返す |
+| `continue` | ループの更新 (カウンタの加算など) を本体の先頭で行っているので、`loop` の先頭への分岐にする |
+| `_toMap` / `_fromMap` / `_fromStem` | オブジェクトが struct なので、Mapping のクラスとそれを含む List / Map を再帰的に変換する。`_fromMap` は Lua 版の `_toInt` / `_toList` などと同じ検査をして、エラーの位置 (`list.1.val.1` など) を返す |
+| `advertise` | メンバのメソッドを呼び出す関数を生成し、vtable に登録する |
+| generics のインタフェースを具体的な型で実装 | itable に、型パラメータ (anyref) と実装の型 (i64 など) を変換するアダプタを登録する (14.2 の課題) |
+| `__run` / `__join` / `__lns.Sync` | Lua 版と同じく、`__run` はその場で `run()` を呼び出す (Skip なら呼ばない)。`createFlag` / `_createPipe` は nil |
+| 文字列の関数 | `byte` / `rep` / `lower` / `upper` / `reverse` / `replace` と、`string.find` などのモジュールの関数は Lua の関数を呼び出す。`string._join` は wasm で実装 |
+| その他 | `alias`、Map の `#`、`for` の実数の増分、`__func__`、`type()`、`tonumber()`、stem の値の `[]`、`__asyncLock`、enum / alge の `get__txt()`、関数を持つメンバの呼び出し、static メンバの getter、インタフェースの getter |
+
+作業中に見つかった既存の問題:
+
+| 問題 | 修正 |
+|---|---|
+| マクロの中の `__line__` の `LiteralIntNode` の値 (`$num`) が、マクロを定義した行になっていた (トークンの文字列は展開した行) | `TransUnitExp.lns` で、値も展開した行にした |
+
+Lua 版との既知の差:
+
+- generics のクラスの `_fromMap` で、型パラメータのメンバは型を検査しない (型を消去しているため)。
+
+残りの作業:
+
+- import (複数のモジュール)
+- `io.open` / `io.popen` (ホストの関数で実装する)
+- `_load` などの Lua 連携 (M3)
+- `make test-wasm` に `test/testGo.lns` を追加する (対象外の section を除く印を付ける)

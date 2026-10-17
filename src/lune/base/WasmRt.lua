@@ -969,6 +969,46 @@ local luaTonumber = 6
 _moduleObj.luaTonumber = luaTonumber
 
 
+local luaByte = 7
+_moduleObj.luaByte = luaByte
+
+
+local luaRep = 8
+_moduleObj.luaRep = luaRep
+
+
+local luaLower = 9
+_moduleObj.luaLower = luaLower
+
+
+local luaUpper = 10
+_moduleObj.luaUpper = luaUpper
+
+
+local luaReverse = 11
+_moduleObj.luaReverse = luaReverse
+
+
+local luaLen = 12
+_moduleObj.luaLen = luaLen
+
+
+local luaChar = 13
+_moduleObj.luaChar = luaChar
+
+
+local luaGmatchAll = 14
+_moduleObj.luaGmatchAll = luaGmatchAll
+
+
+local luaReplace = 15
+_moduleObj.luaReplace = luaReplace
+
+
+local luaSub = 16
+_moduleObj.luaSub = luaSub
+
+
 function Runtime:luaFunc( name, params, results )
 
    do

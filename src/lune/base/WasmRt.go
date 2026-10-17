@@ -20,6 +20,16 @@ var WasmRt_luaTostring LnsInt
 var WasmRt_luaGmatch LnsInt
 var WasmRt_luaMatch LnsInt
 var WasmRt_luaTonumber LnsInt
+var WasmRt_luaByte LnsInt
+var WasmRt_luaRep LnsInt
+var WasmRt_luaLower LnsInt
+var WasmRt_luaUpper LnsInt
+var WasmRt_luaReverse LnsInt
+var WasmRt_luaLen LnsInt
+var WasmRt_luaChar LnsInt
+var WasmRt_luaGmatchAll LnsInt
+var WasmRt_luaReplace LnsInt
+var WasmRt_luaSub LnsInt
 // for 242
 func WasmRt_convExp1_299(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
@@ -145,47 +155,47 @@ func WasmRt_convExp4_2229(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
 // for 1164
-func WasmRt_convExp0_1391(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+func WasmRt_convExp0_1431(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
 // for 1169
-func WasmRt_convExp0_1448(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+func WasmRt_convExp0_1488(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1214
-func WasmRt_convExp0_1651(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1226
+func WasmRt_convExp0_1691(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1239
-func WasmRt_convExp0_1934(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1251
+func WasmRt_convExp0_1974(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1270
-func WasmRt_convExp0_2240(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1282
+func WasmRt_convExp0_2280(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1298
-func WasmRt_convExp0_2599(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1310
+func WasmRt_convExp0_2639(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1327
-func WasmRt_convExp0_2950(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1339
+func WasmRt_convExp0_2990(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1377
-func WasmRt_convExp0_3552(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1389
+func WasmRt_convExp0_3592(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1394
-func WasmRt_convExp0_3715(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1406
+func WasmRt_convExp0_3755(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1416
-func WasmRt_convExp0_3896(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1428
+func WasmRt_convExp0_3936(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
-// for 1434
-func WasmRt_convExp0_4120(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
+// for 1446
+func WasmRt_convExp0_4160(arg1 []LnsAny) (LnsInt, *WasmBin_Func) {
     return Lns_getFromMulti( arg1, 0 ).(LnsInt), Lns_getFromMulti( arg1, 1 ).(*WasmBin_Func)
 }
 // 78: decl @lune.@base.@WasmRt.lg
@@ -1000,7 +1010,7 @@ func (self *WasmRt_Runtime) ExportHostFuncs(_env *LnsEnv) {
         self.mod.FP.ExportFunc(_env, "lns_str_get", index)
     }
 }
-// 1191: decl @lune.@base.@WasmRt.Runtime.luaFunc
+// 1203: decl @lune.@base.@WasmRt.Runtime.luaFunc
 func (self *WasmRt_Runtime) luaFunc(_env *LnsEnv, name string,params *LnsList2_[*WasmBin_ValType],results *LnsList2_[*WasmBin_ValType]) LnsInt {
     {
         _funcId := self.name2luaFunc.Get(name)
@@ -1019,7 +1029,7 @@ func (self *WasmRt_Runtime) luaFunc(_env *LnsEnv, name string,params *LnsList2_[
     self.name2luaFunc.Set(name,funcId)
     return funcId
 }
-// 1208: decl @lune.@base.@WasmRt.Runtime.fnLuaPushStr
+// 1220: decl @lune.@base.@WasmRt.Runtime.fnLuaPushStr
 func (self *WasmRt_Runtime) fnLuaPushStr(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "luaPushStr")
@@ -1044,7 +1054,7 @@ func (self *WasmRt_Runtime) fnLuaPushStr(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, len, WasmBin_arrayLen(_env, WasmRt_lg_1_(_env, 0))), WasmRt_ls_2_(_env, addr, WasmBin_call(_env, fnBuf, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, len))))), WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_brIf(_env, 1, WasmRt_p_5_(_env, WasmBin_opI32GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, pos), WasmRt_lg_1_(_env, len))))), WasmBin_i32Store8(_env, WasmRt_p_5_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, addr), WasmRt_lg_1_(_env, pos)))), WasmBin_arrayGetU(_env, self.tStr, WasmRt_lg_1_(_env, 0), WasmRt_lg_1_(_env, pos))), WasmRt_incr_7_(_env, pos), WasmBin_br(_env, 0))), nil))), nil), WasmBin_call(_env, fnPushStr, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, len)))))))
     return index
 }
-// 1233: decl @lune.@base.@WasmRt.Runtime.fnLuaToStr
+// 1245: decl @lune.@base.@WasmRt.Runtime.fnLuaToStr
 func (self *WasmRt_Runtime) fnLuaToStr(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "luaToStr")
@@ -1069,7 +1079,7 @@ func (self *WasmRt_Runtime) fnLuaToStr(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, addr, WasmBin_call(_env, fnToStr, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0))))), WasmRt_ls_2_(_env, work, WasmBin_arrayNewDefault(_env, self.tStr, WasmBin_call(_env, fnStrLen, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})))), WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_brIf(_env, 1, WasmRt_p_5_(_env, WasmBin_opI32GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, pos), WasmBin_arrayLen(_env, WasmRt_lg_1_(_env, work)))))), WasmBin_arraySet(_env, self.tStr, WasmRt_lg_1_(_env, work), WasmRt_lg_1_(_env, pos), WasmBin_i32Load8U(_env, WasmRt_p_5_(_env, WasmBin_opI32Add, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, addr), WasmRt_lg_1_(_env, pos)))))), WasmRt_incr_7_(_env, pos), WasmBin_br(_env, 0))), nil))), nil), WasmRt_lg_1_(_env, work))))
     return index
 }
-// 1262: decl @lune.@base.@WasmRt.Runtime.fnLuaPushAny
+// 1274: decl @lune.@base.@WasmRt.Runtime.fnLuaPushAny
 func (self *WasmRt_Runtime) fnLuaPushAny(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "luaPushAny")
@@ -1092,7 +1102,7 @@ func (self *WasmRt_Runtime) fnLuaPushAny(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_when__6_(_env, WasmBin_refIsNull(_env, WasmRt_lg_1_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, fnPushNil, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{})), WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))))), WasmRt_when__6_(_env, WasmBin_refTest(_env, self.tBoxI64, WasmRt_lg_1_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, fnPushInt, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.UnboxI64(_env, WasmRt_lg_1_(_env, 0))))), WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))))), WasmRt_when__6_(_env, WasmBin_refTest(_env, self.tBoxF64, WasmRt_lg_1_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, fnPushReal, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_structGet(_env, self.tBoxF64, 0, WasmBin_refCast(_env, self.tBoxF64, WasmRt_lg_1_(_env, 0)))))), WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))))), WasmRt_when__6_(_env, WasmBin_refTest(_env, self.tBoxBool, WasmRt_lg_1_(_env, 0)), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, fnPushBool, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.UnboxBool(_env, WasmRt_lg_1_(_env, 0))))), WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins]([]*WasmBin_Ins{}))))), WasmBin_call(_env, self.FP.fnLuaPushStr(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, self.FP.FnToStr(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0))))))))))
     return index
 }
-// 1290: decl @lune.@base.@WasmRt.Runtime.fnLuaGetAny
+// 1302: decl @lune.@base.@WasmRt.Runtime.fnLuaGetAny
 func (self *WasmRt_Runtime) fnLuaGetAny(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "luaGetAny")
@@ -1121,8 +1131,8 @@ func (self *WasmRt_Runtime) fnLuaGetAny(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, kind, WasmBin_call(_env, fnKind, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0))))), WasmRt_when__6_(_env, WasmRt_isKind(_env, 1), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.BoxI64(_env, WasmBin_call(_env, fnToInt, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0))))))))))), WasmRt_when__6_(_env, WasmRt_isKind(_env, 2), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.BoxF64(_env, WasmBin_call(_env, fnToReal, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0))))))))))), WasmRt_when__6_(_env, WasmRt_isKind(_env, 3), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](self.FP.BoxBool(_env, WasmBin_call(_env, fnToBool, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0))))))))))), WasmRt_when__6_(_env, WasmRt_isKind(_env, 4), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_ret(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, self.FP.fnLuaToStr(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0)))))))))), WasmBin_refNull(_env, WasmBin_htAny))))
     return index
 }
-// 1320: decl @lune.@base.@WasmRt.Runtime.fnLuaCall
-func (self *WasmRt_Runtime) fnLuaCall(_env *LnsEnv) LnsInt {
+// 1332: decl @lune.@base.@WasmRt.Runtime.fnLuaCall
+func (self *WasmRt_Runtime) FnLuaCall(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "luaCall")
         if !Lns_IsNil( _index ) {
@@ -1152,11 +1162,11 @@ func (self *WasmRt_Runtime) fnLuaCall(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, fnPushBuiltin, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0)))), WasmRt_ls_2_(_env, argNum, WasmBin_structGet(_env, self.tList, WasmRt_fListLen, WasmRt_lg_1_(_env, 1))), WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_brIf(_env, 1, WasmRt_p_5_(_env, WasmBin_opI32GeS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, pos), WasmRt_lg_1_(_env, argNum))))), WasmBin_call(_env, self.FP.fnLuaPushAny(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_arrayGet(_env, self.tAnyArr, WasmBin_structGet(_env, self.tList, WasmRt_fListItems, WasmRt_lg_1_(_env, 1)), WasmRt_lg_1_(_env, pos))))), WasmRt_incr_7_(_env, pos), WasmBin_br(_env, 0))), nil))), nil), WasmRt_ls_2_(_env, num, WasmBin_call(_env, fnCall, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, argNum))))), WasmRt_when__6_(_env, WasmRt_p_5_(_env, WasmBin_opI32LtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, num), WasmRt_i32c_3_(_env, 0)))), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, mess, WasmBin_call(_env, self.FP.fnLuaToStr(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, -1))))), WasmBin_call(_env, fnSettop, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 0)))), self.FP.Error(_env, WasmRt_lg_1_(_env, mess))))), WasmRt_ls_2_(_env, result, WasmBin_call(_env, self.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, num))))), WasmRt_ls_2_(_env, pos, WasmRt_i32c_3_(_env, 1)), WasmBin_block(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_loop(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_brIf(_env, 1, WasmRt_p_5_(_env, WasmBin_opI32GtS, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, pos), WasmRt_lg_1_(_env, num))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, result), WasmBin_call(_env, self.FP.fnLuaGetAny(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, pos))))))), WasmRt_incr_7_(_env, pos), WasmBin_br(_env, 0))), nil))), nil), WasmBin_call(_env, fnSettop, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 0)))), WasmRt_lg_1_(_env, result))))
     return index
 }
-// 1364: decl @lune.@base.@WasmRt.Runtime.listItem
-func (self *WasmRt_Runtime) listItem(_env *LnsEnv, list *WasmBin_Ins,index LnsInt) *WasmBin_Ins {
+// 1376: decl @lune.@base.@WasmRt.Runtime.listItem
+func (self *WasmRt_Runtime) ListItem(_env *LnsEnv, list *WasmBin_Ins,index LnsInt) *WasmBin_Ins {
     return WasmBin_arrayGet(_env, self.tAnyArr, WasmBin_structGet(_env, self.tList, WasmRt_fListItems, list), WasmRt_i32c_3_(_env, index))
 }
-// 1369: decl @lune.@base.@WasmRt.Runtime.fnRealToStr
+// 1381: decl @lune.@base.@WasmRt.Runtime.fnRealToStr
 func (self *WasmRt_Runtime) FnRealToStr(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "realToStr")
@@ -1181,7 +1191,7 @@ func (self *WasmRt_Runtime) FnRealToStr(_env *LnsEnv) LnsInt {
     _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmBin_call(_env, fnPushBuiltin, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, WasmRt_luaTostring)))), WasmBin_call(_env, fnPushReal, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, 0)))), WasmBin_drop(_env, WasmBin_call(_env, fnCall, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 1))))), WasmRt_ls_2_(_env, work, WasmBin_call(_env, self.FP.fnLuaToStr(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 1))))), WasmBin_call(_env, fnSettop, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 0)))), WasmRt_lg_1_(_env, work))))
     return index
 }
-// 1390: decl @lune.@base.@WasmRt.Runtime.fnFormat
+// 1402: decl @lune.@base.@WasmRt.Runtime.fnFormat
 func (self *WasmRt_Runtime) FnFormat(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "format")
@@ -1195,10 +1205,10 @@ func (self *WasmRt_Runtime) FnFormat(_env *LnsEnv) LnsInt {
     index,_func = self.FP.newFunc(_env, "format", NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.strType, self.listType)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.strType)))
     var args LnsInt
     args = _func.FP.AddLocal(_env, self.listType)
-    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, args, WasmBin_call(_env, self.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 8))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 0)))), WasmBin_call(_env, self.FP.FnListAppend(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 1)))), WasmBin_refCast(_env, self.tStr, self.FP.listItem(_env, WasmBin_call(_env, self.FP.fnLuaCall(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, WasmRt_luaFormat), WasmRt_lg_1_(_env, args)))), 0)))))
+    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, args, WasmBin_call(_env, self.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 8))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 0)))), WasmBin_call(_env, self.FP.FnListAppend(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 1)))), WasmBin_refCast(_env, self.tStr, self.FP.ListItem(_env, WasmBin_call(_env, self.FP.FnLuaCall(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, WasmRt_luaFormat), WasmRt_lg_1_(_env, args)))), 0)))))
     return index
 }
-// 1412: decl @lune.@base.@WasmRt.Runtime.fnStrFind
+// 1424: decl @lune.@base.@WasmRt.Runtime.fnStrFind
 func (self *WasmRt_Runtime) FnStrFind(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "strFind")
@@ -1212,10 +1222,10 @@ func (self *WasmRt_Runtime) FnStrFind(_env *LnsEnv) LnsInt {
     index,_func = self.FP.newFunc(_env, "strFind", NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.strType, self.strType, WasmBin_typeI64, WasmBin_typeI32)), NewLnsList2_[*WasmBin_ValType](Lns_2DDDGen[*WasmBin_ValType](self.listType)))
     var args LnsInt
     args = _func.FP.AddLocal(_env, self.listType)
-    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, args, WasmBin_call(_env, self.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 4))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 0)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 1)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), self.FP.BoxI64(_env, WasmRt_lg_1_(_env, 2))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), self.FP.BoxBool(_env, WasmRt_lg_1_(_env, 3))))), WasmBin_call(_env, self.FP.fnLuaCall(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, WasmRt_luaFind), WasmRt_lg_1_(_env, args)))))))
+    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, args, WasmBin_call(_env, self.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 4))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 0)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 1)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), self.FP.BoxI64(_env, WasmRt_lg_1_(_env, 2))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), self.FP.BoxBool(_env, WasmRt_lg_1_(_env, 3))))), WasmBin_call(_env, self.FP.FnLuaCall(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, WasmRt_luaFind), WasmRt_lg_1_(_env, args)))))))
     return index
 }
-// 1430: decl @lune.@base.@WasmRt.Runtime.fnStrGsub
+// 1442: decl @lune.@base.@WasmRt.Runtime.fnStrGsub
 func (self *WasmRt_Runtime) FnStrGsub(_env *LnsEnv) LnsInt {
     {
         _index := self.FP.getFunc(_env, "strGsub")
@@ -1231,7 +1241,7 @@ func (self *WasmRt_Runtime) FnStrGsub(_env *LnsEnv) LnsInt {
     result = _func.FP.AddLocal(_env, self.listType)
     var args LnsInt
     args = _func.FP.AddLocal(_env, self.listType)
-    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, args, WasmBin_call(_env, self.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 4))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 0)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 1)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 2)))), WasmRt_ls_2_(_env, result, WasmBin_call(_env, self.FP.fnLuaCall(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, WasmRt_luaGsub), WasmRt_lg_1_(_env, args))))), WasmBin_refCast(_env, self.tStr, self.FP.listItem(_env, WasmRt_lg_1_(_env, result), 0)), self.FP.UnboxI64(_env, self.FP.listItem(_env, WasmRt_lg_1_(_env, result), 1)))))
+    _func.FP.SetBody(_env, NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_ls_2_(_env, args, WasmBin_call(_env, self.FP.FnListNew(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, 4))))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 0)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 1)))), WasmBin_call(_env, self.FP.FnListPush(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_lg_1_(_env, args), WasmRt_lg_1_(_env, 2)))), WasmRt_ls_2_(_env, result, WasmBin_call(_env, self.FP.FnLuaCall(_env), NewLnsList2_[*WasmBin_Ins](Lns_2DDDGen[*WasmBin_Ins](WasmRt_i32c_3_(_env, WasmRt_luaGsub), WasmRt_lg_1_(_env, args))))), WasmBin_refCast(_env, self.tStr, self.FP.ListItem(_env, WasmRt_lg_1_(_env, result), 0)), self.FP.UnboxI64(_env, self.FP.ListItem(_env, WasmRt_lg_1_(_env, result), 1)))))
     return index
 }
 // declaration Class -- CloInfo
@@ -1314,7 +1324,7 @@ type WasmRt_RuntimeMtd interface {
     FnListRemove(_env *LnsEnv) LnsInt
     FnListSet(_env *LnsEnv) LnsInt
     FnListSort(_env *LnsEnv) LnsInt
-    fnLuaCall(_env *LnsEnv) LnsInt
+    FnLuaCall(_env *LnsEnv) LnsInt
     fnLuaGetAny(_env *LnsEnv) LnsInt
     fnLuaPushAny(_env *LnsEnv) LnsInt
     fnLuaPushStr(_env *LnsEnv) LnsInt
@@ -1369,7 +1379,7 @@ type WasmRt_RuntimeMtd interface {
     Get_tVT(_env *LnsEnv) LnsInt
     isNum(_env *LnsEnv, arg1 *WasmBin_Ins) *WasmBin_Ins
     isTomb(_env *LnsEnv, arg1 *WasmBin_Ins) *WasmBin_Ins
-    listItem(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 LnsInt) *WasmBin_Ins
+    ListItem(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 LnsInt) *WasmBin_Ins
     luaFunc(_env *LnsEnv, arg1 string, arg2 *LnsList2_[*WasmBin_ValType], arg3 *LnsList2_[*WasmBin_ValType]) LnsInt
     MapKeyAt(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 *WasmBin_Ins) *WasmBin_Ins
     MapValAt(_env *LnsEnv, arg1 *WasmBin_Ins, arg2 *WasmBin_Ins) *WasmBin_Ins
@@ -1535,6 +1545,16 @@ func Lns_WasmRt_init(_env *LnsEnv) {
     WasmRt_luaGmatch = 4
     WasmRt_luaMatch = 5
     WasmRt_luaTonumber = 6
+    WasmRt_luaByte = 7
+    WasmRt_luaRep = 8
+    WasmRt_luaLower = 9
+    WasmRt_luaUpper = 10
+    WasmRt_luaReverse = 11
+    WasmRt_luaLen = 12
+    WasmRt_luaChar = 13
+    WasmRt_luaGmatchAll = 14
+    WasmRt_luaReplace = 15
+    WasmRt_luaSub = 16
 }
 func init() {
     init_WasmRt = false

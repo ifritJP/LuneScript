@@ -1182,6 +1182,18 @@ pub let luaTostring = 3;
 pub let luaGmatch = 4;
 pub let luaMatch = 5;
 pub let luaTonumber = 6;
+pub let luaByte = 7;
+pub let luaRep = 8;
+pub let luaLower = 9;
+pub let luaUpper = 10;
+pub let luaReverse = 11;
+pub let luaLen = 12;
+pub let luaChar = 13;
+/** gmatch の全ての一致 (lnslua.c で Lua で書いた関数) */
+pub let luaGmatchAll = 14;
+/** str.replace (lnslua.c で Lua で書いた関数。Lua 版の _lune.replace と同じ) */
+pub let luaReplace = 15;
+pub let luaSub = 16;
 
 /**
 Lua (lnslua.c) の関数を import し、関数の ID を返す。
@@ -1317,7 +1329,7 @@ Lua でエラーになった場合は、そのメッセージでエラーにす�
 
 引数: builtin の ID (i32)、引数の List
 */
-fn Runtime.fnLuaCall() mut : int {
+pub fn Runtime.fnLuaCall() mut : int {
    if! let index = self.getFunc( "luaCall" ) {
       return index;
    }
@@ -1361,7 +1373,7 @@ fn Runtime.fnLuaCall() mut : int {
 }
 
 /** List の index 番目 (0 始まり) の要素 */
-fn Runtime.listItem( list:&W.Ins, index:int ) : &W.Ins {
+pub fn Runtime.listItem( list:&W.Ins, index:int ) : &W.Ins {
    return W.arrayGet( self.tAnyArr, W.structGet( self.tList, fListItems, list ), i32c( index ) );
 }
 
