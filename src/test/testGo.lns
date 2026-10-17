@@ -3265,3 +3265,27 @@ _section();
 /*nolua51*/   print( val |>> cnt, 16 |<< cnt );
 /*nolua51*/   print( 6 ~ 3, val ~ 1 );
 /*nolua51*/}
+
+// ビット演算の優先順位 (Lua と同じく、&・~・| は + などより低い)
+/*nolua51*/_section();
+/*nolua51*/{
+/*nolua51*/   let x = 5;
+/*nolua51*/   let y = 3;
+/*nolua51*/   print( x + y & 1, x * y | 16, x - y ~ 1, x | y ~ 6, x & y + 4 );
+/*nolua51*/   print( ( x + y ) & 1, x + ( y & 1 ), x & y == 1 );
+/*nolua51*/}
+
+// 引数の無いクロージャを form に変換する
+_section();
+{
+   fn makeCounter( step:int ) : form {
+      let mut count = 0;
+      return fn () : int {
+         count = count + step;
+         return count;
+      };
+   }
+   let counter = makeCounter( 3 );
+   counter( ## );
+   print( counter( ## ) );
+}
