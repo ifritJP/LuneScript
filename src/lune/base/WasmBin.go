@@ -200,10 +200,10 @@ func WasmBin_sleb(_env *LnsEnv, val LnsInt) string {
         if _env.PopVal( _env.IncStack() ||
             _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( work == 0) &&
-                _env.SetStackVal( bt & 0x40 == 0) ).(bool))) ||
+                _env.SetStackVal( (bt & 0x40) == 0) ).(bool))) ||
             _env.SetStackVal( (_env.PopVal( _env.IncStack() ||
                 _env.SetStackVal( work == -1) &&
-                _env.SetStackVal( bt & 0x40 != 0) ).(bool))) ).(bool){
+                _env.SetStackVal( (bt & 0x40) != 0) ).(bool))) ).(bool){
             done = true
         } else { 
             done = false
@@ -278,7 +278,7 @@ func WasmBin_f64bits(_env *LnsEnv, val LnsReal) LnsInt {
     }
     var mant LnsInt
     mant = (LnsInt)(((work - 1.0) * two52))
-    return (Lns_shiftL(sign, 63)) | (Lns_shiftL((exp + 1023), 52)) | mant
+    return ((Lns_shiftL(sign, 63)) | (Lns_shiftL((exp + 1023), 52))) | mant
 }
 
 // 140: decl @lune.@base.@WasmBin.name

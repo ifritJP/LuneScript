@@ -247,6 +247,7 @@ local getAddEnvArg
 local isRetGenerics
 local str2gostr
 local getLnsItemKind
+local isBitOpTxt
 
 
 
@@ -2226,10 +2227,7 @@ func %s( luaform LnsAny ) LnsForm {
    self:writeln( string.format( "return func (%s argList []LnsAny) []LnsAny {", self:getEnvArgDecl( 1 )) )
    self:pushIndent(  )
    if #funcType:get_retTypeInfoList() > 0 then
-      self:write( "return " )
-      if #funcType:get_argTypeInfoList() > 0 then
-         self:write( "Lns_2DDD(" )
-      end
+      self:write( "return Lns_2DDD(" )
    end
    self:writeRaw( "src(" )
    self:writeRaw( getAddEnvArg( #funcType:get_argTypeInfoList(), self.option:get_addEnvArg() ) )
@@ -2245,12 +2243,7 @@ func %s( luaform LnsAny ) LnsForm {
    end
    self:writeRaw( ")" )
    if #funcType:get_retTypeInfoList() > 0 then
-      if #funcType:get_argTypeInfoList() > 0 then
-         self:writeln( ")" )
-      else
-       
-         self:writeln( "" )
-      end
+      self:writeln( ")" )
    else
     
       self:writeln( "" )
@@ -6383,6 +6376,34 @@ end
 local op2map = {[".."] = "+", ["~="] = "!="}
 
 
+function isBitOpTxt( opTxt )
+
+   do
+      local _switchExp = opTxt
+      if _switchExp == "&" or _switchExp == "|" or _switchExp == "~" then
+         return true
+      end
+   end
+   return false
+end
+
+function convFilter:filterOp2Operand( exp, parent )
+
+   do
+      local op2Node = _lune.__Cast( exp, 3, Nodes.ExpOp2Node )
+      if op2Node ~= nil then
+         if isBitOpTxt( parent:get_op().txt ) or isBitOpTxt( op2Node:get_op().txt ) then
+            self:writeRaw( "(" )
+            filter( exp, self, parent )
+            self:writeRaw( ")" )
+            return 
+         end
+      end
+   end
+   filter( exp, self, parent )
+end
+
+
 function convFilter:processExpOp2( node, opt )
 
    local opTxt = node:get_op().txt
@@ -6417,11 +6438,11 @@ function convFilter:processExpOp2( node, opt )
                         opTxt = "^"
                      end
                   end
-                  filter( node:get_exp1(), self, node )
+                  self:filterOp2Operand( node:get_exp1(), node )
                   self:writeRaw( " " .. opTxt .. " " )
-                  filter( node:get_exp2(), self, node )
+                  self:filterOp2Operand( node:get_exp2(), node )
                else
-                  filter( node:get_exp1(), self, node )
+                  self:filterOp2Operand( node:get_exp1(), node )
                   do
                      local op = op2map[opTxt]
                      if op ~= nil then
@@ -6430,7 +6451,7 @@ function convFilter:processExpOp2( node, opt )
                         self:writeRaw( string.format( " %s ", opTxt) )
                      end
                   end
-                  filter( node:get_exp2(), self, node )
+                  self:filterOp2Operand( node:get_exp2(), node )
                end
             end
       end

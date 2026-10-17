@@ -1882,10 +1882,8 @@ func %s( luaform LnsAny ) LnsForm {
 
    self.pushIndent(##);
    if #funcType.$retTypeInfoList > 0 {
-      self.write ( "return " );
-      if #funcType.$argTypeInfoList > 0 {
-         self.write ( "Lns_2DDD(" );
-      }
+      // 戻り値を []LnsAny にする。引数が無い関数も同じ
+      self.write ( "return Lns_2DDD(" );
    }
    self.writeRaw( "src(" );
    self.writeRaw( getAddEnvArg( #funcType.$argTypeInfoList, self.option.$addEnvArg ) );
@@ -1902,11 +1900,7 @@ func %s( luaform LnsAny ) LnsForm {
    }
    self.writeRaw( ")" );
    if #funcType.$retTypeInfoList > 0 {
-      if #funcType.$argTypeInfoList > 0 {
-         self.writeln( ")" );
-      } else {
-         self.writeln( "" );
-      }
+      self.writeln( ")" );
    } else {
       self.writeln( "" );
       self.writeln( "return []LnsAny{}" );
@@ -6154,6 +6148,35 @@ let op2map = {
 };
 
 
+/** ビット演算 (&、|、~) の演算子かどうか */
+fn isBitOpTxt( opTxt:str ) : bool {
+   switch opTxt {
+      case "&", "|", "~" {
+         return true;
+      }
+   }
+   return false;
+}
+
+/**
+二項演算の項を出力する。
+
+Lua と go では、ビット演算の優先順位が異なる
+(Lua は + などより低いが、go の & は * と、| と ^ は + と同じ)。
+そのため、親か子がビット演算の場合は、子の二項演算を括弧で囲む。
+*/
+fn convFilter.filterOp2Operand( exp:&Nodes.Node, parent:&Nodes.ExpOp2Node ) mut {
+   if! let op2Node = exp@@@Nodes.ExpOp2Node {
+      if isBitOpTxt( parent.$op.txt ) or isBitOpTxt( op2Node.$op.txt ) {
+         self.writeRaw( "(" );
+         filter( exp, self, parent );
+         self.writeRaw( ")" );
+         return;
+      }
+   }
+   filter( exp, self, parent );
+}
+
 pub override fn convFilter.processExpOp2(
    node: &Nodes.ExpOp2Node, opt: Opt ) mut
 {
@@ -6192,20 +6215,20 @@ pub override fn convFilter.processExpOp2(
                }
             }
             //self.accessPrimVal( node.$exp1, node );
-            filter( node.$exp1, self, node );
+            self.filterOp2Operand( node.$exp1, node );
             self.writeRaw( " " .. opTxt .. " " );
             //self.accessPrimVal( node.$exp2, node );
-            filter( node.$exp2, self, node );
+            self.filterOp2Operand( node.$exp2, node );
          }
          else {
-            filter( node.$exp1, self, node );
+            self.filterOp2Operand( node.$exp1, node );
             if! let op = op2map[ opTxt ] {
                self.writeRaw( " %s " (op) );
             } else {
                self.writeRaw( " %s " (opTxt) );
             }
             //self.accessPrimVal( node.$exp2, node );
-            filter( node.$exp2, self, node );
+            self.filterOp2Operand( node.$exp2, node );
          }
       }
    }
