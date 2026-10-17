@@ -1912,6 +1912,13 @@ pub fn Front.exec() mut
          {
             Util.errorLog( mess );
          }
+         if! let lnsRef = self.option.gomodLnsRef {
+            if! let mess = convGo.outputGoMod(
+               self.getGoAppName(), self.option.outputDir, lnsRef )
+            {
+               Util.errorLog( mess );
+            }
+         }
       }
       case .Indexer {
          self.build(

@@ -2391,6 +2391,17 @@ function Front:exec(  )
                Util.errorLog( mess )
             end
          end
+         do
+            local lnsRef = self.option.gomodLnsRef
+            if lnsRef ~= nil then
+               do
+                  local mess = convGo.outputGoMod( self:getGoAppName(  ), self.option.outputDir, lnsRef )
+                  if mess ~= nil then
+                     Util.errorLog( mess )
+                  end
+               end
+            end
+         end
       elseif _switchExp == Option.ModeKind.Indexer then
          self:build( _lune.newAlge( BuildMode.CreateAst), function ( ast )
          

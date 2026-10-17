@@ -229,7 +229,7 @@ local Builtin = _lune.loadModule( 'lune.base.Builtin' )
 
 local function getBuildCount(  )
 
-   return 14207
+   return 14208
 end
 
 
@@ -398,6 +398,7 @@ function Option:__init()
    self.shebangArgList = {}
    self.mainModule = ""
    self.appName = nil
+   self.gomodLnsRef = nil
    self.packageName = nil
    self.testing = false
    self.convTo = nil
@@ -585,6 +586,9 @@ usage:
     --valid-luaval: enable luaval when transcompie to lua.
     --package <name>: set the package name for the go-lang.
     --app <name>: set the application name for the go-lang.
+    --gomod <dir|version>: with mkmain, also output go.mod if it doesn't exist.
+            <dir>: refer the LuneScript source directory (src) with replace.
+            <version>: require the LuneScript runtime of the version (e.g. master).
     --debug-dump-ast: dump ast for debuging.
 
     compati_op:
@@ -870,6 +874,13 @@ end
                         option.appName = _exp
                      end
                   end
+               elseif _switchExp == "--gomod" then
+                  do
+                     local _exp = getNextOp(  )
+                     if _exp ~= nil then
+                        option.gomodLnsRef = _exp
+                     end
+                  end
                elseif _switchExp == "--main" then
                   do
                      local _exp = getNextOp(  )
@@ -1050,7 +1061,7 @@ end
          end
       end
    end
-   Log.log( Log.Level.Log, __func__, 791, function (  )
+   Log.log( Log.Level.Log, __func__, 808, function (  )
    
       return string.format( "mode is '%s'", ModeKind:_getTxt( option.mode)
       )

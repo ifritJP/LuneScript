@@ -386,6 +386,62 @@ fn concatGLSym( name:str, external:bool ) : str {
    //return (external and "G" or "l") .. name;
 }
 
+/**
+mkmain で出力した main.go と同じディレクトリに、go.mod を出力する。
+
+既に go.mod がある場合は何もしない。
+
+@param mainPath main.go のパス (nil なら main.go)
+@param lnsRef LuneScript のランタイムの参照先。
+   ディレクトリなら、その LuneScript のソース (src) を replace で参照する。
+   それ以外は、require するバージョン (master など) とする。
+@return エラーメッセージ。正常時は nil
+*/
+pub fn outputGoMod( appName:str, mainPath:str!, lnsRef:str ) : str! {
+   let mut dir = ".";
+   when! mainPath {
+      if mainPath.find( "/", 1, true ) {
+         dir = mainPath.gsub( "/[^/]*$", "" );
+      }
+   }
+   let gomodPath = "%s/go.mod" (dir);
+   if! let mut fileObj = io.open( gomodPath, "r" ) {
+      fileObj.close();
+      return nil;
+   }
+
+   let lnsModule = "github.com/ifritJP/LuneScript/src";
+   let mut moduleName = appName;
+   if moduleName == "" {
+      moduleName = "lnsapp";
+   }
+   let mut code = ```// lnsc mkmain --gomod で生成した。
+// 依存するモジュールは go mod tidy で取得する。
+module %s
+
+go 1.20
+
+``` (moduleName);
+   // lnsRef がディレクトリかどうかは、その下の go.mod を開けるかで判断する
+   let mut isDir = false;
+   if! let mut fileObj = io.open( "%s/go.mod" (lnsRef), "r" ) {
+      fileObj.close();
+      isDir = true;
+   }
+   if isDir {
+      code = code .. "require %s v0.0.0\n\nreplace %s => %s\n" (lnsModule, lnsModule, lnsRef);
+   } else {
+      code = code .. "require %s %s\n" (lnsModule, lnsRef);
+   }
+
+   let! mut fileObj = io.open( gomodPath, "w" ) {
+      return "failed to open -- %s" ( gomodPath );
+   };
+   fileObj.write( code );
+   fileObj.close();
+   return nil;
+}
+
 pub fn outputGoMain( appName:str, mod:str, testing:bool, path:str!,
                      opt:&LnsOpt.RuntimeOpt ):str!
 {

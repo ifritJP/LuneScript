@@ -684,6 +684,61 @@ function concatGLSym( name, external )
    return name
 end
 
+local function outputGoMod( appName, mainPath, lnsRef )
+
+   local dir = "."
+   if mainPath ~= nil then
+      if mainPath:find( "/", 1, true ) then
+         dir = mainPath:gsub( "/[^/]*$", "" )
+      end
+   end
+   local gomodPath = string.format( "%s/go.mod", dir)
+   do
+      local fileObj = io.open( gomodPath, "r" )
+      if fileObj ~= nil then
+         fileObj:close(  )
+         return nil
+      end
+   end
+   local lnsModule = "github.com/ifritJP/LuneScript/src"
+   local moduleName = appName
+   if moduleName == "" then
+      moduleName = "lnsapp"
+   end
+   local code = string.format( [==[// lnsc mkmain --gomod で生成した。
+// 依存するモジュールは go mod tidy で取得する。
+module %s
+
+go 1.20
+
+]==], moduleName)
+   local isDir = false
+   do
+      local fileObj = io.open( string.format( "%s/go.mod", lnsRef), "r" )
+      if fileObj ~= nil then
+         fileObj:close(  )
+         isDir = true
+      end
+   end
+   if isDir then
+      code = code .. string.format( "require %s v0.0.0\n\nreplace %s => %s\n", lnsModule, lnsModule, lnsRef)
+   else
+    
+      code = code .. string.format( "require %s %s\n", lnsModule, lnsRef)
+   end
+   local fileObj = io.open( gomodPath, "w" )
+   if  nil == fileObj then
+      local _fileObj = fileObj
+   
+      return string.format( "failed to open -- %s", gomodPath)
+   end
+   
+   fileObj:write( code )
+   fileObj:close(  )
+   return nil
+end
+_moduleObj.outputGoMod = outputGoMod
+
 
 local function outputGoMain( appName, mod, testing, path, opt )
 
