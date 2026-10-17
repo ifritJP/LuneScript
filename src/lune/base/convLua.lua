@@ -485,6 +485,7 @@ function ConvFilter:__init(streamName, stream, metaStream, convMode, inMacro, mo
    self.convMode = convMode
    self.inMacro = inMacro
    self.curLineNo = 1
+   self.lineMap = {}
    self.classId2TypeInfo = {}
    self.classId2MemberList = {}
    self.pubVarName2InfoMap = {}
@@ -553,6 +554,20 @@ function ConvFilter:writeRaw( txt )
       stream:write( string.rep( " ", self:get_indent() ) )
       self.needIndent = false
    end
+   if not self.outMetaFlag then
+      local pos = 1
+      while true do
+         local nextPos = txt:find( "\n", pos, true )
+         if  nil == nextPos then
+            local _nextPos = nextPos
+         
+            break
+         end
+         
+         self.curLineNo = self.curLineNo + 1
+         pos = nextPos + 1
+      end
+   end
    stream:write( txt )
 end
 function ConvFilter:write( txt )
@@ -566,12 +581,30 @@ function ConvFilter:write( txt )
          stream:write( string.rep( " ", self:get_indent() ) )
          self.needIndent = false
       end
-      if #line > 0 and string.byte( line, #line ) == 10 then
+      if not self.outMetaFlag and #line > 0 and string.byte( line, #line ) == 10 then
          self.curLineNo = self.curLineNo + 1
       end
       stream:write( line )
    end
    return self, nil
+end
+function ConvFilter:markLine( node )
+
+   if self.outMetaFlag or #self.lineMap >= self.curLineNo then
+      return 
+   end
+   local pos = node:get_pos():get_orgPos()
+   if pos.streamName ~= self.streamName then
+      return 
+   end
+   while #self.lineMap < self.curLineNo - 1 do
+      table.insert( self.lineMap, 0 )
+   end
+   table.insert( self.lineMap, pos.lineNo )
+end
+function ConvFilter:get_lineMap(  )
+
+   return self.lineMap
 end
 function ConvFilter._setmeta( obj )
   setmetatable( obj, { __index = ConvFilter  } )
@@ -580,6 +613,7 @@ end
 
 function filter( node, filter, parent )
 
+   filter:markLine( node )
    node:processFilter( filter, Opt._new(parent) )
 end
 
@@ -1355,7 +1389,7 @@ end
 function ConvFilter:processRoot( node, opt )
    local __func__ = '@lune.@base.@convLua.ConvFilter.processRoot'
 
-   Log.log( Log.Level.Log, __func__, 1112, function (  )
+   Log.log( Log.Level.Log, __func__, 1151, function (  )
    
       return string.format( "streamName: %s, enableTest: %s", self.streamName, self.enableTest)
    end
@@ -4195,6 +4229,16 @@ end
 
 local FilterInfo = {}
 _moduleObj.FilterInfo = FilterInfo
+function FilterInfo:getLineMap(  )
+
+   do
+      local convFilter = _lune.__Cast( self.filter, 3, ConvFilter )
+      if convFilter ~= nil then
+         return convFilter:get_lineMap()
+      end
+   end
+   return {}
+end
 function FilterInfo:outputLuaAndMeta( node )
 
    node:processFilter( self.filter, Opt._new(node) )

@@ -120,6 +120,11 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    pri let inMacro: bool;
    pri let mut indentQueue: List<int>;
    pri let mut curLineNo: int;
+   /**
+出力した Lua の行番号 → その行で出力を始めたノードの lns の行番号 (不明は 0)。
+Lua の実行時エラーの位置を lns の位置に対応付けるのに使う。
+*/
+   pri let mut lineMap: List<int>;
    // クラス TypeId → TypeInfo
    pri let mut classId2TypeInfo: Map<&Ast.IdInfo,&Ast.TypeInfo>;
    // クラス TypeId → Member Node List
@@ -190,6 +195,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
       self.convMode = convMode;
       self.inMacro = inMacro;
       self.curLineNo = 1;
+      self.lineMap = [];
       self.classId2TypeInfo = {};
       self.classId2MemberList = {};
       self.pubVarName2InfoMap = {};
@@ -264,6 +270,16 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
          stream.write( string.rep( " ", self.$indent ) );
          self.needIndent = false;
       }
+      if not self.outMetaFlag {
+         let mut pos = 1;
+         while true {
+            let! nextPos = txt.find( "\n", pos, true ) {
+               break;
+            };
+            self.curLineNo = self.curLineNo + 1;
+            pos = nextPos + 1;
+         }
+      }
       stream.write( txt );
    }
    
@@ -278,7 +294,7 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
             self.needIndent = false;
          }
 
-         if #line > 0 and line[ #line ] == ?\n {
+         if not self.outMetaFlag and #line > 0 and line[ #line ] == ?\n {
             self.curLineNo = self.curLineNo + 1;
          }
          stream.write( line );
@@ -287,11 +303,34 @@ class ConvFilter extend Nodes.Filter<Opt> (oStream) {
    }
 
    fn outputAlter2MapFunc( stream:oStream, alt2Map:&Map<&Ast.TypeInfo,&Ast.TypeInfo>);
+
+   /**
+今の出力先の Lua の行に、node の lns の行を記録する。
+既に記録している行は、先に出力を始めたノードの行のままにする。
+*/
+   pub fn markLine( node: &Nodes.Node ) mut {
+      if self.outMetaFlag or #self.lineMap >= self.curLineNo {
+         return;
+      }
+      // マクロ展開したノードは、展開元の位置を使う
+      let pos = node.$pos.$orgPos;
+      if pos.streamName ~= self.streamName {
+         return;
+      }
+      while #self.lineMap < self.curLineNo - 1 {
+         self.lineMap.insert( 0 );
+      }
+      self.lineMap.insert( pos.lineNo );
+   }
+   pub fn get_lineMap(): &List<int> {
+      return self.lineMap;
+   }
 }
 
 fn filter( node: &Nodes.Node, filter: ConvFilter,
            parent: &Nodes.Node ) __async
 {
+   filter.markLine( node );
    node.processFilter( filter, new Opt( parent ) );
 }
 
@@ -4076,6 +4115,16 @@ pub override fn ConvFilter.processLuneControl(
 
 pub class FilterInfo {
    let filter:Nodes.Filter<Opt> {pub};
+
+   /**
+outputLua() で出力した Lua の行番号 → lns の行番号 (不明は 0) のリスト。
+*/
+   pub fn getLineMap(): &List<int> {
+      if! let convFilter = self.filter@@@ConvFilter {
+         return convFilter.$lineMap;
+      }
+      return [];
+   }
 
    pub fn outputLuaAndMeta( node: &Nodes.RootNode ) mut {
       // if! let mut convFilter = self.filter@@@ConvFilter {

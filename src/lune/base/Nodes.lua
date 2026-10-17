@@ -3273,7 +3273,14 @@ function ExpListNode:getExpTypeNoDDDAt( index )
       end
       return Ast.builtinTypeNil
    end
-   return self:get_expTypeList()[index]
+   local expType = self:get_expTypeList()[index]
+   do
+      local dddTypeInfo = _lune.__Cast( expType, 3, Ast.DDDTypeInfo )
+      if dddTypeInfo ~= nil then
+         return dddTypeInfo:get_typeInfo():get_nilableTypeInfo()
+      end
+   end
+   return expType
 end
 
 
