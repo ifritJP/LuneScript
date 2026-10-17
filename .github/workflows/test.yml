@@ -17,25 +17,26 @@ jobs:
     timeout-minutes: 15 # 15分で強制停止
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Set up Python 3.12
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v7
       with:
         python-version: '3.12'
     - name: Set up Go 1.x
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v7
       with:
         go-version: ^1.20
     - name: Install dependencies
       run: |
+        # hererocks は Lua をソースからビルドするので、readline の開発用ファイルが必要
+        sudo apt-get update
+        sudo apt-get install -y libreadline-dev liblua5.3-dev lua5.3
         python -m pip install --upgrade pip
         python -m pip install hererocks
         hererocks here --lua=5.3 -r latest
         pwd
         source here/bin/activate
         luarocks install luacheck
-        sudo apt-get update
-        sudo apt-get install -y liblua5.3-dev lua5.3
     - name: Test
       run: |
         source here/bin/activate
@@ -44,7 +45,7 @@ jobs:
         make -C src go-build LUA=lua5.3 LUA51=
         make -C src LUACHECK=luacheck test-global
     - name: 'Upload Artifact'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: test-result
         path: src/work/test*.result
@@ -56,7 +57,7 @@ jobs:
     timeout-minutes: 8 # 8分で強制停止
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Build the Docker image
       run: |
         docker build src/test/docker/compose/linux/build --tag linux_lns
@@ -74,7 +75,7 @@ jobs:
     timeout-minutes: 8 # 8分で強制停止
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     - name: Build the Docker image
       run: |
         docker build src/test/docker/compose/alpine/build --tag alpine_lns
@@ -102,7 +103,7 @@ jobs:
 #     timeout-minutes: 8 # 8分で強制停止
 #     
 #     steps:
-#     - uses: actions/checkout@v4
+#     - uses: actions/checkout@v7
 #     - name: Build the Docker image
 #       run: |
 #         docker build src/test/docker/compose/centos8/build --tag cent8_lns
@@ -133,7 +134,7 @@ jobs:
 #    timeout-minutes: 8 # 8分で強制停止
 #    
 #    steps:
-#    - uses: actions/checkout@v4
+#    - uses: actions/checkout@v7
 #    - name: Build the Docker image
 #      run: |
 #        docker build src/test/docker/compose/centos7/test --tag cent7_lns
