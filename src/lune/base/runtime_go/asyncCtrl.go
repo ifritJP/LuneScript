@@ -385,30 +385,53 @@ func init() {
 }
 
 type Lns__pipe struct {
-	ch  chan LnsAny
-	end bool
-	FP  Lns_pipeMtd
+	ch chan LnsAny
+	// put() で close したかどうか (mutex で保護する)
+	closed bool
+	mutex  sync.Mutex
+	FP     Lns_pipeMtd
 }
 
 func NewLnspipe(count int) *Lns__pipe {
 	pipe := &Lns__pipe{}
 	pipe.ch = make(chan LnsAny, count)
 	pipe.FP = pipe
-	pipe.end = false
 	return pipe
 }
 
+/*
+*
+val を送る。nil は終わりを表し、チャネルを close する。
+
+以前は終わりをフラグ (end) で表し、get() で「チャネルが空で end が true なら終わり」と判定していた。
+しかし、空かどうかを確認してから end を確認するまでの間に、put() が残りの値と nil を送ると、
+残りの値を受け取らずに終わりと判定してしまう (トークナイザが途中で EOF を返していた)。
+*/
 func (self *Lns__pipe) put(val LnsAny) {
+	self.mutex.Lock()
+	defer self.mutex.Unlock()
+	if self.closed {
+		// 終わりの後の put は無視する
+		return
+	}
 	if Lns_IsNil(val) {
-		self.end = true
+		self.closed = true
+		close(self.ch)
+		return
 	}
 	self.ch <- val
 }
+
+/*
+*
+値を受け取る。終わり (put( nil ) の後) は、何度呼んでも nil を返す。
+*/
 func (self *Lns__pipe) get() LnsAny {
-	if len(self.ch) == 0 && self.end {
+	val, ok := <-self.ch
+	if !ok {
 		return nil
 	}
-	return <-self.ch
+	return val
 }
 
 func (self *Lns_ThreadMgrInfo) changeRunNum(delta int) {

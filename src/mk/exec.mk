@@ -3,7 +3,9 @@ ifeq ($(WITH_GO),y)
 define check_singleBin
 	mkdir -p work/$3
 	cp $1 work/$3
-	cp -a test work/$3
+# 並列に動く test-error が test/error に一時ファイルを作って消すので、
+# コピー中に消えたファイル (rsync の終了コード 24) は無視する
+	rsync -a test work/$3 || [ $$? = 24 ]
 	(cd work/$3; ./lnsc test/testing.lns exe --testing 2>&1) >> $2
 endef
 else
